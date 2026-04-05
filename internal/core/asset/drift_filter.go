@@ -6,27 +6,27 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
-// FilterOptions narrows an ObservationDelta by change/asset criteria.
+// FilterOptions narrows an InfrastructureDrift by change/asset criteria.
 type FilterOptions struct {
-	ChangeTypes []ChangeType
+	ChangeTypes []DriftType
 	AssetTypes  []kernel.AssetType
 	AssetID     string
 }
 
-// ApplyFilter returns a new ObservationDelta containing only matching changes.
-func (d ObservationDelta) ApplyFilter(opt FilterOptions) ObservationDelta {
+// ApplyFilter returns a new InfrastructureDrift containing only matching changes.
+func (d InfrastructureDrift) ApplyFilter(opt FilterOptions) InfrastructureDrift {
 	filtered := filterAssetDiffs(d.Changes, opt)
-	return ObservationDelta{
+	return InfrastructureDrift{
 		SchemaVersion: d.SchemaVersion,
 		Kind:          d.Kind,
-		FromCaptured:  d.FromCaptured,
-		ToCaptured:    d.ToCaptured,
+		StartTime:     d.StartTime,
+		EndTime:       d.EndTime,
 		Changes:       filtered,
-		Summary:       SummarizeDeltaChanges(filtered),
+		Summary:       SummarizeDrift(filtered),
 	}
 }
 
-func filterAssetDiffs(changes []Diff, opt FilterOptions) []Diff {
+func filterAssetDiffs(changes []AssetChange, opt FilterOptions) []AssetChange {
 	if len(changes) == 0 {
 		return nil
 	}
@@ -35,9 +35,9 @@ func filterAssetDiffs(changes []Diff, opt FilterOptions) []Diff {
 	assetTypes := buildAssetTypeSet(opt.AssetTypes)
 	assetID := strings.TrimSpace(opt.AssetID)
 
-	filteredChanges := make([]Diff, 0, len(changes))
+	filteredChanges := make([]AssetChange, 0, len(changes))
 	for _, change := range changes {
-		if matchesChangeType(change.ChangeType, changeTypes) &&
+		if matchesChangeType(change.Action, changeTypes) &&
 			matchesAssetType(change, assetTypes) &&
 			matchesID(change, assetID) {
 			filteredChanges = append(filteredChanges, change)
@@ -46,8 +46,8 @@ func filterAssetDiffs(changes []Diff, opt FilterOptions) []Diff {
 	return filteredChanges
 }
 
-func buildChangeTypeSet(types []ChangeType) map[ChangeType]struct{} {
-	m := make(map[ChangeType]struct{}, len(types))
+func buildChangeTypeSet(types []DriftType) map[DriftType]struct{} {
+	m := make(map[DriftType]struct{}, len(types))
 	for _, ct := range types {
 		if ct != "" {
 			m[ct] = struct{}{}
@@ -66,7 +66,7 @@ func buildAssetTypeSet(types []kernel.AssetType) map[kernel.AssetType]struct{} {
 	return m
 }
 
-func matchesChangeType(ct ChangeType, filter map[ChangeType]struct{}) bool {
+func matchesChangeType(ct DriftType, filter map[DriftType]struct{}) bool {
 	if len(filter) == 0 {
 		return true
 	}
@@ -74,7 +74,7 @@ func matchesChangeType(ct ChangeType, filter map[ChangeType]struct{}) bool {
 	return ok
 }
 
-func matchesAssetType(change Diff, filter map[kernel.AssetType]struct{}) bool {
+func matchesAssetType(change AssetChange, filter map[kernel.AssetType]struct{}) bool {
 	if len(filter) == 0 {
 		return true
 	}
@@ -82,16 +82,16 @@ func matchesAssetType(change Diff, filter map[kernel.AssetType]struct{}) bool {
 	return ok
 }
 
-func matchesID(change Diff, substr string) bool {
+func matchesID(change AssetChange, substr string) bool {
 	if substr == "" {
 		return true
 	}
 	return strings.Contains(change.AssetID.String(), substr)
 }
 
-func effectiveAssetType(change Diff) kernel.AssetType {
-	if change.ToType != "" {
-		return change.ToType
+func effectiveAssetType(change AssetChange) kernel.AssetType {
+	if change.CurrentType != "" {
+		return change.CurrentType
 	}
-	return change.FromType
+	return change.PreviousType
 }

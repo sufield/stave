@@ -8,7 +8,7 @@ import (
 )
 
 func TestScopeFilter_AllowlistMatchesIDAndExternalID(t *testing.T) {
-	f := asset.NewScopeFilter([]string{"bucket-allowed", "arn:aws:s3:::arn-allowed"}, nil)
+	f := asset.NewAuditScope([]string{"bucket-allowed", "arn:aws:s3:::arn-allowed"}, nil)
 
 	if !f.IsInScope(asset.Asset{ID: "bucket-allowed"}) {
 		t.Fatal("expected resource ID allowlist match")
@@ -29,7 +29,7 @@ func TestScopeFilter_AllowlistMatchesIDAndExternalID(t *testing.T) {
 }
 
 func TestScopeFilter_TagMatchingIsNormalized(t *testing.T) {
-	f := asset.NewScopeFilter(nil, map[string][]string{
+	f := asset.NewAuditScope(nil, map[string][]string{
 		" DataDomain ": {" HEALTH "},
 		"owner":        {}, // any non-empty value
 	})
@@ -75,7 +75,7 @@ func TestScopeFilter_TagMatchingIsNormalized(t *testing.T) {
 }
 
 func TestScopeFilter_FilterSnapshots(t *testing.T) {
-	f := asset.NewScopeFilter(nil, map[string][]string{
+	f := asset.NewAuditScope(nil, map[string][]string{
 		"containsPHI": {"true"},
 	})
 
@@ -95,7 +95,7 @@ func TestScopeFilter_FilterSnapshots(t *testing.T) {
 		},
 	}
 
-	got := asset.FilterSnapshots(f, snapshots)
+	got := asset.ApplyScopeToInventory(f, snapshots)
 	if len(got) != 1 {
 		t.Fatalf("filtered snapshot count = %d, want 1", len(got))
 	}
@@ -108,7 +108,7 @@ func TestScopeFilter_FilterSnapshots(t *testing.T) {
 }
 
 func TestScopeFilter_ConstraintFreeAfterNormalizationIsUniversal(t *testing.T) {
-	f := asset.NewScopeFilter(
+	f := asset.NewAuditScope(
 		[]string{"   "},
 		map[string][]string{
 			"   ": {"   "},
@@ -166,16 +166,16 @@ func TestNewScopeFilter_EdgeCases(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := asset.NewScopeFilter(tt.allowlist, tt.tagSpecs)
+			got := asset.NewAuditScope(tt.allowlist, tt.tagSpecs)
 			if got == nil {
-				t.Fatal("NewScopeFilter() returned nil")
+				t.Fatal("NewAuditScope() returned nil")
 			}
 
 			// Behavior-based universal check: universal filters admit any asset.
 			unknown := asset.Asset{ID: "resource-not-in-allowlist-or-tags"}
 			isUniversalBehavior := got.IsInScope(unknown)
 			if isUniversalBehavior != tt.wantUniversal {
-				t.Errorf("NewScopeFilter() universal behavior = %v, want %v", isUniversalBehavior, tt.wantUniversal)
+				t.Errorf("NewAuditScope() universal behavior = %v, want %v", isUniversalBehavior, tt.wantUniversal)
 			}
 
 			if !tt.wantUniversal {
@@ -191,7 +191,7 @@ func TestNewScopeFilter_EdgeCases(t *testing.T) {
 					},
 				}
 				if !got.IsInScope(inScope) {
-					t.Error("NewScopeFilter() constrained filter did not admit matching resource")
+					t.Error("NewAuditScope() constrained filter did not admit matching resource")
 				}
 			}
 		})

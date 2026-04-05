@@ -28,7 +28,7 @@ func ExampleClassifyExposure() {
 	// CTL.STORAGE.PUBLIC.READ.001: public_read (public)
 }
 
-func ExampleBuildVisibilityResult() {
+func ExampleBuildResourceExposure() {
 	identity := exposure.Visibility{
 		Public: exposure.Capabilities{Read: true, List: true},
 	}
@@ -37,7 +37,7 @@ func ExampleBuildVisibilityResult() {
 		BlockIdentityBoundPublicAccess: true,
 	}
 
-	vis := exposure.BuildVisibilityResult(identity, resource, gov)
+	vis := exposure.BuildResourceExposure(identity, resource, gov)
 	fmt.Println("public_read:", vis.PublicRead)
 	fmt.Println("latent_public_read:", vis.LatentPublicRead)
 	// Output:

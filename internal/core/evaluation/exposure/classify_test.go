@@ -620,8 +620,8 @@ func TestFactsFromStorage_AllScopesOrphaned(t *testing.T) {
 
 // --- Visibility resolver tests ---
 
-func TestBuildVisibilityResult_PublicRead(t *testing.T) {
-	result := BuildVisibilityResult(
+func TestBuildResourceExposure_PublicRead(t *testing.T) {
+	result := BuildResourceExposure(
 		Visibility{Public: Capabilities{Read: true}},
 		Visibility{},
 		GovernanceOverrides{},
@@ -634,8 +634,8 @@ func TestBuildVisibilityResult_PublicRead(t *testing.T) {
 	}
 }
 
-func TestBuildVisibilityResult_Blocked(t *testing.T) {
-	result := BuildVisibilityResult(
+func TestBuildResourceExposure_Blocked(t *testing.T) {
+	result := BuildResourceExposure(
 		Visibility{Public: Capabilities{Read: true}},
 		Visibility{},
 		GovernanceOverrides{BlockIdentityBoundPublicAccess: true},
@@ -648,8 +648,8 @@ func TestBuildVisibilityResult_Blocked(t *testing.T) {
 	}
 }
 
-func TestBuildVisibilityResult_AuthenticatedAccess(t *testing.T) {
-	result := BuildVisibilityResult(
+func TestBuildResourceExposure_AuthenticatedAccess(t *testing.T) {
+	result := BuildResourceExposure(
 		Visibility{Authenticated: Capabilities{Read: true, Write: true, Admin: true}},
 		Visibility{},
 		GovernanceOverrides{},
@@ -665,8 +665,8 @@ func TestBuildVisibilityResult_AuthenticatedAccess(t *testing.T) {
 	}
 }
 
-func TestBuildVisibilityResult_ResourceFullAccess(t *testing.T) {
-	result := BuildVisibilityResult(
+func TestBuildResourceExposure_ResourceFullAccess(t *testing.T) {
+	result := BuildResourceExposure(
 		Visibility{},
 		Visibility{
 			Public:        Capabilities{Read: true, Write: true, List: true, Delete: true, Admin: true},

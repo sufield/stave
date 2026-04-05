@@ -35,7 +35,7 @@
         ],
         "threshold_hours": 1,
         "unsafe_duration_hours": 2,
-        "temporal_risk": "Asset has been unsafe for 2 hours (threshold: 1 hours). Unsafe since 2026-01-01T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 2 hours (SLA: 1 hours). Exposed since 2026-01-01T00:00:00Z."
       },
       "posture_drift": {
         "episode_count": 1,

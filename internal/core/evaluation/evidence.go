@@ -92,8 +92,8 @@ type PostureDrift struct {
 
 // ComputePostureDrift analyzes a timeline to classify the violation's drift pattern.
 // Returns nil if the asset is not currently in an unsafe state.
-func ComputePostureDrift(t *asset.Timeline) *PostureDrift {
-	if t.CurrentlySafe() {
+func ComputePostureDrift(t *asset.ExposureLifecycle) *PostureDrift {
+	if t.IsSecure() {
 		return nil
 	}
 
@@ -108,9 +108,9 @@ func ComputePostureDrift(t *asset.Timeline) *PostureDrift {
 		// previously unsafe, then safe, and is now unsafe again.
 		pattern = DriftIntermittent
 
-	case t.HasOpenEpisode() && t.Stats().HasFirstObservation():
+	case t.HasActiveWindow() && t.Stats().HasFirstObservation():
 		// Check if the asset was safe at the start of its known history.
-		if t.FirstUnsafeAt().After(t.Stats().FirstSeenAt()) {
+		if t.FirstExposedAt().After(t.Stats().FirstSeenAt()) {
 			pattern = DriftDegraded
 		} else {
 			pattern = DriftPersistent

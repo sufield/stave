@@ -2,24 +2,24 @@ package diag
 
 import "testing"
 
-type testExternalError struct {
+type testRawIssue struct {
 	field string
 	desc  string
 	code  string
 }
 
-func (e testExternalError) Field() string       { return e.field }
-func (e testExternalError) Description() string { return e.desc }
-func (e testExternalError) Code() string        { return e.code }
+func (e testRawIssue) Field() string       { return e.field }
+func (e testRawIssue) Description() string { return e.desc }
+func (e testRawIssue) Code() string        { return e.code }
 
 func TestTranslator_TranslateWithPrefix(t *testing.T) {
-	translator := NewTranslator(RuleSchemaViolation,
-		WithDefaultAction("Fix input to match schema"),
+	translator := NewMapper(RuleSchemaViolation,
+		WithDefaultRemediation("Fix input to match schema"),
 		WithPathPrefix("controls.yaml"),
 	)
 
-	result := translator.Translate([]ExternalError{
-		testExternalError{
+	result := translator.Map([]RawIssue{
+		testRawIssue{
 			field: "/dsl_version",
 			desc:  "missing required field",
 			code:  "required",
@@ -39,7 +39,7 @@ func TestTranslator_TranslateWithPrefix(t *testing.T) {
 	if got := finding.Message; got != "missing required field" {
 		t.Fatalf("message=%q, want %q", got, "missing required field")
 	}
-	if got := finding.Action; got == "" {
+	if got := finding.Remediation; got == "" {
 		t.Fatal("action should not be empty")
 	}
 	if path, ok := finding.Resource.Get("path"); !ok || path != "controls.yaml: /dsl_version" {
@@ -48,17 +48,17 @@ func TestTranslator_TranslateWithPrefix(t *testing.T) {
 }
 
 func TestTranslator_DefaultActionFallback(t *testing.T) {
-	translator := NewTranslator(RuleSchemaViolation,
-		WithDefaultAction("Fix input to match schema"),
+	translator := NewMapper(RuleSchemaViolation,
+		WithDefaultRemediation("Fix input to match schema"),
 	)
 
-	finding := translator.TranslateOne(testExternalError{
+	finding := translator.MapOne(testRawIssue{
 		field: "/x",
 		desc:  "unknown schema violation",
 		code:  "custom",
 	})
 
-	if finding.Action != "Fix input to match schema" {
-		t.Fatalf("action=%q, want fallback action", finding.Action)
+	if finding.Remediation != "Fix input to match schema" {
+		t.Fatalf("action=%q, want fallback action", finding.Remediation)
 	}
 }

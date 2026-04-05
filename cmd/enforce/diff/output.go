@@ -13,7 +13,7 @@ import (
 
 // writeOutput dispatches rendering of the delta based on format.
 // Pass io.Discard as w to suppress output in quiet mode.
-func writeOutput(w io.Writer, format appcontracts.OutputFormat, out asset.ObservationDelta) error {
+func writeOutput(w io.Writer, format appcontracts.OutputFormat, out asset.InfrastructureDrift) error {
 	if format.IsJSON() {
 		return jsonutil.WriteIndented(w, out)
 	}
@@ -21,7 +21,7 @@ func writeOutput(w io.Writer, format appcontracts.OutputFormat, out asset.Observ
 }
 
 // renderText generates a human-readable summary of asset changes.
-func renderText(w io.Writer, out asset.ObservationDelta) error {
+func renderText(w io.Writer, out asset.InfrastructureDrift) error {
 	bw := bufio.NewWriter(w)
 
 	var firstErr error
@@ -33,10 +33,10 @@ func renderText(w io.Writer, out asset.ObservationDelta) error {
 	}
 
 	printf("Observation delta: %s -> %s\n",
-		out.FromCaptured.Format(time.RFC3339),
-		out.ToCaptured.Format(time.RFC3339))
+		out.StartTime.Format(time.RFC3339),
+		out.EndTime.Format(time.RFC3339))
 	printf("Summary: added=%d removed=%d modified=%d total=%d\n\n",
-		out.Summary.Added(), out.Summary.Removed(), out.Summary.Modified(), out.Summary.Total())
+		out.Summary.Provisioned(), out.Summary.Decommissioned(), out.Summary.Reconfigured(), out.Summary.Total())
 	if firstErr != nil {
 		return firstErr
 	}
@@ -50,9 +50,9 @@ func renderText(w io.Writer, out asset.ObservationDelta) error {
 		if firstErr != nil {
 			break
 		}
-		printf("- %s [%s]\n", c.AssetID, c.ChangeType)
-		for _, p := range c.PropertyChanges {
-			printf("  * %s: %v -> %v\n", p.Path, p.From, p.To)
+		printf("- %s [%s]\n", c.AssetID, c.Action)
+		for _, p := range c.Drifts {
+			printf("  * %s: %v -> %v\n", p.Attribute, p.OldValue, p.NewValue)
 		}
 	}
 	if err := bw.Flush(); err != nil && firstErr == nil {

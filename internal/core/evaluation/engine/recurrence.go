@@ -18,7 +18,7 @@ type RecurrenceStats struct {
 // EvaluateRecurrenceForControl evaluates the timeline against recurrence limits.
 // It returns a slice containing a violation finding if the recurrence limit is exceeded.
 func EvaluateRecurrenceForControl(
-	t *asset.Timeline,
+	t *asset.ExposureLifecycle,
 	ctl *policy.ControlDefinition,
 	now time.Time,
 ) []*evaluation.Finding {
@@ -38,7 +38,7 @@ func EvaluateRecurrenceForControl(
 
 // CreateRecurrenceFinding generates a finding based on the frequency of unsafe episodes.
 func CreateRecurrenceFinding(
-	t *asset.Timeline,
+	t *asset.ExposureLifecycle,
 	ctl *policy.ControlDefinition,
 	stats RecurrenceStats,
 ) *evaluation.Finding {

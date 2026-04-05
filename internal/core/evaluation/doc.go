@@ -2,7 +2,7 @@
 //
 // The heavy lifting lives in subpackages:
 //
-//   - [engine]: Timeline processing, finding generation, coverage metrics, and
+//   - [engine]: ExposureLifecycle processing, finding generation, coverage metrics, and
 //     the main [engine.Runner] that orchestrates evaluation across snapshots.
 //   - [diagnosis]: Post-evaluation root-cause analysis — streak detection,
 //     evidence interpretation, and diagnostic report generation.

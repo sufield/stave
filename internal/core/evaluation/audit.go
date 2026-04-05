@@ -9,18 +9,16 @@ import (
 // ConfidenceLevel quantifies the certainty of an evaluation result.
 type ConfidenceLevel string
 
-// ConfidenceHigh and related constants.
 const (
-	ConfidenceHigh         ConfidenceLevel = "high"
-	ConfidenceMedium       ConfidenceLevel = "medium"
-	ConfidenceLow          ConfidenceLevel = "low"
-	ConfidenceInconclusive ConfidenceLevel = "inconclusive"
+	ConfidenceHigh         ConfidenceLevel = "HIGH"
+	ConfidenceMedium       ConfidenceLevel = "MEDIUM"
+	ConfidenceLow          ConfidenceLevel = "LOW"
+	ConfidenceInconclusive ConfidenceLevel = "INCONCLUSIVE"
 )
 
 // SecurityState classifies the high-level security posture of the environment.
 type SecurityState string
 
-// StateCompliant and related constants.
 const (
 	StateCompliant    SecurityState = "COMPLIANT"
 	StateAtRisk       SecurityState = "AT_RISK"
@@ -38,10 +36,9 @@ func DeriveSecurityState(violations int, upcoming risk.ThresholdItems) SecurityS
 	return StateCompliant
 }
 
-// Verdict represents the final outcome of a control check against a resource.
+// Verdict represents the final outcome of a security control check against a resource.
 type Verdict string
 
-// VerdictViolation and related constants.
 const (
 	VerdictViolation     Verdict = "VIOLATION"
 	VerdictPass          Verdict = "PASS"
@@ -60,17 +57,17 @@ type ResourceCheck struct {
 	Confidence   ConfidenceLevel    `json:"confidence"`
 	Evidence     *Evidence          `json:"evidence,omitempty"`
 	TemporalRisk string             `json:"temporal_risk,omitempty"`
-	Reason       string             `json:"reason,omitempty"` // populated for SKIPPED/INCONCLUSIVE
+	Reason       string             `json:"reason,omitempty"`
 }
 
-// MarkInconclusive shifts a row to an inconclusive state with a specific explanation.
-func (r *ResourceCheck) MarkInconclusive(reason string) {
-	if r == nil {
+// MarkInconclusive shifts a check to an inconclusive state with a specific explanation.
+func (c *ResourceCheck) MarkInconclusive(reason string) {
+	if c == nil {
 		return
 	}
-	r.Verdict = VerdictInconclusive
-	r.Confidence = ConfidenceInconclusive
-	r.Reason = reason
+	c.Verdict = VerdictInconclusive
+	c.Confidence = ConfidenceInconclusive
+	c.Reason = reason
 }
 
 // ComplianceSummary provides high-level metrics for an evaluation run.
@@ -98,10 +95,10 @@ type ComplianceReport struct {
 	SkippedControls  []SkippedControl      `json:"skipped_controls,omitempty"`
 	ExemptedAssets   []asset.ExemptedAsset `json:"exempted_assets,omitempty"`
 	Metadata         Metadata              `json:"-"`
-	Checks           []ResourceCheck       `json:"checks,omitempty"` // populated if --explain is used
+	Checks           []ResourceCheck       `json:"checks,omitempty"`
 }
 
-// GetFindingByResource retrieves a finding for a specific control/asset pair, returning nil if not found.
+// GetFindingByResource retrieves a finding for a specific control/asset pair.
 func (r *ComplianceReport) GetFindingByResource(ctlID kernel.ControlID, astID asset.ID) *Finding {
 	for i := range r.Findings {
 		if r.Findings[i].ControlID == ctlID && r.Findings[i].AssetID == astID {

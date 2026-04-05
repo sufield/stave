@@ -62,7 +62,7 @@ Exit Codes:
 
 	opts.BindFlags(cmd)
 	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed(cliflags.FormatsTextJSON...))
-	_ = cmd.RegisterFlagCompletionFunc("change-type", cliflags.CompleteFixed(asset.AllChangeTypes()...))
+	_ = cmd.RegisterFlagCompletionFunc("change-type", cliflags.CompleteFixed(asset.AllDriftTypes()...))
 
 	return cmd
 }

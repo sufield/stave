@@ -14,10 +14,10 @@ func PackConfigIssues() []diag.Finding {
 	cfg, ok, cfgErr := projconfig.FindProjectConfig()
 	if cfgErr != nil {
 		return []diag.Finding{
-			diag.New(diag.RuleProjectConfigLoadFailed).
+			diag.NewFinding(diag.RuleProjectConfigLoadFailed).
 				Error().
-				Action("Check stave.yaml for syntax errors").
-				WithSensitive("error", cfgErr.Error()).
+				Remediation("Check stave.yaml for syntax errors").
+				SensitiveAttribute("error", cfgErr.Error()).
 				Build(),
 		}
 	}
@@ -27,10 +27,10 @@ func PackConfigIssues() []diag.Finding {
 	reg, err := packs.NewEmbeddedRegistry()
 	if err != nil {
 		return []diag.Finding{
-			diag.New(diag.RulePackRegistryLoadFailed).
+			diag.NewFinding(diag.RulePackRegistryLoadFailed).
 				Error().
-				Action("Reinstall Stave binary or verify embedded registry integrity").
-				WithSensitive("error", err.Error()).
+				Remediation("Reinstall Stave binary or verify embedded registry integrity").
+				SensitiveAttribute("error", err.Error()).
 				Build(),
 		}
 	}
@@ -48,10 +48,10 @@ func PackConfigIssues() []diag.Finding {
 		if _, ok := knownSet[name]; ok {
 			continue
 		}
-		issues = append(issues, diag.New(diag.RuleUnknownControlPack).
+		issues = append(issues, diag.NewFinding(diag.RuleUnknownControlPack).
 			Error().
-			Action(fmt.Sprintf("Use a configured pack name: %s", strings.Join(known, ", "))).
-			With("pack", name).
+			Remediation(fmt.Sprintf("Use a configured pack name: %s", strings.Join(known, ", "))).
+			Attribute("pack", name).
 			Build())
 	}
 	return issues

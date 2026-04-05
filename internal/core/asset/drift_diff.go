@@ -16,19 +16,19 @@ type assetDiffInput struct {
 	HasCurrent  bool
 }
 
-func diffAsset(in assetDiffInput) *Diff {
+func diffAsset(in assetDiffInput) *AssetChange {
 	switch {
 	case !in.HasPrevious && in.HasCurrent:
-		return &Diff{
-			AssetID:    ID(in.ID),
-			ChangeType: ChangeAdded,
-			ToType:     in.Curr.Type,
+		return &AssetChange{
+			AssetID:     ID(in.ID),
+			Action:      DriftProvisioned,
+			CurrentType: in.Curr.Type,
 		}
 	case in.HasPrevious && !in.HasCurrent:
-		return &Diff{
-			AssetID:    ID(in.ID),
-			ChangeType: ChangeRemoved,
-			FromType:   in.Prev.Type,
+		return &AssetChange{
+			AssetID:      ID(in.ID),
+			Action:       DriftDecommissioned,
+			PreviousType: in.Prev.Type,
 		}
 	default:
 		// TELL: Let the asset identify its own property-level differences.
@@ -36,37 +36,37 @@ func diffAsset(in assetDiffInput) *Diff {
 		if len(propChanges) == 0 {
 			return nil
 		}
-		return &Diff{
-			AssetID:         ID(in.ID),
-			ChangeType:      ChangeModified,
-			FromType:        in.Prev.Type,
-			ToType:          in.Curr.Type,
-			PropertyChanges: propChanges,
+		return &AssetChange{
+			AssetID:      ID(in.ID),
+			Action:       DriftReconfigured,
+			PreviousType: in.Prev.Type,
+			CurrentType:  in.Curr.Type,
+			Drifts:       propChanges,
 		}
 	}
 }
 
 // DiffAssets compares two assets and returns property-level changes.
-func DiffAssets(prev, curr Asset) []PropertyChange {
-	var changes []PropertyChange
+func DiffAssets(prev, curr Asset) []ConfigurationDrift {
+	var changes []ConfigurationDrift
 	if prev.Type != curr.Type {
-		changes = append(changes, PropertyChange{Path: "_meta.type", From: prev.Type.String(), To: curr.Type.String()})
+		changes = append(changes, ConfigurationDrift{Attribute: "_meta.type", OldValue: prev.Type.String(), NewValue: curr.Type.String()})
 	}
 	if prev.Vendor != curr.Vendor {
-		changes = append(changes, PropertyChange{Path: "_meta.vendor", From: prev.Vendor.String(), To: curr.Vendor.String()})
+		changes = append(changes, ConfigurationDrift{Attribute: "_meta.vendor", OldValue: prev.Vendor.String(), NewValue: curr.Vendor.String()})
 	}
 	changes = append(changes, diffDeep("properties", prev.Properties, curr.Properties)...)
 	// POSTCONDITION: Output is deterministically sorted by Path to ensure stable diffs.
-	sort.Slice(changes, func(i, j int) bool { return changes[i].Path < changes[j].Path })
+	sort.Slice(changes, func(i, j int) bool { return changes[i].Attribute < changes[j].Attribute })
 	return changes
 }
 
 // CONTRACT: Property paths are dot-separated breadcrumbs (e.g., "properties.cpu.cores").
 // diffDeep recursively compares two values and returns property changes.
-func diffDeep(path string, from, to any) []PropertyChange {
+func diffDeep(path string, from, to any) []ConfigurationDrift {
 	// PRECONDITION: If types differ at the same path, record as a change and stop recursion.
 	if reflect.TypeOf(from) != reflect.TypeOf(to) {
-		return []PropertyChange{{Path: path, From: from, To: to}}
+		return []ConfigurationDrift{{Attribute: path, OldValue: from, NewValue: to}}
 	}
 
 	fromMap, fromIsMap := from.(map[string]any)
@@ -74,7 +74,7 @@ func diffDeep(path string, from, to any) []PropertyChange {
 	if fromIsMap && toIsMap {
 		keys := uniqueSortedKeys(fromMap, toMap)
 
-		var changes []PropertyChange
+		var changes []ConfigurationDrift
 		for _, k := range keys {
 			changes = append(changes, diffDeep(appendPropertyPath(path, k), fromMap[k], toMap[k])...)
 		}
@@ -82,7 +82,7 @@ func diffDeep(path string, from, to any) []PropertyChange {
 	}
 	// PERFORMANCE: Using reflect.DeepEqual is the idiomatic way to compare arbitrary JSON values.
 	if !reflect.DeepEqual(from, to) {
-		return []PropertyChange{{Path: path, From: from, To: to}}
+		return []ConfigurationDrift{{Attribute: path, OldValue: from, NewValue: to}}
 	}
 	return nil
 }

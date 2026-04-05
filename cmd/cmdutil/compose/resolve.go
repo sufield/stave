@@ -61,12 +61,12 @@ func ResolveFormatValuePure(raw string, formatChanged bool, isJSONMode bool) (ap
 func ResolveNowDiag(raw string) (time.Time, *diag.Finding) {
 	t, err := cliflags.ParseRFC3339(raw, "--now")
 	if err != nil {
-		issue := diag.New(diag.RuleInvalidNowTime).
+		issue := diag.NewFinding(diag.RuleInvalidNowTime).
 			Error().
-			Action("Use RFC3339 format").
-			Command("stave validate --now 2026-01-15T00:00:00Z").
-			With("value", raw).
-			WithSensitive("error", err.Error()).
+			Remediation("Use RFC3339 format").
+			FixCommand("stave validate --now 2026-01-15T00:00:00Z").
+			Attribute("value", raw).
+			SensitiveAttribute("error", err.Error()).
 			Build()
 		return time.Time{}, &issue
 	}
@@ -78,12 +78,12 @@ func ResolveNowDiag(raw string) (time.Time, *diag.Finding) {
 func ResolveDurationDiag(raw string) (*time.Duration, *diag.Finding) {
 	dur, err := kernel.ParseDuration(raw)
 	if err != nil {
-		issue := diag.New(diag.RuleInvalidMaxUnsafe).
+		issue := diag.NewFinding(diag.RuleInvalidMaxUnsafe).
 			Error().
-			Action("Use format like 168h, 7d, or 1d12h").
-			Command("stave validate --max-unsafe 168h").
-			With("value", raw).
-			WithSensitive("error", err.Error()).
+			Remediation("Use format like 168h, 7d, or 1d12h").
+			FixCommand("stave validate --max-unsafe 168h").
+			Attribute("value", raw).
+			SensitiveAttribute("error", err.Error()).
 			Build()
 		return nil, &issue
 	}

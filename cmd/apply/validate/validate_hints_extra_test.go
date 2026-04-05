@@ -222,7 +222,7 @@ func TestCollectHints_Dedupes(t *testing.T) {
 func TestCollectHints_UsesExplicitCommand(t *testing.T) {
 	result := &diag.Assessment{
 		Findings: []diag.Finding{
-			{Command: "stave custom-command"},
+			{FixCommand: "stave custom-command"},
 		},
 	}
 	got := collectHints(result, hintContext{})
@@ -234,9 +234,9 @@ func TestCollectHints_UsesExplicitCommand(t *testing.T) {
 func TestCollectHints_Sorted(t *testing.T) {
 	result := &diag.Assessment{
 		Findings: []diag.Finding{
-			{Command: "z-command"},
-			{Command: "a-command"},
-			{Command: "m-command"},
+			{FixCommand: "z-command"},
+			{FixCommand: "a-command"},
+			{FixCommand: "m-command"},
 		},
 	}
 	got := collectHints(result, hintContext{})

@@ -28,9 +28,9 @@ func TestParseChangeTypes_Valid(t *testing.T) {
 	}{
 		{nil, 0},
 		{[]string{}, 0},
-		{[]string{"added"}, 1},
-		{[]string{"added", "removed", "modified"}, 3},
-		{[]string{" Added ", " REMOVED "}, 2},
+		{[]string{"PROVISIONED"}, 1},
+		{[]string{"PROVISIONED", "DECOMMISSIONED", "RECONFIGURED"}, 3},
+		{[]string{" Provisioned ", " decommissioned "}, 2},
 	}
 	for _, tt := range tests {
 		got, err := parseChangeTypes(tt.input)
@@ -65,7 +65,7 @@ func TestParseChangeTypes_EmptyStrings(t *testing.T) {
 
 func TestBuildFilter(t *testing.T) {
 	opts := &Options{
-		ChangeTypes: []string{"added"},
+		ChangeTypes: []string{"PROVISIONED"},
 		AssetTypes:  []string{"bucket"},
 		AssetID:     "  my-bucket  ",
 	}
@@ -86,9 +86,9 @@ func TestRenderText_EmptyChanges(t *testing.T) {
 	// the bufio.Writer when there are no changes. We verify this path
 	// does not return an error rather than checking output content.
 	var buf bytes.Buffer
-	delta := asset.ObservationDelta{
-		FromCaptured: time.Date(2026, 1, 10, 0, 0, 0, 0, time.UTC),
-		ToCaptured:   time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC),
+	delta := asset.InfrastructureDrift{
+		StartTime: time.Date(2026, 1, 10, 0, 0, 0, 0, time.UTC),
+		EndTime:   time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC),
 	}
 	err := renderText(&buf, delta)
 	if err != nil {
@@ -98,19 +98,19 @@ func TestRenderText_EmptyChanges(t *testing.T) {
 
 func TestRenderText_WithChanges(t *testing.T) {
 	var buf bytes.Buffer
-	delta := asset.ObservationDelta{
-		FromCaptured: time.Date(2026, 1, 10, 0, 0, 0, 0, time.UTC),
-		ToCaptured:   time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC),
-		Changes: []asset.Diff{
+	delta := asset.InfrastructureDrift{
+		StartTime: time.Date(2026, 1, 10, 0, 0, 0, 0, time.UTC),
+		EndTime:   time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC),
+		Changes: []asset.AssetChange{
 			{
-				AssetID:    "bucket-a",
-				ChangeType: asset.ChangeAdded,
+				AssetID: "bucket-a",
+				Action:  asset.DriftProvisioned,
 			},
 			{
-				AssetID:    "bucket-b",
-				ChangeType: asset.ChangeModified,
-				PropertyChanges: []asset.PropertyChange{
-					{Path: "public", From: false, To: true},
+				AssetID: "bucket-b",
+				Action:  asset.DriftReconfigured,
+				Drifts: []asset.ConfigurationDrift{
+					{Attribute: "public", OldValue: false, NewValue: true},
 				},
 			},
 		},
@@ -123,8 +123,8 @@ func TestRenderText_WithChanges(t *testing.T) {
 	if !strings.Contains(out, "bucket-a") {
 		t.Fatalf("expected bucket-a in output, got: %s", out)
 	}
-	if !strings.Contains(out, "[added]") {
-		t.Fatalf("expected [added] in output, got: %s", out)
+	if !strings.Contains(out, "[PROVISIONED]") {
+		t.Fatalf("expected [PROVISIONED] in output, got: %s", out)
 	}
 	if !strings.Contains(out, "public") {
 		t.Fatalf("expected property path in output, got: %s", out)
@@ -133,7 +133,7 @@ func TestRenderText_WithChanges(t *testing.T) {
 
 func TestWriteOutput_Quiet(t *testing.T) {
 	// Quiet mode: caller passes io.Discard.
-	err := writeOutput(io.Discard, appcontracts.FormatText, asset.ObservationDelta{})
+	err := writeOutput(io.Discard, appcontracts.FormatText, asset.InfrastructureDrift{})
 	if err != nil {
 		t.Fatalf("writeOutput error: %v", err)
 	}
@@ -141,26 +141,26 @@ func TestWriteOutput_Quiet(t *testing.T) {
 
 func TestWriteOutput_JSON(t *testing.T) {
 	var buf bytes.Buffer
-	delta := asset.ObservationDelta{
-		FromCaptured: time.Date(2026, 1, 10, 0, 0, 0, 0, time.UTC),
-		ToCaptured:   time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC),
+	delta := asset.InfrastructureDrift{
+		StartTime: time.Date(2026, 1, 10, 0, 0, 0, 0, time.UTC),
+		EndTime:   time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC),
 	}
 	err := writeOutput(&buf, appcontracts.FormatJSON, delta)
 	if err != nil {
 		t.Fatalf("writeOutput error: %v", err)
 	}
-	if !strings.Contains(buf.String(), "from_captured_at") {
+	if !strings.Contains(buf.String(), "start_time") {
 		t.Fatalf("expected JSON output, got: %s", buf.String())
 	}
 }
 
 func TestWriteOutput_TextWithChanges(t *testing.T) {
 	var buf bytes.Buffer
-	delta := asset.ObservationDelta{
-		FromCaptured: time.Date(2026, 1, 10, 0, 0, 0, 0, time.UTC),
-		ToCaptured:   time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC),
-		Changes: []asset.Diff{
-			{AssetID: "bucket-a", ChangeType: asset.ChangeAdded},
+	delta := asset.InfrastructureDrift{
+		StartTime: time.Date(2026, 1, 10, 0, 0, 0, 0, time.UTC),
+		EndTime:   time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC),
+		Changes: []asset.AssetChange{
+			{AssetID: "bucket-a", Action: asset.DriftProvisioned},
 		},
 	}
 	err := writeOutput(&buf, appcontracts.FormatText, delta)

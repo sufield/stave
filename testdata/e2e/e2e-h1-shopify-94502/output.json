@@ -184,7 +184,7 @@
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-10-18T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -224,7 +224,7 @@
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-10-18T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -264,7 +264,7 @@
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-10-18T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -322,7 +322,7 @@
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-10-18T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -380,7 +380,7 @@
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-10-18T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -438,7 +438,7 @@
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-10-18T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -478,7 +478,7 @@
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-10-18T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -552,7 +552,7 @@
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-10-18T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -626,7 +626,7 @@
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-10-18T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -694,7 +694,7 @@
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-10-18T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -761,7 +761,7 @@
         "root_causes": [
           "resource"
         ],
-        "temporal_risk": "Asset has been unsafe for 192 hours (threshold: 0 hours). Unsafe since 2015-10-18T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 0 hours). Exposed since 2015-10-18T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -828,7 +828,7 @@
         "root_causes": [
           "resource"
         ],
-        "temporal_risk": "Asset has been unsafe for 192 hours (threshold: 0 hours). Unsafe since 2015-10-18T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 0 hours). Exposed since 2015-10-18T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -895,7 +895,7 @@
         "root_causes": [
           "resource"
         ],
-        "temporal_risk": "Asset has been unsafe for 192 hours (threshold: 0 hours). Unsafe since 2015-10-18T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 0 hours). Exposed since 2015-10-18T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",

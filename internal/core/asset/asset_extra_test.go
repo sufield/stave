@@ -9,106 +9,106 @@ import (
 )
 
 // ---------------------------------------------------------------------------
-// Episode
+// ExposureWindow
 // ---------------------------------------------------------------------------
 
-func TestNewOpenEpisode(t *testing.T) {
+func TestNewOpenExposureWindow(t *testing.T) {
 	now := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
-	ep, err := NewOpenEpisode(now)
+	ep, err := NewActiveWindow(now)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !ep.IsOpen() {
+	if !ep.IsActive() {
 		t.Fatal("should be open")
 	}
-	if ep.StartAt() != now {
-		t.Fatalf("StartAt = %v", ep.StartAt())
+	if ep.OpenedAt() != now {
+		t.Fatalf("StartAt = %v", ep.OpenedAt())
 	}
-	if !ep.EndAt().IsZero() {
+	if !ep.ResolvedAt().IsZero() {
 		t.Fatalf("EndAt should be zero for open episode")
 	}
 }
 
-func TestNewOpenEpisodeZeroTime(t *testing.T) {
-	_, err := NewOpenEpisode(time.Time{})
+func TestNewOpenExposureWindowZeroTime(t *testing.T) {
+	_, err := NewActiveWindow(time.Time{})
 	if err == nil {
 		t.Fatal("expected error for zero time")
 	}
 }
 
-func TestNewClosedEpisode(t *testing.T) {
+func TestNewClosedExposureWindow(t *testing.T) {
 	start := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	end := start.Add(2 * time.Hour)
-	ep, err := NewClosedEpisode(start, end)
+	ep, err := NewResolvedWindow(start, end)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if ep.IsOpen() {
+	if ep.IsActive() {
 		t.Fatal("should be closed")
 	}
-	if ep.StartAt() != start {
-		t.Fatalf("StartAt = %v", ep.StartAt())
+	if ep.OpenedAt() != start {
+		t.Fatalf("StartAt = %v", ep.OpenedAt())
 	}
-	if ep.EndAt() != end {
-		t.Fatalf("EndAt = %v", ep.EndAt())
+	if ep.ResolvedAt() != end {
+		t.Fatalf("EndAt = %v", ep.ResolvedAt())
 	}
 }
 
-func TestNewClosedEpisodeEndBeforeStart(t *testing.T) {
+func TestNewClosedExposureWindowEndBeforeStart(t *testing.T) {
 	start := time.Date(2026, 1, 1, 2, 0, 0, 0, time.UTC)
 	end := start.Add(-time.Hour) // before start
-	ep, err := NewClosedEpisode(start, end)
+	ep, err := NewResolvedWindow(start, end)
 	if err != nil {
 		t.Fatal(err)
 	}
 	// Close clamps end to start when end < start
-	if ep.EndAt().Before(ep.StartAt()) {
+	if ep.ResolvedAt().Before(ep.OpenedAt()) {
 		t.Fatal("EndAt should be clamped to StartAt")
 	}
 }
 
-func TestEpisodeClose(t *testing.T) {
+func TestExposureWindowClose(t *testing.T) {
 	start := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
-	ep, _ := NewOpenEpisode(start)
+	ep, _ := NewActiveWindow(start)
 	endAt := start.Add(3 * time.Hour)
 
-	closed := ep.Close(endAt)
-	if closed.IsOpen() {
+	closed := ep.Resolve(endAt)
+	if closed.IsActive() {
 		t.Fatal("should be closed")
 	}
-	if closed.EndAt() != endAt {
-		t.Fatalf("EndAt = %v", closed.EndAt())
+	if closed.ResolvedAt() != endAt {
+		t.Fatalf("EndAt = %v", closed.ResolvedAt())
 	}
 
 	// Idempotent
-	closed2 := closed.Close(endAt.Add(time.Hour))
-	if closed2.EndAt() != endAt {
+	closed2 := closed.Resolve(endAt.Add(time.Hour))
+	if closed2.ResolvedAt() != endAt {
 		t.Fatal("already closed, should not change")
 	}
 }
 
-func TestEpisodeEffectiveEndAt(t *testing.T) {
+func TestExposureWindowEffectiveEndAt(t *testing.T) {
 	now := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
 	start := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 
 	// Open episode returns now
-	ep, _ := NewOpenEpisode(start)
+	ep, _ := NewActiveWindow(start)
 	if ep.EffectiveEndAt(now) != now {
 		t.Fatalf("open EffectiveEndAt = %v", ep.EffectiveEndAt(now))
 	}
 
 	// Closed episode returns actual endAt
 	end := start.Add(time.Hour)
-	closed, _ := NewClosedEpisode(start, end)
+	closed, _ := NewResolvedWindow(start, end)
 	if closed.EffectiveEndAt(now) != end {
 		t.Fatalf("closed EffectiveEndAt = %v", closed.EffectiveEndAt(now))
 	}
 }
 
-func TestEpisodeOverlapsWindow(t *testing.T) {
+func TestExposureWindowOverlapsWindow(t *testing.T) {
 	start := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	end := start.Add(24 * time.Hour)
-	ep, _ := NewClosedEpisode(start, end)
+	ep, _ := NewResolvedWindow(start, end)
 
 	// Window fully overlapping
 	w := kernel.NewTimeWindow(start, end)
@@ -129,66 +129,66 @@ func TestEpisodeOverlapsWindow(t *testing.T) {
 	}
 }
 
-func TestEpisodeMarshalJSON(t *testing.T) {
+func TestExposureWindowMarshalJSON(t *testing.T) {
 	start := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
-	ep, _ := NewOpenEpisode(start)
+	ep, _ := NewActiveWindow(start)
 
 	b, err := json.Marshal(ep)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	var decoded Episode
+	var decoded ExposureWindow
 	if err := json.Unmarshal(b, &decoded); err != nil {
 		t.Fatal(err)
 	}
-	if !decoded.IsOpen() {
+	if !decoded.IsActive() {
 		t.Fatal("should be open after roundtrip")
 	}
-	if !decoded.StartAt().Equal(start) {
-		t.Fatalf("StartAt = %v after roundtrip", decoded.StartAt())
+	if !decoded.OpenedAt().Equal(start) {
+		t.Fatalf("StartAt = %v after roundtrip", decoded.OpenedAt())
 	}
 }
 
-func TestEpisodeUnmarshalJSON_Closed(t *testing.T) {
+func TestExposureWindowUnmarshalJSON_Closed(t *testing.T) {
 	start := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	end := start.Add(2 * time.Hour)
-	ep, _ := NewClosedEpisode(start, end)
+	ep, _ := NewResolvedWindow(start, end)
 
 	b, err := json.Marshal(ep)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	var decoded Episode
+	var decoded ExposureWindow
 	if err := json.Unmarshal(b, &decoded); err != nil {
 		t.Fatal(err)
 	}
-	if decoded.IsOpen() {
+	if decoded.IsActive() {
 		t.Fatal("should be closed")
 	}
 }
 
-func TestEpisodeUnmarshalJSON_MissingStart(t *testing.T) {
+func TestExposureWindowUnmarshalJSON_MissingStart(t *testing.T) {
 	// Missing start_at should error
 	raw := `{"start_at":"0001-01-01T00:00:00Z","end_at":"0001-01-01T00:00:00Z","open":false}`
-	var ep Episode
+	var ep ExposureWindow
 	if err := json.Unmarshal([]byte(raw), &ep); err == nil {
 		t.Fatal("expected error for zero start_at")
 	}
 }
 
 // ---------------------------------------------------------------------------
-// EpisodeHistory
+// ExposureHistory
 // ---------------------------------------------------------------------------
 
-func TestEpisodeHistoryRecord(t *testing.T) {
-	h := &EpisodeHistory{}
+func TestExposureHistoryRecord(t *testing.T) {
+	h := &ExposureHistory{}
 
 	start1 := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	start2 := time.Date(2026, 1, 5, 0, 0, 0, 0, time.UTC)
-	ep1, _ := NewClosedEpisode(start1, start1.Add(time.Hour))
-	ep2, _ := NewClosedEpisode(start2, start2.Add(time.Hour))
+	ep1, _ := NewResolvedWindow(start1, start1.Add(time.Hour))
+	ep2, _ := NewResolvedWindow(start2, start2.Add(time.Hour))
 
 	// Insert in reverse order — should still be sorted
 	h.Record(ep2)
@@ -198,20 +198,20 @@ func TestEpisodeHistoryRecord(t *testing.T) {
 	}
 
 	// Open episodes are ignored
-	open, _ := NewOpenEpisode(time.Now())
+	open, _ := NewActiveWindow(time.Now())
 	h.Record(open)
 	if h.Count() != 2 {
 		t.Fatal("open episode should be ignored")
 	}
 }
 
-func TestEpisodeHistoryRecurringViolationCount(t *testing.T) {
-	h := &EpisodeHistory{}
+func TestExposureHistoryRecurringViolationCount(t *testing.T) {
+	h := &ExposureHistory{}
 
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	for i := range 5 {
 		start := base.Add(time.Duration(i*24) * time.Hour)
-		ep, _ := NewClosedEpisode(start, start.Add(time.Hour))
+		ep, _ := NewResolvedWindow(start, start.Add(time.Hour))
 		h.Record(ep)
 	}
 
@@ -221,19 +221,19 @@ func TestEpisodeHistoryRecurringViolationCount(t *testing.T) {
 		base.Add(4*24*time.Hour+1), // day 4+
 	)
 	count := h.RecurringViolationCount(w)
-	// Episodes at day2, day3, day4 should match (start > w.Start && start < w.End)
+	// ExposureWindows at day2, day3, day4 should match (start > w.Start && start < w.End)
 	if count != 3 {
 		t.Fatalf("count = %d, want 3", count)
 	}
 }
 
-func TestEpisodeHistoryWindowSummary(t *testing.T) {
-	h := &EpisodeHistory{}
+func TestExposureHistoryWindowSummary(t *testing.T) {
+	h := &ExposureHistory{}
 
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	for i := range 3 {
 		start := base.Add(time.Duration(i+1) * 24 * time.Hour)
-		ep, _ := NewClosedEpisode(start, start.Add(2*time.Hour))
+		ep, _ := NewResolvedWindow(start, start.Add(2*time.Hour))
 		h.Record(ep)
 	}
 
@@ -248,28 +248,28 @@ func TestEpisodeHistoryWindowSummary(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// Timeline
+// ExposureLifecycle
 // ---------------------------------------------------------------------------
 
 func TestTimelineBasic(t *testing.T) {
 	a := Asset{ID: ID("bucket-1")}
-	tl, err := NewTimeline(a)
+	tl, err := NewExposureLifecycle(a)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if tl.ID != "bucket-1" {
 		t.Fatalf("ID = %v", tl.ID)
 	}
-	if !tl.CurrentlySafe() {
+	if !tl.IsSecure() {
 		t.Fatal("new timeline should be safe")
 	}
-	if tl.CurrentlyUnsafe() {
+	if tl.IsExposed() {
 		t.Fatal("new timeline should not be unsafe")
 	}
 }
 
 func TestTimelineEmptyID(t *testing.T) {
-	_, err := NewTimeline(Asset{})
+	_, err := NewExposureLifecycle(Asset{})
 	if err == nil {
 		t.Fatal("expected error for empty ID")
 	}
@@ -277,54 +277,54 @@ func TestTimelineEmptyID(t *testing.T) {
 
 func TestTimelineRecordObservation(t *testing.T) {
 	a := Asset{ID: ID("bucket-1")}
-	tl, _ := NewTimeline(a)
+	tl, _ := NewExposureLifecycle(a)
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 
 	// Zero time should error
-	if err := tl.RecordObservation(time.Time{}, false); err == nil {
+	if err := tl.RecordCheck(time.Time{}, false); err == nil {
 		t.Fatal("expected error for zero time")
 	}
 
 	// Safe observations
-	if err := tl.RecordObservation(base, false); err != nil {
+	if err := tl.RecordCheck(base, false); err != nil {
 		t.Fatal(err)
 	}
-	if !tl.CurrentlySafe() {
+	if !tl.IsSecure() {
 		t.Fatal("should be safe")
 	}
 
 	// Unsafe observation
-	if err := tl.RecordObservation(base.Add(time.Hour), true); err != nil {
+	if err := tl.RecordCheck(base.Add(time.Hour), true); err != nil {
 		t.Fatal(err)
 	}
-	if !tl.CurrentlyUnsafe() {
+	if !tl.IsExposed() {
 		t.Fatal("should be unsafe")
 	}
-	if tl.FirstUnsafeAt().IsZero() {
+	if tl.FirstExposedAt().IsZero() {
 		t.Fatal("FirstUnsafeAt should be set")
 	}
-	if tl.LastSeenUnsafeAt().IsZero() {
+	if tl.LastObservedAt().IsZero() {
 		t.Fatal("LastSeenUnsafeAt should be set")
 	}
-	if !tl.HasUnsafeTimestamps() {
+	if !tl.HasExposureTimestamps() {
 		t.Fatal("HasUnsafeTimestamps should be true")
 	}
-	if tl.MissingUnsafeTimestamps() {
+	if tl.MissingExposureTimestamps() {
 		t.Fatal("MissingUnsafeTimestamps should be false")
 	}
 }
 
 func TestTimelineUnsafeDuration(t *testing.T) {
 	a := Asset{ID: ID("bucket-1")}
-	tl, _ := NewTimeline(a)
+	tl, _ := NewExposureLifecycle(a)
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 
-	if err := tl.RecordObservation(base, true); err != nil {
+	if err := tl.RecordCheck(base, true); err != nil {
 		t.Fatal(err)
 	}
 
 	now := base.Add(24 * time.Hour)
-	d, err := tl.UnsafeDuration(now)
+	d, err := tl.ExposureDuration(now)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -333,11 +333,11 @@ func TestTimelineUnsafeDuration(t *testing.T) {
 	}
 
 	// Safe timeline
-	tl2, _ := NewTimeline(Asset{ID: "bucket-2"})
-	if recErr := tl2.RecordObservation(base, false); recErr != nil {
+	tl2, _ := NewExposureLifecycle(Asset{ID: "bucket-2"})
+	if recErr := tl2.RecordCheck(base, false); recErr != nil {
 		t.Fatal(recErr)
 	}
-	d, err = tl2.UnsafeDuration(now)
+	d, err = tl2.ExposureDuration(now)
 	if err != nil || d != 0 {
 		t.Fatalf("safe UnsafeDuration = %v, err=%v", d, err)
 	}
@@ -345,15 +345,15 @@ func TestTimelineUnsafeDuration(t *testing.T) {
 
 func TestTimelineUnsafeDurationNowBeforeStart(t *testing.T) {
 	a := Asset{ID: ID("bucket-1")}
-	tl, _ := NewTimeline(a)
+	tl, _ := NewExposureLifecycle(a)
 	base := time.Date(2026, 1, 10, 0, 0, 0, 0, time.UTC)
 
-	if err := tl.RecordObservation(base, true); err != nil {
+	if err := tl.RecordCheck(base, true); err != nil {
 		t.Fatal(err)
 	}
 
 	earlier := base.Add(-time.Hour)
-	_, err := tl.UnsafeDuration(earlier)
+	_, err := tl.ExposureDuration(earlier)
 	if err == nil {
 		t.Fatal("expected error when now < start")
 	}
@@ -361,15 +361,15 @@ func TestTimelineUnsafeDurationNowBeforeStart(t *testing.T) {
 
 func TestTimelineExceedsUnsafeThreshold(t *testing.T) {
 	a := Asset{ID: ID("bucket-1")}
-	tl, _ := NewTimeline(a)
+	tl, _ := NewExposureLifecycle(a)
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 
-	if err := tl.RecordObservation(base, true); err != nil {
+	if err := tl.RecordCheck(base, true); err != nil {
 		t.Fatal(err)
 	}
 
 	now := base.Add(48 * time.Hour)
-	exceeds, err := tl.ExceedsUnsafeThreshold(now, 24*time.Hour)
+	exceeds, err := tl.ExceedsSLA(now, 24*time.Hour)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -377,7 +377,7 @@ func TestTimelineExceedsUnsafeThreshold(t *testing.T) {
 		t.Fatal("48h > 24h threshold")
 	}
 
-	exceeds, _ = tl.ExceedsUnsafeThreshold(now, 72*time.Hour)
+	exceeds, _ = tl.ExceedsSLA(now, 72*time.Hour)
 	if exceeds {
 		t.Fatal("48h should not exceed 72h threshold")
 	}
@@ -385,47 +385,47 @@ func TestTimelineExceedsUnsafeThreshold(t *testing.T) {
 
 func TestTimelineFormatUnsafeSummary(t *testing.T) {
 	a := Asset{ID: ID("bucket-1")}
-	tl, _ := NewTimeline(a)
+	tl, _ := NewExposureLifecycle(a)
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 
-	if err := tl.RecordObservation(base, true); err != nil {
+	if err := tl.RecordCheck(base, true); err != nil {
 		t.Fatal(err)
 	}
 
 	now := base.Add(48 * time.Hour)
-	summary := tl.FormatUnsafeSummary(24*time.Hour, now)
+	summary := tl.FormatExposureSummary(24*time.Hour, now)
 	if summary == "" {
 		t.Fatal("should produce summary")
 	}
 }
 
-func TestTimelineEpisodeClosure(t *testing.T) {
+func TestTimelineExposureWindowClosure(t *testing.T) {
 	a := Asset{ID: ID("bucket-1")}
-	tl, _ := NewTimeline(a)
+	tl, _ := NewExposureLifecycle(a)
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 
 	// Unsafe -> safe transition closes episode
-	if err := tl.RecordObservation(base, true); err != nil {
+	if err := tl.RecordCheck(base, true); err != nil {
 		t.Fatal(err)
 	}
-	if err := tl.RecordObservation(base.Add(time.Hour), true); err != nil {
+	if err := tl.RecordCheck(base.Add(time.Hour), true); err != nil {
 		t.Fatal(err)
 	}
-	if err := tl.RecordObservation(base.Add(2*time.Hour), false); err != nil {
+	if err := tl.RecordCheck(base.Add(2*time.Hour), false); err != nil {
 		t.Fatal(err)
 	}
 
 	if tl.History().Count() != 1 {
 		t.Fatalf("History count = %d, want 1", tl.History().Count())
 	}
-	if !tl.CurrentlySafe() {
+	if !tl.IsSecure() {
 		t.Fatal("should be safe after transition")
 	}
 }
 
 func TestTimelineSetAsset(t *testing.T) {
 	a := Asset{ID: ID("bucket-1"), Type: "old_type"}
-	tl, _ := NewTimeline(a)
+	tl, _ := NewExposureLifecycle(a)
 
 	newAsset := Asset{ID: ID("bucket-1"), Type: "new_type"}
 	tl.SetAsset(newAsset)
@@ -434,19 +434,19 @@ func TestTimelineSetAsset(t *testing.T) {
 	}
 }
 
-func TestTimelineHasOpenEpisode(t *testing.T) {
+func TestTimelineHasActiveWindow(t *testing.T) {
 	a := Asset{ID: ID("bucket-1")}
-	tl, _ := NewTimeline(a)
+	tl, _ := NewExposureLifecycle(a)
 
-	if tl.HasOpenEpisode() {
+	if tl.HasActiveWindow() {
 		t.Fatal("no observation yet")
 	}
 
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
-	if err := tl.RecordObservation(base, true); err != nil {
+	if err := tl.RecordCheck(base, true); err != nil {
 		t.Fatal(err)
 	}
-	if !tl.HasOpenEpisode() {
+	if !tl.HasActiveWindow() {
 		t.Fatal("should have open episode")
 	}
 }
@@ -523,50 +523,50 @@ func TestObservationStatsOutOfOrder(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestChangeTypeIsValid(t *testing.T) {
-	if !ChangeAdded.IsValid() {
-		t.Fatal("added")
+	if !DriftProvisioned.IsValid() {
+		t.Fatal("PROVISIONED")
 	}
-	if !ChangeRemoved.IsValid() {
-		t.Fatal("removed")
+	if !DriftDecommissioned.IsValid() {
+		t.Fatal("DECOMMISSIONED")
 	}
-	if !ChangeModified.IsValid() {
-		t.Fatal("modified")
+	if !DriftReconfigured.IsValid() {
+		t.Fatal("RECONFIGURED")
 	}
-	if ChangeType("bogus").IsValid() {
+	if DriftType("bogus").IsValid() {
 		t.Fatal("bogus should not be valid")
 	}
 }
 
 func TestObservationDeltaSummaryIncrement(t *testing.T) {
-	s := &ObservationDeltaSummary{}
-	s.Increment(ChangeAdded)
-	s.Increment(ChangeAdded)
-	s.Increment(ChangeRemoved)
-	s.Increment(ChangeModified)
+	s := &DriftSummary{}
+	s.Record(DriftProvisioned)
+	s.Record(DriftProvisioned)
+	s.Record(DriftDecommissioned)
+	s.Record(DriftReconfigured)
 
-	if s.Added() != 2 {
-		t.Fatalf("Added = %d", s.Added())
+	if s.Provisioned() != 2 {
+		t.Fatalf("Added = %d", s.Provisioned())
 	}
-	if s.Removed() != 1 {
-		t.Fatalf("Removed = %d", s.Removed())
+	if s.Decommissioned() != 1 {
+		t.Fatalf("Removed = %d", s.Decommissioned())
 	}
-	if s.Modified() != 1 {
-		t.Fatalf("Modified = %d", s.Modified())
+	if s.Reconfigured() != 1 {
+		t.Fatalf("Modified = %d", s.Reconfigured())
 	}
 	if s.Total() != 4 {
 		t.Fatalf("Total = %d", s.Total())
 	}
 
 	// Invalid type should not increment
-	s.Increment(ChangeType("invalid"))
+	s.Record(DriftType("invalid"))
 	if s.Total() != 4 {
 		t.Fatal("invalid type should not change total")
 	}
 }
 
 func TestObservationDeltaSummaryJSON(t *testing.T) {
-	s := ObservationDeltaSummary{}
-	s.Increment(ChangeAdded)
+	s := DriftSummary{}
+	s.Record(DriftProvisioned)
 	b, err := json.Marshal(s)
 	if err != nil {
 		t.Fatal(err)
@@ -575,21 +575,21 @@ func TestObservationDeltaSummaryJSON(t *testing.T) {
 	if err := json.Unmarshal(b, &decoded); err != nil {
 		t.Fatal(err)
 	}
-	if decoded["added"] != 1 || decoded["total"] != 1 {
+	if decoded["provisioned"] != 1 || decoded["total"] != 1 {
 		t.Fatalf("decoded = %v", decoded)
 	}
 }
 
 func TestSummarizeDeltaChanges(t *testing.T) {
-	changes := []Diff{
-		{ChangeType: ChangeAdded},
-		{ChangeType: ChangeModified},
-		{ChangeType: ChangeRemoved},
-		{ChangeType: ChangeModified},
+	changes := []AssetChange{
+		{Action: DriftProvisioned},
+		{Action: DriftReconfigured},
+		{Action: DriftDecommissioned},
+		{Action: DriftReconfigured},
 	}
-	s := SummarizeDeltaChanges(changes)
-	if s.Added() != 1 || s.Removed() != 1 || s.Modified() != 2 || s.Total() != 4 {
-		t.Fatalf("summary = added:%d removed:%d modified:%d total:%d", s.Added(), s.Removed(), s.Modified(), s.Total())
+	s := SummarizeDrift(changes)
+	if s.Provisioned() != 1 || s.Decommissioned() != 1 || s.Reconfigured() != 2 || s.Total() != 4 {
+		t.Fatalf("summary = added:%d removed:%d modified:%d total:%d", s.Provisioned(), s.Decommissioned(), s.Reconfigured(), s.Total())
 	}
 }
 
@@ -601,7 +601,7 @@ func TestLatestTwoSnapshots(t *testing.T) {
 		{CapturedAt: base.Add(time.Hour)},
 	}
 
-	prev, curr, err := LatestTwoSnapshots(snaps)
+	prev, curr, err := GetStateTransition(snaps)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -614,7 +614,7 @@ func TestLatestTwoSnapshots(t *testing.T) {
 }
 
 func TestLatestTwoSnapshotsInsufficient(t *testing.T) {
-	_, _, err := LatestTwoSnapshots([]Snapshot{{CapturedAt: time.Now()}})
+	_, _, err := GetStateTransition([]Snapshot{{CapturedAt: time.Now()}})
 	if err == nil {
 		t.Fatal("expected error for insufficient snapshots")
 	}
@@ -642,7 +642,7 @@ func TestDiffAssetsTypeChange(t *testing.T) {
 	changes := DiffAssets(a, b)
 	found := false
 	for _, c := range changes {
-		if c.Path == "_meta.type" {
+		if c.Attribute == "_meta.type" {
 			found = true
 		}
 	}
@@ -655,7 +655,7 @@ func TestDiffAssetsPropertyChange(t *testing.T) {
 	a := Asset{ID: "bucket-1", Properties: map[string]any{"key": "old"}}
 	b := Asset{ID: "bucket-1", Properties: map[string]any{"key": "new"}}
 	changes := DiffAssets(a, b)
-	if len(changes) != 1 || changes[0].Path != "properties.key" {
+	if len(changes) != 1 || changes[0].Attribute != "properties.key" {
 		t.Fatalf("changes = %+v", changes)
 	}
 }
@@ -677,7 +677,7 @@ func TestAppendPropertyPath(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// ComputeObservationDelta
+// ComputeDrift
 // ---------------------------------------------------------------------------
 
 func TestComputeObservationDelta(t *testing.T) {
@@ -697,18 +697,18 @@ func TestComputeObservationDelta(t *testing.T) {
 		},
 	}
 
-	delta := ComputeObservationDelta(prev, curr)
+	delta := ComputeDrift(prev, curr)
 	if delta.Summary.Total() != 3 {
 		t.Fatalf("Total = %d (expected 3: 1 modified, 1 removed, 1 added)", delta.Summary.Total())
 	}
-	if delta.Summary.Added() != 1 {
-		t.Fatalf("Added = %d", delta.Summary.Added())
+	if delta.Summary.Provisioned() != 1 {
+		t.Fatalf("Added = %d", delta.Summary.Provisioned())
 	}
-	if delta.Summary.Removed() != 1 {
-		t.Fatalf("Removed = %d", delta.Summary.Removed())
+	if delta.Summary.Decommissioned() != 1 {
+		t.Fatalf("Removed = %d", delta.Summary.Decommissioned())
 	}
-	if delta.Summary.Modified() != 1 {
-		t.Fatalf("Modified = %d", delta.Summary.Modified())
+	if delta.Summary.Reconfigured() != 1 {
+		t.Fatalf("Modified = %d", delta.Summary.Reconfigured())
 	}
 }
 
@@ -834,18 +834,18 @@ func TestSnapshotHasTimestamp(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// ScopeFilter
+// AuditScope
 // ---------------------------------------------------------------------------
 
 func TestUniversalFilter(t *testing.T) {
 	a := Asset{ID: "anything"}
-	if !UniversalFilter.IsInScope(a) {
+	if !GlobalScope.IsInScope(a) {
 		t.Fatal("universal should match all")
 	}
 }
 
 func TestNewScopeFilterAllowlist(t *testing.T) {
-	f := NewScopeFilterFromAllowlist([]string{"bucket-1", "bucket-2"})
+	f := NewAuditScopeFromAllowlist([]string{"bucket-1", "bucket-2"})
 	if f.IsInScope(Asset{ID: "bucket-1"}) != true {
 		t.Fatal("should match bucket-1")
 	}
@@ -855,20 +855,20 @@ func TestNewScopeFilterAllowlist(t *testing.T) {
 }
 
 func TestNewScopeFilterEmptyReturnsUniversal(t *testing.T) {
-	f := NewScopeFilter(nil, nil)
-	if f != UniversalFilter {
+	f := NewAuditScope(nil, nil)
+	if f != GlobalScope {
 		t.Fatal("empty constraints should return universal")
 	}
 }
 
 func TestFilterSnapshots(t *testing.T) {
-	f := NewScopeFilterFromAllowlist([]string{"bucket-1"})
+	f := NewAuditScopeFromAllowlist([]string{"bucket-1"})
 	snaps := []Snapshot{
 		{Assets: []Asset{{ID: "bucket-1"}, {ID: "bucket-2"}}},
 		{Assets: []Asset{{ID: "bucket-3"}}},
 	}
 
-	filtered := FilterSnapshots(f, snaps)
+	filtered := ApplyScopeToInventory(f, snaps)
 	if len(filtered) != 1 {
 		t.Fatalf("expected 1 filtered snapshot, got %d", len(filtered))
 	}
@@ -879,10 +879,10 @@ func TestFilterSnapshots(t *testing.T) {
 
 func TestFilterSnapshotsNilOrUniversal(t *testing.T) {
 	snaps := []Snapshot{{Assets: []Asset{{ID: "a"}}}}
-	if got := FilterSnapshots(nil, snaps); len(got) != 1 {
+	if got := ApplyScopeToInventory(nil, snaps); len(got) != 1 {
 		t.Fatal("nil filter should pass through")
 	}
-	if got := FilterSnapshots(UniversalFilter, snaps); len(got) != 1 {
+	if got := ApplyScopeToInventory(GlobalScope, snaps); len(got) != 1 {
 		t.Fatal("universal filter should pass through")
 	}
 }
@@ -892,17 +892,17 @@ func TestFilterSnapshotsNilOrUniversal(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestApplyFilter(t *testing.T) {
-	delta := ObservationDelta{
-		Changes: []Diff{
-			{AssetID: "bucket-1", ChangeType: ChangeAdded, ToType: "aws_s3_bucket"},
-			{AssetID: "bucket-2", ChangeType: ChangeRemoved, FromType: "aws_s3_bucket"},
-			{AssetID: "vm-1", ChangeType: ChangeModified, FromType: "aws_ec2_instance", ToType: "aws_ec2_instance"},
+	delta := InfrastructureDrift{
+		Changes: []AssetChange{
+			{AssetID: "bucket-1", Action: DriftProvisioned, CurrentType: "aws_s3_bucket"},
+			{AssetID: "bucket-2", Action: DriftDecommissioned, PreviousType: "aws_s3_bucket"},
+			{AssetID: "vm-1", Action: DriftReconfigured, PreviousType: "aws_ec2_instance", CurrentType: "aws_ec2_instance"},
 		},
 	}
 
 	// Filter by change type
-	filtered := delta.ApplyFilter(FilterOptions{ChangeTypes: []ChangeType{ChangeAdded}})
-	if filtered.Summary.Total() != 1 || filtered.Summary.Added() != 1 {
+	filtered := delta.ApplyFilter(FilterOptions{ChangeTypes: []DriftType{DriftProvisioned}})
+	if filtered.Summary.Total() != 1 || filtered.Summary.Provisioned() != 1 {
 		t.Fatalf("change type filter: %+v", filtered.Summary)
 	}
 

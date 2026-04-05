@@ -71,9 +71,9 @@ func recordValidationIssues(req readinessValidationRequest) error {
 		req.Report.RecordIssue(validation.Check{
 			Name:    string(issue.RuleID),
 			Status:  readinessIssueStatus(issue),
-			Message: issue.Action,
-			Fix:     issue.Action,
-			Command: issue.Command,
+			Message: issue.Remediation,
+			Fix:     issue.Remediation,
+			Command: issue.FixCommand,
 		})
 	}
 	return nil

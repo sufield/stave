@@ -88,7 +88,7 @@ type CapInput struct {
 type Output struct {
 	Classifications []domainexposure.Classification  `json:"classifications"`
 	BucketAccess    *domainexposure.BucketAccess     `json:"bucket_access,omitempty"`
-	Visibility      *domainexposure.VisibilityResult `json:"visibility,omitempty"`
+	Visibility      *domainexposure.ResourceExposure `json:"visibility,omitempty"`
 }
 
 func run(cmd *cobra.Command, file string) error {
@@ -130,7 +130,7 @@ func run(cmd *cobra.Command, file string) error {
 			EnforceStrictPublicInheritance: a.EnforceStrict,
 		}
 
-		vis := domainexposure.BuildVisibilityResult(identity, resource, gov)
+		vis := domainexposure.BuildResourceExposure(identity, resource, gov)
 		output.Visibility = &vis
 
 		bucketAccess := domainexposure.ResolveBucketAccess(domainexposure.BucketAccessInput{

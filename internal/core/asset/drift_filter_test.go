@@ -7,16 +7,16 @@ import (
 )
 
 func TestObservationDeltaApplyFilter(t *testing.T) {
-	delta := ObservationDelta{
-		Changes: []Diff{
-			{AssetID: "bucket-a", ChangeType: ChangeAdded, ToType: "res:aws:s3:bucket"},
-			{AssetID: "bucket-b", ChangeType: ChangeModified, FromType: "res:aws:s3:bucket", ToType: "res:aws:s3:bucket"},
-			{AssetID: "queue-a", ChangeType: ChangeRemoved, FromType: "res:aws:sqs:queue"},
+	delta := InfrastructureDrift{
+		Changes: []AssetChange{
+			{AssetID: "bucket-a", Action: DriftProvisioned, CurrentType: "res:aws:s3:bucket"},
+			{AssetID: "bucket-b", Action: DriftReconfigured, PreviousType: "res:aws:s3:bucket", CurrentType: "res:aws:s3:bucket"},
+			{AssetID: "queue-a", Action: DriftDecommissioned, PreviousType: "res:aws:sqs:queue"},
 		},
 	}
 
 	filtered := delta.ApplyFilter(FilterOptions{
-		ChangeTypes: []ChangeType{ChangeModified, ChangeRemoved},
+		ChangeTypes: []DriftType{DriftReconfigured, DriftDecommissioned},
 		AssetTypes:  []kernel.AssetType{"res:aws:s3:bucket"},
 		AssetID:     "bucket",
 	})
@@ -28,7 +28,7 @@ func TestObservationDeltaApplyFilter(t *testing.T) {
 		t.Fatalf("unexpected filtered resource: %+v", filtered.Changes[0])
 	}
 
-	if filtered.Summary.Modified() != 1 || filtered.Summary.Total() != 1 {
+	if filtered.Summary.Reconfigured() != 1 || filtered.Summary.Total() != 1 {
 		t.Fatalf("unexpected filtered summary: %+v", filtered.Summary)
 	}
 }

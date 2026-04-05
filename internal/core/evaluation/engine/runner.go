@@ -101,7 +101,7 @@ type runSession struct {
 	runner      *Runner
 	snapshots   []asset.Snapshot // sorted by CapturedAt
 	now         time.Time
-	acc         *Accumulator
+	acc         *AssessmentCollector
 	identityIdx IdentityIndex
 	opts        EvaluateOptions
 }
@@ -129,7 +129,7 @@ func (e *Runner) Evaluate(snapshots []asset.Snapshot, opts ...EvaluateOptions) (
 		runner:      e,
 		snapshots:   sorted,
 		now:         e.deterministicNow(sorted),
-		acc:         NewAccumulator(assetHint),
+		acc:         NewCollector(assetHint),
 		identityIdx: BuildIdentityIndex(sorted),
 		opts:        opt,
 	}
@@ -137,7 +137,7 @@ func (e *Runner) Evaluate(snapshots []asset.Snapshot, opts ...EvaluateOptions) (
 	for _, ctl := range e.Controls {
 		// Skip control types the evaluator cannot process.
 		if !ctl.IsEvaluatable() {
-			sess.acc.AddSkippedControl(
+			sess.acc.RecordSkippedControl(
 				ctl.ID,
 				ctl.Name,
 				"type not evaluatable: "+ctl.Type.String(),
@@ -153,7 +153,7 @@ func (e *Runner) Evaluate(snapshots []asset.Snapshot, opts ...EvaluateOptions) (
 // evaluateControl evaluates a single control across all asset timelines.
 func (s *runSession) evaluateControl(
 	ctl *policy.ControlDefinition,
-	timelines map[asset.ID]*asset.Timeline,
+	timelines map[asset.ID]*asset.ExposureLifecycle,
 ) {
 	strategy := s.runner.strategyFor(ctl)
 	// Deterministic iteration: sort asset IDs first.
@@ -166,10 +166,10 @@ func (s *runSession) evaluateControl(
 		timeline := timelines[assetID]
 		// Check if asset is exempted.
 		if rule := s.runner.Exemptions.ShouldExempt(assetID); rule != nil {
-			if s.acc.TrackExemption(assetID) {
-				s.acc.AddExemptedAsset(assetID, rule.Pattern, rule.Reason)
+			if s.acc.RecordExemption(assetID) {
+				s.acc.RecordExemptedAsset(assetID, rule.Pattern, rule.Reason)
 			}
-			s.acc.AddRow(evaluation.ResourceCheck{
+			s.acc.RecordCheck(evaluation.ResourceCheck{
 				ControlID:   ctl.ID,
 				AssetID:     assetID,
 				AssetType:   timeline.Asset().Type,
@@ -181,13 +181,13 @@ func (s *runSession) evaluateControl(
 			continue
 		}
 		// Track assets that were actually evaluated (not exempted).
-		s.acc.seenAssets.Add(assetID)
-		if timeline.CurrentlyUnsafe() {
-			s.acc.unsafeAssets.Add(assetID)
+		s.acc.seenAssets.register(assetID)
+		if timeline.IsExposed() {
+			s.acc.nonCompliantAssets.register(assetID)
 		}
 		observation, findings := strategy.Evaluate(timeline, s.now, s.identityIdx)
-		s.acc.AddRow(observation)
-		s.acc.AddFindings(findings)
+		s.acc.RecordCheck(observation)
+		s.acc.RecordFindings(findings)
 	}
 }
 
@@ -196,11 +196,11 @@ func (s *runSession) buildResult() evaluation.ComplianceReport {
 	// Sort findings for deterministic output.
 	evaluation.SortFindings(s.acc.findings)
 	// Sort exempted assets for deterministic output.
-	slices.SortFunc(s.acc.exemptedByAst, func(a, b asset.ExemptedAsset) int {
+	slices.SortFunc(s.acc.exemptedAssets, func(a, b asset.ExemptedAsset) int {
 		return cmp.Compare(a.ID, b.ID)
 	})
 	// Sort rows for deterministic output (by control_id, then asset_id).
-	slices.SortFunc(s.acc.rows, func(a, b evaluation.ResourceCheck) int {
+	slices.SortFunc(s.acc.checks, func(a, b evaluation.ResourceCheck) int {
 		if c := cmp.Compare(a.ControlID, b.ControlID); c != 0 {
 			return c
 		}
@@ -229,16 +229,16 @@ func (s *runSession) buildResult() evaluation.ComplianceReport {
 		},
 		Summary: evaluation.ComplianceSummary{
 			TotalAssets:      len(s.acc.seenAssets),
-			ExposedResources: len(s.acc.unsafeAssets),
+			ExposedResources: len(s.acc.nonCompliantAssets),
 			Violations:       len(regularFindings),
 		},
 		SecurityState:    status,
 		RiskSignals:      upcoming,
 		Findings:         regularFindings,
 		ExceptedFindings: exceptedFindings,
-		SkippedControls:  s.acc.skippedByCtl,
-		ExemptedAssets:   s.acc.exemptedByAst,
-		Checks:           s.acc.rows,
+		SkippedControls:  s.acc.skippedControls,
+		ExemptedAssets:   s.acc.exemptedAssets,
+		Checks:           s.acc.checks,
 	}
 }
 

@@ -49,7 +49,7 @@ func resolveOptions(opts []Option) options {
 func DiagnosticsResult(diags []Diagnostic, action string, strict bool, opts ...Option) *diag.Assessment {
 	o := resolveOptions(opts)
 
-	externalErrors := make([]diag.ExternalError, 0, len(diags))
+	externalErrors := make([]diag.RawIssue, 0, len(diags))
 	for _, d := range diags {
 		cat := classify(d)
 		if !strict && cat == CatAdditionalProperties {
@@ -62,10 +62,10 @@ func DiagnosticsResult(diags []Diagnostic, action string, strict bool, opts ...O
 		})
 	}
 
-	return diag.NewTranslator(diag.RuleSchemaViolation,
-		diag.WithDefaultAction(action),
+	return diag.NewMapper(diag.RuleSchemaViolation,
+		diag.WithDefaultRemediation(action),
 		diag.WithPathPrefix(o.pathPrefix),
-	).Translate(externalErrors)
+	).Map(externalErrors)
 }
 
 // ValidateControlYAML validates a control document against its contract schema.
@@ -176,10 +176,10 @@ func (e schemaError) Code() string        { return e.code }
 func syntaxErrorResult(fmtName string, err error) *diag.Assessment {
 	result := diag.NewAssessment()
 	result.Record(
-		diag.New(diag.RuleSchemaViolation).
+		diag.NewFinding(diag.RuleSchemaViolation).
 			Error().
-			Action(fmt.Sprintf("Fix %s syntax errors", fmtName)).
-			WithSensitive("error", fmt.Sprintf("invalid %s: %v", fmtName, err)).
+			Remediation(fmt.Sprintf("Fix %s syntax errors", fmtName)).
+			SensitiveAttribute("error", fmt.Sprintf("invalid %s: %v", fmtName, err)).
 			Build(),
 	)
 	return result
@@ -188,11 +188,11 @@ func syntaxErrorResult(fmtName string, err error) *diag.Assessment {
 func missingFieldResult(field, action string) *diag.Assessment {
 	result := diag.NewAssessment()
 	result.Record(
-		diag.New(diag.RuleSchemaViolation).
+		diag.NewFinding(diag.RuleSchemaViolation).
 			Error().
-			Action(action).
-			With("path", field).
-			With("message", "missing required field").
+			Remediation(action).
+			Attribute("path", field).
+			Attribute("message", "missing required field").
 			Build(),
 	)
 	return result
@@ -201,11 +201,11 @@ func missingFieldResult(field, action string) *diag.Assessment {
 func unsupportedVersionResult(version string, supported []string, action string) *diag.Assessment {
 	result := diag.NewAssessment()
 	result.Record(
-		diag.New(diag.RuleUnsupportedSchemaVersion).
+		diag.NewFinding(diag.RuleUnsupportedSchemaVersion).
 			Error().
-			Action(action).
-			With("version", version).
-			With("supported", strings.Join(supported, ", ")).
+			Remediation(action).
+			Attribute("version", version).
+			Attribute("supported", strings.Join(supported, ", ")).
 			Build(),
 	)
 	return result

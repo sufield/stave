@@ -4,11 +4,11 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
-// ResolveEffectiveVisibility computes the final exposure state after applying governance blocks.
-func ResolveEffectiveVisibility(identity, resource Visibility, gov GovernanceOverrides) EffectiveVisibility {
+// ResolveAccess computes the final exposure state after applying guardrails.
+func ResolveAccess(identity, resource Visibility, gov GovernanceOverrides) ResolvedAccess {
 	mask := resolveMask(identity, resource, gov)
 
-	visibility := EffectiveVisibility{
+	resolved := ResolvedAccess{
 		Read:       mask.Has(PermRead),
 		Write:      mask.Has(PermWrite),
 		List:       mask.Has(PermList),
@@ -17,60 +17,60 @@ func ResolveEffectiveVisibility(identity, resource Visibility, gov GovernanceOve
 		AdminWrite: mask.Has(PermMetadataWrite),
 	}
 
-	// Latency: Would this be public if Governance didn't block it?
+	// Latency: Would this be public if guardrails didn't block it?
 	rawPublicRead := identity.Public.Read || resource.Public.Read
-	visibility.IsLatent = rawPublicRead && !visibility.Read
+	resolved.IsLatent = rawPublicRead && !resolved.Read
 
-	visibility.PrincipalScope = resolvePrincipalScope(identity, resource, mask)
+	resolved.PrincipalScope = resolvePrincipalScope(identity, resource, mask)
 
-	return visibility
+	return resolved
 }
 
-// BuildVisibilityResult constructs the flattened "Fact" structure used for storage/diagnostics.
-func BuildVisibilityResult(identity, resource Visibility, gov GovernanceOverrides) VisibilityResult {
-	effective := ResolveEffectiveVisibility(identity, resource, gov)
-	return buildVisibilityFromEffective(identity, resource, gov, effective)
+// BuildResourceExposure constructs the flattened reachability state used for storage/diagnostics.
+func BuildResourceExposure(identity, resource Visibility, gov GovernanceOverrides) ResourceExposure {
+	resolved := ResolveAccess(identity, resource, gov)
+	return buildExposureFromResolved(identity, resource, gov, resolved)
 }
 
-// buildVisibilityFromEffective constructs a VisibilityResult from pre-computed effective visibility.
-// This allows callers that already have the EffectiveVisibility (e.g. ResolveBucketAccess)
-// to avoid a redundant ResolveEffectiveVisibility call.
-func buildVisibilityFromEffective(identity, resource Visibility, gov GovernanceOverrides, effective EffectiveVisibility) VisibilityResult {
-	visibilityResult := VisibilityResult{
-		// Governance Status
-		IdentityExposureBlocked: gov.BlockIdentityBoundPublicAccess,
-		ResourceExposureBlocked: gov.BlockResourceBoundPublicAccess,
+// buildExposureFromResolved constructs a ResourceExposure from pre-computed resolved access.
+// This allows callers that already have the ResolvedAccess (e.g. ResolveBucketAccess)
+// to avoid a redundant ResolveAccess call.
+func buildExposureFromResolved(identity, resource Visibility, gov GovernanceOverrides, resolved ResolvedAccess) ResourceExposure {
+	exposure := ResourceExposure{
+		// Guardrail Status
+		IdentityGuardrailActive: gov.BlockIdentityBoundPublicAccess,
+		ResourceGuardrailActive: gov.BlockResourceBoundPublicAccess,
 
-		// Effective Access
-		PublicRead:   effective.Read,
-		PublicWrite:  effective.Write,
-		PublicList:   effective.List,
-		PublicDelete: effective.Delete,
-		PublicAdmin:  effective.AdminRead || effective.AdminWrite,
+		// Effective Exposure
+		PublicRead:   resolved.Read,
+		PublicWrite:  resolved.Write,
+		PublicList:   resolved.List,
+		PublicDelete: resolved.Delete,
+		PublicAdmin:  resolved.AdminRead || resolved.AdminWrite,
 
-		// Origin Signals (Identity)
+		// Access Vectors (Identity)
 		ReadViaIdentity: identity.Public.Read,
 		ListViaIdentity: identity.Public.List,
 
-		// Origin Signals (Resource)
+		// Access Vectors (Resource)
 		ReadViaResource:  resource.Public.Read,
 		WriteViaResource: resource.Public.Write && !gov.BlockResourceBoundPublicAccess,
 		AdminViaResource: resource.Public.Admin && !gov.BlockResourceBoundPublicAccess,
 
-		// Latent Signals
-		LatentPublicRead: effective.IsLatent,
-		LatentPublicList: identity.Public.List && !effective.List,
+		// Latent Reachability
+		LatentPublicRead: resolved.IsLatent,
+		LatentPublicList: identity.Public.List && !resolved.List,
 	}
 
-	// Authenticated Access (Post-Governance)
-	visibilityResult.AuthenticatedRead = resolveAuthField(identity.Authenticated.Read, resource.Authenticated.Read, gov)
-	visibilityResult.AuthenticatedWrite = resolveAuthField(identity.Authenticated.Write, resource.Authenticated.Write, gov)
-	visibilityResult.AuthenticatedAdmin = resolveAuthField(identity.Authenticated.Admin, resource.Authenticated.Admin, gov)
+	// Cross-Account / Authenticated Exposure (Post-Guardrails)
+	exposure.AuthenticatedRead = resolveAuthField(identity.Authenticated.Read, resource.Authenticated.Read, gov)
+	exposure.AuthenticatedWrite = resolveAuthField(identity.Authenticated.Write, resource.Authenticated.Write, gov)
+	exposure.AuthenticatedAdmin = resolveAuthField(identity.Authenticated.Admin, resource.Authenticated.Admin, gov)
 
-	return visibilityResult
+	return exposure
 }
 
-// --- Internal SecurityState Logic ---
+// --- Internal Resolution Logic ---
 
 func resolveMask(identity, resource Visibility, gov GovernanceOverrides) Permission {
 	var mask Permission
@@ -100,7 +100,7 @@ func resolvePrincipalScope(identity, resource Visibility, effective Permission) 
 }
 
 // resolveAuthField merges authenticated permissions from Identity and Resource sources,
-// respecting the same governance blocks that apply to public access.
+// respecting the same guardrails that apply to public access.
 func resolveAuthField(identityVal, resourceVal bool, gov GovernanceOverrides) bool {
 	identityAllowed := identityVal && !gov.BlockIdentityBoundPublicAccess
 	resourceAllowed := resourceVal && !gov.BlockResourceBoundPublicAccess

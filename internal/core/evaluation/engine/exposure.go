@@ -20,13 +20,13 @@ const (
 // prefixEvaluator groups the timeline and control that travel together
 // through every prefix-exposure helper, eliminating repeated parameter passing.
 type prefixEvaluator struct {
-	timeline *asset.Timeline
+	timeline *asset.ExposureLifecycle
 	ctl      *policy.ControlDefinition
 }
 
 // EvaluatePrefixExposureForRow evaluates whether protected prefixes are publicly readable.
 func EvaluatePrefixExposureForRow(
-	timeline *asset.Timeline,
+	timeline *asset.ExposureLifecycle,
 	ctl *policy.ControlDefinition,
 ) (evaluation.ResourceCheck, []evaluation.Finding) {
 	e := prefixEvaluator{timeline: timeline, ctl: ctl}
@@ -51,7 +51,7 @@ func (e *prefixEvaluator) evaluate() (evaluation.ResourceCheck, []evaluation.Fin
 	return e.assetExposure(prefixRow, protected)
 }
 
-func newPrefixExposureRow(t *asset.Timeline, ctl *policy.ControlDefinition) evaluation.ResourceCheck {
+func newPrefixExposureRow(t *asset.ExposureLifecycle, ctl *policy.ControlDefinition) evaluation.ResourceCheck {
 	resType := t.Asset().Type
 	return evaluation.ResourceCheck{
 		ControlID:   ctl.ID,

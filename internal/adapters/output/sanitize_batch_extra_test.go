@@ -45,8 +45,8 @@ func TestSanitizeBaselineEntries_WithEntries(t *testing.T) {
 }
 
 func TestSanitizeObservationDelta_NilSanitizer(t *testing.T) {
-	delta := asset.ObservationDelta{
-		Changes: []asset.Diff{{AssetID: "res-1"}},
+	delta := asset.InfrastructureDrift{
+		Changes: []asset.AssetChange{{AssetID: "res-1"}},
 	}
 	result := output.SanitizeObservationDelta(nil, delta)
 	if result.Changes[0].AssetID != "res-1" {
@@ -56,7 +56,7 @@ func TestSanitizeObservationDelta_NilSanitizer(t *testing.T) {
 
 func TestSanitizeObservationDelta_EmptyChanges(t *testing.T) {
 	s := sanitize.New(sanitize.WithIDSanitization(true))
-	delta := asset.ObservationDelta{}
+	delta := asset.InfrastructureDrift{}
 	result := output.SanitizeObservationDelta(s, delta)
 	if len(result.Changes) != 0 {
 		t.Error("expected empty changes")
@@ -65,9 +65,9 @@ func TestSanitizeObservationDelta_EmptyChanges(t *testing.T) {
 
 func TestSanitizeObservationDelta_WithChanges(t *testing.T) {
 	s := sanitize.New(sanitize.WithIDSanitization(true))
-	delta := asset.ObservationDelta{
-		Changes: []asset.Diff{
-			{AssetID: "secret-bucket", ChangeType: asset.ChangeAdded},
+	delta := asset.InfrastructureDrift{
+		Changes: []asset.AssetChange{
+			{AssetID: "secret-bucket", Action: asset.DriftProvisioned},
 		},
 	}
 	result := output.SanitizeObservationDelta(s, delta)

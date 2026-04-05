@@ -12,70 +12,70 @@ import (
 )
 
 // ---------------------------------------------------------------------------
-// assetIDSet
+// assetRegistry
 // ---------------------------------------------------------------------------
 
 func TestAssetIDSet(t *testing.T) {
-	s := make(assetIDSet)
-	if !s.Add("a") {
+	s := make(assetRegistry)
+	if !s.register("a") {
 		t.Fatal("first add should return true")
 	}
-	if s.Add("a") {
+	if s.register("a") {
 		t.Fatal("duplicate add should return false")
 	}
-	if !s.Add("b") {
+	if !s.register("b") {
 		t.Fatal("different add should return true")
 	}
 }
 
 // ---------------------------------------------------------------------------
-// Accumulator
+// AssessmentCollector
 // ---------------------------------------------------------------------------
 
-func TestAccumulatorTrackExemption(t *testing.T) {
-	acc := NewAccumulator(10)
-	if !acc.TrackExemption("asset-1") {
+func TestAssessmentCollectorTrackExemption(t *testing.T) {
+	acc := NewCollector(10)
+	if !acc.RecordExemption("asset-1") {
 		t.Fatal("first exemption should return true")
 	}
-	if acc.TrackExemption("asset-1") {
+	if acc.RecordExemption("asset-1") {
 		t.Fatal("duplicate exemption should return false")
 	}
 }
 
-func TestAccumulatorAddSkippedControl(t *testing.T) {
-	acc := NewAccumulator(0)
-	acc.AddSkippedControl("CTL.TEST.001", "test-ctrl", "unsupported type")
-	if len(acc.skippedByCtl) != 1 {
-		t.Fatalf("len = %d", len(acc.skippedByCtl))
+func TestAssessmentCollectorAddSkippedControl(t *testing.T) {
+	acc := NewCollector(0)
+	acc.RecordSkippedControl("CTL.TEST.001", "test-ctrl", "unsupported type")
+	if len(acc.skippedControls) != 1 {
+		t.Fatalf("len = %d", len(acc.skippedControls))
 	}
-	if acc.skippedByCtl[0].Reason != "unsupported type" {
-		t.Fatalf("Reason = %q", acc.skippedByCtl[0].Reason)
-	}
-}
-
-func TestAccumulatorAddExemptedAsset(t *testing.T) {
-	acc := NewAccumulator(0)
-	acc.AddExemptedAsset("bucket-1", "bucket-*", "temp data")
-	if len(acc.exemptedByAst) != 1 {
-		t.Fatalf("len = %d", len(acc.exemptedByAst))
-	}
-	if acc.exemptedByAst[0].ID != "bucket-1" {
-		t.Fatalf("ID = %v", acc.exemptedByAst[0].ID)
+	if acc.skippedControls[0].Reason != "unsupported type" {
+		t.Fatalf("Reason = %q", acc.skippedControls[0].Reason)
 	}
 }
 
-func TestAccumulatorAddRow(t *testing.T) {
-	acc := NewAccumulator(0)
-	acc.AddRow(evaluation.ResourceCheck{ControlID: "CTL.A.001", AssetID: "res-1"})
-	if len(acc.rows) != 1 {
-		t.Fatalf("len = %d", len(acc.rows))
+func TestAssessmentCollectorAddExemptedAsset(t *testing.T) {
+	acc := NewCollector(0)
+	acc.RecordExemptedAsset("bucket-1", "bucket-*", "temp data")
+	if len(acc.exemptedAssets) != 1 {
+		t.Fatalf("len = %d", len(acc.exemptedAssets))
+	}
+	if acc.exemptedAssets[0].ID != "bucket-1" {
+		t.Fatalf("ID = %v", acc.exemptedAssets[0].ID)
 	}
 }
 
-func TestAccumulatorAddFindings(t *testing.T) {
-	acc := NewAccumulator(0)
+func TestAssessmentCollectorAddRow(t *testing.T) {
+	acc := NewCollector(0)
+	acc.RecordCheck(evaluation.ResourceCheck{ControlID: "CTL.A.001", AssetID: "res-1"})
+	if len(acc.checks) != 1 {
+		t.Fatalf("len = %d", len(acc.checks))
+	}
+}
+
+func TestAssessmentCollectorAddFindings(t *testing.T) {
+	acc := NewCollector(0)
 	f := &evaluation.Finding{ControlID: "CTL.A.001"}
-	acc.AddFindings([]*evaluation.Finding{f, nil})
+	acc.RecordFindings([]*evaluation.Finding{f, nil})
 	if len(acc.findings) != 1 {
 		t.Fatalf("len = %d (nil should be filtered)", len(acc.findings))
 	}
@@ -90,7 +90,7 @@ func TestNewControlRowAndFinalize(t *testing.T) {
 		ID: kernel.ControlID("CTL.TEST.001"),
 	}
 	a := asset.Asset{ID: "bucket-1", Type: "aws_s3_bucket"}
-	tl, _ := asset.NewTimeline(a)
+	tl, _ := asset.NewExposureLifecycle(a)
 
 	row := newControlRow(ctl, tl)
 	if row.ControlID != "CTL.TEST.001" {
@@ -235,7 +235,7 @@ func TestUnsupportedStrategy(t *testing.T) {
 		Type: policy.TypeAuthorizationBoundary,
 	}
 	a := asset.Asset{ID: "bucket-1"}
-	tl, _ := asset.NewTimeline(a)
+	tl, _ := asset.NewExposureLifecycle(a)
 
 	s := &unsupportedStrategy{ctl: ctl}
 	row, findings := s.Evaluate(tl, time.Now(), nil)
@@ -355,9 +355,9 @@ func TestBuildIdentityIndex(t *testing.T) {
 
 func TestCreateRecurrenceFinding(t *testing.T) {
 	a := asset.Asset{ID: "bucket-1", Type: "aws_s3_bucket"}
-	tl, _ := asset.NewTimeline(a)
+	tl, _ := asset.NewExposureLifecycle(a)
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
-	if err := tl.RecordObservation(base, true); err != nil {
+	if err := tl.RecordCheck(base, true); err != nil {
 		t.Fatal(err)
 	}
 
@@ -403,7 +403,7 @@ func TestNewFinding(t *testing.T) {
 		Severity: policy.SeverityHigh,
 	}
 	a := asset.Asset{ID: "bucket-1", Type: "aws_s3_bucket", Vendor: "aws"}
-	tl, _ := asset.NewTimeline(a)
+	tl, _ := asset.NewExposureLifecycle(a)
 
 	ctx := FindingContext{
 		Reason: "test reason",

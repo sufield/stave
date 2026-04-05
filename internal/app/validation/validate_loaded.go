@@ -67,9 +67,9 @@ func ValidateLoaded(input Input) Report {
 
 	// 1. Validate controls.
 	if len(input.Controls) == 0 {
-		issues.Record(diag.New(diag.RuleNoControls).
+		issues.Record(diag.NewFinding(diag.RuleNoControls).
 			Warning().
-			Action("Add control YAML files to the directory").
+			Remediation("Add control YAML files to the directory").
 			Build())
 	} else {
 		for i := range input.Controls {

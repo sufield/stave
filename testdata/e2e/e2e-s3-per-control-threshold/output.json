@@ -67,7 +67,7 @@
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset has been unsafe for 1 hours (threshold: 0 hours). Unsafe since 2026-01-10T23:00:00Z."
+        "temporal_risk": "Asset non-compliant for 1 hours (SLA: 0 hours). Exposed since 2026-01-10T23:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",

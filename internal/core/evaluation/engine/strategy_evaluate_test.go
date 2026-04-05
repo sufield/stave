@@ -18,15 +18,15 @@ import (
 func buildTimeline(t *testing.T, observations []struct {
 	at     time.Time
 	unsafe bool
-}) *asset.Timeline {
+}) *asset.ExposureLifecycle {
 	t.Helper()
 	a := asset.Asset{ID: "bucket-1", Type: kernel.AssetType("s3_bucket")}
-	tl, err := asset.NewTimeline(a)
+	tl, err := asset.NewExposureLifecycle(a)
 	if err != nil {
-		t.Fatalf("NewTimeline: %v", err)
+		t.Fatalf("NewExposureLifecycle: %v", err)
 	}
 	for _, obs := range observations {
-		if err := tl.RecordObservation(obs.at, obs.unsafe); err != nil {
+		if err := tl.RecordCheck(obs.at, obs.unsafe); err != nil {
 			t.Fatalf("RecordObservation(%v, %v): %v", obs.at, obs.unsafe, err)
 		}
 	}

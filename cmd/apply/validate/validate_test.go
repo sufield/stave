@@ -176,9 +176,9 @@ func TestOutputAndExit_Errors(t *testing.T) {
 	result := &appvalidation.Report{
 		Diagnostics: &diag.Assessment{Findings: []diag.Finding{
 			{
-				RuleID:   diag.RuleControlMissingID,
-				Severity: diag.SeverityError,
-				Action:   "Add id field",
+				RuleID:      diag.RuleControlMissingID,
+				Severity:    diag.SeverityError,
+				Remediation: "Add id field",
 			},
 		}},
 		Summary: appvalidation.Summary{
@@ -208,14 +208,14 @@ func TestOutputAndExit_WarningsOnly(t *testing.T) {
 	result := &appvalidation.Report{
 		Diagnostics: &diag.Assessment{Findings: []diag.Finding{
 			{
-				RuleID:   diag.RuleSingleSnapshot,
-				Severity: diag.SeverityWarn,
-				Action:   "Add more snapshots",
+				RuleID:      diag.RuleSingleSnapshot,
+				Severity:    diag.SeverityWarn,
+				Remediation: "Add more snapshots",
 			},
 			{
-				RuleID:   diag.RuleSpanLessThanMaxUnsafe,
-				Severity: diag.SeverityWarn,
-				Action:   "Reduce max-unsafe",
+				RuleID:      diag.RuleSpanLessThanMaxUnsafe,
+				Severity:    diag.SeverityWarn,
+				Remediation: "Reduce max-unsafe",
 			},
 		}},
 		Summary: appvalidation.Summary{
@@ -245,14 +245,14 @@ func TestOutputAndExit_ErrorsAndWarnings(t *testing.T) {
 	result := &appvalidation.Report{
 		Diagnostics: &diag.Assessment{Findings: []diag.Finding{
 			{
-				RuleID:   diag.RuleControlMissingID,
-				Severity: diag.SeverityError,
-				Action:   "Add id field",
+				RuleID:      diag.RuleControlMissingID,
+				Severity:    diag.SeverityError,
+				Remediation: "Add id field",
 			},
 			{
-				RuleID:   diag.RuleSingleSnapshot,
-				Severity: diag.SeverityWarn,
-				Action:   "Add more snapshots",
+				RuleID:      diag.RuleSingleSnapshot,
+				Severity:    diag.SeverityWarn,
+				Remediation: "Add more snapshots",
 			},
 		}},
 		Summary: appvalidation.Summary{
@@ -289,7 +289,7 @@ func TestOutputAndExit_JSONOutput(t *testing.T) {
 				Resource: kernel.NewSanitizableMap(map[string]string{
 					"snapshot_count": "1",
 				}),
-				Action: "Add more snapshots",
+				Remediation: "Add more snapshots",
 			},
 		}},
 		Summary: appvalidation.Summary{
@@ -331,9 +331,9 @@ func TestWriteValidationText_WithFixHints(t *testing.T) {
 	result := &appvalidation.Report{
 		Diagnostics: &diag.Assessment{Findings: []diag.Finding{
 			{
-				RuleID:   diag.RuleObservationLoadFailed,
-				Severity: diag.SeverityError,
-				Action:   "Check observations",
+				RuleID:      diag.RuleObservationLoadFailed,
+				Severity:    diag.SeverityError,
+				Remediation: "Check observations",
 				Resource: kernel.NewSanitizableMap(map[string]string{
 					"directory": "./observations",
 				}),
@@ -362,10 +362,10 @@ func TestOutputAndExit_JSONOutput_WithFixHints(t *testing.T) {
 	result := &appvalidation.Report{
 		Diagnostics: &diag.Assessment{Findings: []diag.Finding{
 			{
-				RuleID:   "INVALID_MAX_UNSAFE",
-				Severity: diag.SeverityError,
-				Action:   "Use valid duration",
-				Command:  "stave validate --max-unsafe 168h",
+				RuleID:      "INVALID_MAX_UNSAFE",
+				Severity:    diag.SeverityError,
+				Remediation: "Use valid duration",
+				FixCommand:  "stave validate --max-unsafe 168h",
 			},
 		}},
 	}

@@ -12,32 +12,32 @@ import (
 
 // DurationFindingInput groups the data required to build a duration-based violation finding.
 type DurationFindingInput struct {
-	Timeline        *asset.Timeline
-	Control         *policy.ControlDefinition
-	Threshold       time.Duration
-	Now             time.Time
-	Identities      []asset.CloudIdentity
-	PredicateParser policy.PredicateParser
+	ExposureLifecycle *asset.ExposureLifecycle
+	Control           *policy.ControlDefinition
+	Threshold         time.Duration
+	Now               time.Time
+	Identities        []asset.CloudIdentity
+	PredicateParser   policy.PredicateParser
 }
 
 // CreateDurationFinding generates a violation finding specifically for duration-based controls.
 func CreateDurationFinding(in DurationFindingInput) *evaluation.Finding {
-	a := in.Timeline.Asset()
-	duration, _ := in.Timeline.UnsafeDuration(in.Now)
+	a := in.ExposureLifecycle.Asset()
+	duration, _ := in.ExposureLifecycle.ExposureDuration(in.Now)
 	ctx := policy.NewAssetEvalContext(a, in.Control.Params, in.PredicateParser, in.Identities...)
 	misconfigs := policy.ExtractMisconfigurations(&in.Control.UnsafePredicate, ctx)
 	causes := DeriveRootCauses(misconfigs)
 
-	f := newBaseFinding(in.Control, in.Timeline)
+	f := newBaseFinding(in.Control, in.ExposureLifecycle)
 	f.Evidence = evaluation.Evidence{
-		FirstUnsafeAt:       in.Timeline.FirstUnsafeAt(),
-		LastSeenUnsafeAt:    in.Timeline.LastSeenUnsafeAt(),
+		FirstUnsafeAt:       in.ExposureLifecycle.FirstExposedAt(),
+		LastSeenUnsafeAt:    in.ExposureLifecycle.LastObservedAt(),
 		UnsafeDurationHours: duration.Hours(),
 		ThresholdHours:      in.Threshold.Hours(),
 		Misconfigurations:   misconfigs,
 		RootCauses:          causes,
 		SourceEvidence:      ExtractSourceEvidence(a, causes),
-		TemporalRisk:        in.Timeline.FormatUnsafeSummary(in.Threshold, in.Now),
+		TemporalRisk:        in.ExposureLifecycle.FormatExposureSummary(in.Threshold, in.Now),
 	}
 	return f
 }

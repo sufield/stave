@@ -17,15 +17,15 @@ func TestResolveBucketAccess_VisibilityMatchesDirect(t *testing.T) {
 		BlockIdentityBoundPublicAccess: true,
 	}
 
-	direct := BuildVisibilityResult(identity, resource, gov)
+	direct := BuildResourceExposure(identity, resource, gov)
 	access := ResolveBucketAccess(BucketAccessInput{
 		Identity: identity,
 		Resource: resource,
 		Gov:      gov,
 	})
 
-	if access.Visibility != direct {
-		t.Errorf("Visibility mismatch:\n  ResolveBucketAccess: %+v\n  BuildVisibilityResult: %+v", access.Visibility, direct)
+	if access.Exposure != direct {
+		t.Errorf("Visibility mismatch:\n  ResolveBucketAccess: %+v\n  BuildResourceExposure: %+v", access.Exposure, direct)
 	}
 }
 

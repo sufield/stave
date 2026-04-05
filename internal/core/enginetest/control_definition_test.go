@@ -78,8 +78,8 @@ func TestControlDefinitionValidate_BadTypeWarning(t *testing.T) {
 	if got, ok := issue.Resource.Get("type"); !ok || got != "unknown" {
 		t.Fatalf("evidence type = %q (ok=%v), want %q for unknown type", got, ok, "unknown")
 	}
-	if !strings.Contains(issue.Action, "supported control type") {
-		t.Fatalf("action = %q, want supported type hint", issue.Action)
+	if !strings.Contains(issue.Remediation, "supported control type") {
+		t.Fatalf("action = %q, want supported type hint", issue.Remediation)
 	}
 }
 

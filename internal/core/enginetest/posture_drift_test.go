@@ -13,8 +13,8 @@ func TestComputePostureDrift(t *testing.T) {
 	t1 := time.Date(2026, 1, 10, 6, 0, 0, 0, time.UTC)
 	t2 := time.Date(2026, 1, 10, 12, 0, 0, 0, time.UTC)
 
-	newTimeline := func() *asset.Timeline {
-		tl, err := asset.NewTimeline(asset.Asset{ID: "res:test"})
+	newTimeline := func() *asset.ExposureLifecycle {
+		tl, err := asset.NewExposureLifecycle(asset.Asset{ID: "res:test"})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -23,53 +23,53 @@ func TestComputePostureDrift(t *testing.T) {
 
 	tests := []struct {
 		name           string
-		setup          func(*asset.Timeline)
+		setup          func(*asset.ExposureLifecycle)
 		wantNil        bool
 		wantPattern    evaluation.DriftPattern
 		wantEpisodeCnt int
 	}{
 		{
 			name: "not currently unsafe returns nil",
-			setup: func(tl *asset.Timeline) {
-				_ = tl.RecordObservation(t0, false)
+			setup: func(tl *asset.ExposureLifecycle) {
+				_ = tl.RecordCheck(t0, false)
 			},
 			wantNil: true,
 		},
 		{
 			name: "persistent: unsafe since first observation",
-			setup: func(tl *asset.Timeline) {
-				_ = tl.RecordObservation(t0, true)
+			setup: func(tl *asset.ExposureLifecycle) {
+				_ = tl.RecordCheck(t0, true)
 			},
 			wantPattern:    "persistent",
 			wantEpisodeCnt: 1,
 		},
 		{
 			name: "degraded: was safe before first unsafe",
-			setup: func(tl *asset.Timeline) {
-				_ = tl.RecordObservation(t0, false)
-				_ = tl.RecordObservation(t1, true)
+			setup: func(tl *asset.ExposureLifecycle) {
+				_ = tl.RecordCheck(t0, false)
+				_ = tl.RecordCheck(t1, true)
 			},
 			wantPattern:    "degraded",
 			wantEpisodeCnt: 1,
 		},
 		{
 			name: "intermittent: one closed episode plus open",
-			setup: func(tl *asset.Timeline) {
-				_ = tl.RecordObservation(t0, true)
-				_ = tl.RecordObservation(t1, false)
-				_ = tl.RecordObservation(t2, true)
+			setup: func(tl *asset.ExposureLifecycle) {
+				_ = tl.RecordCheck(t0, true)
+				_ = tl.RecordCheck(t1, false)
+				_ = tl.RecordCheck(t2, true)
 			},
 			wantPattern:    "intermittent",
 			wantEpisodeCnt: 2,
 		},
 		{
 			name: "intermittent: two closed episodes plus open",
-			setup: func(tl *asset.Timeline) {
-				_ = tl.RecordObservation(t0, true)
-				_ = tl.RecordObservation(t1, false)
-				_ = tl.RecordObservation(t1, true)
-				_ = tl.RecordObservation(t2, false)
-				_ = tl.RecordObservation(t2, true)
+			setup: func(tl *asset.ExposureLifecycle) {
+				_ = tl.RecordCheck(t0, true)
+				_ = tl.RecordCheck(t1, false)
+				_ = tl.RecordCheck(t1, true)
+				_ = tl.RecordCheck(t2, false)
+				_ = tl.RecordCheck(t2, true)
 			},
 			wantPattern:    "intermittent",
 			wantEpisodeCnt: 3,

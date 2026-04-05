@@ -2,8 +2,8 @@ package exposure
 
 import "testing"
 
-func TestResolveEffectiveVisibility_PolicyBlockedLatentRead(t *testing.T) {
-	got := ResolveEffectiveVisibility(
+func TestResolveAccess_PolicyBlockedLatentRead(t *testing.T) {
+	got := ResolveAccess(
 		Visibility{Public: Capabilities{Read: true}},
 		Visibility{},
 		GovernanceOverrides{BlockIdentityBoundPublicAccess: true},
@@ -17,8 +17,8 @@ func TestResolveEffectiveVisibility_PolicyBlockedLatentRead(t *testing.T) {
 	}
 }
 
-func TestResolveEffectiveVisibility_UnionAcrossIdentityAndResource(t *testing.T) {
-	got := ResolveEffectiveVisibility(
+func TestResolveAccess_UnionAcrossIdentityAndResource(t *testing.T) {
+	got := ResolveAccess(
 		Visibility{Public: Capabilities{List: true}},
 		Visibility{Public: Capabilities{Read: true}},
 		GovernanceOverrides{},
@@ -32,8 +32,8 @@ func TestResolveEffectiveVisibility_UnionAcrossIdentityAndResource(t *testing.T)
 	}
 }
 
-func TestResolveEffectiveVisibility_DeleteAndAdmin(t *testing.T) {
-	got := ResolveEffectiveVisibility(
+func TestResolveAccess_DeleteAndAdmin(t *testing.T) {
+	got := ResolveAccess(
 		Visibility{Public: Capabilities{Delete: true, Admin: true}},
 		Visibility{},
 		GovernanceOverrides{},

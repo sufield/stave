@@ -15,10 +15,10 @@ func TestIssue_MarshalJSON_SensitiveEvidence(t *testing.T) {
 	evidence.SetSensitive("error", "parse error at /secret/path")
 
 	issue := diag.Finding{
-		RuleID:   diag.RuleControlBadDurationParam,
-		Severity: diag.SeverityError,
-		Resource: evidence,
-		Action:   "Fix the issue",
+		RuleID:      diag.RuleControlBadDurationParam,
+		Severity:    diag.SeverityError,
+		Resource:    evidence,
+		Remediation: "Fix the issue",
 	}
 
 	data, err := json.Marshal(issue)
@@ -51,7 +51,7 @@ func TestIssue_MarshalJSON_NonSensitiveEvidence(t *testing.T) {
 		Resource: kernel.NewSanitizableMap(map[string]string{
 			"snapshot_count": "1",
 		}),
-		Action: "Add more snapshots",
+		Remediation: "Add more snapshots",
 	}
 
 	data, err := json.Marshal(issue)

@@ -261,15 +261,15 @@ func TestObservationStats_HasCoverageData(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// scope_filter.go — DefaultHealthcareScopeFilter, tag-based filtering
+// scope_filter.go — PHIBoundary, tag-based filtering
 // ---------------------------------------------------------------------------
 
 func TestDefaultHealthcareScopeFilter(t *testing.T) {
-	f := DefaultHealthcareScopeFilter()
+	f := PHIBoundary()
 	if f == nil {
 		t.Fatal("expected non-nil")
 	}
-	if f.includeAll {
+	if f.global {
 		t.Fatal("should not be universal")
 	}
 
@@ -296,11 +296,11 @@ func TestDefaultHealthcareScopeFilter(t *testing.T) {
 }
 
 func TestScopeFilter_TagRequirements(t *testing.T) {
-	f := NewScopeFilter(nil, map[string][]string{
+	f := NewAuditScope(nil, map[string][]string{
 		"env":        {"prod", "staging"},
 		"DataDomain": {},
 	})
-	if f.includeAll {
+	if f.global {
 		t.Fatal("should not be universal")
 	}
 
@@ -337,8 +337,8 @@ func TestScopeFilter_TagRequirements(t *testing.T) {
 
 func TestScopeFilter_WhitespaceHandling(t *testing.T) {
 	// Allowlist with whitespace entries
-	f := NewScopeFilter([]string{"  bucket-1  ", "", "  "}, nil)
-	if f.includeAll {
+	f := NewAuditScope([]string{"  bucket-1  ", "", "  "}, nil)
+	if f.global {
 		t.Fatal("should not be universal")
 	}
 
@@ -350,21 +350,21 @@ func TestScopeFilter_WhitespaceHandling(t *testing.T) {
 
 func TestScopeFilter_EmptyTagValues(t *testing.T) {
 	// Tag spec with all empty values -> key-only mode
-	f := NewScopeFilter(nil, map[string][]string{
+	f := NewAuditScope(nil, map[string][]string{
 		"env": {"", "  "},
 	})
-	if f.includeAll {
+	if f.global {
 		t.Fatal("should not be universal with key-only tag spec")
 	}
 }
 
 func TestScopeFilter_DiscardableKey(t *testing.T) {
 	// Empty tag key should be discarded
-	f := NewScopeFilter(nil, map[string][]string{
+	f := NewAuditScope(nil, map[string][]string{
 		"  ": {"value"},
 	})
 	// All keys are empty, so the filter should be universal
-	if !f.includeAll {
+	if !f.global {
 		t.Fatal("all empty keys should result in universal filter")
 	}
 }
@@ -375,7 +375,7 @@ func TestScopeFilter_DiscardableKey(t *testing.T) {
 
 func TestTimeline_Stats(t *testing.T) {
 	a := Asset{ID: "bucket-1"}
-	tl, err := NewTimeline(a)
+	tl, err := NewExposureLifecycle(a)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -387,7 +387,7 @@ func TestTimeline_Stats(t *testing.T) {
 
 func TestTimeline_SetAsset_EmptyID(t *testing.T) {
 	a := Asset{ID: "bucket-1"}
-	tl, err := NewTimeline(a)
+	tl, err := NewExposureLifecycle(a)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -428,41 +428,41 @@ func TestCheckDurationFeasibility_InsufficientSpan(t *testing.T) {
 // episode.go — UnmarshalJSON edge cases
 // ---------------------------------------------------------------------------
 
-func TestEpisodeUnmarshalJSON_OpenEpisode(t *testing.T) {
-	data := `{"start_at":"2026-01-01T00:00:00Z","end_at":"0001-01-01T00:00:00Z","open":true}`
-	var ep Episode
+func TestExposureWindowUnmarshalJSON_OpenExposureWindow(t *testing.T) {
+	data := `{"opened_at":"2026-01-01T00:00:00Z","resolved_at":"0001-01-01T00:00:00Z","is_active":true}`
+	var ep ExposureWindow
 	err := json.Unmarshal([]byte(data), &ep)
 	if err != nil {
 		t.Fatalf("UnmarshalJSON: %v", err)
 	}
-	if !ep.IsOpen() {
+	if !ep.IsActive() {
 		t.Fatal("should be open")
 	}
 }
 
-func TestEpisodeUnmarshalJSON_ClosedEpisode(t *testing.T) {
-	data := `{"start_at":"2026-01-01T00:00:00Z","end_at":"2026-01-02T00:00:00Z","open":false}`
-	var ep Episode
+func TestExposureWindowUnmarshalJSON_ClosedExposureWindow(t *testing.T) {
+	data := `{"opened_at":"2026-01-01T00:00:00Z","resolved_at":"2026-01-02T00:00:00Z","is_active":false}`
+	var ep ExposureWindow
 	err := json.Unmarshal([]byte(data), &ep)
 	if err != nil {
 		t.Fatalf("UnmarshalJSON: %v", err)
 	}
-	if ep.IsOpen() {
+	if ep.IsActive() {
 		t.Fatal("should be closed")
 	}
 }
 
-func TestEpisodeUnmarshalJSON_MissingStartAt(t *testing.T) {
-	data := `{"end_at":"2026-01-02T00:00:00Z","open":false}`
-	var ep Episode
+func TestExposureWindowUnmarshalJSON_MissingStartAt(t *testing.T) {
+	data := `{"resolved_at":"2026-01-02T00:00:00Z","is_active":false}`
+	var ep ExposureWindow
 	err := json.Unmarshal([]byte(data), &ep)
 	if err == nil {
 		t.Fatal("expected error for missing start_at")
 	}
 }
 
-func TestEpisodeUnmarshalJSON_BadJSON(t *testing.T) {
-	var ep Episode
+func TestExposureWindowUnmarshalJSON_BadJSON(t *testing.T) {
+	var ep ExposureWindow
 	err := json.Unmarshal([]byte(`{bad`), &ep)
 	if err == nil {
 		t.Fatal("expected error for bad JSON")
@@ -473,17 +473,17 @@ func TestEpisodeUnmarshalJSON_BadJSON(t *testing.T) {
 // episode_history.go — WindowSummary
 // ---------------------------------------------------------------------------
 
-func TestEpisodeHistory_WindowSummary(t *testing.T) {
-	h := &EpisodeHistory{}
+func TestExposureHistory_WindowSummary(t *testing.T) {
+	h := &ExposureHistory{}
 
 	start1 := time.Date(2026, 1, 5, 0, 0, 0, 0, time.UTC)
 	end1 := start1.Add(2 * time.Hour)
-	ep1, _ := NewClosedEpisode(start1, end1)
+	ep1, _ := NewResolvedWindow(start1, end1)
 	h.Record(ep1)
 
 	start2 := time.Date(2026, 1, 10, 0, 0, 0, 0, time.UTC)
 	end2 := start2.Add(3 * time.Hour)
-	ep2, _ := NewClosedEpisode(start2, end2)
+	ep2, _ := NewResolvedWindow(start2, end2)
 	h.Record(ep2)
 
 	w := kernel.TimeWindow{
@@ -503,11 +503,11 @@ func TestEpisodeHistory_WindowSummary(t *testing.T) {
 	}
 }
 
-func TestEpisodeHistory_WindowSummary_NoMatch(t *testing.T) {
-	h := &EpisodeHistory{}
+func TestExposureHistory_WindowSummary_NoMatch(t *testing.T) {
+	h := &ExposureHistory{}
 
 	start1 := time.Date(2026, 1, 5, 0, 0, 0, 0, time.UTC)
-	ep1, _ := NewClosedEpisode(start1, start1.Add(time.Hour))
+	ep1, _ := NewResolvedWindow(start1, start1.Add(time.Hour))
 	h.Record(ep1)
 
 	w := kernel.TimeWindow{
@@ -522,40 +522,40 @@ func TestEpisodeHistory_WindowSummary_NoMatch(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// delta.go — ChangeType.IsValid, ObservationDeltaSummary
+// delta.go — DriftType.IsValid, DriftSummary
 // ---------------------------------------------------------------------------
 
 func TestChangeType_IsValid(t *testing.T) {
-	if !ChangeAdded.IsValid() {
-		t.Fatal("ChangeAdded should be valid")
+	if !DriftProvisioned.IsValid() {
+		t.Fatal("DriftProvisioned should be valid")
 	}
-	if !ChangeRemoved.IsValid() {
-		t.Fatal("ChangeRemoved should be valid")
+	if !DriftDecommissioned.IsValid() {
+		t.Fatal("DriftDecommissioned should be valid")
 	}
-	if !ChangeModified.IsValid() {
-		t.Fatal("ChangeModified should be valid")
+	if !DriftReconfigured.IsValid() {
+		t.Fatal("DriftReconfigured should be valid")
 	}
-	if ChangeType("unknown").IsValid() {
+	if DriftType("unknown").IsValid() {
 		t.Fatal("unknown should not be valid")
 	}
 }
 
 func TestObservationDeltaSummary_Increment(t *testing.T) {
-	var s ObservationDeltaSummary
-	s.Increment(ChangeAdded)
-	s.Increment(ChangeAdded)
-	s.Increment(ChangeRemoved)
-	s.Increment(ChangeModified)
-	s.Increment("invalid") // should be no-op
+	var s DriftSummary
+	s.Record(DriftProvisioned)
+	s.Record(DriftProvisioned)
+	s.Record(DriftDecommissioned)
+	s.Record(DriftReconfigured)
+	s.Record("invalid") // should be no-op
 
-	if s.Added() != 2 {
-		t.Fatalf("Added = %d", s.Added())
+	if s.Provisioned() != 2 {
+		t.Fatalf("Added = %d", s.Provisioned())
 	}
-	if s.Removed() != 1 {
-		t.Fatalf("Removed = %d", s.Removed())
+	if s.Decommissioned() != 1 {
+		t.Fatalf("Removed = %d", s.Decommissioned())
 	}
-	if s.Modified() != 1 {
-		t.Fatalf("Modified = %d", s.Modified())
+	if s.Reconfigured() != 1 {
+		t.Fatalf("Modified = %d", s.Reconfigured())
 	}
 	if s.Total() != 4 {
 		t.Fatalf("Total = %d", s.Total())
@@ -563,9 +563,9 @@ func TestObservationDeltaSummary_Increment(t *testing.T) {
 }
 
 func TestObservationDeltaSummary_MarshalJSON(t *testing.T) {
-	var s ObservationDeltaSummary
-	s.Increment(ChangeAdded)
-	s.Increment(ChangeRemoved)
+	var s DriftSummary
+	s.Record(DriftProvisioned)
+	s.Record(DriftDecommissioned)
 
 	data, err := json.Marshal(s)
 	if err != nil {
@@ -575,7 +575,7 @@ func TestObservationDeltaSummary_MarshalJSON(t *testing.T) {
 	if err := json.Unmarshal(data, &m); err != nil {
 		t.Fatal(err)
 	}
-	if m["added"] != 1 || m["removed"] != 1 || m["total"] != 2 {
+	if m["provisioned"] != 1 || m["decommissioned"] != 1 || m["total"] != 2 {
 		t.Fatalf("got %v", m)
 	}
 }
