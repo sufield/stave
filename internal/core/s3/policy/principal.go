@@ -71,7 +71,7 @@ func (p Principal) analyzeMap(m map[string]any) kernel.PrincipalScope {
 			continue
 		}
 
-		maxScope = upgradeScope(maxScope, scope)
+		maxScope = morePermissive(maxScope, scope)
 	}
 	return maxScope
 }
@@ -86,35 +86,20 @@ func classifyAWSPrincipal(val any) kernel.PrincipalScope {
 		case isWildcardPrincipal(p):
 			return kernel.ScopePublic
 		case strings.Contains(p, ":iam::*:root"):
-			maxScope = upgradeScope(maxScope, kernel.ScopeAuthenticated)
+			maxScope = morePermissive(maxScope, kernel.ScopeAuthenticated)
 		case isAccountIDOnly(p):
-			maxScope = upgradeScope(maxScope, kernel.ScopeAccount)
+			maxScope = morePermissive(maxScope, kernel.ScopeAccount)
 		}
 	}
 	return maxScope
 }
 
-// upgradeScope returns the more permissive of two scopes.
-func upgradeScope(current, candidate kernel.PrincipalScope) kernel.PrincipalScope {
-	if scopePrecedence(candidate) > scopePrecedence(current) {
+// morePermissive returns whichever scope has the wider blast radius.
+func morePermissive(current, candidate kernel.PrincipalScope) kernel.PrincipalScope {
+	if candidate.IsMorePermissiveThan(current) {
 		return candidate
 	}
 	return current
-}
-
-// scopePrecedence maps scopes to integers for comparison.
-// Higher values indicate greater exposure risk.
-func scopePrecedence(s kernel.PrincipalScope) int {
-	switch s {
-	case kernel.ScopePublic:
-		return 3
-	case kernel.ScopeAuthenticated:
-		return 2
-	case kernel.ScopeCrossAccount, kernel.ScopeAccount:
-		return 1
-	default:
-		return 0
-	}
 }
 
 // classifyPolicyPrincipalScope is the internal entry point used by Statement.PrincipalScope().

@@ -41,6 +41,25 @@ func (s PrincipalScope) IsPublic() bool {
 	return s == ScopePublic
 }
 
+// IsMorePermissiveThan reports whether this scope has a wider blast radius
+// than the other. Public > Authenticated > CrossAccount/Account > Unknown.
+func (s PrincipalScope) IsMorePermissiveThan(other PrincipalScope) bool {
+	return s.permissiveness() > other.permissiveness()
+}
+
+func (s PrincipalScope) permissiveness() int {
+	switch s {
+	case ScopePublic:
+		return 3
+	case ScopeAuthenticated:
+		return 2
+	case ScopeCrossAccount, ScopeAccount:
+		return 1
+	default:
+		return 0
+	}
+}
+
 // IsValid reports whether the integer value represents a known scope.
 func (s PrincipalScope) IsValid() bool {
 	return s >= ScopeNotApplicable && s <= ScopeAccount
