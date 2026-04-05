@@ -41,15 +41,20 @@ type Runner struct {
 	MaxGapThreshold   time.Duration // If zero, defaultRunnerMaxGapThreshold is used.
 }
 
+// NewRunner creates a Runner with sensible defaults for optional fields.
+// Callers should set required fields (Controls, CELEvaluator) after construction.
+func NewRunner() *Runner {
+	return &Runner{
+		Logger:          slog.Default(),
+		MaxGapThreshold: DefaultMaxGapThreshold,
+		Confidence:      evaluation.DefaultConfidenceCalculator(),
+	}
+}
+
 // Compile-time check: Runner satisfies strategyDeps.
 var _ strategyDeps = (*Runner)(nil)
 
-func (e *Runner) logger() *slog.Logger {
-	if e.Logger != nil {
-		return e.Logger
-	}
-	return slog.Default()
-}
+func (e *Runner) logger() *slog.Logger { return e.Logger }
 
 // maxUnsafeDurationFor returns the max unsafe duration for a control.
 // Uses per-control override if set, otherwise falls back to CLI default.
@@ -62,14 +67,7 @@ func (e *Runner) predicateParser() policy.PredicateParser {
 	return e.PredicateParser
 }
 
-// confidenceCalculator returns the configured confidence thresholds,
-// defaulting to standard multipliers if not explicitly set.
-func (e *Runner) confidenceCalculator() evaluation.ConfidenceCalculator {
-	if e.Confidence.HighMultiplier > 0 && e.Confidence.MedMultiplier > 0 {
-		return e.Confidence
-	}
-	return evaluation.DefaultConfidenceCalculator()
-}
+func (e *Runner) confidenceCalculator() evaluation.ConfidenceCalculator { return e.Confidence }
 
 // normalizeSnapshots returns a copy of snapshots sorted by captured_at ascending.
 func (e *Runner) normalizeSnapshots(snapshots []asset.Snapshot) []asset.Snapshot {
@@ -286,9 +284,4 @@ func (e *Runner) computePackHash() kernel.Digest {
 // observations become INCONCLUSIVE. Override via Runner.MaxGapThreshold.
 const DefaultMaxGapThreshold = 12 * time.Hour
 
-func (e *Runner) maxGapThreshold() time.Duration {
-	if e.MaxGapThreshold > 0 {
-		return e.MaxGapThreshold
-	}
-	return DefaultMaxGapThreshold
-}
+func (e *Runner) maxGapThreshold() time.Duration { return e.MaxGapThreshold }

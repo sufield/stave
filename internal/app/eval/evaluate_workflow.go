@@ -32,16 +32,17 @@ type EvaluateInput struct {
 // Evaluate runs domain evaluation over already-loaded inputs.
 func Evaluate(input EvaluateInput) (evaluation.Audit, error) {
 	catalog := policy.NewCatalog(input.Controls)
-	runner := engine.Runner{
-		Controls:          catalog.List(),
-		MaxUnsafeDuration: input.MaxUnsafeDuration,
-		Confidence:        input.Confidence,
-		Clock:             input.Clock,
-		Hasher:            input.Hasher,
-		Exemptions:        input.ExemptionConfig,
-		Exceptions:        input.ExceptionConfig,
-		PredicateParser:   input.PredicateParser,
-		CELEvaluator:      input.CELEvaluator,
+	runner := engine.NewRunner()
+	runner.Controls = catalog.List()
+	runner.MaxUnsafeDuration = input.MaxUnsafeDuration
+	runner.Clock = input.Clock
+	runner.Hasher = input.Hasher
+	runner.Exemptions = input.ExemptionConfig
+	runner.Exceptions = input.ExceptionConfig
+	runner.PredicateParser = input.PredicateParser
+	runner.CELEvaluator = input.CELEvaluator
+	if input.Confidence.HighMultiplier > 0 {
+		runner.Confidence = input.Confidence
 	}
 	result, err := runner.Evaluate(input.Snapshots, engine.EvaluateOptions{
 		StaveVersion: input.StaveVersion,
