@@ -5,14 +5,14 @@ import (
 	"github.com/sufield/stave/internal/core/maps"
 )
 
-// FactsFromStorage extracts prefix exposure facts from storage properties.
-func FactsFromStorage(props map[string]any) Facts {
+// SummarizeAccess extracts prefix exposure facts from storage properties.
+func SummarizeAccess(props map[string]any) AccessSummary {
 	pe := maps.ParseMap(props).GetPath("storage.prefix_exposure")
 	if pe.IsMissing() {
-		return Facts{}
+		return AccessSummary{}
 	}
 
-	return Facts{
+	return AccessSummary{
 		HasIdentityEvidence: pe.Get("has_identity_evidence").Bool(),
 		HasResourceEvidence: pe.Get("has_resource_evidence").Bool(),
 
