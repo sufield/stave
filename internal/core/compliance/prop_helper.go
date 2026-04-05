@@ -62,9 +62,9 @@ func (p S3Properties) ACLsDisabled() bool {
 
 // S3Encryption holds encryption configuration.
 type S3Encryption struct {
-	AtRestEnabled  bool
-	Algorithm      string
-	KMSMasterKeyID string
+	IsEncryptedAtRest bool
+	Algorithm         string
+	KMSMasterKeyID    string
 }
 
 // IsKMS reports whether the encryption algorithm is SSE-KMS (aws:kms).
@@ -82,7 +82,7 @@ func (e S3Encryption) IsAWSManagedKey() bool {
 
 // S3Versioning holds versioning configuration.
 type S3Versioning struct {
-	Enabled bool
+	IsEnabled bool
 }
 
 // S3Access holds access condition flags.
@@ -175,14 +175,14 @@ func ParseS3Properties(a asset.Asset) S3Properties {
 
 	// Encryption
 	if enc, _ := storage["encryption"].(map[string]any); enc != nil {
-		p.Encryption.AtRestEnabled, _ = enc["at_rest_enabled"].(bool)
+		p.Encryption.IsEncryptedAtRest, _ = enc["at_rest_enabled"].(bool)
 		p.Encryption.Algorithm, _ = enc["algorithm"].(string)
 		p.Encryption.KMSMasterKeyID, _ = enc["kms_master_key_id"].(string)
 	}
 
 	// Versioning
 	if ver, _ := storage["versioning"].(map[string]any); ver != nil {
-		p.Versioning.Enabled, _ = ver["enabled"].(bool)
+		p.Versioning.IsEnabled, _ = ver["enabled"].(bool)
 	}
 
 	// Access

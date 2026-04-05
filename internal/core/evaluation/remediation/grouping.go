@@ -102,7 +102,7 @@ func (a *accumulator) toSortedGroups() []Group {
 		return nil
 	}
 
-	result := make([]Group, 0, len(a.order))
+	remediationGroups := make([]Group, 0, len(a.order))
 	for _, key := range a.order {
 		g := a.groups[key]
 
@@ -113,7 +113,7 @@ func (a *accumulator) toSortedGroups() []Group {
 		}
 		slices.Sort(controls)
 
-		result = append(result, Group{
+		remediationGroups = append(remediationGroups, Group{
 			AssetID:              g.assetID,
 			AssetType:            g.assetType,
 			RemediationPlan:      g.remediationPlan,
@@ -123,12 +123,12 @@ func (a *accumulator) toSortedGroups() []Group {
 	}
 
 	// Final deterministic sort: AssetID first, then Plan ID
-	slices.SortFunc(result, func(i, j Group) int {
+	slices.SortFunc(remediationGroups, func(i, j Group) int {
 		if n := cmp.Compare(i.AssetID.String(), j.AssetID.String()); n != 0 {
 			return n
 		}
 		return cmp.Compare(i.RemediationPlan.ID, j.RemediationPlan.ID)
 	})
 
-	return result
+	return remediationGroups
 }
