@@ -42,7 +42,7 @@ func (p *Planner) PlanFor(f Finding) *evaluation.RemediationPlan {
 }
 
 // EnrichFindings combines raw violations with their remediation specs and plans.
-func (p *Planner) EnrichFindings(result evaluation.Audit) []Finding {
+func (p *Planner) EnrichFindings(result evaluation.ComplianceReport) []Finding {
 	enriched := make([]Finding, len(result.Findings))
 	for i, f := range result.Findings {
 		findingWithPlan := Finding{

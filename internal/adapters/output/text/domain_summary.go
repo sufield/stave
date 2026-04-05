@@ -16,7 +16,7 @@ type DomainCount struct {
 }
 
 // GroupViolationsByDomain aggregates violation rows into sorted counts by asset domain.
-func GroupViolationsByDomain(rows []evaluation.Observation) []DomainCount {
+func GroupViolationsByDomain(rows []evaluation.ResourceCheck) []DomainCount {
 	if len(rows) == 0 {
 		return nil
 	}

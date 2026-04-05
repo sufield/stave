@@ -106,10 +106,10 @@ func newReportOutput(eval safetyenvelope.Evaluation, toolVersion string) reportO
 			Offline:           eval.Run.Offline,
 		},
 		Summary: reportSummary{
-			AssetsEvaluated: eval.Summary.AssetsEvaluated,
-			AttackSurface:   eval.Summary.AttackSurface,
+			AssetsEvaluated: eval.Summary.TotalAssets,
+			AttackSurface:   eval.Summary.ExposedResources,
 			Violations:      eval.Summary.Violations,
-			Skipped:         len(eval.Skipped),
+			Skipped:         len(eval.SkippedControls),
 		},
 		FindingsBySeverity: make(map[string]int),
 		Findings:           make([]reportFinding, 0, len(eval.Findings)),

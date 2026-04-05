@@ -17,12 +17,12 @@
     "pack_hash": "1427d5ae84eb5800b910ae82089ee8f3e2b70ca2c5555b8179bb888015810909"
   },
   "summary": {
-    "assets_evaluated": 1,
-    "attack_surface": 1,
+    "total_assets": 1,
+    "exposed_resources": 1,
     "violations": 2
   },
-  "posture": "UNSAFE",
-  "at_risk": [
+  "security_state": "NON_COMPLIANT",
+  "risk_signals": [
     {
       "control_id": "CTL.S3.MRAP.PAB.001",
       "asset_id": "mrap-bucket",
@@ -74,7 +74,7 @@
         "root_causes": [
           "general"
         ],
-        "why_now": "Asset has been unsafe for 216 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+        "temporal_risk": "Asset has been unsafe for 216 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
       },
       "control_severity": "critical",
       "control_compliance": {
@@ -123,7 +123,7 @@
         "root_causes": [
           "general"
         ],
-        "why_now": "Asset has been unsafe for 216 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+        "temporal_risk": "Asset has been unsafe for 216 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
       },
       "control_severity": "critical",
       "exposure": {

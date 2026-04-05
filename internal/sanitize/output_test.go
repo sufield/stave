@@ -29,10 +29,10 @@ var sensitiveValues = []string{
 	"/home/user/obs/snap1.json",
 }
 
-func makeTestResult() evaluation.Audit {
+func makeTestResult() evaluation.ComplianceReport {
 	t1 := time.Date(2026, 1, 14, 0, 0, 0, 0, time.UTC)
 	t2 := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
-	return evaluation.Audit{
+	return evaluation.ComplianceReport{
 		Run: evaluation.RunInfo{
 			Now:               t2,
 			Offline:           true,
@@ -46,10 +46,10 @@ func makeTestResult() evaluation.Audit {
 				},
 			},
 		},
-		Summary: evaluation.Summary{
-			AssetsEvaluated: 1,
-			Violations:      1,
-			AttackSurface:   1,
+		Summary: evaluation.ComplianceSummary{
+			TotalAssets:      1,
+			Violations:       1,
+			ExposedResources: 1,
 		},
 		Findings: []evaluation.Finding{
 			{
@@ -74,7 +74,7 @@ func makeTestResult() evaluation.Audit {
 						IdentityStatements: []kernel.StatementID{"AllowPublicRead"},
 						ResourceGrantees:   []kernel.GranteeID{"http://acs.amazonaws.com/groups/global/AllUsers"},
 					},
-					WhyNow: "Unsafe for 24h, threshold is 0h",
+					TemporalRisk: "Unsafe for 24h, threshold is 0h",
 				},
 			},
 		},

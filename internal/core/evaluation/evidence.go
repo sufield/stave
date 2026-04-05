@@ -48,8 +48,8 @@ type Evidence struct {
 	RootCauses        []RootCause               `json:"root_causes,omitempty"`
 	SourceEvidence    *SourceEvidence           `json:"source_evidence,omitempty"`
 
-	// WhyNow is a human-readable summary of the current violation state.
-	WhyNow string `json:"why_now,omitempty"`
+	// TemporalRisk is a human-readable summary of the current violation state.
+	TemporalRisk string `json:"temporal_risk,omitempty"`
 }
 
 // RootCauseStrings converts typed causes to a raw string slice.

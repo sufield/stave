@@ -10,11 +10,11 @@
     "pack_hash": "702573847a308c737563d82f4a3588dd5166ece820782b687fe13ea5bfecb59f"
   },
   "summary": {
-    "assets_evaluated": 1,
-    "attack_surface": 1,
+    "total_assets": 1,
+    "exposed_resources": 1,
     "violations": 4
   },
-  "posture": "UNSAFE",
+  "security_state": "NON_COMPLIANT",
   "findings": [
     {
       "control_id": "CTL.S3.PUBLIC.PREFIX.001",
@@ -38,7 +38,7 @@
             "unsafe_value": "backups/"
           }
         ],
-        "why_now": "Protected prefix \"backups/\" is publicly readable via missing_evidence."
+        "temporal_risk": "Protected prefix \"backups/\" is publicly readable via missing_evidence."
       },
       "control_severity": "high",
       "exposure": {
@@ -111,7 +111,7 @@
             "unsafe_value": "internal/"
           }
         ],
-        "why_now": "Protected prefix \"internal/\" is publicly readable via missing_evidence."
+        "temporal_risk": "Protected prefix \"internal/\" is publicly readable via missing_evidence."
       },
       "control_severity": "high",
       "exposure": {
@@ -184,7 +184,7 @@
             "unsafe_value": "invoices/"
           }
         ],
-        "why_now": "Protected prefix \"invoices/\" is publicly readable via missing_evidence."
+        "temporal_risk": "Protected prefix \"invoices/\" is publicly readable via missing_evidence."
       },
       "control_severity": "high",
       "exposure": {
@@ -257,7 +257,7 @@
             "unsafe_value": "secrets/"
           }
         ],
-        "why_now": "Protected prefix \"secrets/\" is publicly readable via missing_evidence."
+        "temporal_risk": "Protected prefix \"secrets/\" is publicly readable via missing_evidence."
       },
       "control_severity": "high",
       "exposure": {

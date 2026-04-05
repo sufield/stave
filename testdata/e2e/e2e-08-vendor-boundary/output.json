@@ -17,11 +17,11 @@
     "pack_hash": "6a5cf52efaa5bdc83ec3eb9d5011d4278835db68a4eda55c464859b38337ec46"
   },
   "summary": {
-    "assets_evaluated": 0,
-    "attack_surface": 0,
+    "total_assets": 0,
+    "exposed_resources": 0,
     "violations": 0
   },
-  "posture": "SAFE",
+  "security_state": "COMPLIANT",
   "findings": [],
   "skipped": [
     {

@@ -17,13 +17,13 @@
     "pack_hash": "f6e08b33a0a5bf36714060eeffe01783f353ac1a54caf7bfa92f907ed4f7265f"
   },
   "summary": {
-    "assets_evaluated": 0,
-    "attack_surface": 0,
+    "total_assets": 0,
+    "exposed_resources": 0,
     "violations": 0
   },
-  "posture": "SAFE",
+  "security_state": "COMPLIANT",
   "findings": [],
-  "skipped": [
+  "skipped_controls": [
     {
       "control_id": "CTL.TP.PLATFORM.001",
       "control_name": "Third-Party Platform Boundaries",

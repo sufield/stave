@@ -78,7 +78,7 @@ func tenantEvaluator(t *testing.T) *testEvaluator {
 	)
 }
 
-func assertHasTenantFinding(t *testing.T, result evaluation.Audit, assetID string) {
+func assertHasTenantFinding(t *testing.T, result evaluation.ComplianceReport, assetID string) {
 	t.Helper()
 	for _, f := range result.Findings {
 		if f.ControlID == "CTL.S3.TENANT.ISOLATION.001" && f.AssetID == asset.ID(assetID) {
@@ -88,7 +88,7 @@ func assertHasTenantFinding(t *testing.T, result evaluation.Audit, assetID strin
 	t.Errorf("expected finding CTL.S3.TENANT.ISOLATION.001 for asset %s, got %d findings", assetID, len(result.Findings))
 }
 
-func assertNoTenantFinding(t *testing.T, result evaluation.Audit, assetID string) {
+func assertNoTenantFinding(t *testing.T, result evaluation.ComplianceReport, assetID string) {
 	t.Helper()
 	for _, f := range result.Findings {
 		if f.ControlID == "CTL.S3.TENANT.ISOLATION.001" && f.AssetID == asset.ID(assetID) {

@@ -22,7 +22,7 @@
             "unsafe_value": "invoices/"
           }
         ],
-        "why_now": "Protected prefix \"invoices/\" is publicly readable via missing_evidence."
+        "temporal_risk": "Protected prefix \"invoices/\" is publicly readable via missing_evidence."
       },
       "posture_drift": {
         "episode_count": 1,
@@ -35,7 +35,7 @@
     }
   ],
   "kind": "evaluation",
-  "posture": "UNSAFE",
+  "security_state": "NON_COMPLIANT",
   "run": {
     "input_hashes": {
       "files": {
@@ -52,8 +52,8 @@
   },
   "schema_version": "out.v0.1",
   "summary": {
-    "assets_evaluated": 1,
-    "attack_surface": 1,
+    "total_assets": 1,
+    "exposed_resources": 1,
     "violations": 1
   }
 }

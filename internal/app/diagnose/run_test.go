@@ -144,11 +144,11 @@ func TestExecute_WithPreviousResult(t *testing.T) {
 		ControlRepo:     &mockCtlRepo{controls: simpleControls()},
 	}
 
-	prev := &evaluation.Audit{
+	prev := &evaluation.ComplianceReport{
 		Findings: []evaluation.Finding{
 			{ControlID: "CTL.TEST.001", AssetID: "bucket-1"},
 		},
-		Summary: evaluation.Summary{Violations: 1},
+		Summary: evaluation.ComplianceSummary{Violations: 1},
 	}
 
 	report, err := run.Execute(context.Background(), Config{

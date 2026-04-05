@@ -10,12 +10,12 @@
     "pack_hash": "702573847a308c737563d82f4a3588dd5166ece820782b687fe13ea5bfecb59f"
   },
   "summary": {
-    "assets_evaluated": 1,
-    "attack_surface": 1,
+    "total_assets": 1,
+    "exposed_resources": 1,
     "violations": 6
   },
-  "posture": "UNSAFE",
-  "at_risk": [
+  "security_state": "NON_COMPLIANT",
+  "risk_signals": [
     {
       "control_id": "CTL.S3.NETWORK.VPC.001",
       "asset_id": "public-test-bucket",
@@ -72,7 +72,7 @@
         "root_causes": [
           "general"
         ],
-        "why_now": "Asset has been unsafe for 96 hours (threshold: 0 hours). Unsafe since 2026-01-10T00:00:00Z."
+        "temporal_risk": "Asset has been unsafe for 96 hours (threshold: 0 hours). Unsafe since 2026-01-10T00:00:00Z."
       },
       "control_severity": "high",
       "control_compliance": {
@@ -110,7 +110,7 @@
         "root_causes": [
           "general"
         ],
-        "why_now": "Asset has been unsafe for 96 hours (threshold: 0 hours). Unsafe since 2026-01-10T00:00:00Z."
+        "temporal_risk": "Asset has been unsafe for 96 hours (threshold: 0 hours). Unsafe since 2026-01-10T00:00:00Z."
       },
       "control_severity": "critical",
       "control_compliance": {
@@ -189,7 +189,7 @@
             "unsafe_value": "backups/"
           }
         ],
-        "why_now": "Protected prefix \"backups/\" is publicly readable via missing_evidence."
+        "temporal_risk": "Protected prefix \"backups/\" is publicly readable via missing_evidence."
       },
       "control_severity": "high",
       "exposure": {
@@ -262,7 +262,7 @@
             "unsafe_value": "internal/"
           }
         ],
-        "why_now": "Protected prefix \"internal/\" is publicly readable via missing_evidence."
+        "temporal_risk": "Protected prefix \"internal/\" is publicly readable via missing_evidence."
       },
       "control_severity": "high",
       "exposure": {
@@ -335,7 +335,7 @@
             "unsafe_value": "invoices/"
           }
         ],
-        "why_now": "Protected prefix \"invoices/\" is publicly readable via missing_evidence."
+        "temporal_risk": "Protected prefix \"invoices/\" is publicly readable via missing_evidence."
       },
       "control_severity": "high",
       "exposure": {
@@ -408,7 +408,7 @@
             "unsafe_value": "secrets/"
           }
         ],
-        "why_now": "Protected prefix \"secrets/\" is publicly readable via missing_evidence."
+        "temporal_risk": "Protected prefix \"secrets/\" is publicly readable via missing_evidence."
       },
       "control_severity": "high",
       "exposure": {

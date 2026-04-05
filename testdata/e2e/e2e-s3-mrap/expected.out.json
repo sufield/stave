@@ -1,5 +1,5 @@
 {
-  "at_risk": [
+  "risk_signals": [
     {
       "asset_id": "mrap-bucket",
       "asset_type": "aws_s3_bucket",
@@ -55,7 +55,7 @@
         ],
         "threshold_hours": 168,
         "unsafe_duration_hours": 216,
-        "why_now": "Asset has been unsafe for 216 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+        "temporal_risk": "Asset has been unsafe for 216 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
       },
       "exposure": {
         "principal_scope": "public",
@@ -101,7 +101,7 @@
         ],
         "threshold_hours": 168,
         "unsafe_duration_hours": 216,
-        "why_now": "Asset has been unsafe for 216 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+        "temporal_risk": "Asset has been unsafe for 216 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
       },
       "exposure": {
         "principal_scope": "public",
@@ -119,7 +119,7 @@
     }
   ],
   "kind": "evaluation",
-  "posture": "UNSAFE",
+  "security_state": "NON_COMPLIANT",
   "run": {
     "input_hashes": {
       "files": {
@@ -136,8 +136,8 @@
   },
   "schema_version": "out.v0.1",
   "summary": {
-    "assets_evaluated": 1,
-    "attack_surface": 1,
+    "total_assets": 1,
+    "exposed_resources": 1,
     "violations": 2
   }
 }

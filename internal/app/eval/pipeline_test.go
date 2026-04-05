@@ -17,11 +17,11 @@ func TestOutputPipeline_Success(t *testing.T) {
 
 	p := &OutputPipeline{
 		Marshaler: &outputMarshalerStub{data: []byte(`{"ok":true}`)},
-		Enricher: func(r evaluation.Audit) (appcontracts.EnrichedResult, error) {
+		Enricher: func(r evaluation.ComplianceReport) (appcontracts.EnrichedResult, error) {
 			return appcontracts.EnrichedResult{Result: r, Run: r.Run}, nil
 		},
 	}
-	err := p.Run(context.Background(), &buf, evaluation.Audit{Run: evaluation.RunInfo{StaveVersion: "test"}})
+	err := p.Run(context.Background(), &buf, evaluation.ComplianceReport{Run: evaluation.RunInfo{StaveVersion: "test"}})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -35,11 +35,11 @@ func TestOutputPipeline_MarshalError(t *testing.T) {
 
 	p := &OutputPipeline{
 		Marshaler: &outputMarshalerStub{err: sentinel},
-		Enricher: func(_ evaluation.Audit) (appcontracts.EnrichedResult, error) {
+		Enricher: func(_ evaluation.ComplianceReport) (appcontracts.EnrichedResult, error) {
 			return appcontracts.EnrichedResult{}, nil
 		},
 	}
-	err := p.Run(context.Background(), &bytes.Buffer{}, evaluation.Audit{})
+	err := p.Run(context.Background(), &bytes.Buffer{}, evaluation.ComplianceReport{})
 	if err == nil {
 		t.Fatal("expected error")
 	}
@@ -57,11 +57,11 @@ func TestOutputPipeline_CancelledContext(t *testing.T) {
 
 	p := &OutputPipeline{
 		Marshaler: &outputMarshalerStub{data: []byte(`{}`)},
-		Enricher: func(_ evaluation.Audit) (appcontracts.EnrichedResult, error) {
+		Enricher: func(_ evaluation.ComplianceReport) (appcontracts.EnrichedResult, error) {
 			return appcontracts.EnrichedResult{}, nil
 		},
 	}
-	err := p.Run(ctx, &bytes.Buffer{}, evaluation.Audit{})
+	err := p.Run(ctx, &bytes.Buffer{}, evaluation.ComplianceReport{})
 	if !errors.Is(err, context.Canceled) {
 		t.Fatalf("expected context.Canceled, got %v", err)
 	}

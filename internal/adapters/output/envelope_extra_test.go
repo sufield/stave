@@ -16,9 +16,9 @@ func TestBuildSafetyEnvelopeFromEnriched_NilFindings(t *testing.T) {
 			Now:               time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 			MaxUnsafeDuration: kernel.Duration(24 * time.Hour),
 		},
-		Result: evaluation.Audit{
-			Summary: evaluation.Summary{AssetsEvaluated: 5},
-			Posture: evaluation.PostureSafe,
+		Result: evaluation.ComplianceReport{
+			Summary:       evaluation.ComplianceSummary{TotalAssets: 5},
+			SecurityState: evaluation.StateCompliant,
 		},
 		// Findings is nil
 	}
@@ -37,12 +37,12 @@ func TestBuildSafetyEnvelopeFromEnriched_WithFindings(t *testing.T) {
 			Now:               time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 			MaxUnsafeDuration: kernel.Duration(24 * time.Hour),
 		},
-		Result: evaluation.Audit{
-			Summary: evaluation.Summary{
-				AssetsEvaluated: 1,
-				Violations:      1,
+		Result: evaluation.ComplianceReport{
+			Summary: evaluation.ComplianceSummary{
+				TotalAssets: 1,
+				Violations:  1,
 			},
-			Posture: evaluation.PostureUnsafe,
+			SecurityState: evaluation.StateNonCompliant,
 		},
 		Findings: []appcontracts.EnrichedFinding{
 			{Finding: evaluation.Finding{ControlID: "CTL.A.001", AssetID: "bucket-1"}},

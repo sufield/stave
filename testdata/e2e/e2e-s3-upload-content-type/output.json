@@ -17,12 +17,12 @@
     "pack_hash": "45f34f72f0576f50ad06dfe17f45df33aa1e752683cc8a1ba0f995006b91d26d"
   },
   "summary": {
-    "assets_evaluated": 2,
-    "attack_surface": 1,
+    "total_assets": 2,
+    "exposed_resources": 1,
     "violations": 1
   },
-  "posture": "UNSAFE",
-  "at_risk": [
+  "security_state": "NON_COMPLIANT",
+  "risk_signals": [
     {
       "control_id": "CTL.S3.WRITE.CONTENT.001",
       "asset_id": "upload-policy-unrestricted-content",
@@ -70,7 +70,7 @@
         "root_causes": [
           "general"
         ],
-        "why_now": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+        "temporal_risk": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",

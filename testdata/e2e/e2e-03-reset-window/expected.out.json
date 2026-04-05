@@ -1,5 +1,5 @@
 {
-  "at_risk": [
+  "risk_signals": [
     {
       "asset_id": "res:aws:s3:bucket:flip-bucket",
       "asset_type": "storage_bucket",
@@ -13,7 +13,7 @@
   ],
   "findings": [],
   "kind": "evaluation",
-  "posture": "BORDERLINE",
+  "security_state": "AT_RISK",
   "run": {
     "input_hashes": {
       "files": {
@@ -31,8 +31,8 @@
   },
   "schema_version": "out.v0.1",
   "summary": {
-    "assets_evaluated": 1,
-    "attack_surface": 1,
+    "total_assets": 1,
+    "exposed_resources": 1,
     "violations": 0
   }
 }

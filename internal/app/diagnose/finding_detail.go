@@ -15,7 +15,7 @@ type FindingDetailInput struct {
 	AssetID      asset.ID
 	Controls     policy.ControlDefinitions
 	Snapshots    []asset.Snapshot
-	Result       *evaluation.Audit
+	Result       *evaluation.ComplianceReport
 	TraceBuilder evaluation.FindingTraceBuilder
 	IDGen        ports.IdentityGenerator
 }

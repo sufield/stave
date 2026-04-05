@@ -19,7 +19,7 @@ import (
 type Config struct {
 	ControlsDir       string
 	ObservationsDir   string
-	PreviousResult    *evaluation.Audit // Optional: pre-loaded evaluation result (resolved by cmd layer).
+	PreviousResult    *evaluation.ComplianceReport // Optional: pre-loaded evaluation result (resolved by cmd layer).
 	MaxUnsafeDuration time.Duration
 	Clock             ports.Clock
 	PredicateParser   func(any) (*policy.UnsafePredicate, error)
@@ -71,7 +71,7 @@ func (d *Run) Execute(ctx context.Context, cfg Config) (*diagnosis.Report, error
 		Controls:          loaded.controls,
 		Findings:          toDiagnosticFindings(result.Findings),
 		ViolationsFound:   len(result.Findings),
-		AttackSurface:     result.Summary.AttackSurface,
+		AttackSurface:     result.Summary.ExposedResources,
 		MaxUnsafeDuration: cfg.MaxUnsafeDuration,
 		Now:               cfg.Clock.Now(),
 		PredicateEval:     cfg.PredicateEval,
@@ -138,7 +138,7 @@ func (d *Run) loadArtifacts(
 func (d *Run) resolveResult(
 	cfg Config,
 	artifacts artifacts,
-) (*evaluation.Audit, error) {
+) (*evaluation.ComplianceReport, error) {
 	if cfg.PreviousResult != nil {
 		return cfg.PreviousResult, nil
 	}

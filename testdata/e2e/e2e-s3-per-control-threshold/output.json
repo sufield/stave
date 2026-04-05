@@ -17,12 +17,12 @@
     "pack_hash": "cdbb17ac7321c439f566401dfd8cf24c69959caf103ff76a5cf56eb2a67ef022"
   },
   "summary": {
-    "assets_evaluated": 1,
-    "attack_surface": 1,
+    "total_assets": 1,
+    "exposed_resources": 1,
     "violations": 1
   },
-  "posture": "UNSAFE",
-  "at_risk": [
+  "security_state": "NON_COMPLIANT",
+  "risk_signals": [
     {
       "control_id": "CTL.TEST.OVERRIDE.001",
       "asset_id": "test-public-bucket",
@@ -67,7 +67,7 @@
         "root_causes": [
           "general"
         ],
-        "why_now": "Asset has been unsafe for 1 hours (threshold: 0 hours). Unsafe since 2026-01-10T23:00:00Z."
+        "temporal_risk": "Asset has been unsafe for 1 hours (threshold: 0 hours). Unsafe since 2026-01-10T23:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",

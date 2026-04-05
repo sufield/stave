@@ -1,7 +1,7 @@
 {
   "findings": [],
   "kind": "evaluation",
-  "posture": "SAFE",
+  "security_state": "COMPLIANT",
   "run": {
     "input_hashes": {
       "files": {
@@ -17,7 +17,7 @@
     "snapshots": 2
   },
   "schema_version": "out.v0.1",
-  "skipped": [
+  "skipped_controls": [
     {
       "control_id": "CTL.TP.PLATFORM.001",
       "control_name": "Third-Party Platform Boundaries",
@@ -25,8 +25,8 @@
     }
   ],
   "summary": {
-    "assets_evaluated": 0,
-    "attack_surface": 0,
+    "total_assets": 0,
+    "exposed_resources": 0,
     "violations": 0
   }
 }

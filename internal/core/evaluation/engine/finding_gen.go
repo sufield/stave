@@ -37,7 +37,7 @@ func CreateDurationFinding(in DurationFindingInput) *evaluation.Finding {
 		Misconfigurations:   misconfigs,
 		RootCauses:          causes,
 		SourceEvidence:      ExtractSourceEvidence(a, causes),
-		WhyNow:              in.Timeline.FormatUnsafeSummary(in.Threshold, in.Now),
+		TemporalRisk:        in.Timeline.FormatUnsafeSummary(in.Threshold, in.Now),
 	}
 	return f
 }

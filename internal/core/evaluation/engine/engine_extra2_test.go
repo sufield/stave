@@ -254,8 +254,8 @@ func TestRunnerEvaluate_EmptySnapshots(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Evaluate: %v", err)
 	}
-	if result.Posture != evaluation.PostureSafe {
-		t.Fatalf("empty should be safe, got %v", result.Posture)
+	if result.SecurityState != evaluation.StateCompliant {
+		t.Fatalf("empty should be safe, got %v", result.SecurityState)
 	}
 }
 
@@ -294,8 +294,8 @@ func TestRunnerEvaluate_BasicViolation(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Evaluate: %v", err)
 	}
-	if result.Posture != evaluation.PostureUnsafe {
-		t.Fatalf("expected unsafe, got %v", result.Posture)
+	if result.SecurityState != evaluation.StateNonCompliant {
+		t.Fatalf("expected unsafe, got %v", result.SecurityState)
 	}
 	if len(result.Findings) == 0 {
 		t.Fatal("expected findings")

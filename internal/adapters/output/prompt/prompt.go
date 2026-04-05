@@ -126,8 +126,8 @@ func BuildEvidenceSummary(ev evaluation.Evidence) string {
 	if ev.RecurrenceLimit > 0 {
 		lines = append(lines, fmt.Sprintf("- Recurrence limit: %d", ev.RecurrenceLimit))
 	}
-	if ev.WhyNow != "" {
-		lines = append(lines, fmt.Sprintf("- Why now: %s", ev.WhyNow))
+	if ev.TemporalRisk != "" {
+		lines = append(lines, fmt.Sprintf("- Why now: %s", ev.TemporalRisk))
 	}
 
 	if len(lines) == 0 {

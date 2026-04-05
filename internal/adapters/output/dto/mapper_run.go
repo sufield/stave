@@ -34,11 +34,11 @@ func fromInputHashes(h *evaluation.InputHashes) *InputHashesDTO {
 	}
 }
 
-func fromSummary(s evaluation.Summary) SummaryDTO {
+func fromSummary(s evaluation.ComplianceSummary) SummaryDTO {
 	return SummaryDTO{
-		AssetsEvaluated: s.AssetsEvaluated,
-		AttackSurface:   s.AttackSurface,
-		Violations:      s.Violations,
+		TotalAssets:      s.TotalAssets,
+		ExposedResources: s.ExposedResources,
+		Violations:       s.Violations,
 	}
 }
 

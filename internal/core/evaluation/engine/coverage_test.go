@@ -129,7 +129,7 @@ func TestCoverageValidatorIsSufficient(t *testing.T) {
 }
 
 func TestEvaluationRowMarkInconclusive(t *testing.T) {
-	row := evaluation.Observation{
+	row := evaluation.ResourceCheck{
 		Verdict:    evaluation.VerdictPass,
 		Confidence: evaluation.ConfidenceHigh,
 	}

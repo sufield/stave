@@ -189,7 +189,7 @@ func TestReporter_ReportApply_Pass(t *testing.T) {
 	}
 
 	policy := evaluation.ResponsePolicy{}
-	res := EvaluateResult{Posture: evaluation.PostureSafe}
+	res := EvaluateResult{SecurityState: evaluation.StateCompliant}
 	err := r.ReportApply(res, policy)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -209,7 +209,7 @@ func TestReporter_ReportApply_Fail(t *testing.T) {
 
 	policy := evaluation.ResponsePolicy{}
 	res := EvaluateResult{
-		Posture:         evaluation.PostureUnsafe,
+		SecurityState:   evaluation.StateNonCompliant,
 		DiagnoseCommand: "stave diagnose",
 		NextSteps:       []string{"fix it"},
 	}
@@ -229,7 +229,7 @@ func TestReporter_ReportApply_Quiet(t *testing.T) {
 	}
 
 	policy := evaluation.ResponsePolicy{}
-	res := EvaluateResult{Posture: evaluation.PostureSafe}
+	res := EvaluateResult{SecurityState: evaluation.StateCompliant}
 	err := r.ReportApply(res, policy)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -462,7 +462,7 @@ func TestFilterSnapshots_EmptyQuiet(t *testing.T) {
 
 func TestFinalizeProfileEvaluation_NoFindings(t *testing.T) {
 	var stderr bytes.Buffer
-	result := evaluation.Audit{Findings: nil}
+	result := evaluation.ComplianceReport{Findings: nil}
 	err := finalizeProfileEvaluation(&stderr, false, result, nil, "ctl", "input")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -474,7 +474,7 @@ func TestFinalizeProfileEvaluation_NoFindings(t *testing.T) {
 
 func TestFinalizeProfileEvaluation_WithFindings(t *testing.T) {
 	var stderr bytes.Buffer
-	result := evaluation.Audit{
+	result := evaluation.ComplianceReport{
 		Findings: []evaluation.Finding{{ControlID: "CTL.TEST.001"}},
 	}
 	err := finalizeProfileEvaluation(&stderr, false, result, nil, "ctl", "input")
@@ -485,7 +485,7 @@ func TestFinalizeProfileEvaluation_WithFindings(t *testing.T) {
 
 func TestFinalizeProfileEvaluation_Quiet(t *testing.T) {
 	var stderr bytes.Buffer
-	result := evaluation.Audit{Findings: nil}
+	result := evaluation.ComplianceReport{Findings: nil}
 	err := finalizeProfileEvaluation(&stderr, true, result, nil, "ctl", "input")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -528,8 +528,8 @@ func TestNewReadinessRunner(t *testing.T) {
 
 func TestEvaluateResult_Defaults(t *testing.T) {
 	res := EvaluateResult{}
-	if res.Posture != "" {
-		t.Fatalf("expected empty status, got %q", res.Posture)
+	if res.SecurityState != "" {
+		t.Fatalf("expected empty status, got %q", res.SecurityState)
 	}
 	if res.DiagnoseCommand != "" {
 		t.Fatal("expected empty command")

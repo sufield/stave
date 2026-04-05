@@ -58,7 +58,7 @@ func TestDiagnoseExecuteAndLoaders(t *testing.T) {
 	}
 
 	t.Run("uses previous result when provided", func(t *testing.T) {
-		previousResult := &evaluation.Audit{Findings: []evaluation.Finding{}}
+		previousResult := &evaluation.ComplianceReport{Findings: []evaluation.Finding{}}
 		report, err := run.Execute(context.Background(), appdiagnose.Config{
 			ControlsDir:       "ctl",
 			ObservationsDir:   "obs",

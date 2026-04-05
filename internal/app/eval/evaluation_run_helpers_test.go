@@ -9,7 +9,7 @@ import (
 
 // ExecuteAndWrite runs the full evaluate use case: load artifacts, evaluate, marshal, and write output.
 // This is a test helper that combines Execute with the output pipeline.
-func (e *EvaluateRun) ExecuteAndWrite(ctx context.Context, cfg EvaluateConfig) (evaluation.Posture, error) {
+func (e *EvaluateRun) ExecuteAndWrite(ctx context.Context, cfg EvaluateConfig) (evaluation.SecurityState, error) {
 	result, status, err := e.Execute(ctx, cfg)
 	if err != nil {
 		return "", err

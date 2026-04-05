@@ -1,5 +1,5 @@
 {
-  "at_risk": [
+  "risk_signals": [
     {
       "asset_id": "public-phi-bucket",
       "asset_type": "aws_s3_bucket",
@@ -137,7 +137,7 @@
         ],
         "threshold_hours": 168,
         "unsafe_duration_hours": 240,
-        "why_now": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+        "temporal_risk": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
       },
       "posture_drift": {
         "episode_count": 1,
@@ -185,7 +185,7 @@
         ],
         "threshold_hours": 168,
         "unsafe_duration_hours": 240,
-        "why_now": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+        "temporal_risk": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
       },
       "posture_drift": {
         "episode_count": 1,
@@ -245,7 +245,7 @@
         ],
         "threshold_hours": 168,
         "unsafe_duration_hours": 240,
-        "why_now": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+        "temporal_risk": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
       },
       "posture_drift": {
         "episode_count": 1,
@@ -287,7 +287,7 @@
         ],
         "threshold_hours": 168,
         "unsafe_duration_hours": 240,
-        "why_now": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+        "temporal_risk": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
       },
       "posture_drift": {
         "episode_count": 1,
@@ -328,7 +328,7 @@
         ],
         "threshold_hours": 168,
         "unsafe_duration_hours": 240,
-        "why_now": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+        "temporal_risk": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
       },
       "exposure": {
         "principal_scope": "public",
@@ -426,7 +426,7 @@
         ],
         "threshold_hours": 168,
         "unsafe_duration_hours": 240,
-        "why_now": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+        "temporal_risk": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
       },
       "exposure": {
         "principal_scope": "public",
@@ -500,7 +500,7 @@
         ],
         "threshold_hours": 168,
         "unsafe_duration_hours": 240,
-        "why_now": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+        "temporal_risk": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
       },
       "exposure": {
         "principal_scope": "public",
@@ -574,7 +574,7 @@
         ],
         "threshold_hours": 168,
         "unsafe_duration_hours": 240,
-        "why_now": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+        "temporal_risk": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
       },
       "exposure": {
         "principal_scope": "public",
@@ -648,7 +648,7 @@
         ],
         "threshold_hours": 168,
         "unsafe_duration_hours": 240,
-        "why_now": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+        "temporal_risk": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
       },
       "exposure": {
         "principal_scope": "public",
@@ -740,7 +740,7 @@
         ],
         "threshold_hours": 168,
         "unsafe_duration_hours": 240,
-        "why_now": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+        "temporal_risk": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
       },
       "exposure": {
         "principal_scope": "public",
@@ -813,7 +813,7 @@
             "unsafe_value": "backups/"
           }
         ],
-        "why_now": "Protected prefix \"backups/\" is publicly readable via missing_evidence."
+        "temporal_risk": "Protected prefix \"backups/\" is publicly readable via missing_evidence."
       },
       "exposure": {
         "principal_scope": "public",
@@ -886,7 +886,7 @@
             "unsafe_value": "internal/"
           }
         ],
-        "why_now": "Protected prefix \"internal/\" is publicly readable via missing_evidence."
+        "temporal_risk": "Protected prefix \"internal/\" is publicly readable via missing_evidence."
       },
       "exposure": {
         "principal_scope": "public",
@@ -959,7 +959,7 @@
             "unsafe_value": "invoices/"
           }
         ],
-        "why_now": "Protected prefix \"invoices/\" is publicly readable via missing_evidence."
+        "temporal_risk": "Protected prefix \"invoices/\" is publicly readable via missing_evidence."
       },
       "exposure": {
         "principal_scope": "public",
@@ -1032,7 +1032,7 @@
             "unsafe_value": "secrets/"
           }
         ],
-        "why_now": "Protected prefix \"secrets/\" is publicly readable via missing_evidence."
+        "temporal_risk": "Protected prefix \"secrets/\" is publicly readable via missing_evidence."
       },
       "exposure": {
         "principal_scope": "public",
@@ -1105,7 +1105,7 @@
             "unsafe_value": "backups/"
           }
         ],
-        "why_now": "Protected prefix \"backups/\" is publicly readable via missing_evidence."
+        "temporal_risk": "Protected prefix \"backups/\" is publicly readable via missing_evidence."
       },
       "exposure": {
         "principal_scope": "public",
@@ -1178,7 +1178,7 @@
             "unsafe_value": "internal/"
           }
         ],
-        "why_now": "Protected prefix \"internal/\" is publicly readable via missing_evidence."
+        "temporal_risk": "Protected prefix \"internal/\" is publicly readable via missing_evidence."
       },
       "exposure": {
         "principal_scope": "public",
@@ -1251,7 +1251,7 @@
             "unsafe_value": "invoices/"
           }
         ],
-        "why_now": "Protected prefix \"invoices/\" is publicly readable via missing_evidence."
+        "temporal_risk": "Protected prefix \"invoices/\" is publicly readable via missing_evidence."
       },
       "exposure": {
         "principal_scope": "public",
@@ -1324,7 +1324,7 @@
             "unsafe_value": "secrets/"
           }
         ],
-        "why_now": "Protected prefix \"secrets/\" is publicly readable via missing_evidence."
+        "temporal_risk": "Protected prefix \"secrets/\" is publicly readable via missing_evidence."
       },
       "exposure": {
         "principal_scope": "public",
@@ -1376,7 +1376,7 @@
     }
   ],
   "kind": "evaluation",
-  "posture": "UNSAFE",
+  "security_state": "NON_COMPLIANT",
   "remediation_groups": [
     {
       "asset_id": "private-bucket",
@@ -1485,8 +1485,8 @@
   },
   "schema_version": "out.v0.1",
   "summary": {
-    "assets_evaluated": 2,
-    "attack_surface": 2,
+    "total_assets": 2,
+    "exposed_resources": 2,
     "violations": 18
   }
 }

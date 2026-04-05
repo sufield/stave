@@ -17,12 +17,12 @@
     "pack_hash": "5569c0ea77304ab6bb5c1e932ad299b037790563f57a4cf579136136d930d1a8"
   },
   "summary": {
-    "assets_evaluated": 2,
-    "attack_surface": 1,
+    "total_assets": 2,
+    "exposed_resources": 1,
     "violations": 1
   },
-  "posture": "UNSAFE",
-  "at_risk": [
+  "security_state": "NON_COMPLIANT",
+  "risk_signals": [
     {
       "control_id": "CTL.ID.KUBE.001",
       "asset_id": "k8s:ClusterRoleBinding/complete-binding",
@@ -58,7 +58,7 @@
         "root_causes": [
           "general"
         ],
-        "why_now": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+        "temporal_risk": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
       },
       "control_severity": "critical",
       "posture_drift": {

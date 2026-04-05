@@ -16,7 +16,7 @@ import (
 func TestWriteFindings_BareJSON(t *testing.T) {
 	w := NewFindingWriter(false)
 	enricher := remediation.NewPlanner()
-	result := evaluation.Audit{
+	result := evaluation.ComplianceReport{
 		Run: evaluation.RunInfo{
 			StaveVersion:      "test",
 			Offline:           true,
@@ -24,10 +24,10 @@ func TestWriteFindings_BareJSON(t *testing.T) {
 			MaxUnsafeDuration: kernel.Duration(24 * time.Hour),
 			Snapshots:         0,
 		},
-		Summary: evaluation.Summary{
-			AssetsEvaluated: 0,
-			AttackSurface:   0,
-			Violations:      0,
+		Summary: evaluation.ComplianceSummary{
+			TotalAssets:      0,
+			ExposedResources: 0,
+			Violations:       0,
 		},
 		Findings: nil,
 	}

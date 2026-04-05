@@ -17,11 +17,11 @@
     "pack_hash": "3e4adb4aed85eb64d5f3b59514f45ff9f82f3cd39fc81e38a7c04a9032062038"
   },
   "summary": {
-    "assets_evaluated": 1,
-    "attack_surface": 1,
+    "total_assets": 1,
+    "exposed_resources": 1,
     "violations": 1
   },
-  "posture": "UNSAFE",
+  "security_state": "NON_COMPLIANT",
   "findings": [
     {
       "control_id": "CTL.EXP.VISIBILITY.003",
@@ -45,7 +45,7 @@
             "unsafe_value": "invoices/"
           }
         ],
-        "why_now": "Protected prefix \"invoices/\" is publicly readable via missing_evidence."
+        "temporal_risk": "Protected prefix \"invoices/\" is publicly readable via missing_evidence."
       },
       "posture_drift": {
         "pattern": "persistent",

@@ -1,5 +1,5 @@
 {
-  "at_risk": [
+  "risk_signals": [
     {
       "asset_id": "res:aws:s3:bucket:public-bucket",
       "asset_type": "storage_bucket",
@@ -35,7 +35,7 @@
         ],
         "threshold_hours": 168,
         "unsafe_duration_hours": 240,
-        "why_now": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+        "temporal_risk": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
       },
       "posture_drift": {
         "episode_count": 1,
@@ -52,7 +52,7 @@
     }
   ],
   "kind": "evaluation",
-  "posture": "UNSAFE",
+  "security_state": "NON_COMPLIANT",
   "run": {
     "input_hashes": {
       "files": {
@@ -70,8 +70,8 @@
   },
   "schema_version": "out.v0.1",
   "summary": {
-    "assets_evaluated": 2,
-    "attack_surface": 1,
+    "total_assets": 2,
+    "exposed_resources": 1,
     "violations": 1
   }
 }

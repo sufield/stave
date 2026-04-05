@@ -30,7 +30,7 @@ type EvaluateInput struct {
 }
 
 // Evaluate runs domain evaluation over already-loaded inputs.
-func Evaluate(input EvaluateInput) (evaluation.Audit, error) {
+func Evaluate(input EvaluateInput) (evaluation.ComplianceReport, error) {
 	catalog := policy.NewCatalog(input.Controls)
 	runner := engine.NewRunner()
 	runner.Controls = catalog.List()
@@ -49,7 +49,7 @@ func Evaluate(input EvaluateInput) (evaluation.Audit, error) {
 		InputHashes:  input.InputHashes,
 	})
 	if err != nil {
-		return evaluation.Audit{}, err
+		return evaluation.ComplianceReport{}, err
 	}
 	result.Metadata = input.Metadata
 	return result, nil
@@ -69,7 +69,7 @@ type EvaluationRequest struct {
 
 // EvaluateLoaded evaluates already-loaded controls and snapshots.
 // This keeps command adapters from directly constructing domain evaluators.
-func EvaluateLoaded(req EvaluationRequest) (evaluation.Audit, error) {
+func EvaluateLoaded(req EvaluationRequest) (evaluation.ComplianceReport, error) {
 	if req.Clock == nil {
 		req.Clock = ports.RealClock{}
 	}

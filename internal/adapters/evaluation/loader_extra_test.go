@@ -18,13 +18,13 @@ import (
 
 func TestLoader_LoadFromFile_ValidJSON(t *testing.T) {
 	dir := t.TempDir()
-	result := evaluation.Audit{
+	result := evaluation.ComplianceReport{
 		Run: evaluation.RunInfo{
 			StaveVersion:      "test",
 			MaxUnsafeDuration: kernel.Duration(24 * time.Hour),
 			Snapshots:         2,
 		},
-		Summary: evaluation.Summary{AssetsEvaluated: 1},
+		Summary: evaluation.ComplianceSummary{TotalAssets: 1},
 	}
 	data, err := json.Marshal(result)
 	if err != nil {
@@ -40,14 +40,14 @@ func TestLoader_LoadFromFile_ValidJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("LoadFromFile() error = %v", err)
 	}
-	if got.Summary.AssetsEvaluated != 1 {
-		t.Errorf("AssetsEvaluated = %d, want 1", got.Summary.AssetsEvaluated)
+	if got.Summary.TotalAssets != 1 {
+		t.Errorf("AssetsEvaluated = %d, want 1", got.Summary.TotalAssets)
 	}
 }
 
 func TestLoader_LoadFromReader_ValidJSON(t *testing.T) {
-	result := evaluation.Audit{
-		Summary: evaluation.Summary{Violations: 3},
+	result := evaluation.ComplianceReport{
+		Summary: evaluation.ComplianceSummary{Violations: 3},
 	}
 	data, _ := json.Marshal(result)
 
@@ -70,9 +70,9 @@ func TestLoader_LoadEnvelopeFromFile_ValidEnvelope(t *testing.T) {
 			MaxUnsafeDuration: kernel.Duration(24 * time.Hour),
 			Snapshots:         2,
 		},
-		Summary:  evaluation.Summary{AssetsEvaluated: 1},
-		Posture:  evaluation.PostureSafe,
-		Findings: []remediation.Finding{},
+		Summary:       evaluation.ComplianceSummary{TotalAssets: 1},
+		SecurityState: evaluation.StateCompliant,
+		Findings:      []remediation.Finding{},
 	})
 	data, err := json.Marshal(env)
 	if err != nil {

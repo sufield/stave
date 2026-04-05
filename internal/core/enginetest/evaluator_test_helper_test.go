@@ -57,7 +57,7 @@ func (e *testEvaluator) Controls() []policy.ControlDefinition {
 	return e.runner.Controls
 }
 
-func (e *testEvaluator) Evaluate(snapshots []asset.Snapshot) evaluation.Audit {
+func (e *testEvaluator) Evaluate(snapshots []asset.Snapshot) evaluation.ComplianceReport {
 	result, err := e.runner.Evaluate(snapshots, engine.EvaluateOptions{
 		InputHashes: e.InputHashes,
 	})

@@ -24,13 +24,13 @@ func TestFromEvaluation_MinimalEnvelope(t *testing.T) {
 			MaxUnsafeDuration: kernel.Duration(24 * time.Hour),
 			Snapshots:         2,
 		},
-		Summary: evaluation.Summary{
-			AssetsEvaluated: 3,
-			AttackSurface:   1,
-			Violations:      0,
+		Summary: evaluation.ComplianceSummary{
+			TotalAssets:      3,
+			ExposedResources: 1,
+			Violations:       0,
 		},
-		Posture:  evaluation.PostureSafe,
-		Findings: []remediation.Finding{},
+		SecurityState: evaluation.StateCompliant,
+		Findings:      []remediation.Finding{},
 	})
 
 	dto := FromEvaluation(env)
@@ -50,19 +50,19 @@ func TestFromEvaluation_MinimalEnvelope(t *testing.T) {
 	if dto.Run.Snapshots != 2 {
 		t.Errorf("Run.Snapshots = %d", dto.Run.Snapshots)
 	}
-	if dto.Summary.AssetsEvaluated != 3 {
-		t.Errorf("Summary.AssetsEvaluated = %d", dto.Summary.AssetsEvaluated)
+	if dto.Summary.TotalAssets != 3 {
+		t.Errorf("Summary.TotalAssets = %d", dto.Summary.TotalAssets)
 	}
-	if dto.Posture != evaluation.PostureSafe {
-		t.Errorf("Posture = %q", dto.Posture)
+	if dto.SecurityState != evaluation.StateCompliant {
+		t.Errorf("SecurityState = %q", dto.SecurityState)
 	}
 	if len(dto.Findings) != 0 {
 		t.Errorf("len(Findings) = %d", len(dto.Findings))
 	}
-	if dto.AtRisk != nil {
-		t.Error("AtRisk should be nil for empty items")
+	if dto.RiskSignals != nil {
+		t.Error("RiskSignals should be nil for empty items")
 	}
-	if dto.Skipped != nil {
+	if dto.SkippedControls != nil {
 		t.Error("Skipped should be nil for empty input")
 	}
 	if dto.ExemptedAssets != nil {
@@ -95,7 +95,7 @@ func TestFromFinding_AllFields(t *testing.T) {
 				LastSeenUnsafeAt:    now.Add(-1 * time.Hour),
 				UnsafeDurationHours: 47,
 				ThresholdHours:      24,
-				WhyNow:              "Threshold exceeded",
+				TemporalRisk:        "Threshold exceeded",
 				Misconfigurations: []policy.Misconfiguration{
 					{Property: predicate.NewFieldPath("storage.access.public_read"), ActualValue: true, Operator: "eq", UnsafeValue: true},
 				},
@@ -152,8 +152,8 @@ func TestFromFinding_AllFields(t *testing.T) {
 	if dto.Evidence.UnsafeDurationHours != 47 {
 		t.Errorf("Evidence.UnsafeDurationHours = %f", dto.Evidence.UnsafeDurationHours)
 	}
-	if dto.Evidence.WhyNow != "Threshold exceeded" {
-		t.Errorf("Evidence.WhyNow = %q", dto.Evidence.WhyNow)
+	if dto.Evidence.TemporalRisk != "Threshold exceeded" {
+		t.Errorf("Evidence.TemporalRisk = %q", dto.Evidence.TemporalRisk)
 	}
 	if len(dto.Evidence.Misconfigurations) != 1 {
 		t.Fatalf("len(Evidence.Misconfigurations) = %d", len(dto.Evidence.Misconfigurations))
@@ -493,9 +493,9 @@ func TestFromExtensions_WithoutGit(t *testing.T) {
 }
 
 func TestFromSummary(t *testing.T) {
-	s := evaluation.Summary{AssetsEvaluated: 5, AttackSurface: 2, Violations: 1}
+	s := evaluation.ComplianceSummary{TotalAssets: 5, ExposedResources: 2, Violations: 1}
 	dto := fromSummary(s)
-	if dto.AssetsEvaluated != 5 || dto.AttackSurface != 2 || dto.Violations != 1 {
+	if dto.TotalAssets != 5 || dto.ExposedResources != 2 || dto.Violations != 1 {
 		t.Errorf("Summary = %+v", dto)
 	}
 }
@@ -512,7 +512,7 @@ func TestFromEvidence_WithAllFields(t *testing.T) {
 		RecurrenceLimit:     3,
 		FirstEpisodeAt:      now.Add(-72 * time.Hour),
 		LastEpisodeAt:       now,
-		WhyNow:              "threshold exceeded",
+		TemporalRisk:        "threshold exceeded",
 		Misconfigurations: []policy.Misconfiguration{
 			{Property: predicate.NewFieldPath("x"), ActualValue: true, Operator: "eq"},
 		},

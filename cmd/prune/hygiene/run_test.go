@@ -71,7 +71,7 @@ func TestRenderMarkdown(t *testing.T) {
 		"## Current Risk Status",
 		"| Current violations | 4 |",
 		"| Upcoming overdue | 1 |",
-		"## Risk Posture & Trends",
+		"## Risk SecurityState & Trends",
 		"| Current violations | 4 | 6 | ↓ -2 |",
 	}
 	for _, needle := range contains {

@@ -73,7 +73,7 @@ func fromEvidence(e evaluation.Evidence) EvidenceDTO {
 		RecurrenceLimit:     e.RecurrenceLimit,
 		FirstEpisodeAt:      e.FirstEpisodeAt,
 		LastEpisodeAt:       e.LastEpisodeAt,
-		WhyNow:              e.WhyNow,
+		TemporalRisk:        e.TemporalRisk,
 	}
 
 	if len(e.Misconfigurations) > 0 {

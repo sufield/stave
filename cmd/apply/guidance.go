@@ -16,7 +16,7 @@ const (
 
 // EvaluateResult provides structured execution outcomes and CLI guidance.
 type EvaluateResult struct {
-	Posture         evaluation.Posture
+	SecurityState   evaluation.SecurityState
 	DiagnoseCommand string   // full CLI command for copy-paste
 	NextSteps       []string // nil when safe
 }
@@ -24,14 +24,14 @@ type EvaluateResult struct {
 // BuildEvaluateResult maps a domain safety status into actionable CLI guidance.
 // This lives in the cmd layer because it produces CLI-specific strings
 // (command names, flag suggestions) that the app layer must not know about.
-func BuildEvaluateResult(status evaluation.Posture, controlsDir, observationsDir string) EvaluateResult {
-	if status == evaluation.PostureSafe {
-		return EvaluateResult{Posture: status}
+func BuildEvaluateResult(status evaluation.SecurityState, controlsDir, observationsDir string) EvaluateResult {
+	if status == evaluation.StateCompliant {
+		return EvaluateResult{SecurityState: status}
 	}
 
 	hint := BuildDiagnoseHint(controlsDir, observationsDir)
 	return EvaluateResult{
-		Posture:         status,
+		SecurityState:   status,
 		DiagnoseCommand: hint,
 		NextSteps: []string{
 			fmt.Sprintf(stepDiagnose, hint),
