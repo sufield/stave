@@ -3,7 +3,6 @@ package policy
 import (
 	"encoding/json"
 	"slices"
-	"strings"
 
 	"github.com/sufield/stave/internal/core/kernel"
 )
@@ -66,36 +65,4 @@ func (s Statement) decodeRaw(raw json.RawMessage) any {
 	var v any
 	_ = json.Unmarshal(raw, &v)
 	return v
-}
-
-// hasSecureTransportCondition checks if Condition contains
-// Bool.aws:SecureTransport = false.
-func hasSecureTransportCondition(condition json.RawMessage) bool {
-	if len(condition) == 0 {
-		return false
-	}
-
-	var cond map[string]map[string]any
-	if err := json.Unmarshal(condition, &cond); err != nil {
-		return false
-	}
-
-	boolCond, ok := cond[condBool]
-	if !ok {
-		return false
-	}
-
-	raw, ok := boolCond[condSecureTransport]
-	if !ok {
-		return false
-	}
-
-	switch v := raw.(type) {
-	case string:
-		return strings.EqualFold(strings.TrimSpace(v), condValueFalse)
-	case bool:
-		return !v
-	default:
-		return false
-	}
 }

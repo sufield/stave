@@ -1,6 +1,7 @@
 package policy
 
 import (
+	"encoding/json"
 	"strings"
 
 	"github.com/sufield/stave/internal/core/kernel"
@@ -107,6 +108,34 @@ func (op condOperator) isEffective(values []string) bool {
 		return false
 	}
 	return false
+}
+
+// hasSecureTransportCondition checks if a Condition JSON block contains
+// Bool: {aws:SecureTransport: false} — the standard HTTPS enforcement pattern.
+func hasSecureTransportCondition(condition json.RawMessage) bool {
+	if len(condition) == 0 {
+		return false
+	}
+	var cond map[string]map[string]any
+	if err := json.Unmarshal(condition, &cond); err != nil {
+		return false
+	}
+	boolCond, ok := cond[condBool]
+	if !ok {
+		return false
+	}
+	raw, ok := boolCond[condSecureTransport]
+	if !ok {
+		return false
+	}
+	switch v := raw.(type) {
+	case string:
+		return strings.EqualFold(strings.TrimSpace(v), "false")
+	case bool:
+		return !v
+	default:
+		return false
+	}
 }
 
 // ResolveNetworkScope maps condition flags to a high-level network boundary.
