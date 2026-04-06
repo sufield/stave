@@ -14,7 +14,7 @@ type stubProvider struct {
 	err      error
 }
 
-func (s *stubProvider) Load(_ context.Context) ([]policy.ControlDefinition, error) {
+func (s *stubProvider) Fetch(_ context.Context) ([]policy.ControlDefinition, error) {
 	return s.controls, s.err
 }
 
@@ -44,9 +44,9 @@ func sampleControls() []policy.ControlDefinition {
 	}
 }
 
-func TestToRows(t *testing.T) {
+func TestSummarizePolicies(t *testing.T) {
 	controls := sampleControls()
-	rows := ToRows(controls)
+	rows := SummarizePolicies(controls)
 
 	if len(rows) != 3 {
 		t.Fatalf("len = %d, want 3", len(rows))
@@ -59,14 +59,14 @@ func TestToRows(t *testing.T) {
 	}
 }
 
-func TestToRows_Empty(t *testing.T) {
-	rows := ToRows(nil)
+func TestSummarizePolicies_Empty(t *testing.T) {
+	rows := SummarizePolicies(nil)
 	if len(rows) != 0 {
 		t.Errorf("expected empty, got %d rows", len(rows))
 	}
 }
 
-func TestSortRows(t *testing.T) {
+func TestOrderEntries(t *testing.T) {
 	tests := []struct {
 		sortBy    string
 		wantFirst string
@@ -74,14 +74,14 @@ func TestSortRows(t *testing.T) {
 		{"id", "CTL.S3.ENCRYPT.001"},
 		{"name", "Access Logging"},
 		{"domain", "encryption"},
-		{"severity", policy.SeverityCritical.String()},
+		{"risk", policy.SeverityCritical.String()},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.sortBy, func(t *testing.T) {
-			rows := ToRows(sampleControls())
-			if err := SortRows(rows, tt.sortBy); err != nil {
-				t.Fatalf("SortRows error: %v", err)
+			rows := SummarizePolicies(sampleControls())
+			if err := OrderEntries(rows, tt.sortBy); err != nil {
+				t.Fatalf("OrderEntries error: %v", err)
 			}
 			var got string
 			switch tt.sortBy {
@@ -91,8 +91,8 @@ func TestSortRows(t *testing.T) {
 				got = rows[0].Name
 			case "domain":
 				got = rows[0].Domain
-			case "severity":
-				got = rows[0].Severity
+			case "risk":
+				got = rows[0].Risk
 			}
 			if got != tt.wantFirst {
 				t.Errorf("first row %s = %q, want %q", tt.sortBy, got, tt.wantFirst)
@@ -101,16 +101,16 @@ func TestSortRows(t *testing.T) {
 	}
 }
 
-func TestSortRows_InvalidColumn(t *testing.T) {
-	rows := ToRows(sampleControls())
-	if err := SortRows(rows, "nonexistent"); err == nil {
+func TestOrderEntries_InvalidColumn(t *testing.T) {
+	rows := SummarizePolicies(sampleControls())
+	if err := OrderEntries(rows, "nonexistent"); err == nil {
 		t.Error("expected error for invalid sort column")
 	}
 }
 
-func TestParseColumns(t *testing.T) {
+func TestSelectFields(t *testing.T) {
 	t.Run("valid columns", func(t *testing.T) {
-		cols, err := ParseColumns("id,name,type")
+		cols, err := SelectFields("id,name,type")
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -123,7 +123,7 @@ func TestParseColumns(t *testing.T) {
 	})
 
 	t.Run("deduplicates", func(t *testing.T) {
-		cols, err := ParseColumns("id,id,name")
+		cols, err := SelectFields("id,id,name")
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -133,7 +133,7 @@ func TestParseColumns(t *testing.T) {
 	})
 
 	t.Run("normalizes case and whitespace", func(t *testing.T) {
-		cols, err := ParseColumns(" ID , Name ")
+		cols, err := SelectFields(" ID , Name ")
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -143,21 +143,21 @@ func TestParseColumns(t *testing.T) {
 	})
 
 	t.Run("invalid column", func(t *testing.T) {
-		_, err := ParseColumns("id,invalid")
+		_, err := SelectFields("id,invalid")
 		if err == nil {
 			t.Error("expected error for invalid column")
 		}
 	})
 
 	t.Run("empty string", func(t *testing.T) {
-		_, err := ParseColumns("")
+		_, err := SelectFields("")
 		if err == nil {
 			t.Error("expected error for empty columns")
 		}
 	})
 
 	t.Run("all five columns", func(t *testing.T) {
-		cols, err := ParseColumns("id,name,type,severity,domain")
+		cols, err := SelectFields("id,name,type,risk,domain")
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -167,13 +167,13 @@ func TestParseColumns(t *testing.T) {
 	})
 }
 
-func TestFieldValue(t *testing.T) {
-	row := ControlRow{
-		ID:       "CTL.001",
-		Name:     "Test",
-		Type:     "unsafe_state",
-		Severity: "critical",
-		Domain:   "storage",
+func TestGetAttribute(t *testing.T) {
+	row := PolicyEntry{
+		ID:     "CTL.001",
+		Name:   "Test",
+		Type:   "unsafe_state",
+		Risk:   "critical",
+		Domain: "storage",
 	}
 
 	tests := []struct {
@@ -183,25 +183,25 @@ func TestFieldValue(t *testing.T) {
 		{"id", "CTL.001"},
 		{"name", "Test"},
 		{"type", "unsafe_state"},
-		{"severity", "critical"},
+		{"risk", "critical"},
 		{"domain", "storage"},
 		{"unknown", ""},
 	}
 
 	for _, tt := range tests {
-		if got := FieldValue(row, tt.col); got != tt.want {
-			t.Errorf("FieldValue(%q) = %q, want %q", tt.col, got, tt.want)
+		if got := GetAttribute(row, tt.col); got != tt.want {
+			t.Errorf("GetAttribute(%q) = %q, want %q", tt.col, got, tt.want)
 		}
 	}
 }
 
-func TestListRunner_Run(t *testing.T) {
+func TestCatalogBrowser_Browse(t *testing.T) {
 	provider := &stubProvider{controls: sampleControls()}
-	runner := &ListRunner{Provider: provider}
+	runner := &CatalogBrowser{Provider: provider}
 
-	rows, err := runner.Run(context.Background(), ListConfig{Dir: "controls", SortBy: "id"})
+	rows, err := runner.Browse(context.Background(), DiscoveryRequest{PolicySource: "controls", OrderBy: "id"})
 	if err != nil {
-		t.Fatalf("Run error: %v", err)
+		t.Fatalf("Browse error: %v", err)
 	}
 	if len(rows) != 3 {
 		t.Fatalf("len = %d, want 3", len(rows))
@@ -212,11 +212,11 @@ func TestListRunner_Run(t *testing.T) {
 	}
 }
 
-func TestListRunner_RunError(t *testing.T) {
+func TestCatalogBrowser_BrowseError(t *testing.T) {
 	provider := &stubProvider{err: fmt.Errorf("not found")}
-	runner := &ListRunner{Provider: provider}
+	runner := &CatalogBrowser{Provider: provider}
 
-	_, err := runner.Run(context.Background(), ListConfig{Dir: "bad", SortBy: "id"})
+	_, err := runner.Browse(context.Background(), DiscoveryRequest{PolicySource: "bad", OrderBy: "id"})
 	if err == nil {
 		t.Error("expected error from repo failure")
 	}

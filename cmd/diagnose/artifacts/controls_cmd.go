@@ -43,7 +43,7 @@ definitions used by Stave.` + metadata.OfflineHelpSuffix,
 }
 
 func newControlsListCmd(newCtlRepo compose.CtlRepoFactory) *cobra.Command {
-	cfg := catalog.ListConfig{}
+	cfg := catalog.DiscoveryRequest{}
 	var filterPatterns []string
 
 	cmd := &cobra.Command{
@@ -60,15 +60,15 @@ Exit Codes:
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			stdout := cmd.OutOrStdout()
-			if cfg.ListPacks {
+			if cfg.IncludePacks {
 				return runListPacks(stdout, cfg)
 			}
-			provider, err := buildControlProvider(cfg, filterPatterns, newCtlRepo)
+			provider, err := buildPolicySource(cfg, filterPatterns, newCtlRepo)
 			if err != nil {
 				return err
 			}
-			runner := &catalog.ListRunner{Provider: provider}
-			rows, err := runner.Run(cmd.Context(), cfg)
+			runner := &catalog.CatalogBrowser{Provider: provider}
+			rows, err := runner.Browse(cmd.Context(), cfg)
 			if err != nil {
 				return err
 			}
@@ -78,26 +78,26 @@ Exit Codes:
 		SilenceErrors: true,
 	}
 
-	cmd.Flags().StringVarP(&cfg.Dir, "controls", "i", cliflags.DefaultControlsDir, "Path to control definitions directory")
-	cmd.Flags().StringVarP(&cfg.Columns, "columns", "c", "id,name,type", "Comma-separated columns: id,name,type,severity,domain")
-	cmd.Flags().StringVarP(&cfg.SortBy, "sort", "s", "id", "Sort column: id,name,type,severity,domain")
-	cmd.Flags().StringVarP(&cfg.Format, "format", "f", "text", "Output format: text, json, csv")
-	cmd.Flags().BoolVar(&cfg.NoHeaders, "no-headers", false, "Hide headers for table/csv output")
-	cmd.Flags().BoolVar(&cfg.UseBuiltIn, "built-in", false, "List built-in embedded controls instead of filesystem")
-	cmd.Flags().BoolVar(&cfg.ListPacks, "packs", false, "List built-in control packs instead of controls")
+	cmd.Flags().StringVarP(&cfg.PolicySource, "controls", "i", cliflags.DefaultControlsDir, "Path to control definitions directory")
+	cmd.Flags().StringVarP(&cfg.Fields, "columns", "c", "id,name,type", "Comma-separated columns: id,name,type,risk,domain")
+	cmd.Flags().StringVarP(&cfg.OrderBy, "sort", "s", "id", "Sort column: id,name,type,risk,domain")
+	cmd.Flags().StringVarP(&cfg.OutputFormat, "format", "f", "text", "Output format: text, json, csv")
+	cmd.Flags().BoolVar(&cfg.HideHeaders, "no-headers", false, "Hide headers for table/csv output")
+	cmd.Flags().BoolVar(&cfg.IncludeBuiltIn, "built-in", false, "List built-in embedded controls instead of filesystem")
+	cmd.Flags().BoolVar(&cfg.IncludePacks, "packs", false, "List built-in control packs instead of controls")
 	cmd.Flags().StringSliceVar(&filterPatterns, "filter", nil, "Filter controls by selector (e.g. aws/s3/severity:high+)")
 
 	return cmd
 }
 
-func runListPacks(w io.Writer, cfg catalog.ListConfig) error {
+func runListPacks(w io.Writer, cfg catalog.DiscoveryRequest) error {
 	reg, err := packs.NewEmbeddedRegistry()
 	if err != nil {
 		return err
 	}
 	items := reg.ListPacks()
 
-	if appcontracts.OutputFormat(cfg.Format) == appcontracts.FormatJSON {
+	if appcontracts.OutputFormat(cfg.OutputFormat) == appcontracts.FormatJSON {
 		return jsonutil.WriteIndented(w, items)
 	}
 
@@ -214,11 +214,11 @@ Exit Codes:
 	}
 }
 
-// buildControlProvider constructs the right ControlProvider based on config.
+// buildPolicySource constructs the right ControlProvider based on config.
 // Built-in mode constructs the embedded registry with filter support.
 // Filesystem mode delegates to the injected repo factory.
-func buildControlProvider(cfg catalog.ListConfig, filters []string, newCtlRepo compose.CtlRepoFactory) (catalog.ControlProvider, error) {
-	if cfg.UseBuiltIn {
+func buildPolicySource(cfg catalog.DiscoveryRequest, filters []string, newCtlRepo compose.CtlRepoFactory) (catalog.PolicySource, error) {
+	if cfg.IncludeBuiltIn {
 		registry := builtin.NewControlStore(
 			builtin.EmbeddedFS(), "embedded",
 			builtin.WithAliasResolver(predicates.ResolverFunc()),
@@ -232,16 +232,16 @@ func buildControlProvider(cfg catalog.ListConfig, filters []string, newCtlRepo c
 				}
 				selectors = append(selectors, sel)
 			}
-			return catalog.NewBuiltInProvider(func() ([]policy.ControlDefinition, error) {
+			return catalog.NewLibrarySource(func() ([]policy.ControlDefinition, error) {
 				return registry.Filtered(selectors)
 			}), nil
 		}
-		return catalog.NewBuiltInProvider(registry.All), nil
+		return catalog.NewLibrarySource(registry.All), nil
 	}
 
 	repo, err := newCtlRepo()
 	if err != nil {
 		return nil, fmt.Errorf("create control loader: %w", err)
 	}
-	return catalog.NewFSProvider(repo, cfg.Dir), nil
+	return catalog.NewWorkspaceSource(repo, cfg.PolicySource), nil
 }

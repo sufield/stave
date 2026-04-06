@@ -13,7 +13,7 @@ import (
 
 func TestWriteCSV_WithHeader(t *testing.T) {
 	var buf strings.Builder
-	rows := []catalog.ControlRow{
+	rows := []catalog.PolicyEntry{
 		{ID: "CTL.TEST.001", Name: "Test"},
 	}
 	cols := []string{"id", "name"}
@@ -31,7 +31,7 @@ func TestWriteCSV_WithHeader(t *testing.T) {
 
 func TestWriteCSV_NoHeader(t *testing.T) {
 	var buf strings.Builder
-	rows := []catalog.ControlRow{
+	rows := []catalog.PolicyEntry{
 		{ID: "CTL.TEST.001", Name: "Test"},
 	}
 	cols := []string{"id"}
@@ -61,7 +61,7 @@ func TestWriteTable_Empty(t *testing.T) {
 
 func TestWriteTable_WithRows(t *testing.T) {
 	var buf strings.Builder
-	rows := []catalog.ControlRow{
+	rows := []catalog.PolicyEntry{
 		{ID: "CTL.TEST.001", Name: "Test"},
 	}
 	if err := WriteTable(&buf, rows, []string{"id", "name"}, true); err != nil {
@@ -78,8 +78,8 @@ func TestWriteTable_WithRows(t *testing.T) {
 
 func TestFormatControlOutput_CSV(t *testing.T) {
 	var buf strings.Builder
-	cfg := catalog.ListConfig{Format: "csv", Columns: "id,name"}
-	rows := []catalog.ControlRow{
+	cfg := catalog.DiscoveryRequest{OutputFormat: "csv", Fields: "id,name"}
+	rows := []catalog.PolicyEntry{
 		{ID: "CTL.TEST.001", Name: "Test"},
 	}
 	if err := FormatControlOutput(&buf, cfg, rows); err != nil {
@@ -92,7 +92,7 @@ func TestFormatControlOutput_CSV(t *testing.T) {
 
 func TestFormatControlOutput_Unsupported(t *testing.T) {
 	var buf strings.Builder
-	cfg := catalog.ListConfig{Format: "xml", Columns: "id"}
+	cfg := catalog.DiscoveryRequest{OutputFormat: "xml", Fields: "id"}
 	err := FormatControlOutput(&buf, cfg, nil)
 	if err == nil {
 		t.Fatal("expected error for unsupported format")

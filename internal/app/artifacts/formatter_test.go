@@ -68,7 +68,7 @@ func TestCanonicalizeByExtension_Dispatch(t *testing.T) {
 
 func TestFormatControlOutput_JSON(t *testing.T) {
 	var buf strings.Builder
-	cfg := catalog.ListConfig{Format: "json"}
+	cfg := catalog.DiscoveryRequest{OutputFormat: "json"}
 	err := FormatControlOutput(&buf, cfg, nil)
 	if err != nil {
 		t.Fatalf("FormatControlOutput json: %v", err)
@@ -77,8 +77,8 @@ func TestFormatControlOutput_JSON(t *testing.T) {
 
 func TestFormatControlOutput_Text(t *testing.T) {
 	var buf strings.Builder
-	cfg := catalog.ListConfig{Format: "text", Columns: "id,name"}
-	rows := []catalog.ControlRow{{ID: "CTL.TEST.001", Name: "Test control"}}
+	cfg := catalog.DiscoveryRequest{OutputFormat: "text", Fields: "id,name"}
+	rows := []catalog.PolicyEntry{{ID: "CTL.TEST.001", Name: "Test control"}}
 	err := FormatControlOutput(&buf, cfg, rows)
 	if err != nil {
 		t.Fatalf("FormatControlOutput text: %v", err)
