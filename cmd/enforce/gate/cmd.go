@@ -88,9 +88,9 @@ Exit Codes:
 					return renderErr
 				}
 			} else if !cfg.Quiet {
-				status := "PASS"
-				if !resp.Passed {
-					status = "FAIL"
+				status := "FAIL"
+				if resp.Passed {
+					status = "PASS"
 				}
 				if _, renderErr := fmt.Fprintf(cfg.Stdout, "Gate %s (%s): %s\n", status, resp.Policy, resp.Reason); renderErr != nil {
 					return renderErr
