@@ -13,30 +13,30 @@ import (
 )
 
 // FormatControlOutput writes control rows in the requested format.
-func FormatControlOutput(w io.Writer, cfg catalog.ListConfig, rows []catalog.ControlRow) error {
-	format := appcontracts.OutputFormat(strings.ToLower(strings.TrimSpace(cfg.Format)))
+func FormatControlOutput(w io.Writer, cfg catalog.DiscoveryRequest, rows []catalog.PolicyEntry) error {
+	format := appcontracts.OutputFormat(strings.ToLower(strings.TrimSpace(cfg.OutputFormat)))
 
 	if format == appcontracts.FormatJSON {
 		return jsonutil.WriteIndented(w, rows)
 	}
 
-	cols, err := catalog.ParseColumns(cfg.Columns)
+	cols, err := catalog.SelectFields(cfg.Fields)
 	if err != nil {
 		return err
 	}
 
 	switch format {
 	case "csv":
-		return WriteCSV(w, rows, cols, !cfg.NoHeaders)
+		return WriteCSV(w, rows, cols, !cfg.HideHeaders)
 	case appcontracts.FormatText:
-		return WriteTable(w, rows, cols, !cfg.NoHeaders)
+		return WriteTable(w, rows, cols, !cfg.HideHeaders)
 	default:
-		return fmt.Errorf("unsupported --format %q (use: text, json, csv)", cfg.Format)
+		return fmt.Errorf("unsupported --format %q (use: text, json, csv)", cfg.OutputFormat)
 	}
 }
 
 // WriteCSV writes control rows as CSV.
-func WriteCSV(w io.Writer, rows []catalog.ControlRow, cols []string, header bool) error {
+func WriteCSV(w io.Writer, rows []catalog.PolicyEntry, cols []string, header bool) error {
 	cw := csv.NewWriter(w)
 	if header {
 		if err := cw.Write(cols); err != nil {
@@ -46,7 +46,7 @@ func WriteCSV(w io.Writer, rows []catalog.ControlRow, cols []string, header bool
 	for _, row := range rows {
 		record := make([]string, len(cols))
 		for i, c := range cols {
-			record[i] = catalog.FieldValue(row, c)
+			record[i] = catalog.GetAttribute(row, c)
 		}
 		if err := cw.Write(record); err != nil {
 			return err
@@ -57,7 +57,7 @@ func WriteCSV(w io.Writer, rows []catalog.ControlRow, cols []string, header bool
 }
 
 // WriteTable writes control rows as a formatted table.
-func WriteTable(w io.Writer, rows []catalog.ControlRow, cols []string, header bool) error {
+func WriteTable(w io.Writer, rows []catalog.PolicyEntry, cols []string, header bool) error {
 	if len(rows) == 0 {
 		_, err := fmt.Fprintln(w, "No controls found.")
 		return err
@@ -72,7 +72,7 @@ func WriteTable(w io.Writer, rows []catalog.ControlRow, cols []string, header bo
 	for _, row := range rows {
 		vals := make([]string, len(cols))
 		for i, c := range cols {
-			vals[i] = catalog.FieldValue(row, c)
+			vals[i] = catalog.GetAttribute(row, c)
 		}
 		fmt.Fprintln(tw, strings.Join(vals, "\t"))
 	}
