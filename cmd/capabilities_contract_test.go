@@ -30,11 +30,11 @@ func TestCapabilitiesJSONContract(t *testing.T) {
 
 	assertStringField(t, got, "version")
 	assertBoolField(t, got, "offline")
-	assertObjectField(t, got, "inventory")
-	assertObjectField(t, got, "policies")
-	assertObjectField(t, got, "ingress")
+	assertObjectField(t, got, "inventory_support")
+	assertObjectField(t, got, "policy_support")
+	assertObjectField(t, got, "data_ingress")
 	assertArrayField(t, got, "policy_library")
-	assertObjectField(t, got, "compliance")
+	assertObjectField(t, got, "compliance_support")
 
 	if got["version"] != "contract-test-version" {
 		t.Fatalf("version = %v, want %q", got["version"], "contract-test-version")
@@ -43,44 +43,44 @@ func TestCapabilitiesJSONContract(t *testing.T) {
 		t.Fatal("offline must be true")
 	}
 
-	inventory := got["inventory"].(map[string]any)
-	policies := got["policies"].(map[string]any)
-	ingress := got["ingress"].(map[string]any)
+	inventory := got["inventory_support"].(map[string]any)
+	policies := got["policy_support"].(map[string]any)
+	ingress := got["data_ingress"].(map[string]any)
 	library := got["policy_library"].([]any)
-	compliance := got["compliance"].(map[string]any)
+	compliance := got["compliance_support"].(map[string]any)
 
 	schemas := assertArrayField(t, inventory, "schemas")
 	policySchemas := assertArrayField(t, policies, "schemas")
 	connectors := assertArrayField(t, ingress, "connectors")
 	if len(schemas) == 0 {
-		t.Fatal("inventory.schemas must be non-empty")
+		t.Fatal("inventory_support.schemas must be non-empty")
 	}
 	if len(policySchemas) == 0 {
-		t.Fatal("policies.schemas must be non-empty")
+		t.Fatal("policy_support.schemas must be non-empty")
 	}
 	if len(connectors) == 0 {
-		t.Fatal("ingress.connectors must be non-empty")
+		t.Fatal("data_ingress.connectors must be non-empty")
 	}
 	if len(library) == 0 {
 		t.Fatal("policy_library must be non-empty")
 	}
 	if enabled, ok := compliance["enabled"].(bool); !ok || !enabled {
-		t.Fatal("compliance.enabled must be true")
+		t.Fatal("compliance_support.enabled must be true")
 	}
 	if formats := assertArrayField(t, compliance, "report_formats"); len(formats) == 0 {
-		t.Fatal("compliance.report_formats must be non-empty")
+		t.Fatal("compliance_support.report_formats must be non-empty")
 	}
 	if sbom := assertArrayField(t, compliance, "sbom_formats"); len(sbom) == 0 {
-		t.Fatal("compliance.sbom_formats must be non-empty")
+		t.Fatal("compliance_support.sbom_formats must be non-empty")
 	}
 	if vuln := assertArrayField(t, compliance, "vuln_sources"); len(vuln) == 0 {
-		t.Fatal("compliance.vuln_sources must be non-empty")
+		t.Fatal("compliance_support.vuln_sources must be non-empty")
 	}
-	if failOn := assertArrayField(t, compliance, "fail_on_levels"); len(failOn) == 0 {
-		t.Fatal("compliance.fail_on_levels must be non-empty")
+	if failOn := assertArrayField(t, compliance, "sla_thresholds"); len(failOn) == 0 {
+		t.Fatal("compliance_support.sla_thresholds must be non-empty")
 	}
-	if frameworks := assertArrayField(t, compliance, "frameworks"); len(frameworks) == 0 {
-		t.Fatal("compliance.frameworks must be non-empty")
+	if frameworks := assertArrayField(t, compliance, "security_frameworks"); len(frameworks) == 0 {
+		t.Fatal("compliance_support.security_frameworks must be non-empty")
 	}
 
 	validateConnectors(t, connectors)
@@ -93,18 +93,18 @@ func validateConnectors(t *testing.T, connectors []any) {
 	for i, raw := range connectors {
 		obj, ok := raw.(map[string]any)
 		if !ok {
-			t.Fatalf("ingress.connectors[%d] must be an object", i)
+			t.Fatalf("data_ingress.connectors[%d] must be an object", i)
 		}
 		typ, ok := obj["type"].(string)
 		if !ok || typ == "" {
-			t.Fatalf("ingress.connectors[%d].type must be a non-empty string", i)
+			t.Fatalf("data_ingress.connectors[%d].type must be a non-empty string", i)
 		}
 		if typ == "aws-s3-snapshot" {
 			foundS3Snapshot = true
 		}
 	}
 	if !foundS3Snapshot {
-		t.Fatal("ingress.connectors missing aws-s3-snapshot")
+		t.Fatal("data_ingress.connectors missing aws-s3-snapshot")
 	}
 }
 

@@ -133,7 +133,7 @@ Examples:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			caps := capabilities.GetCapabilities(Version())
+			caps := capabilities.Summarize(Version())
 			return jsonutil.WriteIndented(cmd.OutOrStdout(), caps)
 		},
 	}
