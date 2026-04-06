@@ -79,13 +79,12 @@ Exit Codes:
 				return err
 			}
 
-			// Delegate to internal runner
-			runner := &apptrace.Runner{}
-			result, err := runner.Run(apptrace.Config{
-				Control:         control,
-				Snapshot:        snapshot,
-				AssetID:         strings.TrimSpace(assetID),
-				ObservationPath: cleanObsPath,
+			tracer := &apptrace.PolicyTracer{}
+			result, err := tracer.Trace(apptrace.TraceRequest{
+				Control:    control,
+				Snapshot:   snapshot,
+				TargetID:   strings.TrimSpace(assetID),
+				SourcePath: cleanObsPath,
 			})
 			if err != nil {
 				return err
