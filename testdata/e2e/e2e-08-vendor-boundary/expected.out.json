@@ -21,7 +21,7 @@
     {
       "control_id": "CTL.TP.VENDOR.001",
       "control_name": "Third-Party Vendor Data Boundaries",
-      "reason": "type not evaluatable: authorization_boundary"
+      "reason": "control type cannot be evaluated: authorization_boundary"
     }
   ],
   "summary": {

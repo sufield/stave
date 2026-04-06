@@ -12,7 +12,7 @@ type CheckRunner struct{}
 
 // RunChecks executes the standard doctor checks and converts results to setup types.
 func (r *CheckRunner) RunChecks(_ context.Context, req setup.DoctorRequest) (setup.DoctorResponse, error) {
-	dctx := intdoctor.NewContext()
+	dctx := intdoctor.NewEnvironment()
 	dctx.Cwd = req.Cwd
 	dctx.BinaryPath = req.BinaryPath
 

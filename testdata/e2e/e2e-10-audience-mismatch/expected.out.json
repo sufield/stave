@@ -21,7 +21,7 @@
     {
       "control_id": "CTL.PROC.MAIL.001",
       "control_name": "Process Audience Verification",
-      "reason": "type not evaluatable: audience_boundary"
+      "reason": "control type cannot be evaluated: audience_boundary"
     }
   ],
   "summary": {

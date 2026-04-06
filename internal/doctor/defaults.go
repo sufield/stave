@@ -28,8 +28,8 @@ func (c *SystemEnvironment) FillDefaults() {
 	}
 }
 
-// NewContext returns a SystemEnvironment initialized with system defaults.
-func NewContext() *SystemEnvironment {
+// NewEnvironment returns a SystemEnvironment initialized with system defaults.
+func NewEnvironment() *SystemEnvironment {
 	ctx := &SystemEnvironment{}
 	ctx.FillDefaults()
 	return ctx

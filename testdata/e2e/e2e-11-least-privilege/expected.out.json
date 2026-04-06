@@ -21,7 +21,7 @@
     {
       "control_id": "CTL.ID.AUTHZ.001",
       "control_name": "Least-Privilege Subject Access",
-      "reason": "type not evaluatable: authorization_boundary"
+      "reason": "control type cannot be evaluated: authorization_boundary"
     }
   ],
   "summary": {
