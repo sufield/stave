@@ -48,7 +48,7 @@ func (o *loopOptions) BindFlags(cmd *cobra.Command) {
 
 // Prepare resolves config defaults and normalizes paths. Called from PreRunE.
 func (o *loopOptions) Prepare(cmd *cobra.Command) error {
-	o.resolveConfigDefaults(cmdctx.EvaluatorFromCmd(cmd), cmd.Flags())
+	o.resolveConfigDefaults(cmdctx.ResolverFromCmd(cmd), cmd.Flags())
 	return o.normalize()
 }
 

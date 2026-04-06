@@ -8,8 +8,8 @@ import (
 
 func noEnv(string) string { return "" }
 
-func newTestEvaluator(proj *ProjectConfig, user *UserConfig) *Evaluator {
-	e := NewEvaluator(proj, "/proj/stave.yaml", user, "/home/.config/stave/config.yaml")
+func newTestEvaluator(proj *ProjectConfig, user *UserConfig) *GovernanceResolver {
+	e := NewResolver(proj, "/proj/stave.yaml", user, "/home/.config/stave/config.yaml")
 	e.Getenv = noEnv
 	return e
 }
@@ -338,9 +338,9 @@ func TestHasConfiguredTier(t *testing.T) {
 	})
 }
 
-func TestWithProject(t *testing.T) {
+func TestWithPolicy(t *testing.T) {
 	orig := newTestEvaluator(&ProjectConfig{MaxUnsafe: "24h"}, &UserConfig{MaxUnsafe: "48h"})
-	updated := orig.WithProject(&ProjectConfig{MaxUnsafe: "72h"}, "/other/stave.yaml")
+	updated := orig.WithPolicy(&ProjectConfig{MaxUnsafe: "72h"}, "/other/stave.yaml")
 
 	if updated.MaxUnsafeDuration() != "72h" {
 		t.Errorf("updated MaxUnsafe = %q, want 72h", updated.MaxUnsafeDuration())
@@ -351,9 +351,9 @@ func TestWithProject(t *testing.T) {
 		t.Errorf("original MaxUnsafe = %q, want 24h", orig.MaxUnsafeDuration())
 	}
 
-	// User config should be inherited
-	if updated.User != orig.User {
-		t.Error("WithProject should preserve user config")
+	// Settings should be inherited
+	if updated.Settings != orig.Settings {
+		t.Error("WithPolicy should preserve settings config")
 	}
 }
 

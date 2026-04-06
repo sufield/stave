@@ -26,7 +26,7 @@ func (o *Options) resolveEnvVarDefaults(cmd *cobra.Command) {
 // config when the user did not set them explicitly on the command line.
 // Called from PreRunE — the only place that touches *cobra.Command.
 func (o *Options) resolveApplyConfigDefaults(cmd *cobra.Command) {
-	eval := cmdctx.EvaluatorFromCmd(cmd)
+	eval := cmdctx.ResolverFromCmd(cmd)
 	if !cmd.Flags().Changed("max-unsafe") {
 		o.MaxUnsafeDuration = eval.MaxUnsafeDuration()
 	}

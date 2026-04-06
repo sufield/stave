@@ -62,7 +62,7 @@ Exit Codes:
 			}
 
 			// Load retention config
-			tiers, tierRules, defaultTier, err := resolvePlanRetentionConfig(cmdctx.EvaluatorFromCmd(cmd))
+			tiers, tierRules, defaultTier, err := resolvePlanRetentionConfig(cmdctx.ResolverFromCmd(cmd))
 			if err != nil {
 				return err
 			}

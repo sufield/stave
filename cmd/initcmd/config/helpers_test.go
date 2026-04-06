@@ -8,7 +8,7 @@ import (
 )
 
 // getTestRootCmd builds a minimal root *cobra.Command with config subcommands
-// for use in tests. Injects an evaluator from cwd into the command context
+// for use in tests. Injects a resolver from cwd into the command context
 // so that config show works without the full bootstrap.
 func getTestRootCmd() *cobra.Command {
 	root := &cobra.Command{
@@ -19,8 +19,8 @@ func getTestRootCmd() *cobra.Command {
 			// Discover config from cwd — matches what bootstrap does, but
 			// without the full App lifecycle. Tests that need specific config
 			// should create stave.yaml in their temp dir and chdir there.
-			eval := projconfig.BuildEvaluator().Evaluator
-			ctx := cmdctx.WithEvaluator(cmd.Context(), eval)
+			eval := projconfig.BuildResolver().Resolver
+			ctx := cmdctx.WithResolver(cmd.Context(), eval)
 			cmd.SetContext(ctx)
 		},
 	}

@@ -37,7 +37,7 @@ func listSnapshotFilesRecursive(ctx context.Context, loader appcontracts.Snapsho
 	return files, nil
 }
 
-func resolvePlanRetentionConfig(eval *appconfig.Evaluator) (map[string]retention.Tier, []retention.Rule, string, error) {
+func resolvePlanRetentionConfig(eval *appconfig.GovernanceResolver) (map[string]retention.Tier, []retention.Rule, string, error) {
 	cfg, _, err := projconfig.FindProjectConfigWithPath("")
 	if err != nil {
 		return nil, nil, "", fmt.Errorf("load project config: %w", err)

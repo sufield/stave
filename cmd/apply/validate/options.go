@@ -20,7 +20,7 @@ import (
 // resolveConfigDefaults fills flag values from project config when the user
 // did not set them explicitly on the command line.
 func (o *options) resolveConfigDefaults(cmd *cobra.Command) {
-	eval := cmdctx.EvaluatorFromCmd(cmd)
+	eval := cmdctx.ResolverFromCmd(cmd)
 	if !cmd.Flags().Changed("max-unsafe") {
 		o.MaxUnsafeDuration = eval.MaxUnsafeDuration()
 	}

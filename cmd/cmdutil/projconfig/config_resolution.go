@@ -6,11 +6,11 @@ import (
 	appconfig "github.com/sufield/stave/internal/app/config"
 )
 
-// EvaluatorResult holds the output of building an evaluator from the filesystem.
-type EvaluatorResult struct {
-	// Evaluator is always non-nil. When config loading fails, it is built
+// ResolverResult holds the output of building a resolver from the filesystem.
+type ResolverResult struct {
+	// Resolver is always non-nil. When config loading fails, it is built
 	// with default values and Err indicates the degraded state.
-	Evaluator *appconfig.Evaluator
+	Resolver *appconfig.GovernanceResolver
 
 	// Err is non-nil when project or user configuration could not be loaded
 	// (parse errors, permission failures, resolver construction errors).
@@ -23,14 +23,14 @@ type EvaluatorResult struct {
 	Warnings []error
 }
 
-// BuildEvaluator constructs a config evaluator from the filesystem by loading
-// project and user configuration. It always returns a usable evaluator (never
+// BuildResolver constructs a config resolver from the filesystem by loading
+// project and user configuration. It always returns a usable resolver (never
 // nil), even if config loading failed — check Err to detect degraded operation.
 //
 // This function is stateless: it does not cache the result or store it in
-// package-level variables. Callers should store the evaluator in Cobra's
-// context (via cmdctx.WithEvaluator) for downstream commands to retrieve.
-func BuildEvaluator() EvaluatorResult {
+// package-level variables. Callers should store the resolver in Cobra's
+// context (via cmdctx.WithResolver) for downstream commands to retrieve.
+func BuildResolver() ResolverResult {
 	var errs []error
 
 	pCfg, pPath, err := FindProjectConfigWithPath("")
@@ -42,9 +42,9 @@ func BuildEvaluator() EvaluatorResult {
 		errs = append(errs, uErr)
 	}
 
-	return EvaluatorResult{
-		Evaluator: appconfig.NewEvaluator(pCfg, pPath, uCfg, uPath),
-		Err:       errors.Join(errs...),
-		Warnings:  errs,
+	return ResolverResult{
+		Resolver: appconfig.NewResolver(pCfg, pPath, uCfg, uPath),
+		Err:      errors.Join(errs...),
+		Warnings: errs,
 	}
 }

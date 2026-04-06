@@ -39,7 +39,7 @@ func toResolvedField[T any](v Value[T]) ResolvedField {
 
 // BuildEffectiveConfig assembles the fully resolved configuration with provenance,
 // suitable for `stave config show` output.
-func (e *Evaluator) BuildEffectiveConfig() EffectiveConfig {
+func (e *GovernanceResolver) BuildEffectiveConfig() EffectiveConfig {
 	retTier := e.ResolveRetentionTier()
 	out := EffectiveConfig{
 		DefaultRetentionTier:     toResolvedField(retTier),
@@ -54,12 +54,12 @@ func (e *Evaluator) BuildEffectiveConfig() EffectiveConfig {
 		DefinedRetentionTiers:    e.buildDefinedRetentionTiers(),
 		EffectiveRetentionByTier: map[string]ResolvedField{},
 	}
-	if e.ProjectPath != "" {
-		out.ConfigFile = e.ProjectPath
-		out.ProjectRoot = filepath.Dir(e.ProjectPath)
+	if e.PolicyPath != "" {
+		out.ConfigFile = e.PolicyPath
+		out.ProjectRoot = filepath.Dir(e.PolicyPath)
 	}
-	if e.UserPath != "" {
-		out.UserConfigFile = e.UserPath
+	if e.SettingsPath != "" {
+		out.UserConfigFile = e.SettingsPath
 	}
 	for tier := range out.DefinedRetentionTiers {
 		out.EffectiveRetentionByTier[tier] = toResolvedField(e.ResolveSnapshotRetention(tier))
@@ -67,9 +67,9 @@ func (e *Evaluator) BuildEffectiveConfig() EffectiveConfig {
 	return out
 }
 
-func (e *Evaluator) buildDefinedRetentionTiers() map[string]retention.Tier {
-	if e.Project != nil {
-		if tiers := ResolveDefinedRetentionTiers(e.Project); len(tiers) > 0 {
+func (e *GovernanceResolver) buildDefinedRetentionTiers() map[string]retention.Tier {
+	if e.Policy != nil {
+		if tiers := ResolveDefinedRetentionTiers(e.Policy); len(tiers) > 0 {
 			return tiers
 		}
 	}

@@ -62,7 +62,7 @@ func (o *diagnoseOptions) Prepare(cmd *cobra.Command) error {
 	o.controlsSet = cmd.Flags().Changed("controls")
 	o.obsSet = cmd.Flags().Changed("observations")
 	o.formatSet = cmd.Flags().Changed("format")
-	eval := cmdctx.EvaluatorFromCmd(cmd)
+	eval := cmdctx.ResolverFromCmd(cmd)
 	if !cmd.Flags().Changed("max-unsafe") {
 		o.MaxUnsafeDuration = eval.MaxUnsafeDuration()
 	}

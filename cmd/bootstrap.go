@@ -40,13 +40,13 @@ func (a *App) bootstrap(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	// Build the evaluator explicitly from the filesystem. The result
+	// Build the resolver explicitly from the filesystem. The result
 	// is stored in Cobra's context — no package-level global state.
-	evalResult := projconfig.BuildEvaluator()
-	a.resolveGlobalFlagDefaults(cmd, evalResult.Evaluator)
+	evalResult := projconfig.BuildResolver()
+	a.resolveGlobalFlagDefaults(cmd, evalResult.Resolver)
 	a.resolveEnvVarDefaults(cmd)
 
-	a.resolveConfigurableLimits(evalResult.Evaluator)
+	a.resolveConfigurableLimits(evalResult.Resolver)
 
 	if err := a.checkRequireOffline(); err != nil {
 		return err
@@ -64,7 +64,7 @@ func (a *App) bootstrap(cmd *cobra.Command, _ []string) error {
 	}
 
 	// Replay config-load warnings through the configured logger.
-	// These were collected during BuildEvaluator before the logger
+	// These were collected during BuildResolver before the logger
 	// was initialized.
 	for _, w := range evalResult.Warnings {
 		a.Logger.Warn("config load warning", "error", w)
@@ -80,10 +80,10 @@ func (a *App) bootstrap(cmd *cobra.Command, _ []string) error {
 
 // resolveGlobalFlagDefaults fills global persistent flags with project-config
 // defaults when the user did not set them explicitly on the command line.
-// The evaluator is stored in Cobra's context so all downstream commands
-// retrieve it via cmdctx.EvaluatorFromCmd(cmd).
-func (a *App) resolveGlobalFlagDefaults(cmd *cobra.Command, eval *appconfig.Evaluator) {
-	ctx := cmdctx.WithEvaluator(cmd.Context(), eval)
+// The resolver is stored in Cobra's context so all downstream commands
+// retrieve it via cmdctx.ResolverFromCmd(cmd).
+func (a *App) resolveGlobalFlagDefaults(cmd *cobra.Command, eval *appconfig.GovernanceResolver) {
+	ctx := cmdctx.WithResolver(cmd.Context(), eval)
 	cmd.SetContext(ctx)
 
 	p := cmd.Root().PersistentFlags()
@@ -115,7 +115,7 @@ func (a *App) resolveEnvVarDefaults(cmd *cobra.Command) {
 
 // checkConfigHealth enforces config loading errors for commands that need config.
 // Commands that can operate without a project config (init, generate, help, etc.)
-// are tolerant of config failures. cfgErr is the error from BuildEvaluator().
+// are tolerant of config failures. cfgErr is the error from BuildResolver().
 func (a *App) checkConfigHealth(cmd *cobra.Command, cfgErr error) error {
 	if cfgErr == nil {
 		return nil

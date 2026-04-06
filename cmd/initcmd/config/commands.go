@@ -234,7 +234,7 @@ Exit Codes:
 				return err
 			}
 			runner := newRunner(rt, cmd.InOrStdin(), cmd.OutOrStdout(), cmd.ErrOrStderr())
-			return runner.Show(cmd.Context(), cmdctx.EvaluatorFromCmd(cmd), fmtValue)
+			return runner.Show(cmd.Context(), cmdctx.ResolverFromCmd(cmd), fmtValue)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
@@ -260,7 +260,7 @@ Exit Codes:
 				return err
 			}
 			runner := newRunner(rt, cmd.InOrStdin(), cmd.OutOrStdout(), cmd.ErrOrStderr())
-			return runner.Show(cmd.Context(), cmdctx.EvaluatorFromCmd(cmd), fmtValue)
+			return runner.Show(cmd.Context(), cmdctx.ResolverFromCmd(cmd), fmtValue)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,

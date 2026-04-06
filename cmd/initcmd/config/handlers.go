@@ -68,7 +68,7 @@ func (r *Runner) Get(_ context.Context, req GetRequest) error {
 	if err != nil {
 		return err
 	}
-	eval := appconfig.NewEvaluator(cfg, cfgPath, nil, "")
+	eval := appconfig.NewResolver(cfg, cfgPath, nil, "")
 
 	parsed, err := appconfig.IdentifySetting(key)
 	if err != nil {
@@ -136,7 +136,7 @@ func (r *Runner) Delete(ctx context.Context, req DeleteRequest, opts MutationOpt
 }
 
 // Show renders the full suite of effective values and their sources.
-func (r *Runner) Show(_ context.Context, eval *appconfig.Evaluator, format appcontracts.OutputFormat) error {
+func (r *Runner) Show(_ context.Context, eval *appconfig.GovernanceResolver, format appcontracts.OutputFormat) error {
 	if eval == nil {
 		return fmt.Errorf("project config evaluator not available; ensure bootstrap runs before this command")
 	}

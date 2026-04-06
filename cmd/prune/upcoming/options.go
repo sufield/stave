@@ -41,7 +41,7 @@ func (o *options) BindFlags(cmd *cobra.Command) {
 
 // Prepare resolves config defaults and normalizes paths. Called from PreRunE.
 func (o *options) Prepare(cmd *cobra.Command) error {
-	if eval := cmdctx.EvaluatorFromCmd(cmd); eval != nil {
+	if eval := cmdctx.ResolverFromCmd(cmd); eval != nil {
 		if !cmd.Flags().Changed("max-unsafe") {
 			o.MaxUnsafe = eval.MaxUnsafeDuration()
 		}
