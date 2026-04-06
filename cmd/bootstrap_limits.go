@@ -19,12 +19,12 @@ func (a *App) resolveConfigurableLimits(eval *appconfig.Evaluator) {
 		}
 	}
 
-	// Max gap threshold (default 12h) — flows through Runner.MaxGapThreshold
-	// which callers set from config. The exported DefaultMaxGapThreshold
+	// Max gap threshold (default 12h) — flows through Assessor.ContinuityLimit
+	// which callers set from config. The exported DefaultContinuityLimit
 	// constant in engine/ is the fallback.
 
 	// Confidence classification multipliers (default HIGH=4x, MEDIUM=2x).
-	// Stored on App and passed to Runner during wiring, not as global state.
+	// Stored on App and passed to Assessor during wiring, not as global state.
 	a.Confidence = evaluation.DefaultConfidenceCalculator()
 	if h, m := eval.ConfidenceHighMultiplier(), eval.ConfidenceMedMultiplier(); h > 0 || m > 0 {
 		if h > 0 {

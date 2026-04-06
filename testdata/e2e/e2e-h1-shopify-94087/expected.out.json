@@ -173,7 +173,7 @@
     "sla_threshold": "7d",
     "now": "2015-10-23T00:00:00Z",
     "offline": true,
-    "pack_hash": "3609d3ccc6d44ae3b90ec49530b51572d239b1394af157d0f0a39a7f024cc025",
+    "policy_fingerprint": "3609d3ccc6d44ae3b90ec49530b51572d239b1394af157d0f0a39a7f024cc025",
     "snapshots": 2
   },
   "schema_version": "out.v0.1",

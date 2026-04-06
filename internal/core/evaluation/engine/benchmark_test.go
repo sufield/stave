@@ -46,15 +46,15 @@ func BenchmarkEvaluate(b *testing.B) {
 		}
 	}
 
-	runner := &Runner{
-		Controls:          controls,
-		MaxUnsafeDuration: 12 * time.Hour,
-		Clock:             ports.FixedClock(now),
+	assessor := &Assessor{
+		Controls:     controls,
+		SLAThreshold: 12 * time.Hour,
+		Clock:        ports.FixedClock(now),
 	}
 
 	b.ResetTimer()
 	for b.Loop() {
-		_, _ = runner.Evaluate(snapshots)
+		_, _ = assessor.Assess(snapshots)
 	}
 }
 

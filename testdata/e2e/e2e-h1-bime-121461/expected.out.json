@@ -144,7 +144,7 @@
     "sla_threshold": "7d",
     "now": "2016-03-18T00:00:00Z",
     "offline": true,
-    "pack_hash": "7bf215c30ede67f208b873df06900343273f618007838d0d4b09d4937c11162e",
+    "policy_fingerprint": "7bf215c30ede67f208b873df06900343273f618007838d0d4b09d4937c11162e",
     "snapshots": 2
   },
   "schema_version": "out.v0.1",

@@ -14,7 +14,7 @@
       },
       "overall": "efead7098f84a1e064f5d3ec773ee58835603d1793aeaff405ba33fbe5153475"
     },
-    "pack_hash": "f6e08b33a0a5bf36714060eeffe01783f353ac1a54caf7bfa92f907ed4f7265f"
+    "policy_fingerprint": "f6e08b33a0a5bf36714060eeffe01783f353ac1a54caf7bfa92f907ed4f7265f"
   },
   "summary": {
     "total_assets": 0,
@@ -27,7 +27,7 @@
     {
       "control_id": "CTL.TP.PLATFORM.001",
       "control_name": "Third-Party Platform Boundaries",
-      "reason": "type not evaluatable: authorization_boundary"
+      "reason": "control type cannot be evaluated: authorization_boundary"
     }
   ],
   "extensions": {
@@ -39,7 +39,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "9b6d84a8ace8aad933781cd25c04ab2d33acd5b8",
+      "head_commit": "177b7bb40ca5f0a9121e4edafda3e3acf34fc429",
       "dirty": false
     }
   }

@@ -29,7 +29,7 @@ type RunInfo struct {
 	MaxUnsafeDuration kernel.Duration `json:"sla_threshold"`
 	Snapshots         int             `json:"snapshots"`
 	InputHashes       *InputHashes    `json:"input_hashes,omitempty"`
-	// PackHash is a fingerprint of the exact control set used during the run,
-	// ensuring that the evaluation logic itself is auditable.
-	PackHash kernel.Digest `json:"pack_hash,omitempty"`
+	// PolicyFingerprint is a deterministic hash of the exact control set used
+	// during the run, ensuring that the evaluation logic itself is auditable.
+	PolicyFingerprint kernel.Digest `json:"policy_fingerprint,omitempty"`
 }

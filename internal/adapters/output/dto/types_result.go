@@ -15,7 +15,7 @@ type RunInfoDTO struct {
 	MaxUnsafeDuration kernel.Duration `json:"sla_threshold"`
 	Snapshots         int             `json:"snapshots"`
 	InputHashes       *InputHashesDTO `json:"input_hashes,omitempty"`
-	PackHash          kernel.Digest   `json:"pack_hash,omitempty"`
+	PolicyFingerprint kernel.Digest   `json:"policy_fingerprint,omitempty"`
 }
 
 // InputHashesDTO mirrors evaluation.InputHashes.
