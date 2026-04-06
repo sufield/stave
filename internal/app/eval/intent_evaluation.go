@@ -110,7 +110,7 @@ func classifySnapshotSourceType(s asset.Snapshot) sourceTypeVerdict {
 	if s.GeneratedBy == nil || s.GeneratedBy.SourceType == "" {
 		return sourceTypeMissing
 	}
-	if !capabilities.IsSourceTypeSupported(s.GeneratedBy.SourceType) {
+	if !capabilities.IsConnectorSupported(s.GeneratedBy.SourceType) {
 		return sourceTypeUnsupported
 	}
 	return sourceTypeOK
