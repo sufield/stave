@@ -28,9 +28,9 @@ func renderQualityText(w io.Writer, report qualityReport) error {
 	}
 
 	s := report.Summary
-	status := "PASS"
-	if !report.Passed {
-		status = "FAIL"
+	status := "FAIL"
+	if report.Passed {
+		status = "PASS"
 	}
 	printf("Snapshot quality: %s\n", status)
 	printf("Snapshots:        %d\n", s.Snapshots)

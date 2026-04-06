@@ -51,9 +51,9 @@ func writeFindingsBySeverity(w io.Writer, results []profile.Result) {
 		}
 		fmt.Fprintf(w, "── %s ──\n\n", sev)
 		for _, r := range group {
-			status := "PASS"
-			if !r.Pass {
-				status = "FAIL"
+			status := "FAIL"
+			if r.Pass {
+				status = "PASS"
 			}
 			fmt.Fprintf(w, "  [%s] %s — %s\n", status, r.ControlID, r.Severity)
 			if r.ComplianceRef != "" {
@@ -81,9 +81,9 @@ func writeAcknowledged(w io.Writer, acknowledged []profile.AcknowledgedEntry) {
 	fmt.Fprintln(w, "── Acknowledged Exceptions ──")
 	fmt.Fprintln(w)
 	for _, ack := range acknowledged {
-		status := "VALID"
-		if !ack.Valid {
-			status = "INVALID"
+		status := "INVALID"
+		if ack.Valid {
+			status = "VALID"
 		}
 		fmt.Fprintf(w, "  [%s] %s — %s\n", status, ack.ControlID, ack.Bucket)
 		fmt.Fprintf(w, "  Rationale: %s\n", ack.Rationale)
