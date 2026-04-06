@@ -21,7 +21,7 @@ stdout '"checks"'
 # capabilities produces valid JSON
 exec stave capabilities
 stdout '"version"'
-stdout '"inputs"'
+stdout '"ingress"'
 
 # validate help
 exec stave validate --help

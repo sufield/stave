@@ -30,11 +30,11 @@ func TestCapabilitiesJSONContract(t *testing.T) {
 
 	assertStringField(t, got, "version")
 	assertBoolField(t, got, "offline")
-	assertObjectField(t, got, "observations")
-	assertObjectField(t, got, "controls")
-	assertObjectField(t, got, "inputs")
-	assertArrayField(t, got, "packs")
-	assertObjectField(t, got, "security_audit")
+	assertObjectField(t, got, "inventory")
+	assertObjectField(t, got, "policies")
+	assertObjectField(t, got, "ingress")
+	assertArrayField(t, got, "policy_library")
+	assertObjectField(t, got, "compliance")
 
 	if got["version"] != "contract-test-version" {
 		t.Fatalf("version = %v, want %q", got["version"], "contract-test-version")
@@ -43,95 +43,95 @@ func TestCapabilitiesJSONContract(t *testing.T) {
 		t.Fatal("offline must be true")
 	}
 
-	observations := got["observations"].(map[string]any)
-	controls := got["controls"].(map[string]any)
-	inputs := got["inputs"].(map[string]any)
-	packs := got["packs"].([]any)
-	securityAudit := got["security_audit"].(map[string]any)
+	inventory := got["inventory"].(map[string]any)
+	policies := got["policies"].(map[string]any)
+	ingress := got["ingress"].(map[string]any)
+	library := got["policy_library"].([]any)
+	compliance := got["compliance"].(map[string]any)
 
-	schemaVersions := assertArrayField(t, observations, "schema_versions")
-	dslVersions := assertArrayField(t, controls, "dsl_versions")
-	sourceTypes := assertArrayField(t, inputs, "source_types")
-	if len(schemaVersions) == 0 {
-		t.Fatal("observations.schema_versions must be non-empty")
+	schemas := assertArrayField(t, inventory, "schemas")
+	policySchemas := assertArrayField(t, policies, "schemas")
+	connectors := assertArrayField(t, ingress, "connectors")
+	if len(schemas) == 0 {
+		t.Fatal("inventory.schemas must be non-empty")
 	}
-	if len(dslVersions) == 0 {
-		t.Fatal("controls.dsl_versions must be non-empty")
+	if len(policySchemas) == 0 {
+		t.Fatal("policies.schemas must be non-empty")
 	}
-	if len(sourceTypes) == 0 {
-		t.Fatal("inputs.source_types must be non-empty")
+	if len(connectors) == 0 {
+		t.Fatal("ingress.connectors must be non-empty")
 	}
-	if len(packs) == 0 {
-		t.Fatal("packs must be non-empty")
+	if len(library) == 0 {
+		t.Fatal("policy_library must be non-empty")
 	}
-	if enabled, ok := securityAudit["enabled"].(bool); !ok || !enabled {
-		t.Fatal("security_audit.enabled must be true")
+	if enabled, ok := compliance["enabled"].(bool); !ok || !enabled {
+		t.Fatal("compliance.enabled must be true")
 	}
-	if formats := assertArrayField(t, securityAudit, "formats"); len(formats) == 0 {
-		t.Fatal("security_audit.formats must be non-empty")
+	if formats := assertArrayField(t, compliance, "report_formats"); len(formats) == 0 {
+		t.Fatal("compliance.report_formats must be non-empty")
 	}
-	if sbom := assertArrayField(t, securityAudit, "sbom_formats"); len(sbom) == 0 {
-		t.Fatal("security_audit.sbom_formats must be non-empty")
+	if sbom := assertArrayField(t, compliance, "sbom_formats"); len(sbom) == 0 {
+		t.Fatal("compliance.sbom_formats must be non-empty")
 	}
-	if vuln := assertArrayField(t, securityAudit, "vuln_sources"); len(vuln) == 0 {
-		t.Fatal("security_audit.vuln_sources must be non-empty")
+	if vuln := assertArrayField(t, compliance, "vuln_sources"); len(vuln) == 0 {
+		t.Fatal("compliance.vuln_sources must be non-empty")
 	}
-	if failOn := assertArrayField(t, securityAudit, "fail_on_levels"); len(failOn) == 0 {
-		t.Fatal("security_audit.fail_on_levels must be non-empty")
+	if failOn := assertArrayField(t, compliance, "fail_on_levels"); len(failOn) == 0 {
+		t.Fatal("compliance.fail_on_levels must be non-empty")
 	}
-	if frameworks := assertArrayField(t, securityAudit, "compliance_frameworks"); len(frameworks) == 0 {
-		t.Fatal("security_audit.compliance_frameworks must be non-empty")
+	if frameworks := assertArrayField(t, compliance, "frameworks"); len(frameworks) == 0 {
+		t.Fatal("compliance.frameworks must be non-empty")
 	}
 
-	validateSourceTypes(t, sourceTypes)
-	validatePacks(t, packs)
+	validateConnectors(t, connectors)
+	validateLibrary(t, library)
 }
 
-func validateSourceTypes(t *testing.T, sourceTypes []any) {
+func validateConnectors(t *testing.T, connectors []any) {
 	t.Helper()
 	foundS3Snapshot := false
-	for i, raw := range sourceTypes {
+	for i, raw := range connectors {
 		obj, ok := raw.(map[string]any)
 		if !ok {
-			t.Fatalf("inputs.source_types[%d] must be an object", i)
+			t.Fatalf("ingress.connectors[%d] must be an object", i)
 		}
 		typ, ok := obj["type"].(string)
 		if !ok || typ == "" {
-			t.Fatalf("inputs.source_types[%d].type must be a non-empty string", i)
+			t.Fatalf("ingress.connectors[%d].type must be a non-empty string", i)
 		}
 		if typ == "aws-s3-snapshot" {
 			foundS3Snapshot = true
 		}
 	}
 	if !foundS3Snapshot {
-		t.Fatal("inputs.source_types missing aws-s3-snapshot")
+		t.Fatal("ingress.connectors missing aws-s3-snapshot")
 	}
 }
 
-func validatePacks(t *testing.T, packs []any) {
+func validateLibrary(t *testing.T, library []any) {
 	t.Helper()
 	foundS3Pack := false
-	for i, raw := range packs {
+	for i, raw := range library {
 		obj, ok := raw.(map[string]any)
 		if !ok {
-			t.Fatalf("packs[%d] must be an object", i)
+			t.Fatalf("policy_library[%d] must be an object", i)
 		}
 		name, ok := obj["name"].(string)
 		if !ok || name == "" {
-			t.Fatalf("packs[%d].name must be a non-empty string", i)
+			t.Fatalf("policy_library[%d].name must be a non-empty string", i)
 		}
 		if _, ok := obj["description"].(string); !ok {
-			t.Fatalf("packs[%d].description must be a string", i)
+			t.Fatalf("policy_library[%d].description must be a string", i)
 		}
 		if v, ok := obj["version"].(string); !ok || v != "contract-test-version" {
-			t.Fatalf("packs[%d].version = %v, want %q", i, obj["version"], "contract-test-version")
+			t.Fatalf("policy_library[%d].version = %v, want %q", i, obj["version"], "contract-test-version")
 		}
 		if name == "s3" {
 			foundS3Pack = true
 		}
 	}
 	if !foundS3Pack {
-		t.Fatal("packs missing required s3 pack")
+		t.Fatal("policy_library missing required s3 pack")
 	}
 }
 

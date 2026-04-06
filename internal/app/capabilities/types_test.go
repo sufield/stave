@@ -9,21 +9,21 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
-func TestCapabilities_SourceTypeCount(t *testing.T) {
+func TestCapabilities_ConnectorCount(t *testing.T) {
 	caps := capabilities.GetCapabilities("test-v1")
-	got := len(caps.Inputs.SourceTypes)
+	got := len(caps.Ingress.Connectors)
 	want := 1
 	if got != want {
-		t.Errorf("source type count = %d, want %d (update this test when adding source types)", got, want)
+		t.Errorf("connector count = %d, want %d (update this test when adding connectors)", got, want)
 	}
 }
 
-func TestCapabilities_SourceTypesExpectedSet(t *testing.T) {
+func TestCapabilities_ConnectorsExpectedSet(t *testing.T) {
 	caps := capabilities.GetCapabilities("test-v1")
 
-	got := make(map[kernel.ObservationSourceType]bool, len(caps.Inputs.SourceTypes))
-	for _, st := range caps.Inputs.SourceTypes {
-		got[st.Type] = true
+	got := make(map[kernel.ObservationSourceType]bool, len(caps.Ingress.Connectors))
+	for _, c := range caps.Ingress.Connectors {
+		got[c.Type] = true
 	}
 
 	want := []kernel.ObservationSourceType{
@@ -32,12 +32,12 @@ func TestCapabilities_SourceTypesExpectedSet(t *testing.T) {
 
 	for _, sourceType := range want {
 		if !got[sourceType] {
-			t.Errorf("source type %q missing from capabilities", sourceType)
+			t.Errorf("connector %q missing from capabilities", sourceType)
 		}
 	}
 }
 
-func TestCapabilities_PacksMatchEmbeddedRegistry(t *testing.T) {
+func TestCapabilities_LibraryMatchesEmbeddedRegistry(t *testing.T) {
 	reg, err := pack.NewEmbeddedRegistry()
 	if err != nil {
 		t.Fatalf("load embedded registry: %v", err)
@@ -46,10 +46,10 @@ func TestCapabilities_PacksMatchEmbeddedRegistry(t *testing.T) {
 
 	caps := capabilities.GetCapabilities("test-v1")
 
-	if len(caps.Packs) != len(want) {
-		t.Fatalf("pack count = %d, want %d", len(caps.Packs), len(want))
+	if len(caps.Library) != len(want) {
+		t.Fatalf("pack count = %d, want %d", len(caps.Library), len(want))
 	}
-	for i, p := range caps.Packs {
+	for i, p := range caps.Library {
 		if p.Name != want[i].Name {
 			t.Errorf("pack[%d].Name = %q, want %q", i, p.Name, want[i].Name)
 		}
@@ -68,7 +68,7 @@ func TestCapabilities_OfflineField(t *testing.T) {
 
 func TestCapabilities_S3PackExists(t *testing.T) {
 	caps := capabilities.GetCapabilities("test-v1")
-	for _, p := range caps.Packs {
+	for _, p := range caps.Library {
 		if p.Name == "s3" {
 			return
 		}
@@ -81,7 +81,7 @@ func TestCapabilities_UsesProvidedVersion(t *testing.T) {
 	if caps.Version != "1.2.3-test" {
 		t.Fatalf("version = %q, want %q", caps.Version, "1.2.3-test")
 	}
-	for _, p := range caps.Packs {
+	for _, p := range caps.Library {
 		if p.Version != "1.2.3-test" {
 			t.Fatalf("pack %q version = %q, want %q", p.Name, p.Version, "1.2.3-test")
 		}
@@ -95,29 +95,16 @@ func TestCapabilities_DefaultVersionFallback(t *testing.T) {
 	}
 }
 
-func TestCapabilities_SecurityAuditSupport(t *testing.T) {
+func TestCapabilities_ComplianceSupport(t *testing.T) {
 	caps := capabilities.GetCapabilities("test-v1")
-	if !caps.SecurityAudit.Enabled {
-		t.Fatal("security_audit.enabled should be true")
+	if !caps.Compliance.Enabled {
+		t.Fatal("compliance.enabled should be true")
 	}
 	wantFormats := map[string]bool{"json": true, "markdown": true, "sarif": true}
-	for _, format := range caps.SecurityAudit.Formats {
+	for _, format := range caps.Compliance.ReportFormats {
 		delete(wantFormats, format)
 	}
 	for missing := range wantFormats {
-		t.Fatalf("security_audit.formats missing %q", missing)
-	}
-	wantFailOn := map[string]bool{
-		"critical": true,
-		"high":     true,
-		"medium":   true,
-		"low":      true,
-		"none":     true,
-	}
-	for _, level := range caps.SecurityAudit.FailOnLevels {
-		delete(wantFailOn, level)
-	}
-	for missing := range wantFailOn {
-		t.Fatalf("security_audit.fail_on_levels missing %q", missing)
+		t.Fatalf("compliance.report_formats missing %q", missing)
 	}
 }

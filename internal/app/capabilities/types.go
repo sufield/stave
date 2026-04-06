@@ -5,21 +5,21 @@ import (
 	staveversion "github.com/sufield/stave/internal/version"
 )
 
-// IsSourceTypeSupported checks if a source type is supported.
-func IsSourceTypeSupported(sourceType kernel.ObservationSourceType) bool {
-	_, ok := capabilitiesRegistry.sourceTypeIndex[sourceType]
+// IsConnectorSupported checks if a source type has a registered connector.
+func IsConnectorSupported(sourceType kernel.ObservationSourceType) bool {
+	_, ok := Manifest.connectorIndex[sourceType]
 	return ok
 }
 
 // Capabilities describes what this version of Stave supports.
 type Capabilities struct {
-	Version       string               `json:"version"`
-	Offline       bool                 `json:"offline"`
-	Observations  ObservationSupport   `json:"observations"`
-	Controls      ControlSupport       `json:"controls"`
-	Inputs        InputSupport         `json:"inputs"`
-	Packs         []ControlPack        `json:"packs"`
-	SecurityAudit SecurityAuditSupport `json:"security_audit"`
+	Version    string            `json:"version"`
+	Offline    bool              `json:"offline"`
+	Inventory  InventorySupport  `json:"inventory"`
+	Policies   PolicySupport     `json:"policies"`
+	Ingress    IngressSupport    `json:"ingress"`
+	Library    []ControlPack     `json:"policy_library"`
+	Compliance ComplianceSupport `json:"compliance"`
 }
 
 // ControlPack describes an available control pack.
@@ -29,35 +29,35 @@ type ControlPack struct {
 	Version     string `json:"version"`
 }
 
-// ObservationSupport describes supported observation formats.
-type ObservationSupport struct {
-	SchemaVersions []string `json:"schema_versions"`
+// InventorySupport describes supported observation formats.
+type InventorySupport struct {
+	Schemas []string `json:"schemas"`
 }
 
-// ControlSupport describes supported control formats.
-type ControlSupport struct {
-	DSLVersions []string `json:"dsl_versions"`
+// PolicySupport describes supported control formats.
+type PolicySupport struct {
+	Schemas []string `json:"schemas"`
 }
 
-// InputSupport describes supported input types.
-type InputSupport struct {
-	SourceTypes []SourceTypeSupport `json:"source_types"`
+// IngressSupport describes supported input types.
+type IngressSupport struct {
+	Connectors []ConnectorSupport `json:"connectors"`
 }
 
-// SourceTypeSupport describes a supported observation source type.
-type SourceTypeSupport struct {
+// ConnectorSupport describes a supported observation source type.
+type ConnectorSupport struct {
 	Type        kernel.ObservationSourceType `json:"type"`
 	Description string                       `json:"description"`
 }
 
-// SecurityAuditSupport describes the supported security-audit command features.
-type SecurityAuditSupport struct {
-	Enabled              bool     `json:"enabled"`
-	Formats              []string `json:"formats"`
-	SBOMFormats          []string `json:"sbom_formats"`
-	VulnerabilitySources []string `json:"vuln_sources"`
-	FailOnLevels         []string `json:"fail_on_levels"`
-	ComplianceFrameworks []string `json:"compliance_frameworks"`
+// ComplianceSupport describes the supported compliance and audit features.
+type ComplianceSupport struct {
+	Enabled       bool     `json:"enabled"`
+	ReportFormats []string `json:"report_formats"`
+	SBOMFormats   []string `json:"sbom_formats"`
+	VulnSources   []string `json:"vuln_sources"`
+	FailOnLevels  []string `json:"fail_on_levels"`
+	Frameworks    []string `json:"frameworks"`
 }
 
 // GetCapabilities returns the capabilities of this Stave version.
@@ -67,12 +67,12 @@ func GetCapabilities(version string) Capabilities {
 	}
 
 	return Capabilities{
-		Version:       version,
-		Offline:       true,
-		Observations:  capabilitiesRegistry.observationSupport(),
-		Controls:      capabilitiesRegistry.controlSupport(),
-		Inputs:        capabilitiesRegistry.inputSupport(),
-		Packs:         capabilitiesRegistry.packsWithVersion(version),
-		SecurityAudit: capabilitiesRegistry.securityAuditSupport(),
+		Version:    version,
+		Offline:    true,
+		Inventory:  Manifest.inventorySupport(),
+		Policies:   Manifest.policySupport(),
+		Ingress:    Manifest.ingressSupport(),
+		Library:    Manifest.libraryWithVersion(version),
+		Compliance: Manifest.complianceSupport(),
 	}
 }
