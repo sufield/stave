@@ -10,9 +10,9 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// FormatByExtension applies deterministic formatting based on file extension.
+// CanonicalizeByExtension applies deterministic formatting based on file extension.
 // Returns nil if the extension is not recognized.
-func FormatByExtension(path string, data []byte) ([]byte, error) {
+func CanonicalizeByExtension(path string, data []byte) ([]byte, error) {
 	switch strings.ToLower(filepath.Ext(path)) {
 	case ".json":
 		return FormatJSON(data)

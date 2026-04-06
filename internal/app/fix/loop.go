@@ -7,9 +7,9 @@ import (
 	"os"
 	"time"
 
+	appattest "github.com/sufield/stave/internal/app/attestation"
 	"github.com/sufield/stave/internal/app/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
-	appverify "github.com/sufield/stave/internal/app/verify"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"
@@ -93,19 +93,19 @@ func (s *Service) Loop(ctx context.Context, req LoopRequest, deps LoopDeps, am *
 	}
 
 	// 5. Verify (compare before/after)
-	cmp, err := appverify.Compare(appverify.CompareRequest{
-		BeforeFindings:    before.Result.Findings,
-		AfterFindings:     after.Result.Findings,
-		BeforeSnapshots:   before.Snapshots,
-		AfterSnapshots:    after.Snapshots,
-		MaxUnsafeDuration: req.MaxUnsafeDuration,
+	cmp, err := appattest.Compare(appattest.CompareRequest{
+		BaselineFindings:  before.Result.Findings,
+		TargetFindings:    after.Result.Findings,
+		BaselineSnapshots: before.Snapshots,
+		TargetSnapshots:   after.Snapshots,
+		SLAThreshold:      req.MaxUnsafeDuration,
 		Now:               s.Clock.Now().UTC(),
 		Sanitizer:         s.Sanitizer,
 	})
 	if err != nil {
 		return err
 	}
-	verification := cmp.Verification
+	verification := cmp.Attestation
 
 	// 6. Build envelopes
 	beforeEnv, err := eb.BuildEvaluation(*before.Result)

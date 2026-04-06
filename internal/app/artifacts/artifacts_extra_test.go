@@ -100,12 +100,12 @@ func TestFormatControlOutput_Unsupported(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// FormatByExtension edge cases
+// CanonicalizeByExtension edge cases
 // ---------------------------------------------------------------------------
 
-func TestFormatByExtension_JSON(t *testing.T) {
+func TestCanonicalizeByExtension_JSON(t *testing.T) {
 	input := []byte(`{"schema_version":"obs.v0.1","captured_at":"2026-01-01T00:00:00Z","generated_by":{"source_type":"test","tool":"test"},"assets":[]}`)
-	out, err := FormatByExtension("test.json", input)
+	out, err := CanonicalizeByExtension("test.json", input)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -114,8 +114,8 @@ func TestFormatByExtension_JSON(t *testing.T) {
 	}
 }
 
-func TestFormatByExtension_YML(t *testing.T) {
-	out, err := FormatByExtension("test.yml", []byte("key: value\n"))
+func TestCanonicalizeByExtension_YML(t *testing.T) {
+	out, err := CanonicalizeByExtension("test.yml", []byte("key: value\n"))
 	if err != nil {
 		t.Fatal(err)
 	}

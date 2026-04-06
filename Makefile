@@ -340,8 +340,7 @@ demo-check: build
 # internal-only directories. The public repo lives at PUBLIC_DEST.
 #
 # Usage:
-#   make sync-public              # sync and show summary
-#   make sync-public MSG="v0.1.0 release"  # sync, commit, push
+#   make sync              # sync and show summary
 
 PUBLIC_DEST ?= $(HOME)/work/stave/
 SYNC_EXCLUDES = \
@@ -353,8 +352,8 @@ SYNC_EXCLUDES = \
 	--exclude='dist/' \
 	--exclude='dist-local/'
 
-## sync-public: Sync to public repo
-sync-public:
+## sync: Sync to public repo
+sync:
 	@if [ ! -d "$(PUBLIC_DEST)/.git" ]; then \
 		echo "Error: $(PUBLIC_DEST) is not a git repository."; \
 		echo "Initialize it first:"; \

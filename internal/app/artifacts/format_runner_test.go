@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestFormatterRun_CheckOnly(t *testing.T) {
+func TestCanonicalizerNormalize_VerifyOnly(t *testing.T) {
 	dir := t.TempDir()
 
 	// Write an unformatted JSON file (extra whitespace).
@@ -16,18 +16,18 @@ func TestFormatterRun_CheckOnly(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	f := &Formatter{}
-	_, err := f.Run(context.Background(), FormatConfig{
-		Target:    dir,
-		CheckOnly: true,
-		ReadFile:  os.ReadFile,
+	c := &Canonicalizer{}
+	_, err := c.Normalize(context.Background(), NormalizationConfig{
+		SourcePath: dir,
+		VerifyOnly: true,
+		Reader:     os.ReadFile,
 	})
 	if err == nil {
-		t.Fatal("expected error for unformatted file in check mode")
+		t.Fatal("expected error for unformatted file in verify mode")
 	}
 }
 
-func TestFormatterRun_FormatWrites(t *testing.T) {
+func TestCanonicalizerNormalize_Writes(t *testing.T) {
 	dir := t.TempDir()
 
 	unformatted := []byte(`{   "schema_version":"obs.v0.1","generated_by":{"source_type":"test","tool":"test"},"captured_at":"2026-01-01T00:00:00Z","assets":[]}`)
@@ -37,50 +37,49 @@ func TestFormatterRun_FormatWrites(t *testing.T) {
 	}
 
 	var written []byte
-	f := &Formatter{}
-	result, err := f.Run(context.Background(), FormatConfig{
-		Target:   dir,
-		ReadFile: os.ReadFile,
-		WriteFile: func(_ string, data []byte) error {
+	c := &Canonicalizer{}
+	result, err := c.Normalize(context.Background(), NormalizationConfig{
+		SourcePath: dir,
+		Reader:     os.ReadFile,
+		Writer: func(_ string, data []byte) error {
 			written = data
 			return nil
 		},
 	})
 	if err != nil {
-		t.Fatalf("Run error: %v", err)
+		t.Fatalf("Normalize error: %v", err)
 	}
-	if result.ChangedFiles != 1 {
-		t.Fatalf("expected 1 changed file, got %d", result.ChangedFiles)
+	if result.ModifiedManifests != 1 {
+		t.Fatalf("expected 1 modified manifest, got %d", result.ModifiedManifests)
 	}
 	if len(written) == 0 {
-		t.Fatal("expected WriteFile to be called")
+		t.Fatal("expected Writer to be called")
 	}
 }
 
-func TestFormatterRun_AlreadyFormatted(t *testing.T) {
+func TestCanonicalizerNormalize_AlreadyCanonical(t *testing.T) {
 	dir := t.TempDir()
 
-	// Write a properly formatted YAML file.
 	formatted := []byte("dsl_version: ctrl.v1\nid: CTL.TEST.001\n")
 	if err := os.WriteFile(filepath.Join(dir, "ctl.yaml"), formatted, 0o644); err != nil {
 		t.Fatal(err)
 	}
 
-	f := &Formatter{}
-	result, err := f.Run(context.Background(), FormatConfig{
-		Target:    dir,
-		CheckOnly: true,
-		ReadFile:  os.ReadFile,
+	c := &Canonicalizer{}
+	result, err := c.Normalize(context.Background(), NormalizationConfig{
+		SourcePath: dir,
+		VerifyOnly: true,
+		Reader:     os.ReadFile,
 	})
 	if err != nil {
-		t.Fatalf("Run error: %v", err)
+		t.Fatalf("Normalize error: %v", err)
 	}
-	if result.ChangedFiles != 0 {
-		t.Fatalf("expected 0 changed files, got %d", result.ChangedFiles)
+	if result.ModifiedManifests != 0 {
+		t.Fatalf("expected 0 modified manifests, got %d", result.ModifiedManifests)
 	}
 }
 
-func TestCollectFormatTargets_Dir(t *testing.T) {
+func TestDiscoverManifests_Dir(t *testing.T) {
 	dir := t.TempDir()
 	for _, name := range []string{"a.json", "b.yaml", "c.txt", "d.yml"} {
 		if err := os.WriteFile(filepath.Join(dir, name), []byte("{}"), 0o644); err != nil {
@@ -88,25 +87,25 @@ func TestCollectFormatTargets_Dir(t *testing.T) {
 		}
 	}
 
-	files, err := CollectFormatTargets(context.Background(), dir)
+	files, err := DiscoverManifests(context.Background(), dir)
 	if err != nil {
-		t.Fatalf("CollectFormatTargets error: %v", err)
+		t.Fatalf("DiscoverManifests error: %v", err)
 	}
 	if len(files) != 3 {
 		t.Fatalf("expected 3 files (json+yaml+yml), got %d: %v", len(files), files)
 	}
 }
 
-func TestCollectFormatTargets_SingleFile(t *testing.T) {
+func TestDiscoverManifests_SingleFile(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "single.json")
 	if err := os.WriteFile(path, []byte("{}"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
-	files, err := CollectFormatTargets(context.Background(), path)
+	files, err := DiscoverManifests(context.Background(), path)
 	if err != nil {
-		t.Fatalf("CollectFormatTargets error: %v", err)
+		t.Fatalf("DiscoverManifests error: %v", err)
 	}
 	if len(files) != 1 || files[0] != path {
 		t.Fatalf("expected [%s], got %v", path, files)
