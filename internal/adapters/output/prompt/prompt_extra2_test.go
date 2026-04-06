@@ -208,7 +208,10 @@ func TestRenderPrompt(t *testing.T) {
 		AssetProperties: `{"public_access": true}`,
 	}
 
-	got := RenderPrompt(data)
+	got, err := RenderPrompt(data, DefaultTemplate)
+	if err != nil {
+		t.Fatalf("RenderPrompt error: %v", err)
+	}
 	expects := []string{
 		"# Stave Finding Analysis",
 		"**1 finding(s)**",
@@ -235,7 +238,10 @@ func TestRenderPrompt_Minimal(t *testing.T) {
 		FindingCount: 0,
 		AssetID:      "none",
 	}
-	got := RenderPrompt(data)
+	got, err := RenderPrompt(data, DefaultTemplate)
+	if err != nil {
+		t.Fatalf("RenderPrompt error: %v", err)
+	}
 	if !strings.Contains(got, "**0 finding(s)**") {
 		t.Error("missing finding count")
 	}

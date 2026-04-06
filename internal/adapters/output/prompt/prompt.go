@@ -2,16 +2,21 @@ package prompt
 
 import (
 	"bytes"
+	_ "embed"
 	"fmt"
 	"strings"
 	"time"
 
+	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"
 	"gopkg.in/yaml.v3"
 )
+
+//go:embed templates/prompt_default.tmpl
+var DefaultTemplate string
 
 // FindingData holds data for a single finding in the rendered prompt.
 type FindingData struct {
@@ -163,54 +168,13 @@ func BuildGuidanceSummary(m *policy.RemediationSpec) string {
 	return strings.Join(parts, "\n\n")
 }
 
-// RenderPrompt builds the Markdown prompt from assembled data.
-func RenderPrompt(data Data) string {
+// RenderPrompt builds the Markdown prompt by executing a Go text/template
+// against the assembled data. Pass DefaultTemplate for the built-in prompt,
+// or a custom template string for team-specific personas.
+func RenderPrompt(data Data, tmpl string) (string, error) {
 	var b bytes.Buffer
-
-	fmt.Fprintf(&b, "# Stave Finding Analysis\n\n")
-	fmt.Fprintf(&b, "I am using **Stave**, an offline configuration safety evaluator, to detect infrastructure misconfigurations. ")
-	fmt.Fprintf(&b, "Stave found **%d finding(s)** for asset `%s` that I need help analyzing and correcting.\n", data.FindingCount, data.AssetID)
-
-	for _, f := range data.Findings {
-		fmt.Fprintf(&b, "\n---\n\n")
-		fmt.Fprintf(&b, "## Finding: %s\n\n", f.ControlID)
-		fmt.Fprintf(&b, "| Field | Value |\n")
-		fmt.Fprintf(&b, "|-------|-------|\n")
-		fmt.Fprintf(&b, "| Control | %s |\n", f.ControlID)
-		fmt.Fprintf(&b, "| Name | %s |\n", f.ControlName)
-		fmt.Fprintf(&b, "| Description | %s |\n", strings.TrimSpace(f.Description))
-		fmt.Fprintf(&b, "| Asset | %s |\n", f.AssetID)
-		fmt.Fprintf(&b, "| Asset Type | %s |\n", f.AssetType)
-
-		fmt.Fprintf(&b, "\n### Evidence\n\n%s\n", f.Evidence)
-
-		if f.MatchedProps != "" {
-			fmt.Fprintf(&b, "\n### Misconfigurations\n\n%s\n", f.MatchedProps)
-		}
-
-		if f.RootCauses != "" {
-			fmt.Fprintf(&b, "\n### Root Causes\n\n%s\n", f.RootCauses)
-		}
-
-		if f.ControlYAML != "" {
-			fmt.Fprintf(&b, "\n### Control Definition (YAML)\n\n```yaml\n%s\n```\n", f.ControlYAML)
-		}
-
-		if f.Guidance != "" {
-			fmt.Fprintf(&b, "\n### Control Guidance\n\n%s\n", f.Guidance)
-		}
+	if err := ui.ExecuteTemplate(&b, tmpl, data); err != nil {
+		return "", fmt.Errorf("render prompt template: %w", err)
 	}
-
-	if data.AssetProperties != "" {
-		fmt.Fprintf(&b, "\n## Asset Properties (Latest Snapshot)\n\n```json\n%s\n```\n", data.AssetProperties)
-	}
-
-	fmt.Fprintf(&b, "\n## What I Need\n\n")
-	fmt.Fprintf(&b, "Based on the findings above, please provide:\n\n")
-	fmt.Fprintf(&b, "1. **Root cause analysis** — Why is this asset in an unsafe state?\n")
-	fmt.Fprintf(&b, "2. **Corrective changes** — Specific, actionable changes to address each finding.\n")
-	fmt.Fprintf(&b, "3. **Verification** — How to confirm the fix is applied correctly.\n")
-	fmt.Fprintf(&b, "4. **Prevention** — What controls or automation would prevent recurrence?\n")
-
-	return b.String()
+	return b.String(), nil
 }

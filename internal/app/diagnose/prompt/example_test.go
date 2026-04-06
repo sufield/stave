@@ -56,7 +56,7 @@ func testBuildPrompt(
 		AssetPropsJSON: assetPropsJSON,
 	}
 	data := builder.Build(matched)
-	rendered := promptout.RenderPrompt(data)
+	rendered, _ := promptout.RenderPrompt(data, promptout.DefaultTemplate)
 
 	findingIDs := make([]kernel.ControlID, len(data.Findings))
 	for i, f := range data.Findings {

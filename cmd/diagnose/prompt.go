@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -39,11 +41,12 @@ func NewPromptCmd(newCtlRepo compose.CtlRepoFactory, loadSnapshots compose.Snaps
 
 func newPromptFromFindingCmd(newCtlRepo compose.CtlRepoFactory, loadSnapshots compose.SnapshotLoader) *cobra.Command {
 	var (
-		evalFile    string
-		assetID     string
-		controlsDir string
-		obsDir      string
-		format      string
+		evalFile       string
+		assetID        string
+		controlsDir    string
+		obsDir         string
+		format         string
+		promptTemplate string
 	)
 
 	cmd := &cobra.Command{
@@ -59,9 +62,10 @@ starts from complete information.
 
 Inputs:
   --evaluation-file   Path to evaluation JSON output (required)
-  --asset-id       Asset ID to filter findings (required)
-  --controls        Directory containing YAML control definitions
+  --asset-id          Asset ID to filter findings (required)
+  --controls          Directory containing YAML control definitions
   --observations      Optional: directory containing observation snapshots
+  --prompt-template   Optional: path to custom Go text/template file
 
 Outputs:
   stdout              Markdown prompt (default) or JSON (--format json)
@@ -103,13 +107,14 @@ Examples:
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			return runPromptFromFinding(cmd, promptFromFindingOpts{
-				evalFile:      evalFile,
-				assetID:       assetID,
-				controlsDir:   controlsDir,
-				obsDir:        obsDir,
-				format:        format,
-				newCtlRepo:    newCtlRepo,
-				loadSnapshots: loadSnapshots,
+				evalFile:       evalFile,
+				assetID:        assetID,
+				controlsDir:    controlsDir,
+				obsDir:         obsDir,
+				format:         format,
+				promptTemplate: promptTemplate,
+				newCtlRepo:     newCtlRepo,
+				loadSnapshots:  loadSnapshots,
 			})
 		},
 	}
@@ -120,6 +125,7 @@ Examples:
 	cmd.Flags().StringVarP(&obsDir, "observations", "o", "", "Path to observation snapshots directory (optional)")
 	cmd.Flags().StringVarP(&format, "format", "f", "text", "Output format: text or json")
 
+	cmd.Flags().StringVar(&promptTemplate, "prompt-template", "", "Path to custom Go text/template file for prompt output")
 	_ = cmd.MarkFlagRequired("evaluation-file")
 	_ = cmd.MarkFlagRequired("asset-id")
 	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed(cliflags.FormatsTextJSON...))
@@ -129,13 +135,14 @@ Examples:
 
 // promptFromFindingOpts holds the resolved inputs for prompt generation.
 type promptFromFindingOpts struct {
-	evalFile      string
-	assetID       string
-	controlsDir   string
-	obsDir        string
-	format        string
-	newCtlRepo    compose.CtlRepoFactory
-	loadSnapshots compose.SnapshotLoader
+	evalFile       string
+	assetID        string
+	controlsDir    string
+	obsDir         string
+	format         string
+	promptTemplate string
+	newCtlRepo     compose.CtlRepoFactory
+	loadSnapshots  compose.SnapshotLoader
 }
 
 // runPromptFromFinding executes the prompt-from-finding workflow.
@@ -161,13 +168,18 @@ func runPromptFromFinding(cmd *cobra.Command, opts promptFromFindingOpts) error 
 		}
 	}
 
+	tmplStr, err := resolvePromptTemplate(opts.promptTemplate)
+	if err != nil {
+		return err
+	}
+
 	dctx := diagprompt.DiagnosticContext{
 		ControlsByID:   ctlByID,
 		AssetPropsJSON: assetPropsJSON,
 		LoadEval: func(path string) (*evaluation.ComplianceReport, error) {
 			return (&evaljson.Loader{}).LoadFromFile(path)
 		},
-		BuildPrompt: buildPromptAdapter,
+		BuildPrompt: buildPromptAdapterWith(tmplStr),
 	}
 
 	runner := diagprompt.NewRunner(dctx)
@@ -181,30 +193,49 @@ func runPromptFromFinding(cmd *cobra.Command, opts promptFromFindingOpts) error 
 	return diagprompt.WriteOutput(cmd.OutOrStdout(), cmd.ErrOrStderr(), out, fmtValue, cliflags.GetGlobalFlags(cmd).Quiet)
 }
 
-// buildPromptAdapter bridges the app-layer BuildFunc contract to the
-// adapters/output/prompt implementation.
-func buildPromptAdapter(
-	assetID string,
-	controlsByID map[kernel.ControlID]*policy.ControlDefinition,
-	assetPropsJSON string,
-	matched []evaluation.Finding,
-) diagprompt.Output {
-	builder := &promptout.Builder{
-		AssetID:        assetID,
-		ControlsByID:   controlsByID,
-		AssetPropsJSON: assetPropsJSON,
+// resolvePromptTemplate returns the template string to use: a custom file if
+// specified, or the built-in default.
+func resolvePromptTemplate(path string) (string, error) {
+	if path == "" {
+		return promptout.DefaultTemplate, nil
 	}
-	data := builder.Build(matched)
-	rendered := promptout.RenderPrompt(data)
+	clean := filepath.Clean(path)
+	data, err := os.ReadFile(clean) //nolint:gosec // path is a user-supplied CLI flag, cleaned above
+	if err != nil {
+		return "", fmt.Errorf("read prompt template %q: %w", clean, err)
+	}
+	return string(data), nil
+}
 
-	findingIDs := make([]kernel.ControlID, len(data.Findings))
-	for i, f := range data.Findings {
-		findingIDs[i] = f.ControlID
-	}
-	return diagprompt.Output{
-		Rendered:   rendered,
-		FindingIDs: findingIDs,
-		AssetID:    data.AssetID,
+// buildPromptAdapterWith returns a BuildFunc that renders prompts using the
+// given template string.
+func buildPromptAdapterWith(tmpl string) func(string, map[kernel.ControlID]*policy.ControlDefinition, string, []evaluation.Finding) diagprompt.Output {
+	return func(
+		assetID string,
+		controlsByID map[kernel.ControlID]*policy.ControlDefinition,
+		assetPropsJSON string,
+		matched []evaluation.Finding,
+	) diagprompt.Output {
+		builder := &promptout.Builder{
+			AssetID:        assetID,
+			ControlsByID:   controlsByID,
+			AssetPropsJSON: assetPropsJSON,
+		}
+		data := builder.Build(matched)
+		rendered, err := promptout.RenderPrompt(data, tmpl)
+		if err != nil {
+			rendered = fmt.Sprintf("template error: %v", err)
+		}
+
+		findingIDs := make([]kernel.ControlID, len(data.Findings))
+		for i, f := range data.Findings {
+			findingIDs[i] = f.ControlID
+		}
+		return diagprompt.Output{
+			Rendered:   rendered,
+			FindingIDs: findingIDs,
+			AssetID:    data.AssetID,
+		}
 	}
 }
 
