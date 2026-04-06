@@ -12,8 +12,8 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appfix "github.com/sufield/stave/internal/app/fix"
 	"github.com/sufield/stave/internal/core/ports"
+	"github.com/sufield/stave/internal/core/report"
 	"github.com/sufield/stave/internal/platform/fileout"
-	"github.com/sufield/stave/internal/safetyenvelope"
 )
 
 func TestBuildFixLoopReport(t *testing.T) {
@@ -24,18 +24,18 @@ func TestBuildFixLoopReport(t *testing.T) {
 		AfterDir:          "./after",
 		MaxUnsafeDuration: 7 * 24 * time.Hour,
 	}
-	v := safetyenvelope.Verification{
-		Run: safetyenvelope.VerificationRunInfo{
+	v := report.Attestation{
+		Run: report.AttestationRunInfo{
 			Now:             time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC),
 			BeforeSnapshots: 2,
 			AfterSnapshots:  2,
 		},
-		Summary: safetyenvelope.VerificationSummary{
-			BeforeViolations: 2,
-			AfterViolations:  1,
-			Resolved:         1,
-			Remaining:        1,
-			Introduced:       0,
+		Summary: report.AttestationSummary{
+			PreviousViolations: 2,
+			CurrentViolations:  1,
+			Remediated:         1,
+			Open:               1,
+			Regressions:        0,
 		},
 	}
 
@@ -46,8 +46,8 @@ func TestBuildFixLoopReport(t *testing.T) {
 	if report.MaxUnsafeDuration != "168h0m0s" {
 		t.Fatalf("unexpected max_unsafe: %s", report.MaxUnsafeDuration)
 	}
-	if report.Verification.Remaining != 1 {
-		t.Fatalf("unexpected remaining count: %d", report.Verification.Remaining)
+	if report.Verification.Open != 1 {
+		t.Fatalf("unexpected remaining count: %d", report.Verification.Open)
 	}
 }
 
@@ -103,7 +103,7 @@ func TestRunFixLoopWritesArtifacts(t *testing.T) {
 	if !report.Passed {
 		t.Fatalf("expected pass for e2e-s3-verify fixture, got fail: %s", report.Reason)
 	}
-	if report.Verification.Resolved == 0 {
+	if report.Verification.Remediated == 0 {
 		t.Fatalf("expected at least one resolved finding in remediation report")
 	}
 }

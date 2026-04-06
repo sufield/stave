@@ -125,8 +125,8 @@
       }
     }
   ],
-  "kind": "evaluation",
-  "security_state": "NON_COMPLIANT",
+  "kind": "ASSESSMENT",
+  "status": "NON_COMPLIANT",
   "remediation_groups": [
     {
       "asset_id": "shopify-internal-assets",
@@ -179,7 +179,7 @@
       },
       "overall": "a2405a467c080332dc7993b196a308ba329d3e4673298ecac2931c45b083a95e"
     },
-    "max_unsafe": "7d",
+    "sla_threshold": "7d",
     "now": "2015-11-23T00:00:00Z",
     "offline": true,
     "pack_hash": "d2b35cd40cec32a8718ca0f93ff93d9e6b67eced18e3388436a53e8cee4e6b11",

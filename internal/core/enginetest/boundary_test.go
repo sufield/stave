@@ -26,7 +26,7 @@ func TestDomainLayerBoundary(t *testing.T) {
 		"/internal/builtin/",
 		"/internal/compliance/",
 		"/internal/doctor/",
-		"/internal/safetyenvelope/",
+		"/internal/core/report/",
 		"/cmd/",
 	}
 

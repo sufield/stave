@@ -1,7 +1,7 @@
 {
   "findings": [],
-  "kind": "evaluation",
-  "security_state": "COMPLIANT",
+  "kind": "ASSESSMENT",
+  "status": "COMPLIANT",
   "run": {
     "input_hashes": {
       "files": {
@@ -10,7 +10,7 @@
       },
       "overall": "c73da21f39d6aeb7fb98de52798dbc09bab7319b577aa429ccbf0261784f657b"
     },
-    "max_unsafe": "7d",
+    "sla_threshold": "7d",
     "now": "2026-01-11T00:00:00Z",
     "offline": true,
     "pack_hash": "6a5cf52efaa5bdc83ec3eb9d5011d4278835db68a4eda55c464859b38337ec46",

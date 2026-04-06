@@ -381,8 +381,8 @@
       }
     }
   ],
-  "kind": "evaluation",
-  "security_state": "NON_COMPLIANT",
+  "kind": "ASSESSMENT",
+  "status": "NON_COMPLIANT",
   "remediation_groups": [
     {
       "asset_id": "vuln-public-write",
@@ -435,7 +435,7 @@
       },
       "overall": "f1a53cadb12f71a455478836b9bf00b60caf407237acea76565c3879fd855ff4"
     },
-    "max_unsafe": "7d",
+    "sla_threshold": "7d",
     "now": "2026-01-11T00:00:00Z",
     "offline": true,
     "pack_hash": "f349152f181d051f2df004a8d196370ea8ccf9d52833c1da70a43f6832bc3024",

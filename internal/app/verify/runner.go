@@ -12,7 +12,7 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/ports"
-	"github.com/sufield/stave/internal/safetyenvelope"
+	"github.com/sufield/stave/internal/core/report"
 	staveversion "github.com/sufield/stave/internal/version"
 )
 
@@ -20,7 +20,7 @@ import (
 type Deps struct {
 	LoadControls       func(ctx context.Context, dir string) ([]policy.ControlDefinition, error)
 	NewObservationRepo func() (appcontracts.ObservationRepository, error)
-	WriteVerification  func(w io.Writer, v *safetyenvelope.Verification) error
+	WriteVerification  func(w io.Writer, v *report.Attestation) error
 
 	// BeginProgress starts a progress indicator with the given label and returns
 	// a stop function. If nil, progress reporting is silently skipped.

@@ -10,7 +10,7 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
-func TestBuildSafetyEnvelopeFromEnriched_NilFindings(t *testing.T) {
+func TestBuildAssessmentFromEnriched_NilFindings(t *testing.T) {
 	enriched := appcontracts.EnrichedResult{
 		Run: evaluation.RunInfo{
 			Now:               time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
@@ -22,7 +22,7 @@ func TestBuildSafetyEnvelopeFromEnriched_NilFindings(t *testing.T) {
 		},
 		// Findings is nil
 	}
-	env := output.BuildSafetyEnvelopeFromEnriched(enriched)
+	env := output.BuildAssessmentFromEnriched(enriched)
 	if env == nil {
 		t.Fatal("expected non-nil envelope")
 	}
@@ -31,7 +31,7 @@ func TestBuildSafetyEnvelopeFromEnriched_NilFindings(t *testing.T) {
 	}
 }
 
-func TestBuildSafetyEnvelopeFromEnriched_WithFindings(t *testing.T) {
+func TestBuildAssessmentFromEnriched_WithFindings(t *testing.T) {
 	enriched := appcontracts.EnrichedResult{
 		Run: evaluation.RunInfo{
 			Now:               time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
@@ -48,7 +48,7 @@ func TestBuildSafetyEnvelopeFromEnriched_WithFindings(t *testing.T) {
 			{Finding: evaluation.Finding{ControlID: "CTL.A.001", AssetID: "bucket-1"}},
 		},
 	}
-	env := output.BuildSafetyEnvelopeFromEnriched(enriched)
+	env := output.BuildAssessmentFromEnriched(enriched)
 	if env == nil {
 		t.Fatal("expected non-nil envelope")
 	}

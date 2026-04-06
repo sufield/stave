@@ -87,8 +87,8 @@
       }
     }
   ],
-  "kind": "evaluation",
-  "security_state": "NON_COMPLIANT",
+  "kind": "ASSESSMENT",
+  "status": "NON_COMPLIANT",
   "remediation_groups": [
     {
       "asset_id": "dod-subdomain-s3-ref",
@@ -141,7 +141,7 @@
       },
       "overall": "2f76c014033339a1de40c945f68102845a820bbbf223d98402add772a6f02d68"
     },
-    "max_unsafe": "7d",
+    "sla_threshold": "7d",
     "now": "2020-07-09T00:00:00Z",
     "offline": true,
     "pack_hash": "7bf215c30ede67f208b873df06900343273f618007838d0d4b09d4937c11162e",

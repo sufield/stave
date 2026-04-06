@@ -14,13 +14,13 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
-	"github.com/sufield/stave/internal/safetyenvelope"
+	"github.com/sufield/stave/internal/core/report"
 	"github.com/sufield/stave/internal/util/jsonutil"
 )
 
 // EnvelopeBuilderFunc transforms an enriched result into a safety envelope.
 // Injected from the adapters layer by cmd/ callers.
-type EnvelopeBuilderFunc func(enriched contracts.EnrichedResult) *safetyenvelope.Evaluation
+type EnvelopeBuilderFunc func(enriched contracts.EnrichedResult) *report.Assessment
 
 // WriteOptions controls file output behavior.
 type WriteOptions struct {
@@ -57,9 +57,9 @@ func NewArtifactWriter(outDir string, opts WriteOptions, stdout io.Writer, fs Fi
 
 // PersistVerification writes the full suite of verification artifacts to disk.
 func (m *ArtifactWriter) PersistVerification(
-	before *safetyenvelope.Evaluation,
-	after *safetyenvelope.Evaluation,
-	verification *safetyenvelope.Verification,
+	before *report.Assessment,
+	after *report.Assessment,
+	verification *report.Attestation,
 ) (LoopArtifacts, error) {
 	artifacts := LoopArtifacts{}
 	if m.OutDir == "" {
@@ -126,7 +126,7 @@ type EnvelopeBuilder struct {
 }
 
 // BuildEvaluation creates a compliant safety envelope from a raw evaluation result.
-func (b *EnvelopeBuilder) BuildEvaluation(result evaluation.ComplianceReport) (*safetyenvelope.Evaluation, error) {
+func (b *EnvelopeBuilder) BuildEvaluation(result evaluation.ComplianceReport) (*report.Assessment, error) {
 	enricher := remediation.NewPlanner()
 	enriched, err := appeval.Enrich(enricher, b.Sanitizer, result)
 	if err != nil {
@@ -147,16 +147,16 @@ type LoopArtifacts struct {
 
 // LoopReport is the structured output of a fix-loop run.
 type LoopReport struct {
-	SchemaVersion     kernel.Schema                      `json:"schema_version"`
-	Kind              kernel.OutputKind                  `json:"kind"`
-	CheckedAt         time.Time                          `json:"checked_at"`
-	Passed            bool                               `json:"pass"`
-	Reason            string                             `json:"reason"`
-	MaxUnsafeDuration string                             `json:"max_unsafe"`
-	Before            ObservationSummary                 `json:"before"`
-	After             ObservationSummary                 `json:"after"`
-	Verification      safetyenvelope.VerificationSummary `json:"verification"`
-	Artifacts         LoopArtifacts                      `json:"artifacts,omitzero"`
+	SchemaVersion     kernel.Schema             `json:"schema_version"`
+	Kind              kernel.OutputKind         `json:"kind"`
+	CheckedAt         time.Time                 `json:"checked_at"`
+	Passed            bool                      `json:"pass"`
+	Reason            string                    `json:"reason"`
+	MaxUnsafeDuration string                    `json:"max_unsafe"`
+	Before            ObservationSummary        `json:"before"`
+	After             ObservationSummary        `json:"after"`
+	Verification      report.AttestationSummary `json:"verification"`
+	Artifacts         LoopArtifacts             `json:"artifacts,omitzero"`
 }
 
 // ObservationSummary captures snapshot and violation counts for one side.

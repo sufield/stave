@@ -6,15 +6,15 @@ import (
 	"testing"
 
 	"github.com/sufield/stave/internal/core/evaluation/diagnosis"
-	"github.com/sufield/stave/internal/safetyenvelope"
+	"github.com/sufield/stave/internal/core/report"
 )
 
 func TestWriteDiagnosis(t *testing.T) {
-	report := &diagnosis.Report{
+	diagReport := &diagnosis.Report{
 		Issues: []diagnosis.Insight{},
 	}
 	var buf bytes.Buffer
-	err := WriteDiagnosis(&buf, report)
+	err := WriteDiagnosis(&buf, diagReport)
 	if err != nil {
 		t.Fatalf("WriteDiagnosis() error = %v", err)
 	}
@@ -25,14 +25,14 @@ func TestWriteDiagnosis(t *testing.T) {
 }
 
 func TestWriteVerification(t *testing.T) {
-	result := safetyenvelope.NewVerification(safetyenvelope.VerificationRequest{})
+	result := report.NewAttestation(report.AttestationRequest{})
 	var buf bytes.Buffer
 	err := WriteVerification(&buf, result)
 	if err != nil {
 		t.Fatalf("WriteVerification() error = %v", err)
 	}
 	out := buf.String()
-	if !strings.Contains(out, "verification") {
-		t.Fatalf("expected 'verification' in output: %s", out)
+	if !strings.Contains(out, "ATTESTATION") {
+		t.Fatalf("expected 'ATTESTATION' in output: %s", out)
 	}
 }

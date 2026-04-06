@@ -5,13 +5,13 @@ import (
 	"io"
 
 	"github.com/sufield/stave/internal/core/evaluation/diagnosis"
-	"github.com/sufield/stave/internal/safetyenvelope"
+	"github.com/sufield/stave/internal/core/report"
 )
 
 // WriteDiagnosis writes a diagnosis report as bare JSON.
-func WriteDiagnosis(w io.Writer, report *diagnosis.Report) error {
-	jsonOutput := safetyenvelope.NewDiagnose(report)
-	if err := safetyenvelope.ValidateDiagnose(jsonOutput); err != nil {
+func WriteDiagnosis(w io.Writer, diagReport *diagnosis.Report) error {
+	jsonOutput := report.NewReadiness(diagReport)
+	if err := report.ValidateReadiness(jsonOutput); err != nil {
 		return err
 	}
 

@@ -16,19 +16,19 @@ func TestCheck_IsFail(t *testing.T) {
 		{outcome.Fail, true},
 	}
 	for _, tt := range tests {
-		c := Check{Status: tt.status}
-		if c.IsFail() != tt.want {
-			t.Errorf("Check{Status: %q}.IsFail() = %v, want %v", tt.status, c.IsFail(), tt.want)
+		c := Diagnostic{Status: tt.status}
+		if c.IsFailure() != tt.want {
+			t.Errorf("Diagnostic{Status: %q}.IsFailure() = %v, want %v", tt.status, c.IsFailure(), tt.want)
 		}
 	}
 }
 
 func TestCheck_String(t *testing.T) {
-	c := Check{Name: "test", Status: outcome.Pass, Message: "ok"}
+	c := Diagnostic{Name: "test", Status: outcome.Pass, Message: "ok"}
 	got := c.String()
 	want := "[PASS] test: ok"
 	if got != want {
-		t.Errorf("Check.String() = %q, want %q", got, want)
+		t.Errorf("Diagnostic.String() = %q, want %q", got, want)
 	}
 }
 
@@ -56,8 +56,10 @@ func TestRegistry_Run_EmptyRegistry(t *testing.T) {
 
 func TestRegistry_Run_AllPass(t *testing.T) {
 	r := NewCheckSuite(
-		func(*Context) Check { return Check{Name: "a", Status: outcome.Pass, Message: "ok"} },
-		func(*Context) Check { return Check{Name: "b", Status: outcome.Warn, Message: "warning"} },
+		func(*SystemEnvironment) Diagnostic { return Diagnostic{Name: "a", Status: outcome.Pass, Message: "ok"} },
+		func(*SystemEnvironment) Diagnostic {
+			return Diagnostic{Name: "b", Status: outcome.Warn, Message: "warning"}
+		},
 	)
 	checks, ok := r.Run(nil)
 	if !ok {
@@ -70,8 +72,8 @@ func TestRegistry_Run_AllPass(t *testing.T) {
 
 func TestRegistry_Run_SkipsEmptyName(t *testing.T) {
 	r := NewCheckSuite(
-		func(*Context) Check { return Check{} }, // empty name, should be skipped
-		func(*Context) Check { return Check{Name: "a", Status: outcome.Pass} },
+		func(*SystemEnvironment) Diagnostic { return Diagnostic{} }, // empty name, should be skipped
+		func(*SystemEnvironment) Diagnostic { return Diagnostic{Name: "a", Status: outcome.Pass} },
 	)
 	checks, _ := r.Run(nil)
 	if len(checks) != 1 {
@@ -80,41 +82,41 @@ func TestRegistry_Run_SkipsEmptyName(t *testing.T) {
 }
 
 func TestFillDefaults_Nil(_ *testing.T) {
-	var ctx *Context
+	var ctx *SystemEnvironment
 	ctx.FillDefaults() // should not panic
 }
 
 func TestFillDefaults_SetsFields(t *testing.T) {
-	ctx := &Context{}
+	ctx := &SystemEnvironment{}
 	ctx.FillDefaults()
-	if ctx.LookPathFn == nil {
+	if ctx.PathLookupFn == nil {
 		t.Error("expected LookPathFn to be set")
 	}
-	if ctx.GetenvFn == nil {
+	if ctx.EnvVarFn == nil {
 		t.Error("expected GetenvFn to be set")
 	}
-	if ctx.Goos == "" {
+	if ctx.OS == "" {
 		t.Error("expected Goos to be set")
 	}
-	if ctx.Goarch == "" {
+	if ctx.Arch == "" {
 		t.Error("expected Goarch to be set")
 	}
-	if ctx.GoVersion == "" {
+	if ctx.Runtime == "" {
 		t.Error("expected GoVersion to be set")
 	}
 }
 
 func TestFillDefaults_PreservesExistingValues(t *testing.T) {
-	ctx := &Context{
-		Goos:   "custom",
-		Goarch: "arm",
+	ctx := &SystemEnvironment{
+		OS:   "custom",
+		Arch: "arm",
 	}
 	ctx.FillDefaults()
-	if ctx.Goos != "custom" {
-		t.Errorf("Goos = %q, want custom", ctx.Goos)
+	if ctx.OS != "custom" {
+		t.Errorf("Goos = %q, want custom", ctx.OS)
 	}
-	if ctx.Goarch != "arm" {
-		t.Errorf("Goarch = %q, want arm", ctx.Goarch)
+	if ctx.Arch != "arm" {
+		t.Errorf("Goarch = %q, want arm", ctx.Arch)
 	}
 }
 

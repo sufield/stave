@@ -40,12 +40,12 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/core/report"
 	"github.com/sufield/stave/internal/core/reporting"
 	"github.com/sufield/stave/internal/core/setup"
 	"github.com/sufield/stave/internal/core/usecase"
 	"github.com/sufield/stave/internal/platform/fileout"
 	"github.com/sufield/stave/internal/platform/fsutil"
-	"github.com/sufield/stave/internal/safetyenvelope"
 )
 
 const (
@@ -106,7 +106,7 @@ func WireCommands(app *App) {
 	root.AddCommand(diagreport.NewReportCmd(diagreport.Deps{
 		UseCaseDeps: reporting.ReportDeps{
 			Loader: &infrareport.EvaluationLoader{
-				LoadEval: func(ctx context.Context, path string) (*safetyenvelope.Evaluation, error) {
+				LoadEval: func(ctx context.Context, path string) (*report.Assessment, error) {
 					return artifact.NewLoader().Evaluation(ctx, fsutil.CleanUserPath(path))
 				},
 			},

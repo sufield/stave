@@ -5,32 +5,32 @@ import (
 	"runtime"
 )
 
-// FillDefaults populates empty fields in the Context with standard system values.
-func (c *Context) FillDefaults() {
+// FillDefaults populates empty fields in the SystemEnvironment with standard system values.
+func (c *SystemEnvironment) FillDefaults() {
 	if c == nil {
 		return
 	}
 
-	if c.LookPathFn == nil {
-		c.LookPathFn = LookPathInEnv
+	if c.PathLookupFn == nil {
+		c.PathLookupFn = LookPathInEnv
 	}
-	if c.GetenvFn == nil {
-		c.GetenvFn = os.Getenv
+	if c.EnvVarFn == nil {
+		c.EnvVarFn = os.Getenv
 	}
-	if c.Goos == "" {
-		c.Goos = runtime.GOOS
+	if c.OS == "" {
+		c.OS = runtime.GOOS
 	}
-	if c.Goarch == "" {
-		c.Goarch = runtime.GOARCH
+	if c.Arch == "" {
+		c.Arch = runtime.GOARCH
 	}
-	if c.GoVersion == "" {
-		c.GoVersion = runtime.Version()
+	if c.Runtime == "" {
+		c.Runtime = runtime.Version()
 	}
 }
 
-// NewContext returns a Context initialized with system defaults.
-func NewContext() *Context {
-	ctx := &Context{}
+// NewContext returns a SystemEnvironment initialized with system defaults.
+func NewContext() *SystemEnvironment {
+	ctx := &SystemEnvironment{}
 	ctx.FillDefaults()
 	return ctx
 }

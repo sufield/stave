@@ -1,8 +1,8 @@
 {
-  "introduced": [],
-  "kind": "verification",
-  "remaining": [],
-  "resolved": [
+  "regressions": [],
+  "kind": "ATTESTATION",
+  "open": [],
+  "remediated": [
     {
       "asset_id": "patient-records-bucket",
       "asset_type": "aws_s3_bucket",
@@ -13,16 +13,16 @@
   "run": {
     "after_snapshots": 2,
     "before_snapshots": 2,
-    "max_unsafe": "168h0m0s",
+    "sla_threshold": "168h0m0s",
     "now": "2026-01-11T00:00:00Z",
     "offline": true
   },
   "schema_version": "out.v0.1",
   "summary": {
-    "after_violations": 0,
-    "before_violations": 1,
-    "introduced": 0,
-    "remaining": 0,
-    "resolved": 1
+    "current_violations": 0,
+    "previous_violations": 1,
+    "regressions": 0,
+    "open": 0,
+    "remediated": 1
   }
 }

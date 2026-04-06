@@ -10,7 +10,7 @@ import (
 
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
-	"github.com/sufield/stave/internal/safetyenvelope"
+	corereport "github.com/sufield/stave/internal/core/report"
 )
 
 type reportOutput struct {
@@ -69,7 +69,7 @@ type reportRemediation struct {
 
 // RenderJSON serialises the evaluation as JSON and writes it to w.
 // Pass io.Discard as w to suppress output in quiet mode.
-func RenderJSON(eval safetyenvelope.Evaluation, toolVersion string, w io.Writer) error {
+func RenderJSON(eval corereport.Assessment, toolVersion string, w io.Writer) error {
 	data := buildReportViewModel(eval, toolVersion)
 	output, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {
@@ -82,7 +82,7 @@ func RenderJSON(eval safetyenvelope.Evaluation, toolVersion string, w io.Writer)
 	return nil
 }
 
-func buildReportViewModel(eval safetyenvelope.Evaluation, toolVersion string) reportOutput {
+func buildReportViewModel(eval corereport.Assessment, toolVersion string) reportOutput {
 	out := newReportOutput(eval, toolVersion)
 	complianceData := make(map[string]*reportComplianceEntry)
 	for _, finding := range eval.Findings {
@@ -94,7 +94,7 @@ func buildReportViewModel(eval safetyenvelope.Evaluation, toolVersion string) re
 	return out
 }
 
-func newReportOutput(eval safetyenvelope.Evaluation, toolVersion string) reportOutput {
+func newReportOutput(eval corereport.Assessment, toolVersion string) reportOutput {
 	generated := eval.Run.Now.UTC()
 	return reportOutput{
 		GeneratedAt:  generated.Format(time.RFC3339),

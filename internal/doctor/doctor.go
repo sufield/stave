@@ -1,14 +1,14 @@
 package doctor
 
 // Run executes the standard suite of diagnostic checks.
-// It returns a slice of Check results and true if all checks passed (no FAIL status).
-func Run(ctx *Context) ([]Check, bool) {
+// It returns a slice of Diagnostic results and true if all checks passed (no FAIL status).
+func Run(ctx *SystemEnvironment) ([]Diagnostic, bool) {
 	return NewCheckSuite(StandardChecks()...).Run(ctx)
 }
 
 // StandardChecks returns the default list of diagnostic functions.
-func StandardChecks() []CheckFunc {
-	return []CheckFunc{
+func StandardChecks() []Probe {
+	return []Probe{
 		checkVersionInfo,
 		checkOSVersion,
 		checkShell,

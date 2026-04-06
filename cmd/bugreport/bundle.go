@@ -80,10 +80,10 @@ func (g *Generator) Generate(_ context.Context, w io.Writer, cfg Config) error {
 }
 
 func (g *Generator) addCoreArtifacts(bundle *bundleWriter, cfg Config) error {
-	checks, ok := doctor.Run(&doctor.Context{
+	checks, ok := doctor.Run(&doctor.SystemEnvironment{
 		Cwd:          cfg.Cwd,
 		BinaryPath:   cfg.BinaryPath,
-		StaveVersion: staveversion.String,
+		BuildVersion: staveversion.String,
 	})
 	if err := bundle.addJSON("doctor.json", DoctorResult{Ready: ok, Checks: checks}); err != nil {
 		return fmt.Errorf("write doctor.json: %w", err)

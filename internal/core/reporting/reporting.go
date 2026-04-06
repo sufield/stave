@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/sufield/stave/internal/safetyenvelope"
+	"github.com/sufield/stave/internal/core/report"
 )
 
 // --- Report ---
 
 // ReportEvaluationLoaderPort loads an evaluation artifact for reporting.
 type ReportEvaluationLoaderPort interface {
-	LoadEvaluation(ctx context.Context, path string) (*safetyenvelope.Evaluation, error)
+	LoadEvaluation(ctx context.Context, path string) (*report.Assessment, error)
 }
 
 // ReportDeps represents a reportdeps value.
@@ -115,7 +115,7 @@ type ReportRequest struct {
 
 // ReportResponse represents a reportresponse value.
 type ReportResponse struct {
-	EvaluationData *safetyenvelope.Evaluation `json:"evaluation_data"`
+	EvaluationData *report.Assessment `json:"evaluation_data"`
 }
 
 // --- CI Diff Types ---

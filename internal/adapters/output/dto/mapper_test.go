@@ -12,11 +12,11 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/predicate"
-	"github.com/sufield/stave/internal/safetyenvelope"
+	"github.com/sufield/stave/internal/core/report"
 )
 
 func TestFromEvaluation_MinimalEnvelope(t *testing.T) {
-	env := safetyenvelope.NewEvaluation(safetyenvelope.EvaluationRequest{
+	env := report.NewAssessment(report.AssessmentRequest{
 		Run: evaluation.RunInfo{
 			StaveVersion:      "test",
 			Offline:           true,
@@ -38,8 +38,8 @@ func TestFromEvaluation_MinimalEnvelope(t *testing.T) {
 	if dto.SchemaVersion != kernel.SchemaOutput {
 		t.Errorf("SchemaVersion = %q, want %q", dto.SchemaVersion, kernel.SchemaOutput)
 	}
-	if dto.Kind != "evaluation" {
-		t.Errorf("Kind = %q, want evaluation", dto.Kind)
+	if dto.Kind != "ASSESSMENT" {
+		t.Errorf("Kind = %q, want ASSESSMENT", dto.Kind)
 	}
 	if dto.Run.StaveVersion != "test" {
 		t.Errorf("Run.StaveVersion = %q", dto.Run.StaveVersion)

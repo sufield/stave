@@ -11,11 +11,11 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/kernel"
-	"github.com/sufield/stave/internal/safetyenvelope"
+	"github.com/sufield/stave/internal/core/report"
 )
 
 // EvaluationLoaderFunc loads a safety envelope evaluation from a path.
-type EvaluationLoaderFunc func(ctx context.Context, path string) (*safetyenvelope.Evaluation, error)
+type EvaluationLoaderFunc func(ctx context.Context, path string) (*report.Assessment, error)
 
 // BaselineLoaderFunc loads a baseline from a path.
 type BaselineLoaderFunc func(ctx context.Context, path string, expectedKind kernel.OutputKind) (*evaluation.Baseline, error)

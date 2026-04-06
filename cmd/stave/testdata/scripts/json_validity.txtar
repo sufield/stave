@@ -3,10 +3,10 @@
 # apply --format json produces valid JSON with expected fields
 exec stave apply --controls controls --observations observations-clean --max-unsafe 168h --now 2026-01-11T00:00:00Z --format json --allow-unknown-input
 stdout '"schema_version": "out.v0.1"'
-stdout '"kind": "evaluation"'
+stdout '"kind": "ASSESSMENT"'
 stdout '"summary"'
 stdout '"findings"'
-stdout '"security_state"'
+stdout '"status"'
 
 # apply with violations produces findings array
 ! exec stave apply --controls controls --observations observations --max-unsafe 24h --now 2026-01-11T00:00:00Z --format json --allow-unknown-input

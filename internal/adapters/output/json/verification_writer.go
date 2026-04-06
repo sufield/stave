@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/sufield/stave/internal/safetyenvelope"
+	"github.com/sufield/stave/internal/core/report"
 )
 
 // WriteVerification writes a verification result as JSON.
-func WriteVerification(w io.Writer, result *safetyenvelope.Verification) error {
-	if err := safetyenvelope.ValidateVerification(result); err != nil {
+func WriteVerification(w io.Writer, result *report.Attestation) error {
+	if err := report.ValidateAttestation(result); err != nil {
 		return fmt.Errorf("write output: %w", err)
 	}
 

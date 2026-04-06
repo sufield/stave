@@ -11,7 +11,7 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
-	"github.com/sufield/stave/internal/safetyenvelope"
+	"github.com/sufield/stave/internal/core/report"
 )
 
 func makeRemFinding(ctlID string, assetID string) remediation.Finding {
@@ -124,12 +124,12 @@ func (c fixedClock) Now() time.Time { return c.t }
 
 func TestBuildReport_Pass(t *testing.T) {
 	now := time.Date(2026, 3, 1, 0, 0, 0, 0, time.UTC)
-	verification := &safetyenvelope.Verification{
-		Summary: safetyenvelope.VerificationSummary{
-			Remaining:  0,
-			Introduced: 0,
+	verification := &report.Attestation{
+		Summary: report.AttestationSummary{
+			Open:        0,
+			Regressions: 0,
 		},
-		Run: safetyenvelope.VerificationRunInfo{
+		Run: report.AttestationRunInfo{
 			Now:             now,
 			BeforeSnapshots: 2,
 			AfterSnapshots:  2,
@@ -140,35 +140,35 @@ func TestBuildReport_Pass(t *testing.T) {
 		AfterDir:          "/after",
 		MaxUnsafeDuration: 24 * time.Hour,
 	}
-	report := BuildReport(req, fixedClock{now}, verification, LoopArtifacts{})
-	if !report.Passed {
+	rpt := BuildReport(req, fixedClock{now}, verification, LoopArtifacts{})
+	if !rpt.Passed {
 		t.Fatal("expected pass")
 	}
-	if !strings.Contains(report.Reason, "resolved") {
-		t.Fatalf("reason = %q", report.Reason)
+	if !strings.Contains(rpt.Reason, "resolved") {
+		t.Fatalf("reason = %q", rpt.Reason)
 	}
 }
 
 func TestBuildReport_Fail(t *testing.T) {
 	now := time.Date(2026, 3, 1, 0, 0, 0, 0, time.UTC)
-	verification := &safetyenvelope.Verification{
-		Summary: safetyenvelope.VerificationSummary{
-			Remaining:  3,
-			Introduced: 1,
+	verification := &report.Attestation{
+		Summary: report.AttestationSummary{
+			Open:        3,
+			Regressions: 1,
 		},
-		Run: safetyenvelope.VerificationRunInfo{Now: now},
+		Run: report.AttestationRunInfo{Now: now},
 	}
 	req := LoopRequest{
 		BeforeDir:         "/before",
 		AfterDir:          "/after",
 		MaxUnsafeDuration: 24 * time.Hour,
 	}
-	report := BuildReport(req, fixedClock{now}, verification, LoopArtifacts{})
-	if report.Passed {
+	rpt := BuildReport(req, fixedClock{now}, verification, LoopArtifacts{})
+	if rpt.Passed {
 		t.Fatal("expected fail")
 	}
-	if !strings.Contains(report.Reason, "remaining=3") {
-		t.Fatalf("reason = %q", report.Reason)
+	if !strings.Contains(rpt.Reason, "remaining=3") {
+		t.Fatalf("reason = %q", rpt.Reason)
 	}
 }
 
@@ -199,13 +199,13 @@ func TestErrViolationsRemaining(t *testing.T) {
 
 func TestLoopReportSchemaVersion(t *testing.T) {
 	now := time.Date(2026, 3, 1, 0, 0, 0, 0, time.UTC)
-	report := BuildReport(LoopRequest{MaxUnsafeDuration: time.Hour}, fixedClock{now}, &safetyenvelope.Verification{
-		Run: safetyenvelope.VerificationRunInfo{Now: now},
+	rpt := BuildReport(LoopRequest{MaxUnsafeDuration: time.Hour}, fixedClock{now}, &report.Attestation{
+		Run: report.AttestationRunInfo{Now: now},
 	}, LoopArtifacts{})
-	if report.SchemaVersion != kernel.SchemaFixLoop {
-		t.Fatalf("schema = %v, want %v", report.SchemaVersion, kernel.SchemaFixLoop)
+	if rpt.SchemaVersion != kernel.SchemaFixLoop {
+		t.Fatalf("schema = %v, want %v", rpt.SchemaVersion, kernel.SchemaFixLoop)
 	}
-	if report.Kind != kernel.KindRemediationReport {
-		t.Fatalf("kind = %v, want %v", report.Kind, kernel.KindRemediationReport)
+	if rpt.Kind != kernel.KindRemediationReport {
+		t.Fatalf("kind = %v, want %v", rpt.Kind, kernel.KindRemediationReport)
 	}
 }

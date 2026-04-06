@@ -154,8 +154,8 @@
       }
     }
   ],
-  "kind": "evaluation",
-  "security_state": "NON_COMPLIANT",
+  "kind": "ASSESSMENT",
+  "status": "NON_COMPLIANT",
   "remediation_groups": [
     {
       "asset_id": "cdn-bucket",
@@ -208,7 +208,7 @@
       },
       "overall": "b16183c001b8da79c67609e393cc6ed2497e744e597731587b60e1f863d3347e"
     },
-    "max_unsafe": "7d",
+    "sla_threshold": "7d",
     "now": "2026-01-10T00:00:00Z",
     "offline": true,
     "pack_hash": "3ed3b164039c94c6264d7228793f9e30279aa9217fe33b2176e3447076be519a",

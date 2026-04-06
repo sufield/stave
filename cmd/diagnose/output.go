@@ -12,7 +12,7 @@ import (
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/diagnosis"
-	"github.com/sufield/stave/internal/safetyenvelope"
+	corereport "github.com/sufield/stave/internal/core/report"
 )
 
 // Presenter handles formatting and writing diagnostic results.
@@ -26,7 +26,7 @@ type Presenter struct {
 // RenderReport writes a standard diagnostic report.
 func (p *Presenter) RenderReport(report *diagnosis.Report) error {
 	if p.Template != "" {
-		return ui.ExecuteTemplate(p.W, p.Template, safetyenvelope.NewDiagnose(report))
+		return ui.ExecuteTemplate(p.W, p.Template, corereport.NewReadiness(report))
 	}
 	if p.Format.IsJSON() {
 		return outjson.WriteDiagnosis(p.W, report)

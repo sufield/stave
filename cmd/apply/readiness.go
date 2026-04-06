@@ -18,7 +18,7 @@ import (
 )
 
 // ReadinessValidator evaluates controls against observations and returns a result.
-type ReadinessValidator func(maxUnsafe time.Duration, now time.Time) (validation.Status, error)
+type ReadinessValidator func(maxUnsafe time.Duration, now time.Time) (validation.EvaluationState, error)
 
 // ReadinessValidatorFactory creates the validation function used during assessment.
 type ReadinessValidatorFactory func(ctlDir, obsDir string, sanitize bool) ReadinessValidator
@@ -38,7 +38,7 @@ type ReadinessConfig struct {
 
 	ControlsFlagSet        bool
 	HasEnabledControlPacks bool
-	PrereqChecks           []validation.Check
+	PrereqChecks           []validation.ValidationFinding
 }
 
 // ReadinessRunner orchestrates the readiness assessment workflow.
@@ -56,15 +56,15 @@ func NewReadinessRunner(factory ReadinessValidatorFactory) *ReadinessRunner {
 
 // Execute performs the readiness assessment and writes the report.
 func (r *ReadinessRunner) Execute(cfg ReadinessConfig) error {
-	report, err := readiness.AssessReadiness(validation.Input{
-		ControlsDir:            cfg.ControlsDir,
-		ObservationsDir:        cfg.ObservationsDir,
-		MaxUnsafeDuration:      cfg.MaxUnsafeDuration,
-		Now:                    cfg.Now,
-		ControlsFlagSet:        cfg.ControlsFlagSet,
+	report, err := readiness.AssessReadiness(validation.AssessmentContext{
+		ControlSource:          cfg.ControlsDir,
+		InventorySource:        cfg.ObservationsDir,
+		SLAThreshold:           cfg.MaxUnsafeDuration,
+		CurrentTime:            cfg.Now,
+		ControlFlagsSet:        cfg.ControlsFlagSet,
 		HasEnabledControlPacks: cfg.HasEnabledControlPacks,
-		PrereqChecks:           cfg.PrereqChecks,
-		Validate:               r.CreateValidator(cfg.ControlsDir, cfg.ObservationsDir, cfg.Sanitize),
+		PreflightChecks:        cfg.PrereqChecks,
+		RunEvaluation:          r.CreateValidator(cfg.ControlsDir, cfg.ObservationsDir, cfg.Sanitize),
 	})
 	if err != nil {
 		return err
@@ -76,17 +76,17 @@ func (r *ReadinessRunner) Execute(cfg ReadinessConfig) error {
 		}
 	}
 
-	if !report.Ready {
+	if !report.IsSafe {
 		return ui.ErrValidationFailed
 	}
 	return nil
 }
 
-func (r *ReadinessRunner) writeReport(cfg ReadinessConfig, report validation.Report) error {
+func (r *ReadinessRunner) writeReport(cfg ReadinessConfig, report validation.ReadinessAssessment) error {
 	if cfg.Format.IsJSON() {
 		return jsonutil.WriteIndented(cfg.Stdout, readinessJSONReport{
-			Report:      report,
-			NextCommand: readinessNextCommand(report),
+			ReadinessAssessment: report,
+			NextCommand:         readinessNextCommand(report),
 		})
 	}
 	rep := &Reporter{Stdout: cfg.Stdout, Stderr: cfg.Stderr}
@@ -97,7 +97,7 @@ func (r *ReadinessRunner) writeReport(cfg ReadinessConfig, report validation.Rep
 // next_command field for JSON output. The domain type intentionally omits this
 // field because CLI command names are a presentation concern.
 type readinessJSONReport struct {
-	validation.Report
+	validation.ReadinessAssessment
 	NextCommand string `json:"next_command"`
 }
 
@@ -111,7 +111,7 @@ func runDryRun(ctx context.Context, p *compose.Provider, cfg ReadinessConfig) er
 	return runner.Execute(cfg)
 }
 
-func doctorPrereqs() ([]validation.Check, error) {
+func doctorPrereqs() ([]validation.ValidationFinding, error) {
 	cwd, err := os.Getwd()
 	if err != nil {
 		return nil, fmt.Errorf("resolve working directory: %w", err)

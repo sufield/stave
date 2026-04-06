@@ -1375,8 +1375,8 @@
       }
     }
   ],
-  "kind": "evaluation",
-  "security_state": "NON_COMPLIANT",
+  "kind": "ASSESSMENT",
+  "status": "NON_COMPLIANT",
   "remediation_groups": [
     {
       "asset_id": "private-bucket",
@@ -1477,7 +1477,7 @@
       },
       "overall": "f6cf103b7ebe8a91a9f2708bb27a9779af5f262f9d036a36b2f92dd7a3111b4a"
     },
-    "max_unsafe": "7d",
+    "sla_threshold": "7d",
     "now": "2026-01-11T00:00:00Z",
     "offline": true,
     "pack_hash": "853b2485a07396a55f0ef421159807db391eab7282c1d4d3e83059506c0dcb67",

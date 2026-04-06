@@ -13,7 +13,7 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
-	"github.com/sufield/stave/internal/safetyenvelope"
+	"github.com/sufield/stave/internal/core/report"
 )
 
 func TestLoader_LoadFromFile_ValidJSON(t *testing.T) {
@@ -63,7 +63,7 @@ func TestLoader_LoadFromReader_ValidJSON(t *testing.T) {
 
 func TestLoader_LoadEnvelopeFromFile_ValidEnvelope(t *testing.T) {
 	dir := t.TempDir()
-	env := safetyenvelope.NewEvaluation(safetyenvelope.EvaluationRequest{
+	env := report.NewAssessment(report.AssessmentRequest{
 		Run: evaluation.RunInfo{
 			StaveVersion:      "test",
 			Now:               time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC),
@@ -88,8 +88,8 @@ func TestLoader_LoadEnvelopeFromFile_ValidEnvelope(t *testing.T) {
 	if err != nil {
 		t.Fatalf("LoadEnvelopeFromFile() error = %v", err)
 	}
-	if got.Kind != safetyenvelope.KindEvaluation {
-		t.Errorf("Kind = %q, want evaluation", got.Kind)
+	if got.Kind != report.KindAssessment {
+		t.Errorf("Kind = %q, want ASSESSMENT", got.Kind)
 	}
 }
 

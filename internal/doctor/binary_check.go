@@ -12,26 +12,26 @@ type BinaryRequest struct {
 	Name        string
 	WarnMessage string
 	PassMessage string
-	Fix         string
+	Remediation string
 }
 
 // checkBinary verifies if a specific binary is available in the system PATH.
-func checkBinary(ctx *Context, req BinaryRequest) Check {
+func checkBinary(ctx *SystemEnvironment, req BinaryRequest) Diagnostic {
 	if req.Binary == "" {
-		return Check{
+		return Diagnostic{
 			Name:    req.Name,
 			Status:  outcome.Fail,
 			Message: "Logic error: binary name not specified in check request",
 		}
 	}
 
-	_, err := ctx.LookPathFn(req.Binary)
+	_, err := ctx.PathLookupFn(req.Binary)
 	if err != nil {
-		return Check{
-			Name:    req.Name,
-			Status:  outcome.Warn,
-			Message: req.WarnMessage,
-			Fix:     req.Fix,
+		return Diagnostic{
+			Name:        req.Name,
+			Status:      outcome.Warn,
+			Message:     req.WarnMessage,
+			Remediation: req.Remediation,
 		}
 	}
 
@@ -40,7 +40,7 @@ func checkBinary(ctx *Context, req BinaryRequest) Check {
 		message = fmt.Sprintf("%s is available in PATH", req.Binary)
 	}
 
-	return Check{
+	return Diagnostic{
 		Name:    req.Name,
 		Status:  outcome.Pass,
 		Message: message,

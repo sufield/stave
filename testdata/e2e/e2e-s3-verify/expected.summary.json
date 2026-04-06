@@ -1,7 +1,7 @@
 {
-  "after_violations": 0,
-  "before_violations": 1,
-  "introduced": 0,
-  "remaining": 0,
-  "resolved": 1
+  "current_violations": 0,
+  "previous_violations": 1,
+  "regressions": 0,
+  "open": 0,
+  "remediated": 1
 }

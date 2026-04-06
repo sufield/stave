@@ -10,8 +10,8 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/core/report"
 	"github.com/sufield/stave/internal/platform/fsutil"
-	"github.com/sufield/stave/internal/safetyenvelope"
 )
 
 // ErrNoFindings is returned when input JSON does not contain evaluation findings.
@@ -49,7 +49,7 @@ func (l *Loader) parseResult(data []byte, source string) (*evaluation.Compliance
 }
 
 // LoadEnvelopeFromFile loads and validates a JSON safety envelope containing evaluation results.
-func (l *Loader) LoadEnvelopeFromFile(_ context.Context, path string) (*safetyenvelope.Evaluation, error) {
+func (l *Loader) LoadEnvelopeFromFile(_ context.Context, path string) (*report.Assessment, error) {
 	path = fsutil.CleanUserPath(path)
 
 	data, err := fsutil.ReadFileLimited(path)
@@ -57,14 +57,14 @@ func (l *Loader) LoadEnvelopeFromFile(_ context.Context, path string) (*safetyen
 		return nil, fmt.Errorf("reading evaluation file %q: %w", path, err)
 	}
 
-	var eval safetyenvelope.Evaluation
+	var eval report.Assessment
 	if err := json.Unmarshal(data, &eval); err != nil {
 		return nil, fmt.Errorf("parsing evaluation JSON from %q: %w", path, err)
 	}
 
-	if eval.Kind != safetyenvelope.KindEvaluation {
+	if eval.Kind != report.KindAssessment {
 		return nil, fmt.Errorf("invalid artifact kind in %q: got %q, expected %q",
-			path, eval.Kind, safetyenvelope.KindEvaluation)
+			path, eval.Kind, report.KindAssessment)
 	}
 
 	return &eval, nil
@@ -127,7 +127,7 @@ func ParseFindings(raw []byte) ([]remediation.Finding, error) {
 
 	// Format 2: Safety envelope ({"kind": ..., "findings": [...]})
 	if _, hasKind := probe["kind"]; hasKind {
-		var env safetyenvelope.Evaluation
+		var env report.Assessment
 		if err := json.Unmarshal(raw, &env); err == nil {
 			return env.Findings, nil
 		}

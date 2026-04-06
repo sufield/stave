@@ -1,6 +1,6 @@
 {
   "schema_version": "out.v0.1",
-  "kind": "evaluation",
+  "kind": "ASSESSMENT",
   "findings": [
     {
       "control_id": "CTL.S3.PUBLIC.005",

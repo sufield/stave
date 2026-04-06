@@ -12,7 +12,7 @@ type RunInfoDTO struct {
 	StaveVersion      string          `json:"tool_version"`
 	Offline           bool            `json:"offline"`
 	Now               time.Time       `json:"now"`
-	MaxUnsafeDuration kernel.Duration `json:"max_unsafe"`
+	MaxUnsafeDuration kernel.Duration `json:"sla_threshold"`
 	Snapshots         int             `json:"snapshots"`
 	InputHashes       *InputHashesDTO `json:"input_hashes,omitempty"`
 	PackHash          kernel.Digest   `json:"pack_hash,omitempty"`
@@ -57,7 +57,7 @@ type ResultDTO struct {
 	Kind              string                   `json:"kind"`
 	Run               RunInfoDTO               `json:"run"`
 	Summary           SummaryDTO               `json:"summary"`
-	SecurityState     evaluation.SecurityState `json:"security_state"`
+	SecurityState     evaluation.SecurityState `json:"status"`
 	RiskSignals       []AtRiskItemDTO          `json:"risk_signals,omitempty"`
 	Findings          []FindingDTO             `json:"findings"`
 	ExceptedFindings  []ExceptedFindingDTO     `json:"excepted_findings,omitempty"`
