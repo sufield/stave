@@ -35,48 +35,48 @@ func TestParseGatePolicy(t *testing.T) {
 	}
 }
 
-func TestParseConfigKey_TopLevel(t *testing.T) {
-	// ConfigKeys should include max_unsafe, snapshot_retention, etc.
-	pk, err := ParseConfigKey("max_unsafe")
+func TestIdentifySetting_TopLevel(t *testing.T) {
+	// GovernanceSettings should include max_unsafe, snapshot_retention, etc.
+	pk, err := IdentifySetting("max_unsafe")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if pk.TopLevel != "max_unsafe" {
-		t.Errorf("TopLevel = %q, want max_unsafe", pk.TopLevel)
+	if pk.Attribute != "max_unsafe" {
+		t.Errorf("TopLevel = %q, want max_unsafe", pk.Attribute)
 	}
 	if pk.TierName != "" {
 		t.Error("TierName should be empty for top-level key")
 	}
 }
 
-func TestParseConfigKey_TierKey(t *testing.T) {
-	pk, err := ParseConfigKey("snapshot_retention_tiers.hot.older_than")
+func TestIdentifySetting_TierKey(t *testing.T) {
+	pk, err := IdentifySetting("snapshot_retention_tiers.hot.older_than")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if pk.TierName != "hot" {
 		t.Errorf("TierName = %q, want hot", pk.TierName)
 	}
-	if pk.SubField != "older_than" {
-		t.Errorf("SubField = %q, want older_than", pk.SubField)
+	if pk.Property != "older_than" {
+		t.Errorf("SubField = %q, want older_than", pk.Property)
 	}
 }
 
-func TestParseConfigKey_TierKeyNoSubField(t *testing.T) {
-	pk, err := ParseConfigKey("snapshot_retention_tiers.hot")
+func TestIdentifySetting_TierKeyNoSubField(t *testing.T) {
+	pk, err := IdentifySetting("snapshot_retention_tiers.hot")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if pk.TierName != "hot" {
 		t.Errorf("TierName = %q, want hot", pk.TierName)
 	}
-	if pk.SubField != "" {
-		t.Errorf("SubField = %q, want empty", pk.SubField)
+	if pk.Property != "" {
+		t.Errorf("SubField = %q, want empty", pk.Property)
 	}
 }
 
-func TestParseConfigKey_TierKeyNormalized(t *testing.T) {
-	pk, err := ParseConfigKey("snapshot_retention_tiers.HOT.keep_min")
+func TestIdentifySetting_TierKeyNormalized(t *testing.T) {
+	pk, err := IdentifySetting("snapshot_retention_tiers.HOT.keep_min")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -85,7 +85,7 @@ func TestParseConfigKey_TierKeyNormalized(t *testing.T) {
 	}
 }
 
-func TestParseConfigKey_Errors(t *testing.T) {
+func TestIdentifySetting_Errors(t *testing.T) {
 	tests := []struct {
 		name  string
 		input string
@@ -97,7 +97,7 @@ func TestParseConfigKey_Errors(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := ParseConfigKey(tt.input)
+			_, err := IdentifySetting(tt.input)
 			if err == nil {
 				t.Errorf("expected error for %q", tt.input)
 			}
@@ -105,14 +105,14 @@ func TestParseConfigKey_Errors(t *testing.T) {
 	}
 }
 
-func TestGetConfigValue(t *testing.T) {
+func TestGetAttribute(t *testing.T) {
 	cfg := &ProjectConfig{
 		MaxUnsafe:       "168h",
 		CIFailurePolicy: "fail_on_any_violation",
 	}
 
 	t.Run("existing key", func(t *testing.T) {
-		v, ok := GetConfigValue(cfg, "max_unsafe")
+		v, ok := GetAttribute(cfg, "max_unsafe")
 		if !ok {
 			t.Fatal("expected ok=true for max_unsafe")
 		}
@@ -122,14 +122,14 @@ func TestGetConfigValue(t *testing.T) {
 	})
 
 	t.Run("unknown key", func(t *testing.T) {
-		_, ok := GetConfigValue(cfg, "nonexistent")
+		_, ok := GetAttribute(cfg, "nonexistent")
 		if ok {
 			t.Error("expected ok=false for nonexistent key")
 		}
 	})
 
 	t.Run("empty value", func(t *testing.T) {
-		v, ok := GetConfigValue(cfg, "snapshot_retention")
+		v, ok := GetAttribute(cfg, "snapshot_retention")
 		if !ok {
 			t.Fatal("expected ok=true for snapshot_retention")
 		}
@@ -139,11 +139,11 @@ func TestGetConfigValue(t *testing.T) {
 	})
 }
 
-func TestSetConfigValue(t *testing.T) {
+func TestUpdateAttribute(t *testing.T) {
 	t.Run("set string", func(t *testing.T) {
 		cfg := &ProjectConfig{}
-		if err := SetConfigValue(cfg, "max_unsafe", "24h"); err != nil {
-			t.Fatalf("SetConfigValue() error: %v", err)
+		if err := UpdateAttribute(cfg, "max_unsafe", "24h"); err != nil {
+			t.Fatalf("UpdateAttribute() error: %v", err)
 		}
 		if cfg.MaxUnsafe != "24h" {
 			t.Errorf("MaxUnsafe = %q, want 24h", cfg.MaxUnsafe)
@@ -152,7 +152,7 @@ func TestSetConfigValue(t *testing.T) {
 
 	t.Run("unknown key", func(t *testing.T) {
 		cfg := &ProjectConfig{}
-		err := SetConfigValue(cfg, "nonexistent", "value")
+		err := UpdateAttribute(cfg, "nonexistent", "value")
 		if err == nil {
 			t.Fatal("expected error for unknown key")
 		}
@@ -160,7 +160,7 @@ func TestSetConfigValue(t *testing.T) {
 
 	t.Run("invalid duration", func(t *testing.T) {
 		cfg := &ProjectConfig{}
-		err := SetConfigValue(cfg, "max_unsafe", "not-a-duration")
+		err := UpdateAttribute(cfg, "max_unsafe", "not-a-duration")
 		if err == nil {
 			t.Fatal("expected error for invalid duration")
 		}
@@ -172,7 +172,7 @@ func TestSetConfigValue(t *testing.T) {
 
 	t.Run("valid ci_failure_policy", func(t *testing.T) {
 		cfg := &ProjectConfig{}
-		if err := SetConfigValue(cfg, "ci_failure_policy", "fail_on_new_violation"); err != nil {
+		if err := UpdateAttribute(cfg, "ci_failure_policy", "fail_on_new_violation"); err != nil {
 			t.Fatalf("error: %v", err)
 		}
 		if cfg.CIFailurePolicy != "fail_on_new_violation" {
@@ -182,7 +182,7 @@ func TestSetConfigValue(t *testing.T) {
 
 	t.Run("invalid ci_failure_policy", func(t *testing.T) {
 		cfg := &ProjectConfig{}
-		err := SetConfigValue(cfg, "ci_failure_policy", "invalid_policy")
+		err := UpdateAttribute(cfg, "ci_failure_policy", "invalid_policy")
 		if err == nil {
 			t.Fatal("expected error for invalid policy")
 		}
@@ -190,7 +190,7 @@ func TestSetConfigValue(t *testing.T) {
 
 	t.Run("valid capture_cadence", func(t *testing.T) {
 		cfg := &ProjectConfig{}
-		if err := SetConfigValue(cfg, "capture_cadence", "daily"); err != nil {
+		if err := UpdateAttribute(cfg, "capture_cadence", "daily"); err != nil {
 			t.Fatalf("error: %v", err)
 		}
 		if cfg.CaptureCadence != "daily" {
@@ -200,32 +200,32 @@ func TestSetConfigValue(t *testing.T) {
 
 	t.Run("invalid capture_cadence", func(t *testing.T) {
 		cfg := &ProjectConfig{}
-		err := SetConfigValue(cfg, "capture_cadence", "weekly")
+		err := UpdateAttribute(cfg, "capture_cadence", "weekly")
 		if err == nil {
 			t.Fatal("expected error for invalid cadence")
 		}
 	})
 }
 
-func TestDeleteConfigValue(t *testing.T) {
+func TestResetAttribute(t *testing.T) {
 	cfg := &ProjectConfig{MaxUnsafe: "168h"}
-	if err := DeleteConfigValue(cfg, "max_unsafe"); err != nil {
-		t.Fatalf("DeleteConfigValue() error: %v", err)
+	if err := ResetAttribute(cfg, "max_unsafe"); err != nil {
+		t.Fatalf("ResetAttribute() error: %v", err)
 	}
 	if cfg.MaxUnsafe != "" {
 		t.Errorf("MaxUnsafe = %q, want empty", cfg.MaxUnsafe)
 	}
 
-	err := DeleteConfigValue(cfg, "nonexistent")
+	err := ResetAttribute(cfg, "nonexistent")
 	if err == nil {
 		t.Fatal("expected error for unknown key")
 	}
 }
 
-func TestSetTierValue(t *testing.T) {
+func TestConfigureLifecycleTier(t *testing.T) {
 	t.Run("older_than", func(t *testing.T) {
 		cfg := &ProjectConfig{}
-		if err := SetTierValue(cfg, "hot", "older_than", "7d"); err != nil {
+		if err := ConfigureLifecycleTier(cfg, "hot", "older_than", "7d"); err != nil {
 			t.Fatalf("error: %v", err)
 		}
 		if cfg.RetentionTiers["hot"].OlderThan != "7d" {
@@ -235,7 +235,7 @@ func TestSetTierValue(t *testing.T) {
 
 	t.Run("keep_min", func(t *testing.T) {
 		cfg := &ProjectConfig{}
-		if err := SetTierValue(cfg, "hot", "keep_min", "5"); err != nil {
+		if err := ConfigureLifecycleTier(cfg, "hot", "keep_min", "5"); err != nil {
 			t.Fatalf("error: %v", err)
 		}
 		if cfg.RetentionTiers["hot"].KeepMin != 5 {
@@ -245,7 +245,7 @@ func TestSetTierValue(t *testing.T) {
 
 	t.Run("default subfield is older_than", func(t *testing.T) {
 		cfg := &ProjectConfig{}
-		if err := SetTierValue(cfg, "hot", "", "14d"); err != nil {
+		if err := ConfigureLifecycleTier(cfg, "hot", "", "14d"); err != nil {
 			t.Fatalf("error: %v", err)
 		}
 		if cfg.RetentionTiers["hot"].OlderThan != "14d" {
@@ -255,7 +255,7 @@ func TestSetTierValue(t *testing.T) {
 
 	t.Run("invalid duration", func(t *testing.T) {
 		cfg := &ProjectConfig{}
-		err := SetTierValue(cfg, "hot", "older_than", "bad")
+		err := ConfigureLifecycleTier(cfg, "hot", "older_than", "bad")
 		if err == nil {
 			t.Fatal("expected error for invalid duration")
 		}
@@ -263,7 +263,7 @@ func TestSetTierValue(t *testing.T) {
 
 	t.Run("invalid keep_min", func(t *testing.T) {
 		cfg := &ProjectConfig{}
-		err := SetTierValue(cfg, "hot", "keep_min", "not-a-number")
+		err := ConfigureLifecycleTier(cfg, "hot", "keep_min", "not-a-number")
 		if err == nil {
 			t.Fatal("expected error for invalid keep_min")
 		}
@@ -271,7 +271,7 @@ func TestSetTierValue(t *testing.T) {
 
 	t.Run("negative keep_min", func(t *testing.T) {
 		cfg := &ProjectConfig{}
-		err := SetTierValue(cfg, "hot", "keep_min", "-1")
+		err := ConfigureLifecycleTier(cfg, "hot", "keep_min", "-1")
 		if err == nil {
 			t.Fatal("expected error for negative keep_min")
 		}
@@ -279,30 +279,30 @@ func TestSetTierValue(t *testing.T) {
 
 	t.Run("unsupported subfield", func(t *testing.T) {
 		cfg := &ProjectConfig{}
-		err := SetTierValue(cfg, "hot", "bad_field", "value")
+		err := ConfigureLifecycleTier(cfg, "hot", "bad_field", "value")
 		if err == nil {
 			t.Fatal("expected error for unsupported sub-field")
 		}
 	})
 }
 
-func TestDeleteTierValue(t *testing.T) {
+func TestRemoveLifecycleTier(t *testing.T) {
 	cfg := &ProjectConfig{
 		RetentionTiers: map[string]retention.Tier{
 			"hot": {OlderThan: "7d"},
 		},
 	}
-	DeleteTierValue(cfg, "hot")
+	RemoveLifecycleTier(cfg, "hot")
 	if _, exists := cfg.RetentionTiers["hot"]; exists {
 		t.Error("tier 'hot' should be deleted")
 	}
 }
 
-func TestResolveKey(t *testing.T) {
+func TestResolveAuditSetting(t *testing.T) {
 	e := newTestEvaluator(&ProjectConfig{MaxUnsafe: "72h"}, nil)
 
 	t.Run("known key", func(t *testing.T) {
-		v, ok := ResolveKey(e, "max_unsafe")
+		v, ok := ResolveAuditSetting(e, "max_unsafe")
 		if !ok {
 			t.Fatal("expected ok=true for max_unsafe")
 		}
@@ -312,14 +312,14 @@ func TestResolveKey(t *testing.T) {
 	})
 
 	t.Run("unknown key", func(t *testing.T) {
-		_, ok := ResolveKey(e, "nonexistent")
+		_, ok := ResolveAuditSetting(e, "nonexistent")
 		if ok {
 			t.Error("expected ok=false for unknown key")
 		}
 	})
 
 	t.Run("cli_output", func(t *testing.T) {
-		v, ok := ResolveKey(e, "cli_output")
+		v, ok := ResolveAuditSetting(e, "cli_output")
 		if !ok {
 			t.Fatal("expected ok=true for cli_output")
 		}
@@ -329,13 +329,13 @@ func TestResolveKey(t *testing.T) {
 	})
 }
 
-func TestBuildKeyCompletions(t *testing.T) {
+func TestBuildSettingCompletions(t *testing.T) {
 	tiers := []string{"hot", "cold"}
-	comps := BuildKeyCompletions(tiers)
+	comps := BuildSettingCompletions(tiers)
 
 	// Should include base config keys + tier expansions
-	if len(comps) < len(ConfigKeys)+6 { // 2 tiers * 3 variants
-		t.Errorf("completions len = %d, expected at least %d", len(comps), len(ConfigKeys)+6)
+	if len(comps) < len(GovernanceSettings)+6 { // 2 tiers * 3 variants
+		t.Errorf("completions len = %d, expected at least %d", len(comps), len(GovernanceSettings)+6)
 	}
 
 	// Check tier completions exist
@@ -408,19 +408,19 @@ func TestBuildEffectiveConfig_NoProject(t *testing.T) {
 	}
 }
 
-func TestConfigKeys_ContainsExpected(t *testing.T) {
+func TestGovernanceSettings_ContainsExpected(t *testing.T) {
 	expected := []string{"max_unsafe", "snapshot_retention", "ci_failure_policy", "capture_cadence"}
 	for _, k := range expected {
-		found := slices.Contains(ConfigKeys, k)
+		found := slices.Contains(GovernanceSettings, k)
 		if !found {
-			t.Errorf("ConfigKeys missing %q", k)
+			t.Errorf("GovernanceSettings missing %q", k)
 		}
 	}
 }
 
 func TestValidateField_CaptureAdence(t *testing.T) {
 	cfg := &ProjectConfig{CaptureCadence: "weekly"}
-	err := validateField(cfg, "CaptureCadence")
+	err := validateAuditSetting(cfg, "CaptureCadence")
 	if err == nil {
 		t.Fatal("expected error for invalid cadence")
 	}
@@ -433,8 +433,8 @@ func TestValidateField_EmptyValues(t *testing.T) {
 	cfg := &ProjectConfig{}
 	// Empty values should pass validation
 	for _, field := range []string{"MaxUnsafe", "SnapshotRetention", "RetentionTier", "CIFailurePolicy", "CaptureCadence", "SnapshotFilenameTemplate"} {
-		if err := validateField(cfg, field); err != nil {
-			t.Errorf("validateField(%q) with empty value: %v", field, err)
+		if err := validateAuditSetting(cfg, field); err != nil {
+			t.Errorf("validateAuditSetting(%q) with empty value: %v", field, err)
 		}
 	}
 }

@@ -62,13 +62,13 @@ func (s projectConfigStore) CurrentValue(cfg *appconfig.ProjectConfig, key, cfgP
 	}
 	eval := appconfig.NewEvaluator(cfg, cfgPath, nil, "")
 
-	parsed, err := appconfig.ParseConfigKey(key)
+	parsed, err := appconfig.IdentifySetting(key)
 	if err != nil {
 		return "", false
 	}
 
 	if parsed.TierName != "" {
-		if parsed.SubField != "" {
+		if parsed.Property != "" {
 			return s.tierSubFieldValue(cfg, parsed)
 		}
 		v := eval.ResolveSnapshotRetention(parsed.TierName)
@@ -78,7 +78,7 @@ func (s projectConfigStore) CurrentValue(cfg *appconfig.ProjectConfig, key, cfgP
 		return v.Value, true
 	}
 
-	if parsed.TopLevel == "snapshot_retention" {
+	if parsed.Attribute == "snapshot_retention" {
 		v := eval.ResolveSnapshotRetention(eval.RetentionTier())
 		if v.Value == "" {
 			return "", false
@@ -86,14 +86,14 @@ func (s projectConfigStore) CurrentValue(cfg *appconfig.ProjectConfig, key, cfgP
 		return v.Value, true
 	}
 
-	v, ok := appconfig.ResolveKey(eval, key)
+	v, ok := appconfig.ResolveAuditSetting(eval, key)
 	if !ok || v.Value == "" {
 		return "", false
 	}
 	return v.Value, true
 }
 
-func (s projectConfigStore) tierSubFieldValue(cfg *appconfig.ProjectConfig, parsed appconfig.ParsedKey) (string, bool) {
+func (s projectConfigStore) tierSubFieldValue(cfg *appconfig.ProjectConfig, parsed appconfig.SettingPath) (string, bool) {
 	if cfg == nil || len(cfg.RetentionTiers) == 0 {
 		return "", false
 	}
@@ -101,7 +101,7 @@ func (s projectConfigStore) tierSubFieldValue(cfg *appconfig.ProjectConfig, pars
 	if !exists {
 		return "", false
 	}
-	switch parsed.SubField {
+	switch parsed.Property {
 	case "older_than":
 		if tc.OlderThan == "" {
 			return "", false
@@ -116,27 +116,27 @@ func (s projectConfigStore) tierSubFieldValue(cfg *appconfig.ProjectConfig, pars
 
 // Set updates a specific key in the provided config struct.
 func (s projectConfigStore) Set(cfg *appconfig.ProjectConfig, key, value string) error {
-	parsed, err := appconfig.ParseConfigKey(key)
+	parsed, err := appconfig.IdentifySetting(key)
 	if err != nil {
 		return err
 	}
 	if parsed.TierName != "" {
-		return appconfig.SetTierValue(cfg, parsed.TierName, parsed.SubField, value)
+		return appconfig.ConfigureLifecycleTier(cfg, parsed.TierName, parsed.Property, value)
 	}
-	return appconfig.SetConfigValue(cfg, parsed.TopLevel, value)
+	return appconfig.UpdateAttribute(cfg, parsed.Attribute, value)
 }
 
 // Delete removes a specific key from the provided config struct.
 func (s projectConfigStore) Delete(cfg *appconfig.ProjectConfig, key string) error {
-	parsed, err := appconfig.ParseConfigKey(key)
+	parsed, err := appconfig.IdentifySetting(key)
 	if err != nil {
 		return err
 	}
 	if parsed.TierName != "" {
-		appconfig.DeleteTierValue(cfg, parsed.TierName)
+		appconfig.RemoveLifecycleTier(cfg, parsed.TierName)
 		return nil
 	}
-	return appconfig.DeleteConfigValue(cfg, parsed.TopLevel)
+	return appconfig.ResetAttribute(cfg, parsed.Attribute)
 }
 
 // Write serializes the configuration back to the stave.yaml file.
