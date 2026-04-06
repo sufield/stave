@@ -11,8 +11,8 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	outjson "github.com/sufield/stave/internal/adapters/output/json"
+	appattest "github.com/sufield/stave/internal/app/attestation"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	appverify "github.com/sufield/stave/internal/app/verify"
 	"github.com/sufield/stave/internal/cli/ui"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/report"
@@ -79,31 +79,31 @@ Exit Codes:
 
 			gf := cliflags.GetGlobalFlags(cmd)
 
-			return appverify.RunVerify(
-				appverify.Deps{
-					LoadControls: func(ctx context.Context, dir string) ([]policy.ControlDefinition, error) {
+			return appattest.PerformAttestation(
+				appattest.WorkflowDeps{
+					LoadPolicies: func(ctx context.Context, dir string) ([]policy.ControlDefinition, error) {
 						return compose.LoadControlsFrom(ctx, newCtlRepo, dir)
 					},
-					NewObservationRepo: func() (appcontracts.ObservationRepository, error) {
+					NewInventoryRepo: func() (appcontracts.ObservationRepository, error) {
 						return newObsRepo()
 					},
-					WriteVerification: func(w io.Writer, v *report.Attestation) error {
+					PublishAttestation: func(w io.Writer, v *report.Attestation) error {
 						return outjson.WriteVerification(w, v)
 					},
-					BeginProgress: rt.BeginProgress,
+					BeginStage: rt.BeginProgress,
 				},
-				appverify.Request{
-					Ctx:               exec.Context,
-					BeforeDir:         exec.BeforeDir,
-					AfterDir:          exec.AfterDir,
-					ControlsDir:       exec.ControlsDir,
-					MaxUnsafeDuration: exec.MaxUnsafeDuration,
-					Clock:             exec.Clock,
-					AllowUnknown:      exec.AllowUnknown,
-					Quiet:             gf.Quiet,
-					Sanitizer:         gf.GetSanitizer(),
-					Stdout:            cmd.OutOrStdout(),
-					CELEvaluator:      celEval,
+				appattest.Request{
+					Ctx:            exec.Context,
+					BaselineSource: exec.BeforeDir,
+					TargetSource:   exec.AfterDir,
+					PolicySource:   exec.ControlsDir,
+					SLAThreshold:   exec.MaxUnsafeDuration,
+					Clock:          exec.Clock,
+					AllowUnknown:   exec.AllowUnknown,
+					Quiet:          gf.Quiet,
+					Sanitizer:      gf.GetSanitizer(),
+					Stdout:         cmd.OutOrStdout(),
+					PredicateEval:  celEval,
 				},
 			)
 		},

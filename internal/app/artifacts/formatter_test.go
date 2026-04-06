@@ -46,20 +46,20 @@ func TestFormatYAML_InvalidInput(t *testing.T) {
 	}
 }
 
-func TestFormatByExtension_Dispatch(t *testing.T) {
+func TestCanonicalizeByExtension_Dispatch(t *testing.T) {
 	yaml := []byte("id: test\n")
 
-	out, err := FormatByExtension("control.yaml", yaml)
+	out, err := CanonicalizeByExtension("control.yaml", yaml)
 	if err != nil {
-		t.Fatalf("FormatByExtension yaml: %v", err)
+		t.Fatalf("CanonicalizeByExtension yaml: %v", err)
 	}
 	if out == nil {
 		t.Fatal("expected non-nil output for .yaml")
 	}
 
-	out, err = FormatByExtension("readme.txt", yaml)
+	out, err = CanonicalizeByExtension("readme.txt", yaml)
 	if err != nil {
-		t.Fatalf("FormatByExtension txt: %v", err)
+		t.Fatalf("CanonicalizeByExtension txt: %v", err)
 	}
 	if out != nil {
 		t.Fatal("expected nil output for unrecognized extension")

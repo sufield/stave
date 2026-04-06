@@ -35,26 +35,26 @@ Exit Codes:
 		RunE: func(cmd *cobra.Command, args []string) error {
 			allowSymlinks := cliflags.GetGlobalFlags(cmd).AllowSymlinkOut
 
-			cfg := appartifacts.FormatConfig{
-				Target:    fsutil.CleanUserPath(args[0]),
-				CheckOnly: checkOnly,
-				ReadFile:  fsutil.ReadFileLimited,
-				WriteFile: func(path string, data []byte) error {
+			cfg := appartifacts.NormalizationConfig{
+				SourcePath: fsutil.CleanUserPath(args[0]),
+				VerifyOnly: checkOnly,
+				Reader:     fsutil.ReadFileLimited,
+				Writer: func(path string, data []byte) error {
 					opts := fsutil.ConfigWriteOpts()
 					opts.AllowSymlink = allowSymlinks
 					return fsutil.SafeWriteFile(path, data, opts)
 				},
 			}
-			formatter := &appartifacts.Formatter{}
-			res, err := formatter.Run(cmd.Context(), cfg)
+			canonicalizer := &appartifacts.Canonicalizer{}
+			res, err := canonicalizer.Normalize(cmd.Context(), cfg)
 			if err != nil {
 				return err
 			}
 			out := cmd.OutOrStdout()
 			if checkOnly {
-				fmt.Fprintf(out, "All %d file(s) already formatted.\n", res.TotalFiles)
+				fmt.Fprintf(out, "All %d manifest(s) already in canonical form.\n", res.TotalManifests)
 			} else {
-				fmt.Fprintf(out, "Formatted %d/%d file(s).\n", res.ChangedFiles, res.TotalFiles)
+				fmt.Fprintf(out, "Canonicalized %d/%d manifest(s).\n", res.ModifiedManifests, res.TotalManifests)
 			}
 			return nil
 		},

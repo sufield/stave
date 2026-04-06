@@ -1,4 +1,4 @@
-package verify
+package attestation
 
 import (
 	"testing"
@@ -11,86 +11,86 @@ import (
 
 func TestCompare_NoFindings(t *testing.T) {
 	result, err := Compare(CompareRequest{
-		Now:               time.Date(2026, 3, 1, 0, 0, 0, 0, time.UTC),
-		MaxUnsafeDuration: 24 * time.Hour,
+		Now:          time.Date(2026, 3, 1, 0, 0, 0, 0, time.UTC),
+		SLAThreshold: 24 * time.Hour,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if result.RemainingCount != 0 {
-		t.Fatalf("remaining = %d", result.RemainingCount)
+	if result.OpenCount != 0 {
+		t.Fatalf("open = %d", result.OpenCount)
 	}
-	if result.IntroducedCount != 0 {
-		t.Fatalf("introduced = %d", result.IntroducedCount)
+	if result.RegressionCount != 0 {
+		t.Fatalf("regressions = %d", result.RegressionCount)
 	}
 }
 
-func TestCompare_AllResolved(t *testing.T) {
+func TestCompare_AllRemediated(t *testing.T) {
 	before := []evaluation.Finding{
 		{ControlID: kernel.ControlID("CTL.TEST.001"), AssetID: asset.ID("bucket-a")},
 	}
 	result, err := Compare(CompareRequest{
-		BeforeFindings:    before,
-		AfterFindings:     nil,
-		BeforeSnapshots:   2,
-		AfterSnapshots:    2,
+		BaselineFindings:  before,
+		TargetFindings:    nil,
+		BaselineSnapshots: 2,
+		TargetSnapshots:   2,
 		Now:               time.Date(2026, 3, 1, 0, 0, 0, 0, time.UTC),
-		MaxUnsafeDuration: 24 * time.Hour,
+		SLAThreshold:      24 * time.Hour,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if result.RemainingCount != 0 {
-		t.Fatalf("remaining = %d", result.RemainingCount)
+	if result.OpenCount != 0 {
+		t.Fatalf("open = %d", result.OpenCount)
 	}
-	if result.IntroducedCount != 0 {
-		t.Fatalf("introduced = %d", result.IntroducedCount)
+	if result.RegressionCount != 0 {
+		t.Fatalf("regressions = %d", result.RegressionCount)
 	}
-	if result.Verification == nil {
-		t.Fatal("verification should not be nil")
+	if result.Attestation == nil {
+		t.Fatal("attestation should not be nil")
 	}
-	if result.Verification.Summary.Remediated != 1 {
-		t.Fatalf("resolved = %d, want 1", result.Verification.Summary.Remediated)
+	if result.Attestation.Summary.Remediated != 1 {
+		t.Fatalf("remediated = %d, want 1", result.Attestation.Summary.Remediated)
 	}
 }
 
-func TestCompare_WithRemaining(t *testing.T) {
+func TestCompare_WithOpen(t *testing.T) {
 	finding := evaluation.Finding{
 		ControlID: kernel.ControlID("CTL.TEST.001"),
 		AssetID:   asset.ID("bucket-a"),
 	}
 	result, err := Compare(CompareRequest{
-		BeforeFindings:    []evaluation.Finding{finding},
-		AfterFindings:     []evaluation.Finding{finding},
-		BeforeSnapshots:   2,
-		AfterSnapshots:    2,
+		BaselineFindings:  []evaluation.Finding{finding},
+		TargetFindings:    []evaluation.Finding{finding},
+		BaselineSnapshots: 2,
+		TargetSnapshots:   2,
 		Now:               time.Date(2026, 3, 1, 0, 0, 0, 0, time.UTC),
-		MaxUnsafeDuration: 24 * time.Hour,
+		SLAThreshold:      24 * time.Hour,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if result.RemainingCount != 1 {
-		t.Fatalf("remaining = %d, want 1", result.RemainingCount)
+	if result.OpenCount != 1 {
+		t.Fatalf("open = %d, want 1", result.OpenCount)
 	}
 }
 
-func TestCompare_WithIntroduced(t *testing.T) {
+func TestCompare_WithRegressions(t *testing.T) {
 	result, err := Compare(CompareRequest{
-		BeforeFindings: nil,
-		AfterFindings: []evaluation.Finding{
+		BaselineFindings: nil,
+		TargetFindings: []evaluation.Finding{
 			{ControlID: kernel.ControlID("CTL.NEW.001"), AssetID: asset.ID("bucket-new")},
 		},
-		BeforeSnapshots:   2,
-		AfterSnapshots:    2,
+		BaselineSnapshots: 2,
+		TargetSnapshots:   2,
 		Now:               time.Date(2026, 3, 1, 0, 0, 0, 0, time.UTC),
-		MaxUnsafeDuration: 24 * time.Hour,
+		SLAThreshold:      24 * time.Hour,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if result.IntroducedCount != 1 {
-		t.Fatalf("introduced = %d, want 1", result.IntroducedCount)
+	if result.RegressionCount != 1 {
+		t.Fatalf("regressions = %d, want 1", result.RegressionCount)
 	}
 }
 
@@ -99,20 +99,19 @@ func TestCompare_WithSanitizer(t *testing.T) {
 		{ControlID: kernel.ControlID("CTL.TEST.001"), AssetID: asset.ID("bucket-a")},
 	}
 	result, err := Compare(CompareRequest{
-		BeforeFindings:    before,
-		AfterFindings:     nil,
-		Now:               time.Date(2026, 3, 1, 0, 0, 0, 0, time.UTC),
-		MaxUnsafeDuration: 24 * time.Hour,
-		Sanitizer:         testSanitizer{},
+		BaselineFindings: before,
+		TargetFindings:   nil,
+		Now:              time.Date(2026, 3, 1, 0, 0, 0, 0, time.UTC),
+		SLAThreshold:     24 * time.Hour,
+		Sanitizer:        testSanitizer{},
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	// Verify that the resolved entries have sanitized asset IDs
-	if len(result.Verification.Remediated) != 1 {
-		t.Fatalf("expected 1 resolved entry, got %d", len(result.Verification.Remediated))
+	if len(result.Attestation.Remediated) != 1 {
+		t.Fatalf("expected 1 remediated entry, got %d", len(result.Attestation.Remediated))
 	}
-	if string(result.Verification.Remediated[0].AssetID) == "bucket-a" {
+	if string(result.Attestation.Remediated[0].AssetID) == "bucket-a" {
 		t.Fatal("asset ID should be sanitized")
 	}
 }
@@ -137,7 +136,6 @@ func TestFindingsToEntries_NoSanitizer(t *testing.T) {
 	}
 }
 
-// testSanitizer masks asset IDs for testing.
 type testSanitizer struct{}
 
 func (testSanitizer) ID(s string) string    { return "REDACTED-" + s }
