@@ -17,7 +17,7 @@ type featureManifest struct {
 	policySchemas      []string
 	connectors         []ConnectorSupport
 	connectorIndex     map[kernel.ObservationSourceType]struct{}
-	policyLibrary      []ControlPack
+	policyLibrary      []PolicyPack
 	complianceFeatures ComplianceSupport
 }
 
@@ -29,11 +29,11 @@ func (m *featureManifest) policySupport() PolicySupport {
 	return PolicySupport{Schemas: m.policySchemas}
 }
 
-func (m *featureManifest) ingressSupport() IngressSupport {
-	return IngressSupport{Connectors: m.connectors}
+func (m *featureManifest) ingressSupport() DataIngress {
+	return DataIngress{Connectors: m.connectors}
 }
 
-func (m *featureManifest) libraryWithVersion(version string) []ControlPack {
+func (m *featureManifest) libraryWithVersion(version string) []PolicyPack {
 	result := slices.Clone(m.policyLibrary)
 	for i := range result {
 		result[i].Version = version
@@ -43,12 +43,12 @@ func (m *featureManifest) libraryWithVersion(version string) []ControlPack {
 
 func (m *featureManifest) complianceSupport() ComplianceSupport {
 	return ComplianceSupport{
-		Enabled:        m.complianceFeatures.Enabled,
-		ReportFormats:  slices.Clone(m.complianceFeatures.ReportFormats),
-		SBOMFormats:    slices.Clone(m.complianceFeatures.SBOMFormats),
-		VulnSources:    slices.Clone(m.complianceFeatures.VulnSources),
-		FailOnLevels:   slices.Clone(m.complianceFeatures.FailOnLevels),
-		Frameworks:     slices.Clone(m.complianceFeatures.Frameworks),
+		Enabled:            m.complianceFeatures.Enabled,
+		ReportFormats:      slices.Clone(m.complianceFeatures.ReportFormats),
+		SBOMFormats:        slices.Clone(m.complianceFeatures.SBOMFormats),
+		VulnSources:        slices.Clone(m.complianceFeatures.VulnSources),
+		SLAThresholds:      slices.Clone(m.complianceFeatures.SLAThresholds),
+		SecurityFrameworks: slices.Clone(m.complianceFeatures.SecurityFrameworks),
 	}
 }
 
@@ -79,21 +79,21 @@ func newFeatureManifest() *featureManifest {
 		panic("capabilities: failed to load embedded policy library: " + err.Error())
 	}
 	discovered := packReg.ListPacks()
-	library := make([]ControlPack, len(discovered))
+	library := make([]PolicyPack, len(discovered))
 	for i, p := range discovered {
-		library[i] = ControlPack{
+		library[i] = PolicyPack{
 			Name:        p.Name,
 			Description: p.Description,
 		}
 	}
 
 	complianceFeatures := ComplianceSupport{
-		Enabled:       true,
-		ReportFormats: securityaudit.AllReportFormats(),
-		SBOMFormats:   evidence.AllSBOMFormats(),
-		VulnSources:   evidence.AllVulnSources(),
-		FailOnLevels:  []string{"critical", "high", "medium", "low", "none"},
-		Frameworks:    compliance.FrameworkStrings(compliance.SupportedFrameworks()),
+		Enabled:            true,
+		ReportFormats:      securityaudit.AllReportFormats(),
+		SBOMFormats:        evidence.AllSBOMFormats(),
+		VulnSources:        evidence.AllVulnSources(),
+		SLAThresholds:      []string{"critical", "high", "medium", "low", "none"},
+		SecurityFrameworks: compliance.FrameworkStrings(compliance.SupportedFrameworks()),
 	}
 
 	return &featureManifest{
