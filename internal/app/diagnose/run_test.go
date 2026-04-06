@@ -79,21 +79,21 @@ func celEvalAllSafe() policy.PredicateEval {
 // ---------------------------------------------------------------------------
 
 func TestNewRun_NilObs(t *testing.T) {
-	_, err := NewRun(nil, &mockCtlRepo{})
+	_, err := NewEngine(nil, &mockCtlRepo{})
 	if err == nil {
 		t.Fatal("expected error for nil ObservationRepository")
 	}
 }
 
 func TestNewRun_NilCtl(t *testing.T) {
-	_, err := NewRun(&mockObsRepo{}, nil)
+	_, err := NewEngine(&mockObsRepo{}, nil)
 	if err == nil {
 		t.Fatal("expected error for nil ControlRepository")
 	}
 }
 
 func TestNewRun_Success(t *testing.T) {
-	run, err := NewRun(&mockObsRepo{}, &mockCtlRepo{})
+	run, err := NewEngine(&mockObsRepo{}, &mockCtlRepo{})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -107,14 +107,14 @@ func TestNewRun_Success(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestExecute_ControlLoadError(t *testing.T) {
-	run := &Run{
-		ObservationRepo: &mockObsRepo{result: appcontracts.LoadResult{Snapshots: simpleSnapshots()}},
-		ControlRepo:     &mockCtlRepo{err: errors.New("controls broken")},
+	run := &DiagnosticEngine{
+		InventoryRepo: &mockObsRepo{result: appcontracts.LoadResult{Snapshots: simpleSnapshots()}},
+		PolicyRepo:    &mockCtlRepo{err: errors.New("controls broken")},
 	}
 
-	_, err := run.Execute(context.Background(), Config{
-		ControlsDir:     "controls",
-		ObservationsDir: "observations",
+	_, err := run.Analyze(context.Background(), AuditRequest{
+		PolicySource:    "controls",
+		InventorySource: "observations",
 		Clock:           ports.FixedClock(baseTime()),
 	})
 	if err == nil {
@@ -123,14 +123,14 @@ func TestExecute_ControlLoadError(t *testing.T) {
 }
 
 func TestExecute_ObservationLoadError(t *testing.T) {
-	run := &Run{
-		ObservationRepo: &mockObsRepo{err: errors.New("obs broken")},
-		ControlRepo:     &mockCtlRepo{controls: simpleControls()},
+	run := &DiagnosticEngine{
+		InventoryRepo: &mockObsRepo{err: errors.New("obs broken")},
+		PolicyRepo:    &mockCtlRepo{controls: simpleControls()},
 	}
 
-	_, err := run.Execute(context.Background(), Config{
-		ControlsDir:     "controls",
-		ObservationsDir: "observations",
+	_, err := run.Analyze(context.Background(), AuditRequest{
+		PolicySource:    "controls",
+		InventorySource: "observations",
 		Clock:           ports.FixedClock(baseTime()),
 	})
 	if err == nil {
@@ -139,9 +139,9 @@ func TestExecute_ObservationLoadError(t *testing.T) {
 }
 
 func TestExecute_WithPreviousResult(t *testing.T) {
-	run := &Run{
-		ObservationRepo: &mockObsRepo{result: appcontracts.LoadResult{Snapshots: simpleSnapshots()}},
-		ControlRepo:     &mockCtlRepo{controls: simpleControls()},
+	run := &DiagnosticEngine{
+		InventoryRepo: &mockObsRepo{result: appcontracts.LoadResult{Snapshots: simpleSnapshots()}},
+		PolicyRepo:    &mockCtlRepo{controls: simpleControls()},
 	}
 
 	prev := &evaluation.ComplianceReport{
@@ -151,11 +151,11 @@ func TestExecute_WithPreviousResult(t *testing.T) {
 		Summary: evaluation.ComplianceSummary{Violations: 1},
 	}
 
-	report, err := run.Execute(context.Background(), Config{
-		ControlsDir:     "controls",
-		ObservationsDir: "observations",
+	report, err := run.Analyze(context.Background(), AuditRequest{
+		PolicySource:    "controls",
+		InventorySource: "observations",
 		Clock:           ports.FixedClock(baseTime().Add(2 * time.Hour)),
-		PreviousResult:  prev,
+		BaselineReport:  prev,
 		PredicateEval:   celEvalAllSafe(),
 	})
 	if err != nil {
@@ -167,17 +167,17 @@ func TestExecute_WithPreviousResult(t *testing.T) {
 }
 
 func TestExecute_FreshEvaluation(t *testing.T) {
-	run := &Run{
-		ObservationRepo: &mockObsRepo{result: appcontracts.LoadResult{Snapshots: simpleSnapshots()}},
-		ControlRepo:     &mockCtlRepo{controls: simpleControls()},
+	run := &DiagnosticEngine{
+		InventoryRepo: &mockObsRepo{result: appcontracts.LoadResult{Snapshots: simpleSnapshots()}},
+		PolicyRepo:    &mockCtlRepo{controls: simpleControls()},
 	}
 
-	report, err := run.Execute(context.Background(), Config{
-		ControlsDir:       "controls",
-		ObservationsDir:   "observations",
-		MaxUnsafeDuration: 168 * time.Hour,
-		Clock:             ports.FixedClock(baseTime().Add(2 * time.Hour)),
-		PredicateEval:     celEvalAllSafe(),
+	report, err := run.Analyze(context.Background(), AuditRequest{
+		PolicySource:    "controls",
+		InventorySource: "observations",
+		SLAThreshold:    168 * time.Hour,
+		Clock:           ports.FixedClock(baseTime().Add(2 * time.Hour)),
+		PredicateEval:   celEvalAllSafe(),
 	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -192,19 +192,19 @@ func TestExecute_FreshEvaluation(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestExecuteFindingDetail_LoadError(t *testing.T) {
-	run := &Run{
-		ObservationRepo: &mockObsRepo{err: errors.New("broken")},
-		ControlRepo:     &mockCtlRepo{controls: simpleControls()},
+	run := &DiagnosticEngine{
+		InventoryRepo: &mockObsRepo{err: errors.New("broken")},
+		PolicyRepo:    &mockCtlRepo{controls: simpleControls()},
 	}
 
-	_, err := run.ExecuteFindingDetail(context.Background(), FindingDetailConfig{
-		DiagnoseConfig: Config{
-			ControlsDir:     "controls",
-			ObservationsDir: "observations",
+	_, err := run.InspectViolation(context.Background(), InspectionRequest{
+		AuditReq: AuditRequest{
+			PolicySource:    "controls",
+			InventorySource: "observations",
 			Clock:           ports.FixedClock(baseTime()),
 		},
-		ControlID: "CTL.TEST.001",
-		AssetID:   "bucket-1",
+		TargetPolicy: "CTL.TEST.001",
+		TargetAsset:  "bucket-1",
 	})
 	if err == nil {
 		t.Fatal("expected error for load failure")
@@ -212,7 +212,7 @@ func TestExecuteFindingDetail_LoadError(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// toDiagnosticFindings
+// mapToDiagnosticFindings
 // ---------------------------------------------------------------------------
 
 func TestToDiagnosticFindings_FieldMapping(t *testing.T) {
@@ -230,7 +230,7 @@ func TestToDiagnosticFindings_FieldMapping(t *testing.T) {
 		},
 	}
 
-	result := toDiagnosticFindings(findings)
+	result := mapToDiagnosticFindings(findings)
 	if len(result) != 1 {
 		t.Fatalf("expected 1 diagnostic finding, got %d", len(result))
 	}
@@ -243,7 +243,7 @@ func TestToDiagnosticFindings_FieldMapping(t *testing.T) {
 }
 
 func TestToDiagnosticFindings_Empty(t *testing.T) {
-	result := toDiagnosticFindings(nil)
+	result := mapToDiagnosticFindings(nil)
 	if len(result) != 0 {
 		t.Fatalf("expected 0, got %d", len(result))
 	}

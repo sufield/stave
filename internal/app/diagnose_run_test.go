@@ -49,7 +49,7 @@ func TestDiagnoseExecuteAndLoaders(t *testing.T) {
 		},
 	}
 
-	run, newErr := appdiagnose.NewRun(
+	run, newErr := appdiagnose.NewEngine(
 		evalObservationRepoStub{snapshots: snapshots},
 		evalControlRepoStub{controls: []policy.ControlDefinition{ctl}},
 	)
@@ -59,12 +59,12 @@ func TestDiagnoseExecuteAndLoaders(t *testing.T) {
 
 	t.Run("uses previous result when provided", func(t *testing.T) {
 		previousResult := &evaluation.ComplianceReport{Findings: []evaluation.Finding{}}
-		report, err := run.Execute(context.Background(), appdiagnose.Config{
-			ControlsDir:       "ctl",
-			ObservationsDir:   "obs",
-			PreviousResult:    previousResult,
-			MaxUnsafeDuration: 30 * time.Minute,
-			Clock:             clockadp.FixedClock(now),
+		report, err := run.Analyze(context.Background(), appdiagnose.AuditRequest{
+			PolicySource:    "ctl",
+			InventorySource: "obs",
+			BaselineReport:  previousResult,
+			SLAThreshold:    30 * time.Minute,
+			Clock:           clockadp.FixedClock(now),
 		})
 		if err != nil {
 			t.Fatalf("unexpected err: %v", err)
@@ -81,18 +81,18 @@ func TestDiagnoseExecuteAndLoaders(t *testing.T) {
 		// Fresh evaluation with a properly prepared control.
 		preparedCtl := ctl
 		preparedCtl.Prepare()
-		preparedRun, newErr := appdiagnose.NewRun(
+		preparedRun, newErr := appdiagnose.NewEngine(
 			evalObservationRepoStub{snapshots: snapshots},
 			evalControlRepoStub{controls: []policy.ControlDefinition{preparedCtl}},
 		)
 		if newErr != nil {
 			t.Fatal(newErr)
 		}
-		report, err := preparedRun.Execute(context.Background(), appdiagnose.Config{
-			ControlsDir:       "ctl",
-			ObservationsDir:   "obs",
-			MaxUnsafeDuration: 30 * time.Minute,
-			Clock:             clockadp.FixedClock(now),
+		report, err := preparedRun.Analyze(context.Background(), appdiagnose.AuditRequest{
+			PolicySource:    "ctl",
+			InventorySource: "obs",
+			SLAThreshold:    30 * time.Minute,
+			Clock:           clockadp.FixedClock(now),
 		})
 		if err != nil {
 			t.Fatalf("unexpected err: %v", err)
@@ -114,7 +114,7 @@ func TestDiagnoseExecute_NilPreviousResultRunsFreshEvaluation(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	run, newErr := appdiagnose.NewRun(
+	run, newErr := appdiagnose.NewEngine(
 		evalObservationRepoStub{snapshots: []asset.Snapshot{{CapturedAt: now}}},
 		evalControlRepoStub{controls: []policy.ControlDefinition{ctl}},
 	)
@@ -122,11 +122,11 @@ func TestDiagnoseExecute_NilPreviousResultRunsFreshEvaluation(t *testing.T) {
 		t.Fatal(newErr)
 	}
 
-	report, err := run.Execute(context.Background(), appdiagnose.Config{
-		ControlsDir:       "ctl",
-		ObservationsDir:   "obs",
-		MaxUnsafeDuration: time.Hour,
-		Clock:             clockadp.FixedClock(now),
+	report, err := run.Analyze(context.Background(), appdiagnose.AuditRequest{
+		PolicySource:    "ctl",
+		InventorySource: "obs",
+		SLAThreshold:    time.Hour,
+		Clock:           clockadp.FixedClock(now),
 	})
 	if err != nil {
 		t.Fatalf("unexpected err: %v", err)

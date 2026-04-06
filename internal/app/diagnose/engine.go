@@ -1,0 +1,172 @@
+package diagnose
+
+import (
+	"context"
+	"fmt"
+	"time"
+
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	appeval "github.com/sufield/stave/internal/app/eval"
+	"github.com/sufield/stave/internal/core/asset"
+	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/evaluation"
+	"github.com/sufield/stave/internal/core/evaluation/diagnosis"
+	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/core/ports"
+)
+
+// AuditRequest defines the parameters for generating security insights.
+type AuditRequest struct {
+	PolicySource    string
+	InventorySource string
+	BaselineReport  *evaluation.ComplianceReport
+	SLAThreshold    time.Duration
+	Clock           ports.Clock
+	PredicateParser func(any) (*policy.UnsafePredicate, error)
+	PredicateEval   policy.PredicateEval
+}
+
+// DiagnosticEngine orchestrates the deep analysis of security policy evaluations.
+type DiagnosticEngine struct {
+	InventoryRepo appcontracts.ObservationRepository
+	PolicyRepo    appcontracts.ControlRepository
+}
+
+type auditContext struct {
+	policies  []policy.ControlDefinition
+	inventory []asset.Snapshot
+}
+
+// NewEngine initializes a diagnostic engine with required data repositories.
+func NewEngine(
+	invRepo appcontracts.ObservationRepository,
+	polRepo appcontracts.ControlRepository,
+) (*DiagnosticEngine, error) {
+	if invRepo == nil {
+		return nil, fmt.Errorf("inventory repository required")
+	}
+	if polRepo == nil {
+		return nil, fmt.Errorf("policy repository required")
+	}
+	return &DiagnosticEngine{
+		InventoryRepo: invRepo,
+		PolicyRepo:    polRepo,
+	}, nil
+}
+
+// Analyze performs a diagnostic analysis of the current security state.
+func (e *DiagnosticEngine) Analyze(ctx context.Context, req AuditRequest) (*diagnosis.Report, error) {
+	data, err := e.loadAuditData(ctx, req.PolicySource, req.InventorySource)
+	if err != nil {
+		return nil, fmt.Errorf("load audit context: %w", err)
+	}
+
+	assessment, err := e.resolveAssessment(req, data)
+	if err != nil {
+		return nil, fmt.Errorf("resolve compliance assessment: %w", err)
+	}
+
+	input := diagnosis.NewInput(diagnosis.Input{
+		Snapshots:         data.inventory,
+		Controls:          data.policies,
+		Findings:          mapToDiagnosticFindings(assessment.Findings),
+		ViolationsFound:   len(assessment.Findings),
+		AttackSurface:     assessment.Summary.ExposedResources,
+		MaxUnsafeDuration: req.SLAThreshold,
+		Now:               req.Clock.Now(),
+		PredicateEval:     req.PredicateEval,
+	})
+
+	report := diagnosis.Explain(input)
+	return &report, nil
+}
+
+// InspectionRequest defines the parameters for a deep-dive analysis of a specific violation.
+type InspectionRequest struct {
+	AuditReq     AuditRequest
+	TargetPolicy kernel.ControlID
+	TargetAsset  asset.ID
+	TraceBuilder evaluation.FindingTraceBuilder
+	IDGen        ports.IdentityGenerator
+}
+
+// InspectViolation generates a detailed root-cause analysis for a single finding.
+func (e *DiagnosticEngine) InspectViolation(ctx context.Context, req InspectionRequest) (*evaluation.FindingDetail, error) {
+	data, err := e.loadAuditData(ctx, req.AuditReq.PolicySource, req.AuditReq.InventorySource)
+	if err != nil {
+		return nil, fmt.Errorf("load audit context: %w", err)
+	}
+
+	assessment, err := e.resolveAssessment(req.AuditReq, data)
+	if err != nil {
+		return nil, fmt.Errorf("resolve compliance assessment: %w", err)
+	}
+
+	return BuildFindingDetail(FindingDetailInput{
+		ControlID:    req.TargetPolicy,
+		AssetID:      req.TargetAsset,
+		Controls:     data.policies,
+		Snapshots:    data.inventory,
+		Result:       assessment,
+		TraceBuilder: req.TraceBuilder,
+		IDGen:        req.IDGen,
+	})
+}
+
+func (e *DiagnosticEngine) loadAuditData(
+	ctx context.Context,
+	policySrc string,
+	inventorySrc string,
+) (auditContext, error) {
+	policies, err := appcontracts.LoadControls(ctx, e.PolicyRepo, policySrc)
+	if err != nil {
+		return auditContext{}, fmt.Errorf("fetch policies: %w", err)
+	}
+
+	invResult, err := appcontracts.LoadSnapshots(ctx, e.InventoryRepo, inventorySrc)
+	if err != nil {
+		return auditContext{}, fmt.Errorf("fetch inventory: %w", err)
+	}
+
+	return auditContext{
+		policies:  policies,
+		inventory: invResult.Snapshots,
+	}, nil
+}
+
+func (e *DiagnosticEngine) resolveAssessment(
+	req AuditRequest,
+	data auditContext,
+) (*evaluation.ComplianceReport, error) {
+	if req.BaselineReport != nil {
+		return req.BaselineReport, nil
+	}
+
+	assessment, err := appeval.Evaluate(appeval.EvaluateInput{
+		Controls:          data.policies,
+		Snapshots:         data.inventory,
+		MaxUnsafeDuration: req.SLAThreshold,
+		Clock:             req.Clock,
+		PredicateParser:   req.PredicateParser,
+		CELEvaluator:      req.PredicateEval,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &assessment, nil
+}
+
+func mapToDiagnosticFindings(findings []evaluation.Finding) []diagnosis.DiagnosticFinding {
+	out := make([]diagnosis.DiagnosticFinding, len(findings))
+	for i, f := range findings {
+		out[i] = diagnosis.DiagnosticFinding{
+			AssetID:             f.AssetID,
+			ControlID:           f.ControlID,
+			FirstUnsafeAt:       f.Evidence.FirstUnsafeAt,
+			LastSeenUnsafeAt:    f.Evidence.LastSeenUnsafeAt,
+			UnsafeDurationHours: f.Evidence.UnsafeDurationHours,
+			ThresholdHours:      f.Evidence.ThresholdHours,
+		}
+	}
+	return out
+}

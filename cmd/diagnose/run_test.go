@@ -115,24 +115,24 @@ func TestRunnerBuildAppConfig(t *testing.T) {
 		PreviousOutput:  "-",
 		Stdin:           fakeStdin,
 	}
-	appCfg, err := runner.buildAppConfig(cfg, 24*time.Hour)
+	appCfg, err := runner.buildAuditRequest(cfg, 24*time.Hour)
 	if err != nil {
-		t.Fatalf("buildAppConfig(stdin) error = %v", err)
+		t.Fatalf("buildAuditRequest(stdin) error = %v", err)
 	}
-	if appCfg.PreviousResult == nil {
-		t.Fatal("expected PreviousResult to be set from stdin")
+	if appCfg.BaselineReport == nil {
+		t.Fatal("expected BaselineReport to be set from stdin")
 	}
 
 	cfg = Config{
 		ControlsDir:     "ctl",
 		ObservationsDir: "obs",
 	}
-	appCfg, err = runner.buildAppConfig(cfg, 24*time.Hour)
+	appCfg, err = runner.buildAuditRequest(cfg, 24*time.Hour)
 	if err != nil {
-		t.Fatalf("buildAppConfig(no previous) error = %v", err)
+		t.Fatalf("buildAuditRequest(no previous) error = %v", err)
 	}
-	if appCfg.PreviousResult != nil {
-		t.Fatalf("expected PreviousResult nil, got %#v", appCfg.PreviousResult)
+	if appCfg.BaselineReport != nil {
+		t.Fatalf("expected BaselineReport nil, got %#v", appCfg.BaselineReport)
 	}
 
 	var buf bytes.Buffer

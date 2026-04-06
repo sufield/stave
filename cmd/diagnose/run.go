@@ -85,16 +85,16 @@ func (r *Runner) validate(cfg Config) error {
 }
 
 func (r *Runner) runStandardDiagnosis(ctx context.Context, cfg Config) error {
-	diagnoseRun, err := r.newDiagnoseRun()
+	diagnoseRun, err := r.newDiagnosticEngine()
 	if err != nil {
 		return err
 	}
 
-	baseCfg, err := r.buildAppConfig(cfg, cfg.MaxUnsafeDuration)
+	baseCfg, err := r.buildAuditRequest(cfg, cfg.MaxUnsafeDuration)
 	if err != nil {
 		return err
 	}
-	report, err := diagnoseRun.Execute(ctx, baseCfg)
+	report, err := diagnoseRun.Analyze(ctx, baseCfg)
 	if err != nil {
 		return err
 	}
@@ -118,21 +118,21 @@ func (r *Runner) runStandardDiagnosis(ctx context.Context, cfg Config) error {
 }
 
 func (r *Runner) runDetailMode(ctx context.Context, cfg Config) error {
-	diagnoseRun, err := r.newDiagnoseRun()
+	diagnoseRun, err := r.newDiagnosticEngine()
 	if err != nil {
 		return err
 	}
 
-	baseCfg, err := r.buildAppConfig(cfg, cfg.MaxUnsafeDuration)
+	baseCfg, err := r.buildAuditRequest(cfg, cfg.MaxUnsafeDuration)
 	if err != nil {
 		return err
 	}
-	detail, err := diagnoseRun.ExecuteFindingDetail(ctx, appdiagnose.FindingDetailConfig{
-		DiagnoseConfig: baseCfg,
-		ControlID:      kernel.ControlID(cfg.ControlID),
-		AssetID:        asset.ID(cfg.AssetID),
-		TraceBuilder:   &apptrace.Builder{},
-		IDGen:          crypto.NewHasher(),
+	detail, err := diagnoseRun.InspectViolation(ctx, appdiagnose.InspectionRequest{
+		AuditReq:     baseCfg,
+		TargetPolicy: kernel.ControlID(cfg.ControlID),
+		TargetAsset:  asset.ID(cfg.AssetID),
+		TraceBuilder: &apptrace.Builder{},
+		IDGen:        crypto.NewHasher(),
 	})
 
 	if err != nil {
@@ -149,17 +149,17 @@ func (r *Runner) runDetailMode(ctx context.Context, cfg Config) error {
 	return nil
 }
 
-func (r *Runner) newDiagnoseRun() (*appdiagnose.Run, error) {
-	return appdiagnose.NewRun(r.ObsRepo, r.CtlRepo)
+func (r *Runner) newDiagnosticEngine() (*appdiagnose.DiagnosticEngine, error) {
+	return appdiagnose.NewEngine(r.ObsRepo, r.CtlRepo)
 }
 
-func (r *Runner) buildAppConfig(cfg Config, maxDuration time.Duration) (appdiagnose.Config, error) {
-	appCfg := appdiagnose.Config{
-		ControlsDir:       cfg.ControlsDir,
-		ObservationsDir:   cfg.ObservationsDir,
-		MaxUnsafeDuration: maxDuration,
-		Clock:             r.Clock,
-		PredicateParser:   ctlyaml.ParsePredicate,
+func (r *Runner) buildAuditRequest(cfg Config, maxDuration time.Duration) (appdiagnose.AuditRequest, error) {
+	req := appdiagnose.AuditRequest{
+		PolicySource:    cfg.ControlsDir,
+		InventorySource: cfg.ObservationsDir,
+		SLAThreshold:    maxDuration,
+		Clock:           r.Clock,
+		PredicateParser: ctlyaml.ParsePredicate,
 	}
 
 	loader := &evaljson.Loader{}
@@ -167,17 +167,17 @@ func (r *Runner) buildAppConfig(cfg Config, maxDuration time.Duration) (appdiagn
 	case cfg.PreviousOutput == "-":
 		result, err := loader.LoadFromReader(cfg.Stdin, "stdin")
 		if err != nil {
-			return appdiagnose.Config{}, fmt.Errorf("load evaluation from stdin: %w", err)
+			return appdiagnose.AuditRequest{}, fmt.Errorf("load evaluation from stdin: %w", err)
 		}
-		appCfg.PreviousResult = result
+		req.BaselineReport = result
 	case cfg.PreviousOutput != "":
 		result, err := loader.LoadFromFile(cfg.PreviousOutput)
 		if err != nil {
-			return appdiagnose.Config{}, fmt.Errorf("load evaluation from %q: %w", cfg.PreviousOutput, err)
+			return appdiagnose.AuditRequest{}, fmt.Errorf("load evaluation from %q: %w", cfg.PreviousOutput, err)
 		}
-		appCfg.PreviousResult = result
+		req.BaselineReport = result
 	}
-	return appCfg, nil
+	return req, nil
 }
 
 func (r *Runner) newPresenter(cfg Config) *Presenter {
