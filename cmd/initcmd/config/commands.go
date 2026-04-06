@@ -89,7 +89,7 @@ func configKeyCompletions() []string {
 		}
 	}
 
-	return appconfig.BuildKeyCompletions(tiers)
+	return appconfig.BuildSettingCompletions(tiers)
 }
 
 func newGetCmd(rt *ui.Runtime, format *string) *cobra.Command {

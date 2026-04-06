@@ -70,7 +70,7 @@ func (r *Runner) Get(_ context.Context, req GetRequest) error {
 	}
 	eval := appconfig.NewEvaluator(cfg, cfgPath, nil, "")
 
-	parsed, err := appconfig.ParseConfigKey(key)
+	parsed, err := appconfig.IdentifySetting(key)
 	if err != nil {
 		return err
 	}
