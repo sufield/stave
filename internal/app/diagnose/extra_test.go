@@ -69,26 +69,26 @@ func (stubCtlRepo) LoadControls(_ context.Context, _ string) ([]policy.ControlDe
 }
 
 func TestNewRun_NilObsRepo(t *testing.T) {
-	_, err := NewRun(nil, stubCtlRepo{})
+	_, err := NewEngine(nil, stubCtlRepo{})
 	if err == nil {
 		t.Fatal("expected error for nil obs repo")
 	}
 }
 
 func TestNewRun_NilCtlRepo(t *testing.T) {
-	_, err := NewRun(stubObsRepo{}, nil)
+	_, err := NewEngine(stubObsRepo{}, nil)
 	if err == nil {
 		t.Fatal("expected error for nil ctl repo")
 	}
 }
 
 func TestNewRun_ValidRepos(t *testing.T) {
-	r, err := NewRun(stubObsRepo{}, stubCtlRepo{})
+	r, err := NewEngine(stubObsRepo{}, stubCtlRepo{})
 	if err != nil {
-		t.Fatalf("NewRun() error = %v", err)
+		t.Fatalf("NewEngine() error = %v", err)
 	}
 	if r == nil {
-		t.Fatal("NewRun() returned nil")
+		t.Fatal("NewEngine() returned nil")
 	}
 }
 
@@ -109,7 +109,7 @@ func TestToDiagnosticFindings(t *testing.T) {
 			AssetID:   "res-2",
 		},
 	}
-	result := toDiagnosticFindings(input)
+	result := mapToDiagnosticFindings(input)
 	if len(result) != 2 {
 		t.Fatalf("len = %d, want 2", len(result))
 	}
