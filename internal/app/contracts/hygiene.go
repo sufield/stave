@@ -8,72 +8,75 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation/risk"
 )
 
-// ReportRequest bundles all data required to generate a hygiene report.
-type ReportRequest struct {
-	Context   ReportContext
-	Snapshots SnapshotStats
-	Risks     RiskStats
-	Trends    []evaluation.TrendMetric
+// HygieneAssessment bundles the metrics required to evaluate the health of the
+// security audit trail and the urgency of pending remediations.
+type HygieneAssessment struct {
+	AuditContext    AuditContext
+	Evidence        EvidenceInventory
+	SLAPosture      SLAPosture
+	ExposureHistory []evaluation.TrendMetric
 }
 
-// ReportContext provides the temporal metadata for the report.
-type ReportContext struct {
-	Now         time.Time
-	PreviousNow time.Time
-	Lookback    time.Duration
-	DueSoon     time.Duration
+// AuditContext provides the temporal boundaries for the hygiene report.
+type AuditContext struct {
+	Now             time.Time
+	PreviousAuditAt time.Time
+	LookbackWindow  time.Duration
+	SLAWarning      time.Duration
 }
 
-// SnapshotStats summarizes snapshot inventory and retention posture.
-type SnapshotStats struct {
-	Active            int           `json:"active"`
-	Archived          int           `json:"archived"`
-	PruneCandidates   int           `json:"prune_candidates"`
-	RetentionTier     string        `json:"retention_tier"`
-	RetentionDuration time.Duration `json:"retention_duration"`
-	KeepMin           int           `json:"keep_min"`
+// EvidenceInventory summarizes the state of collected cloud resource snapshots.
+type EvidenceInventory struct {
+	CurrentInventory   int           `json:"current_inventory"`
+	HistoricalEvidence int           `json:"historical_evidence"`
+	PurgeCandidates    int           `json:"purge_candidates"`
+	ComplianceTier     string        `json:"compliance_tier"`
+	RetentionPolicy    time.Duration `json:"retention_policy"`
+	MinEvidenceCount   int           `json:"min_evidence_count"`
 }
 
-// Total returns Active + Archived.
-func (s SnapshotStats) Total() int { return s.Active + s.Archived }
+// TotalEvidence returns the sum of current and historical records.
+func (s EvidenceInventory) TotalEvidence() int { return s.CurrentInventory + s.HistoricalEvidence }
 
-// MarshalJSON includes the computed Total field in JSON output.
-func (s SnapshotStats) MarshalJSON() ([]byte, error) {
-	type raw SnapshotStats
+// MarshalJSON includes the computed total in the JSON output.
+func (s EvidenceInventory) MarshalJSON() ([]byte, error) {
+	type raw EvidenceInventory
 	return json.Marshal(struct {
 		raw
-		Total int `json:"total"`
-	}{raw: raw(s), Total: s.Total()})
+		TotalEvidence int `json:"total_evidence"`
+	}{raw: raw(s), TotalEvidence: s.TotalEvidence()})
 }
 
-// RiskStats captures the current and upcoming risk surface.
-type RiskStats struct {
-	CurrentViolations int `json:"current_violations"`
-	Overdue           int `json:"overdue"`
-	DueNow            int `json:"due_now"`
-	DueSoon           int `json:"due_soon"`
-	Later             int `json:"later"`
+// SLAPosture captures the current remediation health against defined thresholds.
+type SLAPosture struct {
+	ActiveFindings  int `json:"active_findings"`
+	SLABreaches     int `json:"sla_breaches"`
+	BreachingNow    int `json:"breaching_now"`
+	NearBreach      int `json:"near_breach"`
+	CompliantWindow int `json:"compliant_window"`
 }
 
-// UpcomingTotal returns the sum of all urgency buckets.
-func (s RiskStats) UpcomingTotal() int { return s.Overdue + s.DueNow + s.DueSoon + s.Later }
+// PendingRemediations returns the sum of all findings requiring action.
+func (s SLAPosture) PendingRemediations() int {
+	return s.SLABreaches + s.BreachingNow + s.NearBreach + s.CompliantWindow
+}
 
-// MarshalJSON includes the computed UpcomingTotal field in JSON output.
-func (s RiskStats) MarshalJSON() ([]byte, error) {
-	type raw RiskStats
+// MarshalJSON includes the aggregate pending count.
+func (s SLAPosture) MarshalJSON() ([]byte, error) {
+	type raw SLAPosture
 	return json.Marshal(struct {
 		raw
-		UpcomingTotal int `json:"upcoming_total"`
-	}{raw: raw(s), UpcomingTotal: s.UpcomingTotal()})
+		PendingRemediations int `json:"pending_remediations"`
+	}{raw: raw(s), PendingRemediations: s.PendingRemediations()})
 }
 
-// NewRiskStats creates RiskStats from current violations and a risk summary.
-func NewRiskStats(violations int, summary risk.ThresholdSummary) RiskStats {
-	return RiskStats{
-		CurrentViolations: violations,
-		Overdue:           summary.Overdue,
-		DueNow:            summary.DueNow,
-		DueSoon:           summary.DueSoon,
-		Later:             summary.Later,
+// NewSLAPosture maps risk threshold summaries into the SLA compliance domain.
+func NewSLAPosture(activeFindings int, summary risk.ThresholdSummary) SLAPosture {
+	return SLAPosture{
+		ActiveFindings:  activeFindings,
+		SLABreaches:     summary.Overdue,
+		BreachingNow:    summary.DueNow,
+		NearBreach:      summary.DueSoon,
+		CompliantWindow: summary.Later,
 	}
 }

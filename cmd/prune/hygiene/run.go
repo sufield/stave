@@ -97,16 +97,16 @@ func (r *runner) Run(ctx context.Context, cfg config) error {
 	snapshotStats := buildSnapshotStats(cfg, loaded.Snapshots, archiveSnapshots, files)
 	currentRisk, trend := computeRiskTrend(cfg, previousNow, loaded.Controls, loaded.Snapshots)
 
-	reportReq := appcontracts.ReportRequest{
-		Context: appcontracts.ReportContext{
-			Now:         cfg.Now,
-			PreviousNow: previousNow,
-			Lookback:    cfg.Lookback,
-			DueSoon:     cfg.DueSoon,
+	reportReq := appcontracts.HygieneAssessment{
+		AuditContext: appcontracts.AuditContext{
+			Now:             cfg.Now,
+			PreviousAuditAt: previousNow,
+			LookbackWindow:  cfg.Lookback,
+			SLAWarning:      cfg.DueSoon,
 		},
-		Snapshots: snapshotStats,
-		Risks:     currentRisk,
-		Trends:    trend,
+		Evidence:        snapshotStats,
+		SLAPosture:      currentRisk,
+		ExposureHistory: trend,
 	}
 	jsonOut := hygieneapp.Output{
 		GeneratedAt:      cfg.Now,
@@ -119,9 +119,9 @@ func (r *runner) Run(ctx context.Context, cfg config) error {
 			Statuses:   cfg.Filter.Statuses,
 			DueWithin:  cfg.Filter.DueWithinRaw,
 		},
-		SnapshotStats: snapshotStats,
-		RiskStats:     currentRisk,
-		Trend:         trend,
+		EvidenceInventory: snapshotStats,
+		SLAPosture:        currentRisk,
+		Trend:             trend,
 	}
 
 	if cfg.Quiet {
@@ -137,19 +137,19 @@ func buildSnapshotStats(
 	activeSnapshots []asset.Snapshot,
 	archiveSnapshots []asset.Snapshot,
 	files []appcontracts.SnapshotFile,
-) appcontracts.SnapshotStats {
+) appcontracts.EvidenceInventory {
 	pruneCandidates := pruneretention.PlanPrune(files, retention.Criteria{
 		Now:       cfg.Now,
 		OlderThan: cfg.OlderThan,
 		KeepMin:   cfg.KeepMin,
 	})
-	return appcontracts.SnapshotStats{
-		Active:            len(activeSnapshots),
-		Archived:          len(archiveSnapshots),
-		PruneCandidates:   len(pruneCandidates),
-		RetentionTier:     cfg.RetentionTier,
-		RetentionDuration: cfg.OlderThan,
-		KeepMin:           cfg.KeepMin,
+	return appcontracts.EvidenceInventory{
+		CurrentInventory:   len(activeSnapshots),
+		HistoricalEvidence: len(archiveSnapshots),
+		PurgeCandidates:    len(pruneCandidates),
+		ComplianceTier:     cfg.RetentionTier,
+		RetentionPolicy:    cfg.OlderThan,
+		MinEvidenceCount:   cfg.KeepMin,
 	}
 }
 
@@ -158,7 +158,7 @@ func computeRiskTrend(
 	previousNow time.Time,
 	controls []policy.ControlDefinition,
 	activeSnapshots []asset.Snapshot,
-) (appcontracts.RiskStats, []evaluation.TrendMetric) {
+) (appcontracts.SLAPosture, []evaluation.TrendMetric) {
 	riskOpts := buildRiskOptions(cfg)
 
 	svc := hygieneapp.NewService(ports.FixedClock(cfg.Now))

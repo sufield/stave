@@ -56,7 +56,7 @@ func filterSnapshotsBefore(snapshots []asset.Snapshot, cutoff time.Time) []asset
 }
 
 // writeHygieneOutput dispatches the report to the correct presenter based on format.
-func writeHygieneOutput(format appcontracts.OutputFormat, report appcontracts.ReportRequest, jsonOut hygieneapp.Output, w io.Writer) error {
+func writeHygieneOutput(format appcontracts.OutputFormat, report appcontracts.HygieneAssessment, jsonOut hygieneapp.Output, w io.Writer) error {
 	if format.IsJSON() {
 		if err := jsonutil.WriteIndented(w, jsonOut); err != nil {
 			return fmt.Errorf("writing hygiene JSON: %w", err)

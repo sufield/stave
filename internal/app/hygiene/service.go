@@ -46,7 +46,7 @@ func (s *Service) ComputeRisk(
 	controls []policy.ControlDefinition,
 	snapshots []asset.Snapshot,
 	opts RiskOptions,
-) appcontracts.RiskStats {
+) appcontracts.SLAPosture {
 	violations := 0
 	if len(controls) > 0 && len(snapshots) > 0 {
 		result, err := appeval.Evaluate(appeval.EvaluateInput{
@@ -59,13 +59,13 @@ func (s *Service) ComputeRisk(
 			CELEvaluator:      opts.CELEvaluator,
 		})
 		if err != nil {
-			return appcontracts.RiskStats{}
+			return appcontracts.SLAPosture{}
 		}
 		violations = len(result.Findings)
 	}
 	summary := computeUpcomingSummary(controls, snapshots, opts, s.Clock.Now())
 
-	return appcontracts.NewRiskStats(violations, summary)
+	return appcontracts.NewSLAPosture(violations, summary)
 }
 
 func computeUpcomingSummary(
