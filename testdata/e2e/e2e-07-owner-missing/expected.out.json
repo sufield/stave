@@ -21,7 +21,7 @@
     {
       "control_id": "CTL.EXP.OWNERSHIP.001",
       "control_name": "Public Exposure Requires Owner",
-      "reason": "type not evaluatable: ownership_required"
+      "reason": "control type cannot be evaluated: ownership_required"
     }
   ],
   "summary": {

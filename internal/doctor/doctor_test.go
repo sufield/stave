@@ -11,13 +11,13 @@ import (
 )
 
 func TestRun_UsesConfiguredChecksAndHasFail(t *testing.T) {
-	reg := NewCheckSuite(
+	reg := NewSuite(
 		func(*SystemEnvironment) Diagnostic { return Diagnostic{Name: "ok", Status: outcome.Pass} },
 		func(*SystemEnvironment) Diagnostic { return Diagnostic{} }, // skipped
 		func(*SystemEnvironment) Diagnostic { return Diagnostic{Name: "bad", Status: outcome.Fail} },
 	)
 
-	checks, ok := reg.Run(nil)
+	checks, ok := reg.Execute(nil)
 	if ok {
 		t.Fatal("expected success=false when FAIL present")
 	}
@@ -27,7 +27,7 @@ func TestRun_UsesConfiguredChecksAndHasFail(t *testing.T) {
 }
 
 func TestWithDefaults(t *testing.T) {
-	ctx := NewContext()
+	ctx := NewEnvironment()
 	if ctx.PathLookupFn == nil || ctx.EnvVarFn == nil {
 		t.Fatal("expected default function pointers")
 	}

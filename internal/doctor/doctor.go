@@ -1,9 +1,9 @@
 package doctor
 
-// Run executes the standard suite of diagnostic checks.
-// It returns a slice of Diagnostic results and true if all checks passed (no FAIL status).
+// Run executes the standard suite of diagnostic probes.
+// It returns a slice of Diagnostic results and true if all probes passed (no FAIL status).
 func Run(ctx *SystemEnvironment) ([]Diagnostic, bool) {
-	return NewCheckSuite(StandardChecks()...).Run(ctx)
+	return NewSuite(StandardChecks()...).Execute(ctx)
 }
 
 // StandardChecks returns the default list of diagnostic functions.

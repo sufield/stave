@@ -33,8 +33,8 @@ func TestCheck_String(t *testing.T) {
 }
 
 func TestRegistry_Run_NilRegistry(t *testing.T) {
-	var r *CheckSuite
-	checks, ok := r.Run(nil)
+	var r *DiagnosticSuite
+	checks, ok := r.Execute(nil)
 	if !ok {
 		t.Error("nil registry should return success=true")
 	}
@@ -44,8 +44,8 @@ func TestRegistry_Run_NilRegistry(t *testing.T) {
 }
 
 func TestRegistry_Run_EmptyRegistry(t *testing.T) {
-	r := NewCheckSuite()
-	checks, ok := r.Run(nil)
+	r := NewSuite()
+	checks, ok := r.Execute(nil)
 	if !ok {
 		t.Error("empty registry should return success=true")
 	}
@@ -55,13 +55,13 @@ func TestRegistry_Run_EmptyRegistry(t *testing.T) {
 }
 
 func TestRegistry_Run_AllPass(t *testing.T) {
-	r := NewCheckSuite(
+	r := NewSuite(
 		func(*SystemEnvironment) Diagnostic { return Diagnostic{Name: "a", Status: outcome.Pass, Message: "ok"} },
 		func(*SystemEnvironment) Diagnostic {
 			return Diagnostic{Name: "b", Status: outcome.Warn, Message: "warning"}
 		},
 	)
-	checks, ok := r.Run(nil)
+	checks, ok := r.Execute(nil)
 	if !ok {
 		t.Error("no FAIL checks should return success=true")
 	}
@@ -71,11 +71,11 @@ func TestRegistry_Run_AllPass(t *testing.T) {
 }
 
 func TestRegistry_Run_SkipsEmptyName(t *testing.T) {
-	r := NewCheckSuite(
+	r := NewSuite(
 		func(*SystemEnvironment) Diagnostic { return Diagnostic{} }, // empty name, should be skipped
 		func(*SystemEnvironment) Diagnostic { return Diagnostic{Name: "a", Status: outcome.Pass} },
 	)
-	checks, _ := r.Run(nil)
+	checks, _ := r.Execute(nil)
 	if len(checks) != 1 {
 		t.Errorf("expected 1 check (skipping empty), got %d", len(checks))
 	}
