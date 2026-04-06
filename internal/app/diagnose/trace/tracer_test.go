@@ -39,16 +39,16 @@ func testSnapshot() *asset.Snapshot {
 	}
 }
 
-func TestRunnerRun_Text(t *testing.T) {
-	runner := &Runner{}
-	result, err := runner.Run(Config{
-		Control:         testControl(),
-		Snapshot:        testSnapshot(),
-		AssetID:         "aws:s3:::test-bucket",
-		ObservationPath: "test.json",
+func TestPolicyTracer_Trace_Text(t *testing.T) {
+	tracer := &PolicyTracer{}
+	result, err := tracer.Trace(TraceRequest{
+		Control:    testControl(),
+		Snapshot:   testSnapshot(),
+		TargetID:   "aws:s3:::test-bucket",
+		SourcePath: "test.json",
 	})
 	if err != nil {
-		t.Fatalf("Run error: %v", err)
+		t.Fatalf("Trace error: %v", err)
 	}
 	var buf bytes.Buffer
 	if err := result.RenderText(&buf); err != nil {
@@ -59,16 +59,16 @@ func TestRunnerRun_Text(t *testing.T) {
 	}
 }
 
-func TestRunnerRun_JSON(t *testing.T) {
-	runner := &Runner{}
-	result, err := runner.Run(Config{
-		Control:         testControl(),
-		Snapshot:        testSnapshot(),
-		AssetID:         "aws:s3:::test-bucket",
-		ObservationPath: "test.json",
+func TestPolicyTracer_Trace_JSON(t *testing.T) {
+	tracer := &PolicyTracer{}
+	result, err := tracer.Trace(TraceRequest{
+		Control:    testControl(),
+		Snapshot:   testSnapshot(),
+		TargetID:   "aws:s3:::test-bucket",
+		SourcePath: "test.json",
 	})
 	if err != nil {
-		t.Fatalf("Run error: %v", err)
+		t.Fatalf("Trace error: %v", err)
 	}
 	var buf bytes.Buffer
 	if err := result.RenderJSON(&buf); err != nil {
@@ -79,38 +79,38 @@ func TestRunnerRun_JSON(t *testing.T) {
 	}
 }
 
-func TestRunnerRun_ReturnsResult(t *testing.T) {
-	runner := &Runner{}
-	result, err := runner.Run(Config{
-		Control:         testControl(),
-		Snapshot:        testSnapshot(),
-		AssetID:         "aws:s3:::test-bucket",
-		ObservationPath: "test.json",
+func TestPolicyTracer_Trace_ReturnsResult(t *testing.T) {
+	tracer := &PolicyTracer{}
+	result, err := tracer.Trace(TraceRequest{
+		Control:    testControl(),
+		Snapshot:   testSnapshot(),
+		TargetID:   "aws:s3:::test-bucket",
+		SourcePath: "test.json",
 	})
 	if err != nil {
-		t.Fatalf("Run error: %v", err)
+		t.Fatalf("Trace error: %v", err)
 	}
 	if result == nil {
 		t.Fatal("expected non-nil result")
 	}
 }
 
-func TestFindAsset_Found(t *testing.T) {
+func TestLocateResource_Found(t *testing.T) {
 	snap := testSnapshot()
-	a, err := FindAsset(snap, "aws:s3:::test-bucket", "test.json")
+	a, err := LocateResource(snap, "aws:s3:::test-bucket", "test.json")
 	if err != nil {
-		t.Fatalf("FindAsset error: %v", err)
+		t.Fatalf("LocateResource error: %v", err)
 	}
 	if a.ID != "aws:s3:::test-bucket" {
 		t.Fatalf("expected test-bucket, got %s", a.ID)
 	}
 }
 
-func TestFindAsset_NotFound(t *testing.T) {
+func TestLocateResource_NotFound(t *testing.T) {
 	snap := testSnapshot()
-	_, err := FindAsset(snap, "nonexistent", "test.json")
+	_, err := LocateResource(snap, "nonexistent", "test.json")
 	if err == nil {
-		t.Fatal("expected error for missing asset")
+		t.Fatal("expected error for missing resource")
 	}
 	if !strings.Contains(err.Error(), "not found") {
 		t.Fatalf("expected 'not found' in error, got: %v", err)
