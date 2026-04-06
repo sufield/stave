@@ -55,11 +55,11 @@ func TestComputeRisk_WithViolations(t *testing.T) {
 		StaveVersion:            "test",
 		CELEvaluator:            mustPredicateEval(),
 	})
-	if stats.CurrentViolations == 0 {
-		t.Fatalf("expected violations in risk stats, got %+v", stats)
+	if stats.ActiveFindings == 0 {
+		t.Fatalf("expected violations in SLA posture, got %+v", stats)
 	}
-	if stats.UpcomingTotal() == 0 {
-		t.Fatalf("expected upcoming metrics in risk stats, got %+v", stats)
+	if stats.PendingRemediations() == 0 {
+		t.Fatalf("expected pending remediations in SLA posture, got %+v", stats)
 	}
 }
 
@@ -69,8 +69,8 @@ func TestComputeRisk_EmptyInput(t *testing.T) {
 		GlobalMaxUnsafeDuration: 24 * time.Hour,
 		DueSoonThreshold:        time.Hour,
 	})
-	if stats != (appcontracts.RiskStats{}) {
-		t.Fatalf("empty risk expected, got %+v", stats)
+	if stats != (appcontracts.SLAPosture{}) {
+		t.Fatalf("empty SLA posture expected, got %+v", stats)
 	}
 }
 

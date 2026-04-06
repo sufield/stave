@@ -17,16 +17,16 @@ func TestWriteHygieneReport(t *testing.T) {
 		{Name: "Upcoming overdue", Current: 2, Previous: 2},
 	}
 
-	req := appcontracts.ReportRequest{
-		Context: appcontracts.ReportContext{
-			Now:         now,
-			PreviousNow: previous,
-			Lookback:    7 * 24 * time.Hour,
-			DueSoon:     24 * time.Hour,
+	req := appcontracts.HygieneAssessment{
+		AuditContext: appcontracts.AuditContext{
+			Now:             now,
+			PreviousAuditAt: previous,
+			LookbackWindow:  7 * 24 * time.Hour,
+			SLAWarning:      24 * time.Hour,
 		},
-		Snapshots: appcontracts.SnapshotStats{Active: 3, Archived: 1, PruneCandidates: 0, RetentionTier: "critical", RetentionDuration: 30 * 24 * time.Hour, KeepMin: 2},
-		Risks:     appcontracts.RiskStats{CurrentViolations: 10, Overdue: 2, DueNow: 0, DueSoon: 1, Later: 0},
-		Trends:    trends,
+		Evidence:        appcontracts.EvidenceInventory{CurrentInventory: 3, HistoricalEvidence: 1, PurgeCandidates: 0, ComplianceTier: "critical", RetentionPolicy: 30 * 24 * time.Hour, MinEvidenceCount: 2},
+		SLAPosture:      appcontracts.SLAPosture{ActiveFindings: 10, SLABreaches: 2, BreachingNow: 0, NearBreach: 1, CompliantWindow: 0},
+		ExposureHistory: trends,
 	}
 
 	var b strings.Builder

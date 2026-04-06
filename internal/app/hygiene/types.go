@@ -19,12 +19,12 @@ type Filters struct {
 
 // Output is the structured representation of a hygiene report.
 type Output struct {
-	GeneratedAt      time.Time                  `json:"generated_at"`
-	LookbackStart    time.Time                  `json:"lookback_start"`
-	LookbackDuration string                     `json:"lookback_duration"`
-	DueSoonThreshold string                     `json:"due_soon_threshold"`
-	Filters          Filters                    `json:"filters"`
-	SnapshotStats    appcontracts.SnapshotStats `json:"snapshot_stats"`
-	RiskStats        appcontracts.RiskStats     `json:"risk_stats"`
-	Trend            []evaluation.TrendMetric   `json:"trend"`
+	GeneratedAt       time.Time                      `json:"generated_at"`
+	LookbackStart     time.Time                      `json:"lookback_start"`
+	LookbackDuration  string                         `json:"lookback_duration"`
+	DueSoonThreshold  string                         `json:"due_soon_threshold"`
+	Filters           Filters                        `json:"filters"`
+	EvidenceInventory appcontracts.EvidenceInventory `json:"evidence_inventory"`
+	SLAPosture        appcontracts.SLAPosture        `json:"sla_posture"`
+	Trend             []evaluation.TrendMetric       `json:"trend"`
 }

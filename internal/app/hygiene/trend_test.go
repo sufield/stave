@@ -7,19 +7,19 @@ import (
 )
 
 func TestCalculateTrend(t *testing.T) {
-	current := appcontracts.RiskStats{
-		CurrentViolations: 4,
-		Overdue:           1,
-		DueNow:            1,
-		DueSoon:           2,
-		Later:             0,
+	current := appcontracts.SLAPosture{
+		ActiveFindings:  4,
+		SLABreaches:     1,
+		BreachingNow:    1,
+		NearBreach:      2,
+		CompliantWindow: 0,
 	}
-	previous := appcontracts.RiskStats{
-		CurrentViolations: 6,
-		Overdue:           2,
-		DueNow:            0,
-		DueSoon:           1,
-		Later:             1,
+	previous := appcontracts.SLAPosture{
+		ActiveFindings:  6,
+		SLABreaches:     2,
+		BreachingNow:    0,
+		NearBreach:      1,
+		CompliantWindow: 1,
 	}
 
 	got := CalculateTrend(current, previous)

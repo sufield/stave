@@ -30,29 +30,29 @@ func TestFilterSnapshotsBefore(t *testing.T) {
 func TestRenderMarkdown(t *testing.T) {
 	now := time.Date(2026, 1, 20, 0, 0, 0, 0, time.UTC)
 	previous := now.Add(-7 * 24 * time.Hour)
-	reportReq := appcontracts.ReportRequest{
-		Context: appcontracts.ReportContext{
-			Now:         now,
-			PreviousNow: previous,
-			Lookback:    7 * 24 * time.Hour,
-			DueSoon:     24 * time.Hour,
+	reportReq := appcontracts.HygieneAssessment{
+		AuditContext: appcontracts.AuditContext{
+			Now:             now,
+			PreviousAuditAt: previous,
+			LookbackWindow:  7 * 24 * time.Hour,
+			SLAWarning:      24 * time.Hour,
 		},
-		Snapshots: appcontracts.SnapshotStats{
-			Active:            6,
-			Archived:          2,
-			PruneCandidates:   1,
-			RetentionTier:     "critical",
-			RetentionDuration: 30 * 24 * time.Hour,
-			KeepMin:           2,
+		Evidence: appcontracts.EvidenceInventory{
+			CurrentInventory:   6,
+			HistoricalEvidence: 2,
+			PurgeCandidates:    1,
+			ComplianceTier:     "critical",
+			RetentionPolicy:    30 * 24 * time.Hour,
+			MinEvidenceCount:   2,
 		},
-		Risks: appcontracts.RiskStats{
-			CurrentViolations: 4,
-			Overdue:           1,
-			DueNow:            1,
-			DueSoon:           2,
-			Later:             0,
+		SLAPosture: appcontracts.SLAPosture{
+			ActiveFindings:  4,
+			SLABreaches:     1,
+			BreachingNow:    1,
+			NearBreach:      2,
+			CompliantWindow: 0,
 		},
-		Trends: []evaluation.TrendMetric{
+		ExposureHistory: []evaluation.TrendMetric{
 			{Name: "Current violations", Current: 4, Previous: 6},
 		},
 	}

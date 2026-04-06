@@ -29,15 +29,15 @@ func TestOutputFormat_IsJSON(t *testing.T) {
 	}
 }
 
-func TestSnapshotStats_Total(t *testing.T) {
-	s := SnapshotStats{Active: 3, Archived: 2}
-	if s.Total() != 5 {
-		t.Errorf("Total() = %d, want 5", s.Total())
+func TestEvidenceInventory_TotalEvidence(t *testing.T) {
+	s := EvidenceInventory{CurrentInventory: 3, HistoricalEvidence: 2}
+	if s.TotalEvidence() != 5 {
+		t.Errorf("TotalEvidence() = %d, want 5", s.TotalEvidence())
 	}
 }
 
-func TestSnapshotStats_MarshalJSON(t *testing.T) {
-	s := SnapshotStats{Active: 3, Archived: 2}
+func TestEvidenceInventory_MarshalJSON(t *testing.T) {
+	s := EvidenceInventory{CurrentInventory: 3, HistoricalEvidence: 2}
 	data, err := json.Marshal(s)
 	if err != nil {
 		t.Fatal(err)
@@ -46,20 +46,20 @@ func TestSnapshotStats_MarshalJSON(t *testing.T) {
 	if err := json.Unmarshal(data, &m); err != nil {
 		t.Fatal(err)
 	}
-	if m["total"] != float64(5) {
-		t.Errorf("total = %v", m["total"])
+	if m["total_evidence"] != float64(5) {
+		t.Errorf("total_evidence = %v", m["total_evidence"])
 	}
 }
 
-func TestRiskStats_UpcomingTotal(t *testing.T) {
-	r := RiskStats{Overdue: 1, DueNow: 2, DueSoon: 3, Later: 4}
-	if r.UpcomingTotal() != 10 {
-		t.Errorf("UpcomingTotal() = %d, want 10", r.UpcomingTotal())
+func TestSLAPosture_PendingRemediations(t *testing.T) {
+	r := SLAPosture{SLABreaches: 1, BreachingNow: 2, NearBreach: 3, CompliantWindow: 4}
+	if r.PendingRemediations() != 10 {
+		t.Errorf("PendingRemediations() = %d, want 10", r.PendingRemediations())
 	}
 }
 
-func TestRiskStats_MarshalJSON(t *testing.T) {
-	r := RiskStats{Overdue: 1, DueNow: 2, DueSoon: 3, Later: 4}
+func TestSLAPosture_MarshalJSON(t *testing.T) {
+	r := SLAPosture{SLABreaches: 1, BreachingNow: 2, NearBreach: 3, CompliantWindow: 4}
 	data, err := json.Marshal(r)
 	if err != nil {
 		t.Fatal(err)
@@ -68,8 +68,8 @@ func TestRiskStats_MarshalJSON(t *testing.T) {
 	if err := json.Unmarshal(data, &m); err != nil {
 		t.Fatal(err)
 	}
-	if m["upcoming_total"] != float64(10) {
-		t.Errorf("upcoming_total = %v", m["upcoming_total"])
+	if m["pending_remediations"] != float64(10) {
+		t.Errorf("pending_remediations = %v", m["pending_remediations"])
 	}
 }
 
@@ -128,18 +128,18 @@ func TestLoadSnapshots_Error(t *testing.T) {
 	}
 }
 
-func TestNewRiskStats(t *testing.T) {
+func TestNewSLAPosture(t *testing.T) {
 	summary := risk.ThresholdSummary{
 		Overdue: 1,
 		DueNow:  2,
 		DueSoon: 3,
 		Later:   4,
 	}
-	r := NewRiskStats(5, summary)
-	if r.CurrentViolations != 5 {
-		t.Errorf("CurrentViolations = %d", r.CurrentViolations)
+	r := NewSLAPosture(5, summary)
+	if r.ActiveFindings != 5 {
+		t.Errorf("ActiveFindings = %d", r.ActiveFindings)
 	}
-	if r.Overdue != 1 || r.DueNow != 2 || r.DueSoon != 3 || r.Later != 4 {
-		t.Errorf("risk stats mismatch: %+v", r)
+	if r.SLABreaches != 1 || r.BreachingNow != 2 || r.NearBreach != 3 || r.CompliantWindow != 4 {
+		t.Errorf("SLA posture mismatch: %+v", r)
 	}
 }
