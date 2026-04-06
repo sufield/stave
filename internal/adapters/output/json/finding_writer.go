@@ -19,7 +19,7 @@ import (
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
-	"github.com/sufield/stave/internal/safetyenvelope"
+	"github.com/sufield/stave/internal/core/report"
 )
 
 // FindingWriter marshals findings as JSON.
@@ -42,7 +42,7 @@ func NewFindingWriter(indent bool) *FindingWriter {
 
 // MarshalFindings transforms enriched findings into JSON bytes without performing I/O.
 func (w *FindingWriter) MarshalFindings(enriched appcontracts.EnrichedResult) ([]byte, error) {
-	envelope := output.BuildSafetyEnvelopeFromEnriched(enriched)
+	envelope := output.BuildAssessmentFromEnriched(enriched)
 	if err := validateEvaluationEnvelope(envelope, w.ValidateContract); err != nil {
 		return nil, err
 	}
@@ -58,8 +58,8 @@ func (w *FindingWriter) MarshalFindings(enriched appcontracts.EnrichedResult) ([
 // validateEvaluationEnvelope performs schema and optional contract validation.
 // The validateContract flag is captured at construction time (from env vars)
 // so this function remains pure.
-func validateEvaluationEnvelope(output *safetyenvelope.Evaluation, validateContract bool) error {
-	if err := safetyenvelope.ValidateEvaluation(output); err != nil {
+func validateEvaluationEnvelope(output *report.Assessment, validateContract bool) error {
+	if err := report.ValidateAssessment(output); err != nil {
 		return fmt.Errorf("failed to validate output schema: %w", err)
 	}
 	if validateContract {

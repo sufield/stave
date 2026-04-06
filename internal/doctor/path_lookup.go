@@ -10,7 +10,7 @@ import (
 )
 
 // LookPathInEnv searches for an executable in the system PATH.
-// It is the default implementation for Context.LookPathFn.
+// It is the default implementation for SystemEnvironment.PathLookupFn.
 func LookPathInEnv(file string) (string, error) {
 	return lookPath(file, os.Getenv("PATH"), os.Getenv("PATHEXT"), runtime.GOOS)
 }

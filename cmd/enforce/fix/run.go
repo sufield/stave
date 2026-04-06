@@ -57,6 +57,6 @@ func (r *Runner) Run(ctx context.Context, req Request) error {
 func (r *Runner) newEnvelopeBuilder() *appfix.EnvelopeBuilder {
 	return &appfix.EnvelopeBuilder{
 		Sanitizer:     r.Sanitizer,
-		BuildEnvelope: output.BuildSafetyEnvelopeFromEnriched,
+		BuildEnvelope: output.BuildAssessmentFromEnriched,
 	}
 }

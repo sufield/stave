@@ -13,7 +13,7 @@ import (
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"
-	"github.com/sufield/stave/internal/safetyenvelope"
+	"github.com/sufield/stave/internal/core/report"
 	"github.com/sufield/stave/internal/version"
 )
 
@@ -116,10 +116,10 @@ func (s *Service) Loop(ctx context.Context, req LoopRequest, deps LoopDeps, am *
 	if err != nil {
 		return fmt.Errorf("build after evaluation: %w", err)
 	}
-	if err = safetyenvelope.ValidateEvaluation(beforeEnv); err != nil {
+	if err = report.ValidateAssessment(beforeEnv); err != nil {
 		return fmt.Errorf("before envelope invalid: %w", err)
 	}
-	if err = safetyenvelope.ValidateEvaluation(afterEnv); err != nil {
+	if err = report.ValidateAssessment(afterEnv); err != nil {
 		return fmt.Errorf("after envelope invalid: %w", err)
 	}
 
@@ -185,11 +185,11 @@ func (s *Service) evaluateState(
 }
 
 // BuildReport creates a LoopReport from the verification results.
-func BuildReport(req LoopRequest, _ interface{ Now() time.Time }, v *safetyenvelope.Verification, artifacts LoopArtifacts) LoopReport {
-	pass := v.Summary.Remaining == 0 && v.Summary.Introduced == 0
+func BuildReport(req LoopRequest, _ interface{ Now() time.Time }, v *report.Attestation, artifacts LoopArtifacts) LoopReport {
+	pass := v.Summary.Open == 0 && v.Summary.Regressions == 0
 	reason := "all previously violating resources are now resolved"
 	if !pass {
-		reason = fmt.Sprintf("remaining=%d introduced=%d", v.Summary.Remaining, v.Summary.Introduced)
+		reason = fmt.Sprintf("remaining=%d introduced=%d", v.Summary.Open, v.Summary.Regressions)
 	}
 	return LoopReport{
 		SchemaVersion:     kernel.SchemaFixLoop,
@@ -198,8 +198,8 @@ func BuildReport(req LoopRequest, _ interface{ Now() time.Time }, v *safetyenvel
 		Passed:            pass,
 		Reason:            reason,
 		MaxUnsafeDuration: req.MaxUnsafeDuration.String(),
-		Before:            ObservationSummary{Directory: req.BeforeDir, Snapshots: v.Run.BeforeSnapshots, Violations: v.Summary.BeforeViolations},
-		After:             ObservationSummary{Directory: req.AfterDir, Snapshots: v.Run.AfterSnapshots, Violations: v.Summary.AfterViolations},
+		Before:            ObservationSummary{Directory: req.BeforeDir, Snapshots: v.Run.BeforeSnapshots, Violations: v.Summary.PreviousViolations},
+		After:             ObservationSummary{Directory: req.AfterDir, Snapshots: v.Run.AfterSnapshots, Violations: v.Summary.CurrentViolations},
 		Verification:      v.Summary,
 		Artifacts:         artifacts,
 	}

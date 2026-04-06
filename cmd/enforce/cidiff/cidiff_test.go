@@ -10,13 +10,13 @@ import (
 	artifact "github.com/sufield/stave/internal/adapters/artifacts"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
-	"github.com/sufield/stave/internal/safetyenvelope"
+	"github.com/sufield/stave/internal/core/report"
 )
 
 func writeEvalJSON(t *testing.T, dir, name string, violations []remediation.Finding) string {
 	t.Helper()
-	eval := safetyenvelope.Evaluation{
-		Kind:     safetyenvelope.KindEvaluation,
+	eval := report.Assessment{
+		Kind:     report.KindAssessment,
 		Findings: violations,
 	}
 	data, err := json.MarshalIndent(eval, "", "  ")

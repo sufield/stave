@@ -15,8 +15,8 @@ import (
 	appverify "github.com/sufield/stave/internal/app/verify"
 	"github.com/sufield/stave/internal/cli/ui"
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/report"
 	"github.com/sufield/stave/internal/metadata"
-	"github.com/sufield/stave/internal/safetyenvelope"
 )
 
 // NewCmd builds the verify command.
@@ -87,7 +87,7 @@ Exit Codes:
 					NewObservationRepo: func() (appcontracts.ObservationRepository, error) {
 						return newObsRepo()
 					},
-					WriteVerification: func(w io.Writer, v *safetyenvelope.Verification) error {
+					WriteVerification: func(w io.Writer, v *report.Attestation) error {
 						return outjson.WriteVerification(w, v)
 					},
 					BeginProgress: rt.BeginProgress,

@@ -7,8 +7,8 @@ import (
 
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/evaluation"
+	corereport "github.com/sufield/stave/internal/core/report"
 	"github.com/sufield/stave/internal/platform/fsutil"
-	"github.com/sufield/stave/internal/safetyenvelope"
 )
 
 type reportTemplateMetadata struct {
@@ -26,12 +26,12 @@ type reportSeverityGroup struct {
 }
 
 type reportTemplateData struct {
-	Metadata       reportTemplateMetadata    `json:"metadata"`
-	Summary        reportSummary             `json:"summary"`
-	Findings       []reportFinding           `json:"findings"`
-	SeverityGroups []reportSeverityGroup     `json:"severity_groups"`
-	Remediations   []reportRemediation       `json:"remediations"`
-	RunRaw         safetyenvelope.Evaluation `json:"run_raw"`
+	Metadata       reportTemplateMetadata `json:"metadata"`
+	Summary        reportSummary          `json:"summary"`
+	Findings       []reportFinding        `json:"findings"`
+	SeverityGroups []reportSeverityGroup  `json:"severity_groups"`
+	Remediations   []reportRemediation    `json:"remediations"`
+	RunRaw         corereport.Assessment  `json:"run_raw"`
 }
 
 // RenderTextOptions configures text report rendering.
@@ -45,7 +45,7 @@ type RenderTextOptions struct {
 
 // RenderText writes report text to opts.Writer unless opts.Quiet is true.
 // When TemplatePath is set, it overrides DefaultTemplate.
-func RenderText(eval safetyenvelope.Evaluation, opts RenderTextOptions) error {
+func RenderText(eval corereport.Assessment, opts RenderTextOptions) error {
 	tplText := opts.DefaultTemplate
 	if opts.TemplatePath != "" {
 		b, err := fsutil.ReadFileLimited(opts.TemplatePath)
@@ -70,7 +70,7 @@ func RenderText(eval safetyenvelope.Evaluation, opts RenderTextOptions) error {
 	return nil
 }
 
-func buildReportTemplateData(eval safetyenvelope.Evaluation, toolVersion string) reportTemplateData {
+func buildReportTemplateData(eval corereport.Assessment, toolVersion string) reportTemplateData {
 	vm := buildReportViewModel(eval, toolVersion)
 	meta := extractTemplateMetadata(vm.Run, eval.Extensions)
 	return reportTemplateData{

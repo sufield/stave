@@ -3,19 +3,19 @@ package output
 import (
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
+	"github.com/sufield/stave/internal/core/report"
 	"github.com/sufield/stave/internal/platform/crypto"
-	"github.com/sufield/stave/internal/safetyenvelope"
 )
 
-// BuildSafetyEnvelopeFromEnriched assembles a safety envelope from a
+// BuildAssessmentFromEnriched assembles an assessment from a
 // pipeline-produced EnrichedResult.
-func BuildSafetyEnvelopeFromEnriched(enriched appcontracts.EnrichedResult) *safetyenvelope.Evaluation {
+func BuildAssessmentFromEnriched(enriched appcontracts.EnrichedResult) *report.Assessment {
 	findings := toRemediationFindings(enriched.Findings)
 	if findings == nil {
 		findings = []remediation.Finding{}
 	}
 
-	out := safetyenvelope.NewEvaluation(safetyenvelope.EvaluationRequest{
+	out := report.NewAssessment(report.AssessmentRequest{
 		Run:              enriched.Run,
 		Summary:          enriched.Result.Summary,
 		SecurityState:    enriched.Result.SecurityState,

@@ -11,7 +11,7 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
-	"github.com/sufield/stave/internal/safetyenvelope"
+	corereport "github.com/sufield/stave/internal/core/report"
 )
 
 func TestToReportFinding(t *testing.T) {
@@ -199,7 +199,7 @@ func TestExtractTemplateMetadata_WithGit(t *testing.T) {
 }
 
 func TestRenderJSON_Quiet(t *testing.T) {
-	eval := safetyenvelope.Evaluation{
+	eval := corereport.Assessment{
 		Run: evaluation.RunInfo{
 			Now:               time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 			MaxUnsafeDuration: kernel.Duration(24 * time.Hour),
@@ -213,7 +213,7 @@ func TestRenderJSON_Quiet(t *testing.T) {
 }
 
 func TestRenderJSON_NotQuiet(t *testing.T) {
-	eval := safetyenvelope.Evaluation{
+	eval := corereport.Assessment{
 		Run: evaluation.RunInfo{
 			Now:               time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 			MaxUnsafeDuration: kernel.Duration(24 * time.Hour),

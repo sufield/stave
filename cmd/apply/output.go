@@ -58,7 +58,7 @@ func (r *Reporter) ReportApply(res EvaluateResult, policy evaluation.Enforcement
 }
 
 // ReportPlan prints the readiness report (used by apply --dry-run).
-func (r *Reporter) ReportPlan(report validation.Report) error {
+func (r *Reporter) ReportPlan(report validation.ReadinessAssessment) error {
 	if r.Quiet {
 		return nil
 	}
@@ -67,23 +67,23 @@ func (r *Reporter) ReportPlan(report validation.Report) error {
 	if _, err := fmt.Fprintf(w, "Plan Summary\n------------\n"); err != nil {
 		return err
 	}
-	if _, err := fmt.Fprintf(w, "Ready:        %t\n", report.Ready); err != nil {
+	if _, err := fmt.Fprintf(w, "Ready:        %t\n", report.IsSafe); err != nil {
 		return err
 	}
-	if _, err := fmt.Fprintf(w, "Controls:     %s\n", report.ControlsDir); err != nil {
+	if _, err := fmt.Fprintf(w, "Controls:     %s\n", report.ControlSource); err != nil {
 		return err
 	}
-	if _, err := fmt.Fprintf(w, "Checks: %s\n", report.ObservationsDir); err != nil {
+	if _, err := fmt.Fprintf(w, "Checks: %s\n", report.InventorySource); err != nil {
 		return err
 	}
 	if _, err := fmt.Fprintf(w, "Checked:      %d controls, %d snapshots, %d asset observations\n",
-		report.Summary.ControlsChecked,
-		report.Summary.SnapshotsChecked,
-		report.Summary.AssetObservationsChecked); err != nil {
+		report.Summary.ControlsVerified,
+		report.Summary.StatesVerified,
+		report.Summary.ResourcesAnalyzed); err != nil {
 		return err
 	}
 
-	issues := report.Issues()
+	issues := report.Findings()
 	if len(issues) > 0 {
 		if _, err := fmt.Fprintln(w, "\nIssues:"); err != nil {
 			return err
@@ -101,27 +101,27 @@ func (r *Reporter) ReportPlan(report validation.Report) error {
 }
 
 // readinessNextCommand returns the recommended next CLI command based on readiness status.
-func readinessNextCommand(report validation.Report) string {
-	if report.Ready {
+func readinessNextCommand(report validation.ReadinessAssessment) string {
+	if report.IsSafe {
 		return fmt.Sprintf("stave apply --controls %s --observations %s",
-			report.ControlsDir, report.ObservationsDir)
+			report.ControlSource, report.InventorySource)
 	}
 	return fmt.Sprintf("stave validate --controls %s --observations %s",
-		report.ControlsDir, report.ObservationsDir)
+		report.ControlSource, report.InventorySource)
 }
 
-func printReadinessIssue(w io.Writer, issue validation.Check) error {
+func printReadinessIssue(w io.Writer, issue validation.ValidationFinding) error {
 	if _, err := fmt.Fprintf(w, "  [%s] %s: %s\n", issue.Status.String(), issue.Name, issue.Message); err != nil {
 		return err
 	}
 
-	if fix := strings.TrimSpace(issue.Fix); fix != "" {
+	if fix := strings.TrimSpace(issue.Remediation); fix != "" {
 		if _, err := fmt.Fprintf(w, "    Fix: %s\n", fix); err != nil {
 			return err
 		}
 	}
 
-	if cmd := strings.TrimSpace(issue.Command); cmd != "" {
+	if cmd := strings.TrimSpace(issue.FixCommand); cmd != "" {
 		if _, err := fmt.Fprintf(w, "    Command: %s\n", cmd); err != nil {
 			return err
 		}

@@ -1,17 +1,17 @@
 package dto
 
 import (
-	"github.com/sufield/stave/internal/safetyenvelope"
+	"github.com/sufield/stave/internal/core/report"
 )
 
-// FromEvaluation projects a safetyenvelope.Evaluation into a ResultDTO.
-func FromEvaluation(e *safetyenvelope.Evaluation) ResultDTO {
+// FromEvaluation projects a report.Assessment into a ResultDTO.
+func FromEvaluation(e *report.Assessment) ResultDTO {
 	return ResultDTO{
 		SchemaVersion:     e.SchemaVersion,
 		Kind:              string(e.Kind),
 		Run:               fromRunInfo(e.Run),
 		Summary:           fromSummary(e.Summary),
-		SecurityState:     e.SecurityState,
+		SecurityState:     e.Status,
 		RiskSignals:       fromAtRiskItems(e.RiskSignals),
 		Findings:          fromFindings(e.Findings),
 		ExceptedFindings:  fromExceptedFindings(e.ExceptedFindings),

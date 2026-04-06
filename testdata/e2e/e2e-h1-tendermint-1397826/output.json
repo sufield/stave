@@ -1,11 +1,11 @@
 {
   "schema_version": "out.v0.1",
-  "kind": "evaluation",
+  "kind": "ASSESSMENT",
   "run": {
     "tool_version": "edge",
     "offline": true,
     "now": "2021-11-23T00:00:00Z",
-    "max_unsafe": "7d",
+    "sla_threshold": "7d",
     "snapshots": 2,
     "input_hashes": {
       "files": {
@@ -21,7 +21,7 @@
     "exposed_resources": 1,
     "violations": 1
   },
-  "security_state": "NON_COMPLIANT",
+  "status": "NON_COMPLIANT",
   "risk_signals": [
     {
       "control_id": "CTL.S3.BUCKET.TAKEOVER.001",
@@ -163,7 +163,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "8e5006c64b0662ca2ff28df3224bcc82983af91a",
+      "head_commit": "9b6d84a8ace8aad933781cd25c04ab2d33acd5b8",
       "dirty": false
     }
   }

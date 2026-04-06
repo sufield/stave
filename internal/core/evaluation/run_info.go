@@ -26,7 +26,7 @@ type RunInfo struct {
 	StaveVersion      string          `json:"tool_version"`
 	Offline           bool            `json:"offline"`
 	Now               time.Time       `json:"now"`
-	MaxUnsafeDuration kernel.Duration `json:"max_unsafe"`
+	MaxUnsafeDuration kernel.Duration `json:"sla_threshold"`
 	Snapshots         int             `json:"snapshots"`
 	InputHashes       *InputHashes    `json:"input_hashes,omitempty"`
 	// PackHash is a fingerprint of the exact control set used during the run,

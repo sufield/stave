@@ -23,10 +23,10 @@ func (v *Validator) Verify(m Manifest) error {
 	for name, expected := range m.Files {
 		actual, ok := v.ActualHashes.Files[name]
 		if !ok {
-			return fmt.Errorf("%w: missing required file %s", ErrIntegrityViolation, name)
+			return fmt.Errorf("%w: %s", ErrMissingFile, name)
 		}
 		if actual != expected {
-			return fmt.Errorf("%w: hash mismatch for %s (expected %s, got %s)", ErrIntegrityViolation, name, expected, actual)
+			return fmt.Errorf("%w: %s (expected %s, got %s)", ErrHashMismatch, name, expected, actual)
 		}
 	}
 
@@ -36,13 +36,13 @@ func (v *Validator) Verify(m Manifest) error {
 	if len(v.ActualHashes.Files) != len(m.Files) {
 		for name := range v.ActualHashes.Files {
 			if _, ok := m.Files[name]; !ok {
-				return fmt.Errorf("%w: untrusted file %s found in directory", ErrIntegrityViolation, name)
+				return fmt.Errorf("%w: %s", ErrUntrustedFile, name)
 			}
 		}
 	}
 
 	if v.ActualHashes.Overall != m.Overall {
-		return fmt.Errorf("%w: overall manifest hash mismatch (expected %s, got %s)", ErrIntegrityViolation, m.Overall, v.ActualHashes.Overall)
+		return fmt.Errorf("%w: overall digest mismatch (expected %s, got %s)", ErrHashMismatch, m.Overall, v.ActualHashes.Overall)
 	}
 
 	return nil
@@ -57,7 +57,7 @@ func UnmarshalSigned(data []byte, pubKeyPEM []byte) (Manifest, error) {
 
 	publicKey, err := crypto.ParsePublicKeyPEM(pubKeyPEM)
 	if err != nil {
-		return Manifest{}, fmt.Errorf("parse integrity public key: unsupported key encoding; expected PEM public key: %w", err)
+		return Manifest{}, fmt.Errorf("parse integrity public key: %w", err)
 	}
 
 	verifier, err := crypto.NewVerifier(publicKey)
@@ -65,7 +65,7 @@ func UnmarshalSigned(data []byte, pubKeyPEM []byte) (Manifest, error) {
 		return Manifest{}, fmt.Errorf("create verifier: %w", err)
 	}
 	if err = VerifySignedManifest(signed, verifier); err != nil {
-		return Manifest{}, fmt.Errorf("integrity check failed: %w", err)
+		return Manifest{}, fmt.Errorf("%w: signature verification failed: %v", ErrIntegrityViolation, err)
 	}
 
 	return signed.Manifest, nil

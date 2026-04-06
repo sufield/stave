@@ -1,8 +1,8 @@
 {
   "schema_version": "out.v0.1",
-  "kind": "verification",
+  "kind": "ATTESTATION",
   "run": {
-    "max_unsafe": "168h0m0s",
+    "sla_threshold": "168h0m0s",
     "tool_version": "edge",
     "offline": true,
     "now": "2026-01-11T00:00:00Z",
@@ -10,13 +10,13 @@
     "after_snapshots": 2
   },
   "summary": {
-    "before_violations": 1,
-    "after_violations": 0,
-    "resolved": 1,
-    "remaining": 0,
-    "introduced": 0
+    "previous_violations": 1,
+    "current_violations": 0,
+    "remediated": 1,
+    "open": 0,
+    "regressions": 0
   },
-  "resolved": [
+  "remediated": [
     {
       "control_id": "CTL.S3.PUBLIC.001",
       "control_name": "No Public Read via Bucket Policy",
@@ -24,6 +24,6 @@
       "asset_type": "aws_s3_bucket"
     }
   ],
-  "remaining": [],
-  "introduced": []
+  "open": [],
+  "regressions": []
 }

@@ -49,8 +49,8 @@ func TestCompare_AllResolved(t *testing.T) {
 	if result.Verification == nil {
 		t.Fatal("verification should not be nil")
 	}
-	if result.Verification.Summary.Resolved != 1 {
-		t.Fatalf("resolved = %d, want 1", result.Verification.Summary.Resolved)
+	if result.Verification.Summary.Remediated != 1 {
+		t.Fatalf("resolved = %d, want 1", result.Verification.Summary.Remediated)
 	}
 }
 
@@ -109,10 +109,10 @@ func TestCompare_WithSanitizer(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Verify that the resolved entries have sanitized asset IDs
-	if len(result.Verification.Resolved) != 1 {
-		t.Fatalf("expected 1 resolved entry, got %d", len(result.Verification.Resolved))
+	if len(result.Verification.Remediated) != 1 {
+		t.Fatalf("expected 1 resolved entry, got %d", len(result.Verification.Remediated))
 	}
-	if string(result.Verification.Resolved[0].AssetID) == "bucket-a" {
+	if string(result.Verification.Remediated[0].AssetID) == "bucket-a" {
 		t.Fatal("asset ID should be sanitized")
 	}
 }

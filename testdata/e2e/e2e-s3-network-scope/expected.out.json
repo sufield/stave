@@ -91,8 +91,8 @@
       }
     }
   ],
-  "kind": "evaluation",
-  "security_state": "NON_COMPLIANT",
+  "kind": "ASSESSMENT",
+  "status": "NON_COMPLIANT",
   "run": {
     "input_hashes": {
       "files": {
@@ -101,7 +101,7 @@
       },
       "overall": "f0c01c0f6dd2ac9e44643e6058a4f4d730bf03fdef67ad45e0c193f97bc4793c"
     },
-    "max_unsafe": "7d",
+    "sla_threshold": "7d",
     "now": "2026-01-11T00:00:00Z",
     "offline": true,
     "pack_hash": "2e1995fb41f04b370179709b1e150168e47bf9f749f6ac0ae2deb90f36aa57cc",

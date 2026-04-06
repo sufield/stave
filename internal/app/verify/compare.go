@@ -8,7 +8,7 @@ import (
 	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"
-	"github.com/sufield/stave/internal/safetyenvelope"
+	"github.com/sufield/stave/internal/core/report"
 	staveversion "github.com/sufield/stave/internal/version"
 )
 
@@ -25,7 +25,7 @@ type CompareRequest struct {
 
 // CompareResult holds the comparison outcome.
 type CompareResult struct {
-	Verification    *safetyenvelope.Verification
+	Verification    *report.Attestation
 	RemainingCount  int
 	IntroducedCount int
 }
@@ -40,28 +40,28 @@ func Compare(req CompareRequest) (CompareResult, error) {
 	remaining := findingsToEntries(req.Sanitizer, diff.Remaining)
 	introduced := findingsToEntries(req.Sanitizer, diff.Introduced)
 
-	v := safetyenvelope.NewVerification(safetyenvelope.VerificationRequest{
-		Run: safetyenvelope.VerificationRunInfo{
-			StaveVersion:      staveversion.String,
-			Offline:           true,
-			Now:               req.Now,
-			MaxUnsafeDuration: req.MaxUnsafeDuration,
-			BeforeSnapshots:   req.BeforeSnapshots,
-			AfterSnapshots:    req.AfterSnapshots,
+	v := report.NewAttestation(report.AttestationRequest{
+		Run: report.AttestationRunInfo{
+			ToolVersion:     staveversion.String,
+			Offline:         true,
+			Now:             req.Now,
+			SLAThreshold:    req.MaxUnsafeDuration,
+			BeforeSnapshots: req.BeforeSnapshots,
+			AfterSnapshots:  req.AfterSnapshots,
 		},
-		Summary: safetyenvelope.VerificationSummary{
-			BeforeViolations: len(req.BeforeFindings),
-			AfterViolations:  len(req.AfterFindings),
-			Resolved:         len(resolved),
-			Remaining:        len(remaining),
-			Introduced:       len(introduced),
+		Summary: report.AttestationSummary{
+			PreviousViolations: len(req.BeforeFindings),
+			CurrentViolations:  len(req.AfterFindings),
+			Remediated:         len(resolved),
+			Open:               len(remaining),
+			Regressions:        len(introduced),
 		},
-		Resolved:   resolved,
-		Remaining:  remaining,
-		Introduced: introduced,
+		Remediated:  resolved,
+		Open:        remaining,
+		Regressions: introduced,
 	})
 
-	if err := safetyenvelope.ValidateVerification(v); err != nil {
+	if err := report.ValidateAttestation(v); err != nil {
 		return CompareResult{}, err
 	}
 
@@ -74,17 +74,17 @@ func Compare(req CompareRequest) (CompareResult, error) {
 
 // findingsToEntries transforms domain findings into safety envelope
 // verification entries, applying sanitization if configured.
-func findingsToEntries(san kernel.Sanitizer, findings []evaluation.Finding) []safetyenvelope.VerificationEntry {
+func findingsToEntries(san kernel.Sanitizer, findings []evaluation.Finding) []report.AttestationEntry {
 	if len(findings) == 0 {
 		return nil
 	}
-	entries := make([]safetyenvelope.VerificationEntry, 0, len(findings))
+	entries := make([]report.AttestationEntry, 0, len(findings))
 	for _, f := range findings {
 		assetID := f.AssetID
 		if san != nil {
 			assetID = asset.ID(san.ID(string(assetID)))
 		}
-		entries = append(entries, safetyenvelope.VerificationEntry{
+		entries = append(entries, report.AttestationEntry{
 			ControlID:   f.ControlID,
 			ControlName: f.ControlName,
 			AssetID:     assetID,

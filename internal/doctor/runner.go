@@ -8,11 +8,11 @@ import (
 
 // CheckSuite maintains an ordered collection of diagnostic check functions.
 type CheckSuite struct {
-	checks []CheckFunc
+	checks []Probe
 }
 
 // NewCheckSuite creates a new CheckSuite from the provided check functions.
-func NewCheckSuite(checks ...CheckFunc) *CheckSuite {
+func NewCheckSuite(checks ...Probe) *CheckSuite {
 	return &CheckSuite{
 		checks: slices.Clone(checks),
 	}
@@ -20,7 +20,7 @@ func NewCheckSuite(checks ...CheckFunc) *CheckSuite {
 
 // Run executes all checks in the registry against the provided context.
 // It returns the list of results and a boolean indicating success (true if no FAIL status).
-func (r *CheckSuite) Run(ctx *Context) ([]Check, bool) {
+func (r *CheckSuite) Run(ctx *SystemEnvironment) ([]Diagnostic, bool) {
 	if r == nil || len(r.checks) == 0 {
 		return nil, true
 	}
@@ -30,7 +30,7 @@ func (r *CheckSuite) Run(ctx *Context) ([]Check, bool) {
 	}
 	ctx.FillDefaults()
 
-	results := make([]Check, 0, len(r.checks))
+	results := make([]Diagnostic, 0, len(r.checks))
 	success := true
 
 	for _, checkFn := range r.checks {

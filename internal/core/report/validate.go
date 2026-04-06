@@ -1,4 +1,4 @@
-package safetyenvelope
+package report
 
 import (
 	"encoding/json"
@@ -10,23 +10,22 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
-// ValidateEvaluation checks an evaluation envelope against the output schema.
-func ValidateEvaluation(payload *Evaluation) error {
+// ValidateAssessment checks an assessment against the output schema.
+func ValidateAssessment(payload *Assessment) error {
 	return validate(string(schemas.KindOutput), kernel.RegistryLayoutStandard, payload)
 }
 
-// ValidateVerification checks a verification envelope against the output schema.
-func ValidateVerification(payload *Verification) error {
+// ValidateAttestation checks an attestation against the output schema.
+func ValidateAttestation(payload *Attestation) error {
 	return validate(string(schemas.KindOutput), kernel.RegistryLayoutStandard, payload)
 }
 
-// ValidateDiagnose checks a diagnose envelope against the diagnose schema.
-func ValidateDiagnose(payload *Diagnose) error {
+// ValidateReadiness checks a readiness report against the diagnose schema.
+func ValidateReadiness(payload *Readiness) error {
 	return validate(string(schemas.KindDiagnose), kernel.RegistryLayoutStandard, payload)
 }
 
-// validate marshals the payload and runs schema validation. Callers wrap
-// the returned error with their own context if needed.
+// validate marshals the payload and runs schema validation.
 func validate(kind, version string, payload any) error {
 	raw, err := json.Marshal(payload)
 	if err != nil {
@@ -36,7 +35,6 @@ func validate(kind, version string, payload any) error {
 }
 
 // validateRaw validates pre-serialized JSON bytes against a schema.
-// Use this when the caller already has the JSON representation.
 func validateRaw(kind, version string, data []byte) error {
 	validator := contractvalidator.New()
 	diags, err := validator.Validate(contractvalidator.Request{

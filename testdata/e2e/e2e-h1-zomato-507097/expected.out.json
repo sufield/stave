@@ -183,8 +183,8 @@
       }
     }
   ],
-  "kind": "evaluation",
-  "security_state": "NON_COMPLIANT",
+  "kind": "ASSESSMENT",
+  "status": "NON_COMPLIANT",
   "remediation_groups": [
     {
       "asset_id": "zomato-chat-images",
@@ -238,7 +238,7 @@
       },
       "overall": "cd1cd28873214469ba459e8a43d087a99407e64e54ee119753ff878c6c606f20"
     },
-    "max_unsafe": "7d",
+    "sla_threshold": "7d",
     "now": "2019-03-09T00:00:00Z",
     "offline": true,
     "pack_hash": "94d929856f0be843071e52d987dad995a16b206b18a92ab46d0b14832f4981b2",

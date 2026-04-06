@@ -24,7 +24,7 @@ func (r *CheckRunner) RunChecks(_ context.Context, req setup.DoctorRequest) (set
 			Name:    c.Name,
 			Status:  c.Status,
 			Message: c.Message,
-			Fix:     c.Fix,
+			Fix:     c.Remediation,
 		}
 	}
 	return setup.DoctorResponse{Checks: out, AllPassed: allPassed}, nil

@@ -12,9 +12,9 @@ import (
 
 func TestRun_UsesConfiguredChecksAndHasFail(t *testing.T) {
 	reg := NewCheckSuite(
-		func(*Context) Check { return Check{Name: "ok", Status: outcome.Pass} },
-		func(*Context) Check { return Check{} }, // skipped
-		func(*Context) Check { return Check{Name: "bad", Status: outcome.Fail} },
+		func(*SystemEnvironment) Diagnostic { return Diagnostic{Name: "ok", Status: outcome.Pass} },
+		func(*SystemEnvironment) Diagnostic { return Diagnostic{} }, // skipped
+		func(*SystemEnvironment) Diagnostic { return Diagnostic{Name: "bad", Status: outcome.Fail} },
 	)
 
 	checks, ok := reg.Run(nil)
@@ -28,18 +28,18 @@ func TestRun_UsesConfiguredChecksAndHasFail(t *testing.T) {
 
 func TestWithDefaults(t *testing.T) {
 	ctx := NewContext()
-	if ctx.LookPathFn == nil || ctx.GetenvFn == nil {
+	if ctx.PathLookupFn == nil || ctx.EnvVarFn == nil {
 		t.Fatal("expected default function pointers")
 	}
-	if ctx.Goos == "" || ctx.Goarch == "" || ctx.GoVersion == "" {
-		t.Fatalf("expected runtime defaults, got goos=%q goarch=%q goversion=%q", ctx.Goos, ctx.Goarch, ctx.GoVersion)
+	if ctx.OS == "" || ctx.Arch == "" || ctx.Runtime == "" {
+		t.Fatalf("expected runtime defaults, got goos=%q goarch=%q goversion=%q", ctx.OS, ctx.Arch, ctx.Runtime)
 	}
 }
 
 func TestCheckClipboard(t *testing.T) {
-	pass := checkClipboard(&Context{
-		Goos: "linux",
-		LookPathFn: func(file string) (string, error) {
+	pass := checkClipboard(&SystemEnvironment{
+		OS: "linux",
+		PathLookupFn: func(file string) (string, error) {
 			if file == "xclip" {
 				return "/usr/bin/xclip", nil
 			}
@@ -50,9 +50,9 @@ func TestCheckClipboard(t *testing.T) {
 		t.Fatalf("linux clipboard pass status = %s", pass.Status)
 	}
 
-	warn := checkClipboard(&Context{
-		Goos: "linux",
-		LookPathFn: func(string) (string, error) {
+	warn := checkClipboard(&SystemEnvironment{
+		OS: "linux",
+		PathLookupFn: func(string) (string, error) {
 			return "", os.ErrNotExist
 		},
 	})
@@ -60,15 +60,15 @@ func TestCheckClipboard(t *testing.T) {
 		t.Fatalf("linux clipboard warn = %+v", warn)
 	}
 
-	other := checkClipboard(&Context{Goos: "freebsd"})
+	other := checkClipboard(&SystemEnvironment{OS: "freebsd"})
 	if other.Status != outcome.Warn {
 		t.Fatalf("other os clipboard status = %s, want WARN", other.Status)
 	}
 }
 
 func TestCheckOfflineProxyEnv(t *testing.T) {
-	ctx := &Context{
-		GetenvFn: func(key string) string {
+	ctx := &SystemEnvironment{
+		EnvVarFn: func(key string) string {
 			if key == "HTTP_PROXY" {
 				return "http://proxy.local"
 			}
@@ -80,7 +80,7 @@ func TestCheckOfflineProxyEnv(t *testing.T) {
 		t.Fatalf("proxy warning = %+v", warn)
 	}
 
-	pass := checkOfflineProxyEnv(&Context{GetenvFn: func(string) string { return "" }})
+	pass := checkOfflineProxyEnv(&SystemEnvironment{EnvVarFn: func(string) string { return "" }})
 	if pass.Status != outcome.Pass {
 		t.Fatalf("expected pass when proxy env unset, got %+v", pass)
 	}
@@ -198,19 +198,19 @@ func TestIsDirectoryWritable_Failure(t *testing.T) {
 }
 
 func TestCoreChecksAndBinaryChecks(t *testing.T) {
-	version := checkVersionInfo(&Context{
-		StaveVersion: "v1.2.3",
-		GoVersion:    "go1.26.1",
-		Goos:         "darwin",
-		Goarch:       "arm64",
+	version := checkVersionInfo(&SystemEnvironment{
+		BuildVersion: "v1.2.3",
+		Runtime:      "go1.26.1",
+		OS:           "darwin",
+		Arch:         "arm64",
 		BinaryPath:   "/usr/local/bin/stave",
 	})
 	if version.Status != outcome.Pass || !strings.Contains(version.Message, "stave_version=v1.2.3") {
 		t.Fatalf("version check = %+v", version)
 	}
 
-	shell := checkShell(&Context{
-		GetenvFn: func(key string) string {
+	shell := checkShell(&SystemEnvironment{
+		EnvVarFn: func(key string) string {
 			if key == "SHELL" {
 				return "/bin/bash"
 			}
@@ -221,8 +221,8 @@ func TestCoreChecksAndBinaryChecks(t *testing.T) {
 		t.Fatalf("shell check = %+v", shell)
 	}
 
-	ci := checkCI(&Context{
-		GetenvFn: func(key string) string {
+	ci := checkCI(&SystemEnvironment{
+		EnvVarFn: func(key string) string {
 			if key == "GITHUB_ACTIONS" {
 				return "true"
 			}
@@ -233,22 +233,22 @@ func TestCoreChecksAndBinaryChecks(t *testing.T) {
 		t.Fatalf("ci check = %+v", ci)
 	}
 
-	_ = checkContainer(&Context{}) // environment-dependent; ensure call path is exercised
+	_ = checkContainer(&SystemEnvironment{}) // environment-dependent; ensure call path is exercised
 
-	writable := checkWorkspaceWritable(&Context{Cwd: t.TempDir()})
+	writable := checkWorkspaceWritable(&SystemEnvironment{Cwd: t.TempDir()})
 	if writable.Status != outcome.Pass {
 		t.Fatalf("workspace writable check = %+v", writable)
 	}
-	notWritable := checkWorkspaceWritable(&Context{Cwd: filepath.Join(t.TempDir(), "missing")})
+	notWritable := checkWorkspaceWritable(&SystemEnvironment{Cwd: filepath.Join(t.TempDir(), "missing")})
 	if notWritable.Status != outcome.Fail {
 		t.Fatalf("workspace fail check = %+v", notWritable)
 	}
 
-	passCtx := &Context{
-		LookPathFn: func(string) (string, error) { return "/usr/bin/tool", nil },
+	passCtx := &SystemEnvironment{
+		PathLookupFn: func(string) (string, error) { return "/usr/bin/tool", nil },
 	}
-	warnCtx := &Context{
-		LookPathFn: func(string) (string, error) { return "", os.ErrNotExist },
+	warnCtx := &SystemEnvironment{
+		PathLookupFn: func(string) (string, error) { return "", os.ErrNotExist },
 	}
 
 	if c := checkGit(passCtx); c.Status != outcome.Pass {
@@ -278,7 +278,7 @@ func TestCoreChecksAndBinaryChecks(t *testing.T) {
 }
 
 func TestCheckBinary_EmptyBinaryName(t *testing.T) {
-	c := checkBinary(&Context{}, BinaryRequest{Name: "empty-bin"})
+	c := checkBinary(&SystemEnvironment{}, BinaryRequest{Name: "empty-bin"})
 	if c.Status != outcome.Fail {
 		t.Fatalf("expected FAIL for empty binary name, got %+v", c)
 	}

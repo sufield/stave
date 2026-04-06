@@ -5,8 +5,8 @@ import (
 	appconfig "github.com/sufield/stave/internal/app/config"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/core/report"
 	"github.com/sufield/stave/internal/platform/fsutil"
-	"github.com/sufield/stave/internal/safetyenvelope"
 )
 
 // resolveConfigurableLimits applies user-configurable runtime limits from
@@ -47,6 +47,6 @@ func (a *App) resolveConfigurableLimits(eval *appconfig.Evaluator) {
 
 	// Max validation errors reported (default 3)
 	if n := eval.MaxValidationErrors(); n > 0 {
-		safetyenvelope.SetMaxValidationErrors(n)
+		report.SetMaxValidationErrors(n)
 	}
 }

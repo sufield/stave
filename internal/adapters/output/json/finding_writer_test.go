@@ -45,8 +45,8 @@ func TestWriteFindings_BareJSON(t *testing.T) {
 	if strings.Contains(out, `"ok":`) {
 		t.Fatalf("unexpected envelope in output: %s", out)
 	}
-	if !strings.Contains(out, `"kind":"evaluation"`) {
-		t.Fatalf("missing evaluation kind: %s", out)
+	if !strings.Contains(out, `"kind":"ASSESSMENT"`) {
+		t.Fatalf("missing ASSESSMENT kind: %s", out)
 	}
 	if !strings.Contains(out, `"findings":[]`) {
 		t.Fatalf("expected normalized empty findings array: %s", out)

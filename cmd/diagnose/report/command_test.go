@@ -13,16 +13,16 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
-	"github.com/sufield/stave/internal/safetyenvelope"
+	corereport "github.com/sufield/stave/internal/core/report"
 )
 
-func sampleEvaluation() safetyenvelope.Evaluation {
+func sampleEvaluation() corereport.Assessment {
 	now := time.Date(2026, 2, 1, 10, 0, 0, 0, time.UTC)
 	first := now.Add(-48 * time.Hour)
 	last := now.Add(-2 * time.Hour)
-	return safetyenvelope.Evaluation{
+	return corereport.Assessment{
 		SchemaVersion: "out.v0.1",
-		Kind:          safetyenvelope.KindEvaluation,
+		Kind:          corereport.KindAssessment,
 		Run:           evaluation.RunInfo{Now: now, MaxUnsafeDuration: kernel.Duration(24 * time.Hour), Snapshots: 2, Offline: true},
 		Summary:       evaluation.ComplianceSummary{TotalAssets: 10, ExposedResources: 2, Violations: 2},
 		Findings: []remediation.Finding{

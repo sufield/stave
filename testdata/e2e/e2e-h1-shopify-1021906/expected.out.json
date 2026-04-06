@@ -87,8 +87,8 @@
       }
     }
   ],
-  "kind": "evaluation",
-  "security_state": "NON_COMPLIANT",
+  "kind": "ASSESSMENT",
+  "status": "NON_COMPLIANT",
   "remediation_groups": [
     {
       "asset_id": "ping-api-production",
@@ -141,7 +141,7 @@
       },
       "overall": "96035383a7a6daa256746d27cf672c87fc949333d38d36668ea2ed98770d8855"
     },
-    "max_unsafe": "7d",
+    "sla_threshold": "7d",
     "now": "2026-01-11T00:00:00Z",
     "offline": true,
     "pack_hash": "2c3e3588e28da436e5052caf84f629ff4f9eb044d66fbe9c83e9facf975fda1e",

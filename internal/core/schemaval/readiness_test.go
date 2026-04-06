@@ -24,19 +24,19 @@ func TestStatus_String(t *testing.T) {
 	}
 }
 
-func TestNewReport(t *testing.T) {
-	r := NewReport("/controls", "/observations")
+func TestNewReadinessAssessment(t *testing.T) {
+	r := NewReadinessAssessment("/controls", "/observations")
 	if r == nil {
-		t.Fatal("NewReport returned nil")
+		t.Fatal("NewReadinessAssessment returned nil")
 	}
-	if !r.Ready {
-		t.Fatal("new report should default to Ready=true")
+	if !r.IsSafe {
+		t.Fatal("new assessment should default to IsSafe=true")
 	}
-	if r.ControlsDir != "/controls" {
-		t.Fatalf("ControlsDir=%q", r.ControlsDir)
+	if r.ControlSource != "/controls" {
+		t.Fatalf("ControlSource=%q", r.ControlSource)
 	}
-	if r.ObservationsDir != "/observations" {
-		t.Fatalf("ObservationsDir=%q", r.ObservationsDir)
+	if r.InventorySource != "/observations" {
+		t.Fatalf("InventorySource=%q", r.InventorySource)
 	}
 	if r.Summary.Errors != 0 {
 		t.Fatalf("Errors=%d, want 0", r.Summary.Errors)
@@ -46,25 +46,25 @@ func TestNewReport(t *testing.T) {
 	}
 }
 
-func TestReport_Issues_Empty(t *testing.T) {
-	r := NewReport("", "")
-	issues := r.Issues()
-	if len(issues) != 0 {
-		t.Fatalf("len=%d, want 0", len(issues))
+func TestReadinessAssessment_Findings_Empty(t *testing.T) {
+	r := NewReadinessAssessment("", "")
+	findings := r.Findings()
+	if len(findings) != 0 {
+		t.Fatalf("len=%d, want 0", len(findings))
 	}
 }
 
-func TestReport_RecordIssue_Fail(t *testing.T) {
-	r := NewReport("", "")
-	r.RecordIssue(Check{
-		Name:    "schema check",
-		Status:  outcome.Fail,
-		Message: "schema invalid",
-		Fix:     "fix the schema",
+func TestReadinessAssessment_RecordFinding_Fail(t *testing.T) {
+	r := NewReadinessAssessment("", "")
+	r.RecordFinding(ValidationFinding{
+		Name:        "schema check",
+		Status:      outcome.Fail,
+		Message:     "schema invalid",
+		Remediation: "fix the schema",
 	})
 
-	if r.Ready {
-		t.Fatal("Ready should be false after recording a fail issue")
+	if r.IsSafe {
+		t.Fatal("IsSafe should be false after recording a fail finding")
 	}
 	if r.Summary.Errors != 1 {
 		t.Fatalf("Errors=%d, want 1", r.Summary.Errors)
@@ -72,24 +72,24 @@ func TestReport_RecordIssue_Fail(t *testing.T) {
 	if r.Summary.Warnings != 0 {
 		t.Fatalf("Warnings=%d, want 0", r.Summary.Warnings)
 	}
-	issues := r.Issues()
-	if len(issues) != 1 {
-		t.Fatalf("Issues len=%d, want 1", len(issues))
+	findings := r.Findings()
+	if len(findings) != 1 {
+		t.Fatalf("Findings len=%d, want 1", len(findings))
 	}
-	if issues[0].Name != "schema check" {
-		t.Fatalf("Name=%q", issues[0].Name)
+	if findings[0].Name != "schema check" {
+		t.Fatalf("Name=%q", findings[0].Name)
 	}
 }
 
-func TestReport_RecordIssue_Warn(t *testing.T) {
-	r := NewReport("", "")
-	r.RecordIssue(Check{
+func TestReadinessAssessment_RecordFinding_Warn(t *testing.T) {
+	r := NewReadinessAssessment("", "")
+	r.RecordFinding(ValidationFinding{
 		Name:   "minor warning",
 		Status: outcome.Warn,
 	})
 
-	if !r.Ready {
-		t.Fatal("Ready should remain true after recording a warning")
+	if !r.IsSafe {
+		t.Fatal("IsSafe should remain true after recording a warning")
 	}
 	if r.Summary.Warnings != 1 {
 		t.Fatalf("Warnings=%d, want 1", r.Summary.Warnings)
@@ -99,46 +99,46 @@ func TestReport_RecordIssue_Warn(t *testing.T) {
 	}
 }
 
-func TestReport_RecordIssue_Pass(t *testing.T) {
-	r := NewReport("", "")
-	r.RecordIssue(Check{
+func TestReadinessAssessment_RecordFinding_Pass(t *testing.T) {
+	r := NewReadinessAssessment("", "")
+	r.RecordFinding(ValidationFinding{
 		Name:   "all good",
 		Status: outcome.Pass,
 	})
 
-	if !r.Ready {
-		t.Fatal("Ready should remain true after pass")
+	if !r.IsSafe {
+		t.Fatal("IsSafe should remain true after pass")
 	}
 	if r.Summary.Errors != 0 || r.Summary.Warnings != 0 {
 		t.Fatalf("unexpected counters: errors=%d warnings=%d", r.Summary.Errors, r.Summary.Warnings)
 	}
-	if len(r.Issues()) != 1 {
-		t.Fatalf("Issues len=%d, want 1", len(r.Issues()))
+	if len(r.Findings()) != 1 {
+		t.Fatalf("Findings len=%d, want 1", len(r.Findings()))
 	}
 }
 
-func TestReport_Issues_ReturnsDefensiveCopy(t *testing.T) {
-	r := NewReport("", "")
-	r.RecordIssue(Check{Name: "original", Status: outcome.Pass})
+func TestReadinessAssessment_Findings_ReturnsDefensiveCopy(t *testing.T) {
+	r := NewReadinessAssessment("", "")
+	r.RecordFinding(ValidationFinding{Name: "original", Status: outcome.Pass})
 
-	issues := r.Issues()
-	issues[0].Name = "mutated"
+	findings := r.Findings()
+	findings[0].Name = "mutated"
 
-	fresh := r.Issues()
+	fresh := r.Findings()
 	if fresh[0].Name != "original" {
-		t.Fatal("Issues() should return a defensive copy")
+		t.Fatal("Findings() should return a defensive copy")
 	}
 }
 
-func TestReport_MultipleIssues(t *testing.T) {
-	r := NewReport("/c", "/o")
-	r.RecordIssue(Check{Name: "fail1", Status: outcome.Fail})
-	r.RecordIssue(Check{Name: "warn1", Status: outcome.Warn})
-	r.RecordIssue(Check{Name: "fail2", Status: outcome.Fail})
-	r.RecordIssue(Check{Name: "pass1", Status: outcome.Pass})
+func TestReadinessAssessment_MultipleFindings(t *testing.T) {
+	r := NewReadinessAssessment("/c", "/o")
+	r.RecordFinding(ValidationFinding{Name: "fail1", Status: outcome.Fail})
+	r.RecordFinding(ValidationFinding{Name: "warn1", Status: outcome.Warn})
+	r.RecordFinding(ValidationFinding{Name: "fail2", Status: outcome.Fail})
+	r.RecordFinding(ValidationFinding{Name: "pass1", Status: outcome.Pass})
 
-	if r.Ready {
-		t.Fatal("should not be ready with fail issues")
+	if r.IsSafe {
+		t.Fatal("should not be safe with fail findings")
 	}
 	if r.Summary.Errors != 2 {
 		t.Fatalf("Errors=%d, want 2", r.Summary.Errors)
@@ -146,7 +146,7 @@ func TestReport_MultipleIssues(t *testing.T) {
 	if r.Summary.Warnings != 1 {
 		t.Fatalf("Warnings=%d, want 1", r.Summary.Warnings)
 	}
-	if len(r.Issues()) != 4 {
-		t.Fatalf("Issues len=%d, want 4", len(r.Issues()))
+	if len(r.Findings()) != 4 {
+		t.Fatalf("Findings len=%d, want 4", len(r.Findings()))
 	}
 }

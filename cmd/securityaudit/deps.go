@@ -25,10 +25,10 @@ func buildRunnerDeps() appsa.RunnerDeps {
 		VulnerabilityScanner: govulncheck.Run,
 		SignatureVerifier:    nil,
 		RunDiagnostics: func(cwd, binaryPath, staveVersion string) {
-			_, _ = doctor.Run(&doctor.Context{
+			_, _ = doctor.Run(&doctor.SystemEnvironment{
 				Cwd:          cwd,
 				BinaryPath:   binaryPath,
-				StaveVersion: staveVersion,
+				BuildVersion: staveVersion,
 			})
 		},
 		ResolveCrosswalk: func(raw []byte, frameworks, checkIDs []string, now time.Time) (evidence.CrosswalkResult, error) {

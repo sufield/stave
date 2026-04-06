@@ -87,8 +87,8 @@
       }
     }
   ],
-  "kind": "evaluation",
-  "security_state": "NON_COMPLIANT",
+  "kind": "ASSESSMENT",
+  "status": "NON_COMPLIANT",
   "remediation_groups": [
     {
       "asset_id": "bime-a2-cname-ref",
@@ -141,7 +141,7 @@
       },
       "overall": "25e5d6b44462771c6fc7157f031768bff7575df9e564e49b993e4c1b3912fecc"
     },
-    "max_unsafe": "7d",
+    "sla_threshold": "7d",
     "now": "2016-03-18T00:00:00Z",
     "offline": true,
     "pack_hash": "7bf215c30ede67f208b873df06900343273f618007838d0d4b09d4937c11162e",

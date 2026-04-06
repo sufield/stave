@@ -7,7 +7,7 @@ import (
 	evaljson "github.com/sufield/stave/internal/adapters/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"
-	"github.com/sufield/stave/internal/safetyenvelope"
+	"github.com/sufield/stave/internal/core/report"
 )
 
 // Loader handles the retrieval and validation of Stave artifacts from the filesystem.
@@ -21,7 +21,7 @@ func NewLoader() *Loader {
 }
 
 // Evaluation loads and validates a JSON safety envelope containing evaluation results.
-func (l *Loader) Evaluation(ctx context.Context, path string) (*safetyenvelope.Evaluation, error) {
+func (l *Loader) Evaluation(ctx context.Context, path string) (*report.Assessment, error) {
 	if path == "" {
 		return nil, errors.New("evaluation path is required")
 	}

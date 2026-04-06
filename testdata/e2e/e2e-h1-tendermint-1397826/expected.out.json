@@ -87,8 +87,8 @@
       }
     }
   ],
-  "kind": "evaluation",
-  "security_state": "NON_COMPLIANT",
+  "kind": "ASSESSMENT",
+  "status": "NON_COMPLIANT",
   "remediation_groups": [
     {
       "asset_id": "tendermint-packages-ref",
@@ -141,7 +141,7 @@
       },
       "overall": "ab690097d015e1ff56bb0943fef9746e614beec4d0fd3c2160fb227911577b42"
     },
-    "max_unsafe": "7d",
+    "sla_threshold": "7d",
     "now": "2021-11-23T00:00:00Z",
     "offline": true,
     "pack_hash": "7bf215c30ede67f208b873df06900343273f618007838d0d4b09d4937c11162e",

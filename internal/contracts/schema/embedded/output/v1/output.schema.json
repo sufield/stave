@@ -16,15 +16,15 @@
           "description": "Output schema version identifier."
         },
         "kind": {
-          "const": "evaluation",
+          "const": "ASSESSMENT",
           "title": "Output Kind",
-          "description": "Output kind discriminator. Value 'evaluation' indicates this is a standard evaluation run."
+          "description": "Output kind discriminator. Value 'ASSESSMENT' indicates this is a standard security assessment."
         },
         "run": {
           "type": "object",
           "title": "Run Metadata",
           "description": "Metadata about the evaluation run including tool version, timing, and input parameters.",
-          "required": ["tool_version", "offline", "now", "max_unsafe", "snapshots"],
+          "required": ["tool_version", "offline", "now", "sla_threshold", "snapshots"],
           "properties": {
             "tool_version": {
               "type": "string",
@@ -42,9 +42,9 @@
               "title": "Evaluation Timestamp",
               "description": "Effective evaluation timestamp (RFC 3339). May be capped to the last snapshot's captured_at."
             },
-            "max_unsafe": {
+            "sla_threshold": {
               "type": "string",
-              "title": "Max Unsafe Duration",
+              "title": "SLA Threshold",
               "description": "Maximum unsafe duration threshold used for this evaluation (e.g., 12h, 7d)."
             },
             "snapshots": {
@@ -348,9 +348,9 @@
     },
     {
       "type": "object",
-      "title": "Verification Output",
-      "description": "Verification output: results from comparing before and after observation snapshots to measure remediation progress.",
-      "required": ["schema_version", "kind", "run", "summary", "resolved", "remaining", "introduced"],
+      "title": "Attestation Output",
+      "description": "Attestation output: results from comparing before and after observation snapshots to measure remediation progress.",
+      "required": ["schema_version", "kind", "run", "summary", "remediated", "open", "regressions"],
       "properties": {
         "schema_version": {
           "const": "out.v0.1",
@@ -358,15 +358,15 @@
           "description": "Output schema version identifier."
         },
         "kind": {
-          "const": "verification",
+          "const": "ATTESTATION",
           "title": "Output Kind",
-          "description": "Output kind discriminator. Value 'verification' indicates this is a before/after comparison."
+          "description": "Output kind discriminator. Value 'ATTESTATION' indicates this is a before/after remediation attestation."
         },
         "run": {
           "type": "object",
           "title": "Run Metadata",
-          "description": "Metadata about the verification run including tool version, timing, and snapshot counts.",
-          "required": ["tool_version", "offline", "now", "max_unsafe", "before_snapshots", "after_snapshots"],
+          "description": "Metadata about the attestation run including tool version, timing, and snapshot counts.",
+          "required": ["tool_version", "offline", "now", "sla_threshold", "before_snapshots", "after_snapshots"],
           "properties": {
             "tool_version": {
               "type": "string",
@@ -376,7 +376,7 @@
             "offline": {
               "type": "boolean",
               "title": "Offline Mode Flag",
-              "description": "Whether this verification was run in offline mode."
+              "description": "Whether this attestation was run in offline mode."
             },
             "now": {
               "type": "string",
@@ -384,9 +384,9 @@
               "title": "Evaluation Timestamp",
               "description": "Effective evaluation timestamp (RFC 3339)."
             },
-            "max_unsafe": {
+            "sla_threshold": {
               "type": "string",
-              "title": "Max Unsafe Duration",
+              "title": "SLA Threshold",
               "description": "Maximum unsafe duration threshold used for both before and after evaluations."
             },
             "before_snapshots": {
@@ -406,70 +406,70 @@
         },
         "summary": {
           "type": "object",
-          "title": "Verification Summary",
+          "title": "Attestation Summary",
           "description": "Aggregate counts comparing before and after violation states.",
-          "required": ["before_violations", "after_violations", "resolved", "remaining", "introduced"],
+          "required": ["previous_violations", "current_violations", "remediated", "open", "regressions"],
           "properties": {
-            "before_violations": {
+            "previous_violations": {
               "type": "integer",
               "minimum": 0,
-              "title": "Before Violation Count",
+              "title": "Previous Violation Count",
               "description": "Number of violations in the before (pre-remediation) evaluation."
             },
-            "after_violations": {
+            "current_violations": {
               "type": "integer",
               "minimum": 0,
-              "title": "After Violation Count",
+              "title": "Current Violation Count",
               "description": "Number of violations in the after (post-remediation) evaluation."
             },
-            "resolved": {
+            "remediated": {
               "type": "integer",
               "minimum": 0,
-              "title": "Resolved Violation Count",
+              "title": "Remediated Violation Count",
               "description": "Number of violations present before but absent after remediation."
             },
-            "remaining": {
+            "open": {
               "type": "integer",
               "minimum": 0,
-              "title": "Remaining Violation Count",
+              "title": "Open Violation Count",
               "description": "Number of violations present in both before and after evaluations."
             },
-            "introduced": {
+            "regressions": {
               "type": "integer",
               "minimum": 0,
-              "title": "Introduced Violation Count",
+              "title": "Regression Count",
               "description": "Number of new violations absent before but present after (regressions)."
             }
           },
           "additionalProperties": true
         },
-        "resolved": {
+        "remediated": {
           "type": "array",
-          "title": "Resolved Violations",
+          "title": "Remediated Violations",
           "description": "Violations that were present before remediation but are now resolved.",
-          "items": { "$ref": "#/$defs/verification_entry" }
+          "items": { "$ref": "#/$defs/attestation_entry" }
         },
-        "remaining": {
+        "open": {
           "type": "array",
-          "title": "Remaining Violations",
+          "title": "Open Violations",
           "description": "Violations that persist after remediation.",
-          "items": { "$ref": "#/$defs/verification_entry" }
+          "items": { "$ref": "#/$defs/attestation_entry" }
         },
-        "introduced": {
+        "regressions": {
           "type": "array",
-          "title": "Introduced Violations",
-          "description": "New violations introduced after remediation (regressions).",
-          "items": { "$ref": "#/$defs/verification_entry" }
+          "title": "Regressions",
+          "description": "New violations introduced after remediation (security regressions).",
+          "items": { "$ref": "#/$defs/attestation_entry" }
         }
       },
       "additionalProperties": true
     }
   ],
   "$defs": {
-    "verification_entry": {
+    "attestation_entry": {
       "type": "object",
-      "title": "Verification Entry",
-      "description": "A single entry in a verification result list (resolved, remaining, or introduced).",
+      "title": "Attestation Entry",
+      "description": "A single entry in an attestation result list (remediated, open, or regressions).",
       "required": ["control_id", "control_name", "asset_id", "asset_type"],
       "properties": {
         "control_id": {

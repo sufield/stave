@@ -15,8 +15,8 @@ import (
 
 // DoctorResult represents the output of the internal health check.
 type DoctorResult struct {
-	Ready  bool           `json:"ready"`
-	Checks []doctor.Check `json:"checks"`
+	Ready  bool                `json:"ready"`
+	Checks []doctor.Diagnostic `json:"checks"`
 }
 
 // BuildInfo contains details about the compiled binary and runtime environment.

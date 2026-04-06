@@ -81,8 +81,8 @@
       }
     }
   ],
-  "kind": "evaluation",
-  "security_state": "NON_COMPLIANT",
+  "kind": "ASSESSMENT",
+  "status": "NON_COMPLIANT",
   "remediation_groups": [
     {
       "asset_id": "latent-bucket",
@@ -135,7 +135,7 @@
       },
       "overall": "879e9696dfcf38f01f35fd7beeb3ae0a66e0842df73e35592fcd753fdf153ae4"
     },
-    "max_unsafe": "7d",
+    "sla_threshold": "7d",
     "now": "2026-01-11T00:00:00Z",
     "offline": true,
     "pack_hash": "e8c0d214eaf160e9f50bf810630da10c327caf828c883ab3c7e84c4994fd742b",

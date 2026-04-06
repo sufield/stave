@@ -106,10 +106,10 @@ func TestQuoteArg_WithShellChars(t *testing.T) {
 // --- readinessNextCommand ---
 
 func TestReadinessNextCommand_Ready(t *testing.T) {
-	report := validation.Report{
-		Ready:           true,
-		ControlsDir:     "controls/s3",
-		ObservationsDir: "observations",
+	report := validation.ReadinessAssessment{
+		IsSafe:          true,
+		ControlSource:   "controls/s3",
+		InventorySource: "observations",
 	}
 	got := readinessNextCommand(report)
 	if !strings.Contains(got, "stave apply") {
@@ -121,10 +121,10 @@ func TestReadinessNextCommand_Ready(t *testing.T) {
 }
 
 func TestReadinessNextCommand_NotReady(t *testing.T) {
-	report := validation.Report{
-		Ready:           false,
-		ControlsDir:     "controls/s3",
-		ObservationsDir: "observations",
+	report := validation.ReadinessAssessment{
+		IsSafe:          false,
+		ControlSource:   "controls/s3",
+		InventorySource: "observations",
 	}
 	got := readinessNextCommand(report)
 	if !strings.Contains(got, "stave validate") {
@@ -243,12 +243,12 @@ func TestReporter_ReportApply_Quiet(t *testing.T) {
 
 func TestPrintReadinessIssue(t *testing.T) {
 	var buf bytes.Buffer
-	issue := validation.Check{
-		Name:    "controls",
-		Status:  outcome.Pass,
-		Message: "found 5 controls",
-		Fix:     "run validate",
-		Command: "stave validate",
+	issue := validation.ValidationFinding{
+		Name:        "controls",
+		Status:      outcome.Pass,
+		Message:     "found 5 controls",
+		Remediation: "run validate",
+		FixCommand:  "stave validate",
 	}
 	err := printReadinessIssue(&buf, issue)
 	if err != nil {
@@ -268,7 +268,7 @@ func TestPrintReadinessIssue(t *testing.T) {
 
 func TestPrintReadinessIssue_NoFixOrCommand(t *testing.T) {
 	var buf bytes.Buffer
-	issue := validation.Check{
+	issue := validation.ValidationFinding{
 		Name:    "obs",
 		Status:  outcome.Pass,
 		Message: "found 3 snapshots",
@@ -295,14 +295,14 @@ func TestReporter_ReportPlan(t *testing.T) {
 		Stderr:  &stderr,
 		Runtime: ui.NewRuntime(&stdout, &stderr),
 	}
-	report := validation.Report{
-		Ready:           true,
-		ControlsDir:     "controls/s3",
-		ObservationsDir: "observations",
-		Summary: validation.Summary{
-			ControlsChecked:          5,
-			SnapshotsChecked:         3,
-			AssetObservationsChecked: 10,
+	report := validation.ReadinessAssessment{
+		IsSafe:          true,
+		ControlSource:   "controls/s3",
+		InventorySource: "observations",
+		Summary: validation.AssessmentSummary{
+			ControlsVerified:  5,
+			StatesVerified:    3,
+			ResourcesAnalyzed: 10,
 		},
 	}
 	err := r.ReportPlan(report)
@@ -329,7 +329,7 @@ func TestReporter_ReportPlan_Quiet(t *testing.T) {
 		Runtime: ui.NewRuntime(&stdout, &stderr),
 		Quiet:   true,
 	}
-	report := validation.Report{Ready: true}
+	report := validation.ReadinessAssessment{IsSafe: true}
 	err := r.ReportPlan(report)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -511,8 +511,8 @@ func TestValidateDirsWithConfig_StdinObservations(t *testing.T) {
 
 func TestNewReadinessRunner(t *testing.T) {
 	factory := func(_, _ string, _ bool) ReadinessValidator {
-		return func(_ time.Duration, _ time.Time) (validation.Status, error) {
-			return validation.Status{}, nil
+		return func(_ time.Duration, _ time.Time) (validation.EvaluationState, error) {
+			return validation.EvaluationState{}, nil
 		}
 	}
 	runner := NewReadinessRunner(factory)

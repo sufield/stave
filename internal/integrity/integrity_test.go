@@ -1,6 +1,7 @@
 package integrity
 
 import (
+	"encoding/json"
 	"errors"
 	"testing"
 
@@ -130,6 +131,9 @@ func TestValidator_Verify_MissingFile(t *testing.T) {
 	if err == nil || !errors.Is(err, ErrIntegrityViolation) {
 		t.Fatalf("expected ErrIntegrityViolation for missing file, got %v", err)
 	}
+	if !errors.Is(err, ErrMissingFile) {
+		t.Fatalf("expected ErrMissingFile, got %v", err)
+	}
 }
 
 func TestValidator_Verify_HashMismatch(t *testing.T) {
@@ -146,6 +150,9 @@ func TestValidator_Verify_HashMismatch(t *testing.T) {
 	err := v.Verify(m)
 	if err == nil || !errors.Is(err, ErrIntegrityViolation) {
 		t.Fatalf("expected ErrIntegrityViolation for hash mismatch, got %v", err)
+	}
+	if !errors.Is(err, ErrHashMismatch) {
+		t.Fatalf("expected ErrHashMismatch, got %v", err)
 	}
 }
 
@@ -167,6 +174,9 @@ func TestValidator_Verify_ExtraFile(t *testing.T) {
 	if err == nil || !errors.Is(err, ErrIntegrityViolation) {
 		t.Fatalf("expected ErrIntegrityViolation for extra file, got %v", err)
 	}
+	if !errors.Is(err, ErrUntrustedFile) {
+		t.Fatalf("expected ErrUntrustedFile, got %v", err)
+	}
 }
 
 func TestValidator_Verify_OverallMismatch(t *testing.T) {
@@ -183,6 +193,9 @@ func TestValidator_Verify_OverallMismatch(t *testing.T) {
 	err := v.Verify(m)
 	if err == nil || !errors.Is(err, ErrIntegrityViolation) {
 		t.Fatalf("expected ErrIntegrityViolation for overall mismatch, got %v", err)
+	}
+	if !errors.Is(err, ErrHashMismatch) {
+		t.Fatalf("expected ErrHashMismatch, got %v", err)
 	}
 }
 
@@ -227,6 +240,50 @@ func TestUnmarshalSigned_InvalidPEM(t *testing.T) {
 	_, err := UnmarshalSigned([]byte(validJSON), []byte("not-a-pem"))
 	if err == nil {
 		t.Fatal("expected PEM parse error")
+	}
+}
+
+func TestUnmarshalSigned_SignatureFailure_WrapsViolation(t *testing.T) {
+	// Sign with one key pair, verify with a different public key.
+	privPEM, _, err := crypto.GenerateSigningKeyPair()
+	if err != nil {
+		t.Fatalf("generate keypair 1: %v", err)
+	}
+	_, wrongPubPEM, err := crypto.GenerateSigningKeyPair()
+	if err != nil {
+		t.Fatalf("generate keypair 2: %v", err)
+	}
+
+	signer, err := crypto.ParsePrivateKeyPEM(privPEM)
+	if err != nil {
+		t.Fatalf("parse private key: %v", err)
+	}
+
+	m := Manifest{
+		Files:   map[evaluation.FilePath]kernel.Digest{"a.json": "sha256:aaa"},
+		Overall: "sha256:overall",
+	}
+	canonical, err := m.CanonicalBytes()
+	if err != nil {
+		t.Fatalf("canonical bytes: %v", err)
+	}
+	sig, err := signer.Sign(canonical)
+	if err != nil {
+		t.Fatalf("sign: %v", err)
+	}
+
+	sm := SignedManifest{Manifest: m, Signature: sig}
+	data, err := json.Marshal(sm)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+
+	_, err = UnmarshalSigned(data, wrongPubPEM)
+	if err == nil {
+		t.Fatal("expected signature verification error")
+	}
+	if !errors.Is(err, ErrIntegrityViolation) {
+		t.Fatalf("expected ErrIntegrityViolation for signature failure, got %v", err)
 	}
 }
 
