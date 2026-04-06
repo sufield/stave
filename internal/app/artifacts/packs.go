@@ -10,45 +10,46 @@ import (
 	"github.com/sufield/stave/internal/util/jsonutil"
 )
 
-// PackRunner handles the inspection of built-in control packs.
-type PackRunner struct {
-	Registry *packs.Index
+// PolicyInspector manages the discovery and inspection of pre-defined
+// security control packs embedded within the tool.
+type PolicyInspector struct {
+	Library *packs.Index
 }
 
-// NewPackRunner initializes a runner with an embedded pack registry.
-func NewPackRunner() (*PackRunner, error) {
-	reg, err := packs.NewEmbeddedRegistry()
+// NewInspector initializes an inspector with the built-in policy library.
+func NewInspector() (*PolicyInspector, error) {
+	lib, err := packs.NewEmbeddedRegistry()
 	if err != nil {
-		return nil, fmt.Errorf("load pack registry: %w", err)
+		return nil, fmt.Errorf("load policy library: %w", err)
 	}
-	return &PackRunner{Registry: reg}, nil
+	return &PolicyInspector{Library: lib}, nil
 }
 
-// List returns all available built-in packs.
-func (r *PackRunner) List() []packs.Pack {
-	return r.Registry.ListPacks()
+// AvailablePacks returns the full collection of embedded security control sets.
+func (i *PolicyInspector) AvailablePacks() []packs.Pack {
+	return i.Library.ListPacks()
 }
 
-// Show returns the detailed configuration of a specific pack.
-func (r *PackRunner) Show(name string) (packs.Pack, error) {
+// Inspect retrieves the detailed technical definition of a specific security pack.
+func (i *PolicyInspector) Inspect(name string) (packs.Pack, error) {
 	name = strings.TrimSpace(name)
-	pack, ok := r.Registry.LookupPack(name)
+	pack, ok := i.Library.LookupPack(name)
 	if !ok {
-		available := r.Registry.PackNames()
-		return packs.Pack{}, fmt.Errorf("unknown pack %q (available: %s)", name, strings.Join(available, ", "))
+		available := i.Library.PackNames()
+		return packs.Pack{}, fmt.Errorf("policy pack %q not found (available: %s)", name, strings.Join(available, ", "))
 	}
 	return pack, nil
 }
 
-// WritePackList renders pack items as a formatted table.
-func WritePackList(w io.Writer, items []packs.Pack) error {
+// RenderSummary renders a high-level list of available policy packs as a table.
+func RenderSummary(w io.Writer, items []packs.Pack) error {
 	if len(items) == 0 {
-		_, err := fmt.Fprintln(w, "No built-in packs available.")
+		_, err := fmt.Fprintln(w, "No security policy packs discovered in the library.")
 		return err
 	}
 
 	tw := tabwriter.NewWriter(w, 0, 8, 2, ' ', 0)
-	fmt.Fprintln(tw, "NAME\tDESCRIPTION")
+	fmt.Fprintln(tw, "POLICY PACK\tDESCRIPTION")
 
 	for _, p := range items {
 		fmt.Fprintf(tw, "%s\t%s\n", p.Name, p.Description)
@@ -57,7 +58,7 @@ func WritePackList(w io.Writer, items []packs.Pack) error {
 	return tw.Flush()
 }
 
-// WritePackJSON renders a pack as indented JSON.
-func WritePackJSON(w io.Writer, pack packs.Pack) error {
-	return jsonutil.WriteIndented(w, pack)
+// ExportManifest renders a policy pack definition as a raw JSON manifest.
+func ExportManifest(w io.Writer, p packs.Pack) error {
+	return jsonutil.WriteIndented(w, p)
 }
