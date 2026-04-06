@@ -147,7 +147,7 @@ func (r *Runner) Show(_ context.Context, eval *appconfig.GovernanceResolver, for
 
 // --- Internal Helpers ---
 
-func (r *Runner) newEditor(opts MutationOpts) (*cliconfig.Editor[appconfig.ProjectConfig], error) {
+func (r *Runner) newEditor(opts MutationOpts) (*cliconfig.Editor[appconfig.WorkspacePolicy], error) {
 	cfgResolver, err := projconfig.NewResolver()
 	if err != nil {
 		return nil, fmt.Errorf("resolve project context: %w", err)
@@ -161,7 +161,7 @@ func (r *Runner) newEditor(opts MutationOpts) (*cliconfig.Editor[appconfig.Proje
 		confirmFn = ui.NewPrompter(r.Stdin, r.Stderr).Confirm
 	}
 
-	return &cliconfig.Editor[appconfig.ProjectConfig]{
+	return &cliconfig.Editor[appconfig.WorkspacePolicy]{
 		SetStore:    store,
 		DeleteStore: store,
 		Stderr:      r.Stderr,

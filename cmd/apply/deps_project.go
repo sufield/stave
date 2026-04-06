@@ -19,7 +19,7 @@ import (
 // buildProjectConfigFromLoaded assembles project configuration input from
 // an already-loaded config. This avoids duplicate I/O — the config is loaded
 // once in Build() and passed here.
-func (b *Builder) buildProjectConfigFromLoaded(projCfg *appconfig.ProjectConfig) (appeval.ProjectConfigInput, error) {
+func (b *Builder) buildProjectConfigFromLoaded(projCfg *appconfig.WorkspacePolicy) (appeval.ProjectConfigInput, error) {
 	if projCfg == nil {
 		return appeval.ProjectConfigInput{}, nil
 	}
@@ -42,7 +42,7 @@ func (b *Builder) buildProjectConfigFromLoaded(projCfg *appconfig.ProjectConfig)
 }
 
 // mapExceptions converts config exception rules to the app-layer input format.
-func mapExceptions(in []appconfig.ExceptionRule) []appeval.ExceptionInput {
+func mapExceptions(in []appconfig.PolicyException) []appeval.ExceptionInput {
 	if len(in) == 0 {
 		return nil
 	}

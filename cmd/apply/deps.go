@@ -41,7 +41,7 @@ type Builder struct {
 	NewStdinObsRepo  func(io.Reader) (appcontracts.ObservationRepository, error)
 
 	// Pre-loaded project config from Resolve(), shared across the pipeline.
-	ProjectConfig     *appconfig.ProjectConfig
+	ProjectConfig     *appconfig.WorkspacePolicy
 	ProjectConfigPath string
 
 	// OnObsProgress is called by the observation loader after each file

@@ -8,28 +8,28 @@ import (
 	"github.com/sufield/stave/internal/core/retention"
 )
 
-func TestParseGatePolicy(t *testing.T) {
+func TestParseEnforcementGate(t *testing.T) {
 	tests := []struct {
 		input   string
-		want    GatePolicy
+		want    EnforcementGate
 		wantErr bool
 	}{
-		{"fail_on_any_violation", GatePolicyAny, false},
-		{"fail_on_new_violation", GatePolicyNew, false},
-		{"fail_on_overdue_upcoming", GatePolicyOverdue, false},
-		{"FAIL_ON_ANY_VIOLATION", GatePolicyAny, false},
-		{"  fail_on_new_violation  ", GatePolicyNew, false},
+		{"fail_on_any_violation", GateStrict, false},
+		{"fail_on_new_violation", GateRegression, false},
+		{"fail_on_overdue_upcoming", GateSLA, false},
+		{"FAIL_ON_ANY_VIOLATION", GateStrict, false},
+		{"  fail_on_new_violation  ", GateRegression, false},
 		{"invalid", "", true},
 		{"", "", true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
-			got, err := ParseGatePolicy(tt.input)
+			got, err := ParseEnforcementGate(tt.input)
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("err = %v, wantErr = %v", err, tt.wantErr)
 			}
 			if got != tt.want {
-				t.Errorf("ParseGatePolicy(%q) = %q, want %q", tt.input, got, tt.want)
+				t.Errorf("ParseEnforcementGate(%q) = %q, want %q", tt.input, got, tt.want)
 			}
 		})
 	}
@@ -106,7 +106,7 @@ func TestIdentifySetting_Errors(t *testing.T) {
 }
 
 func TestGetAttribute(t *testing.T) {
-	cfg := &ProjectConfig{
+	cfg := &WorkspacePolicy{
 		MaxUnsafe:       "168h",
 		CIFailurePolicy: "fail_on_any_violation",
 	}
@@ -141,7 +141,7 @@ func TestGetAttribute(t *testing.T) {
 
 func TestUpdateAttribute(t *testing.T) {
 	t.Run("set string", func(t *testing.T) {
-		cfg := &ProjectConfig{}
+		cfg := &WorkspacePolicy{}
 		if err := UpdateAttribute(cfg, "max_unsafe", "24h"); err != nil {
 			t.Fatalf("UpdateAttribute() error: %v", err)
 		}
@@ -151,7 +151,7 @@ func TestUpdateAttribute(t *testing.T) {
 	})
 
 	t.Run("unknown key", func(t *testing.T) {
-		cfg := &ProjectConfig{}
+		cfg := &WorkspacePolicy{}
 		err := UpdateAttribute(cfg, "nonexistent", "value")
 		if err == nil {
 			t.Fatal("expected error for unknown key")
@@ -159,7 +159,7 @@ func TestUpdateAttribute(t *testing.T) {
 	})
 
 	t.Run("invalid duration", func(t *testing.T) {
-		cfg := &ProjectConfig{}
+		cfg := &WorkspacePolicy{}
 		err := UpdateAttribute(cfg, "max_unsafe", "not-a-duration")
 		if err == nil {
 			t.Fatal("expected error for invalid duration")
@@ -171,7 +171,7 @@ func TestUpdateAttribute(t *testing.T) {
 	})
 
 	t.Run("valid ci_failure_policy", func(t *testing.T) {
-		cfg := &ProjectConfig{}
+		cfg := &WorkspacePolicy{}
 		if err := UpdateAttribute(cfg, "ci_failure_policy", "fail_on_new_violation"); err != nil {
 			t.Fatalf("error: %v", err)
 		}
@@ -181,7 +181,7 @@ func TestUpdateAttribute(t *testing.T) {
 	})
 
 	t.Run("invalid ci_failure_policy", func(t *testing.T) {
-		cfg := &ProjectConfig{}
+		cfg := &WorkspacePolicy{}
 		err := UpdateAttribute(cfg, "ci_failure_policy", "invalid_policy")
 		if err == nil {
 			t.Fatal("expected error for invalid policy")
@@ -189,7 +189,7 @@ func TestUpdateAttribute(t *testing.T) {
 	})
 
 	t.Run("valid capture_cadence", func(t *testing.T) {
-		cfg := &ProjectConfig{}
+		cfg := &WorkspacePolicy{}
 		if err := UpdateAttribute(cfg, "capture_cadence", "daily"); err != nil {
 			t.Fatalf("error: %v", err)
 		}
@@ -199,7 +199,7 @@ func TestUpdateAttribute(t *testing.T) {
 	})
 
 	t.Run("invalid capture_cadence", func(t *testing.T) {
-		cfg := &ProjectConfig{}
+		cfg := &WorkspacePolicy{}
 		err := UpdateAttribute(cfg, "capture_cadence", "weekly")
 		if err == nil {
 			t.Fatal("expected error for invalid cadence")
@@ -208,7 +208,7 @@ func TestUpdateAttribute(t *testing.T) {
 }
 
 func TestResetAttribute(t *testing.T) {
-	cfg := &ProjectConfig{MaxUnsafe: "168h"}
+	cfg := &WorkspacePolicy{MaxUnsafe: "168h"}
 	if err := ResetAttribute(cfg, "max_unsafe"); err != nil {
 		t.Fatalf("ResetAttribute() error: %v", err)
 	}
@@ -224,7 +224,7 @@ func TestResetAttribute(t *testing.T) {
 
 func TestConfigureLifecycleTier(t *testing.T) {
 	t.Run("older_than", func(t *testing.T) {
-		cfg := &ProjectConfig{}
+		cfg := &WorkspacePolicy{}
 		if err := ConfigureLifecycleTier(cfg, "hot", "older_than", "7d"); err != nil {
 			t.Fatalf("error: %v", err)
 		}
@@ -234,7 +234,7 @@ func TestConfigureLifecycleTier(t *testing.T) {
 	})
 
 	t.Run("keep_min", func(t *testing.T) {
-		cfg := &ProjectConfig{}
+		cfg := &WorkspacePolicy{}
 		if err := ConfigureLifecycleTier(cfg, "hot", "keep_min", "5"); err != nil {
 			t.Fatalf("error: %v", err)
 		}
@@ -244,7 +244,7 @@ func TestConfigureLifecycleTier(t *testing.T) {
 	})
 
 	t.Run("default subfield is older_than", func(t *testing.T) {
-		cfg := &ProjectConfig{}
+		cfg := &WorkspacePolicy{}
 		if err := ConfigureLifecycleTier(cfg, "hot", "", "14d"); err != nil {
 			t.Fatalf("error: %v", err)
 		}
@@ -254,7 +254,7 @@ func TestConfigureLifecycleTier(t *testing.T) {
 	})
 
 	t.Run("invalid duration", func(t *testing.T) {
-		cfg := &ProjectConfig{}
+		cfg := &WorkspacePolicy{}
 		err := ConfigureLifecycleTier(cfg, "hot", "older_than", "bad")
 		if err == nil {
 			t.Fatal("expected error for invalid duration")
@@ -262,7 +262,7 @@ func TestConfigureLifecycleTier(t *testing.T) {
 	})
 
 	t.Run("invalid keep_min", func(t *testing.T) {
-		cfg := &ProjectConfig{}
+		cfg := &WorkspacePolicy{}
 		err := ConfigureLifecycleTier(cfg, "hot", "keep_min", "not-a-number")
 		if err == nil {
 			t.Fatal("expected error for invalid keep_min")
@@ -270,7 +270,7 @@ func TestConfigureLifecycleTier(t *testing.T) {
 	})
 
 	t.Run("negative keep_min", func(t *testing.T) {
-		cfg := &ProjectConfig{}
+		cfg := &WorkspacePolicy{}
 		err := ConfigureLifecycleTier(cfg, "hot", "keep_min", "-1")
 		if err == nil {
 			t.Fatal("expected error for negative keep_min")
@@ -278,7 +278,7 @@ func TestConfigureLifecycleTier(t *testing.T) {
 	})
 
 	t.Run("unsupported subfield", func(t *testing.T) {
-		cfg := &ProjectConfig{}
+		cfg := &WorkspacePolicy{}
 		err := ConfigureLifecycleTier(cfg, "hot", "bad_field", "value")
 		if err == nil {
 			t.Fatal("expected error for unsupported sub-field")
@@ -287,7 +287,7 @@ func TestConfigureLifecycleTier(t *testing.T) {
 }
 
 func TestRemoveLifecycleTier(t *testing.T) {
-	cfg := &ProjectConfig{
+	cfg := &WorkspacePolicy{
 		RetentionTiers: map[string]retention.Tier{
 			"hot": {OlderThan: "7d"},
 		},
@@ -299,7 +299,7 @@ func TestRemoveLifecycleTier(t *testing.T) {
 }
 
 func TestResolveAuditSetting(t *testing.T) {
-	e := newTestEvaluator(&ProjectConfig{MaxUnsafe: "72h"}, nil)
+	e := newTestEvaluator(&WorkspacePolicy{MaxUnsafe: "72h"}, nil)
 
 	t.Run("known key", func(t *testing.T) {
 		v, ok := ResolveAuditSetting(e, "max_unsafe")
@@ -358,15 +358,15 @@ func TestBuildSettingCompletions(t *testing.T) {
 
 func TestBuildEffectiveConfig(t *testing.T) {
 	e := newTestEvaluator(
-		&ProjectConfig{
+		&WorkspacePolicy{
 			MaxUnsafe:       "72h",
 			CIFailurePolicy: "fail_on_any_violation",
 			RetentionTiers: map[string]retention.Tier{
 				"hot": {OlderThan: "7d", KeepMin: 2},
 			},
 		},
-		&UserConfig{
-			CLIDefaults: UserCLIConfig{Output: "json"},
+		&OperatorSettings{
+			CLIDefaults: OperatorCLIConfig{Output: "json"},
 		},
 	)
 
@@ -419,7 +419,7 @@ func TestGovernanceSettings_ContainsExpected(t *testing.T) {
 }
 
 func TestValidateField_CaptureAdence(t *testing.T) {
-	cfg := &ProjectConfig{CaptureCadence: "weekly"}
+	cfg := &WorkspacePolicy{CaptureCadence: "weekly"}
 	err := validateAuditSetting(cfg, "CaptureCadence")
 	if err == nil {
 		t.Fatal("expected error for invalid cadence")
@@ -430,7 +430,7 @@ func TestValidateField_CaptureAdence(t *testing.T) {
 }
 
 func TestValidateField_EmptyValues(t *testing.T) {
-	cfg := &ProjectConfig{}
+	cfg := &WorkspacePolicy{}
 	// Empty values should pass validation
 	for _, field := range []string{"MaxUnsafe", "SnapshotRetention", "RetentionTier", "CIFailurePolicy", "CaptureCadence", "SnapshotFilenameTemplate"} {
 		if err := validateAuditSetting(cfg, field); err != nil {
@@ -440,7 +440,7 @@ func TestValidateField_EmptyValues(t *testing.T) {
 }
 
 func TestSnapshotRetentionForTier(t *testing.T) {
-	e := newTestEvaluator(&ProjectConfig{
+	e := newTestEvaluator(&WorkspacePolicy{
 		RetentionTiers: map[string]retention.Tier{
 			"hot": {OlderThan: "3d"},
 		},

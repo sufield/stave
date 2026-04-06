@@ -46,7 +46,7 @@ func TestConfigShow_ConfigAndEnvSourcesJSON(t *testing.T) {
 	temp := t.TempDir()
 	chdirForConfigTest(t, temp)
 
-	cfgPath := filepath.Join(temp, appconfig.ProjectConfigFile)
+	cfgPath := filepath.Join(temp, appconfig.AuditPolicyFile)
 	cfg := "max_unsafe: 96h\nsnapshot_retention: 45d\ndefault_retention_tier: non_critical\nsnapshot_retention_tiers:\n  critical:\n    older_than: 30d\n  non_critical:\n    older_than: 14d\nci_failure_policy: fail_on_new_violation\n"
 	if err := os.WriteFile(cfgPath, []byte(cfg), 0o644); err != nil {
 		t.Fatalf("write config: %v", err)
@@ -69,13 +69,13 @@ func TestConfigShow_ConfigAndEnvSourcesJSON(t *testing.T) {
 		t.Fatalf("decode output: %v\noutput=%s", err, buf.String())
 	}
 	configBase := filepath.Base(out.ConfigFile)
-	if configBase != appconfig.ProjectConfigFile {
-		t.Fatalf("config file base=%q want %q", configBase, appconfig.ProjectConfigFile)
+	if configBase != appconfig.AuditPolicyFile {
+		t.Fatalf("config file base=%q want %q", configBase, appconfig.AuditPolicyFile)
 	}
 	if out.MaxUnsafeDuration.Value != "96h" {
 		t.Fatalf("max_unsafe=%q want 96h", out.MaxUnsafeDuration.Value)
 	}
-	if !strings.HasSuffix(out.MaxUnsafeDuration.Source, appconfig.ProjectConfigFile+":max_unsafe") {
+	if !strings.HasSuffix(out.MaxUnsafeDuration.Source, appconfig.AuditPolicyFile+":max_unsafe") {
 		t.Fatalf("max_unsafe source=%q", out.MaxUnsafeDuration.Source)
 	}
 	if out.SnapshotRetention.Value != "7d" {
@@ -126,7 +126,7 @@ func TestConfigSetRetentionTierKey(t *testing.T) {
 		t.Fatalf("config set failed: %v", err)
 	}
 
-	cfgBytes, err := os.ReadFile(filepath.Join(temp, appconfig.ProjectConfigFile))
+	cfgBytes, err := os.ReadFile(filepath.Join(temp, appconfig.AuditPolicyFile))
 	if err != nil {
 		t.Fatalf("read config: %v", err)
 	}

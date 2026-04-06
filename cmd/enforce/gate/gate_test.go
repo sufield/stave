@@ -6,30 +6,30 @@ import (
 	appconfig "github.com/sufield/stave/internal/app/config"
 )
 
-func TestParseGatePolicy(t *testing.T) {
+func TestParseEnforcementGate(t *testing.T) {
 	tests := []struct {
 		in      string
-		want    appconfig.GatePolicy
+		want    appconfig.EnforcementGate
 		wantErr bool
 	}{
-		{in: string(appconfig.GatePolicyAny), want: appconfig.GatePolicyAny},
-		{in: "  FAIL_ON_NEW_VIOLATION  ", want: appconfig.GatePolicyNew},
-		{in: string(appconfig.GatePolicyOverdue), want: appconfig.GatePolicyOverdue},
+		{in: string(appconfig.GateStrict), want: appconfig.GateStrict},
+		{in: "  FAIL_ON_NEW_VIOLATION  ", want: appconfig.GateRegression},
+		{in: string(appconfig.GateSLA), want: appconfig.GateSLA},
 		{in: "unknown", wantErr: true},
 	}
 	for _, tc := range tests {
-		got, err := appconfig.ParseGatePolicy(tc.in)
+		got, err := appconfig.ParseEnforcementGate(tc.in)
 		if tc.wantErr {
 			if err == nil {
-				t.Fatalf("ParseGatePolicy(%q): expected error", tc.in)
+				t.Fatalf("ParseEnforcementGate(%q): expected error", tc.in)
 			}
 			continue
 		}
 		if err != nil {
-			t.Fatalf("ParseGatePolicy(%q): %v", tc.in, err)
+			t.Fatalf("ParseEnforcementGate(%q): %v", tc.in, err)
 		}
 		if got != tc.want {
-			t.Fatalf("ParseGatePolicy(%q) = %q, want %q", tc.in, got, tc.want)
+			t.Fatalf("ParseEnforcementGate(%q) = %q, want %q", tc.in, got, tc.want)
 		}
 	}
 }

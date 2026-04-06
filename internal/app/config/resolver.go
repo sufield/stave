@@ -9,15 +9,15 @@ import (
 
 // GovernanceResolver orchestrates the merging of security settings from multiple layers.
 type GovernanceResolver struct {
-	Policy       *ProjectConfig
+	Policy       *WorkspacePolicy
 	PolicyPath   string
-	Settings     *UserConfig
+	Settings     *OperatorSettings
 	SettingsPath string
 	Getenv       func(string) string
 }
 
 // NewResolver constructs a pre-populated governance resolver.
-func NewResolver(p *ProjectConfig, pPath string, s *UserConfig, sPath string) *GovernanceResolver {
+func NewResolver(p *WorkspacePolicy, pPath string, s *OperatorSettings, sPath string) *GovernanceResolver {
 	return &GovernanceResolver{
 		Policy:       p,
 		PolicyPath:   pPath,
@@ -28,7 +28,7 @@ func NewResolver(p *ProjectConfig, pPath string, s *UserConfig, sPath string) *G
 }
 
 // WithPolicy returns a resolver with an updated security policy.
-func (r *GovernanceResolver) WithPolicy(p *ProjectConfig, pPath string) *GovernanceResolver {
+func (r *GovernanceResolver) WithPolicy(p *WorkspacePolicy, pPath string) *GovernanceResolver {
 	return &GovernanceResolver{
 		Policy:       p,
 		PolicyPath:   pPath,
@@ -41,71 +41,71 @@ func (r *GovernanceResolver) WithPolicy(p *ProjectConfig, pPath string) *Governa
 func (r *GovernanceResolver) mergeLayers(
 	entry env.Entry,
 	configKey string,
-	policyField func(*ProjectConfig) string,
-	userField func(*UserConfig) string,
+	policyField func(*WorkspacePolicy) string,
+	userField func(*OperatorSettings) string,
 	defaultValue string,
 	normalize func(string) string,
-) Value[string] {
+) PolicyValue[string] {
 	if v := strings.TrimSpace(r.Getenv(entry.Name)); v != "" {
-		return Value[string]{Value: normalize(v), Source: "env:" + entry.Name, Layer: LayerEnvironment}
+		return PolicyValue[string]{Value: normalize(v), Source: "env:" + entry.Name, Layer: LayerEnvironment}
 	}
 	if r.Policy != nil {
 		if v := strings.TrimSpace(policyField(r.Policy)); v != "" {
-			return Value[string]{Value: normalize(v), Source: r.PolicyPath + ":" + configKey, Layer: LayerProjectConfig}
+			return PolicyValue[string]{Value: normalize(v), Source: r.PolicyPath + ":" + configKey, Layer: LayerProjectConfig}
 		}
 	}
 	if r.Settings != nil {
 		if v := strings.TrimSpace(userField(r.Settings)); v != "" {
-			return Value[string]{Value: normalize(v), Source: r.SettingsPath + ":" + configKey, Layer: LayerUserConfig}
+			return PolicyValue[string]{Value: normalize(v), Source: r.SettingsPath + ":" + configKey, Layer: LayerUserConfig}
 		}
 	}
-	return Value[string]{Value: defaultValue, Source: "default", Layer: LayerDefault}
+	return PolicyValue[string]{Value: defaultValue, Source: "default", Layer: LayerDefault}
 }
 
 func passthrough(v string) string { return v }
 
 // ResolveMaxUnsafeDuration returns the SLA threshold with provenance.
-func (r *GovernanceResolver) ResolveMaxUnsafeDuration() Value[string] {
+func (r *GovernanceResolver) ResolveMaxUnsafeDuration() PolicyValue[string] {
 	return r.mergeLayers(env.MaxUnsafe, "max_unsafe",
-		func(c *ProjectConfig) string { return c.MaxUnsafe },
-		func(c *UserConfig) string { return c.MaxUnsafe },
+		func(c *WorkspacePolicy) string { return c.MaxUnsafe },
+		func(c *OperatorSettings) string { return c.MaxUnsafe },
 		DefaultMaxUnsafeDuration, passthrough,
 	)
 }
 
 // ResolveRetentionTier returns the default retention tier with provenance.
-func (r *GovernanceResolver) ResolveRetentionTier() Value[string] {
+func (r *GovernanceResolver) ResolveRetentionTier() PolicyValue[string] {
 	return r.mergeLayers(env.RetentionTier, "default_retention_tier",
-		func(c *ProjectConfig) string { return c.RetentionTier },
-		func(c *UserConfig) string { return c.RetentionTier },
+		func(c *WorkspacePolicy) string { return c.RetentionTier },
+		func(c *OperatorSettings) string { return c.RetentionTier },
 		DefaultRetentionTier, NormalizeTier,
 	)
 }
 
 // ResolveSnapshotRetention returns the retention duration for a specific tier.
-func (r *GovernanceResolver) ResolveSnapshotRetention(tier string) Value[string] {
+func (r *GovernanceResolver) ResolveSnapshotRetention(tier string) PolicyValue[string] {
 	if v := strings.TrimSpace(r.Getenv(env.SnapshotRetention.Name)); v != "" {
-		return Value[string]{Value: v, Source: "env:" + env.SnapshotRetention.Name, Layer: LayerEnvironment}
+		return PolicyValue[string]{Value: v, Source: "env:" + env.SnapshotRetention.Name, Layer: LayerEnvironment}
 	}
 	if v, ok := r.retentionFromPolicy(tier); ok {
 		return v
 	}
 	if r.Settings != nil {
 		if v := strings.TrimSpace(r.Settings.SnapshotRetention); v != "" {
-			return Value[string]{Value: v, Source: r.SettingsPath + ":snapshot_retention", Layer: LayerUserConfig}
+			return PolicyValue[string]{Value: v, Source: r.SettingsPath + ":snapshot_retention", Layer: LayerUserConfig}
 		}
 	}
-	return Value[string]{Value: DefaultSnapshotRetention, Source: "default", Layer: LayerDefault}
+	return PolicyValue[string]{Value: DefaultSnapshotRetention, Source: "default", Layer: LayerDefault}
 }
 
-func (r *GovernanceResolver) retentionFromPolicy(tier string) (Value[string], bool) {
+func (r *GovernanceResolver) retentionFromPolicy(tier string) (PolicyValue[string], bool) {
 	if r.Policy == nil {
-		return Value[string]{}, false
+		return PolicyValue[string]{}, false
 	}
 	normalizedTier := NormalizeTier(tier)
 	if tc, exists := r.Policy.RetentionTiers[normalizedTier]; exists {
 		if v := strings.TrimSpace(tc.OlderThan); v != "" {
-			return Value[string]{
+			return PolicyValue[string]{
 				Value:  v,
 				Source: r.PolicyPath + ":snapshot_retention_tiers." + normalizedTier,
 				Layer:  LayerProjectConfig,
@@ -113,64 +113,64 @@ func (r *GovernanceResolver) retentionFromPolicy(tier string) (Value[string], bo
 		}
 	}
 	if v := strings.TrimSpace(r.Policy.SnapshotRetention); v != "" {
-		return Value[string]{Value: v, Source: r.PolicyPath + ":snapshot_retention", Layer: LayerProjectConfig}, true
+		return PolicyValue[string]{Value: v, Source: r.PolicyPath + ":snapshot_retention", Layer: LayerProjectConfig}, true
 	}
-	return Value[string]{}, false
+	return PolicyValue[string]{}, false
 }
 
 // ResolveCIFailurePolicy returns the enforcement gate policy with provenance.
-func (r *GovernanceResolver) ResolveCIFailurePolicy() Value[string] {
+func (r *GovernanceResolver) ResolveCIFailurePolicy() PolicyValue[string] {
 	return r.mergeLayers(env.CIFailurePolicy, "ci_failure_policy",
-		func(c *ProjectConfig) string { return c.CIFailurePolicy },
-		func(c *UserConfig) string { return c.CIFailurePolicy },
-		string(GatePolicyAny), passthrough,
+		func(c *WorkspacePolicy) string { return c.CIFailurePolicy },
+		func(c *OperatorSettings) string { return c.CIFailurePolicy },
+		string(GateStrict), passthrough,
 	)
 }
 
 // ResolveCLIOutput returns the CLI output format with provenance.
-func (r *GovernanceResolver) ResolveCLIOutput() Value[string] {
+func (r *GovernanceResolver) ResolveCLIOutput() PolicyValue[string] {
 	if r.Settings != nil {
 		v := strings.ToLower(strings.TrimSpace(r.Settings.CLIDefaults.Output))
 		if v == "json" || v == "text" {
-			return Value[string]{Value: v, Source: r.SettingsPath + ":cli_defaults.output", Layer: LayerUserConfig}
+			return PolicyValue[string]{Value: v, Source: r.SettingsPath + ":cli_defaults.output", Layer: LayerUserConfig}
 		}
 	}
-	return Value[string]{Value: "text", Source: "default", Layer: LayerDefault}
+	return PolicyValue[string]{Value: "text", Source: "default", Layer: LayerDefault}
 }
 
 // ResolveCLIQuiet returns the CLI quiet value with provenance.
-func (r *GovernanceResolver) ResolveCLIQuiet() Value[bool] {
+func (r *GovernanceResolver) ResolveCLIQuiet() PolicyValue[bool] {
 	if r.Settings != nil && r.Settings.CLIDefaults.Quiet != nil {
-		return Value[bool]{Value: *r.Settings.CLIDefaults.Quiet, Source: r.SettingsPath + ":cli_defaults.quiet", Layer: LayerUserConfig}
+		return PolicyValue[bool]{Value: *r.Settings.CLIDefaults.Quiet, Source: r.SettingsPath + ":cli_defaults.quiet", Layer: LayerUserConfig}
 	}
-	return Value[bool]{Value: false, Source: "default", Layer: LayerDefault}
+	return PolicyValue[bool]{Value: false, Source: "default", Layer: LayerDefault}
 }
 
 // ResolveCLISanitize returns the CLI sanitize value with provenance.
-func (r *GovernanceResolver) ResolveCLISanitize() Value[bool] {
+func (r *GovernanceResolver) ResolveCLISanitize() PolicyValue[bool] {
 	if r.Settings != nil && r.Settings.CLIDefaults.Sanitize != nil {
-		return Value[bool]{Value: *r.Settings.CLIDefaults.Sanitize, Source: r.SettingsPath + ":cli_defaults.sanitize", Layer: LayerUserConfig}
+		return PolicyValue[bool]{Value: *r.Settings.CLIDefaults.Sanitize, Source: r.SettingsPath + ":cli_defaults.sanitize", Layer: LayerUserConfig}
 	}
-	return Value[bool]{Value: false, Source: "default", Layer: LayerDefault}
+	return PolicyValue[bool]{Value: false, Source: "default", Layer: LayerDefault}
 }
 
 // ResolveCLIPathMode returns the CLI path mode with provenance.
-func (r *GovernanceResolver) ResolveCLIPathMode() Value[string] {
+func (r *GovernanceResolver) ResolveCLIPathMode() PolicyValue[string] {
 	if r.Settings != nil {
 		v := strings.ToLower(strings.TrimSpace(r.Settings.CLIDefaults.PathMode))
 		if v == "base" || v == "full" {
-			return Value[string]{Value: v, Source: r.SettingsPath + ":cli_defaults.path_mode", Layer: LayerUserConfig}
+			return PolicyValue[string]{Value: v, Source: r.SettingsPath + ":cli_defaults.path_mode", Layer: LayerUserConfig}
 		}
 	}
-	return Value[string]{Value: "base", Source: "default", Layer: LayerDefault}
+	return PolicyValue[string]{Value: "base", Source: "default", Layer: LayerDefault}
 }
 
 // ResolveCLIAllowUnknownInput returns the CLI allow-unknown-input value with provenance.
-func (r *GovernanceResolver) ResolveCLIAllowUnknownInput() Value[bool] {
+func (r *GovernanceResolver) ResolveCLIAllowUnknownInput() PolicyValue[bool] {
 	if r.Settings != nil && r.Settings.CLIDefaults.AllowUnknownInput != nil {
-		return Value[bool]{Value: *r.Settings.CLIDefaults.AllowUnknownInput, Source: r.SettingsPath + ":cli_defaults.allow_unknown_input", Layer: LayerUserConfig}
+		return PolicyValue[bool]{Value: *r.Settings.CLIDefaults.AllowUnknownInput, Source: r.SettingsPath + ":cli_defaults.allow_unknown_input", Layer: LayerUserConfig}
 	}
-	return Value[bool]{Value: false, Source: "default", Layer: LayerDefault}
+	return PolicyValue[bool]{Value: false, Source: "default", Layer: LayerDefault}
 }
 
 // --- Value-Only Accessors ---
@@ -199,8 +199,8 @@ func (r *GovernanceResolver) HasConfiguredTier(tier string) bool {
 	return exists
 }
 
-func (r *GovernanceResolver) CIFailurePolicy() GatePolicy {
-	return GatePolicy(r.ResolveCIFailurePolicy().Value)
+func (r *GovernanceResolver) CIFailurePolicy() EnforcementGate {
+	return EnforcementGate(r.ResolveCIFailurePolicy().Value)
 }
 
 // --- CLI Default Accessors ---

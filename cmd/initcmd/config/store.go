@@ -13,7 +13,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// projectConfigStore implements cliconfig.Store[appconfig.ProjectConfig].
+// projectConfigStore implements cliconfig.Store[appconfig.WorkspacePolicy].
 // It acts as the infrastructure adapter for the stave.yaml file.
 type projectConfigStore struct {
 	resolver     *projconfig.Resolver
@@ -21,7 +21,7 @@ type projectConfigStore struct {
 }
 
 // Find attempts to locate an existing project configuration.
-func (s projectConfigStore) Find() (*appconfig.ProjectConfig, string, bool) {
+func (s projectConfigStore) Find() (*appconfig.WorkspacePolicy, string, bool) {
 	if s.resolver == nil {
 		cfg, path, err := projconfig.FindProjectConfigWithPath("")
 		if err != nil {
@@ -37,11 +37,11 @@ func (s projectConfigStore) Find() (*appconfig.ProjectConfig, string, bool) {
 }
 
 // LoadOrCreate finds the config file or prepares a new one in the working directory.
-func (s projectConfigStore) LoadOrCreate() (*appconfig.ProjectConfig, string, error) {
+func (s projectConfigStore) LoadOrCreate() (*appconfig.WorkspacePolicy, string, error) {
 	cfg, cfgPath, ok := s.Find()
 	if ok {
 		if cfg == nil {
-			cfg = &appconfig.ProjectConfig{}
+			cfg = &appconfig.WorkspacePolicy{}
 		}
 		return cfg, cfgPath, nil
 	}
@@ -50,13 +50,13 @@ func (s projectConfigStore) LoadOrCreate() (*appconfig.ProjectConfig, string, er
 	if s.resolver != nil && s.resolver.WorkingDir != "" {
 		baseDir = s.resolver.WorkingDir
 	}
-	return &appconfig.ProjectConfig{}, filepath.Join(baseDir, appconfig.ProjectConfigFile), nil
+	return &appconfig.WorkspacePolicy{}, filepath.Join(baseDir, appconfig.AuditPolicyFile), nil
 }
 
 // CurrentValue resolves the effective value of a key for display during
 // interactive editing. Returns (value, true) when set, or ("", false)
 // when unset, following Go's comma-ok idiom.
-func (s projectConfigStore) CurrentValue(cfg *appconfig.ProjectConfig, key, cfgPath string) (string, bool) {
+func (s projectConfigStore) CurrentValue(cfg *appconfig.WorkspacePolicy, key, cfgPath string) (string, bool) {
 	if cfg == nil {
 		return "", false
 	}
@@ -93,7 +93,7 @@ func (s projectConfigStore) CurrentValue(cfg *appconfig.ProjectConfig, key, cfgP
 	return v.Value, true
 }
 
-func (s projectConfigStore) tierSubFieldValue(cfg *appconfig.ProjectConfig, parsed appconfig.SettingPath) (string, bool) {
+func (s projectConfigStore) tierSubFieldValue(cfg *appconfig.WorkspacePolicy, parsed appconfig.SettingPath) (string, bool) {
 	if cfg == nil || len(cfg.RetentionTiers) == 0 {
 		return "", false
 	}
@@ -115,7 +115,7 @@ func (s projectConfigStore) tierSubFieldValue(cfg *appconfig.ProjectConfig, pars
 }
 
 // Set updates a specific key in the provided config struct.
-func (s projectConfigStore) Set(cfg *appconfig.ProjectConfig, key, value string) error {
+func (s projectConfigStore) Set(cfg *appconfig.WorkspacePolicy, key, value string) error {
 	parsed, err := appconfig.IdentifySetting(key)
 	if err != nil {
 		return err
@@ -127,7 +127,7 @@ func (s projectConfigStore) Set(cfg *appconfig.ProjectConfig, key, value string)
 }
 
 // Delete removes a specific key from the provided config struct.
-func (s projectConfigStore) Delete(cfg *appconfig.ProjectConfig, key string) error {
+func (s projectConfigStore) Delete(cfg *appconfig.WorkspacePolicy, key string) error {
 	parsed, err := appconfig.IdentifySetting(key)
 	if err != nil {
 		return err
@@ -140,7 +140,7 @@ func (s projectConfigStore) Delete(cfg *appconfig.ProjectConfig, key string) err
 }
 
 // Write serializes the configuration back to the stave.yaml file.
-func (s projectConfigStore) Write(path string, cfg *appconfig.ProjectConfig) error {
+func (s projectConfigStore) Write(path string, cfg *appconfig.WorkspacePolicy) error {
 	data, err := yaml.Marshal(cfg)
 	if err != nil {
 		return fmt.Errorf("marshaling configuration: %w", err)

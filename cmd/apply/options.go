@@ -47,7 +47,7 @@ type RunConfig struct {
 
 	// Pre-loaded project config, resolved once during Resolve().
 	// Shared by buildEvaluatorInput and Build to avoid repeated disk reads.
-	projectConfig     *appconfig.ProjectConfig
+	projectConfig     *appconfig.WorkspacePolicy
 	projectConfigPath string
 }
 

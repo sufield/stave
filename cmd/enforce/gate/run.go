@@ -12,7 +12,7 @@ import (
 
 // config defines the parameters for enforcing a CI failure policy.
 type config struct {
-	Policy            appconfig.GatePolicy
+	Policy            appconfig.EnforcementGate
 	InPath            string
 	BaselinePath      string
 	ControlsDir       string

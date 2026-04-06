@@ -130,7 +130,7 @@ snapshot_retention_tiers:
   non_critical:
     older_than: 14d
 `
-	var cfg appconfig.ProjectConfig
+	var cfg appconfig.WorkspacePolicy
 	if err := yaml.Unmarshal([]byte(input), &cfg); err != nil {
 		t.Fatalf("unmarshal project config: %v", err)
 	}

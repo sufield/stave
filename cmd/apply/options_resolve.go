@@ -160,7 +160,7 @@ func parseDomainOptions(maxUnsafe, nowTime, observationsDir, manifest, pubKey st
 
 // validateDirsWithConfig ensures directories exist unless using packs or stdin.
 // Uses a pre-loaded project config to check for enabled packs without re-reading disk.
-func validateDirsWithConfig(controlsDir, observationsDir string, controlsSet bool, projCfg *appconfig.ProjectConfig) error {
+func validateDirsWithConfig(controlsDir, observationsDir string, controlsSet bool, projCfg *appconfig.WorkspacePolicy) error {
 	hasPacks := !controlsSet && projCfg != nil && len(projCfg.EnabledControlPacks) > 0
 	if !hasPacks {
 		if err := dircheck.ValidateFlagDir("--controls", controlsDir, "controls", ui.ErrHintControlsNotAccessible, nil); err != nil {

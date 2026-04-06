@@ -22,7 +22,7 @@ type evalContext struct {
 	Plan              *appeval.EvaluationPlan
 	Runtime           *ui.Runtime
 	Logger            *slog.Logger
-	ProjectConfig     *appconfig.ProjectConfig
+	ProjectConfig     *appconfig.WorkspacePolicy
 	ProjectConfigPath string
 }
 
