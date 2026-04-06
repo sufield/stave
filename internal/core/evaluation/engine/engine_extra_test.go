@@ -248,49 +248,49 @@ func TestUnsupportedStrategy(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// Runner helpers
+// Assessor helpers
 // ---------------------------------------------------------------------------
 
-func TestRunnerMaxGapThreshold(t *testing.T) {
-	r := NewRunner()
-	if got := r.maxGapThreshold(); got != DefaultMaxGapThreshold {
+func TestAssessorContinuityLimit(t *testing.T) {
+	a := NewAssessor()
+	if got := a.continuityLimit(); got != DefaultContinuityLimit {
 		t.Fatalf("default = %v", got)
 	}
 
-	r.MaxGapThreshold = 6 * time.Hour
-	if got := r.maxGapThreshold(); got != 6*time.Hour {
+	a.ContinuityLimit = 6 * time.Hour
+	if got := a.continuityLimit(); got != 6*time.Hour {
 		t.Fatalf("custom = %v", got)
 	}
 }
 
-func TestRunnerMaxUnsafeDurationFor(t *testing.T) {
-	r := &Runner{MaxUnsafeDuration: 168 * time.Hour}
+func TestAssessorSLAThresholdFor(t *testing.T) {
+	a := &Assessor{SLAThreshold: 168 * time.Hour}
 
 	// No per-control override
 	ctl := &policy.ControlDefinition{}
-	if got := r.maxUnsafeDurationFor(ctl); got != 168*time.Hour {
-		t.Fatalf("got %v, want runner default", got)
+	if got := a.slaThresholdFor(ctl); got != 168*time.Hour {
+		t.Fatalf("got %v, want assessor default", got)
 	}
 
 	// Per-control override
 	ctl = &policy.ControlDefinition{
 		Params: policy.NewParams(map[string]any{"max_unsafe_duration": "24h"}),
 	}
-	if got := r.maxUnsafeDurationFor(ctl); got != 24*time.Hour {
+	if got := a.slaThresholdFor(ctl); got != 24*time.Hour {
 		t.Fatalf("got %v, want per-control 24h", got)
 	}
 }
 
-func TestRunnerNormalizeSnapshots(t *testing.T) {
+func TestAssessorSequenceInventory(t *testing.T) {
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
-	r := &Runner{}
+	a := &Assessor{}
 	snaps := []asset.Snapshot{
 		{CapturedAt: base.Add(2 * time.Hour)},
 		{CapturedAt: base},
 		{CapturedAt: base.Add(time.Hour)},
 	}
 
-	sorted := r.normalizeSnapshots(snaps)
+	sorted := a.sequenceInventory(snaps)
 	if sorted[0].CapturedAt != base {
 		t.Fatalf("[0] = %v", sorted[0].CapturedAt)
 	}

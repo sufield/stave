@@ -139,7 +139,7 @@ func TestCheckUnsafe_EvaluatorError(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestStrategyFor(t *testing.T) {
-	r := &Runner{}
+	a := &Assessor{}
 
 	tests := []struct {
 		ctlType policy.ControlType
@@ -155,7 +155,7 @@ func TestStrategyFor(t *testing.T) {
 
 	for _, tt := range tests {
 		ctl := &policy.ControlDefinition{Type: tt.ctlType}
-		s := r.strategyFor(ctl)
+		s := a.strategyFor(ctl)
 		if s == nil {
 			t.Fatalf("strategyFor(%v) returned nil", tt.ctlType)
 		}
@@ -163,7 +163,7 @@ func TestStrategyFor(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// Runner.computePackHash
+// Assessor.FingerprintPolicy
 // ---------------------------------------------------------------------------
 
 type testDigester struct{}
@@ -172,96 +172,96 @@ func (d *testDigester) Digest(_ []string, _ byte) kernel.Digest {
 	return kernel.Digest("sha256:testhash")
 }
 
-func TestRunnerComputePackHash_Empty(t *testing.T) {
-	r := &Runner{Hasher: &testDigester{}}
-	if hash := r.computePackHash(); hash != "" {
+func TestAssessorFingerprintPolicy_Empty(t *testing.T) {
+	a := &Assessor{Hasher: &testDigester{}}
+	if hash := a.FingerprintPolicy(); hash != "" {
 		t.Fatalf("empty controls should return empty hash, got %v", hash)
 	}
 }
 
-func TestRunnerComputePackHash_NilHasher(t *testing.T) {
-	r := &Runner{
+func TestAssessorFingerprintPolicy_NilHasher(t *testing.T) {
+	a := &Assessor{
 		Controls: []policy.ControlDefinition{{ID: "CTL.A.001"}},
 	}
-	if hash := r.computePackHash(); hash != "" {
+	if hash := a.FingerprintPolicy(); hash != "" {
 		t.Fatalf("nil hasher should return empty hash, got %v", hash)
 	}
 }
 
-func TestRunnerComputePackHash_WithControls(t *testing.T) {
-	r := &Runner{
+func TestAssessorFingerprintPolicy_WithControls(t *testing.T) {
+	a := &Assessor{
 		Controls: []policy.ControlDefinition{
 			{ID: "CTL.B.001"},
 			{ID: "CTL.A.001"},
 		},
 		Hasher: &testDigester{},
 	}
-	hash := r.computePackHash()
+	hash := a.FingerprintPolicy()
 	if hash != "sha256:testhash" {
 		t.Fatalf("expected hash, got %v", hash)
 	}
 }
 
 // ---------------------------------------------------------------------------
-// Runner.deterministicNow
+// Assessor.referenceTime
 // ---------------------------------------------------------------------------
 
 type stubClock struct{ t time.Time }
 
 func (c stubClock) Now() time.Time { return c.t }
 
-func TestDeterministicNow_FromSnapshots(t *testing.T) {
+func TestReferenceTime_FromSnapshots(t *testing.T) {
 	base := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
-	r := &Runner{Clock: stubClock{t: time.Date(2026, 3, 1, 0, 0, 0, 0, time.UTC)}}
+	a := &Assessor{Clock: stubClock{t: time.Date(2026, 3, 1, 0, 0, 0, 0, time.UTC)}}
 	sorted := []asset.Snapshot{
 		{CapturedAt: base},
 		{CapturedAt: base.Add(time.Hour)},
 	}
-	now := r.deterministicNow(sorted)
+	now := a.referenceTime(sorted)
 	if !now.Equal(base.Add(time.Hour)) {
 		t.Fatalf("expected last snapshot time, got %v", now)
 	}
 }
 
-func TestDeterministicNow_Fallback(t *testing.T) {
+func TestReferenceTime_Fallback(t *testing.T) {
 	fallback := time.Date(2026, 3, 1, 0, 0, 0, 0, time.UTC)
-	r := &Runner{Clock: stubClock{t: fallback}}
-	now := r.deterministicNow(nil)
+	a := &Assessor{Clock: stubClock{t: fallback}}
+	now := a.referenceTime(nil)
 	if !now.Equal(fallback) {
 		t.Fatalf("expected clock fallback, got %v", now)
 	}
 }
 
 // ---------------------------------------------------------------------------
-// Runner.Evaluate — basic smoke test
+// Assessor.Assess — basic smoke test
 // ---------------------------------------------------------------------------
 
-func TestRunnerEvaluate_NilClock(t *testing.T) {
-	r := &Runner{}
-	_, err := r.Evaluate(nil)
+func TestAssessorAssess_NilClock(t *testing.T) {
+	a := &Assessor{}
+	_, err := a.Assess(nil)
 	if err == nil {
 		t.Fatal("expected error for nil clock")
 	}
 }
 
-func TestRunnerEvaluate_EmptySnapshots(t *testing.T) {
-	r := &Runner{
+func TestAssessorAssess_EmptySnapshots(t *testing.T) {
+	a := &Assessor{
 		Clock:      stubClock{t: time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)},
 		Exemptions: policy.NewExemptionConfig("", nil),
 		Exceptions: policy.NewExceptionConfig(nil),
 	}
-	result, err := r.Evaluate(nil)
+	result, err := a.Assess(nil)
 	if err != nil {
-		t.Fatalf("Evaluate: %v", err)
+		t.Fatalf("Assess: %v", err)
 	}
 	if result.SecurityState != evaluation.StateCompliant {
 		t.Fatalf("empty should be safe, got %v", result.SecurityState)
 	}
 }
 
-func TestRunnerEvaluate_BasicViolation(t *testing.T) {
+func TestAssessorAssess_BasicViolation(t *testing.T) {
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
-	r := &Runner{
+	a := &Assessor{
 		Controls: []policy.ControlDefinition{
 			{
 				ID:       "CTL.A.001",
@@ -270,11 +270,11 @@ func TestRunnerEvaluate_BasicViolation(t *testing.T) {
 				Type:     policy.TypeUnsafeState,
 			},
 		},
-		MaxUnsafeDuration: 1 * time.Hour,
-		Clock:             stubClock{t: base.Add(48 * time.Hour)},
-		Exemptions:        policy.NewExemptionConfig("", nil),
-		Exceptions:        policy.NewExceptionConfig(nil),
-		CELEvaluator: func(_ policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
+		SLAThreshold: 1 * time.Hour,
+		Clock:        stubClock{t: base.Add(48 * time.Hour)},
+		Exemptions:   policy.NewExemptionConfig("", nil),
+		Exceptions:   policy.NewExceptionConfig(nil),
+		PredicateEval: func(_ policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
 			return true, nil
 		},
 	}
@@ -290,9 +290,9 @@ func TestRunnerEvaluate_BasicViolation(t *testing.T) {
 		},
 	}
 
-	result, err := r.Evaluate(snapshots)
+	result, err := a.Assess(snapshots)
 	if err != nil {
-		t.Fatalf("Evaluate: %v", err)
+		t.Fatalf("Assess: %v", err)
 	}
 	if result.SecurityState != evaluation.StateNonCompliant {
 		t.Fatalf("expected unsafe, got %v", result.SecurityState)

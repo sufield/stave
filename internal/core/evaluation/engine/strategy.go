@@ -9,11 +9,11 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation"
 )
 
-// strategyDeps abstracts the Runner capabilities that strategies need,
-// decoupling them from the concrete Runner type.
+// strategyDeps abstracts the Assessor capabilities that strategies need,
+// decoupling them from the concrete Assessor type.
 type strategyDeps interface {
-	maxUnsafeDurationFor(ctl *policy.ControlDefinition) time.Duration
-	maxGapThreshold() time.Duration
+	slaThresholdFor(ctl *policy.ControlDefinition) time.Duration
+	continuityLimit() time.Duration
 	confidenceCalculator() evaluation.ConfidenceCalculator
 	logger() *slog.Logger
 	predicateParser() policy.PredicateParser
@@ -34,14 +34,14 @@ var (
 )
 
 // strategyFor returns the appropriate evaluator based on the control type.
-func (r *Runner) strategyFor(ctl *policy.ControlDefinition) strategy {
+func (a *Assessor) strategyFor(ctl *policy.ControlDefinition) strategy {
 	switch ctl.Type {
 	case policy.TypeUnsafeState:
-		return &unsafeStateStrategy{deps: r, ctl: ctl}
+		return &unsafeStateStrategy{deps: a, ctl: ctl}
 	case policy.TypeUnsafeDuration:
-		return &unsafeDurationStrategy{deps: r, ctl: ctl}
+		return &unsafeDurationStrategy{deps: a, ctl: ctl}
 	case policy.TypeUnsafeRecurrence:
-		return &unsafeRecurrenceStrategy{deps: r, ctl: ctl}
+		return &unsafeRecurrenceStrategy{deps: a, ctl: ctl}
 	case policy.TypePrefixExposure:
 		return &prefixExposureStrategy{ctl: ctl}
 	default:
@@ -58,7 +58,7 @@ type unsafeStateStrategy struct {
 
 func (s *unsafeStateStrategy) Evaluate(t *asset.ExposureLifecycle, now time.Time, ids IdentityIndex) (evaluation.ResourceCheck, []*evaluation.Finding) {
 	observation := newControlRow(s.ctl, t)
-	maxUnsafe := s.deps.maxUnsafeDurationFor(s.ctl)
+	maxUnsafe := s.deps.slaThresholdFor(s.ctl)
 
 	if t.IsSecure() {
 		return finalizeRow(observation, evaluation.VerdictPass, evaluation.ConfidenceHigh), nil
@@ -98,7 +98,7 @@ type unsafeDurationStrategy struct {
 
 func (s *unsafeDurationStrategy) Evaluate(t *asset.ExposureLifecycle, now time.Time, ids IdentityIndex) (evaluation.ResourceCheck, []*evaluation.Finding) {
 	observation := newControlRow(s.ctl, t)
-	maxUnsafe := s.deps.maxUnsafeDurationFor(s.ctl)
+	maxUnsafe := s.deps.slaThresholdFor(s.ctl)
 
 	// 1. Violation Check (Always takes precedence)
 	exceeds, threshErr := t.ExceedsSLA(now, maxUnsafe)
@@ -124,7 +124,7 @@ func (s *unsafeDurationStrategy) Evaluate(t *asset.ExposureLifecycle, now time.T
 	// 2. Coverage Check (Is the data sufficient to say it's a PASS?)
 	coverage := CoverageValidator{
 		MinRequiredSpan: maxUnsafe,
-		MaxAllowedGap:   s.deps.maxGapThreshold(),
+		MaxAllowedGap:   s.deps.continuityLimit(),
 	}
 	if reason, ok := coverage.IsSufficient(t); !ok {
 		observation.MarkInconclusive(reason)

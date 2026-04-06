@@ -33,10 +33,10 @@ func buildTimeline(t *testing.T, observations []struct {
 	return tl
 }
 
-func testRunner(maxUnsafe time.Duration, now time.Time) *Runner {
-	return &Runner{
-		MaxUnsafeDuration: maxUnsafe,
-		Clock:             ports.FixedClock(now),
+func testAssessor(maxUnsafe time.Duration, now time.Time) *Assessor {
+	return &Assessor{
+		SLAThreshold: maxUnsafe,
+		Clock:        ports.FixedClock(now),
 	}
 }
 
@@ -66,7 +66,7 @@ func TestUnsafeStateStrategy_SafeAsset(t *testing.T) {
 	})
 
 	s := &unsafeStateStrategy{
-		deps: testRunner(4*time.Hour, now),
+		deps: testAssessor(4*time.Hour, now),
 		ctl:  testControl("CTL.STATE.001", policy.TypeUnsafeState),
 	}
 
@@ -92,7 +92,7 @@ func TestUnsafeStateStrategy_UnsafeExceedsThreshold(t *testing.T) {
 	})
 
 	s := &unsafeStateStrategy{
-		deps: testRunner(4*time.Hour, now),
+		deps: testAssessor(4*time.Hour, now),
 		ctl:  testControl("CTL.STATE.001", policy.TypeUnsafeState),
 	}
 
@@ -118,7 +118,7 @@ func TestUnsafeStateStrategy_UnsafeBelowThreshold(t *testing.T) {
 	})
 
 	s := &unsafeStateStrategy{
-		deps: testRunner(4*time.Hour, now),
+		deps: testAssessor(4*time.Hour, now),
 		ctl:  testControl("CTL.STATE.001", policy.TypeUnsafeState),
 	}
 
@@ -149,7 +149,7 @@ func TestUnsafeDurationStrategy_SafeAsset(t *testing.T) {
 	})
 
 	s := &unsafeDurationStrategy{
-		deps: testRunner(4*time.Hour, now),
+		deps: testAssessor(4*time.Hour, now),
 		ctl:  testControl("CTL.DUR.001", policy.TypeUnsafeDuration),
 	}
 
@@ -175,7 +175,7 @@ func TestUnsafeDurationStrategy_ViolationExceedsThreshold(t *testing.T) {
 	})
 
 	s := &unsafeDurationStrategy{
-		deps: testRunner(4*time.Hour, now),
+		deps: testAssessor(4*time.Hour, now),
 		ctl:  testControl("CTL.DUR.001", policy.TypeUnsafeDuration),
 	}
 
@@ -201,7 +201,7 @@ func TestUnsafeDurationStrategy_InconclusiveInsufficientCoverage(t *testing.T) {
 	})
 
 	s := &unsafeDurationStrategy{
-		deps: testRunner(168*time.Hour, now),
+		deps: testAssessor(168*time.Hour, now),
 		ctl:  testControl("CTL.DUR.001", policy.TypeUnsafeDuration),
 	}
 
@@ -229,7 +229,7 @@ func TestUnsafeDurationStrategy_SafeWithAdequateCoverage(t *testing.T) {
 	})
 
 	s := &unsafeDurationStrategy{
-		deps: testRunner(4*time.Hour, now),
+		deps: testAssessor(4*time.Hour, now),
 		ctl:  testControl("CTL.DUR.001", policy.TypeUnsafeDuration),
 	}
 
@@ -261,7 +261,7 @@ func TestUnsafeRecurrenceStrategy_DisabledPolicy(t *testing.T) {
 	ctl := testControl("CTL.REC.001", policy.TypeUnsafeRecurrence)
 
 	s := &unsafeRecurrenceStrategy{
-		deps: testRunner(4*time.Hour, now),
+		deps: testAssessor(4*time.Hour, now),
 		ctl:  ctl,
 	}
 

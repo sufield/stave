@@ -14,7 +14,7 @@
       },
       "overall": "c73da21f39d6aeb7fb98de52798dbc09bab7319b577aa429ccbf0261784f657b"
     },
-    "pack_hash": "6a5cf52efaa5bdc83ec3eb9d5011d4278835db68a4eda55c464859b38337ec46"
+    "policy_fingerprint": "6a5cf52efaa5bdc83ec3eb9d5011d4278835db68a4eda55c464859b38337ec46"
   },
   "summary": {
     "total_assets": 0,
@@ -27,7 +27,7 @@
     {
       "control_id": "CTL.TP.VENDOR.001",
       "control_name": "Third-Party Vendor Data Boundaries",
-      "reason": "type not evaluatable: authorization_boundary"
+      "reason": "control type cannot be evaluated: authorization_boundary"
     }
   ],
   "extensions": {
@@ -39,7 +39,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "9b6d84a8ace8aad933781cd25c04ab2d33acd5b8",
+      "head_commit": "177b7bb40ca5f0a9121e4edafda3e3acf34fc429",
       "dirty": false
     }
   }

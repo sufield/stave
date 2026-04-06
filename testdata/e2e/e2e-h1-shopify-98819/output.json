@@ -14,7 +14,7 @@
       },
       "overall": "a2405a467c080332dc7993b196a308ba329d3e4673298ecac2931c45b083a95e"
     },
-    "pack_hash": "d2b35cd40cec32a8718ca0f93ff93d9e6b67eced18e3388436a53e8cee4e6b11"
+    "policy_fingerprint": "d2b35cd40cec32a8718ca0f93ff93d9e6b67eced18e3388436a53e8cee4e6b11"
   },
   "summary": {
     "total_assets": 1,
@@ -201,7 +201,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "9b6d84a8ace8aad933781cd25c04ab2d33acd5b8",
+      "head_commit": "177b7bb40ca5f0a9121e4edafda3e3acf34fc429",
       "dirty": false
     }
   }

@@ -66,7 +66,7 @@
     "sla_threshold": "7d",
     "now": "2026-01-11T00:00:00Z",
     "offline": true,
-    "pack_hash": "5ca7f82f6ac5637a86b20ebaf619f2fd8db717792144900b537378860a1edd6a",
+    "policy_fingerprint": "5ca7f82f6ac5637a86b20ebaf619f2fd8db717792144900b537378860a1edd6a",
     "snapshots": 2
   },
   "schema_version": "out.v0.1",
