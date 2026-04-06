@@ -72,7 +72,7 @@ func (o *Options) BindFlags(cmd *cobra.Command) {
 // toConfig converts raw CLI options into a validated Config.
 // Standalone function — does not depend on cobra.
 func toConfig(o *Options, gf cliflags.GlobalFlags, stdout, stderr io.Writer) (config, error) {
-	policy, err := appconfig.ParseGatePolicy(o.Policy)
+	policy, err := appconfig.ParseEnforcementGate(o.Policy)
 	if err != nil {
 		return config{}, &ui.UserError{Err: fmt.Errorf("invalid policy: %w", err)}
 	}
@@ -85,7 +85,7 @@ func toConfig(o *Options, gf cliflags.GlobalFlags, stdout, stderr io.Writer) (co
 		Format:            o.Format,
 		FormatChanged:     o.formatChanged,
 		SkipPathInference: true,
-		SkipMaxUnsafe:     policy != appconfig.GatePolicyOverdue,
+		SkipMaxUnsafe:     policy != appconfig.GateSLA,
 	})
 	if err != nil {
 		return config{}, &ui.UserError{Err: fmt.Errorf("prepare evaluation context: %w", err)}

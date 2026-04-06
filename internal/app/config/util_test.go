@@ -121,14 +121,14 @@ func TestResolveDefinedRetentionTiers(t *testing.T) {
 	})
 
 	t.Run("empty tiers", func(t *testing.T) {
-		got := ResolveDefinedRetentionTiers(&ProjectConfig{})
+		got := ResolveDefinedRetentionTiers(&WorkspacePolicy{})
 		if got != nil {
 			t.Errorf("expected nil, got %v", got)
 		}
 	})
 
 	t.Run("normalizes tier names", func(t *testing.T) {
-		cfg := &ProjectConfig{
+		cfg := &WorkspacePolicy{
 			RetentionTiers: map[string]retention.Tier{
 				"HOT":    {OlderThan: "7d", KeepMin: 2},
 				"  Cold": {OlderThan: "30d", KeepMin: 1},

@@ -43,7 +43,7 @@ func MatchGlob(pattern, relPath string) (bool, error) {
 }
 
 // ResolveDefinedRetentionTiers returns the defined retention tiers from project config.
-func ResolveDefinedRetentionTiers(cfg *ProjectConfig) map[string]retention.Tier {
+func ResolveDefinedRetentionTiers(cfg *WorkspacePolicy) map[string]retention.Tier {
 	if cfg == nil || len(cfg.RetentionTiers) == 0 {
 		return nil
 	}

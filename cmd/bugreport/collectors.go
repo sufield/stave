@@ -158,7 +158,7 @@ func isSensitiveEnvKey(key string) bool {
 }
 
 func findConfigPath() (string, bool) {
-	path, ok, err := projconfig.FindNearestFile(appconfig.ProjectConfigFile)
+	path, ok, err := projconfig.FindNearestFile(appconfig.AuditPolicyFile)
 	if err != nil || !ok || strings.TrimSpace(path) == "" {
 		return "", false
 	}

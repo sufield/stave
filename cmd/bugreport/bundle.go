@@ -144,7 +144,7 @@ func (g *Generator) addConfigArtifact(bundle *bundleWriter, path string) error {
 		bundle.addWarning("skipped project config (%s): %v", path, err)
 		return nil
 	}
-	var cfg appconfig.ProjectConfig
+	var cfg appconfig.WorkspacePolicy
 	if unmarshalErr := yaml.Unmarshal(cfgBytes, &cfg); unmarshalErr != nil {
 		bundle.addWarning("skipped project config (%s): parse error: %v", path, unmarshalErr)
 		return nil

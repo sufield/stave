@@ -156,7 +156,7 @@ Exit Codes:
 				return configKeyCompletions(), cobra.ShellCompDirectiveNoFileComp
 			}
 			if len(args) == 1 && args[0] == "ci_failure_policy" {
-				return []string{string(appconfig.GatePolicyAny), string(appconfig.GatePolicyNew), string(appconfig.GatePolicyOverdue)}, cobra.ShellCompDirectiveNoFileComp
+				return []string{string(appconfig.GateStrict), string(appconfig.GateRegression), string(appconfig.GateSLA)}, cobra.ShellCompDirectiveNoFileComp
 			}
 			if len(args) == 1 && args[0] == "capture_cadence" {
 				return []string{"daily", "hourly"}, cobra.ShellCompDirectiveNoFileComp

@@ -52,7 +52,7 @@ func (a *App) printNoProjectHintIfNeeded(args []string) {
 	if len(args) != 0 {
 		return
 	}
-	_, found, err := projconfig.FindNearestFile(appconfig.ProjectConfigFile)
+	_, found, err := projconfig.FindNearestFile(appconfig.AuditPolicyFile)
 	if err != nil || !found {
 		fmt.Fprintf(a.Root.ErrOrStderr(), "No Stave project found in this directory tree. Run `%s` to create one.\n", cliCommand("init"))
 	}

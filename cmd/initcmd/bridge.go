@@ -16,8 +16,8 @@ const (
 	defaultSnapshotRetention = appconfig.DefaultSnapshotRetention
 	defaultRetentionTier     = appconfig.DefaultRetentionTier
 	defaultTierKeepMin       = appconfig.DefaultTierKeepMin
-	defaultCIFailurePolicy   = string(appconfig.GatePolicyAny)
-	projectConfigFile        = appconfig.ProjectConfigFile
+	defaultCIFailurePolicy   = string(appconfig.GateStrict)
+	projectConfigFile        = appconfig.AuditPolicyFile
 
 	profileAWSS3 = "aws-s3"
 

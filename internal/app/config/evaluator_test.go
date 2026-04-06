@@ -8,7 +8,7 @@ import (
 
 func noEnv(string) string { return "" }
 
-func newTestEvaluator(proj *ProjectConfig, user *UserConfig) *GovernanceResolver {
+func newTestEvaluator(proj *WorkspacePolicy, user *OperatorSettings) *GovernanceResolver {
 	e := NewResolver(proj, "/proj/stave.yaml", user, "/home/.config/stave/config.yaml")
 	e.Getenv = noEnv
 	return e
@@ -27,7 +27,7 @@ func TestResolveMaxUnsafeDuration_Layers(t *testing.T) {
 	})
 
 	t.Run("user config", func(t *testing.T) {
-		e := newTestEvaluator(nil, &UserConfig{MaxUnsafe: "24h"})
+		e := newTestEvaluator(nil, &OperatorSettings{MaxUnsafe: "24h"})
 		v := e.ResolveMaxUnsafeDuration()
 		if v.Value != "24h" {
 			t.Errorf("Value = %q, want 24h", v.Value)
@@ -39,8 +39,8 @@ func TestResolveMaxUnsafeDuration_Layers(t *testing.T) {
 
 	t.Run("project overrides user", func(t *testing.T) {
 		e := newTestEvaluator(
-			&ProjectConfig{MaxUnsafe: "48h"},
-			&UserConfig{MaxUnsafe: "24h"},
+			&WorkspacePolicy{MaxUnsafe: "48h"},
+			&OperatorSettings{MaxUnsafe: "24h"},
 		)
 		v := e.ResolveMaxUnsafeDuration()
 		if v.Value != "48h" {
@@ -53,7 +53,7 @@ func TestResolveMaxUnsafeDuration_Layers(t *testing.T) {
 
 	t.Run("env overrides project", func(t *testing.T) {
 		e := newTestEvaluator(
-			&ProjectConfig{MaxUnsafe: "48h"},
+			&WorkspacePolicy{MaxUnsafe: "48h"},
 			nil,
 		)
 		e.Getenv = func(key string) string {
@@ -82,7 +82,7 @@ func TestResolveRetentionTier(t *testing.T) {
 	})
 
 	t.Run("project config normalizes", func(t *testing.T) {
-		e := newTestEvaluator(&ProjectConfig{RetentionTier: "  HOT  "}, nil)
+		e := newTestEvaluator(&WorkspacePolicy{RetentionTier: "  HOT  "}, nil)
 		v := e.ResolveRetentionTier()
 		if v.Value != "hot" {
 			t.Errorf("Value = %q, want hot", v.Value)
@@ -114,7 +114,7 @@ func TestResolveSnapshotRetention(t *testing.T) {
 	})
 
 	t.Run("project tier-specific", func(t *testing.T) {
-		e := newTestEvaluator(&ProjectConfig{
+		e := newTestEvaluator(&WorkspacePolicy{
 			RetentionTiers: map[string]retention.Tier{
 				"hot": {OlderThan: "7d"},
 			},
@@ -126,7 +126,7 @@ func TestResolveSnapshotRetention(t *testing.T) {
 	})
 
 	t.Run("project fallback to top-level", func(t *testing.T) {
-		e := newTestEvaluator(&ProjectConfig{
+		e := newTestEvaluator(&WorkspacePolicy{
 			SnapshotRetention: "14d",
 		}, nil)
 		v := e.ResolveSnapshotRetention("unknown")
@@ -136,7 +136,7 @@ func TestResolveSnapshotRetention(t *testing.T) {
 	})
 
 	t.Run("user config", func(t *testing.T) {
-		e := newTestEvaluator(nil, &UserConfig{SnapshotRetention: "60d"})
+		e := newTestEvaluator(nil, &OperatorSettings{SnapshotRetention: "60d"})
 		v := e.ResolveSnapshotRetention("any")
 		if v.Value != "60d" {
 			t.Errorf("Value = %q, want 60d", v.Value)
@@ -144,7 +144,7 @@ func TestResolveSnapshotRetention(t *testing.T) {
 	})
 
 	t.Run("env override", func(t *testing.T) {
-		e := newTestEvaluator(&ProjectConfig{SnapshotRetention: "14d"}, nil)
+		e := newTestEvaluator(&WorkspacePolicy{SnapshotRetention: "14d"}, nil)
 		e.Getenv = func(key string) string {
 			if key == "STAVE_SNAPSHOT_RETENTION" {
 				return "3d"
@@ -162,13 +162,13 @@ func TestResolveCIFailurePolicy(t *testing.T) {
 	t.Run("default", func(t *testing.T) {
 		e := newTestEvaluator(nil, nil)
 		v := e.ResolveCIFailurePolicy()
-		if v.Value != string(GatePolicyAny) {
-			t.Errorf("Value = %q, want %q", v.Value, GatePolicyAny)
+		if v.Value != string(GateStrict) {
+			t.Errorf("Value = %q, want %q", v.Value, GateStrict)
 		}
 	})
 
 	t.Run("project", func(t *testing.T) {
-		e := newTestEvaluator(&ProjectConfig{CIFailurePolicy: "fail_on_new_violation"}, nil)
+		e := newTestEvaluator(&WorkspacePolicy{CIFailurePolicy: "fail_on_new_violation"}, nil)
 		v := e.ResolveCIFailurePolicy()
 		if v.Value != "fail_on_new_violation" {
 			t.Errorf("Value = %q, want fail_on_new_violation", v.Value)
@@ -186,7 +186,7 @@ func TestResolveCLIOutput(t *testing.T) {
 	})
 
 	t.Run("user json", func(t *testing.T) {
-		e := newTestEvaluator(nil, &UserConfig{CLIDefaults: UserCLIConfig{Output: "JSON"}})
+		e := newTestEvaluator(nil, &OperatorSettings{CLIDefaults: OperatorCLIConfig{Output: "JSON"}})
 		v := e.ResolveCLIOutput()
 		if v.Value != "json" {
 			t.Errorf("Value = %q, want json", v.Value)
@@ -194,7 +194,7 @@ func TestResolveCLIOutput(t *testing.T) {
 	})
 
 	t.Run("user invalid falls to default", func(t *testing.T) {
-		e := newTestEvaluator(nil, &UserConfig{CLIDefaults: UserCLIConfig{Output: "xml"}})
+		e := newTestEvaluator(nil, &OperatorSettings{CLIDefaults: OperatorCLIConfig{Output: "xml"}})
 		v := e.ResolveCLIOutput()
 		if v.Value != "text" {
 			t.Errorf("Value = %q, want text (invalid falls back)", v.Value)
@@ -213,7 +213,7 @@ func TestResolveCLIQuiet(t *testing.T) {
 
 	t.Run("user true", func(t *testing.T) {
 		val := true
-		e := newTestEvaluator(nil, &UserConfig{CLIDefaults: UserCLIConfig{Quiet: &val}})
+		e := newTestEvaluator(nil, &OperatorSettings{CLIDefaults: OperatorCLIConfig{Quiet: &val}})
 		v := e.ResolveCLIQuiet()
 		if v.Value != true {
 			t.Error("expected true from user config")
@@ -231,7 +231,7 @@ func TestResolveCLISanitize(t *testing.T) {
 
 	t.Run("user true", func(t *testing.T) {
 		val := true
-		e := newTestEvaluator(nil, &UserConfig{CLIDefaults: UserCLIConfig{Sanitize: &val}})
+		e := newTestEvaluator(nil, &OperatorSettings{CLIDefaults: OperatorCLIConfig{Sanitize: &val}})
 		if !e.Sanitize() {
 			t.Error("expected true from user config")
 		}
@@ -247,14 +247,14 @@ func TestResolveCLIPathMode(t *testing.T) {
 	})
 
 	t.Run("user full", func(t *testing.T) {
-		e := newTestEvaluator(nil, &UserConfig{CLIDefaults: UserCLIConfig{PathMode: "Full"}})
+		e := newTestEvaluator(nil, &OperatorSettings{CLIDefaults: OperatorCLIConfig{PathMode: "Full"}})
 		if e.PathMode() != "full" {
 			t.Errorf("PathMode = %q, want full", e.PathMode())
 		}
 	})
 
 	t.Run("user invalid falls to default", func(t *testing.T) {
-		e := newTestEvaluator(nil, &UserConfig{CLIDefaults: UserCLIConfig{PathMode: "invalid"}})
+		e := newTestEvaluator(nil, &OperatorSettings{CLIDefaults: OperatorCLIConfig{PathMode: "invalid"}})
 		if e.PathMode() != "base" {
 			t.Errorf("PathMode = %q, want base", e.PathMode())
 		}
@@ -271,7 +271,7 @@ func TestResolveCLIAllowUnknownInput(t *testing.T) {
 
 	t.Run("user true", func(t *testing.T) {
 		val := true
-		e := newTestEvaluator(nil, &UserConfig{CLIDefaults: UserCLIConfig{AllowUnknownInput: &val}})
+		e := newTestEvaluator(nil, &OperatorSettings{CLIDefaults: OperatorCLIConfig{AllowUnknownInput: &val}})
 		if !e.AllowUnknownInput() {
 			t.Error("expected true from user config")
 		}
@@ -279,7 +279,7 @@ func TestResolveCLIAllowUnknownInput(t *testing.T) {
 }
 
 func TestValueAccessors(t *testing.T) {
-	e := newTestEvaluator(&ProjectConfig{
+	e := newTestEvaluator(&WorkspacePolicy{
 		MaxUnsafe:       "72h",
 		CIFailurePolicy: "fail_on_new_violation",
 	}, nil)
@@ -288,8 +288,8 @@ func TestValueAccessors(t *testing.T) {
 		t.Errorf("MaxUnsafeDuration() = %q, want 72h", got)
 	}
 
-	if got := e.CIFailurePolicy(); got != GatePolicyNew {
-		t.Errorf("CIFailurePolicy() = %q, want %q", got, GatePolicyNew)
+	if got := e.CIFailurePolicy(); got != GateRegression {
+		t.Errorf("CIFailurePolicy() = %q, want %q", got, GateRegression)
 	}
 
 	if got := e.RetentionTier(); got != DefaultRetentionTier {
@@ -314,14 +314,14 @@ func TestHasConfiguredTier(t *testing.T) {
 	})
 
 	t.Run("empty tiers", func(t *testing.T) {
-		e := newTestEvaluator(&ProjectConfig{}, nil)
+		e := newTestEvaluator(&WorkspacePolicy{}, nil)
 		if e.HasConfiguredTier("hot") {
 			t.Error("empty tiers should not have tier")
 		}
 	})
 
 	t.Run("tier exists", func(t *testing.T) {
-		e := newTestEvaluator(&ProjectConfig{
+		e := newTestEvaluator(&WorkspacePolicy{
 			RetentionTiers: map[string]retention.Tier{
 				"hot": {OlderThan: "7d"},
 			},
@@ -339,8 +339,8 @@ func TestHasConfiguredTier(t *testing.T) {
 }
 
 func TestWithPolicy(t *testing.T) {
-	orig := newTestEvaluator(&ProjectConfig{MaxUnsafe: "24h"}, &UserConfig{MaxUnsafe: "48h"})
-	updated := orig.WithPolicy(&ProjectConfig{MaxUnsafe: "72h"}, "/other/stave.yaml")
+	orig := newTestEvaluator(&WorkspacePolicy{MaxUnsafe: "24h"}, &OperatorSettings{MaxUnsafe: "48h"})
+	updated := orig.WithPolicy(&WorkspacePolicy{MaxUnsafe: "72h"}, "/other/stave.yaml")
 
 	if updated.MaxUnsafeDuration() != "72h" {
 		t.Errorf("updated MaxUnsafe = %q, want 72h", updated.MaxUnsafeDuration())
@@ -358,12 +358,12 @@ func TestWithPolicy(t *testing.T) {
 }
 
 func TestValueString(t *testing.T) {
-	v := Value[string]{Value: "168h"}
+	v := PolicyValue[string]{Value: "168h"}
 	if v.String() != "168h" {
 		t.Errorf("String() = %q, want 168h", v.String())
 	}
 
-	vb := Value[bool]{Value: true}
+	vb := PolicyValue[bool]{Value: true}
 	if vb.String() != "true" {
 		t.Errorf("bool String() = %q, want true", vb.String())
 	}

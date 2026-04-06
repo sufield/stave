@@ -32,8 +32,8 @@ type EffectiveConfig struct {
 	EffectiveRetentionByTier map[string]ResolvedField  `json:"effective_retention_by_tier"`
 }
 
-// toResolvedField converts a Value[T] to a ResolvedField.
-func toResolvedField[T any](v Value[T]) ResolvedField {
+// toResolvedField converts a PolicyValue[T] to a ResolvedField.
+func toResolvedField[T any](v PolicyValue[T]) ResolvedField {
 	return ResolvedField{Value: v.String(), Source: v.Source}
 }
 

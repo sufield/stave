@@ -15,7 +15,7 @@ import (
 var GovernanceSettings = discoverGovernanceSettings()
 
 func discoverGovernanceSettings() []string {
-	t := reflect.TypeFor[ProjectConfig]()
+	t := reflect.TypeFor[WorkspacePolicy]()
 	var settings []string
 	for f := range t.Fields() {
 		tag := strings.Split(f.Tag.Get("yaml"), ",")[0]
@@ -72,7 +72,7 @@ func IdentifySetting(raw string) (SettingPath, error) {
 }
 
 // GetAttribute retrieves the current value of a governance setting.
-func GetAttribute(cfg *ProjectConfig, name string) (string, bool) {
+func GetAttribute(cfg *WorkspacePolicy, name string) (string, bool) {
 	field, ok := fieldByYAMLTag(reflect.ValueOf(cfg).Elem(), name)
 	if !ok {
 		return "", false
@@ -81,7 +81,7 @@ func GetAttribute(cfg *ProjectConfig, name string) (string, bool) {
 }
 
 // UpdateAttribute validates and applies a change to a governance setting.
-func UpdateAttribute(cfg *ProjectConfig, name, value string) error {
+func UpdateAttribute(cfg *WorkspacePolicy, name, value string) error {
 	field, ok := fieldByYAMLTag(reflect.ValueOf(cfg).Elem(), name)
 	if !ok {
 		return fmt.Errorf("unknown governance setting: %s", name)
@@ -107,7 +107,7 @@ func UpdateAttribute(cfg *ProjectConfig, name, value string) error {
 	return nil
 }
 
-func validateAuditSetting(cfg *ProjectConfig, fieldName string) error {
+func validateAuditSetting(cfg *WorkspacePolicy, fieldName string) error {
 	switch fieldName {
 	case "MaxUnsafe":
 		return validateDuration(cfg.MaxUnsafe, "max_unsafe")
@@ -139,7 +139,7 @@ func validateEnforcementGate(v string) error {
 	if v == "" {
 		return nil
 	}
-	if _, err := ParseGatePolicy(v); err != nil {
+	if _, err := ParseEnforcementGate(v); err != nil {
 		return fmt.Errorf("invalid ci_failure_policy: %w", err)
 	}
 	return nil
@@ -166,7 +166,7 @@ func validateNonEmpty(v, name string) error {
 }
 
 // ResetAttribute restores a governance setting to its zero/default state.
-func ResetAttribute(cfg *ProjectConfig, name string) error {
+func ResetAttribute(cfg *WorkspacePolicy, name string) error {
 	field, ok := fieldByYAMLTag(reflect.ValueOf(cfg).Elem(), name)
 	if !ok {
 		return fmt.Errorf("unknown governance setting: %s", name)
@@ -176,7 +176,7 @@ func ResetAttribute(cfg *ProjectConfig, name string) error {
 }
 
 // ConfigureLifecycleTier sets specific retention rules for an inventory tier.
-func ConfigureLifecycleTier(cfg *ProjectConfig, tierName, property, value string) error {
+func ConfigureLifecycleTier(cfg *WorkspacePolicy, tierName, property, value string) error {
 	if cfg.RetentionTiers == nil {
 		cfg.RetentionTiers = make(map[string]retention.Tier)
 	}
@@ -204,12 +204,12 @@ func ConfigureLifecycleTier(cfg *ProjectConfig, tierName, property, value string
 }
 
 // RemoveLifecycleTier deletes a custom retention policy for a specific tier.
-func RemoveLifecycleTier(cfg *ProjectConfig, tierName string) {
+func RemoveLifecycleTier(cfg *WorkspacePolicy, tierName string) {
 	delete(cfg.RetentionTiers, tierName)
 }
 
 // attributeResolvers maps audit settings to their evaluation logic.
-var attributeResolvers = map[string]func(*GovernanceResolver) Value[string]{
+var attributeResolvers = map[string]func(*GovernanceResolver) PolicyValue[string]{
 	"max_unsafe":             (*GovernanceResolver).ResolveMaxUnsafeDuration,
 	"default_retention_tier": (*GovernanceResolver).ResolveRetentionTier,
 	"ci_failure_policy":      (*GovernanceResolver).ResolveCIFailurePolicy,
@@ -219,10 +219,10 @@ var attributeResolvers = map[string]func(*GovernanceResolver) Value[string]{
 
 // ResolveAuditSetting uses the GovernanceResolver to determine the effective value
 // of a governance setting.
-func ResolveAuditSetting(eval *GovernanceResolver, name string) (Value[string], bool) {
+func ResolveAuditSetting(eval *GovernanceResolver, name string) (PolicyValue[string], bool) {
 	resolver, ok := attributeResolvers[name]
 	if !ok {
-		return Value[string]{}, false
+		return PolicyValue[string]{}, false
 	}
 	return resolver(eval), true
 }
@@ -254,8 +254,8 @@ func fieldByYAMLTag(v reflect.Value, tag string) (reflect.Value, bool) {
 	return reflect.Value{}, false
 }
 
-func structFieldNameByYAMLTag(_ *ProjectConfig, yamlKey string) string {
-	t := reflect.TypeFor[ProjectConfig]()
+func structFieldNameByYAMLTag(_ *WorkspacePolicy, yamlKey string) string {
+	t := reflect.TypeFor[WorkspacePolicy]()
 	for field := range t.Fields() {
 		tag := strings.Split(field.Tag.Get("yaml"), ",")[0]
 		if tag == yamlKey {

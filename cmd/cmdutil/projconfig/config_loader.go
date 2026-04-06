@@ -43,7 +43,7 @@ func NewResolver() (*Resolver, error) {
 
 // FindProjectConfig searches for the project configuration file by walking up
 // the directory tree starting from the resolver's WorkingDir.
-func (r *Resolver) FindProjectConfig(contextPath string) (*appconfig.ProjectConfig, string, error) {
+func (r *Resolver) FindProjectConfig(contextPath string) (*appconfig.WorkspacePolicy, string, error) {
 	// 1. Priority: Explicit context path (passed from CLI layer).
 	// If loading fails, return the error — do not silently fall back
 	// to a different config from cwd ancestry.
@@ -56,9 +56,9 @@ func (r *Resolver) FindProjectConfig(contextPath string) (*appconfig.ProjectConf
 	}
 
 	// 2. Secondary: Walk up from working directory
-	path, ok := r.NearestFile(appconfig.ProjectConfigFile)
+	path, ok := r.NearestFile(appconfig.AuditPolicyFile)
 	if !ok {
-		return nil, "", fmt.Errorf("%w: %s", ErrConfigNotFound, appconfig.ProjectConfigFile)
+		return nil, "", fmt.Errorf("%w: %s", ErrConfigNotFound, appconfig.AuditPolicyFile)
 	}
 
 	cfg, err := r.loadProjectConfig(path)
@@ -86,12 +86,12 @@ func (r *Resolver) NearestFile(filename string) (string, bool) {
 	return "", false
 }
 
-func (r *Resolver) loadProjectConfig(path string) (*appconfig.ProjectConfig, error) {
+func (r *Resolver) loadProjectConfig(path string) (*appconfig.WorkspacePolicy, error) {
 	data, err := fsutil.ReadFileLimited(path)
 	if err != nil {
 		return nil, fmt.Errorf("read project config: %w", err)
 	}
-	var cfg appconfig.ProjectConfig
+	var cfg appconfig.WorkspacePolicy
 	if err := yaml.Unmarshal(data, &cfg); err != nil {
 		return nil, fmt.Errorf("parse project config at %q: %w", path, err)
 	}
@@ -112,7 +112,7 @@ func (r *Resolver) UserConfigPath() (string, error) {
 }
 
 // LoadUserConfig finds and parses the user's global configuration.
-func (r *Resolver) LoadUserConfig() (*appconfig.UserConfig, string, error) {
+func (r *Resolver) LoadUserConfig() (*appconfig.OperatorSettings, string, error) {
 	path, err := r.UserConfigPath()
 	if err != nil {
 		return nil, "", err
@@ -121,12 +121,12 @@ func (r *Resolver) LoadUserConfig() (*appconfig.UserConfig, string, error) {
 	data, err := fsutil.ReadFileLimited(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return &appconfig.UserConfig{}, path, nil
+			return &appconfig.OperatorSettings{}, path, nil
 		}
 		return nil, path, fmt.Errorf("read user config: %w", err)
 	}
 
-	var cfg appconfig.UserConfig
+	var cfg appconfig.OperatorSettings
 	if err := yaml.Unmarshal(data, &cfg); err != nil {
 		return nil, path, fmt.Errorf("parse user config at %q: %w", path, err)
 	}
@@ -134,7 +134,7 @@ func (r *Resolver) LoadUserConfig() (*appconfig.UserConfig, string, error) {
 }
 
 // WriteUserConfig persists the user configuration to disk.
-func (r *Resolver) WriteUserConfig(cfg *appconfig.UserConfig, path string) error {
+func (r *Resolver) WriteUserConfig(cfg *appconfig.OperatorSettings, path string) error {
 	outBytes, err := yaml.Marshal(cfg)
 	if err != nil {
 		return fmt.Errorf("marshal user config: %w", err)
@@ -172,7 +172,7 @@ func FindNearestFile(filename string) (string, bool, error) {
 // FindProjectConfig returns the nearest project config.
 // Returns (nil, false, nil) when no config file is found.
 // Returns a non-nil error for parse or permission failures.
-func FindProjectConfig() (*appconfig.ProjectConfig, bool, error) {
+func FindProjectConfig() (*appconfig.WorkspacePolicy, bool, error) {
 	cfg, _, err := FindProjectConfigWithPath("")
 	if err != nil {
 		return nil, false, err
@@ -184,7 +184,7 @@ func FindProjectConfig() (*appconfig.ProjectConfig, bool, error) {
 // Returns (nil, "", nil) when no config file is found (ErrConfigNotFound).
 // Returns a non-nil error for resolver construction failures, parse
 // failures, permission errors, or explicit context path load failures.
-func FindProjectConfigWithPath(contextPath string) (*appconfig.ProjectConfig, string, error) {
+func FindProjectConfigWithPath(contextPath string) (*appconfig.WorkspacePolicy, string, error) {
 	r, err := defaultResolver()
 	if err != nil {
 		return nil, "", fmt.Errorf("resolve environment: %w", err)
@@ -203,7 +203,7 @@ func FindProjectConfigWithPath(contextPath string) (*appconfig.ProjectConfig, st
 // Returns a non-nil error for resolver construction failures, parse
 // failures, or permission failures (as opposed to the config simply not
 // existing, which returns found=false with nil error).
-func FindUserConfigWithPath() (*appconfig.UserConfig, string, bool, error) {
+func FindUserConfigWithPath() (*appconfig.OperatorSettings, string, bool, error) {
 	r, err := defaultResolver()
 	if err != nil {
 		return nil, "", false, fmt.Errorf("resolve environment: %w", err)
