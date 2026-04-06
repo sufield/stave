@@ -83,7 +83,7 @@ func (p *ShowPresenter) renderText(out appconfig.EffectiveConfig) error {
 }
 
 // buildShowOutput resolves the current effective configuration state.
-func buildShowOutput(eval *appconfig.Evaluator) appconfig.EffectiveConfig {
+func buildShowOutput(eval *appconfig.GovernanceResolver) appconfig.EffectiveConfig {
 	return eval.BuildEffectiveConfig()
 }
 

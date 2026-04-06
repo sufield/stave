@@ -25,7 +25,7 @@ type options struct {
 	olderThanSet bool
 	tierSet      bool
 	formatSet    bool
-	eval         *appconfig.Evaluator
+	eval         *appconfig.GovernanceResolver
 }
 
 // BindFlags attaches the options to a Cobra command.
@@ -48,7 +48,7 @@ func (o *options) Prepare(cmd *cobra.Command) error {
 		o.olderThanSet = cmd.Flags().Changed("older-than")
 		o.tierSet = cmd.Flags().Changed("retention-tier")
 		o.formatSet = cmd.Flags().Changed("format")
-		o.eval = cmdctx.EvaluatorFromCmd(cmd)
+		o.eval = cmdctx.ResolverFromCmd(cmd)
 	}
 	o.ObsDir = fsutil.CleanUserPath(o.ObsDir)
 	o.ArchiveDir = fsutil.CleanUserPath(o.ArchiveDir)

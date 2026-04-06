@@ -131,9 +131,9 @@ func TestResolver_UserConfigPath_EmptyHome(t *testing.T) {
 	}
 }
 
-func TestBuildEvaluator_AlwaysReturnsEvaluator(t *testing.T) {
-	result := BuildEvaluator()
-	if result.Evaluator == nil {
-		t.Fatal("Evaluator should never be nil")
+func TestBuildResolver_AlwaysReturnsResolver(t *testing.T) {
+	result := BuildResolver()
+	if result.Resolver == nil {
+		t.Fatal("Resolver should never be nil")
 	}
 }

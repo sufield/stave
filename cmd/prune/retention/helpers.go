@@ -101,7 +101,7 @@ type ResolutionFlags struct {
 
 // ResolveRetention transforms raw CLI flag values into fully resolved retention
 // parameters.
-func ResolveRetention(raw RawRetentionOpts, eval *appconfig.Evaluator, flags ResolutionFlags) (ResolvedRetention, error) {
+func ResolveRetention(raw RawRetentionOpts, eval *appconfig.GovernanceResolver, flags ResolutionFlags) (ResolvedRetention, error) {
 	olderThan := raw.OlderThan
 	if !flags.OlderThanChanged {
 		olderThan = eval.SnapshotRetention()
@@ -138,7 +138,7 @@ func ResolveRetention(raw RawRetentionOpts, eval *appconfig.Evaluator, flags Res
 
 // ValidateRetentionTierWith normalizes and validates a retention tier name
 // using the supplied evaluator instead of the global singleton.
-func ValidateRetentionTierWith(eval *appconfig.Evaluator, rawTier string) (string, error) {
+func ValidateRetentionTierWith(eval *appconfig.GovernanceResolver, rawTier string) (string, error) {
 	tier := appconfig.NormalizeTier(rawTier)
 	if tier == "" {
 		return "", fmt.Errorf("--retention-tier cannot be empty")
@@ -157,7 +157,7 @@ func ValidateRetentionTierWith(eval *appconfig.Evaluator, rawTier string) (strin
 }
 
 // ResolveOlderThanWith resolves the --older-than duration using the supplied evaluator.
-func ResolveOlderThanWith(eval *appconfig.Evaluator, flagValue string, flagChanged bool, tier string) (time.Duration, error) {
+func ResolveOlderThanWith(eval *appconfig.GovernanceResolver, flagValue string, flagChanged bool, tier string) (time.Duration, error) {
 	raw := flagValue
 	if !flagChanged {
 		raw = eval.SnapshotRetentionForTier(tier)

@@ -30,7 +30,7 @@ type rawOptions struct {
 	olderThanSet bool
 	tierSet      bool
 	formatSet    bool
-	eval         *appconfig.Evaluator
+	eval         *appconfig.GovernanceResolver
 	gf           cliflags.GlobalFlags
 }
 
@@ -40,7 +40,7 @@ func (o *rawOptions) prepare(cmd *cobra.Command) error {
 	o.olderThanSet = cmd.Flags().Changed("older-than")
 	o.tierSet = cmd.Flags().Changed("retention-tier")
 	o.formatSet = cmd.Flags().Changed("format")
-	o.eval = cmdctx.EvaluatorFromCmd(cmd)
+	o.eval = cmdctx.ResolverFromCmd(cmd)
 	o.gf = cliflags.GetGlobalFlags(cmd)
 	return nil
 }

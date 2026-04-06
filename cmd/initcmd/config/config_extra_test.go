@@ -60,7 +60,7 @@ func TestWriteLines(t *testing.T) {
 }
 
 func TestBuildShowOutput(t *testing.T) {
-	eval := appconfig.NewEvaluator(nil, "", nil, "")
+	eval := appconfig.NewResolver(nil, "", nil, "")
 	out := buildShowOutput(eval)
 	if out.MaxUnsafeDuration.Value == "" {
 		t.Fatal("expected non-empty max_unsafe default")
@@ -71,7 +71,7 @@ func TestBuildShowOutput(t *testing.T) {
 }
 
 func TestShowPresenter_RenderText(t *testing.T) {
-	eval := appconfig.NewEvaluator(nil, "", nil, "")
+	eval := appconfig.NewResolver(nil, "", nil, "")
 	out := buildShowOutput(eval)
 
 	var buf bytes.Buffer
@@ -90,7 +90,7 @@ func TestShowPresenter_RenderText(t *testing.T) {
 }
 
 func TestShowPresenter_RenderJSON(t *testing.T) {
-	eval := appconfig.NewEvaluator(nil, "", nil, "")
+	eval := appconfig.NewResolver(nil, "", nil, "")
 	out := buildShowOutput(eval)
 
 	var buf bytes.Buffer

@@ -42,7 +42,7 @@ func DefaultOptions() Options {
 
 // Prepare resolves config defaults from project config. Called from PreRunE.
 func (o *Options) Prepare(cmd *cobra.Command) error {
-	eval := cmdctx.EvaluatorFromCmd(cmd)
+	eval := cmdctx.ResolverFromCmd(cmd)
 	if eval == nil {
 		return nil
 	}

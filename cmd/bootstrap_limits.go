@@ -11,7 +11,7 @@ import (
 
 // resolveConfigurableLimits applies user-configurable runtime limits from
 // stave.yaml. Invalid values are silently ignored (keeps conservative defaults).
-func (a *App) resolveConfigurableLimits(eval *appconfig.Evaluator) {
+func (a *App) resolveConfigurableLimits(eval *appconfig.GovernanceResolver) {
 	// Max input file size (default 256 MB)
 	if raw := eval.MaxInputFileSize(); raw != "" {
 		if n, err := kernel.ParseByteSize(raw); err == nil {

@@ -396,7 +396,7 @@ func TestBuildEffectiveConfig(t *testing.T) {
 }
 
 func TestBuildEffectiveConfig_NoProject(t *testing.T) {
-	e := &Evaluator{Getenv: noEnv}
+	e := &GovernanceResolver{Getenv: noEnv}
 	eff := e.BuildEffectiveConfig()
 
 	if eff.ConfigFile != "" {

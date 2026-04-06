@@ -209,17 +209,17 @@ func RemoveLifecycleTier(cfg *ProjectConfig, tierName string) {
 }
 
 // attributeResolvers maps audit settings to their evaluation logic.
-var attributeResolvers = map[string]func(*Evaluator) Value[string]{
-	"max_unsafe":             (*Evaluator).ResolveMaxUnsafeDuration,
-	"default_retention_tier": (*Evaluator).ResolveRetentionTier,
-	"ci_failure_policy":      (*Evaluator).ResolveCIFailurePolicy,
-	"cli_output":             (*Evaluator).ResolveCLIOutput,
-	"cli_path_mode":          (*Evaluator).ResolveCLIPathMode,
+var attributeResolvers = map[string]func(*GovernanceResolver) Value[string]{
+	"max_unsafe":             (*GovernanceResolver).ResolveMaxUnsafeDuration,
+	"default_retention_tier": (*GovernanceResolver).ResolveRetentionTier,
+	"ci_failure_policy":      (*GovernanceResolver).ResolveCIFailurePolicy,
+	"cli_output":             (*GovernanceResolver).ResolveCLIOutput,
+	"cli_path_mode":          (*GovernanceResolver).ResolveCLIPathMode,
 }
 
-// ResolveAuditSetting uses the Evaluator to determine the effective value
+// ResolveAuditSetting uses the GovernanceResolver to determine the effective value
 // of a governance setting.
-func ResolveAuditSetting(eval *Evaluator, name string) (Value[string], bool) {
+func ResolveAuditSetting(eval *GovernanceResolver, name string) (Value[string], bool) {
 	resolver, ok := attributeResolvers[name]
 	if !ok {
 		return Value[string]{}, false

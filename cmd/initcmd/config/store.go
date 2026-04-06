@@ -60,7 +60,7 @@ func (s projectConfigStore) CurrentValue(cfg *appconfig.ProjectConfig, key, cfgP
 	if cfg == nil {
 		return "", false
 	}
-	eval := appconfig.NewEvaluator(cfg, cfgPath, nil, "")
+	eval := appconfig.NewResolver(cfg, cfgPath, nil, "")
 
 	parsed, err := appconfig.IdentifySetting(key)
 	if err != nil {
