@@ -68,68 +68,6 @@ type runner struct {
 	NewSnapshotRepo compose.SnapshotRepoFactory
 }
 
-// Run executes the hygiene analysis and renders the report.
-func (r *runner) Run(ctx context.Context, cfg config) error {
-	loaded, err := r.LoadAssets(ctx, cfg.ObservationsDir, cfg.ControlsDir)
-	if err != nil {
-		return err
-	}
-
-	obsRepo, err := r.NewObsRepo()
-	if err != nil {
-		return err
-	}
-	archiveSnapshots, err := loadSnapshotsIfDirExists(ctx, obsRepo, cfg.ArchiveDir)
-	if err != nil {
-		return err
-	}
-
-	snapshotLoader, err := r.NewSnapshotRepo()
-	if err != nil {
-		return err
-	}
-	files, err := pruneretention.ListObservationSnapshotFiles(ctx, snapshotLoader, cfg.ObservationsDir)
-	if err != nil {
-		return err
-	}
-
-	previousNow := cfg.Now.Add(-cfg.Lookback)
-	snapshotStats := buildSnapshotStats(cfg, loaded.Snapshots, archiveSnapshots, files)
-	currentRisk, trend := computeRiskTrend(cfg, previousNow, loaded.Controls, loaded.Snapshots)
-
-	reportReq := appcontracts.HygieneAssessment{
-		AuditContext: appcontracts.AuditContext{
-			Now:             cfg.Now,
-			PreviousAuditAt: previousNow,
-			LookbackWindow:  cfg.Lookback,
-			SLAWarning:      cfg.DueSoon,
-		},
-		Evidence:        snapshotStats,
-		SLAPosture:      currentRisk,
-		ExposureHistory: trend,
-	}
-	jsonOut := hygieneapp.Output{
-		GeneratedAt:      cfg.Now,
-		LookbackStart:    previousNow,
-		LookbackDuration: kernel.FormatDuration(cfg.Lookback),
-		DueSoonThreshold: kernel.FormatDuration(cfg.DueSoon),
-		Filters: hygieneapp.Filters{
-			ControlIDs: cfg.Filter.ControlIDs,
-			AssetTypes: cfg.Filter.AssetTypes,
-			Statuses:   cfg.Filter.Statuses,
-			DueWithin:  cfg.Filter.DueWithinRaw,
-		},
-		EvidenceInventory: snapshotStats,
-		SLAPosture:        currentRisk,
-		Trend:             trend,
-	}
-
-	if cfg.Quiet {
-		return nil
-	}
-	return writeHygieneOutput(cfg.Format, reportReq, jsonOut, cfg.Stdout)
-}
-
 // RunStatus generates only the evidence inventory section.
 func (r *runner) RunStatus(ctx context.Context, cfg config) error {
 	obsRepo, err := r.NewObsRepo()
