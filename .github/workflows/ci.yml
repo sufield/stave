@@ -111,7 +111,7 @@ jobs:
           check-latest: true
           cache: true
       - name: Build and run E2E tests
-        run: make build && scripts/e2e.sh
+        run: make build && go test ./e2e/ -run E2E -count=1 -timeout 5m
 
   release-check:
     name: GoReleaser config check
