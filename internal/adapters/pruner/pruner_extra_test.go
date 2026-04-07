@@ -46,11 +46,12 @@ func TestScannerOptions_MaxFiles_Custom(t *testing.T) {
 	}
 }
 
-func TestListSnapshotFilesFlat_NilMetadataLoader(t *testing.T) {
+func TestListSnapshotFilesFlat_NilMetadataLoaderUsesDefault(t *testing.T) {
 	dir := t.TempDir()
+	// Nil loader falls back to file modification time — should succeed.
 	_, err := ListSnapshotFilesFlat(context.Background(), dir, ScannerOptions{})
-	if err == nil {
-		t.Fatal("expected error for nil MetadataLoader")
+	if err != nil {
+		t.Fatalf("nil MetadataLoader should use default, got: %v", err)
 	}
 }
 
@@ -299,11 +300,12 @@ func TestIsSnapshotFile(_ *testing.T) {
 	// Non-JSON files should be skipped, which is tested above.
 }
 
-func TestListSnapshotFilesFlatWithLoader_NilLoader(t *testing.T) {
+func TestListSnapshotFilesFlatWithLoader_NilLoaderUsesDefault(t *testing.T) {
 	dir := t.TempDir()
+	// Nil loader falls back to file modification time via ListSnapshotFilesFlat default.
 	_, err := ListSnapshotFilesFlatWithLoader(context.Background(), dir, nil)
-	if err == nil {
-		t.Fatal("expected error for nil loader")
+	if err != nil {
+		t.Fatalf("nil loader should use default, got: %v", err)
 	}
 }
 

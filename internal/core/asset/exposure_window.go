@@ -62,20 +62,14 @@ func (w ExposureWindow) Resolve(resolvedAt time.Time) ExposureWindow {
 }
 
 // NewResolvedWindow creates a completed exposure window (OpenedAt <= ResolvedAt).
-func NewResolvedWindow(start, end time.Time) (ExposureWindow, error) {
-	w, err := NewActiveWindow(start)
-	if err != nil {
-		return ExposureWindow{}, err
-	}
-	return w.Resolve(end), nil
+func NewResolvedWindow(start, end time.Time) ExposureWindow {
+	return NewActiveWindow(start).Resolve(end)
 }
 
 // NewActiveWindow creates a new ongoing exposure window.
-func NewActiveWindow(openedAt time.Time) (ExposureWindow, error) {
-	if openedAt.IsZero() {
-		return ExposureWindow{}, fmt.Errorf("exposure_window: opened_at is required")
-	}
-	return ExposureWindow{openedAt: openedAt, active: true}, nil
+// A zero openedAt is accepted — callers may check OpenedAt().IsZero() if needed.
+func NewActiveWindow(openedAt time.Time) ExposureWindow {
+	return ExposureWindow{openedAt: openedAt, active: true}
 }
 
 // OverlapsWindow reports whether this exposure occurred during the given time window.
@@ -109,18 +103,10 @@ func (w *ExposureWindow) UnmarshalJSON(data []byte) error {
 	}
 
 	if payload.IsActive {
-		win, err := NewActiveWindow(payload.OpenedAt)
-		if err != nil {
-			return err
-		}
-		*w = win
+		*w = NewActiveWindow(payload.OpenedAt)
 		return nil
 	}
 
-	win, err := NewResolvedWindow(payload.OpenedAt, payload.ResolvedAt)
-	if err != nil {
-		return err
-	}
-	*w = win
+	*w = NewResolvedWindow(payload.OpenedAt, payload.ResolvedAt)
 	return nil
 }

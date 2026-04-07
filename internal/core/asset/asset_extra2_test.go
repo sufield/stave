@@ -375,10 +375,7 @@ func TestScopeFilter_DiscardableKey(t *testing.T) {
 
 func TestTimeline_Stats(t *testing.T) {
 	a := Asset{ID: "bucket-1"}
-	tl, err := NewExposureLifecycle(a)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tl := NewExposureLifecycle(a)
 	stats := tl.Stats()
 	if stats.HasFirstObservation() {
 		t.Fatal("empty timeline should not have first observation")
@@ -387,10 +384,7 @@ func TestTimeline_Stats(t *testing.T) {
 
 func TestTimeline_SetAsset_EmptyID(t *testing.T) {
 	a := Asset{ID: "bucket-1"}
-	tl, err := NewExposureLifecycle(a)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tl := NewExposureLifecycle(a)
 	// SetAsset with same ID is fine
 	tl.SetAsset(Asset{ID: "bucket-1", Type: "s3_bucket"})
 	if tl.Asset().Type != "s3_bucket" {
@@ -478,12 +472,12 @@ func TestExposureHistory_WindowSummary(t *testing.T) {
 
 	start1 := time.Date(2026, 1, 5, 0, 0, 0, 0, time.UTC)
 	end1 := start1.Add(2 * time.Hour)
-	ep1, _ := NewResolvedWindow(start1, end1)
+	ep1 := NewResolvedWindow(start1, end1)
 	h.Record(ep1)
 
 	start2 := time.Date(2026, 1, 10, 0, 0, 0, 0, time.UTC)
 	end2 := start2.Add(3 * time.Hour)
-	ep2, _ := NewResolvedWindow(start2, end2)
+	ep2 := NewResolvedWindow(start2, end2)
 	h.Record(ep2)
 
 	w := kernel.TimeWindow{
@@ -507,7 +501,7 @@ func TestExposureHistory_WindowSummary_NoMatch(t *testing.T) {
 	h := &ExposureHistory{}
 
 	start1 := time.Date(2026, 1, 5, 0, 0, 0, 0, time.UTC)
-	ep1, _ := NewResolvedWindow(start1, start1.Add(time.Hour))
+	ep1 := NewResolvedWindow(start1, start1.Add(time.Hour))
 	h.Record(ep1)
 
 	w := kernel.TimeWindow{

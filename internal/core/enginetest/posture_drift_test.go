@@ -14,10 +14,7 @@ func TestComputePostureDrift(t *testing.T) {
 	t2 := time.Date(2026, 1, 10, 12, 0, 0, 0, time.UTC)
 
 	newTimeline := func() *asset.ExposureLifecycle {
-		tl, err := asset.NewExposureLifecycle(asset.Asset{ID: "res:test"})
-		if err != nil {
-			t.Fatal(err)
-		}
+		tl := asset.NewExposureLifecycle(asset.Asset{ID: "res:test"})
 		return tl
 	}
 

@@ -13,10 +13,7 @@ func TestEpisodeClose_FloorsEndBeforeStart(t *testing.T) {
 	start := time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC)
 	beforeStart := start.Add(-4 * time.Hour)
 
-	ep, err := asset.NewActiveWindow(start)
-	if err != nil {
-		t.Fatalf("NewActiveWindow: %v", err)
-	}
+	ep := asset.NewActiveWindow(start)
 	closed := ep.Resolve(beforeStart)
 	if closed.IsActive() {
 		t.Fatal("expected episode to be closed")
@@ -32,10 +29,7 @@ func TestEpisodeClose_FloorsEndBeforeStart(t *testing.T) {
 func TestEpisodeClose_IsIdempotentForClosedEpisode(t *testing.T) {
 	start := time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC)
 	end := time.Date(2026, 2, 1, 2, 0, 0, 0, time.UTC)
-	alreadyClosed, err := asset.NewResolvedWindow(start, end)
-	if err != nil {
-		t.Fatalf("NewResolvedWindow: %v", err)
-	}
+	alreadyClosed := asset.NewResolvedWindow(start, end)
 
 	got := alreadyClosed.Resolve(end.Add(3 * time.Hour))
 	if got.IsActive() {
@@ -52,10 +46,7 @@ func TestEpisodeClose_IsIdempotentForClosedEpisode(t *testing.T) {
 func TestEpisodeJSON_RoundTrip(t *testing.T) {
 	start := time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC)
 	end := time.Date(2026, 2, 1, 2, 0, 0, 0, time.UTC)
-	want, err := asset.NewResolvedWindow(start, end)
-	if err != nil {
-		t.Fatalf("NewResolvedWindow: %v", err)
-	}
+	want := asset.NewResolvedWindow(start, end)
 
 	raw, err := json.Marshal(want)
 	if err != nil {
@@ -82,10 +73,7 @@ func TestTimeline_RecordObservation_FloorsArchivedEpisodeEnd(t *testing.T) {
 	start := time.Date(2026, 2, 1, 10, 0, 0, 0, time.UTC)
 	outOfOrderSafe := start.Add(-1 * time.Hour)
 
-	timeline, err := asset.NewExposureLifecycle(asset.Asset{ID: "res:test"})
-	if err != nil {
-		t.Fatal(err)
-	}
+	timeline := asset.NewExposureLifecycle(asset.Asset{ID: "res:test"})
 	if err := timeline.RecordCheck(start, true); err != nil {
 		t.Fatal(err)
 	}

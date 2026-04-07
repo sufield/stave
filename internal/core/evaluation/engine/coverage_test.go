@@ -13,10 +13,7 @@ func TestCoverageValidatorIsSufficient(t *testing.T) {
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 
 	t.Run("no coverage data", func(t *testing.T) {
-		timeline, err := asset.NewExposureLifecycle(asset.Asset{ID: "res-1"})
-		if err != nil {
-			t.Fatal(err)
-		}
+		timeline := asset.NewExposureLifecycle(asset.Asset{ID: "res-1"})
 		v := CoverageValidator{
 			MinRequiredSpan: 24 * time.Hour,
 			MaxAllowedGap:   12 * time.Hour,
@@ -31,10 +28,7 @@ func TestCoverageValidatorIsSufficient(t *testing.T) {
 	})
 
 	t.Run("coverage span below required threshold", func(t *testing.T) {
-		timeline, err := asset.NewExposureLifecycle(asset.Asset{ID: "res-1"})
-		if err != nil {
-			t.Fatal(err)
-		}
+		timeline := asset.NewExposureLifecycle(asset.Asset{ID: "res-1"})
 		if err := timeline.RecordCheck(base, false); err != nil {
 			t.Fatal(err)
 		}
@@ -56,10 +50,7 @@ func TestCoverageValidatorIsSufficient(t *testing.T) {
 	})
 
 	t.Run("max gap exceeds threshold", func(t *testing.T) {
-		timeline, err := asset.NewExposureLifecycle(asset.Asset{ID: "res-1"})
-		if err != nil {
-			t.Fatal(err)
-		}
+		timeline := asset.NewExposureLifecycle(asset.Asset{ID: "res-1"})
 		if err := timeline.RecordCheck(base, false); err != nil {
 			t.Fatal(err)
 		}
@@ -84,10 +75,7 @@ func TestCoverageValidatorIsSufficient(t *testing.T) {
 	})
 
 	t.Run("coverage sufficient", func(t *testing.T) {
-		timeline, err := asset.NewExposureLifecycle(asset.Asset{ID: "res-1"})
-		if err != nil {
-			t.Fatal(err)
-		}
+		timeline := asset.NewExposureLifecycle(asset.Asset{ID: "res-1"})
 		if err := timeline.RecordCheck(base, false); err != nil {
 			t.Fatal(err)
 		}

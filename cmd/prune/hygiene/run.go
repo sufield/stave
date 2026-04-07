@@ -130,6 +130,89 @@ func (r *runner) Run(ctx context.Context, cfg config) error {
 	return writeHygieneOutput(cfg.Format, reportReq, jsonOut, cfg.Stdout)
 }
 
+// RunStatus generates only the evidence inventory section.
+func (r *runner) RunStatus(ctx context.Context, cfg config) error {
+	obsRepo, err := r.NewObsRepo()
+	if err != nil {
+		return err
+	}
+
+	activeSnapshots, err := loadSnapshotsIfDirExists(ctx, obsRepo, cfg.ObservationsDir)
+	if err != nil {
+		return err
+	}
+	archiveSnapshots, err := loadSnapshotsIfDirExists(ctx, obsRepo, cfg.ArchiveDir)
+	if err != nil {
+		return err
+	}
+
+	snapshotLoader, err := r.NewSnapshotRepo()
+	if err != nil {
+		return err
+	}
+	files, err := pruneretention.ListObservationSnapshotFiles(ctx, snapshotLoader, cfg.ObservationsDir)
+	if err != nil {
+		return err
+	}
+
+	stats := buildSnapshotStats(cfg, activeSnapshots, archiveSnapshots, files)
+
+	if cfg.Quiet {
+		return nil
+	}
+
+	report := appcontracts.HygieneAssessment{
+		AuditContext: appcontracts.AuditContext{Now: cfg.Now},
+		Evidence:     stats,
+	}
+	jsonOut := hygieneapp.Output{
+		GeneratedAt:       cfg.Now,
+		EvidenceInventory: stats,
+	}
+	return writeHygieneOutput(cfg.Format, report, jsonOut, cfg.Stdout)
+}
+
+// RunRisk generates only the SLA posture and trend section.
+func (r *runner) RunRisk(ctx context.Context, cfg config) error {
+	loaded, err := r.LoadAssets(ctx, cfg.ObservationsDir, cfg.ControlsDir)
+	if err != nil {
+		return err
+	}
+
+	previousNow := cfg.Now.Add(-cfg.Lookback)
+	currentRisk, trend := computeRiskTrend(cfg, previousNow, loaded.Controls, loaded.Snapshots)
+
+	if cfg.Quiet {
+		return nil
+	}
+
+	report := appcontracts.HygieneAssessment{
+		AuditContext: appcontracts.AuditContext{
+			Now:             cfg.Now,
+			PreviousAuditAt: previousNow,
+			LookbackWindow:  cfg.Lookback,
+			SLAWarning:      cfg.DueSoon,
+		},
+		SLAPosture:      currentRisk,
+		ExposureHistory: trend,
+	}
+	jsonOut := hygieneapp.Output{
+		GeneratedAt:      cfg.Now,
+		LookbackStart:    previousNow,
+		LookbackDuration: kernel.FormatDuration(cfg.Lookback),
+		DueSoonThreshold: kernel.FormatDuration(cfg.DueSoon),
+		Filters: hygieneapp.Filters{
+			ControlIDs: cfg.Filter.ControlIDs,
+			AssetTypes: cfg.Filter.AssetTypes,
+			Statuses:   cfg.Filter.Statuses,
+			DueWithin:  cfg.Filter.DueWithinRaw,
+		},
+		SLAPosture: currentRisk,
+		Trend:      trend,
+	}
+	return writeHygieneOutput(cfg.Format, report, jsonOut, cfg.Stdout)
+}
+
 // --- Internal Helpers ---
 
 func buildSnapshotStats(

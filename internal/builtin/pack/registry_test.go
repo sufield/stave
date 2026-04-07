@@ -1,7 +1,6 @@
 package pack
 
 import (
-	"errors"
 	"strings"
 	"testing"
 
@@ -69,13 +68,13 @@ func TestResolveEnabledPacksDedupSorted(t *testing.T) {
 	}
 }
 
-func TestNewRegistry_RejectsEmptyPacks(t *testing.T) {
-	_, err := NewIndex([]byte("version: v1\npacks: {}\n"))
-	if err == nil {
-		t.Fatal("expected error for empty packs")
+func TestNewRegistry_AcceptsEmptyPacks(t *testing.T) {
+	idx, err := NewIndex([]byte("version: v1\npacks: {}\n"))
+	if err != nil {
+		t.Fatalf("empty packs should succeed, got: %v", err)
 	}
-	if !errors.Is(err, ErrEmptyRegistry) {
-		t.Fatalf("expected ErrEmptyRegistry, got: %v", err)
+	if len(idx.ListPacks()) != 0 {
+		t.Fatal("expected zero packs")
 	}
 }
 

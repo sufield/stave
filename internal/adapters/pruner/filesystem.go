@@ -63,7 +63,14 @@ func (o ScannerOptions) maxFiles() int {
 // ListSnapshotFilesFlat lists JSON snapshot files directly under observationsDir.
 func ListSnapshotFilesFlat(ctx context.Context, observationsDir string, opts ScannerOptions) ([]appcontracts.SnapshotFile, error) {
 	if opts.MetadataLoader == nil {
-		return nil, errMetadataLoaderRequired
+		// Default: use file modification time as captured_at.
+		opts.MetadataLoader = func(filePath, _ string) (time.Time, error) {
+			fi, statErr := os.Stat(filePath)
+			if statErr != nil {
+				return time.Time{}, statErr
+			}
+			return fi.ModTime(), nil
+		}
 	}
 
 	entries, err := os.ReadDir(observationsDir)

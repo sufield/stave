@@ -90,7 +90,7 @@ func TestNewControlRowAndFinalize(t *testing.T) {
 		ID: kernel.ControlID("CTL.TEST.001"),
 	}
 	a := asset.Asset{ID: "bucket-1", Type: "aws_s3_bucket"}
-	tl, _ := asset.NewExposureLifecycle(a)
+	tl := asset.NewExposureLifecycle(a)
 
 	row := newControlRow(ctl, tl)
 	if row.ControlID != "CTL.TEST.001" {
@@ -235,7 +235,7 @@ func TestUnsupportedStrategy(t *testing.T) {
 		Type: policy.TypeAuthorizationBoundary,
 	}
 	a := asset.Asset{ID: "bucket-1"}
-	tl, _ := asset.NewExposureLifecycle(a)
+	tl := asset.NewExposureLifecycle(a)
 
 	s := &unsupportedStrategy{ctl: ctl}
 	row, findings := s.Evaluate(tl, time.Now(), nil)
@@ -355,7 +355,7 @@ func TestBuildIdentityIndex(t *testing.T) {
 
 func TestCreateRecurrenceFinding(t *testing.T) {
 	a := asset.Asset{ID: "bucket-1", Type: "aws_s3_bucket"}
-	tl, _ := asset.NewExposureLifecycle(a)
+	tl := asset.NewExposureLifecycle(a)
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	if err := tl.RecordCheck(base, true); err != nil {
 		t.Fatal(err)
@@ -403,7 +403,7 @@ func TestNewFinding(t *testing.T) {
 		Severity: policy.SeverityHigh,
 	}
 	a := asset.Asset{ID: "bucket-1", Type: "aws_s3_bucket", Vendor: "aws"}
-	tl, _ := asset.NewExposureLifecycle(a)
+	tl := asset.NewExposureLifecycle(a)
 
 	ctx := FindingContext{
 		Reason: "test reason",

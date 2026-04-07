@@ -23,7 +23,10 @@ stdout 'Exit Codes'
 exec stave snapshot upcoming --help
 stdout 'Exit Codes'
 
-exec stave snapshot hygiene --help
+exec stave snapshot status --help
+stdout 'Exit Codes'
+
+exec stave snapshot risk --help
 stdout 'Exit Codes'
 
 exec stave snapshot manifest --help

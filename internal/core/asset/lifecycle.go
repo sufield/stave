@@ -21,14 +21,15 @@ type ExposureLifecycle struct {
 }
 
 // NewExposureLifecycle constructs a new lifecycle tracker for a cloud asset.
-func NewExposureLifecycle(a Asset) (*ExposureLifecycle, error) {
+// Panics if the asset ID is empty — this is a programming error at the call site.
+func NewExposureLifecycle(a Asset) *ExposureLifecycle {
 	if a.ID.IsEmpty() {
-		return nil, fmt.Errorf("asset ID must not be empty")
+		panic("contract violated: NewExposureLifecycle requires non-empty asset ID")
 	}
 	return &ExposureLifecycle{
 		ID:    a.ID,
 		asset: a,
-	}, nil
+	}
 }
 
 // Asset returns the latest observed state of the cloud asset.
@@ -115,7 +116,7 @@ func (l *ExposureLifecycle) HasActiveWindow() bool {
 
 func (l *ExposureLifecycle) handleExposed(t time.Time) {
 	if l.activeWindow == nil {
-		window, _ := NewActiveWindow(t)
+		window := NewActiveWindow(t)
 		l.activeWindow = &window
 	}
 	if t.After(l.lastObservedAt) || l.lastObservedAt.IsZero() {

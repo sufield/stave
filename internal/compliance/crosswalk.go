@@ -76,7 +76,7 @@ func ResolveControlCrosswalk(
 	}
 
 	if strings.TrimSpace(parsed.Version) == "" {
-		return CrosswalkResolution{}, fmt.Errorf("crosswalk 'version' is required")
+		parsed.Version = "1.0"
 	}
 
 	selected, err := resolveFrameworks(frameworkFilter)
