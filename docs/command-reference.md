@@ -58,7 +58,8 @@ All commands ship in the standard `stave` binary. No build tags are required.
 | `snapshot archive` | Move aged snapshots to cold storage | `--observations` dir, `--archive-dir` path | Moved files (dry-run by default) | Periodically, to keep observation directories fast |
 | `snapshot quality` | Check snapshot health | `--observations` dir | Staleness, cadence gaps, missing fields report | Regularly, to ensure observation data is fresh |
 | `snapshot upcoming` | Snapshots approaching retention deadlines | `--controls` dir, `--observations` dir | Action items for at-risk snapshots | Weekly, to stay ahead of retention deadlines |
-| `snapshot hygiene` | Weekly lifecycle hygiene report | `--controls` dir, `--observations` dir | Markdown or JSON hygiene report | Scheduled reporting on snapshot health |
+| `snapshot status` | Snapshot health summary | `--controls` dir, `--observations` dir | Markdown or JSON status report | Scheduled reporting on snapshot health |
+| `snapshot risk` | Snapshot risk report | `--controls` dir, `--observations` dir | Markdown or JSON risk report | Scheduled reporting on snapshot risk signals |
 | `snapshot diff` | Compare two snapshots for drift | `--observations` dir (or `--before`/`--after` files) | Changed, added, removed fields per asset | When investigating configuration drift |
 | `snapshot manifest generate` | Generate unsigned integrity manifest | `--observations` dir | Manifest JSON with SHA-256 hashes | Establishing snapshot provenance |
 | `snapshot manifest sign` | Sign manifest with Ed25519 key | Manifest file, private key | Signed manifest | Tamper-evidence for compliance workflows |

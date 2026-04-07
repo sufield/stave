@@ -145,7 +145,8 @@ All output is written with restricted permissions (`0700` dirs, `0600` files). S
 | `verify` | `cmd/apply/verify/` | — | Before/after comparison |
 | `inspect *` | `cmd/inspect/` | — | `internal/core/s3/`, `evaluation/exposure/`, `evaluation/risk/` |
 | `snapshot plan` | `cmd/prune/snapshot/` | `app/prune/snapshot/` | `internal/core/snapplan/` |
-| `snapshot hygiene` | `cmd/prune/hygiene/` | `app/hygiene/` | Weekly lifecycle report |
+| `snapshot status` | `cmd/prune/hygiene/` | `app/hygiene/` | Snapshot health summary |
+| `snapshot risk` | `cmd/prune/hygiene/` | `app/hygiene/` | Snapshot risk report |
 | `ci fix-loop` | `cmd/enforce/fix/` | — | Apply before/after + verification |
 | `capabilities` | `cmd/commands_dev.go` | `app/capabilities/` | — |
 | `graph coverage` | `cmd/enforce/graph/` | — | Predicate matching |
