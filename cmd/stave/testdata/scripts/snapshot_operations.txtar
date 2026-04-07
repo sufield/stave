@@ -16,8 +16,11 @@ exec stave snapshot plan --observations-root observations --now 2026-01-11T00:00
 # Snapshot archive dry-run
 exec stave snapshot archive --observations observations --archive-dir archive --older-than 1h --now 2026-01-11T00:00:00Z --dry-run
 
-# Snapshot hygiene
-exec stave snapshot hygiene --controls controls --observations observations --now 2026-01-11T00:00:00Z
+# Snapshot status
+exec stave snapshot status --observations observations --now 2026-01-11T00:00:00Z
+
+# Snapshot risk
+exec stave snapshot risk --controls controls --observations observations --now 2026-01-11T00:00:00Z
 
 -- controls/CTL.S3.PUBLIC.001.yaml --
 dsl_version: ctrl.v1

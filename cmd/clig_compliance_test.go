@@ -166,7 +166,8 @@ func isDataCommand(cmd *cobra.Command) bool {
 		"stave snapshot diff":     true,
 		"stave snapshot quality":  true,
 		"stave snapshot upcoming": true,
-		"stave snapshot hygiene":  true,
+		"stave snapshot status":   true,
+		"stave snapshot risk":     true,
 		"stave controls list":     true,
 	}
 	return multiFormatCommands[cmd.CommandPath()]

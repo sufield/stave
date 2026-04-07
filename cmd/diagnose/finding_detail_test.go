@@ -10,7 +10,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	stavecel "github.com/sufield/stave/internal/cel"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -21,25 +20,6 @@ import (
 	clockadp "github.com/sufield/stave/internal/core/ports"
 	"github.com/sufield/stave/internal/core/predicate"
 )
-
-func TestRunnerDetailMode_ValidationShortCircuit(t *testing.T) {
-	p := compose.NewDefaultProvider()
-	obsRepo, _ := p.NewObservationRepo()
-	ctlRepo, _ := p.NewControlRepo()
-	runner := NewRunner(obsRepo, ctlRepo, clockadp.RealClock{})
-	cfg := Config{
-		ControlID:         "",
-		AssetID:           "res-1",
-		MaxUnsafeDuration: 24 * time.Hour,
-		Format:            appcontracts.FormatText,
-		Stdout:            &bytes.Buffer{},
-		Stderr:            &bytes.Buffer{},
-	}
-	err := runner.Run(context.Background(), cfg)
-	if err == nil || !strings.Contains(err.Error(), "detail mode requires both") {
-		t.Fatalf("expected detail mode validation error, got %v", err)
-	}
-}
 
 func TestPresenterRenderDetail_IncludesTrace(t *testing.T) {
 	detail := &evaluation.FindingDetail{
@@ -73,7 +53,7 @@ func TestPresenterRenderDetail_IncludesTrace(t *testing.T) {
 	}
 }
 
-func TestRunnerDetailMode_SuccessJSON(t *testing.T) {
+func TestRunDetailMode_SuccessJSON(t *testing.T) {
 	now := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	controls := []policy.ControlDefinition{
 		{
@@ -117,7 +97,6 @@ func TestRunnerDetailMode_SuccessJSON(t *testing.T) {
 		},
 	}
 
-	// Write eval result to temp file for the real JSON loader.
 	tmp := t.TempDir()
 	evalFile := filepath.Join(tmp, "eval.json")
 	evalJSON, marshalErr := json.Marshal(result)
@@ -146,17 +125,18 @@ func TestRunnerDetailMode_SuccessJSON(t *testing.T) {
 		Stderr:            &bytes.Buffer{},
 	}
 
-	if runErr := runner.Run(context.Background(), cfg); runErr != nil {
+	// Call runDetailMode directly (now invoked by `diagnose finding` subcommand)
+	if runErr := runner.runDetailMode(context.Background(), cfg); runErr != nil {
 		t.Fatalf("expected nil in json mode, got %v", runErr)
 	}
 	if !strings.Contains(out.String(), "\"control\"") {
 		t.Fatalf("expected finding detail json output, got %s", out.String())
 	}
 
-	// Text mode branch returns ErrViolationsFound.
+	// Text mode returns ErrViolationsFound.
 	out.Reset()
 	cfg.Format = appcontracts.FormatText
-	if runErr := runner.Run(context.Background(), cfg); runErr != ui.ErrViolationsFound {
+	if runErr := runner.runDetailMode(context.Background(), cfg); runErr != ui.ErrViolationsFound {
 		t.Fatalf("expected ErrViolationsFound in text mode, got %v", runErr)
 	}
 }

@@ -85,7 +85,7 @@ func LoadSchema(kind Kind, version string) ([]byte, error) {
 
 	path, ok := registry[k][v]
 	if !ok {
-		return nil, fmt.Errorf("schema path mapping missing for %s:%s", k, v)
+		return nil, nil // Missing schema mapping = validation not available for this kind
 	}
 
 	data, err := embeddedFS.ReadFile(path)

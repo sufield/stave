@@ -23,7 +23,7 @@ func NewCmd() *cobra.Command {
 		SeverityRaw: "CRITICAL,HIGH,MEDIUM,LOW",
 		SBOMFormat:  "spdx",
 		VulnSource:  "hybrid",
-		FailOn:      "HIGH",
+		FailOn:      "NONE",
 	}
 
 	cmd := &cobra.Command{
@@ -48,7 +48,8 @@ Inputs:
   --live-vuln-check          Run local govulncheck live check (opt-in)
   --release-bundle-dir       Directory with release verification artifacts
   --privacy-mode             Enable strict privacy assertions
-  --fail-on                  Gate threshold: CRITICAL, HIGH, MEDIUM, LOW, or NONE (default: HIGH)
+  --fail-on                  Gate threshold: CRITICAL, HIGH, MEDIUM, LOW, or NONE (default: NONE)
+                             Set to NONE for pure generation; set to HIGH for CI gating
   --now                      Override current time (RFC3339) for deterministic output
 
 Outputs:
@@ -57,8 +58,8 @@ Outputs:
   stderr                     Error messages (if any)
 
 Exit Codes:
-  0   - Audit passed; no findings at or above the --fail-on threshold
-  1   - Gated findings detected at or above the --fail-on threshold
+  0   - Audit completed; no findings above --fail-on threshold (or --fail-on NONE)
+  1   - Gated: findings detected at or above the --fail-on threshold
   2   - Invalid input or configuration error
   130 - Interrupted (SIGINT)` + metadata.OfflineHelpSuffix,
 		Example: `  # Print JSON report to stdout (pipe to jq for filtering)

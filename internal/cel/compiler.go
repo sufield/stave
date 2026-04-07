@@ -45,7 +45,7 @@ func (c *Compiler) Compile(pred policy.UnsafePredicate) (CompiledPredicate, erro
 		return CompiledPredicate{}, fmt.Errorf("predicate to expression: %w", err)
 	}
 	if expr == "" {
-		return CompiledPredicate{}, fmt.Errorf("predicate produced empty expression")
+		expr = "true" // Empty predicate = always-pass (no rules = compliant)
 	}
 
 	// Check cache

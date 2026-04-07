@@ -49,11 +49,7 @@ func recordAssetObservation(
 
 		t, exists := timelines[a.ID]
 		if !exists {
-			var err error
-			t, err = asset.NewExposureLifecycle(a)
-			if err != nil {
-				return fmt.Errorf("build timeline for control %s: %w", ctl.ID, err)
-			}
+			t = asset.NewExposureLifecycle(a)
 			timelines[a.ID] = t
 		}
 

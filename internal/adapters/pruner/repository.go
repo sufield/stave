@@ -31,7 +31,9 @@ func loadSnapshotCapturedAt(ctx context.Context, loader appcontracts.SnapshotRea
 // and resolves captured_at via the provided loader.
 func ListSnapshotFilesFlatWithLoader(ctx context.Context, observationsDir string, loader appcontracts.SnapshotReader) ([]appcontracts.SnapshotFile, error) {
 	if loader == nil {
-		return nil, errSnapshotLoaderRequired
+		// No loader: fall through to ListSnapshotFilesFlat which uses
+		// file modification time as the default metadata source.
+		return ListSnapshotFilesFlat(ctx, observationsDir, ScannerOptions{})
 	}
 	return ListSnapshotFilesFlat(ctx, observationsDir, ScannerOptions{
 		MetadataLoader: func(path, name string) (time.Time, error) {

@@ -41,10 +41,8 @@ What it explains:
   - Empty findings (no predicate matches, under threshold)
   - Configuration mismatches
 
-Finding Detail mode (--control-id + --asset-id):
-  When both flags are set, diagnose switches to a single-finding deep dive
-  showing control metadata, predicate evaluation trace, evidence,
-  remediation guidance, and next steps.
+Subcommands:
+  finding    Deep-dive analysis of a single control/asset violation
 
 Exit Codes:
   0   - No diagnostic issues found
@@ -69,17 +67,9 @@ Exit Codes:
   # Diagnose from stdin (pipe evaluation output)
   stave apply --controls ./controls --observations ./obs | stave diagnose --previous-output - --controls ./controls --observations ./obs
 
-  # Deep dive into a single finding (finding detail mode)
-  stave diagnose --controls ./controls --observations ./obs \
-    --control-id CTL.S3.PUBLIC.001 \
-    --asset-id res:aws:s3:bucket:my-bucket
-
-  # Same with existing evaluation output
-  stave diagnose --previous-output output/evaluation.json \
-    --controls ./controls --observations ./obs \
-    --control-id CTL.S3.PUBLIC.001 \
-    --asset-id res:aws:s3:bucket:my-bucket \
-    --format json`,
+  # Deep dive into a single finding (subcommand)
+  stave diagnose finding --control-id CTL.S3.PUBLIC.001 --asset-id my-bucket \
+    --controls ./controls --observations ./obs`,
 		Args:          cobra.NoArgs,
 		SilenceUsage:  true,
 		SilenceErrors: true,
@@ -106,6 +96,7 @@ Exit Codes:
 	}
 
 	opts.BindFlags(cmd)
+	cmd.AddCommand(NewFindingCmd(newObsRepo, newCtlRepo))
 
 	return cmd
 }

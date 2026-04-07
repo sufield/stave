@@ -21,10 +21,7 @@ func buildTimeline(t *testing.T, observations []struct {
 }) *asset.ExposureLifecycle {
 	t.Helper()
 	a := asset.Asset{ID: "bucket-1", Type: kernel.AssetType("s3_bucket")}
-	tl, err := asset.NewExposureLifecycle(a)
-	if err != nil {
-		t.Fatalf("NewExposureLifecycle: %v", err)
-	}
+	tl := asset.NewExposureLifecycle(a)
 	for _, obs := range observations {
 		if err := tl.RecordCheck(obs.at, obs.unsafe); err != nil {
 			t.Fatalf("RecordObservation(%v, %v): %v", obs.at, obs.unsafe, err)

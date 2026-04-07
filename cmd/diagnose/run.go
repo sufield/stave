@@ -31,7 +31,7 @@ type Config struct {
 	SignalContains    string
 	Template          string
 
-	// Detail Mode (single-finding deep dive)
+	// Detail Mode — used by `diagnose finding` subcommand.
 	ControlID string
 	AssetID   string
 
@@ -43,11 +43,6 @@ type Config struct {
 	// Dependencies resolved by the CLI layer.
 	Clock     ports.Clock
 	Sanitizer kernel.Sanitizer
-}
-
-// IsDetailMode returns true if both IDs are provided for a deep-dive analysis.
-func (c Config) IsDetailMode() bool {
-	return c.ControlID != "" && c.AssetID != ""
 }
 
 // Runner orchestrates the diagnostic analysis.
@@ -66,25 +61,8 @@ func NewRunner(obsRepo appcontracts.ObservationRepository, ctlRepo appcontracts.
 	}
 }
 
-// Run executes the diagnostic workflow.
+// Run executes the standard diagnostic workflow.
 func (r *Runner) Run(ctx context.Context, cfg Config) error {
-	if err := r.validate(cfg); err != nil {
-		return err
-	}
-	if cfg.IsDetailMode() {
-		return r.runDetailMode(ctx, cfg)
-	}
-	return r.runStandardDiagnosis(ctx, cfg)
-}
-
-func (r *Runner) validate(cfg Config) error {
-	if (cfg.ControlID != "" && cfg.AssetID == "") || (cfg.ControlID == "" && cfg.AssetID != "") {
-		return &ui.UserError{Err: fmt.Errorf("detail mode requires both --control-id AND --asset-id")}
-	}
-	return nil
-}
-
-func (r *Runner) runStandardDiagnosis(ctx context.Context, cfg Config) error {
 	diagnoseRun, err := r.newDiagnosticEngine()
 	if err != nil {
 		return err

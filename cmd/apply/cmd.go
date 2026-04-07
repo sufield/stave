@@ -157,6 +157,7 @@ Exit Codes:
 	cmd.Flags().BoolVar(&opts.DryRun, "dry-run", false, "Run readiness checks only, without evaluating controls")
 	opts.bindCommon(cmd, "json")
 	opts.bindApplySpecific(cmd)
+	opts.markMutuallyExclusive(cmd)
 	// Completion registration is best-effort — if it fails, help output
 	// loses tab completion but the command still works.
 	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed(cliflags.FormatsTextJSONSARIF...))
@@ -181,4 +182,10 @@ func (o *Options) validate() error {
 		return &ui.UserError{Err: fmt.Errorf("flag --input is required when using --profile")}
 	}
 	return nil
+}
+
+// markMutuallyExclusive registers flag groups that cannot be combined.
+func (o *Options) markMutuallyExclusive(cmd *cobra.Command) {
+	cmd.MarkFlagsMutuallyExclusive("profile", "controls")
+	cmd.MarkFlagsMutuallyExclusive("profile", "observations")
 }

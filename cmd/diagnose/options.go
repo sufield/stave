@@ -2,7 +2,6 @@ package diagnose
 
 import (
 	"io"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -24,9 +23,6 @@ type diagnoseOptions struct {
 	Cases             []string
 	SignalContains    string
 	Template          string
-	ControlID         string
-	AssetID           string
-
 	// Captured in Prepare from cmd.Flags().Changed() so ToConfig
 	// does not need *cobra.Command.
 	controlsSet bool
@@ -46,8 +42,6 @@ func (o *diagnoseOptions) BindFlags(cmd *cobra.Command) {
 	f.StringSliceVar(&o.Cases, "case", nil, "Filter to one or more diagnostic case values")
 	f.StringVar(&o.SignalContains, "signal-contains", "", "Filter diagnostics by signal substring (case-insensitive)")
 	f.StringVar(&o.Template, "template", "", "Template string for custom output formatting (supports {{.Field}}, {{range}}, {{json}})")
-	f.StringVar(&o.ControlID, "control-id", "", "Control ID for single-finding detail mode (requires --asset-id)")
-	f.StringVar(&o.AssetID, "asset-id", "", "Asset ID for single-finding detail mode (requires --control-id)")
 	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed(cliflags.FormatsTextJSON...))
 	_ = cmd.RegisterFlagCompletionFunc("case", cliflags.CompleteFixed(
 		string(diagnosis.ScenarioExpectedNone),
@@ -96,8 +90,6 @@ func toConfig(o *diagnoseOptions, flags cliflags.GlobalFlags, stdout, stderr io.
 		Cases:             o.Cases,
 		SignalContains:    o.SignalContains,
 		Template:          o.Template,
-		ControlID:         strings.TrimSpace(o.ControlID),
-		AssetID:           strings.TrimSpace(o.AssetID),
 		Stdout:            stdout,
 		Stderr:            stderr,
 		Stdin:             stdin,

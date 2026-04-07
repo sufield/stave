@@ -30,10 +30,7 @@ func recurrenceControl(id string, limit, windowDays int) *policy.ControlDefiniti
 func recurrenceTimeline(t *testing.T, episodes []struct{ start, end time.Time }) *asset.ExposureLifecycle {
 	t.Helper()
 	a := asset.Asset{ID: "bucket-1", Type: kernel.AssetType("s3_bucket")}
-	tl, err := asset.NewExposureLifecycle(a)
-	if err != nil {
-		t.Fatalf("NewExposureLifecycle: %v", err)
-	}
+	tl := asset.NewExposureLifecycle(a)
 
 	for _, ep := range episodes {
 		// Record unsafe start
@@ -107,7 +104,7 @@ func TestCreateRecurrenceFinding_Fields(t *testing.T) {
 	ctl := recurrenceControl("CTL.REC.001", 2, 7)
 
 	a := asset.Asset{ID: "bucket-1", Type: kernel.AssetType("s3_bucket")}
-	tl, _ := asset.NewExposureLifecycle(a)
+	tl := asset.NewExposureLifecycle(a)
 	_ = tl.RecordCheck(base, false)
 
 	stats := RecurrenceStats{

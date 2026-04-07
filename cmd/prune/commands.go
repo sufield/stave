@@ -21,7 +21,8 @@ func Commands(p *compose.Provider) []*cobra.Command {
 		upcoming.NewCmd(p.LoadAssets),
 		snapshot.NewQualityCmd(p.LoadSnapshots),
 		snapshot.NewPlanCmd(p.NewSnapshotRepo),
-		hygiene.NewCmd(p.LoadAssets, p.NewObservationRepo, p.NewSnapshotRepo),
+		hygiene.NewStatusCmd(p.NewObservationRepo, p.NewSnapshotRepo),
+		hygiene.NewRiskCmd(p.LoadAssets),
 		manifest.NewCmd(),
 	}
 }

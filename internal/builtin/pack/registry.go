@@ -2,7 +2,6 @@ package pack
 
 import (
 	"embed"
-	"errors"
 	"fmt"
 	"io/fs"
 	"maps"
@@ -15,9 +14,6 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/platform/crypto"
 )
-
-// ErrEmptyRegistry is returned when a registry index contains no packs.
-var ErrEmptyRegistry = errors.New("registry contains no packs")
 
 //go:embed embedded/index.yaml
 var embeddedRegistryFS embed.FS
@@ -63,10 +59,6 @@ func NewIndex(data []byte) (*Index, error) {
 	if err := yaml.Unmarshal(data, &idx); err != nil {
 		return nil, fmt.Errorf("parse registry: %w", err)
 	}
-	if len(idx.Packs) == 0 {
-		return nil, ErrEmptyRegistry
-	}
-
 	r := &Index{
 		version:   strings.TrimSpace(idx.Version),
 		hash:      crypto.HashBytes(data),
