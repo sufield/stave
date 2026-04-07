@@ -24,11 +24,11 @@ func TestNewConfig_SetsExpectedFields(t *testing.T) {
 		WithAllowUnknownInput(true),
 	)
 
-	if cfg.ControlsDir != plan.ControlsPath || cfg.ObservationsDir != plan.ObservationsPath {
+	if cfg.PolicySource != plan.ControlsPath || cfg.InventorySource != plan.ObservationsPath {
 		t.Fatalf("unexpected dirs: %+v", cfg)
 	}
-	if cfg.StaveVersion != "test" {
-		t.Fatalf("StaveVersion = %q, want test", cfg.StaveVersion)
+	if cfg.BuildVersion != "test" {
+		t.Fatalf("BuildVersion = %q, want test", cfg.BuildVersion)
 	}
 	if cfg.Metadata.ControlSource.Source != "dir" {
 		t.Fatalf("ControlSource.Source = %q, want dir", cfg.Metadata.ControlSource.Source)
@@ -72,11 +72,11 @@ func TestNewConfig_EndToEnd(t *testing.T) {
 		}),
 	)
 
-	if cfg.ExceptionConfig == nil || len(cfg.ExceptionConfig.Rules()) != 1 {
-		t.Fatalf("exception config = %#v", cfg.ExceptionConfig)
+	if cfg.ExceptionRules == nil || len(cfg.ExceptionRules.Rules()) != 1 {
+		t.Fatalf("exception config = %#v", cfg.ExceptionRules)
 	}
-	if len(cfg.PreloadedControls) != 1 || cfg.PreloadedControls[0].ID != "CTL.A" {
-		t.Fatalf("preloaded controls = %#v", cfg.PreloadedControls)
+	if len(cfg.ActivePolicies) != 1 || cfg.ActivePolicies[0].ID != "CTL.A" {
+		t.Fatalf("active policies = %#v", cfg.ActivePolicies)
 	}
 	if cfg.Metadata.Git == nil || cfg.Metadata.Git.RepoRoot != "/repo" || cfg.Metadata.Git.Head != "abc123" {
 		t.Fatalf("git metadata = %+v", cfg.Metadata.Git)

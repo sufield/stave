@@ -64,8 +64,8 @@ type BuildDependenciesInput struct {
 
 // BuildDependenciesOutput is the assembled runner + config pair.
 type BuildDependenciesOutput struct {
-	Runner *EvaluateRun
-	Config EvaluateConfig
+	Runner *AuditWorkflow
+	Config AssessmentConfig
 }
 
 // BuildDependencies assembles the evaluate runner and config from
@@ -106,7 +106,7 @@ func BuildDependencies(ctx context.Context, in BuildDependenciesInput) (BuildDep
 
 	cfg := NewConfig(in.Plan, opts...)
 
-	runner := NewEvaluateRun(in.Adapters.ObservationLoader, in.Adapters.ControlLoader, in.Adapters.FindingMarshaler, in.Adapters.EnrichFn)
+	runner := NewAuditWorkflow(in.Adapters.ObservationLoader, in.Adapters.ControlLoader, in.Adapters.FindingMarshaler, in.Adapters.EnrichFn)
 	runner.Logger = in.Logger
 
 	return BuildDependenciesOutput{
@@ -165,8 +165,8 @@ func validateBuildDependenciesInput(in BuildDependenciesInput) error {
 
 // ApplyDeps holds wired dependencies for the apply workflow.
 type ApplyDeps struct {
-	Runner *EvaluateRun
-	Config EvaluateConfig
+	Runner *AuditWorkflow
+	Config AssessmentConfig
 }
 
 // Close releases assets held by ApplyDeps.

@@ -135,8 +135,8 @@ func TestBuildDependencies_UsesProvidedLoader(t *testing.T) {
 		t.Fatalf("BuildDependencies() error = %v", err)
 	}
 
-	if out.Runner.ObservationRepo != obsRepo {
-		t.Fatalf("observation repo mismatch: got %#v want %#v", out.Runner.ObservationRepo, obsRepo)
+	if out.Runner.InventoryRepo != obsRepo {
+		t.Fatalf("observation repo mismatch: got %#v want %#v", out.Runner.InventoryRepo, obsRepo)
 	}
 	if out.Config.Output == nil || out.Config.Stderr == nil {
 		t.Fatalf("expected default output/stderr writers to be set, got output=%v stderr=%v", out.Config.Output, out.Config.Stderr)
@@ -168,7 +168,7 @@ func TestBuildDependencies_PassesExemptionConfig(t *testing.T) {
 	if err != nil {
 		t.Fatalf("BuildDependencies() error = %v", err)
 	}
-	if out.Config.ExemptionConfig == nil || len(out.Config.ExemptionConfig.Assets) != 1 {
-		t.Fatalf("expected exemption config to be passed through, got %#v", out.Config.ExemptionConfig)
+	if out.Config.ExemptionRules == nil || len(out.Config.ExemptionRules.Assets) != 1 {
+		t.Fatalf("expected exemption config to be passed through, got %#v", out.Config.ExemptionRules)
 	}
 }

@@ -8,18 +8,18 @@ import (
 )
 
 // ExecuteAndWrite runs the full evaluate use case: load artifacts, evaluate, marshal, and write output.
-// This is a test helper that combines Execute with the output pipeline.
-func (e *EvaluateRun) ExecuteAndWrite(ctx context.Context, cfg EvaluateConfig) (evaluation.SecurityState, error) {
-	result, status, err := e.Execute(ctx, cfg)
+// This is a test helper that combines PerformAssessment with the output pipeline.
+func (e *AuditWorkflow) ExecuteAndWrite(ctx context.Context, cfg AssessmentConfig) (evaluation.SecurityState, error) {
+	result, status, err := e.PerformAssessment(ctx, cfg)
 	if err != nil {
 		return "", err
 	}
 
-	enriched, enrichErr := e.EnrichFn(result)
+	enriched, enrichErr := e.ContextEnricher(result)
 	if enrichErr != nil {
 		return "", fmt.Errorf("enrich: %w", enrichErr)
 	}
-	data, marshalErr := e.Marshaler.MarshalFindings(enriched)
+	data, marshalErr := e.ReportPublisher.MarshalFindings(enriched)
 	if marshalErr != nil {
 		return "", fmt.Errorf("marshal: %w", marshalErr)
 	}
