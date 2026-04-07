@@ -266,11 +266,11 @@ func TestBuildApplyDeps(t *testing.T) {
 		}
 		defer deps.Close()
 
-		if deps.Config.ControlsDir != opts.ControlsDir {
-			t.Errorf("ControlsDir = %q, want %q", deps.Config.ControlsDir, opts.ControlsDir)
+		if deps.Config.PolicySource != opts.ControlsDir {
+			t.Errorf("PolicySource = %q, want %q", deps.Config.PolicySource, opts.ControlsDir)
 		}
-		if deps.Config.MaxUnsafeDuration != 168*time.Hour {
-			t.Errorf("MaxUnsafe = %v, want 168h", deps.Config.MaxUnsafeDuration)
+		if deps.Config.SLAThreshold != 168*time.Hour {
+			t.Errorf("SLAThreshold = %v, want 168h", deps.Config.SLAThreshold)
 		}
 		if deps.Runner == nil {
 			t.Error("Runner should not be nil")

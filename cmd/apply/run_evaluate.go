@@ -30,21 +30,21 @@ func executeEvaluation(ctx context.Context, ec evalContext) (EvaluateResult, err
 	}
 	defer deps.Close()
 
-	result, status, err := deps.Runner.Execute(ctx, deps.Config)
+	result, status, err := deps.Runner.PerformAssessment(ctx, deps.Config)
 	if err != nil {
 		return EvaluateResult{}, fmt.Errorf("execute evaluation: %w", err)
 	}
 
 	pipeline := &appeval.OutputPipeline{
-		Marshaler: deps.Runner.Marshaler,
-		Enricher:  deps.Runner.EnrichFn,
+		Marshaler: deps.Runner.ReportPublisher,
+		Enricher:  deps.Runner.ContextEnricher,
 		Logger:    ec.Logger,
 	}
 	if err := pipeline.Run(ctx, deps.Config.Output, result); err != nil {
 		return EvaluateResult{}, fmt.Errorf("run output pipeline: %w", err)
 	}
 
-	return BuildEvaluateResult(status, deps.Config.ControlsDir, deps.Config.ObservationsDir), nil
+	return BuildEvaluateResult(status, deps.Config.PolicySource, deps.Config.InventorySource), nil
 }
 
 // runStrictIntegrityCheck ensures internal pack integrity when --strict is set.

@@ -12,81 +12,81 @@ import (
 
 // WithRuntime constructs the withruntime component.
 func WithRuntime(output, stderr io.Writer, clock ports.Clock, toolVersion string) Option {
-	return func(cfg *EvaluateConfig) {
+	return func(cfg *AssessmentConfig) {
 		cfg.Output = output
 		cfg.Stderr = stderr
 		cfg.Clock = clock
-		cfg.StaveVersion = toolVersion
+		cfg.BuildVersion = toolVersion
 	}
 }
 
 // WithMaxUnsafeDuration constructs the withmaxunsafeduration component.
 func WithMaxUnsafeDuration(maxUnsafeDuration time.Duration) Option {
-	return func(cfg *EvaluateConfig) {
-		cfg.MaxUnsafeDuration = maxUnsafeDuration
+	return func(cfg *AssessmentConfig) {
+		cfg.SLAThreshold = maxUnsafeDuration
 	}
 }
 
 // WithAllowUnknownInput constructs the withallowunknowninput component.
 func WithAllowUnknownInput(allow bool) Option {
-	return func(cfg *EvaluateConfig) {
-		cfg.AllowUnknownInput = allow
+	return func(cfg *AssessmentConfig) {
+		cfg.AcceptUnknownData = allow
 	}
 }
 
 // WithExemptionConfig constructs the withexemptionconfig component.
 func WithExemptionConfig(exemptionConfig *policy.ExemptionConfig) Option {
-	return func(cfg *EvaluateConfig) {
-		cfg.ExemptionConfig = exemptionConfig
+	return func(cfg *AssessmentConfig) {
+		cfg.ExemptionRules = exemptionConfig
 	}
 }
 
 // WithExceptionConfig constructs the withexceptionconfig component.
 func WithExceptionConfig(exceptionConfig *policy.ExceptionConfig) Option {
-	return func(cfg *EvaluateConfig) {
-		cfg.ExceptionConfig = exceptionConfig
+	return func(cfg *AssessmentConfig) {
+		cfg.ExceptionRules = exceptionConfig
 	}
 }
 
 // WithPreloadedControls constructs the withpreloadedcontrols component.
 func WithPreloadedControls(controls []policy.ControlDefinition) Option {
 	cloned := slices.Clone(controls)
-	return func(cfg *EvaluateConfig) {
-		cfg.PreloadedControls = cloned
+	return func(cfg *AssessmentConfig) {
+		cfg.ActivePolicies = cloned
 	}
 }
 
 // WithControlSource constructs the withcontrolsource component.
 func WithControlSource(source evaluation.ControlSourceInfo) Option {
-	return func(cfg *EvaluateConfig) {
+	return func(cfg *AssessmentConfig) {
 		cfg.Metadata.ControlSource = source
 	}
 }
 
 // WithGitMetadata constructs the withgitmetadata component.
 func WithGitMetadata(git *evaluation.GitInfo) Option {
-	return func(cfg *EvaluateConfig) {
+	return func(cfg *AssessmentConfig) {
 		cfg.Metadata.Git = git
 	}
 }
 
 // WithPredicateParser constructs the withpredicateparser component.
 func WithPredicateParser(fn func(any) (*policy.UnsafePredicate, error)) Option {
-	return func(cfg *EvaluateConfig) {
+	return func(cfg *AssessmentConfig) {
 		cfg.PredicateParser = fn
 	}
 }
 
 // WithCELEvaluator constructs the withcelevaluator component.
 func WithCELEvaluator(fn policy.PredicateEval) Option {
-	return func(cfg *EvaluateConfig) {
-		cfg.CELEvaluator = fn
+	return func(cfg *AssessmentConfig) {
+		cfg.PredicateEval = fn
 	}
 }
 
 // WithHasher constructs the withhasher component.
 func WithHasher(h ports.Digester) Option {
-	return func(cfg *EvaluateConfig) {
+	return func(cfg *AssessmentConfig) {
 		cfg.Hasher = h
 	}
 }

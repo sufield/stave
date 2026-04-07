@@ -79,7 +79,7 @@ func TestLoadSnapshots(t *testing.T) {
 	})
 }
 
-func TestEvaluateRunExecute(t *testing.T) {
+func TestAuditWorkflowPerformAssessment(t *testing.T) {
 	now := time.Date(2026, 1, 20, 0, 0, 0, 0, time.UTC)
 	ctl := policy.ControlDefinition{
 		ID:          "CTL.TEST.PUBLIC.001",
@@ -114,7 +114,7 @@ func TestEvaluateRunExecute(t *testing.T) {
 
 	t.Run("writes findings and returns violations", func(t *testing.T) {
 		m := &marshalerStub{}
-		run := NewEvaluateRun(
+		run := NewAuditWorkflow(
 			evalObservationRepoStub{
 				snapshots: snapshots,
 				hashes: &evaluation.InputHashes{
@@ -127,15 +127,15 @@ func TestEvaluateRunExecute(t *testing.T) {
 			testEnrichFn,
 		)
 
-		status, err := run.ExecuteAndWrite(context.Background(), EvaluateConfig{
-			LoadConfig: LoadConfig{
-				ControlsDir:     "ctl",
-				ObservationsDir: "obs",
+		status, err := run.ExecuteAndWrite(context.Background(), AssessmentConfig{
+			InventoryConfig: InventoryConfig{
+				PolicySource:    "ctl",
+				InventorySource: "obs",
 			},
-			MaxUnsafeDuration: 30 * time.Minute,
-			Clock:             clockadp.FixedClock(now),
-			Output:            &bytes.Buffer{},
-			CELEvaluator:      mustPredicateEval(),
+			SLAThreshold:  30 * time.Minute,
+			Clock:         clockadp.FixedClock(now),
+			Output:        &bytes.Buffer{},
+			PredicateEval: mustPredicateEval(),
 		})
 		if err != nil {
 			t.Fatalf("unexpected err: %v", err)
@@ -155,22 +155,22 @@ func TestEvaluateRunExecute(t *testing.T) {
 	})
 
 	t.Run("marshaler failure is wrapped", func(t *testing.T) {
-		run := NewEvaluateRun(
+		run := NewAuditWorkflow(
 			evalObservationRepoStub{snapshots: snapshots},
 			evalControlRepoStub{controls: []policy.ControlDefinition{ctl}},
 			&marshalerStub{err: errors.New("marshal boom")},
 			testEnrichFn,
 		)
 
-		_, err := run.ExecuteAndWrite(context.Background(), EvaluateConfig{
-			LoadConfig: LoadConfig{
-				ControlsDir:     "ctl",
-				ObservationsDir: "obs",
+		_, err := run.ExecuteAndWrite(context.Background(), AssessmentConfig{
+			InventoryConfig: InventoryConfig{
+				PolicySource:    "ctl",
+				InventorySource: "obs",
 			},
-			MaxUnsafeDuration: 30 * time.Minute,
-			Clock:             clockadp.FixedClock(now),
-			Output:            &bytes.Buffer{},
-			CELEvaluator:      mustPredicateEval(),
+			SLAThreshold:  30 * time.Minute,
+			Clock:         clockadp.FixedClock(now),
+			Output:        &bytes.Buffer{},
+			PredicateEval: mustPredicateEval(),
 		})
 		if err == nil || !strings.Contains(err.Error(), "marshal") {
 			t.Fatalf("unexpected err: %v", err)

@@ -238,8 +238,8 @@ func TestNewConfigBasic(t *testing.T) {
 		ContextName:      "test",
 	}
 	cfg := NewConfig(plan)
-	if cfg.ControlsDir != "/controls" {
-		t.Fatalf("ControlsDir = %q", cfg.ControlsDir)
+	if cfg.PolicySource != "/controls" {
+		t.Fatalf("PolicySource = %q", cfg.PolicySource)
 	}
 	if cfg.Metadata.ContextName != "test" {
 		t.Fatalf("ContextName = %q", cfg.Metadata.ContextName)
@@ -250,8 +250,8 @@ func TestNewConfigWithNilOptions(t *testing.T) {
 	plan := EvaluationPlan{ControlsPath: "/c", ObservationsPath: "/o"}
 	// nil options should not panic
 	cfg := NewConfig(plan, nil, nil)
-	if cfg.ControlsDir != "/c" {
-		t.Fatalf("ControlsDir = %q", cfg.ControlsDir)
+	if cfg.PolicySource != "/c" {
+		t.Fatalf("PolicySource = %q", cfg.PolicySource)
 	}
 }
 
