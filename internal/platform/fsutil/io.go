@@ -110,7 +110,8 @@ func CleanUserPath(p string) string {
 //   - relPath is absolute
 //   - the joined path resolves outside root after cleaning
 func JoinWithinRoot(root, relPath string) (string, error) {
-	if filepath.IsAbs(relPath) {
+	relPath = filepath.Clean(relPath)
+	if filepath.IsAbs(relPath) || strings.HasPrefix(relPath, string(filepath.Separator)) {
 		return "", fmt.Errorf("path must be relative: %s", relPath)
 	}
 
@@ -119,22 +120,13 @@ func JoinWithinRoot(root, relPath string) (string, error) {
 		return "", fmt.Errorf("resolve root: %w", err)
 	}
 
-	joined := filepath.Join(absRoot, filepath.Clean(relPath))
-	absJoined, err := filepath.Abs(joined)
-	if err != nil {
-		return "", fmt.Errorf("resolve destination: %w", err)
-	}
-
-	// Verify the joined path is within root
-	rel, err := filepath.Rel(absRoot, absJoined)
-	if err != nil {
-		return "", fmt.Errorf("path outside root: %s", relPath)
-	}
-	if rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+	joined := filepath.Join(absRoot, relPath)
+	rel, err := filepath.Rel(absRoot, joined)
+	if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
 		return "", fmt.Errorf("%w: %s", ErrPathTraversal, relPath)
 	}
 
-	return absJoined, nil
+	return joined, nil
 }
 
 // --- WRITE SAFETY ---
@@ -192,15 +184,46 @@ func SafeWriteFile(path string, data []byte, opts WriteOptions) error {
 	return closeErr
 }
 
-// SafeMkdirAll creates a directory tree with the given permissions.
-// It refuses if the final directory path is a symlink (unless AllowSymlink).
+// SafeMkdirAll creates a directory tree, checking every path component for
+// symlinks during creation (unless AllowSymlink). This prevents TOCTOU races
+// that could occur between a pre-check and os.MkdirAll.
 func SafeMkdirAll(path string, opts WriteOptions) error {
-	if !opts.AllowSymlink {
-		if err := CheckSymlinkSafety(path); err != nil {
-			return err
+	if opts.AllowSymlink {
+		return os.MkdirAll(path, opts.Perm)
+	}
+
+	cleanPath := filepath.Clean(path)
+	components := strings.Split(cleanPath, string(filepath.Separator))
+
+	current := ""
+	if filepath.IsAbs(cleanPath) {
+		current = string(filepath.Separator)
+	}
+
+	for _, part := range components {
+		if part == "" {
+			continue
+		}
+		current = filepath.Join(current, part)
+
+		fi, err := os.Lstat(current)
+		if err == nil {
+			if fi.Mode()&os.ModeSymlink != 0 {
+				return fmt.Errorf("%w: %s (use --allow-symlink-output to override)", ErrSymlinkForbidden, current)
+			}
+			if !fi.IsDir() {
+				return fmt.Errorf("path component is not a directory: %s", current)
+			}
+			continue
+		}
+		if !os.IsNotExist(err) {
+			return fmt.Errorf("security check failed for %q: %w", current, err)
+		}
+		if mkErr := os.Mkdir(current, opts.Perm); mkErr != nil && !os.IsExist(mkErr) {
+			return mkErr
 		}
 	}
-	return os.MkdirAll(path, opts.Perm)
+	return nil
 }
 
 // SafeOpenAppend opens a file for appending, enforcing symlink protection
@@ -251,12 +274,12 @@ func CheckSymlinkSafety(path string) error {
 
 		parent := filepath.Dir(cur)
 		if parent == cur {
-			break
+			return nil // reached filesystem root
 		}
 		cur = parent
 	}
 
-	return nil
+	return fmt.Errorf("security check failed for %q: path too deep (exceeded %d ancestor checks)", path, maxParentWalk)
 }
 
 // verifyHandle confirms the opened file handle points to the same inode as the
