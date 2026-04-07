@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - **Breaking:** Removed `--out` flag from `apply`, `check`, `verify`, `ci diff`,
   `ci baseline check`, `report`, `ci gate`, `snapshot diff`, `snapshot upcoming`,
-  and `snapshot hygiene`. Use shell redirection (`> file`) instead. Commands that
+  and `snapshot status`/`snapshot risk` (formerly `snapshot hygiene`). Use shell redirection (`> file`) instead. Commands that
   create files (`generate`, `ingest`, `ci baseline save`, `enforce`, `ci fix-loop`)
   keep `--out` unchanged.
 - **Breaking:** Removed `--summary-out` flag from `snapshot upcoming`. Pipe output

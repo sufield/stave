@@ -16,7 +16,7 @@ The output contract is defined by Go struct types in `internal/core/evaluation/`
 ```json
 {
   "schema_version": "out.v0.1",
-  "kind": "evaluation",
+  "kind": "ASSESSMENT",
   "run": { ... },
   "summary": { ... },
   "findings": [ ... ],
@@ -29,7 +29,7 @@ The output contract is defined by Go struct types in `internal/core/evaluation/`
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `schema_version` | string | Yes | Always `"out.v0.1"` |
-| `kind` | string | Yes | Always `"evaluation"` |
+| `kind` | string | Yes | Always `"ASSESSMENT"` |
 | `run` | [run](#run) | Yes | Run metadata |
 | `summary` | [summary](#summary) | Yes | Aggregate counts |
 | `findings` | array of [finding](#finding) | Yes | Detected violations (empty array when none) |
@@ -44,7 +44,7 @@ The output contract is defined by Go struct types in `internal/core/evaluation/`
 | `tool_version` | string | Yes | Stave binary version |
 | `offline` | boolean | Yes | Always `true` (Stave is architecturally offline) |
 | `now` | string (RFC 3339) | Yes | Evaluation timestamp (from `--now` or derived from last snapshot) |
-| `max_unsafe` | string | Yes | Maximum unsafe duration threshold (e.g., `"168h0m0s"`) |
+| `sla_threshold` | string | Yes | Maximum unsafe duration threshold (e.g., `"168h0m0s"`) |
 | `snapshots` | integer | Yes | Number of observation snapshots loaded |
 | `input_hashes` | [input_hashes](#input_hashes) | No | SHA-256 hashes of input files (for auditability) |
 
@@ -184,12 +184,12 @@ When `--explain-all` is enabled, each row represents one `(control, asset)` eval
 ```json
 {
   "schema_version": "out.v0.1",
-  "kind": "evaluation",
+  "kind": "ASSESSMENT",
   "run": {
     "tool_version": "0.0.1",
     "offline": true,
     "now": "2026-01-11T00:00:00Z",
-    "max_unsafe": "168h0m0s",
+    "sla_threshold": "168h0m0s",
     "snapshots": 2
   },
   "summary": {
@@ -206,12 +206,12 @@ When `--explain-all` is enabled, each row represents one `(control, asset)` eval
 ```json
 {
   "schema_version": "out.v0.1",
-  "kind": "evaluation",
+  "kind": "ASSESSMENT",
   "run": {
     "tool_version": "0.0.1",
     "offline": true,
     "now": "2026-01-11T00:00:00Z",
-    "max_unsafe": "168h0m0s",
+    "sla_threshold": "168h0m0s",
     "snapshots": 3,
     "input_hashes": {
       "files": {

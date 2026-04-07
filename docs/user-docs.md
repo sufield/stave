@@ -223,7 +223,8 @@ For snapshot operations, use the lifecycle command set:
 | `snapshot archive` | Audit-preserving retention | Move stale snapshots to archive directory instead of deleting |
 | `snapshot diff` | Snapshot drift comparison | Focus remediation on what changed between latest two snapshots |
 | `snapshot quality` | Snapshot quality gate | Warn/fail on sparse, stale, or missing-key-asset snapshots |
-| `snapshot hygiene` | Weekly lifecycle report | Generate markdown with snapshot totals, retention posture, violations, upcoming items, and trend vs last week |
+| `snapshot status` | Snapshot health summary | Generate markdown with snapshot totals, retention posture, and trend vs last week |
+| `snapshot risk` | Snapshot risk report | Generate markdown with violations, upcoming items, and risk signals |
 | `ci baseline save/check` | Fail-on-new CI policy | Preserve accepted findings and fail only on newly introduced findings |
 | `ci gate` | CI policy enforcement | Apply configurable fail modes (`any`, `new`, `overdue`) |
 | `ci fix-loop` | Fix verification loop | Apply before/after snapshots, verify changes, and generate remediation report |
@@ -380,22 +381,22 @@ stave snapshot diff --observations ./observations --change-type modified --asset
 # Quality gate before evaluation
 stave snapshot quality --observations ./observations --strict
 
-# Weekly hygiene report (markdown)
-stave snapshot hygiene \
+# Weekly status report (markdown)
+stave snapshot status \
   --controls ./controls \
   --observations ./observations \
   --archive-dir ./observations/archive \
-  --out output/weekly-hygiene.md
+  --out output/weekly-status.md
 
-# Weekly hygiene report (json)
-stave snapshot hygiene \
+# Weekly risk report (json)
+stave snapshot risk \
   --controls ./controls \
   --observations ./observations \
   --format json \
-  --out output/weekly-hygiene.json
+  --out output/weekly-risk.json
 
-# Filter hygiene upcoming metrics
-stave snapshot hygiene \
+# Filter risk upcoming metrics
+stave snapshot risk \
   --controls ./controls \
   --observations ./observations \
   --status OVERDUE \
@@ -571,7 +572,7 @@ Checked: 2 controls, 2 snapshots, 3 assets
     {
       "code": "SPAN_LESS_THAN_MAX_UNSAFE",
       "signal": "warning",
-      "evidence": {"span": "24h0m0s", "max_unsafe": "168h0m0s"},
+      "evidence": {"span": "24h0m0s", "sla_threshold": "168h0m0s"},
       "action": "Add older snapshots or reduce --max-unsafe"
     }
   ],
@@ -1629,7 +1630,7 @@ Use dot notation to access nested properties:
 {
   "run": {
     "now": "2026-01-11T00:00:00Z",
-    "max_unsafe": "168h0m0s",
+    "sla_threshold": "168h0m0s",
     "snapshots": 3
   },
   "summary": {
@@ -1668,7 +1669,7 @@ Use dot notation to access nested properties:
 
 **run:** Evaluation context
 - `now`: Evaluation timestamp
-- `max_unsafe`: Configured threshold
+- `sla_threshold`: Configured threshold
 - `snapshots`: Number of snapshots processed
 
 **summary:** Aggregate statistics

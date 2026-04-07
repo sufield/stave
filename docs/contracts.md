@@ -80,22 +80,22 @@ dictionary.
 
 Evaluation output. Two kinds distinguished by the `kind` field:
 
-### Evaluation output (`kind: "evaluation"`)
+### Evaluation output (`kind: "ASSESSMENT"`)
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `schema_version` | string | yes | `"out.v0.1"` |
-| `kind` | string | yes | `"evaluation"` |
+| `kind` | string | yes | `"ASSESSMENT"` |
 | `run` | object | yes | Run metadata (tool version, timing, parameters) |
 | `summary` | object | yes | Aggregate counts (violations, assets, controls) |
 | `findings` | array | yes | Individual violation findings |
 
-### Verification output (`kind: "verification"`)
+### Verification output (`kind: "ATTESTATION"`)
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `schema_version` | string | yes | `"out.v0.1"` |
-| `kind` | string | yes | `"verification"` |
+| `kind` | string | yes | `"ATTESTATION"` |
 | `run` | object | yes | Run metadata |
 | `summary` | object | yes | Before/after counts |
 | `resolved` | array | yes | Findings resolved between runs |
