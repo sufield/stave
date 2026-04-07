@@ -158,7 +158,7 @@ golden: build
 
 ## e2e: Run end-to-end tests
 e2e: build
-	./scripts/e2e.sh
+	go test ./e2e/ -run E2E -count=1 -timeout 5m
 
 ## determinism: Verify apply --profile aws-s3 output is deterministic (run twice, diff)
 determinism: build
@@ -286,7 +286,7 @@ help:
 	@grep -E '^## [a-zA-Z0-9_-]+:' Makefile | sed 's/## /  /'
 
 e2e-s3: build
-	./scripts/e2e-s3.sh
+	go test ./e2e/ -run E2E/e2e-s3 -count=1 -timeout 5m
 
 ## readme: Render README.md from README.md.tmpl (fills in control counts, version)
 readme: sync-controls
