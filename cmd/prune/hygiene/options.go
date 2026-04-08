@@ -1,6 +1,7 @@
 package hygiene
 
 import (
+	"fmt"
 	"io"
 	"time"
 
@@ -119,6 +120,11 @@ func (o *rawOptions) resolve(stdout io.Writer) (config, error) {
 		return config{}, parseErr
 	}
 
+	filterCtlIDs, err := convert.ToControlIDs(o.controlIDs)
+	if err != nil {
+		return config{}, fmt.Errorf("parse --control-ids: %w", err)
+	}
+
 	return config{
 		ControlsDir:       ec.ControlsDir,
 		ObservationsDir:   ec.ObservationsDir,
@@ -134,7 +140,7 @@ func (o *rawOptions) resolve(stdout io.Writer) (config, error) {
 		Quiet:             o.gf.Quiet,
 		Stdout:            stdout,
 		Filter: UpcomingFilter{
-			ControlIDs:   convert.ToControlIDs(o.controlIDs),
+			ControlIDs:   filterCtlIDs,
 			AssetTypes:   convert.ToAssetTypes(o.assetTypes),
 			Statuses:     statuses,
 			DueWithin:    dueWithinDur,

@@ -22,7 +22,7 @@ func TestBuildAssessmentFromEnriched_NilFindings(t *testing.T) {
 		},
 		// Findings is nil
 	}
-	env := output.BuildAssessmentFromEnriched(enriched)
+	env := output.BuildAssessmentFromEnriched(&enriched)
 	if env == nil {
 		t.Fatal("expected non-nil envelope")
 	}
@@ -48,7 +48,7 @@ func TestBuildAssessmentFromEnriched_WithFindings(t *testing.T) {
 			{Finding: evaluation.Finding{ControlID: "CTL.A.001", AssetID: "bucket-1"}},
 		},
 	}
-	env := output.BuildAssessmentFromEnriched(enriched)
+	env := output.BuildAssessmentFromEnriched(&enriched)
 	if env == nil {
 		t.Fatal("expected non-nil envelope")
 	}

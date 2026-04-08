@@ -107,6 +107,6 @@ type outputMarshalerStub struct {
 	err  error
 }
 
-func (s *outputMarshalerStub) MarshalFindings(_ appcontracts.EnrichedResult) ([]byte, error) {
+func (s *outputMarshalerStub) MarshalFindings(_ *appcontracts.EnrichedResult) ([]byte, error) {
 	return s.data, s.err
 }

@@ -10,7 +10,7 @@ import (
 	"github.com/sufield/stave/internal/core/securityaudit"
 )
 
-func assembleReport(req Request, findings []securityaudit.Finding, ev evidence.Bundle, artifacts securityaudit.ArtifactManifest) securityaudit.Report {
+func assembleReport(req Request, findings []securityaudit.Finding, ev *evidence.Bundle, artifacts securityaudit.ArtifactManifest) securityaudit.Report {
 	report := securityaudit.Report{
 		SchemaVersion: kernel.SchemaSecurityAudit,
 		GeneratedAt:   req.Now.UTC(),

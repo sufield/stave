@@ -22,7 +22,7 @@ var _ appcontracts.FindingMarshaler = (*FindingWriter)(nil)
 
 // MarshalFindings transforms enriched findings into human-readable text bytes
 // without performing I/O.
-func (w *FindingWriter) MarshalFindings(enriched appcontracts.EnrichedResult) ([]byte, error) {
+func (w *FindingWriter) MarshalFindings(enriched *appcontracts.EnrichedResult) ([]byte, error) {
 	var buf bytes.Buffer
 	d := &drawer{w: &buf}
 	result := enriched.Result

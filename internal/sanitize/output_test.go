@@ -102,7 +102,7 @@ func TestJSONWriter_WriteFindings_NoRedact(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	data, err := w.MarshalFindings(enriched)
+	data, err := w.MarshalFindings(&enriched)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -121,7 +121,7 @@ func TestJSONWriter_WriteFindings_WithRedact(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	data, err := w.MarshalFindings(enriched)
+	data, err := w.MarshalFindings(&enriched)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -147,7 +147,7 @@ func TestTextWriter_WriteFindings_WithRedact(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	data, err := w.MarshalFindings(enriched)
+	data, err := w.MarshalFindings(&enriched)
 	if err != nil {
 		t.Fatal(err)
 	}

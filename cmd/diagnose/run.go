@@ -105,9 +105,14 @@ func (r *Runner) runDetailMode(ctx context.Context, cfg Config) error {
 	if err != nil {
 		return err
 	}
+	targetCtlID, err := kernel.NewControlID(cfg.ControlID)
+	if err != nil {
+		return fmt.Errorf("invalid control ID %q: %w", cfg.ControlID, err)
+	}
+
 	detail, err := diagnoseRun.InspectViolation(ctx, appdiagnose.InspectionRequest{
 		AuditReq:     baseCfg,
-		TargetPolicy: kernel.ControlID(cfg.ControlID),
+		TargetPolicy: targetCtlID,
 		TargetAsset:  asset.ID(cfg.AssetID),
 		TraceBuilder: &apptrace.Builder{},
 		IDGen:        crypto.NewHasher(),

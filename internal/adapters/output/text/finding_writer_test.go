@@ -39,7 +39,7 @@ func TestFindingWriter_NoViolations(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	data, err := w.MarshalFindings(enriched)
+	data, err := w.MarshalFindings(&enriched)
 	if err != nil {
 		t.Fatalf("MarshalFindings() error = %v", err)
 	}
@@ -119,7 +119,7 @@ func TestFindingWriter_ViolationsWithSections(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	data, err := w.MarshalFindings(enriched)
+	data, err := w.MarshalFindings(&enriched)
 	if err != nil {
 		t.Fatalf("MarshalFindings() error = %v", err)
 	}
@@ -206,7 +206,7 @@ func TestFindingWriter_ViolationDomainSummary(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	data, err := w.MarshalFindings(enriched)
+	data, err := w.MarshalFindings(&enriched)
 	if err != nil {
 		t.Fatalf("MarshalFindings() error = %v", err)
 	}

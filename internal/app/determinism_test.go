@@ -133,7 +133,7 @@ func TestEvaluateOutput_ByteIdentical(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		data, err := writer.MarshalFindings(enriched)
+		data, err := writer.MarshalFindings(&enriched)
 		if err != nil {
 			t.Fatalf("run %d: MarshalFindings failed: %v", i, err)
 		}
@@ -211,7 +211,7 @@ func TestEvaluateOutput_ByteIdentical_MultipleControls(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		data, err := writer.MarshalFindings(enriched)
+		data, err := writer.MarshalFindings(&enriched)
 		if err != nil {
 			t.Fatalf("run %d: MarshalFindings failed: %v", i, err)
 		}

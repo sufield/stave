@@ -13,7 +13,7 @@ import (
 func TestComputeOverall_Deterministic(t *testing.T) {
 	files := map[evaluation.FilePath]kernel.Digest{
 		"b.json": "sha256:bbb",
-		"a.json": "sha256:aaa",
+		"a.json": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
 	}
 	d1 := ComputeOverall(files)
 	d2 := ComputeOverall(files)
@@ -27,12 +27,12 @@ func TestComputeOverall_Deterministic(t *testing.T) {
 
 func TestComputeOverall_OrderIndependent(t *testing.T) {
 	files1 := map[evaluation.FilePath]kernel.Digest{
-		"a.json": "sha256:aaa",
+		"a.json": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
 		"b.json": "sha256:bbb",
 	}
 	files2 := map[evaluation.FilePath]kernel.Digest{
 		"b.json": "sha256:bbb",
-		"a.json": "sha256:aaa",
+		"a.json": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
 	}
 	if ComputeOverall(files1) != ComputeOverall(files2) {
 		t.Fatal("ComputeOverall should be order-independent")
@@ -48,7 +48,7 @@ func TestComputeOverall_Empty(t *testing.T) {
 
 func TestManifest_ValidateOverall_Valid(t *testing.T) {
 	files := map[evaluation.FilePath]kernel.Digest{
-		"a.json": "sha256:aaa",
+		"a.json": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
 	}
 	m := Manifest{
 		Files:   files,
@@ -61,7 +61,7 @@ func TestManifest_ValidateOverall_Valid(t *testing.T) {
 
 func TestManifest_ValidateOverall_Invalid(t *testing.T) {
 	m := Manifest{
-		Files:   map[evaluation.FilePath]kernel.Digest{"a.json": "sha256:aaa"},
+		Files:   map[evaluation.FilePath]kernel.Digest{"a.json": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
 		Overall: "sha256:wrong",
 	}
 	if err := m.ValidateOverall(); err == nil {
@@ -73,9 +73,9 @@ func TestManifest_CanonicalBytes_Deterministic(t *testing.T) {
 	m := Manifest{
 		Files: map[evaluation.FilePath]kernel.Digest{
 			"b.json": "sha256:bbb",
-			"a.json": "sha256:aaa",
+			"a.json": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
 		},
-		Overall: "sha256:overall",
+		Overall: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
 	}
 	b1, err := m.CanonicalBytes()
 	if err != nil {
@@ -92,7 +92,7 @@ func TestManifest_CanonicalBytes_Deterministic(t *testing.T) {
 
 func TestValidator_Verify_Success(t *testing.T) {
 	files := map[evaluation.FilePath]kernel.Digest{
-		"a.json": "sha256:aaa",
+		"a.json": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
 		"b.json": "sha256:bbb",
 	}
 	overall := ComputeOverall(files)
@@ -118,13 +118,13 @@ func TestValidator_Verify_NilHashes(t *testing.T) {
 func TestValidator_Verify_MissingFile(t *testing.T) {
 	m := Manifest{
 		Files: map[evaluation.FilePath]kernel.Digest{
-			"a.json": "sha256:aaa",
+			"a.json": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
 			"b.json": "sha256:bbb",
 		},
 	}
 	v := &Validator{ActualHashes: &evaluation.InputHashes{
 		Files: map[evaluation.FilePath]kernel.Digest{
-			"a.json": "sha256:aaa",
+			"a.json": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
 		},
 	}}
 	err := v.Verify(m)
@@ -139,7 +139,7 @@ func TestValidator_Verify_MissingFile(t *testing.T) {
 func TestValidator_Verify_HashMismatch(t *testing.T) {
 	m := Manifest{
 		Files: map[evaluation.FilePath]kernel.Digest{
-			"a.json": "sha256:aaa",
+			"a.json": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
 		},
 	}
 	v := &Validator{ActualHashes: &evaluation.InputHashes{
@@ -158,14 +158,14 @@ func TestValidator_Verify_HashMismatch(t *testing.T) {
 
 func TestValidator_Verify_ExtraFile(t *testing.T) {
 	files := map[evaluation.FilePath]kernel.Digest{
-		"a.json": "sha256:aaa",
+		"a.json": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
 	}
 	overall := ComputeOverall(files)
 	m := Manifest{Files: files, Overall: overall}
 
 	v := &Validator{ActualHashes: &evaluation.InputHashes{
 		Files: map[evaluation.FilePath]kernel.Digest{
-			"a.json": "sha256:aaa",
+			"a.json": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
 			"c.json": "sha256:ccc",
 		},
 		Overall: overall,
@@ -181,7 +181,7 @@ func TestValidator_Verify_ExtraFile(t *testing.T) {
 
 func TestValidator_Verify_OverallMismatch(t *testing.T) {
 	files := map[evaluation.FilePath]kernel.Digest{
-		"a.json": "sha256:aaa",
+		"a.json": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
 	}
 	overall := ComputeOverall(files)
 	m := Manifest{Files: files, Overall: overall}
@@ -207,8 +207,8 @@ func (m *mockVerifier) Verify(_ []byte, _ kernel.Signature) error { return m.err
 
 func TestVerifySignedManifest_ValidSignature(t *testing.T) {
 	m := Manifest{
-		Files:   map[evaluation.FilePath]kernel.Digest{"a.json": "sha256:aaa"},
-		Overall: "sha256:overall",
+		Files:   map[evaluation.FilePath]kernel.Digest{"a.json": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+		Overall: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
 	}
 	sm := SignedManifest{Manifest: m, Signature: "sig"}
 	if err := VerifySignedManifest(sm, &mockVerifier{err: nil}); err != nil {
@@ -218,8 +218,8 @@ func TestVerifySignedManifest_ValidSignature(t *testing.T) {
 
 func TestVerifySignedManifest_InvalidSignature(t *testing.T) {
 	m := Manifest{
-		Files:   map[evaluation.FilePath]kernel.Digest{"a.json": "sha256:aaa"},
-		Overall: "sha256:overall",
+		Files:   map[evaluation.FilePath]kernel.Digest{"a.json": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+		Overall: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
 	}
 	sm := SignedManifest{Manifest: m, Signature: "badsig"}
 	err := VerifySignedManifest(sm, &mockVerifier{err: errors.New("bad sig")})
@@ -260,8 +260,8 @@ func TestUnmarshalSigned_SignatureFailure_WrapsViolation(t *testing.T) {
 	}
 
 	m := Manifest{
-		Files:   map[evaluation.FilePath]kernel.Digest{"a.json": "sha256:aaa"},
-		Overall: "sha256:overall",
+		Files:   map[evaluation.FilePath]kernel.Digest{"a.json": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+		Overall: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
 	}
 	canonical, err := m.CanonicalBytes()
 	if err != nil {

@@ -56,12 +56,17 @@ type Writer struct {
 
 // WriteBaseline writes a baseline snapshot to disk.
 func (w *Writer) WriteBaseline(_ context.Context, path string, findings []reporting.BaselineFinding, createdAt time.Time, sourcePath string) error {
+	entries, err := domainToEntries(findings)
+	if err != nil {
+		return fmt.Errorf("convert baseline findings: %w", err)
+	}
+
 	baseline := evaluation.Baseline{
 		SchemaVersion:    kernel.SchemaBaseline,
 		Kind:             kernel.KindBaseline,
 		CreatedAt:        createdAt,
 		SourceEvaluation: sourcePath,
-		Findings:         domainToEntries(findings),
+		Findings:         entries,
 	}
 
 	f, err := w.OpenFile(fsutil.CleanUserPath(path))
@@ -85,15 +90,19 @@ func entriesToDomain(entries []evaluation.BaselineEntry) []reporting.BaselineFin
 	return out
 }
 
-func domainToEntries(findings []reporting.BaselineFinding) []evaluation.BaselineEntry {
+func domainToEntries(findings []reporting.BaselineFinding) ([]evaluation.BaselineEntry, error) {
 	out := make([]evaluation.BaselineEntry, len(findings))
 	for i, f := range findings {
+		ctlID, err := kernel.NewControlID(f.ControlID)
+		if err != nil {
+			return nil, fmt.Errorf("invalid control ID at baseline entry %d: %w", i, err)
+		}
 		out[i] = evaluation.BaselineEntry{
-			ControlID:   kernel.ControlID(f.ControlID),
+			ControlID:   ctlID,
 			ControlName: f.ControlName,
 			AssetID:     asset.ID(f.AssetID),
-			AssetType:   kernel.AssetType(f.AssetType),
+			AssetType:   kernel.NewAssetType(f.AssetType),
 		}
 	}
-	return out
+	return out, nil
 }

@@ -63,7 +63,7 @@ func TestExecuteTemplate_DisallowedFunction(t *testing.T) {
 func TestSuggestFlagParseError_EmptyCandidates(t *testing.T) {
 	err := errors.New("unknown flag 'x'")
 	result := SuggestFlagParseError(err, nil)
-	if result != err {
+	if result != err { //nolint:errorlint // identity check: verifying same pointer returned
 		t.Error("expected original error for empty candidates")
 	}
 }

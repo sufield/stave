@@ -132,7 +132,7 @@ func TestSuggestCommandError_CaseMismatch(t *testing.T) {
 func TestSuggestCommandError_NoMatch(t *testing.T) {
 	err := errors.New(`unknown command "zzzzz" for "stave"`)
 	got := SuggestCommandError(err, []string{"apply", "validate"})
-	if got != err {
+	if got != err { //nolint:errorlint // identity check: verifying same pointer returned
 		t.Fatalf("expected original error, got: %q", got.Error())
 	}
 }
@@ -140,7 +140,7 @@ func TestSuggestCommandError_NoMatch(t *testing.T) {
 func TestSuggestCommandError_NotUnknownCommand(t *testing.T) {
 	err := errors.New("some other error")
 	got := SuggestCommandError(err, []string{"apply"})
-	if got != err {
+	if got != err { //nolint:errorlint // identity check: verifying same pointer returned
 		t.Fatal("should return original error for non-command errors")
 	}
 }

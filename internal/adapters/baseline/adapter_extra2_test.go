@@ -39,39 +39,58 @@ func TestEntriesToDomain_Empty(t *testing.T) {
 func TestDomainToEntries(t *testing.T) {
 	findings := []reporting.BaselineFinding{
 		{
-			ControlID:   "CTL.A.001",
+			ControlID:   "CTL.S3.PUBLIC.001",
 			ControlName: "Test",
 			AssetID:     "bucket-1",
 			AssetType:   "s3_bucket",
 		},
 	}
-	entries := domainToEntries(findings)
+	entries, err := domainToEntries(findings)
+	if err != nil {
+		t.Fatalf("domainToEntries: %v", err)
+	}
 	if len(entries) != 1 {
 		t.Fatalf("len = %d", len(entries))
 	}
-	if entries[0].ControlID != "CTL.A.001" {
+	if entries[0].ControlID != "CTL.S3.PUBLIC.001" {
 		t.Fatalf("ControlID = %v", entries[0].ControlID)
 	}
 }
 
 func TestDomainToEntries_Empty(t *testing.T) {
-	entries := domainToEntries(nil)
+	entries, err := domainToEntries(nil)
+	if err != nil {
+		t.Fatalf("domainToEntries: %v", err)
+	}
 	if len(entries) != 0 {
 		t.Fatalf("len = %d", len(entries))
+	}
+}
+
+func TestDomainToEntries_InvalidControlID(t *testing.T) {
+	findings := []reporting.BaselineFinding{
+		{ControlID: "INVALID", ControlName: "Bad", AssetID: "x", AssetType: "s3_bucket"},
+	}
+	_, err := domainToEntries(findings)
+	if err == nil {
+		t.Fatal("expected error for invalid control ID")
 	}
 }
 
 func TestRoundTrip(t *testing.T) {
 	original := []evaluation.BaselineEntry{
 		{
-			ControlID:   "CTL.A.001",
+			ControlID:   "CTL.S3.PUBLIC.001",
 			ControlName: "Test Control",
 			AssetID:     "bucket-1",
 			AssetType:   "s3_bucket",
 		},
 	}
 	domain := entriesToDomain(original)
-	roundTrip := domainToEntries(domain)
+	roundTrip, err := domainToEntries(domain)
+	if err != nil {
+		t.Fatalf("domainToEntries: %v", err)
+	}
 	if len(roundTrip) != 1 {
 		t.Fatalf("len = %d", len(roundTrip))
 	}

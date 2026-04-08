@@ -20,7 +20,7 @@ import (
 
 // EnvelopeBuilderFunc transforms an enriched result into a safety envelope.
 // Injected from the adapters layer by cmd/ callers.
-type EnvelopeBuilderFunc func(enriched contracts.EnrichedResult) *report.Assessment
+type EnvelopeBuilderFunc func(enriched *contracts.EnrichedResult) *report.Assessment
 
 // WriteOptions controls file output behavior.
 type WriteOptions struct {
@@ -132,7 +132,7 @@ func (b *EnvelopeBuilder) BuildEvaluation(result evaluation.ComplianceReport) (*
 	if err != nil {
 		return nil, fmt.Errorf("enrich evaluation: %w", err)
 	}
-	return b.BuildEnvelope(enriched), nil
+	return b.BuildEnvelope(&enriched), nil
 }
 
 // --- Data Models ---

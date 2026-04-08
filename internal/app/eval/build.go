@@ -71,7 +71,7 @@ type BuildDependenciesOutput struct {
 // BuildDependencies assembles the evaluate runner and config from
 // pre-built dependencies. All loaders and writers must be created
 // by the caller before invoking this function.
-func BuildDependencies(ctx context.Context, in BuildDependenciesInput) (BuildDependenciesOutput, error) {
+func BuildDependencies(ctx context.Context, in *BuildDependenciesInput) (BuildDependenciesOutput, error) {
 	if err := validateBuildDependenciesInput(in); err != nil {
 		return BuildDependenciesOutput{}, err
 	}
@@ -115,7 +115,7 @@ func BuildDependencies(ctx context.Context, in BuildDependenciesInput) (BuildDep
 	}, nil
 }
 
-func resolvePreloadedControls(ctx context.Context, in BuildDependenciesInput, resolved ResolvedProjectConfig) ([]policy.ControlDefinition, error) {
+func resolvePreloadedControls(ctx context.Context, in *BuildDependenciesInput, resolved ResolvedProjectConfig) ([]policy.ControlDefinition, error) {
 	preloaded := resolved.PreloadedControls
 	if !in.Project.Filters.Enabled() {
 		return preloaded, nil
@@ -144,7 +144,7 @@ func resolveOutputWriters(output, stderr io.Writer) (io.Writer, io.Writer) {
 	return output, stderr
 }
 
-func validateBuildDependenciesInput(in BuildDependenciesInput) error {
+func validateBuildDependenciesInput(in *BuildDependenciesInput) error {
 	if in.Plan.ControlsPath == "" {
 		return fmt.Errorf("evaluation plan is required")
 	}

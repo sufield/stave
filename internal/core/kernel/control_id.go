@@ -11,9 +11,15 @@ import (
 // Format: CTL.<PROVIDER>.<CATEGORY...>.<SEQUENCE>
 type ControlID string
 
-// controlIDPattern validates the canonical format.
+// controlIDPattern validates the strict canonical format.
 // Examples: CTL.STORAGE.PUBLIC.001, CTL.NETWORK.FIREWALL.INGRESS.005
 var controlIDPattern = regexp.MustCompile(`^CTL\.[A-Z][A-Z0-9]*(\.[A-Z][A-Z0-9]*){1,}\.\d{3}$`)
+
+// controlIDBasicPattern validates structural soundness at parse time without
+// enforcing the full canonical format. Requires dot-separated uppercase/digit
+// segments (2+ segments). Catches clearly invalid values (lowercase, special
+// chars, spaces) while allowing non-CTL prefixes (e.g. HIPAA: ACCESS.001).
+var controlIDBasicPattern = regexp.MustCompile(`^[A-Z][A-Z0-9]*(\.[A-Z0-9]+)+$`)
 
 // String returns the raw ID string.
 func (id ControlID) String() string {
@@ -66,23 +72,39 @@ func ValidateControlIDFormat(id string) error {
 	return nil
 }
 
-// MarshalJSON ensures the ID is serialized as a string.
+// UnmarshalText implements encoding.TextUnmarshaler. Both JSON and YAML
+// unmarshalers delegate to this method, providing a single parse-time gate.
+// Rejects empty strings and structurally invalid values (must be dot-separated
+// uppercase segments). The strict canonical format (CTL.PROVIDER.CATEGORY.SEQ)
+// is checked in Validate() as a warning — this allows user-authored YAML with
+// non-canonical IDs to load while still catching garbage at the boundary.
+func (id *ControlID) UnmarshalText(text []byte) error {
+	s := string(text)
+	if s == "" {
+		return fmt.Errorf("control ID must not be empty")
+	}
+	if !controlIDBasicPattern.MatchString(s) {
+		return fmt.Errorf("invalid control ID format %q: must be dot-separated uppercase segments (e.g. CTL.S3.PUBLIC.001)", s)
+	}
+	*id = ControlID(s)
+	return nil
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (id ControlID) MarshalText() ([]byte, error) {
+	return []byte(id.String()), nil
+}
+
+// MarshalJSON ensures the ID is serialized as a JSON string.
 func (id ControlID) MarshalJSON() ([]byte, error) {
 	return json.Marshal(id.String())
 }
 
-// UnmarshalJSON validates the ID during deserialization.
+// UnmarshalJSON extracts the JSON string and delegates to UnmarshalText.
 func (id *ControlID) UnmarshalJSON(b []byte) error {
 	var s string
 	if err := json.Unmarshal(b, &s); err != nil {
 		return err
 	}
-
-	val, err := NewControlID(s)
-	if err != nil {
-		return err
-	}
-
-	*id = val
-	return nil
+	return id.UnmarshalText([]byte(s))
 }

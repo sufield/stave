@@ -19,7 +19,7 @@ func (e *AuditWorkflow) ExecuteAndWrite(ctx context.Context, cfg AssessmentConfi
 	if enrichErr != nil {
 		return "", fmt.Errorf("enrich: %w", enrichErr)
 	}
-	data, marshalErr := e.ReportPublisher.MarshalFindings(enriched)
+	data, marshalErr := e.ReportPublisher.MarshalFindings(&enriched)
 	if marshalErr != nil {
 		return "", fmt.Errorf("marshal: %w", marshalErr)
 	}

@@ -29,7 +29,7 @@ func TestWriteFindings_EmptyFindings(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	data, err := w.MarshalFindings(enriched)
+	data, err := w.MarshalFindings(&enriched)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -97,7 +97,7 @@ func TestWriteFindings_SARIFStructure(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	data, err := w.MarshalFindings(enriched)
+	data, err := w.MarshalFindings(&enriched)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -202,7 +202,7 @@ func TestWriteFindings_RuleDeduplication(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	data, err := w.MarshalFindings(enriched)
+	data, err := w.MarshalFindings(&enriched)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -270,7 +270,7 @@ func TestWriteFindings_LogicalLocation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	data, err := w.MarshalFindings(enriched)
+	data, err := w.MarshalFindings(&enriched)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
