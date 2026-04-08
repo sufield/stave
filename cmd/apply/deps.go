@@ -33,6 +33,7 @@ type Builder struct {
 	Sanitizer kernel.Sanitizer
 	Format    appcontracts.OutputFormat
 	Digester  ports.Digester
+	Tracer    ports.Tracer
 
 	Opts             *Options
 	Params           applyParams
@@ -113,6 +114,7 @@ func (b *Builder) Build(ctx context.Context, plan *appeval.EvaluationPlan) (*app
 			ExemptionConfig:   exemptionCfg,
 			PredicateParser:   ctlyaml.ParsePredicate,
 			CELEvaluator:      celEval,
+			Tracer:            b.Tracer,
 		},
 		Writers: appeval.OutputWriters{
 			Stdout: b.Stdout,

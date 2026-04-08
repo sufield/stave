@@ -23,6 +23,7 @@ All commands ship in the standard `stave` binary. No build tags are required.
 | Command | Purpose | Input | Output | When to use |
 |---|---|---|---|---|
 | `apply` | Run control evaluation against observations | `--controls` dir, `--observations` dir, `--max-unsafe` duration | Findings JSON, text, or SARIF (exit 0=clean, 3=violations) | Core command — every evaluation run |
+| `apply --trace` | Evaluation with logic audit trail | Same as `apply`, plus `--trace` path | Findings output + `audit_trace.json` with reasoning chain | When auditors need "Proof of Pass" or violation evidence |
 | `apply --dry-run` | Check readiness without running evaluation | Same as `apply` | JSON readiness report (`ready: true/false`) | Before `apply` to verify inputs are complete |
 | `apply --profile aws-s3` | Evaluate using bundled S3 controls | `--input` observations bundle file | Same as `apply` | When using built-in controls with a single observation file |
 | `diagnose` | Root-cause guidance for unexpected results | `--controls` dir, `--observations` dir | Diagnostic report with signals and actions | After `apply` produces unexpected findings (or no findings) |

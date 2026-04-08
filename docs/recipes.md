@@ -332,3 +332,43 @@ stave alias delete ev
      --observations observations/ \
    | dot -Tpng > coverage.png
    ```
+
+## 11. Logic Audit Trace — Proof of Pass
+
+**When to use:** You need to demonstrate to an auditor *why* every resource was marked compliant or non-compliant, with a verifiable reasoning chain.
+
+1. **Run evaluation with trace enabled:**
+
+   ```bash
+   stave apply \
+     --controls controls/s3 \
+     --observations observations/ \
+     --max-unsafe 7d \
+     --format json \
+     --trace audit_trace.json \
+     > evaluation.json
+   ```
+
+2. **In CI/CD (via environment variable):**
+
+   ```bash
+   STAVE_TRACE=1 stave apply \
+     --controls controls/s3 \
+     --observations observations/ \
+     --max-unsafe 7d \
+     --format json > evaluation.json
+   # audit_trace.json is written to the current directory
+   ```
+
+3. **Inspect the trace with jq:**
+
+   ```bash
+   # Show all PASS verdicts with their reasoning
+   jq '.assessments[] | select(.verdict == "PASS") | {resource_id, steps}' audit_trace.json
+
+   # Show all VIOLATION verdicts with finding links
+   jq '.assessments[] | select(.verdict == "VIOLATION") | {resource_id, finding_id, steps}' audit_trace.json
+
+   # Summary counts
+   jq '.summary' audit_trace.json
+   ```

@@ -32,6 +32,7 @@ type RuntimeConfig struct {
 	ExemptionConfig   *policy.ExemptionConfig
 	PredicateParser   func(any) (*policy.UnsafePredicate, error)
 	CELEvaluator      policy.PredicateEval
+	Tracer            ports.Tracer
 }
 
 // OutputWriters holds the destination writers for evaluation output.
@@ -99,6 +100,7 @@ func BuildDependencies(ctx context.Context, in *BuildDependenciesInput) (BuildDe
 		WithGitMetadata(in.Project.GitMetadata),
 		WithPredicateParser(in.Runtime.PredicateParser),
 		WithCELEvaluator(in.Runtime.CELEvaluator),
+		WithTracer(in.Runtime.Tracer),
 	}
 	if resolved.ControlSource.Source != "" {
 		opts = append(opts, WithControlSource(resolved.ControlSource))

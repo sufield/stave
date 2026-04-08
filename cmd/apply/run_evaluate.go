@@ -4,8 +4,11 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
+	"os"
 
 	ctlbuiltin "github.com/sufield/stave/internal/adapters/controls/builtin"
+	"github.com/sufield/stave/internal/adapters/telemetry"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	packs "github.com/sufield/stave/internal/builtin/pack"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -16,6 +19,16 @@ func executeEvaluation(ctx context.Context, ec evalContext) (EvaluateResult, err
 	progress := ec.Runtime.BeginCountedProgress("apply controls against observations")
 	defer progress.Done()
 
+	// Create logic tracer if --trace flag or STAVE_TRACE env is set.
+	var tracer *telemetry.LocalFileTracer
+	tracePath := ec.Opts.TracePath
+	if tracePath == "" && os.Getenv("STAVE_TRACE") != "" {
+		tracePath = "audit_trace.json"
+	}
+	if tracePath != "" {
+		tracer = telemetry.NewLocalFileTracer()
+	}
+
 	builder := NewBuilder(ec.Logger, ec.Opts, ec.Params, ec.IO)
 	builder.NewFindingWriter = ec.Provider.NewFindingWriter
 	builder.NewCtlRepo = ec.Provider.NewControlRepo
@@ -23,6 +36,9 @@ func executeEvaluation(ctx context.Context, ec evalContext) (EvaluateResult, err
 	builder.ProjectConfig = ec.ProjectConfig
 	builder.ProjectConfigPath = ec.ProjectConfigPath
 	builder.OnObsProgress = progress.Update
+	if tracer != nil {
+		builder.Tracer = tracer
+	}
 
 	deps, err := builder.Build(ctx, ec.Plan)
 	if err != nil {
@@ -33,6 +49,14 @@ func executeEvaluation(ctx context.Context, ec evalContext) (EvaluateResult, err
 	result, status, err := deps.Runner.PerformAssessment(ctx, deps.Config)
 	if err != nil {
 		return EvaluateResult{}, fmt.Errorf("execute evaluation: %w", err)
+	}
+
+	// Export logic trace if enabled.
+	if tracer != nil {
+		lt := tracer.Finalize("", deps.Config.BuildVersion, nil)
+		if writeErr := telemetry.WriteTraceFile(lt, tracePath); writeErr != nil {
+			slog.Warn("failed to write logic trace", "path", tracePath, "error", writeErr)
+		}
 	}
 
 	pipeline := &appeval.OutputPipeline{

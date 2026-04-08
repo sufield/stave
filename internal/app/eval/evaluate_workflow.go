@@ -27,6 +27,11 @@ type EvaluateInput struct {
 
 	// CELEvaluator evaluates predicates using the CEL engine.
 	CELEvaluator policy.PredicateEval
+
+	// Tracer enables the logic trace audit trail. When set, the engine
+	// records every decision step for both PASS and VIOLATION verdicts.
+	// Nil means no tracing (zero overhead via nopSpan).
+	Tracer ports.Tracer
 }
 
 // Evaluate runs domain evaluation over already-loaded inputs.
@@ -41,6 +46,7 @@ func Evaluate(input EvaluateInput) (evaluation.ComplianceReport, error) {
 	runner.Exceptions = input.ExceptionConfig
 	runner.PredicateParser = input.PredicateParser
 	runner.PredicateEval = input.CELEvaluator
+	runner.Tracer = input.Tracer
 	if input.Confidence.HighMultiplier > 0 {
 		runner.Confidence = input.Confidence
 	}

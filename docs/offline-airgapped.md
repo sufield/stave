@@ -25,6 +25,7 @@ Typical offline flow:
 - Validating observations/controls
 - Evaluating findings from local snapshots
 - Diagnosing previous output with local inputs
+- Logic trace audit trail (`--trace` writes a local JSON file, no network calls)
 
 ## What is Not Offline
 
