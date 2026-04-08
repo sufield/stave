@@ -258,8 +258,7 @@ func inferVulnCount(raw []byte) int {
 			}
 		}
 		if value, ok := obj["findings"]; ok {
-			switch typed := value.(type) {
-			case []any:
+			if typed, isSlice := value.([]any); isSlice {
 				return len(typed)
 			}
 		}

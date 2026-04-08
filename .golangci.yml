@@ -24,6 +24,7 @@ linters:
     - nilnesserr
     - noctx
     - predeclared
+    - recvcheck
     - revive
     - staticcheck
     - unconvert
@@ -56,13 +57,48 @@ linters:
     gocritic:
       disable-all: true
       enabled-checks:
-        - nestingReduce
-        - initClause
         - appendAssign
+        - boolExprSimplify
         - deferInLoop
+        - emptyStringTest
+        - initClause
+        - nestingReduce
+        - singleCaseSwitch
+        - sloppyLen
+        - switchTrue
+        - unnecessaryBlock
     govet:
       enable:
         - shadow
+    recvcheck:
+      # Built-in exclusions cover Marshal* but not Unmarshal* methods.
+      # Unmarshal* must use pointer receivers (they mutate the receiver)
+      # while value types correctly use value receivers for everything else.
+      # Private helpers (assign, parseAndAssign, ensureInit) serve the
+      # unmarshal path and also need pointer receivers.
+      exclusions:
+        # Deserialization methods must use pointer receivers
+        - "*.UnmarshalJSON"
+        - "*.UnmarshalText"
+        - "*.UnmarshalYAML"
+        - "*.UnmarshalXML"
+        - "*.UnmarshalBinary"
+        - "*.GobDecode"
+        # Private helpers that serve the unmarshal path
+        - "*.assign"
+        - "*.parseAndAssign"
+        - "*.ensureInit"
+        # Mutating methods on otherwise-value types (returned by value
+        # from accessors, so non-mutating methods must stay value receivers)
+        - "*.Record"
+        - "*.RecordObservation"
+        - "*.checkContracts"
+        - "*.FindAsset"
+        - "*.addIssue"
+        - "*.Set"
+        - "*.SetSensitive"
+        - "*.Prepare"
+        - "*.collect"
     nestif:
       min-complexity: 12
     revive:
