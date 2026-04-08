@@ -185,8 +185,8 @@ func TestRemediationPlanner_EnrichFindings(t *testing.T) {
 }
 
 func contains(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || len(substr) == 0 ||
-		(len(s) > 0 && len(substr) > 0 && stringContains(s, substr)))
+	return len(s) >= len(substr) && (s == substr || substr == "" ||
+		(s != "" && substr != "" && stringContains(s, substr)))
 }
 
 func stringContains(s, substr string) bool {

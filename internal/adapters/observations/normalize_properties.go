@@ -73,7 +73,7 @@ func coerceString(s string) any {
 // Rejects hex (0x), octal (0o), binary (0b), and strings starting with
 // letters to avoid false positives on identifiers like "s3://bucket".
 func isNumericCandidate(s string) bool {
-	if len(s) == 0 {
+	if s == "" {
 		return false
 	}
 	first := s[0]
