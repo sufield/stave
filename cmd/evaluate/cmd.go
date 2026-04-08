@@ -109,7 +109,8 @@ func run(w io.Writer, opts *options) error {
 	}
 	if len(excs) > 0 {
 		acks := exception.ApplyExceptions(excs, report.Results)
-		for _, ack := range acks {
+		for i := range acks {
+			ack := &acks[i]
 			report.Acknowledged = append(report.Acknowledged, profile.AcknowledgedEntry{
 				ControlID:      ack.ControlID,
 				Bucket:         ack.Bucket,

@@ -22,7 +22,8 @@ func (d *Document) AnalyzeScopes() PrefixScopeAnalysis {
 	}
 	seen := make(map[kernel.ObjectPrefix]struct{})
 
-	for i, stmt := range d.statements {
+	for i := range d.statements {
+		stmt := &d.statements[i]
 		if !stmt.IsPubliclyExposed() {
 			continue
 		}

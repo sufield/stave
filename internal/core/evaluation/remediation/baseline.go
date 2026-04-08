@@ -9,7 +9,8 @@ func BaselineEntriesFromFindings(findings []Finding) []evaluation.BaselineEntry 
 	}
 
 	unique := make(map[evaluation.BaselineEntryKey]evaluation.BaselineEntry, len(findings))
-	for _, f := range findings {
+	for i := range findings {
+		f := &findings[i]
 		entry := evaluation.BaselineEntryFromFinding(f.Finding)
 		unique[entry.Key()] = entry
 	}

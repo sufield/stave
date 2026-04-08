@@ -148,7 +148,8 @@ func loadBuiltInControlsByID(
 	// Single pass: select allowed controls, mark as seen.
 	selected := make([]policy.ControlDefinition, 0, len(controlIDs))
 	foundCount := 0
-	for _, ctl := range allBuiltIns {
+	for i := range allBuiltIns {
+		ctl := &allBuiltIns[i]
 		if !allowed[ctl.ID] {
 			continue
 		}
@@ -157,7 +158,7 @@ func loadBuiltInControlsByID(
 		if _, ok := excluded[ctl.ID]; ok {
 			continue
 		}
-		selected = append(selected, ctl)
+		selected = append(selected, *ctl)
 	}
 
 	if foundCount < len(controlIDs) {

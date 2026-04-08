@@ -59,7 +59,8 @@ type ThresholdItems []ThresholdItem
 // CountOverdue returns the number of items with OVERDUE status.
 func (it ThresholdItems) CountOverdue() int {
 	count := 0
-	for _, threshold := range it {
+	for i := range it {
+		threshold := &it[i]
 		if threshold.Status == StatusOverdue {
 			count++
 		}
@@ -96,9 +97,10 @@ func (it ThresholdItems) Filter(c ThresholdFilter) ThresholdItems {
 	}
 
 	out := make(ThresholdItems, 0, len(it))
-	for _, threshold := range it {
-		if c.matches(threshold) {
-			out = append(out, threshold)
+	for i := range it {
+		threshold := &it[i]
+		if c.matches(*threshold) {
+			out = append(out, *threshold)
 		}
 	}
 	return out
@@ -130,7 +132,8 @@ func (c ThresholdFilter) matches(item ThresholdItem) bool {
 func (it ThresholdItems) Summarize(dueSoonThreshold time.Duration) ThresholdSummary {
 	var s ThresholdSummary
 	s.Total = len(it)
-	for _, threshold := range it {
+	for i := range it {
+		threshold := &it[i]
 		switch threshold.Status {
 		case StatusOverdue:
 			s.Overdue++
@@ -177,13 +180,14 @@ func ComputeItems(req ThresholdRequest) ThresholdItems {
 
 	// 2. Identify relevant controls
 	var items ThresholdItems
-	for _, ctl := range req.Controls {
+	for i := range req.Controls {
+		ctl := &req.Controls[i]
 		if ctl.Type != policy.TypeUnsafeDuration && ctl.Type != policy.TypeUnsafeState {
 			continue
 		}
 
 		threshold := ctl.EffectiveMaxUnsafeDuration(req.GlobalMaxUnsafeDuration)
-		states := computeAssetStates(ctl, sortedSnaps, req.PredicateEval)
+		states := computeAssetStates(*ctl, sortedSnaps, req.PredicateEval)
 
 		// 3. Convert states to risk items
 		for id, st := range states {

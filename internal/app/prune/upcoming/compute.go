@@ -13,7 +13,8 @@ func mapRiskItems(items risk.ThresholdItems) []Snapshot {
 		return nil
 	}
 	out := make([]Snapshot, len(items))
-	for i, d := range items {
+	for i := range items {
+		d := &items[i]
 		out[i] = Snapshot{
 			DueAt:          d.DueAt,
 			Status:         d.Status,
@@ -34,7 +35,8 @@ func sanitizeItems(s kernel.Sanitizer, items []Snapshot) []Snapshot {
 		return items
 	}
 	out := make([]Snapshot, len(items))
-	for i, item := range items {
+	for i := range items {
+		item := items[i]
 		item.AssetID = asset.ID(s.ID(string(item.AssetID)))
 		out[i] = item
 	}
@@ -44,7 +46,8 @@ func sanitizeItems(s kernel.Sanitizer, items []Snapshot) []Snapshot {
 func summarizeUpcoming(items []Snapshot, dueSoonThreshold time.Duration) Summary {
 	// Convert to risk.ThresholdItems for canonical summarization.
 	riskItems := make(risk.ThresholdItems, len(items))
-	for i, item := range items {
+	for i := range items {
+		item := &items[i]
 		riskItems[i] = risk.ThresholdItem{
 			Status:    item.Status,
 			Remaining: item.Remaining,

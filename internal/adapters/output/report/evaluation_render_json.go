@@ -85,8 +85,9 @@ func RenderJSON(eval corereport.Assessment, toolVersion string, w io.Writer) err
 func buildReportViewModel(eval corereport.Assessment, toolVersion string) reportOutput {
 	out := newReportOutput(eval, toolVersion)
 	complianceData := make(map[string]*reportComplianceEntry)
-	for _, finding := range eval.Findings {
-		appendReportFinding(&out, complianceData, finding)
+	for i := range eval.Findings {
+		finding := &eval.Findings[i]
+		appendReportFinding(&out, complianceData, *finding)
 	}
 
 	sortReportFindings(out.Findings)

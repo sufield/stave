@@ -72,7 +72,8 @@ func buildRules(findings []remediation.Finding) ([]sarifRule, map[kernel.Control
 	ruleIndex := make(map[kernel.ControlID]int, len(findings))
 	rules := make([]sarifRule, 0, len(findings))
 
-	for _, f := range findings {
+	for i := range findings {
+		f := &findings[i]
 		if _, exists := ruleIndex[f.ControlID]; exists {
 			continue
 		}
@@ -105,15 +106,16 @@ func mapSeverityToSarif(s policy.Severity) string {
 func buildResults(findings []remediation.Finding, ruleIndex map[kernel.ControlID]int) []sarifResult {
 	results := make([]sarifResult, 0, len(findings))
 
-	for _, f := range findings {
+	for i := range findings {
+		f := &findings[i]
 		result := sarifResult{
 			RuleID:    f.ControlID,
 			RuleIndex: ruleIndex[f.ControlID],
 			Level:     mapSeverityToSarif(f.ControlSeverity),
 			Message: sarifMessage{
-				Text: buildMessage(f),
+				Text: buildMessage(*f),
 			},
-			Locations: buildLocations(f),
+			Locations: buildLocations(*f),
 		}
 
 		// Add fix suggestion from remediation
@@ -176,7 +178,8 @@ func buildMessage(f remediation.Finding) string {
 // remediation.Finding for use by core formatting functions.
 func toRemediationFindings(fs []appcontracts.EnrichedFinding) []remediation.Finding {
 	out := make([]remediation.Finding, len(fs))
-	for i, f := range fs {
+	for i := range fs {
+		f := &fs[i]
 		out[i] = remediation.Finding{
 			Finding:         f.Finding,
 			RemediationSpec: f.RemediationSpec,

@@ -72,7 +72,8 @@ func MarshalSARIFReport(report domain.Report) ([]byte, error) {
 	ruleIndex := make(map[string]int, len(report.Findings))
 	results := make([]sarifResult, 0, len(report.Findings))
 
-	for _, finding := range report.Findings {
+	for i := range report.Findings {
+		finding := &report.Findings[i]
 		fid := string(finding.ID)
 		if _, exists := ruleIndex[fid]; !exists {
 			ruleIndex[fid] = len(rules)

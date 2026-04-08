@@ -77,7 +77,8 @@ func (d *Document) Assess() Assessment {
 		seenAccounts: make(map[string]struct{}),
 	}
 
-	for i, stmt := range d.statements {
+	for i := range d.statements {
+		stmt := &d.statements[i]
 		if stmt.EnforcesHTTPS() {
 			policyAssessment.EnforcesHTTPS = true
 		}
@@ -90,7 +91,7 @@ func (d *Document) Assess() Assessment {
 
 		// Cross-account analysis
 		if scope == kernel.ScopeAccount {
-			analyzeExternalAccess(&policyAssessment, state, stmt)
+			analyzeExternalAccess(&policyAssessment, state, *stmt)
 			continue
 		}
 

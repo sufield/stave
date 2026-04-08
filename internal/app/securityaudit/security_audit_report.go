@@ -56,7 +56,8 @@ func assembleReport(req Request, findings []securityaudit.Finding, ev *evidence.
 
 func collectUniqueControls(findings []securityaudit.Finding) []securityaudit.ControlRef {
 	set := map[string]securityaudit.ControlRef{}
-	for _, finding := range findings {
+	for i := range findings {
+		finding := &findings[i]
 		for _, ref := range finding.ControlRefs {
 			key := ref.Framework + "|" + ref.ControlID + "|" + ref.Rationale
 			set[key] = ref

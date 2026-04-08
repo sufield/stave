@@ -91,9 +91,10 @@ func (r *Runner) Run(ctx context.Context, cfg Config) (Output, error) {
 
 	assetID := asset.ID(cfg.AssetID)
 	var matched []evaluation.Finding
-	for _, f := range evalResult.Findings {
+	for i := range evalResult.Findings {
+		f := &evalResult.Findings[i]
 		if f.AssetID == assetID {
-			matched = append(matched, f)
+			matched = append(matched, *f)
 		}
 	}
 	if len(matched) == 0 {

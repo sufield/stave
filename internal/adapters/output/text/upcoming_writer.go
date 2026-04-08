@@ -53,7 +53,8 @@ func RenderUpcomingMarkdown(items []UpcomingItem, summary UpcomingSummary, opts 
 
 	b.WriteString("| Due At (UTC) | Status | Control | Asset | Type | First Unsafe | Last Seen Unsafe | Threshold | Time To Due |\n")
 	b.WriteString("| --- | --- | --- | --- | --- | --- | --- | --- | --- |\n")
-	for _, item := range items {
+	for i := range items {
+		item := &items[i]
 		fmt.Fprintf(&b,
 			"| %s | %s | %s | %s | %s | %s | %s | %s | %s |\n",
 			item.DueAt.Format(time.RFC3339),

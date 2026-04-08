@@ -19,7 +19,8 @@ func BuildTimelinesPerControl(
 ) (map[kernel.ControlID]map[asset.ID]*asset.ExposureLifecycle, error) {
 
 	timelinesByControl := make(map[kernel.ControlID]map[asset.ID]*asset.ExposureLifecycle, len(controls))
-	for _, ctl := range controls {
+	for i := range controls {
+		ctl := &controls[i]
 		timelinesByControl[ctl.ID] = make(map[asset.ID]*asset.ExposureLifecycle)
 	}
 
@@ -44,7 +45,8 @@ func recordAssetObservation(
 	celEval policy.PredicateEval,
 	timelinesByControl map[kernel.ControlID]map[asset.ID]*asset.ExposureLifecycle,
 ) error {
-	for _, ctl := range controls {
+	for i := range controls {
+		ctl := &controls[i]
 		timelines := timelinesByControl[ctl.ID]
 
 		t, exists := timelines[a.ID]
@@ -53,7 +55,7 @@ func recordAssetObservation(
 			timelines[a.ID] = t
 		}
 
-		isUnsafe := checkUnsafe(ctl, a, snap, celEval)
+		isUnsafe := checkUnsafe(*ctl, a, snap, celEval)
 		if err := t.RecordCheck(snap.CapturedAt, isUnsafe); err != nil {
 			return fmt.Errorf("record observation for control %s, asset %s: %w", ctl.ID, a.ID, err)
 		}

@@ -44,8 +44,9 @@ func CheckEffectiveness(controls []ControlDefinition, snapshots []asset.Snapshot
 	}
 
 	var issues []diag.Finding
-	for _, ctl := range controls {
-		if !isTriggered(ctl, snapshots, eval) {
+	for i := range controls {
+		ctl := &controls[i]
+		if !isTriggered(*ctl, snapshots, eval) {
 			issues = append(issues, diag.NewFinding(diag.RuleControlNeverMatches).
 				Warning().
 				Remediation("Check predicate field paths or verify if all resources are currently safe.").
@@ -74,10 +75,12 @@ func isTriggered(ctl ControlDefinition, snapshots []asset.Snapshot, eval Predica
 
 // Walk performs a depth-first traversal of all rules within the predicate.
 func (p UnsafePredicate) Walk(visit func(PredicateRule)) {
-	for _, r := range p.Any {
+	for i := range p.Any {
+		r := &p.Any[i]
 		r.Walk(visit)
 	}
-	for _, r := range p.All {
+	for i := range p.All {
+		r := &p.All[i]
 		r.Walk(visit)
 	}
 }
@@ -85,10 +88,12 @@ func (p UnsafePredicate) Walk(visit func(PredicateRule)) {
 // Walk visits the current rule and recursively visits all child rules.
 func (r PredicateRule) Walk(visit func(PredicateRule)) {
 	visit(r)
-	for _, child := range r.Any {
+	for i := range r.Any {
+		child := &r.Any[i]
 		child.Walk(visit)
 	}
-	for _, child := range r.All {
+	for i := range r.All {
+		child := &r.All[i]
 		child.Walk(visit)
 	}
 }

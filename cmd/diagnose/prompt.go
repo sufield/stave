@@ -228,7 +228,8 @@ func buildPromptAdapterWith(tmpl string) func(string, map[kernel.ControlID]*poli
 		}
 
 		findingIDs := make([]kernel.ControlID, len(data.Findings))
-		for i, f := range data.Findings {
+		for i := range data.Findings {
+			f := &data.Findings[i]
 			findingIDs[i] = f.ControlID
 		}
 		return diagprompt.Output{
