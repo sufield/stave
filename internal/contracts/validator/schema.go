@@ -62,12 +62,12 @@ func (v *Validator) Validate(req Request) ([]Diagnostic, error) {
 	if req.IsYAML {
 		var rawYAML any
 		if err := yaml.Unmarshal(req.Data, &rawYAML); err != nil {
-			return []Diagnostic{{Path: "/", Message: "invalid YAML: " + err.Error()}}, nil
+			return []Diagnostic{{Path: "/", Message: "invalid YAML: " + err.Error()}}, nil //nolint:nilerr // parse error converted to diagnostic, not propagated
 		}
 		payload = normalizeYAML(rawYAML)
 	} else {
 		if err := json.Unmarshal(req.Data, &payload); err != nil {
-			return []Diagnostic{{Path: "/", Message: "invalid JSON: " + err.Error()}}, nil
+			return []Diagnostic{{Path: "/", Message: "invalid JSON: " + err.Error()}}, nil //nolint:nilerr // parse error converted to diagnostic, not propagated
 		}
 	}
 

@@ -88,7 +88,7 @@ func buildControlSummary(ctl *policy.ControlDefinition, f *evaluation.Finding) e
 			Domain:      ctl.Domain,
 			Type:        ctl.Type,
 			ScopeTags:   ctl.ScopeTags,
-			Compliance:  policy.ComplianceMapping(ctl.Compliance),
+			Compliance:  ctl.Compliance,
 			Exposure:    exp,
 		}
 	}

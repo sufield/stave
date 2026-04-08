@@ -5,6 +5,7 @@ package gitinfo
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"os/exec"
 	"slices"
 	"strings"
@@ -16,12 +17,12 @@ func hasGit() bool {
 }
 
 // DetectRepoRoot returns the git repository root containing dir, or false if dir is not inside a git working tree.
-func DetectRepoRoot(dir string) (string, bool) {
+func DetectRepoRoot(ctx context.Context, dir string) (string, bool) {
 	if !hasGit() {
 		return "", false
 	}
 	// #nosec G204 -- exec.Command does not invoke a shell; "-C dir" is passed as a literal argument.
-	cmd := exec.Command("git", "-C", dir, "rev-parse", "--show-toplevel")
+	cmd := exec.CommandContext(ctx, "git", "-C", dir, "rev-parse", "--show-toplevel")
 	out, err := cmd.Output()
 	if err != nil {
 		return "", false
@@ -34,12 +35,12 @@ func DetectRepoRoot(dir string) (string, bool) {
 }
 
 // HeadCommit returns the commit hash of HEAD in the repository at repoRoot.
-func HeadCommit(repoRoot string) (string, error) {
+func HeadCommit(ctx context.Context, repoRoot string) (string, error) {
 	if !hasGit() {
 		return "", nil
 	}
 	// #nosec G204 -- exec.Command does not invoke a shell; repoRoot is a literal git argument.
-	cmd := exec.Command("git", "-C", repoRoot, "rev-parse", "HEAD")
+	cmd := exec.CommandContext(ctx, "git", "-C", repoRoot, "rev-parse", "HEAD")
 	out, err := cmd.Output()
 	if err != nil {
 		return "", err
@@ -48,14 +49,14 @@ func HeadCommit(repoRoot string) (string, error) {
 }
 
 // IsDirty reports whether any of the given paths have uncommitted changes in the repository at repoRoot.
-func IsDirty(repoRoot string, paths []string) (bool, []string, error) {
+func IsDirty(ctx context.Context, repoRoot string, paths []string) (bool, []string, error) {
 	if !hasGit() {
 		return false, nil, nil
 	}
 	args := []string{"-C", repoRoot, "status", "--porcelain", "--"}
 	args = append(args, paths...)
 	// #nosec G204 -- exec.Command does not invoke a shell; args are passed directly to git.
-	cmd := exec.Command("git", args...)
+	cmd := exec.CommandContext(ctx, "git", args...)
 	out, err := cmd.Output()
 	if err != nil {
 		return false, nil, err
@@ -85,12 +86,12 @@ func IsDirty(repoRoot string, paths []string) (bool, []string, error) {
 }
 
 // InitRepo initializes a new git repository in dir.
-func InitRepo(dir string) error {
+func InitRepo(ctx context.Context, dir string) error {
 	if !hasGit() {
 		return exec.ErrNotFound
 	}
 	// #nosec G204 -- exec.Command does not invoke a shell; "-C dir" is passed as a literal argument.
-	cmd := exec.Command("git", "-C", dir, "init")
+	cmd := exec.CommandContext(ctx, "git", "-C", dir, "init")
 	_, err := cmd.Output()
 	return err
 }

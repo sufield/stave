@@ -1,6 +1,7 @@
 package compose
 
 import (
+	"context"
 	"io"
 	"log/slog"
 	"os"
@@ -15,15 +16,15 @@ import (
 // Best-effort: if baseDir is empty, falls back to os.Getwd(). If that also
 // fails, returns nil (no git metadata). This is metadata for output enrichment,
 // not a critical path — callers should always pass a resolved baseDir.
-func AuditGitStatus(baseDir string, watchPaths []string) *evaluation.GitInfo {
+func AuditGitStatus(ctx context.Context, baseDir string, watchPaths []string) *evaluation.GitInfo {
 	if strings.TrimSpace(baseDir) == "" {
 		baseDir, _ = os.Getwd()
 	}
-	repoRoot, ok := gitinfo.DetectRepoRoot(baseDir)
+	repoRoot, ok := gitinfo.DetectRepoRoot(ctx, baseDir)
 	if !ok {
 		return nil
 	}
-	head, headErr := gitinfo.HeadCommit(repoRoot)
+	head, headErr := gitinfo.HeadCommit(ctx, repoRoot)
 
 	var cleaned []string
 	for _, p := range watchPaths {
@@ -37,7 +38,7 @@ func AuditGitStatus(baseDir string, watchPaths []string) *evaluation.GitInfo {
 		cleaned = append(cleaned, abs)
 	}
 
-	dirty, dirtyList, dirtyErr := gitinfo.IsDirty(repoRoot, cleaned)
+	dirty, dirtyList, dirtyErr := gitinfo.IsDirty(ctx, repoRoot, cleaned)
 
 	// Fail closed: if git commands error, report as dirty so outputs
 	// don't falsely claim a clean repository state.

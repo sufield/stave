@@ -143,7 +143,7 @@ func (o *options) auditGitStatus(cmd *cobra.Command) error {
 	}
 
 	root := resolver.ProjectRoot()
-	gitMeta := compose.AuditGitStatus(root, []string{o.Controls, cfgPath})
+	gitMeta := compose.AuditGitStatus(cmd.Context(), root, []string{o.Controls, cfgPath})
 	if !gf.Quiet {
 		compose.WarnGitDirty(cmd.ErrOrStderr(), gitMeta, "validate")
 	}

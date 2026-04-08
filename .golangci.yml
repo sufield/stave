@@ -10,13 +10,18 @@ linters:
   enable:
     - depguard
     - errcheck
+    - errorlint
+    - forcetypeassert
     - gocritic
     - gosec
     - govet
     - ineffassign
     - nestif
+    - nilerr
+    - noctx
     - revive
     - staticcheck
+    - unconvert
     - unused
   settings:
     depguard:
@@ -81,8 +86,11 @@ linters:
     rules:
       - path: _test\.go
         linters:
+          - errorlint
+          - forcetypeassert
           - gosec
           - errcheck
+          - noctx
       - path: _test\.go
         linters:
           - cyclop

@@ -101,7 +101,8 @@ func (r *Runtime) CanColor(out io.Writer) bool {
 
 	key := reflect.ValueOf(f).Pointer()
 	if cached, ok := ttyCache.Load(key); ok {
-		return cached.(bool)
+		v, _ := cached.(bool)
+		return v
 	}
 
 	enabled := detectTTY(f)
