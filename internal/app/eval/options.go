@@ -112,11 +112,16 @@ func (o Options) validateIntegrityFlags() error {
 
 // validateFilePath checks that a flag value, when non-empty, references an
 // existing regular file. It distinguishes not-exist from permission errors.
-func validateFilePath(path, flag string) error {
+// The statFn parameter allows testing without a real filesystem.
+func validateFilePath(path, flag string, statFn ...func(string) (os.FileInfo, error)) error { //nolint:unparam // statFn is a test seam — production callers use the os.Stat default
 	if path == "" {
 		return nil
 	}
-	fi, err := os.Stat(path)
+	stat := os.Stat
+	if len(statFn) > 0 && statFn[0] != nil {
+		stat = statFn[0]
+	}
+	fi, err := stat(path)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return fmt.Errorf("%s not found at path %q", flag, path)

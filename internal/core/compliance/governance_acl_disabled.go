@@ -13,15 +13,17 @@ type governanceACLDisabled struct {
 }
 
 func init() {
-	ControlRegistry.MustRegister(&governanceACLDisabled{
-		Definition: NewDefinition(
-			WithID("GOVERNANCE.001"),
-			WithDescription("Bucket ACLs must be disabled (ownership_controls == BucketOwnerEnforced)"),
-			WithSeverity(policy.SeverityHigh),
-			WithComplianceProfiles("hipaa", "cis-s3"),
-			WithComplianceRef("hipaa", "§164.312(a)(1)"),
-			WithProfileRationale("hipaa", "ACL control — disable legacy ACL grants"),
-		),
+	RegisterControl(func() Control {
+		return &governanceACLDisabled{
+			Definition: NewDefinition(
+				WithID("GOVERNANCE.001"),
+				WithDescription("Bucket ACLs must be disabled (ownership_controls == BucketOwnerEnforced)"),
+				WithSeverity(policy.SeverityHigh),
+				WithComplianceProfiles("hipaa", "cis-s3"),
+				WithComplianceRef("hipaa", "§164.312(a)(1)"),
+				WithProfileRationale("hipaa", "ACL control — disable legacy ACL grants"),
+			),
+		}
 	})
 }
 

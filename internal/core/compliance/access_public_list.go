@@ -14,14 +14,16 @@ type accessPublicList struct {
 }
 
 func init() {
-	ControlRegistry.MustRegister(&accessPublicList{
-		Definition: NewDefinition(
-			WithID("ACCESS.011"),
-			WithDescription("No bucket policy may grant s3:ListBucket to a public principal"),
-			WithSeverity(policy.SeverityHigh),
-			WithComplianceProfiles("hipaa", "cis-s3"),
-			WithComplianceRef("hipaa", "§164.312(a)(1)"),
-		),
+	RegisterControl(func() Control {
+		return &accessPublicList{
+			Definition: NewDefinition(
+				WithID("ACCESS.011"),
+				WithDescription("No bucket policy may grant s3:ListBucket to a public principal"),
+				WithSeverity(policy.SeverityHigh),
+				WithComplianceProfiles("hipaa", "cis-s3"),
+				WithComplianceRef("hipaa", "§164.312(a)(1)"),
+			),
+		}
 	})
 }
 

@@ -12,16 +12,18 @@ type accessNetworkRestriction struct {
 }
 
 func init() {
-	ControlRegistry.MustRegister(&accessNetworkRestriction{
-		Definition: NewDefinition(
-			WithID("ACCESS.003"),
-			WithDescription("Bucket access must be restricted by VPC endpoint or IP condition"),
-			WithSeverity(policy.SeverityHigh),
-			WithComplianceProfiles("hipaa"),
-			WithComplianceRef("hipaa", "§164.312(e)(1)"),
-			WithProfileRationale("hipaa", "Transmission security — VPC endpoint or IP restriction"),
-			WithProfileSeverityOverride("hipaa", policy.SeverityHigh),
-		),
+	RegisterControl(func() Control {
+		return &accessNetworkRestriction{
+			Definition: NewDefinition(
+				WithID("ACCESS.003"),
+				WithDescription("Bucket access must be restricted by VPC endpoint or IP condition"),
+				WithSeverity(policy.SeverityHigh),
+				WithComplianceProfiles("hipaa"),
+				WithComplianceRef("hipaa", "§164.312(e)(1)"),
+				WithProfileRationale("hipaa", "Transmission security — VPC endpoint or IP restriction"),
+				WithProfileSeverityOverride("hipaa", policy.SeverityHigh),
+			),
+		}
 	})
 }
 

@@ -135,13 +135,19 @@ func (s *Service) Loop(ctx context.Context, req LoopRequest, deps LoopDeps, am *
 }
 
 // ValidateLoopDirs checks that all required directories exist.
-func ValidateLoopDirs(req LoopRequest) error {
+// ValidateLoopDirs checks that required directories exist and are accessible.
+// The optional statFn parameter allows testing without a real filesystem.
+func ValidateLoopDirs(req LoopRequest, statFn ...func(string) (os.FileInfo, error)) error {
+	stat := os.Stat
+	if len(statFn) > 0 && statFn[0] != nil {
+		stat = statFn[0]
+	}
 	for _, dir := range []struct{ flag, path string }{
 		{"--before", req.BeforeDir},
 		{"--after", req.AfterDir},
 		{"--controls", req.ControlsDir},
 	} {
-		info, err := os.Stat(dir.path)
+		info, err := stat(dir.path)
 		if err != nil {
 			return fmt.Errorf("%s: %w", dir.flag, err)
 		}

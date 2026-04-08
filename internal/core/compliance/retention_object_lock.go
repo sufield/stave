@@ -13,15 +13,17 @@ type retentionObjectLock struct {
 }
 
 func init() {
-	ControlRegistry.MustRegister(&retentionObjectLock{
-		Definition: NewDefinition(
-			WithID("RETENTION.002"),
-			WithDescription("Object Lock must be enabled for PHI retention (6-year HIPAA minimum)"),
-			WithSeverity(policy.SeverityHigh),
-			WithComplianceProfiles("hipaa"),
-			WithComplianceRef("hipaa", "§164.316(b)(2)"),
-			WithProfileRationale("hipaa", "6-year PHI retention via Object Lock"),
-		),
+	RegisterControl(func() Control {
+		return &retentionObjectLock{
+			Definition: NewDefinition(
+				WithID("RETENTION.002"),
+				WithDescription("Object Lock must be enabled for PHI retention (6-year HIPAA minimum)"),
+				WithSeverity(policy.SeverityHigh),
+				WithComplianceProfiles("hipaa"),
+				WithComplianceRef("hipaa", "§164.316(b)(2)"),
+				WithProfileRationale("hipaa", "6-year PHI retention via Object Lock"),
+			),
+		}
 	})
 }
 

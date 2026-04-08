@@ -12,16 +12,18 @@ type accessPresignedURL struct {
 }
 
 func init() {
-	ControlRegistry.MustRegister(&accessPresignedURL{
-		Definition: NewDefinition(
-			WithID("ACCESS.009"),
-			WithDescription("PHI bucket policy must restrict presigned URL access via s3:signatureAge or s3:authType condition"),
-			WithSeverity(policy.SeverityMedium),
-			WithComplianceProfiles("hipaa"),
-			WithComplianceRef("hipaa", "§164.312(a)(1)"),
-			WithProfileRationale("hipaa", "Presigned URL restriction for PHI buckets"),
-			WithProfileSeverityOverride("hipaa", policy.SeverityMedium),
-		),
+	RegisterControl(func() Control {
+		return &accessPresignedURL{
+			Definition: NewDefinition(
+				WithID("ACCESS.009"),
+				WithDescription("PHI bucket policy must restrict presigned URL access via s3:signatureAge or s3:authType condition"),
+				WithSeverity(policy.SeverityMedium),
+				WithComplianceProfiles("hipaa"),
+				WithComplianceRef("hipaa", "§164.312(a)(1)"),
+				WithProfileRationale("hipaa", "Presigned URL restriction for PHI buckets"),
+				WithProfileSeverityOverride("hipaa", policy.SeverityMedium),
+			),
+		}
 	})
 }
 

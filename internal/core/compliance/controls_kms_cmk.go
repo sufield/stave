@@ -16,15 +16,17 @@ type controlsKmsCmk struct {
 }
 
 func init() {
-	ControlRegistry.MustRegister(&controlsKmsCmk{
-		Definition: NewDefinition(
-			WithID("CONTROLS.001.STRICT"),
-			WithDescription("Server-side encryption must use SSE-KMS with a customer-managed key (CMK)"),
-			WithSeverity(policy.SeverityCritical),
-			WithComplianceProfiles("hipaa"),
-			WithComplianceRef("hipaa", "§164.312(a)(2)(iv)"),
-			WithProfileRationale("hipaa", "CMK required for key revocation during breach response"),
-		),
+	RegisterControl(func() Control {
+		return &controlsKmsCmk{
+			Definition: NewDefinition(
+				WithID("CONTROLS.001.STRICT"),
+				WithDescription("Server-side encryption must use SSE-KMS with a customer-managed key (CMK)"),
+				WithSeverity(policy.SeverityCritical),
+				WithComplianceProfiles("hipaa"),
+				WithComplianceRef("hipaa", "§164.312(a)(2)(iv)"),
+				WithProfileRationale("hipaa", "CMK required for key revocation during breach response"),
+			),
+		}
 	})
 }
 

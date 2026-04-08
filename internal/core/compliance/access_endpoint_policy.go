@@ -12,15 +12,17 @@ type accessEndpointPolicy struct {
 }
 
 func init() {
-	ControlRegistry.MustRegister(&accessEndpointPolicy{
-		Definition: NewDefinition(
-			WithID("ACCESS.006"),
-			WithDescription("VPC endpoint policy must restrict S3 access to approved bucket ARNs"),
-			WithSeverity(policy.SeverityHigh),
-			WithComplianceProfiles("hipaa"),
-			WithComplianceRef("hipaa", "§164.312(e)(1)"),
-			WithProfileRationale("hipaa", "VPC endpoint policy restricts access to approved bucket ARNs"),
-		),
+	RegisterControl(func() Control {
+		return &accessEndpointPolicy{
+			Definition: NewDefinition(
+				WithID("ACCESS.006"),
+				WithDescription("VPC endpoint policy must restrict S3 access to approved bucket ARNs"),
+				WithSeverity(policy.SeverityHigh),
+				WithComplianceProfiles("hipaa"),
+				WithComplianceRef("hipaa", "§164.312(e)(1)"),
+				WithProfileRationale("hipaa", "VPC endpoint policy restricts access to approved bucket ARNs"),
+			),
+		}
 	})
 }
 

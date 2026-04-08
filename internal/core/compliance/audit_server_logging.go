@@ -13,15 +13,17 @@ type auditServerLogging struct {
 }
 
 func init() {
-	ControlRegistry.MustRegister(&auditServerLogging{
-		Definition: NewDefinition(
-			WithID("AUDIT.001"),
-			WithDescription("Server access logging must be enabled with a configured target bucket"),
-			WithSeverity(policy.SeverityCritical),
-			WithComplianceProfiles("hipaa", "pci-dss", "cis-s3"),
-			WithComplianceRef("hipaa", "§164.312(b)"),
-			WithProfileRationale("hipaa", "All PHI access must be logged — logs cannot be obtained retroactively"),
-		),
+	RegisterControl(func() Control {
+		return &auditServerLogging{
+			Definition: NewDefinition(
+				WithID("AUDIT.001"),
+				WithDescription("Server access logging must be enabled with a configured target bucket"),
+				WithSeverity(policy.SeverityCritical),
+				WithComplianceProfiles("hipaa", "pci-dss", "cis-s3"),
+				WithComplianceRef("hipaa", "§164.312(b)"),
+				WithProfileRationale("hipaa", "All PHI access must be logged — logs cannot be obtained retroactively"),
+			),
+		}
 	})
 }
 

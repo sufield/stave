@@ -10,11 +10,21 @@ import (
 )
 
 // Scanner collects project artifact metadata from the filesystem.
-type Scanner struct{}
+type Scanner struct {
+	// StatFn abstracts os.Stat for testing. Defaults to os.Stat.
+	StatFn func(string) (os.FileInfo, error)
+}
 
-// NewScanner creates a scanner instance.
+// NewScanner creates a scanner with default OS filesystem access.
 func NewScanner() *Scanner {
-	return &Scanner{}
+	return &Scanner{StatFn: os.Stat}
+}
+
+func (sc *Scanner) stat(path string) (os.FileInfo, error) {
+	if sc.StatFn != nil {
+		return sc.StatFn(path)
+	}
+	return os.Stat(path)
 }
 
 // Scan inspects a project root and returns the aggregate artifact state.
@@ -112,7 +122,7 @@ func matchesExtension(name string, exts []string) bool {
 }
 
 func (sc *Scanner) fileModTime(path string) (time.Time, bool) {
-	fi, err := os.Stat(path)
+	fi, err := sc.stat(path)
 	if err != nil || fi.IsDir() {
 		return time.Time{}, false
 	}

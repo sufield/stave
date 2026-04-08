@@ -73,5 +73,39 @@ func (r *ControlCatalog) Len() int {
 	return len(r.controls)
 }
 
-// ControlRegistry is the single registry for all HIPAA controls.
+// ControlRegistry is the default global registry, populated by init()
+// functions in each control implementation file. Production code uses this
+// directly. Tests that need isolation should use NewTestCatalog() instead.
 var ControlRegistry = NewRegistry()
+
+// allControlConstructors holds factory functions for every built-in control.
+// Populated by RegisterControl() calls in init() — the source of truth
+// that both the global ControlRegistry and NewTestCatalog() draw from.
+var allControlConstructors []func() Control
+
+// RegisterControl records a control factory and registers it in the global
+// ControlRegistry. Called from init() in each control file.
+func RegisterControl(factory func() Control) {
+	allControlConstructors = append(allControlConstructors, factory)
+	ControlRegistry.MustRegister(factory())
+}
+
+// NewTestCatalog creates an isolated ControlCatalog with all built-in controls.
+// Each call produces a fresh catalog — safe for parallel tests.
+func NewTestCatalog() *ControlCatalog {
+	cat := NewRegistry()
+	for i := range allControlConstructors {
+		cat.MustRegister(allControlConstructors[i]())
+	}
+	return cat
+}
+
+// NewCatalogWith creates a ControlCatalog containing only the specified controls.
+// Use in tests that need a focused subset for isolated evaluation.
+func NewCatalogWith(controls ...Control) *ControlCatalog {
+	cat := NewRegistry()
+	for _, ctl := range controls {
+		cat.MustRegister(ctl)
+	}
+	return cat
+}
