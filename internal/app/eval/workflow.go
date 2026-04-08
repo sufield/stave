@@ -35,6 +35,7 @@ type AssessmentConfig struct {
 	Metadata        evaluation.Metadata
 	PredicateParser func(any) (*policy.UnsafePredicate, error)
 	PredicateEval   policy.PredicateEval
+	Tracer          ports.Tracer
 }
 
 // AuditWorkflow orchestrates the end-to-end security assessment process.
@@ -93,6 +94,7 @@ func (w *AuditWorkflow) PerformAssessment(ctx context.Context, cfg AssessmentCon
 		PredicateParser:   cfg.PredicateParser,
 		CELEvaluator:      cfg.PredicateEval,
 		Metadata:          cfg.Metadata,
+		Tracer:            cfg.Tracer,
 	})
 	if err != nil {
 		return evaluation.ComplianceReport{}, "", fmt.Errorf("security assessment failed: %w", err)

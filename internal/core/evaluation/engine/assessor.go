@@ -27,6 +27,12 @@ type Assessor struct {
 	PredicateParser func(any) (*policy.UnsafePredicate, error)
 	Confidence      evaluation.ConfidenceCalculator
 
+	// Observability — optional logic trace for audit transparency.
+	// When set, the engine records every decision step (predicate evaluation,
+	// threshold check, coverage analysis) so security researchers can verify
+	// the reasoning chain for both PASS and VIOLATION verdicts.
+	Tracer ports.Tracer
+
 	// Governance — the policy-set and override configurations.
 	Controls   []policy.ControlDefinition
 	Exemptions *policy.ExemptionConfig
@@ -46,10 +52,23 @@ func NewAssessor() *Assessor {
 	}
 }
 
-// Compile-time check: Assessor satisfies the internal strategy dependency interface.
-var _ strategyDeps = (*Assessor)(nil)
+// sessionDeps wraps the Assessor to satisfy strategyDeps, adding the
+// active trace span from the current assessmentSession.
+type sessionDeps struct {
+	*Assessor
+	span ports.AssessmentSpan
+}
 
-func (a *Assessor) logger() *slog.Logger { return a.Logger }
+func (d *sessionDeps) currentSpan() ports.AssessmentSpan { return d.span }
+
+// Compile-time checks.
+var (
+	_ strategyDeps = (*sessionDeps)(nil)
+	_ strategyDeps = (*Assessor)(nil)
+)
+
+func (a *Assessor) logger() *slog.Logger              { return a.Logger }
+func (a *Assessor) currentSpan() ports.AssessmentSpan { return nopSpan{} }
 
 // slaThresholdFor returns the effective SLA (Max Unsafe Duration) for a control.
 func (a *Assessor) slaThresholdFor(ctl *policy.ControlDefinition) time.Duration {
@@ -88,12 +107,22 @@ type AssessmentOptions struct {
 
 // assessmentSession maintains the state of a single execution of the engine.
 type assessmentSession struct {
-	assessor  *Assessor
-	inventory []asset.Snapshot
-	auditTime time.Time
-	collector *AssessmentCollector
-	idIndex   IdentityIndex
-	opts      AssessmentOptions
+	assessor   *Assessor
+	inventory  []asset.Snapshot
+	auditTime  time.Time
+	collector  *AssessmentCollector
+	idIndex    IdentityIndex
+	opts       AssessmentOptions
+	activeSpan ports.AssessmentSpan // current control×asset span for strategy access
+}
+
+// beginTrace starts a trace span for a control×asset evaluation.
+// Returns a nopSpan if no tracer is configured — avoids nil checks at call sites.
+func (s *assessmentSession) beginTrace(resourceID, policyID string) ports.AssessmentSpan {
+	if s.assessor.Tracer == nil {
+		return nopSpan{}
+	}
+	return s.assessor.Tracer.BeginAssessment(resourceID, policyID)
 }
 
 // Assess processes the cloud inventory and returns a comprehensive ComplianceReport.
@@ -146,7 +175,6 @@ func (s *assessmentSession) applyControl(
 	ctl *policy.ControlDefinition,
 	lifecycles map[asset.ID]*asset.ExposureLifecycle,
 ) {
-	strategy := s.assessor.strategyFor(ctl)
 
 	// Ensure deterministic output by processing assets in ID order.
 	assetIDs := make([]asset.ID, 0, len(lifecycles))
@@ -157,9 +185,19 @@ func (s *assessmentSession) applyControl(
 
 	for _, id := range assetIDs {
 		lifecycle := lifecycles[id]
+		span := s.beginTrace(string(id), ctl.ID.String())
 
 		// 1. Check for organizational exemptions (Policy Overrides)
 		if rule := s.assessor.Exemptions.ShouldExempt(id); rule != nil {
+			span.RecordStep("exemption_check", map[string]any{
+				"pattern": rule.Pattern,
+			}, map[string]any{
+				"exempted": true,
+				"reason":   rule.Reason,
+			})
+			span.SetVerdict(string(evaluation.VerdictSkipped), string(evaluation.ConfidenceHigh))
+			span.End()
+
 			if s.collector.RecordExemption(id) {
 				s.collector.RecordExemptedAsset(id, rule.Pattern, rule.Reason)
 			}
@@ -174,6 +212,7 @@ func (s *assessmentSession) applyControl(
 			})
 			continue
 		}
+		span.RecordStep("exemption_check", nil, map[string]any{"exempted": false})
 
 		// 2. Track evaluated inventory
 		s.collector.seenAssets.register(id)
@@ -181,8 +220,20 @@ func (s *assessmentSession) applyControl(
 			s.collector.nonCompliantAssets.register(id)
 		}
 
-		// 3. Evaluate the security strategy against the asset lifecycle
-		check, findings := strategy.Evaluate(lifecycle, s.auditTime, s.idIndex)
+		// 3. Evaluate the security strategy against the asset lifecycle.
+		//    Set the active span so strategies can record their decision steps,
+		//    then create the strategy (which captures the span via sessionDeps).
+		s.activeSpan = span
+		strat := s.strategyFor(ctl)
+		check, findings := strat.Evaluate(lifecycle, s.auditTime, s.idIndex)
+
+		// 4. Record verdict and finding linkage in the trace span
+		span.SetVerdict(string(check.Verdict), string(check.Confidence))
+		if len(findings) > 0 {
+			span.SetFindingID(findings[0].ControlID.String() + "@" + string(findings[0].AssetID))
+		}
+		span.End()
+
 		s.collector.RecordCheck(check)
 		s.collector.RecordFindings(findings)
 	}

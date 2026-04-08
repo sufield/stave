@@ -90,3 +90,10 @@ func WithHasher(h ports.Digester) Option {
 		cfg.Hasher = h
 	}
 }
+
+// WithTracer enables the logic audit trace.
+func WithTracer(t ports.Tracer) Option {
+	return func(cfg *AssessmentConfig) {
+		cfg.Tracer = t
+	}
+}

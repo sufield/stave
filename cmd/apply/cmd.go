@@ -75,6 +75,7 @@ type Options struct {
 	InputFile          string
 	BucketAllowlist    []string
 	IncludeAll         bool
+	TracePath          string
 }
 
 // normalize cleans all user-supplied paths in one pass.
@@ -175,6 +176,7 @@ func (o *Options) bindApplySpecific(cmd *cobra.Command) {
 	f.StringVar(&o.InputFile, "input", "", "Path to observations bundle file (required with --profile)")
 	f.StringSliceVar(&o.BucketAllowlist, "bucket-allowlist", nil, "Bucket names/ARNs to include")
 	f.BoolVar(&o.IncludeAll, "include-all", false, "Disable health scope filtering")
+	f.StringVar(&o.TracePath, "trace", "", "Write logic audit trace to file (e.g. audit_trace.json)")
 }
 
 func (o *Options) validate() error {
