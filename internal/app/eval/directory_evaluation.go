@@ -14,7 +14,6 @@ import (
 // DirectoryEvaluationRequest describes a loaded-on-demand evaluation over an
 // observations directory.
 type DirectoryEvaluationRequest struct {
-	Context           context.Context
 	ObservationsDir   string
 	Controls          []policy.ControlDefinition
 	MaxUnsafeDuration time.Duration
@@ -26,11 +25,10 @@ type DirectoryEvaluationRequest struct {
 }
 
 // RunDirectoryEvaluation loads snapshots and evaluates them against controls.
-func RunDirectoryEvaluation(req DirectoryEvaluationRequest) (*evaluation.ComplianceReport, int, error) {
+func RunDirectoryEvaluation(ctx context.Context, req DirectoryEvaluationRequest) (*evaluation.ComplianceReport, int, error) {
 	if req.ObservationLoader == nil {
 		return nil, 0, fmt.Errorf("observation loader is required")
 	}
-	ctx := req.Context
 
 	loadResult, err := req.ObservationLoader.LoadSnapshots(ctx, req.ObservationsDir)
 	if err != nil {

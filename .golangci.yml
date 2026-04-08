@@ -8,9 +8,12 @@ run:
 
 linters:
   enable:
+    - containedctx
     - depguard
+    - durationcheck
     - errcheck
     - errorlint
+    - fatcontext
     - forcetypeassert
     - gocritic
     - gosec
@@ -18,11 +21,15 @@ linters:
     - ineffassign
     - nestif
     - nilerr
+    - nilnesserr
     - noctx
+    - predeclared
     - revive
     - staticcheck
     - unconvert
+    - unparam
     - unused
+    - wastedassign
   settings:
     depguard:
       rules:
@@ -91,6 +98,7 @@ linters:
           - gosec
           - errcheck
           - noctx
+          - unparam
       - path: _test\.go
         linters:
           - cyclop

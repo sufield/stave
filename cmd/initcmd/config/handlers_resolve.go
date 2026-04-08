@@ -37,7 +37,7 @@ func resolveConfigValue(cfg *appconfig.WorkspacePolicy, cfgPath string, eval *ap
 
 // specialResolvers maps top-level keys that need custom resolution logic.
 var specialResolvers = map[string]func(*appconfig.WorkspacePolicy, string, *appconfig.GovernanceResolver, appconfig.SettingPath) (ValueResult, error){
-	"snapshot_retention": func(_ *appconfig.WorkspacePolicy, _ string, eval *appconfig.GovernanceResolver, p appconfig.SettingPath) (ValueResult, error) {
+	"snapshot_retention": func(_ *appconfig.WorkspacePolicy, _ string, eval *appconfig.GovernanceResolver, p appconfig.SettingPath) (ValueResult, error) { //nolint:unparam // error is part of the resolver func signature
 		v := eval.ResolveSnapshotRetention(eval.RetentionTier())
 		return ValueResult{Key: p.Raw, Value: v.Value, Source: v.Source}, nil
 	},

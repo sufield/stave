@@ -68,8 +68,8 @@ func testControls() []policy.ControlDefinition {
 func TestRunDirectoryEvaluation_LoadError(t *testing.T) {
 	repo := &mockObsRepo{err: errors.New("disk failure")}
 
-	_, _, err := RunDirectoryEvaluation(DirectoryEvaluationRequest{
-		Context:           context.Background(),
+	_, _, err := RunDirectoryEvaluation(context.Background(), DirectoryEvaluationRequest{
+
 		ObservationsDir:   "/tmp/obs",
 		ObservationLoader: repo,
 	})
@@ -84,8 +84,8 @@ func TestRunDirectoryEvaluation_LoadError(t *testing.T) {
 func TestRunDirectoryEvaluation_EmptySnapshots(t *testing.T) {
 	repo := &mockObsRepo{result: appcontracts.LoadResult{Snapshots: nil}}
 
-	_, _, err := RunDirectoryEvaluation(DirectoryEvaluationRequest{
-		Context:           context.Background(),
+	_, _, err := RunDirectoryEvaluation(context.Background(), DirectoryEvaluationRequest{
+
 		ObservationsDir:   "/tmp/obs",
 		ObservationLoader: repo,
 	})
@@ -108,8 +108,8 @@ func TestRunDirectoryEvaluation_SourceTypeIncompatible(t *testing.T) {
 	}
 	repo := &mockObsRepo{result: appcontracts.LoadResult{Snapshots: snaps}}
 
-	_, _, err := RunDirectoryEvaluation(DirectoryEvaluationRequest{
-		Context:           context.Background(),
+	_, _, err := RunDirectoryEvaluation(context.Background(), DirectoryEvaluationRequest{
+
 		ObservationsDir:   "/tmp/obs",
 		Controls:          testControls(),
 		ObservationLoader: repo,
@@ -131,8 +131,8 @@ func TestRunDirectoryEvaluation_Success(t *testing.T) {
 		return false, nil // all safe
 	}
 
-	result, snapCount, err := RunDirectoryEvaluation(DirectoryEvaluationRequest{
-		Context:           context.Background(),
+	result, snapCount, err := RunDirectoryEvaluation(context.Background(), DirectoryEvaluationRequest{
+
 		ObservationsDir:   "/tmp/obs",
 		Controls:          testControls(),
 		MaxUnsafeDuration: 168 * time.Hour,
@@ -176,8 +176,8 @@ func TestRunDirectoryEvaluation_AllowUnknownType(t *testing.T) {
 		return false, nil
 	}
 
-	result, _, err := RunDirectoryEvaluation(DirectoryEvaluationRequest{
-		Context:           context.Background(),
+	result, _, err := RunDirectoryEvaluation(context.Background(), DirectoryEvaluationRequest{
+
 		ObservationsDir:   "/tmp/obs",
 		Controls:          testControls(),
 		MaxUnsafeDuration: 168 * time.Hour,

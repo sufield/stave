@@ -1,7 +1,6 @@
 package verify
 
 import (
-	"context"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -82,7 +81,6 @@ func (o *options) validate() error {
 
 // Execution contains the resolved domain objects ready for the application layer.
 type Execution struct {
-	Context           context.Context
 	BeforeDir         string
 	AfterDir          string
 	ControlsDir       string
@@ -92,7 +90,7 @@ type Execution struct {
 }
 
 // Complete transforms the raw options into a validated Execution object.
-func (o *options) Complete(ctx context.Context) (Execution, error) {
+func (o *options) Complete() (Execution, error) {
 	maxDuration, err := cliflags.ParseDurationFlag(o.MaxUnsafeDuration, "--max-unsafe")
 	if err != nil {
 		return Execution{}, err
@@ -104,7 +102,6 @@ func (o *options) Complete(ctx context.Context) (Execution, error) {
 	}
 
 	return Execution{
-		Context:           ctx,
 		BeforeDir:         o.BeforeDir,
 		AfterDir:          o.AfterDir,
 		ControlsDir:       o.ControlsDir,
