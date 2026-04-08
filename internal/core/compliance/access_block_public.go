@@ -15,15 +15,17 @@ type accessBlockPublic struct {
 }
 
 func init() {
-	ControlRegistry.MustRegister(&accessBlockPublic{
-		Definition: NewDefinition(
-			WithID("ACCESS.001"),
-			WithDescription("Block Public Access must be fully enabled at bucket level"),
-			WithSeverity(policy.SeverityCritical),
-			WithComplianceProfiles("hipaa", "pci-dss", "cis-s3"),
-			WithComplianceRef("hipaa", "§164.312(a)(1)"),
-			WithProfileRationale("hipaa", "Access control — Block Public Access prevents public exposure of ePHI"),
-		),
+	RegisterControl(func() Control {
+		return &accessBlockPublic{
+			Definition: NewDefinition(
+				WithID("ACCESS.001"),
+				WithDescription("Block Public Access must be fully enabled at bucket level"),
+				WithSeverity(policy.SeverityCritical),
+				WithComplianceProfiles("hipaa", "pci-dss", "cis-s3"),
+				WithComplianceRef("hipaa", "§164.312(a)(1)"),
+				WithProfileRationale("hipaa", "Access control — Block Public Access prevents public exposure of ePHI"),
+			),
+		}
 	})
 }
 

@@ -13,14 +13,16 @@ type controlsEncryption struct {
 }
 
 func init() {
-	ControlRegistry.MustRegister(&controlsEncryption{
-		Definition: NewDefinition(
-			WithID("CONTROLS.001"),
-			WithDescription("Server-side encryption (SSE) must be enabled"),
-			WithSeverity(policy.SeverityHigh),
-			WithComplianceProfiles("hipaa", "pci-dss", "cis-s3"),
-			WithComplianceRef("hipaa", "§164.312(a)(2)(iv)"),
-		),
+	RegisterControl(func() Control {
+		return &controlsEncryption{
+			Definition: NewDefinition(
+				WithID("CONTROLS.001"),
+				WithDescription("Server-side encryption (SSE) must be enabled"),
+				WithSeverity(policy.SeverityHigh),
+				WithComplianceProfiles("hipaa", "pci-dss", "cis-s3"),
+				WithComplianceRef("hipaa", "§164.312(a)(2)(iv)"),
+			),
+		}
 	})
 }
 

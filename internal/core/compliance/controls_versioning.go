@@ -13,15 +13,17 @@ type controlsVersioning struct {
 }
 
 func init() {
-	ControlRegistry.MustRegister(&controlsVersioning{
-		Definition: NewDefinition(
-			WithID("CONTROLS.002"),
-			WithDescription("S3 bucket versioning must be enabled to protect data integrity"),
-			WithSeverity(policy.SeverityMedium),
-			WithComplianceProfiles("hipaa", "cis-s3"),
-			WithComplianceRef("hipaa", "§164.312(c)(1)"),
-			WithProfileRationale("hipaa", "Integrity — versioning protects against accidental deletion"),
-		),
+	RegisterControl(func() Control {
+		return &controlsVersioning{
+			Definition: NewDefinition(
+				WithID("CONTROLS.002"),
+				WithDescription("S3 bucket versioning must be enabled to protect data integrity"),
+				WithSeverity(policy.SeverityMedium),
+				WithComplianceProfiles("hipaa", "cis-s3"),
+				WithComplianceRef("hipaa", "§164.312(c)(1)"),
+				WithProfileRationale("hipaa", "Integrity — versioning protects against accidental deletion"),
+			),
+		}
 	})
 }
 

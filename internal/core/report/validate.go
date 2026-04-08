@@ -52,13 +52,18 @@ func validateRaw(kind, version string, data []byte) error {
 }
 
 // DefaultMaxValidationErrors is the conservative default for how many schema
-// validation errors are shown before truncating. Override via SetMaxValidationErrors.
+// validation errors are shown before truncating.
 const DefaultMaxValidationErrors = 3
 
+// maxValidationErrors controls how many errors are shown before truncating.
+// Set via SetMaxValidationErrors at startup. This is a process-level display
+// preference, not domain state — acceptable as a package variable since it's
+// set once during bootstrap and read during validation.
 var maxValidationErrors = DefaultMaxValidationErrors
 
 // SetMaxValidationErrors overrides the validation error display cap.
-// Values <= 0 are ignored.
+// Must be called during process initialization (e.g., bootstrap), not
+// concurrently with validation calls.
 func SetMaxValidationErrors(n int) {
 	if n > 0 {
 		maxValidationErrors = n

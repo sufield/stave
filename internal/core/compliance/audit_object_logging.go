@@ -12,16 +12,18 @@ type auditObjectLogging struct {
 }
 
 func init() {
-	ControlRegistry.MustRegister(&auditObjectLogging{
-		Definition: NewDefinition(
-			WithID("AUDIT.002"),
-			WithDescription("CloudTrail S3 object-level data event logging must be enabled"),
-			WithSeverity(policy.SeverityHigh),
-			WithComplianceProfiles("hipaa"),
-			WithComplianceRef("hipaa", "§164.312(b)"),
-			WithProfileRationale("hipaa", "Object-level logging for PHI access audit trail"),
-			WithProfileSeverityOverride("hipaa", policy.SeverityHigh),
-		),
+	RegisterControl(func() Control {
+		return &auditObjectLogging{
+			Definition: NewDefinition(
+				WithID("AUDIT.002"),
+				WithDescription("CloudTrail S3 object-level data event logging must be enabled"),
+				WithSeverity(policy.SeverityHigh),
+				WithComplianceProfiles("hipaa"),
+				WithComplianceRef("hipaa", "§164.312(b)"),
+				WithProfileRationale("hipaa", "Object-level logging for PHI access audit trail"),
+				WithProfileSeverityOverride("hipaa", policy.SeverityHigh),
+			),
+		}
 	})
 }
 

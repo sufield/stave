@@ -25,15 +25,17 @@ var minimumSyncActions = []string{
 }
 
 func init() {
-	ControlRegistry.MustRegister(&accessWildcardAction{
-		Definition: NewDefinition(
-			WithID("ACCESS.002"),
-			WithDescription("No bucket policy statement may grant Allow with wildcard action s3:*"),
-			WithSeverity(policy.SeverityHigh),
-			WithComplianceProfiles("hipaa", "pci-dss", "cis-s3"),
-			WithComplianceRef("hipaa", "§164.312(a)(2)(i)"),
-			WithProfileRationale("hipaa", "Least privilege — no wildcard actions"),
-		),
+	RegisterControl(func() Control {
+		return &accessWildcardAction{
+			Definition: NewDefinition(
+				WithID("ACCESS.002"),
+				WithDescription("No bucket policy statement may grant Allow with wildcard action s3:*"),
+				WithSeverity(policy.SeverityHigh),
+				WithComplianceProfiles("hipaa", "pci-dss", "cis-s3"),
+				WithComplianceRef("hipaa", "§164.312(a)(2)(i)"),
+				WithProfileRationale("hipaa", "Least privilege — no wildcard actions"),
+			),
+		}
 	})
 }
 
