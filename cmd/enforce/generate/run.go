@@ -143,7 +143,8 @@ func loadFindingRefs(inputPath string) ([]outenforce.FindingRef, error) {
 		return nil, fmt.Errorf("parse input JSON: %w", err)
 	}
 	refs := make([]outenforce.FindingRef, len(findings))
-	for i, f := range findings {
+	for i := range findings {
+		f := &findings[i]
 		refs[i] = outenforce.FindingRef{
 			ControlID: f.ControlID,
 			AssetID:   f.AssetID,

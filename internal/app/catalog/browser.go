@@ -50,7 +50,8 @@ func (b *CatalogBrowser) Browse(ctx context.Context, req DiscoveryRequest) ([]Po
 // SummarizePolicies transforms control definitions into display-friendly entries.
 func SummarizePolicies(controls []policy.ControlDefinition) []PolicyEntry {
 	entries := make([]PolicyEntry, 0, len(controls))
-	for _, c := range controls {
+	for i := range controls {
+		c := &controls[i]
 		entries = append(entries, PolicyEntry{
 			ID:     c.ID.String(),
 			Name:   c.Name,

@@ -44,10 +44,11 @@ func (p *Planner) PlanFor(f Finding) *evaluation.RemediationPlan {
 // EnrichFindings combines raw violations with their remediation specs and plans.
 func (p *Planner) EnrichFindings(result evaluation.ComplianceReport) []Finding {
 	enriched := make([]Finding, len(result.Findings))
-	for i, f := range result.Findings {
+	for i := range result.Findings {
+		f := &result.Findings[i]
 		findingWithPlan := Finding{
-			Finding:         f,
-			RemediationSpec: resolveSpec(f),
+			Finding:         *f,
+			RemediationSpec: resolveSpec(*f),
 		}
 		findingWithPlan.RemediationPlan = p.PlanFor(findingWithPlan)
 		enriched[i] = findingWithPlan

@@ -34,9 +34,10 @@ func FindControlByID(ctx context.Context, repo appcontracts.ControlRepository, d
 	if err != nil {
 		return policy.ControlDefinition{}, fmt.Errorf("loading controls from %s: %w", dir, err)
 	}
-	for _, c := range controls {
+	for i := range controls {
+		c := &controls[i]
 		if c.ID == id {
-			return c, nil
+			return *c, nil
 		}
 	}
 	return policy.ControlDefinition{}, fmt.Errorf("%w: %q in %s", ErrControlNotFound, id, dir)

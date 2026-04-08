@@ -32,7 +32,8 @@ func (e *Evaluator) Evaluate(doc *Document) risk.Report {
 
 	report := risk.Report{}
 
-	for _, stmt := range doc.statements {
+	for i := range doc.statements {
+		stmt := &doc.statements[i]
 		if !stmt.GrantsAccess() {
 			continue
 		}

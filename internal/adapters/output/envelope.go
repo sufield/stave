@@ -39,7 +39,8 @@ func toRemediationFindings(fs []appcontracts.EnrichedFinding) []remediation.Find
 		return nil
 	}
 	out := make([]remediation.Finding, len(fs))
-	for i, f := range fs {
+	for i := range fs {
+		f := &fs[i]
 		out[i] = remediation.Finding{
 			Finding:         f.Finding,
 			RemediationSpec: f.RemediationSpec,

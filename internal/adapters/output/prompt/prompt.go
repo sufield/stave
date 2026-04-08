@@ -51,7 +51,8 @@ type Builder struct {
 func (b *Builder) Build(matched []evaluation.Finding) Data {
 	findings := make([]FindingData, 0, len(matched))
 
-	for _, v := range matched {
+	for i := range matched {
+		v := &matched[i]
 		fd := FindingData{
 			ControlID:    v.ControlID,
 			ControlName:  v.ControlName,

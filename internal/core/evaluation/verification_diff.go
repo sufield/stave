@@ -25,13 +25,15 @@ func CompareVerificationFindings(before, after []Finding) VerificationDiff {
 	// 1. Build maps for O(1) lookups.
 	// Capacity hints reduce re-allocations for large data sets.
 	beforeMap := make(map[findingKey]Finding, len(before))
-	for _, f := range before {
-		beforeMap[findingKey{f.ControlID, f.AssetID}] = f
+	for i := range before {
+		f := &before[i]
+		beforeMap[findingKey{f.ControlID, f.AssetID}] = *f
 	}
 
 	afterMap := make(map[findingKey]Finding, len(after))
-	for _, f := range after {
-		afterMap[findingKey{f.ControlID, f.AssetID}] = f
+	for i := range after {
+		f := &after[i]
+		afterMap[findingKey{f.ControlID, f.AssetID}] = *f
 	}
 
 	diff := VerificationDiff{
@@ -41,7 +43,8 @@ func CompareVerificationFindings(before, after []Finding) VerificationDiff {
 	}
 
 	// 2. Identify Resolved and Remaining
-	for key, f := range beforeMap {
+	for key := range beforeMap {
+		f := beforeMap[key]
 		if _, exists := afterMap[key]; exists {
 			diff.Remaining = append(diff.Remaining, f)
 		} else {
@@ -50,7 +53,8 @@ func CompareVerificationFindings(before, after []Finding) VerificationDiff {
 	}
 
 	// 3. Identify Introduced (New)
-	for key, f := range afterMap {
+	for key := range afterMap {
+		f := afterMap[key]
 		if _, exists := beforeMap[key]; !exists {
 			diff.Introduced = append(diff.Introduced, f)
 		}

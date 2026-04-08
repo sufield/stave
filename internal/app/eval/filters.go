@@ -35,9 +35,10 @@ func FilterControls(controls []policy.ControlDefinition, f ControlFilter) ([]pol
 	}
 
 	filtered := make([]policy.ControlDefinition, 0, len(controls))
-	for _, ctl := range controls {
-		if f.matches(ctl, excluded) {
-			filtered = append(filtered, ctl)
+	for i := range controls {
+		ctl := &controls[i]
+		if f.matches(*ctl, excluded) {
+			filtered = append(filtered, *ctl)
 		}
 	}
 

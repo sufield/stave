@@ -132,7 +132,8 @@ func coverageAssets(assets []asset.Asset) (map[asset.ID]asset.Asset, []asset.ID)
 
 func coverageControlIDs(controls []policy.ControlDefinition) []kernel.ControlID {
 	ids := make([]kernel.ControlID, len(controls))
-	for i, ctl := range controls {
+	for i := range controls {
+		ctl := &controls[i]
 		ids[i] = ctl.ID
 	}
 	return ids

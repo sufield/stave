@@ -86,7 +86,8 @@ func (r *Report) RecomputeSummary() {
 		FailOn: r.Summary.Gating.FailOn,
 	}
 
-	for _, f := range r.Findings {
+	for i := range r.Findings {
+		f := &r.Findings[i]
 		switch f.Status {
 		case outcome.Pass:
 			counts.Pass++
@@ -131,9 +132,10 @@ func (r *Report) CloneWithFilter(allowed []policy.Severity) *Report {
 	}
 
 	filtered := make([]Finding, 0, len(r.Findings))
-	for _, f := range r.Findings {
+	for i := range r.Findings {
+		f := &r.Findings[i]
 		if _, ok := allowedSet[f.Severity]; ok {
-			filtered = append(filtered, f)
+			filtered = append(filtered, *f)
 		}
 	}
 

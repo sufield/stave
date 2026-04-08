@@ -83,8 +83,9 @@ func (w *FindingWriter) writeViolationsFromEnriched(d *drawer, result evaluation
 		return
 	}
 
-	for i, f := range enriched {
-		w.writeFinding(d, i+1, f)
+	for i := range enriched {
+		f := &enriched[i]
+		w.writeFinding(d, i+1, *f)
 	}
 }
 
@@ -155,7 +156,8 @@ func writeRemediationGroupHeader(d *drawer, groupCount, totalFindings int) {
 }
 
 func writeRemediationGroupRows(d *drawer, groups []remediation.Group) {
-	for i, group := range groups {
+	for i := range groups {
+		group := &groups[i]
 		d.f("  %d. %s (%s)\n", i+1, group.AssetID, group.AssetType)
 		d.f("     Resolves %d findings: %s\n", group.FindingCount, joinControls(group.ContributingControls))
 		d.f("     Actions: set %d properties\n", len(group.RemediationPlan.Actions))
@@ -235,7 +237,8 @@ func writeFindingRemediation(d *drawer, f remediation.Finding) {
 // remediation.Finding for use by core formatting functions.
 func toRemediationFindings(fs []appcontracts.EnrichedFinding) []remediation.Finding {
 	out := make([]remediation.Finding, len(fs))
-	for i, f := range fs {
+	for i := range fs {
+		f := &fs[i]
 		out[i] = remediation.Finding{
 			Finding:         f.Finding,
 			RemediationSpec: f.RemediationSpec,

@@ -1,7 +1,7 @@
 # HIPAA S3 Compliance Evaluation
 
 Stave evaluates S3 bucket configurations against HIPAA Security Rule
-requirements using programmatic invariants, compound risk detection,
+requirements using security controls, compound risk detection,
 a compliance profile system, acknowledged exceptions with compensating
 controls, and structured reporting with regulatory citations.
 
@@ -16,14 +16,14 @@ stave evaluate --snapshot snap.json --profile hipaa --format json --output repor
 ```
 
 Exit codes:
-- `0` — all CRITICAL invariants pass
-- `1` — one or more CRITICAL invariants fail
+- `0` — all CRITICAL controls pass
+- `1` — one or more CRITICAL controls fail
 - `2` — input or configuration error
 
 ## HIPAA Profile
 
 The built-in HIPAA profile (`internal/profile/hipaa.go`) includes 11
-invariants in priority order. Invariants not yet implemented are skipped
+controls in priority order. Controls not yet implemented are skipped
 without error during evaluation.
 
 ### CRITICAL Priority
@@ -52,7 +52,7 @@ without error during evaluation.
 | CONTROLS.002 | §164.312(c)(1) | Integrity — versioning protects against accidental deletion |
 | ACCESS.009 | §164.312(a)(1) | Presigned URL restriction for PHI buckets |
 
-## Invariant Reference
+## Control Reference
 
 ### ACCESS.001 — Block Public Access
 
@@ -160,7 +160,7 @@ without error during evaluation.
 
 ## Compound Risk Detection
 
-After individual invariant evaluation, the compound risk detector
+After individual control evaluation, the compound risk detector
 identifies known dangerous combinations that represent higher risk than
 any individual finding alone. Compound findings are prepended to the
 report before individual findings.
@@ -193,7 +193,7 @@ report before individual findings.
 
 ## Acknowledged Exceptions
 
-Legitimate configurations that intentionally fail invariants can be
+Legitimate configurations that intentionally fail controls can be
 declared as acknowledged exceptions in a `stave.yaml` file co-located
 with the snapshot.
 
@@ -201,7 +201,7 @@ with the snapshot.
 
 ```yaml
 exceptions:
-  - invariant_id: ACCESS.001
+  - control_id: ACCESS.001
     bucket: my-public-assets-bucket
     rationale: "CloudFront + OAI pattern — bucket is private to CloudFront"
     acknowledged_by: bala@example.com
@@ -239,9 +239,9 @@ with rationale, acknowledger, and compensating control status:
   Acknowledged by: bala@example.com
 ```
 
-## Invariant Incompatibility
+## Control Incompatibility
 
-Some invariants are mutually exclusive and cannot coexist in the same
+Some controls are mutually exclusive and cannot coexist in the same
 profile. The profile validator checks for known incompatible pairs at
 startup (not at runtime).
 
@@ -314,8 +314,8 @@ provides a `Less(other)` method for comparison.
 ### Package Layout
 
 ```
-internal/core/invariant/          Invariant interface, severity, registries
-internal/core/invariant/compound/ Compound risk detection rules
+internal/core/controldef/         Control definition, severity, type system
+internal/core/evaluation/engine/  Evaluation engine, compound risk detection
 internal/core/asset/s3props.go    Typed S3 property structs
 internal/profile/                 Profile type, HIPAA profile, profile registry
 internal/profile/exception/       Acknowledged exception mechanism
@@ -323,34 +323,25 @@ internal/profile/reporter/        Text and JSON report generators
 cmd/evaluate/                     CLI command wiring
 ```
 
-### Invariant Interface
+### Control Definition
+
+Controls are defined as YAML files with typed fields:
 
 ```go
-type Invariant interface {
-    ID() string
-    Description() string
-    Severity() Severity
-    ComplianceProfiles() []string
-    Evaluate(snap asset.Snapshot) Result
-}
-```
-
-### Result Struct
-
-```go
-type Result struct {
-    Pass           bool              `json:"pass"`
-    InvariantID    string            `json:"invariant_id"`
-    Severity       Severity          `json:"severity"`
-    Finding        string            `json:"finding,omitempty"`
-    Remediation    string            `json:"remediation,omitempty"`
-    ComplianceRefs map[string]string `json:"compliance_refs,omitempty"`
+type ControlDefinition struct {
+    ID              kernel.ControlID
+    Name            string
+    Description     string
+    Type            ControlType
+    Severity        Severity
+    UnsafePredicate UnsafePredicate
+    Compliance      ComplianceMapping
 }
 ```
 
 ### Registries
 
-All controls are registered in a single `ControlRegistry`:
+All controls are registered in the built-in catalog:
 - ACCESS.* — public access, policy checks
 - CONTROLS.* — encryption, versioning, TLS
 - AUDIT.* — logging
@@ -361,21 +352,26 @@ All controls are registered in a single `ControlRegistry`:
 
 ```
 Load snapshot → Validate schema → Load profile → Validate incompatible pairs
-  → Evaluate invariants → Apply exceptions → Detect compound risks
+  → Evaluate controls → Apply exceptions → Detect compound risks
   → Generate report → Write output → Exit code
 ```
 
-### Functional Options for Invariant Construction
+### Control Definition via YAML
 
-```go
-inv := &myInvariant{
-    Definition: invariant.Build(
-        invariant.WithID("ACCESS.001"),
-        invariant.WithSeverity(invariant.Critical),
-        invariant.WithComplianceRef("hipaa", "§164.312(a)(1)"),
-        invariant.WithComplianceProfiles("hipaa", "pci-dss"),
-    ),
-}
+```yaml
+dsl_version: ctrl.v1
+id: CTL.S3.PUBLIC.001
+name: Block Public Access
+description: All four BPA flags must be enabled at bucket level
+type: unsafe_state
+severity: critical
+compliance:
+  hipaa: "§164.312(a)(1)"
+unsafe_predicate:
+  any:
+    - field: properties.block_public_access.all_enabled
+      op: eq
+      value: false
 ```
 
 ### Shared Helpers
@@ -386,7 +382,7 @@ inv := &myInvariant{
 - `prophelper.go` — Extracts `storage.*` sub-maps from asset properties
   (`storageMap`, `encryptionMap`, `versioningMap`, `loggingMap`,
   `objectLockMap`)
-- No JSON traversal logic is duplicated across invariants
+- No JSON traversal logic is duplicated across controls
 
 ### Account ID Redaction
 

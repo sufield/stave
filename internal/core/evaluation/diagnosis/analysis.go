@@ -72,7 +72,8 @@ func (s *session) diagnoseMatchCoverage() []Insight {
 	}
 
 	// Individual control matched zero assets — its scope is effectively empty.
-	for _, ctl := range s.input.Controls {
+	for i := range s.input.Controls {
+		ctl := &s.input.Controls[i]
 		if s.controlHasNoCoverage(ctl.ID) {
 			issues = append(issues, Insight{
 				Case:     ScenarioExpectedNone,
@@ -169,13 +170,14 @@ func computeStats(input Input) map[kernel.ControlID]controlStat {
 
 	// Phase 2: Analyze streaks per control O(Controls * Assets)
 	stats := make(map[kernel.ControlID]controlStat, len(input.Controls))
-	for _, ctl := range input.Controls {
+	for i := range input.Controls {
+		ctl := &input.Controls[i]
 		cs := controlStat{matchedAssetIDs: make(map[asset.ID]struct{})}
 
 		for id, history := range assetHistories {
 			streak, matched := analyzeAssetStreak(assetStreakRequest{
 				Points:  history,
-				Control: ctl,
+				Control: *ctl,
 				EndTime: endTime,
 				Eval:    input.PredicateEval,
 			})
@@ -198,7 +200,8 @@ func computeStats(input Input) map[kernel.ControlID]controlStat {
 func (s *session) globalMaxStreak() (time.Duration, string) {
 	var best time.Duration
 	var bestID string
-	for _, ctl := range s.input.Controls {
+	for i := range s.input.Controls {
+		ctl := &s.input.Controls[i]
 		if stat, ok := s.stats[ctl.ID]; ok && stat.maxStreak > best {
 			best = stat.maxStreak
 			bestID = ctl.ID.String()

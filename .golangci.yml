@@ -75,7 +75,7 @@ linters:
         hugeParam:
           sizeThreshold: 512
         rangeValCopy:
-          sizeThreshold: 512
+          sizeThreshold: 128
     govet:
       enable:
         - shadow
@@ -151,6 +151,12 @@ linters:
           - errcheck
           - noctx
           - unparam
+        # rangeValCopy in tests: 47 issues in engine e2e tests.
+        # Deferred — test performance is not a concern.
+      - path: _test\.go
+        linters:
+          - gocritic
+        text: "rangeValCopy"
       - path: _test\.go
         linters:
           - cyclop

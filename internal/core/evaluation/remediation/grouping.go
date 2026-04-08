@@ -23,7 +23,8 @@ type Group struct {
 
 // GroupStats computes aggregate statistics across remediation groups.
 func GroupStats(groups []Group) (totalFindings int, hasMulti bool) {
-	for _, g := range groups {
+	for i := range groups {
+		g := &groups[i]
 		totalFindings += g.FindingCount
 		if g.FindingCount > 1 {
 			hasMulti = true
@@ -49,9 +50,10 @@ func PrepareForGrouping(h ports.Digester, gen ports.IdentityGenerator, findings 
 // Findings must have been prepared via PrepareForGrouping first.
 func BuildGroups(findings []Finding) []Group {
 	acc := newAccumulator()
-	for _, f := range findings {
+	for i := range findings {
+		f := &findings[i]
 		if f.RemediationPlan != nil {
-			acc.add(f)
+			acc.add(*f)
 		}
 	}
 	return acc.toSortedGroups()

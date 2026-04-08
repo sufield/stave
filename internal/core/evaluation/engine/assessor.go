@@ -126,7 +126,8 @@ func (a *Assessor) Assess(inventory []asset.Snapshot, opts ...AssessmentOptions)
 		opts:      opt,
 	}
 
-	for _, ctl := range a.Controls {
+	for i := range a.Controls {
+		ctl := &a.Controls[i]
 		if !ctl.IsEvaluatable() {
 			sess.collector.RecordSkippedControl(
 				ctl.ID,
@@ -135,7 +136,7 @@ func (a *Assessor) Assess(inventory []asset.Snapshot, opts ...AssessmentOptions)
 			)
 			continue
 		}
-		sess.applyControl(&ctl, lifecycles[ctl.ID])
+		sess.applyControl(ctl, lifecycles[ctl.ID])
 	}
 
 	return sess.compileReport(), nil
@@ -252,7 +253,8 @@ func partitionFindings(
 ) ([]evaluation.Finding, []evaluation.ExceptedFinding) {
 	var active []evaluation.Finding
 	var excepted []evaluation.ExceptedFinding
-	for _, f := range findings {
+	for i := range findings {
+		f := &findings[i]
 		if rule := exceptions.ShouldExcept(f.ControlID, f.AssetID, now); rule != nil {
 			excepted = append(excepted, evaluation.ExceptedFinding{
 				ControlID: f.ControlID,
@@ -261,7 +263,7 @@ func partitionFindings(
 				Expires:   rule.Expires,
 			})
 		} else {
-			active = append(active, f)
+			active = append(active, *f)
 		}
 	}
 	return active, excepted
@@ -274,7 +276,8 @@ func (a *Assessor) FingerprintPolicy() kernel.Digest {
 		return ""
 	}
 	ids := make([]string, len(a.Controls))
-	for i, ctl := range a.Controls {
+	for i := range a.Controls {
+		ctl := &a.Controls[i]
 		ids[i] = string(ctl.ID)
 	}
 	slices.Sort(ids)

@@ -66,7 +66,8 @@ func renderSummaryTable(b *strings.Builder, counts domain.ResultCounts, gating d
 func renderFindingsTable(b *strings.Builder, findings []domain.Finding) {
 	b.WriteString("| Check ID | Pillar | Status | Severity | Title |\n")
 	b.WriteString("| :--- | :--- | :---: | :---: | :--- |\n")
-	for _, finding := range findings {
+	for i := range findings {
+		finding := &findings[i]
 		fmt.Fprintf(
 			b,
 			"| `%s` | `%s` | `%s` | `%s` | %s |\n",
@@ -81,7 +82,8 @@ func renderFindingsTable(b *strings.Builder, findings []domain.Finding) {
 }
 
 func renderFindingDetails(b *strings.Builder, findings []domain.Finding) {
-	for _, finding := range findings {
+	for i := range findings {
+		finding := &findings[i]
 		fmt.Fprintf(b, "### `%s` — %s\n\n", finding.ID, finding.Title)
 		writeBullet(b, "Pillar", finding.Pillar)
 		writeBullet(b, "Status", finding.Status)

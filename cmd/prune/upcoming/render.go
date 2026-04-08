@@ -33,7 +33,8 @@ func renderOutput(w io.Writer, format appcontracts.OutputFormat, out appupcoming
 
 func toAdapterItems(items []appupcoming.Snapshot) []textout.UpcomingItem {
 	out := make([]textout.UpcomingItem, len(items))
-	for i, item := range items {
+	for i := range items {
+		item := &items[i]
 		out[i] = textout.UpcomingItem{
 			DueAt:          item.DueAt,
 			Status:         string(item.Status),

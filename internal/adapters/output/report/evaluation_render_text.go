@@ -106,7 +106,8 @@ var severityLabels = [6]string{"critical", "high", "medium", "low", "info", "uns
 func tplGroupBySeverity(findings []reportFinding) []reportSeverityGroup {
 	const n = len(severityLabels)
 	var counts [n]int
-	for _, f := range findings {
+	for i := range findings {
+		f := &findings[i]
 		r := f.sevRank
 		if r < 0 || r >= n {
 			r = n - 1

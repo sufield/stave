@@ -76,8 +76,9 @@ func MarshalJSONReport(report domain.Report) ([]byte, error) {
 
 func toJSONReport(r domain.Report) jsonReport {
 	findings := make([]jsonFinding, len(r.Findings))
-	for i, f := range r.Findings {
-		findings[i] = toJSONFinding(f)
+	for i := range r.Findings {
+		f := &r.Findings[i]
+		findings[i] = toJSONFinding(*f)
 	}
 	evIndex := make([]jsonEvRef, len(r.EvidenceIndex))
 	for i, e := range r.EvidenceIndex {

@@ -52,8 +52,9 @@ func PrepareFindings(enricher remediation.FindingEnricher, sanitizer kernel.Sani
 // with infrastructure identifiers masked by deterministic tokens.
 func SanitizeFindings(s kernel.Sanitizer, findings []remediation.Finding) []remediation.Finding {
 	out := make([]remediation.Finding, len(findings))
-	for i, f := range findings {
-		out[i] = sanitizeFinding(f, s)
+	for i := range findings {
+		f := &findings[i]
+		out[i] = sanitizeFinding(*f, s)
 	}
 	return out
 }
@@ -111,7 +112,8 @@ func sanitizeSlice[T ~string](items []T, s kernel.Sanitizer) []T {
 // field-level copy with no semantic transformation.
 func toEnrichedFindings(fs []remediation.Finding) []appcontracts.EnrichedFinding {
 	out := make([]appcontracts.EnrichedFinding, len(fs))
-	for i, f := range fs {
+	for i := range fs {
+		f := &fs[i]
 		out[i] = appcontracts.EnrichedFinding{
 			Finding:         f.Finding,
 			RemediationSpec: f.RemediationSpec,

@@ -158,7 +158,8 @@ func (e *DiagnosticEngine) resolveAssessment(
 
 func mapToDiagnosticFindings(findings []evaluation.Finding) []diagnosis.DiagnosticFinding {
 	out := make([]diagnosis.DiagnosticFinding, len(findings))
-	for i, f := range findings {
+	for i := range findings {
+		f := &findings[i]
 		out[i] = diagnosis.DiagnosticFinding{
 			AssetID:             f.AssetID,
 			ControlID:           f.ControlID,

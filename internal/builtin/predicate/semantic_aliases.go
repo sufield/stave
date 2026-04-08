@@ -200,13 +200,15 @@ func ValidateAliases() error {
 
 func validateEntry(name string, entry aliasEntry) error {
 	var errs []error
-	for i, rule := range entry.Predicate.Any {
-		if err := validateRule(name, "any", i, rule); err != nil {
+	for i := range entry.Predicate.Any {
+		rule := &entry.Predicate.Any[i]
+		if err := validateRule(name, "any", i, *rule); err != nil {
 			errs = append(errs, err)
 		}
 	}
-	for i, rule := range entry.Predicate.All {
-		if err := validateRule(name, "all", i, rule); err != nil {
+	for i := range entry.Predicate.All {
+		rule := &entry.Predicate.All[i]
+		if err := validateRule(name, "all", i, *rule); err != nil {
 			errs = append(errs, err)
 		}
 	}
@@ -222,13 +224,15 @@ func validateRule(alias, block string, idx int, rule policy.PredicateRule) error
 			return fmt.Errorf("alias %q: %s[%d] has unsupported operator %q", alias, block, idx, rule.Op)
 		}
 	}
-	for i, sub := range rule.Any {
-		if err := validateRule(alias, fmt.Sprintf("%s[%d].any", block, idx), i, sub); err != nil {
+	for i := range rule.Any {
+		sub := &rule.Any[i]
+		if err := validateRule(alias, fmt.Sprintf("%s[%d].any", block, idx), i, *sub); err != nil {
 			return err
 		}
 	}
-	for i, sub := range rule.All {
-		if err := validateRule(alias, fmt.Sprintf("%s[%d].all", block, idx), i, sub); err != nil {
+	for i := range rule.All {
+		sub := &rule.All[i]
+		if err := validateRule(alias, fmt.Sprintf("%s[%d].all", block, idx), i, *sub); err != nil {
 			return err
 		}
 	}
@@ -249,8 +253,9 @@ func cloneRules(rules []policy.PredicateRule) []policy.PredicateRule {
 		return nil
 	}
 	out := make([]policy.PredicateRule, len(rules))
-	for i, r := range rules {
-		out[i] = cloneRule(r)
+	for i := range rules {
+		r := &rules[i]
+		out[i] = cloneRule(*r)
 	}
 	return out
 }

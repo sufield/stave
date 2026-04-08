@@ -93,7 +93,8 @@ func validateFindings(v *contractvalidator.Validator, findings []remediation.Fin
 	}
 
 	var allErrors error
-	for i, f := range findings {
+	for i := range findings {
+		f := &findings[i]
 		raw, err := json.Marshal(f)
 		if err != nil {
 			allErrors = errors.Join(allErrors, fmt.Errorf("finding[%d]: marshal failed: %w", i, err))

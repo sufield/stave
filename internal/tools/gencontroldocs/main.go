@@ -107,7 +107,8 @@ func buildTemplateData(catalog *policy.Catalog, hasher ports.Digester) templateD
 		PackHash: string(catalog.PackHash(hasher)),
 	}
 
-	for _, ctl := range controls {
+	for i := range controls {
+		ctl := &controls[i]
 		domain := string(ctl.Domain)
 		if domain == "" {
 			domain = "uncategorized"

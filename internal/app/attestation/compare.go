@@ -77,7 +77,8 @@ func findingsToEntries(san kernel.Sanitizer, findings []evaluation.Finding) []re
 		return nil
 	}
 	entries := make([]report.AttestationEntry, 0, len(findings))
-	for _, f := range findings {
+	for i := range findings {
+		f := &findings[i]
 		assetID := f.AssetID
 		if san != nil {
 			assetID = asset.ID(san.ID(string(assetID)))
