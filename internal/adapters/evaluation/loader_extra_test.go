@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -164,7 +165,7 @@ func TestParseFindings_APIWrapped(t *testing.T) {
 func TestParseFindings_NoFindings(t *testing.T) {
 	data := `{"some_key":"some_value"}`
 	_, err := ParseFindings([]byte(data))
-	if err == nil || err != ErrNoFindings {
+	if err == nil || !errors.Is(err, ErrNoFindings) {
 		t.Fatalf("expected ErrNoFindings, got: %v", err)
 	}
 }

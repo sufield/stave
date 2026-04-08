@@ -53,9 +53,9 @@ build: sync-schemas sync-controls
 build-dev: sync-schemas sync-controls
 	$(GOBUILD) $(LDFLAGS) -tags stavedev -o stave-dev ./cmd/stave-dev
 
-## test: Run all tests (includes dev-only packages via build tag)
+## test: Run all tests with race detector (includes dev-only packages via build tag)
 test: sync-schemas sync-controls
-	$(GOTEST) -tags stavedev -v ./...
+	$(GOTEST) -tags stavedev -race -v ./...
 
 ## test-coverage: Run tests with coverage
 test-coverage:
@@ -276,7 +276,10 @@ fuzz: sync-schemas sync-controls
 	$(GOTEST) -fuzz=Fuzz -fuzztime=30s ./internal/adapters/observations/
 	$(GOTEST) -fuzz=Fuzz -fuzztime=30s ./internal/contracts/validator/
 	$(GOTEST) -fuzz=Fuzz -fuzztime=30s ./internal/core/predicate/
-	$(GOTEST) -fuzz=Fuzz -fuzztime=30s ./internal/core/kernel/
+	$(GOTEST) -fuzz=Fuzz -fuzztime=30s -run=FuzzNewControlID ./internal/core/kernel/
+	$(GOTEST) -fuzz=FuzzParseByteSize -fuzztime=30s ./internal/core/kernel/
+	$(GOTEST) -fuzz=FuzzParseDuration -fuzztime=30s ./internal/core/kernel/
+	$(GOTEST) -fuzz=Fuzz -fuzztime=30s ./internal/cel/
 
 ## help: Show this help
 help:

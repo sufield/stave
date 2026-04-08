@@ -549,8 +549,8 @@ func TestToParams(t *testing.T) {
 // helpers
 // ---------------------------------------------------------------------------
 
-type testErr struct{ msg string }
+type testError struct{ msg string }
 
-func (e testErr) Error() string { return e.msg }
+func (e testError) Error() string { return e.msg }
 
-func errForTest(msg string) error { return testErr{msg} }
+func errForTest(msg string) error { return testError{msg} }

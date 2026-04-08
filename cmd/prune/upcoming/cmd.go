@@ -3,6 +3,8 @@
 package upcoming
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
@@ -59,13 +61,18 @@ Exit Codes:
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			gf := cliflags.GetGlobalFlags(cmd)
 
+			ctlIDs, err := convert.ToControlIDs(opts.ControlIDs)
+			if err != nil {
+				return fmt.Errorf("parse --control-ids: %w", err)
+			}
+
 			cfg, err := gatherUpcomingConfig(upcomingConfigInput{
 				MaxUnsafeRaw:  opts.MaxUnsafe,
 				DueSoonRaw:    opts.DueSoon,
 				NowRaw:        opts.NowRaw,
 				FormatRaw:     opts.FormatFlag,
 				DueWithinRaw:  opts.DueWithin,
-				ControlIDs:    convert.ToControlIDs(opts.ControlIDs),
+				ControlIDs:    ctlIDs,
 				AssetTypes:    convert.ToAssetTypes(opts.AssetTypes),
 				Statuses:      opts.Statuses,
 				Sanitizer:     gf.GetSanitizer(),

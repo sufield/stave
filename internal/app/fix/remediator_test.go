@@ -34,7 +34,7 @@ func TestRemediatorInterface(t *testing.T) {
 	rem.ConfirmFix("CTL.TEST.001", "asset-1")
 	rem.LogProgress("step 1")
 
-	rec := rem.(*recordingRemediator)
+	rec, _ := rem.(*recordingRemediator)
 	if len(rec.confirmed) != 1 || rec.confirmed[0] != "CTL.TEST.001@asset-1" {
 		t.Fatalf("unexpected confirmed: %v", rec.confirmed)
 	}

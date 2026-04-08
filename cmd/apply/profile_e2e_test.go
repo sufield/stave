@@ -3,6 +3,7 @@ package apply
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -16,7 +17,8 @@ func extractExitCode(t *testing.T, err error) int {
 	if err == nil {
 		return 0
 	}
-	if exitErr, ok := err.(*exec.ExitError); ok {
+	var exitErr *exec.ExitError
+	if errors.As(err, &exitErr) {
 		return exitErr.ExitCode()
 	}
 	t.Fatalf("unexpected error: %v", err)

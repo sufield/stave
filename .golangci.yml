@@ -13,6 +13,8 @@ linters:
     - durationcheck
     - errcheck
     - errorlint
+    - errname
+    - forbidigo
     - fatcontext
     - forcetypeassert
     - gocritic
@@ -61,35 +63,49 @@ linters:
         - boolExprSimplify
         - deferInLoop
         - emptyStringTest
+        - hugeParam
         - initClause
         - nestingReduce
+        - rangeValCopy
         - singleCaseSwitch
         - sloppyLen
         - switchTrue
         - unnecessaryBlock
+      settings:
+        hugeParam:
+          sizeThreshold: 512
+        rangeValCopy:
+          sizeThreshold: 512
     govet:
       enable:
         - shadow
     recvcheck:
-      # Built-in exclusions cover Marshal* but not Unmarshal* methods.
-      # Unmarshal* must use pointer receivers (they mutate the receiver)
-      # while value types correctly use value receivers for everything else.
-      # Private helpers (assign, parseAndAssign, ensureInit) serve the
-      # unmarshal path and also need pointer receivers.
+      # We allow mixed receivers in two cases:
+      #
+      # 1. Initialization methods (pointer receiver on value types)
+      #    Unmarshal/decode/assign methods must use pointer receivers because
+      #    they mutate the receiver. The built-in Marshal* exclusions don't
+      #    cover the Unmarshal side or private helpers that serve it.
+      #
+      # 2. Value types with controlled mutation
+      #    Types like ObservationStats, ExposureHistory, and Snapshot are
+      #    returned by value from accessors to enforce immutability during
+      #    analysis. Their read-only methods use value receivers. Only the
+      #    single mutating method (Record, Prepare, etc.) uses a pointer
+      #    receiver — this is intentional to prevent accidental mutation
+      #    through returned copies.
       exclusions:
-        # Deserialization methods must use pointer receivers
+        # --- Group 1: Initialization (deserialization + helpers) ---
         - "*.UnmarshalJSON"
         - "*.UnmarshalText"
         - "*.UnmarshalYAML"
         - "*.UnmarshalXML"
         - "*.UnmarshalBinary"
         - "*.GobDecode"
-        # Private helpers that serve the unmarshal path
         - "*.assign"
         - "*.parseAndAssign"
         - "*.ensureInit"
-        # Mutating methods on otherwise-value types (returned by value
-        # from accessors, so non-mutating methods must stay value receivers)
+        # --- Group 2: Controlled mutation on value types ---
         - "*.Record"
         - "*.RecordObservation"
         - "*.checkContracts"
@@ -126,10 +142,10 @@ linters:
       - (^|/)testdata($|/)
       - (^|/)fixtures($|/)
       - (^|/)examples($|/)
+      - internal/tools/
     rules:
       - path: _test\.go
         linters:
-          - errorlint
           - forcetypeassert
           - gosec
           - errcheck

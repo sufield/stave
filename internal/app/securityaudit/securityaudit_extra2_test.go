@@ -32,7 +32,7 @@ func TestBuildFindings_AllPaths(t *testing.T) {
 		Crosswalk: evidence.CrosswalkSnapshot{},
 	}
 	req := Request{PrivacyEnabled: true}
-	findings := buildFindings(ev, req)
+	findings := buildFindings(&ev, req)
 	if len(findings) == 0 {
 		t.Fatal("expected at least one finding")
 	}
@@ -49,7 +49,7 @@ func TestBuildFindings_WithCrosswalkMissing(t *testing.T) {
 		BuildInfo: evidence.BuildInfoSnapshot{Available: false},
 		Crosswalk: evidence.CrosswalkSnapshot{MissingChecks: []string{"SC.VULN"}},
 	}
-	findings := buildFindings(ev, Request{})
+	findings := buildFindings(&ev, Request{})
 	// Should include crosswalk missing finding
 	found := false
 	for _, f := range findings {
@@ -83,7 +83,7 @@ func TestAssembleReport_Basic(t *testing.T) {
 	req := NewRequest()
 	artifacts := securityaudit.ArtifactManifest{}
 
-	report := assembleReport(req, findings, ev, artifacts)
+	report := assembleReport(req, findings, &ev, artifacts)
 	if len(report.Findings) == 0 {
 		t.Fatal("expected findings in report")
 	}

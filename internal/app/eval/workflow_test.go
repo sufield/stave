@@ -40,10 +40,10 @@ func (s evalObservationRepoStub) LoadSnapshots(_ context.Context, _ string) (app
 type marshalerStub struct {
 	err          error
 	marshalCalls int
-	lastEnriched appcontracts.EnrichedResult
+	lastEnriched *appcontracts.EnrichedResult
 }
 
-func (s *marshalerStub) MarshalFindings(enriched appcontracts.EnrichedResult) ([]byte, error) {
+func (s *marshalerStub) MarshalFindings(enriched *appcontracts.EnrichedResult) ([]byte, error) {
 	s.marshalCalls++
 	s.lastEnriched = enriched
 	if s.err != nil {

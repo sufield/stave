@@ -4,16 +4,13 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/sufield/stave/cmd/cmdutil/convert"
 	ctlbuiltin "github.com/sufield/stave/internal/adapters/controls/builtin"
 	"github.com/sufield/stave/internal/adapters/exemption"
 	appconfig "github.com/sufield/stave/internal/app/config"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/builtin/pack"
 	"github.com/sufield/stave/internal/builtin/predicate"
-	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
-	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // buildProjectConfigFromLoaded assembles project configuration input from
@@ -34,7 +31,7 @@ func (b *Builder) buildProjectConfigFromLoaded(projCfg *appconfig.WorkspacePolic
 	return appeval.ProjectConfigInput{
 		Exceptions:          mapExceptions(projCfg.Exceptions),
 		EnabledControlPacks: projCfg.EnabledControlPacks,
-		ExcludeControls:     convert.ToControlIDs(projCfg.ExcludeControls),
+		ExcludeControls:     projCfg.ExcludeControls,
 		ControlsFlagSet:     b.Opts.controlsSet,
 		BuiltinLoader:       builtinRegistry.All,
 		PackRegistry:        reg,
@@ -42,6 +39,7 @@ func (b *Builder) buildProjectConfigFromLoaded(projCfg *appconfig.WorkspacePolic
 }
 
 // mapExceptions converts config exception rules to the app-layer input format.
+// ControlID and AssetID are already typed from YAML deserialization.
 func mapExceptions(in []appconfig.PolicyException) []appeval.ExceptionInput {
 	if len(in) == 0 {
 		return nil
@@ -49,8 +47,8 @@ func mapExceptions(in []appconfig.PolicyException) []appeval.ExceptionInput {
 	out := make([]appeval.ExceptionInput, len(in))
 	for i, s := range in {
 		out[i] = appeval.ExceptionInput{
-			ControlID: kernel.ControlID(s.ControlID),
-			AssetID:   asset.ID(s.AssetID),
+			ControlID: s.ControlID,
+			AssetID:   s.AssetID,
 			Reason:    s.Reason,
 			Expires:   s.Expires,
 		}

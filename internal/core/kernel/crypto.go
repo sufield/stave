@@ -1,11 +1,43 @@
 package kernel
 
+import "fmt"
+
 const sha256HexLen = 64 // hex.EncodedLen(32)
 
 // Digest represents a hex-encoded cryptographic hash (typically SHA-256).
 type Digest string
 
+// NewDigest returns a validated Digest. The raw value must be a 64-character
+// lowercase hex string (SHA-256). Use this at trust boundaries where hash
+// values enter the system from external sources (manifests, config files).
+func NewDigest(raw string) (Digest, error) {
+	if len(raw) != sha256HexLen {
+		return "", fmt.Errorf("invalid digest length: want %d, got %d", sha256HexLen, len(raw))
+	}
+	if !isLowerHex(raw) {
+		return "", fmt.Errorf("invalid digest %q: must be lowercase hex", raw)
+	}
+	return Digest(raw), nil
+}
+
 func (d Digest) String() string { return string(d) }
+
+// UnmarshalText implements encoding.TextUnmarshaler. Validates that the
+// digest is a well-formed 64-character lowercase hex string when
+// deserialized from JSON or YAML (trust boundary for external artifacts).
+func (d *Digest) UnmarshalText(text []byte) error {
+	s := string(text)
+	if s == "" {
+		*d = ""
+		return nil
+	}
+	v, err := NewDigest(s)
+	if err != nil {
+		return err
+	}
+	*d = v
+	return nil
+}
 
 // IsValid reports whether d is a well-formed, lowercase, 64-character hex string.
 func (d Digest) IsValid() bool {

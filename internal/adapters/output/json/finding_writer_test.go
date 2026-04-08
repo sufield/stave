@@ -36,7 +36,7 @@ func TestWriteFindings_BareJSON(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	data, err := w.MarshalFindings(enriched)
+	data, err := w.MarshalFindings(&enriched)
 	if err != nil {
 		t.Fatalf("MarshalFindings() error = %v", err)
 	}

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -129,7 +130,8 @@ func runE2ECase(t *testing.T, bin, caseDir string) {
 
 	exitCode := 0
 	if err := cmd.Run(); err != nil {
-		if exitErr, ok := err.(*exec.ExitError); ok {
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
 			exitCode = exitErr.ExitCode()
 		} else {
 			t.Fatalf("exec error: %v", err)
@@ -236,7 +238,8 @@ func checkSourceEvidence(t *testing.T, caseDir string, stdout []byte) {
 		fm, _ := f.(map[string]any)
 		ev, _ := fm["evidence"].(map[string]any)
 		if se, ok := ev["source_evidence"]; ok {
-			result[fm["control_id"].(string)] = se
+			cid, _ := fm["control_id"].(string)
+			result[cid] = se
 		}
 	}
 	actual := marshalCanonical(t, result)

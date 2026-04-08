@@ -530,7 +530,8 @@ func TestSeverityMarshalYAML(t *testing.T) {
 func TestSeverityUnmarshalYAML(t *testing.T) {
 	var s Severity
 	err := s.UnmarshalYAML(func(v any) error {
-		*(v.(*string)) = "medium"
+		p, _ := v.(*string)
+		*p = "medium"
 		return nil
 	})
 	if err != nil {

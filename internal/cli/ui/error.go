@@ -49,7 +49,7 @@ var (
 )
 
 // ErrorInfo contains human-readable and machine-readable error details.
-type ErrorInfo struct {
+type ErrorInfo struct { //nolint:errname // ErrorXxx is intentional — this is error metadata, not an XxxError
 	Code     ErrorCode         `json:"code"`
 	Title    string            `json:"title,omitempty"`
 	Message  string            `json:"message"`

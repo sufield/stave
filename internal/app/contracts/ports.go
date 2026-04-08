@@ -80,7 +80,7 @@ type EnrichedResult struct {
 // FindingMarshaler transforms enriched findings into format-specific bytes
 // without performing I/O.
 type FindingMarshaler interface {
-	MarshalFindings(enriched EnrichedResult) ([]byte, error)
+	MarshalFindings(enriched *EnrichedResult) ([]byte, error)
 }
 
 // EnrichFunc produces an EnrichedResult from an evaluation result.

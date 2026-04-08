@@ -55,9 +55,9 @@ func (r *Runner) Run(
 		return securityaudit.Report{}, securityaudit.ArtifactManifest{}, err
 	}
 
-	findings := buildFindings(ev, req)
-	artifacts := r.buildArtifactManifest(req, ev)
-	report := assembleReport(req, findings, ev, artifacts)
+	findings := buildFindings(&ev, req)
+	artifacts := r.buildArtifactManifest(req, &ev)
+	report := assembleReport(req, findings, &ev, artifacts)
 	return report, artifacts, nil
 }
 

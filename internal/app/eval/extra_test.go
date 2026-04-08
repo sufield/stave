@@ -277,7 +277,7 @@ func TestResolveOutputWriters(t *testing.T) {
 }
 
 func TestValidateBuildDependenciesInput_EmptyPlan(t *testing.T) {
-	err := validateBuildDependenciesInput(BuildDependenciesInput{})
+	err := validateBuildDependenciesInput(&BuildDependenciesInput{})
 	if err == nil || !strings.Contains(err.Error(), "evaluation plan is required") {
 		t.Fatalf("expected plan error, got: %v", err)
 	}

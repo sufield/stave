@@ -37,7 +37,7 @@ func (p *OutputPipeline) Run(ctx context.Context, w io.Writer, result evaluation
 	}
 
 	data, err := runStep(p.Logger, "marshal", func() ([]byte, error) {
-		return p.Marshaler.MarshalFindings(enriched)
+		return p.Marshaler.MarshalFindings(&enriched)
 	})
 	if err != nil {
 		return fmt.Errorf("marshal: %w", err)

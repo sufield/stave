@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/sufield/stave/internal/core/asset"
+	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/retention"
 )
 
@@ -86,7 +88,7 @@ type WorkspacePolicy struct {
 	SnapshotFilenameTemplate string                    `yaml:"snapshot_filename_template"`
 	Exceptions               []PolicyException         `yaml:"exceptions"`
 	EnabledControlPacks      []string                  `yaml:"enabled_control_packs"`
-	ExcludeControls          []string                  `yaml:"exclude_controls"`
+	ExcludeControls          []kernel.ControlID        `yaml:"exclude_controls"`
 	MaxInputFileSize         string                    `yaml:"max_input_file_size"`
 	MaxGapThreshold          string                    `yaml:"max_gap_threshold"`
 	ConfidenceHighMultiplier int                       `yaml:"confidence_high_multiplier"`
@@ -97,11 +99,12 @@ type WorkspacePolicy struct {
 }
 
 // PolicyException allows a specific resource to bypass a security control.
+// ControlID is validated at YAML load time via kernel.ControlID.UnmarshalYAML.
 type PolicyException struct {
-	ControlID string `yaml:"control_id"`
-	AssetID   string `yaml:"asset_id"`
-	Reason    string `yaml:"reason"`
-	Expires   string `yaml:"expires"`
+	ControlID kernel.ControlID `yaml:"control_id"`
+	AssetID   asset.ID         `yaml:"asset_id"`
+	Reason    string           `yaml:"reason"`
+	Expires   string           `yaml:"expires"`
 }
 
 // OperatorSettings represents the local preferences of the security operator.

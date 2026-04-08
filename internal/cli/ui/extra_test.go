@@ -39,7 +39,7 @@ func TestUserError(t *testing.T) {
 	if ue.Error() != "bad flag" {
 		t.Errorf("UserError.Error() = %q", ue.Error())
 	}
-	if ue.Unwrap() != inner {
+	if ue.Unwrap() != inner { //nolint:errorlint // identity check: verifying Unwrap returns exact same pointer
 		t.Error("UserError.Unwrap() mismatch")
 	}
 }
@@ -238,7 +238,7 @@ func TestWithHint_NilErr(t *testing.T) {
 func TestWithHint_NilHint(t *testing.T) {
 	err := errors.New("base")
 	result := WithHint(err, nil)
-	if result != err {
+	if result != err { //nolint:errorlint // identity check: verifying same pointer returned
 		t.Error("WithHint(err, nil) should return original err")
 	}
 }
@@ -247,7 +247,7 @@ func TestWithHint_AlreadyContainsSentinel(t *testing.T) {
 	err := WithHint(errors.New("base"), ErrHintNoControls)
 	// Apply same hint again
 	result := WithHint(err, ErrHintNoControls)
-	if result != err {
+	if result != err { //nolint:errorlint // identity check: verifying same pointer returned
 		t.Error("WithHint should skip if sentinel already in chain")
 	}
 }
@@ -262,7 +262,7 @@ func TestWithNextCommand_NilErr(t *testing.T) {
 func TestWithNextCommand_EmptyCommand(t *testing.T) {
 	err := errors.New("base")
 	result := WithNextCommand(err, "")
-	if result != err {
+	if result != err { //nolint:errorlint // identity check: verifying same pointer returned
 		t.Error("WithNextCommand(err, '') should return original err")
 	}
 }

@@ -13,6 +13,7 @@ import (
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/diag"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
@@ -122,13 +123,22 @@ func (l *ControlLoader) loadOne(path string) (policy.ControlDefinition, error) {
 	return ctl, nil
 }
 
-// enrichAndPrepare resolves predicate aliases and prepares the control for use.
+// enrichAndPrepare resolves predicate aliases, prepares the control, and
+// validates it. Validation runs at load time so user-authored controls
+// fail fast with clear errors instead of silently producing wrong results.
 func (l *ControlLoader) enrichAndPrepare(ctl *policy.ControlDefinition) error {
 	if err := l.resolveAlias(ctl); err != nil {
 		return fmt.Errorf("semantic error: %w", err)
 	}
 	if err := ctl.Prepare(); err != nil {
 		return fmt.Errorf("semantic error: %w", err)
+	}
+	if issues := ctl.Validate(); len(issues) > 0 {
+		for _, issue := range issues {
+			if issue.Severity == diag.SeverityError {
+				return fmt.Errorf("control %s: %s", ctl.ID, issue.Message)
+			}
+		}
 	}
 	return nil
 }

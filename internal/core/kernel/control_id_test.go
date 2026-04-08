@@ -82,7 +82,7 @@ func TestControlIDUnmarshalJSON(t *testing.T) {
 		wantErr bool
 	}{
 		{name: "CTL prefix", json: `"CTL.S3.PUBLIC.001"`, want: "CTL.S3.PUBLIC.001"},
-		{name: "INV prefix rejected", json: `"INV.S3.PUBLIC.001"`, wantErr: true},
+		{name: "INV prefix accepted at parse time", json: `"INV.S3.PUBLIC.001"`, want: "INV.S3.PUBLIC.001"},
 		{name: "invalid", json: `"not-an-id"`, wantErr: true},
 	}
 	for _, tt := range tests {

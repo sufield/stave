@@ -2,6 +2,7 @@ package observations
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"testing"
 	"time"
@@ -15,7 +16,7 @@ import (
 
 func TestNormalizeSnapshotTypes_NilSnapshot(t *testing.T) {
 	err := normalizeSnapshotTypes(nil)
-	if err != ErrNilSnapshot {
+	if !errors.Is(err, ErrNilSnapshot) {
 		t.Fatalf("expected ErrNilSnapshot, got %v", err)
 	}
 }
@@ -23,7 +24,7 @@ func TestNormalizeSnapshotTypes_NilSnapshot(t *testing.T) {
 func TestNormalizeSnapshotTypes_MissingTimestamp(t *testing.T) {
 	snap := &asset.Snapshot{}
 	err := normalizeSnapshotTypes(snap)
-	if err != ErrMissingTimestamp {
+	if !errors.Is(err, ErrMissingTimestamp) {
 		t.Fatalf("expected ErrMissingTimestamp, got %v", err)
 	}
 }

@@ -41,7 +41,7 @@ func NewFindingWriter(indent bool) *FindingWriter {
 }
 
 // MarshalFindings transforms enriched findings into JSON bytes without performing I/O.
-func (w *FindingWriter) MarshalFindings(enriched appcontracts.EnrichedResult) ([]byte, error) {
+func (w *FindingWriter) MarshalFindings(enriched *appcontracts.EnrichedResult) ([]byte, error) {
 	envelope := output.BuildAssessmentFromEnriched(enriched)
 	if err := validateEvaluationEnvelope(envelope, w.ValidateContract); err != nil {
 		return nil, err

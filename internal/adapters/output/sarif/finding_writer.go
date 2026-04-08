@@ -35,7 +35,7 @@ func NewFindingWriter(opts ...Option) *FindingWriter {
 
 // MarshalFindings transforms enriched findings into SARIF v2.1.0 JSON bytes
 // without performing I/O.
-func (w *FindingWriter) MarshalFindings(enriched appcontracts.EnrichedResult) ([]byte, error) {
+func (w *FindingWriter) MarshalFindings(enriched *appcontracts.EnrichedResult) ([]byte, error) {
 	remFindings := toRemediationFindings(enriched.Findings)
 	rules, ruleIndex := buildRules(remFindings)
 	results := buildResults(remFindings, ruleIndex)

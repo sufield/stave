@@ -24,6 +24,7 @@ func (ctl *ControlDefinition) Validate() []diag.Finding {
 		ctl.validateSeverity,
 		ctl.validateType,
 		ctl.validatePredicate,
+		ctl.validatePredicateRules,
 		ctl.validateOperators,
 		ctl.validateParameters,
 		ctl.validateDuration,
@@ -203,4 +204,20 @@ func (ctl *ControlDefinition) validateDuration() []diag.Finding {
 		}
 	}
 	return nil
+}
+
+// validatePredicateRules checks for leaf rules with empty field paths —
+// these silently produce no-op logic that never matches any resource.
+func (ctl *ControlDefinition) validatePredicateRules() []diag.Finding {
+	var issues []diag.Finding
+	ctl.UnsafePredicate.Walk(func(rule PredicateRule) {
+		isLeaf := len(rule.Any) == 0 && len(rule.All) == 0
+		if isLeaf && rule.Field.IsZero() && rule.Op == "" {
+			issues = append(issues, ctl.newIssue(diag.RuleControlEmptyPredicate, nil).
+				Warning().
+				Remediation("Remove empty predicate rule or add a field and operator").
+				Build())
+		}
+	})
+	return issues
 }

@@ -134,9 +134,14 @@ Exit Codes:
 			if err != nil {
 				return fmt.Errorf("create control loader: %w", err)
 			}
+			ctlID, err := kernel.NewControlID(args[0])
+			if err != nil {
+				return fmt.Errorf("invalid control ID %q: %w", args[0], err)
+			}
+
 			explainer := diagnose.NewExplainerWithFinder(repo)
 			result, err := explainer.Run(cmd.Context(), diagnose.ExplainRequest{
-				ControlID:   kernel.ControlID(args[0]),
+				ControlID:   ctlID,
 				ControlsDir: controlsDir,
 			})
 			if err != nil {

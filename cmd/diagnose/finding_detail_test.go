@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -136,7 +137,7 @@ func TestRunDetailMode_SuccessJSON(t *testing.T) {
 	// Text mode returns ErrViolationsFound.
 	out.Reset()
 	cfg.Format = appcontracts.FormatText
-	if runErr := runner.runDetailMode(context.Background(), cfg); runErr != ui.ErrViolationsFound {
+	if runErr := runner.runDetailMode(context.Background(), cfg); !errors.Is(runErr, ui.ErrViolationsFound) {
 		t.Fatalf("expected ErrViolationsFound in text mode, got %v", runErr)
 	}
 }

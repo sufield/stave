@@ -173,7 +173,7 @@ func TestDecorateError_SchemaValidation(t *testing.T) {
 func TestDecorateError_Unknown(t *testing.T) {
 	orig := errors.New("some unknown error")
 	err := decorateError(orig)
-	if err != orig {
+	if err != orig { //nolint:errorlint // identity check: decorateError returns same pointer for unknown errors
 		t.Fatal("expected original error for unknown error type")
 	}
 }

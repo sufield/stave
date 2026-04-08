@@ -25,7 +25,7 @@ func (depsControlRepoStub) LoadControls(context.Context, string) ([]policy.Contr
 
 type depsMarshalerStub struct{}
 
-func (depsMarshalerStub) MarshalFindings(appcontracts.EnrichedResult) ([]byte, error) {
+func (depsMarshalerStub) MarshalFindings(*appcontracts.EnrichedResult) ([]byte, error) {
 	return []byte(`{}`), nil
 }
 
@@ -99,7 +99,7 @@ func TestBuildDependencies_ValidationErrors(t *testing.T) {
 			in := base
 			tt.mutate(&in)
 
-			_, err := BuildDependencies(context.Background(), in)
+			_, err := BuildDependencies(context.Background(), &in)
 			if err == nil {
 				t.Fatal("expected error")
 			}
@@ -114,7 +114,7 @@ func TestBuildDependencies_UsesProvidedLoader(t *testing.T) {
 	obsRepo := &depsObservationRepoStub{}
 	ctlRepo := &depsControlRepoStub{}
 
-	out, err := BuildDependencies(context.Background(), BuildDependenciesInput{
+	out, err := BuildDependencies(context.Background(), &BuildDependenciesInput{
 		Plan: EvaluationPlan{
 			ContextName:      "ctx",
 			ControlsPath:     "/ctl",
@@ -150,7 +150,7 @@ func TestBuildDependencies_PassesExemptionConfig(t *testing.T) {
 		},
 	}
 
-	out, err := BuildDependencies(context.Background(), BuildDependenciesInput{
+	out, err := BuildDependencies(context.Background(), &BuildDependenciesInput{
 		Plan: EvaluationPlan{
 			ControlsPath:     "/ctl",
 			ObservationsPath: "/obs",

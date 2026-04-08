@@ -65,10 +65,13 @@ Exit Codes:
 			ctx := cmd.Context()
 			cleanCtlDir := fsutil.CleanUserPath(strings.TrimSpace(controlsDir))
 			cleanObsPath := fsutil.CleanUserPath(strings.TrimSpace(observation))
-			trimmedCtlID := strings.TrimSpace(controlID)
+			ctlID, err := kernel.NewControlID(strings.TrimSpace(controlID))
+			if err != nil {
+				return fmt.Errorf("invalid control ID %q: %w", controlID, err)
+			}
 
 			// Load control via factory
-			control, err := loadTraceControl(ctx, newCtlRepo, cleanCtlDir, kernel.ControlID(trimmedCtlID))
+			control, err := loadTraceControl(ctx, newCtlRepo, cleanCtlDir, ctlID)
 			if err != nil {
 				return err
 			}

@@ -9,7 +9,7 @@ import (
 
 // BuildAssessmentFromEnriched assembles an assessment from a
 // pipeline-produced EnrichedResult.
-func BuildAssessmentFromEnriched(enriched appcontracts.EnrichedResult) *report.Assessment {
+func BuildAssessmentFromEnriched(enriched *appcontracts.EnrichedResult) *report.Assessment {
 	findings := toRemediationFindings(enriched.Findings)
 	if findings == nil {
 		findings = []remediation.Finding{}
