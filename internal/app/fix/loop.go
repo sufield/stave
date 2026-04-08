@@ -167,8 +167,7 @@ func (s *Service) evaluateState(
 	ctx context.Context,
 	params EvaluationParams,
 ) (evaluationState, error) {
-	result, snaps, err := appeval.RunDirectoryEvaluation(appeval.DirectoryEvaluationRequest{
-		Context:           ctx,
+	result, snaps, err := appeval.RunDirectoryEvaluation(ctx, appeval.DirectoryEvaluationRequest{
 		ObservationsDir:   params.Dir,
 		Controls:          params.Controls,
 		MaxUnsafeDuration: params.Req.MaxUnsafeDuration,

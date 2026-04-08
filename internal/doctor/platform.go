@@ -90,7 +90,7 @@ func detectDarwin() string {
 }
 
 // extractXMLTag finds the content between <tag> and </tag>.
-func extractXMLTag(s, tag string) (string, bool) {
+func extractXMLTag(s, tag string) (string, bool) { //nolint:unparam // tag is "string" today; function is generic for any XML tag
 	_, after, ok := strings.Cut(s, "<"+tag+">")
 	if !ok {
 		return "", false

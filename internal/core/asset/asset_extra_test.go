@@ -731,17 +731,17 @@ func TestSnapshotsTemporalBounds(t *testing.T) {
 		{CapturedAt: base},
 		{CapturedAt: base.Add(time.Hour)},
 	}
-	min, max := s.TemporalBounds()
-	if min != base {
-		t.Fatalf("min = %v", min)
+	earliest, latest := s.TemporalBounds()
+	if earliest != base {
+		t.Fatalf("min = %v", earliest)
 	}
-	if max != base.Add(2*time.Hour) {
-		t.Fatalf("max = %v", max)
+	if latest != base.Add(2*time.Hour) {
+		t.Fatalf("max = %v", latest)
 	}
 
 	var empty Snapshots
-	min, max = empty.TemporalBounds()
-	if !min.IsZero() || !max.IsZero() {
+	earliest, latest = empty.TemporalBounds()
+	if !earliest.IsZero() || !latest.IsZero() {
 		t.Fatal("empty bounds should be zero")
 	}
 }

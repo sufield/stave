@@ -173,7 +173,7 @@ func (r *Runner) loadControls(ctx context.Context, prof Profile) (string, []poli
 }
 
 // profileControlDomain maps a profile to its control subdirectory.
-func profileControlDomain(prof Profile) string {
+func profileControlDomain(prof Profile) string { //nolint:unparam // returns "s3" today; will vary when non-S3 profiles are added
 	switch prof {
 	case ProfileHIPAA:
 		// HIPAA reuses S3 controls — same directory, filtered by compliance ref.

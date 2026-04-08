@@ -67,7 +67,7 @@ Exit Codes:
 			return opts.validate()
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			exec, err := opts.Complete(compose.CommandContext(cmd))
+			exec, err := opts.Complete()
 			if err != nil {
 				return err
 			}
@@ -80,6 +80,7 @@ Exit Codes:
 			gf := cliflags.GetGlobalFlags(cmd)
 
 			return appattest.PerformAttestation(
+				cmd.Context(),
 				appattest.WorkflowDeps{
 					LoadPolicies: func(ctx context.Context, dir string) ([]policy.ControlDefinition, error) {
 						return compose.LoadControlsFrom(ctx, newCtlRepo, dir)
@@ -93,7 +94,6 @@ Exit Codes:
 					BeginStage: rt.BeginProgress,
 				},
 				appattest.Request{
-					Ctx:            exec.Context,
 					BaselineSource: exec.BeforeDir,
 					TargetSource:   exec.AfterDir,
 					PolicySource:   exec.ControlsDir,

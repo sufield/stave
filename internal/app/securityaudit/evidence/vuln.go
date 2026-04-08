@@ -90,7 +90,7 @@ func shouldAttemptLiveCheck(req Params) bool {
 	return req.VulnSource == VulnSourceLocal || req.VulnSource == VulnSourceHybrid
 }
 
-func (p DefaultVulnProvider) resolveVulnFallback(req Params) (VulnerabilitySnapshot, error) {
+func (p DefaultVulnProvider) resolveVulnFallback(req Params) (VulnerabilitySnapshot, error) { //nolint:unparam // error kept for caller consistency with resolveVulnPrimary
 	if req.VulnSource == VulnSourceLocal || req.VulnSource == VulnSourceHybrid {
 		if cached, ok := p.loadVulnEvidenceFromCandidates(localVulnEvidenceCandidates(req), req.Now); ok {
 			return cached, nil

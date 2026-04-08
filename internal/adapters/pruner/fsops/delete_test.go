@@ -105,12 +105,12 @@ func TestApplyDelete_RejectsSymlink(t *testing.T) {
 	}
 
 	tmp := t.TempDir()
-	real := filepath.Join(tmp, "real.json")
-	if err := os.WriteFile(real, []byte(`{}`), 0o644); err != nil {
+	realFile := filepath.Join(tmp, "real.json")
+	if err := os.WriteFile(realFile, []byte(`{}`), 0o644); err != nil {
 		t.Fatalf("write real: %v", err)
 	}
 	link := filepath.Join(tmp, "link.json")
-	if err := os.Symlink(real, link); err != nil {
+	if err := os.Symlink(realFile, link); err != nil {
 		t.Fatalf("symlink: %v", err)
 	}
 
@@ -122,7 +122,7 @@ func TestApplyDelete_RejectsSymlink(t *testing.T) {
 		t.Fatal("expected symlink rejection error")
 	}
 	// real.json should still exist.
-	if _, statErr := os.Stat(real); statErr != nil {
+	if _, statErr := os.Stat(realFile); statErr != nil {
 		t.Fatalf("real.json should not have been deleted: %v", statErr)
 	}
 }

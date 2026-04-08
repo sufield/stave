@@ -94,7 +94,7 @@ func resolveLockPath(projectRoot string) string {
 	return filepath.Join(projectRoot, "stave.lock")
 }
 
-func populatePlanLockHash(plan *EvaluationPlan, projectRoot string, hasher appcontracts.ContentHasher) error {
+func populatePlanLockHash(plan *EvaluationPlan, projectRoot string, hasher appcontracts.ContentHasher) error { //nolint:unparam // error return is always nil because lock file is optional; callers still check for safety
 	lockPath := resolveLockPath(projectRoot)
 	if lockPath == "" || hasher == nil {
 		return nil

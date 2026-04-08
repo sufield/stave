@@ -34,7 +34,7 @@ func analyze(raw []byte, frameworks, checkIDs []string) ([]byte, error) {
 	return resolution.ResolutionJSON, nil
 }
 
-func extractCheckIDs(raw []byte) ([]string, error) {
+func extractCheckIDs(raw []byte) ([]string, error) { //nolint:unparam // error kept for future JSON/YAML parse failure paths
 	// Minimal YAML parse to extract check IDs — only need top-level keys.
 	// The full parse happens inside ResolveControlCrosswalk.
 	type minimalCrosswalk struct {

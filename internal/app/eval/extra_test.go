@@ -367,7 +367,7 @@ func TestOutputPipeline_Run_CancelledContext(t *testing.T) {
 }
 
 func TestRunDirectoryEvaluation_NilLoader(t *testing.T) {
-	_, _, err := RunDirectoryEvaluation(DirectoryEvaluationRequest{})
+	_, _, err := RunDirectoryEvaluation(context.Background(), DirectoryEvaluationRequest{})
 	if err == nil || !strings.Contains(err.Error(), "observation loader is required") {
 		t.Fatalf("expected nil loader error, got: %v", err)
 	}

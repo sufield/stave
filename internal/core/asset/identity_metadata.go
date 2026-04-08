@@ -68,7 +68,7 @@ func identityNestedBoolProperty(props map[string]any, parent, key string) (value
 	return value, true
 }
 
-func identityNestedIntProperty(props map[string]any, parent, key string) (int, bool) {
+func identityNestedIntProperty(props map[string]any, parent, key string) (int, bool) { //nolint:unparam // parent is "scope" today; kept generic to match identityNestedBoolProperty pattern
 	rawParent, ok := props[parent]
 	if !ok {
 		return 0, false

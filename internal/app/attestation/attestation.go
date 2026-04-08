@@ -30,7 +30,6 @@ type WorkflowDeps struct {
 
 // Request defines the parameters for a remediation attestation run.
 type Request struct {
-	Ctx            context.Context
 	BaselineSource string
 	TargetSource   string
 	PolicySource   string
@@ -44,14 +43,14 @@ type Request struct {
 }
 
 // PerformAttestation executes the baseline-vs-target comparison to verify remediation.
-func PerformAttestation(deps WorkflowDeps, req Request) error {
+func PerformAttestation(ctx context.Context, deps WorkflowDeps, req Request) error {
 	beginStage := deps.BeginStage
 	if beginStage == nil {
 		beginStage = func(string) func() { return func() {} }
 	}
 
 	// 1. Load security policies
-	controls, err := deps.LoadPolicies(req.Ctx, req.PolicySource)
+	controls, err := deps.LoadPolicies(ctx, req.PolicySource)
 	if err != nil {
 		return err
 	}
@@ -61,14 +60,14 @@ func PerformAttestation(deps WorkflowDeps, req Request) error {
 
 	// 2. Conduct assessments
 	baseline, err := executeStage(beginStage, "analyzing baseline inventory", func() (assessmentState, error) {
-		return conductAssessment(deps, req, controls, req.BaselineSource)
+		return conductAssessment(ctx, deps, req, controls, req.BaselineSource)
 	})
 	if err != nil {
 		return fmt.Errorf("baseline assessment failed: %w", err)
 	}
 
 	target, err := executeStage(beginStage, "analyzing target inventory", func() (assessmentState, error) {
-		return conductAssessment(deps, req, controls, req.TargetSource)
+		return conductAssessment(ctx, deps, req, controls, req.TargetSource)
 	})
 	if err != nil {
 		return fmt.Errorf("target assessment failed: %w", err)
@@ -103,14 +102,13 @@ type assessmentState struct {
 	inventoryCount int
 }
 
-func conductAssessment(deps WorkflowDeps, req Request, controls []policy.ControlDefinition, src string) (assessmentState, error) {
+func conductAssessment(ctx context.Context, deps WorkflowDeps, req Request, controls []policy.ControlDefinition, src string) (assessmentState, error) {
 	loader, err := deps.NewInventoryRepo()
 	if err != nil {
 		return assessmentState{}, err
 	}
 
-	res, count, err := appeval.RunDirectoryEvaluation(appeval.DirectoryEvaluationRequest{
-		Context:           req.Ctx,
+	res, count, err := appeval.RunDirectoryEvaluation(ctx, appeval.DirectoryEvaluationRequest{
 		ObservationsDir:   src,
 		Controls:          controls,
 		MaxUnsafeDuration: req.SLAThreshold,
