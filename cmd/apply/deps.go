@@ -83,7 +83,7 @@ func (b *Builder) Build(ctx context.Context, plan *appeval.EvaluationPlan) (*app
 		return nil, fmt.Errorf("load exemption config: %w", err)
 	}
 
-	gitMeta := compose.AuditGitStatus(plan.ProjectRoot, []string{b.Opts.ControlsDir, b.ProjectConfigPath})
+	gitMeta := compose.AuditGitStatus(ctx, plan.ProjectRoot, []string{b.Opts.ControlsDir, b.ProjectConfigPath})
 
 	projCfgInput, err := b.buildProjectConfigFromLoaded(b.ProjectConfig)
 	if err != nil {

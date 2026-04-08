@@ -6,6 +6,7 @@ package evaluate
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -179,7 +180,8 @@ func ExitCode(err error) int {
 	if err == nil {
 		return 0
 	}
-	if ee, ok := err.(*exitError); ok {
+	var ee *exitError
+	if errors.As(err, &ee) {
 		return ee.code
 	}
 	return 2

@@ -65,7 +65,7 @@ func UnmarshalSigned(data []byte, pubKeyPEM []byte) (Manifest, error) {
 		return Manifest{}, fmt.Errorf("create verifier: %w", err)
 	}
 	if err = VerifySignedManifest(signed, verifier); err != nil {
-		return Manifest{}, fmt.Errorf("%w: signature verification failed: %v", ErrIntegrityViolation, err)
+		return Manifest{}, fmt.Errorf("%w: signature verification failed: %w", ErrIntegrityViolation, err)
 	}
 
 	return signed.Manifest, nil

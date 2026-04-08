@@ -69,7 +69,7 @@ func ParsePolicyStatements(policyJSON string) ([]PolicyStatement, error) {
 		Statement json.RawMessage `json:"Statement"`
 	}
 	if err := json.Unmarshal([]byte(policyJSON), &doc); err != nil {
-		return nil, nil // unparseable policy treated as empty
+		return nil, nil //nolint:nilerr // unparseable policy treated as empty
 	}
 	if doc.Statement == nil {
 		return nil, nil
@@ -79,7 +79,7 @@ func ParsePolicyStatements(policyJSON string) ([]PolicyStatement, error) {
 	var stmts []json.RawMessage
 	if len(doc.Statement) > 0 && doc.Statement[0] == '[' {
 		if err := json.Unmarshal(doc.Statement, &stmts); err != nil {
-			return nil, nil
+			return nil, nil //nolint:nilerr // malformed Statement array treated as empty
 		}
 	} else {
 		stmts = []json.RawMessage{doc.Statement}

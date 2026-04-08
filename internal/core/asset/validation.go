@@ -43,7 +43,7 @@ func (s Snapshots) analyze() *validationCtx {
 
 		seenInSnap := make(map[ID]struct{})
 		for _, r := range snap.Assets {
-			assetID := ID(r.ID)
+			assetID := r.ID
 			if _, ok := seenInSnap[assetID]; !ok {
 				ctx.assetCounts[assetID]++
 				seenInSnap[assetID] = struct{}{}

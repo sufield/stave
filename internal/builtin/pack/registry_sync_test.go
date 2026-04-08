@@ -85,7 +85,7 @@ func TestIndexCoversAllEmbeddedBuiltins(t *testing.T) {
 	var missing []string
 	for _, p := range paths {
 		id := strings.TrimSuffix(filepath.Base(p), filepath.Ext(p))
-		if _, ok := refs[string(id)]; !ok {
+		if _, ok := refs[id]; !ok {
 			missing = append(missing, id)
 		}
 	}

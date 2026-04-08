@@ -36,7 +36,7 @@ func TestSanitizeDiagnosisReport(t *testing.T) {
 	if string(out.Issues[0].AssetID) != "REDACTED" {
 		t.Errorf("AssetID = %q, want REDACTED", out.Issues[0].AssetID)
 	}
-	if strings.Contains(string(out.Issues[0].Evidence), "my-bucket") {
+	if strings.Contains(out.Issues[0].Evidence, "my-bucket") {
 		t.Error("Evidence still contains raw asset ID")
 	}
 	if out.Issues[1].AssetID != "" {

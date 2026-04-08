@@ -2,6 +2,7 @@ package initcmd
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -19,7 +20,7 @@ func maybePromptAndInitGitRepo(baseDir string, in io.Reader, out io.Writer, auto
 
 	if autoConfirm {
 		// --yes flag: auto-confirm git init without prompting.
-		if err := gitinfo.InitRepo(baseDir); err != nil {
+		if err := gitinfo.InitRepo(context.Background(), baseDir); err != nil {
 			return fmt.Errorf("initialize git repository in %s: %w", baseDir, err)
 		}
 		if _, err := fmt.Fprintf(out, "Initialized git repository at %s\n", baseDir); err != nil {
@@ -30,7 +31,7 @@ func maybePromptAndInitGitRepo(baseDir string, in io.Reader, out io.Writer, auto
 
 	interactive, err := isInteractiveTTY()
 	if err != nil || !interactive {
-		return nil
+		return nil //nolint:nilerr // TTY detection failure means non-interactive — skip prompt
 	}
 	shouldInit, err := promptInitializeGit(baseDir, in, out)
 	if err != nil {
@@ -39,7 +40,7 @@ func maybePromptAndInitGitRepo(baseDir string, in io.Reader, out io.Writer, auto
 	if !shouldInit {
 		return nil
 	}
-	if err := gitinfo.InitRepo(baseDir); err != nil {
+	if err := gitinfo.InitRepo(context.Background(), baseDir); err != nil {
 		return fmt.Errorf("initialize git repository in %s: %w", baseDir, err)
 	}
 	if _, err := fmt.Fprintf(out, "Initialized git repository at %s\n", baseDir); err != nil {

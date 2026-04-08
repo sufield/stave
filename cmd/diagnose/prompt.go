@@ -265,7 +265,7 @@ func loadAssetProperties(ctx context.Context, loadSnapshots compose.SnapshotLoad
 	}
 	latest, latestErr := compose.LatestSnapshot(snapshots)
 	if latestErr != nil {
-		return "", nil // no snapshots is not an error for optional asset properties
+		return "", nil //nolint:nilerr // no snapshots is not an error for optional asset properties
 	}
 	for _, a := range latest.Assets {
 		if a.ID == assetID {

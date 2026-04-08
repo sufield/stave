@@ -96,7 +96,7 @@ func (a *App) executeRootCommand(args []string) {
 func (a *App) suggestCommandIfUnknown(err error) error {
 	names := collectVisibleCommandNames(a.Root)
 	enhanced := ui.SuggestCommandError(err, names)
-	if enhanced != err {
+	if enhanced != err { //nolint:errorlint // identity check: SuggestCommandError returns same pointer or new error
 		return &ui.UserError{Err: enhanced}
 	}
 	return err

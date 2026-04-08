@@ -1,6 +1,7 @@
 package gitinfo
 
 import (
+	"context"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -47,7 +48,7 @@ func TestDetectRepoRootAndHead(t *testing.T) {
 		t.Fatalf("mkdir: %v", err)
 	}
 
-	root, ok := DetectRepoRoot(subdir)
+	root, ok := DetectRepoRoot(context.Background(), subdir)
 	if !ok {
 		t.Fatalf("expected repo root")
 	}
@@ -63,7 +64,7 @@ func TestDetectRepoRootAndHead(t *testing.T) {
 		t.Fatalf("repo root mismatch: got %q want %q", rootCanonical, repoCanonical)
 	}
 
-	head, err := HeadCommit(repo)
+	head, err := HeadCommit(context.Background(), repo)
 	if err != nil {
 		t.Fatalf("head commit: %v", err)
 	}
@@ -82,7 +83,7 @@ func TestIsDirtyReturnsSortedPaths(t *testing.T) {
 		t.Fatalf("write a.txt: %v", err)
 	}
 
-	dirty, paths, err := IsDirty(repo, []string{"z.txt", "a.txt"})
+	dirty, paths, err := IsDirty(context.Background(), repo, []string{"z.txt", "a.txt"})
 	if err != nil {
 		t.Fatalf("IsDirty: %v", err)
 	}

@@ -83,7 +83,7 @@ Examples:
 				slog.Warn("failed to resolve project context", "error", resolverErr)
 			}
 			if res != nil {
-				gitInfo := compose.AuditGitStatus(res.ProjectRoot(), resolveAuditPaths(res))
+				gitInfo := compose.AuditGitStatus(cmd.Context(), res.ProjectRoot(), resolveAuditPaths(res))
 				if !flags.Quiet {
 					compose.WarnGitDirty(cmd.ErrOrStderr(), gitInfo, "report")
 				}

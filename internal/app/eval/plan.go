@@ -101,8 +101,7 @@ func populatePlanLockHash(plan *EvaluationPlan, projectRoot string, hasher appco
 	}
 	h, err := hasher.HashFile(lockPath)
 	if err != nil {
-		// Lock file is optional — absence is not an error.
-		return nil
+		return nil //nolint:nilerr // lock file is optional — absence is not an error
 	}
 	plan.LockFile = lockPath
 	plan.LockHash = kernel.Digest(h)

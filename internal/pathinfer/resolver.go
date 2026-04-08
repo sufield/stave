@@ -89,7 +89,7 @@ type walkState struct {
 
 func (s *walkState) walk(path string, entry fs.DirEntry, walkErr error) error {
 	if walkErr != nil || !entry.IsDir() {
-		return nil
+		return nil //nolint:nilerr // walk errors are non-fatal in best-effort directory search
 	}
 
 	// Skip hidden directories (.git, .stave, etc.) to save I/O.
@@ -99,7 +99,7 @@ func (s *walkState) walk(path string, entry fs.DirEntry, walkErr error) error {
 
 	rel, err := filepath.Rel(s.base, path)
 	if err != nil || rel == "." {
-		return nil
+		return nil //nolint:nilerr // Rel failure on a walk entry is non-fatal
 	}
 
 	depth := pathDepth(rel)
