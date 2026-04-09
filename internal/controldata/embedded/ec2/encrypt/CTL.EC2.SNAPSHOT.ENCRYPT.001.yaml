@@ -1,0 +1,40 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.SNAPSHOT.ENCRYPT.001
+name: EBS Snapshots Must Be Encrypted
+description: >
+  EBS snapshots must be encrypted. Unencrypted snapshots can be shared
+  across accounts or made public, exposing data at rest.
+domain: exposure
+severity: high
+compliance:
+  hipaa: "164.312(a)(2)(iv)"
+  cis_aws_v1.4.0: "2.2.1"
+scope_tags:
+  - aws
+  - ec2
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    EBS snapshot is not encrypted. Snapshot data is stored in plaintext
+    and can be shared or restored without encryption protection.
+  action: >
+    Copy the snapshot with encryption enabled. Delete the unencrypted
+    snapshot. Enable EBS encryption by default for future snapshots.
+  example: |
+    {
+      "compute": {
+        "kind": "snapshot",
+        "encryption": {
+          "encrypted": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: snapshot
+    - field: properties.compute.encryption.encrypted
+      op: eq
+      value: false

@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.SG.UNRESTRICTED.001
+name: Security Groups Must Not Allow Unrestricted Ingress
+description: >
+  Security group rules must not allow ingress from 0.0.0.0/0 on
+  sensitive ports (SSH, RDP, database). Unrestricted ingress exposes
+  services to the entire internet.
+domain: exposure
+severity: critical
+compliance:
+  cis_aws_v1.4.0: "5.2"
+  hipaa: "164.312(e)(1)"
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Security group allows ingress from 0.0.0.0/0 on sensitive ports.
+    Services are exposed to the entire internet.
+  action: >
+    Restrict ingress rules to specific CIDR blocks or security group
+    references. Remove 0.0.0.0/0 and ::/0 from ingress rules on
+    ports 22 (SSH), 3389 (RDP), 3306 (MySQL), 5432 (PostgreSQL).
+  example: |
+    {
+      "network": {
+        "kind": "security_group",
+        "security_group": {
+          "has_unrestricted_ingress": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: security_group
+    - field: properties.network.security_group.has_unrestricted_ingress
+      op: eq
+      value: true

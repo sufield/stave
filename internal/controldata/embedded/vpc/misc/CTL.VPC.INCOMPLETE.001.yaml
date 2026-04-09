@@ -1,0 +1,28 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.INCOMPLETE.001
+name: Complete Data Required for VPC Assessment
+description: >
+  VPC safety cannot be assessed when flow logging status is missing
+  from the snapshot. The extractor must populate network.flow_log.enabled.
+domain: exposure
+severity: low
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    VPC assessment data is incomplete. The extractor did not populate
+    required network properties.
+  action: >
+    Re-run the extractor with VPC permissions:
+    ec2:DescribeFlowLogs, ec2:DescribeVpcs.
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: vpc
+    - field: properties.network.flow_log.enabled
+      op: missing
+      value: true

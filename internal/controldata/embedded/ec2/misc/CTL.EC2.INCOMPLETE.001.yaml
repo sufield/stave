@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.INCOMPLETE.001
+name: Complete Data Required for EC2 Assessment
+description: >
+  EC2 instance safety cannot be assessed when encryption status is
+  missing from the snapshot. The extractor must populate
+  compute.encryption.ebs_encrypted.
+domain: exposure
+severity: low
+scope_tags:
+  - aws
+  - ec2
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    EC2 assessment data is incomplete. The extractor did not populate
+    required compute properties.
+  action: >
+    Re-run the extractor with EC2 permissions:
+    ec2:DescribeInstances, ec2:DescribeVolumes, ec2:DescribeSnapshots.
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: instance
+    - field: properties.compute.encryption.ebs_encrypted
+      op: missing
+      value: true

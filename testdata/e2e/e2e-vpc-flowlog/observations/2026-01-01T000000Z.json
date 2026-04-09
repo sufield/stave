@@ -1,0 +1,19 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "assets": [
+    {
+      "id": "vpc-test-001",
+      "type": "aws_vpc",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "vpc",
+          "flow_log": {
+            "enabled": false
+          }
+        }
+      }
+    }
+  ]
+}

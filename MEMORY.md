@@ -156,6 +156,59 @@ Actual result: **4 domains, 74 controls, 3+ vendors, zero engine changes.**
 | GCS (storage) | 7 | gcp | 0 |
 | DNS (takeover) | 3 | any (vendor-agnostic) | 0 |
 
+## Phase 3 Roadmap: Infrastructure Domain Expansion
+
+All phases require zero engine changes — YAML controls + observation contract only.
+
+### Phase 3a: VPC + EC2 (highest HIPAA gap coverage)
+
+| Domain | Controls Needed | Property Namespace | Source |
+|---|---|---|---|
+| VPC flow logging | Flow logs enabled, flow logs encrypted | `properties.network.flow_log.*` | kops #1776, Cloudticity #3 |
+| VPC security groups | Default deny, restricted ports, no 0.0.0.0/0 | `properties.network.security_group.*` | kops #1776, Cloudticity #1 |
+| EC2 encryption | EBS volume encryption, snapshot encryption | `properties.compute.encryption.*` | kops #1776, Cloudticity #6 |
+| EC2 network | No public IP, IMDSv2 enforced | `properties.compute.network.*` | kops #1776, Cloudticity #1 |
+| EC2 monitoring | Detailed monitoring enabled | `properties.compute.monitoring.*` | AWS blog 2016 |
+
+### Phase 3b: RDS + ELB
+
+| Domain | Controls Needed | Property Namespace | Source |
+|---|---|---|---|
+| RDS encryption | Storage encryption, snapshot encryption | `properties.database.encryption.*` | kops #1776, Cloudticity #6 |
+| RDS access | No public access, multi-AZ | `properties.database.access.*` | Cloudticity #9 |
+| RDS backup | Backup enabled, retention period | `properties.database.backup.*` | Cloudticity #8 |
+| RDS logging | Audit logging, slow query log | `properties.database.logging.*` | Cloudticity #3 |
+| ELB encryption | TLS 1.2+, HTTPS redirect | `properties.loadbalancer.encryption.*` | Cloudticity #7 |
+| ELB logging | Access logging enabled | `properties.loadbalancer.logging.*` | kops #1776 |
+| ELB availability | Cross-zone enabled, multi-AZ | `properties.loadbalancer.availability.*` | Cloudticity #9 |
+
+### Phase 3c: Kubernetes
+
+| Domain | Controls Needed | Property Namespace | Source |
+|---|---|---|---|
+| K8s RBAC | No wildcard ClusterRoles, service account restrictions | `properties.rbac.*` | kops #1776 |
+| K8s network | Network policies exist, default deny | `properties.network_policy.*` | kops #1776 |
+| K8s audit | Audit logging enabled, audit policy configured | `properties.audit.*` | kops #1776 |
+| K8s secrets | etcd encryption, no plaintext secrets in pods | `properties.secrets.*` | kops #1776 |
+
+### Phase 3d: Backup + Availability (cross-service)
+
+| Domain | Controls Needed | Property Namespace | Source |
+|---|---|---|---|
+| Backup verification | Backup exists, backup is recent, backup encrypted | `properties.backup.*` | Cloudticity #8 |
+| Availability | Multi-AZ configured, redundancy present | `properties.availability.*` | Cloudticity #9 |
+| Disaster recovery | Cross-region replication configured | `properties.replication.*` | HIPAA §164.308(a)(7) |
+
+### Gap sources consolidated
+
+| Source | Issues Mapped | Gaps Found |
+|---|---|---|
+| kops #1776 | 42 requirements | VPC, EC2, K8s, RDS |
+| Cloudticity top 10 | 10 issues | Availability, backup frequency, transport |
+| AWS Config Conformance Pack | ~100 rules | 20+ services breadth |
+| Prowler HIPAA | Checklist | Same as kops + Cloudticity |
+| AWS blog 2016 | 9 snippets | EC2 monitoring, security groups |
+
 ## Architectural Insight: Stave Is a Formal Proof System
 
 The 2-month refactoring and Phase 2 implementation revealed Stave's true identity. It is NOT a cloud security tool. It is a **policy evaluation engine for JSON-represented infrastructure**.

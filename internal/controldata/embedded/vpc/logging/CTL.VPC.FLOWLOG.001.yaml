@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.FLOWLOG.001
+name: VPC Flow Logging Must Be Enabled
+description: >
+  VPC flow logs capture information about IP traffic going to and from
+  network interfaces. Without flow logs, network-level access patterns
+  cannot be audited and unauthorized traffic goes undetected.
+domain: exposure
+severity: high
+compliance:
+  hipaa: "164.312(b)"
+  cis_aws_v1.4.0: "3.9"
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    VPC does not have flow logging enabled. Network traffic patterns
+    are invisible to audit and forensic analysis.
+  action: >
+    Enable VPC flow logs to CloudWatch Logs or S3. Run:
+    aws ec2 create-flow-logs --resource-type VPC --resource-ids vpc-xxx
+    --traffic-type ALL --log-destination-type cloud-watch-logs
+  example: |
+    {
+      "network": {
+        "kind": "vpc",
+        "flow_log": {
+          "enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: vpc
+    - field: properties.network.flow_log.enabled
+      op: eq
+      value: false

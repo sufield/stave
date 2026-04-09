@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.IMDSV2.001
+name: EC2 Instances Must Require IMDSv2
+description: >
+  EC2 instances must enforce Instance Metadata Service Version 2 (IMDSv2).
+  IMDSv1 is vulnerable to SSRF attacks that can steal instance credentials
+  from the metadata endpoint.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v1.4.0: "5.6"
+scope_tags:
+  - aws
+  - ec2
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    EC2 instance does not enforce IMDSv2. Instance credentials are
+    vulnerable to SSRF-based credential theft via the metadata endpoint.
+  action: >
+    Set HttpTokens to required on the instance metadata options. Run:
+    aws ec2 modify-instance-metadata-options --instance-id i-xxx
+    --http-tokens required --http-endpoint enabled
+  example: |
+    {
+      "compute": {
+        "kind": "instance",
+        "network": {
+          "imdsv2_required": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: instance
+    - field: properties.compute.network.imdsv2_required
+      op: eq
+      value: false

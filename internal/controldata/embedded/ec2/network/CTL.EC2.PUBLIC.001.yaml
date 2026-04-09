@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.PUBLIC.001
+name: EC2 Instances Must Not Have Public IP Addresses
+description: >
+  EC2 instances should not have public IP addresses unless explicitly
+  required. Public IP assignment exposes the instance to direct
+  internet access, bypassing network perimeter controls.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v1.4.0: "5.1"
+  hipaa: "164.312(e)(1)"
+scope_tags:
+  - aws
+  - ec2
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    EC2 instance has a public IP address. The instance is directly
+    reachable from the internet.
+  action: >
+    Launch instances in private subnets without public IP assignment.
+    Use NAT Gateway or VPC endpoints for outbound internet access.
+    Use ALB or NLB for inbound traffic that requires internet access.
+  example: |
+    {
+      "compute": {
+        "kind": "instance",
+        "network": {
+          "has_public_ip": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: instance
+    - field: properties.compute.network.has_public_ip
+      op: eq
+      value: true

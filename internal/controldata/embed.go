@@ -8,7 +8,7 @@ package controldata
 
 import "embed"
 
-//go:embed embedded/s3/**/*.yaml embedded/iam/**/*.yaml embedded/gcs/**/*.yaml embedded/dns/**/*.yaml
+//go:embed embedded/s3/**/*.yaml embedded/iam/**/*.yaml embedded/gcs/**/*.yaml embedded/dns/**/*.yaml embedded/vpc/**/*.yaml embedded/ec2/**/*.yaml
 
 // FS provides read-only access to the embedded built-in control YAML files.
 var FS embed.FS

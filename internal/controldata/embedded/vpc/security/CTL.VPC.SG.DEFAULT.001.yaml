@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.SG.DEFAULT.001
+name: Default Security Group Must Restrict All Traffic
+description: >
+  The default VPC security group should not allow any inbound or
+  outbound traffic. Resources should use custom security groups with
+  explicit rules instead of relying on the default group.
+domain: exposure
+severity: medium
+compliance:
+  cis_aws_v1.4.0: "5.4"
+  hipaa: "164.312(a)(1)"
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Default security group allows traffic. Resources using the default
+    group inherit permissive rules that bypass explicit security policies.
+  action: >
+    Remove all inbound and outbound rules from the default security group.
+    Assign custom security groups to all resources.
+  example: |
+    {
+      "network": {
+        "kind": "security_group",
+        "security_group": {
+          "is_default": true,
+          "has_rules": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: security_group
+    - field: properties.network.security_group.is_default
+      op: eq
+      value: true
+    - field: properties.network.security_group.has_rules
+      op: eq
+      value: true
