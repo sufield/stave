@@ -161,16 +161,10 @@ graph LR
 
 By working through these scenarios you have:
 
-- **Seen what an observation looks like** — a JSON snapshot of S3
-  bucket configuration captured at a point in time (`obs.v0.1`)
-- **Run `stave apply`** — the evaluation engine that checks
-  observations against safety controls and reports violations
-- **Read a finding** — control ID, severity, affected asset, evidence
-  of the misconfiguration, and concrete remediation steps
-- **Verified a fix** — the same command on a remediated observation
-  produces zero violations (exit code 0)
+- **Seen what an observation looks like** — a JSON snapshot of S3 bucket configuration captured at a point in time (`obs.v0.1`)
+- **Run `stave apply`** — the evaluation engine that checks observations against safety controls and reports violations
+- **Read a finding** — control ID, severity, affected asset, evidence of the misconfiguration, and concrete remediation steps
+- **Verified a fix** — the same command on a remediated observation produces zero violations (exit code 0)
 - **Understood exit codes** — 0 means safe, 3 means violations found
-- **Seen compound risks** — how HIPAA profile evaluation detects
-  dangerous combinations of control failures
-- **Used your own data** — captured a real S3 bucket with the AWS CLI
-  and evaluated it with stave
+- **Seen compound risks** — how HIPAA profile evaluation detects dangerous combinations of control failures
+- **Used your own data** — captured a real S3 bucket with the AWS CLI and evaluated it with stave

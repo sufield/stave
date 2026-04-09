@@ -2,6 +2,7 @@ package docs
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -79,7 +80,7 @@ func (r *SearchRunner) Run(ctx context.Context, req SearchRequest) (SearchResult
 
 func validateSearchRequest(req SearchRequest) error {
 	if strings.TrimSpace(req.Query) == "" {
-		return &ui.UserError{Err: fmt.Errorf("query cannot be empty")}
+		return &ui.UserError{Err: errors.New("query cannot be empty")}
 	}
 	if req.MaxResults < 1 {
 		return &ui.UserError{Err: fmt.Errorf("invalid --show %d: must be >= 1", req.MaxResults)}

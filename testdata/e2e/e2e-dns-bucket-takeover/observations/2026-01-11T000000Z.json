@@ -1,0 +1,22 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "assets": [
+    {
+      "id": "a2.bime.io-cname",
+      "type": "dns_record",
+      "vendor": "cloudflare",
+      "properties": {
+        "dns": {
+          "hostname": "a2.bime.io",
+          "record_type": "CNAME",
+          "target": "bimeio.s3.amazonaws.com",
+          "target_type": "cloud_storage",
+          "target_provider": "aws",
+          "target_exists": false,
+          "target_owned": false
+        }
+      }
+    }
+  ]
+}

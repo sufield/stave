@@ -2,7 +2,7 @@ package explain
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"testing"
 
 	"github.com/sufield/stave/internal/app/contracts"
@@ -37,7 +37,7 @@ func TestRun_EmptyControlID(t *testing.T) {
 }
 
 func TestRun_FinderError(t *testing.T) {
-	e := &Explainer{Finder: &mockFinder{err: fmt.Errorf("not found")}}
+	e := &Explainer{Finder: &mockFinder{err: errors.New("not found")}}
 	_, err := e.Run(context.Background(), Input{ControlID: "CTL.A.001", ControlsDir: "controls"})
 	if err == nil {
 		t.Fatal("expected error from finder")

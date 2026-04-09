@@ -4,6 +4,7 @@ package usecase
 
 import (
 	"context"
+	"errors"
 	"fmt"
 )
 
@@ -51,7 +52,7 @@ func Apply(ctx context.Context, req ApplyRequest, deps ApplyDeps) (ApplyResponse
 	}
 
 	if req.Profile != "" && req.InputFile == "" {
-		return ApplyResponse{}, fmt.Errorf("apply: --input is required when using --profile")
+		return ApplyResponse{}, errors.New("apply: --input is required when using --profile")
 	}
 
 	resp, err := deps.Runner.RunEvaluation(ctx, req)

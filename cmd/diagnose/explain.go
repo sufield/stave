@@ -2,6 +2,7 @@ package diagnose
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 
@@ -35,7 +36,7 @@ type Explainer struct {
 // Presentation is handled by the caller.
 func (e *Explainer) Run(ctx context.Context, req ExplainRequest) (appcontracts.ExplainResult, error) {
 	if req.ControlID == "" {
-		return appcontracts.ExplainResult{}, &ui.UserError{Err: fmt.Errorf("control id cannot be empty")}
+		return appcontracts.ExplainResult{}, &ui.UserError{Err: errors.New("control id cannot be empty")}
 	}
 
 	runner := &appexplain.Explainer{Finder: e.Finder}
@@ -68,7 +69,7 @@ func (f *repoFinder) FindByID(ctx context.Context, dir string, id kernel.Control
 	ctl, err := compose.FindControlByID(ctx, f.repo, dir, id)
 	if err != nil {
 		return policy.ControlDefinition{}, ui.WithNextCommand(err,
-			fmt.Sprintf("stave validate --controls %s", dir))
+			"stave validate --controls "+dir)
 	}
 	return ctl, nil
 }

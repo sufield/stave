@@ -40,7 +40,7 @@ func checkTimeSpan(input Input) *Insight {
 			Evidence: fmt.Sprintf("Snapshots span %s; threshold is %s",
 				fmtd(span), fmtd(input.MaxUnsafeDuration)),
 			Action:  "Collect snapshots over a longer period, or reduce --max-unsafe",
-			Command: fmt.Sprintf("stave apply --max-unsafe %s", fmtd(span)),
+			Command: "stave apply --max-unsafe " + fmtd(span),
 		}
 	}
 
@@ -58,7 +58,7 @@ func buildNowSkewIssue(now, maxCapturedAt time.Time) *Insight {
 		Evidence: fmt.Sprintf("--now=%s but latest captured_at=%s",
 			fmtTime(now), fmtTime(maxCapturedAt)),
 		Action:  "Set --now to a time after or equal to latest snapshot",
-		Command: fmt.Sprintf("stave apply --now %s", fmtTime(maxCapturedAt)),
+		Command: "stave apply --now " + fmtTime(maxCapturedAt),
 	}
 }
 

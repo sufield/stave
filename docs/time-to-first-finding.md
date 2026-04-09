@@ -8,7 +8,8 @@ No agents, no credentials stored by Stave, no network calls during evaluation. Y
 
 - `stave` installed and on `PATH`
 - AWS CLI configured with read access to the target account
-- `jq` installed (for extracting observation data)
+- Optional: `jq` installed (for extracting observation data)
+- If jq is not installed, you can use JMES path that is part of AWS CLI
 
 ## Step 1: Extract a snapshot from your AWS account
 
@@ -27,7 +28,7 @@ for bucket in $(jq -r '.Buckets[].Name' snapshot-raw/list-buckets.json); do
 done
 ```
 
-This runs entirely in your terminal. Stave never sees your credentials.
+This runs in your terminal. Stave never sees your credentials.
 
 ## Step 2: Convert the snapshot into observations
 

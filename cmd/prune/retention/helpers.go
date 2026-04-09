@@ -2,6 +2,7 @@ package retention
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"slices"
 	"strings"
@@ -141,7 +142,7 @@ func ResolveRetention(raw RawRetentionOpts, eval *appconfig.GovernanceResolver, 
 func ValidateRetentionTierWith(eval *appconfig.GovernanceResolver, rawTier string) (string, error) {
 	tier := appconfig.NormalizeTier(rawTier)
 	if tier == "" {
-		return "", fmt.Errorf("--retention-tier cannot be empty")
+		return "", errors.New("--retention-tier cannot be empty")
 	}
 	if !eval.HasConfiguredTier(tier) {
 		cfg, ok, cfgErr := projconfig.FindProjectConfig()

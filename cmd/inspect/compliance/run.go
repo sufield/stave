@@ -2,6 +2,7 @@ package compliance
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"time"
@@ -65,7 +66,7 @@ func readInput(file string, stdin io.Reader) ([]byte, error) {
 		return nil, fmt.Errorf("read crosswalk file: %w", err)
 	}
 	if len(data) == 0 {
-		return nil, fmt.Errorf("crosswalk file is empty")
+		return nil, errors.New("crosswalk file is empty")
 	}
 	return data, nil
 }

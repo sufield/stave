@@ -1,0 +1,162 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "6c44dabd68d7cb045eb82c5e1ce9863cd20a7a64ef8ea2605e98c271bdadbc3e",
+        "2026-01-11T000000Z.json": "1efb1e7513c9fe336a889ba6744eda787f0ec48b1c2b086a29be1694390bab11"
+      },
+      "overall": "adbe267bbfd92561bf5fac722ebbb7f8925526884fe0f7316c8f285070e44acd"
+    },
+    "policy_fingerprint": "4987a5a9d095a3f8b38626be9b9da03fa7e86ff6ccd9fb5f6555974692c052c5"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.GCS.PUBLIC.001",
+      "asset_id": "my-project-public-bucket",
+      "asset_type": "gcp_gcs_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.GCS.PUBLIC.001",
+      "control_name": "No Public GCS Bucket Read",
+      "control_description": "GCS buckets must not allow public read access. Detects buckets where IAM bindings include allUsers or allAuthenticatedUsers with read permissions, or where uniform bucket-level access is disabled and object ACLs may grant public access.\n",
+      "asset_id": "my-project-public-bucket",
+      "asset_type": "gcp_gcs_bucket",
+      "asset_vendor": "gcp",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "storage.access.public_read",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "storage.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance": {
+        "cis_gcp_v1.3.0": "5.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
+      "remediation": {
+        "description": "Bucket has public read access. IAM bindings include allUsers or allAuthenticatedUsers, making objects downloadable by anyone.",
+        "action": "Remove allUsers and allAuthenticatedUsers from bucket IAM bindings. Run: gcloud storage buckets remove-iam-policy-binding gs://BUCKET --member=allUsers --role=roles/storage.objectViewer",
+        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"access\": {\n      \"public_read\": false\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-182ea18064a0b07e",
+        "target": {
+          "asset_id": "my-project-public-bucket",
+          "asset_type": "gcp_gcs_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+      }
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "my-project-public-bucket",
+      "asset_type": "gcp_gcs_bucket",
+      "fix_plan": {
+        "id": "fix-182ea18064a0b07e",
+        "target": {
+          "asset_id": "my-project-public-bucket",
+          "asset_type": "gcp_gcs_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+      },
+      "contributing_controls": [
+        "CTL.GCS.PUBLIC.001"
+      ],
+      "finding_count": 1
+    }
+  ]
+}

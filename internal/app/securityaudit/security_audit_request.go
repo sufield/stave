@@ -120,7 +120,7 @@ func NewRequest(opts ...RequestOption) Request {
 	req.SBOMFormat = evidence.SBOMFormat(strings.ToLower(strings.TrimSpace(string(req.SBOMFormat))))
 	req.VulnSource = evidence.VulnSource(strings.ToLower(strings.TrimSpace(string(req.VulnSource))))
 	if strings.TrimSpace(req.OutDir) == "" {
-		req.OutDir = fmt.Sprintf("security-audit-%s", req.Now.UTC().Format("20060102T150405Z"))
+		req.OutDir = "security-audit-" + req.Now.UTC().Format("20060102T150405Z")
 	}
 	return req
 }

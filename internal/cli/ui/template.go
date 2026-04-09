@@ -2,6 +2,7 @@ package ui
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"text/template"
@@ -107,7 +108,7 @@ func walkNode(node parse.Node) error {
 	case *parse.WithNode:
 		return walkBranch(n.Pipe, n.List, n.ElseList)
 	case *parse.TemplateNode:
-		return fmt.Errorf("{{template}} is not allowed")
+		return errors.New("{{template}} is not allowed")
 	}
 	return nil
 }

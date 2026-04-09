@@ -3,6 +3,7 @@ package prompt
 import (
 	"bytes"
 	_ "embed"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -12,11 +13,26 @@ import (
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/core/trace"
 	"gopkg.in/yaml.v3"
 )
 
 //go:embed templates/prompt_default.tmpl
 var DefaultTemplate string
+
+// TraceStepData holds a single reasoning step from the logic trace.
+type TraceStepData struct {
+	Name   string
+	Input  string
+	Result string
+}
+
+// TraceData holds the logic trace assessment for a single finding.
+type TraceData struct {
+	Verdict    string
+	Confidence string
+	Steps      []TraceStepData
+}
 
 // FindingData holds data for a single finding in the rendered prompt.
 type FindingData struct {
@@ -30,6 +46,7 @@ type FindingData struct {
 	RootCauses   string
 	ControlYAML  string
 	Guidance     string
+	Trace        *TraceData
 }
 
 // Data holds all data for the prompt rendering.
@@ -42,9 +59,10 @@ type Data struct {
 
 // Builder coordinates assembly of LLM-ready prompt data.
 type Builder struct {
-	AssetID        string
-	ControlsByID   map[kernel.ControlID]*policy.ControlDefinition
-	AssetPropsJSON string
+	AssetID          string
+	ControlsByID     map[kernel.ControlID]*policy.ControlDefinition
+	AssetPropsJSON   string
+	TraceAssessments []trace.Assessment
 }
 
 // Build creates prompt data from matched findings.
@@ -75,6 +93,7 @@ func (b *Builder) Build(matched []evaluation.Finding) Data {
 				fd.Guidance = BuildGuidanceSummary(&remediation)
 			}
 		}
+		fd.Trace = b.matchTrace(v.ControlID, v.AssetID)
 		findings = append(findings, fd)
 	}
 
@@ -112,10 +131,10 @@ func BuildEvidenceSummary(ev evaluation.Evidence) string {
 	var lines []string
 
 	if !ev.FirstUnsafeAt.IsZero() {
-		lines = append(lines, fmt.Sprintf("- First unsafe: %s", ev.FirstUnsafeAt.Format(time.RFC3339)))
+		lines = append(lines, "- First unsafe: "+ev.FirstUnsafeAt.Format(time.RFC3339))
 	}
 	if !ev.LastSeenUnsafeAt.IsZero() {
-		lines = append(lines, fmt.Sprintf("- Last seen unsafe: %s", ev.LastSeenUnsafeAt.Format(time.RFC3339)))
+		lines = append(lines, "- Last seen unsafe: "+ev.LastSeenUnsafeAt.Format(time.RFC3339))
 	}
 	if ev.UnsafeDurationHours > 0 {
 		lines = append(lines, fmt.Sprintf("- Unsafe duration: %.1f hours", ev.UnsafeDurationHours))
@@ -133,7 +152,7 @@ func BuildEvidenceSummary(ev evaluation.Evidence) string {
 		lines = append(lines, fmt.Sprintf("- Recurrence limit: %d", ev.RecurrenceLimit))
 	}
 	if ev.TemporalRisk != "" {
-		lines = append(lines, fmt.Sprintf("- Why now: %s", ev.TemporalRisk))
+		lines = append(lines, "- Why now: "+ev.TemporalRisk)
 	}
 
 	if len(lines) == 0 {
@@ -167,6 +186,41 @@ func BuildGuidanceSummary(m *policy.RemediationSpec) string {
 		parts = append(parts, "**Example:**\n```\n"+strings.TrimSpace(m.Example)+"\n```")
 	}
 	return strings.Join(parts, "\n\n")
+}
+
+// matchTrace finds the trace assessment matching a control×asset pair and
+// converts it to template-ready data.
+func (b *Builder) matchTrace(ctlID kernel.ControlID, astID asset.ID) *TraceData {
+	for i := range b.TraceAssessments {
+		a := &b.TraceAssessments[i]
+		if a.PolicyID == string(ctlID) && a.ResourceID == string(astID) {
+			steps := make([]TraceStepData, len(a.Steps))
+			for j := range a.Steps {
+				steps[j] = TraceStepData{
+					Name:   a.Steps[j].Name,
+					Input:  compactJSON(a.Steps[j].Input),
+					Result: compactJSON(a.Steps[j].Result),
+				}
+			}
+			return &TraceData{
+				Verdict:    a.Verdict,
+				Confidence: a.Confidence,
+				Steps:      steps,
+			}
+		}
+	}
+	return nil
+}
+
+func compactJSON(v any) string {
+	if v == nil {
+		return ""
+	}
+	b, err := json.Marshal(v)
+	if err != nil {
+		return fmt.Sprintf("%v", v)
+	}
+	return string(b)
 }
 
 // RenderPrompt builds the Markdown prompt by executing a Go text/template

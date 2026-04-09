@@ -2,6 +2,7 @@ package evidence
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -84,7 +85,7 @@ func (DefaultSBOMGenerator) Generate(input BuildInfoSnapshot, format SBOMFormat,
 	}
 	modules = append(modules, input.Deps...)
 	if len(modules) == 0 {
-		return SBOMSnapshot{}, fmt.Errorf("no module metadata available")
+		return SBOMSnapshot{}, errors.New("no module metadata available")
 	}
 
 	sort.Slice(modules, func(i, j int) bool {

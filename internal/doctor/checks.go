@@ -81,7 +81,7 @@ func checkWorkspaceWritable(ctx *SystemEnvironment) Diagnostic {
 	return Diagnostic{
 		Name:    CheckWorkspaceWritable,
 		Status:  outcome.Pass,
-		Message: fmt.Sprintf("directory is writable: %s", ctx.Cwd),
+		Message: "directory is writable: " + ctx.Cwd,
 	}
 }
 
@@ -148,7 +148,7 @@ func checkClipboard(ctx *SystemEnvironment) Diagnostic {
 		return Diagnostic{
 			Name:    CheckClipboard,
 			Status:  outcome.Warn,
-			Message: fmt.Sprintf("clipboard check not supported on %s", ctx.OS),
+			Message: "clipboard check not supported on " + ctx.OS,
 		}
 	}
 }
@@ -165,7 +165,7 @@ func checkOfflineProxyEnv(ctx *SystemEnvironment) Diagnostic {
 		return Diagnostic{
 			Name:        CheckProxyEnv,
 			Status:      outcome.Warn,
-			Message:     fmt.Sprintf("active proxy variables detected: %s", strings.Join(found, ", ")),
+			Message:     "active proxy variables detected: " + strings.Join(found, ", "),
 			Remediation: "unset proxy variables for strict air-gap compliance, or use --require-offline",
 		}
 	}

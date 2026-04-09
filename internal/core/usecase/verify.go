@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"errors"
 	"fmt"
 )
 
@@ -41,10 +42,10 @@ func Verify(ctx context.Context, req Request, deps VerifyDeps) (VerifyResponse, 
 	}
 
 	if req.BeforeDir == "" {
-		return VerifyResponse{}, fmt.Errorf("verify: before observations directory is required")
+		return VerifyResponse{}, errors.New("verify: before observations directory is required")
 	}
 	if req.AfterDir == "" {
-		return VerifyResponse{}, fmt.Errorf("verify: after observations directory is required")
+		return VerifyResponse{}, errors.New("verify: after observations directory is required")
 	}
 
 	resp, err := deps.Runner.RunVerification(ctx, req)

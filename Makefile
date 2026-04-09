@@ -1,4 +1,4 @@
-.PHONY: all build build-dev test test-coverage test-compliance cover-report clean-cover lint lint-fix fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls gofixer imports imports-check sync-public fuzz docker-demo demo-check readme readme-check
+.PHONY: all build build-dev test test-coverage test-compliance cover-report clean-cover lint lint-fix fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls gofixer imports imports-check sync-public fuzz bench docker-demo demo-check readme readme-check
 
 # Binary name
 BINARY=stave
@@ -270,6 +270,11 @@ imports-check:
 		echo "goimports would reformat:"; echo "$$bad"; exit 1; \
 	fi
 
+## bench: Run performance benchmarks (engine evaluation at 10k assets)
+bench:
+	$(GOTEST) -bench=BenchmarkEvaluate -benchmem -count=1 ./internal/core/evaluation/engine/
+	$(GOTEST) -bench=BenchmarkEvaluateLargeSnapshot -benchmem -count=1 ./internal/app/
+
 ## fuzz: Run Go native fuzz tests (30s per target)
 fuzz: sync-schemas sync-controls
 	$(GOTEST) -fuzz=Fuzz -fuzztime=30s ./internal/core/s3/policy/
@@ -298,6 +303,13 @@ readme: sync-controls
 ## readme-check: Verify README.md matches template output
 readme-check: sync-controls
 	$(GOCMD) run ./internal/tools/genreadme -check
+
+## forge: Scaffold a new control with E2E test fixtures (usage: make forge ID=CTL.S3.NEW.001 NAME="..." FIELD=... REMEDIATION="...")
+forge:
+ifndef ID
+	$(error Usage: make forge ID=CTL.S3.NEW.001 NAME="Control Name" FIELD=properties.storage.access.public_read REMEDIATION="Fix action text")
+endif
+	$(GOCMD) run ./internal/tools/gencontrol --id "$(ID)" --name "$(NAME)" --field "$(FIELD)" --remediation "$(REMEDIATION)" $(if $(DOMAIN),--domain "$(DOMAIN)") $(if $(SEVERITY),--severity "$(SEVERITY)") $(if $(SCOPE_TAGS),--scope-tags "$(SCOPE_TAGS)") $(if $(ASSET_TYPE),--asset-type "$(ASSET_TYPE)") $(if $(OP),--op "$(OP)") $(if $(VALUE),--value "$(VALUE)") $(if $(COMPLIANCE),--compliance "$(COMPLIANCE)") $(if $(OUT),--out "$(OUT)")
 
 ## docs-controls: Generate control reference from built-in catalog
 docs-controls: sync-controls

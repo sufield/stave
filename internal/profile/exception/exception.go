@@ -5,6 +5,7 @@
 package exception
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -100,13 +101,13 @@ func LoadExceptions(path string) ([]Config, error) {
 
 func validateException(exc Config) error {
 	if strings.TrimSpace(string(exc.ControlID)) == "" {
-		return fmt.Errorf("control_id is required")
+		return errors.New("control_id is required")
 	}
 	if strings.TrimSpace(exc.Rationale) == "" {
-		return fmt.Errorf("rationale is required")
+		return errors.New("rationale is required")
 	}
 	if len(exc.RequiresPassing) == 0 {
-		return fmt.Errorf("requires_passing is mandatory — compensating controls must be specified")
+		return errors.New("requires_passing is mandatory — compensating controls must be specified")
 	}
 	return nil
 }
@@ -204,8 +205,7 @@ func ApplyExceptions(exceptions []Config, results []profile.Result) []Acknowledg
 				}
 			}
 			ack.InvalidReason = InvalidReasonCompensatingFailed
-			ack.InvalidDetail = fmt.Sprintf("compensating control(s) not passing: %s",
-				strings.Join(failing, ", "))
+			ack.InvalidDetail = "compensating control(s) not passing: " + strings.Join(failing, ", ")
 			r.Finding = r.Finding + fmt.Sprintf(
 				" [Exception declared but compensating control %s is not passing]",
 				strings.Join(failing, ", "))

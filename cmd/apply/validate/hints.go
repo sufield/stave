@@ -90,7 +90,7 @@ func hintGenerateControl(issue diag.Finding, ctx hintContext) string {
 	}
 	// Sanitize ID for use as filename — replace path separators
 	safeID := strings.ReplaceAll(strings.ReplaceAll(id, "/", "_"), "..", "_")
-	filename := fmt.Sprintf("%s.yaml", safeID)
+	filename := safeID + ".yaml"
 	return fmt.Sprintf("stave generate control --id %s --out %s",
 		shellQuote(id),
 		shellQuote(filepath.Join(ctx.ControlsDir, filename)),
@@ -132,7 +132,7 @@ func hintExplainControl(issue diag.Finding, ctx hintContext) string {
 		return ""
 	}
 	if ctx.ControlsDir == "" {
-		return fmt.Sprintf("stave explain %s", shellQuote(controlID))
+		return "stave explain " + shellQuote(controlID)
 	}
 	return fmt.Sprintf("stave explain %s --controls %s",
 		shellQuote(controlID),

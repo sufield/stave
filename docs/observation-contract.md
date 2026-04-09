@@ -80,24 +80,36 @@ Each entry in `identities[]` (optional, used by ACL/policy controls):
 
 ## MVP 1.0 stability promise
 
-For S3 evaluation, these property namespaces are the stability surface.
-Fields within these namespaces will not be removed or have their semantics
-changed without a schema version bump.
+These property namespaces are the stability surface. Fields within these
+namespaces will not be removed or have their semantics changed without a
+schema version bump.
 
-- `storage.visibility.*`
-- `storage.controls.*`
-- `storage.encryption.*`
-- `storage.versioning.*`
-- `storage.logging.*`
-- `storage.access.*`
-- `storage.object_lock.*`
-- `storage.website.*`
-- `storage.lifecycle.*`
-- `storage.content.*`
-- `storage.tags.*`
-- `cdn.*`
-- `s3_ref.*`
-- `s3_upload.*`
+### Storage domain (S3 + GCS)
+
+- `storage.kind` — shared discriminator (`"bucket"`)
+- `storage.access.*` — access control properties
+- `storage.controls.*` — safety net settings (PAB, uniform access)
+- `storage.encryption.*` — encryption at rest and in transit
+- `storage.versioning.*` — object versioning
+- `storage.logging.*` — access logging
+- `storage.object_lock.*` — immutability controls
+- `storage.website.*` — static website hosting
+- `storage.lifecycle.*` — data retention rules
+- `storage.content.*` — content-level properties
+- `storage.tags.*` — governance and classification tags
+- `cdn.*` — CDN origin properties
+- `s3_ref.*` — bucket reference (takeover detection)
+- `s3_upload.*` — upload policy scope
+
+### Identity domain (IAM)
+
+- `identity.kind` — shared discriminator (`"account"`, `"user"`, `"password_policy"`)
+- `identity.root.*` — root account properties
+- `identity.console_access.*` — console login properties
+- `identity.credentials.*` — credential lifecycle
+- `identity.access_keys.*` — access key properties
+- `identity.policies.*` — policy attachment properties
+- `identity.password_policy.*` — password policy settings
 
 ---
 
@@ -236,6 +248,100 @@ changed without a schema version bump.
 | Field | Type | Description |
 |-------|------|-------------|
 | `safety_provable` | bool | Whether bucket safety can be proven from observation data |
+
+---
+
+## IAM Domain (identity.*)
+
+For IAM evaluation, these property namespaces are the stability surface.
+
+### Account-level (`aws_iam_account`)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `identity.kind` | string | `"account"` — discriminator |
+| `identity.root.mfa_enabled` | bool | Root account has MFA configured |
+| `identity.root.has_access_keys` | bool | Root account has active access keys |
+
+### User-level (`aws_iam_user`)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `identity.kind` | string | `"user"` — discriminator |
+| `identity.console_access.enabled` | bool | Console login is enabled |
+| `identity.console_access.mfa_enabled` | bool | MFA enabled for console access |
+| `identity.credentials.unused` | bool | No activity for 90+ days |
+| `identity.access_keys.has_stale_key` | bool | Any access key older than 90 days |
+| `identity.policies.has_inline_policies` | bool | Inline policies attached to user |
+| `identity.policies.has_direct_policies` | bool | Managed policies attached directly |
+| `identity.policies.has_admin_access` | bool | User has admin-level access |
+
+### Password policy (`aws_iam_password_policy`)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `identity.kind` | string | `"password_policy"` — discriminator |
+| `identity.password_policy.minimum_length` | integer | Minimum password length |
+| `identity.password_policy.require_uppercase` | bool | Uppercase required |
+| `identity.password_policy.require_lowercase` | bool | Lowercase required |
+| `identity.password_policy.require_numbers` | bool | Numbers required |
+| `identity.password_policy.require_symbols` | bool | Symbols required |
+| `identity.password_policy.reuse_prevention_count` | integer | Password history depth |
+
+---
+
+## GCS Domain (storage.*)
+
+GCS uses the same `storage.*` namespace as S3 where semantics align.
+GCP-specific properties use fields that don't exist in the S3 contract.
+
+### Bucket-level (`gcp_gcs_bucket`)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `storage.kind` | string | `"bucket"` — discriminator (shared with S3) |
+| `storage.access.public_read` | bool | Public read via IAM bindings (allUsers) |
+| `storage.access.public_list` | bool | Public list via IAM bindings |
+| `storage.access.public_write` | bool | Public write via IAM bindings |
+| `storage.controls.uniform_access_enabled` | bool | Uniform bucket-level access (GCP-specific) |
+| `storage.encryption.at_rest_enabled` | bool | Encryption enabled (always true for GCS) |
+| `storage.encryption.cmek_enabled` | bool | Customer-managed key via Cloud KMS (GCP-specific) |
+| `storage.logging.enabled` | bool | Access logging enabled |
+| `storage.versioning.enabled` | bool | Object versioning enabled |
+
+**Cross-cloud shared fields:** `storage.kind`, `storage.access.public_read`,
+`storage.access.public_list`, `storage.encryption.at_rest_enabled`,
+`storage.logging.enabled`, `storage.versioning.enabled`.
+
+**GCP-specific fields:** `storage.controls.uniform_access_enabled`,
+`storage.encryption.cmek_enabled`.
+
+---
+
+## DNS Domain (dns.*)
+
+DNS record evaluation is **vendor-agnostic**. The controls evaluate
+`properties.dns.*` regardless of whether the DNS is hosted on Route53,
+Cloudflare, Namecheap, GoDaddy, or a self-hosted nameserver. The
+`vendor` field on the asset is extractor metadata — controls never
+reference it.
+
+### DNS record (`dns_record`)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `dns.hostname` | string | The FQDN (e.g., `a2.bime.io`) |
+| `dns.record_type` | string | Record type (`CNAME`, `A`, `ALIAS`, `AAAA`) |
+| `dns.target` | string | What the record points to |
+| `dns.target_type` | string | Target category (`cloud_storage`, `cdn`, `compute`, `paas`) |
+| `dns.target_provider` | string | Target cloud provider (`aws`, `gcp`, `azure`, `heroku`) |
+| `dns.target_exists` | bool | Target resource exists |
+| `dns.target_owned` | bool | Target resource is owned by the organization |
+| `dns.blast_radius` | string | Impact category (`software_distribution`, `web_content`, `api`) |
+
+**Vendor field:** Set `vendor` to whatever DNS provider hosts the zone
+(`route53`, `cloudflare`, `namecheap`, `godaddy`, `bind`, etc.). Controls
+evaluate `dns.*` properties only — the vendor is for provenance tracking.
 
 ---
 

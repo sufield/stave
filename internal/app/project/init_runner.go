@@ -1,6 +1,6 @@
 package project
 
-import "fmt"
+import "errors"
 
 // InitRequest captures the init command execution inputs.
 type InitRequest struct {
@@ -46,10 +46,10 @@ type InitDeps struct {
 // RunInit orchestrates project scaffold generation for the CLI layer.
 func RunInit(req InitRequest, deps InitDeps) (InitResult, error) {
 	if deps.ValidateInputs == nil {
-		return InitResult{}, fmt.Errorf("validate inputs dependency is required")
+		return InitResult{}, errors.New("validate inputs dependency is required")
 	}
 	if deps.Plan == nil || deps.Scaffold == nil {
-		return InitResult{}, fmt.Errorf("scaffold dependencies are required")
+		return InitResult{}, errors.New("scaffold dependencies are required")
 	}
 
 	cleanDir, err := deps.ValidateInputs(req.Dir, req.Profile, req.CaptureCadence)

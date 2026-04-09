@@ -19,6 +19,7 @@ import (
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/core/trace"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
@@ -45,6 +46,7 @@ func newPromptFromFindingCmd(newCtlRepo compose.CtlRepoFactory, loadSnapshots co
 		assetID        string
 		controlsDir    string
 		obsDir         string
+		traceFile      string
 		format         string
 		promptTemplate string
 	)
@@ -111,6 +113,7 @@ Examples:
 				assetID:        assetID,
 				controlsDir:    controlsDir,
 				obsDir:         obsDir,
+				traceFile:      traceFile,
 				format:         format,
 				promptTemplate: promptTemplate,
 				newCtlRepo:     newCtlRepo,
@@ -123,6 +126,7 @@ Examples:
 	cmd.Flags().StringVar(&assetID, "asset-id", "", "Asset ID to filter findings (required)")
 	cmd.Flags().StringVarP(&controlsDir, "controls", "i", cliflags.DefaultControlsDir, "Path to control definitions directory")
 	cmd.Flags().StringVarP(&obsDir, "observations", "o", "", "Path to observation snapshots directory (optional)")
+	cmd.Flags().StringVar(&traceFile, "trace-file", "", "Path to audit trace JSON for evaluation reasoning context (optional)")
 	cmd.Flags().StringVarP(&format, "format", "f", "text", "Output format: text or json")
 
 	cmd.Flags().StringVar(&promptTemplate, "prompt-template", "", "Path to custom Go text/template file for prompt output")
@@ -139,6 +143,7 @@ type promptFromFindingOpts struct {
 	assetID        string
 	controlsDir    string
 	obsDir         string
+	traceFile      string
 	format         string
 	promptTemplate string
 	newCtlRepo     compose.CtlRepoFactory
@@ -173,13 +178,22 @@ func runPromptFromFinding(cmd *cobra.Command, opts promptFromFindingOpts) error 
 		return err
 	}
 
+	var traceAssessments []trace.Assessment
+	cleanTraceFile := fsutil.CleanUserPath(opts.traceFile)
+	if cleanTraceFile != "" {
+		traceAssessments, err = loadTraceAssessments(cleanTraceFile)
+		if err != nil {
+			return err
+		}
+	}
+
 	dctx := diagprompt.DiagnosticContext{
 		ControlsByID:   ctlByID,
 		AssetPropsJSON: assetPropsJSON,
 		LoadEval: func(path string) (*evaluation.ComplianceReport, error) {
 			return (&evaljson.Loader{}).LoadFromFile(path)
 		},
-		BuildPrompt: buildPromptAdapterWith(tmplStr),
+		BuildPrompt: buildPromptAdapterWith(tmplStr, traceAssessments),
 	}
 
 	runner := diagprompt.NewRunner(dctx)
@@ -208,8 +222,8 @@ func resolvePromptTemplate(path string) (string, error) {
 }
 
 // buildPromptAdapterWith returns a BuildFunc that renders prompts using the
-// given template string.
-func buildPromptAdapterWith(tmpl string) func(string, map[kernel.ControlID]*policy.ControlDefinition, string, []evaluation.Finding) diagprompt.Output {
+// given template string and optional trace assessments.
+func buildPromptAdapterWith(tmpl string, traceAssessments []trace.Assessment) func(string, map[kernel.ControlID]*policy.ControlDefinition, string, []evaluation.Finding) diagprompt.Output {
 	return func(
 		assetID string,
 		controlsByID map[kernel.ControlID]*policy.ControlDefinition,
@@ -217,9 +231,10 @@ func buildPromptAdapterWith(tmpl string) func(string, map[kernel.ControlID]*poli
 		matched []evaluation.Finding,
 	) diagprompt.Output {
 		builder := &promptout.Builder{
-			AssetID:        assetID,
-			ControlsByID:   controlsByID,
-			AssetPropsJSON: assetPropsJSON,
+			AssetID:          assetID,
+			ControlsByID:     controlsByID,
+			AssetPropsJSON:   assetPropsJSON,
+			TraceAssessments: traceAssessments,
 		}
 		data := builder.Build(matched)
 		rendered, err := promptout.RenderPrompt(data, tmpl)
@@ -278,4 +293,17 @@ func loadAssetProperties(ctx context.Context, loadSnapshots compose.SnapshotLoad
 		}
 	}
 	return "", nil
+}
+
+// loadTraceAssessments reads a trace JSON file and returns its assessments.
+func loadTraceAssessments(path string) ([]trace.Assessment, error) {
+	data, err := os.ReadFile(path) //nolint:gosec // path is a user-supplied CLI flag, cleaned by caller
+	if err != nil {
+		return nil, fmt.Errorf("read trace file %q: %w", path, err)
+	}
+	var lt trace.LogicTrace
+	if err := json.Unmarshal(data, &lt); err != nil {
+		return nil, fmt.Errorf("parse trace file %q: %w", path, err)
+	}
+	return lt.Assessments, nil
 }

@@ -31,7 +31,7 @@ func (a *App) recoverExecutePanic() {
 func (a *App) buildPanicErrorInfo(sanitized string) *ui.ErrorInfo {
 	userMsg := "internal error occurred; rerun with -vv to see details"
 	if a.Flags.Verbosity >= 2 {
-		userMsg = fmt.Sprintf("internal error: %s", sanitized)
+		userMsg = "internal error: " + sanitized
 	}
 
 	action := "Rerun with -vv, then run `stave-dev doctor` or contact support if this error persists."

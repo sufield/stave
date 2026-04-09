@@ -1,0 +1,38 @@
+# Security audit SBOM generation: verifies the security-audit command
+# produces valid SPDX and CycloneDX SBOMs with expected components.
+
+# --- SPDX format ---
+
+exec stave security-audit --sbom spdx --format json --out-dir $WORK/audit-spdx --now 2026-01-15T00:00:00Z --fail-on NONE
+stdout 'summary:'
+
+# SBOM file must exist in the output directory.
+exists $WORK/audit-spdx/sbom.spdx.json
+
+# Must be valid SPDX 2.3.
+exec grep -q 'SPDX-2.3' $WORK/audit-spdx/sbom.spdx.json
+
+# Must contain the stave root component.
+exec grep -q 'sufield/stave' $WORK/audit-spdx/sbom.spdx.json
+
+# Must contain a known dependency.
+exec grep -q 'spf13/cobra' $WORK/audit-spdx/sbom.spdx.json
+
+# Must contain PURL references.
+exec grep -q 'pkg:golang/' $WORK/audit-spdx/sbom.spdx.json
+
+# --- CycloneDX format ---
+
+exec stave security-audit --sbom cyclonedx --format json --out-dir $WORK/audit-cdx --now 2026-01-15T00:00:00Z --fail-on NONE
+stdout 'summary:'
+
+# SBOM file must exist.
+exists $WORK/audit-cdx/sbom.cdx.json
+
+# Must be valid CycloneDX 1.6.
+exec grep -q 'CycloneDX' $WORK/audit-cdx/sbom.cdx.json
+exec grep -q '1.6' $WORK/audit-cdx/sbom.cdx.json
+
+# Must contain components.
+exec grep -q 'sufield/stave' $WORK/audit-cdx/sbom.cdx.json
+exec grep -q 'spf13/cobra' $WORK/audit-cdx/sbom.cdx.json

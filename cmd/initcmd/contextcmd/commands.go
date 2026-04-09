@@ -3,6 +3,7 @@
 package contextcmd
 
 import (
+	"errors"
 	"fmt"
 
 	"os"
@@ -225,7 +226,7 @@ func runContextShow(cmd *cobra.Command, rawFormat string) error {
 		return resolveErr
 	}
 	if !ok || ctx == nil {
-		return &ui.UserError{Err: fmt.Errorf("no context selected; use `stave context create <name> --dir <path>` then `stave context use <name>`")}
+		return &ui.UserError{Err: errors.New("no context selected; use `stave context create <name> --dir <path>` then `stave context use <name>`")}
 	}
 
 	selectedBy := "active"

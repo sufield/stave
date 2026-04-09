@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -165,7 +166,7 @@ func checkExitCode(t *testing.T, caseDir string, got int) {
 		return
 	}
 	want := readFileTrimmed(t, path)
-	if fmt.Sprintf("%d", got) != want {
+	if strconv.Itoa(got) != want {
 		t.Errorf("exit code = %d, want %s", got, want)
 	}
 }
@@ -203,7 +204,7 @@ func checkFindingsCount(t *testing.T, caseDir string, stdout []byte) {
 	}
 	want := readFileTrimmed(t, path)
 	got := countJSONArrayPath(t, stdout, "findings")
-	if fmt.Sprintf("%d", got) != want {
+	if strconv.Itoa(got) != want {
 		t.Errorf("findings count = %d, want %s", got, want)
 	}
 }

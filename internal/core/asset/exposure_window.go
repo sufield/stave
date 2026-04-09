@@ -2,7 +2,7 @@ package asset
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"time"
 
 	"github.com/sufield/stave/internal/core/kernel"
@@ -99,7 +99,7 @@ func (w *ExposureWindow) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if payload.OpenedAt.IsZero() {
-		return fmt.Errorf("exposure_window opened_at is required")
+		return errors.New("exposure_window opened_at is required")
 	}
 
 	if payload.IsActive {

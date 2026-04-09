@@ -79,7 +79,7 @@ func ResolveProjectConfig(in ProjectConfigInput) (ResolvedProjectConfig, error) 
 	slices.Sort(packNames)
 
 	if in.PackRegistry == nil {
-		return ResolvedProjectConfig{}, fmt.Errorf("pack registry is required when enabled_control_packs is set")
+		return ResolvedProjectConfig{}, errors.New("pack registry is required when enabled_control_packs is set")
 	}
 	resolvedIDs, err := in.PackRegistry.ResolveEnabledPacks(packNames)
 	if err != nil {

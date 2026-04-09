@@ -2,9 +2,8 @@ package catalog
 
 import (
 	"context"
+	"errors"
 	"testing"
-
-	"fmt"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
 )
@@ -213,7 +212,7 @@ func TestCatalogBrowser_Browse(t *testing.T) {
 }
 
 func TestCatalogBrowser_BrowseError(t *testing.T) {
-	provider := &stubProvider{err: fmt.Errorf("not found")}
+	provider := &stubProvider{err: errors.New("not found")}
 	runner := &CatalogBrowser{Provider: provider}
 
 	_, err := runner.Browse(context.Background(), DiscoveryRequest{PolicySource: "bad", OrderBy: "id"})

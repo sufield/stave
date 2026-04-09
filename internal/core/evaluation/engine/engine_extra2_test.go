@@ -1,7 +1,7 @@
 package engine
 
 import (
-	"fmt"
+	"errors"
 	"testing"
 	"time"
 
@@ -125,7 +125,7 @@ func TestCheckUnsafe_EvaluatorError(t *testing.T) {
 	snap := asset.Snapshot{}
 
 	eval := func(_ policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
-		return true, fmt.Errorf("some error")
+		return true, errors.New("some error")
 	}
 
 	result := checkUnsafe(ctl, a, snap, eval)

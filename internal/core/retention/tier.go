@@ -3,6 +3,7 @@
 package retention
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -21,7 +22,7 @@ type Tier struct {
 // Validate checks if the tier configuration is semantically correct.
 func (t Tier) Validate() error {
 	if t.OlderThan == "" {
-		return fmt.Errorf("retention: older_than must not be empty")
+		return errors.New("retention: older_than must not be empty")
 	}
 	_, err := t.Duration()
 	return err
@@ -57,10 +58,10 @@ type Rule struct {
 // Validate ensures the rule has both a pattern and a target tier.
 func (r Rule) Validate() error {
 	if r.Pattern == "" {
-		return fmt.Errorf("retention rule: pattern is required")
+		return errors.New("retention rule: pattern is required")
 	}
 	if r.Tier == "" {
-		return fmt.Errorf("retention rule: tier name is required")
+		return errors.New("retention rule: tier name is required")
 	}
 	return nil
 }

@@ -1,7 +1,7 @@
 package apply
 
 import (
-	"fmt"
+	"errors"
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
@@ -181,7 +181,7 @@ func (o *Options) bindApplySpecific(cmd *cobra.Command) {
 
 func (o *Options) validate() error {
 	if o.Profile != "" && o.InputFile == "" {
-		return &ui.UserError{Err: fmt.Errorf("flag --input is required when using --profile")}
+		return &ui.UserError{Err: errors.New("flag --input is required when using --profile")}
 	}
 	return nil
 }

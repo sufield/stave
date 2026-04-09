@@ -7,6 +7,7 @@ package controldef
 // output array — nothing is silently dropped.
 
 import (
+	"errors"
 	"fmt"
 	"slices"
 	"sync"
@@ -89,10 +90,10 @@ type ExceptionRule struct {
 // Validate ensures the rule has the required identifiers.
 func (r ExceptionRule) Validate() error {
 	if r.ControlID == "" {
-		return fmt.Errorf("exception rule: control_id is required")
+		return errors.New("exception rule: control_id is required")
 	}
 	if r.AssetID == "" {
-		return fmt.Errorf("exception rule: asset_id is required")
+		return errors.New("exception rule: asset_id is required")
 	}
 	return nil
 }

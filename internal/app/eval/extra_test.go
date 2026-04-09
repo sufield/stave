@@ -3,7 +3,7 @@ package eval
 import (
 	"bytes"
 	"context"
-	"fmt"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -340,7 +340,7 @@ func TestOutputPipeline_Run_EnrichError(t *testing.T) {
 	pipeline := &OutputPipeline{
 		Marshaler: &marshalerStub{},
 		Enricher: func(_ evaluation.ComplianceReport) (appcontracts.EnrichedResult, error) {
-			return appcontracts.EnrichedResult{}, fmt.Errorf("enrich failed")
+			return appcontracts.EnrichedResult{}, errors.New("enrich failed")
 		},
 	}
 	err := pipeline.Run(context.Background(), &buf, evaluation.ComplianceReport{})

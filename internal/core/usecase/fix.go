@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"errors"
 	"fmt"
 )
 
@@ -35,7 +36,7 @@ func Fix(ctx context.Context, req FixRequest, deps FixDeps) (FixResponse, error)
 	}
 
 	if req.FindingRef == "" {
-		return FixResponse{}, fmt.Errorf("fix: finding selector cannot be empty")
+		return FixResponse{}, errors.New("fix: finding selector cannot be empty")
 	}
 
 	data, err := deps.Loader.LoadFindingWithPlan(ctx, req.InputPath, req.FindingRef)
@@ -82,10 +83,10 @@ func FixLoop(ctx context.Context, req FixLoopRequest, deps LoopDeps) (FixLoopRes
 	}
 
 	if req.BeforeDir == "" {
-		return FixLoopResponse{}, fmt.Errorf("fix-loop: before observations directory is required")
+		return FixLoopResponse{}, errors.New("fix-loop: before observations directory is required")
 	}
 	if req.AfterDir == "" {
-		return FixLoopResponse{}, fmt.Errorf("fix-loop: after observations directory is required")
+		return FixLoopResponse{}, errors.New("fix-loop: after observations directory is required")
 	}
 
 	resp, err := deps.Runner.RunFixLoop(ctx, req)

@@ -183,5 +183,5 @@ func resolveOutDir(raw string, now time.Time) string {
 	if strings.TrimSpace(outDir) != "" {
 		return outDir
 	}
-	return fmt.Sprintf("security-audit-%s", now.UTC().Format("20060102T150405Z"))
+	return "security-audit-" + now.UTC().Format("20060102T150405Z")
 }

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -68,7 +69,7 @@ func (m *Editor[T]) Set(key, value string) (MutationResult, error) {
 func (m *Editor[T]) Delete(key string) (MutationResult, error) {
 	cfg, cfgPath, existed := m.DeleteStore.Find()
 	if !existed {
-		return MutationResult{}, fmt.Errorf("no config file found — nothing to delete")
+		return MutationResult{}, errors.New("no config file found — nothing to delete")
 	}
 
 	if err := m.DeleteStore.Delete(cfg, key); err != nil {

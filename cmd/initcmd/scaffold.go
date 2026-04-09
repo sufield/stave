@@ -1,6 +1,7 @@
 package initcmd
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -87,7 +88,7 @@ func (r *InitRunner) Run(req *InitRequest) error {
 func validateScaffoldInputs(rawDir, profile, cadence string) (string, error) {
 	dir := fsutil.CleanUserPath(rawDir)
 	if dir == "" {
-		return "", &ui.UserError{Err: fmt.Errorf("--dir cannot be empty")}
+		return "", &ui.UserError{Err: errors.New("--dir cannot be empty")}
 	}
 	if profile != "" && profile != profileAWSS3 {
 		return "", &ui.UserError{Err: fmt.Errorf("unsupported --profile %q (supported: aws-s3)", profile)}

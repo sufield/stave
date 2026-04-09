@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"reflect"
 	"slices"
@@ -45,7 +46,7 @@ type SettingPath struct {
 func IdentifySetting(raw string) (SettingPath, error) {
 	raw = strings.TrimSpace(raw)
 	if raw == "" {
-		return SettingPath{}, fmt.Errorf("governance setting name cannot be empty")
+		return SettingPath{}, errors.New("governance setting name cannot be empty")
 	}
 
 	if after, ok := strings.CutPrefix(raw, RetentionPrefix); ok {
@@ -193,7 +194,7 @@ func ConfigureLifecycleTier(cfg *WorkspacePolicy, tierName, property, value stri
 	case "keep_min":
 		tmp := 0
 		if err := json.Unmarshal([]byte(value), &tmp); err != nil || tmp < 0 {
-			return fmt.Errorf("keep_min must be a non-negative integer")
+			return errors.New("keep_min must be a non-negative integer")
 		}
 		tc.KeepMin = tmp
 	default:

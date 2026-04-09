@@ -2,6 +2,7 @@ package setup
 
 import (
 	"context"
+	"errors"
 	"fmt"
 )
 
@@ -26,7 +27,7 @@ func ContextCreate(ctx context.Context, req ContextCreateRequest, deps ContextDe
 	}
 
 	if req.Name == "" {
-		return ContextCreateResponse{}, fmt.Errorf("context-create: name is required")
+		return ContextCreateResponse{}, errors.New("context-create: name is required")
 	}
 
 	if err := deps.Store.CreateContext(ctx, req); err != nil {
@@ -59,7 +60,7 @@ func ContextUse(ctx context.Context, req ContextUseRequest, deps ContextDeps) (C
 	}
 
 	if req.Name == "" {
-		return ContextUseResponse{}, fmt.Errorf("context-use: name is required")
+		return ContextUseResponse{}, errors.New("context-use: name is required")
 	}
 
 	if err := deps.Store.UseContext(ctx, req.Name); err != nil {
@@ -92,7 +93,7 @@ func ContextDelete(ctx context.Context, req ContextDeleteRequest, deps ContextDe
 	}
 
 	if req.Name == "" {
-		return ContextDeleteResponse{}, fmt.Errorf("context-delete: name is required")
+		return ContextDeleteResponse{}, errors.New("context-delete: name is required")
 	}
 
 	if err := deps.Store.DeleteContext(ctx, req.Name); err != nil {

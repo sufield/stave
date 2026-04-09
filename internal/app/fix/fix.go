@@ -4,6 +4,7 @@ package fix
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -54,7 +55,7 @@ func (s *Service) Fix(ctx context.Context, req Request) error {
 	}
 	needle := strings.TrimSpace(req.FindingRef)
 	if needle == "" {
-		return fmt.Errorf("finding reference selector cannot be empty")
+		return errors.New("finding reference selector cannot be empty")
 	}
 
 	path := filepath.Clean(req.InputPath)

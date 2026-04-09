@@ -9,6 +9,7 @@
 package snapplan
 
 import (
+	"errors"
 	"fmt"
 	"maps"
 	"slices"
@@ -121,7 +122,7 @@ type BuildPlanParams struct {
 // duration strings in Tier.OlderThan).
 func BuildPlan(params BuildPlanParams) (*PlanOutput, error) {
 	if params.Now.IsZero() {
-		return nil, fmt.Errorf("BuildPlan requires non-zero Now (resolve from --now flag or clock)")
+		return nil, errors.New("BuildPlan requires non-zero Now (resolve from --now flag or clock)")
 	}
 
 	mode, applied := resolveMode(params.Apply, params.Force, params.ArchiveDir)

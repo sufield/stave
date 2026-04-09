@@ -2,6 +2,7 @@
 package builtin
 
 import (
+	"errors"
 	"fmt"
 	"slices"
 	"strings"
@@ -21,7 +22,7 @@ type Selector struct {
 func ParseSelector(s string) (Selector, error) {
 	s = strings.TrimSpace(s)
 	if s == "" {
-		return Selector{}, fmt.Errorf("empty selector")
+		return Selector{}, errors.New("empty selector")
 	}
 
 	parts := strings.Split(s, "/")

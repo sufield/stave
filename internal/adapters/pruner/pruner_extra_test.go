@@ -141,7 +141,7 @@ func TestListSnapshotFilesFlat_MetadataLoaderError(t *testing.T) {
 
 	_, err := ListSnapshotFilesFlat(context.Background(), dir, ScannerOptions{
 		MetadataLoader: func(_, name string) (time.Time, error) {
-			return time.Time{}, fmt.Errorf("parse error")
+			return time.Time{}, errors.New("parse error")
 		},
 	})
 	if err == nil {

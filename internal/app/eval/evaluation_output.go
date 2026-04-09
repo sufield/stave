@@ -2,6 +2,7 @@ package eval
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -48,7 +49,7 @@ func (p *OutputPipeline) Run(ctx context.Context, w io.Writer, result evaluation
 	}
 
 	if len(data) == 0 {
-		return fmt.Errorf("no output generated")
+		return errors.New("no output generated")
 	}
 
 	_, err = runStep(p.Logger, "write", func() (int, error) {

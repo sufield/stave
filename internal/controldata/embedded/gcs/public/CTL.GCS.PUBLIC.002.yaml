@@ -1,0 +1,39 @@
+dsl_version: ctrl.v1
+id: CTL.GCS.PUBLIC.002
+name: No Public GCS Bucket Listing
+description: >
+  GCS buckets must not allow public listing. Anonymous bucket listing
+  exposes the full object inventory, enabling bulk data discovery.
+domain: exposure
+severity: high
+compliance:
+  cis_gcp_v1.3.0: "5.1"
+scope_tags:
+  - gcp
+  - gcs
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Bucket allows public listing. Anonymous users can enumerate all
+    object keys in the bucket.
+  action: >
+    Remove allUsers from bucket IAM bindings for storage.objects.list.
+    Enable uniform bucket-level access to prevent object ACL overrides.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "access": {
+          "public_list": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.access.public_list
+      op: eq
+      value: true

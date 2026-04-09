@@ -35,7 +35,15 @@ I am using **Stave**, an offline configuration safety evaluator, to detect infra
 ### Control Guidance
 
 {{ .Guidance }}
-{{end}}{{end}}{{if .AssetProperties}}
+{{end}}{{if .Trace}}
+### Evaluation Logic Trace
+
+**Verdict:** {{ .Trace.Verdict }} | **Confidence:** {{ .Trace.Confidence }}
+
+| Step | Input | Result |
+|------|-------|--------|
+{{range .Trace.Steps}}| {{ .Name }} | {{ .Input }} | {{ .Result }} |
+{{end}}{{end}}{{end}}{{if .AssetProperties}}
 ## Asset Properties (Latest Snapshot)
 
 ```json

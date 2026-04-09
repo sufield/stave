@@ -68,7 +68,7 @@ type Statement struct {
 // StatementID returns a kernel-compatible ID based on Sid or index.
 func (s Statement) StatementID(index int) kernel.StatementID {
 	if s.Sid != "" {
-		return kernel.StatementID(fmt.Sprintf("sid:%s", s.Sid))
+		return kernel.StatementID("sid:" + s.Sid)
 	}
 	return kernel.StatementID(fmt.Sprintf("idx:%d", index))
 }

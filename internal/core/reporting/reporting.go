@@ -2,6 +2,7 @@ package reporting
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -74,10 +75,10 @@ func PromptFromFinding(ctx context.Context, req PromptFromFindingRequest, deps P
 		return PromptFromFindingResponse{}, fmt.Errorf("prompt-from-finding: %w", err)
 	}
 	if req.EvaluationFile == "" {
-		return PromptFromFindingResponse{}, fmt.Errorf("prompt-from-finding: evaluation file is required")
+		return PromptFromFindingResponse{}, errors.New("prompt-from-finding: evaluation file is required")
 	}
 	if req.AssetID == "" {
-		return PromptFromFindingResponse{}, fmt.Errorf("prompt-from-finding: asset ID is required")
+		return PromptFromFindingResponse{}, errors.New("prompt-from-finding: asset ID is required")
 	}
 	resp, err := deps.Generator.GeneratePrompt(ctx, req)
 	if err != nil {

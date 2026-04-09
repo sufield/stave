@@ -6,6 +6,7 @@ package yaml
 import (
 	"cmp"
 	"context"
+	"errors"
 	"fmt"
 	"slices"
 	"strings"
@@ -153,7 +154,7 @@ func (l *ControlLoader) resolveAlias(ctl *policy.ControlDefinition) error {
 		return fmt.Errorf("unsafe_predicate_alias %q requires an alias resolver", alias)
 	}
 	if len(ctl.UnsafePredicate.Any) > 0 || len(ctl.UnsafePredicate.All) > 0 {
-		return fmt.Errorf("cannot set both unsafe_predicate and unsafe_predicate_alias")
+		return errors.New("cannot set both unsafe_predicate and unsafe_predicate_alias")
 	}
 	expanded, ok := l.aliasResolver(alias)
 	if !ok {

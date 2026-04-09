@@ -3,6 +3,7 @@ package docs
 import (
 	"bufio"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -40,7 +41,7 @@ type OpenRunner struct{}
 // Presentation is handled by the caller.
 func (r *OpenRunner) Run(ctx context.Context, req OpenRequest) (OpenResult, error) {
 	if strings.TrimSpace(req.Topic) == "" {
-		return OpenResult{}, fmt.Errorf("topic cannot be empty")
+		return OpenResult{}, errors.New("topic cannot be empty")
 	}
 
 	files, err := collectDocsFiles(req.Root, req.Paths)

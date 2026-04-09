@@ -1,0 +1,103 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "8c689f6d24c05eac181fce6c618a52e373bc70fa5e642f8f7cc9846d57efdfd6",
+        "2026-01-11T000000Z.json": "739b1aa49b516deb709d9f976aa92a53d7d5872588254a2f8f677ccc00352b6a"
+      },
+      "overall": "ea44c57c5d4582413f52204ad7ba63f76d9004dae56bf3bcb096f3d9ccc819e0"
+    },
+    "policy_fingerprint": "cd131d79e0cfec54d85f162fb2e884d5d5d779eceb8b95ec472dd3387429a08f"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.IAM.ROOT.MFA.001",
+      "asset_id": "aws-account-root",
+      "asset_type": "aws_iam_account",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.IAM.ROOT.MFA.001",
+      "control_name": "Root Account Must Have MFA Enabled",
+      "control_description": "The AWS root account must have multi-factor authentication enabled. Root has unrestricted access to all resources. Compromise without MFA is the highest-severity identity risk.\n",
+      "asset_id": "aws-account-root",
+      "asset_type": "aws_iam_account",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "identity.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "account"
+          },
+          {
+            "property": "identity.root.mfa_enabled",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance": {
+        "cis_aws_v1.4.0": "1.5",
+        "hipaa": "164.312(d)",
+        "pci_dss_v3.2.1": "8.3",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
+      "remediation": {
+        "description": "Root account does not have MFA enabled. An attacker with root credentials can perform any action in the AWS account.",
+        "action": "Enable MFA on the root account using a hardware MFA device or virtual MFA app. Navigate to IAM \u003e Security credentials \u003e MFA.",
+        "example": "{\n  \"identity\": {\n    \"kind\": \"account\",\n    \"root\": {\n      \"mfa_enabled\": true\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-iam-root-mfa/controls",
+      "observations": "testdata/e2e/e2e-iam-root-mfa/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "b472e5a4331ec1a9c14754ddc0885ffb781f71c2",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-iam-root-mfa/controls/"
+      ]
+    }
+  }
+}

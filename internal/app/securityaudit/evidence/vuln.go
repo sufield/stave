@@ -224,7 +224,7 @@ func (p DefaultVulnProvider) loadVulnEvidenceFromCandidates(candidates []string,
 			Freshness:    freshness,
 			FindingCount: count,
 			RawJSON:      append(payload, '\n'),
-			Details:      fmt.Sprintf("loaded vulnerability evidence from %s", candidate),
+			Details:      "loaded vulnerability evidence from " + candidate,
 		}, now), true
 	}
 	return VulnerabilitySnapshot{}, false
