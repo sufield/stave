@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.INCOMPLETE.001
+name: Complete Data Required for RDS Assessment
+description: >
+  RDS instance safety cannot be assessed when encryption status is
+  missing from the snapshot. The extractor must populate
+  database.encryption.storage_encrypted.
+domain: exposure
+severity: low
+scope_tags:
+  - aws
+  - rds
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    RDS assessment data is incomplete. The extractor did not populate
+    required database properties.
+  action: >
+    Re-run the extractor with RDS permissions:
+    rds:DescribeDBInstances, rds:DescribeDBClusters.
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: instance
+    - field: properties.database.encryption.storage_encrypted
+      op: missing
+      value: true

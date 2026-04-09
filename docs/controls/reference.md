@@ -3,21 +3,21 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 84
-**Pack hash:** `ec85052465eb9d0568a5880791d22e7206c6bf4f7d0bbf0ff5fabb2d435ca553`
+**Total controls:** 95
+**Pack hash:** `ca40898938d929644ab5aa7d38d00d1f57881e0256c4b052fe0cf9bfff491669`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 19 |
-| high | 34 |
-| low | 7 |
-| medium | 24 |
+| critical | 20 |
+| high | 38 |
+| low | 9 |
+| medium | 28 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 67 |
+| exposure | 78 |
 | governance | 2 |
 | identity | 11 |
 | storage | 4 |
@@ -137,6 +137,80 @@ EC2 instances should not have public IP addresses unless explicitly required. Pu
 EBS snapshots must be encrypted. Unencrypted snapshots can be shared across accounts or made public, exposing data at rest.
 
 **Remediation:** Copy the snapshot with encryption enabled. Delete the unencrypted snapshot. Enable EBS encryption by default for future snapshots.
+
+---
+
+### CTL.ELB.CROSSZONE.001
+
+**Load Balancer Must Have Cross-Zone Load Balancing Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.308(a)(7);
+
+Load balancers must distribute traffic across all registered targets in all enabled Availability Zones. Without cross-zone balancing, uneven distribution can cause availability issues during AZ failures.
+
+**Remediation:** Enable cross-zone load balancing. Run: aws elbv2 modify-load-balancer-attributes --load-balancer-arn xxx --attributes Key=load_balancing.cross_zone.enabled,Value=true
+
+---
+
+### CTL.ELB.HTTPS.001
+
+**Load Balancer Must Redirect HTTP to HTTPS**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(e)(2)(ii);
+
+Load balancers serving PHI must redirect all HTTP traffic to HTTPS. Allowing plaintext HTTP exposes data in transit to interception.
+
+**Remediation:** Add a listener rule on port 80 that redirects to HTTPS (443) with status code 301.
+
+---
+
+### CTL.ELB.INCOMPLETE.001
+
+**Complete Data Required for ELB Assessment**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+
+Load balancer safety cannot be assessed when TLS configuration is missing from the snapshot. The extractor must populate loadbalancer.encryption.tls_1_2_or_higher.
+
+**Remediation:** Re-run the extractor with ELB permissions: elasticloadbalancing:DescribeLoadBalancers, elasticloadbalancing:DescribeLoadBalancerAttributes, elasticloadbalancing:DescribeListeners.
+
+---
+
+### CTL.ELB.LOG.001
+
+**Load Balancer Access Logging Must Be Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(b);
+
+Load balancer access logging must be enabled for audit and forensic analysis. Without access logs, request patterns and potential unauthorized access cannot be investigated after an incident.
+
+**Remediation:** Enable access logging to an S3 bucket. Run: aws elbv2 modify-load-balancer-attributes --load-balancer-arn xxx --attributes Key=access_logs.s3.enabled,Value=true Key=access_logs.s3.bucket,Value=my-elb-logs
+
+---
+
+### CTL.ELB.TLS.001
+
+**Load Balancer Must Use TLS 1.2 or Higher**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(e)(2)(ii);
+
+Application and Network Load Balancers must use TLS 1.2 or higher for HTTPS listeners. Older TLS versions have known vulnerabilities.
+
+**Remediation:** Update the HTTPS listener to use an ELBSecurityPolicy that enforces TLS 1.2 minimum (e.g., ELBSecurityPolicy-TLS-1-2-2017-01).
 
 ---
 
@@ -405,6 +479,95 @@ The AWS root account must not have active access keys. Root access keys provide 
 The AWS root account must have multi-factor authentication enabled. Root has unrestricted access to all resources. Compromise without MFA is the highest-severity identity risk.
 
 **Remediation:** Enable MFA on the root account using a hardware MFA device or virtual MFA app. Navigate to IAM > Security credentials > MFA.
+
+---
+
+### CTL.RDS.BACKUP.001
+
+**RDS Automated Backups Must Be Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.308(a)(7); hipaa_retention: 164.316(b)(2);
+
+RDS instances must have automated backups enabled with a retention period of at least 7 days. Without backups, data loss from accidental deletion, corruption, or ransomware is permanent.
+
+**Remediation:** Enable automated backups with at least 7 days retention. Run: aws rds modify-db-instance --db-instance-identifier xxx --backup-retention-period 7 --apply-immediately
+
+---
+
+### CTL.RDS.ENCRYPT.001
+
+**RDS Storage Encryption Must Be Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v1.4.0: 2.3.1; hipaa: 164.312(a)(2)(iv);
+
+RDS instances must have storage encryption enabled. Unencrypted database storage exposes data at rest to unauthorized access if the underlying storage is compromised.
+
+**Remediation:** Storage encryption can only be enabled at creation time. Create a snapshot, copy it with encryption enabled, then restore to a new encrypted instance. Enable encryption by default for new instances.
+
+---
+
+### CTL.RDS.INCOMPLETE.001
+
+**Complete Data Required for RDS Assessment**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+
+RDS instance safety cannot be assessed when encryption status is missing from the snapshot. The extractor must populate database.encryption.storage_encrypted.
+
+**Remediation:** Re-run the extractor with RDS permissions: rds:DescribeDBInstances, rds:DescribeDBClusters.
+
+---
+
+### CTL.RDS.LOG.001
+
+**RDS Audit Logging Must Be Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(b);
+
+RDS instances must export audit logs to CloudWatch. Without audit logging, database access patterns cannot be monitored and unauthorized queries are undetectable.
+
+**Remediation:** Enable CloudWatch log exports for the database engine. Run: aws rds modify-db-instance --db-instance-identifier xxx --cloudwatch-logs-export-configuration '{"EnableLogTypes":["audit","error","slowquery"]}'
+
+---
+
+### CTL.RDS.MULTIAZ.001
+
+**RDS Instances Must Use Multi-AZ Deployment**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.308(a)(7);
+
+Production RDS instances must use Multi-AZ deployment for high availability. Single-AZ instances have a single point of failure that can cause data unavailability during AZ outages.
+
+**Remediation:** Modify the instance to enable Multi-AZ. Run: aws rds modify-db-instance --db-instance-identifier xxx --multi-az --apply-immediately
+
+---
+
+### CTL.RDS.PUBLIC.001
+
+**RDS Instances Must Not Be Publicly Accessible**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v1.4.0: 2.3.2; hipaa: 164.312(a)(1);
+
+RDS instances must not have public accessibility enabled. A publicly accessible database is reachable from the internet, exposing it to brute force attacks, SQL injection, and unauthorized data access.
+
+**Remediation:** Modify the instance to disable public accessibility. Run: aws rds modify-db-instance --db-instance-identifier xxx --no-publicly-accessible --apply-immediately
 
 ---
 

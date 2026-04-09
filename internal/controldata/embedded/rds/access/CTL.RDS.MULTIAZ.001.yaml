@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.MULTIAZ.001
+name: RDS Instances Must Use Multi-AZ Deployment
+description: >
+  Production RDS instances must use Multi-AZ deployment for high
+  availability. Single-AZ instances have a single point of failure
+  that can cause data unavailability during AZ outages.
+domain: exposure
+severity: medium
+compliance:
+  hipaa: "164.308(a)(7)"
+scope_tags:
+  - aws
+  - rds
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    RDS instance is not configured for Multi-AZ deployment. An AZ
+    outage will cause database unavailability.
+  action: >
+    Modify the instance to enable Multi-AZ. Run:
+    aws rds modify-db-instance --db-instance-identifier xxx
+    --multi-az --apply-immediately
+  example: |
+    {
+      "database": {
+        "kind": "instance",
+        "access": {
+          "multi_az": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: instance
+    - field: properties.database.access.multi_az
+      op: eq
+      value: false

@@ -1,0 +1,38 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.CROSSZONE.001
+name: Load Balancer Must Have Cross-Zone Load Balancing Enabled
+description: >
+  Load balancers must distribute traffic across all registered targets
+  in all enabled Availability Zones. Without cross-zone balancing,
+  uneven distribution can cause availability issues during AZ failures.
+domain: exposure
+severity: medium
+compliance:
+  hipaa: "164.308(a)(7)"
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Load balancer does not have cross-zone load balancing enabled.
+    Traffic is not evenly distributed across AZs.
+  action: >
+    Enable cross-zone load balancing. Run:
+    aws elbv2 modify-load-balancer-attributes --load-balancer-arn xxx
+    --attributes Key=load_balancing.cross_zone.enabled,Value=true
+  example: |
+    {
+      "loadbalancer": {
+        "kind": "alb",
+        "availability": {
+          "cross_zone_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.loadbalancer.availability.cross_zone_enabled
+      op: eq
+      value: false

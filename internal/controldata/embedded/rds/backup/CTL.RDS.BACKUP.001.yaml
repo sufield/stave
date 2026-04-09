@@ -1,0 +1,43 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.BACKUP.001
+name: RDS Automated Backups Must Be Enabled
+description: >
+  RDS instances must have automated backups enabled with a retention
+  period of at least 7 days. Without backups, data loss from accidental
+  deletion, corruption, or ransomware is permanent.
+domain: exposure
+severity: high
+compliance:
+  hipaa: "164.308(a)(7)"
+  hipaa_retention: "164.316(b)(2)"
+scope_tags:
+  - aws
+  - rds
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    RDS instance has automated backups disabled or retention period
+    is too short. Data loss is not recoverable.
+  action: >
+    Enable automated backups with at least 7 days retention. Run:
+    aws rds modify-db-instance --db-instance-identifier xxx
+    --backup-retention-period 7 --apply-immediately
+  example: |
+    {
+      "database": {
+        "kind": "instance",
+        "backup": {
+          "enabled": true,
+          "retention_days": 7
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: instance
+    - field: properties.database.backup.enabled
+      op: eq
+      value: false

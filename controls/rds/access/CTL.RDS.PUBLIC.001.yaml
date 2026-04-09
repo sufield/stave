@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.PUBLIC.001
+name: RDS Instances Must Not Be Publicly Accessible
+description: >
+  RDS instances must not have public accessibility enabled. A publicly
+  accessible database is reachable from the internet, exposing it to
+  brute force attacks, SQL injection, and unauthorized data access.
+domain: exposure
+severity: critical
+compliance:
+  hipaa: "164.312(a)(1)"
+  cis_aws_v1.4.0: "2.3.2"
+scope_tags:
+  - aws
+  - rds
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    RDS instance is publicly accessible. The database can be reached
+    from the internet.
+  action: >
+    Modify the instance to disable public accessibility. Run:
+    aws rds modify-db-instance --db-instance-identifier xxx
+    --no-publicly-accessible --apply-immediately
+  example: |
+    {
+      "database": {
+        "kind": "instance",
+        "access": {
+          "publicly_accessible": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: instance
+    - field: properties.database.access.publicly_accessible
+      op: eq
+      value: true

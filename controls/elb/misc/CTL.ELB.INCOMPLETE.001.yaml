@@ -1,0 +1,28 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.INCOMPLETE.001
+name: Complete Data Required for ELB Assessment
+description: >
+  Load balancer safety cannot be assessed when TLS configuration is
+  missing from the snapshot. The extractor must populate
+  loadbalancer.encryption.tls_1_2_or_higher.
+domain: exposure
+severity: low
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    ELB assessment data is incomplete. The extractor did not populate
+    required loadbalancer properties.
+  action: >
+    Re-run the extractor with ELB permissions:
+    elasticloadbalancing:DescribeLoadBalancers,
+    elasticloadbalancing:DescribeLoadBalancerAttributes,
+    elasticloadbalancing:DescribeListeners.
+unsafe_predicate:
+  all:
+    - field: properties.loadbalancer.encryption.tls_1_2_or_higher
+      op: missing
+      value: true
