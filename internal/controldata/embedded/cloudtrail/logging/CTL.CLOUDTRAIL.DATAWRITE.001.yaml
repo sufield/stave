@@ -9,6 +9,8 @@ domain: exposure
 severity: high
 compliance:
   cis_aws_v3.0: "3.8"
+  soc2: "CC6.2"
+  pci_dss_v4.0: "10.2.1.7"
 scope_tags:
   - aws
   - cloudtrail

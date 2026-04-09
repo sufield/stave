@@ -34,15 +34,19 @@ const (
 	ProfileHIPAA Profile = "hipaa"
 	// ProfileCISv3 selects the CIS AWS Foundations Benchmark v3.0 profile.
 	ProfileCISv3 Profile = "cis-aws-v3.0"
+	// ProfileSOC2 selects the SOC 2 Trust Service Criteria profile.
+	ProfileSOC2 Profile = "soc2"
+	// ProfilePCIDSSv4 selects the PCI-DSS v4.0 profile.
+	ProfilePCIDSSv4 Profile = "pci-dss-v4.0"
 )
 
 // ParseProfile validates and returns a Profile value.
 func ParseProfile(s string) (Profile, error) {
 	switch Profile(s) {
-	case ProfileAWSS3, ProfileAWSIAM, ProfileGCPGCS, ProfileHIPAA, ProfileCISv3:
+	case ProfileAWSS3, ProfileAWSIAM, ProfileGCPGCS, ProfileHIPAA, ProfileCISv3, ProfileSOC2, ProfilePCIDSSv4:
 		return Profile(s), nil
 	default:
-		return "", fmt.Errorf("unsupported --profile %q (supported: aws-s3, aws-iam, gcp-gcs, hipaa, cis-aws-v3.0)", s)
+		return "", fmt.Errorf("unsupported --profile %q (supported: aws-s3, aws-iam, gcp-gcs, hipaa, cis-aws-v3.0, soc2, pci-dss-v4.0)", s)
 	}
 }
 
@@ -196,7 +200,7 @@ func profileControlDomain(prof Profile) string {
 		return "iam"
 	case ProfileGCPGCS:
 		return "gcs"
-	case ProfileHIPAA, ProfileCISv3:
+	case ProfileHIPAA, ProfileCISv3, ProfileSOC2, ProfilePCIDSSv4:
 		return "" // Cross-domain: loads all, filtered by compliance ref.
 	default:
 		return "s3"
@@ -212,6 +216,10 @@ func profileComplianceFramework(prof Profile) policy.ComplianceFramework {
 		return "hipaa"
 	case ProfileCISv3:
 		return "cis_aws_v3.0"
+	case ProfileSOC2:
+		return "soc2"
+	case ProfilePCIDSSv4:
+		return "pci_dss_v4.0"
 	default:
 		return ""
 	}

@@ -9,6 +9,9 @@ description: >
   at rest.
 domain: exposure
 severity: high
+compliance:
+  soc2: "CC6.7"
+  pci_dss_v4.0: "3.5.1"
 scope_tags:
   - aws
   - s3

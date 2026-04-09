@@ -1,0 +1,35 @@
+dsl_version: ctrl.v1
+id: CTL.SQS.DLQ.001
+name: SQS Queues Must Have Dead-Letter Queue Configured
+description: >
+  SQS queues processing critical workloads must have a dead-letter queue configured. Without a DLQ, messages that fail processing are silently lost.
+domain: exposure
+severity: medium
+compliance:
+  soc2: "PI1.1"
+scope_tags:
+  - aws
+  - sqs
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    SQS queue does not have a dead-letter queue configured.
+  action: >
+    Configure a DLQ: aws sqs set-queue-attributes --queue-url <url> --attributes RedrivePolicy='{"deadLetterTargetArn":"<dlq-arn>","maxReceiveCount":"3"}'
+  example: |
+    {
+      {
+      "messaging": {
+        "kind": "queue",
+        "dead_letter_queue": {
+          "enabled": true
+        }
+      }
+    }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.dead_letter_queue.enabled
+      op: eq
+      value: false

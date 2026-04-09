@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.AUTOSCALING.MULTIAZ.001
+name: Auto Scaling Groups Must Span Multiple Availability Zones
+description: >
+  Auto Scaling groups must be configured across multiple AZs. A single-AZ ASG has a single point of failure during AZ outages.
+domain: exposure
+severity: high
+compliance:
+  soc2: "A1.1"
+scope_tags:
+  - aws
+  - autoscaling
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Auto Scaling group is configured in a single Availability Zone.
+  action: >
+    Update the ASG: aws autoscaling update-auto-scaling-group --auto-scaling-group-name <name> --availability-zones us-east-1a us-east-1b
+  example: |
+    {
+      {
+      "scaling": {
+        "kind": "auto_scaling_group",
+        "availability_zone_count": 3
+      }
+    }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.scaling.availability_zone_count
+      op: lt
+      value: 2

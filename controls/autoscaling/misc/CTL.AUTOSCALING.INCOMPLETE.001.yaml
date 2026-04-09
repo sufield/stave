@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.AUTOSCALING.INCOMPLETE.001
+name: Complete Data Required for Auto Scaling Assessment
+description: >
+  The observation snapshot is missing required Auto Scaling properties.
+domain: exposure
+severity: info
+compliance: {}
+scope_tags:
+  - aws
+  - autoscaling
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Observation is missing Auto Scaling properties.
+  action: >
+    Ensure the extractor calls aws autoscaling describe-auto-scaling-groups.
+  example: |
+    {
+      "scaling": {
+        "kind": "auto_scaling_group",
+        "availability_zone_count": 3
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.scaling.availability_zone_count
+      op: missing
+      value: true

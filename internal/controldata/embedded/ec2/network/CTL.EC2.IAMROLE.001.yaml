@@ -9,6 +9,7 @@ domain: identity
 severity: medium
 compliance:
   cis_aws_v3.0: "1.18"
+  soc2: "CC6.8"
 scope_tags:
   - aws
   - ec2

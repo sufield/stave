@@ -400,7 +400,9 @@
       },
       "control_severity": "high",
       "control_compliance": {
-        "hipaa": "164.312(e)(2)(ii)"
+        "hipaa": "164.312(e)(2)(ii)",
+        "pci_dss_v4.0": "4.2.1",
+        "soc2": "CC6.6"
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -444,7 +446,8 @@
       },
       "control_severity": "high",
       "control_compliance": {
-        "hipaa": "164.308(a)(7)"
+        "hipaa": "164.308(a)(7)",
+        "soc2": "A1.1"
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -488,7 +491,8 @@
       },
       "control_severity": "medium",
       "control_compliance": {
-        "hipaa": "164.308(a)(7)"
+        "hipaa": "164.308(a)(7)",
+        "soc2": "A1.1"
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -532,7 +536,8 @@
       },
       "control_severity": "medium",
       "control_compliance": {
-        "hipaa": "164.308(a)(7)"
+        "hipaa": "164.308(a)(7)",
+        "soc2": "A1.1"
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -578,7 +583,9 @@
       "control_compliance": {
         "cis_aws_v1.4.0": "3.1",
         "cis_aws_v3.0": "3.1",
-        "hipaa": "164.312(b)"
+        "hipaa": "164.312(b)",
+        "pci_dss_v4.0": "10.2.1",
+        "soc2": "CC7.1"
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -624,7 +631,9 @@
       "control_compliance": {
         "cis_aws_v1.4.0": "3.7",
         "cis_aws_v3.0": "3.5",
-        "hipaa": "164.312(a)(2)(iv)"
+        "hipaa": "164.312(a)(2)(iv)",
+        "pci_dss_v4.0": "10.5.1",
+        "soc2": "CC6.7"
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -670,7 +679,9 @@
       "control_compliance": {
         "cis_aws_v1.4.0": "3.2",
         "cis_aws_v3.0": "3.2",
-        "hipaa": "164.312(b)"
+        "hipaa": "164.312(b)",
+        "pci_dss_v4.0": "10.2.1",
+        "soc2": "CC7.1"
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -714,7 +725,8 @@
       },
       "control_severity": "medium",
       "control_compliance": {
-        "hipaa": "164.312(b)"
+        "hipaa": "164.312(b)",
+        "soc2": "CC7.1"
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -758,7 +770,9 @@
       },
       "control_severity": "high",
       "control_compliance": {
-        "hipaa": "164.312(d)"
+        "hipaa": "164.312(d)",
+        "pci_dss_v4.0": "8.3.1",
+        "soc2": "CC6.1"
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -804,7 +818,9 @@
       "control_compliance": {
         "cis_aws_v1.4.0": "3.5",
         "cis_aws_v3.0": "3.3",
-        "hipaa": "164.312(b)"
+        "hipaa": "164.312(b)",
+        "pci_dss_v4.0": "6.3.2",
+        "soc2": "CC7.1"
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -848,7 +864,9 @@
       },
       "control_severity": "medium",
       "control_compliance": {
-        "hipaa": "164.312(c)(1)"
+        "hipaa": "164.312(c)(1)",
+        "pci_dss_v4.0": "6.3.2",
+        "soc2": "CC6.3"
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -892,7 +910,9 @@
       },
       "control_severity": "high",
       "control_compliance": {
-        "hipaa": "164.312(a)(2)(iv)"
+        "hipaa": "164.312(a)(2)(iv)",
+        "pci_dss_v4.0": "3.4.1",
+        "soc2": "CC6.7"
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -938,7 +958,9 @@
       "control_compliance": {
         "cis_aws_v1.4.0": "2.2.1",
         "cis_aws_v3.0": "2.2.1",
-        "hipaa": "164.312(a)(2)(iv)"
+        "hipaa": "164.312(a)(2)(iv)",
+        "pci_dss_v4.0": "3.4.1",
+        "soc2": "CC6.7"
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -983,7 +1005,9 @@
       "control_severity": "high",
       "control_compliance": {
         "cis_aws_v1.4.0": "5.1",
-        "hipaa": "164.312(e)(1)"
+        "hipaa": "164.312(e)(1)",
+        "pci_dss_v4.0": "1.3.4",
+        "soc2": "CC6.6"
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -1061,7 +1085,9 @@
       },
       "control_severity": "high",
       "control_compliance": {
-        "hipaa": "164.312(e)(2)(ii)"
+        "hipaa": "164.312(e)(2)(ii)",
+        "pci_dss_v4.0": "4.2.1",
+        "soc2": "CC6.6"
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -1099,7 +1125,8 @@
       },
       "control_severity": "medium",
       "control_compliance": {
-        "hipaa": "164.308(a)(7)"
+        "hipaa": "164.308(a)(7)",
+        "soc2": "A1.1"
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -1137,7 +1164,9 @@
       },
       "control_severity": "high",
       "control_compliance": {
-        "hipaa": "164.312(e)(2)(ii)"
+        "hipaa": "164.312(e)(2)(ii)",
+        "pci_dss_v4.0": "4.2.1",
+        "soc2": "CC6.6"
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -1175,7 +1204,8 @@
       },
       "control_severity": "medium",
       "control_compliance": {
-        "hipaa": "164.312(b)"
+        "hipaa": "164.312(b)",
+        "soc2": "CC7.1"
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -1213,7 +1243,9 @@
       },
       "control_severity": "high",
       "control_compliance": {
-        "hipaa": "164.312(e)(2)(ii)"
+        "hipaa": "164.312(e)(2)(ii)",
+        "pci_dss_v4.0": "4.2.1",
+        "soc2": "CC6.6"
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -1261,6 +1293,7 @@
         "cis_aws_v3.0": "1.4",
         "hipaa": "164.312(a)(1)",
         "pci_dss_v3.2.1": "2.1",
+        "pci_dss_v4.0": "8.3.4",
         "soc2": "CC6.1"
       },
       "posture_drift": {
@@ -1309,6 +1342,7 @@
         "cis_aws_v3.0": "1.5",
         "hipaa": "164.312(d)",
         "pci_dss_v3.2.1": "8.3",
+        "pci_dss_v4.0": "8.3.1",
         "soc2": "CC6.1"
       },
       "posture_drift": {
@@ -1354,7 +1388,8 @@
       "control_severity": "high",
       "control_compliance": {
         "cis_k8s_v1.8.0": "3.2.1",
-        "hipaa": "164.312(b)"
+        "hipaa": "164.312(b)",
+        "soc2": "CC7.1"
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -1444,7 +1479,8 @@
       "control_severity": "critical",
       "control_compliance": {
         "cis_k8s_v1.8.0": "1.2.29",
-        "hipaa": "164.312(a)(2)(iv)"
+        "hipaa": "164.312(a)(2)(iv)",
+        "soc2": "CC6.7"
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -1488,7 +1524,9 @@
       },
       "control_severity": "high",
       "control_compliance": {
-        "hipaa": "164.312(a)(1)"
+        "hipaa": "164.312(a)(1)",
+        "pci_dss_v4.0": "3.4.1",
+        "soc2": "CC6.1"
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -1533,7 +1571,8 @@
       "control_severity": "high",
       "control_compliance": {
         "hipaa": "164.308(a)(7)",
-        "hipaa_retention": "164.316(b)(2)"
+        "hipaa_retention": "164.316(b)(2)",
+        "soc2": "A1.1"
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -1579,7 +1618,9 @@
       "control_compliance": {
         "cis_aws_v1.4.0": "2.3.1",
         "cis_aws_v3.0": "2.3.1",
-        "hipaa": "164.312(a)(2)(iv)"
+        "hipaa": "164.312(a)(2)(iv)",
+        "pci_dss_v4.0": "3.4.1",
+        "soc2": "CC6.7"
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -1623,7 +1664,8 @@
       },
       "control_severity": "medium",
       "control_compliance": {
-        "hipaa": "164.312(b)"
+        "hipaa": "164.312(b)",
+        "soc2": "CC7.1"
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -1667,7 +1709,8 @@
       },
       "control_severity": "medium",
       "control_compliance": {
-        "hipaa": "164.308(a)(7)"
+        "hipaa": "164.308(a)(7)",
+        "soc2": "A1.1"
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -1713,7 +1756,9 @@
       "control_compliance": {
         "cis_aws_v1.4.0": "2.3.2",
         "cis_aws_v3.0": "2.3.3",
-        "hipaa": "164.312(a)(1)"
+        "hipaa": "164.312(a)(1)",
+        "pci_dss_v4.0": "7.2.1",
+        "soc2": "CC6.1"
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -1791,7 +1836,8 @@
       },
       "control_severity": "medium",
       "control_compliance": {
-        "hipaa": "164.312(a)(1)"
+        "hipaa": "164.312(a)(1)",
+        "soc2": "CC6.1"
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -1835,7 +1881,9 @@
       },
       "control_severity": "high",
       "control_compliance": {
-        "hipaa": "164.312(a)(2)(iv)"
+        "hipaa": "164.312(a)(2)(iv)",
+        "pci_dss_v4.0": "3.4.1",
+        "soc2": "CC6.7"
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -1879,7 +1927,8 @@
       },
       "control_severity": "high",
       "control_compliance": {
-        "hipaa": "164.312(a)(2)(iv)"
+        "hipaa": "164.312(a)(2)(iv)",
+        "soc2": "CC6.7"
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -1923,7 +1972,8 @@
       },
       "control_severity": "high",
       "control_compliance": {
-        "hipaa": "164.312(a)(2)(iv)"
+        "hipaa": "164.312(a)(2)(iv)",
+        "soc2": "CC6.7"
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -1969,7 +2019,9 @@
       "control_compliance": {
         "cis_aws_v1.4.0": "3.9",
         "cis_aws_v3.0": "3.7",
-        "hipaa": "164.312(b)"
+        "hipaa": "164.312(b)",
+        "pci_dss_v4.0": "1.2.1",
+        "soc2": "CC7.1"
       },
       "posture_drift": {
         "pattern": "persistent",

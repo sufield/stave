@@ -10,6 +10,8 @@ description: >
   violating retention policy requirements.
 domain: exposure
 severity: medium
+compliance:
+  soc2: "C1.2"
 scope_tags:
   - aws
   - s3

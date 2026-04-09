@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.SECURITYHUB.INCOMPLETE.001
+name: Complete Data Required for Security Hub Assessment
+description: >
+  The observation snapshot is missing required Security Hub properties.
+domain: exposure
+severity: info
+compliance: {}
+scope_tags:
+  - aws
+  - securityhub
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Observation is missing Security Hub properties.
+  action: >
+    Ensure the extractor calls aws securityhub describe-hub.
+  example: |
+    {
+      "security_hub": {
+        "kind": "hub",
+        "enabled": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.security_hub.enabled
+      op: missing
+      value: true

@@ -29,6 +29,8 @@ func TestParseProfile_Valid(t *testing.T) {
 		{"aws-s3", ProfileAWSS3},
 		{"hipaa", ProfileHIPAA},
 		{"cis-aws-v3.0", ProfileCISv3},
+		{"soc2", ProfileSOC2},
+		{"pci-dss-v4.0", ProfilePCIDSSv4},
 	}
 	for _, tt := range tests {
 		got, err := ParseProfile(tt.input)
@@ -388,6 +390,8 @@ func TestProfileControlDomain(t *testing.T) {
 		{ProfileGCPGCS, "gcs"},
 		{ProfileHIPAA, ""},
 		{ProfileCISv3, ""},
+		{ProfileSOC2, ""},
+		{ProfilePCIDSSv4, ""},
 	}
 	for _, tt := range tests {
 		got := profileControlDomain(tt.prof)
@@ -407,6 +411,8 @@ func TestProfileComplianceFramework(t *testing.T) {
 		{ProfileGCPGCS, ""},
 		{ProfileHIPAA, "hipaa"},
 		{ProfileCISv3, "cis_aws_v3.0"},
+		{ProfileSOC2, "soc2"},
+		{ProfilePCIDSSv4, "pci_dss_v4.0"},
 	}
 	for _, tt := range tests {
 		got := profileComplianceFramework(tt.prof)

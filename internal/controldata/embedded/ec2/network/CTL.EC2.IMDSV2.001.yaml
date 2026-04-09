@@ -10,6 +10,8 @@ severity: high
 compliance:
   cis_aws_v1.4.0: "5.6"
   cis_aws_v3.0: "5.6"
+  soc2: "CC6.6"
+  pci_dss_v4.0: "2.2.1"
 scope_tags:
   - aws
   - ec2

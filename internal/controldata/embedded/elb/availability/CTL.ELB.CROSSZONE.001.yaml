@@ -9,6 +9,7 @@ domain: exposure
 severity: medium
 compliance:
   hipaa: "164.308(a)(7)"
+  soc2: "A1.1"
 scope_tags:
   - aws
   - elb
