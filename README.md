@@ -14,7 +14,7 @@ Stave fills this gap. Define safety controls in YAML, compile them to [CEL](http
 
 ## Features
 
-- **137 built-in controls** across 21 domains — AWS S3 (53), AWS IAM (11), GCP Cloud Storage (7), DNS (3)
+- **171 built-in controls** across 21 domains — AWS S3 (54), AWS IAM (21), GCP Cloud Storage (7), DNS (3)
 - **Unsafe duration tracking** — detects how long assets remain misconfigured across snapshots
 - **HIPAA compliance pack** — controls mapped to HIPAA Security Rule sections with compound risk detection
 - **Custom controls** — YAML with `unsafe_predicate` for any asset type, no code changes
@@ -105,9 +105,9 @@ New observation properties are additive and backward-compatible. Existing contro
 
 ## Built-in controls
 
-137 controls across 21 domains:
+171 controls across 21 domains:
 
-### AWS S3 (53 controls)
+### AWS S3 (54 controls)
 
 | Category | Count | What they detect |
 |----------|:---:|-----------------|
@@ -116,7 +116,7 @@ New observation properties are additive and backward-compatible. Existing contro
 | `access` | 8 | Cross-account, wildcard actions, presigned URLs, Access Grants |
 | `encrypt` | 4 | Missing encryption at rest/in transit, KMS for PHI |
 | `network` | 5 | VPC/IP conditions, VPC endpoint policy, Multi-Region Access Point PAB |
-| `versioning` | 2 | Disabled versioning, missing MFA delete |
+| `versioning` | 3 | Disabled versioning, missing MFA delete |
 | `lock` | 3 | Object lock mode, retention period |
 | `logging` | 2 | Access logging, CloudTrail object-level audit |
 | `lifecycle` | 2 | Lifecycle rules, PHI retention |
@@ -127,7 +127,7 @@ New observation properties are additive and backward-compatible. Existing contro
 | `artifacts` | 1 | VCS artifacts on public buckets |
 | `misc` | 2 | Incomplete data, completeness checks |
 
-### AWS IAM (11 controls)
+### AWS IAM (21 controls)
 
 Root account MFA and access keys, console user MFA, credential rotation, password policy, inline/direct policy attachment. CIS AWS Benchmark aligned.
 
