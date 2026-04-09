@@ -2,6 +2,7 @@ package archive
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"time"
@@ -100,11 +101,11 @@ func (r *runner) Render(_ context.Context, _ appeval.CleanupPlan) error {
 func resolveArchivePaths(observationsPath, archivePath string) (obsDir, archiveDir string, err error) {
 	obsDir = fsutil.CleanUserPath(observationsPath)
 	if obsDir == "" {
-		return "", "", fmt.Errorf("--observations cannot be empty")
+		return "", "", errors.New("--observations cannot be empty")
 	}
 	destArchiveDir := fsutil.CleanUserPath(archivePath)
 	if destArchiveDir == "" {
-		return "", "", fmt.Errorf("--archive-dir cannot be empty")
+		return "", "", errors.New("--archive-dir cannot be empty")
 	}
 	return obsDir, destArchiveDir, nil
 }

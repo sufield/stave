@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.INCOMPLETE.001
+name: Complete Data Required for IAM Assessment
+description: >
+  IAM account safety cannot be proven when root account MFA status or
+  access key data is missing from the snapshot. The extractor must
+  populate identity.root.mfa_enabled and identity.root.has_access_keys.
+domain: identity
+severity: low
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    IAM assessment data is incomplete. The extractor did not populate
+    required root account properties.
+  action: >
+    Re-run the extractor with IAM permissions: iam:GetAccountSummary,
+    iam:GenerateCredentialReport, iam:ListMFADevices.
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: account
+    - field: properties.identity.root.mfa_enabled
+      op: missing
+      value: true

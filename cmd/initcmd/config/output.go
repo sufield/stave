@@ -32,7 +32,7 @@ func (p *ShowPresenter) renderText(out appconfig.EffectiveConfig) error {
 		configFileLine(out.ConfigFile),
 	}
 	if out.UserConfigFile != "" {
-		lines = append(lines, fmt.Sprintf("User config: %s", out.UserConfigFile))
+		lines = append(lines, "User config: "+out.UserConfigFile)
 	}
 	lines = append(lines,
 		fmt.Sprintf("max_unsafe: %s (%s)", out.MaxUnsafeDuration.Value, out.MaxUnsafeDuration.Source),
@@ -91,7 +91,7 @@ func configFileLine(configFile string) string {
 	if configFile == "" {
 		return "Config file: (none found; using env/defaults)"
 	}
-	return fmt.Sprintf("Config file: %s", configFile)
+	return "Config file: " + configFile
 }
 
 func sortedKeys[V any](m map[string]V) []string {

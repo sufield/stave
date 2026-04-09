@@ -109,7 +109,7 @@ func findingFromOffline(in evidence.PolicyInspectionSnapshot, req Request, err e
 			Status:         outcome.Fail,
 			Severity:       policy.SeverityHigh,
 			Title:          "Offline enforcement failed",
-			Details:        fmt.Sprintf("Proxy environment variables are set: %s", strings.Join(in.ProxyVarsSet, ", ")),
+			Details:        "Proxy environment variables are set: " + strings.Join(in.ProxyVarsSet, ", "),
 			AuditorHint:    "--require-offline was requested and policy checks found proxy settings.",
 			Recommendation: "Unset proxy variables or run without --require-offline.",
 		}

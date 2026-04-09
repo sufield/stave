@@ -24,6 +24,36 @@ packs:
       - CTL.S3.PRESIGNED.001
       - CTL.S3.PUBLIC.001
       - CTL.S3.VERSION.001
+  dns:
+    description: DNS record security controls (vendor-agnostic)
+    controls:
+      - CTL.DNS.DANGLING.001
+      - CTL.DNS.DANGLING.002
+      - CTL.DNS.DANGLING.003
+  gcs:
+    description: GCP Cloud Storage security controls
+    controls:
+      - CTL.GCS.PUBLIC.001
+      - CTL.GCS.PUBLIC.002
+      - CTL.GCS.UNIFORM.001
+      - CTL.GCS.ENCRYPT.001
+      - CTL.GCS.LOG.001
+      - CTL.GCS.VERSION.001
+      - CTL.GCS.INCOMPLETE.001
+  iam:
+    description: AWS IAM identity security controls
+    controls:
+      - CTL.IAM.ROOT.MFA.001
+      - CTL.IAM.ROOT.ACCESSKEY.001
+      - CTL.IAM.CONSOLE.MFA.001
+      - CTL.IAM.CRED.UNUSED.001
+      - CTL.IAM.CRED.ROTATION.001
+      - CTL.IAM.PASSWORD.LENGTH.001
+      - CTL.IAM.PASSWORD.REUSE.001
+      - CTL.IAM.PASSWORD.COMPLEXITY.001
+      - CTL.IAM.POLICY.INLINE.001
+      - CTL.IAM.POLICY.DIRECT.001
+      - CTL.IAM.INCOMPLETE.001
   s3:
     description: Default S3 built-in pack for MVP
     controls:
@@ -240,3 +270,66 @@ controls:
   CTL.S3.CDN.EXPOSURE.001:
     path: internal/controldata/embedded/s3/public/CTL.S3.CDN.EXPOSURE.001.yaml
     summary: Private Bucket Must Not Be Publicly Exposed Via CloudFront
+  CTL.IAM.ROOT.MFA.001:
+    path: internal/controldata/embedded/iam/root/CTL.IAM.ROOT.MFA.001.yaml
+    summary: Root Account Must Have MFA Enabled
+  CTL.IAM.ROOT.ACCESSKEY.001:
+    path: internal/controldata/embedded/iam/root/CTL.IAM.ROOT.ACCESSKEY.001.yaml
+    summary: Root Account Must Not Have Access Keys
+  CTL.IAM.CONSOLE.MFA.001:
+    path: internal/controldata/embedded/iam/console/CTL.IAM.CONSOLE.MFA.001.yaml
+    summary: Console Users Must Have MFA Enabled
+  CTL.IAM.CRED.UNUSED.001:
+    path: internal/controldata/embedded/iam/credentials/CTL.IAM.CRED.UNUSED.001.yaml
+    summary: Disable Unused Credentials
+  CTL.IAM.CRED.ROTATION.001:
+    path: internal/controldata/embedded/iam/credentials/CTL.IAM.CRED.ROTATION.001.yaml
+    summary: Access Keys Must Be Rotated Within 90 Days
+  CTL.IAM.PASSWORD.LENGTH.001:
+    path: internal/controldata/embedded/iam/password/CTL.IAM.PASSWORD.LENGTH.001.yaml
+    summary: Password Minimum Length Must Be At Least 14
+  CTL.IAM.PASSWORD.REUSE.001:
+    path: internal/controldata/embedded/iam/password/CTL.IAM.PASSWORD.REUSE.001.yaml
+    summary: Password Reuse Prevention Must Be At Least 24
+  CTL.IAM.PASSWORD.COMPLEXITY.001:
+    path: internal/controldata/embedded/iam/password/CTL.IAM.PASSWORD.COMPLEXITY.001.yaml
+    summary: Password Policy Must Require All Character Types
+  CTL.IAM.POLICY.INLINE.001:
+    path: internal/controldata/embedded/iam/policy/CTL.IAM.POLICY.INLINE.001.yaml
+    summary: No Inline Policies on IAM Users
+  CTL.IAM.POLICY.DIRECT.001:
+    path: internal/controldata/embedded/iam/policy/CTL.IAM.POLICY.DIRECT.001.yaml
+    summary: No Direct Policy Attachment on IAM Users
+  CTL.GCS.PUBLIC.001:
+    path: internal/controldata/embedded/gcs/public/CTL.GCS.PUBLIC.001.yaml
+    summary: No Public GCS Bucket Read
+  CTL.GCS.PUBLIC.002:
+    path: internal/controldata/embedded/gcs/public/CTL.GCS.PUBLIC.002.yaml
+    summary: No Public GCS Bucket Listing
+  CTL.GCS.UNIFORM.001:
+    path: internal/controldata/embedded/gcs/public/CTL.GCS.UNIFORM.001.yaml
+    summary: Uniform Bucket-Level Access Must Be Enabled
+  CTL.GCS.ENCRYPT.001:
+    path: internal/controldata/embedded/gcs/encrypt/CTL.GCS.ENCRYPT.001.yaml
+    summary: Customer-Managed Encryption Key Required
+  CTL.GCS.LOG.001:
+    path: internal/controldata/embedded/gcs/logging/CTL.GCS.LOG.001.yaml
+    summary: Access Logging Must Be Enabled
+  CTL.GCS.VERSION.001:
+    path: internal/controldata/embedded/gcs/versioning/CTL.GCS.VERSION.001.yaml
+    summary: Object Versioning Must Be Enabled
+  CTL.GCS.INCOMPLETE.001:
+    path: internal/controldata/embedded/gcs/misc/CTL.GCS.INCOMPLETE.001.yaml
+    summary: Complete Data Required for GCS Assessment
+  CTL.IAM.INCOMPLETE.001:
+    path: internal/controldata/embedded/iam/misc/CTL.IAM.INCOMPLETE.001.yaml
+    summary: Complete Data Required for IAM Assessment
+  CTL.DNS.DANGLING.001:
+    path: internal/controldata/embedded/dns/takeover/CTL.DNS.DANGLING.001.yaml
+    summary: DNS Records Must Not Point to Unclaimed Resources
+  CTL.DNS.DANGLING.002:
+    path: internal/controldata/embedded/dns/takeover/CTL.DNS.DANGLING.002.yaml
+    summary: DNS Records to Cloud Storage Must Resolve to Owned Buckets
+  CTL.DNS.DANGLING.003:
+    path: internal/controldata/embedded/dns/takeover/CTL.DNS.DANGLING.003.yaml
+    summary: DNS Records to Software Distribution Must Resolve to Owned Endpoints

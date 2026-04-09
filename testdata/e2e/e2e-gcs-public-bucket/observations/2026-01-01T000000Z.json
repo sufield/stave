@@ -1,0 +1,22 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "assets": [
+    {
+      "id": "my-project-public-bucket",
+      "type": "gcp_gcs_bucket",
+      "vendor": "gcp",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "my-project-public-bucket",
+          "access": {
+            "public_read": true,
+            "public_list": false,
+            "public_write": false
+          }
+        }
+      }
+    }
+  ]
+}

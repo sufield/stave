@@ -1,6 +1,7 @@
 package initcmd
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -28,7 +29,7 @@ type GenerateRunner struct {
 func (r *GenerateRunner) RunControl(req GenerateRequest) error {
 	name := strings.TrimSpace(req.Name)
 	if name == "" {
-		return fmt.Errorf("control name cannot be empty")
+		return errors.New("control name cannot be empty")
 	}
 	id := controlIDFromName(name)
 	content := strings.ReplaceAll(strings.TrimLeft(templateControlCanonical, "\n"), "CTL.S3.PUBLIC.901", id)
@@ -43,7 +44,7 @@ func (r *GenerateRunner) RunControl(req GenerateRequest) error {
 func (r *GenerateRunner) RunObservation(req GenerateRequest) error {
 	name := strings.TrimSpace(req.Name)
 	if name == "" {
-		return fmt.Errorf("observation name cannot be empty")
+		return errors.New("observation name cannot be empty")
 	}
 	slug := sanitizeSlug(name)
 	content := strings.ReplaceAll(strings.TrimLeft(templateObservation, "\n"), "aws:s3:::example-phi-bucket", "asset:"+slug)
@@ -57,7 +58,7 @@ func (r *GenerateRunner) RunObservation(req GenerateRequest) error {
 func (r *GenerateRunner) writeFile(path string, content []byte) error {
 	path = fsutil.CleanUserPath(path)
 	if strings.TrimSpace(path) == "" {
-		return fmt.Errorf("output path cannot be empty")
+		return errors.New("output path cannot be empty")
 	}
 	if !r.Force {
 		if _, err := os.Stat(path); err == nil {

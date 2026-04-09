@@ -1,7 +1,7 @@
 package eval
 
 import (
-	"fmt"
+	"errors"
 	"testing"
 	"time"
 
@@ -265,12 +265,12 @@ func TestIntentEvaluationResult_HasErrors(t *testing.T) {
 		t.Fatal("empty result should not have errors")
 	}
 
-	r.ControlErr = fmt.Errorf("control error")
+	r.ControlErr = errors.New("control error")
 	if !r.HasErrors() {
 		t.Fatal("should have errors with ControlErr set")
 	}
 
-	r = IntentEvaluationResult{ObservationErr: fmt.Errorf("obs error")}
+	r = IntentEvaluationResult{ObservationErr: errors.New("obs error")}
 	if !r.HasErrors() {
 		t.Fatal("should have errors with ObservationErr set")
 	}
@@ -282,13 +282,13 @@ func TestIntentEvaluationResult_FirstError(t *testing.T) {
 		t.Fatal("empty result should return nil")
 	}
 
-	r.ControlErr = fmt.Errorf("control error")
-	r.ObservationErr = fmt.Errorf("obs error")
+	r.ControlErr = errors.New("control error")
+	r.ObservationErr = errors.New("obs error")
 	if r.FirstError().Error() != "control error" {
 		t.Fatal("should return control error first")
 	}
 
-	r = IntentEvaluationResult{ObservationErr: fmt.Errorf("obs only")}
+	r = IntentEvaluationResult{ObservationErr: errors.New("obs only")}
 	if r.FirstError().Error() != "obs only" {
 		t.Fatal("should return observation error when control error is nil")
 	}

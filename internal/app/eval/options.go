@@ -1,6 +1,7 @@
 package eval
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -102,10 +103,10 @@ func (o Options) normalize() Options {
 
 func (o Options) validateIntegrityFlags() error {
 	if o.IntegrityPublicKey != "" && o.IntegrityManifest == "" {
-		return fmt.Errorf("integrity-public-key requires integrity-manifest")
+		return errors.New("integrity-public-key requires integrity-manifest")
 	}
 	if o.ObservationsSource.IsStdin() && o.IntegrityManifest != "" {
-		return fmt.Errorf("integrity-manifest cannot be used with observations - (stdin mode)")
+		return errors.New("integrity-manifest cannot be used with observations - (stdin mode)")
 	}
 	return nil
 }

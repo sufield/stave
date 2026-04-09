@@ -1,0 +1,43 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ROOT.MFA.001
+name: Root Account Must Have MFA Enabled
+description: >
+  The AWS root account must have multi-factor authentication enabled.
+  Root has unrestricted access to all resources. Compromise without
+  MFA is the highest-severity identity risk.
+domain: identity
+severity: critical
+compliance:
+  cis_aws_v1.4.0: "1.5"
+  hipaa: "164.312(d)"
+  pci_dss_v3.2.1: "8.3"
+  soc2: "CC6.1"
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Root account does not have MFA enabled. An attacker with root
+    credentials can perform any action in the AWS account.
+  action: >
+    Enable MFA on the root account using a hardware MFA device or
+    virtual MFA app. Navigate to IAM > Security credentials > MFA.
+  example: |
+    {
+      "identity": {
+        "kind": "account",
+        "root": {
+          "mfa_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: account
+    - field: properties.identity.root.mfa_enabled
+      op: eq
+      value: false

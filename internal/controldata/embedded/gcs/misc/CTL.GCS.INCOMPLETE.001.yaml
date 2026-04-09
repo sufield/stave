@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.GCS.INCOMPLETE.001
+name: Complete Data Required for GCS Assessment
+description: >
+  GCS bucket safety cannot be proven when access control data is missing
+  from the snapshot. The extractor must populate storage.access.public_read
+  to evaluate public exposure controls.
+domain: storage
+severity: low
+scope_tags:
+  - gcp
+  - gcs
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    GCS assessment data is incomplete. The extractor did not populate
+    required access control properties.
+  action: >
+    Re-run the extractor with storage permissions:
+    storage.buckets.getIamPolicy, storage.buckets.get.
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.access.public_read
+      op: missing
+      value: true

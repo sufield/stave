@@ -2,6 +2,7 @@ package diagnose
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -43,10 +44,10 @@ func NewEngine(
 	polRepo appcontracts.ControlRepository,
 ) (*DiagnosticEngine, error) {
 	if invRepo == nil {
-		return nil, fmt.Errorf("inventory repository required")
+		return nil, errors.New("inventory repository required")
 	}
 	if polRepo == nil {
-		return nil, fmt.Errorf("policy repository required")
+		return nil, errors.New("policy repository required")
 	}
 	return &DiagnosticEngine{
 		InventoryRepo: invRepo,

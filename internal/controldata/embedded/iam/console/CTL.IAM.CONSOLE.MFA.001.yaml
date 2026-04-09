@@ -1,0 +1,47 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.CONSOLE.MFA.001
+name: Console Users Must Have MFA Enabled
+description: >
+  IAM users with console access must have multi-factor authentication
+  enabled. Console access without MFA allows credential-only login,
+  making accounts vulnerable to password compromise.
+domain: identity
+severity: high
+compliance:
+  cis_aws_v1.4.0: "1.10"
+  hipaa: "164.312(d)"
+  pci_dss_v3.2.1: "8.3"
+  soc2: "CC6.1"
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    IAM user has console access enabled but MFA is not configured.
+    Password-only access is vulnerable to phishing and credential stuffing.
+  action: >
+    Enable MFA for the user via IAM > Users > Security credentials > MFA.
+    Alternatively, disable console access if the user only needs programmatic access.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "console_access": {
+          "enabled": true,
+          "mfa_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user
+    - field: properties.identity.console_access.enabled
+      op: eq
+      value: true
+    - field: properties.identity.console_access.mfa_enabled
+      op: eq
+      value: false

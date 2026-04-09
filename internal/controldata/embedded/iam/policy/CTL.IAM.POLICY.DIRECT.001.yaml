@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.POLICY.DIRECT.001
+name: No Direct Policy Attachment on IAM Users
+description: >
+  IAM users must not have managed policies attached directly.
+  Policies should be attached to groups or roles, not individual users.
+  Direct attachment creates unmanageable per-user permission sprawl.
+domain: identity
+severity: low
+compliance:
+  cis_aws_v1.4.0: "1.15"
+  soc2: "CC6.3"
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    IAM user has managed policies attached directly. Direct attachment
+    prevents consistent permission management across users.
+  action: >
+    Create IAM groups with the required policies and add the user to
+    the appropriate groups. Remove directly attached policies from the user.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "policies": {
+          "has_direct_policies": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user
+    - field: properties.identity.policies.has_direct_policies
+      op: eq
+      value: true

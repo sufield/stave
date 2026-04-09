@@ -2,6 +2,7 @@ package setup
 
 import (
 	"context"
+	"errors"
 	"fmt"
 )
 
@@ -54,7 +55,7 @@ func ConfigGet(ctx context.Context, req ConfigGetRequest, deps ConfigGetDeps) (C
 	}
 
 	if req.Key == "" {
-		return ConfigGetResponse{}, fmt.Errorf("config-get: key is required")
+		return ConfigGetResponse{}, errors.New("config-get: key is required")
 	}
 
 	resp, err := deps.Reader.GetConfig(ctx, req.Key)
@@ -77,10 +78,10 @@ func ConfigSet(ctx context.Context, req ConfigSetRequest, deps ConfigSetDeps) (C
 	}
 
 	if req.Key == "" {
-		return ConfigSetResponse{}, fmt.Errorf("config-set: key is required")
+		return ConfigSetResponse{}, errors.New("config-set: key is required")
 	}
 	if req.Value == "" {
-		return ConfigSetResponse{}, fmt.Errorf("config-set: value is required")
+		return ConfigSetResponse{}, errors.New("config-set: value is required")
 	}
 
 	if err := deps.Writer.SetConfig(ctx, req.Key, req.Value); err != nil {
@@ -102,7 +103,7 @@ func ConfigDelete(ctx context.Context, req ConfigDeleteRequest, deps ConfigDelet
 	}
 
 	if req.Key == "" {
-		return ConfigDeleteResponse{}, fmt.Errorf("config-delete: key is required")
+		return ConfigDeleteResponse{}, errors.New("config-delete: key is required")
 	}
 
 	if err := deps.Writer.DeleteConfig(ctx, req.Key); err != nil {

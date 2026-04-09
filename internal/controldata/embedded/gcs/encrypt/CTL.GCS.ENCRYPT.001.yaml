@@ -1,0 +1,43 @@
+dsl_version: ctrl.v1
+id: CTL.GCS.ENCRYPT.001
+name: Customer-Managed Encryption Key Required
+description: >
+  GCS buckets containing sensitive data must use a customer-managed
+  encryption key (CMEK) via Cloud KMS, not the default Google-managed
+  key. CMEK provides key rotation control, access policies, and audit
+  trails that Google-managed keys do not.
+domain: exposure
+severity: high
+compliance:
+  cis_gcp_v1.3.0: "5.3"
+scope_tags:
+  - gcp
+  - gcs
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Bucket uses Google-managed encryption (default). No customer control
+    over key rotation, access policies, or audit trails.
+  action: >
+    Set a default CMEK on the bucket. Run:
+    gcloud storage buckets update gs://BUCKET
+    --default-encryption-key=projects/PROJECT/locations/LOCATION/keyRings/RING/cryptoKeys/KEY
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "encryption": {
+          "at_rest_enabled": true,
+          "cmek_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.encryption.cmek_enabled
+      op: eq
+      value: false

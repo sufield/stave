@@ -2,6 +2,7 @@ package asset
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"unicode"
@@ -52,7 +53,7 @@ func validateID(raw string) error {
 
 	trimmed := strings.TrimSpace(raw)
 	if trimmed == "" {
-		return fmt.Errorf("asset id must not be empty")
+		return errors.New("asset id must not be empty")
 	}
 	if trimmed != raw {
 		return fmt.Errorf("asset id %q must not have leading or trailing whitespace", raw)

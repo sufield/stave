@@ -26,6 +26,10 @@ type Profile string
 const (
 	// ProfileAWSS3 selects the AWS S3 evaluation profile.
 	ProfileAWSS3 Profile = "aws-s3"
+	// ProfileAWSIAM selects the AWS IAM identity security profile.
+	ProfileAWSIAM Profile = "aws-iam"
+	// ProfileGCPGCS selects the GCP Cloud Storage evaluation profile.
+	ProfileGCPGCS Profile = "gcp-gcs"
 	// ProfileHIPAA selects the HIPAA Security Rule evaluation profile.
 	ProfileHIPAA Profile = "hipaa"
 )
@@ -33,10 +37,10 @@ const (
 // ParseProfile validates and returns a Profile value.
 func ParseProfile(s string) (Profile, error) {
 	switch Profile(s) {
-	case ProfileAWSS3, ProfileHIPAA:
+	case ProfileAWSS3, ProfileAWSIAM, ProfileGCPGCS, ProfileHIPAA:
 		return Profile(s), nil
 	default:
-		return "", fmt.Errorf("unsupported --profile %q (supported: aws-s3, hipaa)", s)
+		return "", fmt.Errorf("unsupported --profile %q (supported: aws-s3, aws-iam, gcp-gcs, hipaa)", s)
 	}
 }
 
@@ -173,8 +177,12 @@ func (r *Runner) loadControls(ctx context.Context, prof Profile) (string, []poli
 }
 
 // profileControlDomain maps a profile to its control subdirectory.
-func profileControlDomain(prof Profile) string { //nolint:unparam // returns "s3" today; will vary when non-S3 profiles are added
+func profileControlDomain(prof Profile) string {
 	switch prof {
+	case ProfileAWSIAM:
+		return "iam"
+	case ProfileGCPGCS:
+		return "gcs"
 	case ProfileHIPAA:
 		// HIPAA reuses S3 controls — same directory, filtered by compliance ref.
 		return "s3"

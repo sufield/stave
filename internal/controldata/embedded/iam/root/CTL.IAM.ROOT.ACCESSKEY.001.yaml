@@ -1,0 +1,43 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ROOT.ACCESSKEY.001
+name: Root Account Must Not Have Access Keys
+description: >
+  The AWS root account must not have active access keys. Root access
+  keys provide unrestricted programmatic access. Use IAM users or
+  roles for programmatic access instead.
+domain: identity
+severity: critical
+compliance:
+  cis_aws_v1.4.0: "1.4"
+  hipaa: "164.312(a)(1)"
+  pci_dss_v3.2.1: "2.1"
+  soc2: "CC6.1"
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Root account has active access keys. Programmatic access via root
+    bypasses all IAM controls and cannot be scoped or audited.
+  action: >
+    Delete the root access keys. Create IAM users or roles with
+    least-privilege policies for programmatic access.
+  example: |
+    {
+      "identity": {
+        "kind": "account",
+        "root": {
+          "has_access_keys": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: account
+    - field: properties.identity.root.has_access_keys
+      op: eq
+      value: true

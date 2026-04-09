@@ -5,14 +5,19 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
+	"runtime/debug"
+	"sort"
+	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	"github.com/sufield/stave/internal/app/capabilities"
+	"github.com/sufield/stave/internal/controldata"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/util/jsonutil"
@@ -28,7 +33,7 @@ type VersionRunner struct {
 }
 
 // Run produces version output in text or JSON format.
-func (r *VersionRunner) Run(edition Edition, verbose bool) error {
+func (r *VersionRunner) Run(edition Edition, verbose, verify bool) error {
 	out := versionOutput{
 		Version:           Version(),
 		Edition:           string(edition),
@@ -41,15 +46,41 @@ func (r *VersionRunner) Run(edition Edition, verbose bool) error {
 		r.enrichWithProjectInfo(&out)
 	}
 
-	if !verbose {
+	if verify {
+		r.enrichWithIntegrity(&out)
+	}
+
+	if !verbose && !verify {
 		_, err := fmt.Fprintf(r.Stdout, "%s (%s)\n", out.Version, out.Edition)
 		return err
 	}
 
-	_, err := fmt.Fprintf(r.Stdout,
-		"Version:      %s\nEdition:      %s\nSchemas:      control=%s, observation=%s, output=%s\nProject root: %s\nLockfile:     %v (%s)\nLock hash:    %s\n",
-		out.Version, out.Edition, out.SchemaControl, out.SchemaObservation, out.SchemaOutput,
-		compose.EmptyDash(out.ProjectRoot), out.LockPresent, compose.EmptyDash(out.LockFile), compose.EmptyDash(out.LockHash))
+	var sb strings.Builder
+	fmt.Fprintf(&sb, "Version:      %s\nEdition:      %s\nSchemas:      control=%s, observation=%s, output=%s\n",
+		out.Version, out.Edition, out.SchemaControl, out.SchemaObservation, out.SchemaOutput)
+
+	if verbose {
+		fmt.Fprintf(&sb, "Project root: %s\nLockfile:     %v (%s)\nLock hash:    %s\n",
+			compose.EmptyDash(out.ProjectRoot), out.LockPresent, compose.EmptyDash(out.LockFile), compose.EmptyDash(out.LockHash))
+	}
+
+	if verify {
+		fmt.Fprintf(&sb, "\nIntegrity:\n")
+		fmt.Fprintf(&sb, "  Binary hash:  %s\n", compose.EmptyDash(out.BinaryHash))
+		fmt.Fprintf(&sb, "  Policy hash:  %s\n", compose.EmptyDash(out.PolicyHash))
+		fmt.Fprintf(&sb, "  Controls:     %d embedded\n", out.ControlCount)
+		if out.GoVersion != "" {
+			fmt.Fprintf(&sb, "  Go version:   %s\n", out.GoVersion)
+		}
+		if len(out.Modules) > 0 {
+			fmt.Fprintf(&sb, "  Modules:      %d dependencies\n", len(out.Modules))
+			for _, m := range out.Modules {
+				fmt.Fprintf(&sb, "    %s\n", m)
+			}
+		}
+	}
+
+	_, err := fmt.Fprint(r.Stdout, sb.String())
 	return err
 }
 
@@ -75,21 +106,71 @@ func (r *VersionRunner) enrichWithProjectInfo(out *versionOutput) {
 	}
 }
 
+// enrichWithIntegrity computes binary and policy library hashes for auditors.
+func (r *VersionRunner) enrichWithIntegrity(out *versionOutput) {
+	// Binary self-hash: sha256 of the running executable.
+	if exe, err := os.Executable(); err == nil {
+		if data, readErr := os.ReadFile(exe); readErr == nil { //nolint:gosec // reading own binary
+			sum := sha256.Sum256(data)
+			out.BinaryHash = "sha256:" + hex.EncodeToString(sum[:])
+		}
+	}
+
+	// Policy library hash: sorted sha256 of all embedded control YAML files.
+	var controlHashes []string
+	err := fs.WalkDir(controldata.FS, ".", func(path string, d fs.DirEntry, walkErr error) error {
+		if walkErr != nil || d.IsDir() {
+			return walkErr
+		}
+		if !strings.HasSuffix(path, ".yaml") {
+			return nil
+		}
+		data, readErr := fs.ReadFile(controldata.FS, path)
+		if readErr != nil {
+			return nil //nolint:nilerr // skip unreadable files
+		}
+		sum := sha256.Sum256(data)
+		controlHashes = append(controlHashes, hex.EncodeToString(sum[:]))
+		out.ControlCount++
+		return nil
+	})
+	if err == nil && len(controlHashes) > 0 {
+		sort.Strings(controlHashes)
+		combined := sha256.Sum256([]byte(strings.Join(controlHashes, "\n")))
+		out.PolicyHash = "sha256:" + hex.EncodeToString(combined[:])
+	}
+
+	// Go build info: version and module dependencies.
+	if bi, ok := debug.ReadBuildInfo(); ok {
+		out.GoVersion = bi.GoVersion
+		for _, dep := range bi.Deps {
+			out.Modules = append(out.Modules, dep.Path+"@"+dep.Version)
+		}
+	}
+}
+
 // ---------------------------------------------------------------------------
 // Command constructors
 // ---------------------------------------------------------------------------
 
 func newVersionCmd(edition Edition) *cobra.Command {
-	var verbose bool
+	var verbose, verify bool
 	cmd := &cobra.Command{
 		Use:   "version",
 		Short: "Print version and environment state",
 		Long: `Version prints binary version and, with --verbose, schema and lockfile status.
+With --verify, prints integrity hashes for the binary, embedded policy library,
+and Go module dependencies. Auditors compare these against known-good values.
 
 Exit Codes:
   0   - Success
-  4   - Internal error` + OfflineHelpSuffix,
-		Example:       `  stave version --verbose`,
+  4   - Internal error
+
+Examples:
+  stave version
+  stave version --verbose
+  stave version --verify` + OfflineHelpSuffix,
+		Example:       `  stave version --verify`,
 		Args:          cobra.NoArgs,
 		SilenceUsage:  true,
 		SilenceErrors: true,
@@ -97,10 +178,11 @@ Exit Codes:
 			runner := &VersionRunner{
 				Stdout: cmd.OutOrStdout(),
 			}
-			return runner.Run(edition, verbose)
+			return runner.Run(edition, verbose, verify)
 		},
 	}
 	cmd.Flags().BoolVar(&verbose, "verbose", false, "Include schema and lockfile status")
+	cmd.Flags().BoolVar(&verify, "verify", false, "Print binary and policy library integrity hashes")
 	return cmd
 }
 
@@ -150,4 +232,11 @@ type versionOutput struct {
 	LockFile          string        `json:"lock_file,omitempty"`
 	LockHash          string        `json:"lock_hash,omitempty"`
 	LockPresent       bool          `json:"lock_present"`
+
+	// Integrity fields (populated by --verify).
+	BinaryHash   string   `json:"binary_hash,omitempty"`
+	PolicyHash   string   `json:"policy_hash,omitempty"`
+	ControlCount int      `json:"control_count,omitempty"`
+	GoVersion    string   `json:"go_version,omitempty"`
+	Modules      []string `json:"modules,omitempty"`
 }

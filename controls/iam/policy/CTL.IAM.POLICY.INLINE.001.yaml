@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.POLICY.INLINE.001
+name: No Inline Policies on IAM Users
+description: >
+  IAM users must not have inline policies attached directly.
+  Inline policies are harder to audit, cannot be reused, and
+  create per-user policy sprawl that resists central governance.
+domain: identity
+severity: medium
+compliance:
+  cis_aws_v1.4.0: "1.15"
+  soc2: "CC6.3"
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    IAM user has inline policies attached. Inline policies bypass
+    centralized policy management and are invisible to IAM Access Analyzer.
+  action: >
+    Convert inline policies to managed policies and attach via groups
+    or roles. Delete the inline policies from the user.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "policies": {
+          "has_inline_policies": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user
+    - field: properties.identity.policies.has_inline_policies
+      op: eq
+      value: true

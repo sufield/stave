@@ -41,7 +41,7 @@ func NewVerifier(pub ed25519.PublicKey) (ports.Verifier, error) {
 // Verify validates an Ed25519 signature over data.
 func (v *verifier) Verify(data []byte, sig kernel.Signature) error {
 	if len(sig) == 0 {
-		return fmt.Errorf("signature must be hex-encoded: empty signature")
+		return errors.New("signature must be hex-encoded: empty signature")
 	}
 
 	decoded, err := hex.DecodeString(string(sig))

@@ -2,6 +2,7 @@ package config
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -91,7 +92,7 @@ func (r *Runner) Set(ctx context.Context, req SetRequest, opts MutationOpts) err
 	key := strings.TrimSpace(req.Key)
 	value := strings.TrimSpace(req.Value)
 	if value == "" {
-		return fmt.Errorf("value cannot be empty")
+		return errors.New("value cannot be empty")
 	}
 
 	editor, err := r.newEditor(opts)
@@ -138,7 +139,7 @@ func (r *Runner) Delete(ctx context.Context, req DeleteRequest, opts MutationOpt
 // Show renders the full suite of effective values and their sources.
 func (r *Runner) Show(_ context.Context, eval *appconfig.GovernanceResolver, format appcontracts.OutputFormat) error {
 	if eval == nil {
-		return fmt.Errorf("project config evaluator not available; ensure bootstrap runs before this command")
+		return errors.New("project config evaluator not available; ensure bootstrap runs before this command")
 	}
 	out := buildShowOutput(eval)
 	presenter := &ShowPresenter{Stdout: r.Stdout}

@@ -2,6 +2,7 @@ package kernel
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -81,7 +82,7 @@ func ValidateControlIDFormat(id string) error {
 func (id *ControlID) UnmarshalText(text []byte) error {
 	s := string(text)
 	if s == "" {
-		return fmt.Errorf("control ID must not be empty")
+		return errors.New("control ID must not be empty")
 	}
 	if !controlIDBasicPattern.MatchString(s) {
 		return fmt.Errorf("invalid control ID format %q: must be dot-separated uppercase segments (e.g. CTL.S3.PUBLIC.001)", s)

@@ -45,7 +45,7 @@ func (s ProjectState) RecommendNext() string {
 		return fmt.Sprintf("Create observation snapshots in %s from your AWS environment data", obsDir)
 	}
 	if s.Controls.Count == 0 {
-		return fmt.Sprintf("stave generate control --id CTL.S3.PUBLIC.901 --out %s", filepath.Join(ctlDir, "CTL.S3.PUBLIC.901.yaml"))
+		return "stave generate control --id CTL.S3.PUBLIC.901 --out " + filepath.Join(ctlDir, "CTL.S3.PUBLIC.901.yaml")
 	}
 	if s.Observations.Count == 0 {
 		return fmt.Sprintf("Create observation snapshots in %s from your AWS environment data", obsDir)

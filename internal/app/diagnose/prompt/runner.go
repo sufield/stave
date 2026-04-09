@@ -2,6 +2,7 @@ package prompt
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/sufield/stave/internal/core/asset"
@@ -78,10 +79,10 @@ func (r *Runner) Run(ctx context.Context, cfg Config) (Output, error) {
 		return Output{}, err
 	}
 	if cfg.EvalFile == "" {
-		return Output{}, fmt.Errorf("--evaluation-file is required")
+		return Output{}, errors.New("--evaluation-file is required")
 	}
 	if cfg.AssetID == "" {
-		return Output{}, fmt.Errorf("--asset-id is required")
+		return Output{}, errors.New("--asset-id is required")
 	}
 
 	evalResult, err := r.Ctx.LoadEval(cfg.EvalFile)

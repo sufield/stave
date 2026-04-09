@@ -3,7 +3,7 @@ package prompt_test
 import (
 	"bytes"
 	"context"
-	"fmt"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -197,7 +197,7 @@ func TestNewRunnerRunJSON(t *testing.T) {
 func TestNewRunnerRunLoadError(t *testing.T) {
 	dctx := diagprompt.DiagnosticContext{
 		LoadEval: func(string) (*evaluation.ComplianceReport, error) {
-			return nil, fmt.Errorf("simulated load error")
+			return nil, errors.New("simulated load error")
 		},
 		BuildPrompt: testBuildPrompt,
 	}

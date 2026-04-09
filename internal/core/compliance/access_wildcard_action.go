@@ -56,7 +56,7 @@ func (ctl *accessWildcardAction) Evaluate(snap asset.Snapshot) Outcome {
 				}
 				r := ctl.FailResult(
 					fmt.Sprintf("Bucket %s: policy statement %q grants Allow with wildcard action s3:* — this permits all S3 operations including delete and ACL modification", a.ID, sid),
-					fmt.Sprintf("Replace s3:* with the minimum required actions. For sync patterns use: %s", strings.Join(minimumSyncActions, ", ")),
+					"Replace s3:* with the minimum required actions. For sync patterns use: "+strings.Join(minimumSyncActions, ", "),
 				)
 				return &r
 			}

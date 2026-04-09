@@ -2,6 +2,7 @@ package setup
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"regexp"
 )
@@ -30,7 +31,7 @@ func AliasSet(ctx context.Context, req AliasSetRequest, deps AliasDeps) (AliasSe
 		return AliasSetResponse{}, fmt.Errorf("alias-set: invalid name %q: must match [a-zA-Z0-9_-]+", req.Name)
 	}
 	if req.Command == "" {
-		return AliasSetResponse{}, fmt.Errorf("alias-set: command cannot be empty")
+		return AliasSetResponse{}, errors.New("alias-set: command cannot be empty")
 	}
 
 	if err := deps.Store.SetAlias(ctx, req.Name, req.Command); err != nil {
@@ -63,7 +64,7 @@ func AliasDelete(ctx context.Context, req AliasDeleteRequest, deps AliasDeps) (A
 	}
 
 	if req.Name == "" {
-		return AliasDeleteResponse{}, fmt.Errorf("alias-delete: alias name is required")
+		return AliasDeleteResponse{}, errors.New("alias-delete: alias name is required")
 	}
 
 	if err := deps.Store.DeleteAlias(ctx, req.Name); err != nil {

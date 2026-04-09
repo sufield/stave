@@ -2,6 +2,7 @@ package alias
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"regexp"
@@ -58,7 +59,7 @@ func (r *Runner) Set(ctx context.Context, name, command string) error {
 
 	command = strings.TrimSpace(command)
 	if command == "" {
-		return fmt.Errorf("alias command cannot be empty")
+		return errors.New("alias command cannot be empty")
 	}
 
 	cfg, path, err := r.Resolver.LoadUserConfig()

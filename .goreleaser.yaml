@@ -41,6 +41,10 @@ archives:
         formats:
           - zip
 
+sboms:
+  - artifacts: archive
+    args: ["$artifact", "--output", "cyclonedx-json", "--file", "$document"]
+
 checksum:
   name_template: "SHA256SUMS"
   algorithm: sha256

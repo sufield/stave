@@ -2,7 +2,7 @@ package pruner
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"io"
 	"os"
 	"path/filepath"
@@ -54,7 +54,7 @@ func TestLoadSnapshotCapturedAt_LoaderError(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	loader := &stubSnapshotReader{err: fmt.Errorf("parse failure")}
+	loader := &stubSnapshotReader{err: errors.New("parse failure")}
 	_, err := loadSnapshotCapturedAt(context.Background(), loader, path, "obs.json")
 	if err == nil {
 		t.Fatal("expected error from loader")

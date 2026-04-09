@@ -37,12 +37,14 @@ The output MUST be a flat JSON object with this exact structure:
 }
 
 ## 3. Implementation Requirements
+
 - **Mapping:** Iterate through the [Data Source] and map each resource to an entry in the `assets` array.
 - **Properties:** The `properties` map should contain the raw configuration values needed for security invariants.
 - **No Extra Fields:** The schema has `additionalProperties: false`. Do not add top-level fields outside of the ones listed above.
 - **Error Handling:** If the [Data Source] is unreachable, exit with a non-zero code and a clear error message to STDERR.
 
 ## 4. Deliverable
+
 Please provide:
 1. The full [Language] source code for the extractor.
 2. Instructions on how to run it.

@@ -3,6 +3,7 @@ package explain
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"slices"
 	"strings"
@@ -32,7 +33,7 @@ type Explainer struct {
 // Run executes the explain workflow.
 func (e *Explainer) Run(ctx context.Context, input Input) (contracts.ExplainResult, error) {
 	if input.ControlID == "" {
-		return contracts.ExplainResult{}, fmt.Errorf("control id cannot be empty")
+		return contracts.ExplainResult{}, errors.New("control id cannot be empty")
 	}
 	controlsDir := strings.TrimSpace(input.ControlsDir)
 	ctl, err := e.Finder.FindByID(ctx, controlsDir, input.ControlID)

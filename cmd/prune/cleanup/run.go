@@ -2,6 +2,7 @@ package cleanup
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"time"
@@ -53,7 +54,7 @@ type runner struct {
 func (r *runner) Run(ctx context.Context, cfg config) error {
 	obsDir := fsutil.CleanUserPath(cfg.ObservationsDir)
 	if obsDir == "" {
-		return &ui.UserError{Err: fmt.Errorf("--observations cannot be empty")}
+		return &ui.UserError{Err: errors.New("--observations cannot be empty")}
 	}
 	if cfg.KeepMin < 0 {
 		return &ui.UserError{Err: fmt.Errorf("invalid --keep-min %d: must be >= 0", cfg.KeepMin)}

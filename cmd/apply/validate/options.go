@@ -1,6 +1,7 @@
 package validate
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 	"strings"
@@ -95,7 +96,7 @@ func (o *options) normalizeAndValidate(controlsChanged, obsChanged bool) error {
 	o.SchemaVersion = strings.TrimSpace(o.SchemaVersion)
 
 	if o.Kind != "" && o.InputPath == "" {
-		return &ui.UserError{Err: fmt.Errorf("flag --kind requires --in <file>")}
+		return &ui.UserError{Err: errors.New("flag --kind requires --in <file>")}
 	}
 
 	singleFileMode := o.InputPath != ""

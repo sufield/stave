@@ -1,6 +1,7 @@
 package diagnose
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -75,7 +76,7 @@ Examples:
 		SilenceErrors: true,
 		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			if strings.TrimSpace(controlID) == "" || strings.TrimSpace(assetID) == "" {
-				return fmt.Errorf("both --control-id and --asset-id are required")
+				return errors.New("both --control-id and --asset-id are required")
 			}
 			eval := cmdctx.ResolverFromCmd(cmd)
 			if !cmd.Flags().Changed("max-unsafe") {

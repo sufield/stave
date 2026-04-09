@@ -1,7 +1,6 @@
 package validate
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
@@ -50,7 +49,7 @@ func PackConfigIssues() []diag.Finding {
 		}
 		issues = append(issues, diag.NewFinding(diag.RuleUnknownControlPack).
 			Error().
-			Remediation(fmt.Sprintf("Use a configured pack name: %s", strings.Join(known, ", "))).
+			Remediation("Use a configured pack name: "+strings.Join(known, ", ")).
 			Attribute("pack", name).
 			Build())
 	}

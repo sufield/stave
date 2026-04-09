@@ -2,6 +2,7 @@ package eval
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -27,7 +28,7 @@ type DirectoryEvaluationRequest struct {
 // RunDirectoryEvaluation loads snapshots and evaluates them against controls.
 func RunDirectoryEvaluation(ctx context.Context, req DirectoryEvaluationRequest) (*evaluation.ComplianceReport, int, error) {
 	if req.ObservationLoader == nil {
-		return nil, 0, fmt.Errorf("observation loader is required")
+		return nil, 0, errors.New("observation loader is required")
 	}
 
 	loadResult, err := req.ObservationLoader.LoadSnapshots(ctx, req.ObservationsDir)

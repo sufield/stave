@@ -2,6 +2,7 @@ package cel
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/google/cel-go/cel"
@@ -204,13 +205,13 @@ func literal(v any) string {
 		return fmt.Sprintf("%q", val)
 	case float64:
 		if val == float64(int64(val)) {
-			return fmt.Sprintf("%d", int64(val))
+			return strconv.FormatInt(int64(val), 10)
 		}
 		return fmt.Sprintf("%g", val)
 	case int:
-		return fmt.Sprintf("%d", val)
+		return strconv.Itoa(val)
 	case int64:
-		return fmt.Sprintf("%d", val)
+		return strconv.FormatInt(val, 10)
 	case []string:
 		quoted := make([]string, len(val))
 		for i, s := range val {

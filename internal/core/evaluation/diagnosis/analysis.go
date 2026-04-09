@@ -112,7 +112,7 @@ func (s *session) diagnoseThresholdGaps() []Insight {
 			Evidence: fmt.Sprintf("Max observed streak: %s (control %s); threshold: %s",
 				fmtd(maxStreak), ctlID, fmtd(s.input.MaxUnsafeDuration)),
 			Action:  fmt.Sprintf("Lower --max-unsafe to below %s to trigger a violation", fmtd(maxStreak)),
-			Command: fmt.Sprintf("stave apply --max-unsafe %s", fmtd(maxStreak)),
+			Command: "stave apply --max-unsafe " + fmtd(maxStreak),
 		})
 	}
 

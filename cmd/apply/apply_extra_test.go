@@ -382,6 +382,8 @@ func TestProfileControlDomain(t *testing.T) {
 		want string
 	}{
 		{ProfileAWSS3, "s3"},
+		{ProfileAWSIAM, "iam"},
+		{ProfileGCPGCS, "gcs"},
 		{ProfileHIPAA, "s3"},
 	}
 	for _, tt := range tests {

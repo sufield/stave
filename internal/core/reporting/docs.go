@@ -2,6 +2,7 @@ package reporting
 
 import (
 	"context"
+	"errors"
 	"fmt"
 )
 
@@ -21,10 +22,10 @@ func DocsSearch(ctx context.Context, req DocsSearchRequest, deps DocsSearchDeps)
 		return DocsSearchResponse{}, fmt.Errorf("docs-search: %w", err)
 	}
 	if req.Query == "" {
-		return DocsSearchResponse{}, fmt.Errorf("docs-search: query cannot be empty")
+		return DocsSearchResponse{}, errors.New("docs-search: query cannot be empty")
 	}
 	if req.MaxResults < 1 {
-		return DocsSearchResponse{}, fmt.Errorf("docs-search: max-results must be >= 1")
+		return DocsSearchResponse{}, errors.New("docs-search: max-results must be >= 1")
 	}
 	resp, err := deps.Searcher.SearchDocs(ctx, req)
 	if err != nil {
@@ -49,7 +50,7 @@ func DocsOpen(ctx context.Context, req DocsOpenRequest, deps DocsOpenDeps) (Docs
 		return DocsOpenResponse{}, fmt.Errorf("docs-open: %w", err)
 	}
 	if req.Topic == "" {
-		return DocsOpenResponse{}, fmt.Errorf("docs-open: topic cannot be empty")
+		return DocsOpenResponse{}, errors.New("docs-open: topic cannot be empty")
 	}
 	resp, err := deps.Opener.OpenDoc(ctx, req)
 	if err != nil {

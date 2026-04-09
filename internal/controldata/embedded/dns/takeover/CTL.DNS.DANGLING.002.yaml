@@ -1,0 +1,47 @@
+dsl_version: ctrl.v1
+id: CTL.DNS.DANGLING.002
+name: DNS Records to Cloud Storage Must Resolve to Owned Buckets
+description: >
+  DNS records that reference cloud storage endpoints (S3, GCS, Azure Blob)
+  must resolve to buckets that exist and are owned by the organization.
+  Storage bucket names are globally unique — a deleted bucket's name can
+  be claimed by any account, enabling content injection under a trusted domain.
+domain: exposure
+exposure:
+  type: bucket_takeover
+  principal_scope: public
+severity: critical
+scope_tags:
+  - dns
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    A DNS record references a cloud storage bucket that does not exist or
+    is not owned by the organization. An attacker can register the bucket
+    name and serve arbitrary content — including malicious downloads,
+    phishing pages, or JavaScript that executes in the context of your domain.
+  action: >
+    Create the bucket in your cloud account to claim the name, or remove
+    the DNS record. For software distribution URLs, update documentation
+    to point to the current distribution endpoint.
+  example: |
+    {
+      "dns": {
+        "target_type": "cloud_storage",
+        "target_exists": true,
+        "target_owned": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.dns.target_type
+      op: eq
+      value: cloud_storage
+    - any:
+        - field: properties.dns.target_exists
+          op: eq
+          value: false
+        - field: properties.dns.target_owned
+          op: eq
+          value: false

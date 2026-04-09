@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.GCS.PUBLIC.001
+name: No Public GCS Bucket Read
+description: >
+  GCS buckets must not allow public read access. Detects buckets where
+  IAM bindings include allUsers or allAuthenticatedUsers with read
+  permissions, or where uniform bucket-level access is disabled and
+  object ACLs may grant public access.
+domain: exposure
+severity: critical
+compliance:
+  cis_gcp_v1.3.0: "5.1"
+scope_tags:
+  - gcp
+  - gcs
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Bucket has public read access. IAM bindings include allUsers or
+    allAuthenticatedUsers, making objects downloadable by anyone.
+  action: >
+    Remove allUsers and allAuthenticatedUsers from bucket IAM bindings.
+    Run: gcloud storage buckets remove-iam-policy-binding gs://BUCKET
+    --member=allUsers --role=roles/storage.objectViewer
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "access": {
+          "public_read": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.access.public_read
+      op: eq
+      value: true

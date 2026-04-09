@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/fs"
 	"path/filepath"
@@ -48,7 +49,7 @@ type DefaultBinaryInspector struct {
 func (d DefaultBinaryInspector) Inspect(req Params, buildInfo BuildInfoSnapshot) (BinaryInspectionSnapshot, error) {
 	path := strings.TrimSpace(req.BinaryPath)
 	if path == "" {
-		return BinaryInspectionSnapshot{}, fmt.Errorf("binary path is required")
+		return BinaryInspectionSnapshot{}, errors.New("binary path is required")
 	}
 	abs, err := filepath.Abs(path)
 	if err != nil {

@@ -29,6 +29,7 @@ linters:
     - recvcheck
     - revive
     - staticcheck
+    - perfsprint
     - unconvert
     - unparam
     - unused

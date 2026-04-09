@@ -27,7 +27,7 @@ func FormatText(w io.Writer, result Result) error {
 	fmt.Fprintf(w, "  - observations: %d\n", s.Observations.Count)
 	fmt.Fprintf(w, "  - output/evaluation.json: %v\n", s.HasEval)
 
-	label := ui.SeverityLabel("info", fmt.Sprintf("Next: %s", result.NextCommand), w)
+	label := ui.SeverityLabel("info", "Next: "+result.NextCommand, w)
 	fmt.Fprintf(w, "\n%s\n", label)
 	return nil
 }

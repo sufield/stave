@@ -2,6 +2,7 @@ package eval
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -148,19 +149,19 @@ func resolveOutputWriters(output, stderr io.Writer) (io.Writer, io.Writer) {
 
 func validateBuildDependenciesInput(in *BuildDependenciesInput) error {
 	if in.Plan.ControlsPath == "" {
-		return fmt.Errorf("evaluation plan is required")
+		return errors.New("evaluation plan is required")
 	}
 	if in.Adapters.ControlLoader == nil {
-		return fmt.Errorf("control loader is not configured")
+		return errors.New("control loader is not configured")
 	}
 	if in.Adapters.ObservationLoader == nil {
-		return fmt.Errorf("observation loader is not configured")
+		return errors.New("observation loader is not configured")
 	}
 	if in.Adapters.FindingMarshaler == nil {
-		return fmt.Errorf("finding marshaler is not configured")
+		return errors.New("finding marshaler is not configured")
 	}
 	if in.Adapters.EnrichFn == nil {
-		return fmt.Errorf("enrich function is not configured")
+		return errors.New("enrich function is not configured")
 	}
 	return nil
 }

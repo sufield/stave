@@ -2,6 +2,7 @@ package setup
 
 import (
 	"context"
+	"errors"
 	"fmt"
 )
 
@@ -83,7 +84,7 @@ func Init(ctx context.Context, req InitRequest, deps InitDeps) (InitResponse, er
 	}
 
 	if req.Dir == "" {
-		return InitResponse{}, fmt.Errorf("init-project: directory is required")
+		return InitResponse{}, errors.New("init-project: directory is required")
 	}
 
 	if req.Profile != "" && req.Profile != "aws-s3" {

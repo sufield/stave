@@ -1,8 +1,6 @@
 package doctor
 
 import (
-	"fmt"
-
 	"github.com/sufield/stave/internal/core/outcome"
 )
 
@@ -37,7 +35,7 @@ func checkBinary(ctx *SystemEnvironment, req BinaryRequest) Diagnostic {
 
 	message := req.PassMessage
 	if message == "" {
-		message = fmt.Sprintf("%s is available in PATH", req.Binary)
+		message = req.Binary + " is available in PATH"
 	}
 
 	return Diagnostic{

@@ -50,7 +50,7 @@ type ArtifactWriter struct {
 // The cmd layer must inject a FileSystem backed by safe platform functions.
 func NewArtifactWriter(outDir string, opts WriteOptions, stdout io.Writer, fs FileSystem) (*ArtifactWriter, error) {
 	if fs == nil {
-		return nil, fmt.Errorf("fix.NewArtifactWriter: FileSystem implementation is required")
+		return nil, errors.New("fix.NewArtifactWriter: FileSystem implementation is required")
 	}
 	return &ArtifactWriter{OutDir: outDir, Options: opts, Stdout: stdout, fs: fs}, nil
 }

@@ -2,6 +2,7 @@ package setup
 
 import (
 	"context"
+	"errors"
 	"fmt"
 )
 
@@ -22,7 +23,7 @@ func GenerateControl(ctx context.Context, req GenerateControlRequest, deps Gener
 	}
 
 	if req.Name == "" {
-		return GenerateControlResponse{}, fmt.Errorf("generate-control: name is required")
+		return GenerateControlResponse{}, errors.New("generate-control: name is required")
 	}
 
 	resp, err := deps.Generator.GenerateControl(ctx, req)
@@ -50,7 +51,7 @@ func GenerateObservation(ctx context.Context, req GenerateObservationRequest, de
 	}
 
 	if req.Name == "" {
-		return GenerateObservationResponse{}, fmt.Errorf("generate-observation: name is required")
+		return GenerateObservationResponse{}, errors.New("generate-observation: name is required")
 	}
 
 	resp, err := deps.Generator.GenerateObservation(ctx, req)

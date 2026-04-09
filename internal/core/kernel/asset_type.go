@@ -2,6 +2,7 @@ package kernel
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -49,7 +50,7 @@ func (a AssetType) Domain() AssetDomain {
 func (a AssetType) Validate() error {
 	s := string(a)
 	if s == "" || a == UnknownAsset {
-		return fmt.Errorf("asset type is required")
+		return errors.New("asset type is required")
 	}
 	if !assetTypePattern.MatchString(s) {
 		return fmt.Errorf("invalid asset type %q: must be lowercase alphanumerics with underscores, dots, or hyphens", s)

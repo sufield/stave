@@ -2,6 +2,7 @@ package compose
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	appeval "github.com/sufield/stave/internal/app/eval"
@@ -12,7 +13,7 @@ import (
 // the provider's configured repository.
 func (p *Provider) LoadSnapshots(ctx context.Context, dir string) ([]asset.Snapshot, error) {
 	if p.ObsRepoFunc == nil {
-		return nil, fmt.Errorf("observation repository function not configured")
+		return nil, errors.New("observation repository function not configured")
 	}
 
 	repo, err := p.ObsRepoFunc()

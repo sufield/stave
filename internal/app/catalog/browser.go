@@ -2,6 +2,7 @@ package catalog
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -107,7 +108,7 @@ func SelectFields(raw string) ([]string, error) {
 		}
 	}
 	if len(selected) == 0 {
-		return nil, fmt.Errorf("at least one field must be selected (id, name, type, risk, domain)")
+		return nil, errors.New("at least one field must be selected (id, name, type, risk, domain)")
 	}
 	return selected, nil
 }

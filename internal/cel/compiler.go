@@ -1,6 +1,7 @@
 package cel
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -227,7 +228,7 @@ func ruleToExprAnyMatch(_ *policy.PredicateRule, val any) (string, error) {
 			return "", fmt.Errorf("any_match: %w", err)
 		}
 		if parsed == nil {
-			return "", fmt.Errorf("any_match: nil nested predicate")
+			return "", errors.New("any_match: nil nested predicate")
 		}
 		nested = parsed
 	}
@@ -239,7 +240,7 @@ func ruleToExprAnyMatch(_ *policy.PredicateRule, val any) (string, error) {
 		return "", fmt.Errorf("any_match: %w", err)
 	}
 	if innerExpr == "" || innerExpr == "false" {
-		return "", fmt.Errorf("any_match: empty nested predicate")
+		return "", errors.New("any_match: empty nested predicate")
 	}
 
 	return fmt.Sprintf("identities.exists(__id, %s)", innerExpr), nil

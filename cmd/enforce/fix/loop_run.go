@@ -34,10 +34,10 @@ type loopInfra struct {
 // buildLoopInfra initializes all dependencies needed by the fix-loop.
 func (r *Runner) buildLoopInfra(req LoopRequest) (loopInfra, error) {
 	if r.NewCtlRepo == nil {
-		return loopInfra{}, fmt.Errorf("fix-loop requires a control repository factory")
+		return loopInfra{}, errors.New("fix-loop requires a control repository factory")
 	}
 	if r.NewObsRepo == nil {
-		return loopInfra{}, fmt.Errorf("fix-loop requires an observation repository factory")
+		return loopInfra{}, errors.New("fix-loop requires an observation repository factory")
 	}
 
 	controlRepo, err := r.NewCtlRepo()

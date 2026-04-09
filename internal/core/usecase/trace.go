@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"errors"
 	"fmt"
 )
 
@@ -37,10 +38,10 @@ func Trace(ctx context.Context, req TraceRequest, deps TraceDeps) (TraceResponse
 	}
 
 	if req.ControlID == "" {
-		return TraceResponse{}, fmt.Errorf("trace: control ID is required")
+		return TraceResponse{}, errors.New("trace: control ID is required")
 	}
 	if req.AssetID == "" {
-		return TraceResponse{}, fmt.Errorf("trace: asset ID is required")
+		return TraceResponse{}, errors.New("trace: asset ID is required")
 	}
 
 	data, err := deps.Evaluator.TraceEvaluation(ctx, req.ControlID, req.ControlsDir, req.ObservationPath, req.AssetID)

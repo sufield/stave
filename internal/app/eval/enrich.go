@@ -1,7 +1,7 @@
 package eval
 
 import (
-	"fmt"
+	"errors"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/core/asset"
@@ -39,7 +39,7 @@ func Enrich(enricher remediation.FindingEnricher, sanitizer kernel.Sanitizer, re
 // Returns an error if enricher is nil.
 func PrepareFindings(enricher remediation.FindingEnricher, sanitizer kernel.Sanitizer, result evaluation.ComplianceReport) ([]appcontracts.EnrichedFinding, error) {
 	if enricher == nil {
-		return nil, fmt.Errorf("enricher must not be nil")
+		return nil, errors.New("enricher must not be nil")
 	}
 	findings := enricher.EnrichFindings(result)
 	if sanitizer != nil {

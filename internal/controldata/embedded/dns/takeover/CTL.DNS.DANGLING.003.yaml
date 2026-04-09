@@ -1,0 +1,47 @@
+dsl_version: ctrl.v1
+id: CTL.DNS.DANGLING.003
+name: DNS Records to Software Distribution Must Resolve to Owned Endpoints
+description: >
+  DNS records or URLs that reference software distribution endpoints
+  (package repositories, binary downloads, update servers) must resolve
+  to resources owned by the organization. Supply chain takeover through
+  dangling distribution references delivers executable code to systems
+  that trust the source.
+domain: exposure
+exposure:
+  type: supply_chain_takeover
+  principal_scope: public
+severity: critical
+scope_tags:
+  - dns
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    A reference to a software distribution endpoint points to a resource
+    that does not exist or is not owned. Users following install guides or
+    running update scripts will download attacker-controlled software.
+  action: >
+    Claim the resource to block takeover. Update all documentation, install
+    guides, and CI pipelines to reference the current distribution URL.
+    Search community forums and cached tutorials for outdated references.
+  example: |
+    {
+      "dns": {
+        "target_type": "software_distribution",
+        "target_exists": true,
+        "target_owned": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.dns.blast_radius
+      op: eq
+      value: software_distribution
+    - any:
+        - field: properties.dns.target_exists
+          op: eq
+          value: false
+        - field: properties.dns.target_owned
+          op: eq
+          value: false
