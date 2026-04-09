@@ -15,7 +15,7 @@ HIPAA_DIR="$SCENARIOS_DIR/hipaa-compliance"
 
 usage() {
   cat <<'HELP'
-Stave Tutorial Demo — 44 S3 security scenarios + HIPAA compliance profile
+Stave Tutorial Demo — 74 security controls across S3, IAM, GCS, and DNS
 
 Usage:
   docker run stave-tutorials --list                  List all scenarios
@@ -358,7 +358,7 @@ case "${1:-}" in
   --scenario|-s)
     num="${2:-}"
     if [ -z "$num" ]; then
-      echo "Error: --scenario requires a number (1-44)" >&2
+      echo "Error: --scenario requires a number" >&2
       exit 2
     fi
     mode="bad"
