@@ -1,0 +1,40 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.AUDIT.001
+name: Kubernetes Audit Logging Must Be Enabled
+description: >
+  The Kubernetes API server must have audit logging enabled. Without
+  audit logs, API calls (including unauthorized access attempts) are
+  not recorded for forensic analysis.
+domain: exposure
+severity: high
+compliance:
+  cis_k8s_v1.8.0: "3.2.1"
+  hipaa: "164.312(b)"
+scope_tags:
+  - kubernetes
+  - audit
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Kubernetes API server does not have audit logging enabled. API
+    access is not recorded.
+  action: >
+    Configure the API server with --audit-policy-file and
+    --audit-log-path. For managed clusters (EKS, GKE), enable
+    control plane logging via the cloud provider console.
+  example: |
+    {
+      "audit": {
+        "kind": "cluster",
+        "audit_logging_enabled": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.audit.kind
+      op: eq
+      value: cluster
+    - field: properties.audit.audit_logging_enabled
+      op: eq
+      value: false

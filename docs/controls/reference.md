@@ -3,21 +3,21 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 95
-**Pack hash:** `ca40898938d929644ab5aa7d38d00d1f57881e0256c4b052fe0cf9bfff491669`
+**Total controls:** 103
+**Pack hash:** `99e6d722ab6e8828c8059074cbddf2e473511b7454e7dd8c60a15da3be152eef`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 20 |
-| high | 38 |
-| low | 9 |
-| medium | 28 |
+| critical | 22 |
+| high | 41 |
+| low | 10 |
+| medium | 30 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 78 |
+| exposure | 86 |
 | governance | 2 |
 | identity | 11 |
 | storage | 4 |
@@ -479,6 +479,125 @@ The AWS root account must not have active access keys. Root access keys provide 
 The AWS root account must have multi-factor authentication enabled. Root has unrestricted access to all resources. Compromise without MFA is the highest-severity identity risk.
 
 **Remediation:** Enable MFA on the root account using a hardware MFA device or virtual MFA app. Navigate to IAM > Security credentials > MFA.
+
+---
+
+### CTL.K8S.AUDIT.001
+
+**Kubernetes Audit Logging Must Be Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.8.0: 3.2.1; hipaa: 164.312(b);
+
+The Kubernetes API server must have audit logging enabled. Without audit logs, API calls (including unauthorized access attempts) are not recorded for forensic analysis.
+
+**Remediation:** Configure the API server with --audit-policy-file and --audit-log-path. For managed clusters (EKS, GKE), enable control plane logging via the cloud provider console.
+
+---
+
+### CTL.K8S.INCOMPLETE.001
+
+**Complete Data Required for Kubernetes Assessment**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+
+Kubernetes cluster safety cannot be assessed when audit logging status is missing from the snapshot. The extractor must populate audit.audit_logging_enabled.
+
+**Remediation:** Re-run the extractor with Kubernetes API access to describe cluster configuration, RBAC, network policies, and secrets.
+
+---
+
+### CTL.K8S.NETPOL.001
+
+**Namespaces Must Have Network Policies**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.8.0: 5.3.2; hipaa: 164.312(e)(1);
+
+Kubernetes namespaces containing workloads must have at least one NetworkPolicy defined. Without network policies, all pod-to-pod traffic is allowed by default, enabling lateral movement.
+
+**Remediation:** Create a default-deny NetworkPolicy for the namespace, then add explicit allow rules for required traffic flows.
+
+---
+
+### CTL.K8S.NETPOL.DENY.001
+
+**Namespaces Must Have Default-Deny Network Policy**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.8.0: 5.3.2;
+
+Namespaces with network policies must include a default-deny ingress policy. Without default-deny, network policies only add allow rules on top of the implicit allow-all default.
+
+**Remediation:** Add a default-deny ingress NetworkPolicy that selects all pods and has no ingress rules.
+
+---
+
+### CTL.K8S.RBAC.SERVICEACCOUNT.001
+
+**Default Service Account Must Not Have Active Tokens**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.8.0: 5.1.5;
+
+The default service account in each namespace should not have auto-mounted tokens. Pods using the default service account inherit permissions that may allow unintended API access.
+
+**Remediation:** Set automountServiceAccountToken to false on the default service account in every namespace. Create dedicated service accounts with minimal permissions for workloads that need API access.
+
+---
+
+### CTL.K8S.RBAC.WILDCARD.001
+
+**ClusterRoles Must Not Use Wildcard Resources or Verbs**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.8.0: 5.1.3;
+
+Kubernetes ClusterRoles must not grant wildcard (*) access to resources or verbs. Wildcard grants provide cluster-wide permissions that bypass the principle of least privilege.
+
+**Remediation:** Replace wildcard entries with explicit resource names and verbs. Use Roles (namespace-scoped) instead of ClusterRoles where possible.
+
+---
+
+### CTL.K8S.SECRETS.ENCRYPT.001
+
+**Kubernetes Secrets Must Be Encrypted at Rest in etcd**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.8.0: 1.2.29; hipaa: 164.312(a)(2)(iv);
+
+Kubernetes Secrets stored in etcd must be encrypted at rest. By default, Secrets are stored as base64-encoded plaintext in etcd, readable by anyone with etcd access or etcd backup access.
+
+**Remediation:** Configure the API server with --encryption-provider-config pointing to an EncryptionConfiguration that uses aescbc, aesgcm, or kms provider. For EKS, enable envelope encryption with a KMS key.
+
+---
+
+### CTL.K8S.SECRETS.PLAINTEXT.001
+
+**Pods Must Not Mount Secrets as Environment Variables**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.8.0: 5.4.1;
+
+Secrets should be mounted as files, not environment variables. Environment variables are visible in process listings, crash dumps, and container inspection output, increasing the risk of credential exposure.
+
+**Remediation:** Mount Secrets as volumes instead of environment variables. Use projected volumes with restrictive file permissions (0400).
 
 ---
 
