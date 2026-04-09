@@ -7,15 +7,25 @@
     "now": "2026-01-14T00:00:00Z",
     "sla_threshold": "0h",
     "snapshots": 2,
-    "policy_fingerprint": "2ab47c9d9dbd17752806e50f72334cbadf9c99dfef25d2286345f5cf1e60f7d8"
+    "policy_fingerprint": "9e975ec5d29e7dc77d0160ae8989d8f659e8c0242bd5ff8a37812dd49b49b80b"
   },
   "summary": {
-    "total_assets": 9,
-    "exposed_resources": 8,
-    "violations": 20
+    "total_assets": 20,
+    "exposed_resources": 19,
+    "violations": 35
   },
   "status": "NON_COMPLIANT",
   "risk_signals": [
+    {
+      "control_id": "CTL.APIGATEWAY.TLS.001",
+      "asset_id": "phi-api",
+      "asset_type": "aws_apigateway_stage",
+      "status": "OVERDUE",
+      "due_at": "2026-01-10T00:00:00Z",
+      "remaining_hours": -96,
+      "first_unsafe_at": "2026-01-10T00:00:00Z",
+      "threshold_hours": 0
+    },
     {
       "control_id": "CTL.BACKUP.EXISTS.001",
       "asset_id": "backup-phi-database",
@@ -47,6 +57,86 @@
       "threshold_hours": 0
     },
     {
+      "control_id": "CTL.CLOUDTRAIL.ENABLED.001",
+      "asset_id": "main-trail",
+      "asset_type": "aws_cloudtrail_trail",
+      "status": "OVERDUE",
+      "due_at": "2026-01-10T00:00:00Z",
+      "remaining_hours": -96,
+      "first_unsafe_at": "2026-01-10T00:00:00Z",
+      "threshold_hours": 0
+    },
+    {
+      "control_id": "CTL.CLOUDTRAIL.ENCRYPT.001",
+      "asset_id": "main-trail",
+      "asset_type": "aws_cloudtrail_trail",
+      "status": "OVERDUE",
+      "due_at": "2026-01-10T00:00:00Z",
+      "remaining_hours": -96,
+      "first_unsafe_at": "2026-01-10T00:00:00Z",
+      "threshold_hours": 0
+    },
+    {
+      "control_id": "CTL.CLOUDTRAIL.VALIDATION.001",
+      "asset_id": "main-trail",
+      "asset_type": "aws_cloudtrail_trail",
+      "status": "OVERDUE",
+      "due_at": "2026-01-10T00:00:00Z",
+      "remaining_hours": -96,
+      "first_unsafe_at": "2026-01-10T00:00:00Z",
+      "threshold_hours": 0
+    },
+    {
+      "control_id": "CTL.CLOUDWATCH.RETENTION.001",
+      "asset_id": "app-logs",
+      "asset_type": "aws_cloudwatch_log_group",
+      "status": "OVERDUE",
+      "due_at": "2026-01-10T00:00:00Z",
+      "remaining_hours": -96,
+      "first_unsafe_at": "2026-01-10T00:00:00Z",
+      "threshold_hours": 0
+    },
+    {
+      "control_id": "CTL.COGNITO.MFA.001",
+      "asset_id": "patient-portal",
+      "asset_type": "aws_cognito_user_pool",
+      "status": "OVERDUE",
+      "due_at": "2026-01-10T00:00:00Z",
+      "remaining_hours": -96,
+      "first_unsafe_at": "2026-01-10T00:00:00Z",
+      "threshold_hours": 0
+    },
+    {
+      "control_id": "CTL.CONFIG.ENABLED.001",
+      "asset_id": "config-recorder",
+      "asset_type": "aws_config_recorder",
+      "status": "OVERDUE",
+      "due_at": "2026-01-10T00:00:00Z",
+      "remaining_hours": -96,
+      "first_unsafe_at": "2026-01-10T00:00:00Z",
+      "threshold_hours": 0
+    },
+    {
+      "control_id": "CTL.CONFIG.RULES.001",
+      "asset_id": "config-recorder",
+      "asset_type": "aws_config_recorder",
+      "status": "OVERDUE",
+      "due_at": "2026-01-10T00:00:00Z",
+      "remaining_hours": -96,
+      "first_unsafe_at": "2026-01-10T00:00:00Z",
+      "threshold_hours": 0
+    },
+    {
+      "control_id": "CTL.DYNAMODB.ENCRYPT.001",
+      "asset_id": "phi-events-table",
+      "asset_type": "aws_dynamodb_table",
+      "status": "OVERDUE",
+      "due_at": "2026-01-10T00:00:00Z",
+      "remaining_hours": -96,
+      "first_unsafe_at": "2026-01-10T00:00:00Z",
+      "threshold_hours": 0
+    },
+    {
       "control_id": "CTL.EC2.EBS.ENCRYPT.001",
       "asset_id": "i-0abc123def",
       "asset_type": "aws_instance",
@@ -60,6 +150,16 @@
       "control_id": "CTL.EC2.PUBLIC.001",
       "asset_id": "i-0abc123def",
       "asset_type": "aws_instance",
+      "status": "OVERDUE",
+      "due_at": "2026-01-10T00:00:00Z",
+      "remaining_hours": -96,
+      "first_unsafe_at": "2026-01-10T00:00:00Z",
+      "threshold_hours": 0
+    },
+    {
+      "control_id": "CTL.ELASTICACHE.TRANSIT.001",
+      "asset_id": "session-cache",
+      "asset_type": "aws_elasticache_cluster",
       "status": "OVERDUE",
       "due_at": "2026-01-10T00:00:00Z",
       "remaining_hours": -96,
@@ -157,6 +257,16 @@
       "threshold_hours": 0
     },
     {
+      "control_id": "CTL.KMS.POLICY.001",
+      "asset_id": "phi-cmk",
+      "asset_type": "aws_kms_key",
+      "status": "OVERDUE",
+      "due_at": "2026-01-10T00:00:00Z",
+      "remaining_hours": -96,
+      "first_unsafe_at": "2026-01-10T00:00:00Z",
+      "threshold_hours": 0
+    },
+    {
       "control_id": "CTL.RDS.BACKUP.001",
       "asset_id": "phi-database",
       "asset_type": "aws_rds_instance",
@@ -207,6 +317,46 @@
       "threshold_hours": 0
     },
     {
+      "control_id": "CTL.SECRETSMANAGER.ACCESS.001",
+      "asset_id": "db-credentials",
+      "asset_type": "aws_secretsmanager_secret",
+      "status": "OVERDUE",
+      "due_at": "2026-01-10T00:00:00Z",
+      "remaining_hours": -96,
+      "first_unsafe_at": "2026-01-10T00:00:00Z",
+      "threshold_hours": 0
+    },
+    {
+      "control_id": "CTL.SECRETSMANAGER.ENCRYPT.001",
+      "asset_id": "db-credentials",
+      "asset_type": "aws_secretsmanager_secret",
+      "status": "OVERDUE",
+      "due_at": "2026-01-10T00:00:00Z",
+      "remaining_hours": -96,
+      "first_unsafe_at": "2026-01-10T00:00:00Z",
+      "threshold_hours": 0
+    },
+    {
+      "control_id": "CTL.SNS.ENCRYPT.001",
+      "asset_id": "phi-alerts",
+      "asset_type": "aws_sns_topic",
+      "status": "OVERDUE",
+      "due_at": "2026-01-10T00:00:00Z",
+      "remaining_hours": -96,
+      "first_unsafe_at": "2026-01-10T00:00:00Z",
+      "threshold_hours": 0
+    },
+    {
+      "control_id": "CTL.SQS.ENCRYPT.001",
+      "asset_id": "phi-notifications",
+      "asset_type": "aws_sqs_queue",
+      "status": "OVERDUE",
+      "due_at": "2026-01-10T00:00:00Z",
+      "remaining_hours": -96,
+      "first_unsafe_at": "2026-01-10T00:00:00Z",
+      "threshold_hours": 0
+    },
+    {
       "control_id": "CTL.VPC.FLOWLOG.001",
       "asset_id": "vpc-prod-001",
       "asset_type": "aws_vpc",
@@ -218,6 +368,50 @@
     }
   ],
   "findings": [
+    {
+      "control_id": "CTL.APIGATEWAY.TLS.001",
+      "control_name": "API Gateway Must Enforce TLS 1.2",
+      "control_description": "API Gateway stages must enforce TLS 1.2 or higher. Allowing older TLS versions exposes API traffic to known cryptographic attacks (BEAST, POODLE, etc).\n",
+      "asset_id": "phi-api",
+      "asset_type": "aws_apigateway_stage",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
+        "unsafe_duration_hours": 96,
+        "misconfigurations": [
+          {
+            "property": "api.encryption.tls_enforced",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "api.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "rest_api"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 96 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "hipaa": "164.312(e)(2)(ii)"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
+      "remediation": {
+        "description": "API Gateway does not enforce TLS 1.2. Clients can connect with older, vulnerable TLS versions.",
+        "action": "Set the minimum TLS version on the custom domain or API stage. For REST APIs, configure a security policy of TLS_1_2 on the custom domain name.",
+        "example": "{\n  \"api\": {\n    \"kind\": \"rest_api\",\n    \"encryption\": {\n      \"minimum_tls_version\": \"TLS_1_2\"\n    }\n  }\n}\n"
+      }
+    },
     {
       "control_id": "CTL.BACKUP.EXISTS.001",
       "control_name": "Critical Resources Must Have Backups",
@@ -351,6 +545,362 @@
       }
     },
     {
+      "control_id": "CTL.CLOUDTRAIL.ENABLED.001",
+      "control_name": "CloudTrail Must Be Enabled in All Regions",
+      "control_description": "CloudTrail must be configured as a multi-region trail. A single-region trail misses API activity in other regions, leaving gaps in the audit record that prevent forensic investigation of unauthorized access.\n",
+      "asset_id": "main-trail",
+      "asset_type": "aws_cloudtrail_trail",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
+        "unsafe_duration_hours": 96,
+        "misconfigurations": [
+          {
+            "property": "audit_trail.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "trail"
+          },
+          {
+            "property": "audit_trail.multi_region_enabled",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 96 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance": {
+        "cis_aws_v1.4.0": "3.1",
+        "hipaa": "164.312(b)"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
+      "remediation": {
+        "description": "CloudTrail trail is not configured for multi-region logging. API activity in other regions is not recorded.",
+        "action": "Update the trail to enable multi-region logging. Run: aws cloudtrail update-trail --name xxx --is-multi-region-trail",
+        "example": "{\n  \"audit_trail\": {\n    \"kind\": \"trail\",\n    \"multi_region_enabled\": true\n  }\n}\n"
+      }
+    },
+    {
+      "control_id": "CTL.CLOUDTRAIL.ENCRYPT.001",
+      "control_name": "CloudTrail Logs Must Be Encrypted with KMS",
+      "control_description": "CloudTrail logs must be encrypted at rest using a KMS customer-managed key. Default S3 encryption (SSE-S3) does not provide key revocation capability needed for breach response.\n",
+      "asset_id": "main-trail",
+      "asset_type": "aws_cloudtrail_trail",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
+        "unsafe_duration_hours": 96,
+        "misconfigurations": [
+          {
+            "property": "audit_trail.encryption.encrypted",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "audit_trail.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "trail"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 96 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_aws_v1.4.0": "3.7",
+        "hipaa": "164.312(a)(2)(iv)"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
+      "remediation": {
+        "description": "CloudTrail logs are not encrypted with a KMS customer-managed key. Log data may be exposed if the S3 bucket is compromised.",
+        "action": "Configure the trail to use a KMS key for log encryption. Run: aws cloudtrail update-trail --name xxx --kms-key-id arn:aws:kms:...",
+        "example": "{\n  \"audit_trail\": {\n    \"kind\": \"trail\",\n    \"encryption\": {\n      \"encrypted\": true,\n      \"kms_key_id\": \"arn:aws:kms:us-east-1:123456789012:key/abc\"\n    }\n  }\n}\n"
+      }
+    },
+    {
+      "control_id": "CTL.CLOUDTRAIL.VALIDATION.001",
+      "control_name": "CloudTrail Log File Validation Must Be Enabled",
+      "control_description": "CloudTrail must have log file integrity validation enabled. Without validation, an attacker who gains access to the log bucket can modify or delete log entries to cover their tracks.\n",
+      "asset_id": "main-trail",
+      "asset_type": "aws_cloudtrail_trail",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
+        "unsafe_duration_hours": 96,
+        "misconfigurations": [
+          {
+            "property": "audit_trail.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "trail"
+          },
+          {
+            "property": "audit_trail.log_file_validation_enabled",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 96 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_aws_v1.4.0": "3.2",
+        "hipaa": "164.312(b)"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
+      "remediation": {
+        "description": "CloudTrail log file validation is disabled. Log integrity cannot be verified.",
+        "action": "Enable log file validation on the trail. Run: aws cloudtrail update-trail --name xxx --enable-log-file-validation",
+        "example": "{\n  \"audit_trail\": {\n    \"kind\": \"trail\",\n    \"log_file_validation_enabled\": true\n  }\n}\n"
+      }
+    },
+    {
+      "control_id": "CTL.CLOUDWATCH.RETENTION.001",
+      "control_name": "CloudWatch Log Groups Must Have Retention Policy",
+      "control_description": "CloudWatch Logs log groups must have a retention policy configured. Without a retention policy, logs are kept indefinitely (incurring cost) or may be deleted manually without audit trail.\n",
+      "asset_id": "app-logs",
+      "asset_type": "aws_cloudwatch_log_group",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
+        "unsafe_duration_hours": 96,
+        "misconfigurations": [
+          {
+            "property": "log_group.has_retention_policy",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "log_group.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "log_group"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 96 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "hipaa": "164.312(b)"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
+      "remediation": {
+        "description": "CloudWatch log group does not have a retention policy. Logs may accumulate indefinitely or be deleted without governance.",
+        "action": "Set a retention policy on the log group. Run: aws logs put-retention-policy --log-group-name xxx --retention-in-days 365",
+        "example": "{\n  \"log_group\": {\n    \"kind\": \"log_group\",\n    \"has_retention_policy\": true\n  }\n}\n"
+      }
+    },
+    {
+      "control_id": "CTL.COGNITO.MFA.001",
+      "control_name": "Cognito User Pool Must Enforce MFA",
+      "control_description": "Cognito user pools handling PHI must enforce multi-factor authentication. Without MFA, a compromised password grants full access to the application and any PHI it serves.\n",
+      "asset_id": "patient-portal",
+      "asset_type": "aws_cognito_user_pool",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
+        "unsafe_duration_hours": 96,
+        "misconfigurations": [
+          {
+            "property": "identity.auth.mfa_enforced",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "identity.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "user_pool"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 96 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "hipaa": "164.312(d)"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
+      "remediation": {
+        "description": "Cognito user pool does not enforce MFA. User authentication relies on password alone.",
+        "action": "Set MfaConfiguration to ON (required) on the user pool. Run: aws cognito-idp set-user-pool-mfa-config --user-pool-id xxx --mfa-configuration ON --software-token-mfa-configuration Enabled=true",
+        "example": "{\n  \"identity\": {\n    \"kind\": \"user_pool\",\n    \"auth\": {\n      \"mfa_enforced\": true\n    }\n  }\n}\n"
+      }
+    },
+    {
+      "control_id": "CTL.CONFIG.ENABLED.001",
+      "control_name": "AWS Config Must Be Recording All Resource Types",
+      "control_description": "AWS Config must be enabled and recording all supported resource types. Without Config, configuration changes are not tracked and drift from the desired security baseline cannot be detected.\n",
+      "asset_id": "config-recorder",
+      "asset_type": "aws_config_recorder",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
+        "unsafe_duration_hours": 96,
+        "misconfigurations": [
+          {
+            "property": "compliance.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "recorder"
+          },
+          {
+            "property": "compliance.recording_enabled",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 96 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_aws_v1.4.0": "3.5",
+        "hipaa": "164.312(b)"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
+      "remediation": {
+        "description": "AWS Config recorder is not enabled or not recording all resource types. Configuration changes are not being tracked.",
+        "action": "Enable the Config recorder with all resource types. Run: aws configservice put-configuration-recorder --configuration-recorder name=default,roleARN=arn:...,recordingGroup={allSupported=true}",
+        "example": "{\n  \"compliance\": {\n    \"kind\": \"recorder\",\n    \"recording_enabled\": true,\n    \"all_resource_types\": true\n  }\n}\n"
+      }
+    },
+    {
+      "control_id": "CTL.CONFIG.RULES.001",
+      "control_name": "AWS Config Must Have Active Rules",
+      "control_description": "AWS Config must have active Config Rules to evaluate resource compliance. Recording without rules provides change history but no automated drift detection.\n",
+      "asset_id": "config-recorder",
+      "asset_type": "aws_config_recorder",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
+        "unsafe_duration_hours": 96,
+        "misconfigurations": [
+          {
+            "property": "compliance.has_active_rules",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "compliance.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "recorder"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 96 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "hipaa": "164.312(c)(1)"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
+      "remediation": {
+        "description": "AWS Config has no active rules. Configuration drift will not be detected automatically.",
+        "action": "Deploy Config Rules for your compliance requirements. Start with AWS managed rules for common checks (encrypted-volumes, restricted-common-ports, etc).",
+        "example": "{\n  \"compliance\": {\n    \"kind\": \"recorder\",\n    \"has_active_rules\": true\n  }\n}\n"
+      }
+    },
+    {
+      "control_id": "CTL.DYNAMODB.ENCRYPT.001",
+      "control_name": "DynamoDB Must Use Customer-Managed KMS Encryption",
+      "control_description": "DynamoDB tables must use a customer-managed KMS key for encryption at rest. The default AWS-owned key does not support key revocation, audit of key usage, or cross-account key policies.\n",
+      "asset_id": "phi-events-table",
+      "asset_type": "aws_dynamodb_table",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
+        "unsafe_duration_hours": 96,
+        "misconfigurations": [
+          {
+            "property": "database.encryption.sse_type",
+            "actual_value": "[SANITIZED]",
+            "operator": "ne",
+            "unsafe_value": "KMS"
+          },
+          {
+            "property": "database.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "table"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 96 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "hipaa": "164.312(a)(2)(iv)"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
+      "remediation": {
+        "description": "DynamoDB table is not encrypted with a customer-managed KMS key.",
+        "action": "Update the table encryption to use a customer-managed KMS key. Run: aws dynamodb update-table --table-name xxx --sse-specification Enabled=true,SSEType=KMS,KMSMasterKeyId=arn:...",
+        "example": "{\n  \"database\": {\n    \"kind\": \"table\",\n    \"encryption\": {\n      \"sse_type\": \"KMS\"\n    }\n  }\n}\n"
+      }
+    },
+    {
       "control_id": "CTL.EC2.EBS.ENCRYPT.001",
       "control_name": "EBS Volumes Must Be Encrypted",
       "control_description": "EBS volumes attached to EC2 instances must have encryption enabled. Unencrypted volumes storing PHI or sensitive data violate encryption at rest requirements.\n",
@@ -472,6 +1022,50 @@
           }
         ],
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+      }
+    },
+    {
+      "control_id": "CTL.ELASTICACHE.TRANSIT.001",
+      "control_name": "ElastiCache Must Have In-Transit Encryption Enabled",
+      "control_description": "ElastiCache clusters must have in-transit encryption enabled. Without TLS, cache traffic travels in plaintext between the application and the cache nodes, exposing cached PHI data.\n",
+      "asset_id": "session-cache",
+      "asset_type": "aws_elasticache_cluster",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
+        "unsafe_duration_hours": 96,
+        "misconfigurations": [
+          {
+            "property": "cache.encryption.in_transit_enabled",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "cache.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "cluster"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 96 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "hipaa": "164.312(e)(2)(ii)"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
+      "remediation": {
+        "description": "ElastiCache cluster does not have in-transit encryption enabled. Cache traffic is transmitted in plaintext.",
+        "action": "In-transit encryption can only be enabled at cluster creation. Create a new replication group with TransitEncryptionEnabled=true and migrate data from the existing cluster.",
+        "example": "{\n  \"cache\": {\n    \"kind\": \"cluster\",\n    \"encryption\": {\n      \"in_transit_enabled\": true\n    }\n  }\n}\n"
       }
     },
     {
@@ -856,6 +1450,50 @@
       }
     },
     {
+      "control_id": "CTL.KMS.POLICY.001",
+      "control_name": "KMS Key Policy Must Restrict Access to Specific Roles",
+      "control_description": "KMS key policies must not grant wildcard principal access. A key policy with Principal \"*\" allows any IAM entity in the account (or any account if conditions are missing) to use the key, defeating the purpose of customer-managed encryption.\n",
+      "asset_id": "phi-cmk",
+      "asset_type": "aws_kms_key",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
+        "unsafe_duration_hours": 96,
+        "misconfigurations": [
+          {
+            "property": "cryptography.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "key"
+          },
+          {
+            "property": "cryptography.policy.has_wildcard_principal",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 96 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "hipaa": "164.312(a)(1)"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
+      "remediation": {
+        "description": "KMS key policy grants access to wildcard principals. Any IAM entity can use this key for encryption and decryption.",
+        "action": "Update the key policy to restrict Principal to specific IAM roles or accounts. Remove any statements with Principal \"*\".",
+        "example": "{\n  \"cryptography\": {\n    \"kind\": \"key\",\n    \"policy\": {\n      \"has_wildcard_principal\": false\n    }\n  }\n}\n"
+      }
+    },
+    {
       "control_id": "CTL.RDS.BACKUP.001",
       "control_name": "RDS Automated Backups Must Be Enabled",
       "control_description": "RDS instances must have automated backups enabled with a retention period of at least 7 days. Without backups, data loss from accidental deletion, corruption, or ransomware is permanent.\n",
@@ -1110,6 +1748,182 @@
           }
         ],
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+      }
+    },
+    {
+      "control_id": "CTL.SECRETSMANAGER.ACCESS.001",
+      "control_name": "Secrets Must Have Rotation Enabled",
+      "control_description": "Secrets Manager secrets must have automatic rotation enabled. Long-lived secrets that are never rotated increase the blast radius of credential leaks and prevent timely revocation.\n",
+      "asset_id": "db-credentials",
+      "asset_type": "aws_secretsmanager_secret",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
+        "unsafe_duration_hours": 96,
+        "misconfigurations": [
+          {
+            "property": "secret.access.rotation_enabled",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "secret.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "secret"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 96 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "hipaa": "164.312(a)(1)"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
+      "remediation": {
+        "description": "Secret does not have automatic rotation enabled. The secret value may be stale or compromised without detection.",
+        "action": "Configure automatic rotation with a Lambda function. Run: aws secretsmanager rotate-secret --secret-id xxx --rotation-lambda-arn arn:aws:lambda:... --rotation-rules AutomaticallyAfterDays=90",
+        "example": "{\n  \"secret\": {\n    \"kind\": \"secret\",\n    \"access\": {\n      \"rotation_enabled\": true\n    }\n  }\n}\n"
+      }
+    },
+    {
+      "control_id": "CTL.SECRETSMANAGER.ENCRYPT.001",
+      "control_name": "Secrets Must Be Encrypted with Customer-Managed KMS Key",
+      "control_description": "Secrets Manager secrets must be encrypted with a customer-managed KMS key. The default AWS-managed key does not support key revocation or cross-account key policies needed for breach response.\n",
+      "asset_id": "db-credentials",
+      "asset_type": "aws_secretsmanager_secret",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
+        "unsafe_duration_hours": 96,
+        "misconfigurations": [
+          {
+            "property": "secret.encryption.customer_managed_key",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "secret.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "secret"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 96 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "hipaa": "164.312(a)(2)(iv)"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
+      "remediation": {
+        "description": "Secret is not encrypted with a customer-managed KMS key.",
+        "action": "Recreate the secret with a customer-managed KMS key specified. Secrets Manager does not allow changing the encryption key after creation.",
+        "example": "{\n  \"secret\": {\n    \"kind\": \"secret\",\n    \"encryption\": {\n      \"customer_managed_key\": true\n    }\n  }\n}\n"
+      }
+    },
+    {
+      "control_id": "CTL.SNS.ENCRYPT.001",
+      "control_name": "SNS Topics Must Be Encrypted with KMS",
+      "control_description": "SNS topics must use server-side encryption with a KMS key. Unencrypted topics expose message payloads at rest, which may contain PHI or other sensitive notification data.\n",
+      "asset_id": "phi-alerts",
+      "asset_type": "aws_sns_topic",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
+        "unsafe_duration_hours": 96,
+        "misconfigurations": [
+          {
+            "property": "messaging.encryption.encrypted",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "messaging.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "topic"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 96 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "hipaa": "164.312(a)(2)(iv)"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
+      "remediation": {
+        "description": "SNS topic is not encrypted with KMS. Notification data is stored in plaintext.",
+        "action": "Enable SSE-KMS on the topic. Run: aws sns set-topic-attributes --topic-arn xxx --attribute-name KmsMasterKeyId --attribute-value arn:aws:kms:...",
+        "example": "{\n  \"messaging\": {\n    \"kind\": \"topic\",\n    \"encryption\": {\n      \"encrypted\": true\n    }\n  }\n}\n"
+      }
+    },
+    {
+      "control_id": "CTL.SQS.ENCRYPT.001",
+      "control_name": "SQS Queues Must Be Encrypted with KMS",
+      "control_description": "SQS queues must use server-side encryption with a KMS key. Unencrypted queues expose message payloads at rest, which may contain PHI or other sensitive data.\n",
+      "asset_id": "phi-notifications",
+      "asset_type": "aws_sqs_queue",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
+        "unsafe_duration_hours": 96,
+        "misconfigurations": [
+          {
+            "property": "messaging.encryption.encrypted",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "messaging.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "queue"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 96 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "hipaa": "164.312(a)(2)(iv)"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
+      "remediation": {
+        "description": "SQS queue is not encrypted with KMS. Message data is stored in plaintext.",
+        "action": "Enable SSE-KMS on the queue. Run: aws sqs set-queue-attributes --queue-url xxx --attributes KmsMasterKeyId=arn:aws:kms:...",
+        "example": "{\n  \"messaging\": {\n    \"kind\": \"queue\",\n    \"encryption\": {\n      \"encrypted\": true\n    }\n  }\n}\n"
       }
     },
     {

@@ -1,0 +1,36 @@
+dsl_version: ctrl.v1
+id: CTL.SQS.INCOMPLETE.001
+name: Complete Data Required for SQS Assessment
+description: >
+  The observation snapshot is missing required SQS queue properties.
+domain: exposure
+severity: info
+compliance: {}
+scope_tags:
+  - aws
+  - sqs
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Observation is missing SQS queue properties.
+  action: >
+    Ensure the extractor calls aws sqs get-queue-attributes and maps
+    the KmsMasterKeyId to the messaging.encryption observation properties.
+  example: |
+    {
+      "messaging": {
+        "kind": "queue",
+        "encryption": {
+          "encrypted": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: queue
+    - field: properties.messaging.encryption.encrypted
+      op: missing
+      value: true

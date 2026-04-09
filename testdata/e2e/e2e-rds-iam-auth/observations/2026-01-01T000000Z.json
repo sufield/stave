@@ -1,0 +1,21 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "assets": [
+    {
+      "id": "phi-database",
+      "type": "aws_rds_instance",
+      "vendor": "aws",
+      "properties": {
+        "database": {
+          "kind": "instance",
+          "access": {
+            "publicly_accessible": false,
+            "multi_az": true,
+            "iam_authentication_enabled": false
+          }
+        }
+      }
+    }
+  ]
+}

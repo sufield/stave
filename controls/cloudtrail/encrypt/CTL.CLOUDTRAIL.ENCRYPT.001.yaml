@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.ENCRYPT.001
+name: CloudTrail Logs Must Be Encrypted with KMS
+description: >
+  CloudTrail logs must be encrypted at rest using a KMS customer-managed
+  key. Default S3 encryption (SSE-S3) does not provide key revocation
+  capability needed for breach response.
+domain: exposure
+severity: high
+compliance:
+  hipaa: "164.312(a)(2)(iv)"
+  cis_aws_v1.4.0: "3.7"
+scope_tags:
+  - aws
+  - cloudtrail
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    CloudTrail logs are not encrypted with a KMS customer-managed key.
+    Log data may be exposed if the S3 bucket is compromised.
+  action: >
+    Configure the trail to use a KMS key for log encryption. Run:
+    aws cloudtrail update-trail --name xxx --kms-key-id arn:aws:kms:...
+  example: |
+    {
+      "audit_trail": {
+        "kind": "trail",
+        "encryption": {
+          "encrypted": true,
+          "kms_key_id": "arn:aws:kms:us-east-1:123456789012:key/abc"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.audit_trail.kind
+      op: eq
+      value: trail
+    - field: properties.audit_trail.encryption.encrypted
+      op: eq
+      value: false

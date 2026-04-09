@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.SNS.ENCRYPT.001
+name: SNS Topics Must Be Encrypted with KMS
+description: >
+  SNS topics must use server-side encryption with a KMS key.
+  Unencrypted topics expose message payloads at rest, which may
+  contain PHI or other sensitive notification data.
+domain: exposure
+severity: high
+compliance:
+  hipaa: "164.312(a)(2)(iv)"
+scope_tags:
+  - aws
+  - sns
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    SNS topic is not encrypted with KMS. Notification data is stored
+    in plaintext.
+  action: >
+    Enable SSE-KMS on the topic. Run:
+    aws sns set-topic-attributes --topic-arn xxx
+    --attribute-name KmsMasterKeyId --attribute-value arn:aws:kms:...
+  example: |
+    {
+      "messaging": {
+        "kind": "topic",
+        "encryption": {
+          "encrypted": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: topic
+    - field: properties.messaging.encryption.encrypted
+      op: eq
+      value: false

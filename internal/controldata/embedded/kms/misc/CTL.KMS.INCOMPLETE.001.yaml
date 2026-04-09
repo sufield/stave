@@ -1,0 +1,39 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.INCOMPLETE.001
+name: Complete Data Required for KMS Assessment
+description: >
+  The observation snapshot is missing required KMS key properties.
+  A safety assessment cannot be completed without key policy data.
+domain: exposure
+severity: info
+compliance: {}
+scope_tags:
+  - aws
+  - kms
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Observation is missing KMS key properties. The extractor must
+    populate cryptography.policy fields.
+  action: >
+    Ensure the extractor calls aws kms get-key-policy and maps the
+    response to the cryptography observation properties.
+  example: |
+    {
+      "cryptography": {
+        "kind": "key",
+        "policy": {
+          "has_wildcard_principal": false,
+          "restricted_to_specific_roles": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: key
+    - field: properties.cryptography.policy.has_wildcard_principal
+      op: missing
+      value: true

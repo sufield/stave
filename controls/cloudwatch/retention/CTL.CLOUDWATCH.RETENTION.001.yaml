@@ -1,0 +1,39 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.RETENTION.001
+name: CloudWatch Log Groups Must Have Retention Policy
+description: >
+  CloudWatch Logs log groups must have a retention policy configured.
+  Without a retention policy, logs are kept indefinitely (incurring
+  cost) or may be deleted manually without audit trail.
+domain: exposure
+severity: medium
+compliance:
+  hipaa: "164.312(b)"
+scope_tags:
+  - aws
+  - cloudwatch
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    CloudWatch log group does not have a retention policy. Logs may
+    accumulate indefinitely or be deleted without governance.
+  action: >
+    Set a retention policy on the log group. Run:
+    aws logs put-retention-policy --log-group-name xxx
+    --retention-in-days 365
+  example: |
+    {
+      "log_group": {
+        "kind": "log_group",
+        "has_retention_policy": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.log_group.kind
+      op: eq
+      value: log_group
+    - field: properties.log_group.has_retention_policy
+      op: eq
+      value: false

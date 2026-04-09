@@ -159,6 +159,159 @@
               "has_default_deny": false
             }
           }
+        },
+        {
+          "id": "main-trail",
+          "type": "aws_cloudtrail_trail",
+          "vendor": "aws",
+          "properties": {
+            "audit_trail": {
+              "kind": "trail",
+              "multi_region_enabled": false,
+              "log_file_validation_enabled": false,
+              "encryption": {
+                "encrypted": false,
+                "kms_key_id": ""
+              }
+            }
+          }
+        },
+        {
+          "id": "phi-cmk",
+          "type": "aws_kms_key",
+          "vendor": "aws",
+          "properties": {
+            "cryptography": {
+              "kind": "key",
+              "policy": {
+                "has_wildcard_principal": true,
+                "restricted_to_specific_roles": false
+              }
+            }
+          }
+        },
+        {
+          "id": "db-credentials",
+          "type": "aws_secretsmanager_secret",
+          "vendor": "aws",
+          "properties": {
+            "secret": {
+              "kind": "secret",
+              "encryption": {
+                "customer_managed_key": false
+              },
+              "access": {
+                "rotation_enabled": false
+              }
+            }
+          }
+        },
+        {
+          "id": "phi-events-table",
+          "type": "aws_dynamodb_table",
+          "vendor": "aws",
+          "properties": {
+            "database": {
+              "kind": "table",
+              "encryption": {
+                "sse_enabled": true,
+                "sse_type": "DEFAULT"
+              }
+            }
+          }
+        },
+        {
+          "id": "phi-notifications",
+          "type": "aws_sqs_queue",
+          "vendor": "aws",
+          "properties": {
+            "messaging": {
+              "kind": "queue",
+              "encryption": {
+                "encrypted": false
+              }
+            }
+          }
+        },
+        {
+          "id": "phi-alerts",
+          "type": "aws_sns_topic",
+          "vendor": "aws",
+          "properties": {
+            "messaging": {
+              "kind": "topic",
+              "encryption": {
+                "encrypted": false
+              }
+            }
+          }
+        },
+        {
+          "id": "app-logs",
+          "type": "aws_cloudwatch_log_group",
+          "vendor": "aws",
+          "properties": {
+            "log_group": {
+              "kind": "log_group",
+              "has_retention_policy": false,
+              "retention_days": 0
+            }
+          }
+        },
+        {
+          "id": "config-recorder",
+          "type": "aws_config_recorder",
+          "vendor": "aws",
+          "properties": {
+            "compliance": {
+              "kind": "recorder",
+              "recording_enabled": false,
+              "all_resource_types": false,
+              "has_active_rules": false
+            }
+          }
+        },
+        {
+          "id": "phi-api",
+          "type": "aws_apigateway_stage",
+          "vendor": "aws",
+          "properties": {
+            "api": {
+              "kind": "rest_api",
+              "encryption": {
+                "tls_enforced": false,
+                "minimum_tls_version": "TLS_1_0"
+              }
+            }
+          }
+        },
+        {
+          "id": "session-cache",
+          "type": "aws_elasticache_cluster",
+          "vendor": "aws",
+          "properties": {
+            "cache": {
+              "kind": "cluster",
+              "encryption": {
+                "in_transit_enabled": false,
+                "at_rest_enabled": true
+              }
+            }
+          }
+        },
+        {
+          "id": "patient-portal",
+          "type": "aws_cognito_user_pool",
+          "vendor": "aws",
+          "properties": {
+            "identity": {
+              "kind": "user_pool",
+              "auth": {
+                "mfa_enforced": false,
+                "mfa_configuration": "OFF"
+              }
+            }
+          }
         }
       ]
     },
@@ -318,6 +471,159 @@
               "kind": "namespace",
               "has_network_policies": false,
               "has_default_deny": false
+            }
+          }
+        },
+        {
+          "id": "main-trail",
+          "type": "aws_cloudtrail_trail",
+          "vendor": "aws",
+          "properties": {
+            "audit_trail": {
+              "kind": "trail",
+              "multi_region_enabled": false,
+              "log_file_validation_enabled": false,
+              "encryption": {
+                "encrypted": false,
+                "kms_key_id": ""
+              }
+            }
+          }
+        },
+        {
+          "id": "phi-cmk",
+          "type": "aws_kms_key",
+          "vendor": "aws",
+          "properties": {
+            "cryptography": {
+              "kind": "key",
+              "policy": {
+                "has_wildcard_principal": true,
+                "restricted_to_specific_roles": false
+              }
+            }
+          }
+        },
+        {
+          "id": "db-credentials",
+          "type": "aws_secretsmanager_secret",
+          "vendor": "aws",
+          "properties": {
+            "secret": {
+              "kind": "secret",
+              "encryption": {
+                "customer_managed_key": false
+              },
+              "access": {
+                "rotation_enabled": false
+              }
+            }
+          }
+        },
+        {
+          "id": "phi-events-table",
+          "type": "aws_dynamodb_table",
+          "vendor": "aws",
+          "properties": {
+            "database": {
+              "kind": "table",
+              "encryption": {
+                "sse_enabled": true,
+                "sse_type": "DEFAULT"
+              }
+            }
+          }
+        },
+        {
+          "id": "phi-notifications",
+          "type": "aws_sqs_queue",
+          "vendor": "aws",
+          "properties": {
+            "messaging": {
+              "kind": "queue",
+              "encryption": {
+                "encrypted": false
+              }
+            }
+          }
+        },
+        {
+          "id": "phi-alerts",
+          "type": "aws_sns_topic",
+          "vendor": "aws",
+          "properties": {
+            "messaging": {
+              "kind": "topic",
+              "encryption": {
+                "encrypted": false
+              }
+            }
+          }
+        },
+        {
+          "id": "app-logs",
+          "type": "aws_cloudwatch_log_group",
+          "vendor": "aws",
+          "properties": {
+            "log_group": {
+              "kind": "log_group",
+              "has_retention_policy": false,
+              "retention_days": 0
+            }
+          }
+        },
+        {
+          "id": "config-recorder",
+          "type": "aws_config_recorder",
+          "vendor": "aws",
+          "properties": {
+            "compliance": {
+              "kind": "recorder",
+              "recording_enabled": false,
+              "all_resource_types": false,
+              "has_active_rules": false
+            }
+          }
+        },
+        {
+          "id": "phi-api",
+          "type": "aws_apigateway_stage",
+          "vendor": "aws",
+          "properties": {
+            "api": {
+              "kind": "rest_api",
+              "encryption": {
+                "tls_enforced": false,
+                "minimum_tls_version": "TLS_1_0"
+              }
+            }
+          }
+        },
+        {
+          "id": "session-cache",
+          "type": "aws_elasticache_cluster",
+          "vendor": "aws",
+          "properties": {
+            "cache": {
+              "kind": "cluster",
+              "encryption": {
+                "in_transit_enabled": false,
+                "at_rest_enabled": true
+              }
+            }
+          }
+        },
+        {
+          "id": "patient-portal",
+          "type": "aws_cognito_user_pool",
+          "vendor": "aws",
+          "properties": {
+            "identity": {
+              "kind": "user_pool",
+              "auth": {
+                "mfa_enforced": false,
+                "mfa_configuration": "OFF"
+              }
             }
           }
         }

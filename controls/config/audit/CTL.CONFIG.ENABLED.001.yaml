@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.CONFIG.ENABLED.001
+name: AWS Config Must Be Recording All Resource Types
+description: >
+  AWS Config must be enabled and recording all supported resource types.
+  Without Config, configuration changes are not tracked and drift from
+  the desired security baseline cannot be detected.
+domain: exposure
+severity: high
+compliance:
+  hipaa: "164.312(b)"
+  cis_aws_v1.4.0: "3.5"
+scope_tags:
+  - aws
+  - config
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    AWS Config recorder is not enabled or not recording all resource
+    types. Configuration changes are not being tracked.
+  action: >
+    Enable the Config recorder with all resource types. Run:
+    aws configservice put-configuration-recorder --configuration-recorder
+    name=default,roleARN=arn:...,recordingGroup={allSupported=true}
+  example: |
+    {
+      "compliance": {
+        "kind": "recorder",
+        "recording_enabled": true,
+        "all_resource_types": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compliance.kind
+      op: eq
+      value: recorder
+    - field: properties.compliance.recording_enabled
+      op: eq
+      value: false

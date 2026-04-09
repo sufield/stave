@@ -3,26 +3,56 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 109
-**Pack hash:** `3b22cceacad62a039c7557fc78e95031a0a4e09a1101521532b817b6d326de18`
+**Total controls:** 137
+**Pack hash:** `4cb191728bf68378e57fd2ef90f04c9893f49833dd3b2b4e81f491e91fa9f63d`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 22 |
-| high | 44 |
+| critical | 23 |
+| high | 56 |
+| info | 11 |
 | low | 11 |
-| medium | 32 |
+| medium | 36 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 92 |
+| exposure | 117 |
 | governance | 2 |
-| identity | 11 |
+| identity | 14 |
 | storage | 4 |
 
 ## Controls
+
+### CTL.APIGATEWAY.INCOMPLETE.001
+
+**Complete Data Required for API Gateway Assessment**
+
+- **Severity:** info
+- **Type:** unsafe_state
+- **Domain:** exposure
+
+The observation snapshot is missing required API Gateway properties.
+
+**Remediation:** Ensure the extractor calls aws apigateway get-rest-apis and aws apigateway get-domain-names and maps security policy to the api observation properties.
+
+---
+
+### CTL.APIGATEWAY.TLS.001
+
+**API Gateway Must Enforce TLS 1.2**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(e)(2)(ii);
+
+API Gateway stages must enforce TLS 1.2 or higher. Allowing older TLS versions exposes API traffic to known cryptographic attacks (BEAST, POODLE, etc).
+
+**Remediation:** Set the minimum TLS version on the custom domain or API stage. For REST APIs, configure a security policy of TLS_1_2 on the custom domain name.
+
+---
 
 ### CTL.BACKUP.ENCRYPT.001
 
@@ -113,6 +143,167 @@ Data classified as critical or PHI must have cross-region replication configured
 
 ---
 
+### CTL.CLOUDTRAIL.ENABLED.001
+
+**CloudTrail Must Be Enabled in All Regions**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v1.4.0: 3.1; hipaa: 164.312(b);
+
+CloudTrail must be configured as a multi-region trail. A single-region trail misses API activity in other regions, leaving gaps in the audit record that prevent forensic investigation of unauthorized access.
+
+**Remediation:** Update the trail to enable multi-region logging. Run: aws cloudtrail update-trail --name xxx --is-multi-region-trail
+
+---
+
+### CTL.CLOUDTRAIL.ENCRYPT.001
+
+**CloudTrail Logs Must Be Encrypted with KMS**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v1.4.0: 3.7; hipaa: 164.312(a)(2)(iv);
+
+CloudTrail logs must be encrypted at rest using a KMS customer-managed key. Default S3 encryption (SSE-S3) does not provide key revocation capability needed for breach response.
+
+**Remediation:** Configure the trail to use a KMS key for log encryption. Run: aws cloudtrail update-trail --name xxx --kms-key-id arn:aws:kms:...
+
+---
+
+### CTL.CLOUDTRAIL.INCOMPLETE.001
+
+**Complete Data Required for CloudTrail Assessment**
+
+- **Severity:** info
+- **Type:** unsafe_state
+- **Domain:** exposure
+
+The observation snapshot is missing required CloudTrail properties. A safety assessment cannot be completed without trail configuration data.
+
+**Remediation:** Ensure the extractor calls aws cloudtrail describe-trails and aws cloudtrail get-trail-status and maps the response to the audit_trail observation properties.
+
+---
+
+### CTL.CLOUDTRAIL.VALIDATION.001
+
+**CloudTrail Log File Validation Must Be Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v1.4.0: 3.2; hipaa: 164.312(b);
+
+CloudTrail must have log file integrity validation enabled. Without validation, an attacker who gains access to the log bucket can modify or delete log entries to cover their tracks.
+
+**Remediation:** Enable log file validation on the trail. Run: aws cloudtrail update-trail --name xxx --enable-log-file-validation
+
+---
+
+### CTL.CLOUDWATCH.INCOMPLETE.001
+
+**Complete Data Required for CloudWatch Assessment**
+
+- **Severity:** info
+- **Type:** unsafe_state
+- **Domain:** exposure
+
+The observation snapshot is missing required CloudWatch log group properties.
+
+**Remediation:** Ensure the extractor calls aws logs describe-log-groups and maps the retentionInDays to the log_group observation properties.
+
+---
+
+### CTL.CLOUDWATCH.RETENTION.001
+
+**CloudWatch Log Groups Must Have Retention Policy**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(b);
+
+CloudWatch Logs log groups must have a retention policy configured. Without a retention policy, logs are kept indefinitely (incurring cost) or may be deleted manually without audit trail.
+
+**Remediation:** Set a retention policy on the log group. Run: aws logs put-retention-policy --log-group-name xxx --retention-in-days 365
+
+---
+
+### CTL.COGNITO.INCOMPLETE.001
+
+**Complete Data Required for Cognito Assessment**
+
+- **Severity:** info
+- **Type:** unsafe_state
+- **Domain:** identity
+
+The observation snapshot is missing required Cognito user pool properties.
+
+**Remediation:** Ensure the extractor calls aws cognito-idp describe-user-pool and maps MfaConfiguration to the identity observation properties.
+
+---
+
+### CTL.COGNITO.MFA.001
+
+**Cognito User Pool Must Enforce MFA**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** hipaa: 164.312(d);
+
+Cognito user pools handling PHI must enforce multi-factor authentication. Without MFA, a compromised password grants full access to the application and any PHI it serves.
+
+**Remediation:** Set MfaConfiguration to ON (required) on the user pool. Run: aws cognito-idp set-user-pool-mfa-config --user-pool-id xxx --mfa-configuration ON --software-token-mfa-configuration Enabled=true
+
+---
+
+### CTL.CONFIG.ENABLED.001
+
+**AWS Config Must Be Recording All Resource Types**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v1.4.0: 3.5; hipaa: 164.312(b);
+
+AWS Config must be enabled and recording all supported resource types. Without Config, configuration changes are not tracked and drift from the desired security baseline cannot be detected.
+
+**Remediation:** Enable the Config recorder with all resource types. Run: aws configservice put-configuration-recorder --configuration-recorder name=default,roleARN=arn:...,recordingGroup={allSupported=true}
+
+---
+
+### CTL.CONFIG.INCOMPLETE.001
+
+**Complete Data Required for AWS Config Assessment**
+
+- **Severity:** info
+- **Type:** unsafe_state
+- **Domain:** exposure
+
+The observation snapshot is missing required AWS Config properties.
+
+**Remediation:** Ensure the extractor calls aws configservice describe-configuration-recorders and aws configservice describe-config-rules.
+
+---
+
+### CTL.CONFIG.RULES.001
+
+**AWS Config Must Have Active Rules**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(c)(1);
+
+AWS Config must have active Config Rules to evaluate resource compliance. Recording without rules provides change history but no automated drift detection.
+
+**Remediation:** Deploy Config Rules for your compliance requirements. Start with AWS managed rules for common checks (encrypted-volumes, restricted-common-ports, etc).
+
+---
+
 ### CTL.DNS.DANGLING.001
 
 **DNS Records Must Not Point to Unclaimed Resources**
@@ -152,6 +343,35 @@ DNS records that reference cloud storage endpoints (S3, GCS, Azure Blob) must re
 DNS records or URLs that reference software distribution endpoints (package repositories, binary downloads, update servers) must resolve to resources owned by the organization. Supply chain takeover through dangling distribution references delivers executable code to systems that trust the source.
 
 **Remediation:** Claim the resource to block takeover. Update all documentation, install guides, and CI pipelines to reference the current distribution URL. Search community forums and cached tutorials for outdated references.
+
+---
+
+### CTL.DYNAMODB.ENCRYPT.001
+
+**DynamoDB Must Use Customer-Managed KMS Encryption**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(2)(iv);
+
+DynamoDB tables must use a customer-managed KMS key for encryption at rest. The default AWS-owned key does not support key revocation, audit of key usage, or cross-account key policies.
+
+**Remediation:** Update the table encryption to use a customer-managed KMS key. Run: aws dynamodb update-table --table-name xxx --sse-specification Enabled=true,SSEType=KMS,KMSMasterKeyId=arn:...
+
+---
+
+### CTL.DYNAMODB.INCOMPLETE.001
+
+**Complete Data Required for DynamoDB Assessment**
+
+- **Severity:** info
+- **Type:** unsafe_state
+- **Domain:** exposure
+
+The observation snapshot is missing required DynamoDB properties.
+
+**Remediation:** Ensure the extractor calls aws dynamodb describe-table and maps the SSEDescription to the database.encryption observation properties.
 
 ---
 
@@ -226,6 +446,35 @@ EC2 instances should not have public IP addresses unless explicitly required. Pu
 EBS snapshots must be encrypted. Unencrypted snapshots can be shared across accounts or made public, exposing data at rest.
 
 **Remediation:** Copy the snapshot with encryption enabled. Delete the unencrypted snapshot. Enable EBS encryption by default for future snapshots.
+
+---
+
+### CTL.ELASTICACHE.INCOMPLETE.001
+
+**Complete Data Required for ElastiCache Assessment**
+
+- **Severity:** info
+- **Type:** unsafe_state
+- **Domain:** exposure
+
+The observation snapshot is missing required ElastiCache properties.
+
+**Remediation:** Ensure the extractor calls aws elasticache describe-replication-groups and maps TransitEncryptionEnabled to the cache observation properties.
+
+---
+
+### CTL.ELASTICACHE.TRANSIT.001
+
+**ElastiCache Must Have In-Transit Encryption Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(e)(2)(ii);
+
+ElastiCache clusters must have in-transit encryption enabled. Without TLS, cache traffic travels in plaintext between the application and the cache nodes, exposing cached PHI data.
+
+**Remediation:** In-transit encryption can only be enabled at cluster creation. Create a new replication group with TransitEncryptionEnabled=true and migrate data from the existing cluster.
 
 ---
 
@@ -518,7 +767,7 @@ The IAM account password policy must prevent reuse of the last 24 passwords. Wit
 - **Severity:** low
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v1.4.0: 1.15; soc2: CC6.3;
+- **Compliance:** cis_aws_v1.4.0: 1.15; hipaa: 164.312(a)(1); soc2: CC6.3;
 
 IAM users must not have managed policies attached directly. Policies should be attached to groups or roles, not individual users. Direct attachment creates unmanageable per-user permission sprawl.
 
@@ -533,7 +782,7 @@ IAM users must not have managed policies attached directly. Policies should be a
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v1.4.0: 1.15; soc2: CC6.3;
+- **Compliance:** cis_aws_v1.4.0: 1.15; hipaa: 164.312(a)(1); soc2: CC6.3;
 
 IAM users must not have inline policies attached directly. Inline policies are harder to audit, cannot be reused, and create per-user policy sprawl that resists central governance.
 
@@ -690,6 +939,35 @@ Secrets should be mounted as files, not environment variables. Environment varia
 
 ---
 
+### CTL.KMS.INCOMPLETE.001
+
+**Complete Data Required for KMS Assessment**
+
+- **Severity:** info
+- **Type:** unsafe_state
+- **Domain:** exposure
+
+The observation snapshot is missing required KMS key properties. A safety assessment cannot be completed without key policy data.
+
+**Remediation:** Ensure the extractor calls aws kms get-key-policy and maps the response to the cryptography observation properties.
+
+---
+
+### CTL.KMS.POLICY.001
+
+**KMS Key Policy Must Restrict Access to Specific Roles**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(1);
+
+KMS key policies must not grant wildcard principal access. A key policy with Principal "*" allows any IAM entity in the account (or any account if conditions are missing) to use the key, defeating the purpose of customer-managed encryption.
+
+**Remediation:** Update the key policy to restrict Principal to specific IAM roles or accounts. Remove any statements with Principal "*".
+
+---
+
 ### CTL.RDS.BACKUP.001
 
 **RDS Automated Backups Must Be Enabled**
@@ -717,6 +995,21 @@ RDS instances must have automated backups enabled with a retention period of at 
 RDS instances must have storage encryption enabled. Unencrypted database storage exposes data at rest to unauthorized access if the underlying storage is compromised.
 
 **Remediation:** Storage encryption can only be enabled at creation time. Create a snapshot, copy it with encryption enabled, then restore to a new encrypted instance. Enable encryption by default for new instances.
+
+---
+
+### CTL.RDS.IAMAUTH.001
+
+**RDS Must Enable IAM Authentication**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** hipaa: 164.312(d);
+
+RDS instances should enable IAM database authentication. IAM auth eliminates long-lived database passwords and integrates with AWS identity governance for centralized access control and audit.
+
+**Remediation:** Enable IAM authentication on the instance. Run: aws rds modify-db-instance --db-instance-identifier xxx --enable-iam-database-authentication --apply-immediately
 
 ---
 
@@ -776,6 +1069,21 @@ Production RDS instances must use Multi-AZ deployment for high availability. Sin
 RDS instances must not have public accessibility enabled. A publicly accessible database is reachable from the internet, exposing it to brute force attacks, SQL injection, and unauthorized data access.
 
 **Remediation:** Modify the instance to disable public accessibility. Run: aws rds modify-db-instance --db-instance-identifier xxx --no-publicly-accessible --apply-immediately
+
+---
+
+### CTL.RDS.SSL.001
+
+**RDS Must Require SSL Connections**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v1.4.0: 2.3.3; hipaa: 164.312(e)(2)(ii);
+
+RDS instances must enforce SSL/TLS for all client connections. Without require_ssl, database traffic travels unencrypted over the network, exposing query data and credentials to interception.
+
+**Remediation:** Set the rds.force_ssl parameter to 1 in the parameter group (PostgreSQL) or require_secure_transport to ON (MySQL). For Aurora, use the cluster parameter group.
 
 ---
 
@@ -1542,6 +1850,108 @@ Signed upload policies must restrict allowed content types. Unrestricted content
 Signed upload policies must restrict write permission to a single exact object key. Prefix-wide permissions (e.g., starts-with $key files/) enable arbitrary overwrite and cross-tenant tampering.
 
 **Remediation:** Change the signed upload policy to use an exact key condition (eq instead of starts-with) that binds each upload to a specific object path. Generate unique object keys server-side.
+
+---
+
+### CTL.SECRETSMANAGER.ACCESS.001
+
+**Secrets Must Have Rotation Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(1);
+
+Secrets Manager secrets must have automatic rotation enabled. Long-lived secrets that are never rotated increase the blast radius of credential leaks and prevent timely revocation.
+
+**Remediation:** Configure automatic rotation with a Lambda function. Run: aws secretsmanager rotate-secret --secret-id xxx --rotation-lambda-arn arn:aws:lambda:... --rotation-rules AutomaticallyAfterDays=90
+
+---
+
+### CTL.SECRETSMANAGER.ENCRYPT.001
+
+**Secrets Must Be Encrypted with Customer-Managed KMS Key**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(2)(iv);
+
+Secrets Manager secrets must be encrypted with a customer-managed KMS key. The default AWS-managed key does not support key revocation or cross-account key policies needed for breach response.
+
+**Remediation:** Recreate the secret with a customer-managed KMS key specified. Secrets Manager does not allow changing the encryption key after creation.
+
+---
+
+### CTL.SECRETSMANAGER.INCOMPLETE.001
+
+**Complete Data Required for Secrets Manager Assessment**
+
+- **Severity:** info
+- **Type:** unsafe_state
+- **Domain:** exposure
+
+The observation snapshot is missing required Secrets Manager properties. A safety assessment cannot be completed without secret configuration data.
+
+**Remediation:** Ensure the extractor calls aws secretsmanager describe-secret and maps the response to the secret observation properties.
+
+---
+
+### CTL.SNS.ENCRYPT.001
+
+**SNS Topics Must Be Encrypted with KMS**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(2)(iv);
+
+SNS topics must use server-side encryption with a KMS key. Unencrypted topics expose message payloads at rest, which may contain PHI or other sensitive notification data.
+
+**Remediation:** Enable SSE-KMS on the topic. Run: aws sns set-topic-attributes --topic-arn xxx --attribute-name KmsMasterKeyId --attribute-value arn:aws:kms:...
+
+---
+
+### CTL.SNS.INCOMPLETE.001
+
+**Complete Data Required for SNS Assessment**
+
+- **Severity:** info
+- **Type:** unsafe_state
+- **Domain:** exposure
+
+The observation snapshot is missing required SNS topic properties.
+
+**Remediation:** Ensure the extractor calls aws sns get-topic-attributes and maps the KmsMasterKeyId to the messaging.encryption observation properties.
+
+---
+
+### CTL.SQS.ENCRYPT.001
+
+**SQS Queues Must Be Encrypted with KMS**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(2)(iv);
+
+SQS queues must use server-side encryption with a KMS key. Unencrypted queues expose message payloads at rest, which may contain PHI or other sensitive data.
+
+**Remediation:** Enable SSE-KMS on the queue. Run: aws sqs set-queue-attributes --queue-url xxx --attributes KmsMasterKeyId=arn:aws:kms:...
+
+---
+
+### CTL.SQS.INCOMPLETE.001
+
+**Complete Data Required for SQS Assessment**
+
+- **Severity:** info
+- **Type:** unsafe_state
+- **Domain:** exposure
+
+The observation snapshot is missing required SQS queue properties.
+
+**Remediation:** Ensure the extractor calls aws sqs get-queue-attributes and maps the KmsMasterKeyId to the messaging.encryption observation properties.
 
 ---
 
