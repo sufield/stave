@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -21,6 +22,7 @@ func TestRun_BasicControl(t *testing.T) {
 		Value:       "true",
 		Remediation: "Disable public read.",
 		OutDir:      dir,
+		Stdout:      io.Discard,
 	}
 
 	if err := run(cfg); err != nil {
@@ -59,6 +61,7 @@ func TestRun_WithKind(t *testing.T) {
 		Value:       "true",
 		Remediation: "Disable unused credentials.",
 		OutDir:      dir,
+		Stdout:      io.Discard,
 	}
 
 	if err := run(cfg); err != nil {
@@ -91,6 +94,7 @@ func TestRun_WithCompliance(t *testing.T) {
 		Remediation: "Fix it.",
 		Compliance:  "hipaa=164.312(a),cis_aws_v1.4.0=2.1.5",
 		OutDir:      dir,
+		Stdout:      io.Discard,
 	}
 
 	if err := run(cfg); err != nil {
@@ -117,6 +121,7 @@ func TestRun_PassFixtureHasSafeValue(t *testing.T) {
 		SafeValue:   "false",
 		Remediation: "Fix it.",
 		OutDir:      dir,
+		Stdout:      io.Discard,
 	}
 
 	if err := run(cfg); err != nil {
@@ -149,6 +154,7 @@ func TestRun_ValidationRejectsInvalidYAML(t *testing.T) {
 		Value:       "true",
 		Remediation: "Fix it.",
 		OutDir:      dir,
+		Stdout:      io.Discard,
 	}
 
 	// Should succeed — the generated YAML is valid.

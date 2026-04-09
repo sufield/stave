@@ -22,13 +22,14 @@ type Data struct {
 	Version       string
 	TotalControls int
 	CategoryCount int
-	S3            map[string]int // category → control count
+	S3            map[string]int // S3 category → control count
+	DomainTotals  map[string]int // domain → total control count
 }
 
 func main() {
 	tmplPath := flag.String("tmpl", "internal/tools/genreadme/README.md.tmpl", "template file")
 	outPath := flag.String("out", "README.md", "output file")
-	controlsDir := flag.String("controls", "controls/s3", "controls directory")
+	controlsRoot := flag.String("controls", "controls", "controls root directory")
 	check := flag.Bool("check", false, "check mode: exit 1 if output is stale")
 	flag.Parse()
 
@@ -38,7 +39,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	data, err := collect(*controlsDir)
+	data, err := collect(*controlsRoot)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
@@ -68,42 +69,66 @@ func main() {
 		fmt.Fprintf(os.Stderr, "error writing %s: %v\n", safeOut, err)
 		os.Exit(1)
 	}
-	fmt.Fprintf(os.Stderr, "Wrote %s (%d controls across %d categories)\n",
-		safeOut, data.TotalControls, data.CategoryCount)
+	fmt.Fprintf(os.Stderr, "Wrote %s (%d controls across %d domains)\n",
+		safeOut, data.TotalControls, len(data.DomainTotals))
 }
 
-func collect(controlsDir string) (Data, error) {
+func collect(controlsRoot string) (Data, error) {
 	version, err := os.ReadFile("VERSION")
 	if err != nil {
 		return Data{}, fmt.Errorf("reading VERSION: %w", err)
 	}
 
 	s3 := make(map[string]int)
+	domainTotals := make(map[string]int)
 	total := 0
+	categoryCount := 0
 
-	entries, err := os.ReadDir(controlsDir)
+	domains, err := os.ReadDir(controlsRoot)
 	if err != nil {
-		return Data{}, fmt.Errorf("reading controls dir: %w", err)
+		return Data{}, fmt.Errorf("reading controls root: %w", err)
 	}
 
-	for _, e := range entries {
-		if !e.IsDir() {
+	for _, domain := range domains {
+		if !domain.IsDir() {
 			continue
 		}
-		cat := e.Name()
-		files, err := filepath.Glob(filepath.Join(controlsDir, cat, "*.yaml"))
+		domainName := domain.Name()
+		domainDir := filepath.Join(controlsRoot, domainName)
+
+		categories, err := os.ReadDir(domainDir)
 		if err != nil {
-			return Data{}, fmt.Errorf("globbing %s: %w", cat, err)
+			return Data{}, fmt.Errorf("reading domain %s: %w", domainName, err)
 		}
-		s3[cat] = len(files)
-		total += len(files)
+
+		domainTotal := 0
+		for _, cat := range categories {
+			if !cat.IsDir() {
+				continue
+			}
+			files, err := filepath.Glob(filepath.Join(domainDir, cat.Name(), "*.yaml"))
+			if err != nil {
+				return Data{}, fmt.Errorf("globbing %s/%s: %w", domainName, cat.Name(), err)
+			}
+			count := len(files)
+			domainTotal += count
+			categoryCount++
+
+			if domainName == "s3" {
+				s3[cat.Name()] = count
+			}
+		}
+
+		domainTotals[domainName] = domainTotal
+		total += domainTotal
 	}
 
 	return Data{
 		Version:       strings.TrimSpace(string(version)),
 		TotalControls: total,
-		CategoryCount: len(s3),
+		CategoryCount: categoryCount,
 		S3:            s3,
+		DomainTotals:  domainTotals,
 	}, nil
 }
 
@@ -128,6 +153,9 @@ func render(tmplPath string, data Data) ([]byte, error) {
 	funcMap := template.FuncMap{
 		"ctrl": func(category string) int {
 			return data.S3[category]
+		},
+		"domain": func(name string) int {
+			return data.DomainTotals[name]
 		},
 	}
 

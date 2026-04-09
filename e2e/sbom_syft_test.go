@@ -1,6 +1,6 @@
 //go:build integration && syft
 
-package evidence
+package e2e
 
 import (
 	"encoding/json"
@@ -9,6 +9,8 @@ import (
 	"sort"
 	"testing"
 	"time"
+
+	"github.com/sufield/stave/internal/app/securityaudit/evidence"
 )
 
 // TestSBOM_CrossCheckSyft compares Stave's CycloneDX output against Syft.
@@ -29,7 +31,7 @@ func TestSBOM_CrossCheckSyft(t *testing.T) {
 	}
 
 	// Generate Stave's SBOM from the running binary's build info.
-	provider := DefaultBuildInfoProvider{}
+	provider := evidence.DefaultBuildInfoProvider{}
 	buildInfo, err := provider.Collect(time.Now())
 	if err != nil {
 		t.Fatalf("collect build info: %v", err)
@@ -38,8 +40,8 @@ func TestSBOM_CrossCheckSyft(t *testing.T) {
 		t.Skip("build info not available in test binary")
 	}
 
-	gen := DefaultSBOMGenerator{}
-	staveSnap, err := gen.Generate(buildInfo, SBOMFormatCycloneDX, time.Now())
+	gen := evidence.DefaultSBOMGenerator{}
+	staveSnap, err := gen.Generate(buildInfo, evidence.SBOMFormatCycloneDX, time.Now())
 	if err != nil {
 		t.Fatalf("generate Stave SBOM: %v", err)
 	}

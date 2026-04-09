@@ -14,7 +14,7 @@ Stave fills this gap. Define safety controls in YAML, compile them to [CEL](http
 
 ## Features
 
-- **53 built-in S3 controls** across 15 categories — public exposure, ACL escalation, encryption, network restriction, Access Grants, Multi-Region Access Points, CloudFront OAC, and more
+- **74 built-in controls** across 4 domains — AWS S3 (53), AWS IAM (11), GCP Cloud Storage (7), DNS (3)
 - **Unsafe duration tracking** — detects how long assets remain misconfigured across snapshots
 - **HIPAA compliance pack** — controls mapped to HIPAA Security Rule sections with compound risk detection
 - **Custom controls** — YAML with `unsafe_predicate` for any asset type, no code changes
@@ -105,7 +105,9 @@ New observation properties are additive and backward-compatible. Existing contro
 
 ## Built-in controls
 
-53 controls across 15 categories:
+74 controls across 4 domains:
+
+### AWS S3 (53 controls)
 
 | Category | Count | What they detect |
 |----------|:---:|-----------------|
@@ -125,7 +127,19 @@ New observation properties are additive and backward-compatible. Existing contro
 | `artifacts` | 1 | VCS artifacts on public buckets |
 | `misc` | 2 | Incomplete data, completeness checks |
 
-Full reference: [Control authoring guide](docs/controls/authoring.md)
+### AWS IAM (11 controls)
+
+Root account MFA and access keys, console user MFA, credential rotation, password policy, inline/direct policy attachment. CIS AWS Benchmark aligned.
+
+### GCP Cloud Storage (7 controls)
+
+Public access, uniform bucket-level access, CMEK encryption, access logging, object versioning, data completeness. CIS GCP Benchmark aligned.
+
+### DNS (3 controls)
+
+Vendor-agnostic dangling DNS reference detection — subdomain takeover, storage bucket takeover, supply chain takeover via software distribution endpoints. Works with any DNS provider.
+
+Full reference: [Control reference](docs/controls/reference.md)
 
 ## Documentation
 

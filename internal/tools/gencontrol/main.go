@@ -28,6 +28,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -57,6 +58,8 @@ func main() {
 	flag.StringVar(&cfg.Compliance, "compliance", "", "Compliance refs as key=value pairs (e.g., cis_aws_v1.4.0=1.5,hipaa=164.312(d))")
 	flag.Parse()
 
+	cfg.Stdout = os.Stdout
+
 	if err := cfg.validate(); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(2)
@@ -84,6 +87,7 @@ type config struct {
 	Remediation string
 	OutDir      string
 	Compliance  string
+	Stdout      io.Writer // diagnostic output; defaults to os.Stdout
 }
 
 func (c *config) validate() error {
@@ -157,7 +161,7 @@ func run(cfg config) error {
 			return fmt.Errorf("write control: %w", err)
 		}
 	}
-	fmt.Printf("  control:  %s\n", filepath.Join(failDir, "controls", cfg.ID+".yaml"))
+	fmt.Fprintf(cfg.Stdout, "  control:  %s\n", filepath.Join(failDir, "controls", cfg.ID+".yaml"))
 
 	// ── Fail fixture (unsafe at both T1 and T2) ──────────────
 	t1 := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -166,19 +170,19 @@ func run(cfg config) error {
 	if err := writeFixture(failDir, cfg, t1, t2, cfg.Value, cfg.Value, "3", "1"); err != nil {
 		return err
 	}
-	fmt.Printf("  fail:     %s (exit=3, findings=1)\n", failDir)
+	fmt.Fprintf(cfg.Stdout, "  fail:     %s (exit=3, findings=1)\n", failDir)
 
 	// ── Pass fixture (safe at both T1 and T2) ────────────────
 	if err := writeFixture(passDir, cfg, t1, t2, cfg.SafeValue, cfg.SafeValue, "0", "0"); err != nil {
 		return err
 	}
-	fmt.Printf("  pass:     %s (exit=0, findings=0)\n", passDir)
+	fmt.Fprintf(cfg.Stdout, "  pass:     %s (exit=0, findings=0)\n", passDir)
 
-	fmt.Println()
-	fmt.Println("Next steps:")
-	fmt.Printf("  1. Review: %s\n", filepath.Join(failDir, "controls", cfg.ID+".yaml"))
-	fmt.Println("  2. Generate golden files: make golden")
-	fmt.Println("  3. Run E2E tests: make e2e")
+	fmt.Fprintln(cfg.Stdout)
+	fmt.Fprintln(cfg.Stdout, "Next steps:")
+	fmt.Fprintf(cfg.Stdout, "  1. Review: %s\n", filepath.Join(failDir, "controls", cfg.ID+".yaml"))
+	fmt.Fprintln(cfg.Stdout, "  2. Generate golden files: make golden")
+	fmt.Fprintln(cfg.Stdout, "  3. Run E2E tests: make e2e")
 
 	return nil
 }
