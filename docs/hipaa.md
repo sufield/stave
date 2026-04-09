@@ -1,30 +1,30 @@
-# HIPAA S3 Compliance Evaluation
+# HIPAA Compliance Evaluation
 
-Stave evaluates S3 bucket configurations against HIPAA Security Rule
-requirements using security controls, compound risk detection,
-a compliance profile system, acknowledged exceptions with compensating
-controls, and structured reporting with regulatory citations.
+Stave evaluates infrastructure configurations against HIPAA Security Rule
+technical safeguards (§164.312, §164.316) across all domains — S3, IAM,
+VPC, EC2, RDS, ELB, Kubernetes, and Backup. The HIPAA profile loads
+controls from every domain and filters by `hipaa` compliance tag.
 
 ## Quick Start
 
 ```bash
-# Evaluate a snapshot against the HIPAA profile
-stave evaluate --snapshot observations/snap.json --profile hipaa
+# Evaluate observations against the HIPAA profile
+stave apply --profile hipaa --input observations.json
 
 # JSON output for automation
-stave evaluate --snapshot snap.json --profile hipaa --format json --output report.json
+stave apply --profile hipaa --input observations.json --format json
 ```
 
 Exit codes:
-- `0` — all CRITICAL controls pass
-- `1` — one or more CRITICAL controls fail
+- `0` — compliant
 - `2` — input or configuration error
+- `3` — violations found
 
 ## HIPAA Profile
 
-The built-in HIPAA profile (`internal/profile/hipaa.go`) includes 11
-controls in priority order. Controls not yet implemented are skipped
-without error during evaluation.
+The `--profile hipaa` flag loads all built-in controls across every
+domain, then filters to the 46 controls with HIPAA compliance mappings.
+This covers 10 §164 sections across 8 service domains.
 
 ### CRITICAL Priority
 
