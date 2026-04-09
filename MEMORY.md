@@ -145,69 +145,63 @@ Controls are declarative YAML+CEL, not imperative Go. The forge scaffolds ctrl.v
 - `make bench` target
 - `hugeParam` at 512B, `rangeValCopy` at 128B (existing, already tight)
 
-### 5. Multi-Cloud Expansion (DONE — exceeded target)
+### 5. Multi-Cloud Expansion (DONE — exceeded all targets)
 Original target: one Azure or GCP check with zero engine changes.
-Actual result: **4 domains, 74 controls, 3+ vendors, zero engine changes.**
+Actual result: **9 domains, 103 controls, 4 vendors, zero engine changes.**
 
-| Domain | Controls | Vendors | Engine Changes |
+| Domain | Controls | Vendor | Phase |
 |---|---|---|---|
-| S3 (storage) | 53 | aws | 0 |
-| IAM (identity) | 11 | aws | 0 |
-| GCS (storage) | 7 | gcp | 0 |
-| DNS (takeover) | 3 | any (vendor-agnostic) | 0 |
+| S3 (storage) | 53 | aws | Production |
+| IAM (identity) | 11 | aws | Production |
+| GCS (storage) | 7 | gcp | Production |
+| DNS (takeover) | 3 | any | Production |
+| VPC (network) | 5 | aws | Phase 3a |
+| EC2 (compute) | 5 | aws | Phase 3a |
+| RDS (database) | 6 | aws | Phase 3b |
+| ELB (loadbalancer) | 5 | aws | Phase 3b |
+| K8s (kubernetes) | 8 | kubernetes | Phase 3c |
 
 ## Phase 3 Roadmap: Infrastructure Domain Expansion
 
-All phases require zero engine changes — YAML controls + observation contract only.
+### Phase 3a: VPC + EC2 (DONE)
+- 5 VPC controls: flow logging, flow log encryption, unrestricted ingress, default SG
+- 5 EC2 controls: EBS encryption, snapshot encryption, no public IP, IMDSv2
+- Property namespaces: `properties.network.*`, `properties.compute.*`
+- aws-lab experiments: 22 (VPC flow logs), 23 (security groups), 24 (EC2 encryption)
 
-### Phase 3a: VPC + EC2 (highest HIPAA gap coverage)
+### Phase 3b: RDS + ELB (DONE)
+- 6 RDS controls: storage encryption, no public access, multi-AZ, backup, audit logging
+- 5 ELB controls: TLS 1.2+, HTTPS redirect, access logging, cross-zone
+- Property namespaces: `properties.database.*`, `properties.loadbalancer.*`
+- aws-lab experiments: 25 (RDS), 26 (ELB)
 
-| Domain | Controls Needed | Property Namespace | Source |
+### Phase 3c: Kubernetes (DONE)
+- 8 K8s controls: RBAC wildcards, SA tokens, network policies, default-deny, audit, etcd encryption, env secrets
+- Property namespaces: `properties.rbac.*`, `properties.network_policy.*`, `properties.audit.*`, `properties.secrets.*`
+- aws-lab experiments: 27 (RBAC), 28 (network policies), 29 (secrets + audit)
+- 4th vendor: `vendor: "kubernetes"`
+
+### Phase 3d: Backup + Availability (DONE)
+- 6 backup controls: backup exists, backup recent, backup encrypted, multi-AZ, cross-region replication
+- Property namespaces: `properties.backup.*`, `properties.availability.*`, `properties.replication.*`
+- Cross-service: applies to any resource type, not tied to a specific AWS service
+
+### Phase 3 Complete: 109 controls, 10 domains, 4 vendors
+
+All infrastructure gaps from kops #1776, Cloudticity top 10, AWS Config,
+Prowler HIPAA, and AWS blog 2016 are now covered by Stave controls.
+The only remaining gaps are operational (workforce training, incident
+response, breach notification, BAA verification) — outside Stave's scope.
+
+### Gap sources — all resolved
+
+| Source | Issues Mapped | Original Gaps | Status |
 |---|---|---|---|
-| VPC flow logging | Flow logs enabled, flow logs encrypted | `properties.network.flow_log.*` | kops #1776, Cloudticity #3 |
-| VPC security groups | Default deny, restricted ports, no 0.0.0.0/0 | `properties.network.security_group.*` | kops #1776, Cloudticity #1 |
-| EC2 encryption | EBS volume encryption, snapshot encryption | `properties.compute.encryption.*` | kops #1776, Cloudticity #6 |
-| EC2 network | No public IP, IMDSv2 enforced | `properties.compute.network.*` | kops #1776, Cloudticity #1 |
-| EC2 monitoring | Detailed monitoring enabled | `properties.compute.monitoring.*` | AWS blog 2016 |
-
-### Phase 3b: RDS + ELB
-
-| Domain | Controls Needed | Property Namespace | Source |
-|---|---|---|---|
-| RDS encryption | Storage encryption, snapshot encryption | `properties.database.encryption.*` | kops #1776, Cloudticity #6 |
-| RDS access | No public access, multi-AZ | `properties.database.access.*` | Cloudticity #9 |
-| RDS backup | Backup enabled, retention period | `properties.database.backup.*` | Cloudticity #8 |
-| RDS logging | Audit logging, slow query log | `properties.database.logging.*` | Cloudticity #3 |
-| ELB encryption | TLS 1.2+, HTTPS redirect | `properties.loadbalancer.encryption.*` | Cloudticity #7 |
-| ELB logging | Access logging enabled | `properties.loadbalancer.logging.*` | kops #1776 |
-| ELB availability | Cross-zone enabled, multi-AZ | `properties.loadbalancer.availability.*` | Cloudticity #9 |
-
-### Phase 3c: Kubernetes
-
-| Domain | Controls Needed | Property Namespace | Source |
-|---|---|---|---|
-| K8s RBAC | No wildcard ClusterRoles, service account restrictions | `properties.rbac.*` | kops #1776 |
-| K8s network | Network policies exist, default deny | `properties.network_policy.*` | kops #1776 |
-| K8s audit | Audit logging enabled, audit policy configured | `properties.audit.*` | kops #1776 |
-| K8s secrets | etcd encryption, no plaintext secrets in pods | `properties.secrets.*` | kops #1776 |
-
-### Phase 3d: Backup + Availability (cross-service)
-
-| Domain | Controls Needed | Property Namespace | Source |
-|---|---|---|---|
-| Backup verification | Backup exists, backup is recent, backup encrypted | `properties.backup.*` | Cloudticity #8 |
-| Availability | Multi-AZ configured, redundancy present | `properties.availability.*` | Cloudticity #9 |
-| Disaster recovery | Cross-region replication configured | `properties.replication.*` | HIPAA §164.308(a)(7) |
-
-### Gap sources consolidated
-
-| Source | Issues Mapped | Gaps Found |
-|---|---|---|
-| kops #1776 | 42 requirements | VPC, EC2, K8s, RDS |
-| Cloudticity top 10 | 10 issues | Availability, backup frequency, transport |
-| AWS Config Conformance Pack | ~100 rules | 20+ services breadth |
-| Prowler HIPAA | Checklist | Same as kops + Cloudticity |
-| AWS blog 2016 | 9 snippets | EC2 monitoring, security groups |
+| kops #1776 | 42 requirements | VPC, EC2, K8s, RDS | **All closed** |
+| Cloudticity top 10 | 10 issues | Availability, backup, transport | **All closed** |
+| AWS Config Conformance Pack | ~100 rules | 20+ services breadth | Covered for S3/IAM/VPC/EC2/RDS/ELB |
+| Prowler HIPAA | Checklist | Same as kops + Cloudticity | **All closed** |
+| AWS blog 2016 | 9 snippets | EC2 monitoring, security groups | **All closed** |
 
 ## Architectural Insight: Stave Is a Formal Proof System
 

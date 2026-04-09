@@ -1,0 +1,39 @@
+dsl_version: ctrl.v1
+id: CTL.BACKUP.REPLICATION.001
+name: Critical Data Must Have Cross-Region Replication
+description: >
+  Data classified as critical or PHI must have cross-region replication
+  configured for disaster recovery. Single-region data is vulnerable
+  to regional outages and cannot meet recovery time objectives (RTO)
+  for multi-region failover.
+domain: exposure
+severity: medium
+compliance:
+  hipaa: "164.308(a)(7)"
+scope_tags:
+  - aws
+  - backup
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Resource does not have cross-region replication configured.
+    A regional outage could cause permanent data unavailability.
+  action: >
+    Configure cross-region replication: S3 CRR, RDS cross-region
+    read replica, or AWS Backup cross-region copy rule.
+  example: |
+    {
+      "replication": {
+        "kind": "resource",
+        "cross_region_enabled": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.replication.kind
+      op: eq
+      value: resource
+    - field: properties.replication.cross_region_enabled
+      op: eq
+      value: false

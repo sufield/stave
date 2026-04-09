@@ -1,0 +1,37 @@
+dsl_version: ctrl.v1
+id: CTL.BACKUP.EXISTS.001
+name: Critical Resources Must Have Backups
+description: >
+  Resources tagged as critical or containing PHI must have at least one
+  backup configured. Without backups, data loss from accidental deletion,
+  corruption, or ransomware is permanent and unrecoverable.
+domain: exposure
+severity: high
+compliance:
+  hipaa: "164.308(a)(7)"
+scope_tags:
+  - aws
+  - backup
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Resource has no backup configured. Data loss is not recoverable.
+  action: >
+    Configure automated backups via AWS Backup, RDS automated snapshots,
+    or S3 cross-region replication depending on the resource type.
+  example: |
+    {
+      "backup": {
+        "kind": "resource",
+        "has_backup": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.backup.kind
+      op: eq
+      value: resource
+    - field: properties.backup.has_backup
+      op: eq
+      value: false
