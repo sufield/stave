@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.BACKUP.INCOMPLETE.001
+name: Complete Data Required for Backup Assessment
+description: >
+  Backup safety cannot be assessed when backup status is missing
+  from the snapshot. The extractor must populate backup.has_backup.
+domain: exposure
+severity: low
+scope_tags:
+  - aws
+  - backup
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Backup assessment data is incomplete. The extractor did not populate
+    required backup properties.
+  action: >
+    Re-run the extractor with backup permissions:
+    backup:ListBackupJobs, backup:DescribeBackupVault,
+    rds:DescribeDBSnapshots, s3:GetBucketReplication.
+unsafe_predicate:
+  all:
+    - field: properties.backup.kind
+      op: eq
+      value: resource
+    - field: properties.backup.has_backup
+      op: missing
+      value: true

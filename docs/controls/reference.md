@@ -3,26 +3,115 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 103
-**Pack hash:** `99e6d722ab6e8828c8059074cbddf2e473511b7454e7dd8c60a15da3be152eef`
+**Total controls:** 109
+**Pack hash:** `3b22cceacad62a039c7557fc78e95031a0a4e09a1101521532b817b6d326de18`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 22 |
-| high | 41 |
-| low | 10 |
-| medium | 30 |
+| high | 44 |
+| low | 11 |
+| medium | 32 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 86 |
+| exposure | 92 |
 | governance | 2 |
 | identity | 11 |
 | storage | 4 |
 
 ## Controls
+
+### CTL.BACKUP.ENCRYPT.001
+
+**Backups Must Be Encrypted**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(2)(iv);
+
+All backups must be encrypted at rest. Unencrypted backups expose data if the backup storage is compromised or the backup is shared across accounts.
+
+**Remediation:** Enable encryption on the backup vault or copy the backup with encryption enabled. For AWS Backup, set the vault encryption key to a customer-managed KMS key.
+
+---
+
+### CTL.BACKUP.EXISTS.001
+
+**Critical Resources Must Have Backups**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.308(a)(7);
+
+Resources tagged as critical or containing PHI must have at least one backup configured. Without backups, data loss from accidental deletion, corruption, or ransomware is permanent and unrecoverable.
+
+**Remediation:** Configure automated backups via AWS Backup, RDS automated snapshots, or S3 cross-region replication depending on the resource type.
+
+---
+
+### CTL.BACKUP.INCOMPLETE.001
+
+**Complete Data Required for Backup Assessment**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+
+Backup safety cannot be assessed when backup status is missing from the snapshot. The extractor must populate backup.has_backup.
+
+**Remediation:** Re-run the extractor with backup permissions: backup:ListBackupJobs, backup:DescribeBackupVault, rds:DescribeDBSnapshots, s3:GetBucketReplication.
+
+---
+
+### CTL.BACKUP.MULTIAZ.001
+
+**Critical Resources Must Be Multi-AZ**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.308(a)(7);
+
+Resources tagged as critical must be deployed across multiple Availability Zones. Single-AZ deployment has a single point of failure that causes unavailability during AZ outages.
+
+**Remediation:** Enable Multi-AZ deployment or configure cross-AZ replication depending on the resource type (RDS Multi-AZ, S3 cross-region replication, ELB multi-AZ targets).
+
+---
+
+### CTL.BACKUP.RECENT.001
+
+**Backups Must Be Recent**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.308(a)(7);
+
+The most recent backup must be within the defined recovery point objective (RPO). Stale backups indicate a broken backup process and increase data loss exposure.
+
+**Remediation:** Verify the backup schedule is active and producing successful backups. Check AWS Backup job history or RDS automated snapshot timestamps.
+
+---
+
+### CTL.BACKUP.REPLICATION.001
+
+**Critical Data Must Have Cross-Region Replication**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.308(a)(7);
+
+Data classified as critical or PHI must have cross-region replication configured for disaster recovery. Single-region data is vulnerable to regional outages and cannot meet recovery time objectives (RTO) for multi-region failover.
+
+**Remediation:** Configure cross-region replication: S3 CRR, RDS cross-region read replica, or AWS Backup cross-region copy rule.
+
+---
 
 ### CTL.DNS.DANGLING.001
 

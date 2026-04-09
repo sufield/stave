@@ -1,0 +1,39 @@
+dsl_version: ctrl.v1
+id: CTL.BACKUP.MULTIAZ.001
+name: Critical Resources Must Be Multi-AZ
+description: >
+  Resources tagged as critical must be deployed across multiple
+  Availability Zones. Single-AZ deployment has a single point of
+  failure that causes unavailability during AZ outages.
+domain: exposure
+severity: medium
+compliance:
+  hipaa: "164.308(a)(7)"
+scope_tags:
+  - aws
+  - backup
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Resource is deployed in a single Availability Zone. An AZ outage
+    will cause unavailability.
+  action: >
+    Enable Multi-AZ deployment or configure cross-AZ replication
+    depending on the resource type (RDS Multi-AZ, S3 cross-region
+    replication, ELB multi-AZ targets).
+  example: |
+    {
+      "availability": {
+        "kind": "resource",
+        "multi_az": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.availability.kind
+      op: eq
+      value: resource
+    - field: properties.availability.multi_az
+      op: eq
+      value: false

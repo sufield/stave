@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.BACKUP.RECENT.001
+name: Backups Must Be Recent
+description: >
+  The most recent backup must be within the defined recovery point
+  objective (RPO). Stale backups indicate a broken backup process
+  and increase data loss exposure.
+domain: exposure
+severity: high
+compliance:
+  hipaa: "164.308(a)(7)"
+scope_tags:
+  - aws
+  - backup
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Most recent backup is older than the recovery point objective.
+    The backup process may be broken or disabled.
+  action: >
+    Verify the backup schedule is active and producing successful
+    backups. Check AWS Backup job history or RDS automated snapshot
+    timestamps.
+  example: |
+    {
+      "backup": {
+        "kind": "resource",
+        "is_recent": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.backup.kind
+      op: eq
+      value: resource
+    - field: properties.backup.has_backup
+      op: eq
+      value: true
+    - field: properties.backup.is_recent
+      op: eq
+      value: false

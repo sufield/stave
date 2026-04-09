@@ -111,6 +111,44 @@ schema version bump.
 - `identity.policies.*` — policy attachment properties
 - `identity.password_policy.*` — password policy settings
 
+### VPC domain
+
+- `network.kind` — discriminator (`"vpc"`, `"security_group"`)
+- `network.flow_log.*` — flow logging state
+- `network.security_group.*` — security group rules and defaults
+
+### EC2 domain
+
+- `compute.kind` — discriminator (`"instance"`, `"snapshot"`)
+- `compute.encryption.*` — EBS volume and snapshot encryption
+- `compute.network.*` — public IP, IMDSv2
+
+### RDS domain
+
+- `database.kind` — discriminator (`"instance"`)
+- `database.encryption.*` — storage encryption
+- `database.access.*` — public accessibility, multi-AZ
+- `database.backup.*` — automated backup state
+- `database.logging.*` — audit log exports
+
+### ELB domain
+
+- `loadbalancer.kind` — discriminator (`"alb"`, `"nlb"`)
+- `loadbalancer.encryption.*` — TLS version, HTTPS redirect
+- `loadbalancer.logging.*` — access logging
+- `loadbalancer.availability.*` — cross-zone balancing
+
+### Kubernetes domain
+
+- `rbac.kind` — discriminator (`"cluster_role"`, `"service_account"`)
+- `rbac.*` — wildcard detection, token automount
+- `network_policy.kind` — discriminator (`"namespace"`)
+- `network_policy.*` — policy existence, default-deny
+- `audit.kind` — discriminator (`"cluster"`)
+- `audit.*` — API server audit logging
+- `secrets.kind` — discriminator (`"cluster"`, `"pod"`)
+- `secrets.*` — etcd encryption, environment variable secrets
+
 ---
 
 ## Field dictionary
@@ -342,6 +380,124 @@ reference it.
 **Vendor field:** Set `vendor` to whatever DNS provider hosts the zone
 (`route53`, `cloudflare`, `namecheap`, `godaddy`, `bind`, etc.). Controls
 evaluate `dns.*` properties only — the vendor is for provenance tracking.
+
+---
+
+## VPC Domain (network.*)
+
+### VPC (`aws_vpc`)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `network.kind` | string | `"vpc"` — discriminator |
+| `network.flow_log.enabled` | bool | VPC flow logging enabled |
+| `network.flow_log.encrypted` | bool | Flow logs encrypted at destination |
+| `network.flow_log.destination_type` | string | `cloud-watch-logs` or `s3` |
+
+### Security Group (`aws_security_group`)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `network.kind` | string | `"security_group"` — discriminator |
+| `network.security_group.is_default` | bool | Is the VPC default security group |
+| `network.security_group.has_rules` | bool | Has any ingress or egress rules |
+| `network.security_group.has_unrestricted_ingress` | bool | 0.0.0.0/0 in any ingress rule |
+
+---
+
+## EC2 Domain (compute.*)
+
+### EC2 Instance (`aws_ec2_instance`)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `compute.kind` | string | `"instance"` — discriminator |
+| `compute.encryption.ebs_encrypted` | bool | All attached EBS volumes encrypted |
+| `compute.network.has_public_ip` | bool | Instance has a public IP address |
+| `compute.network.imdsv2_required` | bool | IMDSv2 HttpTokens set to required |
+
+### EBS Snapshot (`aws_ebs_snapshot`)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `compute.kind` | string | `"snapshot"` — discriminator |
+| `compute.encryption.encrypted` | bool | Snapshot is encrypted |
+
+---
+
+## RDS Domain (database.*)
+
+### RDS Instance (`aws_rds_instance`)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `database.kind` | string | `"instance"` — discriminator |
+| `database.encryption.storage_encrypted` | bool | Storage encryption enabled |
+| `database.encryption.kms_key_id` | string | KMS key ARN (if applicable) |
+| `database.access.publicly_accessible` | bool | Instance has public endpoint |
+| `database.access.multi_az` | bool | Multi-AZ deployment enabled |
+| `database.backup.enabled` | bool | Automated backups enabled |
+| `database.backup.retention_days` | integer | Backup retention period in days |
+| `database.logging.audit_log_enabled` | bool | CloudWatch log exports enabled |
+| `database.logging.log_types` | array | Exported log types (audit, error, slowquery) |
+
+---
+
+## ELB Domain (loadbalancer.*)
+
+### Load Balancer (`aws_elb`)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `loadbalancer.kind` | string | `"alb"` or `"nlb"` — discriminator |
+| `loadbalancer.encryption.tls_1_2_or_higher` | bool | HTTPS listener uses TLS 1.2+ policy |
+| `loadbalancer.encryption.http_to_https_redirect` | bool | Port 80 redirects to HTTPS |
+| `loadbalancer.logging.access_log_enabled` | bool | Access logging to S3 enabled |
+| `loadbalancer.availability.cross_zone_enabled` | bool | Cross-zone load balancing enabled |
+
+---
+
+## Kubernetes Domain
+
+### ClusterRole (`k8s_cluster_role`)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `rbac.kind` | string | `"cluster_role"` — discriminator |
+| `rbac.has_wildcard_resources` | bool | Rules include `resources: ["*"]` |
+| `rbac.has_wildcard_verbs` | bool | Rules include `verbs: ["*"]` |
+
+### Service Account (`k8s_service_account`)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `rbac.kind` | string | `"service_account"` — discriminator |
+| `rbac.is_default` | bool | Is the namespace default service account |
+| `rbac.default_token_automount` | bool | automountServiceAccountToken enabled |
+
+### Namespace (`k8s_namespace`)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `network_policy.kind` | string | `"namespace"` — discriminator |
+| `network_policy.has_network_policies` | bool | At least one NetworkPolicy exists |
+| `network_policy.has_default_deny` | bool | Default-deny ingress policy exists |
+
+### Cluster (`k8s_cluster`)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `secrets.kind` | string | `"cluster"` — discriminator |
+| `secrets.etcd_encryption_enabled` | bool | Secrets encrypted at rest in etcd |
+| `audit.kind` | string | `"cluster"` — discriminator |
+| `audit.audit_logging_enabled` | bool | API server audit logging enabled |
+
+### Pod (`k8s_pod`)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `secrets.kind` | string | `"pod"` — discriminator |
+| `secrets.has_env_secrets` | bool | Secrets mounted as environment variables |
 
 ---
 
