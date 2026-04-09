@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.EBS.ENCRYPT.001
+name: EBS Volumes Must Be Encrypted
+description: >
+  EBS volumes attached to EC2 instances must have encryption enabled.
+  Unencrypted volumes storing PHI or sensitive data violate encryption
+  at rest requirements.
+domain: exposure
+severity: high
+compliance:
+  hipaa: "164.312(a)(2)(iv)"
+  cis_aws_v1.4.0: "2.2.1"
+scope_tags:
+  - aws
+  - ec2
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    EBS volume is not encrypted. Data at rest is stored in plaintext
+    on the underlying storage hardware.
+  action: >
+    Enable EBS encryption by default for the account. For existing
+    volumes, create an encrypted snapshot and restore to a new
+    encrypted volume. Run: aws ec2 enable-ebs-encryption-by-default
+  example: |
+    {
+      "compute": {
+        "kind": "instance",
+        "encryption": {
+          "ebs_encrypted": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: instance
+    - field: properties.compute.encryption.ebs_encrypted
+      op: eq
+      value: false

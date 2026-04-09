@@ -3,21 +3,21 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 74
-**Pack hash:** `3bbe9ff7fa61f406d845df33422be000a847e9ea0d294da403de227d382dcd92`
+**Total controls:** 84
+**Pack hash:** `ec85052465eb9d0568a5880791d22e7206c6bf4f7d0bbf0ff5fabb2d435ca553`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 18 |
-| high | 29 |
-| low | 5 |
-| medium | 22 |
+| critical | 19 |
+| high | 34 |
+| low | 7 |
+| medium | 24 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 57 |
+| exposure | 67 |
 | governance | 2 |
 | identity | 11 |
 | storage | 4 |
@@ -63,6 +63,80 @@ DNS records that reference cloud storage endpoints (S3, GCS, Azure Blob) must re
 DNS records or URLs that reference software distribution endpoints (package repositories, binary downloads, update servers) must resolve to resources owned by the organization. Supply chain takeover through dangling distribution references delivers executable code to systems that trust the source.
 
 **Remediation:** Claim the resource to block takeover. Update all documentation, install guides, and CI pipelines to reference the current distribution URL. Search community forums and cached tutorials for outdated references.
+
+---
+
+### CTL.EC2.EBS.ENCRYPT.001
+
+**EBS Volumes Must Be Encrypted**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v1.4.0: 2.2.1; hipaa: 164.312(a)(2)(iv);
+
+EBS volumes attached to EC2 instances must have encryption enabled. Unencrypted volumes storing PHI or sensitive data violate encryption at rest requirements.
+
+**Remediation:** Enable EBS encryption by default for the account. For existing volumes, create an encrypted snapshot and restore to a new encrypted volume. Run: aws ec2 enable-ebs-encryption-by-default
+
+---
+
+### CTL.EC2.IMDSV2.001
+
+**EC2 Instances Must Require IMDSv2**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v1.4.0: 5.6;
+
+EC2 instances must enforce Instance Metadata Service Version 2 (IMDSv2). IMDSv1 is vulnerable to SSRF attacks that can steal instance credentials from the metadata endpoint.
+
+**Remediation:** Set HttpTokens to required on the instance metadata options. Run: aws ec2 modify-instance-metadata-options --instance-id i-xxx --http-tokens required --http-endpoint enabled
+
+---
+
+### CTL.EC2.INCOMPLETE.001
+
+**Complete Data Required for EC2 Assessment**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+
+EC2 instance safety cannot be assessed when encryption status is missing from the snapshot. The extractor must populate compute.encryption.ebs_encrypted.
+
+**Remediation:** Re-run the extractor with EC2 permissions: ec2:DescribeInstances, ec2:DescribeVolumes, ec2:DescribeSnapshots.
+
+---
+
+### CTL.EC2.PUBLIC.001
+
+**EC2 Instances Must Not Have Public IP Addresses**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v1.4.0: 5.1; hipaa: 164.312(e)(1);
+
+EC2 instances should not have public IP addresses unless explicitly required. Public IP assignment exposes the instance to direct internet access, bypassing network perimeter controls.
+
+**Remediation:** Launch instances in private subnets without public IP assignment. Use NAT Gateway or VPC endpoints for outbound internet access. Use ALB or NLB for inbound traffic that requires internet access.
+
+---
+
+### CTL.EC2.SNAPSHOT.ENCRYPT.001
+
+**EBS Snapshots Must Be Encrypted**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v1.4.0: 2.2.1; hipaa: 164.312(a)(2)(iv);
+
+EBS snapshots must be encrypted. Unencrypted snapshots can be shared across accounts or made public, exposing data at rest.
+
+**Remediation:** Copy the snapshot with encryption enabled. Delete the unencrypted snapshot. Enable EBS encryption by default for future snapshots.
 
 ---
 
@@ -1097,6 +1171,80 @@ Signed upload policies must restrict allowed content types. Unrestricted content
 Signed upload policies must restrict write permission to a single exact object key. Prefix-wide permissions (e.g., starts-with $key files/) enable arbitrary overwrite and cross-tenant tampering.
 
 **Remediation:** Change the signed upload policy to use an exact key condition (eq instead of starts-with) that binds each upload to a specific object path. Generate unique object keys server-side.
+
+---
+
+### CTL.VPC.FLOWLOG.001
+
+**VPC Flow Logging Must Be Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v1.4.0: 3.9; hipaa: 164.312(b);
+
+VPC flow logs capture information about IP traffic going to and from network interfaces. Without flow logs, network-level access patterns cannot be audited and unauthorized traffic goes undetected.
+
+**Remediation:** Enable VPC flow logs to CloudWatch Logs or S3. Run: aws ec2 create-flow-logs --resource-type VPC --resource-ids vpc-xxx --traffic-type ALL --log-destination-type cloud-watch-logs
+
+---
+
+### CTL.VPC.FLOWLOG.ENCRYPT.001
+
+**VPC Flow Logs Must Be Encrypted**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(2)(iv);
+
+VPC flow logs contain network metadata (source/destination IPs, ports, protocols). When stored in S3, flow logs must be encrypted with a customer-managed KMS key to protect network topology information.
+
+**Remediation:** Configure flow log destination with SSE-KMS encryption. For S3 destinations, enable default bucket encryption with a CMK.
+
+---
+
+### CTL.VPC.INCOMPLETE.001
+
+**Complete Data Required for VPC Assessment**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+
+VPC safety cannot be assessed when flow logging status is missing from the snapshot. The extractor must populate network.flow_log.enabled.
+
+**Remediation:** Re-run the extractor with VPC permissions: ec2:DescribeFlowLogs, ec2:DescribeVpcs.
+
+---
+
+### CTL.VPC.SG.DEFAULT.001
+
+**Default Security Group Must Restrict All Traffic**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v1.4.0: 5.4; hipaa: 164.312(a)(1);
+
+The default VPC security group should not allow any inbound or outbound traffic. Resources should use custom security groups with explicit rules instead of relying on the default group.
+
+**Remediation:** Remove all inbound and outbound rules from the default security group. Assign custom security groups to all resources.
+
+---
+
+### CTL.VPC.SG.UNRESTRICTED.001
+
+**Security Groups Must Not Allow Unrestricted Ingress**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v1.4.0: 5.2; hipaa: 164.312(e)(1);
+
+Security group rules must not allow ingress from 0.0.0.0/0 on sensitive ports (SSH, RDP, database). Unrestricted ingress exposes services to the entire internet.
+
+**Remediation:** Restrict ingress rules to specific CIDR blocks or security group references. Remove 0.0.0.0/0 and ::/0 from ingress rules on ports 22 (SSH), 3389 (RDP), 3306 (MySQL), 5432 (PostgreSQL).
 
 ---
 
