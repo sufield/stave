@@ -1,0 +1,40 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ROOT.USAGE.001
+name: Root Account Must Not Be Used for Daily Tasks
+description: >
+  The root account must not be used for day-to-day operations. Root
+  activity should be limited to account setup tasks. Recent root
+  usage indicates operational reliance on root credentials.
+domain: identity
+severity: high
+compliance:
+  cis_aws_v3.0: "1.7"
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Root account has been used recently. Root should only be used
+    for account-level tasks that require it.
+  action: >
+    Create IAM admin users or roles for daily operations. Lock root
+    credentials and use them only for account-level tasks.
+  example: |
+    {
+      "identity": {
+        "kind": "account",
+        "root": {
+          "last_used_days": 120
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: account
+    - field: properties.identity.root.last_used_days
+      op: lt
+      value: 90

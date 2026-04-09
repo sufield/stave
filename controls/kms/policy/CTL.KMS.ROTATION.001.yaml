@@ -1,0 +1,37 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.ROTATION.001
+name: KMS Customer-Managed Key Rotation Must Be Enabled
+description: >
+  Customer-created symmetric KMS keys must have automatic key rotation
+  enabled. Key rotation limits the amount of data encrypted with a
+  single key version, reducing the blast radius of key compromise.
+domain: exposure
+severity: medium
+compliance:
+  cis_aws_v3.0: "3.6"
+scope_tags:
+  - aws
+  - kms
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    KMS key does not have automatic rotation enabled.
+  action: >
+    Enable key rotation:
+    aws kms enable-key-rotation --key-id <key-id>
+  example: |
+    {
+      "cryptography": {
+        "kind": "key",
+        "key_rotation_enabled": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: key
+    - field: properties.cryptography.key_rotation_enabled
+      op: eq
+      value: false

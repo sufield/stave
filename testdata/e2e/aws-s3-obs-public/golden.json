@@ -2,20 +2,30 @@
   "schema_version": "out.v0.1",
   "kind": "ASSESSMENT",
   "run": {
-    "tool_version": "0.0.3",
+    "tool_version": "edge",
     "offline": true,
     "now": "2026-01-14T00:00:00Z",
     "sla_threshold": "0h",
     "snapshots": 2,
-    "policy_fingerprint": "702573847a308c737563d82f4a3588dd5166ece820782b687fe13ea5bfecb59f"
+    "policy_fingerprint": "aaffaf76a8e81ef990f9d28f4ea0143c326cd268a1dddc62f300e84d7e82e50b"
   },
   "summary": {
     "total_assets": 1,
     "exposed_resources": 1,
-    "violations": 6
+    "violations": 7
   },
   "status": "NON_COMPLIANT",
   "risk_signals": [
+    {
+      "control_id": "CTL.S3.MFADELETE.001",
+      "asset_id": "public-test-bucket",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-10T00:00:00Z",
+      "remaining_hours": -96,
+      "first_unsafe_at": "2026-01-10T00:00:00Z",
+      "threshold_hours": 0
+    },
     {
       "control_id": "CTL.S3.NETWORK.VPC.001",
       "asset_id": "public-test-bucket",
@@ -38,6 +48,56 @@
     }
   ],
   "findings": [
+    {
+      "control_id": "CTL.S3.MFADELETE.001",
+      "control_name": "MFA Delete Must Be Enabled on S3 Buckets",
+      "control_description": "S3 buckets should have MFA Delete enabled on versioned buckets. MFA Delete requires a second factor to permanently delete object versions, preventing unauthorized or accidental data destruction.\n",
+      "asset_id": "public-test-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
+        "unsafe_duration_hours": 96,
+        "misconfigurations": [
+          {
+            "property": "storage.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          },
+          {
+            "property": "storage.versioning.enabled",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "storage.versioning.mfa_delete_enabled",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 96 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_aws_v3.0": "2.1.2"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
+      "remediation": {
+        "description": "MFA Delete is not enabled on this versioned bucket.",
+        "action": "Enable MFA Delete (requires root credentials): aws s3api put-bucket-versioning --bucket \u003cname\u003e --versioning-configuration Status=Enabled,MFADelete=Enabled --mfa \"arn:aws:iam::\u003caccount\u003e:mfa/root-account-mfa-device \u003ccode\u003e\"",
+        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"versioning\": {\n      \"enabled\": true,\n      \"mfa_delete_enabled\": true\n    }\n  }\n}\n"
+      }
+    },
     {
       "control_id": "CTL.S3.NETWORK.VPC.001",
       "control_name": "VPC Endpoint or IP Condition Required",

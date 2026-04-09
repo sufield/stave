@@ -1,0 +1,44 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ROOT.HWMFA.001
+name: Root Account Must Use Hardware MFA
+description: >
+  The root account must use a hardware MFA device, not a virtual one.
+  Hardware tokens cannot be cloned or phished via device compromise,
+  providing stronger protection for the most privileged identity.
+domain: identity
+severity: high
+compliance:
+  cis_aws_v3.0: "1.6"
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Root account uses a virtual MFA device. Virtual MFA can be
+    compromised if the device is lost or the seed is extracted.
+  action: >
+    Replace the virtual MFA with a hardware TOTP device (YubiKey,
+    Gemalto) in the IAM console under Security Credentials.
+  example: |
+    {
+      "identity": {
+        "kind": "account",
+        "root": {
+          "mfa_enabled": true,
+          "hardware_mfa": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: account
+    - field: properties.identity.root.mfa_enabled
+      op: eq
+      value: true
+    - field: properties.identity.root.hardware_mfa
+      op: eq
+      value: false

@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SUPPORT.001
+name: AWS Support Role Must Exist
+description: >
+  At least one IAM entity must have the AWSSupportAccess managed
+  policy attached. This ensures someone can open support cases
+  during security incidents without using root.
+domain: identity
+severity: medium
+compliance:
+  cis_aws_v3.0: "1.17"
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    No IAM entity has the AWSSupportAccess policy. Support cases
+    require root credentials.
+  action: >
+    Create an IAM role with the AWSSupportAccess policy:
+    aws iam attach-role-policy --role-name SupportRole
+    --policy-arn arn:aws:iam::aws:policy/AWSSupportAccess
+  example: |
+    {
+      "identity": {
+        "kind": "account",
+        "support_role": {
+          "exists": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: account
+    - field: properties.identity.support_role.exists
+      op: eq
+      value: false

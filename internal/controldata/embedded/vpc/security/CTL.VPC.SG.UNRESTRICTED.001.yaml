@@ -9,6 +9,7 @@ domain: exposure
 severity: critical
 compliance:
   cis_aws_v1.4.0: "5.2"
+  cis_aws_v3.0: "5.2"
   hipaa: "164.312(e)(1)"
 scope_tags:
   - aws

@@ -9,6 +9,7 @@ domain: identity
 severity: low
 compliance:
   cis_aws_v1.4.0: "1.15"
+  cis_aws_v3.0: "1.15"
   hipaa: "164.312(a)(1)"
   soc2: "CC6.3"
 scope_tags:

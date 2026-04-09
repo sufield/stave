@@ -1,0 +1,38 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.AUTOUPGRADE.001
+name: RDS Auto Minor Version Upgrade Must Be Enabled
+description: >
+  RDS instances must have automatic minor version upgrades enabled.
+  Minor versions include security patches. Without auto-upgrade,
+  instances run known-vulnerable database engine versions.
+domain: exposure
+severity: medium
+compliance:
+  cis_aws_v3.0: "2.3.2"
+scope_tags:
+  - aws
+  - rds
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    RDS instance does not have auto minor version upgrade enabled.
+  action: >
+    Enable auto minor version upgrade:
+    aws rds modify-db-instance --db-instance-identifier <id>
+    --auto-minor-version-upgrade --apply-immediately
+  example: |
+    {
+      "database": {
+        "kind": "instance",
+        "auto_minor_version_upgrade": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: instance
+    - field: properties.database.auto_minor_version_upgrade
+      op: eq
+      value: false

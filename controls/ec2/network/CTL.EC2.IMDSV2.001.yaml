@@ -9,6 +9,7 @@ domain: exposure
 severity: high
 compliance:
   cis_aws_v1.4.0: "5.6"
+  cis_aws_v3.0: "5.6"
 scope_tags:
   - aws
   - ec2

@@ -1,0 +1,38 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.IAMROLE.001
+name: EC2 Instances Must Use IAM Instance Roles
+description: >
+  EC2 instances that access AWS services must use IAM instance
+  profiles (roles) instead of embedded access keys. Instance roles
+  provide temporary credentials that are automatically rotated.
+domain: identity
+severity: medium
+compliance:
+  cis_aws_v3.0: "1.18"
+scope_tags:
+  - aws
+  - ec2
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    EC2 instance does not have an IAM instance profile attached.
+  action: >
+    Create an IAM role and attach it to the instance:
+    aws ec2 associate-iam-instance-profile
+    --iam-instance-profile Name=<role> --instance-id <id>
+  example: |
+    {
+      "compute": {
+        "kind": "instance",
+        "iam_profile_attached": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: instance
+    - field: properties.compute.iam_profile_attached
+      op: eq
+      value: false

@@ -1,0 +1,39 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.CERT.EXPIRED.001
+name: Remove Expired IAM Server Certificates
+description: >
+  Expired SSL/TLS server certificates must be removed from IAM.
+  Expired certificates cannot serve TLS but create confusion during
+  audits and may mask missing certificate rotation.
+domain: identity
+severity: medium
+compliance:
+  cis_aws_v3.0: "1.19"
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    IAM contains expired server certificates.
+  action: >
+    Delete expired certificates and migrate active ones to ACM:
+    aws iam delete-server-certificate --server-certificate-name <name>
+  example: |
+    {
+      "identity": {
+        "kind": "account",
+        "certificates": {
+          "has_expired": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: account
+    - field: properties.identity.certificates.has_expired
+      op: eq
+      value: true

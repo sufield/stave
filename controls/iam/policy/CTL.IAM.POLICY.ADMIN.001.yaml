@@ -1,0 +1,40 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.POLICY.ADMIN.001
+name: No Full Admin Policies Attached
+description: >
+  No IAM policy with Effect Allow on Action "*" and Resource "*"
+  should be attached to any IAM entity. Full admin policies violate
+  least privilege and grant unrestricted access to all services.
+domain: identity
+severity: critical
+compliance:
+  cis_aws_v3.0: "1.16"
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    IAM entity has a policy granting full *:* administrative access.
+  action: >
+    Replace wildcard admin policies with scoped policies granting
+    only the specific permissions required. Use AWS Access Analyzer
+    to generate least-privilege policies from CloudTrail activity.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "policies": {
+          "has_admin_access": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user
+    - field: properties.identity.policies.has_admin_access
+      op: eq
+      value: true

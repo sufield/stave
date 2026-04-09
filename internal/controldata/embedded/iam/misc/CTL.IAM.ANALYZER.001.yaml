@@ -1,0 +1,35 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ANALYZER.001
+name: IAM Access Analyzer Must Be Enabled
+description: >
+  IAM Access Analyzer must be enabled in every region. Access Analyzer
+  identifies resources shared with external entities and generates
+  findings for unintended exposure.
+domain: identity
+severity: high
+compliance:
+  cis_aws_v3.0: "1.20"
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    IAM Access Analyzer is not enabled in this region.
+  action: >
+    Create an Access Analyzer in each region:
+    aws accessanalyzer create-analyzer --analyzer-name default
+    --type ACCOUNT --region <region>
+  example: |
+    {
+      "access_analyzer": {
+        "enabled": true,
+        "analyzer_type": "ACCOUNT"
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.access_analyzer.enabled
+      op: eq
+      value: false

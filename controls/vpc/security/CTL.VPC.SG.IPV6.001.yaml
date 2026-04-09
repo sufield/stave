@@ -1,0 +1,38 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.SG.IPV6.001
+name: No Security Group Ingress from ::/0 to Admin Ports
+description: >
+  Security groups must not allow inbound SSH (22) or RDP (3389)
+  from ::/0 (IPv6 any). IPv6 open admin ports are equally dangerous
+  as IPv4 and are often overlooked during security reviews.
+domain: exposure
+severity: critical
+compliance:
+  cis_aws_v3.0: "5.3"
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Security group allows ingress from ::/0 to admin ports.
+  action: >
+    Revoke the IPv6 ingress rule:
+    aws ec2 revoke-security-group-ingress --group-id <sg-id>
+    --ip-permissions IpProtocol=tcp,FromPort=22,ToPort=22,Ipv6Ranges=[{CidrIpv6=::/0}]
+  example: |
+    {
+      "network": {
+        "kind": "security_group",
+        "has_unrestricted_ipv6_ingress": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: security_group
+    - field: properties.network.has_unrestricted_ipv6_ingress
+      op: eq
+      value: true
