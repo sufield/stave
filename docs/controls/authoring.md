@@ -1,97 +1,197 @@
 ---
-title: "Authoring Invariants"
+title: "Authoring Controls"
 sidebar_label: "Authoring"
 sidebar_position: 1
-description: "How to write, test, and review custom Stave invariant definitions."
+description: "How to write, test, and review custom Stave control definitions."
 ---
 
-# Authoring Invariants
+# Authoring Controls
 
-This guide explains how to write new control definitions for Stave.
+This guide explains how to create new security controls for Stave. Controls are
+declarative YAML — no Go code required. The evaluation engine handles any asset
+type and any cloud vendor without code changes.
+
+## Quick Start: Policy Forge
+
+The fastest way to create a new control with test fixtures:
+
+```bash
+make forge \
+  ID=CTL.S3.EXAMPLE.001 \
+  NAME="Example Safety Check" \
+  DOMAIN=exposure \
+  SEVERITY=high \
+  SCOPE_TAGS=aws,s3 \
+  ASSET_TYPE=aws_s3_bucket \
+  KIND=bucket \
+  FIELD=properties.storage.access.public_read \
+  OP=eq \
+  VALUE=true \
+  REMEDIATION="Enable S3 Public Access Block."
+```
+
+This generates:
+- A validated ctrl.v1 YAML control definition
+- A **fail** fixture (observations that trigger the finding, expected exit 3)
+- A **pass** fixture (observations that do not trigger, expected exit 0)
+
+Then generate golden files and run tests:
+
+```bash
+make golden
+make e2e
+```
 
 ## Folder Layout
 
-S3 controls are organized by category under `controls/s3/`:
+Controls are organized by domain and category:
 
 ```
-controls/s3/
-├── public/              # Public exposure (PUBLIC.001–006, LIST, PREFIX, etc.)
-├── access/              # Cross-account access (ACCESS.001–003, AUTH.READ/WRITE)
-├── acl/                 # ACL privilege escalation (ESCALATION, RECON, FULLCONTROL)
-├── encrypt/             # Encryption requirements (ENCRYPT.001–004)
-├── versioning/          # Versioning (VERSION.001–002)
-├── logging/             # Access logging (LOG.001)
-├── lifecycle/           # Lifecycle rules (LIFECYCLE.001–002)
-├── lock/                # Object lock (LOCK.001–003)
-├── network/             # Network conditions (NETWORK.001)
-├── governance/          # Tagging and governance (GOVERNANCE.001)
-├── write_scope/         # Upload policy scoping (WRITE.SCOPE, WRITE.CONTENT)
-├── tenant/              # Tenant isolation (TENANT.ISOLATION.001)
-├── takeover/            # Bucket takeover (BUCKET.TAKEOVER, DANGLING.ORIGIN)
-├── artifacts/           # Repository artifacts (REPO.ARTIFACT.001)
-└── misc/                # Controls and completeness (CONTROLS, INCOMPLETE)
+controls/
+├── s3/                  # AWS S3 storage (53 controls)
+│   ├── public/          # Public exposure
+│   ├── access/          # Cross-account, wildcard, presigned
+│   ├── acl/             # ACL escalation
+│   ├── encrypt/         # Encryption at rest and in transit
+│   ├── network/         # VPC, IP conditions, MRAP
+│   ├── versioning/      # Versioning and MFA delete
+│   ├── lock/            # Object lock
+│   ├── logging/         # Access logging, CloudTrail
+│   ├── lifecycle/       # Data retention
+│   ├── governance/      # Classification tags
+│   ├── write_scope/     # Upload policy scope
+│   ├── tenant/          # Tenant isolation
+│   ├── takeover/        # Bucket takeover, dangling origins
+│   ├── artifacts/       # VCS artifacts
+│   └── misc/            # Completeness checks
+├── iam/                 # AWS IAM identity (11 controls)
+│   ├── root/            # Root account MFA, access keys
+│   ├── console/         # Console user MFA
+│   ├── credentials/     # Credential rotation, unused creds
+│   ├── password/        # Password policy
+│   ├── policy/          # Inline/direct policy attachment
+│   └── misc/            # Completeness checks
+├── gcs/                 # GCP Cloud Storage (7 controls)
+│   ├── public/          # Public access, uniform access
+│   ├── encrypt/         # CMEK encryption
+│   ├── logging/         # Access logging
+│   ├── versioning/      # Object versioning
+│   └── misc/            # Completeness checks
+└── dns/                 # DNS records — vendor-agnostic (3 controls)
+    └── takeover/        # Dangling references, subdomain takeover
 ```
 
-Place new invariants in the appropriate category directory. Create a new directory if no existing category fits.
+Place new controls in the appropriate domain and category. Create a new
+domain directory if no existing domain fits.
+
+## Adding a New Domain
+
+When adding controls for a new service or cloud provider:
+
+1. Create `controls/{domain}/{category}/` directories
+2. Document the property namespace in `docs/observation-contract.md`
+3. Add an INCOMPLETE control for missing extractor data
+4. Update `internal/controldata/embed.go` with the new glob
+5. Add pack and control entries to `internal/builtin/pack/embedded/index.yaml`
+6. Optionally register a profile in `cmd/apply/profile.go`
+7. Run `make sync-controls && make readme && make docs-controls`
+
+Zero engine changes required. See AGENTS.md for the full checklist.
 
 ## ID Convention
 
 ```
-CTL.<VENDOR>.<CATEGORY>.<SEQ>
+CTL.<DOMAIN>.<CATEGORY>.<SEQ>
 ```
 
-- **VENDOR**: Service identifier (`S3`, `IAM`, etc.)
-- **CATEGORY**: What it checks (`PUBLIC`, `ENCRYPT`, `ACCESS`, etc.)
+- **DOMAIN**: Service identifier (`S3`, `IAM`, `GCS`, `DNS`)
+- **CATEGORY**: What it checks (`PUBLIC`, `ENCRYPT`, `ROOT`, `DANGLING`)
 - **SEQ**: Three-digit sequence number (`001`, `002`, etc.)
 
-Multi-segment categories are allowed: `CTL.S3.PUBLIC.PREFIX.001`, `CTL.S3.ACL.ESCALATION.001`.
+Multi-segment categories are allowed: `CTL.S3.PUBLIC.PREFIX.001`,
+`CTL.IAM.ROOT.MFA.001`, `CTL.DNS.DANGLING.001`.
 
-The ID must match the regex: `^CTL\.[A-Z0-9]+\.[A-Z0-9]+(\.[A-Z0-9]+)*\.[0-9]+$`
+The ID must match: `^CTL\.[A-Z0-9]+\.[A-Z0-9]+(\.[A-Z0-9]+)*\.[0-9]+$`
 
-## Minimal Example
+## Control Structure
 
 ```yaml
 dsl_version: ctrl.v1
 id: CTL.S3.EXAMPLE.001
 name: Example Safety Check
 description: >
-  Buckets must not have example_flag set to true.
+  Buckets must not have public read access enabled.
 domain: exposure
+severity: high
+compliance:
+  cis_aws_v1.4.0: "2.1.5"
+  hipaa: "164.312(a)(1)"
 scope_tags:
   - aws
   - s3
 type: unsafe_state
-unsafe_predicate:
-  any:
-    - field: properties.storage.example_flag
-      op: eq
-      value: true
+params: {}
 remediation:
   description: >
-    Bucket has example_flag enabled. This is a placeholder control.
+    Bucket has public read access. Anyone can download objects.
   action: >
-    Set example_flag to false in the bucket configuration.
+    Enable S3 Public Access Block (all four settings).
+  example: |
+    {
+      "storage": {
+        "access": { "public_read": false }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.access.public_read
+      op: eq
+      value: true
 ```
+
+### Required fields
+
+| Field | Purpose |
+|-------|---------|
+| `dsl_version` | Must be `ctrl.v1` |
+| `id` | Unique control identifier |
+| `name` | Short human-readable name |
+| `description` | What the control detects and why it matters |
+| `type` | Control type (see below) |
+| `unsafe_predicate` | YAML predicate defining the unsafe condition |
+
+### Recommended fields
+
+| Field | Purpose |
+|-------|---------|
+| `domain` | Grouping label (`exposure`, `identity`, `storage`) |
+| `severity` | `critical`, `high`, `medium`, `low`, `info` |
+| `scope_tags` | Array of tags for filtering (`aws`, `s3`, `gcp`, `dns`) |
+| `compliance` | Framework mappings (`hipaa`, `cis_aws_v1.4.0`, `pci_dss_v3.2.1`) |
+| `remediation` | Description, action, and example for fixing the finding |
 
 ## Operator Reference
 
 | Operator | What it does | Example |
 |----------|-------------|---------|
-| `eq` | Equality check | `{field: properties.storage.visibility.public_read, op: eq, value: true}` |
-| `ne` | Not equal (missing fields match) | `{field: properties.storage.encryption.algorithm, op: ne, value: "aws:kms"}` |
-| `gt` | Greater than (numeric) | `{field: properties.storage.lifecycle.rule_count, op: gt, value: 10}` |
-| `lt` | Less than (numeric) | `{field: properties.storage.lifecycle.rule_count, op: lt, value: 1}` |
-| `gte` | Greater than or equal | `{field: properties.storage.object_lock.retention_days, op: gte, value: 2190}` |
-| `lte` | Less than or equal | `{field: properties.storage.object_lock.retention_days, op: lte, value: 90}` |
-| `in` | Value in list | `{field: properties.storage.tags.data-classification, op: in, value: [PII, PHI]}` |
-| `missing` | Field absent/nil/empty | `{field: properties.storage.encryption.kms_key_id, op: missing, value: true}` |
-| `present` | Field exists and non-empty | `{field: properties.storage.tags.tenant_prefix, op: present, value: true}` |
-| `contains` | Substring match | `{field: properties.storage.tags.purpose, op: contains, value: "enforce_prefix=false"}` |
+| `eq` | Equality check | `{field: ..., op: eq, value: true}` |
+| `ne` | Not equal (missing fields match) | `{field: ..., op: ne, value: "aws:kms"}` |
+| `gt` | Greater than (numeric) | `{field: ..., op: gt, value: 10}` |
+| `lt` | Less than (numeric) | `{field: ..., op: lt, value: 14}` |
+| `gte` | Greater than or equal | `{field: ..., op: gte, value: 2190}` |
+| `lte` | Less than or equal | `{field: ..., op: lte, value: 90}` |
+| `in` | Value in list | `{field: ..., op: in, value: [PII, PHI]}` |
+| `missing` | Field absent/nil/empty | `{field: ..., op: missing, value: true}` |
+| `present` | Field exists and non-empty | `{field: ..., op: present, value: true}` |
+| `contains` | Substring match | `{field: ..., op: contains, value: "enforce_prefix=false"}` |
 | `any_match` | Nested predicate over array | See [Array matching](#array-matching) |
-| `neq_field` | Two fields not equal | `{field: properties.owner, op: neq_field, value: properties.expected_owner}` |
-| `not_in_field` | Value not in another field's list | `{field: properties.role, op: not_in_field, value: properties.allowed_roles}` |
-| `list_empty` | List is empty or nil | `{field: properties.audience, op: list_empty, value: true}` |
-| `not_subset_of_field` | List has elements not in another | `{field: properties.scopes, op: not_subset_of_field, value: properties.allowed_scopes}` |
+| `neq_field` | Two fields not equal | `{field: ..., op: neq_field, value: ...}` |
+| `not_in_field` | Value not in another field's list | `{field: ..., op: not_in_field, value: ...}` |
+| `list_empty` | List is empty or nil | `{field: ..., op: list_empty, value: true}` |
+| `not_subset_of_field` | List has elements not in another | `{field: ..., op: not_subset_of_field, value: ...}` |
 
 **Notes:**
 - Missing fields do **not** match `eq false`. Only explicitly set `false` triggers `eq false`.
@@ -104,57 +204,73 @@ remediation:
 ```yaml
 unsafe_predicate:
   any:
-    - field: properties.storage.visibility.public_read
-      op: eq
-      value: true
-    - field: properties.storage.visibility.public_list
+    - field: properties.storage.access.public_read
       op: eq
       value: true
 ```
 
-### Combined type + property check
+### Kind discriminator + property check
+
+Most controls start with a `kind` check to scope the predicate to the right
+asset subtype. The Policy Forge generates this automatically with `--kind`.
 
 ```yaml
 unsafe_predicate:
   all:
-    - field: properties.storage.kind
+    - field: properties.identity.kind
       op: eq
-      value: bucket
-    - field: properties.storage.access.has_external_access
+      value: user
+    - field: properties.identity.console_access.mfa_enabled
       op: eq
-      value: true
+      value: false
 ```
 
-### Missing field detection
+### Nested `any` inside `all` (compound condition)
 
 ```yaml
 unsafe_predicate:
   all:
-    - field: properties.storage.tags.data-classification
+    - field: properties.identity.kind
       op: eq
-      value: "phi"
-    - field: properties.storage.encryption.kms_key_id
-      op: missing
-      value: true
+      value: password_policy
+    - any:
+        - field: properties.identity.password_policy.require_uppercase
+          op: eq
+          value: false
+        - field: properties.identity.password_policy.require_symbols
+          op: eq
+          value: false
 ```
 
-### Numeric threshold
+### Data classification + access check
 
 ```yaml
 unsafe_predicate:
   all:
-    - field: properties.storage.lifecycle.rule_count
-      op: lt
-      value: 1
+    - any:
+        - field: properties.storage.access.public_read
+          op: eq
+          value: true
+    - any:
+        - field: properties.storage.tags.data-classification
+          op: eq
+          value: confidential
+        - field: properties.storage.tags.data-classification
+          op: eq
+          value: phi
 ```
 
-### Array matching
+### Array matching (identity iteration)
 
-Use `any_match` to evaluate a nested predicate against each element of an array field (e.g., identities):
+Use `any_match` to evaluate a nested predicate against each element of an
+array field (e.g., identities):
 
 ```yaml
 unsafe_predicate:
-  any:
+  all:
+    - field: properties.storage.tags.tenant_mode
+      op: eq
+      value: shared
     - field: identities
       op: any_match
       value:
@@ -164,7 +280,23 @@ unsafe_predicate:
             value: app_signer
           - field: purpose
             op: contains
-            value: "enforce_prefix=false"
+            value: "allow_traversal=true"
+```
+
+### Vendor-agnostic controls
+
+DNS controls work regardless of DNS provider. The `vendor` field is metadata —
+controls evaluate `properties.dns.*` paths only:
+
+```yaml
+unsafe_predicate:
+  any:
+    - field: properties.dns.target_exists
+      op: eq
+      value: false
+    - field: properties.dns.target_owned
+      op: eq
+      value: false
 ```
 
 ## Control Types
@@ -176,151 +308,103 @@ unsafe_predicate:
 | `prefix_exposure` | Violation when protected prefixes are publicly readable. |
 | `unsafe_recurrence` | Violation when episode count exceeds limit within window. |
 
-For `unsafe_duration`, you can set a per-control threshold:
+For `unsafe_duration`, set a per-control threshold to override `--max-unsafe`:
 
 ```yaml
+type: unsafe_duration
 params:
-  max_unsafe_duration: "24h"
+  max_unsafe_duration: "0h"   # zero tolerance — immediate violation
 ```
 
-This overrides the CLI `--max-unsafe` flag for that specific control.
+## Property Namespaces
 
-## Schema Validation
+Each domain uses its own namespace. See `docs/observation-contract.md` for the
+full field dictionary.
 
-`stave validate` performs full [JSON Schema Draft 2020-12](https://json-schema.org/draft/2020-12) validation against the canonical schema files embedded in the binary. Both controls and observations are validated before evaluation begins — you do not need to validate separately unless you want early feedback while authoring.
-
-### What gets validated
-
-| Input | Schema | Invoked via |
-|-------|--------|-------------|
-| Observation JSON | [`obs.v0.1.schema.json`](../../schemas/obs.v0.1.schema.json) | `stave validate --in <file>` or `--observations <dir>` |
-| Control YAML | [`ctrl.v1.schema.json`](../../schemas/ctrl.v1.schema.json) | `stave validate --in <file>` or `--controls <dir>` |
-
-Control YAML is converted to JSON internally before schema validation runs.
-
-### What the schema enforces
-
-| Constraint | Control (`ctrl.v1`) | Observation (`obs.v0.1`) |
-|------------|----------------------|------------------------|
-| `additionalProperties: false` | Yes — extra fields cause rejection | Yes — no `"snapshots"` wrapper, no unknown fields |
-| Required fields | `dsl_version`, `id`, `name`, `description`, `unsafe_predicate` | `schema_version`, `captured_at`, `assets` |
-| `const` version | `dsl_version` must be `"ctrl.v1"` | `schema_version` must be `"obs.v0.1"` |
-| ID pattern | Must match `^CTL\.[A-Z0-9]+\.[A-Z0-9]+(\.[A-Z0-9]+)*\.[0-9]+$` | — |
-| `enum` values | `domain`: exposure, identity, storage, platforms, third_party | — |
-| | `severity`: critical, high, medium, low, info | — |
-| | `op`: 15 allowed operators (eq, ne, gt, lt, ...) | — |
-| Timestamp format | — | `captured_at` must be RFC 3339 (`date-time`) |
-| String minimums | `id`, `name`, `description` must be non-empty (minLength: 1) | Resource `id`, `type`, `vendor` must be non-empty |
-| Nested structure | `unsafe_predicate` must contain `any` or `all` arrays | `assets` items require `id`, `type`, `vendor`, `properties` |
-
-### Common validation errors
-
-| Error | Cause | Fix |
-|-------|-------|-----|
-| `additionalProperties 'foo' not allowed` | Extra field in YAML/JSON | Remove the field or check for typos |
-| `missing properties: 'unsafe_predicate'` | Required field absent | Add the missing field |
-| `'ctrl.v0.2' is not valid ... const 'ctrl.v1'` | Wrong DSL version string | Use `dsl_version: ctrl.v1` |
-| `'CTL.s3.public.001' does not match pattern` | ID has lowercase letters | Use uppercase: `CTL.S3.PUBLIC.001` |
-| `'foo' is not valid ... enum` | Invalid `op`, `domain`, or `severity` | Check allowed values in the schema |
-
-### Validate commands
-
-```bash
-# Validate a single control
-stave validate --in controls/s3/example/CTL.S3.EXAMPLE.001.yaml
-
-# Validate all controls in a directory
-stave validate --controls controls/s3/
-
-# Validate a single observation
-stave validate --in observations/2026-01-01T000000Z.json
-
-# Validate all observations in a directory
-stave validate --observations observations/
-
-# Validate from stdin
-cat snapshot.json | stave validate --in -
-
-# JSON output for programmatic use
-stave validate --controls controls/s3/ --format json
-```
-
-Exit codes: 0 = valid, 2 = validation errors found.
+| Domain | Namespace | Discriminator |
+|--------|-----------|---------------|
+| S3 | `properties.storage.*` | `storage.kind: "bucket"` |
+| IAM | `properties.identity.*` | `identity.kind: "account"/"user"/"password_policy"` |
+| GCS | `properties.storage.*` | `storage.kind: "bucket"` (shared with S3 where semantics align) |
+| DNS | `properties.dns.*` | — (vendor-agnostic) |
 
 ## Testing Your Control
 
-### 1. Validate schema
+### Using the Policy Forge (recommended)
 
 ```bash
+# Generate control + pass/fail fixtures
+make forge ID=CTL.S3.NEW.001 NAME="My Control" \
+  FIELD=properties.storage.access.public_read \
+  REMEDIATION="Disable public read."
+
+# Generate golden expected output
+make golden
+
+# Run all E2E tests including the new fixture
+make e2e
+```
+
+### Manual testing
+
+```bash
+# Validate schema
 stave validate --in controls/s3/example/CTL.S3.EXAMPLE.001.yaml
-```
 
-### 2. Create test observations
-
-Write two observation snapshots with the condition your control should detect:
-
-```json
-{
-  "schema_version": "obs.v0.1",
-  "captured_at": "2026-01-01T00:00:00Z",
-  "assets": [{
-    "id": "res:aws:s3:bucket:test-bucket",
-    "type": "storage_bucket",
-    "vendor": "aws",
-    "properties": {
-      "storage": { "example_flag": true }
-    }
-  }]
-}
-```
-
-### 3. Evaluate
-
-```bash
+# Evaluate against test observations
 stave apply \
   --controls controls/s3/example/ \
   --observations test-observations/ \
   --now 2026-01-02T00:00:00Z \
   --allow-unknown-input
-```
 
-Expected: exit code 3 (violations found).
-
-### 4. Golden-file test
-
-Save the expected output and diff against future runs:
-
-```bash
+# Trace evaluation logic step by step
 stave apply \
   --controls controls/s3/example/ \
   --observations test-observations/ \
   --now 2026-01-02T00:00:00Z \
-  --allow-unknown-input > expected.json
+  --allow-unknown-input \
+  --trace trace.json
 
-# Later: verify no regression
-stave apply \
+# Generate LLM prompt from findings with trace context
+stave prompt from-finding \
+  --evaluation-file eval.json \
+  --asset-id my-bucket \
   --controls controls/s3/example/ \
-  --observations test-observations/ \
-  --now 2026-01-02T00:00:00Z \
-  --allow-unknown-input | diff - expected.json
+  --trace-file trace.json
 ```
 
 ## Review Checklist
 
 Before submitting a new control:
 
-- [ ] ID follows `CTL.<VENDOR>.<CATEGORY>.<SEQ>` pattern
+- [ ] ID follows `CTL.<DOMAIN>.<CATEGORY>.<SEQ>` pattern
 - [ ] `dsl_version` is `ctrl.v1`
 - [ ] `name` and `description` are clear and specific
-- [ ] `unsafe_predicate` uses only operators from the [schema](../schema/ctrl.v1.md)
-- [ ] `remediation.description` and `remediation.action` explain the risk and fix
+- [ ] `remediation.action` explains how to fix (required — every control must have a remediation path)
+- [ ] `severity` is set
+- [ ] `scope_tags` include domain and vendor tags
+- [ ] `compliance` references added where applicable
 - [ ] Control passes `stave validate`
-- [ ] Test observations trigger the expected finding
+- [ ] Pass and fail test fixtures exist
 - [ ] Golden-file output committed for regression testing
-- [ ] Placed in the correct category directory
+- [ ] Property namespace documented in `docs/observation-contract.md`
+- [ ] INCOMPLETE control exists for the domain
+
+## Build Integration
+
+After adding controls:
+
+```bash
+make sync-controls      # Copy to embedded directory
+make build              # Rebuild binary with new controls
+make docs-controls      # Regenerate control reference
+make readme             # Update README with control counts
+make e2e                # Verify all tests pass
+```
 
 ## Further Reading
 
-- [Control Schema Reference](../schema/ctrl.v1.md)
-- [Observation Schema Reference](../schema/obs.v0.1.md)
-- [Evaluation Engine Capabilities](../evaluation-engine-capabilities.md)
+- [Observation Contract](../observation-contract.md) — property namespace specification
+- [Control Reference](reference.md) — auto-generated reference for all 74 built-in controls
+- [Evaluation Semantics](../evaluation-semantics.md) — how duration tracking works

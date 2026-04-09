@@ -589,3 +589,53 @@ go test ./cmd/stave/ -run TestScripts/smoke -v
 ```
 
 These tests run as part of `make test` (which executes `go test ./...`). They are the primary integration test suite — each script exercises the real CLI binary against real control YAML and observation JSON files embedded in the `.txtar` archive.
+
+## How does `security-audit` differ from the Logic Trace (`--trace`)?
+
+They serve different purposes at different layers.
+
+**`stave security-audit`** evaluates the Stave binary itself — supply chain
+integrity, build hardening, vulnerability assessment, SBOM generation. It
+answers: *"Is this tool trustworthy?"* It produces evidence for auditors about
+Stave's own security posture, not about the infrastructure Stave evaluates.
+
+**`stave apply --trace`** records the evaluation engine's reasoning chain —
+step-by-step decisions for every control × asset pair. It answers: *"Why did
+the engine reach this verdict?"* It produces a `trace.v0.1` JSON with exemption
+checks, predicate evaluations, threshold checks, and verdict decisions.
+
+**`stave prompt from-finding --trace-file`** takes that trace and wraps it in
+an LLM-ready prompt for offline explainability. It answers: *"How do I fix
+this?"*
+
+| | `security-audit` | `apply --trace` | `prompt --trace-file` |
+|---|---|---|---|
+| **Subject** | The Stave binary | Infrastructure findings | Finding explanation |
+| **Question** | "Is this tool secure?" | "Why did this fire?" | "How do I fix this?" |
+| **Output** | SBOM, vuln report, build info | trace.v0.1 JSON | Markdown LLM prompt |
+| **Audience** | Auditors, compliance | Security engineers | Operators, AI assistants |
+| **Layer** | Meta (tool about itself) | Engine internals | User-facing guidance |
+
+They are complementary:
+
+- `security-audit` builds trust in the **tool**.
+- `--trace` builds trust in the **verdict**.
+- `--trace-file` bridges the verdict to **remediation**.
+
+Example workflow:
+
+```bash
+# 1. Verify the tool itself is trustworthy
+stave security-audit --sbom cyclonedx --format json
+
+# 2. Evaluate infrastructure and record reasoning
+stave apply --controls controls/s3 --observations obs/ \
+  --max-unsafe 168h --trace audit_trace.json --format json > eval.json
+
+# 3. Generate explainable remediation prompt from trace
+stave prompt from-finding \
+  --evaluation-file eval.json \
+  --asset-id my-bucket \
+  --controls controls/s3 \
+  --trace-file audit_trace.json
+```
