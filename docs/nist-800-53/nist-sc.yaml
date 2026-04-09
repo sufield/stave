@@ -1,0 +1,102 @@
+# NIST SP 800-53 Rev 5 — SC: System and Communications Protection
+# Summary: 14 controls — 13 MAPPED, 0 NEW, 1 MANUAL
+
+invariants:
+
+- id: NIST.SC.1
+  title: S3 encryption in transit enforced
+  nist_control: "SC-8"
+  mapped_to_existing: true
+  existing_invariant: HIPAA CTL.S3.ENCRYPT.002
+  note: Deny non-HTTPS via bucket policy.
+
+- id: NIST.SC.2
+  title: ELB TLS 1.2 minimum
+  nist_control: "SC-8"
+  mapped_to_existing: true
+  existing_invariant: HIPAA CTL.ELB.TLS.001
+  note: TLS 1.2+ on load balancers.
+
+- id: NIST.SC.3
+  title: ELB HTTP to HTTPS redirect
+  nist_control: "SC-8"
+  mapped_to_existing: true
+  existing_invariant: HIPAA CTL.ELB.HTTPS.001
+  note: No plaintext HTTP listeners.
+
+- id: NIST.SC.4
+  title: RDS SSL required
+  nist_control: "SC-8"
+  mapped_to_existing: true
+  existing_invariant: HIPAA CTL.RDS.SSL.001
+  note: require_ssl parameter enforced.
+
+- id: NIST.SC.5
+  title: API Gateway TLS enforced
+  nist_control: "SC-8"
+  mapped_to_existing: true
+  existing_invariant: HIPAA CTL.APIGATEWAY.TLS.001
+  note: Minimum TLS 1.2 on custom domains.
+
+- id: NIST.SC.6
+  title: ElastiCache in-transit encryption
+  nist_control: "SC-8"
+  mapped_to_existing: true
+  existing_invariant: HIPAA CTL.ELASTICACHE.TRANSIT.001
+  note: TLS between app and cache.
+
+- id: NIST.SC.7
+  title: S3 encryption at rest
+  nist_control: "SC-28"
+  mapped_to_existing: true
+  existing_invariant: HIPAA CTL.S3.ENCRYPT.001, CTL.S3.ENCRYPT.003
+  note: SSE enabled; KMS CMK for sensitive data.
+
+- id: NIST.SC.8
+  title: RDS storage encryption
+  nist_control: "SC-28"
+  mapped_to_existing: true
+  existing_invariant: HIPAA CTL.RDS.ENCRYPT.001
+  note: Storage encryption at rest.
+
+- id: NIST.SC.9
+  title: EBS volume encryption
+  nist_control: "SC-28"
+  mapped_to_existing: true
+  existing_invariant: HIPAA CTL.EC2.EBS.ENCRYPT.001
+  note: EBS encryption by default.
+
+- id: NIST.SC.10
+  title: DynamoDB/SQS/SNS/Secrets Manager encryption
+  nist_control: "SC-28"
+  mapped_to_existing: true
+  existing_invariant: HIPAA CTL.DYNAMODB.ENCRYPT.001, CTL.SQS.ENCRYPT.001, CTL.SNS.ENCRYPT.001, CTL.SECRETSMANAGER.ENCRYPT.001
+  note: KMS encryption for all data services.
+
+- id: NIST.SC.11
+  title: Backup encryption
+  nist_control: "SC-28"
+  mapped_to_existing: true
+  existing_invariant: HIPAA CTL.BACKUP.ENCRYPT.001
+  note: Backup vault encryption.
+
+- id: NIST.SC.12
+  title: KMS key rotation enabled
+  nist_control: "SC-12"
+  mapped_to_existing: true
+  existing_invariant: CIS CTL.KMS.ROTATION.001
+  note: Automatic key rotation.
+
+- id: NIST.SC.13
+  title: VPC boundary protection
+  nist_control: "SC-7"
+  mapped_to_existing: true
+  existing_invariant: CIS CTL.VPC.SG.UNRESTRICTED.001, CTL.VPC.SG.DEFAULT.001, CTL.VPC.NACL.ADMIN.001
+  note: Network boundary controls.
+
+- id: NIST.SC.14
+  title: Cryptographic key management policy
+  nist_control: "SC-12"
+  manual: true
+  reason: Key management policies are organizational documents.
+  evidence_guidance: Documented key management procedures including rotation schedules.

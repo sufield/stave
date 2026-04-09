@@ -1,0 +1,25 @@
+# NIST SP 800-53 Rev 5 — RA: Risk Assessment
+# Summary: 3 controls — 2 MAPPED, 0 NEW, 1 MANUAL
+
+invariants:
+
+- id: NIST.RA.1
+  title: IAM Access Analyzer enabled
+  nist_control: "RA-5"
+  mapped_to_existing: true
+  existing_invariant: CIS CTL.IAM.ANALYZER.001
+  note: Detects unintended external access to resources.
+
+- id: NIST.RA.2
+  title: Security Hub for vulnerability aggregation
+  nist_control: "RA-5"
+  mapped_to_existing: true
+  existing_invariant: SOC2 CTL.SECURITYHUB.ENABLED.001
+  note: Aggregates findings from Inspector, GuardDuty, Macie.
+
+- id: NIST.RA.3
+  title: Risk assessment performed regularly
+  nist_control: "RA-3"
+  manual: true
+  reason: Risk assessments are organizational exercises.
+  evidence_guidance: Annual risk assessment document with threat/vulnerability analysis.

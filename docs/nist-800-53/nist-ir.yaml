@@ -1,0 +1,32 @@
+# NIST SP 800-53 Rev 5 — IR: Incident Response
+# Summary: 4 controls — 2 MAPPED, 0 NEW, 2 MANUAL
+
+invariants:
+
+- id: NIST.IR.1
+  title: CloudTrail for incident investigation
+  nist_control: "IR-6"
+  mapped_to_existing: true
+  existing_invariant: CIS CTL.CLOUDTRAIL.ENABLED.001, CTL.CLOUDTRAIL.VALIDATION.001
+  note: Complete audit trail for forensic investigation.
+
+- id: NIST.IR.2
+  title: CloudWatch monitoring for incident detection
+  nist_control: "IR-6"
+  mapped_to_existing: true
+  existing_invariant: CIS CTL.CLOUDWATCH.MONITOR.ROOT.001 (+ 14 others)
+  note: Automated alerting for security events.
+
+- id: NIST.IR.3
+  title: Incident response plan
+  nist_control: "IR-1"
+  manual: true
+  reason: IR plans are organizational documents.
+  evidence_guidance: Written IR plan with roles, procedures, and annual testing evidence.
+
+- id: NIST.IR.4
+  title: Incident handling training
+  nist_control: "IR-2"
+  manual: true
+  reason: Training is an organizational activity.
+  evidence_guidance: Training records for IR team members.

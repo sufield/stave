@@ -1,0 +1,46 @@
+# NIST SP 800-53 Rev 5 — SI: System and Information Integrity
+# Summary: 6 controls — 4 MAPPED, 0 NEW, 2 MANUAL
+
+invariants:
+
+- id: NIST.SI.1
+  title: GuardDuty enabled for threat detection
+  nist_control: "SI-3"
+  mapped_to_existing: true
+  existing_invariant: SOC2 CTL.GUARDDUTY.ENABLED.001
+  note: Continuous threat detection.
+
+- id: NIST.SI.2
+  title: EC2 IMDSv2 for SSRF protection
+  nist_control: "SI-3"
+  mapped_to_existing: true
+  existing_invariant: CIS CTL.EC2.IMDSV2.001
+  note: Blocks SSRF-based credential theft.
+
+- id: NIST.SI.3
+  title: Security Hub enabled
+  nist_control: "SI-4"
+  mapped_to_existing: true
+  existing_invariant: SOC2 CTL.SECURITYHUB.ENABLED.001
+  note: Aggregated security findings.
+
+- id: NIST.SI.4
+  title: RDS auto patching
+  nist_control: "SI-2"
+  mapped_to_existing: true
+  existing_invariant: CIS CTL.RDS.AUTOUPGRADE.001
+  note: Security patches applied automatically.
+
+- id: NIST.SI.5
+  title: Flaw remediation procedures
+  nist_control: "SI-2"
+  manual: true
+  reason: Patch management timelines are organizational processes.
+  evidence_guidance: Documented patching SLAs and evidence of timely remediation.
+
+- id: NIST.SI.6
+  title: Malware protection policy
+  nist_control: "SI-3"
+  manual: true
+  reason: Anti-malware strategy is an organizational decision.
+  evidence_guidance: Documented malware protection strategy and endpoint coverage evidence.

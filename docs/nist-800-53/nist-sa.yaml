@@ -1,0 +1,25 @@
+# NIST SP 800-53 Rev 5 — SA: System and Services Acquisition
+# Summary: 3 controls — 1 MAPPED, 0 NEW, 2 MANUAL
+
+invariants:
+
+- id: NIST.SA.1
+  title: CloudFormation drift detection for configuration integrity
+  nist_control: "SA-10"
+  mapped_to_existing: true
+  existing_invariant: SOC2 CTL.CLOUDFORMATION.DRIFT.001
+  note: IaC integrity verification.
+
+- id: NIST.SA.2
+  title: Secure development lifecycle
+  nist_control: "SA-3"
+  manual: true
+  reason: SDLC is an organizational process.
+  evidence_guidance: SDLC documentation, code review evidence, SAST/DAST results.
+
+- id: NIST.SA.3
+  title: Supply chain risk management
+  nist_control: "SA-12"
+  manual: true
+  reason: Supply chain assessment is an organizational process.
+  evidence_guidance: Vendor assessment records and third-party risk management program.

@@ -1,0 +1,74 @@
+# NIST SP 800-53 Rev 5 — IA: Identification and Authentication
+# Summary: 10 controls — 9 MAPPED, 0 NEW, 1 MANUAL
+
+invariants:
+
+- id: NIST.IA.1
+  title: Root account MFA enabled
+  nist_control: "IA-2(1)"
+  mapped_to_existing: true
+  existing_invariant: CIS CTL.IAM.ROOT.MFA.001, CTL.IAM.ROOT.HWMFA.001
+  note: Root MFA with hardware device preferred.
+
+- id: NIST.IA.2
+  title: Root account has no access keys
+  nist_control: "IA-2"
+  mapped_to_existing: true
+  existing_invariant: CIS CTL.IAM.ROOT.ACCESSKEY.001
+  note: Root access keys provide unrestricted access.
+
+- id: NIST.IA.3
+  title: Console users have MFA
+  nist_control: "IA-2(1)"
+  mapped_to_existing: true
+  existing_invariant: CIS CTL.IAM.CONSOLE.MFA.001
+  note: All interactive users require MFA.
+
+- id: NIST.IA.4
+  title: Cognito user pools enforce MFA
+  nist_control: "IA-2(1)"
+  mapped_to_existing: true
+  existing_invariant: HIPAA CTL.COGNITO.MFA.001
+  note: Application-level MFA for end users.
+
+- id: NIST.IA.5
+  title: Password minimum length 14+
+  nist_control: "IA-5(1)"
+  mapped_to_existing: true
+  existing_invariant: HIPAA CTL.IAM.PASSWORD.LENGTH.001
+  note: Strong password length requirement.
+
+- id: NIST.IA.6
+  title: Password reuse prevention
+  nist_control: "IA-5(1)"
+  mapped_to_existing: true
+  existing_invariant: HIPAA CTL.IAM.PASSWORD.REUSE.001
+  note: Last 24 passwords prevented.
+
+- id: NIST.IA.7
+  title: Password complexity requirements
+  nist_control: "IA-5(1)"
+  mapped_to_existing: true
+  existing_invariant: HIPAA CTL.IAM.PASSWORD.COMPLEXITY.001
+  note: All character types required.
+
+- id: NIST.IA.8
+  title: Access key rotation within 90 days
+  nist_control: "IA-5(1)"
+  mapped_to_existing: true
+  existing_invariant: CIS CTL.IAM.CRED.ROTATION.001
+  note: Credential rotation prevents stale key exposure.
+
+- id: NIST.IA.9
+  title: Single active access key per user
+  nist_control: "IA-5"
+  mapped_to_existing: true
+  existing_invariant: CIS CTL.IAM.CRED.SINGLEKEY.001
+  note: At most one active key per user.
+
+- id: NIST.IA.10
+  title: Authenticator management policy
+  nist_control: "IA-5"
+  manual: true
+  reason: Authenticator management policies are organizational documents.
+  evidence_guidance: Password policy documentation and MFA device management procedures.

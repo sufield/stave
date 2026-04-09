@@ -31,6 +31,7 @@ func TestParseProfile_Valid(t *testing.T) {
 		{"cis-aws-v3.0", ProfileCISv3},
 		{"soc2", ProfileSOC2},
 		{"pci-dss-v4.0", ProfilePCIDSSv4},
+		{"nist-800-53", ProfileNIST},
 	}
 	for _, tt := range tests {
 		got, err := ParseProfile(tt.input)
@@ -392,6 +393,7 @@ func TestProfileControlDomain(t *testing.T) {
 		{ProfileCISv3, ""},
 		{ProfileSOC2, ""},
 		{ProfilePCIDSSv4, ""},
+		{ProfileNIST, ""},
 	}
 	for _, tt := range tests {
 		got := profileControlDomain(tt.prof)
@@ -413,6 +415,7 @@ func TestProfileComplianceFramework(t *testing.T) {
 		{ProfileCISv3, "cis_aws_v3.0"},
 		{ProfileSOC2, "soc2"},
 		{ProfilePCIDSSv4, "pci_dss_v4.0"},
+		{ProfileNIST, "nist_800_53_r5"},
 	}
 	for _, tt := range tests {
 		got := profileComplianceFramework(tt.prof)
