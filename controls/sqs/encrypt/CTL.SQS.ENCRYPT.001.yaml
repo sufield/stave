@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.SQS.ENCRYPT.001
+name: SQS Queues Must Be Encrypted with KMS
+description: >
+  SQS queues must use server-side encryption with a KMS key.
+  Unencrypted queues expose message payloads at rest, which may
+  contain PHI or other sensitive data.
+domain: exposure
+severity: high
+compliance:
+  hipaa: "164.312(a)(2)(iv)"
+scope_tags:
+  - aws
+  - sqs
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    SQS queue is not encrypted with KMS. Message data is stored
+    in plaintext.
+  action: >
+    Enable SSE-KMS on the queue. Run:
+    aws sqs set-queue-attributes --queue-url xxx
+    --attributes KmsMasterKeyId=arn:aws:kms:...
+  example: |
+    {
+      "messaging": {
+        "kind": "queue",
+        "encryption": {
+          "encrypted": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: queue
+    - field: properties.messaging.encryption.encrypted
+      op: eq
+      value: false

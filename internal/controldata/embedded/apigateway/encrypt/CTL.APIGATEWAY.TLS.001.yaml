@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.TLS.001
+name: API Gateway Must Enforce TLS 1.2
+description: >
+  API Gateway stages must enforce TLS 1.2 or higher. Allowing older
+  TLS versions exposes API traffic to known cryptographic attacks
+  (BEAST, POODLE, etc).
+domain: exposure
+severity: high
+compliance:
+  hipaa: "164.312(e)(2)(ii)"
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    API Gateway does not enforce TLS 1.2. Clients can connect with
+    older, vulnerable TLS versions.
+  action: >
+    Set the minimum TLS version on the custom domain or API stage.
+    For REST APIs, configure a security policy of TLS_1_2 on the
+    custom domain name.
+  example: |
+    {
+      "api": {
+        "kind": "rest_api",
+        "encryption": {
+          "minimum_tls_version": "TLS_1_2"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: rest_api
+    - field: properties.api.encryption.tls_enforced
+      op: eq
+      value: false

@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.IAMAUTH.001
+name: RDS Must Enable IAM Authentication
+description: >
+  RDS instances should enable IAM database authentication. IAM auth
+  eliminates long-lived database passwords and integrates with AWS
+  identity governance for centralized access control and audit.
+domain: identity
+severity: medium
+compliance:
+  hipaa: "164.312(d)"
+scope_tags:
+  - aws
+  - rds
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    RDS instance does not have IAM authentication enabled. Database
+    access relies on long-lived passwords that are harder to rotate
+    and audit.
+  action: >
+    Enable IAM authentication on the instance. Run:
+    aws rds modify-db-instance --db-instance-identifier xxx
+    --enable-iam-database-authentication --apply-immediately
+  example: |
+    {
+      "database": {
+        "kind": "instance",
+        "access": {
+          "iam_authentication_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: instance
+    - field: properties.database.access.iam_authentication_enabled
+      op: eq
+      value: false

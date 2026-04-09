@@ -1,0 +1,40 @@
+dsl_version: ctrl.v1
+id: CTL.DYNAMODB.ENCRYPT.001
+name: DynamoDB Must Use Customer-Managed KMS Encryption
+description: >
+  DynamoDB tables must use a customer-managed KMS key for encryption
+  at rest. The default AWS-owned key does not support key revocation,
+  audit of key usage, or cross-account key policies.
+domain: exposure
+severity: high
+compliance:
+  hipaa: "164.312(a)(2)(iv)"
+scope_tags:
+  - aws
+  - dynamodb
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    DynamoDB table is not encrypted with a customer-managed KMS key.
+  action: >
+    Update the table encryption to use a customer-managed KMS key.
+    Run: aws dynamodb update-table --table-name xxx
+    --sse-specification Enabled=true,SSEType=KMS,KMSMasterKeyId=arn:...
+  example: |
+    {
+      "database": {
+        "kind": "table",
+        "encryption": {
+          "sse_type": "KMS"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: table
+    - field: properties.database.encryption.sse_type
+      op: ne
+      value: KMS

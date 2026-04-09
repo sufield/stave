@@ -1,0 +1,36 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.INCOMPLETE.001
+name: Complete Data Required for CloudWatch Assessment
+description: >
+  The observation snapshot is missing required CloudWatch log group
+  properties.
+domain: exposure
+severity: info
+compliance: {}
+scope_tags:
+  - aws
+  - cloudwatch
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Observation is missing CloudWatch log group properties.
+  action: >
+    Ensure the extractor calls aws logs describe-log-groups and maps
+    the retentionInDays to the log_group observation properties.
+  example: |
+    {
+      "log_group": {
+        "kind": "log_group",
+        "has_retention_policy": true,
+        "retention_days": 365
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.log_group.kind
+      op: eq
+      value: log_group
+    - field: properties.log_group.has_retention_policy
+      op: missing
+      value: true

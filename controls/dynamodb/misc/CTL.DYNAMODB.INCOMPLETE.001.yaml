@@ -1,0 +1,37 @@
+dsl_version: ctrl.v1
+id: CTL.DYNAMODB.INCOMPLETE.001
+name: Complete Data Required for DynamoDB Assessment
+description: >
+  The observation snapshot is missing required DynamoDB properties.
+domain: exposure
+severity: info
+compliance: {}
+scope_tags:
+  - aws
+  - dynamodb
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Observation is missing DynamoDB table properties.
+  action: >
+    Ensure the extractor calls aws dynamodb describe-table and maps
+    the SSEDescription to the database.encryption observation properties.
+  example: |
+    {
+      "database": {
+        "kind": "table",
+        "encryption": {
+          "sse_enabled": true,
+          "sse_type": "KMS"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: table
+    - field: properties.database.encryption.sse_type
+      op: missing
+      value: true

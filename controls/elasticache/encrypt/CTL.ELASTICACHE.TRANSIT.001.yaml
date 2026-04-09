@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.ELASTICACHE.TRANSIT.001
+name: ElastiCache Must Have In-Transit Encryption Enabled
+description: >
+  ElastiCache clusters must have in-transit encryption enabled.
+  Without TLS, cache traffic travels in plaintext between the
+  application and the cache nodes, exposing cached PHI data.
+domain: exposure
+severity: high
+compliance:
+  hipaa: "164.312(e)(2)(ii)"
+scope_tags:
+  - aws
+  - elasticache
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    ElastiCache cluster does not have in-transit encryption enabled.
+    Cache traffic is transmitted in plaintext.
+  action: >
+    In-transit encryption can only be enabled at cluster creation.
+    Create a new replication group with TransitEncryptionEnabled=true
+    and migrate data from the existing cluster.
+  example: |
+    {
+      "cache": {
+        "kind": "cluster",
+        "encryption": {
+          "in_transit_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cache.kind
+      op: eq
+      value: cluster
+    - field: properties.cache.encryption.in_transit_enabled
+      op: eq
+      value: false

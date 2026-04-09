@@ -1,0 +1,38 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.INCOMPLETE.001
+name: Complete Data Required for Cognito Assessment
+description: >
+  The observation snapshot is missing required Cognito user pool
+  properties.
+domain: identity
+severity: info
+compliance: {}
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Observation is missing Cognito user pool properties.
+  action: >
+    Ensure the extractor calls aws cognito-idp describe-user-pool
+    and maps MfaConfiguration to the identity observation properties.
+  example: |
+    {
+      "identity": {
+        "kind": "user_pool",
+        "auth": {
+          "mfa_enforced": true,
+          "mfa_configuration": "ON"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user_pool
+    - field: properties.identity.auth.mfa_enforced
+      op: missing
+      value: true

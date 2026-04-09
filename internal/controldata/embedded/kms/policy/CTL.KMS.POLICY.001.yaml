@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.POLICY.001
+name: KMS Key Policy Must Restrict Access to Specific Roles
+description: >
+  KMS key policies must not grant wildcard principal access. A key
+  policy with Principal "*" allows any IAM entity in the account
+  (or any account if conditions are missing) to use the key, defeating
+  the purpose of customer-managed encryption.
+domain: exposure
+severity: high
+compliance:
+  hipaa: "164.312(a)(1)"
+scope_tags:
+  - aws
+  - kms
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    KMS key policy grants access to wildcard principals. Any IAM
+    entity can use this key for encryption and decryption.
+  action: >
+    Update the key policy to restrict Principal to specific IAM roles
+    or accounts. Remove any statements with Principal "*".
+  example: |
+    {
+      "cryptography": {
+        "kind": "key",
+        "policy": {
+          "has_wildcard_principal": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: key
+    - field: properties.cryptography.policy.has_wildcard_principal
+      op: eq
+      value: true

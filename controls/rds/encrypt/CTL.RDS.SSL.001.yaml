@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.SSL.001
+name: RDS Must Require SSL Connections
+description: >
+  RDS instances must enforce SSL/TLS for all client connections.
+  Without require_ssl, database traffic travels unencrypted over the
+  network, exposing query data and credentials to interception.
+domain: exposure
+severity: high
+compliance:
+  hipaa: "164.312(e)(2)(ii)"
+  cis_aws_v1.4.0: "2.3.3"
+scope_tags:
+  - aws
+  - rds
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    RDS instance does not require SSL connections. Database traffic
+    may be transmitted in plaintext.
+  action: >
+    Set the rds.force_ssl parameter to 1 in the parameter group
+    (PostgreSQL) or require_secure_transport to ON (MySQL). For
+    Aurora, use the cluster parameter group.
+  example: |
+    {
+      "database": {
+        "kind": "instance",
+        "encryption": {
+          "require_ssl": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: instance
+    - field: properties.database.encryption.require_ssl
+      op: eq
+      value: false

@@ -1,0 +1,37 @@
+dsl_version: ctrl.v1
+id: CTL.ELASTICACHE.INCOMPLETE.001
+name: Complete Data Required for ElastiCache Assessment
+description: >
+  The observation snapshot is missing required ElastiCache properties.
+domain: exposure
+severity: info
+compliance: {}
+scope_tags:
+  - aws
+  - elasticache
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Observation is missing ElastiCache cluster properties.
+  action: >
+    Ensure the extractor calls aws elasticache describe-replication-groups
+    and maps TransitEncryptionEnabled to the cache observation properties.
+  example: |
+    {
+      "cache": {
+        "kind": "cluster",
+        "encryption": {
+          "in_transit_enabled": true,
+          "at_rest_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cache.kind
+      op: eq
+      value: cluster
+    - field: properties.cache.encryption.in_transit_enabled
+      op: missing
+      value: true

@@ -1,0 +1,38 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.INCOMPLETE.001
+name: Complete Data Required for API Gateway Assessment
+description: >
+  The observation snapshot is missing required API Gateway properties.
+domain: exposure
+severity: info
+compliance: {}
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Observation is missing API Gateway properties.
+  action: >
+    Ensure the extractor calls aws apigateway get-rest-apis and
+    aws apigateway get-domain-names and maps security policy to
+    the api observation properties.
+  example: |
+    {
+      "api": {
+        "kind": "rest_api",
+        "encryption": {
+          "tls_enforced": true,
+          "minimum_tls_version": "TLS_1_2"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: rest_api
+    - field: properties.api.encryption.tls_enforced
+      op: missing
+      value: true

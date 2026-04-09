@@ -1,0 +1,39 @@
+dsl_version: ctrl.v1
+id: CTL.CONFIG.RULES.001
+name: AWS Config Must Have Active Rules
+description: >
+  AWS Config must have active Config Rules to evaluate resource
+  compliance. Recording without rules provides change history but
+  no automated drift detection.
+domain: exposure
+severity: medium
+compliance:
+  hipaa: "164.312(c)(1)"
+scope_tags:
+  - aws
+  - config
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    AWS Config has no active rules. Configuration drift will not be
+    detected automatically.
+  action: >
+    Deploy Config Rules for your compliance requirements. Start with
+    AWS managed rules for common checks (encrypted-volumes,
+    restricted-common-ports, etc).
+  example: |
+    {
+      "compliance": {
+        "kind": "recorder",
+        "has_active_rules": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compliance.kind
+      op: eq
+      value: recorder
+    - field: properties.compliance.has_active_rules
+      op: eq
+      value: false
