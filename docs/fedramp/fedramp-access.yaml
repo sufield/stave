@@ -1,0 +1,68 @@
+# FedRAMP — Personnel and Access Control Requirements
+# Summary: 8 controls — 3 MAPPED, 0 NEW, 5 MANUAL
+
+invariants:
+
+- id: FEDRAMP.ACCESS.1
+  title: Root account MFA with hardware token
+  fedramp_control: "IA-2(1)"
+  baseline: low
+  mapped_to_existing: true
+  existing_invariant: CIS CTL.IAM.ROOT.HWMFA.001
+  note: Hardware MFA required for privileged access.
+
+- id: FEDRAMP.ACCESS.2
+  title: IAM least privilege enforced
+  fedramp_control: "AC-6"
+  baseline: moderate
+  mapped_to_existing: true
+  existing_invariant: CIS CTL.IAM.POLICY.ADMIN.001, CTL.IAM.POLICY.INLINE/DIRECT.001
+  note: No wildcard admin, no inline/direct policies.
+
+- id: FEDRAMP.ACCESS.3
+  title: Cognito MFA enforced for application users
+  fedramp_control: "IA-2(1)"
+  baseline: moderate
+  mapped_to_existing: true
+  existing_invariant: HIPAA CTL.COGNITO.MFA.001
+  note: MFA for all application-level authentication.
+
+- id: FEDRAMP.ACCESS.4
+  title: Personnel background investigations
+  fedramp_control: "PS-3"
+  baseline: moderate
+  manual: true
+  reason: Background checks are HR processes outside infrastructure.
+  evidence_guidance: Background investigation records for all personnel with privileged access.
+
+- id: FEDRAMP.ACCESS.5
+  title: US Persons requirement (FedRAMP High)
+  fedramp_control: "PS-3"
+  baseline: high
+  manual: true
+  reason: Citizenship verification is an HR process.
+  evidence_guidance: Documentation that all administrators are US Persons located on US soil.
+
+- id: FEDRAMP.ACCESS.6
+  title: PIV/CAC card authentication for admin access
+  fedramp_control: "IA-2(12)"
+  baseline: high
+  manual: true
+  reason: PIV/CAC integration is identity provider configuration, not AWS resource config.
+  evidence_guidance: IAM Identity Center or SAML federation config showing PIV/CAC as authenticator.
+
+- id: FEDRAMP.ACCESS.7
+  title: Centralized identity directory
+  fedramp_control: "IA-2"
+  baseline: moderate
+  manual: true
+  reason: Directory architecture is an organizational design decision.
+  evidence_guidance: IAM Identity Center or SAML federation with centralized directory (Active Directory, Okta).
+
+- id: FEDRAMP.ACCESS.8
+  title: Access authorization procedures
+  fedramp_control: "AC-1"
+  baseline: low
+  manual: true
+  reason: Access procedures are organizational documents.
+  evidence_guidance: Documented access request and approval workflow.

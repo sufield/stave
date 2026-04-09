@@ -1,0 +1,71 @@
+# FedRAMP — FIPS 140 Cryptography Requirements
+# Summary: 6 controls — 4 MAPPED, 1 NEW, 1 MANUAL
+
+invariants:
+
+- id: FEDRAMP.FIPS.1
+  title: S3 encryption must use KMS (FIPS-validated)
+  fedramp_control: "SC-13"
+  baseline: moderate
+  mapped_to_existing: true
+  existing_invariant: HIPAA CTL.S3.ENCRYPT.003
+  note: >
+    KMS uses FIPS 140-2 validated HSMs. SSE-S3 (AES256) also uses
+    FIPS-validated modules but lacks key audit trail.
+
+- id: FEDRAMP.FIPS.2
+  title: RDS encryption uses KMS
+  fedramp_control: "SC-13"
+  baseline: moderate
+  mapped_to_existing: true
+  existing_invariant: HIPAA CTL.RDS.ENCRYPT.001
+  note: RDS encryption uses KMS-backed FIPS-validated modules.
+
+- id: FEDRAMP.FIPS.3
+  title: EBS encryption uses KMS
+  fedramp_control: "SC-13"
+  baseline: moderate
+  mapped_to_existing: true
+  existing_invariant: HIPAA CTL.EC2.EBS.ENCRYPT.001
+  note: EBS encryption uses KMS-backed FIPS-validated modules.
+
+- id: FEDRAMP.FIPS.4
+  title: KMS keys use FIPS 140-2 validated HSM
+  fedramp_control: "SC-13"
+  baseline: moderate
+  description: >
+    KMS keys must use AWS_KMS origin (backed by FIPS 140-2 Level 2
+    validated HSMs). External or custom key store keys may not meet
+    FIPS requirements unless independently validated.
+  conditions:
+    - cryptography.kind == "key"
+    - cryptography.origin == "AWS_KMS"
+  all_must_pass: true
+  severity: high
+  remediation: >
+    Use keys with AWS_KMS origin. Avoid EXTERNAL or CUSTOM_KEY_STORE
+    origin unless independently FIPS-validated.
+
+- id: FEDRAMP.FIPS.5
+  title: TLS endpoints use FIPS-validated modules
+  fedramp_control: "SC-8"
+  baseline: moderate
+  mapped_to_existing: true
+  existing_invariant: NIST CTL.ELB.TLS.001, CTL.RDS.SSL.001
+  note: >
+    AWS TLS endpoints use FIPS-validated cryptographic modules.
+    The ELB and RDS SSL controls verify TLS is enforced; the
+    underlying AWS implementation uses FIPS modules.
+
+- id: FEDRAMP.FIPS.6
+  title: FIPS endpoint configuration verified
+  fedramp_control: "SC-13"
+  baseline: high
+  manual: true
+  reason: >
+    FIPS endpoint usage is a client-side SDK configuration
+    (use_fips_endpoint=true), not a resource-level setting verifiable
+    from infrastructure configuration snapshots.
+  evidence_guidance: >
+    Auditors expect SDK configuration showing FIPS endpoints enabled,
+    or network logs showing connections to *.fips.*.amazonaws.com.

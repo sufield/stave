@@ -1,0 +1,68 @@
+# FedRAMP — Continuous Monitoring (ConMon) Requirements
+# Summary: 8 controls — 3 MAPPED, 0 NEW, 5 MANUAL
+
+invariants:
+
+- id: FEDRAMP.CONMON.1
+  title: Security Hub enabled for findings aggregation
+  fedramp_control: "CA-7"
+  baseline: moderate
+  mapped_to_existing: true
+  existing_invariant: SOC2 CTL.SECURITYHUB.ENABLED.001
+  note: Centralized security findings for ConMon reporting.
+
+- id: FEDRAMP.CONMON.2
+  title: CloudWatch monitoring alarms active
+  fedramp_control: "SI-4"
+  baseline: moderate
+  mapped_to_existing: true
+  existing_invariant: CIS CTL.CLOUDWATCH.MONITOR.* (15 controls)
+  note: Automated security event detection.
+
+- id: FEDRAMP.CONMON.3
+  title: AWS Config rules evaluating compliance
+  fedramp_control: "CA-7"
+  baseline: moderate
+  mapped_to_existing: true
+  existing_invariant: HIPAA CTL.CONFIG.RULES.001
+  note: Automated configuration compliance checks.
+
+- id: FEDRAMP.CONMON.4
+  title: Monthly vulnerability scanning
+  fedramp_control: "RA-5"
+  baseline: moderate
+  manual: true
+  reason: Scan execution is a runtime activity not verifiable from config.
+  evidence_guidance: Monthly scan reports from Inspector, Qualys, or equivalent.
+
+- id: FEDRAMP.CONMON.5
+  title: POA&M maintained for open findings
+  fedramp_control: "CA-5"
+  baseline: low
+  manual: true
+  reason: POA&M is a tracking document maintained outside infrastructure.
+  evidence_guidance: Current POA&M spreadsheet with finding dates, severity, owners, and remediation deadlines.
+
+- id: FEDRAMP.CONMON.6
+  title: Annual 3PAO assessment
+  fedramp_control: "CA-2"
+  baseline: moderate
+  manual: true
+  reason: Third-party assessment is an organizational engagement.
+  evidence_guidance: 3PAO assessment report from the last 12 months.
+
+- id: FEDRAMP.CONMON.7
+  title: Significant change request process
+  fedramp_control: "CA-6"
+  baseline: moderate
+  manual: true
+  reason: Change requests to authorizing agency are process-driven.
+  evidence_guidance: Documented significant change request forms and agency approval records.
+
+- id: FEDRAMP.CONMON.8
+  title: Monthly ConMon deliverables submitted
+  fedramp_control: "CA-7"
+  baseline: moderate
+  manual: true
+  reason: Monthly reporting is an organizational process.
+  evidence_guidance: Monthly scan results, POA&M updates, and inventory changes submitted to agency.

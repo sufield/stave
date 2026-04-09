@@ -1,0 +1,174 @@
+# FedRAMP — NIST 800-53 Baseline Controls
+# FedRAMP inherits NIST 800-53 Rev 5. All controls from the NIST profile
+# apply to FedRAMP at the Moderate and High baselines.
+#
+# Summary: 20 controls — 20 MAPPED, 0 NEW, 0 MANUAL
+# All mapped to existing NIST 800-53 Rev 5 controls.
+
+invariants:
+
+# AC — Access Control
+- id: FEDRAMP.AC.1
+  title: S3 Block Public Access enforced
+  fedramp_control: "AC-3"
+  baseline: moderate
+  mapped_to_existing: true
+  existing_invariant: NIST CTL.S3.CONTROLS.001
+  note: Default-deny access via BPA — NIST AC-3.
+
+- id: FEDRAMP.AC.2
+  title: No full admin IAM policies
+  fedramp_control: "AC-6"
+  baseline: moderate
+  mapped_to_existing: true
+  existing_invariant: NIST CTL.IAM.POLICY.ADMIN.001
+  note: Least privilege — NIST AC-6.
+
+- id: FEDRAMP.AC.3
+  title: Security groups restrict admin ports
+  fedramp_control: "AC-4"
+  baseline: moderate
+  mapped_to_existing: true
+  existing_invariant: NIST CTL.VPC.SG.UNRESTRICTED.001, CTL.VPC.SG.IPV6.001
+  note: Network boundary — NIST AC-4.
+
+- id: FEDRAMP.AC.4
+  title: RDS not publicly accessible
+  fedramp_control: "AC-3"
+  baseline: moderate
+  mapped_to_existing: true
+  existing_invariant: NIST CTL.RDS.PUBLIC.001
+  note: Database access restricted — NIST AC-3.
+
+# AU — Audit
+- id: FEDRAMP.AU.1
+  title: CloudTrail enabled in all regions
+  fedramp_control: "AU-2"
+  baseline: low
+  mapped_to_existing: true
+  existing_invariant: NIST CTL.CLOUDTRAIL.ENABLED.001
+  note: Audit logging — NIST AU-2.
+
+- id: FEDRAMP.AU.2
+  title: CloudTrail log validation enabled
+  fedramp_control: "AU-9"
+  baseline: moderate
+  mapped_to_existing: true
+  existing_invariant: NIST CTL.CLOUDTRAIL.VALIDATION.001
+  note: Log integrity — NIST AU-9.
+
+- id: FEDRAMP.AU.3
+  title: CloudTrail encrypted with KMS
+  fedramp_control: "AU-9"
+  baseline: moderate
+  mapped_to_existing: true
+  existing_invariant: NIST CTL.CLOUDTRAIL.ENCRYPT.001
+  note: Audit log encryption — NIST AU-9.
+
+- id: FEDRAMP.AU.4
+  title: Log retention >= 365 days
+  fedramp_control: "AU-11"
+  baseline: moderate
+  mapped_to_existing: true
+  existing_invariant: PCI CTL.CLOUDWATCH.LOG.RETENTION365.001
+  note: 1-year retention required — NIST AU-11.
+
+- id: FEDRAMP.AU.5
+  title: VPC flow logging enabled
+  fedramp_control: "AU-2"
+  baseline: moderate
+  mapped_to_existing: true
+  existing_invariant: NIST CTL.VPC.FLOWLOG.001
+  note: Network audit trail — NIST AU-2.
+
+# IA — Authentication
+- id: FEDRAMP.IA.1
+  title: Root MFA with hardware token
+  fedramp_control: "IA-2(1)"
+  baseline: low
+  mapped_to_existing: true
+  existing_invariant: NIST CTL.IAM.ROOT.MFA.001, CTL.IAM.ROOT.HWMFA.001
+  note: Phishing-resistant MFA — NIST IA-2(1).
+
+- id: FEDRAMP.IA.2
+  title: Console users have MFA
+  fedramp_control: "IA-2(1)"
+  baseline: low
+  mapped_to_existing: true
+  existing_invariant: NIST CTL.IAM.CONSOLE.MFA.001
+  note: All interactive users require MFA — NIST IA-2(1).
+
+- id: FEDRAMP.IA.3
+  title: Password policy enforced
+  fedramp_control: "IA-5(1)"
+  baseline: low
+  mapped_to_existing: true
+  existing_invariant: NIST CTL.IAM.PASSWORD.LENGTH/REUSE/COMPLEXITY.001
+  note: Strong password requirements — NIST IA-5(1).
+
+# SC — System Protection
+- id: FEDRAMP.SC.1
+  title: S3 encryption in transit enforced
+  fedramp_control: "SC-8"
+  baseline: moderate
+  mapped_to_existing: true
+  existing_invariant: NIST CTL.S3.ENCRYPT.002
+  note: TLS enforcement — NIST SC-8.
+
+- id: FEDRAMP.SC.2
+  title: ELB TLS 1.2 minimum
+  fedramp_control: "SC-8"
+  baseline: moderate
+  mapped_to_existing: true
+  existing_invariant: NIST CTL.ELB.TLS.001
+  note: Transit encryption — NIST SC-8.
+
+- id: FEDRAMP.SC.3
+  title: S3 encryption at rest with KMS
+  fedramp_control: "SC-28"
+  baseline: moderate
+  mapped_to_existing: true
+  existing_invariant: NIST CTL.S3.ENCRYPT.001, CTL.S3.ENCRYPT.003
+  note: Data at rest — NIST SC-28.
+
+- id: FEDRAMP.SC.4
+  title: RDS storage encryption
+  fedramp_control: "SC-28"
+  baseline: moderate
+  mapped_to_existing: true
+  existing_invariant: NIST CTL.RDS.ENCRYPT.001
+  note: Database encryption — NIST SC-28.
+
+- id: FEDRAMP.SC.5
+  title: EBS volume encryption
+  fedramp_control: "SC-28"
+  baseline: moderate
+  mapped_to_existing: true
+  existing_invariant: NIST CTL.EC2.EBS.ENCRYPT.001
+  note: Block storage encryption — NIST SC-28.
+
+- id: FEDRAMP.SC.6
+  title: KMS key rotation
+  fedramp_control: "SC-12"
+  baseline: moderate
+  mapped_to_existing: true
+  existing_invariant: NIST CTL.KMS.ROTATION.001
+  note: Cryptographic key management — NIST SC-12.
+
+# CM — Configuration Management
+- id: FEDRAMP.CM.1
+  title: AWS Config recording all resources
+  fedramp_control: "CM-2"
+  baseline: moderate
+  mapped_to_existing: true
+  existing_invariant: NIST CTL.CONFIG.ENABLED.001
+  note: Baseline configuration — NIST CM-2.
+
+# SI — System Integrity
+- id: FEDRAMP.SI.1
+  title: GuardDuty enabled
+  fedramp_control: "SI-3"
+  baseline: moderate
+  mapped_to_existing: true
+  existing_invariant: NIST CTL.GUARDDUTY.ENABLED.001
+  note: Threat detection — NIST SI-3.

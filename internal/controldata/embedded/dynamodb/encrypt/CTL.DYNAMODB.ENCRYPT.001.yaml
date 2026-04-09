@@ -12,6 +12,7 @@ compliance:
   soc2: "CC6.7"
   pci_dss_v4.0: "3.4.1"
   nist_800_53_r5: "SC-28"
+  fedramp_moderate: "SC-28"
 scope_tags:
   - aws
   - dynamodb
