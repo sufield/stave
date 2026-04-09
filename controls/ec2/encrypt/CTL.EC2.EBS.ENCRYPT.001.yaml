@@ -11,6 +11,8 @@ compliance:
   hipaa: "164.312(a)(2)(iv)"
   cis_aws_v1.4.0: "2.2.1"
   cis_aws_v3.0: "2.2.1"
+  soc2: "CC6.7"
+  pci_dss_v4.0: "3.4.1"
 scope_tags:
   - aws
   - ec2

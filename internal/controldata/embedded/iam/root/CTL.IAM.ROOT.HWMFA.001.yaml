@@ -9,6 +9,8 @@ domain: identity
 severity: high
 compliance:
   cis_aws_v3.0: "1.6"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "8.3.1"
 scope_tags:
   - aws
   - iam

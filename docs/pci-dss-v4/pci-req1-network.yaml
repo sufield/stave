@@ -1,0 +1,66 @@
+# PCI-DSS v4.0 — Requirement 1: Network Security Controls
+# Summary: 7 controls — 5 MAPPED, 0 NEW, 2 MANUAL
+
+invariants:
+
+- id: PCI.1.1
+  title: Security groups must not allow unrestricted ingress to admin ports
+  pci_requirement: "1.3.1"
+  mapped_to_existing: true
+  existing_invariant: CIS CTL.VPC.SG.UNRESTRICTED.001, CTL.VPC.SG.IPV6.001
+  note: >
+    No 0.0.0.0/0 or ::/0 to SSH/RDP — covered by CIS 5.2, 5.3.
+
+- id: PCI.1.2
+  title: Default security groups must restrict all traffic
+  pci_requirement: "1.3.2"
+  mapped_to_existing: true
+  existing_invariant: CIS CTL.VPC.SG.DEFAULT.001
+  note: >
+    Default SG must have no rules — covered by CIS 5.4.
+
+- id: PCI.1.3
+  title: Network ACLs must not allow unrestricted admin port access
+  pci_requirement: "1.3.1"
+  mapped_to_existing: true
+  existing_invariant: CIS CTL.VPC.NACL.ADMIN.001
+  note: >
+    No NACL ingress from 0.0.0.0/0 to port 22/3389 — covered by CIS 5.1.
+
+- id: PCI.1.4
+  title: EC2 instances must not have public IP addresses in CDE
+  pci_requirement: "1.3.4"
+  mapped_to_existing: true
+  existing_invariant: HIPAA CTL.EC2.PUBLIC.001
+  note: >
+    CDE instances must not be directly reachable — covered by HIPAA §164.312(e)(1).
+
+- id: PCI.1.5
+  title: VPC flow logging must be enabled
+  pci_requirement: "1.2.1"
+  mapped_to_existing: true
+  existing_invariant: CIS CTL.VPC.FLOWLOG.001
+  note: >
+    Network traffic logging for CDE segments — covered by CIS 3.7.
+
+- id: PCI.1.6
+  title: Network segmentation must be validated
+  pci_requirement: "1.4.1"
+  manual: true
+  reason: >
+    Network segmentation validation requires understanding intended CDE
+    boundaries and testing that non-CDE systems cannot reach CDE resources.
+  evidence_guidance: >
+    Auditors expect network diagrams showing CDE boundaries, penetration
+    test results validating segmentation, and firewall rule reviews.
+
+- id: PCI.1.7
+  title: Firewall rules must be reviewed semi-annually
+  pci_requirement: "1.2.5"
+  manual: true
+  reason: >
+    Rule review frequency is an organizational process that cannot be
+    determined from a point-in-time configuration snapshot.
+  evidence_guidance: >
+    Auditors expect documented firewall rule review records with dates,
+    reviewers, and any changes made as a result of the review.

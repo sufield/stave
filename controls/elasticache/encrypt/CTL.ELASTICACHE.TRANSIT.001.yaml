@@ -9,6 +9,8 @@ domain: exposure
 severity: high
 compliance:
   hipaa: "164.312(e)(2)(ii)"
+  soc2: "CC6.6"
+  pci_dss_v4.0: "4.2.1"
 scope_tags:
   - aws
   - elasticache

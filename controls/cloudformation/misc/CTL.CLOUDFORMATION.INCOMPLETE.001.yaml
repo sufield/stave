@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFORMATION.INCOMPLETE.001
+name: Complete Data Required for CloudFormation Assessment
+description: >
+  The observation snapshot is missing required CloudFormation properties.
+domain: exposure
+severity: info
+compliance: {}
+scope_tags:
+  - aws
+  - cloudformation
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Observation is missing CloudFormation properties.
+  action: >
+    Ensure the extractor calls aws cloudformation describe-stacks.
+  example: |
+    {
+      "infrastructure": {
+        "kind": "stack",
+        "drift_detection_enabled": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.infrastructure.drift_detection_enabled
+      op: missing
+      value: true

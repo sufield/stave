@@ -9,6 +9,7 @@ domain: identity
 severity: medium
 compliance:
   cis_aws_v3.0: "1.22"
+  soc2: "CC6.3"
 scope_tags:
   - aws
   - iam

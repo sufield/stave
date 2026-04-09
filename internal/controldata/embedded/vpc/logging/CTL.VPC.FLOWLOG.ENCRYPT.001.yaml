@@ -9,6 +9,7 @@ domain: exposure
 severity: medium
 compliance:
   hipaa: "164.312(a)(2)(iv)"
+  soc2: "CC6.7"
 scope_tags:
   - aws
   - vpc

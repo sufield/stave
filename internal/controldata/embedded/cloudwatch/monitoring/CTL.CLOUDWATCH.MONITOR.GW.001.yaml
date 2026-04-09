@@ -8,6 +8,7 @@ domain: exposure
 severity: medium
 compliance:
   cis_aws_v3.0: "4.12"
+  soc2: "CC7.1"
 scope_tags:
   - aws
   - cloudwatch

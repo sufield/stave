@@ -3,22 +3,22 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 171
-**Pack hash:** `71bf15b89ebeaae98a96cf61b1a2787b88ed6d197e1a2eae7aca510611069d37`
+**Total controls:** 183
+**Pack hash:** `2870803615664346fd76d37538ce661eff077b7e4e730578a1e1458eb015f3ba`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 26 |
-| high | 67 |
-| info | 11 |
+| high | 71 |
+| info | 16 |
 | low | 11 |
-| medium | 56 |
+| medium | 59 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 140 |
+| exposure | 152 |
 | governance | 2 |
 | identity | 25 |
 | storage | 4 |
@@ -46,11 +46,40 @@ The observation snapshot is missing required API Gateway properties.
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** hipaa: 164.312(e)(2)(ii);
+- **Compliance:** hipaa: 164.312(e)(2)(ii); pci_dss_v4.0: 4.2.1; soc2: CC6.6;
 
 API Gateway stages must enforce TLS 1.2 or higher. Allowing older TLS versions exposes API traffic to known cryptographic attacks (BEAST, POODLE, etc).
 
 **Remediation:** Set the minimum TLS version on the custom domain or API stage. For REST APIs, configure a security policy of TLS_1_2 on the custom domain name.
+
+---
+
+### CTL.AUTOSCALING.INCOMPLETE.001
+
+**Complete Data Required for Auto Scaling Assessment**
+
+- **Severity:** info
+- **Type:** unsafe_state
+- **Domain:** exposure
+
+The observation snapshot is missing required Auto Scaling properties.
+
+**Remediation:** Ensure the extractor calls aws autoscaling describe-auto-scaling-groups.
+
+---
+
+### CTL.AUTOSCALING.MULTIAZ.001
+
+**Auto Scaling Groups Must Span Multiple Availability Zones**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** soc2: A1.1;
+
+Auto Scaling groups must be configured across multiple AZs. A single-AZ ASG has a single point of failure during AZ outages.
+
+**Remediation:** Update the ASG: aws autoscaling update-auto-scaling-group --auto-scaling-group-name <name> --availability-zones us-east-1a us-east-1b
 
 ---
 
@@ -61,7 +90,7 @@ API Gateway stages must enforce TLS 1.2 or higher. Allowing older TLS versions e
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** hipaa: 164.312(a)(2)(iv);
+- **Compliance:** hipaa: 164.312(a)(2)(iv); pci_dss_v4.0: 3.4.1; soc2: CC6.7;
 
 All backups must be encrypted at rest. Unencrypted backups expose data if the backup storage is compromised or the backup is shared across accounts.
 
@@ -76,7 +105,7 @@ All backups must be encrypted at rest. Unencrypted backups expose data if the ba
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** hipaa: 164.308(a)(7);
+- **Compliance:** hipaa: 164.308(a)(7); soc2: A1.1;
 
 Resources tagged as critical or containing PHI must have at least one backup configured. Without backups, data loss from accidental deletion, corruption, or ransomware is permanent and unrecoverable.
 
@@ -105,7 +134,7 @@ Backup safety cannot be assessed when backup status is missing from the snapshot
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** hipaa: 164.308(a)(7);
+- **Compliance:** hipaa: 164.308(a)(7); soc2: A1.1;
 
 Resources tagged as critical must be deployed across multiple Availability Zones. Single-AZ deployment has a single point of failure that causes unavailability during AZ outages.
 
@@ -120,7 +149,7 @@ Resources tagged as critical must be deployed across multiple Availability Zones
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** hipaa: 164.308(a)(7);
+- **Compliance:** hipaa: 164.308(a)(7); soc2: A1.1;
 
 The most recent backup must be within the defined recovery point objective (RPO). Stale backups indicate a broken backup process and increase data loss exposure.
 
@@ -135,11 +164,40 @@ The most recent backup must be within the defined recovery point objective (RPO)
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** hipaa: 164.308(a)(7);
+- **Compliance:** hipaa: 164.308(a)(7); soc2: A1.1;
 
 Data classified as critical or PHI must have cross-region replication configured for disaster recovery. Single-region data is vulnerable to regional outages and cannot meet recovery time objectives (RTO) for multi-region failover.
 
 **Remediation:** Configure cross-region replication: S3 CRR, RDS cross-region read replica, or AWS Backup cross-region copy rule.
+
+---
+
+### CTL.CLOUDFORMATION.DRIFT.001
+
+**CloudFormation Stack Drift Detection Must Be Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** pci_dss_v4.0: 6.3.2; soc2: CC8.1;
+
+CloudFormation stacks managing production infrastructure must have drift detection enabled. Drift indicates out-of-band changes bypassing IaC.
+
+**Remediation:** Detect drift: aws cloudformation detect-stack-drift --stack-name <name>. Configure periodic detection via EventBridge.
+
+---
+
+### CTL.CLOUDFORMATION.INCOMPLETE.001
+
+**Complete Data Required for CloudFormation Assessment**
+
+- **Severity:** info
+- **Type:** unsafe_state
+- **Domain:** exposure
+
+The observation snapshot is missing required CloudFormation properties.
+
+**Remediation:** Ensure the extractor calls aws cloudformation describe-stacks.
 
 ---
 
@@ -150,7 +208,7 @@ Data classified as critical or PHI must have cross-region replication configured
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 3.9;
+- **Compliance:** cis_aws_v3.0: 3.9; pci_dss_v4.0: 10.2.1.7; soc2: CC6.2;
 
 CloudTrail must log S3 data read events (GetObject). Read logging provides evidence of data access for PHI audit trails and breach investigation.
 
@@ -165,7 +223,7 @@ CloudTrail must log S3 data read events (GetObject). Read logging provides evide
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 3.8;
+- **Compliance:** cis_aws_v3.0: 3.8; pci_dss_v4.0: 10.2.1.7; soc2: CC6.2;
 
 CloudTrail must log S3 data write events (PutObject, DeleteObject). Without object-level write logging, individual object mutations are invisible to the audit trail.
 
@@ -180,7 +238,7 @@ CloudTrail must log S3 data write events (PutObject, DeleteObject). Without obje
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v1.4.0: 3.1; cis_aws_v3.0: 3.1; hipaa: 164.312(b);
+- **Compliance:** cis_aws_v1.4.0: 3.1; cis_aws_v3.0: 3.1; hipaa: 164.312(b); pci_dss_v4.0: 10.2.1; soc2: CC7.1;
 
 CloudTrail must be configured as a multi-region trail. A single-region trail misses API activity in other regions, leaving gaps in the audit record that prevent forensic investigation of unauthorized access.
 
@@ -195,7 +253,7 @@ CloudTrail must be configured as a multi-region trail. A single-region trail mis
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v1.4.0: 3.7; cis_aws_v3.0: 3.5; hipaa: 164.312(a)(2)(iv);
+- **Compliance:** cis_aws_v1.4.0: 3.7; cis_aws_v3.0: 3.5; hipaa: 164.312(a)(2)(iv); pci_dss_v4.0: 10.5.1; soc2: CC6.7;
 
 CloudTrail logs must be encrypted at rest using a KMS customer-managed key. Default S3 encryption (SSE-S3) does not provide key revocation capability needed for breach response.
 
@@ -224,7 +282,7 @@ The observation snapshot is missing required CloudTrail properties. A safety ass
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 3.4;
+- **Compliance:** cis_aws_v3.0: 3.4; pci_dss_v4.0: 10.5.1; soc2: CC7.1;
 
 The S3 bucket receiving CloudTrail logs must have server access logging enabled. Without it, access to the audit logs themselves is not auditable.
 
@@ -239,7 +297,7 @@ The S3 bucket receiving CloudTrail logs must have server access logging enabled.
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v1.4.0: 3.2; cis_aws_v3.0: 3.2; hipaa: 164.312(b);
+- **Compliance:** cis_aws_v1.4.0: 3.2; cis_aws_v3.0: 3.2; hipaa: 164.312(b); pci_dss_v4.0: 10.2.1; soc2: CC7.1;
 
 CloudTrail must have log file integrity validation enabled. Without validation, an attacker who gains access to the log bucket can modify or delete log entries to cover their tracks.
 
@@ -261,6 +319,21 @@ The observation snapshot is missing required CloudWatch log group properties.
 
 ---
 
+### CTL.CLOUDWATCH.LOG.RETENTION365.001
+
+**CloudWatch Log Retention Must Be At Least 365 Days**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** pci_dss_v4.0: 10.7;
+
+CloudWatch log groups for cardholder data environment audit logs must retain logs for at least 365 days. PCI-DSS v4.0 requires 12 months of audit trail with at least 3 months immediately available.
+
+**Remediation:** Set retention to at least 365 days: aws logs put-retention-policy --log-group-name <name> --retention-in-days 365
+
+---
+
 ### CTL.CLOUDWATCH.MONITOR.AUTHFAIL.001
 
 **Console Authentication Failures Must Be Monitored**
@@ -268,7 +341,7 @@ The observation snapshot is missing required CloudWatch log group properties.
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 4.6;
+- **Compliance:** cis_aws_v3.0: 4.6; soc2: CC7.1;
 
 A CloudWatch metric filter and alarm must monitor console authentication failures. Failed console authentication attempts indicate brute force attacks against IAM user passwords.
 
@@ -283,7 +356,7 @@ A CloudWatch metric filter and alarm must monitor console authentication failure
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 4.7;
+- **Compliance:** cis_aws_v3.0: 4.7; soc2: CC7.1;
 
 A CloudWatch metric filter and alarm must monitor cmk disable or deletion. KMS key disabling or scheduled deletion renders encrypted data permanently inaccessible — a ransomware vector.
 
@@ -298,7 +371,7 @@ A CloudWatch metric filter and alarm must monitor cmk disable or deletion. KMS k
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 4.9;
+- **Compliance:** cis_aws_v3.0: 4.9; soc2: CC7.1;
 
 A CloudWatch metric filter and alarm must monitor aws config changes. Changes to AWS Config (StopConfigurationRecorder) remove drift detection.
 
@@ -313,7 +386,7 @@ A CloudWatch metric filter and alarm must monitor aws config changes. Changes to
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 4.12;
+- **Compliance:** cis_aws_v3.0: 4.12; soc2: CC7.1;
 
 A CloudWatch metric filter and alarm must monitor network gateway changes. Gateway attachment is the boundary between a VPC and the internet.
 
@@ -328,7 +401,7 @@ A CloudWatch metric filter and alarm must monitor network gateway changes. Gatew
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 4.4;
+- **Compliance:** cis_aws_v3.0: 4.4; soc2: CC7.1;
 
 A CloudWatch metric filter and alarm must monitor iam policy changes. IAM policy modifications (CreatePolicy, DeletePolicy, AttachRolePolicy) are a primary persistence mechanism for attackers.
 
@@ -343,7 +416,7 @@ A CloudWatch metric filter and alarm must monitor iam policy changes. IAM policy
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 4.11;
+- **Compliance:** cis_aws_v3.0: 4.11; soc2: CC7.1;
 
 A CloudWatch metric filter and alarm must monitor nacl changes. Network ACL changes can open or close network paths.
 
@@ -358,7 +431,7 @@ A CloudWatch metric filter and alarm must monitor nacl changes. Network ACL chan
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 4.2;
+- **Compliance:** cis_aws_v3.0: 4.2; soc2: CC7.1;
 
 A CloudWatch metric filter and alarm must monitor console sign-in without mfa. Console sign-ins without MFA indicate either MFA is not enforced or credentials were used from a context that bypassed MFA.
 
@@ -373,7 +446,7 @@ A CloudWatch metric filter and alarm must monitor console sign-in without mfa. C
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 4.15;
+- **Compliance:** cis_aws_v3.0: 4.15; soc2: CC7.1;
 
 A CloudWatch metric filter and alarm must monitor aws organizations changes. Organizations changes affect account-level governance and SCP enforcement.
 
@@ -388,7 +461,7 @@ A CloudWatch metric filter and alarm must monitor aws organizations changes. Org
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 4.3;
+- **Compliance:** cis_aws_v3.0: 4.3; soc2: CC7.1;
 
 A CloudWatch metric filter and alarm must monitor root account usage. Root account API activity should be near-zero. Any activity may indicate compromise or unauthorized administrative action.
 
@@ -403,7 +476,7 @@ A CloudWatch metric filter and alarm must monitor root account usage. Root accou
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 4.13;
+- **Compliance:** cis_aws_v3.0: 4.13; soc2: CC7.1;
 
 A CloudWatch metric filter and alarm must monitor route table changes. Route table modifications can redirect traffic through attacker-controlled paths.
 
@@ -418,7 +491,7 @@ A CloudWatch metric filter and alarm must monitor route table changes. Route tab
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 4.8;
+- **Compliance:** cis_aws_v3.0: 4.8; soc2: CC7.1;
 
 A CloudWatch metric filter and alarm must monitor s3 bucket policy changes. S3 bucket policy changes (PutBucketPolicy, PutBucketAcl) can make private buckets public.
 
@@ -433,7 +506,7 @@ A CloudWatch metric filter and alarm must monitor s3 bucket policy changes. S3 b
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 4.10;
+- **Compliance:** cis_aws_v3.0: 4.10; soc2: CC7.1;
 
 A CloudWatch metric filter and alarm must monitor security group changes. Security group changes directly affect network access to resources.
 
@@ -448,7 +521,7 @@ A CloudWatch metric filter and alarm must monitor security group changes. Securi
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 4.5;
+- **Compliance:** cis_aws_v3.0: 4.5; soc2: CC7.1;
 
 A CloudWatch metric filter and alarm must monitor cloudtrail configuration changes. Changes to CloudTrail (CreateTrail, UpdateTrail, DeleteTrail, StopLogging) are the first action in covering tracks after compromise.
 
@@ -463,7 +536,7 @@ A CloudWatch metric filter and alarm must monitor cloudtrail configuration chang
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 4.1;
+- **Compliance:** cis_aws_v3.0: 4.1; soc2: CC7.1;
 
 A CloudWatch metric filter and alarm must monitor unauthorized api calls. Unauthorized API calls (AccessDenied, UnauthorizedAccess) indicate credential probing or misconfigured IAM policies.
 
@@ -478,7 +551,7 @@ A CloudWatch metric filter and alarm must monitor unauthorized api calls. Unauth
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 4.14;
+- **Compliance:** cis_aws_v3.0: 4.14; soc2: CC7.1;
 
 A CloudWatch metric filter and alarm must monitor vpc changes. VPC lifecycle changes affect the entire network boundary.
 
@@ -493,7 +566,7 @@ A CloudWatch metric filter and alarm must monitor vpc changes. VPC lifecycle cha
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** hipaa: 164.312(b);
+- **Compliance:** hipaa: 164.312(b); soc2: CC7.1;
 
 CloudWatch Logs log groups must have a retention policy configured. Without a retention policy, logs are kept indefinitely (incurring cost) or may be deleted manually without audit trail.
 
@@ -522,7 +595,7 @@ The observation snapshot is missing required Cognito user pool properties.
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** hipaa: 164.312(d);
+- **Compliance:** hipaa: 164.312(d); pci_dss_v4.0: 8.3.1; soc2: CC6.1;
 
 Cognito user pools handling PHI must enforce multi-factor authentication. Without MFA, a compromised password grants full access to the application and any PHI it serves.
 
@@ -537,7 +610,7 @@ Cognito user pools handling PHI must enforce multi-factor authentication. Withou
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v1.4.0: 3.5; cis_aws_v3.0: 3.3; hipaa: 164.312(b);
+- **Compliance:** cis_aws_v1.4.0: 3.5; cis_aws_v3.0: 3.3; hipaa: 164.312(b); pci_dss_v4.0: 6.3.2; soc2: CC7.1;
 
 AWS Config must be enabled and recording all supported resource types. Without Config, configuration changes are not tracked and drift from the desired security baseline cannot be detected.
 
@@ -566,7 +639,7 @@ The observation snapshot is missing required AWS Config properties.
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** hipaa: 164.312(c)(1);
+- **Compliance:** hipaa: 164.312(c)(1); pci_dss_v4.0: 6.3.2; soc2: CC6.3;
 
 AWS Config must have active Config Rules to evaluate resource compliance. Recording without rules provides change history but no automated drift detection.
 
@@ -623,7 +696,7 @@ DNS records or URLs that reference software distribution endpoints (package repo
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** hipaa: 164.312(a)(2)(iv);
+- **Compliance:** hipaa: 164.312(a)(2)(iv); pci_dss_v4.0: 3.4.1; soc2: CC6.7;
 
 DynamoDB tables must use a customer-managed KMS key for encryption at rest. The default AWS-owned key does not support key revocation, audit of key usage, or cross-account key policies.
 
@@ -652,7 +725,7 @@ The observation snapshot is missing required DynamoDB properties.
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v1.4.0: 2.2.1; cis_aws_v3.0: 2.2.1; hipaa: 164.312(a)(2)(iv);
+- **Compliance:** cis_aws_v1.4.0: 2.2.1; cis_aws_v3.0: 2.2.1; hipaa: 164.312(a)(2)(iv); pci_dss_v4.0: 3.4.1; soc2: CC6.7;
 
 EBS volumes attached to EC2 instances must have encryption enabled. Unencrypted volumes storing PHI or sensitive data violate encryption at rest requirements.
 
@@ -667,7 +740,7 @@ EBS volumes attached to EC2 instances must have encryption enabled. Unencrypted 
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v3.0: 1.18;
+- **Compliance:** cis_aws_v3.0: 1.18; soc2: CC6.8;
 
 EC2 instances that access AWS services must use IAM instance profiles (roles) instead of embedded access keys. Instance roles provide temporary credentials that are automatically rotated.
 
@@ -682,7 +755,7 @@ EC2 instances that access AWS services must use IAM instance profiles (roles) in
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v1.4.0: 5.6; cis_aws_v3.0: 5.6;
+- **Compliance:** cis_aws_v1.4.0: 5.6; cis_aws_v3.0: 5.6; pci_dss_v4.0: 2.2.1; soc2: CC6.6;
 
 EC2 instances must enforce Instance Metadata Service Version 2 (IMDSv2). IMDSv1 is vulnerable to SSRF attacks that can steal instance credentials from the metadata endpoint.
 
@@ -711,7 +784,7 @@ EC2 instance safety cannot be assessed when encryption status is missing from th
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v1.4.0: 5.1; hipaa: 164.312(e)(1);
+- **Compliance:** cis_aws_v1.4.0: 5.1; hipaa: 164.312(e)(1); pci_dss_v4.0: 1.3.4; soc2: CC6.6;
 
 EC2 instances should not have public IP addresses unless explicitly required. Public IP assignment exposes the instance to direct internet access, bypassing network perimeter controls.
 
@@ -726,7 +799,7 @@ EC2 instances should not have public IP addresses unless explicitly required. Pu
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v1.4.0: 2.2.1; hipaa: 164.312(a)(2)(iv);
+- **Compliance:** cis_aws_v1.4.0: 2.2.1; hipaa: 164.312(a)(2)(iv); pci_dss_v4.0: 3.4.1; soc2: CC6.7;
 
 EBS snapshots must be encrypted. Unencrypted snapshots can be shared across accounts or made public, exposing data at rest.
 
@@ -755,7 +828,7 @@ The observation snapshot is missing required ElastiCache properties.
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** hipaa: 164.312(e)(2)(ii);
+- **Compliance:** hipaa: 164.312(e)(2)(ii); pci_dss_v4.0: 4.2.1; soc2: CC6.6;
 
 ElastiCache clusters must have in-transit encryption enabled. Without TLS, cache traffic travels in plaintext between the application and the cache nodes, exposing cached PHI data.
 
@@ -770,7 +843,7 @@ ElastiCache clusters must have in-transit encryption enabled. Without TLS, cache
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** hipaa: 164.308(a)(7);
+- **Compliance:** hipaa: 164.308(a)(7); soc2: A1.1;
 
 Load balancers must distribute traffic across all registered targets in all enabled Availability Zones. Without cross-zone balancing, uneven distribution can cause availability issues during AZ failures.
 
@@ -785,7 +858,7 @@ Load balancers must distribute traffic across all registered targets in all enab
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** hipaa: 164.312(e)(2)(ii);
+- **Compliance:** hipaa: 164.312(e)(2)(ii); pci_dss_v4.0: 4.2.1; soc2: CC6.6;
 
 Load balancers serving PHI must redirect all HTTP traffic to HTTPS. Allowing plaintext HTTP exposes data in transit to interception.
 
@@ -814,7 +887,7 @@ Load balancer safety cannot be assessed when TLS configuration is missing from t
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** hipaa: 164.312(b);
+- **Compliance:** hipaa: 164.312(b); soc2: CC7.1;
 
 Load balancer access logging must be enabled for audit and forensic analysis. Without access logs, request patterns and potential unauthorized access cannot be investigated after an incident.
 
@@ -829,7 +902,7 @@ Load balancer access logging must be enabled for audit and forensic analysis. Wi
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** hipaa: 164.312(e)(2)(ii);
+- **Compliance:** hipaa: 164.312(e)(2)(ii); pci_dss_v4.0: 4.2.1; soc2: CC6.6;
 
 Application and Network Load Balancers must use TLS 1.2 or higher for HTTPS listeners. Older TLS versions have known vulnerabilities.
 
@@ -941,6 +1014,35 @@ GCS buckets must have object versioning enabled. Without versioning, deleted or 
 
 ---
 
+### CTL.GUARDDUTY.ENABLED.001
+
+**Amazon GuardDuty Must Be Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** pci_dss_v4.0: 5.2; soc2: CC7.1;
+
+GuardDuty must be enabled to provide continuous threat detection. It analyzes CloudTrail, VPC Flow Logs, and DNS logs to detect reconnaissance, instance compromise, and account compromise.
+
+**Remediation:** Enable GuardDuty: aws guardduty create-detector --enable
+
+---
+
+### CTL.GUARDDUTY.INCOMPLETE.001
+
+**Complete Data Required for GuardDuty Assessment**
+
+- **Severity:** info
+- **Type:** unsafe_state
+- **Domain:** exposure
+
+The observation snapshot is missing required GuardDuty properties.
+
+**Remediation:** Ensure the extractor calls aws guardduty list-detectors and get-detector.
+
+---
+
 ### CTL.IAM.ANALYZER.001
 
 **IAM Access Analyzer Must Be Enabled**
@@ -948,7 +1050,7 @@ GCS buckets must have object versioning enabled. Without versioning, deleted or 
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v3.0: 1.20;
+- **Compliance:** cis_aws_v3.0: 1.20; pci_dss_v4.0: 11.3.1; soc2: CC6.1;
 
 IAM Access Analyzer must be enabled in every region. Access Analyzer identifies resources shared with external entities and generates findings for unintended exposure.
 
@@ -978,7 +1080,7 @@ Expired SSL/TLS server certificates must be removed from IAM. Expired certificat
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v1.4.0: 1.10; cis_aws_v3.0: 1.10; hipaa: 164.312(d); pci_dss_v3.2.1: 8.3; soc2: CC6.1;
+- **Compliance:** cis_aws_v1.4.0: 1.10; cis_aws_v3.0: 1.10; hipaa: 164.312(d); pci_dss_v3.2.1: 8.3; pci_dss_v4.0: 8.3.1; soc2: CC6.1;
 
 IAM users with console access must have multi-factor authentication enabled. Console access without MFA allows credential-only login, making accounts vulnerable to password compromise.
 
@@ -993,7 +1095,7 @@ IAM users with console access must have multi-factor authentication enabled. Con
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v1.4.0: 1.14; cis_aws_v3.0: 1.14; hipaa: 164.312(a)(2)(i); pci_dss_v3.2.1: 8.2.4; soc2: CC6.1;
+- **Compliance:** cis_aws_v1.4.0: 1.14; cis_aws_v3.0: 1.14; hipaa: 164.312(a)(2)(i); pci_dss_v3.2.1: 8.2.4; pci_dss_v4.0: 8.3.9; soc2: CC6.1;
 
 IAM user access keys older than 90 days must be rotated. Long-lived access keys accumulate exposure risk and may have been leaked in code repositories, logs, or configuration files.
 
@@ -1008,7 +1110,7 @@ IAM user access keys older than 90 days must be rotated. Long-lived access keys 
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v3.0: 1.11;
+- **Compliance:** cis_aws_v3.0: 1.11; soc2: CC6.2;
 
 Access keys should not be created at user creation time. Keys created during setup are often distributed insecurely and may not be needed. Create keys only for specific programmatic access.
 
@@ -1023,7 +1125,7 @@ Access keys should not be created at user creation time. Keys created during set
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v3.0: 1.13;
+- **Compliance:** cis_aws_v3.0: 1.13; pci_dss_v4.0: 8.3.4; soc2: CC6.1;
 
 Each IAM user must have at most one active access key. Multiple active keys increase the attack surface and complicate key rotation.
 
@@ -1038,7 +1140,7 @@ Each IAM user must have at most one active access key. Multiple active keys incr
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v1.4.0: 1.12; cis_aws_v3.0: 1.12; hipaa: 164.312(a)(2)(i); soc2: CC6.2;
+- **Compliance:** cis_aws_v1.4.0: 1.12; cis_aws_v3.0: 1.12; hipaa: 164.312(a)(2)(i); pci_dss_v4.0: 8.1.4; soc2: CC6.2;
 
 IAM credentials unused for 90 days or more must be disabled. Dormant credentials are a persistent attack surface that provides access without triggering normal usage patterns.
 
@@ -1082,7 +1184,7 @@ IAM account safety cannot be proven when root account MFA status or access key d
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v1.4.0: 1.8; hipaa: 164.312(a)(2)(i); pci_dss_v3.2.1: 8.2.3; soc2: CC6.1;
+- **Compliance:** cis_aws_v1.4.0: 1.8; hipaa: 164.312(a)(2)(i); pci_dss_v3.2.1: 8.2.3; pci_dss_v4.0: 8.3.6; soc2: CC6.1;
 
 The IAM account password policy must require uppercase, lowercase, numbers, and symbols. Missing any character type requirement reduces the keyspace and makes passwords easier to crack.
 
@@ -1097,7 +1199,7 @@ The IAM account password policy must require uppercase, lowercase, numbers, and 
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v1.4.0: 1.8; cis_aws_v3.0: 1.8; hipaa: 164.312(a)(2)(i); pci_dss_v3.2.1: 8.2.3; soc2: CC6.1;
+- **Compliance:** cis_aws_v1.4.0: 1.8; cis_aws_v3.0: 1.8; hipaa: 164.312(a)(2)(i); pci_dss_v3.2.1: 8.2.3; pci_dss_v4.0: 8.3.6; soc2: CC6.1;
 
 The IAM account password policy must require a minimum password length of 14 characters. Shorter passwords are vulnerable to brute-force and dictionary attacks.
 
@@ -1112,7 +1214,7 @@ The IAM account password policy must require a minimum password length of 14 cha
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v1.4.0: 1.9; cis_aws_v3.0: 1.9; hipaa: 164.312(a)(2)(i); pci_dss_v3.2.1: 8.2.5; soc2: CC6.1;
+- **Compliance:** cis_aws_v1.4.0: 1.9; cis_aws_v3.0: 1.9; hipaa: 164.312(a)(2)(i); pci_dss_v3.2.1: 8.2.5; pci_dss_v4.0: 8.3.7; soc2: CC6.1;
 
 The IAM account password policy must prevent reuse of the last 24 passwords. Without reuse prevention, users cycle between a small set of passwords, negating the value of password rotation.
 
@@ -1127,7 +1229,7 @@ The IAM account password policy must prevent reuse of the last 24 passwords. Wit
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v3.0: 1.16;
+- **Compliance:** cis_aws_v3.0: 1.16; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 No IAM policy with Effect Allow on Action "*" and Resource "*" should be attached to any IAM entity. Full admin policies violate least privilege and grant unrestricted access to all services.
 
@@ -1142,7 +1244,7 @@ No IAM policy with Effect Allow on Action "*" and Resource "*" should be attache
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v3.0: 1.22;
+- **Compliance:** cis_aws_v3.0: 1.22; soc2: CC6.3;
 
 The AWSCloudShellFullAccess managed policy should not be attached to any IAM entity unless specifically required. CloudShell provides a browser-based shell that can bypass network-level controls.
 
@@ -1157,7 +1259,7 @@ The AWSCloudShellFullAccess managed policy should not be attached to any IAM ent
 - **Severity:** low
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v1.4.0: 1.15; cis_aws_v3.0: 1.15; hipaa: 164.312(a)(1); soc2: CC6.3;
+- **Compliance:** cis_aws_v1.4.0: 1.15; cis_aws_v3.0: 1.15; hipaa: 164.312(a)(1); pci_dss_v4.0: 7.2.2; soc2: CC6.3;
 
 IAM users must not have managed policies attached directly. Policies should be attached to groups or roles, not individual users. Direct attachment creates unmanageable per-user permission sprawl.
 
@@ -1172,7 +1274,7 @@ IAM users must not have managed policies attached directly. Policies should be a
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v1.4.0: 1.15; cis_aws_v3.0: 1.15; hipaa: 164.312(a)(1); soc2: CC6.3;
+- **Compliance:** cis_aws_v1.4.0: 1.15; cis_aws_v3.0: 1.15; hipaa: 164.312(a)(1); pci_dss_v4.0: 7.2.2; soc2: CC6.3;
 
 IAM users must not have inline policies attached directly. Inline policies are harder to audit, cannot be reused, and create per-user policy sprawl that resists central governance.
 
@@ -1187,7 +1289,7 @@ IAM users must not have inline policies attached directly. Inline policies are h
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v1.4.0: 1.4; cis_aws_v3.0: 1.4; hipaa: 164.312(a)(1); pci_dss_v3.2.1: 2.1; soc2: CC6.1;
+- **Compliance:** cis_aws_v1.4.0: 1.4; cis_aws_v3.0: 1.4; hipaa: 164.312(a)(1); pci_dss_v3.2.1: 2.1; pci_dss_v4.0: 8.3.4; soc2: CC6.1;
 
 The AWS root account must not have active access keys. Root access keys provide unrestricted programmatic access. Use IAM users or roles for programmatic access instead.
 
@@ -1202,7 +1304,7 @@ The AWS root account must not have active access keys. Root access keys provide 
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v3.0: 1.6;
+- **Compliance:** cis_aws_v3.0: 1.6; pci_dss_v4.0: 8.3.1; soc2: CC6.1;
 
 The root account must use a hardware MFA device, not a virtual one. Hardware tokens cannot be cloned or phished via device compromise, providing stronger protection for the most privileged identity.
 
@@ -1217,7 +1319,7 @@ The root account must use a hardware MFA device, not a virtual one. Hardware tok
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v1.4.0: 1.5; cis_aws_v3.0: 1.5; hipaa: 164.312(d); pci_dss_v3.2.1: 8.3; soc2: CC6.1;
+- **Compliance:** cis_aws_v1.4.0: 1.5; cis_aws_v3.0: 1.5; hipaa: 164.312(d); pci_dss_v3.2.1: 8.3; pci_dss_v4.0: 8.3.1; soc2: CC6.1;
 
 The AWS root account must have multi-factor authentication enabled. Root has unrestricted access to all resources. Compromise without MFA is the highest-severity identity risk.
 
@@ -1232,7 +1334,7 @@ The AWS root account must have multi-factor authentication enabled. Root has unr
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v3.0: 1.7;
+- **Compliance:** cis_aws_v3.0: 1.7; pci_dss_v4.0: 8.1.1; soc2: CC6.2;
 
 The root account must not be used for day-to-day operations. Root activity should be limited to account setup tasks. Recent root usage indicates operational reliance on root credentials.
 
@@ -1262,7 +1364,7 @@ At least one IAM entity must have the AWSSupportAccess managed policy attached. 
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_k8s_v1.8.0: 3.2.1; hipaa: 164.312(b);
+- **Compliance:** cis_k8s_v1.8.0: 3.2.1; hipaa: 164.312(b); soc2: CC7.1;
 
 The Kubernetes API server must have audit logging enabled. Without audit logs, API calls (including unauthorized access attempts) are not recorded for forensic analysis.
 
@@ -1351,7 +1453,7 @@ Kubernetes ClusterRoles must not grant wildcard (*) access to resources or verbs
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_k8s_v1.8.0: 1.2.29; hipaa: 164.312(a)(2)(iv);
+- **Compliance:** cis_k8s_v1.8.0: 1.2.29; hipaa: 164.312(a)(2)(iv); soc2: CC6.7;
 
 Kubernetes Secrets stored in etcd must be encrypted at rest. By default, Secrets are stored as base64-encoded plaintext in etcd, readable by anyone with etcd access or etcd backup access.
 
@@ -1395,7 +1497,7 @@ The observation snapshot is missing required KMS key properties. A safety assess
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** hipaa: 164.312(a)(1);
+- **Compliance:** hipaa: 164.312(a)(1); pci_dss_v4.0: 3.4.1; soc2: CC6.1;
 
 KMS key policies must not grant wildcard principal access. A key policy with Principal "*" allows any IAM entity in the account (or any account if conditions are missing) to use the key, defeating the purpose of customer-managed encryption.
 
@@ -1410,7 +1512,7 @@ KMS key policies must not grant wildcard principal access. A key policy with Pri
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 3.6;
+- **Compliance:** cis_aws_v3.0: 3.6; pci_dss_v4.0: 3.6.1; soc2: CC6.7;
 
 Customer-created symmetric KMS keys must have automatic key rotation enabled. Key rotation limits the amount of data encrypted with a single key version, reducing the blast radius of key compromise.
 
@@ -1425,7 +1527,7 @@ Customer-created symmetric KMS keys must have automatic key rotation enabled. Ke
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 2.3.2;
+- **Compliance:** cis_aws_v3.0: 2.3.2; pci_dss_v4.0: 2.2.1; soc2: A1.1;
 
 RDS instances must have automatic minor version upgrades enabled. Minor versions include security patches. Without auto-upgrade, instances run known-vulnerable database engine versions.
 
@@ -1440,7 +1542,7 @@ RDS instances must have automatic minor version upgrades enabled. Minor versions
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** hipaa: 164.308(a)(7); hipaa_retention: 164.316(b)(2);
+- **Compliance:** hipaa: 164.308(a)(7); hipaa_retention: 164.316(b)(2); soc2: A1.1;
 
 RDS instances must have automated backups enabled with a retention period of at least 7 days. Without backups, data loss from accidental deletion, corruption, or ransomware is permanent.
 
@@ -1455,7 +1557,7 @@ RDS instances must have automated backups enabled with a retention period of at 
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v1.4.0: 2.3.1; cis_aws_v3.0: 2.3.1; hipaa: 164.312(a)(2)(iv);
+- **Compliance:** cis_aws_v1.4.0: 2.3.1; cis_aws_v3.0: 2.3.1; hipaa: 164.312(a)(2)(iv); pci_dss_v4.0: 3.4.1; soc2: CC6.7;
 
 RDS instances must have storage encryption enabled. Unencrypted database storage exposes data at rest to unauthorized access if the underlying storage is compromised.
 
@@ -1499,7 +1601,7 @@ RDS instance safety cannot be assessed when encryption status is missing from th
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** hipaa: 164.312(b);
+- **Compliance:** hipaa: 164.312(b); soc2: CC7.1;
 
 RDS instances must export audit logs to CloudWatch. Without audit logging, database access patterns cannot be monitored and unauthorized queries are undetectable.
 
@@ -1514,7 +1616,7 @@ RDS instances must export audit logs to CloudWatch. Without audit logging, datab
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** hipaa: 164.308(a)(7);
+- **Compliance:** hipaa: 164.308(a)(7); soc2: A1.1;
 
 Production RDS instances must use Multi-AZ deployment for high availability. Single-AZ instances have a single point of failure that can cause data unavailability during AZ outages.
 
@@ -1529,7 +1631,7 @@ Production RDS instances must use Multi-AZ deployment for high availability. Sin
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v1.4.0: 2.3.2; cis_aws_v3.0: 2.3.3; hipaa: 164.312(a)(1);
+- **Compliance:** cis_aws_v1.4.0: 2.3.2; cis_aws_v3.0: 2.3.3; hipaa: 164.312(a)(1); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 RDS instances must not have public accessibility enabled. A publicly accessible database is reachable from the internet, exposing it to brute force attacks, SQL injection, and unauthorized data access.
 
@@ -1544,11 +1646,40 @@ RDS instances must not have public accessibility enabled. A publicly accessible 
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v1.4.0: 2.3.3; hipaa: 164.312(e)(2)(ii);
+- **Compliance:** cis_aws_v1.4.0: 2.3.3; hipaa: 164.312(e)(2)(ii); pci_dss_v4.0: 4.2.1; soc2: CC6.6;
 
 RDS instances must enforce SSL/TLS for all client connections. Without require_ssl, database traffic travels unencrypted over the network, exposing query data and credentials to interception.
 
 **Remediation:** Set the rds.force_ssl parameter to 1 in the parameter group (PostgreSQL) or require_secure_transport to ON (MySQL). For Aurora, use the cluster parameter group.
+
+---
+
+### CTL.ROUTE53.HEALTHCHECK.001
+
+**Route 53 Health Checks Must Be Configured**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** soc2: A1.1;
+
+Route 53 health checks must be configured for DNS records pointing to critical endpoints. Without health checks, DNS routes to failed endpoints.
+
+**Remediation:** Create health checks: aws route53 create-health-check and associate with failover routing.
+
+---
+
+### CTL.ROUTE53.INCOMPLETE.001
+
+**Complete Data Required for Route 53 Assessment**
+
+- **Severity:** info
+- **Type:** unsafe_state
+- **Domain:** exposure
+
+The observation snapshot is missing required Route 53 properties.
+
+**Remediation:** Ensure the extractor calls aws route53 list-hosted-zones and list-health-checks.
 
 ---
 
@@ -1687,7 +1818,7 @@ S3 bucket ACLs must not grant write access to AllUsers or AuthenticatedUsers. AC
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** hipaa: 164.312(b);
+- **Compliance:** hipaa: 164.312(b); pci_dss_v4.0: 10.2.1.3; soc2: CC7.1;
 
 CloudTrail S3 object-level data event logging must be enabled for PHI buckets. Server access logging captures bucket-level operations but not individual object access patterns. CloudTrail data events record GetObject, PutObject, and DeleteObject calls required for HIPAA audit controls.
 
@@ -1744,7 +1875,7 @@ Any externally referenced S3 bucket must exist and be owned. Dangling references
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** hipaa: 164.312(a)(1);
+- **Compliance:** hipaa: 164.312(a)(1); soc2: CC6.1;
 
 A bucket with Block Public Access enabled can still serve objects publicly through CloudFront if the bucket policy grants access to the cloudfront.amazonaws.com service principal. This creates a false sense of security — the bucket appears private but objects are accessible via the CloudFront distribution URL.
 
@@ -1778,7 +1909,7 @@ When S3 objects are served via CloudFront, Origin Access Control (OAC) should be
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v1.4.0: 2.1.5; cis_aws_v3.0: 2.1.4; pci_dss_v3.2.1: 1.3.6; soc2: CC6.1;
+- **Compliance:** cis_aws_v1.4.0: 2.1.5; cis_aws_v3.0: 2.1.4; pci_dss_v3.2.1: 1.3.6; pci_dss_v4.0: 2.2.1; soc2: CC6.1;
 
 S3 buckets must have the public access block fully enabled. When disabled, the bucket has no safety net against accidental public exposure from policy or ACL changes. This detects the enabling condition for public access, not the exposure itself.
 
@@ -1807,7 +1938,7 @@ CloudFront distributions must not reference S3 origins that do not exist. A miss
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v1.4.0: 2.1.1; hipaa: 164.312(a)(2)(iv); pci_dss_v3.2.1: 3.4; soc2: CC6.1;
+- **Compliance:** cis_aws_v1.4.0: 2.1.1; hipaa: 164.312(a)(2)(iv); pci_dss_v3.2.1: 3.4; pci_dss_v4.0: 3.4.1; soc2: CC6.1;
 
 S3 buckets must have server-side encryption enabled. Unencrypted storage is the top audit finding in regulated industries.
 
@@ -1822,7 +1953,7 @@ S3 buckets must have server-side encryption enabled. Unencrypted storage is the 
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v1.4.0: 2.1.2; cis_aws_v3.0: 2.1.1; hipaa: 164.312(e)(2)(ii); pci_dss_v3.2.1: 4.1; soc2: CC6.1;
+- **Compliance:** cis_aws_v1.4.0: 2.1.2; cis_aws_v3.0: 2.1.1; hipaa: 164.312(e)(2)(ii); pci_dss_v3.2.1: 4.1; pci_dss_v4.0: 4.2.1; soc2: CC6.1;
 
 S3 buckets must enforce HTTPS via a deny policy on aws:SecureTransport=false. Without this, data transfers occur in plaintext.
 
@@ -1837,6 +1968,7 @@ S3 buckets must enforce HTTPS via a deny policy on aws:SecureTransport=false. Wi
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
+- **Compliance:** pci_dss_v4.0: 3.5.1; soc2: CC6.7;
 
 S3 buckets tagged with data-classification=phi must use SSE-KMS encryption with a customer-managed key (CMK), not the default AWS-managed key or SSE-S3. This ensures the organization controls key rotation, access policies, and audit logging for PHI data at rest.
 
@@ -1893,6 +2025,7 @@ S3 bucket safety cannot be proven when policy or ACL data is missing from the sn
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
+- **Compliance:** soc2: C1.2;
 
 S3 buckets tagged with data-retention must have at least one enabled lifecycle rule configured. HIPAA requires defined data retention policies for protected health information (PHI), audit logs, and billing records. Without lifecycle rules, data persists indefinitely, increasing exposure surface and violating retention policy requirements.
 
@@ -1964,7 +2097,7 @@ S3 buckets tagged with data-classification=phi that have Object Lock enabled mus
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v1.4.0: 2.1.3; hipaa: 164.312(b); pci_dss_v3.2.1: 10.2.1; soc2: CC7.2;
+- **Compliance:** cis_aws_v1.4.0: 2.1.3; hipaa: 164.312(b); pci_dss_v3.2.1: 10.2.1; pci_dss_v4.0: 10.2.1.3; soc2: CC7.2;
 
 S3 buckets must have server access logging enabled for audit trail and visibility into data access patterns.
 
@@ -1979,7 +2112,7 @@ S3 buckets must have server access logging enabled for audit trail and visibilit
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 2.1.2;
+- **Compliance:** cis_aws_v3.0: 2.1.2; soc2: CC6.1;
 
 S3 buckets should have MFA Delete enabled on versioned buckets. MFA Delete requires a second factor to permanently delete object versions, preventing unauthorized or accidental data destruction.
 
@@ -1994,7 +2127,7 @@ S3 buckets should have MFA Delete enabled on versioned buckets. MFA Delete requi
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** hipaa: 164.312(a)(1);
+- **Compliance:** hipaa: 164.312(a)(1); soc2: CC6.1;
 
 MRAPs have their own PAB settings independent of bucket PAB. A bucket can have PAB enabled while the MRAP has PAB disabled.
 
@@ -2067,7 +2200,7 @@ S3 bucket access must be restricted by a VPC endpoint condition (aws:SourceVpce)
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** hipaa: 164.312(a)(1);
+- **Compliance:** hipaa: 164.312(a)(1); soc2: CC6.1;
 
 PHI bucket policy must restrict presigned URL access using s3:signatureAge (maximum age in milliseconds) or s3:authType (require REST-HEADER to block presigned URLs). Without these guardrails, presigned URLs can provide long-lived unauthenticated access to PHI data.
 
@@ -2082,7 +2215,7 @@ PHI bucket policy must restrict presigned URL access using s3:signatureAge (maxi
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v1.4.0: 2.1.5; hipaa: 164.312(a)(1); pci_dss_v3.2.1: 1.2.1; soc2: CC6.1;
+- **Compliance:** cis_aws_v1.4.0: 2.1.5; hipaa: 164.312(a)(1); pci_dss_v3.2.1: 1.2.1; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 S3 buckets must not allow public read access. Detects buckets with anonymous read exposure via policy or ACL.
 
@@ -2340,7 +2473,7 @@ Signed upload policies must restrict write permission to a single exact object k
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** hipaa: 164.312(a)(1);
+- **Compliance:** hipaa: 164.312(a)(1); soc2: CC6.1;
 
 Secrets Manager secrets must have automatic rotation enabled. Long-lived secrets that are never rotated increase the blast radius of credential leaks and prevent timely revocation.
 
@@ -2355,7 +2488,7 @@ Secrets Manager secrets must have automatic rotation enabled. Long-lived secrets
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** hipaa: 164.312(a)(2)(iv);
+- **Compliance:** hipaa: 164.312(a)(2)(iv); pci_dss_v4.0: 3.4.1; soc2: CC6.7;
 
 Secrets Manager secrets must be encrypted with a customer-managed KMS key. The default AWS-managed key does not support key revocation or cross-account key policies needed for breach response.
 
@@ -2377,6 +2510,35 @@ The observation snapshot is missing required Secrets Manager properties. A safet
 
 ---
 
+### CTL.SECURITYHUB.ENABLED.001
+
+**AWS Security Hub Must Be Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** pci_dss_v4.0: 11.3.1; soc2: CC7.1;
+
+Security Hub must be enabled to aggregate security findings from GuardDuty, Inspector, Macie, and Config into a unified view.
+
+**Remediation:** Enable Security Hub: aws securityhub enable-security-hub --enable-default-standards
+
+---
+
+### CTL.SECURITYHUB.INCOMPLETE.001
+
+**Complete Data Required for Security Hub Assessment**
+
+- **Severity:** info
+- **Type:** unsafe_state
+- **Domain:** exposure
+
+The observation snapshot is missing required Security Hub properties.
+
+**Remediation:** Ensure the extractor calls aws securityhub describe-hub.
+
+---
+
 ### CTL.SNS.ENCRYPT.001
 
 **SNS Topics Must Be Encrypted with KMS**
@@ -2384,7 +2546,7 @@ The observation snapshot is missing required Secrets Manager properties. A safet
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** hipaa: 164.312(a)(2)(iv);
+- **Compliance:** hipaa: 164.312(a)(2)(iv); soc2: CC6.7;
 
 SNS topics must use server-side encryption with a KMS key. Unencrypted topics expose message payloads at rest, which may contain PHI or other sensitive notification data.
 
@@ -2406,6 +2568,21 @@ The observation snapshot is missing required SNS topic properties.
 
 ---
 
+### CTL.SQS.DLQ.001
+
+**SQS Queues Must Have Dead-Letter Queue Configured**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** soc2: PI1.1;
+
+SQS queues processing critical workloads must have a dead-letter queue configured. Without a DLQ, messages that fail processing are silently lost.
+
+**Remediation:** Configure a DLQ: aws sqs set-queue-attributes --queue-url <url> --attributes RedrivePolicy='{"deadLetterTargetArn":"<dlq-arn>","maxReceiveCount":"3"}'
+
+---
+
 ### CTL.SQS.ENCRYPT.001
 
 **SQS Queues Must Be Encrypted with KMS**
@@ -2413,7 +2590,7 @@ The observation snapshot is missing required SNS topic properties.
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** hipaa: 164.312(a)(2)(iv);
+- **Compliance:** hipaa: 164.312(a)(2)(iv); soc2: CC6.7;
 
 SQS queues must use server-side encryption with a KMS key. Unencrypted queues expose message payloads at rest, which may contain PHI or other sensitive data.
 
@@ -2442,7 +2619,7 @@ The observation snapshot is missing required SQS queue properties.
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v1.4.0: 3.9; cis_aws_v3.0: 3.7; hipaa: 164.312(b);
+- **Compliance:** cis_aws_v1.4.0: 3.9; cis_aws_v3.0: 3.7; hipaa: 164.312(b); pci_dss_v4.0: 1.2.1; soc2: CC7.1;
 
 VPC flow logs capture information about IP traffic going to and from network interfaces. Without flow logs, network-level access patterns cannot be audited and unauthorized traffic goes undetected.
 
@@ -2457,7 +2634,7 @@ VPC flow logs capture information about IP traffic going to and from network int
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** hipaa: 164.312(a)(2)(iv);
+- **Compliance:** hipaa: 164.312(a)(2)(iv); soc2: CC6.7;
 
 VPC flow logs contain network metadata (source/destination IPs, ports, protocols). When stored in S3, flow logs must be encrypted with a customer-managed KMS key to protect network topology information.
 
@@ -2486,7 +2663,7 @@ VPC safety cannot be assessed when flow logging status is missing from the snaps
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 5.1;
+- **Compliance:** cis_aws_v3.0: 5.1; pci_dss_v4.0: 1.3.1; soc2: CC6.6;
 
 Network ACLs must not allow inbound traffic from 0.0.0.0/0 or ::/0 to SSH (22) or RDP (3389) ports. NACLs apply to entire subnets — open admin ports expose all instances.
 
@@ -2501,7 +2678,7 @@ Network ACLs must not allow inbound traffic from 0.0.0.0/0 or ::/0 to SSH (22) o
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v1.4.0: 5.4; cis_aws_v3.0: 5.4; hipaa: 164.312(a)(1);
+- **Compliance:** cis_aws_v1.4.0: 5.4; cis_aws_v3.0: 5.4; hipaa: 164.312(a)(1); pci_dss_v4.0: 1.3.2; soc2: CC6.6;
 
 The default VPC security group should not allow any inbound or outbound traffic. Resources should use custom security groups with explicit rules instead of relying on the default group.
 
@@ -2516,7 +2693,7 @@ The default VPC security group should not allow any inbound or outbound traffic.
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 5.3;
+- **Compliance:** cis_aws_v3.0: 5.3; pci_dss_v4.0: 1.3.1; soc2: CC6.6;
 
 Security groups must not allow inbound SSH (22) or RDP (3389) from ::/0 (IPv6 any). IPv6 open admin ports are equally dangerous as IPv4 and are often overlooked during security reviews.
 
@@ -2531,7 +2708,7 @@ Security groups must not allow inbound SSH (22) or RDP (3389) from ::/0 (IPv6 an
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v1.4.0: 5.2; cis_aws_v3.0: 5.2; hipaa: 164.312(e)(1);
+- **Compliance:** cis_aws_v1.4.0: 5.2; cis_aws_v3.0: 5.2; hipaa: 164.312(e)(1); pci_dss_v4.0: 1.3.1; soc2: CC6.6;
 
 Security group rules must not allow ingress from 0.0.0.0/0 on sensitive ports (SSH, RDP, database). Unrestricted ingress exposes services to the entire internet.
 

@@ -10,6 +10,7 @@ severity: high
 compliance:
   cis_k8s_v1.8.0: "3.2.1"
   hipaa: "164.312(b)"
+  soc2: "CC7.1"
 scope_tags:
   - kubernetes
   - audit

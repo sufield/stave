@@ -1,0 +1,72 @@
+# SOC 2 Trust Service Criteria — CC9: Risk Mitigation
+# AWS services: IAM, Config, GuardDuty
+#
+# Summary: 5 controls — 2 MAPPED, 0 NEW, 3 MANUAL
+
+invariants:
+
+# --- MAPPED ---
+
+- id: SOC2.CC9.1
+  title: No administrative privilege escalation paths
+  soc2_criteria: CC9.1
+  mapped_to_existing: true
+  existing_invariant: CIS CTL.IAM.POLICY.ADMIN.001
+  note: >
+    No IAM entity should have full *:* admin access — covered by CIS 1.16.
+
+- id: SOC2.CC9.2
+  title: Continuous compliance monitoring via AWS Config
+  soc2_criteria: CC9.1
+  mapped_to_existing: true
+  existing_invariant: CIS CTL.CONFIG.ENABLED.001, HIPAA CTL.CONFIG.RULES.001
+  note: >
+    Config records changes and evaluates compliance rules — covered
+    by CIS 3.3 and HIPAA §164.312(c)(1).
+
+# --- MANUAL ---
+
+- id: SOC2.CC9.3
+  title: Risk assessment performed annually
+  soc2_criteria: CC9.1
+  manual: true
+  reason: >
+    Risk assessments are organizational exercises involving threat
+    modeling, asset valuation, and likelihood analysis that cannot
+    be verified from infrastructure configuration.
+  evidence_guidance: >
+    Auditors expect a dated risk assessment document identifying
+    threats, vulnerabilities, likelihood, and impact ratings with
+    treatment plans and risk acceptance sign-off.
+
+- id: SOC2.CC9.4
+  title: Vendor risk management program
+  soc2_criteria: CC9.2
+  manual: true
+  reason: >
+    Vendor management involves contractual reviews, security
+    questionnaires, and ongoing monitoring of third-party risk
+    that cannot be determined from AWS configuration.
+  evidence_guidance: >
+    Auditors expect a vendor inventory, risk-tiered assessment
+    process, due diligence evidence for critical vendors, and
+    periodic reassessment schedule.
+
+- id: SOC2.CC9.5
+  title: Business continuity plan documented and tested
+  soc2_criteria: CC9.1
+  manual: true
+  reason: >
+    Business continuity plans are organizational documents that
+    require human judgment to create and test. Infrastructure
+    redundancy (Multi-AZ, backups) is only one component.
+  evidence_guidance: >
+    Auditors expect a BCP document, DR test results from the last
+    12 months, and evidence that RTO/RPO objectives were validated.
+
+# --- Section Summary ---
+# Total: 5 controls
+# MAPPED: 2 (admin privilege, Config compliance)
+# NEW: 0
+# MANUAL: 3 (risk assessment, vendor management, BCP)
+# CC9 is primarily organizational — technical controls are covered by CC6/CC7.

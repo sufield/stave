@@ -12,6 +12,7 @@ compliance:
   cis_aws_v3.0: "2.1.1"
   pci_dss_v3.2.1: "4.1"
   soc2: "CC6.1"
+  pci_dss_v4.0: "4.2.1"
 scope_tags:
   - aws
   - s3

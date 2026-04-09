@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.GUARDDUTY.INCOMPLETE.001
+name: Complete Data Required for GuardDuty Assessment
+description: >
+  The observation snapshot is missing required GuardDuty properties.
+domain: exposure
+severity: info
+compliance: {}
+scope_tags:
+  - aws
+  - guardduty
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Observation is missing GuardDuty properties.
+  action: >
+    Ensure the extractor calls aws guardduty list-detectors and get-detector.
+  example: |
+    {
+      "threat_detection": {
+        "kind": "detector",
+        "enabled": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.threat_detection.enabled
+      op: missing
+      value: true

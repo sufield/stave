@@ -1,0 +1,53 @@
+# PCI-DSS v4.0 — Requirement 4: Protect Data in Transit
+# Summary: 6 controls — 6 MAPPED, 0 NEW, 0 MANUAL
+
+invariants:
+
+- id: PCI.4.1
+  title: S3 bucket policy must enforce TLS
+  pci_requirement: "4.2.1"
+  mapped_to_existing: true
+  existing_invariant: HIPAA CTL.S3.ENCRYPT.002
+  note: >
+    Deny statement for aws:SecureTransport=false — covered by
+    HIPAA §164.312(e)(2)(ii) and CIS 2.1.1.
+
+- id: PCI.4.2
+  title: ELB must use TLS 1.2 or higher
+  pci_requirement: "4.2.1"
+  mapped_to_existing: true
+  existing_invariant: HIPAA CTL.ELB.TLS.001
+  note: >
+    Minimum TLS 1.2 on load balancers — covered by HIPAA.
+
+- id: PCI.4.3
+  title: ELB must redirect HTTP to HTTPS
+  pci_requirement: "4.2.1"
+  mapped_to_existing: true
+  existing_invariant: HIPAA CTL.ELB.HTTPS.001
+  note: >
+    No plaintext HTTP listeners — covered by HIPAA.
+
+- id: PCI.4.4
+  title: RDS must require SSL connections
+  pci_requirement: "4.2.1"
+  mapped_to_existing: true
+  existing_invariant: HIPAA CTL.RDS.SSL.001
+  note: >
+    require_ssl parameter enforced — covered by HIPAA and CIS 2.3.3.
+
+- id: PCI.4.5
+  title: API Gateway must enforce TLS 1.2
+  pci_requirement: "4.2.1"
+  mapped_to_existing: true
+  existing_invariant: HIPAA CTL.APIGATEWAY.TLS.001
+  note: >
+    Minimum TLS version on custom domains — covered by HIPAA.
+
+- id: PCI.4.6
+  title: ElastiCache must have in-transit encryption
+  pci_requirement: "4.2.1"
+  mapped_to_existing: true
+  existing_invariant: HIPAA CTL.ELASTICACHE.TRANSIT.001
+  note: >
+    TLS between app and cache nodes — covered by HIPAA.
