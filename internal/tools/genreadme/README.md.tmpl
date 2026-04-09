@@ -14,7 +14,7 @@ Stave fills this gap. Define safety controls in YAML, compile them to [CEL](http
 
 ## Features
 
-- **{{.TotalControls}} built-in S3 controls** across {{.CategoryCount}} categories — public exposure, ACL escalation, encryption, network restriction, Access Grants, Multi-Region Access Points, CloudFront OAC, and more
+- **{{.TotalControls}} built-in controls** across {{len .DomainTotals}} domains — AWS S3 ({{domain "s3"}}), AWS IAM ({{domain "iam"}}), GCP Cloud Storage ({{domain "gcs"}}), DNS ({{domain "dns"}})
 - **Unsafe duration tracking** — detects how long assets remain misconfigured across snapshots
 - **HIPAA compliance pack** — controls mapped to HIPAA Security Rule sections with compound risk detection
 - **Custom controls** — YAML with `unsafe_predicate` for any asset type, no code changes
@@ -105,7 +105,9 @@ New observation properties are additive and backward-compatible. Existing contro
 
 ## Built-in controls
 
-{{.TotalControls}} controls across {{.CategoryCount}} categories:
+{{.TotalControls}} controls across {{len .DomainTotals}} domains:
+
+### AWS S3 ({{domain "s3"}} controls)
 
 | Category | Count | What they detect |
 |----------|:---:|-----------------|
@@ -125,7 +127,19 @@ New observation properties are additive and backward-compatible. Existing contro
 | `artifacts` | {{ctrl "artifacts"}} | VCS artifacts on public buckets |
 | `misc` | {{ctrl "misc"}} | Incomplete data, completeness checks |
 
-Full reference: [Control authoring guide](docs/controls/authoring.md)
+### AWS IAM ({{domain "iam"}} controls)
+
+Root account MFA and access keys, console user MFA, credential rotation, password policy, inline/direct policy attachment. CIS AWS Benchmark aligned.
+
+### GCP Cloud Storage ({{domain "gcs"}} controls)
+
+Public access, uniform bucket-level access, CMEK encryption, access logging, object versioning, data completeness. CIS GCP Benchmark aligned.
+
+### DNS ({{domain "dns"}} controls)
+
+Vendor-agnostic dangling DNS reference detection — subdomain takeover, storage bucket takeover, supply chain takeover via software distribution endpoints. Works with any DNS provider.
+
+Full reference: [Control reference](docs/controls/reference.md)
 
 ## Documentation
 

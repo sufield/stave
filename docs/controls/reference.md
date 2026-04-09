@@ -3,25 +3,336 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 53
-**Pack hash:** `702573847a308c737563d82f4a3588dd5166ece820782b687fe13ea5bfecb59f`
+**Total controls:** 74
+**Pack hash:** `3bbe9ff7fa61f406d845df33422be000a847e9ea0d294da403de227d382dcd92`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 12 |
-| high | 25 |
-| low | 2 |
-| medium | 14 |
+| critical | 18 |
+| high | 29 |
+| low | 5 |
+| medium | 22 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 48 |
+| exposure | 57 |
 | governance | 2 |
-| storage | 3 |
+| identity | 11 |
+| storage | 4 |
 
 ## Controls
+
+### CTL.DNS.DANGLING.001
+
+**DNS Records Must Not Point to Unclaimed Resources**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+
+DNS records (CNAME, ALIAS, A) that reference external cloud resources must resolve to resources that exist and are owned by the organization. A dangling DNS record pointing to a deleted or unclaimed resource enables subdomain takeover — the attacker claims the resource and serves content under the organization's domain.
+
+**Remediation:** Either claim the target resource in your cloud account to block takeover, or delete the DNS record that points to the unclaimed resource. Audit all DNS zones for records pointing to decommissioned infrastructure.
+
+---
+
+### CTL.DNS.DANGLING.002
+
+**DNS Records to Cloud Storage Must Resolve to Owned Buckets**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+
+DNS records that reference cloud storage endpoints (S3, GCS, Azure Blob) must resolve to buckets that exist and are owned by the organization. Storage bucket names are globally unique — a deleted bucket's name can be claimed by any account, enabling content injection under a trusted domain.
+
+**Remediation:** Create the bucket in your cloud account to claim the name, or remove the DNS record. For software distribution URLs, update documentation to point to the current distribution endpoint.
+
+---
+
+### CTL.DNS.DANGLING.003
+
+**DNS Records to Software Distribution Must Resolve to Owned Endpoints**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+
+DNS records or URLs that reference software distribution endpoints (package repositories, binary downloads, update servers) must resolve to resources owned by the organization. Supply chain takeover through dangling distribution references delivers executable code to systems that trust the source.
+
+**Remediation:** Claim the resource to block takeover. Update all documentation, install guides, and CI pipelines to reference the current distribution URL. Search community forums and cached tutorials for outdated references.
+
+---
+
+### CTL.GCS.ENCRYPT.001
+
+**Customer-Managed Encryption Key Required**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_gcp_v1.3.0: 5.3;
+
+GCS buckets containing sensitive data must use a customer-managed encryption key (CMEK) via Cloud KMS, not the default Google-managed key. CMEK provides key rotation control, access policies, and audit trails that Google-managed keys do not.
+
+**Remediation:** Set a default CMEK on the bucket. Run: gcloud storage buckets update gs://BUCKET --default-encryption-key=projects/PROJECT/locations/LOCATION/keyRings/RING/cryptoKeys/KEY
+
+---
+
+### CTL.GCS.INCOMPLETE.001
+
+**Complete Data Required for GCS Assessment**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** storage
+
+GCS bucket safety cannot be proven when access control data is missing from the snapshot. The extractor must populate storage.access.public_read to evaluate public exposure controls.
+
+**Remediation:** Re-run the extractor with storage permissions: storage.buckets.getIamPolicy, storage.buckets.get.
+
+---
+
+### CTL.GCS.LOG.001
+
+**Access Logging Must Be Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_gcp_v1.3.0: 5.3;
+
+GCS buckets must have access logging enabled. Without logging, access patterns cannot be audited and unauthorized access goes undetected.
+
+**Remediation:** Enable access logging for the bucket. Run: gcloud storage buckets update gs://BUCKET --log-bucket=LOG_BUCKET --log-object-prefix=PREFIX
+
+---
+
+### CTL.GCS.PUBLIC.001
+
+**No Public GCS Bucket Read**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_gcp_v1.3.0: 5.1;
+
+GCS buckets must not allow public read access. Detects buckets where IAM bindings include allUsers or allAuthenticatedUsers with read permissions, or where uniform bucket-level access is disabled and object ACLs may grant public access.
+
+**Remediation:** Remove allUsers and allAuthenticatedUsers from bucket IAM bindings. Run: gcloud storage buckets remove-iam-policy-binding gs://BUCKET --member=allUsers --role=roles/storage.objectViewer
+
+---
+
+### CTL.GCS.PUBLIC.002
+
+**No Public GCS Bucket Listing**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_gcp_v1.3.0: 5.1;
+
+GCS buckets must not allow public listing. Anonymous bucket listing exposes the full object inventory, enabling bulk data discovery.
+
+**Remediation:** Remove allUsers from bucket IAM bindings for storage.objects.list. Enable uniform bucket-level access to prevent object ACL overrides.
+
+---
+
+### CTL.GCS.UNIFORM.001
+
+**Uniform Bucket-Level Access Must Be Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_gcp_v1.3.0: 5.2;
+
+GCS buckets must use uniform bucket-level access. When disabled, both IAM policies and object ACLs control access, creating a dual-path exposure risk that is harder to audit and more prone to misconfiguration.
+
+**Remediation:** Enable uniform bucket-level access. Run: gcloud storage buckets update gs://BUCKET --uniform-bucket-level-access
+
+---
+
+### CTL.GCS.VERSION.001
+
+**Object Versioning Must Be Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_gcp_v1.3.0: 5.3;
+
+GCS buckets must have object versioning enabled. Without versioning, deleted or overwritten objects cannot be recovered, and ransomware attacks that encrypt objects are irreversible.
+
+**Remediation:** Enable versioning. Run: gcloud storage buckets update gs://BUCKET --versioning
+
+---
+
+### CTL.IAM.CONSOLE.MFA.001
+
+**Console Users Must Have MFA Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v1.4.0: 1.10; hipaa: 164.312(d); pci_dss_v3.2.1: 8.3; soc2: CC6.1;
+
+IAM users with console access must have multi-factor authentication enabled. Console access without MFA allows credential-only login, making accounts vulnerable to password compromise.
+
+**Remediation:** Enable MFA for the user via IAM > Users > Security credentials > MFA. Alternatively, disable console access if the user only needs programmatic access.
+
+---
+
+### CTL.IAM.CRED.ROTATION.001
+
+**Access Keys Must Be Rotated Within 90 Days**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v1.4.0: 1.14; hipaa: 164.312(a)(2)(i); pci_dss_v3.2.1: 8.2.4; soc2: CC6.1;
+
+IAM user access keys older than 90 days must be rotated. Long-lived access keys accumulate exposure risk and may have been leaked in code repositories, logs, or configuration files.
+
+**Remediation:** Create a new access key, update all systems using the old key, then deactivate and delete the old key.
+
+---
+
+### CTL.IAM.CRED.UNUSED.001
+
+**Disable Unused Credentials**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v1.4.0: 1.12; hipaa: 164.312(a)(2)(i); soc2: CC6.2;
+
+IAM credentials unused for 90 days or more must be disabled. Dormant credentials are a persistent attack surface that provides access without triggering normal usage patterns.
+
+**Remediation:** Disable or delete unused credentials. Review the user's need for access and remove the IAM user if no longer required.
+
+---
+
+### CTL.IAM.INCOMPLETE.001
+
+**Complete Data Required for IAM Assessment**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** identity
+
+IAM account safety cannot be proven when root account MFA status or access key data is missing from the snapshot. The extractor must populate identity.root.mfa_enabled and identity.root.has_access_keys.
+
+**Remediation:** Re-run the extractor with IAM permissions: iam:GetAccountSummary, iam:GenerateCredentialReport, iam:ListMFADevices.
+
+---
+
+### CTL.IAM.PASSWORD.COMPLEXITY.001
+
+**Password Policy Must Require All Character Types**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v1.4.0: 1.8; hipaa: 164.312(a)(2)(i); pci_dss_v3.2.1: 8.2.3; soc2: CC6.1;
+
+The IAM account password policy must require uppercase, lowercase, numbers, and symbols. Missing any character type requirement reduces the keyspace and makes passwords easier to crack.
+
+**Remediation:** Update the IAM password policy to require all four character types.
+
+---
+
+### CTL.IAM.PASSWORD.LENGTH.001
+
+**Password Minimum Length Must Be At Least 14**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v1.4.0: 1.8; hipaa: 164.312(a)(2)(i); pci_dss_v3.2.1: 8.2.3; soc2: CC6.1;
+
+The IAM account password policy must require a minimum password length of 14 characters. Shorter passwords are vulnerable to brute-force and dictionary attacks.
+
+**Remediation:** Update the IAM account password policy to require at least 14 characters. Run: aws iam update-account-password-policy --minimum-password-length 14
+
+---
+
+### CTL.IAM.PASSWORD.REUSE.001
+
+**Password Reuse Prevention Must Be At Least 24**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v1.4.0: 1.9; hipaa: 164.312(a)(2)(i); pci_dss_v3.2.1: 8.2.5; soc2: CC6.1;
+
+The IAM account password policy must prevent reuse of the last 24 passwords. Without reuse prevention, users cycle between a small set of passwords, negating the value of password rotation.
+
+**Remediation:** Update the IAM password policy to prevent reuse of the last 24 passwords. Run: aws iam update-account-password-policy --password-reuse-prevention 24
+
+---
+
+### CTL.IAM.POLICY.DIRECT.001
+
+**No Direct Policy Attachment on IAM Users**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v1.4.0: 1.15; soc2: CC6.3;
+
+IAM users must not have managed policies attached directly. Policies should be attached to groups or roles, not individual users. Direct attachment creates unmanageable per-user permission sprawl.
+
+**Remediation:** Create IAM groups with the required policies and add the user to the appropriate groups. Remove directly attached policies from the user.
+
+---
+
+### CTL.IAM.POLICY.INLINE.001
+
+**No Inline Policies on IAM Users**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v1.4.0: 1.15; soc2: CC6.3;
+
+IAM users must not have inline policies attached directly. Inline policies are harder to audit, cannot be reused, and create per-user policy sprawl that resists central governance.
+
+**Remediation:** Convert inline policies to managed policies and attach via groups or roles. Delete the inline policies from the user.
+
+---
+
+### CTL.IAM.ROOT.ACCESSKEY.001
+
+**Root Account Must Not Have Access Keys**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v1.4.0: 1.4; hipaa: 164.312(a)(1); pci_dss_v3.2.1: 2.1; soc2: CC6.1;
+
+The AWS root account must not have active access keys. Root access keys provide unrestricted programmatic access. Use IAM users or roles for programmatic access instead.
+
+**Remediation:** Delete the root access keys. Create IAM users or roles with least-privilege policies for programmatic access.
+
+---
+
+### CTL.IAM.ROOT.MFA.001
+
+**Root Account Must Have MFA Enabled**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v1.4.0: 1.5; hipaa: 164.312(d); pci_dss_v3.2.1: 8.3; soc2: CC6.1;
+
+The AWS root account must have multi-factor authentication enabled. Root has unrestricted access to all resources. Compromise without MFA is the highest-severity identity risk.
+
+**Remediation:** Enable MFA on the root account using a hardware MFA device or virtual MFA app. Navigate to IAM > Security credentials > MFA.
+
+---
 
 ### CTL.S3.ACCESS.001
 
