@@ -10,6 +10,7 @@ severity: high
 compliance:
   hipaa: "164.312(a)(2)(iv)"
   cis_aws_v1.4.0: "3.7"
+  cis_aws_v3.0: "3.5"
 scope_tags:
   - aws
   - cloudtrail

@@ -9,6 +9,7 @@ domain: identity
 severity: critical
 compliance:
   cis_aws_v1.4.0: "1.4"
+  cis_aws_v3.0: "1.4"
   hipaa: "164.312(a)(1)"
   pci_dss_v3.2.1: "2.1"
   soc2: "CC6.1"

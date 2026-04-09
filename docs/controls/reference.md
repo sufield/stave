@@ -3,24 +3,24 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 137
-**Pack hash:** `4cb191728bf68378e57fd2ef90f04c9893f49833dd3b2b4e81f491e91fa9f63d`
+**Total controls:** 171
+**Pack hash:** `71bf15b89ebeaae98a96cf61b1a2787b88ed6d197e1a2eae7aca510611069d37`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 23 |
-| high | 56 |
+| critical | 26 |
+| high | 67 |
 | info | 11 |
 | low | 11 |
-| medium | 36 |
+| medium | 56 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 117 |
+| exposure | 140 |
 | governance | 2 |
-| identity | 14 |
+| identity | 25 |
 | storage | 4 |
 
 ## Controls
@@ -143,6 +143,36 @@ Data classified as critical or PHI must have cross-region replication configured
 
 ---
 
+### CTL.CLOUDTRAIL.DATAREAD.001
+
+**S3 Object Read Logging Must Be Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 3.9;
+
+CloudTrail must log S3 data read events (GetObject). Read logging provides evidence of data access for PHI audit trails and breach investigation.
+
+**Remediation:** Add S3 data read event selectors to the trail using advanced event selectors with readOnly=true.
+
+---
+
+### CTL.CLOUDTRAIL.DATAWRITE.001
+
+**S3 Object Write Logging Must Be Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 3.8;
+
+CloudTrail must log S3 data write events (PutObject, DeleteObject). Without object-level write logging, individual object mutations are invisible to the audit trail.
+
+**Remediation:** Add S3 data write event selectors to the trail using advanced event selectors with readOnly=false.
+
+---
+
 ### CTL.CLOUDTRAIL.ENABLED.001
 
 **CloudTrail Must Be Enabled in All Regions**
@@ -150,7 +180,7 @@ Data classified as critical or PHI must have cross-region replication configured
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v1.4.0: 3.1; hipaa: 164.312(b);
+- **Compliance:** cis_aws_v1.4.0: 3.1; cis_aws_v3.0: 3.1; hipaa: 164.312(b);
 
 CloudTrail must be configured as a multi-region trail. A single-region trail misses API activity in other regions, leaving gaps in the audit record that prevent forensic investigation of unauthorized access.
 
@@ -165,7 +195,7 @@ CloudTrail must be configured as a multi-region trail. A single-region trail mis
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v1.4.0: 3.7; hipaa: 164.312(a)(2)(iv);
+- **Compliance:** cis_aws_v1.4.0: 3.7; cis_aws_v3.0: 3.5; hipaa: 164.312(a)(2)(iv);
 
 CloudTrail logs must be encrypted at rest using a KMS customer-managed key. Default S3 encryption (SSE-S3) does not provide key revocation capability needed for breach response.
 
@@ -187,6 +217,21 @@ The observation snapshot is missing required CloudTrail properties. A safety ass
 
 ---
 
+### CTL.CLOUDTRAIL.S3LOG.001
+
+**CloudTrail S3 Bucket Must Have Access Logging**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 3.4;
+
+The S3 bucket receiving CloudTrail logs must have server access logging enabled. Without it, access to the audit logs themselves is not auditable.
+
+**Remediation:** Enable access logging on the trail S3 bucket: aws s3api put-bucket-logging --bucket <trail-bucket> --bucket-logging-status '{"LoggingEnabled":{"TargetBucket":"<log-bucket>"}}'
+
+---
+
 ### CTL.CLOUDTRAIL.VALIDATION.001
 
 **CloudTrail Log File Validation Must Be Enabled**
@@ -194,7 +239,7 @@ The observation snapshot is missing required CloudTrail properties. A safety ass
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v1.4.0: 3.2; hipaa: 164.312(b);
+- **Compliance:** cis_aws_v1.4.0: 3.2; cis_aws_v3.0: 3.2; hipaa: 164.312(b);
 
 CloudTrail must have log file integrity validation enabled. Without validation, an attacker who gains access to the log bucket can modify or delete log entries to cover their tracks.
 
@@ -213,6 +258,231 @@ CloudTrail must have log file integrity validation enabled. Without validation, 
 The observation snapshot is missing required CloudWatch log group properties.
 
 **Remediation:** Ensure the extractor calls aws logs describe-log-groups and maps the retentionInDays to the log_group observation properties.
+
+---
+
+### CTL.CLOUDWATCH.MONITOR.AUTHFAIL.001
+
+**Console Authentication Failures Must Be Monitored**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 4.6;
+
+A CloudWatch metric filter and alarm must monitor console authentication failures. Failed console authentication attempts indicate brute force attacks against IAM user passwords.
+
+**Remediation:** Create a CloudWatch log metric filter on the CloudTrail log group matching the CIS-specified pattern for console authentication failures, then create an alarm with an SNS notification action.
+
+---
+
+### CTL.CLOUDWATCH.MONITOR.CMK.001
+
+**CMK Disable or Deletion Must Be Monitored**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 4.7;
+
+A CloudWatch metric filter and alarm must monitor cmk disable or deletion. KMS key disabling or scheduled deletion renders encrypted data permanently inaccessible — a ransomware vector.
+
+**Remediation:** Create a CloudWatch log metric filter on the CloudTrail log group matching the CIS-specified pattern for cmk disable or deletion, then create an alarm with an SNS notification action.
+
+---
+
+### CTL.CLOUDWATCH.MONITOR.CONFIG.001
+
+**AWS Config Changes Must Be Monitored**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 4.9;
+
+A CloudWatch metric filter and alarm must monitor aws config changes. Changes to AWS Config (StopConfigurationRecorder) remove drift detection.
+
+**Remediation:** Create a CloudWatch log metric filter on the CloudTrail log group matching the CIS-specified pattern for aws config changes, then create an alarm with an SNS notification action.
+
+---
+
+### CTL.CLOUDWATCH.MONITOR.GW.001
+
+**Network Gateway Changes Must Be Monitored**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 4.12;
+
+A CloudWatch metric filter and alarm must monitor network gateway changes. Gateway attachment is the boundary between a VPC and the internet.
+
+**Remediation:** Create a CloudWatch log metric filter on the CloudTrail log group matching the CIS-specified pattern for network gateway changes, then create an alarm with an SNS notification action.
+
+---
+
+### CTL.CLOUDWATCH.MONITOR.IAMPOLICY.001
+
+**IAM Policy Changes Must Be Monitored**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 4.4;
+
+A CloudWatch metric filter and alarm must monitor iam policy changes. IAM policy modifications (CreatePolicy, DeletePolicy, AttachRolePolicy) are a primary persistence mechanism for attackers.
+
+**Remediation:** Create a CloudWatch log metric filter on the CloudTrail log group matching the CIS-specified pattern for iam policy changes, then create an alarm with an SNS notification action.
+
+---
+
+### CTL.CLOUDWATCH.MONITOR.NACL.001
+
+**NACL Changes Must Be Monitored**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 4.11;
+
+A CloudWatch metric filter and alarm must monitor nacl changes. Network ACL changes can open or close network paths.
+
+**Remediation:** Create a CloudWatch log metric filter on the CloudTrail log group matching the CIS-specified pattern for nacl changes, then create an alarm with an SNS notification action.
+
+---
+
+### CTL.CLOUDWATCH.MONITOR.NOMFA.001
+
+**Console Sign-In Without MFA Must Be Monitored**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 4.2;
+
+A CloudWatch metric filter and alarm must monitor console sign-in without mfa. Console sign-ins without MFA indicate either MFA is not enforced or credentials were used from a context that bypassed MFA.
+
+**Remediation:** Create a CloudWatch log metric filter on the CloudTrail log group matching the CIS-specified pattern for console sign-in without mfa, then create an alarm with an SNS notification action.
+
+---
+
+### CTL.CLOUDWATCH.MONITOR.ORG.001
+
+**AWS Organizations Changes Must Be Monitored**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 4.15;
+
+A CloudWatch metric filter and alarm must monitor aws organizations changes. Organizations changes affect account-level governance and SCP enforcement.
+
+**Remediation:** Create a CloudWatch log metric filter on the CloudTrail log group matching the CIS-specified pattern for aws organizations changes, then create an alarm with an SNS notification action.
+
+---
+
+### CTL.CLOUDWATCH.MONITOR.ROOT.001
+
+**Root Account Usage Must Be Monitored**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 4.3;
+
+A CloudWatch metric filter and alarm must monitor root account usage. Root account API activity should be near-zero. Any activity may indicate compromise or unauthorized administrative action.
+
+**Remediation:** Create a CloudWatch log metric filter on the CloudTrail log group matching the CIS-specified pattern for root account usage, then create an alarm with an SNS notification action.
+
+---
+
+### CTL.CLOUDWATCH.MONITOR.ROUTE.001
+
+**Route Table Changes Must Be Monitored**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 4.13;
+
+A CloudWatch metric filter and alarm must monitor route table changes. Route table modifications can redirect traffic through attacker-controlled paths.
+
+**Remediation:** Create a CloudWatch log metric filter on the CloudTrail log group matching the CIS-specified pattern for route table changes, then create an alarm with an SNS notification action.
+
+---
+
+### CTL.CLOUDWATCH.MONITOR.S3POLICY.001
+
+**S3 Bucket Policy Changes Must Be Monitored**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 4.8;
+
+A CloudWatch metric filter and alarm must monitor s3 bucket policy changes. S3 bucket policy changes (PutBucketPolicy, PutBucketAcl) can make private buckets public.
+
+**Remediation:** Create a CloudWatch log metric filter on the CloudTrail log group matching the CIS-specified pattern for s3 bucket policy changes, then create an alarm with an SNS notification action.
+
+---
+
+### CTL.CLOUDWATCH.MONITOR.SG.001
+
+**Security Group Changes Must Be Monitored**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 4.10;
+
+A CloudWatch metric filter and alarm must monitor security group changes. Security group changes directly affect network access to resources.
+
+**Remediation:** Create a CloudWatch log metric filter on the CloudTrail log group matching the CIS-specified pattern for security group changes, then create an alarm with an SNS notification action.
+
+---
+
+### CTL.CLOUDWATCH.MONITOR.TRAIL.001
+
+**CloudTrail Configuration Changes Must Be Monitored**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 4.5;
+
+A CloudWatch metric filter and alarm must monitor cloudtrail configuration changes. Changes to CloudTrail (CreateTrail, UpdateTrail, DeleteTrail, StopLogging) are the first action in covering tracks after compromise.
+
+**Remediation:** Create a CloudWatch log metric filter on the CloudTrail log group matching the CIS-specified pattern for cloudtrail configuration changes, then create an alarm with an SNS notification action.
+
+---
+
+### CTL.CLOUDWATCH.MONITOR.UNAUTH.001
+
+**Unauthorized API Calls Must Be Monitored**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 4.1;
+
+A CloudWatch metric filter and alarm must monitor unauthorized api calls. Unauthorized API calls (AccessDenied, UnauthorizedAccess) indicate credential probing or misconfigured IAM policies.
+
+**Remediation:** Create a CloudWatch log metric filter on the CloudTrail log group matching the CIS-specified pattern for unauthorized api calls, then create an alarm with an SNS notification action.
+
+---
+
+### CTL.CLOUDWATCH.MONITOR.VPC.001
+
+**VPC Changes Must Be Monitored**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 4.14;
+
+A CloudWatch metric filter and alarm must monitor vpc changes. VPC lifecycle changes affect the entire network boundary.
+
+**Remediation:** Create a CloudWatch log metric filter on the CloudTrail log group matching the CIS-specified pattern for vpc changes, then create an alarm with an SNS notification action.
 
 ---
 
@@ -267,7 +537,7 @@ Cognito user pools handling PHI must enforce multi-factor authentication. Withou
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v1.4.0: 3.5; hipaa: 164.312(b);
+- **Compliance:** cis_aws_v1.4.0: 3.5; cis_aws_v3.0: 3.3; hipaa: 164.312(b);
 
 AWS Config must be enabled and recording all supported resource types. Without Config, configuration changes are not tracked and drift from the desired security baseline cannot be detected.
 
@@ -382,11 +652,26 @@ The observation snapshot is missing required DynamoDB properties.
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v1.4.0: 2.2.1; hipaa: 164.312(a)(2)(iv);
+- **Compliance:** cis_aws_v1.4.0: 2.2.1; cis_aws_v3.0: 2.2.1; hipaa: 164.312(a)(2)(iv);
 
 EBS volumes attached to EC2 instances must have encryption enabled. Unencrypted volumes storing PHI or sensitive data violate encryption at rest requirements.
 
 **Remediation:** Enable EBS encryption by default for the account. For existing volumes, create an encrypted snapshot and restore to a new encrypted volume. Run: aws ec2 enable-ebs-encryption-by-default
+
+---
+
+### CTL.EC2.IAMROLE.001
+
+**EC2 Instances Must Use IAM Instance Roles**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 1.18;
+
+EC2 instances that access AWS services must use IAM instance profiles (roles) instead of embedded access keys. Instance roles provide temporary credentials that are automatically rotated.
+
+**Remediation:** Create an IAM role and attach it to the instance: aws ec2 associate-iam-instance-profile --iam-instance-profile Name=<role> --instance-id <id>
 
 ---
 
@@ -397,7 +682,7 @@ EBS volumes attached to EC2 instances must have encryption enabled. Unencrypted 
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v1.4.0: 5.6;
+- **Compliance:** cis_aws_v1.4.0: 5.6; cis_aws_v3.0: 5.6;
 
 EC2 instances must enforce Instance Metadata Service Version 2 (IMDSv2). IMDSv1 is vulnerable to SSRF attacks that can steal instance credentials from the metadata endpoint.
 
@@ -656,6 +941,36 @@ GCS buckets must have object versioning enabled. Without versioning, deleted or 
 
 ---
 
+### CTL.IAM.ANALYZER.001
+
+**IAM Access Analyzer Must Be Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 1.20;
+
+IAM Access Analyzer must be enabled in every region. Access Analyzer identifies resources shared with external entities and generates findings for unintended exposure.
+
+**Remediation:** Create an Access Analyzer in each region: aws accessanalyzer create-analyzer --analyzer-name default --type ACCOUNT --region <region>
+
+---
+
+### CTL.IAM.CERT.EXPIRED.001
+
+**Remove Expired IAM Server Certificates**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 1.19;
+
+Expired SSL/TLS server certificates must be removed from IAM. Expired certificates cannot serve TLS but create confusion during audits and may mask missing certificate rotation.
+
+**Remediation:** Delete expired certificates and migrate active ones to ACM: aws iam delete-server-certificate --server-certificate-name <name>
+
+---
+
 ### CTL.IAM.CONSOLE.MFA.001
 
 **Console Users Must Have MFA Enabled**
@@ -663,7 +978,7 @@ GCS buckets must have object versioning enabled. Without versioning, deleted or 
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v1.4.0: 1.10; hipaa: 164.312(d); pci_dss_v3.2.1: 8.3; soc2: CC6.1;
+- **Compliance:** cis_aws_v1.4.0: 1.10; cis_aws_v3.0: 1.10; hipaa: 164.312(d); pci_dss_v3.2.1: 8.3; soc2: CC6.1;
 
 IAM users with console access must have multi-factor authentication enabled. Console access without MFA allows credential-only login, making accounts vulnerable to password compromise.
 
@@ -678,11 +993,41 @@ IAM users with console access must have multi-factor authentication enabled. Con
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v1.4.0: 1.14; hipaa: 164.312(a)(2)(i); pci_dss_v3.2.1: 8.2.4; soc2: CC6.1;
+- **Compliance:** cis_aws_v1.4.0: 1.14; cis_aws_v3.0: 1.14; hipaa: 164.312(a)(2)(i); pci_dss_v3.2.1: 8.2.4; soc2: CC6.1;
 
 IAM user access keys older than 90 days must be rotated. Long-lived access keys accumulate exposure risk and may have been leaked in code repositories, logs, or configuration files.
 
 **Remediation:** Create a new access key, update all systems using the old key, then deactivate and delete the old key.
+
+---
+
+### CTL.IAM.CRED.SETUPKEY.001
+
+**No Access Keys Created at User Setup**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 1.11;
+
+Access keys should not be created at user creation time. Keys created during setup are often distributed insecurely and may not be needed. Create keys only for specific programmatic access.
+
+**Remediation:** Delete the setup-time access key and create a new one only if programmatic access is specifically required.
+
+---
+
+### CTL.IAM.CRED.SINGLEKEY.001
+
+**Single Active Access Key per User**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 1.13;
+
+Each IAM user must have at most one active access key. Multiple active keys increase the attack surface and complicate key rotation.
+
+**Remediation:** Deactivate and delete the extra access key: aws iam update-access-key --status Inactive --access-key-id AKIA... aws iam delete-access-key --access-key-id AKIA...
 
 ---
 
@@ -693,11 +1038,26 @@ IAM user access keys older than 90 days must be rotated. Long-lived access keys 
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v1.4.0: 1.12; hipaa: 164.312(a)(2)(i); soc2: CC6.2;
+- **Compliance:** cis_aws_v1.4.0: 1.12; cis_aws_v3.0: 1.12; hipaa: 164.312(a)(2)(i); soc2: CC6.2;
 
 IAM credentials unused for 90 days or more must be disabled. Dormant credentials are a persistent attack surface that provides access without triggering normal usage patterns.
 
 **Remediation:** Disable or delete unused credentials. Review the user's need for access and remove the IAM user if no longer required.
+
+---
+
+### CTL.IAM.CRED.UNUSED45.001
+
+**Disable Credentials Unused for 45 Days**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 1.12;
+
+IAM credentials (passwords and access keys) unused for 45 or more days must be disabled. CIS v3.0 requires a 45-day threshold, which is stricter than the 90-day HIPAA threshold.
+
+**Remediation:** Disable inactive access keys and console passwords: aws iam update-access-key --status Inactive --access-key-id AKIA...
 
 ---
 
@@ -737,7 +1097,7 @@ The IAM account password policy must require uppercase, lowercase, numbers, and 
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v1.4.0: 1.8; hipaa: 164.312(a)(2)(i); pci_dss_v3.2.1: 8.2.3; soc2: CC6.1;
+- **Compliance:** cis_aws_v1.4.0: 1.8; cis_aws_v3.0: 1.8; hipaa: 164.312(a)(2)(i); pci_dss_v3.2.1: 8.2.3; soc2: CC6.1;
 
 The IAM account password policy must require a minimum password length of 14 characters. Shorter passwords are vulnerable to brute-force and dictionary attacks.
 
@@ -752,11 +1112,41 @@ The IAM account password policy must require a minimum password length of 14 cha
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v1.4.0: 1.9; hipaa: 164.312(a)(2)(i); pci_dss_v3.2.1: 8.2.5; soc2: CC6.1;
+- **Compliance:** cis_aws_v1.4.0: 1.9; cis_aws_v3.0: 1.9; hipaa: 164.312(a)(2)(i); pci_dss_v3.2.1: 8.2.5; soc2: CC6.1;
 
 The IAM account password policy must prevent reuse of the last 24 passwords. Without reuse prevention, users cycle between a small set of passwords, negating the value of password rotation.
 
 **Remediation:** Update the IAM password policy to prevent reuse of the last 24 passwords. Run: aws iam update-account-password-policy --password-reuse-prevention 24
+
+---
+
+### CTL.IAM.POLICY.ADMIN.001
+
+**No Full Admin Policies Attached**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 1.16;
+
+No IAM policy with Effect Allow on Action "*" and Resource "*" should be attached to any IAM entity. Full admin policies violate least privilege and grant unrestricted access to all services.
+
+**Remediation:** Replace wildcard admin policies with scoped policies granting only the specific permissions required. Use AWS Access Analyzer to generate least-privilege policies from CloudTrail activity.
+
+---
+
+### CTL.IAM.POLICY.CLOUDSHELL.001
+
+**Restrict AWSCloudShellFullAccess**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 1.22;
+
+The AWSCloudShellFullAccess managed policy should not be attached to any IAM entity unless specifically required. CloudShell provides a browser-based shell that can bypass network-level controls.
+
+**Remediation:** Detach AWSCloudShellFullAccess from all IAM users, groups, and roles that do not require it.
 
 ---
 
@@ -767,7 +1157,7 @@ The IAM account password policy must prevent reuse of the last 24 passwords. Wit
 - **Severity:** low
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v1.4.0: 1.15; hipaa: 164.312(a)(1); soc2: CC6.3;
+- **Compliance:** cis_aws_v1.4.0: 1.15; cis_aws_v3.0: 1.15; hipaa: 164.312(a)(1); soc2: CC6.3;
 
 IAM users must not have managed policies attached directly. Policies should be attached to groups or roles, not individual users. Direct attachment creates unmanageable per-user permission sprawl.
 
@@ -782,7 +1172,7 @@ IAM users must not have managed policies attached directly. Policies should be a
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v1.4.0: 1.15; hipaa: 164.312(a)(1); soc2: CC6.3;
+- **Compliance:** cis_aws_v1.4.0: 1.15; cis_aws_v3.0: 1.15; hipaa: 164.312(a)(1); soc2: CC6.3;
 
 IAM users must not have inline policies attached directly. Inline policies are harder to audit, cannot be reused, and create per-user policy sprawl that resists central governance.
 
@@ -797,11 +1187,26 @@ IAM users must not have inline policies attached directly. Inline policies are h
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v1.4.0: 1.4; hipaa: 164.312(a)(1); pci_dss_v3.2.1: 2.1; soc2: CC6.1;
+- **Compliance:** cis_aws_v1.4.0: 1.4; cis_aws_v3.0: 1.4; hipaa: 164.312(a)(1); pci_dss_v3.2.1: 2.1; soc2: CC6.1;
 
 The AWS root account must not have active access keys. Root access keys provide unrestricted programmatic access. Use IAM users or roles for programmatic access instead.
 
 **Remediation:** Delete the root access keys. Create IAM users or roles with least-privilege policies for programmatic access.
+
+---
+
+### CTL.IAM.ROOT.HWMFA.001
+
+**Root Account Must Use Hardware MFA**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 1.6;
+
+The root account must use a hardware MFA device, not a virtual one. Hardware tokens cannot be cloned or phished via device compromise, providing stronger protection for the most privileged identity.
+
+**Remediation:** Replace the virtual MFA with a hardware TOTP device (YubiKey, Gemalto) in the IAM console under Security Credentials.
 
 ---
 
@@ -812,11 +1217,41 @@ The AWS root account must not have active access keys. Root access keys provide 
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v1.4.0: 1.5; hipaa: 164.312(d); pci_dss_v3.2.1: 8.3; soc2: CC6.1;
+- **Compliance:** cis_aws_v1.4.0: 1.5; cis_aws_v3.0: 1.5; hipaa: 164.312(d); pci_dss_v3.2.1: 8.3; soc2: CC6.1;
 
 The AWS root account must have multi-factor authentication enabled. Root has unrestricted access to all resources. Compromise without MFA is the highest-severity identity risk.
 
 **Remediation:** Enable MFA on the root account using a hardware MFA device or virtual MFA app. Navigate to IAM > Security credentials > MFA.
+
+---
+
+### CTL.IAM.ROOT.USAGE.001
+
+**Root Account Must Not Be Used for Daily Tasks**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 1.7;
+
+The root account must not be used for day-to-day operations. Root activity should be limited to account setup tasks. Recent root usage indicates operational reliance on root credentials.
+
+**Remediation:** Create IAM admin users or roles for daily operations. Lock root credentials and use them only for account-level tasks.
+
+---
+
+### CTL.IAM.SUPPORT.001
+
+**AWS Support Role Must Exist**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 1.17;
+
+At least one IAM entity must have the AWSSupportAccess managed policy attached. This ensures someone can open support cases during security incidents without using root.
+
+**Remediation:** Create an IAM role with the AWSSupportAccess policy: aws iam attach-role-policy --role-name SupportRole --policy-arn arn:aws:iam::aws:policy/AWSSupportAccess
 
 ---
 
@@ -968,6 +1403,36 @@ KMS key policies must not grant wildcard principal access. A key policy with Pri
 
 ---
 
+### CTL.KMS.ROTATION.001
+
+**KMS Customer-Managed Key Rotation Must Be Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 3.6;
+
+Customer-created symmetric KMS keys must have automatic key rotation enabled. Key rotation limits the amount of data encrypted with a single key version, reducing the blast radius of key compromise.
+
+**Remediation:** Enable key rotation: aws kms enable-key-rotation --key-id <key-id>
+
+---
+
+### CTL.RDS.AUTOUPGRADE.001
+
+**RDS Auto Minor Version Upgrade Must Be Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 2.3.2;
+
+RDS instances must have automatic minor version upgrades enabled. Minor versions include security patches. Without auto-upgrade, instances run known-vulnerable database engine versions.
+
+**Remediation:** Enable auto minor version upgrade: aws rds modify-db-instance --db-instance-identifier <id> --auto-minor-version-upgrade --apply-immediately
+
+---
+
 ### CTL.RDS.BACKUP.001
 
 **RDS Automated Backups Must Be Enabled**
@@ -990,7 +1455,7 @@ RDS instances must have automated backups enabled with a retention period of at 
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v1.4.0: 2.3.1; hipaa: 164.312(a)(2)(iv);
+- **Compliance:** cis_aws_v1.4.0: 2.3.1; cis_aws_v3.0: 2.3.1; hipaa: 164.312(a)(2)(iv);
 
 RDS instances must have storage encryption enabled. Unencrypted database storage exposes data at rest to unauthorized access if the underlying storage is compromised.
 
@@ -1064,7 +1529,7 @@ Production RDS instances must use Multi-AZ deployment for high availability. Sin
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v1.4.0: 2.3.2; hipaa: 164.312(a)(1);
+- **Compliance:** cis_aws_v1.4.0: 2.3.2; cis_aws_v3.0: 2.3.3; hipaa: 164.312(a)(1);
 
 RDS instances must not have public accessibility enabled. A publicly accessible database is reachable from the internet, exposing it to brute force attacks, SQL injection, and unauthorized data access.
 
@@ -1313,7 +1778,7 @@ When S3 objects are served via CloudFront, Origin Access Control (OAC) should be
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v1.4.0: 2.1.5; pci_dss_v3.2.1: 1.3.6; soc2: CC6.1;
+- **Compliance:** cis_aws_v1.4.0: 2.1.5; cis_aws_v3.0: 2.1.4; pci_dss_v3.2.1: 1.3.6; soc2: CC6.1;
 
 S3 buckets must have the public access block fully enabled. When disabled, the bucket has no safety net against accidental public exposure from policy or ACL changes. This detects the enabling condition for public access, not the exposure itself.
 
@@ -1357,7 +1822,7 @@ S3 buckets must have server-side encryption enabled. Unencrypted storage is the 
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v1.4.0: 2.1.2; hipaa: 164.312(e)(2)(ii); pci_dss_v3.2.1: 4.1; soc2: CC6.1;
+- **Compliance:** cis_aws_v1.4.0: 2.1.2; cis_aws_v3.0: 2.1.1; hipaa: 164.312(e)(2)(ii); pci_dss_v3.2.1: 4.1; soc2: CC6.1;
 
 S3 buckets must enforce HTTPS via a deny policy on aws:SecureTransport=false. Without this, data transfers occur in plaintext.
 
@@ -1504,6 +1969,21 @@ S3 buckets tagged with data-classification=phi that have Object Lock enabled mus
 S3 buckets must have server access logging enabled for audit trail and visibility into data access patterns.
 
 **Remediation:** Enable S3 server access logging and specify a target bucket for log delivery. Ensure the target bucket has appropriate access controls and is in the same region.
+
+---
+
+### CTL.S3.MFADELETE.001
+
+**MFA Delete Must Be Enabled on S3 Buckets**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 2.1.2;
+
+S3 buckets should have MFA Delete enabled on versioned buckets. MFA Delete requires a second factor to permanently delete object versions, preventing unauthorized or accidental data destruction.
+
+**Remediation:** Enable MFA Delete (requires root credentials): aws s3api put-bucket-versioning --bucket <name> --versioning-configuration Status=Enabled,MFADelete=Enabled --mfa "arn:aws:iam::<account>:mfa/root-account-mfa-device <code>"
 
 ---
 
@@ -1962,7 +2442,7 @@ The observation snapshot is missing required SQS queue properties.
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v1.4.0: 3.9; hipaa: 164.312(b);
+- **Compliance:** cis_aws_v1.4.0: 3.9; cis_aws_v3.0: 3.7; hipaa: 164.312(b);
 
 VPC flow logs capture information about IP traffic going to and from network interfaces. Without flow logs, network-level access patterns cannot be audited and unauthorized traffic goes undetected.
 
@@ -1999,6 +2479,21 @@ VPC safety cannot be assessed when flow logging status is missing from the snaps
 
 ---
 
+### CTL.VPC.NACL.ADMIN.001
+
+**No NACL Ingress from 0.0.0.0/0 to Admin Ports**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 5.1;
+
+Network ACLs must not allow inbound traffic from 0.0.0.0/0 or ::/0 to SSH (22) or RDP (3389) ports. NACLs apply to entire subnets — open admin ports expose all instances.
+
+**Remediation:** Replace the allow rule with a specific CIDR for authorized admin IP ranges using aws ec2 replace-network-acl-entry.
+
+---
+
 ### CTL.VPC.SG.DEFAULT.001
 
 **Default Security Group Must Restrict All Traffic**
@@ -2006,11 +2501,26 @@ VPC safety cannot be assessed when flow logging status is missing from the snaps
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v1.4.0: 5.4; hipaa: 164.312(a)(1);
+- **Compliance:** cis_aws_v1.4.0: 5.4; cis_aws_v3.0: 5.4; hipaa: 164.312(a)(1);
 
 The default VPC security group should not allow any inbound or outbound traffic. Resources should use custom security groups with explicit rules instead of relying on the default group.
 
 **Remediation:** Remove all inbound and outbound rules from the default security group. Assign custom security groups to all resources.
+
+---
+
+### CTL.VPC.SG.IPV6.001
+
+**No Security Group Ingress from ::/0 to Admin Ports**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 5.3;
+
+Security groups must not allow inbound SSH (22) or RDP (3389) from ::/0 (IPv6 any). IPv6 open admin ports are equally dangerous as IPv4 and are often overlooked during security reviews.
+
+**Remediation:** Revoke the IPv6 ingress rule: aws ec2 revoke-security-group-ingress --group-id <sg-id> --ip-permissions IpProtocol=tcp,FromPort=22,ToPort=22,Ipv6Ranges=[{CidrIpv6=::/0}]
 
 ---
 
@@ -2021,7 +2531,7 @@ The default VPC security group should not allow any inbound or outbound traffic.
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v1.4.0: 5.2; hipaa: 164.312(e)(1);
+- **Compliance:** cis_aws_v1.4.0: 5.2; cis_aws_v3.0: 5.2; hipaa: 164.312(e)(1);
 
 Security group rules must not allow ingress from 0.0.0.0/0 on sensitive ports (SSH, RDP, database). Unrestricted ingress exposes services to the entire internet.
 

@@ -86,7 +86,7 @@ func TestApplyProfileE2E(t *testing.T) {
 		wantExit  int
 		wantViol  int
 	}{
-		{"obs-public", "aws-s3-obs-public", "aws-s3", nil, 3, 6},
+		{"obs-public", "aws-s3-obs-public", "aws-s3", nil, 3, 7},
 		{"obs-private", "aws-s3-obs-private", "aws-s3", nil, 3, 4},
 		{"hipaa-cross-domain", "e2e-hipaa-cross-domain", "hipaa", []string{"--include-all"}, 3, 35},
 	}

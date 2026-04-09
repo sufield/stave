@@ -1,0 +1,38 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.S3LOG.001
+name: CloudTrail S3 Bucket Must Have Access Logging
+description: >
+  The S3 bucket receiving CloudTrail logs must have server access
+  logging enabled. Without it, access to the audit logs themselves
+  is not auditable.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "3.4"
+scope_tags:
+  - aws
+  - cloudtrail
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    The CloudTrail S3 bucket does not have access logging enabled.
+  action: >
+    Enable access logging on the trail S3 bucket:
+    aws s3api put-bucket-logging --bucket <trail-bucket>
+    --bucket-logging-status '{"LoggingEnabled":{"TargetBucket":"<log-bucket>"}}'
+  example: |
+    {
+      "audit_trail": {
+        "kind": "trail",
+        "s3_bucket_logging_enabled": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.audit_trail.kind
+      op: eq
+      value: trail
+    - field: properties.audit_trail.s3_bucket_logging_enabled
+      op: eq
+      value: false

@@ -577,6 +577,7 @@
       "control_severity": "critical",
       "control_compliance": {
         "cis_aws_v1.4.0": "3.1",
+        "cis_aws_v3.0": "3.1",
         "hipaa": "164.312(b)"
       },
       "posture_drift": {
@@ -622,6 +623,7 @@
       "control_severity": "high",
       "control_compliance": {
         "cis_aws_v1.4.0": "3.7",
+        "cis_aws_v3.0": "3.5",
         "hipaa": "164.312(a)(2)(iv)"
       },
       "posture_drift": {
@@ -667,6 +669,7 @@
       "control_severity": "high",
       "control_compliance": {
         "cis_aws_v1.4.0": "3.2",
+        "cis_aws_v3.0": "3.2",
         "hipaa": "164.312(b)"
       },
       "posture_drift": {
@@ -800,6 +803,7 @@
       "control_severity": "high",
       "control_compliance": {
         "cis_aws_v1.4.0": "3.5",
+        "cis_aws_v3.0": "3.3",
         "hipaa": "164.312(b)"
       },
       "posture_drift": {
@@ -933,6 +937,7 @@
       "control_severity": "high",
       "control_compliance": {
         "cis_aws_v1.4.0": "2.2.1",
+        "cis_aws_v3.0": "2.2.1",
         "hipaa": "164.312(a)(2)(iv)"
       },
       "posture_drift": {
@@ -1253,6 +1258,7 @@
       "control_severity": "critical",
       "control_compliance": {
         "cis_aws_v1.4.0": "1.4",
+        "cis_aws_v3.0": "1.4",
         "hipaa": "164.312(a)(1)",
         "pci_dss_v3.2.1": "2.1",
         "soc2": "CC6.1"
@@ -1300,6 +1306,7 @@
       "control_severity": "critical",
       "control_compliance": {
         "cis_aws_v1.4.0": "1.5",
+        "cis_aws_v3.0": "1.5",
         "hipaa": "164.312(d)",
         "pci_dss_v3.2.1": "8.3",
         "soc2": "CC6.1"
@@ -1571,6 +1578,7 @@
       "control_severity": "high",
       "control_compliance": {
         "cis_aws_v1.4.0": "2.3.1",
+        "cis_aws_v3.0": "2.3.1",
         "hipaa": "164.312(a)(2)(iv)"
       },
       "posture_drift": {
@@ -1704,6 +1712,7 @@
       "control_severity": "critical",
       "control_compliance": {
         "cis_aws_v1.4.0": "2.3.2",
+        "cis_aws_v3.0": "2.3.3",
         "hipaa": "164.312(a)(1)"
       },
       "posture_drift": {
@@ -1959,6 +1968,7 @@
       "control_severity": "high",
       "control_compliance": {
         "cis_aws_v1.4.0": "3.9",
+        "cis_aws_v3.0": "3.7",
         "hipaa": "164.312(b)"
       },
       "posture_drift": {

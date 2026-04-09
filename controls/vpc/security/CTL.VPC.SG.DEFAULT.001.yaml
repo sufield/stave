@@ -9,6 +9,7 @@ domain: exposure
 severity: medium
 compliance:
   cis_aws_v1.4.0: "5.4"
+  cis_aws_v3.0: "5.4"
   hipaa: "164.312(a)(1)"
 scope_tags:
   - aws

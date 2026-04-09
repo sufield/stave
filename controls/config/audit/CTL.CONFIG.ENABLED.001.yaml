@@ -10,6 +10,7 @@ severity: high
 compliance:
   hipaa: "164.312(b)"
   cis_aws_v1.4.0: "3.5"
+  cis_aws_v3.0: "3.3"
 scope_tags:
   - aws
   - config

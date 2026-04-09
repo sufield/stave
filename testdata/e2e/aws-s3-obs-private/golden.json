@@ -2,12 +2,12 @@
   "schema_version": "out.v0.1",
   "kind": "ASSESSMENT",
   "run": {
-    "tool_version": "0.0.3",
+    "tool_version": "edge",
     "offline": true,
     "now": "2026-01-14T00:00:00Z",
     "sla_threshold": "0h",
     "snapshots": 2,
-    "policy_fingerprint": "702573847a308c737563d82f4a3588dd5166ece820782b687fe13ea5bfecb59f"
+    "policy_fingerprint": "aaffaf76a8e81ef990f9d28f4ea0143c326cd268a1dddc62f300e84d7e82e50b"
   },
   "summary": {
     "total_assets": 1,

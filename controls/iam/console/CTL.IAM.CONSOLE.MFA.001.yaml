@@ -9,6 +9,7 @@ domain: identity
 severity: high
 compliance:
   cis_aws_v1.4.0: "1.10"
+  cis_aws_v3.0: "1.10"
   hipaa: "164.312(d)"
   pci_dss_v3.2.1: "8.3"
   soc2: "CC6.1"

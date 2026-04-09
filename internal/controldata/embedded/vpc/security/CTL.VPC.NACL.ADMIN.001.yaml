@@ -1,0 +1,37 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.NACL.ADMIN.001
+name: No NACL Ingress from 0.0.0.0/0 to Admin Ports
+description: >
+  Network ACLs must not allow inbound traffic from 0.0.0.0/0 or
+  ::/0 to SSH (22) or RDP (3389) ports. NACLs apply to entire
+  subnets — open admin ports expose all instances.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "5.1"
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    NACL allows ingress from 0.0.0.0/0 to admin ports (22/3389).
+  action: >
+    Replace the allow rule with a specific CIDR for authorized admin
+    IP ranges using aws ec2 replace-network-acl-entry.
+  example: |
+    {
+      "network": {
+        "kind": "nacl",
+        "allows_admin_from_internet": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: nacl
+    - field: properties.network.allows_admin_from_internet
+      op: eq
+      value: true

@@ -1,0 +1,47 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.MONITOR.VPC.001
+name: "VPC Changes Must Be Monitored"
+description: >
+  A CloudWatch metric filter and alarm must monitor vpc changes.
+  VPC lifecycle changes affect the entire network boundary.
+domain: exposure
+severity: medium
+compliance:
+  cis_aws_v3.0: "4.14"
+scope_tags:
+  - aws
+  - cloudwatch
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    No metric filter or alarm is configured to monitor vpc changes.
+  action: >
+    Create a CloudWatch log metric filter on the CloudTrail log group
+    matching the CIS-specified pattern for vpc changes, then create
+    an alarm with an SNS notification action.
+  example: |
+    {
+      "monitoring": {
+        "kind": "account",
+        "metric_filters": {
+          "vpc_changes": {
+            "exists": true
+          }
+        },
+        "alarms": {
+          "vpc_changes": {
+            "exists": true,
+            "sns_topic_arn": "arn:aws:sns:us-east-1:123456789012:security-alerts"
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.kind
+      op: eq
+      value: account
+    - field: properties.monitoring.metric_filters.vpc_changes.exists
+      op: eq
+      value: false
