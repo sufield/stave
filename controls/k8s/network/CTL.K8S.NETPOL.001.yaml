@@ -1,0 +1,40 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.NETPOL.001
+name: Namespaces Must Have Network Policies
+description: >
+  Kubernetes namespaces containing workloads must have at least one
+  NetworkPolicy defined. Without network policies, all pod-to-pod
+  traffic is allowed by default, enabling lateral movement.
+domain: exposure
+severity: high
+compliance:
+  cis_k8s_v1.8.0: "5.3.2"
+  hipaa: "164.312(e)(1)"
+scope_tags:
+  - kubernetes
+  - network
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Namespace has no NetworkPolicy. All pods can communicate with all
+    other pods in the cluster without restriction.
+  action: >
+    Create a default-deny NetworkPolicy for the namespace, then add
+    explicit allow rules for required traffic flows.
+  example: |
+    {
+      "network_policy": {
+        "kind": "namespace",
+        "has_network_policies": true,
+        "has_default_deny": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network_policy.kind
+      op: eq
+      value: namespace
+    - field: properties.network_policy.has_network_policies
+      op: eq
+      value: false

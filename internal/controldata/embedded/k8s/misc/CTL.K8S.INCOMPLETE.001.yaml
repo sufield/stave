@@ -1,0 +1,28 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.INCOMPLETE.001
+name: Complete Data Required for Kubernetes Assessment
+description: >
+  Kubernetes cluster safety cannot be assessed when audit logging
+  status is missing from the snapshot. The extractor must populate
+  audit.audit_logging_enabled.
+domain: exposure
+severity: low
+scope_tags:
+  - kubernetes
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Kubernetes assessment data is incomplete. The extractor did not
+    populate required cluster properties.
+  action: >
+    Re-run the extractor with Kubernetes API access to describe
+    cluster configuration, RBAC, network policies, and secrets.
+unsafe_predicate:
+  all:
+    - field: properties.audit.kind
+      op: eq
+      value: cluster
+    - field: properties.audit.audit_logging_enabled
+      op: missing
+      value: true
