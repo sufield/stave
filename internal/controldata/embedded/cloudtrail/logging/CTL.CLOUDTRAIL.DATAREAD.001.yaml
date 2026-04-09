@@ -11,6 +11,7 @@ compliance:
   cis_aws_v3.0: "3.9"
   soc2: "CC6.2"
   pci_dss_v4.0: "10.2.1.7"
+  nist_800_53_r5: "AU-3"
 scope_tags:
   - aws
   - cloudtrail

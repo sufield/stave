@@ -1,0 +1,32 @@
+# NIST SP 800-53 Rev 5 — MP: Media Protection
+# Summary: 4 controls — 3 MAPPED, 0 NEW, 1 MANUAL
+
+invariants:
+
+- id: NIST.MP.1
+  title: EBS volume encryption (media protection)
+  nist_control: "MP-5"
+  mapped_to_existing: true
+  existing_invariant: HIPAA CTL.EC2.EBS.ENCRYPT.001, CTL.EC2.SNAPSHOT.ENCRYPT.001
+  note: Storage media encrypted at rest.
+
+- id: NIST.MP.2
+  title: S3 Object Lock for data retention
+  nist_control: "MP-6"
+  mapped_to_existing: true
+  existing_invariant: HIPAA CTL.S3.LOCK.001
+  note: WORM protection prevents unauthorized deletion.
+
+- id: NIST.MP.3
+  title: Backup encryption
+  nist_control: "MP-5"
+  mapped_to_existing: true
+  existing_invariant: HIPAA CTL.BACKUP.ENCRYPT.001
+  note: Backup media encrypted.
+
+- id: NIST.MP.4
+  title: Media sanitization procedures
+  nist_control: "MP-6"
+  manual: true
+  reason: Media sanitization is handled by AWS under shared responsibility.
+  evidence_guidance: Reference AWS SOC 2 report for media destruction procedures.

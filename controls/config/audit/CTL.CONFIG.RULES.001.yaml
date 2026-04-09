@@ -11,6 +11,7 @@ compliance:
   hipaa: "164.312(c)(1)"
   soc2: "CC6.3"
   pci_dss_v4.0: "6.3.2"
+  nist_800_53_r5: "CM-3"
 scope_tags:
   - aws
   - config

@@ -11,6 +11,7 @@ compliance:
   cis_aws_v3.0: "2.3.2"
   soc2: "A1.1"
   pci_dss_v4.0: "2.2.1"
+  nist_800_53_r5: "CM-6"
 scope_tags:
   - aws
   - rds

@@ -11,6 +11,7 @@ compliance:
   cis_aws_v3.0: "1.20"
   soc2: "CC6.1"
   pci_dss_v4.0: "11.3.1"
+  nist_800_53_r5: "SI-4"
 scope_tags:
   - aws
   - iam
