@@ -12,6 +12,7 @@ import (
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/outcome"
 	"github.com/sufield/stave/internal/core/ports"
@@ -384,13 +385,47 @@ func TestProfileControlDomain(t *testing.T) {
 		{ProfileAWSS3, "s3"},
 		{ProfileAWSIAM, "iam"},
 		{ProfileGCPGCS, "gcs"},
-		{ProfileHIPAA, "s3"},
+		{ProfileHIPAA, ""},
 	}
 	for _, tt := range tests {
 		got := profileControlDomain(tt.prof)
 		if got != tt.want {
 			t.Fatalf("profileControlDomain(%q) = %q, want %q", tt.prof, got, tt.want)
 		}
+	}
+}
+
+func TestProfileComplianceFramework(t *testing.T) {
+	tests := []struct {
+		prof Profile
+		want policy.ComplianceFramework
+	}{
+		{ProfileAWSS3, ""},
+		{ProfileAWSIAM, ""},
+		{ProfileGCPGCS, ""},
+		{ProfileHIPAA, "hipaa"},
+	}
+	for _, tt := range tests {
+		got := profileComplianceFramework(tt.prof)
+		if got != tt.want {
+			t.Fatalf("profileComplianceFramework(%q) = %q, want %q", tt.prof, got, tt.want)
+		}
+	}
+}
+
+func TestFilterByCompliance(t *testing.T) {
+	controls := []policy.ControlDefinition{
+		{ID: "CTL.S3.PUBLIC.001", Compliance: policy.ComplianceMapping{"hipaa": "164.312(a)(1)"}},
+		{ID: "CTL.S3.ACL.WRITE.001", Compliance: nil},
+		{ID: "CTL.RDS.ENCRYPT.001", Compliance: policy.ComplianceMapping{"hipaa": "164.312(a)(2)(iv)"}},
+		{ID: "CTL.EC2.IMDSV2.001", Compliance: policy.ComplianceMapping{"cis_aws_v1.4.0": "5.6"}},
+	}
+	got := filterByCompliance(controls, "hipaa")
+	if len(got) != 2 {
+		t.Fatalf("filterByCompliance: got %d controls, want 2", len(got))
+	}
+	if got[0].ID != "CTL.S3.PUBLIC.001" || got[1].ID != "CTL.RDS.ENCRYPT.001" {
+		t.Fatalf("filterByCompliance: unexpected controls: %v, %v", got[0].ID, got[1].ID)
 	}
 }
 

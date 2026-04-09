@@ -169,14 +169,25 @@ func (r *Runner) loadControls(ctx context.Context, prof Profile) (string, []poli
 	if err != nil {
 		return "", nil, err
 	}
+
+	// Compliance profiles load all domains then filter by framework tag.
+	if fw := profileComplianceFramework(prof); fw != "" {
+		controls = filterByCompliance(controls, fw)
+	}
+
 	if len(controls) == 0 {
-		return "", nil, fmt.Errorf("%w: no %s controls found in %s", appeval.ErrNoControls, domain, ctlDir)
+		label := domain
+		if label == "" {
+			label = string(prof)
+		}
+		return "", nil, fmt.Errorf("%w: no %s controls found in %s", appeval.ErrNoControls, label, ctlDir)
 	}
 
 	return ctlDir, controls, nil
 }
 
 // profileControlDomain maps a profile to its control subdirectory.
+// Returns empty string for cross-domain profiles (e.g. HIPAA).
 func profileControlDomain(prof Profile) string {
 	switch prof {
 	case ProfileAWSIAM:
@@ -184,11 +195,32 @@ func profileControlDomain(prof Profile) string {
 	case ProfileGCPGCS:
 		return "gcs"
 	case ProfileHIPAA:
-		// HIPAA reuses S3 controls — same directory, filtered by compliance ref.
-		return "s3"
+		return "" // Cross-domain: loads all, filtered by compliance ref.
 	default:
 		return "s3"
 	}
+}
+
+// profileComplianceFramework returns the compliance framework key used to
+// filter controls for compliance-based profiles. Returns empty for
+// domain-scoped profiles that load all controls from their directory.
+func profileComplianceFramework(prof Profile) policy.ComplianceFramework {
+	switch prof {
+	case ProfileHIPAA:
+		return "hipaa"
+	default:
+		return ""
+	}
+}
+
+func filterByCompliance(controls []policy.ControlDefinition, fw policy.ComplianceFramework) []policy.ControlDefinition {
+	filtered := make([]policy.ControlDefinition, 0, len(controls))
+	for i := range controls {
+		if controls[i].HasCompliance(fw) {
+			filtered = append(filtered, controls[i])
+		}
+	}
+	return filtered
 }
 
 func getControlsBaseDir() string {
