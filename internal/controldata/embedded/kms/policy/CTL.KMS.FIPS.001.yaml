@@ -1,0 +1,39 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.FIPS.001
+name: KMS Keys Must Use FIPS 140-2 Validated HSM Origin
+description: >
+  KMS keys must have AWS_KMS origin, confirming they are generated
+  and stored in FIPS 140-2 Level 2 validated hardware security
+  modules. Keys with EXTERNAL or CUSTOM_KEY_STORE origin may not
+  meet FedRAMP FIPS 140 cryptography requirements.
+domain: exposure
+severity: high
+compliance:
+  fedramp_moderate: "SC-13"
+scope_tags:
+  - aws
+  - kms
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    KMS key does not use AWS_KMS origin. The key may not be backed
+    by FIPS 140-2 validated HSMs.
+  action: >
+    Create a new key with AWS_KMS origin (default). Rotate data
+    encrypted with the non-compliant key to the new key.
+  example: |
+    {
+      "cryptography": {
+        "kind": "key",
+        "origin": "AWS_KMS"
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: key
+    - field: properties.cryptography.origin
+      op: ne
+      value: AWS_KMS

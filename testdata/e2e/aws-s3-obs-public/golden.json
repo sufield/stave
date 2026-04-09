@@ -176,6 +176,7 @@
       "control_severity": "critical",
       "control_compliance": {
         "cis_aws_v1.4.0": "2.1.5",
+        "fedramp_moderate": "AC-3",
         "hipaa": "164.312(a)(1)",
         "nist_800_53_r5": "AC-3",
         "pci_dss_v3.2.1": "1.2.1",

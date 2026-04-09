@@ -1,0 +1,60 @@
+# FedRAMP — Incident Response and Authorization Boundary
+# Summary: 7 controls — 1 MAPPED, 0 NEW, 6 MANUAL
+
+invariants:
+
+- id: FEDRAMP.IR.1
+  title: CloudTrail for incident investigation
+  fedramp_control: "IR-6"
+  baseline: moderate
+  mapped_to_existing: true
+  existing_invariant: NIST CTL.CLOUDTRAIL.ENABLED.001
+  note: Complete audit trail for forensic investigation.
+
+- id: FEDRAMP.IR.2
+  title: Incident response plan tested annually
+  fedramp_control: "IR-3"
+  baseline: moderate
+  manual: true
+  reason: IR plan testing is an organizational exercise.
+  evidence_guidance: Annual tabletop exercise records and post-exercise improvement plans.
+
+- id: FEDRAMP.IR.3
+  title: US-CERT reporting within required timeframes
+  fedramp_control: "IR-6"
+  baseline: moderate
+  manual: true
+  reason: Incident reporting is a process triggered by security events.
+  evidence_guidance: Documented US-CERT reporting procedures and evidence of past reports.
+
+- id: FEDRAMP.IR.4
+  title: Authorization boundary documented
+  fedramp_control: "CA-3"
+  baseline: low
+  manual: true
+  reason: Authorization boundary is an architectural document.
+  evidence_guidance: System Security Plan (SSP) with boundary diagrams showing all data flows, services, and interconnections.
+
+- id: FEDRAMP.IR.5
+  title: All AWS services FedRAMP authorized
+  fedramp_control: "CA-3"
+  baseline: low
+  manual: true
+  reason: Service authorization status requires checking the FedRAMP Marketplace, not infrastructure config.
+  evidence_guidance: Inventory of AWS services used with FedRAMP authorization status for each at the required impact level.
+
+- id: FEDRAMP.IR.6
+  title: Interconnection security agreements
+  fedramp_control: "CA-3"
+  baseline: moderate
+  manual: true
+  reason: ISAs are contractual documents between organizations.
+  evidence_guidance: Signed ISAs for all external system interconnections.
+
+- id: FEDRAMP.IR.7
+  title: Digital identity assurance levels (NIST 800-63)
+  fedramp_control: "IA-1"
+  baseline: moderate
+  manual: true
+  reason: AAL/IAL level determination is a risk-based organizational decision.
+  evidence_guidance: Documentation mapping system impact level to required AAL/IAL per NIST 800-63.

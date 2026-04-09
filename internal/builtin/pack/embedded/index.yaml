@@ -326,6 +326,11 @@ packs:
       # Req 11 — Testing
       - CTL.SECURITYHUB.ENABLED.001
       - CTL.IAM.ANALYZER.001
+  fedramp_moderate:
+    description: FedRAMP Moderate baseline controls (inherits NIST 800-53)
+    controls:
+      # All NIST 800-53 controls apply, plus FIPS cryptography
+      - CTL.KMS.FIPS.001
   vpc:
     description: AWS VPC network security controls
     controls:
@@ -441,6 +446,7 @@ packs:
     controls:
       - CTL.KMS.POLICY.001
       - CTL.KMS.ROTATION.001
+      - CTL.KMS.FIPS.001
       - CTL.KMS.INCOMPLETE.001
   secretsmanager:
     description: AWS Secrets Manager security controls
@@ -1077,6 +1083,9 @@ controls:
   CTL.KMS.POLICY.001:
     path: internal/controldata/embedded/kms/policy/CTL.KMS.POLICY.001.yaml
     summary: KMS Key Policy Must Restrict Access to Specific Roles
+  CTL.KMS.FIPS.001:
+    path: internal/controldata/embedded/kms/policy/CTL.KMS.FIPS.001.yaml
+    summary: KMS Keys Must Use FIPS 140-2 Validated HSM Origin
   CTL.KMS.ROTATION.001:
     path: internal/controldata/embedded/kms/policy/CTL.KMS.ROTATION.001.yaml
     summary: KMS Customer-Managed Key Rotation Must Be Enabled
