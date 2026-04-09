@@ -1,0 +1,66 @@
+# CIS AWS Foundations Benchmark v3.0 — RDS
+# 3 controls
+
+invariants:
+
+- id: CIS.RDS.1
+  title: Ensure that encryption-at-rest is enabled for RDS Instances
+  cis_control: "2.3.1"
+  cis_level: 1
+  description: >
+    RDS instances must have storage encryption enabled. Unencrypted
+    database storage exposes data at rest if the underlying EBS
+    volumes or snapshots are compromised or shared.
+  conditions:
+    - database.kind == "instance"
+    - database.encryption.storage_encrypted == true
+  all_must_pass: true
+  severity: high
+  remediation: >
+    RDS encryption can only be enabled at creation time. Create an
+    encrypted snapshot, then restore to a new encrypted instance.
+    Enable encryption by default for future instances.
+  stave_control: CTL.RDS.ENCRYPT.001
+
+- id: CIS.RDS.2
+  title: Ensure Auto Minor Version Upgrade feature is Enabled for RDS Instances
+  cis_control: "2.3.2"
+  cis_level: 1
+  description: >
+    RDS instances must have automatic minor version upgrades enabled.
+    Minor versions include security patches. Without auto-upgrade,
+    instances run known-vulnerable database engine versions until
+    manually updated.
+  conditions:
+    - database.kind == "instance"
+    - database.auto_minor_version_upgrade == true
+  all_must_pass: true
+  severity: medium
+  remediation: >
+    Enable auto minor version upgrade:
+    aws rds modify-db-instance --db-instance-identifier <id>
+    --auto-minor-version-upgrade --apply-immediately
+
+- id: CIS.RDS.3
+  title: Ensure that public access is not given to RDS Instance
+  cis_control: "2.3.3"
+  cis_level: 1
+  description: >
+    RDS instances must not be publicly accessible. A publicly
+    accessible database is reachable from the internet, exposing it
+    to brute force attacks, SQL injection, and unauthorized access.
+  conditions:
+    - database.kind == "instance"
+    - database.access.publicly_accessible == false
+  all_must_pass: true
+  severity: critical
+  remediation: >
+    Disable public access:
+    aws rds modify-db-instance --db-instance-identifier <id>
+    --no-publicly-accessible --apply-immediately
+  stave_control: CTL.RDS.PUBLIC.001
+
+# Cross-service dependencies:
+# RDS instances are placed in VPC subnets with security groups.
+# The effective network exposure depends on SG rules (covered by VPC
+# controls 5.2, 5.3) and subnet routing (covered by VPC control 5.5).

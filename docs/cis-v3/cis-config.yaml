@@ -1,0 +1,30 @@
+# CIS AWS Foundations Benchmark v3.0 — AWS Config
+# 1 control
+
+invariants:
+
+- id: CIS.CONFIG.1
+  title: Ensure AWS Config is enabled in all regions
+  cis_control: "3.3"
+  cis_level: 2
+  description: >
+    AWS Config must be enabled and recording all supported resource
+    types in every region. Config provides a configuration change
+    history and drift detection baseline. Without it, unauthorized
+    changes go undetected.
+  conditions:
+    - compliance.recording_enabled == true
+    - compliance.all_resource_types == true
+  all_must_pass: true
+  severity: high
+  remediation: >
+    Enable Config in each region:
+    aws configservice put-configuration-recorder
+    --configuration-recorder name=default,roleARN=arn:...,
+    recordingGroup={allSupported=true,includeGlobalResourceTypes=true}
+  stave_control: CTL.CONFIG.ENABLED.001
+
+# Cross-service dependencies:
+# Config delivers snapshots to an S3 bucket and optionally sends
+# notifications to an SNS topic. The S3 bucket should have access
+# logging and encryption enabled (covered by S3 controls).

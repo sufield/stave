@@ -1,0 +1,28 @@
+# CIS AWS Foundations Benchmark v3.0 — IAM Access Analyzer
+# 1 control
+
+invariants:
+
+- id: CIS.ACCESS_ANALYZER.1
+  title: Ensure that IAM Access Analyzer is enabled for all regions
+  cis_control: "1.20"
+  cis_level: 1
+  description: >
+    IAM Access Analyzer must be enabled in every region. Access Analyzer
+    identifies resources shared with external entities (cross-account
+    access, public access) and generates findings for unintended exposure.
+    A missing analyzer means external access is not monitored.
+  conditions:
+    - access_analyzer.enabled == true
+    - access_analyzer.analyzer_type == "ACCOUNT"
+  all_must_pass: true
+  severity: high
+  remediation: >
+    Create an Access Analyzer in each region:
+    aws accessanalyzer create-analyzer --analyzer-name default
+    --type ACCOUNT --region <region>
+
+# Cross-service dependencies:
+# None. This is a standalone IAM Access Analyzer configuration check.
+# However, the check must be repeated per region — the observation
+# should include one asset per region with its analyzer status.

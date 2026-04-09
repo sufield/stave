@@ -1,0 +1,26 @@
+# CIS AWS Foundations Benchmark v3.0 — SNS
+# 0 standalone controls
+#
+# SNS has no dedicated CIS v3.0 controls. It appears exclusively as a
+# dependency of the Section 4 CloudWatch monitoring controls (4.1–4.15),
+# which require alarms to publish to an SNS topic with at least one
+# active subscriber.
+#
+# This file documents the SNS dependency for completeness.
+
+invariants: []
+
+# Cross-service dependencies:
+# SNS is a dependency for all 15 CloudWatch monitoring controls (4.1–4.15).
+# Each monitoring alarm must have an SNS topic ARN as its action, and that
+# topic must have at least one confirmed subscriber.
+#
+# The extractor should capture:
+#   - sns:ListSubscriptionsByTopic for each alarm action topic
+#   - Verify at least one subscription with Status = "Confirmed"
+#
+# Without SNS subscriber verification, a monitoring alarm could exist
+# but not actually notify anyone — a silent failure mode.
+#
+# Observation property (proposed):
+#   monitoring.alarms.<name>.sns_topic_has_subscribers == true
