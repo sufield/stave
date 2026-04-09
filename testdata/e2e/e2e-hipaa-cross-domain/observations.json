@@ -1,0 +1,327 @@
+{
+  "schema_version": "obs.v0.1",
+  "snapshots": [
+    {
+      "schema_version": "obs.v0.1",
+      "generated_by": {
+        "source_type": "hipaa-assessment",
+        "tool": "stave",
+        "tool_version": "0.1.0"
+      },
+      "captured_at": "2026-01-10T00:00:00Z",
+      "assets": [
+        {
+          "id": "aws-account-root",
+          "type": "aws_iam_account",
+          "vendor": "aws",
+          "properties": {
+            "identity": {
+              "kind": "account",
+              "root": {
+                "mfa_enabled": false,
+                "has_access_keys": true
+              }
+            }
+          }
+        },
+        {
+          "id": "phi-database",
+          "type": "aws_rds_instance",
+          "vendor": "aws",
+          "properties": {
+            "database": {
+              "kind": "instance",
+              "encryption": {
+                "storage_encrypted": false
+              },
+              "access": {
+                "publicly_accessible": true,
+                "multi_az": false
+              },
+              "backup": {
+                "enabled": false,
+                "retention_days": 0
+              },
+              "logging": {
+                "audit_log_enabled": false
+              }
+            }
+          }
+        },
+        {
+          "id": "vpc-prod-001",
+          "type": "aws_vpc",
+          "vendor": "aws",
+          "properties": {
+            "network": {
+              "kind": "vpc",
+              "flow_log": {
+                "enabled": false
+              }
+            }
+          }
+        },
+        {
+          "id": "i-0abc123def",
+          "type": "aws_instance",
+          "vendor": "aws",
+          "properties": {
+            "compute": {
+              "kind": "instance",
+              "encryption": {
+                "ebs_encrypted": false
+              },
+              "network": {
+                "imdsv2_required": false,
+                "has_public_ip": true
+              }
+            }
+          }
+        },
+        {
+          "id": "alb-phi-api",
+          "type": "aws_load_balancer",
+          "vendor": "aws",
+          "properties": {
+            "loadbalancer": {
+              "kind": "alb",
+              "encryption": {
+                "tls_1_2_or_higher": false,
+                "http_to_https_redirect": false
+              },
+              "logging": {
+                "access_log_enabled": false
+              },
+              "availability": {
+                "cross_zone_enabled": false
+              }
+            }
+          }
+        },
+        {
+          "id": "backup-phi-database",
+          "type": "aws_backup_resource",
+          "vendor": "aws",
+          "properties": {
+            "backup": {
+              "kind": "resource",
+              "has_backup": false,
+              "is_recent": false,
+              "encrypted": false
+            },
+            "availability": {
+              "kind": "resource",
+              "multi_az": false
+            },
+            "replication": {
+              "kind": "resource",
+              "cross_region_enabled": false
+            }
+          }
+        },
+        {
+          "id": "sg-default-vpc",
+          "type": "aws_security_group",
+          "vendor": "aws",
+          "properties": {
+            "network": {
+              "kind": "security_group",
+              "is_default": true,
+              "allows_all_traffic": true,
+              "has_unrestricted_ingress": true,
+              "unrestricted_ports": [22, 3389]
+            }
+          }
+        },
+        {
+          "id": "eks-prod-cluster",
+          "type": "k8s_cluster",
+          "vendor": "aws",
+          "properties": {
+            "audit": {
+              "kind": "cluster",
+              "audit_logging_enabled": false
+            },
+            "secrets": {
+              "kind": "cluster",
+              "etcd_encryption_enabled": false
+            }
+          }
+        },
+        {
+          "id": "ns-phi-workloads",
+          "type": "k8s_namespace",
+          "vendor": "aws",
+          "properties": {
+            "network_policy": {
+              "kind": "namespace",
+              "has_network_policies": false,
+              "has_default_deny": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "schema_version": "obs.v0.1",
+      "generated_by": {
+        "source_type": "hipaa-assessment",
+        "tool": "stave",
+        "tool_version": "0.1.0"
+      },
+      "captured_at": "2026-01-14T00:00:00Z",
+      "assets": [
+        {
+          "id": "aws-account-root",
+          "type": "aws_iam_account",
+          "vendor": "aws",
+          "properties": {
+            "identity": {
+              "kind": "account",
+              "root": {
+                "mfa_enabled": false,
+                "has_access_keys": true
+              }
+            }
+          }
+        },
+        {
+          "id": "phi-database",
+          "type": "aws_rds_instance",
+          "vendor": "aws",
+          "properties": {
+            "database": {
+              "kind": "instance",
+              "encryption": {
+                "storage_encrypted": false
+              },
+              "access": {
+                "publicly_accessible": true,
+                "multi_az": false
+              },
+              "backup": {
+                "enabled": false,
+                "retention_days": 0
+              },
+              "logging": {
+                "audit_log_enabled": false
+              }
+            }
+          }
+        },
+        {
+          "id": "vpc-prod-001",
+          "type": "aws_vpc",
+          "vendor": "aws",
+          "properties": {
+            "network": {
+              "kind": "vpc",
+              "flow_log": {
+                "enabled": false
+              }
+            }
+          }
+        },
+        {
+          "id": "i-0abc123def",
+          "type": "aws_instance",
+          "vendor": "aws",
+          "properties": {
+            "compute": {
+              "kind": "instance",
+              "encryption": {
+                "ebs_encrypted": false
+              },
+              "network": {
+                "imdsv2_required": false,
+                "has_public_ip": true
+              }
+            }
+          }
+        },
+        {
+          "id": "alb-phi-api",
+          "type": "aws_load_balancer",
+          "vendor": "aws",
+          "properties": {
+            "loadbalancer": {
+              "kind": "alb",
+              "encryption": {
+                "tls_1_2_or_higher": false,
+                "http_to_https_redirect": false
+              },
+              "logging": {
+                "access_log_enabled": false
+              },
+              "availability": {
+                "cross_zone_enabled": false
+              }
+            }
+          }
+        },
+        {
+          "id": "backup-phi-database",
+          "type": "aws_backup_resource",
+          "vendor": "aws",
+          "properties": {
+            "backup": {
+              "kind": "resource",
+              "has_backup": false,
+              "is_recent": false,
+              "encrypted": false
+            },
+            "availability": {
+              "kind": "resource",
+              "multi_az": false
+            },
+            "replication": {
+              "kind": "resource",
+              "cross_region_enabled": false
+            }
+          }
+        },
+        {
+          "id": "sg-default-vpc",
+          "type": "aws_security_group",
+          "vendor": "aws",
+          "properties": {
+            "network": {
+              "kind": "security_group",
+              "is_default": true,
+              "allows_all_traffic": true,
+              "has_unrestricted_ingress": true,
+              "unrestricted_ports": [22, 3389]
+            }
+          }
+        },
+        {
+          "id": "eks-prod-cluster",
+          "type": "k8s_cluster",
+          "vendor": "aws",
+          "properties": {
+            "audit": {
+              "kind": "cluster",
+              "audit_logging_enabled": false
+            },
+            "secrets": {
+              "kind": "cluster",
+              "etcd_encryption_enabled": false
+            }
+          }
+        },
+        {
+          "id": "ns-phi-workloads",
+          "type": "k8s_namespace",
+          "vendor": "aws",
+          "properties": {
+            "network_policy": {
+              "kind": "namespace",
+              "has_network_policies": false,
+              "has_default_deny": false
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

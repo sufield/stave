@@ -79,13 +79,16 @@ func TestApplyProfileE2E(t *testing.T) {
 	}
 
 	testCases := []struct {
-		name     string
-		dir      string
-		wantExit int
-		wantViol int
+		name      string
+		dir       string
+		profile   string
+		extraArgs []string
+		wantExit  int
+		wantViol  int
 	}{
-		{"obs-public", "aws-s3-obs-public", 3, 6},
-		{"obs-private", "aws-s3-obs-private", 3, 4},
+		{"obs-public", "aws-s3-obs-public", "aws-s3", nil, 3, 6},
+		{"obs-private", "aws-s3-obs-private", "aws-s3", nil, 3, 4},
+		{"hipaa-cross-domain", "e2e-hipaa-cross-domain", "hipaa", []string{"--include-all"}, 3, 20},
 	}
 
 	for _, tc := range testCases {
@@ -98,11 +101,15 @@ func TestApplyProfileE2E(t *testing.T) {
 				t.Fatalf("input file not found (testdata must be present in repo): %s", inputFile)
 			}
 
-			cmd := exec.Command(binPath,
+			args := []string{
 				"apply",
-				"--profile", "aws-s3",
+				"--profile", tc.profile,
 				"--input", inputFile,
-				"--now", "2026-01-15T00:00:00Z")
+				"--now", "2026-01-15T00:00:00Z",
+			}
+			args = append(args, tc.extraArgs...)
+
+			cmd := exec.Command(binPath, args...)
 			cmd.Dir = projectRoot
 			var stdout, stderr bytes.Buffer
 			cmd.Stdout = &stdout
