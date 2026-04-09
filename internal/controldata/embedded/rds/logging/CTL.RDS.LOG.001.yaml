@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.LOG.001
+name: RDS Audit Logging Must Be Enabled
+description: >
+  RDS instances must export audit logs to CloudWatch. Without audit
+  logging, database access patterns cannot be monitored and unauthorized
+  queries are undetectable.
+domain: exposure
+severity: medium
+compliance:
+  hipaa: "164.312(b)"
+scope_tags:
+  - aws
+  - rds
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    RDS instance does not export audit logs to CloudWatch. Database
+    access is not auditable.
+  action: >
+    Enable CloudWatch log exports for the database engine. Run:
+    aws rds modify-db-instance --db-instance-identifier xxx
+    --cloudwatch-logs-export-configuration '{"EnableLogTypes":["audit","error","slowquery"]}'
+  example: |
+    {
+      "database": {
+        "kind": "instance",
+        "logging": {
+          "audit_log_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: instance
+    - field: properties.database.logging.audit_log_enabled
+      op: eq
+      value: false

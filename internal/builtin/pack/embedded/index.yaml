@@ -40,6 +40,23 @@ packs:
       - CTL.EC2.PUBLIC.001
       - CTL.EC2.IMDSV2.001
       - CTL.EC2.INCOMPLETE.001
+  rds:
+    description: AWS RDS database security controls
+    controls:
+      - CTL.RDS.ENCRYPT.001
+      - CTL.RDS.PUBLIC.001
+      - CTL.RDS.MULTIAZ.001
+      - CTL.RDS.BACKUP.001
+      - CTL.RDS.LOG.001
+      - CTL.RDS.INCOMPLETE.001
+  elb:
+    description: AWS ELB load balancer security controls
+    controls:
+      - CTL.ELB.TLS.001
+      - CTL.ELB.HTTPS.001
+      - CTL.ELB.LOG.001
+      - CTL.ELB.CROSSZONE.001
+      - CTL.ELB.INCOMPLETE.001
   dns:
     description: DNS record security controls (vendor-agnostic)
     controls:
@@ -379,3 +396,36 @@ controls:
   CTL.EC2.INCOMPLETE.001:
     path: internal/controldata/embedded/ec2/misc/CTL.EC2.INCOMPLETE.001.yaml
     summary: Complete Data Required for EC2 Assessment
+  CTL.RDS.ENCRYPT.001:
+    path: internal/controldata/embedded/rds/encrypt/CTL.RDS.ENCRYPT.001.yaml
+    summary: RDS Storage Encryption Must Be Enabled
+  CTL.RDS.PUBLIC.001:
+    path: internal/controldata/embedded/rds/access/CTL.RDS.PUBLIC.001.yaml
+    summary: RDS Instances Must Not Be Publicly Accessible
+  CTL.RDS.MULTIAZ.001:
+    path: internal/controldata/embedded/rds/access/CTL.RDS.MULTIAZ.001.yaml
+    summary: RDS Instances Must Use Multi-AZ Deployment
+  CTL.RDS.BACKUP.001:
+    path: internal/controldata/embedded/rds/backup/CTL.RDS.BACKUP.001.yaml
+    summary: RDS Automated Backups Must Be Enabled
+  CTL.RDS.LOG.001:
+    path: internal/controldata/embedded/rds/logging/CTL.RDS.LOG.001.yaml
+    summary: RDS Audit Logging Must Be Enabled
+  CTL.RDS.INCOMPLETE.001:
+    path: internal/controldata/embedded/rds/misc/CTL.RDS.INCOMPLETE.001.yaml
+    summary: Complete Data Required for RDS Assessment
+  CTL.ELB.TLS.001:
+    path: internal/controldata/embedded/elb/encrypt/CTL.ELB.TLS.001.yaml
+    summary: Load Balancer Must Use TLS 1.2 or Higher
+  CTL.ELB.HTTPS.001:
+    path: internal/controldata/embedded/elb/encrypt/CTL.ELB.HTTPS.001.yaml
+    summary: Load Balancer Must Redirect HTTP to HTTPS
+  CTL.ELB.LOG.001:
+    path: internal/controldata/embedded/elb/logging/CTL.ELB.LOG.001.yaml
+    summary: Load Balancer Access Logging Must Be Enabled
+  CTL.ELB.CROSSZONE.001:
+    path: internal/controldata/embedded/elb/availability/CTL.ELB.CROSSZONE.001.yaml
+    summary: Load Balancer Must Have Cross-Zone Load Balancing Enabled
+  CTL.ELB.INCOMPLETE.001:
+    path: internal/controldata/embedded/elb/misc/CTL.ELB.INCOMPLETE.001.yaml
+    summary: Complete Data Required for ELB Assessment

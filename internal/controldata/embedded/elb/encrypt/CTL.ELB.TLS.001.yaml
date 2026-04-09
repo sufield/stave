@@ -1,0 +1,36 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.TLS.001
+name: Load Balancer Must Use TLS 1.2 or Higher
+description: >
+  Application and Network Load Balancers must use TLS 1.2 or higher
+  for HTTPS listeners. Older TLS versions have known vulnerabilities.
+domain: exposure
+severity: high
+compliance:
+  hipaa: "164.312(e)(2)(ii)"
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Load balancer uses a TLS version older than 1.2. Traffic is
+    vulnerable to downgrade attacks.
+  action: >
+    Update the HTTPS listener to use an ELBSecurityPolicy that enforces
+    TLS 1.2 minimum (e.g., ELBSecurityPolicy-TLS-1-2-2017-01).
+  example: |
+    {
+      "loadbalancer": {
+        "kind": "alb",
+        "encryption": {
+          "tls_minimum_version": "TLSv1.2"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.loadbalancer.encryption.tls_1_2_or_higher
+      op: eq
+      value: false

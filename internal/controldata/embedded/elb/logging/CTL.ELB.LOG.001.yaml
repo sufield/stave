@@ -1,0 +1,39 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.LOG.001
+name: Load Balancer Access Logging Must Be Enabled
+description: >
+  Load balancer access logging must be enabled for audit and forensic
+  analysis. Without access logs, request patterns and potential
+  unauthorized access cannot be investigated after an incident.
+domain: exposure
+severity: medium
+compliance:
+  hipaa: "164.312(b)"
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Load balancer does not have access logging enabled. Request
+    patterns are not recorded for audit.
+  action: >
+    Enable access logging to an S3 bucket. Run:
+    aws elbv2 modify-load-balancer-attributes --load-balancer-arn xxx
+    --attributes Key=access_logs.s3.enabled,Value=true
+    Key=access_logs.s3.bucket,Value=my-elb-logs
+  example: |
+    {
+      "loadbalancer": {
+        "kind": "alb",
+        "logging": {
+          "access_log_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.loadbalancer.logging.access_log_enabled
+      op: eq
+      value: false

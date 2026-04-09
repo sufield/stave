@@ -1,0 +1,36 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.HTTPS.001
+name: Load Balancer Must Redirect HTTP to HTTPS
+description: >
+  Load balancers serving PHI must redirect all HTTP traffic to HTTPS.
+  Allowing plaintext HTTP exposes data in transit to interception.
+domain: exposure
+severity: high
+compliance:
+  hipaa: "164.312(e)(2)(ii)"
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Load balancer accepts HTTP traffic without redirecting to HTTPS.
+    Data in transit may be unencrypted.
+  action: >
+    Add a listener rule on port 80 that redirects to HTTPS (443)
+    with status code 301.
+  example: |
+    {
+      "loadbalancer": {
+        "kind": "alb",
+        "encryption": {
+          "http_to_https_redirect": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.loadbalancer.encryption.http_to_https_redirect
+      op: eq
+      value: false
