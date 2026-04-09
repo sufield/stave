@@ -1,0 +1,318 @@
+# CIS AWS Foundations Benchmark v3.0 — CloudWatch
+# 15 monitoring controls (Section 4) + 1 Security Hub control
+#
+# All 15 monitoring controls follow the same pattern: a CloudWatch Logs
+# metric filter matching a specific CloudTrail event pattern, with an
+# alarm that sends to an SNS topic. CIS classifies these as "Manual"
+# because CIS did not define a standardized automated audit procedure,
+# but all are evaluable from a configuration snapshot of metric filters,
+# alarms, and SNS subscriptions.
+#
+# Asset type: aws_cloudwatch_monitoring_config
+# Property namespace: monitoring.*
+
+invariants:
+
+- id: CIS.CLOUDWATCH.1
+  title: Ensure unauthorized API calls are monitored
+  cis_control: "4.1"
+  cis_level: 1
+  description: >
+    A CloudWatch metric filter and alarm must monitor unauthorized API
+    calls (AccessDenied, UnauthorizedAccess). High volumes of
+    unauthorized calls indicate credential probing or misconfigured
+    IAM policies.
+  conditions:
+    - monitoring.metric_filters.unauthorized_api_calls.exists == true
+    - monitoring.metric_filters.unauthorized_api_calls.pattern contains "UnauthorizedAccess"
+    - monitoring.metric_filters.unauthorized_api_calls.pattern contains "AccessDenied"
+    - monitoring.alarms.unauthorized_api_calls.exists == true
+    - monitoring.alarms.unauthorized_api_calls.sns_topic_arn != ""
+  all_must_pass: true
+  severity: medium
+  remediation: >
+    Create a metric filter on the CloudTrail log group matching
+    unauthorized API error codes, then create an alarm with an SNS
+    action to notify the security team.
+
+- id: CIS.CLOUDWATCH.2
+  title: Ensure management console sign-in without MFA is monitored
+  cis_control: "4.2"
+  cis_level: 1
+  description: >
+    A metric filter and alarm must detect console sign-ins that did
+    not use multi-factor authentication. Non-MFA logins indicate
+    either MFA is not enforced or credentials were used from a
+    context that bypassed MFA.
+  conditions:
+    - monitoring.metric_filters.console_signin_no_mfa.exists == true
+    - monitoring.metric_filters.console_signin_no_mfa.pattern contains "ConsoleLogin"
+    - monitoring.metric_filters.console_signin_no_mfa.pattern contains "MFAUsed"
+    - monitoring.alarms.console_signin_no_mfa.exists == true
+    - monitoring.alarms.console_signin_no_mfa.sns_topic_arn != ""
+  all_must_pass: true
+  severity: medium
+  remediation: >
+    Create a metric filter matching ConsoleLogin events where
+    additionalEventData.MFAUsed != "Yes", and attach an alarm
+    with an SNS notification action.
+
+- id: CIS.CLOUDWATCH.3
+  title: Ensure usage of 'root' account is monitored
+  cis_control: "4.3"
+  cis_level: 1
+  description: >
+    A metric filter and alarm must detect any root account API
+    activity. Root usage should be near-zero; any activity may
+    indicate compromise or unauthorized administrative action.
+  conditions:
+    - monitoring.metric_filters.root_account_usage.exists == true
+    - monitoring.metric_filters.root_account_usage.pattern contains "Root"
+    - monitoring.alarms.root_account_usage.exists == true
+    - monitoring.alarms.root_account_usage.sns_topic_arn != ""
+  all_must_pass: true
+  severity: high
+  remediation: >
+    Create a metric filter matching userIdentity.type = "Root"
+    (excluding service events), and create an alarm with SNS
+    notification.
+
+- id: CIS.CLOUDWATCH.4
+  title: Ensure IAM policy changes are monitored
+  cis_control: "4.4"
+  cis_level: 1
+  description: >
+    A metric filter and alarm must detect IAM policy modifications
+    (CreatePolicy, DeletePolicy, AttachRolePolicy, etc). Unauthorized
+    policy changes are a primary persistence mechanism for attackers.
+  conditions:
+    - monitoring.metric_filters.iam_policy_changes.exists == true
+    - monitoring.alarms.iam_policy_changes.exists == true
+    - monitoring.alarms.iam_policy_changes.sns_topic_arn != ""
+  all_must_pass: true
+  severity: medium
+  remediation: >
+    Create a metric filter matching IAM policy change API calls
+    (CreatePolicy, DeletePolicy, CreatePolicyVersion, AttachRolePolicy,
+    DetachRolePolicy, etc) and attach an alarm with SNS action.
+
+- id: CIS.CLOUDWATCH.5
+  title: Ensure CloudTrail configuration changes are monitored
+  cis_control: "4.5"
+  cis_level: 1
+  description: >
+    A metric filter and alarm must detect changes to CloudTrail
+    configuration (CreateTrail, UpdateTrail, DeleteTrail,
+    StartLogging, StopLogging). Disabling or modifying trails is
+    the first action in covering tracks after compromise.
+  conditions:
+    - monitoring.metric_filters.cloudtrail_changes.exists == true
+    - monitoring.alarms.cloudtrail_changes.exists == true
+    - monitoring.alarms.cloudtrail_changes.sns_topic_arn != ""
+  all_must_pass: true
+  severity: high
+  remediation: >
+    Create a metric filter matching CloudTrail API calls and
+    attach an alarm with SNS notification.
+
+- id: CIS.CLOUDWATCH.6
+  title: Ensure AWS Management Console authentication failures are monitored
+  cis_control: "4.6"
+  cis_level: 2
+  description: >
+    A metric filter and alarm must detect failed console authentication
+    attempts. Repeated failures indicate brute force attacks against
+    IAM user passwords.
+  conditions:
+    - monitoring.metric_filters.console_auth_failures.exists == true
+    - monitoring.metric_filters.console_auth_failures.pattern contains "ConsoleLogin"
+    - monitoring.metric_filters.console_auth_failures.pattern contains "Failed"
+    - monitoring.alarms.console_auth_failures.exists == true
+    - monitoring.alarms.console_auth_failures.sns_topic_arn != ""
+  all_must_pass: true
+  severity: medium
+  remediation: >
+    Create a metric filter matching ConsoleLogin events with
+    errorMessage = "Failed authentication" and attach an alarm.
+
+- id: CIS.CLOUDWATCH.7
+  title: Ensure disabling or scheduled deletion of customer-created CMKs is monitored
+  cis_control: "4.7"
+  cis_level: 2
+  description: >
+    A metric filter and alarm must detect KMS key disabling or
+    scheduled deletion (DisableKey, ScheduleKeyDeletion). Deleting
+    encryption keys renders all data encrypted with them permanently
+    inaccessible — a ransomware vector.
+  conditions:
+    - monitoring.metric_filters.cmk_changes.exists == true
+    - monitoring.metric_filters.cmk_changes.pattern contains "DisableKey"
+    - monitoring.metric_filters.cmk_changes.pattern contains "ScheduleKeyDeletion"
+    - monitoring.alarms.cmk_changes.exists == true
+    - monitoring.alarms.cmk_changes.sns_topic_arn != ""
+  all_must_pass: true
+  severity: high
+  remediation: >
+    Create a metric filter matching KMS DisableKey and
+    ScheduleKeyDeletion events, and attach an alarm with SNS action.
+
+- id: CIS.CLOUDWATCH.8
+  title: Ensure S3 bucket policy changes are monitored
+  cis_control: "4.8"
+  cis_level: 1
+  description: >
+    A metric filter and alarm must detect S3 bucket policy changes
+    (PutBucketPolicy, DeleteBucketPolicy, PutBucketAcl, etc).
+    Policy changes can make private buckets public.
+  conditions:
+    - monitoring.metric_filters.s3_policy_changes.exists == true
+    - monitoring.alarms.s3_policy_changes.exists == true
+    - monitoring.alarms.s3_policy_changes.sns_topic_arn != ""
+  all_must_pass: true
+  severity: medium
+  remediation: >
+    Create a metric filter matching S3 bucket policy and ACL change
+    APIs, and attach an alarm with SNS notification.
+
+- id: CIS.CLOUDWATCH.9
+  title: Ensure AWS Config configuration changes are monitored
+  cis_control: "4.9"
+  cis_level: 2
+  description: >
+    A metric filter and alarm must detect changes to AWS Config
+    (StopConfigurationRecorder, DeleteDeliveryChannel, etc).
+    Disabling Config removes drift detection.
+  conditions:
+    - monitoring.metric_filters.config_changes.exists == true
+    - monitoring.alarms.config_changes.exists == true
+    - monitoring.alarms.config_changes.sns_topic_arn != ""
+  all_must_pass: true
+  severity: medium
+  remediation: >
+    Create a metric filter matching Config API calls and attach
+    an alarm with SNS notification.
+
+- id: CIS.CLOUDWATCH.10
+  title: Ensure security group changes are monitored
+  cis_control: "4.10"
+  cis_level: 2
+  description: >
+    A metric filter and alarm must detect security group changes
+    (AuthorizeSecurityGroupIngress, RevokeSecurityGroupIngress, etc).
+    SG changes directly affect network access to resources.
+  conditions:
+    - monitoring.metric_filters.security_group_changes.exists == true
+    - monitoring.alarms.security_group_changes.exists == true
+    - monitoring.alarms.security_group_changes.sns_topic_arn != ""
+  all_must_pass: true
+  severity: medium
+  remediation: >
+    Create a metric filter matching security group modification
+    APIs, and attach an alarm with SNS notification.
+
+- id: CIS.CLOUDWATCH.11
+  title: Ensure Network Access Control Lists (NACL) changes are monitored
+  cis_control: "4.11"
+  cis_level: 2
+  description: >
+    A metric filter and alarm must detect NACL changes. NACLs are
+    stateless network controls; unauthorized changes can open or
+    close network paths.
+  conditions:
+    - monitoring.metric_filters.nacl_changes.exists == true
+    - monitoring.alarms.nacl_changes.exists == true
+    - monitoring.alarms.nacl_changes.sns_topic_arn != ""
+  all_must_pass: true
+  severity: medium
+  remediation: >
+    Create a metric filter matching NACL create/delete/replace APIs,
+    and attach an alarm with SNS notification.
+
+- id: CIS.CLOUDWATCH.12
+  title: Ensure changes to network gateways are monitored
+  cis_control: "4.12"
+  cis_level: 1
+  description: >
+    A metric filter and alarm must detect internet gateway and NAT
+    gateway changes. Gateway attachment is the boundary between a
+    VPC and the internet.
+  conditions:
+    - monitoring.metric_filters.network_gateway_changes.exists == true
+    - monitoring.alarms.network_gateway_changes.exists == true
+    - monitoring.alarms.network_gateway_changes.sns_topic_arn != ""
+  all_must_pass: true
+  severity: medium
+  remediation: >
+    Create a metric filter matching gateway attach/detach/create/
+    delete APIs, and attach an alarm with SNS notification.
+
+- id: CIS.CLOUDWATCH.13
+  title: Ensure route table changes are monitored
+  cis_control: "4.13"
+  cis_level: 1
+  description: >
+    A metric filter and alarm must detect route table changes.
+    Route table modifications can redirect traffic through attacker-
+    controlled paths.
+  conditions:
+    - monitoring.metric_filters.route_table_changes.exists == true
+    - monitoring.alarms.route_table_changes.exists == true
+    - monitoring.alarms.route_table_changes.sns_topic_arn != ""
+  all_must_pass: true
+  severity: medium
+  remediation: >
+    Create a metric filter matching route table create/delete/replace
+    APIs, and attach an alarm with SNS notification.
+
+- id: CIS.CLOUDWATCH.14
+  title: Ensure VPC changes are monitored
+  cis_control: "4.14"
+  cis_level: 1
+  description: >
+    A metric filter and alarm must detect VPC lifecycle changes
+    (CreateVpc, DeleteVpc, ModifyVpcAttribute, etc). VPC changes
+    affect the entire network boundary.
+  conditions:
+    - monitoring.metric_filters.vpc_changes.exists == true
+    - monitoring.alarms.vpc_changes.exists == true
+    - monitoring.alarms.vpc_changes.sns_topic_arn != ""
+  all_must_pass: true
+  severity: medium
+  remediation: >
+    Create a metric filter matching VPC lifecycle APIs, and attach
+    an alarm with SNS notification.
+
+- id: CIS.CLOUDWATCH.15
+  title: Ensure AWS Organizations changes are monitored
+  cis_control: "4.15"
+  cis_level: 1
+  description: >
+    A metric filter and alarm must detect AWS Organizations changes
+    (InviteAccountToOrganization, LeaveOrganization, etc). Org
+    changes affect account-level governance and SCP enforcement.
+  conditions:
+    - monitoring.metric_filters.organizations_changes.exists == true
+    - monitoring.alarms.organizations_changes.exists == true
+    - monitoring.alarms.organizations_changes.sns_topic_arn != ""
+  all_must_pass: true
+  severity: medium
+  remediation: >
+    Create a metric filter matching Organizations API calls, and
+    attach an alarm with SNS notification.
+
+# Note: CIS 4.16 (Ensure AWS Security Hub is enabled) is not included
+# because Security Hub is not in the requested service scope. If needed,
+# it would check securityhub:DescribeHub for hub enablement.
+
+# Cross-service dependencies:
+# ALL 15 controls depend on:
+#   1. A CloudTrail trail delivering to a CloudWatch Logs log group
+#   2. CloudWatch metric filters on that log group
+#   3. CloudWatch alarms on those metrics
+#   4. SNS topics as alarm actions (see cis-sns.yaml)
+#
+# The extractor must join data from:
+#   - cloudtrail:DescribeTrails (to find CloudWatchLogsLogGroupArn)
+#   - logs:DescribeMetricFilters (to find filter patterns)
+#   - cloudwatch:DescribeAlarms (to find alarm actions)
+#   - sns:ListSubscriptionsByTopic (to verify SNS has subscribers)

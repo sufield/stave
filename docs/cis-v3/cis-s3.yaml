@@ -1,0 +1,93 @@
+# CIS AWS Foundations Benchmark v3.0 — S3
+# 3 automatable + 1 MANUAL
+
+invariants:
+
+- id: CIS.S3.1
+  title: Ensure S3 Bucket Policy is set to deny HTTP requests
+  cis_control: "2.1.1"
+  cis_level: 2
+  description: >
+    Every S3 bucket must have a bucket policy that denies requests
+    where aws:SecureTransport is false. This enforces TLS for all
+    access, preventing plaintext data transmission even though the
+    S3 API endpoint supports HTTPS by default.
+  conditions:
+    - storage.encryption.in_transit_enforced == true
+  all_must_pass: true
+  severity: high
+  remediation: >
+    Add a Deny statement to the bucket policy with condition
+    {"Bool": {"aws:SecureTransport": "false"}} for all S3 actions.
+  stave_control: CTL.S3.ENCRYPT.002
+
+- id: CIS.S3.2
+  title: Ensure MFA Delete is enabled on S3 buckets
+  cis_control: "2.1.2"
+  cis_level: 2
+  description: >
+    S3 buckets should have MFA Delete enabled on versioned buckets.
+    MFA Delete requires a second factor to permanently delete object
+    versions, preventing unauthorized or accidental data destruction.
+  conditions:
+    - storage.versioning.enabled == true
+    - storage.versioning.mfa_delete_enabled == true
+  all_must_pass: true
+  severity: high
+  remediation: >
+    Enable MFA Delete (requires root credentials):
+    aws s3api put-bucket-versioning --bucket <name>
+    --versioning-configuration Status=Enabled,MFADelete=Enabled
+    --mfa "arn:aws:iam::<account>:mfa/root-account-mfa-device <code>"
+
+- id: CIS.S3.3
+  title: Ensure all data in Amazon S3 has been discovered, classified and secured when required
+  cis_control: "2.1.3"
+  cis_level: 2
+  description: >
+    All S3 data must be discovered and classified, with appropriate
+    security controls applied based on classification. This typically
+    requires Amazon Macie or equivalent data classification service.
+  conditions: []
+  all_must_pass: true
+  severity: medium
+  remediation: >
+    Enable Amazon Macie and configure automated sensitive data
+    discovery jobs. Apply bucket policies and encryption based on
+    classification results.
+  status: MANUAL
+  manual_reason: >
+    Data classification requires running Macie discovery jobs and
+    human review of results. A static configuration snapshot cannot
+    verify that data has been properly classified — only that Macie
+    is enabled.
+
+- id: CIS.S3.4
+  title: Ensure that S3 Buckets are configured with 'Block public access (bucket settings)'
+  cis_control: "2.1.4"
+  cis_level: 1
+  description: >
+    Every S3 bucket must have Block Public Access enabled at the
+    bucket level with all four flags set to true. This is a defense-
+    in-depth control that prevents public access regardless of bucket
+    policy or ACL configuration.
+  conditions:
+    - storage.controls.public_access_block.block_public_acls == true
+    - storage.controls.public_access_block.ignore_public_acls == true
+    - storage.controls.public_access_block.block_public_policy == true
+    - storage.controls.public_access_block.restrict_public_buckets == true
+  all_must_pass: true
+  severity: critical
+  remediation: >
+    Enable all four Block Public Access settings:
+    aws s3api put-public-access-block --bucket <name>
+    --public-access-block-configuration
+    BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true
+  stave_control: CTL.S3.CONTROLS.001
+
+# Cross-service dependencies:
+# CIS 2.1.4 — account-level BPA (s3control:GetPublicAccessBlock) is a
+#   complementary check. The observation should include both bucket-level
+#   and account-level BPA status.
+# CIS 2.1.2 — MFA Delete requires root credentials to enable, which is
+#   an operational constraint, not a cross-service dependency.
