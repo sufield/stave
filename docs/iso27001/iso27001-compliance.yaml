@@ -1,0 +1,40 @@
+# ISO 27001:2022 — Additional Technological Controls
+# A.8.10 (Information Deletion), A.8.11 (Data Masking), A.8.12 (DLP)
+# Summary: 5 controls — 2 MAPPED, 0 NEW, 3 MANUAL
+
+invariants:
+
+- id: ISO.8.10.1
+  title: S3 lifecycle rules for data deletion
+  annex_a: "A.8.10"
+  mapped_to_existing: true
+  existing_invariant: SOC2 CTL.S3.LIFECYCLE.001
+  note: Automated data deletion via lifecycle policies.
+
+- id: ISO.8.10.2
+  title: S3 Object Lock for retention
+  annex_a: "A.8.10"
+  mapped_to_existing: true
+  existing_invariant: HIPAA CTL.S3.LOCK.001
+  note: Controlled deletion with retention enforcement.
+
+- id: ISO.8.11.1
+  title: Data masking and pseudonymization
+  annex_a: "A.8.11"
+  manual: true
+  reason: Data masking is application-level logic, not infrastructure configuration.
+  evidence_guidance: Documented data masking procedures and evidence of pseudonymization in non-production environments.
+
+- id: ISO.8.12.1
+  title: Data leakage prevention
+  annex_a: "A.8.12"
+  manual: true
+  reason: DLP strategies involve application-level controls, Macie configuration, and organizational policies.
+  evidence_guidance: DLP tool deployment evidence (e.g., Amazon Macie), S3 bucket policies preventing exfiltration, and VPC endpoint restrictions.
+
+- id: ISO.8.12.2
+  title: Network segmentation for sensitive data
+  annex_a: "A.8.12"
+  manual: true
+  reason: Network segmentation strategy requires organizational context, though VPC SG controls verify enforcement.
+  evidence_guidance: Network segmentation documentation showing sensitive data isolation. Technical controls verified by CTL.VPC.SG.UNRESTRICTED.001.

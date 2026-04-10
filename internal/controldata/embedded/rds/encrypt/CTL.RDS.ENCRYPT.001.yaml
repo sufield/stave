@@ -17,6 +17,7 @@ compliance:
   fedramp_moderate: "SC-28"
   gdpr: "Art.32"
   ffiec: "ISH-4"
+  iso_27001_2022: "A.8.24"
 scope_tags:
   - aws
   - rds

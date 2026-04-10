@@ -46,15 +46,17 @@ const (
 	ProfileGDPR Profile = "gdpr"
 	// ProfileFFIEC selects the FFIEC compliance profile.
 	ProfileFFIEC Profile = "ffiec"
+	// ProfileISO27001 selects the ISO 27001:2022 profile.
+	ProfileISO27001 Profile = "iso-27001"
 )
 
 // ParseProfile validates and returns a Profile value.
 func ParseProfile(s string) (Profile, error) {
 	switch Profile(s) {
-	case ProfileAWSS3, ProfileAWSIAM, ProfileGCPGCS, ProfileHIPAA, ProfileCISv3, ProfileSOC2, ProfilePCIDSSv4, ProfileNIST, ProfileFedRAMP, ProfileGDPR, ProfileFFIEC:
+	case ProfileAWSS3, ProfileAWSIAM, ProfileGCPGCS, ProfileHIPAA, ProfileCISv3, ProfileSOC2, ProfilePCIDSSv4, ProfileNIST, ProfileFedRAMP, ProfileGDPR, ProfileFFIEC, ProfileISO27001:
 		return Profile(s), nil
 	default:
-		return "", fmt.Errorf("unsupported --profile %q (supported: aws-s3, aws-iam, gcp-gcs, hipaa, cis-aws-v3.0, soc2, pci-dss-v4.0, nist-800-53, fedramp, gdpr, ffiec)", s)
+		return "", fmt.Errorf("unsupported --profile %q (supported: aws-s3, aws-iam, gcp-gcs, hipaa, cis-aws-v3.0, soc2, pci-dss-v4.0, nist-800-53, fedramp, gdpr, ffiec, iso-27001)", s)
 	}
 }
 
@@ -208,7 +210,7 @@ func profileControlDomain(prof Profile) string {
 		return "iam"
 	case ProfileGCPGCS:
 		return "gcs"
-	case ProfileHIPAA, ProfileCISv3, ProfileSOC2, ProfilePCIDSSv4, ProfileNIST, ProfileFedRAMP, ProfileGDPR, ProfileFFIEC:
+	case ProfileHIPAA, ProfileCISv3, ProfileSOC2, ProfilePCIDSSv4, ProfileNIST, ProfileFedRAMP, ProfileGDPR, ProfileFFIEC, ProfileISO27001:
 		return "" // Cross-domain: loads all, filtered by compliance ref.
 	default:
 		return "s3"
@@ -236,6 +238,8 @@ func profileComplianceFramework(prof Profile) policy.ComplianceFramework {
 		return "gdpr"
 	case ProfileFFIEC:
 		return "ffiec"
+	case ProfileISO27001:
+		return "iso_27001_2022"
 	default:
 		return ""
 	}

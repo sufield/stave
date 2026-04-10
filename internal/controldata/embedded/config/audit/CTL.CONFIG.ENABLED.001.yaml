@@ -17,6 +17,7 @@ compliance:
   fedramp_moderate: "CM-2"
   gdpr: "Art.30"
   ffiec: "CAT-D3"
+  iso_27001_2022: "A.8.9"
 scope_tags:
   - aws
   - config

@@ -349,6 +349,26 @@ packs:
       - CTL.BACKUP.EXISTS.001
       - CTL.RDS.MULTIAZ.001
       - CTL.GUARDDUTY.ENABLED.001
+  iso_27001_2022:
+    description: ISO 27001:2022 Annex A technical controls
+    controls:
+      - CTL.S3.CONTROLS.001
+      - CTL.S3.PUBLIC.001
+      - CTL.IAM.POLICY.ADMIN.001
+      - CTL.IAM.ROOT.MFA.001
+      - CTL.IAM.CONSOLE.MFA.001
+      - CTL.S3.ENCRYPT.001
+      - CTL.S3.ENCRYPT.002
+      - CTL.RDS.ENCRYPT.001
+      - CTL.EC2.EBS.ENCRYPT.001
+      - CTL.KMS.ROTATION.001
+      - CTL.CONFIG.ENABLED.001
+      - CTL.CLOUDTRAIL.ENABLED.001
+      - CTL.S3.LOG.001
+      - CTL.VPC.FLOWLOG.001
+      - CTL.GUARDDUTY.ENABLED.001
+      - CTL.SECURITYHUB.ENABLED.001
+      - CTL.IAM.ANALYZER.001
   vpc:
     description: AWS VPC network security controls
     controls:
