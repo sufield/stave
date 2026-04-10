@@ -73,7 +73,7 @@ Never edit `README.md` directly — edits will be overwritten by the next `make 
 The Go version is pinned once in `go.mod` (`toolchain` directive) and read everywhere else:
 
 ```
-go.mod (toolchain go1.26.1)
+go.mod (toolchain go1.26.2)
   ├── CI workflows:    go-version-file: 'go.mod'
   ├── Dockerfile:      ARG GO_VERSION  ← Makefile reads from go.mod
   └── versions.md:     rationale only

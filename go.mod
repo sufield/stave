@@ -2,7 +2,7 @@ module github.com/sufield/stave
 
 go 1.26
 
-toolchain go1.26.1
+toolchain go1.26.2
 
 require (
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.2

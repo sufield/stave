@@ -200,7 +200,7 @@ func TestIsDirectoryWritable_Failure(t *testing.T) {
 func TestCoreChecksAndBinaryChecks(t *testing.T) {
 	version := checkVersionInfo(&SystemEnvironment{
 		BuildVersion: "v1.2.3",
-		Runtime:      "go1.26.1",
+		Runtime:      "go1.26.2",
 		OS:           "darwin",
 		Arch:         "arm64",
 		BinaryPath:   "/usr/local/bin/stave",
