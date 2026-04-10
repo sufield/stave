@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -161,11 +160,8 @@ func outputReport(cfg auditConfig, report domainsecurityaudit.Report, artifacts 
 	}
 
 	if !cfg.Quiet {
-		displayDir := bundleDir
-		if abs, absErr := filepath.Abs(bundleDir); absErr == nil {
-			displayDir = abs
-		}
-		if err := printSummary(cfg.Stdout, mainOutPath, displayDir, report.Summary.Counts, g); err != nil {
+		displayDir := ui.RelativeDisplayPath(bundleDir)
+		if err := printSummary(cfg.Stdout, ui.RelativeDisplayPath(mainOutPath), displayDir, report.Summary.Counts, g); err != nil {
 			return err
 		}
 	}

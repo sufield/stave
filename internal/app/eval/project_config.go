@@ -69,10 +69,9 @@ func ResolveProjectConfig(in ProjectConfigInput) (ResolvedProjectConfig, error) 
 		return result, nil
 	}
 	if in.ControlsFlagSet {
-		return ResolvedProjectConfig{}, fmt.Errorf(
-			"%w: cannot combine explicit --controls with enabled_control_packs",
-			ErrConfigConflict,
-		)
+		// Explicit --controls flag overrides enabled_control_packs from
+		// stave.yaml. The user's CLI flag takes precedence over config.
+		return result, nil
 	}
 
 	packNames := slices.Clone(in.EnabledControlPacks)

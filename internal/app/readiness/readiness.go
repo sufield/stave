@@ -38,12 +38,13 @@ func recordControlSourceIssue(report *validation.ReadinessAssessment, in validat
 	if !in.HasEnabledControlPacks || !in.ControlFlagsSet {
 		return
 	}
+	// Explicit --controls flag overrides enabled_control_packs.
+	// This is not a conflict — the CLI flag takes precedence.
 	report.RecordFinding(validation.ValidationFinding{
 		Name:        "control-source-selection",
-		Status:      outcome.Fail,
-		Message:     "cannot combine explicit --controls with enabled_control_packs",
-		Remediation: "remove --controls or clear enabled_control_packs in stave.yaml",
-		FixCommand:  "stave status",
+		Status:      outcome.Pass,
+		Message:     "--controls flag overrides enabled_control_packs from stave.yaml",
+		Remediation: "",
 	})
 }
 
