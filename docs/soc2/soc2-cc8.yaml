@@ -3,7 +3,7 @@
 #
 # Summary: 6 controls — 3 MAPPED, 1 NEW, 2 MANUAL
 
-invariants:
+controls:
 
 # --- MAPPED ---
 
@@ -11,7 +11,7 @@ invariants:
   title: CloudTrail configuration changes monitored
   soc2_criteria: CC8.1
   mapped_to_existing: true
-  existing_invariant: CIS CTL.CLOUDWATCH.MONITOR.TRAIL.001
+  existing_control: CIS CTL.CLOUDWATCH.MONITOR.TRAIL.001
   note: >
     Metric filter detects CreateTrail, UpdateTrail, DeleteTrail,
     StopLogging — covered by CIS 4.5.
@@ -20,7 +20,7 @@ invariants:
   title: AWS Config detects configuration drift
   soc2_criteria: CC8.1
   mapped_to_existing: true
-  existing_invariant: CIS CTL.CONFIG.ENABLED.001, HIPAA CTL.CONFIG.RULES.001
+  existing_control: CIS CTL.CONFIG.ENABLED.001, HIPAA CTL.CONFIG.RULES.001
   note: >
     Config records all resource changes and evaluates rules —
     covered by CIS 3.3 and HIPAA §164.312(c)(1).
@@ -29,7 +29,7 @@ invariants:
   title: IAM policy changes monitored
   soc2_criteria: CC8.1
   mapped_to_existing: true
-  existing_invariant: CIS CTL.CLOUDWATCH.MONITOR.IAMPOLICY.001
+  existing_control: CIS CTL.CLOUDWATCH.MONITOR.IAMPOLICY.001
   note: >
     Metric filter detects CreatePolicy, DeletePolicy, AttachRolePolicy
     — covered by CIS 4.4.

@@ -1,7 +1,7 @@
-# CIS AWS Foundations Benchmark v3.0 — Invariant Catalog
+# CIS AWS Foundations Benchmark v3.0 — Control Catalog
 
 Complete mapping of CIS AWS Foundations Benchmark v3.0.0 to Stave
-invariant definitions. One YAML file per AWS service.
+control definitions. One YAML file per AWS service.
 
 ## Coverage
 

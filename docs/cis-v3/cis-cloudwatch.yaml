@@ -11,7 +11,7 @@
 # Asset type: aws_cloudwatch_monitoring_config
 # Property namespace: monitoring.*
 
-invariants:
+controls:
 
 - id: CIS.CLOUDWATCH.1
   title: Ensure unauthorized API calls are monitored

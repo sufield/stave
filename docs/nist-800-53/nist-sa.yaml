@@ -1,13 +1,13 @@
 # NIST SP 800-53 Rev 5 — SA: System and Services Acquisition
 # Summary: 3 controls — 1 MAPPED, 0 NEW, 2 MANUAL
 
-invariants:
+controls:
 
 - id: NIST.SA.1
   title: CloudFormation drift detection for configuration integrity
   nist_control: "SA-10"
   mapped_to_existing: true
-  existing_invariant: SOC2 CTL.CLOUDFORMATION.DRIFT.001
+  existing_control: SOC2 CTL.CLOUDFORMATION.DRIFT.001
   note: IaC integrity verification.
 
 - id: NIST.SA.2

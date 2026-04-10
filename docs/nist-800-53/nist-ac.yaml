@@ -1,97 +1,97 @@
 # NIST SP 800-53 Rev 5 — AC: Access Control
 # Summary: 15 controls — 13 MAPPED, 0 NEW, 2 MANUAL
 
-invariants:
+controls:
 
 - id: NIST.AC.1
   title: S3 Block Public Access enforced
   nist_control: "AC-3"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.S3.CONTROLS.001
+  existing_control: CIS CTL.S3.CONTROLS.001
   note: All four BPA flags enabled — enforces default-deny access.
 
 - id: NIST.AC.2
   title: S3 buckets not publicly readable
   nist_control: "AC-3"
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.S3.PUBLIC.001
+  existing_control: HIPAA CTL.S3.PUBLIC.001
   note: No public read access on any bucket.
 
 - id: NIST.AC.3
   title: RDS instances not publicly accessible
   nist_control: "AC-3"
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.RDS.PUBLIC.001
+  existing_control: HIPAA CTL.RDS.PUBLIC.001
   note: Database endpoints not reachable from internet.
 
 - id: NIST.AC.4
   title: EC2 instances must not have public IPs
   nist_control: "AC-3"
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.EC2.PUBLIC.001
+  existing_control: HIPAA CTL.EC2.PUBLIC.001
   note: CDE instances are VPC-internal only.
 
 - id: NIST.AC.5
   title: KMS key policies restrict access
   nist_control: "AC-3"
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.KMS.POLICY.001
+  existing_control: HIPAA CTL.KMS.POLICY.001
   note: No wildcard principal on key policies.
 
 - id: NIST.AC.6
   title: No full admin IAM policies
   nist_control: "AC-6"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.IAM.POLICY.ADMIN.001
+  existing_control: CIS CTL.IAM.POLICY.ADMIN.001
   note: No *:* wildcard admin access — least privilege.
 
 - id: NIST.AC.7
   title: Users receive permissions through groups only
   nist_control: "AC-6"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.IAM.POLICY.INLINE.001, CTL.IAM.POLICY.DIRECT.001
+  existing_control: CIS CTL.IAM.POLICY.INLINE.001, CTL.IAM.POLICY.DIRECT.001
   note: No inline or direct policies on individual users.
 
 - id: NIST.AC.8
   title: Security groups restrict admin port ingress
   nist_control: "AC-4"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.VPC.SG.UNRESTRICTED.001, CTL.VPC.SG.IPV6.001
+  existing_control: CIS CTL.VPC.SG.UNRESTRICTED.001, CTL.VPC.SG.IPV6.001
   note: No 0.0.0.0/0 or ::/0 to SSH/RDP.
 
 - id: NIST.AC.9
   title: Default security group restricts all traffic
   nist_control: "AC-4"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.VPC.SG.DEFAULT.001
+  existing_control: CIS CTL.VPC.SG.DEFAULT.001
   note: Default SG has no rules.
 
 - id: NIST.AC.10
   title: NACLs restrict admin port ingress
   nist_control: "AC-4"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.VPC.NACL.ADMIN.001
+  existing_control: CIS CTL.VPC.NACL.ADMIN.001
   note: No NACL allows internet to admin ports.
 
 - id: NIST.AC.11
   title: Unused credentials disabled
   nist_control: "AC-2"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.IAM.CRED.UNUSED.001
+  existing_control: CIS CTL.IAM.CRED.UNUSED.001
   note: Inactive credentials disabled within 90 days.
 
 - id: NIST.AC.12
   title: Root account not used for daily tasks
   nist_control: "AC-2"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.IAM.ROOT.USAGE.001
+  existing_control: CIS CTL.IAM.ROOT.USAGE.001
   note: Root last used > 90 days.
 
 - id: NIST.AC.13
   title: Secrets Manager rotation enabled
   nist_control: "AC-3"
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.SECRETSMANAGER.ACCESS.001
+  existing_control: HIPAA CTL.SECRETSMANAGER.ACCESS.001
   note: Automatic credential rotation prevents stale secrets.
 
 - id: NIST.AC.14

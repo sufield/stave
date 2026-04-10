@@ -1,0 +1,32 @@
+# NIST CSF 2.0 — Identify (ID)
+# Summary: 4 controls — 2 MAPPED, 0 NEW, 2 MANUAL
+
+controls:
+
+- id: CSF.ID.1
+  title: AWS Config as asset inventory
+  csf_function: "ID.AM"
+  mapped_to_existing: true
+  existing_control: CIS CTL.CONFIG.ENABLED.001
+  note: Config provides automated inventory of all AWS resources.
+
+- id: CSF.ID.2
+  title: IAM Access Analyzer for risk identification
+  csf_function: "ID.RA"
+  mapped_to_existing: true
+  existing_control: CIS CTL.IAM.ANALYZER.001
+  note: Identifies unintended external access to resources.
+
+- id: CSF.ID.3
+  title: Risk assessment performed
+  csf_function: "ID.RA"
+  manual: true
+  reason: Risk assessments require organizational threat modeling.
+  evidence_guidance: Annual risk assessment documenting cloud-specific threats and vulnerabilities.
+
+- id: CSF.ID.4
+  title: Improvement opportunities identified
+  csf_function: "ID.IM"
+  manual: true
+  reason: Improvement tracking is an organizational process.
+  evidence_guidance: Post-incident reviews and architecture improvement plans.

@@ -1,76 +1,76 @@
 # NIST SP 800-53 Rev 5 — AU: Audit and Accountability
 # Summary: 12 controls — 10 MAPPED, 0 NEW, 2 MANUAL
 
-invariants:
+controls:
 
 - id: NIST.AU.1
   title: CloudTrail enabled in all regions
   nist_control: "AU-2"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.CLOUDTRAIL.ENABLED.001
+  existing_control: CIS CTL.CLOUDTRAIL.ENABLED.001
   note: Multi-region trail for complete audit coverage.
 
 - id: NIST.AU.2
   title: CloudTrail log file validation
   nist_control: "AU-9"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.CLOUDTRAIL.VALIDATION.001
+  existing_control: CIS CTL.CLOUDTRAIL.VALIDATION.001
   note: Log integrity validation prevents tamper.
 
 - id: NIST.AU.3
   title: CloudTrail logs encrypted with KMS
   nist_control: "AU-9"
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.CLOUDTRAIL.ENCRYPT.001
+  existing_control: HIPAA CTL.CLOUDTRAIL.ENCRYPT.001
   note: Audit log encryption at rest.
 
 - id: NIST.AU.4
   title: S3 access logging enabled
   nist_control: "AU-2"
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.S3.LOG.001
+  existing_control: HIPAA CTL.S3.LOG.001
   note: Server access logging for data access audit trail.
 
 - id: NIST.AU.5
   title: S3 object-level CloudTrail events
   nist_control: "AU-3"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.CLOUDTRAIL.DATAWRITE.001, CTL.CLOUDTRAIL.DATAREAD.001
+  existing_control: CIS CTL.CLOUDTRAIL.DATAWRITE.001, CTL.CLOUDTRAIL.DATAREAD.001
   note: Object read/write events for detailed audit trail.
 
 - id: NIST.AU.6
   title: VPC flow logging enabled
   nist_control: "AU-2"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.VPC.FLOWLOG.001
+  existing_control: CIS CTL.VPC.FLOWLOG.001
   note: Network traffic metadata for security analysis.
 
 - id: NIST.AU.7
   title: CloudWatch monitoring alarms for security events
   nist_control: "AU-6"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.CLOUDWATCH.MONITOR.UNAUTH.001 (+ 14 others)
+  existing_control: CIS CTL.CLOUDWATCH.MONITOR.UNAUTH.001 (+ 14 others)
   note: All 15 CIS 4.x monitoring controls apply to NIST AU-6.
 
 - id: NIST.AU.8
   title: Log retention meets requirements
   nist_control: "AU-11"
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.CLOUDWATCH.RETENTION.001, PCI CTL.CLOUDWATCH.LOG.RETENTION365.001
+  existing_control: HIPAA CTL.CLOUDWATCH.RETENTION.001, PCI CTL.CLOUDWATCH.LOG.RETENTION365.001
   note: Retention policy set; 365-day minimum for PCI.
 
 - id: NIST.AU.9
   title: S3 MFA Delete for audit log protection
   nist_control: "AU-9"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.S3.MFADELETE.001
+  existing_control: CIS CTL.S3.MFADELETE.001
   note: MFA Delete prevents unauthorized permanent deletion.
 
 - id: NIST.AU.10
   title: CloudTrail S3 bucket access logging
   nist_control: "AU-9"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.CLOUDTRAIL.S3LOG.001
+  existing_control: CIS CTL.CLOUDTRAIL.S3LOG.001
   note: Audit log storage access is itself auditable.
 
 - id: NIST.AU.11

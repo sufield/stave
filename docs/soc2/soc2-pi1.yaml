@@ -3,7 +3,7 @@
 #
 # Summary: 5 controls — 2 MAPPED, 1 NEW, 2 MANUAL
 
-invariants:
+controls:
 
 # --- MAPPED ---
 
@@ -11,7 +11,7 @@ invariants:
   title: CloudTrail data event logging for S3 objects
   soc2_criteria: PI1.1
   mapped_to_existing: true
-  existing_invariant: CIS CTL.CLOUDTRAIL.DATAWRITE.001, CTL.CLOUDTRAIL.DATAREAD.001
+  existing_control: CIS CTL.CLOUDTRAIL.DATAWRITE.001, CTL.CLOUDTRAIL.DATAREAD.001
   note: >
     Object-level read and write logging provides processing audit
     trail — covered by CIS 3.8 and 3.9.
@@ -20,7 +20,7 @@ invariants:
   title: SQS queue encryption for data in transit
   soc2_criteria: PI1.1
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.SQS.ENCRYPT.001
+  existing_control: HIPAA CTL.SQS.ENCRYPT.001
   note: >
     Queue encryption protects message integrity — covered by
     HIPAA §164.312(a)(2)(iv).

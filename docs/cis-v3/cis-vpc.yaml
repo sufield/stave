@@ -1,7 +1,7 @@
 # CIS AWS Foundations Benchmark v3.0 — VPC
 # 5 automatable + 1 MANUAL + 1 cross-service (KMS)
 
-invariants:
+controls:
 
 - id: CIS.VPC.1
   title: Ensure rotation for customer-created symmetric CMKs is enabled

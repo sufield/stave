@@ -1,13 +1,13 @@
 # PCI-DSS v4.0 — Requirement 7: Restrict Access by Business Need
 # Summary: 5 controls — 5 MAPPED, 0 NEW, 0 MANUAL
 
-invariants:
+controls:
 
 - id: PCI.7.1
   title: No full admin IAM policies attached
   pci_requirement: "7.2.1"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.IAM.POLICY.ADMIN.001
+  existing_control: CIS CTL.IAM.POLICY.ADMIN.001
   note: >
     No *:* wildcard admin access — covered by CIS 1.16.
 
@@ -15,7 +15,7 @@ invariants:
   title: IAM users must receive permissions through groups only
   pci_requirement: "7.2.2"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.IAM.POLICY.INLINE.001, CTL.IAM.POLICY.DIRECT.001
+  existing_control: CIS CTL.IAM.POLICY.INLINE.001, CTL.IAM.POLICY.DIRECT.001
   note: >
     No inline or direct policies on users — covered by CIS 1.15.
 
@@ -23,7 +23,7 @@ invariants:
   title: S3 buckets must not be publicly readable
   pci_requirement: "7.2.1"
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.S3.PUBLIC.001
+  existing_control: HIPAA CTL.S3.PUBLIC.001
   note: >
     No public read access — covered by HIPAA §164.312(a)(1).
 
@@ -31,7 +31,7 @@ invariants:
   title: RDS instances must not be publicly accessible
   pci_requirement: "7.2.1"
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.RDS.PUBLIC.001
+  existing_control: HIPAA CTL.RDS.PUBLIC.001
   note: >
     No public database access — covered by HIPAA and CIS 2.3.3.
 
@@ -39,6 +39,6 @@ invariants:
   title: KMS key policies must restrict access
   pci_requirement: "7.2.1"
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.KMS.POLICY.001
+  existing_control: HIPAA CTL.KMS.POLICY.001
   note: >
     No wildcard principal on key policies — covered by HIPAA.

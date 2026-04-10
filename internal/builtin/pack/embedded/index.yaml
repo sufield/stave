@@ -369,6 +369,20 @@ packs:
       - CTL.GUARDDUTY.ENABLED.001
       - CTL.SECURITYHUB.ENABLED.001
       - CTL.IAM.ANALYZER.001
+  nist_csf_2.0:
+    description: NIST Cybersecurity Framework v2.0 controls
+    controls:
+      - CTL.IAM.ROOT.MFA.001
+      - CTL.IAM.CONSOLE.MFA.001
+      - CTL.IAM.POLICY.ADMIN.001
+      - CTL.S3.ENCRYPT.001
+      - CTL.S3.CONTROLS.001
+      - CTL.CLOUDTRAIL.ENABLED.001
+      - CTL.GUARDDUTY.ENABLED.001
+      - CTL.SECURITYHUB.ENABLED.001
+      - CTL.CONFIG.ENABLED.001
+      - CTL.BACKUP.EXISTS.001
+      - CTL.RDS.MULTIAZ.001
   vpc:
     description: AWS VPC network security controls
     controls:

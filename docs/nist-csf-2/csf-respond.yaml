@@ -1,0 +1,25 @@
+# NIST CSF 2.0 — Respond (RS)
+# Summary: 3 controls — 0 MAPPED, 0 NEW, 3 MANUAL
+
+controls:
+
+- id: CSF.RS.1
+  title: Incident management plan
+  csf_function: "RS.MA"
+  manual: true
+  reason: Incident response plans are organizational documents.
+  evidence_guidance: Written IR plan with roles, procedures, and annual testing evidence.
+
+- id: CSF.RS.2
+  title: Root cause analysis capability
+  csf_function: "RS.AN"
+  manual: true
+  reason: Investigation procedures are organizational processes (though CloudTrail provides the data).
+  evidence_guidance: Documented investigation procedures and post-incident review templates.
+
+- id: CSF.RS.3
+  title: Incident reporting and communication
+  csf_function: "RS.CO"
+  manual: true
+  reason: Stakeholder communication is an organizational process.
+  evidence_guidance: Communication plan with notification timelines for internal/external stakeholders.

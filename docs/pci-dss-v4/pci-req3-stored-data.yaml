@@ -1,13 +1,13 @@
 # PCI-DSS v4.0 — Requirement 3: Protect Stored Account Data
 # Summary: 6 controls — 5 MAPPED, 1 NEW, 0 MANUAL
 
-invariants:
+controls:
 
 - id: PCI.3.1
   title: S3 buckets must be encrypted at rest with KMS
   pci_requirement: "3.4.1"
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.S3.ENCRYPT.001, CTL.S3.ENCRYPT.003
+  existing_control: HIPAA CTL.S3.ENCRYPT.001, CTL.S3.ENCRYPT.003
   note: >
     SSE enabled (ENCRYPT.001) and KMS CMK required (ENCRYPT.003) —
     covered by HIPAA §164.312(a)(2)(iv).
@@ -16,7 +16,7 @@ invariants:
   title: RDS storage encryption must be enabled
   pci_requirement: "3.4.1"
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.RDS.ENCRYPT.001
+  existing_control: HIPAA CTL.RDS.ENCRYPT.001
   note: >
     Storage encryption at rest — covered by HIPAA and CIS 2.3.1.
 
@@ -24,7 +24,7 @@ invariants:
   title: EBS volumes must be encrypted
   pci_requirement: "3.4.1"
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.EC2.EBS.ENCRYPT.001
+  existing_control: HIPAA CTL.EC2.EBS.ENCRYPT.001
   note: >
     EBS encryption by default — covered by HIPAA and CIS 2.2.1.
 
@@ -32,7 +32,7 @@ invariants:
   title: KMS key rotation must be enabled
   pci_requirement: "3.6.1"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.KMS.ROTATION.001
+  existing_control: CIS CTL.KMS.ROTATION.001
   note: >
     Automatic key rotation — covered by CIS 3.6.
 
@@ -40,7 +40,7 @@ invariants:
   title: Secrets Manager must use customer-managed KMS key
   pci_requirement: "3.4.1"
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.SECRETSMANAGER.ENCRYPT.001
+  existing_control: HIPAA CTL.SECRETSMANAGER.ENCRYPT.001
   note: >
     CMK for key custody during breach response — covered by HIPAA.
 

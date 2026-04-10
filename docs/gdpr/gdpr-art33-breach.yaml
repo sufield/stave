@@ -1,20 +1,20 @@
 # GDPR — Articles 33 & 34: Personal Data Breach Notification
 # Summary: 5 controls — 2 MAPPED, 0 NEW, 3 MANUAL
 
-invariants:
+controls:
 
 - id: GDPR.33.1
   title: GuardDuty for breach detection
   gdpr_article: "Art.33(1)"
   mapped_to_existing: true
-  existing_invariant: SOC2 CTL.GUARDDUTY.ENABLED.001
+  existing_control: SOC2 CTL.GUARDDUTY.ENABLED.001
   note: Threat detection to identify breaches.
 
 - id: GDPR.33.2
   title: CloudWatch monitoring for anomaly detection
   gdpr_article: "Art.33(1)"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.CLOUDWATCH.MONITOR.UNAUTH.001, CTL.CLOUDWATCH.MONITOR.ROOT.001
+  existing_control: CIS CTL.CLOUDWATCH.MONITOR.UNAUTH.001, CTL.CLOUDWATCH.MONITOR.ROOT.001
   note: Automated alerting for unauthorized access patterns.
 
 - id: GDPR.33.3

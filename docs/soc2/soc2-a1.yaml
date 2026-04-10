@@ -3,7 +3,7 @@
 #
 # Summary: 8 controls — 5 MAPPED, 2 NEW, 1 MANUAL
 
-invariants:
+controls:
 
 # --- MAPPED ---
 
@@ -11,7 +11,7 @@ invariants:
   title: RDS instances deployed in Multi-AZ
   soc2_criteria: A1.2
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.RDS.MULTIAZ.001
+  existing_control: HIPAA CTL.RDS.MULTIAZ.001
   note: >
     Multi-AZ provides automatic failover for database availability —
     covered by HIPAA §164.308(a)(7).
@@ -20,7 +20,7 @@ invariants:
   title: RDS automated backups enabled with retention
   soc2_criteria: A1.2
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.RDS.BACKUP.001
+  existing_control: HIPAA CTL.RDS.BACKUP.001
   note: >
     Automated backups enable point-in-time recovery — covered by
     HIPAA §164.308(a)(7).
@@ -29,7 +29,7 @@ invariants:
   title: Critical resources have backups
   soc2_criteria: A1.2
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.BACKUP.EXISTS.001, CTL.BACKUP.RECENT.001
+  existing_control: HIPAA CTL.BACKUP.EXISTS.001, CTL.BACKUP.RECENT.001
   note: >
     Backup existence and recency verified — covered by
     HIPAA §164.308(a)(7).
@@ -38,7 +38,7 @@ invariants:
   title: Cross-region replication for disaster recovery
   soc2_criteria: A1.2
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.BACKUP.REPLICATION.001
+  existing_control: HIPAA CTL.BACKUP.REPLICATION.001
   note: >
     Regional outage protection via cross-region replication —
     covered by HIPAA §164.308(a)(7).
@@ -47,7 +47,7 @@ invariants:
   title: ELB cross-zone load balancing enabled
   soc2_criteria: A1.1
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.ELB.CROSSZONE.001
+  existing_control: HIPAA CTL.ELB.CROSSZONE.001
   note: >
     Cross-zone distributes traffic evenly across AZs —
     covered by HIPAA §164.308(a)(7).

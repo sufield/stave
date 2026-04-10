@@ -2,20 +2,20 @@
 # A.8.10 (Information Deletion), A.8.11 (Data Masking), A.8.12 (DLP)
 # Summary: 5 controls — 2 MAPPED, 0 NEW, 3 MANUAL
 
-invariants:
+controls:
 
 - id: ISO.8.10.1
   title: S3 lifecycle rules for data deletion
   annex_a: "A.8.10"
   mapped_to_existing: true
-  existing_invariant: SOC2 CTL.S3.LIFECYCLE.001
+  existing_control: SOC2 CTL.S3.LIFECYCLE.001
   note: Automated data deletion via lifecycle policies.
 
 - id: ISO.8.10.2
   title: S3 Object Lock for retention
   annex_a: "A.8.10"
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.S3.LOCK.001
+  existing_control: HIPAA CTL.S3.LOCK.001
   note: Controlled deletion with retention enforcement.
 
 - id: ISO.8.11.1

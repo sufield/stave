@@ -1,7 +1,7 @@
 # FFIEC — Governance, External Dependencies, and Examiner Access
 # Summary: 11 controls — 0 MAPPED, 0 NEW, 11 MANUAL
 
-invariants:
+controls:
 
 # External Dependency Management
 - id: FFIEC.GOV.1

@@ -222,14 +222,30 @@ These terms are final. The renames are done. Use the canonical term.
 
 Stave is NOT a cloud tool. It is a **policy evaluation engine for JSON-represented infrastructure**. The engine knows nothing about AWS, GCP, Azure, or any specific cloud service. It evaluates predicates against `properties.*` paths on assets with open-ended `type` and `vendor` strings.
 
-### Proven with zero engine changes
+### Proven with zero engine changes — 185 controls, 26 domains, 5 vendors
 
-| Domain | Controls | Asset Types | Vendors |
-|---|---|---|---|
-| S3 (storage) | 53 | `aws_s3_bucket`, `s3_bucket_reference`, `s3_upload_policy` | aws |
-| IAM (identity) | 11 | `aws_iam_account`, `aws_iam_user`, `aws_iam_password_policy` | aws |
-| GCS (storage) | 7 | `gcp_gcs_bucket` | gcp |
-| DNS (takeover) | 3 | `dns_record` | any |
+10 compliance framework profiles, all implemented via YAML controls + compliance tags:
+
+| Profile | Framework | Tagged Controls |
+|---|---|---|
+| `--profile hipaa` | HIPAA §164.312 | 64 |
+| `--profile cis-aws-v3.0` | CIS AWS Foundations v3.0 | 56 |
+| `--profile soc2` | SOC 2 Trust Service Criteria | 101 |
+| `--profile pci-dss-v4.0` | PCI-DSS v4.0 | 57 |
+| `--profile nist-800-53` | NIST SP 800-53 Rev 5 | 57 |
+| `--profile fedramp` | FedRAMP Moderate | 58 |
+| `--profile gdpr` | GDPR | 36 |
+| `--profile ffiec` | FFIEC | 29 |
+| `--profile iso-27001` | ISO 27001:2022 | 24 |
+| `--profile nist-csf-2.0` | NIST CSF 2.0 | 20 |
+
+### Terminology
+
+Use "controls" everywhere. Never use "invariants" for security controls.
+The compliance catalog files (`docs/{framework}/`) use `controls:` as the
+top-level YAML key, `existing_control:` for mapped entries. The term
+"invariant" is only used in the Go code sense (type invariants at
+construction time via `NewControlID`, `NewDigest`, etc.).
 
 ### Adding a new domain requires
 

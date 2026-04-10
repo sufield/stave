@@ -1,48 +1,48 @@
 # FFIEC — Resilience and Business Continuity (BCP Handbook)
 # Summary: 8 controls — 6 MAPPED, 0 NEW, 2 MANUAL
 
-invariants:
+controls:
 
 - id: FFIEC.BCP.1
   title: RDS Multi-AZ deployment
   ffiec_reference: "BCP-4.1"
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.RDS.MULTIAZ.001
+  existing_control: HIPAA CTL.RDS.MULTIAZ.001
   note: No single point of failure for databases.
 
 - id: FFIEC.BCP.2
   title: RDS automated backups
   ffiec_reference: "BCP-4.2"
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.RDS.BACKUP.001
+  existing_control: HIPAA CTL.RDS.BACKUP.001
   note: Point-in-time recovery for financial data.
 
 - id: FFIEC.BCP.3
   title: Backup resources exist and are recent
   ffiec_reference: "BCP-4.2"
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.BACKUP.EXISTS.001, CTL.BACKUP.RECENT.001
+  existing_control: HIPAA CTL.BACKUP.EXISTS.001, CTL.BACKUP.RECENT.001
   note: Regular backups verified.
 
 - id: FFIEC.BCP.4
   title: Cross-region replication
   ffiec_reference: "BCP-4.3"
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.BACKUP.REPLICATION.001
+  existing_control: HIPAA CTL.BACKUP.REPLICATION.001
   note: Geographic redundancy.
 
 - id: FFIEC.BCP.5
   title: Backup encryption (ransomware protection)
   ffiec_reference: "BCP-4.2"
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.BACKUP.ENCRYPT.001
+  existing_control: HIPAA CTL.BACKUP.ENCRYPT.001
   note: Encrypted backups protect against exfiltration.
 
 - id: FFIEC.BCP.6
   title: S3 MFA Delete (immutable backups)
   ffiec_reference: "BCP-4.2"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.S3.MFADELETE.001
+  existing_control: CIS CTL.S3.MFADELETE.001
   note: Prevents unauthorized permanent deletion.
 
 - id: FFIEC.BCP.7

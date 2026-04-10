@@ -1,0 +1,39 @@
+# NIST CSF 2.0 — Recover (RC)
+# Summary: 5 controls — 4 MAPPED, 0 NEW, 1 MANUAL
+
+controls:
+
+- id: CSF.RC.1
+  title: RDS Multi-AZ for failover
+  csf_function: "RC.RP"
+  mapped_to_existing: true
+  existing_control: HIPAA CTL.RDS.MULTIAZ.001
+  note: Database resilience and automatic failover.
+
+- id: CSF.RC.2
+  title: Backup existence and recency
+  csf_function: "RC.RP"
+  mapped_to_existing: true
+  existing_control: HIPAA CTL.BACKUP.EXISTS.001, CTL.BACKUP.RECENT.001
+  note: Recovery point verified.
+
+- id: CSF.RC.3
+  title: Cross-region replication
+  csf_function: "RC.RP"
+  mapped_to_existing: true
+  existing_control: HIPAA CTL.BACKUP.REPLICATION.001
+  note: Geographic redundancy for disaster recovery.
+
+- id: CSF.RC.4
+  title: ELB cross-zone balancing
+  csf_function: "RC.RP"
+  mapped_to_existing: true
+  existing_control: HIPAA CTL.ELB.CROSSZONE.001
+  note: Service availability during AZ failures.
+
+- id: CSF.RC.5
+  title: Recovery communication and testing
+  csf_function: "RC.CO"
+  manual: true
+  reason: Recovery communication and DR testing are organizational processes.
+  evidence_guidance: DR test results and recovery communication plan.

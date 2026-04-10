@@ -3,7 +3,7 @@
 #
 # Summary: 8 controls — 7 MAPPED, 0 NEW, 1 MANUAL
 
-invariants:
+controls:
 
 # --- MAPPED ---
 
@@ -11,7 +11,7 @@ invariants:
   title: S3 buckets encrypted at rest
   soc2_criteria: C1.1
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.S3.ENCRYPT.001
+  existing_control: HIPAA CTL.S3.ENCRYPT.001
   note: >
     SSE enabled on all S3 buckets — covered by HIPAA §164.312(a)(2)(iv).
 
@@ -19,7 +19,7 @@ invariants:
   title: S3 bucket policy enforces TLS
   soc2_criteria: C1.1
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.S3.ENCRYPT.002
+  existing_control: HIPAA CTL.S3.ENCRYPT.002
   note: >
     Deny statement for aws:SecureTransport=false — covered by
     HIPAA §164.312(e)(2)(ii) and CIS 2.1.1.
@@ -28,7 +28,7 @@ invariants:
   title: RDS storage encryption enabled
   soc2_criteria: C1.1
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.RDS.ENCRYPT.001
+  existing_control: HIPAA CTL.RDS.ENCRYPT.001
   note: >
     Storage encryption at rest — covered by HIPAA §164.312(a)(2)(iv)
     and CIS 2.3.1.
@@ -37,7 +37,7 @@ invariants:
   title: EBS volumes encrypted
   soc2_criteria: C1.1
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.EC2.EBS.ENCRYPT.001
+  existing_control: HIPAA CTL.EC2.EBS.ENCRYPT.001
   note: >
     EBS encryption by default — covered by HIPAA §164.312(a)(2)(iv)
     and CIS 2.2.1.
@@ -46,7 +46,7 @@ invariants:
   title: KMS customer-managed key rotation enabled
   soc2_criteria: C1.1
   mapped_to_existing: true
-  existing_invariant: CIS CTL.KMS.ROTATION.001
+  existing_control: CIS CTL.KMS.ROTATION.001
   note: >
     Automatic key rotation limits blast radius — covered by CIS 3.6.
 
@@ -54,7 +54,7 @@ invariants:
   title: Secrets Manager secrets encrypted with CMK
   soc2_criteria: C1.1
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.SECRETSMANAGER.ENCRYPT.001
+  existing_control: HIPAA CTL.SECRETSMANAGER.ENCRYPT.001
   note: >
     Customer-managed KMS key for breach response key revocation —
     covered by HIPAA §164.312(a)(2)(iv).
@@ -63,7 +63,7 @@ invariants:
   title: S3 Object Lock for data retention
   soc2_criteria: C1.2
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.S3.LOCK.001
+  existing_control: HIPAA CTL.S3.LOCK.001
   note: >
     Object Lock prevents deletion during retention period —
     covered by HIPAA §164.316(b)(2).

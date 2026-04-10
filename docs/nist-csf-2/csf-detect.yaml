@@ -1,0 +1,46 @@
+# NIST CSF 2.0 — Detect (DE)
+# Summary: 6 controls — 5 MAPPED, 0 NEW, 1 MANUAL
+
+controls:
+
+- id: CSF.DE.1
+  title: CloudTrail enabled for API monitoring
+  csf_function: "DE.CM"
+  mapped_to_existing: true
+  existing_control: CIS CTL.CLOUDTRAIL.ENABLED.001
+  note: Continuous monitoring of API activity.
+
+- id: CSF.DE.2
+  title: GuardDuty for threat detection
+  csf_function: "DE.CM"
+  mapped_to_existing: true
+  existing_control: SOC2 CTL.GUARDDUTY.ENABLED.001
+  note: Anomalous behavior detection.
+
+- id: CSF.DE.3
+  title: Security Hub for findings aggregation
+  csf_function: "DE.CM"
+  mapped_to_existing: true
+  existing_control: SOC2 CTL.SECURITYHUB.ENABLED.001
+  note: Centralized security event analysis.
+
+- id: CSF.DE.4
+  title: CloudWatch monitoring alarms
+  csf_function: "DE.CM"
+  mapped_to_existing: true
+  existing_control: CIS CTL.CLOUDWATCH.MONITOR.UNAUTH.001 (+ 14 others)
+  note: Automated anomaly detection and alerting.
+
+- id: CSF.DE.5
+  title: VPC flow logging
+  csf_function: "DE.CM"
+  mapped_to_existing: true
+  existing_control: CIS CTL.VPC.FLOWLOG.001
+  note: Network traffic monitoring.
+
+- id: CSF.DE.6
+  title: Adverse event analysis procedures
+  csf_function: "DE.AE"
+  manual: true
+  reason: Event analysis and triage is an organizational process.
+  evidence_guidance: Documented event analysis procedures and escalation criteria.

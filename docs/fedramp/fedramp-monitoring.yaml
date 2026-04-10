@@ -1,14 +1,14 @@
 # FedRAMP — Continuous Monitoring (ConMon) Requirements
 # Summary: 8 controls — 3 MAPPED, 0 NEW, 5 MANUAL
 
-invariants:
+controls:
 
 - id: FEDRAMP.CONMON.1
   title: Security Hub enabled for findings aggregation
   fedramp_control: "CA-7"
   baseline: moderate
   mapped_to_existing: true
-  existing_invariant: SOC2 CTL.SECURITYHUB.ENABLED.001
+  existing_control: SOC2 CTL.SECURITYHUB.ENABLED.001
   note: Centralized security findings for ConMon reporting.
 
 - id: FEDRAMP.CONMON.2
@@ -16,7 +16,7 @@ invariants:
   fedramp_control: "SI-4"
   baseline: moderate
   mapped_to_existing: true
-  existing_invariant: CIS CTL.CLOUDWATCH.MONITOR.* (15 controls)
+  existing_control: CIS CTL.CLOUDWATCH.MONITOR.* (15 controls)
   note: Automated security event detection.
 
 - id: FEDRAMP.CONMON.3
@@ -24,7 +24,7 @@ invariants:
   fedramp_control: "CA-7"
   baseline: moderate
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.CONFIG.RULES.001
+  existing_control: HIPAA CTL.CONFIG.RULES.001
   note: Automated configuration compliance checks.
 
 - id: FEDRAMP.CONMON.4

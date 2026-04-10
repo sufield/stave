@@ -1,7 +1,7 @@
 # PCI-DSS v4.0 — Requirement 12: Support Information Security with Policies
 # Summary: 4 controls — 0 MAPPED, 0 NEW, 4 MANUAL
 
-invariants:
+controls:
 
 - id: PCI.12.1
   title: Information security policy maintained

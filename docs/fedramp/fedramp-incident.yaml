@@ -1,14 +1,14 @@
 # FedRAMP — Incident Response and Authorization Boundary
 # Summary: 7 controls — 1 MAPPED, 0 NEW, 6 MANUAL
 
-invariants:
+controls:
 
 - id: FEDRAMP.IR.1
   title: CloudTrail for incident investigation
   fedramp_control: "IR-6"
   baseline: moderate
   mapped_to_existing: true
-  existing_invariant: NIST CTL.CLOUDTRAIL.ENABLED.001
+  existing_control: NIST CTL.CLOUDTRAIL.ENABLED.001
   note: Complete audit trail for forensic investigation.
 
 - id: FEDRAMP.IR.2

@@ -2,7 +2,7 @@
 # Summary: 10 controls — 0 MAPPED, 0 NEW, 10 MANUAL
 # These are entirely organizational/application-level requirements.
 
-invariants:
+controls:
 
 # Chapter III — Data Subject Rights
 - id: GDPR.RIGHTS.1
