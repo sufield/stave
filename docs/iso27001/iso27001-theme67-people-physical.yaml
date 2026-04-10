@@ -1,0 +1,48 @@
+# ISO 27001:2022 — Theme 6 (People) & Theme 7 (Physical) Controls
+# Summary: 6 controls — 0 MAPPED, 0 NEW, 6 MANUAL
+
+invariants:
+
+# Theme 6 — People Controls
+- id: ISO.6.3.1
+  title: Security awareness training
+  annex_a: "A.6.3"
+  manual: true
+  reason: Training is an HR/organizational process.
+  evidence_guidance: Annual security awareness training records with completion rates.
+
+- id: ISO.6.6.1
+  title: Confidentiality agreements
+  annex_a: "A.6.6"
+  manual: true
+  reason: NDAs are contractual documents.
+  evidence_guidance: Signed NDAs for all personnel with access to information assets.
+
+- id: ISO.6.1.1
+  title: Personnel screening
+  annex_a: "A.6.1"
+  manual: true
+  reason: Background checks are HR processes.
+  evidence_guidance: Background investigation records for personnel with system access.
+
+- id: ISO.6.5.1
+  title: Termination responsibilities
+  annex_a: "A.6.5"
+  manual: true
+  reason: Offboarding procedures are HR processes (though CTL.IAM.CRED.UNUSED.001 detects stale accounts).
+  evidence_guidance: Documented termination checklist including access revocation within 24 hours.
+
+# Theme 7 — Physical Controls
+- id: ISO.7.10.1
+  title: Storage media lifecycle management
+  annex_a: "A.7.10"
+  manual: true
+  reason: AWS manages physical media under shared responsibility. Customer manages EBS snapshots and S3 lifecycle (covered by existing controls).
+  evidence_guidance: Reference AWS SOC 2 report for physical media controls. For virtual media, reference S3 lifecycle and EBS snapshot controls.
+
+- id: ISO.7.9.1
+  title: Security of assets off-premises
+  annex_a: "A.7.9"
+  manual: true
+  reason: Laptop and device security policies are organizational.
+  evidence_guidance: Endpoint security policy, device encryption requirements, and mobile device management evidence.

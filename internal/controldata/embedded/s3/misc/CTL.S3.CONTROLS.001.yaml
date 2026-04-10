@@ -18,6 +18,7 @@ compliance:
   fedramp_moderate: "AC-3"
   gdpr: "Art.32"
   ffiec: "ISH-4"
+  iso_27001_2022: "A.8.3"
 scope_tags:
   - aws
   - s3

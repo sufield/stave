@@ -17,6 +17,7 @@ compliance:
   fedramp_moderate: "AC-6"
   gdpr: "Art.32"
   ffiec: "CAT-D3"
+  iso_27001_2022: "A.8.2"
 scope_tags:
   - aws
   - iam

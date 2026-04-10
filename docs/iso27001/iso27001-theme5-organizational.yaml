@@ -1,0 +1,74 @@
+# ISO 27001:2022 — Theme 5: Organizational Controls
+# Summary: 10 controls — 2 MAPPED, 0 NEW, 8 MANUAL
+
+invariants:
+
+- id: ISO.5.9.1
+  title: AWS Config as asset inventory
+  annex_a: "A.5.9"
+  mapped_to_existing: true
+  existing_invariant: CIS CTL.CONFIG.ENABLED.001
+  note: Config provides automated inventory of AWS resources.
+
+- id: ISO.5.24.1
+  title: CloudTrail and monitoring for incident detection
+  annex_a: "A.5.24"
+  mapped_to_existing: true
+  existing_invariant: CIS CTL.CLOUDTRAIL.ENABLED.001, CIS CTL.CLOUDWATCH.MONITOR.UNAUTH.001
+  note: Incident identification via audit logging and alerts.
+
+- id: ISO.5.1.1
+  title: Information security policy defined
+  annex_a: "A.5.1"
+  manual: true
+  reason: Policies are organizational documents requiring management approval.
+  evidence_guidance: Written information security policy reviewed and approved annually by management.
+
+- id: ISO.5.9.2
+  title: Asset inventory maintained
+  annex_a: "A.5.9"
+  manual: true
+  reason: While Config provides technical inventory, organizational asset classification requires human input.
+  evidence_guidance: Asset register linking AWS resources to data classification, ownership, and business purpose.
+
+- id: ISO.5.10.1
+  title: Acceptable use policy
+  annex_a: "A.5.10"
+  manual: true
+  reason: Acceptable use rules are organizational documents.
+  evidence_guidance: Documented acceptable use policy communicated to all personnel.
+
+- id: ISO.5.21.1
+  title: Cloud provider risk management
+  annex_a: "A.5.21"
+  manual: true
+  reason: Vendor risk assessment is an organizational process.
+  evidence_guidance: AWS risk assessment, SOC 2 report review, and documented acceptance of shared responsibility.
+
+- id: ISO.5.24.2
+  title: Incident management procedures
+  annex_a: "A.5.24"
+  manual: true
+  reason: IR procedures are organizational documents.
+  evidence_guidance: Documented incident response plan with roles, escalation paths, and annual testing evidence.
+
+- id: ISO.5.31.1
+  title: Legal and regulatory requirements identified
+  annex_a: "A.5.31"
+  manual: true
+  reason: Legal compliance mapping is an organizational exercise.
+  evidence_guidance: Register of applicable legal, regulatory, and contractual requirements.
+
+- id: ISO.5.35.1
+  title: Independent review of information security
+  annex_a: "A.5.35"
+  manual: true
+  reason: Independent review requires external assessment.
+  evidence_guidance: Internal audit report or third-party assessment from the last 12 months.
+
+- id: ISO.5.36.1
+  title: Compliance with policies reviewed
+  annex_a: "A.5.36"
+  manual: true
+  reason: Manager compliance reviews are organizational processes.
+  evidence_guidance: Periodic management review records showing policy compliance verification.

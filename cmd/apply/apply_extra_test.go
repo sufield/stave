@@ -35,6 +35,7 @@ func TestParseProfile_Valid(t *testing.T) {
 		{"fedramp", ProfileFedRAMP},
 		{"gdpr", ProfileGDPR},
 		{"ffiec", ProfileFFIEC},
+		{"iso-27001", ProfileISO27001},
 	}
 	for _, tt := range tests {
 		got, err := ParseProfile(tt.input)
@@ -400,6 +401,7 @@ func TestProfileControlDomain(t *testing.T) {
 		{ProfileFedRAMP, ""},
 		{ProfileGDPR, ""},
 		{ProfileFFIEC, ""},
+		{ProfileISO27001, ""},
 	}
 	for _, tt := range tests {
 		got := profileControlDomain(tt.prof)
@@ -425,6 +427,7 @@ func TestProfileComplianceFramework(t *testing.T) {
 		{ProfileFedRAMP, "fedramp_moderate"},
 		{ProfileGDPR, "gdpr"},
 		{ProfileFFIEC, "ffiec"},
+		{ProfileISO27001, "iso_27001_2022"},
 	}
 	for _, tt := range tests {
 		got := profileComplianceFramework(tt.prof)

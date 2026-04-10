@@ -12,6 +12,7 @@ compliance:
   fedramp_moderate: "SI-4"
   gdpr: "Art.32"
   ffiec: "CAT-D3"
+  iso_27001_2022: "A.8.16"
 scope_tags:
   - aws
   - securityhub
