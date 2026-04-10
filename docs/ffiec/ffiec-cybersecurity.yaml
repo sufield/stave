@@ -1,0 +1,60 @@
+# FFIEC — Cybersecurity Controls (CAT Domain 3)
+# Summary: 8 controls — 6 MAPPED, 0 NEW, 2 MANUAL
+
+invariants:
+
+- id: FFIEC.CYBER.1
+  title: AWS Config recording all resources (asset inventory)
+  ffiec_reference: "CAT-D3.DC.IM.B.1"
+  mapped_to_existing: true
+  existing_invariant: CIS CTL.CONFIG.ENABLED.001
+  note: Current inventory of cloud assets.
+
+- id: FFIEC.CYBER.2
+  title: Config rules for compliance monitoring
+  ffiec_reference: "CAT-D3.DC.IM.B.2"
+  mapped_to_existing: true
+  existing_invariant: HIPAA CTL.CONFIG.RULES.001
+  note: Continuous configuration compliance.
+
+- id: FFIEC.CYBER.3
+  title: GuardDuty enabled
+  ffiec_reference: "CAT-D3.DC.TVM.B.1"
+  mapped_to_existing: true
+  existing_invariant: SOC2 CTL.GUARDDUTY.ENABLED.001
+  note: Continuous threat detection.
+
+- id: FFIEC.CYBER.4
+  title: Security Hub enabled
+  ffiec_reference: "CAT-D3.DC.TVM.B.1"
+  mapped_to_existing: true
+  existing_invariant: SOC2 CTL.SECURITYHUB.ENABLED.001
+  note: Aggregated security findings.
+
+- id: FFIEC.CYBER.5
+  title: CloudWatch monitoring alarms
+  ffiec_reference: "CAT-D3.DC.TVM.B.2"
+  mapped_to_existing: true
+  existing_invariant: CIS CTL.CLOUDWATCH.MONITOR.UNAUTH.001 (+ 14 others)
+  note: Automated security event detection.
+
+- id: FFIEC.CYBER.6
+  title: IAM Access Analyzer enabled
+  ffiec_reference: "CAT-D3.DC.TVM.B.1"
+  mapped_to_existing: true
+  existing_invariant: CIS CTL.IAM.ANALYZER.001
+  note: External access detection.
+
+- id: FFIEC.CYBER.7
+  title: Vulnerability scanning performed regularly
+  ffiec_reference: "CAT-D3.DC.TVM.B.3"
+  manual: true
+  reason: Scan execution is a runtime activity.
+  evidence_guidance: Monthly scan reports with remediation timelines by risk level.
+
+- id: FFIEC.CYBER.8
+  title: CIS benchmark compliance baseline
+  ffiec_reference: "CAT-D3.DC.IM.B.2"
+  manual: true
+  reason: Benchmark selection and baseline definition is an organizational decision.
+  evidence_guidance: Documentation of adopted CIS benchmark version and evidence of compliance via Stave CIS profile.

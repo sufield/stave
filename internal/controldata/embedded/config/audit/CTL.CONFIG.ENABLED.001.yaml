@@ -16,6 +16,7 @@ compliance:
   nist_800_53_r5: "CM-2"
   fedramp_moderate: "CM-2"
   gdpr: "Art.30"
+  ffiec: "CAT-D3"
 scope_tags:
   - aws
   - config

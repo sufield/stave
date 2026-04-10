@@ -1,0 +1,87 @@
+# FFIEC — Governance, External Dependencies, and Examiner Access
+# Summary: 11 controls — 0 MAPPED, 0 NEW, 11 MANUAL
+
+invariants:
+
+# External Dependency Management
+- id: FFIEC.GOV.1
+  title: Cloud provider audit rights maintained
+  ffiec_reference: "OTS-3.1"
+  manual: true
+  reason: Audit rights are contractual provisions.
+  evidence_guidance: AWS SOC 2 reports and ISO 27001 certificates (via AWS Artifact).
+
+- id: FFIEC.GOV.2
+  title: SLA monitoring and reporting
+  ffiec_reference: "OTS-3.2"
+  manual: true
+  reason: SLA monitoring is an operational process.
+  evidence_guidance: SLA dashboard or reports showing uptime, security metrics, and remediation timelines.
+
+- id: FFIEC.GOV.3
+  title: Shared responsibility model documented
+  ffiec_reference: "OTS-3.1"
+  manual: true
+  reason: Shared responsibility mapping is an organizational document.
+  evidence_guidance: Documented responsibility matrix mapping AWS vs. institution controls.
+
+# Network Segmentation
+- id: FFIEC.GOV.4
+  title: VPC security groups restrict admin ports
+  ffiec_reference: "CAT-D3.DC.NS.B.1"
+  manual: true
+  reason: >
+    While SG controls exist (CTL.VPC.SG.UNRESTRICTED.001), FFIEC requires
+    documented network segmentation strategy specific to payment processing
+    environments. The technical control is covered; the governance is not.
+  evidence_guidance: Network segmentation documentation showing payment processing isolation.
+
+# Examiner Access and Reporting
+- id: FFIEC.GOV.5
+  title: Point-in-time compliance evidence available
+  ffiec_reference: "ISH-6.1"
+  manual: true
+  reason: Evidence generation is a process, though Stave's snapshot-based approach provides the technical foundation.
+  evidence_guidance: Stave apply output (JSON) serves as point-in-time compliance evidence.
+
+- id: FFIEC.GOV.6
+  title: Exception management process
+  ffiec_reference: "ISH-6.2"
+  manual: true
+  reason: Exception approval and time-bounding is an organizational process.
+  evidence_guidance: Exception register with business justification, approver, expiration date, and compensating controls.
+
+- id: FFIEC.GOV.7
+  title: Board and senior management oversight
+  ffiec_reference: "CAT-D1.G.GOV.B.1"
+  manual: true
+  reason: Board oversight is an organizational governance process.
+  evidence_guidance: Board meeting minutes showing cybersecurity risk review.
+
+- id: FFIEC.GOV.8
+  title: Incident response plan tested
+  ffiec_reference: "CAT-D5.IR.B.1"
+  manual: true
+  reason: IR testing is an organizational exercise.
+  evidence_guidance: Annual IR tabletop exercise records.
+
+- id: FFIEC.GOV.9
+  title: Third-party risk management program
+  ffiec_reference: "OTS-3.3"
+  manual: true
+  reason: Vendor risk management is an organizational process.
+  evidence_guidance: Vendor inventory, risk assessments, and due diligence records.
+
+- id: FFIEC.GOV.10
+  title: Information security program documented
+  ffiec_reference: "ISH-2.1"
+  manual: true
+  reason: Security programs are organizational documents.
+  evidence_guidance: Written information security program reviewed annually.
+
+- id: FFIEC.GOV.11
+  title: Cybersecurity assessment tool (CAT) completed
+  ffiec_reference: "CAT-1.1"
+  manual: true
+  reason: CAT completion is an organizational self-assessment exercise.
+  evidence_guidance: Completed CAT assessment showing maturity levels across all domains.

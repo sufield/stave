@@ -16,6 +16,7 @@ compliance:
   nist_800_53_r5: "SC-8"
   fedramp_moderate: "SC-8"
   gdpr: "Art.32"
+  ffiec: "ISH-4"
 scope_tags:
   - aws
   - s3

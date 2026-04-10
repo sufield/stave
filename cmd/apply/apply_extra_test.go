@@ -34,6 +34,7 @@ func TestParseProfile_Valid(t *testing.T) {
 		{"nist-800-53", ProfileNIST},
 		{"fedramp", ProfileFedRAMP},
 		{"gdpr", ProfileGDPR},
+		{"ffiec", ProfileFFIEC},
 	}
 	for _, tt := range tests {
 		got, err := ParseProfile(tt.input)
@@ -398,6 +399,7 @@ func TestProfileControlDomain(t *testing.T) {
 		{ProfileNIST, ""},
 		{ProfileFedRAMP, ""},
 		{ProfileGDPR, ""},
+		{ProfileFFIEC, ""},
 	}
 	for _, tt := range tests {
 		got := profileControlDomain(tt.prof)
@@ -422,6 +424,7 @@ func TestProfileComplianceFramework(t *testing.T) {
 		{ProfileNIST, "nist_800_53_r5"},
 		{ProfileFedRAMP, "fedramp_moderate"},
 		{ProfileGDPR, "gdpr"},
+		{ProfileFFIEC, "ffiec"},
 	}
 	for _, tt := range tests {
 		got := profileComplianceFramework(tt.prof)
