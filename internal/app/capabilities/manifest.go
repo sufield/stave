@@ -13,7 +13,7 @@ import (
 // featureManifest holds pre-sorted, immutable data describing the tool's
 // supported security frameworks and cloud connectors.
 type featureManifest struct {
-	inventorySchemas   []string
+	observationSchemas []string
 	policySchemas      []string
 	connectors         []ConnectorSupport
 	connectorIndex     map[kernel.ObservationSourceType]struct{}
@@ -21,8 +21,8 @@ type featureManifest struct {
 	complianceFeatures ComplianceSupport
 }
 
-func (m *featureManifest) inventorySupport() InventorySupport {
-	return InventorySupport{Schemas: m.inventorySchemas}
+func (m *featureManifest) observationSupport() ObservationSupport {
+	return ObservationSupport{Schemas: m.observationSchemas}
 }
 
 func (m *featureManifest) policySupport() PolicySupport {
@@ -56,8 +56,8 @@ func (m *featureManifest) complianceSupport() ComplianceSupport {
 var Manifest = newFeatureManifest()
 
 func newFeatureManifest() *featureManifest {
-	inventorySchemas := []string{string(kernel.SchemaObservation)}
-	slices.Sort(inventorySchemas)
+	observationSchemas := []string{string(kernel.SchemaObservation)}
+	slices.Sort(observationSchemas)
 
 	policySchemas := []string{string(kernel.SchemaControl)}
 	slices.Sort(policySchemas)
@@ -97,7 +97,7 @@ func newFeatureManifest() *featureManifest {
 	}
 
 	return &featureManifest{
-		inventorySchemas:   inventorySchemas,
+		observationSchemas: observationSchemas,
 		policySchemas:      policySchemas,
 		connectors:         connectors,
 		connectorIndex:     connectorIndex,

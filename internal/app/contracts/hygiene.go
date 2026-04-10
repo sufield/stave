@@ -12,7 +12,7 @@ import (
 // security audit trail and the urgency of pending remediations.
 type HygieneAssessment struct {
 	AuditContext    AuditContext
-	Evidence        EvidenceInventory
+	Evidence        SnapshotSummary
 	SLAPosture      SLAPosture
 	ExposureHistory []evaluation.TrendMetric
 }
@@ -25,9 +25,9 @@ type AuditContext struct {
 	SLAWarning      time.Duration
 }
 
-// EvidenceInventory summarizes the state of collected cloud resource snapshots.
-type EvidenceInventory struct {
-	CurrentInventory   int           `json:"current_inventory"`
+// SnapshotSummary summarizes the state of collected cloud resource snapshots.
+type SnapshotSummary struct {
+	ActiveSnapshots    int           `json:"active_snapshots"`
 	HistoricalEvidence int           `json:"historical_evidence"`
 	PurgeCandidates    int           `json:"purge_candidates"`
 	ComplianceTier     string        `json:"compliance_tier"`
@@ -36,11 +36,11 @@ type EvidenceInventory struct {
 }
 
 // TotalEvidence returns the sum of current and historical records.
-func (s EvidenceInventory) TotalEvidence() int { return s.CurrentInventory + s.HistoricalEvidence }
+func (s SnapshotSummary) TotalEvidence() int { return s.ActiveSnapshots + s.HistoricalEvidence }
 
 // MarshalJSON includes the computed total in the JSON output.
-func (s EvidenceInventory) MarshalJSON() ([]byte, error) {
-	type raw EvidenceInventory
+func (s SnapshotSummary) MarshalJSON() ([]byte, error) {
+	type raw SnapshotSummary
 	return json.Marshal(struct {
 		raw
 		TotalEvidence int `json:"total_evidence"`

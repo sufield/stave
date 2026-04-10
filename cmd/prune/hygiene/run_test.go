@@ -37,8 +37,8 @@ func TestRenderMarkdown(t *testing.T) {
 			LookbackWindow:  7 * 24 * time.Hour,
 			SLAWarning:      24 * time.Hour,
 		},
-		Evidence: appcontracts.EvidenceInventory{
-			CurrentInventory:   6,
+		Evidence: appcontracts.SnapshotSummary{
+			ActiveSnapshots:    6,
 			HistoricalEvidence: 2,
 			PurgeCandidates:    1,
 			ComplianceTier:     "critical",
@@ -64,7 +64,7 @@ func TestRenderMarkdown(t *testing.T) {
 
 	contains := []string{
 		"# Snapshot Hygiene Report",
-		"## Lifecycle Inventory",
+		"## Snapshot Lifecycle",
 		"| Total snapshots | 8 |",
 		"| Archived snapshots | 2 |",
 		"| Prune candidates (current) | 1 |",

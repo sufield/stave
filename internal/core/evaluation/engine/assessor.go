@@ -81,8 +81,8 @@ func (a *Assessor) predicateParser() policy.PredicateParser {
 
 func (a *Assessor) confidenceCalculator() evaluation.ConfidenceCalculator { return a.Confidence }
 
-// sequenceInventory returns a chronological copy of the snapshots.
-func (a *Assessor) sequenceInventory(snapshots []asset.Snapshot) []asset.Snapshot {
+// sortSnapshots returns a chronological copy of the snapshots.
+func (a *Assessor) sortSnapshots(snapshots []asset.Snapshot) []asset.Snapshot {
 	sorted := slices.Clone(snapshots)
 	slices.SortFunc(sorted, func(i, j asset.Snapshot) int {
 		return i.CapturedAt.Compare(j.CapturedAt)
@@ -92,9 +92,9 @@ func (a *Assessor) sequenceInventory(snapshots []asset.Snapshot) []asset.Snapsho
 
 // referenceTime establishes the "audit now" timestamp, using the latest snapshot
 // for reproducibility in historical audits.
-func (a *Assessor) referenceTime(inventory []asset.Snapshot) time.Time {
-	if len(inventory) > 0 {
-		return inventory[len(inventory)-1].CapturedAt
+func (a *Assessor) referenceTime(snapshots []asset.Snapshot) time.Time {
+	if len(snapshots) > 0 {
+		return snapshots[len(snapshots)-1].CapturedAt
 	}
 	return a.Clock.Now()
 }
@@ -108,7 +108,7 @@ type AssessmentOptions struct {
 // assessmentSession maintains the state of a single execution of the engine.
 type assessmentSession struct {
 	assessor   *Assessor
-	inventory  []asset.Snapshot
+	snapshots  []asset.Snapshot
 	auditTime  time.Time
 	collector  *AssessmentCollector
 	idIndex    IdentityIndex
@@ -125,8 +125,8 @@ func (s *assessmentSession) beginTrace(resourceID, policyID string) ports.Assess
 	return s.assessor.Tracer.BeginAssessment(resourceID, policyID)
 }
 
-// Assess processes the cloud inventory and returns a comprehensive ComplianceReport.
-func (a *Assessor) Assess(inventory []asset.Snapshot, opts ...AssessmentOptions) (evaluation.ComplianceReport, error) {
+// Assess processes the observation snapshots and returns a comprehensive ComplianceReport.
+func (a *Assessor) Assess(snapshots []asset.Snapshot, opts ...AssessmentOptions) (evaluation.ComplianceReport, error) {
 	if a.Clock == nil {
 		return evaluation.ComplianceReport{}, errors.New("precondition failed: Assessor requires a Clock")
 	}
@@ -135,7 +135,7 @@ func (a *Assessor) Assess(inventory []asset.Snapshot, opts ...AssessmentOptions)
 		opt = opts[0]
 	}
 
-	sequenced := a.sequenceInventory(inventory)
+	sequenced := a.sortSnapshots(snapshots)
 	lifecycles, err := BuildTimelinesPerControl(a.Controls, sequenced, a.PredicateEval)
 	if err != nil {
 		return evaluation.ComplianceReport{}, fmt.Errorf("lifecycle analysis failed: %w", err)
@@ -148,7 +148,7 @@ func (a *Assessor) Assess(inventory []asset.Snapshot, opts ...AssessmentOptions)
 
 	sess := &assessmentSession{
 		assessor:  a,
-		inventory: sequenced,
+		snapshots: sequenced,
 		auditTime: a.referenceTime(sequenced),
 		collector: NewCollector(assetHint),
 		idIndex:   BuildIdentityIndex(sequenced),
@@ -214,7 +214,7 @@ func (s *assessmentSession) applyControl(
 		}
 		span.RecordStep("exemption_check", nil, map[string]any{"exempted": false})
 
-		// 2. Track evaluated inventory
+		// 2. Track evaluated snapshots
 		s.collector.seenAssets.register(id)
 		if lifecycle.IsExposed() {
 			s.collector.nonCompliantAssets.register(id)
@@ -263,7 +263,7 @@ func (s *assessmentSession) compileReport() evaluation.ComplianceReport {
 	// Calculate environmental risk based on pending violations.
 	riskSignals := risk.ComputeItems(risk.ThresholdRequest{
 		Controls:                s.assessor.Controls,
-		Snapshots:               s.inventory,
+		Snapshots:               s.snapshots,
 		GlobalMaxUnsafeDuration: s.assessor.SLAThreshold,
 		Now:                     s.auditTime,
 		PredicateEval:           s.assessor.PredicateEval,
@@ -277,7 +277,7 @@ func (s *assessmentSession) compileReport() evaluation.ComplianceReport {
 			Offline:           true,
 			Now:               s.auditTime,
 			MaxUnsafeDuration: kernel.Duration(s.assessor.SLAThreshold),
-			Snapshots:         len(s.inventory),
+			Snapshots:         len(s.snapshots),
 			InputHashes:       s.opts.InputHashes,
 			PolicyFingerprint: s.assessor.FingerprintPolicy(),
 		},

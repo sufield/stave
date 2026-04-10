@@ -18,24 +18,24 @@ import (
 
 // AuditRequest defines the parameters for generating security insights.
 type AuditRequest struct {
-	PolicySource    string
-	InventorySource string
-	BaselineReport  *evaluation.ComplianceReport
-	SLAThreshold    time.Duration
-	Clock           ports.Clock
-	PredicateParser func(any) (*policy.UnsafePredicate, error)
-	PredicateEval   policy.PredicateEval
+	PolicySource      string
+	ObservationSource string
+	BaselineReport    *evaluation.ComplianceReport
+	SLAThreshold      time.Duration
+	Clock             ports.Clock
+	PredicateParser   func(any) (*policy.UnsafePredicate, error)
+	PredicateEval     policy.PredicateEval
 }
 
 // DiagnosticEngine orchestrates the deep analysis of security policy evaluations.
 type DiagnosticEngine struct {
-	InventoryRepo appcontracts.ObservationRepository
-	PolicyRepo    appcontracts.ControlRepository
+	ObservationRepo appcontracts.ObservationRepository
+	PolicyRepo      appcontracts.ControlRepository
 }
 
 type auditContext struct {
 	policies  []policy.ControlDefinition
-	inventory []asset.Snapshot
+	snapshots []asset.Snapshot
 }
 
 // NewEngine initializes a diagnostic engine with required data repositories.
@@ -44,20 +44,20 @@ func NewEngine(
 	polRepo appcontracts.ControlRepository,
 ) (*DiagnosticEngine, error) {
 	if invRepo == nil {
-		return nil, errors.New("inventory repository required")
+		return nil, errors.New("observation repository required")
 	}
 	if polRepo == nil {
 		return nil, errors.New("policy repository required")
 	}
 	return &DiagnosticEngine{
-		InventoryRepo: invRepo,
-		PolicyRepo:    polRepo,
+		ObservationRepo: invRepo,
+		PolicyRepo:      polRepo,
 	}, nil
 }
 
 // Analyze performs a diagnostic analysis of the current security state.
 func (e *DiagnosticEngine) Analyze(ctx context.Context, req AuditRequest) (*diagnosis.Report, error) {
-	data, err := e.loadAuditData(ctx, req.PolicySource, req.InventorySource)
+	data, err := e.loadAuditData(ctx, req.PolicySource, req.ObservationSource)
 	if err != nil {
 		return nil, fmt.Errorf("load audit context: %w", err)
 	}
@@ -68,7 +68,7 @@ func (e *DiagnosticEngine) Analyze(ctx context.Context, req AuditRequest) (*diag
 	}
 
 	input := diagnosis.NewInput(diagnosis.Input{
-		Snapshots:         data.inventory,
+		Snapshots:         data.snapshots,
 		Controls:          data.policies,
 		Findings:          mapToDiagnosticFindings(assessment.Findings),
 		ViolationsFound:   len(assessment.Findings),
@@ -93,7 +93,7 @@ type InspectionRequest struct {
 
 // InspectViolation generates a detailed root-cause analysis for a single finding.
 func (e *DiagnosticEngine) InspectViolation(ctx context.Context, req InspectionRequest) (*evaluation.FindingDetail, error) {
-	data, err := e.loadAuditData(ctx, req.AuditReq.PolicySource, req.AuditReq.InventorySource)
+	data, err := e.loadAuditData(ctx, req.AuditReq.PolicySource, req.AuditReq.ObservationSource)
 	if err != nil {
 		return nil, fmt.Errorf("load audit context: %w", err)
 	}
@@ -107,7 +107,7 @@ func (e *DiagnosticEngine) InspectViolation(ctx context.Context, req InspectionR
 		ControlID:    req.TargetPolicy,
 		AssetID:      req.TargetAsset,
 		Controls:     data.policies,
-		Snapshots:    data.inventory,
+		Snapshots:    data.snapshots,
 		Result:       assessment,
 		TraceBuilder: req.TraceBuilder,
 		IDGen:        req.IDGen,
@@ -117,21 +117,21 @@ func (e *DiagnosticEngine) InspectViolation(ctx context.Context, req InspectionR
 func (e *DiagnosticEngine) loadAuditData(
 	ctx context.Context,
 	policySrc string,
-	inventorySrc string,
+	observationSrc string,
 ) (auditContext, error) {
 	policies, err := appcontracts.LoadControls(ctx, e.PolicyRepo, policySrc)
 	if err != nil {
 		return auditContext{}, fmt.Errorf("fetch policies: %w", err)
 	}
 
-	invResult, err := appcontracts.LoadSnapshots(ctx, e.InventoryRepo, inventorySrc)
+	invResult, err := appcontracts.LoadSnapshots(ctx, e.ObservationRepo, observationSrc)
 	if err != nil {
-		return auditContext{}, fmt.Errorf("fetch inventory: %w", err)
+		return auditContext{}, fmt.Errorf("load observations: %w", err)
 	}
 
 	return auditContext{
 		policies:  policies,
-		inventory: invResult.Snapshots,
+		snapshots: invResult.Snapshots,
 	}, nil
 }
 
@@ -145,7 +145,7 @@ func (e *DiagnosticEngine) resolveAssessment(
 
 	assessment, err := appeval.Evaluate(appeval.EvaluateInput{
 		Controls:          data.policies,
-		Snapshots:         data.inventory,
+		Snapshots:         data.snapshots,
 		MaxUnsafeDuration: req.SLAThreshold,
 		Clock:             req.Clock,
 		PredicateParser:   req.PredicateParser,

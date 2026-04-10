@@ -21,7 +21,7 @@ import (
 // WorkflowDeps holds the infrastructure requirements for the attestation process.
 type WorkflowDeps struct {
 	LoadPolicies       func(ctx context.Context, dir string) ([]policy.ControlDefinition, error)
-	NewInventoryRepo   func() (appcontracts.ObservationRepository, error)
+	NewObservationRepo func() (appcontracts.ObservationRepository, error)
 	PublishAttestation func(w io.Writer, a *report.Attestation) error
 
 	// BeginStage starts a visual progress indicator for a workflow stage.
@@ -59,14 +59,14 @@ func PerformAttestation(ctx context.Context, deps WorkflowDeps, req Request) err
 	}
 
 	// 2. Conduct assessments
-	baseline, err := executeStage(beginStage, "analyzing baseline inventory", func() (assessmentState, error) {
+	baseline, err := executeStage(beginStage, "analyzing baseline snapshots", func() (assessmentState, error) {
 		return conductAssessment(ctx, deps, req, controls, req.BaselineSource)
 	})
 	if err != nil {
 		return fmt.Errorf("baseline assessment failed: %w", err)
 	}
 
-	target, err := executeStage(beginStage, "analyzing target inventory", func() (assessmentState, error) {
+	target, err := executeStage(beginStage, "analyzing target snapshots", func() (assessmentState, error) {
 		return conductAssessment(ctx, deps, req, controls, req.TargetSource)
 	})
 	if err != nil {
@@ -77,8 +77,8 @@ func PerformAttestation(ctx context.Context, deps WorkflowDeps, req Request) err
 	comparison, err := Compare(CompareRequest{
 		BaselineFindings:  baseline.report.Findings,
 		TargetFindings:    target.report.Findings,
-		BaselineSnapshots: baseline.inventoryCount,
-		TargetSnapshots:   target.inventoryCount,
+		BaselineSnapshots: baseline.snapshotCount,
+		TargetSnapshots:   target.snapshotCount,
 		SLAThreshold:      req.SLAThreshold,
 		Now:               req.Clock.Now(),
 		Sanitizer:         req.Sanitizer,
@@ -98,12 +98,12 @@ func PerformAttestation(ctx context.Context, deps WorkflowDeps, req Request) err
 // --- Internal ---
 
 type assessmentState struct {
-	report         *evaluation.ComplianceReport
-	inventoryCount int
+	report        *evaluation.ComplianceReport
+	snapshotCount int
 }
 
 func conductAssessment(ctx context.Context, deps WorkflowDeps, req Request, controls []policy.ControlDefinition, src string) (assessmentState, error) {
-	loader, err := deps.NewInventoryRepo()
+	loader, err := deps.NewObservationRepo()
 	if err != nil {
 		return assessmentState{}, err
 	}
@@ -121,7 +121,7 @@ func conductAssessment(ctx context.Context, deps WorkflowDeps, req Request, cont
 	if err != nil {
 		return assessmentState{}, err
 	}
-	return assessmentState{report: res, inventoryCount: count}, nil
+	return assessmentState{report: res, snapshotCount: count}, nil
 }
 
 func evaluateSuccess(outcome CompareResult) error {

@@ -35,8 +35,8 @@ func TestNewReadinessAssessment(t *testing.T) {
 	if r.ControlSource != "/controls" {
 		t.Fatalf("ControlSource=%q", r.ControlSource)
 	}
-	if r.InventorySource != "/observations" {
-		t.Fatalf("InventorySource=%q", r.InventorySource)
+	if r.ObservationSource != "/observations" {
+		t.Fatalf("ObservationSource=%q", r.ObservationSource)
 	}
 	if r.Summary.Errors != 0 {
 		t.Fatalf("Errors=%d, want 0", r.Summary.Errors)

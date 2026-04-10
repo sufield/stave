@@ -24,7 +24,7 @@ func TestWriteHygieneReport(t *testing.T) {
 			LookbackWindow:  7 * 24 * time.Hour,
 			SLAWarning:      24 * time.Hour,
 		},
-		Evidence:        appcontracts.EvidenceInventory{CurrentInventory: 3, HistoricalEvidence: 1, PurgeCandidates: 0, ComplianceTier: "critical", RetentionPolicy: 30 * 24 * time.Hour, MinEvidenceCount: 2},
+		Evidence:        appcontracts.SnapshotSummary{ActiveSnapshots: 3, HistoricalEvidence: 1, PurgeCandidates: 0, ComplianceTier: "critical", RetentionPolicy: 30 * 24 * time.Hour, MinEvidenceCount: 2},
 		SLAPosture:      appcontracts.SLAPosture{ActiveFindings: 10, SLABreaches: 2, BreachingNow: 0, NearBreach: 1, CompliantWindow: 0},
 		ExposureHistory: trends,
 	}
@@ -38,8 +38,8 @@ func TestWriteHygieneReport(t *testing.T) {
 	if !strings.Contains(out, "# Snapshot Hygiene Report") {
 		t.Error("expected report to contain title")
 	}
-	if !strings.Contains(out, "## Lifecycle Inventory") {
-		t.Error("expected Lifecycle Inventory section")
+	if !strings.Contains(out, "## Snapshot Lifecycle") {
+		t.Error("expected Snapshot Lifecycle section")
 	}
 	if !strings.Contains(out, "## Risk SecurityState & Trends") {
 		t.Error("expected Risk SecurityState & Trends section")

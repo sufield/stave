@@ -108,14 +108,14 @@ func TestNewRun_Success(t *testing.T) {
 
 func TestExecute_ControlLoadError(t *testing.T) {
 	run := &DiagnosticEngine{
-		InventoryRepo: &mockObsRepo{result: appcontracts.LoadResult{Snapshots: simpleSnapshots()}},
-		PolicyRepo:    &mockCtlRepo{err: errors.New("controls broken")},
+		ObservationRepo: &mockObsRepo{result: appcontracts.LoadResult{Snapshots: simpleSnapshots()}},
+		PolicyRepo:      &mockCtlRepo{err: errors.New("controls broken")},
 	}
 
 	_, err := run.Analyze(context.Background(), AuditRequest{
-		PolicySource:    "controls",
-		InventorySource: "observations",
-		Clock:           ports.FixedClock(baseTime()),
+		PolicySource:      "controls",
+		ObservationSource: "observations",
+		Clock:             ports.FixedClock(baseTime()),
 	})
 	if err == nil {
 		t.Fatal("expected error for control load failure")
@@ -124,14 +124,14 @@ func TestExecute_ControlLoadError(t *testing.T) {
 
 func TestExecute_ObservationLoadError(t *testing.T) {
 	run := &DiagnosticEngine{
-		InventoryRepo: &mockObsRepo{err: errors.New("obs broken")},
-		PolicyRepo:    &mockCtlRepo{controls: simpleControls()},
+		ObservationRepo: &mockObsRepo{err: errors.New("obs broken")},
+		PolicyRepo:      &mockCtlRepo{controls: simpleControls()},
 	}
 
 	_, err := run.Analyze(context.Background(), AuditRequest{
-		PolicySource:    "controls",
-		InventorySource: "observations",
-		Clock:           ports.FixedClock(baseTime()),
+		PolicySource:      "controls",
+		ObservationSource: "observations",
+		Clock:             ports.FixedClock(baseTime()),
 	})
 	if err == nil {
 		t.Fatal("expected error for observation load failure")
@@ -140,8 +140,8 @@ func TestExecute_ObservationLoadError(t *testing.T) {
 
 func TestExecute_WithPreviousResult(t *testing.T) {
 	run := &DiagnosticEngine{
-		InventoryRepo: &mockObsRepo{result: appcontracts.LoadResult{Snapshots: simpleSnapshots()}},
-		PolicyRepo:    &mockCtlRepo{controls: simpleControls()},
+		ObservationRepo: &mockObsRepo{result: appcontracts.LoadResult{Snapshots: simpleSnapshots()}},
+		PolicyRepo:      &mockCtlRepo{controls: simpleControls()},
 	}
 
 	prev := &evaluation.ComplianceReport{
@@ -152,11 +152,11 @@ func TestExecute_WithPreviousResult(t *testing.T) {
 	}
 
 	report, err := run.Analyze(context.Background(), AuditRequest{
-		PolicySource:    "controls",
-		InventorySource: "observations",
-		Clock:           ports.FixedClock(baseTime().Add(2 * time.Hour)),
-		BaselineReport:  prev,
-		PredicateEval:   celEvalAllSafe(),
+		PolicySource:      "controls",
+		ObservationSource: "observations",
+		Clock:             ports.FixedClock(baseTime().Add(2 * time.Hour)),
+		BaselineReport:    prev,
+		PredicateEval:     celEvalAllSafe(),
 	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -168,16 +168,16 @@ func TestExecute_WithPreviousResult(t *testing.T) {
 
 func TestExecute_FreshEvaluation(t *testing.T) {
 	run := &DiagnosticEngine{
-		InventoryRepo: &mockObsRepo{result: appcontracts.LoadResult{Snapshots: simpleSnapshots()}},
-		PolicyRepo:    &mockCtlRepo{controls: simpleControls()},
+		ObservationRepo: &mockObsRepo{result: appcontracts.LoadResult{Snapshots: simpleSnapshots()}},
+		PolicyRepo:      &mockCtlRepo{controls: simpleControls()},
 	}
 
 	report, err := run.Analyze(context.Background(), AuditRequest{
-		PolicySource:    "controls",
-		InventorySource: "observations",
-		SLAThreshold:    168 * time.Hour,
-		Clock:           ports.FixedClock(baseTime().Add(2 * time.Hour)),
-		PredicateEval:   celEvalAllSafe(),
+		PolicySource:      "controls",
+		ObservationSource: "observations",
+		SLAThreshold:      168 * time.Hour,
+		Clock:             ports.FixedClock(baseTime().Add(2 * time.Hour)),
+		PredicateEval:     celEvalAllSafe(),
 	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -193,15 +193,15 @@ func TestExecute_FreshEvaluation(t *testing.T) {
 
 func TestExecuteFindingDetail_LoadError(t *testing.T) {
 	run := &DiagnosticEngine{
-		InventoryRepo: &mockObsRepo{err: errors.New("broken")},
-		PolicyRepo:    &mockCtlRepo{controls: simpleControls()},
+		ObservationRepo: &mockObsRepo{err: errors.New("broken")},
+		PolicyRepo:      &mockCtlRepo{controls: simpleControls()},
 	}
 
 	_, err := run.InspectViolation(context.Background(), InspectionRequest{
 		AuditReq: AuditRequest{
-			PolicySource:    "controls",
-			InventorySource: "observations",
-			Clock:           ports.FixedClock(baseTime()),
+			PolicySource:      "controls",
+			ObservationSource: "observations",
+			Clock:             ports.FixedClock(baseTime()),
 		},
 		TargetPolicy: "CTL.TEST.001",
 		TargetAsset:  "bucket-1",

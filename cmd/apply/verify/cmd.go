@@ -85,7 +85,7 @@ Exit Codes:
 					LoadPolicies: func(ctx context.Context, dir string) ([]policy.ControlDefinition, error) {
 						return compose.LoadControlsFrom(ctx, newCtlRepo, dir)
 					},
-					NewInventoryRepo: func() (appcontracts.ObservationRepository, error) {
+					NewObservationRepo: func() (appcontracts.ObservationRepository, error) {
 						return newObsRepo()
 					},
 					PublishAttestation: func(w io.Writer, v *report.Attestation) error {

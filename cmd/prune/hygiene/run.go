@@ -68,7 +68,7 @@ type runner struct {
 	NewSnapshotRepo compose.SnapshotRepoFactory
 }
 
-// RunStatus generates only the evidence inventory section.
+// RunStatus generates only the snapshot summary section.
 func (r *runner) RunStatus(ctx context.Context, cfg config) error {
 	obsRepo, err := r.NewObsRepo()
 	if err != nil {
@@ -104,8 +104,8 @@ func (r *runner) RunStatus(ctx context.Context, cfg config) error {
 		Evidence:     stats,
 	}
 	jsonOut := hygieneapp.Output{
-		GeneratedAt:       cfg.Now,
-		EvidenceInventory: stats,
+		GeneratedAt:     cfg.Now,
+		SnapshotSummary: stats,
 	}
 	return writeHygieneOutput(cfg.Format, report, jsonOut, cfg.Stdout)
 }
@@ -158,14 +158,14 @@ func buildSnapshotStats(
 	activeSnapshots []asset.Snapshot,
 	archiveSnapshots []asset.Snapshot,
 	files []appcontracts.SnapshotFile,
-) appcontracts.EvidenceInventory {
+) appcontracts.SnapshotSummary {
 	pruneCandidates := pruneretention.PlanPrune(files, retention.Criteria{
 		Now:       cfg.Now,
 		OlderThan: cfg.OlderThan,
 		KeepMin:   cfg.KeepMin,
 	})
-	return appcontracts.EvidenceInventory{
-		CurrentInventory:   len(activeSnapshots),
+	return appcontracts.SnapshotSummary{
+		ActiveSnapshots:    len(activeSnapshots),
 		HistoricalEvidence: len(archiveSnapshots),
 		PurgeCandidates:    len(pruneCandidates),
 		ComplianceTier:     cfg.RetentionTier,

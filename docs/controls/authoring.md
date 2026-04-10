@@ -48,37 +48,32 @@ Controls are organized by domain and category:
 
 ```
 controls/
-├── s3/                  # AWS S3 storage (53 controls)
-│   ├── public/          # Public exposure
-│   ├── access/          # Cross-account, wildcard, presigned
-│   ├── acl/             # ACL escalation
-│   ├── encrypt/         # Encryption at rest and in transit
-│   ├── network/         # VPC, IP conditions, MRAP
-│   ├── versioning/      # Versioning and MFA delete
-│   ├── lock/            # Object lock
-│   ├── logging/         # Access logging, CloudTrail
-│   ├── lifecycle/       # Data retention
-│   ├── governance/      # Classification tags
-│   ├── write_scope/     # Upload policy scope
-│   ├── tenant/          # Tenant isolation
-│   ├── takeover/        # Bucket takeover, dangling origins
-│   ├── artifacts/       # VCS artifacts
-│   └── misc/            # Completeness checks
-├── iam/                 # AWS IAM identity (11 controls)
-│   ├── root/            # Root account MFA, access keys
-│   ├── console/         # Console user MFA
-│   ├── credentials/     # Credential rotation, unused creds
-│   ├── password/        # Password policy
-│   ├── policy/          # Inline/direct policy attachment
-│   └── misc/            # Completeness checks
+├── s3/                  # AWS S3 storage (55 controls)
+├── iam/                 # AWS IAM identity (21 controls)
+├── cloudwatch/          # AWS CloudWatch (17 controls)
+├── rds/                 # AWS RDS (10 controls)
+├── cloudtrail/          # AWS CloudTrail (7 controls)
+├── vpc/                 # AWS VPC (7 controls)
 ├── gcs/                 # GCP Cloud Storage (7 controls)
-│   ├── public/          # Public access, uniform access
-│   ├── encrypt/         # CMEK encryption
-│   ├── logging/         # Access logging
-│   ├── versioning/      # Object versioning
-│   └── misc/            # Completeness checks
-└── dns/                 # DNS records — vendor-agnostic (3 controls)
-    └── takeover/        # Dangling references, subdomain takeover
+├── ec2/                 # AWS EC2 (6 controls)
+├── backup/              # Cross-service backup (6 controls)
+├── k8s/                 # Kubernetes (8 controls)
+├── elb/                 # AWS ELB (5 controls)
+├── kms/                 # AWS KMS (4 controls)
+├── config/              # AWS Config (3 controls)
+├── secretsmanager/      # AWS Secrets Manager (3 controls)
+├── dns/                 # DNS records — vendor-agnostic (3 controls)
+├── dynamodb/            # AWS DynamoDB (2 controls)
+├── sqs/                 # AWS SQS (3 controls)
+├── sns/                 # AWS SNS (2 controls)
+├── cloudformation/      # AWS CloudFormation (2 controls)
+├── guardduty/           # AWS GuardDuty (2 controls)
+├── securityhub/         # AWS Security Hub (2 controls)
+├── autoscaling/         # AWS Auto Scaling (2 controls)
+├── route53/             # AWS Route 53 (2 controls)
+├── cognito/             # AWS Cognito (2 controls)
+├── elasticache/         # AWS ElastiCache (2 controls)
+└── apigateway/          # AWS API Gateway (2 controls)
 ```
 
 Place new controls in the appropriate domain and category. Create a new
@@ -406,5 +401,5 @@ make e2e                # Verify all tests pass
 ## Further Reading
 
 - [Observation Contract](../observation-contract.md) — property namespace specification
-- [Control Reference](reference.md) — auto-generated reference for all 74 built-in controls
+- [Control Reference](reference.md) — auto-generated reference for all built-in controls
 - [Evaluation Semantics](../evaluation-semantics.md) — how duration tracking works

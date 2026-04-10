@@ -13,10 +13,10 @@ import (
 	"github.com/sufield/stave/internal/core/ports"
 )
 
-// InventoryConfig holds the sources for security policies and cloud resource states.
-type InventoryConfig struct {
+// ObservationConfig holds the sources for security policies and cloud resource states.
+type ObservationConfig struct {
 	PolicySource      string
-	InventorySource   string
+	ObservationSource string
 	AcceptUnknownData bool
 	Stderr            io.Writer
 	ActivePolicies    []policy.ControlDefinition
@@ -24,7 +24,7 @@ type InventoryConfig struct {
 
 // AssessmentConfig defines the parameters and environment for a security audit.
 type AssessmentConfig struct {
-	InventoryConfig
+	ObservationConfig
 	SLAThreshold    time.Duration
 	Clock           ports.Clock
 	Hasher          ports.Digester
@@ -40,7 +40,7 @@ type AssessmentConfig struct {
 
 // AuditWorkflow orchestrates the end-to-end security assessment process.
 type AuditWorkflow struct {
-	InventoryRepo   appcontracts.ObservationRepository
+	ObservationRepo appcontracts.ObservationRepository
 	PolicyRepo      appcontracts.ControlRepository
 	ReportPublisher appcontracts.FindingMarshaler
 	ContextEnricher appcontracts.EnrichFunc
@@ -55,7 +55,7 @@ func NewAuditWorkflow(
 	enricher appcontracts.EnrichFunc,
 ) *AuditWorkflow {
 	if invRepo == nil {
-		panic("AuditWorkflow: InventoryRepo is required")
+		panic("AuditWorkflow: ObservationRepo is required")
 	}
 	if polRepo == nil {
 		panic("AuditWorkflow: PolicyRepo is required")
@@ -67,7 +67,7 @@ func NewAuditWorkflow(
 		panic("AuditWorkflow: ContextEnricher is required")
 	}
 	return &AuditWorkflow{
-		InventoryRepo:   invRepo,
+		ObservationRepo: invRepo,
 		PolicyRepo:      polRepo,
 		ReportPublisher: publisher,
 		ContextEnricher: enricher,
@@ -76,7 +76,7 @@ func NewAuditWorkflow(
 
 // PerformAssessment executes the security audit and returns the compliance report.
 func (w *AuditWorkflow) PerformAssessment(ctx context.Context, cfg AssessmentConfig) (evaluation.ComplianceReport, evaluation.SecurityState, error) {
-	auditData := w.prepareAuditData(ctx, cfg.InventoryConfig)
+	auditData := w.prepareAuditData(ctx, cfg.ObservationConfig)
 	if auditData.HasErrors() {
 		return evaluation.ComplianceReport{}, "", auditData.FirstError()
 	}
@@ -103,11 +103,11 @@ func (w *AuditWorkflow) PerformAssessment(ctx context.Context, cfg AssessmentCon
 	return report, report.SecurityState, nil
 }
 
-func (w *AuditWorkflow) prepareAuditData(ctx context.Context, cfg InventoryConfig) IntentEvaluationResult {
-	intent := NewIntentEvaluation(w.InventoryRepo, w.PolicyRepo)
+func (w *AuditWorkflow) prepareAuditData(ctx context.Context, cfg ObservationConfig) IntentEvaluationResult {
+	intent := NewIntentEvaluation(w.ObservationRepo, w.PolicyRepo)
 	data := intent.LoadArtifacts(ctx, IntentEvaluationConfig{
 		ControlsDir:       cfg.PolicySource,
-		ObservationsDir:   cfg.InventorySource,
+		ObservationsDir:   cfg.ObservationSource,
 		RequireControls:   cfg.ActivePolicies == nil,
 		SkipControlsLoad:  cfg.ActivePolicies != nil,
 		AllowUnknownInput: cfg.AcceptUnknownData,

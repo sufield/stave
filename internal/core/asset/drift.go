@@ -10,7 +10,7 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
-// DriftType classifies how an asset has evolved between two inventory scans.
+// DriftType classifies how an asset has evolved between two observation snapshots.
 type DriftType string
 
 const (
@@ -126,7 +126,7 @@ type InfrastructureDrift struct {
 	Changes       []AssetChange     `json:"changes"`
 }
 
-// GetStateTransition returns the two most recent inventory snapshots for comparison.
+// GetStateTransition returns the two most recent observation snapshots for comparison.
 func GetStateTransition(snapshots []Snapshot) (prev Snapshot, curr Snapshot, err error) {
 	if len(snapshots) < 2 {
 		return Snapshot{}, Snapshot{}, fmt.Errorf("%w: need 2 states for drift analysis, got %d", ErrInsufficientSnapshots, len(snapshots))

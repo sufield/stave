@@ -94,7 +94,7 @@ func BenchmarkEvaluateLargeSnapshot(b *testing.B) {
 // of 100 assets completes within a reasonable time threshold.
 // This is not a strict benchmark but a guardrail against performance regressions.
 func TestEvaluationPerformanceGuardrail(t *testing.T) {
-	// Create 100 assets similar to a real S3 inventory snapshot
+	// Create 100 assets similar to a real S3 observation snapshot
 	resources := make([]asset.Asset, 100)
 	for i := range 100 {
 		resources[i] = asset.Asset{
@@ -175,7 +175,7 @@ func TestLargeSnapshotProcessing(t *testing.T) {
 	// This test uses in-memory data to avoid file system dependencies
 	// The actual loading/parsing is tested via e2e tests.
 
-	// Create 1000 assets to simulate a large S3 inventory.
+	// Create 1000 assets to simulate a large S3 observation set.
 	resources := make([]asset.Asset, 1000)
 	for i := range 1000 {
 		resources[i] = asset.Asset{

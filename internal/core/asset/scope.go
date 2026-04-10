@@ -126,8 +126,8 @@ func (s *AuditScope) isBoundaryEmpty() bool {
 	return len(s.resourceIDs) == 0 && len(s.tagSelectors) == 0 && len(s.requiredKeys) == 0
 }
 
-// ApplyScopeToInventory returns a new set of snapshots containing only in-scope assets.
-func ApplyScopeToInventory(scope *AuditScope, snapshots []Snapshot) []Snapshot {
+// ApplyScopeToSnapshots returns a new set of snapshots containing only in-scope assets.
+func ApplyScopeToSnapshots(scope *AuditScope, snapshots []Snapshot) []Snapshot {
 	if scope == nil || scope.global {
 		return snapshots
 	}

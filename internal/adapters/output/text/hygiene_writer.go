@@ -41,11 +41,11 @@ func WriteHygieneReport(w io.Writer, req appcontracts.HygieneAssessment) error {
 	return h.err
 }
 
-func writeLifecycleTable(h *hygieneWriter, stats appcontracts.EvidenceInventory) {
-	h.f("## Lifecycle Inventory\n\n")
+func writeLifecycleTable(h *hygieneWriter, stats appcontracts.SnapshotSummary) {
+	h.f("## Snapshot Lifecycle\n\n")
 	h.f("| Metric | Value |\n| :--- | :--- |\n")
 	h.f("| Total snapshots | %d |\n", stats.TotalEvidence())
-	h.f("| Active snapshots | %d |\n", stats.CurrentInventory)
+	h.f("| Active snapshots | %d |\n", stats.ActiveSnapshots)
 	h.f("| Archived snapshots | %d |\n", stats.HistoricalEvidence)
 	h.f("| Prune candidates (current) | %d |\n", stats.PurgeCandidates)
 	h.f("| Retention tier | %s |\n", stats.ComplianceTier)

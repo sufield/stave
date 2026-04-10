@@ -24,7 +24,7 @@ func TestNewConfig_SetsExpectedFields(t *testing.T) {
 		WithAllowUnknownInput(true),
 	)
 
-	if cfg.PolicySource != plan.ControlsPath || cfg.InventorySource != plan.ObservationsPath {
+	if cfg.PolicySource != plan.ControlsPath || cfg.ObservationSource != plan.ObservationsPath {
 		t.Fatalf("unexpected dirs: %+v", cfg)
 	}
 	if cfg.BuildVersion != "test" {

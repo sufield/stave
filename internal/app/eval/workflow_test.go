@@ -128,9 +128,9 @@ func TestAuditWorkflowPerformAssessment(t *testing.T) {
 		)
 
 		status, err := run.ExecuteAndWrite(context.Background(), AssessmentConfig{
-			InventoryConfig: InventoryConfig{
-				PolicySource:    "ctl",
-				InventorySource: "obs",
+			ObservationConfig: ObservationConfig{
+				PolicySource:      "ctl",
+				ObservationSource: "obs",
 			},
 			SLAThreshold:  30 * time.Minute,
 			Clock:         clockadp.FixedClock(now),
@@ -163,9 +163,9 @@ func TestAuditWorkflowPerformAssessment(t *testing.T) {
 		)
 
 		_, err := run.ExecuteAndWrite(context.Background(), AssessmentConfig{
-			InventoryConfig: InventoryConfig{
-				PolicySource:    "ctl",
-				InventorySource: "obs",
+			ObservationConfig: ObservationConfig{
+				PolicySource:      "ctl",
+				ObservationSource: "obs",
 			},
 			SLAThreshold:  30 * time.Minute,
 			Clock:         clockadp.FixedClock(now),

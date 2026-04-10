@@ -30,7 +30,7 @@ func TestCapabilitiesJSONContract(t *testing.T) {
 
 	assertStringField(t, got, "version")
 	assertBoolField(t, got, "offline")
-	assertObjectField(t, got, "inventory_support")
+	assertObjectField(t, got, "observation_support")
 	assertObjectField(t, got, "policy_support")
 	assertObjectField(t, got, "data_ingress")
 	assertArrayField(t, got, "policy_library")
@@ -43,17 +43,17 @@ func TestCapabilitiesJSONContract(t *testing.T) {
 		t.Fatal("offline must be true")
 	}
 
-	inventory := got["inventory_support"].(map[string]any)
+	observations := got["observation_support"].(map[string]any)
 	policies := got["policy_support"].(map[string]any)
 	ingress := got["data_ingress"].(map[string]any)
 	library := got["policy_library"].([]any)
 	compliance := got["compliance_support"].(map[string]any)
 
-	schemas := assertArrayField(t, inventory, "schemas")
+	schemas := assertArrayField(t, observations, "schemas")
 	policySchemas := assertArrayField(t, policies, "schemas")
 	connectors := assertArrayField(t, ingress, "connectors")
 	if len(schemas) == 0 {
-		t.Fatal("inventory_support.schemas must be non-empty")
+		t.Fatal("observation_support.schemas must be non-empty")
 	}
 	if len(policySchemas) == 0 {
 		t.Fatal("policy_support.schemas must be non-empty")

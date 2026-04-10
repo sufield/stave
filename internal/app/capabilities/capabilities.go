@@ -15,13 +15,13 @@ func IsConnectorSupported(sourceType kernel.ObservationSourceType) bool {
 // AuditCapabilities describes the security frameworks, cloud connectors,
 // and policy versions supported by this build of Stave.
 type AuditCapabilities struct {
-	Version           string            `json:"version"`
-	Offline           bool              `json:"offline"`
-	InventorySupport  InventorySupport  `json:"inventory_support"`
-	PolicySupport     PolicySupport     `json:"policy_support"`
-	DataIngress       DataIngress       `json:"data_ingress"`
-	PolicyLibrary     []PolicyPack      `json:"policy_library"`
-	ComplianceSupport ComplianceSupport `json:"compliance_support"`
+	Version            string             `json:"version"`
+	Offline            bool               `json:"offline"`
+	ObservationSupport ObservationSupport `json:"observation_support"`
+	PolicySupport      PolicySupport      `json:"policy_support"`
+	DataIngress        DataIngress        `json:"data_ingress"`
+	PolicyLibrary      []PolicyPack       `json:"policy_library"`
+	ComplianceSupport  ComplianceSupport  `json:"compliance_support"`
 }
 
 // PolicyPack describes a curated collection of pre-defined security controls.
@@ -31,8 +31,8 @@ type PolicyPack struct {
 	Version     string `json:"version"`
 }
 
-// InventorySupport defines the supported cloud resource snapshot formats.
-type InventorySupport struct {
+// ObservationSupport defines the supported observation snapshot formats.
+type ObservationSupport struct {
 	Schemas []string `json:"schemas"`
 }
 
@@ -69,12 +69,12 @@ func Summarize(version string) AuditCapabilities {
 	}
 
 	return AuditCapabilities{
-		Version:           version,
-		Offline:           true,
-		InventorySupport:  Manifest.inventorySupport(),
-		PolicySupport:     Manifest.policySupport(),
-		DataIngress:       Manifest.ingressSupport(),
-		PolicyLibrary:     Manifest.libraryWithVersion(version),
-		ComplianceSupport: Manifest.complianceSupport(),
+		Version:            version,
+		Offline:            true,
+		ObservationSupport: Manifest.observationSupport(),
+		PolicySupport:      Manifest.policySupport(),
+		DataIngress:        Manifest.ingressSupport(),
+		PolicyLibrary:      Manifest.libraryWithVersion(version),
+		ComplianceSupport:  Manifest.complianceSupport(),
 	}
 }

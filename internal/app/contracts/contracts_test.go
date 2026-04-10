@@ -29,15 +29,15 @@ func TestOutputFormat_IsJSON(t *testing.T) {
 	}
 }
 
-func TestEvidenceInventory_TotalEvidence(t *testing.T) {
-	s := EvidenceInventory{CurrentInventory: 3, HistoricalEvidence: 2}
+func TestSnapshotSummary_TotalEvidence(t *testing.T) {
+	s := SnapshotSummary{ActiveSnapshots: 3, HistoricalEvidence: 2}
 	if s.TotalEvidence() != 5 {
 		t.Errorf("TotalEvidence() = %d, want 5", s.TotalEvidence())
 	}
 }
 
-func TestEvidenceInventory_MarshalJSON(t *testing.T) {
-	s := EvidenceInventory{CurrentInventory: 3, HistoricalEvidence: 2}
+func TestSnapshotSummary_MarshalJSON(t *testing.T) {
+	s := SnapshotSummary{ActiveSnapshots: 3, HistoricalEvidence: 2}
 	data, err := json.Marshal(s)
 	if err != nil {
 		t.Fatal(err)

@@ -501,6 +501,37 @@ evaluate `dns.*` properties only — the vendor is for provenance tracking.
 
 ---
 
+## Additional domains (compliance expansion)
+
+These domains were added for HIPAA, CIS, SOC 2, PCI-DSS, NIST, FedRAMP,
+GDPR, FFIEC, and ISO 27001 compliance coverage. Each follows the same
+`properties.{namespace}.kind` discriminator pattern.
+
+| Asset Type | Namespace | Kind | Key Properties |
+|---|---|---|---|
+| `aws_cloudtrail_trail` | `audit_trail.*` | `trail` | `multi_region_enabled`, `log_file_validation_enabled`, `encryption.*`, `s3_data_events.*` |
+| `aws_kms_key` | `cryptography.*` | `key` | `key_rotation_enabled`, `origin`, `policy.has_wildcard_principal` |
+| `aws_secretsmanager_secret` | `secret.*` | `secret` | `encryption.customer_managed_key`, `access.rotation_enabled` |
+| `aws_dynamodb_table` | `database.*` | `table` | `encryption.sse_type`, `encryption.sse_enabled` |
+| `aws_sqs_queue` | `messaging.*` | `queue` | `encryption.encrypted`, `dead_letter_queue.enabled` |
+| `aws_sns_topic` | `messaging.*` | `topic` | `encryption.encrypted` |
+| `aws_cloudwatch_log_group` | `log_group.*` | `log_group` | `has_retention_policy`, `retention_days` |
+| `aws_cloudwatch_monitoring_config` | `monitoring.*` | `account` | `metric_filters.*.exists`, `alarms.*.exists` |
+| `aws_config_recorder` | `compliance.*` | `recorder` | `recording_enabled`, `all_resource_types`, `has_active_rules` |
+| `aws_apigateway_stage` | `api.*` | `rest_api` | `encryption.tls_enforced`, `encryption.minimum_tls_version` |
+| `aws_elasticache_cluster` | `cache.*` | `cluster` | `encryption.in_transit_enabled`, `encryption.at_rest_enabled` |
+| `aws_cognito_user_pool` | `identity.*` | `user_pool` | `auth.mfa_enforced`, `auth.mfa_configuration` |
+| `aws_backup_resource` | `backup.*`, `availability.*`, `replication.*` | `resource` | `has_backup`, `is_recent`, `encrypted`, `multi_az`, `cross_region_enabled` |
+| `aws_guardduty_detector` | `threat_detection.*` | `detector` | `enabled` |
+| `aws_securityhub` | `security_hub.*` | `hub` | `enabled` |
+| `aws_cloudformation_stack` | `infrastructure.*` | `stack` | `drift_detection_enabled` |
+| `aws_autoscaling_group` | `scaling.*` | `auto_scaling_group` | `availability_zone_count` |
+| `aws_route53_zone` | `dns_service.*` | `hosted_zone` | `health_checks_configured` |
+| `aws_network_acl` | `network.*` | `nacl` | `allows_admin_from_internet` |
+| `aws_access_analyzer` | `access_analyzer.*` | — | `enabled`, `analyzer_type` |
+
+---
+
 ## Important warning
 
 Do not hand-author production observations. Generate observations using an
