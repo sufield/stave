@@ -2,6 +2,10 @@
 
 44 S3 security scenarios in Docker. No AWS credentials required.
 
+Stave ships with 185 controls across 26 domains and 10 compliance
+profiles. This Docker demo covers the S3 domain (55 controls) through
+44 curated scenarios that progress from beginner to advanced.
+
 ## Install
 
 ```bash
@@ -56,7 +60,7 @@ docker compose run --rm -T stave --hipaa --fixed
 
 The same bucket with Block Public Access on, customer-managed CMK,
 server and object-level logging, versioning, COMPLIANCE Object Lock,
-VPC-only access, and ACLs disabled. All 14 controls pass.
+VPC-only access, and ACLs disabled. All HIPAA-mapped S3 controls pass.
 
 ## Compound risk detection (primary demo)
 
@@ -158,13 +162,31 @@ docker compose build
 
 | # | Control | Severity | Name |
 |---|---------|----------|------|
-| 44 | All 47 controls | all | Full Hardening Audit |
+| 44 | All 55 S3 controls | all | Full S3 Hardening Audit |
+
+## Beyond S3: the full catalog
+
+This demo covers S3. Stave evaluates 185 controls across 26 domains:
+
+```bash
+# Compliance profiles — same engine, different framework lens
+stave apply --profile hipaa --input observations.json --include-all
+stave apply --profile cis-aws-v3.0 --input observations.json --include-all
+stave apply --profile soc2 --input observations.json --include-all
+stave apply --profile pci-dss-v4.0 --input observations.json --include-all
+# Also: nist-800-53, fedramp, gdpr, ffiec, iso-27001, nist-csf-2.0
+```
+
+Domains: S3, IAM, VPC, EC2, RDS, ELB, K8s, CloudTrail, CloudWatch, KMS,
+Config, Secrets Manager, DynamoDB, SQS, SNS, Backup, API Gateway,
+ElastiCache, Cognito, GuardDuty, Security Hub, CloudFormation,
+Auto Scaling, Route 53, GCS, DNS.
 
 ## How stave works
 
 ```mermaid
 graph LR
-    A[Observations<br/>S3 bucket snapshots] --> C[stave apply]
+    A[Observations<br/>infrastructure snapshots] --> C[stave apply]
     B[Controls<br/>safety rules] --> C
     C --> D[Findings<br/>violations + remediation]
 ```
@@ -173,10 +195,11 @@ graph LR
 
 By working through these scenarios you have:
 
-- **Seen what an observation looks like** — a JSON snapshot of S3 bucket configuration captured at a point in time (`obs.v0.1`)
+- **Seen what an observation looks like** — a JSON snapshot of infrastructure configuration captured at a point in time (`obs.v0.1`)
 - **Run `stave apply`** — the evaluation engine that checks observations against safety controls and reports violations
 - **Read a finding** — control ID, severity, affected asset, evidence of the misconfiguration, and concrete remediation steps
 - **Verified a fix** — the same command on a remediated observation produces zero violations (exit code 0)
 - **Understood exit codes** — 0 means safe, 3 means violations found
-- **Seen compound risks** — how HIPAA profile evaluation detects dangerous combinations of control failures
+- **Seen compound risks** — how dangerous combinations of individually medium findings create critical attack paths
 - **Used your own data** — captured a real S3 bucket with the AWS CLI and evaluated it with stave
+- **The same engine works across all 26 domains and 10 compliance frameworks** — this demo is the S3 subset
