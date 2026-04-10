@@ -35,13 +35,16 @@ func TestResolveProjectConfig_InvalidExceptionExpiry(t *testing.T) {
 	}
 }
 
-func TestResolveProjectConfig_PackSelectionConflict(t *testing.T) {
-	_, err := ResolveProjectConfig(ProjectConfigInput{
+func TestResolveProjectConfig_ExplicitControlsOverridesPacks(t *testing.T) {
+	result, err := ResolveProjectConfig(ProjectConfigInput{
 		EnabledControlPacks: []string{"s3/public-exposure"},
 		ControlsFlagSet:     true,
 	})
-	if err == nil {
-		t.Fatal("expected conflict error when packs and --controls are both set")
+	if err != nil {
+		t.Fatalf("explicit --controls should override packs, got error: %v", err)
+	}
+	if len(result.PreloadedControls) != 0 {
+		t.Fatalf("expected no pack-resolved controls when --controls flag overrides, got %d", len(result.PreloadedControls))
 	}
 }
 

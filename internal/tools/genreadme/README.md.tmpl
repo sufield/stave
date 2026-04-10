@@ -14,9 +14,9 @@ Stave fills this gap. Define safety controls in YAML, compile them to [CEL](http
 
 ## Features
 
-- **{{.TotalControls}} built-in controls** across {{len .DomainTotals}} domains — AWS S3 ({{domain "s3"}}), AWS IAM ({{domain "iam"}}), GCP Cloud Storage ({{domain "gcs"}}), DNS ({{domain "dns"}})
+- **{{.TotalControls}} built-in controls** across {{len .DomainTotals}} domains (S3, IAM, VPC, EC2, RDS, ELB, K8s, CloudTrail, CloudWatch, KMS, and 16 more)
+- **10 compliance profiles** — HIPAA, CIS AWS v3.0, SOC 2, PCI-DSS v4.0, NIST 800-53, FedRAMP, GDPR, FFIEC, ISO 27001, NIST CSF 2.0
 - **Unsafe duration tracking** — detects how long assets remain misconfigured across snapshots
-- **HIPAA compliance pack** — controls mapped to HIPAA Security Rule sections with compound risk detection
 - **Custom controls** — YAML with `unsafe_predicate` for any asset type, no code changes
 - **CI/CD ready** — exit codes, SARIF output, baseline tracking, policy gating
 - **Extensible by design** — new properties and controls are additive and backward-compatible
@@ -74,10 +74,14 @@ Extraction is out of scope — Stave evaluates observations, it does not fetch d
 stave apply --format json > evaluation.json
 ```
 
-### HIPAA compliance
+### Compliance profiles
 
 ```bash
-stave apply --profile hipaa --input observations.json --format json
+stave apply --profile hipaa --input observations.json --include-all --format json
+stave apply --profile cis-aws-v3.0 --input observations.json --include-all --format json
+stave apply --profile soc2 --input observations.json --include-all --format json
+stave apply --profile pci-dss-v4.0 --input observations.json --include-all --format json
+# Also: nist-800-53, fedramp, gdpr, ffiec, iso-27001, nist-csf-2.0
 ```
 
 ### CI/CD gating

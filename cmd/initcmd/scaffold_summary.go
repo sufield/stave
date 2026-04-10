@@ -20,14 +20,11 @@ type scaffoldSummaryRequest struct {
 
 // printScaffoldSummary writes the scaffold summary. Pass io.Discard as w for quiet mode.
 func printScaffoldSummary(w io.Writer, stderr io.Writer, req scaffoldSummaryRequest) {
-	absBaseDir, err := filepath.Abs(req.BaseDir)
-	if err != nil {
-		absBaseDir = req.BaseDir
-	}
+	displayDir := ui.RelativeDisplayPath(req.BaseDir)
 	if req.DryRun {
-		fmt.Fprintf(w, "Dry run: scaffold would be created in %s\n", absBaseDir)
+		fmt.Fprintf(w, "Dry run: scaffold would be created in %s\n", displayDir)
 	} else {
-		fmt.Fprintf(w, "Initialized empty Stave project in %s\n", absBaseDir)
+		fmt.Fprintf(w, "Initialized empty Stave project in %s\n", displayDir)
 	}
 	fmt.Fprintln(w)
 	if req.DryRun {
