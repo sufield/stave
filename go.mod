@@ -13,7 +13,7 @@ require (
 )
 
 require (
-	github.com/google/cel-go v0.27.0
+	github.com/google/cel-go v0.28.0
 	github.com/google/go-cmp v0.7.0
 	github.com/rogpeppe/go-internal v1.14.1
 	golang.org/x/sync v0.20.0
