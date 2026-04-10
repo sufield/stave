@@ -13,6 +13,7 @@ compliance:
   pci_dss_v4.0: "3.6.1"
   nist_800_53_r5: "SC-12"
   fedramp_moderate: "SC-12"
+  gdpr: "Art.32"
 scope_tags:
   - aws
   - kms

@@ -1,0 +1,78 @@
+# GDPR — Data Subject Rights, DPIA, and Processor Obligations
+# Summary: 10 controls — 0 MAPPED, 0 NEW, 10 MANUAL
+# These are entirely organizational/application-level requirements.
+
+invariants:
+
+# Chapter III — Data Subject Rights
+- id: GDPR.RIGHTS.1
+  title: Right to erasure ("Right to be Forgotten")
+  gdpr_article: "Art.17"
+  manual: true
+  reason: Data deletion across all storage tiers (including backups) requires application-level logic.
+  evidence_guidance: Documented erasure procedures, evidence of deletion capabilities across all data stores, and backup purge mechanisms.
+
+- id: GDPR.RIGHTS.2
+  title: Right of access (data portability)
+  gdpr_article: "Art.15/Art.20"
+  manual: true
+  reason: Data export in structured format requires application-level functionality.
+  evidence_guidance: Data subject access request (DSAR) process, export format documentation, and response timeline SLAs.
+
+- id: GDPR.RIGHTS.3
+  title: Right to restriction of processing
+  gdpr_article: "Art.18"
+  manual: true
+  reason: Processing restriction requires application-level controls to freeze data.
+  evidence_guidance: Documented restriction mechanisms and evidence of ability to halt processing without deletion.
+
+- id: GDPR.RIGHTS.4
+  title: Right to rectification
+  gdpr_article: "Art.16"
+  manual: true
+  reason: Data correction requires application-level capabilities.
+  evidence_guidance: Process for receiving and implementing data corrections.
+
+# Article 35 — DPIA
+- id: GDPR.DPIA.1
+  title: Data Protection Impact Assessment
+  gdpr_article: "Art.35"
+  manual: true
+  reason: DPIAs are organizational risk assessments requiring legal and privacy expertise.
+  evidence_guidance: Completed DPIA for high-risk processing activities, including risk analysis, safeguards description, and DPO consultation.
+
+- id: GDPR.DPIA.2
+  title: DPO consultation on high-risk processing
+  gdpr_article: "Art.35(2)"
+  manual: true
+  reason: DPO consultation is an organizational process.
+  evidence_guidance: Evidence of DPO review and sign-off on DPIAs.
+
+# Article 28 — Processor Obligations
+- id: GDPR.PROCESSOR.1
+  title: Data Processing Agreement with AWS
+  gdpr_article: "Art.28"
+  manual: true
+  reason: DPA is a contractual document between controller and processor.
+  evidence_guidance: Signed AWS Data Processing Addendum (available via AWS Artifact).
+
+- id: GDPR.PROCESSOR.2
+  title: Sub-processor transparency
+  gdpr_article: "Art.28(2)"
+  manual: true
+  reason: Sub-processor approval is a contractual and organizational process.
+  evidence_guidance: AWS sub-processor list review and documented approval.
+
+- id: GDPR.PROCESSOR.3
+  title: Audit rights exercised
+  gdpr_article: "Art.28(3)(h)"
+  manual: true
+  reason: Audit rights exercise is an organizational activity.
+  evidence_guidance: AWS SOC 2/ISO 27001 reports (available via AWS Artifact) as audit evidence.
+
+- id: GDPR.PROCESSOR.4
+  title: Data processing instructions documented
+  gdpr_article: "Art.28(3)(a)"
+  manual: true
+  reason: Processing instructions are organizational documents.
+  evidence_guidance: Written instructions to AWS specifying scope, purpose, and limitations of data processing.

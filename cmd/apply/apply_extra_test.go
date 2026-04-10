@@ -33,6 +33,7 @@ func TestParseProfile_Valid(t *testing.T) {
 		{"pci-dss-v4.0", ProfilePCIDSSv4},
 		{"nist-800-53", ProfileNIST},
 		{"fedramp", ProfileFedRAMP},
+		{"gdpr", ProfileGDPR},
 	}
 	for _, tt := range tests {
 		got, err := ParseProfile(tt.input)
@@ -396,6 +397,7 @@ func TestProfileControlDomain(t *testing.T) {
 		{ProfilePCIDSSv4, ""},
 		{ProfileNIST, ""},
 		{ProfileFedRAMP, ""},
+		{ProfileGDPR, ""},
 	}
 	for _, tt := range tests {
 		got := profileControlDomain(tt.prof)
@@ -419,6 +421,7 @@ func TestProfileComplianceFramework(t *testing.T) {
 		{ProfilePCIDSSv4, "pci_dss_v4.0"},
 		{ProfileNIST, "nist_800_53_r5"},
 		{ProfileFedRAMP, "fedramp_moderate"},
+		{ProfileGDPR, "gdpr"},
 	}
 	for _, tt := range tests {
 		got := profileComplianceFramework(tt.prof)
