@@ -92,7 +92,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "This bucket has Block Public Access enabled but serves objects publicly through a CloudFront distribution. PolicyStatus.IsPublic reports false because the policy grants access to a service principal (not \"*\"), but the end result is public access via the CDN URL.",
@@ -168,7 +168,7 @@
       "control_severity": "medium",
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "A CloudFront distribution accesses this bucket using a legacy Origin Access Identity (OAI) instead of Origin Access Control (OAC). OAI does not support SSE-KMS encrypted objects.",

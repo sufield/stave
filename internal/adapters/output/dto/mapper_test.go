@@ -112,8 +112,8 @@ func TestFromFinding_AllFields(t *testing.T) {
 				PrincipalScope: kernel.ScopePublic,
 			},
 			PostureDrift: &evaluation.PostureDrift{
-				Pattern:      evaluation.DriftIntermittent,
-				EpisodeCount: 3,
+				Pattern:             evaluation.DriftIntermittent,
+				ExposureWindowCount: 3,
 			},
 		},
 		RemediationSpec: policy.RemediationSpec{
@@ -179,7 +179,7 @@ func TestFromFinding_AllFields(t *testing.T) {
 	if dto.Exposure == nil || dto.Exposure.Type != "public_read" {
 		t.Errorf("Exposure = %+v", dto.Exposure)
 	}
-	if dto.PostureDrift == nil || dto.PostureDrift.EpisodeCount != 3 {
+	if dto.PostureDrift == nil || dto.PostureDrift.ExposureWindowCount != 3 {
 		t.Errorf("PostureDrift = %+v", dto.PostureDrift)
 	}
 	if dto.Remediation.Description != "Disable public read access" {
@@ -503,16 +503,16 @@ func TestFromSummary(t *testing.T) {
 func TestFromEvidence_WithAllFields(t *testing.T) {
 	now := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
 	ev := evaluation.Evidence{
-		FirstUnsafeAt:       now.Add(-48 * time.Hour),
-		LastSeenUnsafeAt:    now,
-		UnsafeDurationHours: 48,
-		ThresholdHours:      24,
-		EpisodeCount:        2,
-		WindowDays:          30,
-		RecurrenceLimit:     3,
-		FirstEpisodeAt:      now.Add(-72 * time.Hour),
-		LastEpisodeAt:       now,
-		TemporalRisk:        "threshold exceeded",
+		FirstUnsafeAt:         now.Add(-48 * time.Hour),
+		LastSeenUnsafeAt:      now,
+		UnsafeDurationHours:   48,
+		ThresholdHours:        24,
+		ExposureWindowCount:   2,
+		WindowDays:            30,
+		RecurrenceLimit:       3,
+		FirstExposureWindowAt: now.Add(-72 * time.Hour),
+		LastExposureWindowAt:  now,
+		TemporalRisk:          "threshold exceeded",
 		Misconfigurations: []policy.Misconfiguration{
 			{Property: predicate.NewFieldPath("x"), ActualValue: true, Operator: "eq"},
 		},
@@ -526,8 +526,8 @@ func TestFromEvidence_WithAllFields(t *testing.T) {
 	if dto.UnsafeDurationHours != 48 {
 		t.Errorf("UnsafeDurationHours = %f", dto.UnsafeDurationHours)
 	}
-	if dto.EpisodeCount != 2 {
-		t.Errorf("EpisodeCount = %d", dto.EpisodeCount)
+	if dto.ExposureWindowCount != 2 {
+		t.Errorf("ExposureWindowCount = %d", dto.ExposureWindowCount)
 	}
 	if len(dto.Misconfigurations) != 1 {
 		t.Errorf("len(Misconfigurations) = %d", len(dto.Misconfigurations))

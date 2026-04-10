@@ -267,7 +267,7 @@ func TestBaselineEntryKey(t *testing.T) {
 // ComputePostureDrift
 // ---------------------------------------------------------------------------
 
-func TestComputePostureDrift_SafeTimeline(t *testing.T) {
+func TestComputePostureDrift_SafeLifecycle(t *testing.T) {
 	a := asset.Asset{ID: "bucket-1"}
 	tl := asset.NewExposureLifecycle(a)
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -275,7 +275,7 @@ func TestComputePostureDrift_SafeTimeline(t *testing.T) {
 		t.Fatal(err)
 	}
 	if d := ComputePostureDrift(tl); d != nil {
-		t.Fatalf("safe timeline should return nil, got %+v", d)
+		t.Fatalf("safe lifecycle should return nil, got %+v", d)
 	}
 }
 
@@ -297,8 +297,8 @@ func TestComputePostureDrift_Persistent(t *testing.T) {
 	if d.Pattern != DriftPersistent {
 		t.Fatalf("Pattern = %v, want persistent", d.Pattern)
 	}
-	if d.EpisodeCount != 1 {
-		t.Fatalf("EpisodeCount = %d, want 1", d.EpisodeCount)
+	if d.ExposureWindowCount != 1 {
+		t.Fatalf("ExposureWindowCount = %d, want 1", d.ExposureWindowCount)
 	}
 }
 
@@ -348,8 +348,8 @@ func TestComputePostureDrift_Intermittent(t *testing.T) {
 	if d.Pattern != DriftIntermittent {
 		t.Fatalf("Pattern = %v, want intermittent", d.Pattern)
 	}
-	if d.EpisodeCount != 2 {
-		t.Fatalf("EpisodeCount = %d, want 2", d.EpisodeCount)
+	if d.ExposureWindowCount != 2 {
+		t.Fatalf("ExposureWindowCount = %d, want 2", d.ExposureWindowCount)
 	}
 }
 

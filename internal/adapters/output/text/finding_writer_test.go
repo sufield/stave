@@ -88,7 +88,7 @@ func TestFindingWriter_ViolationsWithSections(t *testing.T) {
 					LastSeenUnsafeAt:    now.Add(-1 * time.Hour),
 					UnsafeDurationHours: 47,
 					ThresholdHours:      24,
-					EpisodeCount:        3,
+					ExposureWindowCount: 3,
 					WindowDays:          30,
 					RecurrenceLimit:     2,
 					TemporalRisk:        "Threshold exceeded",

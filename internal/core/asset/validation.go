@@ -15,7 +15,7 @@ import (
 // validationCtx caches cross-snapshot metadata computed in a single O(N) pass.
 // Methods that consume it avoid re-traversing snapshots for time bounds or identity maps.
 type validationCtx struct {
-	timeline    *snapshotTimeline
+	lifecycle   *snapshotLifecycle
 	assetCounts map[ID]assetOccurrence
 	assetTypes  map[ID]assetTypeSet // asset_id -> set of types
 }
@@ -30,14 +30,14 @@ func (s Snapshots) analyze() *validationCtx {
 	}
 
 	ctx := &validationCtx{
-		timeline:    newSnapshotTimeline(s[0].CapturedAt),
+		lifecycle:   newSnapshotTimeline(s[0].CapturedAt),
 		assetCounts: make(map[ID]assetOccurrence),
 		assetTypes:  make(map[ID]assetTypeSet),
 	}
 
 	timeCounts := make(map[time.Time]int, len(s))
 	for _, snap := range s {
-		ctx.timeline.observe(snap.CapturedAt)
+		ctx.lifecycle.observe(snap.CapturedAt)
 
 		timeCounts[snap.CapturedAt]++
 
@@ -57,7 +57,7 @@ func (s Snapshots) analyze() *validationCtx {
 		}
 	}
 
-	ctx.timeline.finalize(timeCounts)
+	ctx.lifecycle.finalize(timeCounts)
 	return ctx
 }
 
@@ -88,18 +88,18 @@ func (s assetTypeSet) List() []string {
 	return out
 }
 
-type snapshotTimeline struct {
+type snapshotLifecycle struct {
 	earliest       time.Time
 	latest         time.Time
 	span           time.Duration
 	duplicateTimes []time.Time
 }
 
-func newSnapshotTimeline(seed time.Time) *snapshotTimeline {
-	return &snapshotTimeline{earliest: seed, latest: seed}
+func newSnapshotTimeline(seed time.Time) *snapshotLifecycle {
+	return &snapshotLifecycle{earliest: seed, latest: seed}
 }
 
-func (t *snapshotTimeline) observe(capturedAt time.Time) {
+func (t *snapshotLifecycle) observe(capturedAt time.Time) {
 	if capturedAt.Before(t.earliest) {
 		t.earliest = capturedAt
 	}
@@ -108,7 +108,7 @@ func (t *snapshotTimeline) observe(capturedAt time.Time) {
 	}
 }
 
-func (t *snapshotTimeline) finalize(timeCounts map[time.Time]int) {
+func (t *snapshotLifecycle) finalize(timeCounts map[time.Time]int) {
 	for ts, count := range timeCounts {
 		if count > 1 {
 			t.duplicateTimes = append(t.duplicateTimes, ts)
@@ -120,15 +120,15 @@ func (t *snapshotTimeline) finalize(timeCounts map[time.Time]int) {
 	t.span = t.latest.Sub(t.earliest)
 }
 
-func (t *snapshotTimeline) hasInsufficientSpan(required time.Duration) bool {
+func (t *snapshotLifecycle) hasInsufficientSpan(required time.Duration) bool {
 	return t.span < required
 }
 
-func (t *snapshotTimeline) HasDuplicates() bool {
+func (t *snapshotLifecycle) HasDuplicates() bool {
 	return t != nil && len(t.duplicateTimes) > 0
 }
 
-func (t *snapshotTimeline) DuplicateTimes() []time.Time {
+func (t *snapshotLifecycle) DuplicateTimes() []time.Time {
 	if t == nil || len(t.duplicateTimes) == 0 {
 		return nil
 	}
@@ -137,7 +137,7 @@ func (t *snapshotTimeline) DuplicateTimes() []time.Time {
 	return out
 }
 
-func (t *snapshotTimeline) IsAheadOf(other time.Time) bool {
+func (t *snapshotLifecycle) IsAheadOf(other time.Time) bool {
 	if t == nil || other.IsZero() {
 		return false
 	}
@@ -145,7 +145,7 @@ func (t *snapshotTimeline) IsAheadOf(other time.Time) bool {
 }
 
 // FormatLatest returns the latest captured_at in RFC3339 for reporting.
-func (t *snapshotTimeline) FormatLatest() string {
+func (t *snapshotLifecycle) FormatLatest() string {
 	if t == nil {
 		return ""
 	}
@@ -243,12 +243,12 @@ func (s Snapshots) checkTimeSanity(ctx *validationCtx, now time.Time) (issues []
 			Build())
 	}
 
-	if ctx == nil || ctx.timeline == nil {
+	if ctx == nil || ctx.lifecycle == nil {
 		return
 	}
 
-	if ctx.timeline.HasDuplicates() {
-		for _, ts := range ctx.timeline.DuplicateTimes() {
+	if ctx.lifecycle.HasDuplicates() {
+		for _, ts := range ctx.lifecycle.DuplicateTimes() {
 			issues = append(issues, diag.NewFinding(diag.RuleDuplicateTimestamp).
 				Warning().
 				Remediation("Each snapshot should have a unique captured_at timestamp").
@@ -259,15 +259,15 @@ func (s Snapshots) checkTimeSanity(ctx *validationCtx, now time.Time) (issues []
 		}
 	}
 
-	if ctx.timeline.IsAheadOf(now.UTC()) {
-		issues = append(issues, s.createNowPrecedenceError(now, ctx.timeline))
+	if ctx.lifecycle.IsAheadOf(now.UTC()) {
+		issues = append(issues, s.createNowPrecedenceError(now, ctx.lifecycle))
 	}
 
 	return
 }
 
-func (s Snapshots) createNowPrecedenceError(now time.Time, timeline *snapshotTimeline) diag.Finding {
-	latest := timeline.FormatLatest()
+func (s Snapshots) createNowPrecedenceError(now time.Time, lifecycle *snapshotLifecycle) diag.Finding {
+	latest := lifecycle.FormatLatest()
 	issue := diag.NewFinding(diag.RuleNowBeforeSnapshots).
 		Error().
 		Remediation("Set --now >= latest snapshot timestamp").
@@ -329,20 +329,20 @@ func (s Snapshots) checkIdentityConsistency(ctx *validationCtx) (issues []diag.F
 
 // checkDurationFeasibility checks if the snapshot span covers the threshold.
 func (s Snapshots) checkDurationFeasibility(ctx *validationCtx, maxUnsafe time.Duration) (issues []diag.Finding) {
-	if !s.IsMultiSnapshot() || maxUnsafe <= 0 || ctx == nil || ctx.timeline == nil {
+	if !s.IsMultiSnapshot() || maxUnsafe <= 0 || ctx == nil || ctx.lifecycle == nil {
 		return
 	}
 
-	if ctx.timeline.hasInsufficientSpan(maxUnsafe) {
+	if ctx.lifecycle.hasInsufficientSpan(maxUnsafe) {
 		issue := diag.NewFinding(diag.RuleSpanLessThanMaxUnsafe).
 			Warning().
 			Remediation("Add older snapshots or reduce --max-unsafe").
 			Attributes(map[string]string{
-				"span":       kernel.FormatDuration(ctx.timeline.span),
+				"span":       kernel.FormatDuration(ctx.lifecycle.span),
 				"max_unsafe": kernel.FormatDuration(maxUnsafe),
 			}).
 			Build()
-		issue.FixCommand = "stave validate --max-unsafe " + kernel.FormatDuration(ctx.timeline.span)
+		issue.FixCommand = "stave validate --max-unsafe " + kernel.FormatDuration(ctx.lifecycle.span)
 		issues = append(issues, issue)
 	}
 

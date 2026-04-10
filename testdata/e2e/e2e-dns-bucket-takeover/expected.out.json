@@ -73,7 +73,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "A DNS record points to a cloud resource that does not exist or is not owned by the organization. An attacker can claim the resource and serve content under your domain \u2014 phishing, malware, or credential harvesting that appears to originate from a trusted hostname.",

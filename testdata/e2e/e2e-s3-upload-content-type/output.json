@@ -74,7 +74,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "Signed upload policy does not restrict content types. An attacker can upload arbitrary content types including image/svg+xml or text/html, enabling stored XSS.",

@@ -522,9 +522,9 @@ func TestEvaluator_UnsupportedTypeSkipped(t *testing.T) {
 	}
 }
 
-// TestEvaluator_AbsenceDoesNotCloseepisode tests that an asset missing from a
-// snapshot does NOT close an open episode. Absence means "no new evidence", not "safe".
-func TestEvaluator_AbsenceDoesNotCloseEpisode(t *testing.T) {
+// TestEvaluator_AbsenceDoesNotCloseExposureWindow tests that an asset missing from a
+// snapshot does NOT close an open exposure window. Absence means "no new evidence", not "safe".
+func TestEvaluator_AbsenceDoesNotCloseExposureWindow(t *testing.T) {
 	controls := []policy.ControlDefinition{
 		{
 			ID:   "CTL.EXP.DURATION.001",
@@ -541,8 +541,8 @@ func TestEvaluator_AbsenceDoesNotCloseEpisode(t *testing.T) {
 	}
 
 	// t0: unsafe, t1: missing (absence), t2: unsafe again
-	// Without absence-as-no-evidence, this would close episode at t1.
-	// With correct semantics, the episode continues through absence.
+	// Without absence-as-no-evidence, this would close exposure window at t1.
+	// With correct semantics, the exposure window continues through absence.
 	snapshots := []asset.Snapshot{
 		{
 			CapturedAt: mustParseTime("2026-01-01T00:00:00Z"),
@@ -571,7 +571,7 @@ func TestEvaluator_AbsenceDoesNotCloseEpisode(t *testing.T) {
 	evaluator := NewEvaluator(controls, maxUnsafe, clock)
 	result := evaluator.Evaluate(snapshots)
 
-	// Should have 1 currently unsafe (bucket remains in open episode)
+	// Should have 1 currently unsafe (bucket remains in open exposure window)
 	if result.Summary.ExposedResources != 1 {
 		t.Errorf("Expected 1 currently unsafe, got %d", result.Summary.ExposedResources)
 	}
@@ -583,10 +583,10 @@ func TestEvaluator_AbsenceDoesNotCloseEpisode(t *testing.T) {
 	}
 }
 
-// TestEvaluator_OpenEpisodeNotInEpisodesList tests that an episode still open
-// at end-of-input is NOT added to the Episodes list. Episodes list contains
-// only completed episodes (true -> false transitions).
-func TestEvaluator_OpenEpisodeNotInEpisodesList(t *testing.T) {
+// TestEvaluator_OpenWindowNotInWindowsList tests that an exposure window still open
+// at end-of-input is NOT added to the Exposure windows list. Exposure windows list contains
+// only completed exposure windows (true -> false transitions).
+func TestEvaluator_OpenWindowNotInWindowsList(t *testing.T) {
 	controls := []policy.ControlDefinition{
 		{
 			ID:   "CTL.EXP.RECURRENCE.001",
@@ -603,37 +603,37 @@ func TestEvaluator_OpenEpisodeNotInEpisodesList(t *testing.T) {
 		},
 	}
 
-	// Two completed episodes + one open episode at end
-	// Episodes list should only have 2 completed ones
+	// Two completed exposure windows + one open exposure window at end
+	// Exposure windows list should only have 2 completed ones
 	snapshots := []asset.Snapshot{
 		{
 			CapturedAt: mustParseTime("2026-01-01T00:00:00Z"),
 			Assets: []asset.Asset{
-				{ID: "bucket", Properties: map[string]any{"public": true}}, // episode 1 start
+				{ID: "bucket", Properties: map[string]any{"public": true}}, // window 1 start
 			},
 		},
 		{
 			CapturedAt: mustParseTime("2026-01-08T00:00:00Z"),
 			Assets: []asset.Asset{
-				{ID: "bucket", Properties: map[string]any{"public": false}}, // episode 1 end
+				{ID: "bucket", Properties: map[string]any{"public": false}}, // window 1 end
 			},
 		},
 		{
 			CapturedAt: mustParseTime("2026-01-15T00:00:00Z"),
 			Assets: []asset.Asset{
-				{ID: "bucket", Properties: map[string]any{"public": true}}, // episode 2 start
+				{ID: "bucket", Properties: map[string]any{"public": true}}, // window 2 start
 			},
 		},
 		{
 			CapturedAt: mustParseTime("2026-01-22T00:00:00Z"),
 			Assets: []asset.Asset{
-				{ID: "bucket", Properties: map[string]any{"public": false}}, // episode 2 end
+				{ID: "bucket", Properties: map[string]any{"public": false}}, // window 2 end
 			},
 		},
 		{
 			CapturedAt: mustParseTime("2026-01-29T00:00:00Z"),
 			Assets: []asset.Asset{
-				{ID: "bucket", Properties: map[string]any{"public": true}}, // episode 3 start (OPEN)
+				{ID: "bucket", Properties: map[string]any{"public": true}}, // window 3 start (OPEN)
 			},
 		},
 	}
@@ -649,10 +649,10 @@ func TestEvaluator_OpenEpisodeNotInEpisodesList(t *testing.T) {
 		t.Errorf("Expected 1 currently unsafe, got %d", result.Summary.ExposedResources)
 	}
 
-	// Recurrence check: 2 completed episodes, limit is 3
+	// Recurrence check: 2 completed exposure windows, limit is 3
 	// 2 < 3, so no violation
 	if result.Summary.Violations != 0 {
-		t.Errorf("Expected 0 violations (2 completed episodes < limit 3), got %d", result.Summary.Violations)
+		t.Errorf("Expected 0 violations (2 completed exposure windows < limit 3), got %d", result.Summary.Violations)
 	}
 }
 
@@ -747,7 +747,7 @@ func TestEvaluator_TypeGating(t *testing.T) {
 		}
 	})
 
-	// Test unsafe_recurrence - violation when episode count exceeds limit
+	// Test unsafe_recurrence - violation when exposure window count exceeds limit
 	t.Run("unsafe_recurrence", func(t *testing.T) {
 		controls := []policy.ControlDefinition{
 			{
@@ -765,7 +765,7 @@ func TestEvaluator_TypeGating(t *testing.T) {
 			},
 		}
 
-		// 3 episodes: unsafe -> safe -> unsafe -> safe -> unsafe
+		// 3 exposure windows: unsafe -> safe -> unsafe -> safe -> unsafe
 		snapshots := []asset.Snapshot{
 			{
 				CapturedAt: mustParseTime("2026-01-01T00:00:00Z"),
@@ -804,18 +804,18 @@ func TestEvaluator_TypeGating(t *testing.T) {
 		evaluator := NewEvaluator(controls, maxUnsafe, clock)
 		result := evaluator.Evaluate(snapshots)
 
-		// Closed episodes started in the window are counted for recurrence.
-		// Here, 2 archived episodes meet limit=2, so this is a violation.
+		// Closed exposure windows started in the window are counted for recurrence.
+		// Here, 2 archived exposure windows meet limit=2, so this is a violation.
 		if result.Summary.Violations != 1 {
 			t.Errorf("unsafe_recurrence: expected 1 violation, got %d", result.Summary.Violations)
 		}
 	})
 }
 
-// TestEvaluator_DurationFromCurrentEpisode tests that duration is computed from
-// the current episode start, not from the first-ever unsafe observation.
-// Scenario: unsafe -> safe -> unsafe - duration should measure only the current episode.
-func TestEvaluator_DurationFromCurrentEpisode(t *testing.T) {
+// TestEvaluator_DurationFromCurrentExposureWindow tests that duration is computed from
+// the current window start, not from the first-ever unsafe observation.
+// Scenario: unsafe -> safe -> unsafe - duration should measure only the current exposure window.
+func TestEvaluator_DurationFromCurrentExposureWindow(t *testing.T) {
 	controls := []policy.ControlDefinition{
 		{
 			ID:   "CTL.DURATION.001",
@@ -832,7 +832,7 @@ func TestEvaluator_DurationFromCurrentEpisode(t *testing.T) {
 	}
 
 	// Scenario: unsafe (5 days) -> safe -> unsafe (1 day)
-	// Current episode is only 1 day, should NOT violate 48h threshold.
+	// Current exposure window is only 1 day, should NOT violate 48h threshold.
 	snapshots := []asset.Snapshot{
 		// asset.ExposureWindow 1: Jan 1 - unsafe
 		{
@@ -862,7 +862,7 @@ func TestEvaluator_DurationFromCurrentEpisode(t *testing.T) {
 				{ID: "bucket", Properties: map[string]any{"public": true}},
 			},
 		},
-		// asset.ExposureWindow 2: Jan 11 - still unsafe (1 day in current episode)
+		// asset.ExposureWindow 2: Jan 11 - still unsafe (1 day in current exposure window)
 		{
 			CapturedAt: mustParseTime("2026-01-11T00:00:00Z"),
 			Assets: []asset.Asset{
@@ -876,17 +876,17 @@ func TestEvaluator_DurationFromCurrentEpisode(t *testing.T) {
 	evaluator := NewEvaluator(controls, maxUnsafe, clock)
 	result := evaluator.Evaluate(snapshots)
 
-	// Current episode is only 24h (Jan 10 -> Jan 11), which is < 48h threshold.
+	// Current exposure window is only 24h (Jan 10 -> Jan 11), which is < 48h threshold.
 	// If duration were computed from first-ever unsafe (Jan 1), it would be 10 days = 240h.
 	// asset.ExposureWindow-based duration should NOT trigger a violation.
 	if result.Summary.Violations != 0 {
-		t.Errorf("Expected 0 violations (current episode is only 24h < 48h threshold), got %d", result.Summary.Violations)
+		t.Errorf("Expected 0 violations (current exposure window is only 24h < 48h threshold), got %d", result.Summary.Violations)
 	}
 }
 
-// TestEvaluator_DurationFromCurrentEpisode_Violation tests that duration violation
-// is correctly detected based on current episode duration, not first-ever unsafe.
-func TestEvaluator_DurationFromCurrentEpisode_Violation(t *testing.T) {
+// TestEvaluator_DurationFromCurrentExposureWindow_Violation tests that duration violation
+// is correctly detected based on current exposure window duration, not first-ever unsafe.
+func TestEvaluator_DurationFromCurrentExposureWindow_Violation(t *testing.T) {
 	controls := []policy.ControlDefinition{
 		{
 			ID:   "CTL.DURATION.001",
@@ -903,7 +903,7 @@ func TestEvaluator_DurationFromCurrentEpisode_Violation(t *testing.T) {
 	}
 
 	// Scenario: unsafe (1 day) -> safe -> unsafe (3 days)
-	// Current episode is 3 days, should violate 48h threshold.
+	// Current exposure window is 3 days, should violate 48h threshold.
 	snapshots := []asset.Snapshot{
 		// asset.ExposureWindow 1: Jan 1 - unsafe
 		{
@@ -926,7 +926,7 @@ func TestEvaluator_DurationFromCurrentEpisode_Violation(t *testing.T) {
 				{ID: "bucket", Properties: map[string]any{"public": true}},
 			},
 		},
-		// asset.ExposureWindow 2: Jan 13 - still unsafe (3 days = 72h in current episode)
+		// asset.ExposureWindow 2: Jan 13 - still unsafe (3 days = 72h in current exposure window)
 		{
 			CapturedAt: mustParseTime("2026-01-13T00:00:00Z"),
 			Assets: []asset.Asset{
@@ -940,24 +940,24 @@ func TestEvaluator_DurationFromCurrentEpisode_Violation(t *testing.T) {
 	evaluator := NewEvaluator(controls, maxUnsafe, clock)
 	result := evaluator.Evaluate(snapshots)
 
-	// Current episode is 72h (Jan 10 -> Jan 13), which is > 48h threshold.
+	// Current exposure window is 72h (Jan 10 -> Jan 13), which is > 48h threshold.
 	// Should trigger a violation.
 	if result.Summary.Violations != 1 {
-		t.Errorf("Expected 1 violation (current episode is 72h > 48h threshold), got %d", result.Summary.Violations)
+		t.Errorf("Expected 1 violation (current exposure window is 72h > 48h threshold), got %d", result.Summary.Violations)
 	}
 
 	if len(result.Findings) == 1 {
 		// Duration should be 72h (from Jan 10), not 12 days from Jan 1
 		expectedDuration := 72.0
 		if result.Findings[0].Evidence.UnsafeDurationHours != expectedDuration {
-			t.Errorf("Expected duration %v hours (current episode), got %v",
+			t.Errorf("Expected duration %v hours (current exposure window), got %v",
 				expectedDuration, result.Findings[0].Evidence.UnsafeDurationHours)
 		}
 	}
 }
 
-// TestTimeline_CoverageMetrics tests that coverage metrics are correctly computed.
-func TestTimeline_CoverageMetrics(t *testing.T) {
+// TestExposureLifecycle_CoverageMetrics tests that coverage metrics are correctly computed.
+func TestExposureLifecycle_CoverageMetrics(t *testing.T) {
 	controls := []policy.ControlDefinition{
 		{
 			ID:   "CTL.COVERAGE.001",
@@ -1002,52 +1002,52 @@ func TestTimeline_CoverageMetrics(t *testing.T) {
 	clock := clockadp.FixedClock(mustParseTime("2026-01-12T00:00:00Z"))
 	evaluator := NewEvaluator(controls, maxUnsafe, clock)
 
-	// Get timelines directly to check coverage metrics
-	timelines, btErr := engine.BuildTimelinesPerControl(evaluator.Controls(), snapshots, nil)
+	// Get lifecycles directly to check coverage metrics
+	lifecycles, btErr := engine.BuildLifecyclesPerControl(evaluator.Controls(), snapshots, nil)
 	if btErr != nil {
 		t.Fatal(btErr)
 	}
-	timeline := timelines["CTL.COVERAGE.001"]["bucket"]
+	lifecycle := lifecycles["CTL.COVERAGE.001"]["bucket"]
 
-	if timeline == nil {
-		t.Fatal("Expected timeline for bucket")
+	if lifecycle == nil {
+		t.Fatal("Expected lifecycle for bucket")
 		return
 	}
 
 	// Test ObservationCount
-	if timeline.Stats().ObservationCount() != 4 {
-		t.Errorf("Expected ObservationCount=4, got %d", timeline.Stats().ObservationCount())
+	if lifecycle.Stats().ObservationCount() != 4 {
+		t.Errorf("Expected ObservationCount=4, got %d", lifecycle.Stats().ObservationCount())
 	}
 
 	// Test FirstSeenAt
 	expectedFirstSeen := mustParseTime("2026-01-01T00:00:00Z")
-	if timeline.Stats().FirstSeenAt().IsZero() || !timeline.Stats().FirstSeenAt().Equal(expectedFirstSeen) {
-		t.Errorf("Expected FirstSeenAt=%v, got %v", expectedFirstSeen, timeline.Stats().FirstSeenAt())
+	if lifecycle.Stats().FirstSeenAt().IsZero() || !lifecycle.Stats().FirstSeenAt().Equal(expectedFirstSeen) {
+		t.Errorf("Expected FirstSeenAt=%v, got %v", expectedFirstSeen, lifecycle.Stats().FirstSeenAt())
 	}
 
 	// Test LastSeenAt
 	expectedLastSeen := mustParseTime("2026-01-12T00:00:00Z")
-	if timeline.Stats().LastSeenAt().IsZero() || !timeline.Stats().LastSeenAt().Equal(expectedLastSeen) {
-		t.Errorf("Expected LastSeenAt=%v, got %v", expectedLastSeen, timeline.Stats().LastSeenAt())
+	if lifecycle.Stats().LastSeenAt().IsZero() || !lifecycle.Stats().LastSeenAt().Equal(expectedLastSeen) {
+		t.Errorf("Expected LastSeenAt=%v, got %v", expectedLastSeen, lifecycle.Stats().LastSeenAt())
 	}
 
 	// Test MaxGap (should be 8 days = 192 hours)
 	expectedMaxGap := 8 * 24 * time.Hour // 192 hours
-	if timeline.Stats().MaxGap() != expectedMaxGap {
-		t.Errorf("Expected MaxGap=%v, got %v", expectedMaxGap, timeline.Stats().MaxGap())
+	if lifecycle.Stats().MaxGap() != expectedMaxGap {
+		t.Errorf("Expected MaxGap=%v, got %v", expectedMaxGap, lifecycle.Stats().MaxGap())
 	}
 
 	// Test coverage span
 	expectedSpan := 11 * 24 * time.Hour // Jan 1 -> Jan 12 = 11 days
-	actualSpan := timeline.Stats().LastSeenAt().Sub(timeline.Stats().FirstSeenAt())
+	actualSpan := lifecycle.Stats().LastSeenAt().Sub(lifecycle.Stats().FirstSeenAt())
 	if actualSpan != expectedSpan {
 		t.Errorf("Expected coverage span=%v, got %v", expectedSpan, actualSpan)
 	}
 }
 
-// TestTimeline_CoverageWithAbsence tests that coverage metrics are not updated
+// TestExposureLifecycle_CoverageWithAbsence tests that coverage metrics are not updated
 // when an asset is absent from a snapshot.
-func TestTimeline_CoverageWithAbsence(t *testing.T) {
+func TestExposureLifecycle_CoverageWithAbsence(t *testing.T) {
 	controls := []policy.ControlDefinition{
 		{
 			ID:   "CTL.COVERAGE.002",
@@ -1086,30 +1086,30 @@ func TestTimeline_CoverageWithAbsence(t *testing.T) {
 	clock := clockadp.FixedClock(mustParseTime("2026-01-10T00:00:00Z"))
 	evaluator := NewEvaluator(controls, maxUnsafe, clock)
 
-	timelines, btErr := engine.BuildTimelinesPerControl(evaluator.Controls(), snapshots, nil)
+	lifecycles, btErr := engine.BuildLifecyclesPerControl(evaluator.Controls(), snapshots, nil)
 	if btErr != nil {
 		t.Fatal(btErr)
 	}
-	timeline := timelines["CTL.COVERAGE.002"]["bucket"]
+	lifecycle := lifecycles["CTL.COVERAGE.002"]["bucket"]
 
-	if timeline == nil {
-		t.Fatal("Expected timeline for bucket")
+	if lifecycle == nil {
+		t.Fatal("Expected lifecycle for bucket")
 		return
 	}
 
 	// ObservationCount should be 2 (not 3, since bucket was absent in Jan 5 snapshot)
-	if timeline.Stats().ObservationCount() != 2 {
-		t.Errorf("Expected ObservationCount=2 (absent snapshot not counted), got %d", timeline.Stats().ObservationCount())
+	if lifecycle.Stats().ObservationCount() != 2 {
+		t.Errorf("Expected ObservationCount=2 (absent snapshot not counted), got %d", lifecycle.Stats().ObservationCount())
 	}
 
 	// MaxGap should be 9 days (Jan 1 -> Jan 10, skipping the absent snapshot)
 	expectedMaxGap := 9 * 24 * time.Hour
-	if timeline.Stats().MaxGap() != expectedMaxGap {
-		t.Errorf("Expected MaxGap=%v (gap includes absent period), got %v", expectedMaxGap, timeline.Stats().MaxGap())
+	if lifecycle.Stats().MaxGap() != expectedMaxGap {
+		t.Errorf("Expected MaxGap=%v (gap includes absent period), got %v", expectedMaxGap, lifecycle.Stats().MaxGap())
 	}
 }
 
-// TestEvaluator_SparseDurationInconclusive tests that sparse duration timelines
+// TestEvaluator_SparseDurationInconclusive tests that sparse duration lifecycles
 // result in INCONCLUSIVE, not VIOLATION.
 func TestEvaluator_SparseDurationInconclusive(t *testing.T) {
 	controls := []policy.ControlDefinition{
@@ -1168,7 +1168,7 @@ func TestEvaluator_SparseDurationInconclusive(t *testing.T) {
 }
 
 // TestEvaluator_MissingResourceInconclusive tests that an asset that disappears
-// mid-episode results in INCONCLUSIVE (not PASS).
+// mid-window results in INCONCLUSIVE (not PASS).
 func TestEvaluator_MissingResourceInconclusive(t *testing.T) {
 	controls := []policy.ControlDefinition{
 		{
@@ -1585,9 +1585,9 @@ func TestEvaluator_ConfidenceDowngrade(t *testing.T) {
 	})
 }
 
-// TestEvaluator_RecurrenceOpenEpisode tests that open episodes are not counted
-// as archived recurrence episodes.
-func TestEvaluator_RecurrenceOpenEpisode(t *testing.T) {
+// TestEvaluator_RecurrenceOpenExposureWindow tests that open exposure windows are not counted
+// as archived recurrence exposure windows.
+func TestEvaluator_RecurrenceOpenExposureWindow(t *testing.T) {
 	controls := []policy.ControlDefinition{
 		{
 			ID:   "CTL.RECURRENCE.OPEN",
@@ -1604,7 +1604,7 @@ func TestEvaluator_RecurrenceOpenEpisode(t *testing.T) {
 		},
 	}
 
-	// Create snapshots spanning ~60 days with all episodes within 90-day window:
+	// Create snapshots spanning ~60 days with all exposure windows within 90-day window:
 	// Evaluated at Mar 15, window starts Dec 15 (90 days back)
 	// - asset.ExposureWindow 1: Jan 15-20 (completed, in window)
 	// - asset.ExposureWindow 2: Feb 10-15 (completed, in window)
@@ -1673,10 +1673,10 @@ func TestEvaluator_RecurrenceOpenEpisode(t *testing.T) {
 
 	row := result.Checks[0]
 
-	// Only closed episodes are counted for recurrence.
+	// Only closed exposure windows are counted for recurrence.
 	// With this fixture, archived count stays below limit, so sparse coverage makes it inconclusive.
 	if row.Verdict != evaluation.VerdictInconclusive {
-		t.Errorf("Expected INCONCLUSIVE (open episode not counted), got %s", row.Verdict)
+		t.Errorf("Expected INCONCLUSIVE (open exposure window not counted), got %s", row.Verdict)
 	}
 
 	// No violation finding should be produced.
@@ -1685,9 +1685,9 @@ func TestEvaluator_RecurrenceOpenEpisode(t *testing.T) {
 	}
 }
 
-// TestEvaluator_RecurrenceOpenEpisodeNotCounted tests that open episodes
+// TestEvaluator_RecurrenceOpenExposureWindowNotCounted tests that open exposure windows
 // that don't overlap the recurrence window are not counted.
-func TestEvaluator_RecurrenceOpenEpisodeNotCounted(t *testing.T) {
+func TestEvaluator_RecurrenceOpenExposureWindowNotCounted(t *testing.T) {
 	controls := []policy.ControlDefinition{
 		{
 			ID:   "CTL.RECURRENCE.OPEN.NOCOUNT",
@@ -1707,7 +1707,7 @@ func TestEvaluator_RecurrenceOpenEpisodeNotCounted(t *testing.T) {
 	// Create snapshots with:
 	// - asset.ExposureWindow 1: Jan 1-5 (outside 30-day window from Apr 10)
 	// - asset.ExposureWindow 2: currently open starting Apr 1
-	// Only 1 episode in window (open), should not trigger violation (limit = 3)
+	// Only 1 exposure window in window (open), should not trigger violation (limit = 3)
 	snapshots := []asset.Snapshot{
 		// asset.ExposureWindow 1 (outside window)
 		{
@@ -1761,9 +1761,9 @@ func TestEvaluator_RecurrenceOpenEpisodeNotCounted(t *testing.T) {
 
 	row := result.Checks[0]
 
-	// Only 1 episode in window (the open one), should be PASS (limit = 3)
+	// Only 1 exposure window in window (the open one), should be PASS (limit = 3)
 	if row.Verdict != evaluation.VerdictPass {
-		t.Errorf("Expected PASS (only 1 open episode in window < limit 3), got %s", row.Verdict)
+		t.Errorf("Expected PASS (only 1 open exposure window in window < limit 3), got %s", row.Verdict)
 	}
 
 	// Should have 0 findings

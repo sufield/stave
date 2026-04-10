@@ -195,11 +195,11 @@ func writeFindingSource(d *drawer, f remediation.Finding) {
 
 func writeFindingEvidence(d *drawer, f remediation.Finding) {
 	d.f("   Evidence:\n")
-	writeFindingEvidenceTimeline(d, f)
+	writeFindingEvidenceLifecycle(d, f)
 	writeFindingEvidenceContext(d, f)
 }
 
-func writeFindingEvidenceTimeline(d *drawer, f remediation.Finding) {
+func writeFindingEvidenceLifecycle(d *drawer, f remediation.Finding) {
 	if !f.Evidence.FirstUnsafeAt.IsZero() {
 		d.f("     First unsafe: %s\n", f.Evidence.FirstUnsafeAt.Format("2006-01-02 15:04:05 UTC"))
 	}
@@ -212,8 +212,8 @@ func writeFindingEvidenceTimeline(d *drawer, f remediation.Finding) {
 }
 
 func writeFindingEvidenceContext(d *drawer, f remediation.Finding) {
-	if f.Evidence.EpisodeCount > 0 {
-		d.f("     Episodes:     %d (limit: %d within %d days)\n", f.Evidence.EpisodeCount, f.Evidence.RecurrenceLimit, f.Evidence.WindowDays)
+	if f.Evidence.ExposureWindowCount > 0 {
+		d.f("     Exposure Windows:     %d (limit: %d within %d days)\n", f.Evidence.ExposureWindowCount, f.Evidence.RecurrenceLimit, f.Evidence.WindowDays)
 	}
 	if f.Evidence.TemporalRisk != "" {
 		d.f("     Why now:      %s\n", f.Evidence.TemporalRisk)

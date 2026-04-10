@@ -73,7 +73,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "RDS instance does not require SSL connections. Database traffic may be transmitted in plaintext.",

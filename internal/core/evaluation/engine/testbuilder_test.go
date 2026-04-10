@@ -129,26 +129,26 @@ func (b *controlBuilder) build() policy.ControlDefinition {
 }
 
 // ---------------------------------------------------------------------------
-// SnapshotBuilder — reduces snapshot construction for timeline tests.
+// SnapshotBuilder — reduces snapshot construction for lifecycle tests.
 //
 // Usage:
-//   snaps := newTimeline(base).
+//   snaps := newLifecycleBuilder(base).
 //       at(0, "bucket-1").
 //       at(48*time.Hour, "bucket-1").
 //       build()
 // ---------------------------------------------------------------------------
 
-type timelineBuilder struct {
+type lifecycleBuilder struct {
 	base      time.Time
 	snapshots []asset.Snapshot
 }
 
-func newTimeline(base time.Time) *timelineBuilder {
-	return &timelineBuilder{base: base}
+func newLifecycleBuilder(base time.Time) *lifecycleBuilder {
+	return &lifecycleBuilder{base: base}
 }
 
 // at adds a snapshot at base+offset with the given asset IDs.
-func (b *timelineBuilder) at(offset time.Duration, assetIDs ...string) *timelineBuilder {
+func (b *lifecycleBuilder) at(offset time.Duration, assetIDs ...string) *lifecycleBuilder {
 	assets := make([]asset.Asset, len(assetIDs))
 	for i, id := range assetIDs {
 		assets[i] = asset.Asset{ID: asset.ID(id), Type: "s3_bucket"}
@@ -160,7 +160,7 @@ func (b *timelineBuilder) at(offset time.Duration, assetIDs ...string) *timeline
 	return b
 }
 
-func (b *timelineBuilder) build() []asset.Snapshot {
+func (b *lifecycleBuilder) build() []asset.Snapshot {
 	return b.snapshots
 }
 

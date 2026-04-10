@@ -50,7 +50,7 @@ type assetStreakRequest struct {
 	Eval    policy.PredicateEval
 }
 
-// analyzeAssetStreak walks an asset's chronological timeline to find the
+// analyzeAssetStreak walks an asset's chronological lifecycle to find the
 // longest contiguous unsafe period (streak). A streak starts when the predicate
 // first matches and ends when it stops matching or at endTime if still unsafe.
 func analyzeAssetStreak(req assetStreakRequest) (maxStreak time.Duration, matched bool) {

@@ -145,7 +145,7 @@ The DSL supports 15 operators:
 |------|----------|
 | `unsafe_state` | Violation when predicate matches in any snapshot |
 | `unsafe_duration` | Violation when asset is unsafe longer than `--max-unsafe` threshold |
-| `unsafe_recurrence` | Violation when episode count exceeds limit within window |
+| `unsafe_recurrence` | Violation when exposure window count exceeds limit within window |
 | `prefix_exposure` | Violation when protected prefixes are publicly readable |
 
 ## File Layout

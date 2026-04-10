@@ -128,7 +128,7 @@ Optional fields:
 | `source` | object | Source file + line reference |
 | `fix_plan` | object | Machine-readable fix actions |
 | `exposure` | object | Exposure classification (`type` + `principal_scope`) |
-| `posture_drift` | object | Temporal pattern (`persistent`, `degraded`, `intermittent`) + episode count |
+| `posture_drift` | object | Temporal pattern (`persistent`, `degraded`, `intermittent`) + exposure window count |
 
 ### Evidence structure
 

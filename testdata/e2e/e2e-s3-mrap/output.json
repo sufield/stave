@@ -86,7 +86,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "A Multi-Region Access Point exists with Block Public Access disabled.",
@@ -132,7 +132,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "A Multi-Region Access Point has a public policy.",

@@ -17,24 +17,24 @@ const (
 	valConfigOverlap    = "config_overlap"
 )
 
-// prefixEvaluator groups the timeline and control that travel together
+// prefixEvaluator groups the lifecycle and control that travel together
 // through every prefix-exposure helper, eliminating repeated parameter passing.
 type prefixEvaluator struct {
-	timeline *asset.ExposureLifecycle
-	ctl      *policy.ControlDefinition
+	lifecycle *asset.ExposureLifecycle
+	ctl       *policy.ControlDefinition
 }
 
 // EvaluatePrefixExposureForRow evaluates whether protected prefixes are publicly readable.
 func EvaluatePrefixExposureForRow(
-	timeline *asset.ExposureLifecycle,
+	lifecycle *asset.ExposureLifecycle,
 	ctl *policy.ControlDefinition,
 ) (evaluation.ResourceCheck, []evaluation.Finding) {
-	e := prefixEvaluator{timeline: timeline, ctl: ctl}
+	e := prefixEvaluator{lifecycle: lifecycle, ctl: ctl}
 	return e.evaluate()
 }
 
 func (e *prefixEvaluator) evaluate() (evaluation.ResourceCheck, []evaluation.Finding) {
-	prefixRow := newPrefixExposureRow(e.timeline, e.ctl)
+	prefixRow := newPrefixExposureRow(e.lifecycle, e.ctl)
 
 	// 1. Validate Control Configuration
 	allowed, protected := prefixExposureSets(e.ctl)
@@ -67,7 +67,7 @@ func (e *prefixEvaluator) assetExposure(
 	row evaluation.ResourceCheck,
 	protected policy.PrefixSet,
 ) (evaluation.ResourceCheck, []evaluation.Finding) {
-	facts := exposure.SummarizeAccess(e.timeline.Asset().Properties)
+	facts := exposure.SummarizeAccess(e.lifecycle.Asset().Properties)
 	var findings []evaluation.Finding
 
 	for _, prefix := range protected.Prefixes() {
@@ -77,7 +77,7 @@ func (e *prefixEvaluator) assetExposure(
 		}
 
 		evidence := exposureResult.String()
-		findings = append(findings, *NewFinding(e.ctl, e.timeline, FindingContext{
+		findings = append(findings, *NewFinding(e.ctl, e.lifecycle, FindingContext{
 			Reason: fmt.Sprintf("Protected prefix %q is publicly readable via %s.", prefix, evidence),
 			Misconfigs: []policy.Misconfiguration{
 				{Property: predicate.NewFieldPath(propExposureSource), ActualValue: evidence, Operator: predicate.OpEq, UnsafeValue: evidence},
@@ -101,7 +101,7 @@ func (e *prefixEvaluator) configIssue(
 	reasonCode string,
 ) (evaluation.ResourceCheck, []evaluation.Finding) {
 	row.Verdict = evaluation.VerdictViolation
-	f := NewFinding(e.ctl, e.timeline, FindingContext{
+	f := NewFinding(e.ctl, e.lifecycle, FindingContext{
 		Reason: why,
 		Misconfigs: []policy.Misconfiguration{
 			{Property: predicate.NewFieldPath(propExposureSource), ActualValue: reasonCode, Operator: predicate.OpEq, UnsafeValue: reasonCode},
@@ -115,7 +115,7 @@ func (e *prefixEvaluator) overlapIssue(
 	c *policy.PrefixConflict,
 ) (evaluation.ResourceCheck, []evaluation.Finding) {
 	row.Verdict = evaluation.VerdictViolation
-	f := NewFinding(e.ctl, e.timeline, FindingContext{
+	f := NewFinding(e.ctl, e.lifecycle, FindingContext{
 		Reason: fmt.Sprintf("Protected prefix %q overlaps with allowed prefix %q (config_overlap).", c.Protected, c.Allowed),
 		Misconfigs: []policy.Misconfiguration{
 			{Property: predicate.NewFieldPath(propExposureSource), ActualValue: valConfigOverlap, Operator: predicate.OpEq, UnsafeValue: valConfigOverlap},

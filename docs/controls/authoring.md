@@ -301,7 +301,7 @@ unsafe_predicate:
 | `unsafe_state` | Violation when predicate matches in any snapshot. Most common. |
 | `unsafe_duration` | Violation when asset is unsafe longer than `--max-unsafe`. |
 | `prefix_exposure` | Violation when protected prefixes are publicly readable. |
-| `unsafe_recurrence` | Violation when episode count exceeds limit within window. |
+| `unsafe_recurrence` | Violation when exposure window count exceeds limit within window. |
 
 For `unsafe_duration`, set a per-control threshold to override `--max-unsafe`:
 

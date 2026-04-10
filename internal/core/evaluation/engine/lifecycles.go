@@ -8,51 +8,51 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
-// BuildTimelinesPerControl constructs chronological timelines for each asset
+// BuildLifecyclesPerControl constructs chronological lifecycles for each asset
 // across all controls. The outer loop iterates snapshots (time), the middle
 // loop iterates assets, and the inner loop evaluates each control's predicate
 // to record whether the asset was unsafe at that point in time.
-func BuildTimelinesPerControl(
+func BuildLifecyclesPerControl(
 	controls []policy.ControlDefinition,
 	snapshots []asset.Snapshot,
 	celEval policy.PredicateEval,
 ) (map[kernel.ControlID]map[asset.ID]*asset.ExposureLifecycle, error) {
 
-	timelinesByControl := make(map[kernel.ControlID]map[asset.ID]*asset.ExposureLifecycle, len(controls))
+	lifecyclesByControl := make(map[kernel.ControlID]map[asset.ID]*asset.ExposureLifecycle, len(controls))
 	for i := range controls {
 		ctl := &controls[i]
-		timelinesByControl[ctl.ID] = make(map[asset.ID]*asset.ExposureLifecycle)
+		lifecyclesByControl[ctl.ID] = make(map[asset.ID]*asset.ExposureLifecycle)
 	}
 
 	for _, snap := range snapshots {
 		for _, a := range snap.Assets {
-			if err := recordAssetObservation(a, snap, controls, celEval, timelinesByControl); err != nil {
+			if err := recordAssetObservation(a, snap, controls, celEval, lifecyclesByControl); err != nil {
 				return nil, err
 			}
 		}
 	}
 
-	return timelinesByControl, nil
+	return lifecyclesByControl, nil
 }
 
 // recordAssetObservation evaluates a single asset against all controls at one
-// point in time, updating the corresponding timelines. Extracted from the
+// point in time, updating the corresponding lifecycles. Extracted from the
 // triple-nested loop to reduce indentation and clarify the per-asset logic.
 func recordAssetObservation(
 	a asset.Asset,
 	snap asset.Snapshot,
 	controls []policy.ControlDefinition,
 	celEval policy.PredicateEval,
-	timelinesByControl map[kernel.ControlID]map[asset.ID]*asset.ExposureLifecycle,
+	lifecyclesByControl map[kernel.ControlID]map[asset.ID]*asset.ExposureLifecycle,
 ) error {
 	for i := range controls {
 		ctl := &controls[i]
-		timelines := timelinesByControl[ctl.ID]
+		lcs := lifecyclesByControl[ctl.ID]
 
-		t, exists := timelines[a.ID]
+		t, exists := lcs[a.ID]
 		if !exists {
 			t = asset.NewExposureLifecycle(a)
-			timelines[a.ID] = t
+			lcs[a.ID] = t
 		}
 
 		isUnsafe := checkUnsafe(*ctl, a, snap, celEval)

@@ -78,7 +78,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "Bucket ACL grants FULL_CONTROL to AllUsers or AuthenticatedUsers. This grants complete control including object read/write/delete and ACL modification.",
@@ -119,7 +119,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "Bucket ACL grants FULL_CONTROL to AllUsers or AuthenticatedUsers. This grants complete control including object read/write/delete and ACL modification.",

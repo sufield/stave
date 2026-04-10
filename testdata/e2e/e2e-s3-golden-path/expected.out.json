@@ -140,7 +140,7 @@
         "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
       },
       "posture_drift": {
-        "episode_count": 1,
+        "exposure_window_count": 1,
         "pattern": "persistent"
       },
       "remediation": {
@@ -188,7 +188,7 @@
         "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
       },
       "posture_drift": {
-        "episode_count": 1,
+        "exposure_window_count": 1,
         "pattern": "persistent"
       },
       "remediation": {
@@ -248,7 +248,7 @@
         "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
       },
       "posture_drift": {
-        "episode_count": 1,
+        "exposure_window_count": 1,
         "pattern": "persistent"
       },
       "remediation": {
@@ -290,7 +290,7 @@
         "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
       },
       "posture_drift": {
-        "episode_count": 1,
+        "exposure_window_count": 1,
         "pattern": "persistent"
       },
       "remediation": {
@@ -369,7 +369,7 @@
         }
       },
       "posture_drift": {
-        "episode_count": 1,
+        "exposure_window_count": 1,
         "pattern": "persistent"
       },
       "remediation": {
@@ -467,7 +467,7 @@
         }
       },
       "posture_drift": {
-        "episode_count": 1,
+        "exposure_window_count": 1,
         "pattern": "persistent"
       },
       "remediation": {
@@ -541,7 +541,7 @@
         }
       },
       "posture_drift": {
-        "episode_count": 1,
+        "exposure_window_count": 1,
         "pattern": "persistent"
       },
       "remediation": {
@@ -615,7 +615,7 @@
         }
       },
       "posture_drift": {
-        "episode_count": 1,
+        "exposure_window_count": 1,
         "pattern": "persistent"
       },
       "remediation": {
@@ -689,7 +689,7 @@
         }
       },
       "posture_drift": {
-        "episode_count": 1,
+        "exposure_window_count": 1,
         "pattern": "persistent"
       },
       "remediation": {
@@ -781,7 +781,7 @@
         }
       },
       "posture_drift": {
-        "episode_count": 1,
+        "exposure_window_count": 1,
         "pattern": "persistent"
       },
       "remediation": {
@@ -854,7 +854,7 @@
         }
       },
       "posture_drift": {
-        "episode_count": 1,
+        "exposure_window_count": 1,
         "pattern": "persistent"
       },
       "remediation": {
@@ -927,7 +927,7 @@
         }
       },
       "posture_drift": {
-        "episode_count": 1,
+        "exposure_window_count": 1,
         "pattern": "persistent"
       },
       "remediation": {
@@ -1000,7 +1000,7 @@
         }
       },
       "posture_drift": {
-        "episode_count": 1,
+        "exposure_window_count": 1,
         "pattern": "persistent"
       },
       "remediation": {
@@ -1073,7 +1073,7 @@
         }
       },
       "posture_drift": {
-        "episode_count": 1,
+        "exposure_window_count": 1,
         "pattern": "persistent"
       },
       "remediation": {
@@ -1146,7 +1146,7 @@
         }
       },
       "posture_drift": {
-        "episode_count": 1,
+        "exposure_window_count": 1,
         "pattern": "persistent"
       },
       "remediation": {
@@ -1219,7 +1219,7 @@
         }
       },
       "posture_drift": {
-        "episode_count": 1,
+        "exposure_window_count": 1,
         "pattern": "persistent"
       },
       "remediation": {
@@ -1292,7 +1292,7 @@
         }
       },
       "posture_drift": {
-        "episode_count": 1,
+        "exposure_window_count": 1,
         "pattern": "persistent"
       },
       "remediation": {
@@ -1365,7 +1365,7 @@
         }
       },
       "posture_drift": {
-        "episode_count": 1,
+        "exposure_window_count": 1,
         "pattern": "persistent"
       },
       "remediation": {

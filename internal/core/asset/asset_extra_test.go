@@ -22,7 +22,7 @@ func TestNewOpenExposureWindow(t *testing.T) {
 		t.Fatalf("StartAt = %v", ep.OpenedAt())
 	}
 	if !ep.ResolvedAt().IsZero() {
-		t.Fatalf("EndAt should be zero for open episode")
+		t.Fatalf("EndAt should be zero for open exposure window")
 	}
 }
 
@@ -82,13 +82,13 @@ func TestExposureWindowEffectiveEndAt(t *testing.T) {
 	now := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
 	start := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 
-	// Open episode returns now
+	// Open exposure window returns now
 	ep := NewActiveWindow(start)
 	if ep.EffectiveEndAt(now) != now {
 		t.Fatalf("open EffectiveEndAt = %v", ep.EffectiveEndAt(now))
 	}
 
-	// Closed episode returns actual endAt
+	// Closed exposure window returns actual endAt
 	end := start.Add(time.Hour)
 	closed := NewResolvedWindow(start, end)
 	if closed.EffectiveEndAt(now) != end {
@@ -107,13 +107,13 @@ func TestExposureWindowOverlapsWindow(t *testing.T) {
 		t.Fatal("should overlap")
 	}
 
-	// Window completely before episode
+	// Window completely before exposure window
 	before := kernel.NewTimeWindow(start.Add(-48*time.Hour), start.Add(-24*time.Hour))
 	if ep.OverlapsWindow(before) {
 		t.Fatal("should not overlap - before")
 	}
 
-	// Window completely after episode
+	// Window completely after exposure window
 	after := kernel.NewTimeWindow(end.Add(time.Hour), end.Add(48*time.Hour))
 	if ep.OverlapsWindow(after) {
 		t.Fatal("should not overlap - after")
@@ -188,11 +188,11 @@ func TestExposureHistoryRecord(t *testing.T) {
 		t.Fatalf("Count = %d", h.Count())
 	}
 
-	// Open episodes are ignored
+	// Open exposure windows are ignored
 	open := NewActiveWindow(time.Now())
 	h.Record(open)
 	if h.Count() != 2 {
-		t.Fatal("open episode should be ignored")
+		t.Fatal("open exposure window should be ignored")
 	}
 }
 
@@ -242,21 +242,21 @@ func TestExposureHistoryWindowSummary(t *testing.T) {
 // ExposureLifecycle
 // ---------------------------------------------------------------------------
 
-func TestTimelineBasic(t *testing.T) {
+func TestExposureLifecycleBasic(t *testing.T) {
 	a := Asset{ID: ID("bucket-1")}
 	tl := NewExposureLifecycle(a)
 	if tl.ID != "bucket-1" {
 		t.Fatalf("ID = %v", tl.ID)
 	}
 	if !tl.IsSecure() {
-		t.Fatal("new timeline should be safe")
+		t.Fatal("new lifecycle should be safe")
 	}
 	if tl.IsExposed() {
-		t.Fatal("new timeline should not be unsafe")
+		t.Fatal("new lifecycle should not be unsafe")
 	}
 }
 
-func TestTimelineEmptyID(t *testing.T) {
+func TestExposureLifecycleEmptyID(t *testing.T) {
 	defer func() {
 		if r := recover(); r == nil {
 			t.Fatal("expected panic for empty ID")
@@ -265,7 +265,7 @@ func TestTimelineEmptyID(t *testing.T) {
 	NewExposureLifecycle(Asset{})
 }
 
-func TestTimelineRecordObservation(t *testing.T) {
+func TestExposureLifecycleRecordObservation(t *testing.T) {
 	a := Asset{ID: ID("bucket-1")}
 	tl := NewExposureLifecycle(a)
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -304,7 +304,7 @@ func TestTimelineRecordObservation(t *testing.T) {
 	}
 }
 
-func TestTimelineUnsafeDuration(t *testing.T) {
+func TestExposureLifecycleUnsafeDuration(t *testing.T) {
 	a := Asset{ID: ID("bucket-1")}
 	tl := NewExposureLifecycle(a)
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -322,7 +322,7 @@ func TestTimelineUnsafeDuration(t *testing.T) {
 		t.Fatalf("UnsafeDuration = %v", d)
 	}
 
-	// Safe timeline
+	// Safe lifecycle
 	tl2 := NewExposureLifecycle(Asset{ID: "bucket-2"})
 	if recErr := tl2.RecordCheck(base, false); recErr != nil {
 		t.Fatal(recErr)
@@ -333,7 +333,7 @@ func TestTimelineUnsafeDuration(t *testing.T) {
 	}
 }
 
-func TestTimelineUnsafeDurationNowBeforeStart(t *testing.T) {
+func TestExposureLifecycleUnsafeDurationNowBeforeStart(t *testing.T) {
 	a := Asset{ID: ID("bucket-1")}
 	tl := NewExposureLifecycle(a)
 	base := time.Date(2026, 1, 10, 0, 0, 0, 0, time.UTC)
@@ -349,7 +349,7 @@ func TestTimelineUnsafeDurationNowBeforeStart(t *testing.T) {
 	}
 }
 
-func TestTimelineExceedsUnsafeThreshold(t *testing.T) {
+func TestExposureLifecycleExceedsUnsafeThreshold(t *testing.T) {
 	a := Asset{ID: ID("bucket-1")}
 	tl := NewExposureLifecycle(a)
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -373,7 +373,7 @@ func TestTimelineExceedsUnsafeThreshold(t *testing.T) {
 	}
 }
 
-func TestTimelineFormatUnsafeSummary(t *testing.T) {
+func TestExposureLifecycleFormatUnsafeSummary(t *testing.T) {
 	a := Asset{ID: ID("bucket-1")}
 	tl := NewExposureLifecycle(a)
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -389,12 +389,12 @@ func TestTimelineFormatUnsafeSummary(t *testing.T) {
 	}
 }
 
-func TestTimelineExposureWindowClosure(t *testing.T) {
+func TestExposureLifecycleExposureWindowClosure(t *testing.T) {
 	a := Asset{ID: ID("bucket-1")}
 	tl := NewExposureLifecycle(a)
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 
-	// Unsafe -> safe transition closes episode
+	// Unsafe -> safe transition closes exposure window
 	if err := tl.RecordCheck(base, true); err != nil {
 		t.Fatal(err)
 	}
@@ -413,7 +413,7 @@ func TestTimelineExposureWindowClosure(t *testing.T) {
 	}
 }
 
-func TestTimelineSetAsset(t *testing.T) {
+func TestExposureLifecycleSetAsset(t *testing.T) {
 	a := Asset{ID: ID("bucket-1"), Type: "old_type"}
 	tl := NewExposureLifecycle(a)
 
@@ -424,7 +424,7 @@ func TestTimelineSetAsset(t *testing.T) {
 	}
 }
 
-func TestTimelineHasActiveWindow(t *testing.T) {
+func TestExposureLifecycleHasActiveWindow(t *testing.T) {
 	a := Asset{ID: ID("bucket-1")}
 	tl := NewExposureLifecycle(a)
 
@@ -437,7 +437,7 @@ func TestTimelineHasActiveWindow(t *testing.T) {
 		t.Fatal(err)
 	}
 	if !tl.HasActiveWindow() {
-		t.Fatal("should have open episode")
+		t.Fatal("should have open exposure window")
 	}
 }
 

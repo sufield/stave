@@ -211,7 +211,7 @@ func TestEvaluatePrefixExposureForRow(t *testing.T) {
 		return ctl
 	}
 
-	makeTimeline := func(storage map[string]any) *asset.ExposureLifecycle {
+	makeLifecycle := func(storage map[string]any) *asset.ExposureLifecycle {
 		resource := asset.Asset{
 			ID:     "res:aws:s3:bucket:example-bucket",
 			Type:   kernel.AssetType("storage_bucket"),
@@ -220,16 +220,16 @@ func TestEvaluatePrefixExposureForRow(t *testing.T) {
 				"storage": storage,
 			},
 		}
-		timeline := asset.NewExposureLifecycle(resource)
-		if err := timeline.RecordCheck(now, true); err != nil {
+		lifecycle := asset.NewExposureLifecycle(resource)
+		if err := lifecycle.RecordCheck(now, true); err != nil {
 			t.Fatal(err)
 		}
-		return timeline
+		return lifecycle
 	}
 
 	t.Run("safe - only approved prefix is public", func(t *testing.T) {
 		ctl := makeInv([]string{"images/"}, []string{"invoices/"})
-		timeline := makeTimeline(map[string]any{
+		lifecycle := makeLifecycle(map[string]any{
 			"kind": "bucket",
 			"name": "example-bucket",
 			"prefix_exposure": map[string]any{
@@ -244,7 +244,7 @@ func TestEvaluatePrefixExposureForRow(t *testing.T) {
 		})
 
 		policyInv := *ctl
-		row, findings := engine.EvaluatePrefixExposureForRow(timeline, &policyInv)
+		row, findings := engine.EvaluatePrefixExposureForRow(lifecycle, &policyInv)
 
 		if row.Verdict != evaluation.VerdictPass {
 			t.Errorf("decision=%s, want PASS", row.Verdict)
@@ -256,7 +256,7 @@ func TestEvaluatePrefixExposureForRow(t *testing.T) {
 
 	t.Run("unsafe - bucket-wide policy", func(t *testing.T) {
 		ctl := makeInv([]string{"images/"}, []string{"invoices/"})
-		timeline := makeTimeline(map[string]any{
+		lifecycle := makeLifecycle(map[string]any{
 			"kind": "bucket",
 			"name": "example-bucket",
 			"prefix_exposure": map[string]any{
@@ -271,7 +271,7 @@ func TestEvaluatePrefixExposureForRow(t *testing.T) {
 		})
 
 		policyInv := *ctl
-		row, findings := engine.EvaluatePrefixExposureForRow(timeline, &policyInv)
+		row, findings := engine.EvaluatePrefixExposureForRow(lifecycle, &policyInv)
 
 		if row.Verdict != evaluation.VerdictViolation {
 			t.Errorf("decision=%s, want VIOLATION", row.Verdict)
@@ -286,10 +286,10 @@ func TestEvaluatePrefixExposureForRow(t *testing.T) {
 
 	t.Run("unsafe - config overlap", func(t *testing.T) {
 		ctl := makeInv([]string{"data/"}, []string{"data/secrets/"})
-		timeline := makeTimeline(map[string]any{"kind": "bucket", "name": "example-bucket"})
+		lifecycle := makeLifecycle(map[string]any{"kind": "bucket", "name": "example-bucket"})
 
 		policyInv := *ctl
-		row, findings := engine.EvaluatePrefixExposureForRow(timeline, &policyInv)
+		row, findings := engine.EvaluatePrefixExposureForRow(lifecycle, &policyInv)
 
 		if row.Verdict != evaluation.VerdictViolation {
 			t.Errorf("decision=%s, want VIOLATION", row.Verdict)
@@ -304,10 +304,10 @@ func TestEvaluatePrefixExposureForRow(t *testing.T) {
 
 	t.Run("unsafe - missing evidence", func(t *testing.T) {
 		ctl := makeInv([]string{"images/"}, []string{"invoices/"})
-		timeline := makeTimeline(map[string]any{"kind": "bucket", "name": "example-bucket"})
+		lifecycle := makeLifecycle(map[string]any{"kind": "bucket", "name": "example-bucket"})
 
 		policyInv := *ctl
-		row, findings := engine.EvaluatePrefixExposureForRow(timeline, &policyInv)
+		row, findings := engine.EvaluatePrefixExposureForRow(lifecycle, &policyInv)
 
 		if row.Verdict != evaluation.VerdictViolation {
 			t.Errorf("decision=%s, want VIOLATION", row.Verdict)
@@ -322,10 +322,10 @@ func TestEvaluatePrefixExposureForRow(t *testing.T) {
 
 	t.Run("no protected prefixes configured", func(t *testing.T) {
 		ctl := makeInv([]string{"images/"}, nil)
-		timeline := makeTimeline(map[string]any{"kind": "bucket", "name": "example-bucket"})
+		lifecycle := makeLifecycle(map[string]any{"kind": "bucket", "name": "example-bucket"})
 
 		policyInv := *ctl
-		row, findings := engine.EvaluatePrefixExposureForRow(timeline, &policyInv)
+		row, findings := engine.EvaluatePrefixExposureForRow(lifecycle, &policyInv)
 
 		if row.Verdict != evaluation.VerdictViolation {
 			t.Errorf("decision=%s, want VIOLATION", row.Verdict)

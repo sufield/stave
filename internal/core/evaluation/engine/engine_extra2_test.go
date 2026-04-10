@@ -12,10 +12,10 @@ import (
 )
 
 // ---------------------------------------------------------------------------
-// BuildTimelinesPerControl
+// BuildLifecyclesPerControl
 // ---------------------------------------------------------------------------
 
-func TestBuildTimelinesPerControl_Basic(t *testing.T) {
+func TestBuildLifecyclesPerControl_Basic(t *testing.T) {
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	controls := []policy.ControlDefinition{
 		{ID: "CTL.A.001", Type: policy.TypeUnsafeState},
@@ -36,25 +36,25 @@ func TestBuildTimelinesPerControl_Basic(t *testing.T) {
 		return false, nil
 	}
 
-	timelines, err := BuildTimelinesPerControl(controls, snapshots, celEval)
+	lifecycles, err := BuildLifecyclesPerControl(controls, snapshots, celEval)
 	if err != nil {
-		t.Fatalf("BuildTimelinesPerControl: %v", err)
+		t.Fatalf("BuildLifecyclesPerControl: %v", err)
 	}
 
-	tlMap, ok := timelines["CTL.A.001"]
+	tlMap, ok := lifecycles["CTL.A.001"]
 	if !ok {
-		t.Fatal("missing control timelines")
+		t.Fatal("missing control lifecycles")
 	}
 	tl, ok := tlMap["bucket-1"]
 	if !ok {
-		t.Fatal("missing asset timeline")
+		t.Fatal("missing asset lifecycle")
 	}
 	if tl.IsExposed() {
 		t.Fatal("asset should be safe")
 	}
 }
 
-func TestBuildTimelinesPerControl_UnsafePredicate(t *testing.T) {
+func TestBuildLifecyclesPerControl_UnsafePredicate(t *testing.T) {
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	controls := []policy.ControlDefinition{
 		{ID: "CTL.A.001", Type: policy.TypeUnsafeState},
@@ -71,17 +71,17 @@ func TestBuildTimelinesPerControl_UnsafePredicate(t *testing.T) {
 		return true, nil
 	}
 
-	timelines, err := BuildTimelinesPerControl(controls, snapshots, celEval)
+	lifecycles, err := BuildLifecyclesPerControl(controls, snapshots, celEval)
 	if err != nil {
 		t.Fatal(err)
 	}
-	tl := timelines["CTL.A.001"]["bucket-1"]
+	tl := lifecycles["CTL.A.001"]["bucket-1"]
 	if !tl.IsExposed() {
 		t.Fatal("asset should be unsafe")
 	}
 }
 
-func TestBuildTimelinesPerControl_NilEvaluator(t *testing.T) {
+func TestBuildLifecyclesPerControl_NilEvaluator(t *testing.T) {
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	controls := []policy.ControlDefinition{
 		{ID: "CTL.A.001", Type: policy.TypeUnsafeState},
@@ -94,11 +94,11 @@ func TestBuildTimelinesPerControl_NilEvaluator(t *testing.T) {
 	}
 
 	// Nil evaluator should return safe (false)
-	timelines, err := BuildTimelinesPerControl(controls, snapshots, nil)
+	lifecycles, err := BuildLifecyclesPerControl(controls, snapshots, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	tl := timelines["CTL.A.001"]["bucket-1"]
+	tl := lifecycles["CTL.A.001"]["bucket-1"]
 	if tl.IsExposed() {
 		t.Fatal("nil evaluator should default to safe")
 	}

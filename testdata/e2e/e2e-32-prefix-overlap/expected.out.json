@@ -31,7 +31,7 @@
         "temporal_risk": "Protected prefix \"data/secrets/\" overlaps with allowed prefix \"data/\" (config_overlap)."
       },
       "posture_drift": {
-        "episode_count": 1,
+        "exposure_window_count": 1,
         "pattern": "persistent"
       },
       "remediation": {

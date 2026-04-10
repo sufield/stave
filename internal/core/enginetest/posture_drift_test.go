@@ -13,17 +13,17 @@ func TestComputePostureDrift(t *testing.T) {
 	t1 := time.Date(2026, 1, 10, 6, 0, 0, 0, time.UTC)
 	t2 := time.Date(2026, 1, 10, 12, 0, 0, 0, time.UTC)
 
-	newTimeline := func() *asset.ExposureLifecycle {
+	newLifecycleBuilder := func() *asset.ExposureLifecycle {
 		tl := asset.NewExposureLifecycle(asset.Asset{ID: "res:test"})
 		return tl
 	}
 
 	tests := []struct {
-		name           string
-		setup          func(*asset.ExposureLifecycle)
-		wantNil        bool
-		wantPattern    evaluation.DriftPattern
-		wantEpisodeCnt int
+		name            string
+		setup           func(*asset.ExposureLifecycle)
+		wantNil         bool
+		wantPattern     evaluation.DriftPattern
+		wantWindowCount int
 	}{
 		{
 			name: "not currently unsafe returns nil",
@@ -37,8 +37,8 @@ func TestComputePostureDrift(t *testing.T) {
 			setup: func(tl *asset.ExposureLifecycle) {
 				_ = tl.RecordCheck(t0, true)
 			},
-			wantPattern:    "persistent",
-			wantEpisodeCnt: 1,
+			wantPattern:     "persistent",
+			wantWindowCount: 1,
 		},
 		{
 			name: "degraded: was safe before first unsafe",
@@ -46,21 +46,21 @@ func TestComputePostureDrift(t *testing.T) {
 				_ = tl.RecordCheck(t0, false)
 				_ = tl.RecordCheck(t1, true)
 			},
-			wantPattern:    "degraded",
-			wantEpisodeCnt: 1,
+			wantPattern:     "degraded",
+			wantWindowCount: 1,
 		},
 		{
-			name: "intermittent: one closed episode plus open",
+			name: "intermittent: one closed exposure window plus open",
 			setup: func(tl *asset.ExposureLifecycle) {
 				_ = tl.RecordCheck(t0, true)
 				_ = tl.RecordCheck(t1, false)
 				_ = tl.RecordCheck(t2, true)
 			},
-			wantPattern:    "intermittent",
-			wantEpisodeCnt: 2,
+			wantPattern:     "intermittent",
+			wantWindowCount: 2,
 		},
 		{
-			name: "intermittent: two closed episodes plus open",
+			name: "intermittent: two closed exposure windows plus open",
 			setup: func(tl *asset.ExposureLifecycle) {
 				_ = tl.RecordCheck(t0, true)
 				_ = tl.RecordCheck(t1, false)
@@ -68,16 +68,16 @@ func TestComputePostureDrift(t *testing.T) {
 				_ = tl.RecordCheck(t2, false)
 				_ = tl.RecordCheck(t2, true)
 			},
-			wantPattern:    "intermittent",
-			wantEpisodeCnt: 3,
+			wantPattern:     "intermittent",
+			wantWindowCount: 3,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			timeline := newTimeline()
-			tt.setup(timeline)
-			got := evaluation.ComputePostureDrift(timeline)
+			lifecycle := newLifecycleBuilder()
+			tt.setup(lifecycle)
+			got := evaluation.ComputePostureDrift(lifecycle)
 			if tt.wantNil {
 				if got != nil {
 					t.Fatalf("expected nil, got %+v", got)
@@ -90,8 +90,8 @@ func TestComputePostureDrift(t *testing.T) {
 			if got.Pattern != tt.wantPattern {
 				t.Errorf("pattern: got %q, want %q", got.Pattern, tt.wantPattern)
 			}
-			if got.EpisodeCount != tt.wantEpisodeCnt {
-				t.Errorf("episode_count: got %d, want %d", got.EpisodeCount, tt.wantEpisodeCnt)
+			if got.ExposureWindowCount != tt.wantWindowCount {
+				t.Errorf("exposure_window_count: got %d, want %d", got.ExposureWindowCount, tt.wantWindowCount)
 			}
 		})
 	}

@@ -15,7 +15,7 @@ type RecurrenceStats struct {
 	Last  time.Time
 }
 
-// EvaluateRecurrenceForControl evaluates the timeline against recurrence limits.
+// EvaluateRecurrenceForControl evaluates the lifecycle against recurrence limits.
 // It returns a slice containing a violation finding if the recurrence limit is exceeded.
 func EvaluateRecurrenceForControl(
 	t *asset.ExposureLifecycle,
@@ -36,7 +36,7 @@ func EvaluateRecurrenceForControl(
 	return []*evaluation.Finding{CreateRecurrenceFinding(t, ctl, stats)}
 }
 
-// CreateRecurrenceFinding generates a finding based on the frequency of unsafe episodes.
+// CreateRecurrenceFinding generates a finding based on the frequency of unsafe exposure windows.
 func CreateRecurrenceFinding(
 	t *asset.ExposureLifecycle,
 	ctl *policy.ControlDefinition,
@@ -46,17 +46,17 @@ func CreateRecurrenceFinding(
 
 	f := newBaseFinding(ctl, t)
 	f.Evidence = evaluation.Evidence{
-		EpisodeCount:    stats.Count,
-		WindowDays:      p.WindowDays,
-		RecurrenceLimit: p.Limit,
-		FirstEpisodeAt:  stats.First,
-		LastEpisodeAt:   stats.Last,
+		ExposureWindowCount:   stats.Count,
+		WindowDays:            p.WindowDays,
+		RecurrenceLimit:       p.Limit,
+		FirstExposureWindowAt: stats.First,
+		LastExposureWindowAt:  stats.Last,
 
-		// For recurrence, the span of episodes defines the unsafe period.
+		// For recurrence, the span of exposure windows defines the unsafe period.
 		FirstUnsafeAt:    stats.First,
 		LastSeenUnsafeAt: stats.Last,
 
-		// Threshold represents the individual episode duration limit.
+		// Threshold represents the individual exposure window duration limit.
 		ThresholdHours: ctl.MaxUnsafeDuration().Hours(),
 
 		// UnsafeDurationHours is intentionally omitted.

@@ -60,8 +60,8 @@ func NewQualityCmd(loadSnapshots compose.SnapshotLoader) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "quality",
 		Short: "Check snapshot quality before evaluation",
-		Long: `Quality checks the observation timeline for operational readiness before evaluation.
-It can warn or fail on sparse timelines, stale snapshots, and missing key assets.
+		Long: `Quality checks the observation lifecycle for operational readiness before evaluation.
+It can warn or fail on sparse lifecycles, stale snapshots, and missing key assets.
 
 Inputs:
   --observations, -o  Path to observation snapshots directory (default: observations)

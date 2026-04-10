@@ -25,7 +25,7 @@
         "temporal_risk": "Protected prefix \"invoices/\" is publicly readable via missing_evidence."
       },
       "posture_drift": {
-        "episode_count": 1,
+        "exposure_window_count": 1,
         "pattern": "persistent"
       },
       "remediation": {

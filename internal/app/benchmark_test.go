@@ -198,7 +198,7 @@ func TestLargeSnapshotProcessing(t *testing.T) {
 		Assets:        resources,
 	}
 
-	// Verify we can create timelines for 1000 assets
+	// Verify we can create lifecycles for 1000 assets
 	ctl := policy.ControlDefinition{
 		DSLVersion:  "ctrl.v1",
 		ID:          "CTL.TEST.001",

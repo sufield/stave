@@ -64,9 +64,9 @@ func writeControlSection(d *drawer, detail *evaluation.FindingDetail) {
 			detail.Control.Exposure.PrincipalScope.String())
 	}
 	if detail.PostureDrift != nil {
-		d.f("  SecurityState drift: %s (%d episode(s))\n",
+		d.f("  SecurityState drift: %s (%d exposure window(s))\n",
 			detail.PostureDrift.Pattern,
-			detail.PostureDrift.EpisodeCount)
+			detail.PostureDrift.ExposureWindowCount)
 	}
 }
 
@@ -84,12 +84,12 @@ func writeResourceSection(d *drawer, detail *evaluation.FindingDetail) {
 
 func writeEvidenceSection(d *drawer, ev *evaluation.Evidence) {
 	writeSectionHeader(d, "Evidence")
-	writeEvidenceTimeline(d, ev)
+	writeEvidenceLifecycle(d, ev)
 	writeEvidenceMisconfigurations(d, ev)
 	writeEvidenceSourceDetails(d, ev)
 }
 
-func writeEvidenceTimeline(d *drawer, ev *evaluation.Evidence) {
+func writeEvidenceLifecycle(d *drawer, ev *evaluation.Evidence) {
 	writeOptionalTimeField(d, "  First unsafe at:    %s\n", ev.FirstUnsafeAt)
 	writeOptionalTimeField(d, "  Last seen unsafe:   %s\n", ev.LastSeenUnsafeAt)
 	writeOptionalFloatField(d, "  Unsafe duration:    %.1fh\n", ev.UnsafeDurationHours)

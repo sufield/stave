@@ -1690,7 +1690,7 @@ Use dot notation to access nested properties:
 Stave tracks how long each asset has been continuously unsafe:
 
 1. **Load snapshots** ordered by `captured_at`
-2. **Build timeline** for each asset across snapshots
+2. **Build exposure lifecycle** for each asset across snapshots
 3. **Track unsafe windows**:
    - When asset matches `unsafe_predicate` → start/continue window
    - When asset becomes safe → reset window
