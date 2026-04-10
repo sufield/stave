@@ -11,6 +11,7 @@ compliance:
   nist_800_53_r5: "SI-4"
   fedramp_moderate: "SI-4"
   gdpr: "Art.32"
+  ffiec: "CAT-D3"
 scope_tags:
   - aws
   - securityhub

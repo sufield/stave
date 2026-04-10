@@ -17,6 +17,7 @@ compliance:
   nist_800_53_r5: "IA-2(1)"
   fedramp_moderate: "IA-2(1)"
   gdpr: "Art.32"
+  ffiec: "CAT-D3"
 scope_tags:
   - aws
   - iam

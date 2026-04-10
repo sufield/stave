@@ -335,6 +335,20 @@ packs:
     description: GDPR technical controls for personal data protection
     controls:
       - CTL.S3.REGION.001
+  ffiec:
+    description: FFIEC financial institution compliance controls
+    controls:
+      # All mapped to existing controls via ffiec: tags
+      - CTL.IAM.ROOT.MFA.001
+      - CTL.IAM.CONSOLE.MFA.001
+      - CTL.IAM.POLICY.ADMIN.001
+      - CTL.S3.ENCRYPT.001
+      - CTL.S3.CONTROLS.001
+      - CTL.CLOUDTRAIL.ENABLED.001
+      - CTL.VPC.FLOWLOG.001
+      - CTL.BACKUP.EXISTS.001
+      - CTL.RDS.MULTIAZ.001
+      - CTL.GUARDDUTY.ENABLED.001
   vpc:
     description: AWS VPC network security controls
     controls:

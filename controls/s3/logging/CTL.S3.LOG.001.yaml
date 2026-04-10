@@ -15,6 +15,7 @@ compliance:
   nist_800_53_r5: "AU-2"
   fedramp_moderate: "AU-2"
   gdpr: "Art.30"
+  ffiec: "ISH-4"
 scope_tags:
   - aws
   - s3

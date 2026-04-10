@@ -14,6 +14,7 @@ compliance:
   nist_800_53_r5: "SC-28"
   fedramp_moderate: "SC-28"
   gdpr: "Art.32"
+  ffiec: "BCP"
 scope_tags:
   - aws
   - backup
