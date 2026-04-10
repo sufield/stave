@@ -858,7 +858,7 @@ func TestFilterSnapshots(t *testing.T) {
 		{Assets: []Asset{{ID: "bucket-3"}}},
 	}
 
-	filtered := ApplyScopeToInventory(f, snaps)
+	filtered := ApplyScopeToSnapshots(f, snaps)
 	if len(filtered) != 1 {
 		t.Fatalf("expected 1 filtered snapshot, got %d", len(filtered))
 	}
@@ -869,10 +869,10 @@ func TestFilterSnapshots(t *testing.T) {
 
 func TestFilterSnapshotsNilOrUniversal(t *testing.T) {
 	snaps := []Snapshot{{Assets: []Asset{{ID: "a"}}}}
-	if got := ApplyScopeToInventory(nil, snaps); len(got) != 1 {
+	if got := ApplyScopeToSnapshots(nil, snaps); len(got) != 1 {
 		t.Fatal("nil filter should pass through")
 	}
-	if got := ApplyScopeToInventory(GlobalScope, snaps); len(got) != 1 {
+	if got := ApplyScopeToSnapshots(GlobalScope, snaps); len(got) != 1 {
 		t.Fatal("universal filter should pass through")
 	}
 }

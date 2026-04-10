@@ -73,7 +73,7 @@ func (r *Reporter) ReportPlan(report validation.ReadinessAssessment) error {
 	if _, err := fmt.Fprintf(w, "Controls:     %s\n", report.ControlSource); err != nil {
 		return err
 	}
-	if _, err := fmt.Fprintf(w, "Checks: %s\n", report.InventorySource); err != nil {
+	if _, err := fmt.Fprintf(w, "Checks: %s\n", report.ObservationSource); err != nil {
 		return err
 	}
 	if _, err := fmt.Fprintf(w, "Checked:      %d controls, %d snapshots, %d asset observations\n",
@@ -104,10 +104,10 @@ func (r *Reporter) ReportPlan(report validation.ReadinessAssessment) error {
 func readinessNextCommand(report validation.ReadinessAssessment) string {
 	if report.IsSafe {
 		return fmt.Sprintf("stave apply --controls %s --observations %s",
-			report.ControlSource, report.InventorySource)
+			report.ControlSource, report.ObservationSource)
 	}
 	return fmt.Sprintf("stave validate --controls %s --observations %s",
-		report.ControlSource, report.InventorySource)
+		report.ControlSource, report.ObservationSource)
 }
 
 func printReadinessIssue(w io.Writer, issue validation.ValidationFinding) error {

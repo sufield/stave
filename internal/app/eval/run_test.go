@@ -28,9 +28,9 @@ func TestRunnerExecute(t *testing.T) {
 			name:   "clean run",
 			status: evaluation.StateCompliant,
 			config: AssessmentConfig{
-				InventoryConfig: InventoryConfig{
-					PolicySource:    "/tmp/ctl",
-					InventorySource: "/tmp/obs",
+				ObservationConfig: ObservationConfig{
+					PolicySource:      "/tmp/ctl",
+					ObservationSource: "/tmp/obs",
 				},
 			},
 			wantStatus: evaluation.StateCompliant,
@@ -39,9 +39,9 @@ func TestRunnerExecute(t *testing.T) {
 			name:   "violations found",
 			status: evaluation.StateNonCompliant,
 			config: AssessmentConfig{
-				InventoryConfig: InventoryConfig{
-					PolicySource:    "./s3-controls",
-					InventorySource: "./aws-snapshots",
+				ObservationConfig: ObservationConfig{
+					PolicySource:      "./s3-controls",
+					ObservationSource: "./aws-snapshots",
 				},
 			},
 			wantStatus: evaluation.StateNonCompliant,

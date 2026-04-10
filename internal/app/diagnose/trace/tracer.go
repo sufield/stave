@@ -37,7 +37,7 @@ func (t *PolicyTracer) Trace(req TraceRequest) (*stavecel.TraceResult, error) {
 	return result, nil
 }
 
-// LocateResource finds a cloud asset by its unique ID within an inventory snapshot.
+// LocateResource finds a cloud asset by its unique ID within an observation snapshot.
 func LocateResource(snapshot *asset.Snapshot, id asset.ID, source string) (*asset.Asset, error) {
 	for i := range snapshot.Assets {
 		if snapshot.Assets[i].ID == id {
@@ -49,6 +49,6 @@ func LocateResource(snapshot *asset.Snapshot, id asset.ID, source string) (*asse
 		available = append(available, a.ID.String())
 	}
 	slices.Sort(available)
-	return nil, fmt.Errorf("resource %q not found in inventory %s\nAvailable IDs: %s",
+	return nil, fmt.Errorf("resource %q not found in observations %s\nAvailable IDs: %s",
 		id, source, strings.Join(available, ", "))
 }

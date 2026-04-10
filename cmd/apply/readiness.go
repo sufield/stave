@@ -58,7 +58,7 @@ func NewReadinessRunner(factory ReadinessValidatorFactory) *ReadinessRunner {
 func (r *ReadinessRunner) Execute(cfg ReadinessConfig) error {
 	report, err := readiness.AssessReadiness(validation.AssessmentContext{
 		ControlSource:          cfg.ControlsDir,
-		InventorySource:        cfg.ObservationsDir,
+		ObservationSource:      cfg.ObservationsDir,
 		SLAThreshold:           cfg.MaxUnsafeDuration,
 		CurrentTime:            cfg.Now,
 		ControlFlagsSet:        cfg.ControlsFlagSet,

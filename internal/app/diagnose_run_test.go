@@ -60,11 +60,11 @@ func TestDiagnoseExecuteAndLoaders(t *testing.T) {
 	t.Run("uses previous result when provided", func(t *testing.T) {
 		previousResult := &evaluation.ComplianceReport{Findings: []evaluation.Finding{}}
 		report, err := run.Analyze(context.Background(), appdiagnose.AuditRequest{
-			PolicySource:    "ctl",
-			InventorySource: "obs",
-			BaselineReport:  previousResult,
-			SLAThreshold:    30 * time.Minute,
-			Clock:           clockadp.FixedClock(now),
+			PolicySource:      "ctl",
+			ObservationSource: "obs",
+			BaselineReport:    previousResult,
+			SLAThreshold:      30 * time.Minute,
+			Clock:             clockadp.FixedClock(now),
 		})
 		if err != nil {
 			t.Fatalf("unexpected err: %v", err)
@@ -89,10 +89,10 @@ func TestDiagnoseExecuteAndLoaders(t *testing.T) {
 			t.Fatal(newErr)
 		}
 		report, err := preparedRun.Analyze(context.Background(), appdiagnose.AuditRequest{
-			PolicySource:    "ctl",
-			InventorySource: "obs",
-			SLAThreshold:    30 * time.Minute,
-			Clock:           clockadp.FixedClock(now),
+			PolicySource:      "ctl",
+			ObservationSource: "obs",
+			SLAThreshold:      30 * time.Minute,
+			Clock:             clockadp.FixedClock(now),
 		})
 		if err != nil {
 			t.Fatalf("unexpected err: %v", err)
@@ -123,10 +123,10 @@ func TestDiagnoseExecute_NilPreviousResultRunsFreshEvaluation(t *testing.T) {
 	}
 
 	report, err := run.Analyze(context.Background(), appdiagnose.AuditRequest{
-		PolicySource:    "ctl",
-		InventorySource: "obs",
-		SLAThreshold:    time.Hour,
-		Clock:           clockadp.FixedClock(now),
+		PolicySource:      "ctl",
+		ObservationSource: "obs",
+		SLAThreshold:      time.Hour,
+		Clock:             clockadp.FixedClock(now),
 	})
 	if err != nil {
 		t.Fatalf("unexpected err: %v", err)

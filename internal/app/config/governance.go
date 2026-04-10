@@ -31,7 +31,7 @@ func discoverGovernanceSettings() []string {
 	return settings
 }
 
-// RetentionPrefix is the key prefix for inventory lifecycle tier configuration.
+// RetentionPrefix is the key prefix for snapshot lifecycle tier configuration.
 const RetentionPrefix = "snapshot_retention_tiers."
 
 // SettingPath represents a validated reference to an audit configuration attribute.
@@ -176,7 +176,7 @@ func ResetAttribute(cfg *WorkspacePolicy, name string) error {
 	return nil
 }
 
-// ConfigureLifecycleTier sets specific retention rules for an inventory tier.
+// ConfigureLifecycleTier sets specific retention rules for an snapshot tier.
 func ConfigureLifecycleTier(cfg *WorkspacePolicy, tierName, property, value string) error {
 	if cfg.RetentionTiers == nil {
 		cfg.RetentionTiers = make(map[string]retention.Tier)

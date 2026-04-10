@@ -138,11 +138,11 @@ func (r *Runner) newDiagnosticEngine() (*appdiagnose.DiagnosticEngine, error) {
 
 func (r *Runner) buildAuditRequest(cfg Config, maxDuration time.Duration) (appdiagnose.AuditRequest, error) {
 	req := appdiagnose.AuditRequest{
-		PolicySource:    cfg.ControlsDir,
-		InventorySource: cfg.ObservationsDir,
-		SLAThreshold:    maxDuration,
-		Clock:           r.Clock,
-		PredicateParser: ctlyaml.ParsePredicate,
+		PolicySource:      cfg.ControlsDir,
+		ObservationSource: cfg.ObservationsDir,
+		SLAThreshold:      maxDuration,
+		Clock:             r.Clock,
+		PredicateParser:   ctlyaml.ParsePredicate,
 	}
 
 	loader := &evaljson.Loader{}

@@ -95,7 +95,7 @@ func TestScopeFilter_FilterSnapshots(t *testing.T) {
 		},
 	}
 
-	got := asset.ApplyScopeToInventory(f, snapshots)
+	got := asset.ApplyScopeToSnapshots(f, snapshots)
 	if len(got) != 1 {
 		t.Fatalf("filtered snapshot count = %d, want 1", len(got))
 	}

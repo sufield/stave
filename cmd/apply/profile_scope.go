@@ -26,7 +26,7 @@ func filterSnapshots(stderr io.Writer, quiet bool, cfg Config, snapshots []asset
 	}
 
 	scopeFilter := resolveScopeFilter(cfg)
-	filtered := asset.ApplyScopeToInventory(scopeFilter, snapshots)
+	filtered := asset.ApplyScopeToSnapshots(scopeFilter, snapshots)
 	if len(filtered) == 0 {
 		if !quiet {
 			fmt.Fprintln(stderr, "No S3 buckets matching configured scope found in observations")

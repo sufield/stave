@@ -117,9 +117,9 @@ func TestQuoteArg_WithShellChars(t *testing.T) {
 
 func TestReadinessNextCommand_Ready(t *testing.T) {
 	report := validation.ReadinessAssessment{
-		IsSafe:          true,
-		ControlSource:   "controls/s3",
-		InventorySource: "observations",
+		IsSafe:            true,
+		ControlSource:     "controls/s3",
+		ObservationSource: "observations",
 	}
 	got := readinessNextCommand(report)
 	if !strings.Contains(got, "stave apply") {
@@ -132,9 +132,9 @@ func TestReadinessNextCommand_Ready(t *testing.T) {
 
 func TestReadinessNextCommand_NotReady(t *testing.T) {
 	report := validation.ReadinessAssessment{
-		IsSafe:          false,
-		ControlSource:   "controls/s3",
-		InventorySource: "observations",
+		IsSafe:            false,
+		ControlSource:     "controls/s3",
+		ObservationSource: "observations",
 	}
 	got := readinessNextCommand(report)
 	if !strings.Contains(got, "stave validate") {
@@ -306,9 +306,9 @@ func TestReporter_ReportPlan(t *testing.T) {
 		Runtime: ui.NewRuntime(&stdout, &stderr),
 	}
 	report := validation.ReadinessAssessment{
-		IsSafe:          true,
-		ControlSource:   "controls/s3",
-		InventorySource: "observations",
+		IsSafe:            true,
+		ControlSource:     "controls/s3",
+		ObservationSource: "observations",
 		Summary: validation.AssessmentSummary{
 			ControlsVerified:  5,
 			StatesVerified:    3,

@@ -95,6 +95,7 @@ These terms were used during development and have been replaced. Do not use them
 | Rejected Term | Canonical Term |
 |---|---|
 | invariant | **control** |
+| inventory | **observation** / **snapshot** |
 | resource | **asset** |
 | issue, violation, result | **finding** |
 | ignore, suppress, skip | **exemption** |

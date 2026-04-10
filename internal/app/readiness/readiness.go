@@ -11,7 +11,7 @@ import (
 // AssessReadiness runs prerequisite, control-source, and validation checks
 // and returns a readiness report summarizing any issues found.
 func AssessReadiness(in validation.AssessmentContext) (validation.ReadinessAssessment, error) {
-	report := validation.NewReadinessAssessment(in.ControlSource, in.InventorySource)
+	report := validation.NewReadinessAssessment(in.ControlSource, in.ObservationSource)
 	recordPrereqIssues(report, in.PreflightChecks)
 	recordControlSourceIssue(report, in)
 	if err := recordValidationIssues(readinessValidationRequest{

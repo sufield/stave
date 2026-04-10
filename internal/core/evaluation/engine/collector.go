@@ -32,7 +32,7 @@ type AssessmentCollector struct {
 }
 
 // NewCollector initializes the assessment collector.
-// assetHint allows for pre-allocation of tracking registries based on cloud inventory size.
+// assetHint allows for pre-allocation of tracking registries based on observation size.
 func NewCollector(assetHint int) *AssessmentCollector {
 	return &AssessmentCollector{
 		seenAssets:         make(assetRegistry, assetHint),

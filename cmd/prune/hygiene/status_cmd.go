@@ -8,13 +8,13 @@ import (
 	"github.com/sufield/stave/internal/metadata"
 )
 
-// NewStatusCmd constructs the snapshot status command (evidence inventory).
+// NewStatusCmd constructs the snapshot status command (snapshot summary).
 func NewStatusCmd(newObsRepo compose.ObsRepoFactory, newSnapshotRepo compose.SnapshotRepoFactory) *cobra.Command {
 	opts := &rawOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "status",
-		Short: "Show snapshot inventory and retention posture",
+		Short: "Show snapshot summary and retention posture",
 		Long: `Status reports the physical health of the observation snapshot collection:
 active count, archive count, purge candidates, and retention tier.
 

@@ -68,7 +68,7 @@ func executeEvaluation(ctx context.Context, ec evalContext) (EvaluateResult, err
 		return EvaluateResult{}, fmt.Errorf("run output pipeline: %w", err)
 	}
 
-	return BuildEvaluateResult(status, deps.Config.PolicySource, deps.Config.InventorySource), nil
+	return BuildEvaluateResult(status, deps.Config.PolicySource, deps.Config.ObservationSource), nil
 }
 
 // runStrictIntegrityCheck ensures internal pack integrity when --strict is set.

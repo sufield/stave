@@ -30,20 +30,20 @@ type AssessmentSummary struct {
 // ReadinessAssessment captures the result of a pre-evaluation integrity check.
 // It determines if the environment and control-set are in a safe state to proceed.
 type ReadinessAssessment struct {
-	IsSafe          bool              `json:"is_safe"`
-	ControlSource   string            `json:"control_source"`
-	InventorySource string            `json:"inventory_source"`
-	Summary         AssessmentSummary `json:"summary"`
-	findings        []ValidationFinding
+	IsSafe            bool              `json:"is_safe"`
+	ControlSource     string            `json:"control_source"`
+	ObservationSource string            `json:"observation_source"`
+	Summary           AssessmentSummary `json:"summary"`
+	findings          []ValidationFinding
 }
 
 // NewReadinessAssessment initializes an assessment, defaulting to a safe state.
-func NewReadinessAssessment(controlSrc, inventorySrc string) *ReadinessAssessment {
+func NewReadinessAssessment(controlSrc, observationSrc string) *ReadinessAssessment {
 	return &ReadinessAssessment{
-		IsSafe:          true,
-		ControlSource:   controlSrc,
-		InventorySource: inventorySrc,
-		findings:        make([]ValidationFinding, 0),
+		IsSafe:            true,
+		ControlSource:     controlSrc,
+		ObservationSource: observationSrc,
+		findings:          make([]ValidationFinding, 0),
 	}
 }
 
@@ -79,7 +79,7 @@ type EvaluationState struct {
 // AssessmentContext provides the parameters required to evaluate configuration safety.
 type AssessmentContext struct {
 	ControlSource          string
-	InventorySource        string
+	ObservationSource      string
 	SLAThreshold           time.Duration
 	CurrentTime            time.Time
 	ControlFlagsSet        bool

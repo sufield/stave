@@ -281,7 +281,7 @@ func TestAssessorSLAThresholdFor(t *testing.T) {
 	}
 }
 
-func TestAssessorSequenceInventory(t *testing.T) {
+func TestAssessorSortSnapshots(t *testing.T) {
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	a := &Assessor{}
 	snaps := []asset.Snapshot{
@@ -290,7 +290,7 @@ func TestAssessorSequenceInventory(t *testing.T) {
 		{CapturedAt: base.Add(time.Hour)},
 	}
 
-	sorted := a.sequenceInventory(snaps)
+	sorted := a.sortSnapshots(snaps)
 	if sorted[0].CapturedAt != base {
 		t.Fatalf("[0] = %v", sorted[0].CapturedAt)
 	}
