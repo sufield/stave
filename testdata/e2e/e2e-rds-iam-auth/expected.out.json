@@ -72,7 +72,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "RDS instance does not have IAM authentication enabled. Database access relies on long-lived passwords that are harder to rotate and audit.",

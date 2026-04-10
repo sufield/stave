@@ -13,12 +13,12 @@ func TestCoverageValidatorIsSufficient(t *testing.T) {
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 
 	t.Run("no coverage data", func(t *testing.T) {
-		timeline := asset.NewExposureLifecycle(asset.Asset{ID: "res-1"})
+		lifecycle := asset.NewExposureLifecycle(asset.Asset{ID: "res-1"})
 		v := CoverageValidator{
 			MinRequiredSpan: 24 * time.Hour,
 			MaxAllowedGap:   12 * time.Hour,
 		}
-		reason, ok := v.IsSufficient(timeline)
+		reason, ok := v.IsSufficient(lifecycle)
 		if ok {
 			t.Fatal("expected ok=false")
 		}
@@ -28,11 +28,11 @@ func TestCoverageValidatorIsSufficient(t *testing.T) {
 	})
 
 	t.Run("coverage span below required threshold", func(t *testing.T) {
-		timeline := asset.NewExposureLifecycle(asset.Asset{ID: "res-1"})
-		if err := timeline.RecordCheck(base, false); err != nil {
+		lifecycle := asset.NewExposureLifecycle(asset.Asset{ID: "res-1"})
+		if err := lifecycle.RecordCheck(base, false); err != nil {
 			t.Fatal(err)
 		}
-		if err := timeline.RecordCheck(base.Add(6*time.Hour), false); err != nil {
+		if err := lifecycle.RecordCheck(base.Add(6*time.Hour), false); err != nil {
 			t.Fatal(err)
 		}
 
@@ -40,7 +40,7 @@ func TestCoverageValidatorIsSufficient(t *testing.T) {
 			MinRequiredSpan: 24 * time.Hour,
 			MaxAllowedGap:   12 * time.Hour,
 		}
-		reason, ok := v.IsSufficient(timeline)
+		reason, ok := v.IsSufficient(lifecycle)
 		if ok {
 			t.Fatal("expected ok=false")
 		}
@@ -50,14 +50,14 @@ func TestCoverageValidatorIsSufficient(t *testing.T) {
 	})
 
 	t.Run("max gap exceeds threshold", func(t *testing.T) {
-		timeline := asset.NewExposureLifecycle(asset.Asset{ID: "res-1"})
-		if err := timeline.RecordCheck(base, false); err != nil {
+		lifecycle := asset.NewExposureLifecycle(asset.Asset{ID: "res-1"})
+		if err := lifecycle.RecordCheck(base, false); err != nil {
 			t.Fatal(err)
 		}
-		if err := timeline.RecordCheck(base.Add(13*time.Hour), false); err != nil {
+		if err := lifecycle.RecordCheck(base.Add(13*time.Hour), false); err != nil {
 			t.Fatal(err)
 		}
-		if err := timeline.RecordCheck(base.Add(26*time.Hour), false); err != nil {
+		if err := lifecycle.RecordCheck(base.Add(26*time.Hour), false); err != nil {
 			t.Fatal(err)
 		}
 
@@ -65,7 +65,7 @@ func TestCoverageValidatorIsSufficient(t *testing.T) {
 			MinRequiredSpan: 24 * time.Hour,
 			MaxAllowedGap:   12 * time.Hour,
 		}
-		reason, ok := v.IsSufficient(timeline)
+		reason, ok := v.IsSufficient(lifecycle)
 		if ok {
 			t.Fatal("expected ok=false")
 		}
@@ -75,17 +75,17 @@ func TestCoverageValidatorIsSufficient(t *testing.T) {
 	})
 
 	t.Run("coverage sufficient", func(t *testing.T) {
-		timeline := asset.NewExposureLifecycle(asset.Asset{ID: "res-1"})
-		if err := timeline.RecordCheck(base, false); err != nil {
+		lifecycle := asset.NewExposureLifecycle(asset.Asset{ID: "res-1"})
+		if err := lifecycle.RecordCheck(base, false); err != nil {
 			t.Fatal(err)
 		}
-		if err := timeline.RecordCheck(base.Add(10*time.Hour), false); err != nil {
+		if err := lifecycle.RecordCheck(base.Add(10*time.Hour), false); err != nil {
 			t.Fatal(err)
 		}
-		if err := timeline.RecordCheck(base.Add(20*time.Hour), false); err != nil {
+		if err := lifecycle.RecordCheck(base.Add(20*time.Hour), false); err != nil {
 			t.Fatal(err)
 		}
-		if err := timeline.RecordCheck(base.Add(30*time.Hour), false); err != nil {
+		if err := lifecycle.RecordCheck(base.Add(30*time.Hour), false); err != nil {
 			t.Fatal(err)
 		}
 
@@ -93,7 +93,7 @@ func TestCoverageValidatorIsSufficient(t *testing.T) {
 			MinRequiredSpan: 24 * time.Hour,
 			MaxAllowedGap:   12 * time.Hour,
 		}
-		reason, ok := v.IsSufficient(timeline)
+		reason, ok := v.IsSufficient(lifecycle)
 		if !ok {
 			t.Fatalf("expected ok=true, got reason=%q", reason)
 		}
@@ -102,16 +102,16 @@ func TestCoverageValidatorIsSufficient(t *testing.T) {
 		}
 	})
 
-	t.Run("nil timeline", func(t *testing.T) {
+	t.Run("nil lifecycle", func(t *testing.T) {
 		v := CoverageValidator{
 			MinRequiredSpan: 24 * time.Hour,
 		}
 		reason, ok := v.IsSufficient(nil)
 		if ok {
-			t.Fatal("expected ok=false for nil timeline")
+			t.Fatal("expected ok=false for nil lifecycle")
 		}
-		if reason != "no timeline data provided" {
-			t.Fatalf("reason=%q, want %q", reason, "no timeline data provided")
+		if reason != "no lifecycle data provided" {
+			t.Fatalf("reason=%q, want %q", reason, "no lifecycle data provided")
 		}
 	})
 }

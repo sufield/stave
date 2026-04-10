@@ -381,8 +381,8 @@ func TestCreateRecurrenceFinding(t *testing.T) {
 	if f == nil {
 		t.Fatal("expected finding")
 	}
-	if f.Evidence.EpisodeCount != 5 {
-		t.Fatalf("EpisodeCount = %d", f.Evidence.EpisodeCount)
+	if f.Evidence.ExposureWindowCount != 5 {
+		t.Fatalf("ExposureWindowCount = %d", f.Evidence.ExposureWindowCount)
 	}
 	if f.Evidence.WindowDays != 7 {
 		t.Fatalf("WindowDays = %d", f.Evidence.WindowDays)

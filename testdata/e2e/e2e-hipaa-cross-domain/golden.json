@@ -409,7 +409,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "API Gateway does not enforce TLS 1.2. Clients can connect with older, vulnerable TLS versions.",
@@ -454,7 +454,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "Resource has no backup configured. Data loss is not recoverable.",
@@ -499,7 +499,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "Resource is deployed in a single Availability Zone. An AZ outage will cause unavailability.",
@@ -544,7 +544,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "Resource does not have cross-region replication configured. A regional outage could cause permanent data unavailability.",
@@ -598,7 +598,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "CloudTrail trail is not configured for multi-region logging. API activity in other regions is not recorded.",
@@ -648,7 +648,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "CloudTrail logs are not encrypted with a KMS customer-managed key. Log data may be exposed if the S3 bucket is compromised.",
@@ -701,7 +701,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "CloudTrail log file validation is disabled. Log integrity cannot be verified.",
@@ -746,7 +746,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "CloudWatch log group does not have a retention policy. Logs may accumulate indefinitely or be deleted without governance.",
@@ -794,7 +794,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "Cognito user pool does not enforce MFA. User authentication relies on password alone.",
@@ -848,7 +848,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "AWS Config recorder is not enabled or not recording all resource types. Configuration changes are not being tracked.",
@@ -896,7 +896,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "AWS Config has no active rules. Configuration drift will not be detected automatically.",
@@ -945,7 +945,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "DynamoDB table is not encrypted with a customer-managed KMS key.",
@@ -999,7 +999,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "EBS volume is not encrypted. Data at rest is stored in plaintext on the underlying storage hardware.",
@@ -1049,7 +1049,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "EC2 instance has a public IP address. The instance is directly reachable from the internet.",
@@ -1132,7 +1132,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "ElastiCache cluster does not have in-transit encryption enabled. Cache traffic is transmitted in plaintext.",
@@ -1172,7 +1172,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "Load balancer does not have cross-zone load balancing enabled. Traffic is not evenly distributed across AZs.",
@@ -1215,7 +1215,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "Load balancer accepts HTTP traffic without redirecting to HTTPS. Data in transit may be unencrypted.",
@@ -1254,7 +1254,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "Load balancer does not have access logging enabled. Request patterns are not recorded for audit.",
@@ -1298,7 +1298,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "Load balancer uses a TLS version older than 1.2. Traffic is vulnerable to downgrade attacks.",
@@ -1349,7 +1349,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "Root account has active access keys. Programmatic access via root bypasses all IAM controls and cannot be scoped or audited.",
@@ -1404,7 +1404,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "Root account does not have MFA enabled. An attacker with root credentials can perform any action in the AWS account.",
@@ -1450,7 +1450,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "Kubernetes API server does not have audit logging enabled. API access is not recorded.",
@@ -1495,7 +1495,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "Namespace has no NetworkPolicy. All pods can communicate with all other pods in the cluster without restriction.",
@@ -1541,7 +1541,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "Kubernetes Secrets are not encrypted at rest in etcd. Anyone with etcd access can read all Secrets in plaintext.",
@@ -1593,7 +1593,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "KMS key policy grants access to wildcard principals. Any IAM entity can use this key for encryption and decryption.",
@@ -1639,7 +1639,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "RDS instance has automated backups disabled or retention period is too short. Data loss is not recoverable.",
@@ -1693,7 +1693,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "RDS instance does not have storage encryption enabled. Database contents are stored in plaintext on the underlying EBS volumes.",
@@ -1738,7 +1738,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "RDS instance does not export audit logs to CloudWatch. Database access is not auditable.",
@@ -1783,7 +1783,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "RDS instance is not configured for Multi-AZ deployment. An AZ outage will cause database unavailability.",
@@ -1836,7 +1836,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "RDS instance is publicly accessible. The database can be reached from the internet.",
@@ -1915,7 +1915,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "Secret does not have automatic rotation enabled. The secret value may be stale or compromised without detection.",
@@ -1964,7 +1964,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "Secret is not encrypted with a customer-managed KMS key.",
@@ -2009,7 +2009,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "SNS topic is not encrypted with KMS. Notification data is stored in plaintext.",
@@ -2054,7 +2054,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "SQS queue is not encrypted with KMS. Message data is stored in plaintext.",
@@ -2104,7 +2104,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "VPC does not have flow logging enabled. Network traffic patterns are invisible to audit and forensic analysis.",

@@ -10,7 +10,7 @@ How Stave addresses the 7 cloud security lessons from the Cloud Security Allianc
 
 **Controls:** `CTL.S3.CONTROLS.001` (Public Access Block), `CTL.S3.ACCESS.001` (cross-account access), `CTL.S3.ACCESS.002` (wildcard action policies).
 
-## Lesson 2: Attack speed outpaces response timelines
+## Lesson 2: Attack speed outpaces response lifecycles
 
 **The problem:** Crypto mining workloads began within minutes of credential compromise. Traditional alerting required hours or days to trigger.
 

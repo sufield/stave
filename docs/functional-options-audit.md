@@ -89,11 +89,11 @@ today but adding a 9th parameter would break the only caller.
 **Fix**: No action needed now. If it grows, switch to struct literal or
 options.
 
-### 5. Post-Init Mutation: Timeline.SetAsset (LOW)
+### 5. Post-Init Mutation: ExposureLifecycle.SetAsset (LOW)
 
-**File**: `internal/core/asset/timeline.go:45`
+**File**: `internal/core/asset/exposure_lifecycle.go:45`
 
-Internal state mutation during timeline building. Encapsulated within
+Internal state mutation during lifecycle building. Encapsulated within
 the package — not a constructor configuration issue.
 
 **Fix**: No action needed. This is internal state management, not

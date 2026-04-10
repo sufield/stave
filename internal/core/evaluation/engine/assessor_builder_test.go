@@ -24,7 +24,7 @@ func TestBuilder_BasicViolation(t *testing.T) {
 		alwaysUnsafe().
 		build()
 
-	snaps := newTimeline(base).
+	snaps := newLifecycleBuilder(base).
 		at(0, "bucket-1").
 		at(48*time.Hour, "bucket-1").
 		build()
@@ -45,7 +45,7 @@ func TestBuilder_CompliantResult(t *testing.T) {
 		alwaysSafe().
 		build()
 
-	snaps := newTimeline(base).
+	snaps := newLifecycleBuilder(base).
 		at(0, "bucket-1").
 		at(48*time.Hour, "bucket-1").
 		build()
@@ -69,7 +69,7 @@ func TestBuilder_WithTracer(t *testing.T) {
 		withTracer(tracer).
 		build()
 
-	snaps := newTimeline(base).
+	snaps := newLifecycleBuilder(base).
 		at(0, "bucket-1").
 		at(48*time.Hour, "bucket-1").
 		build()

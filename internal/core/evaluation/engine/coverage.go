@@ -7,19 +7,19 @@ import (
 	"github.com/sufield/stave/internal/core/asset"
 )
 
-// CoverageValidator defines the criteria for determining if a timeline
+// CoverageValidator defines the criteria for determining if a lifecycle
 // has enough data for a confident PASS/VIOLATION decision.
 type CoverageValidator struct {
 	MinRequiredSpan time.Duration
 	MaxAllowedGap   time.Duration
 }
 
-// IsSufficient checks if the provided timeline meets the coverage criteria.
+// IsSufficient checks if the provided lifecycle meets the coverage criteria.
 // It returns (explanation, true) if coverage is sufficient.
 // If coverage is insufficient, it returns (reason, false).
 func (v CoverageValidator) IsSufficient(t *asset.ExposureLifecycle) (string, bool) {
 	if t == nil {
-		return "no timeline data provided", false
+		return "no lifecycle data provided", false
 	}
 
 	stats := t.Stats()

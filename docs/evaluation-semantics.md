@@ -29,7 +29,7 @@ CI runs, always set `--now` explicitly.
 Observation snapshots are evaluated in ascending `captured_at` order.
 
 - Duration checks use elapsed time across ordered snapshots.
-- Recurrence checks count unsafe episodes in the configured window.
+- Recurrence checks count unsafe exposure windows in the configured window.
 
 ## Decision Model
 

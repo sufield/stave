@@ -370,19 +370,19 @@ func TestScopeFilter_DiscardableKey(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// timeline.go — closeTimestamp, Stats, SetAsset edge cases
+// lifecycle.go — closeTimestamp, Stats, SetAsset edge cases
 // ---------------------------------------------------------------------------
 
-func TestTimeline_Stats(t *testing.T) {
+func TestExposureLifecycle_Stats(t *testing.T) {
 	a := Asset{ID: "bucket-1"}
 	tl := NewExposureLifecycle(a)
 	stats := tl.Stats()
 	if stats.HasFirstObservation() {
-		t.Fatal("empty timeline should not have first observation")
+		t.Fatal("empty lifecycle should not have first observation")
 	}
 }
 
-func TestTimeline_SetAsset_EmptyID(t *testing.T) {
+func TestExposureLifecycle_SetAsset_EmptyID(t *testing.T) {
 	a := Asset{ID: "bucket-1"}
 	tl := NewExposureLifecycle(a)
 	// SetAsset with same ID is fine
@@ -419,7 +419,7 @@ func TestCheckDurationFeasibility_InsufficientSpan(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// episode.go — UnmarshalJSON edge cases
+// exposure_window.go — UnmarshalJSON edge cases
 // ---------------------------------------------------------------------------
 
 func TestExposureWindowUnmarshalJSON_OpenExposureWindow(t *testing.T) {
@@ -464,7 +464,7 @@ func TestExposureWindowUnmarshalJSON_BadJSON(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// episode_history.go — WindowSummary
+// exposure_window_history.go — WindowSummary
 // ---------------------------------------------------------------------------
 
 func TestExposureHistory_WindowSummary(t *testing.T) {
@@ -619,23 +619,23 @@ func TestAsset_Tags_Empty(t *testing.T) {
 // validation.go — FormatLatest
 // ---------------------------------------------------------------------------
 
-func TestSnapshotTimeline_FormatLatest_Nil(t *testing.T) {
-	var tl *snapshotTimeline
+func TestSnapshotLifecycle_FormatLatest_Nil(t *testing.T) {
+	var tl *snapshotLifecycle
 	if tl.FormatLatest() != "" {
-		t.Fatal("nil timeline should return empty string")
+		t.Fatal("nil lifecycle should return empty string")
 	}
 }
 
-func TestSnapshotTimeline_DuplicateTimes_Nil(t *testing.T) {
-	var tl *snapshotTimeline
+func TestSnapshotLifecycle_DuplicateTimes_Nil(t *testing.T) {
+	var tl *snapshotLifecycle
 	if tl.DuplicateTimes() != nil {
-		t.Fatal("nil timeline should return nil")
+		t.Fatal("nil lifecycle should return nil")
 	}
 }
 
-func TestSnapshotTimeline_IsAheadOf_Nil(t *testing.T) {
-	var tl *snapshotTimeline
+func TestSnapshotLifecycle_IsAheadOf_Nil(t *testing.T) {
+	var tl *snapshotLifecycle
 	if tl.IsAheadOf(time.Now()) {
-		t.Fatal("nil timeline should not be ahead of anything")
+		t.Fatal("nil lifecycle should not be ahead of anything")
 	}
 }

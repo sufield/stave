@@ -30,7 +30,7 @@ type OutputMetadata struct {
 	DueSoonRaw           string
 }
 
-// Runner orchestrates the risk analysis and timeline projection.
+// Runner orchestrates the risk analysis and lifecycle projection.
 type Runner struct{}
 
 // Run computes upcoming action items and returns the assembled output.

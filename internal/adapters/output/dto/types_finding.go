@@ -34,19 +34,19 @@ type SourceRefDTO struct {
 
 // EvidenceDTO mirrors evaluation.Evidence.
 type EvidenceDTO struct {
-	FirstUnsafeAt       time.Time             `json:"first_unsafe_at,omitzero"`
-	LastSeenUnsafeAt    time.Time             `json:"last_seen_unsafe_at,omitzero"`
-	UnsafeDurationHours float64               `json:"unsafe_duration_hours,omitempty"`
-	ThresholdHours      float64               `json:"threshold_hours,omitempty"`
-	EpisodeCount        int                   `json:"episode_count,omitempty"`
-	WindowDays          int                   `json:"window_days,omitempty"`
-	RecurrenceLimit     int                   `json:"recurrence_limit,omitempty"`
-	FirstEpisodeAt      time.Time             `json:"first_episode_at,omitzero"`
-	LastEpisodeAt       time.Time             `json:"last_episode_at,omitzero"`
-	Misconfigurations   []MisconfigurationDTO `json:"misconfigurations,omitempty"`
-	RootCauses          []string              `json:"root_causes,omitempty"`
-	SourceEvidence      *SourceEvidenceDTO    `json:"source_evidence,omitempty"`
-	TemporalRisk        string                `json:"temporal_risk,omitempty"`
+	FirstUnsafeAt         time.Time             `json:"first_unsafe_at,omitzero"`
+	LastSeenUnsafeAt      time.Time             `json:"last_seen_unsafe_at,omitzero"`
+	UnsafeDurationHours   float64               `json:"unsafe_duration_hours,omitempty"`
+	ThresholdHours        float64               `json:"threshold_hours,omitempty"`
+	ExposureWindowCount   int                   `json:"exposure_window_count,omitempty"`
+	WindowDays            int                   `json:"window_days,omitempty"`
+	RecurrenceLimit       int                   `json:"recurrence_limit,omitempty"`
+	FirstExposureWindowAt time.Time             `json:"first_exposure_window_at,omitzero"`
+	LastExposureWindowAt  time.Time             `json:"last_exposure_window_at,omitzero"`
+	Misconfigurations     []MisconfigurationDTO `json:"misconfigurations,omitempty"`
+	RootCauses            []string              `json:"root_causes,omitempty"`
+	SourceEvidence        *SourceEvidenceDTO    `json:"source_evidence,omitempty"`
+	TemporalRisk          string                `json:"temporal_risk,omitempty"`
 }
 
 // MisconfigurationDTO mirrors policy.Misconfiguration.
@@ -65,8 +65,8 @@ type SourceEvidenceDTO struct {
 
 // PostureDriftDTO mirrors evaluation.PostureDrift.
 type PostureDriftDTO struct {
-	Pattern      evaluation.DriftPattern `json:"pattern"`
-	EpisodeCount int                     `json:"episode_count"`
+	Pattern             evaluation.DriftPattern `json:"pattern"`
+	ExposureWindowCount int                     `json:"exposure_window_count"`
 }
 
 // ExposureDTO mirrors policy.Exposure.

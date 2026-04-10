@@ -106,11 +106,11 @@ Fields are populated depending on the control type.
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `episode_count` | integer | Number of unsafe episodes within the window |
+| `exposure_window_count` | integer | Number of unsafe exposure windows within the window |
 | `window_days` | integer | Rolling window for counting recurrence |
-| `recurrence_limit` | integer | Maximum allowed episodes before violation |
-| `first_episode_at` | string (RFC 3339) | When the first unsafe episode started |
-| `last_episode_at` | string (RFC 3339) | When the most recent unsafe episode ended |
+| `recurrence_limit` | integer | Maximum allowed exposure windows before violation |
+| `first_exposure_window_at` | string (RFC 3339) | When the first unsafe exposure window started |
+| `last_exposure_window_at` | string (RFC 3339) | When the most recent unsafe exposure window ended |
 
 **Common fields (all control types):**
 

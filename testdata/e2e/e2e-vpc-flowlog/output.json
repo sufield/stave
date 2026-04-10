@@ -73,7 +73,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "VPC does not have flow logging enabled. Network traffic patterns are invisible to audit and forensic analysis.",

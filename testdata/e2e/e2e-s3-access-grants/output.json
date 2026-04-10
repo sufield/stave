@@ -92,7 +92,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "An S3 Access Grant exists with broad write permissions.",
@@ -140,7 +140,7 @@
       "control_severity": "medium",
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "S3 Access Grants instance exists but IAM Identity Center is not attached. Grant management is limited to IAM principals only.",

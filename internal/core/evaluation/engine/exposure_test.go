@@ -30,7 +30,7 @@ func exposureControl(id string, protected, allowed []string) *policy.ControlDefi
 	return ctl
 }
 
-func exposureTimeline(t *testing.T, props map[string]any) *asset.ExposureLifecycle {
+func exposureLifecycle(t *testing.T, props map[string]any) *asset.ExposureLifecycle {
 	t.Helper()
 	a := asset.Asset{
 		ID:         "bucket-1",
@@ -52,7 +52,7 @@ func exposureTimeline(t *testing.T, props map[string]any) *asset.ExposureLifecyc
 func TestExposure_MissingProtectedPrefixes(t *testing.T) {
 	// Control with no protected_prefixes → config issue → violation
 	ctl := exposureControl("CTL.EXP.001", nil, nil)
-	tl := exposureTimeline(t, nil)
+	tl := exposureLifecycle(t, nil)
 
 	row, findings := EvaluatePrefixExposureForRow(tl, ctl)
 	if row.Verdict != evaluation.VerdictViolation {
@@ -69,7 +69,7 @@ func TestExposure_OverlappingPrefixes(t *testing.T) {
 		[]string{"public/images"},
 		[]string{"public/images/secret"},
 	)
-	tl := exposureTimeline(t, nil)
+	tl := exposureLifecycle(t, nil)
 
 	row, findings := EvaluatePrefixExposureForRow(tl, ctl)
 	if row.Verdict != evaluation.VerdictViolation {
@@ -83,7 +83,7 @@ func TestExposure_OverlappingPrefixes(t *testing.T) {
 func TestExposure_NoEvidence_IsViolation(t *testing.T) {
 	// Missing exposure evidence is security-conservative → violation
 	ctl := exposureControl("CTL.EXP.001", []string{"data/sensitive"}, nil)
-	tl := exposureTimeline(t, map[string]any{})
+	tl := exposureLifecycle(t, map[string]any{})
 
 	row, findings := EvaluatePrefixExposureForRow(tl, ctl)
 	if row.Verdict != evaluation.VerdictViolation {
@@ -101,7 +101,7 @@ func TestExposure_NoEvidence_IsViolation(t *testing.T) {
 func TestPrefixExposureStrategy_Evaluate_ConfigIssue(t *testing.T) {
 	// Verify the strategy delegates to EvaluatePrefixExposureForRow
 	ctl := exposureControl("CTL.EXP.001", nil, nil) // no protected prefixes
-	tl := exposureTimeline(t, map[string]any{})
+	tl := exposureLifecycle(t, map[string]any{})
 	now := time.Date(2026, 1, 1, 1, 0, 0, 0, time.UTC)
 
 	s := &prefixExposureStrategy{ctl: ctl}
@@ -121,7 +121,7 @@ func TestPrefixExposureStrategy_Evaluate_ConfigIssue(t *testing.T) {
 
 func TestNewPrefixExposureRow(t *testing.T) {
 	ctl := exposureControl("CTL.EXP.001", nil, nil)
-	tl := exposureTimeline(t, nil)
+	tl := exposureLifecycle(t, nil)
 
 	row := newPrefixExposureRow(tl, ctl)
 	if row.ControlID != "CTL.EXP.001" {

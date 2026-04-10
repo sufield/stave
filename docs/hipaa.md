@@ -305,7 +305,7 @@ requirements (§164.316). The following are outside Stave's scope:
 - **Physical safeguards** (§164.310) — facility access controls, workstation
   security, device and media controls
 - **Breach notification** (§164.400-414) — incident response workflows,
-  notification timelines
+  notification lifecycles
 - **Business Associate Agreements** — contractual requirements between
   covered entities and business associates
 

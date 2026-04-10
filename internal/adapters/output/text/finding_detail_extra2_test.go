@@ -53,8 +53,8 @@ func TestWriteFindingDetail_Full(t *testing.T) {
 			},
 		},
 		PostureDrift: &evaluation.PostureDrift{
-			Pattern:      evaluation.DriftPersistent,
-			EpisodeCount: 1,
+			Pattern:             evaluation.DriftPersistent,
+			ExposureWindowCount: 1,
 		},
 		Remediation: &controldef.RemediationSpec{
 			Description: "Disable public access",

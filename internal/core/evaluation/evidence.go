@@ -28,7 +28,7 @@ func (rc RootCause) String() string {
 //
 // Fields are conditionally populated based on the control type:
 //   - Duration: FirstUnsafeAt, LastSeenUnsafeAt, UnsafeDurationHours, ThresholdHours
-//   - Recurrence: EpisodeCount, WindowDays, RecurrenceLimit, FirstEpisodeAt, LastEpisodeAt
+//   - Recurrence: ExposureWindowCount, WindowDays, RecurrenceLimit, FirstExposureWindowAt, LastExposureWindowAt
 type Evidence struct {
 	// --- Duration Timing ---
 	FirstUnsafeAt       time.Time `json:"first_unsafe_at,omitzero"`
@@ -37,11 +37,11 @@ type Evidence struct {
 	ThresholdHours      float64   `json:"threshold_hours,omitempty"`
 
 	// --- Recurrence Frequency ---
-	EpisodeCount    int       `json:"episode_count,omitempty"`
-	WindowDays      int       `json:"window_days,omitempty"`
-	RecurrenceLimit int       `json:"recurrence_limit,omitempty"`
-	FirstEpisodeAt  time.Time `json:"first_episode_at,omitzero"`
-	LastEpisodeAt   time.Time `json:"last_episode_at,omitzero"`
+	ExposureWindowCount   int       `json:"exposure_window_count,omitempty"`
+	WindowDays            int       `json:"window_days,omitempty"`
+	RecurrenceLimit       int       `json:"recurrence_limit,omitempty"`
+	FirstExposureWindowAt time.Time `json:"first_exposure_window_at,omitzero"`
+	LastExposureWindowAt  time.Time `json:"last_exposure_window_at,omitzero"`
 
 	// --- Logical Evidence ---
 	Misconfigurations []policy.Misconfiguration `json:"misconfigurations,omitempty"`
@@ -86,11 +86,11 @@ const (
 
 // PostureDrift describes how a violation has evolved over time.
 type PostureDrift struct {
-	Pattern      DriftPattern `json:"pattern"`
-	EpisodeCount int          `json:"episode_count"`
+	Pattern             DriftPattern `json:"pattern"`
+	ExposureWindowCount int          `json:"exposure_window_count"`
 }
 
-// ComputePostureDrift analyzes a timeline to classify the violation's drift pattern.
+// ComputePostureDrift analyzes a lifecycle to classify the violation's drift pattern.
 // Returns nil if the asset is not currently in an unsafe state.
 func ComputePostureDrift(t *asset.ExposureLifecycle) *PostureDrift {
 	if t.IsSecure() {
@@ -99,12 +99,12 @@ func ComputePostureDrift(t *asset.ExposureLifecycle) *PostureDrift {
 
 	history := t.History()
 	closedCount := history.Count()
-	totalEpisodes := closedCount + 1 // Existing history + current open episode
+	totalEpisodes := closedCount + 1 // Existing history + current open exposure window
 
 	var pattern DriftPattern
 	switch {
 	case closedCount > 0:
-		// If there are any closed episodes in history, it means the asset was
+		// If there are any closed exposure windows in history, it means the asset was
 		// previously unsafe, then safe, and is now unsafe again.
 		pattern = DriftIntermittent
 
@@ -121,7 +121,7 @@ func ComputePostureDrift(t *asset.ExposureLifecycle) *PostureDrift {
 	}
 
 	return &PostureDrift{
-		Pattern:      pattern,
-		EpisodeCount: totalEpisodes,
+		Pattern:             pattern,
+		ExposureWindowCount: totalEpisodes,
 	}
 }

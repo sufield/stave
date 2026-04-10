@@ -62,7 +62,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "Bucket grants write access to the AuthenticatedUsers group. Any AWS account holder worldwide can upload or overwrite objects.",

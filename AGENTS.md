@@ -168,7 +168,7 @@ These terms are final. The renames are done. Use the canonical term.
 ### Do
 
 - Use `google/go-cmp` with `testutil.AssertEqual` for struct comparisons.
-- Use fluent test builders from `internal/testutil` for constructing Assessor, Control, and Timeline fixtures.
+- Use fluent test builders from `internal/testutil` for constructing Assessor, Control, and ExposureLifecycle fixtures.
 - Use `testscript` for behavioral CLI tests in `testdata/script/`.
 - Use golden file pattern: commit expected outputs, diff generated output byte-for-byte.
 - Use `NewTestCatalog()` for test control registries — not `init()` globals.

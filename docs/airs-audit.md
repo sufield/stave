@@ -54,11 +54,11 @@ properties). However, `Snapshot` is a domain value object representing
 "the complete observed state." Narrowing the parameter would break
 domain semantics for no practical gain.
 
-### Evaluation strategies accept *asset.Timeline
+### Evaluation strategies accept *asset.ExposureLifecycle
 
-Strategies use Timeline's temporal methods (`CurrentlySafe()`,
+Strategies use ExposureLifecycle's temporal methods (`CurrentlySafe()`,
 `ExceedsUnsafeThreshold()`, etc.) without accessing the underlying
-Asset directly. Timeline is the correct abstraction for time-aware
+Asset directly. ExposureLifecycle is the correct abstraction for time-aware
 evaluation.
 
 No input over-specification found.

@@ -35,8 +35,8 @@ func FromFinding(f remediation.Finding) FindingDTO {
 	}
 	if f.PostureDrift != nil {
 		dto.PostureDrift = &PostureDriftDTO{
-			Pattern:      f.PostureDrift.Pattern,
-			EpisodeCount: f.PostureDrift.EpisodeCount,
+			Pattern:             f.PostureDrift.Pattern,
+			ExposureWindowCount: f.PostureDrift.ExposureWindowCount,
 		}
 	}
 	if f.RemediationPlan != nil {
@@ -64,16 +64,16 @@ func fromFindings(fs []remediation.Finding) []FindingDTO {
 
 func fromEvidence(e evaluation.Evidence) EvidenceDTO {
 	dto := EvidenceDTO{
-		FirstUnsafeAt:       e.FirstUnsafeAt,
-		LastSeenUnsafeAt:    e.LastSeenUnsafeAt,
-		UnsafeDurationHours: e.UnsafeDurationHours,
-		ThresholdHours:      e.ThresholdHours,
-		EpisodeCount:        e.EpisodeCount,
-		WindowDays:          e.WindowDays,
-		RecurrenceLimit:     e.RecurrenceLimit,
-		FirstEpisodeAt:      e.FirstEpisodeAt,
-		LastEpisodeAt:       e.LastEpisodeAt,
-		TemporalRisk:        e.TemporalRisk,
+		FirstUnsafeAt:         e.FirstUnsafeAt,
+		LastSeenUnsafeAt:      e.LastSeenUnsafeAt,
+		UnsafeDurationHours:   e.UnsafeDurationHours,
+		ThresholdHours:        e.ThresholdHours,
+		ExposureWindowCount:   e.ExposureWindowCount,
+		WindowDays:            e.WindowDays,
+		RecurrenceLimit:       e.RecurrenceLimit,
+		FirstExposureWindowAt: e.FirstExposureWindowAt,
+		LastExposureWindowAt:  e.LastExposureWindowAt,
+		TemporalRisk:          e.TemporalRisk,
 	}
 
 	if len(e.Misconfigurations) > 0 {

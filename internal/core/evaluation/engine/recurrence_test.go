@@ -27,17 +27,17 @@ func recurrenceControl(id string, limit, windowDays int) *policy.ControlDefiniti
 	return ctl
 }
 
-func recurrenceTimeline(t *testing.T, episodes []struct{ start, end time.Time }) *asset.ExposureLifecycle {
+func recurrenceLifecycle(t *testing.T, exposureWindows []struct{ start, end time.Time }) *asset.ExposureLifecycle {
 	t.Helper()
 	a := asset.Asset{ID: "bucket-1", Type: kernel.AssetType("s3_bucket")}
 	tl := asset.NewExposureLifecycle(a)
 
-	for _, ep := range episodes {
+	for _, ep := range exposureWindows {
 		// Record unsafe start
 		if err := tl.RecordCheck(ep.start, true); err != nil {
 			t.Fatalf("RecordObservation(unsafe): %v", err)
 		}
-		// Record safe end (closes the episode)
+		// Record safe end (closes the exposure window)
 		if err := tl.RecordCheck(ep.end, false); err != nil {
 			t.Fatalf("RecordObservation(safe): %v", err)
 		}
@@ -52,7 +52,7 @@ func recurrenceTimeline(t *testing.T, episodes []struct{ start, end time.Time })
 func TestRecurrence_DisabledPolicy(t *testing.T) {
 	ctl := recurrenceControl("CTL.REC.001", 0, 0) // disabled
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
-	tl := recurrenceTimeline(t, []struct{ start, end time.Time }{
+	tl := recurrenceLifecycle(t, []struct{ start, end time.Time }{
 		{base, base.Add(time.Hour)},
 	})
 
@@ -63,10 +63,10 @@ func TestRecurrence_DisabledPolicy(t *testing.T) {
 }
 
 func TestRecurrence_BelowLimit(t *testing.T) {
-	// Limit=3, window=7 days, but only 2 episodes → no violation
+	// Limit=3, window=7 days, but only 2 exposureWindows → no violation
 	ctl := recurrenceControl("CTL.REC.001", 3, 7)
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
-	tl := recurrenceTimeline(t, []struct{ start, end time.Time }{
+	tl := recurrenceLifecycle(t, []struct{ start, end time.Time }{
 		{base, base.Add(time.Hour)},
 		{base.Add(24 * time.Hour), base.Add(25 * time.Hour)},
 	})
@@ -79,10 +79,10 @@ func TestRecurrence_BelowLimit(t *testing.T) {
 }
 
 func TestRecurrence_ExceedsLimit(t *testing.T) {
-	// Limit=2, window=7 days, with 3 episodes → violation
+	// Limit=2, window=7 days, with 3 exposureWindows → violation
 	ctl := recurrenceControl("CTL.REC.001", 2, 7)
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
-	tl := recurrenceTimeline(t, []struct{ start, end time.Time }{
+	tl := recurrenceLifecycle(t, []struct{ start, end time.Time }{
 		{base, base.Add(time.Hour)},
 		{base.Add(24 * time.Hour), base.Add(25 * time.Hour)},
 		{base.Add(48 * time.Hour), base.Add(49 * time.Hour)},
@@ -120,8 +120,8 @@ func TestCreateRecurrenceFinding_Fields(t *testing.T) {
 	if finding.ControlID != "CTL.REC.001" {
 		t.Fatalf("ControlID = %v", finding.ControlID)
 	}
-	if finding.Evidence.EpisodeCount != 3 {
-		t.Fatalf("EpisodeCount = %d, want 3", finding.Evidence.EpisodeCount)
+	if finding.Evidence.ExposureWindowCount != 3 {
+		t.Fatalf("ExposureWindowCount = %d, want 3", finding.Evidence.ExposureWindowCount)
 	}
 	if finding.Evidence.RecurrenceLimit != 2 {
 		t.Fatalf("RecurrenceLimit = %d, want 2", finding.Evidence.RecurrenceLimit)

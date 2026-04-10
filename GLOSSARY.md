@@ -101,7 +101,7 @@ These terms were used during development and have been replaced. Do not use them
 | ignore, suppress, skip | **exemption** |
 | redact, scrub | **sanitize** |
 | delta, change | **drift** |
-| Episode | **ExposureWindow** |
+| Episode | **ExposureWindow** (renamed) |
 | Timeline | **ExposureLifecycle** |
 | Runner (engine) | **Assessor** |
 

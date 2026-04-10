@@ -75,7 +75,7 @@
 | 69 | `internal/core/kernel/sanitizable_map.go` | 21-24 | Private fields, public accessors (Get, Sanitized, Set) |
 | 70 | `internal/core/hipaa/registry.go` | 11-14 | Private controls map, public Lookup/All/ByProfile |
 | 71 | `internal/builtin/pack/registry.go` | 51-58 | Private packs/hash, public ListPacks with clone-on-return |
-| 72 | `internal/core/asset/episode.go` | 15-19 | Private start/end/open, Close() enforces endAt >= startAt |
+| 72 | `internal/core/asset/exposure_window.go` | 15-19 | Private start/end/open, Close() enforces endAt >= startAt |
 | 73 | `internal/core/asset/tag_set.go` | 32-35 | Private normalized map, public Matches/Conflicts |
 | 74 | `internal/core/evaluation/exposure/control_ids.go` | 8-20 | Private ID fields, all() as single enumeration point |
 | | | | |
@@ -83,7 +83,7 @@
 | 75 | `internal/core/hipaa/registry.go` | 43-45 | Method: Lookup reads receiver's internal map |
 | 76 | `internal/app/diagnose/filter.go` | 22-46 | Method: Apply uses receiver's filter criteria |
 | 77 | `internal/core/controldef/severity.go` | 45-48 | Method: Gte compares receiver's ordinal value |
-| 78 | `internal/core/asset/timeline.go` | 66-81 | Method: RecordObservation mutates receiver state |
+| 78 | `internal/core/asset/exposure_lifecycle.go` | 66-81 | Method: RecordCheck mutates receiver state |
 | 79 | `internal/core/evaluation/exposure/classify.go` | 26-45 | Function: ClassifyExposure is pure transformation, no state |
 | 80 | `internal/app/eval/build.go` | 74-116 | Function: BuildDependencies assembles from params, no receiver |
 | 81 | `internal/app/eval/filters.go` | 24-45 | Function: FilterControls transforms input, filter is parameter |
@@ -101,8 +101,8 @@
 | | | | |
 | | *Entities (identity-based, mutable)* | | |
 | 89 | `internal/core/asset/models.go` | 18-24 | Entity: Asset with ID, mutable properties across snapshots |
-| 90 | `internal/core/asset/timeline.go` | 17-26 | Entity: Timeline tracks safety state, mutates via RecordObservation |
-| 91 | `internal/core/asset/episode.go` | 15-19 | Entity: Episode transitions from open to closed |
+| 90 | `internal/core/asset/exposure_lifecycle.go` | 17-26 | Entity: ExposureLifecycle tracks safety state, mutates via RecordObservation |
+| 91 | `internal/core/asset/exposure_window.go` | 15-19 | Entity: ExposureWindow transitions from open to closed |
 | 92 | `internal/core/asset/models.go` | 50-56 | Entity: CloudIdentity with ID, mutable attributes |
 | | | | |
 | | *Value Objects (immutable, compared by content)* | | |
@@ -125,7 +125,7 @@
 | | *Aggregates (consistency boundaries)* | | |
 | 108 | `internal/core/asset/snapshot.go` | 13-19 | Aggregate root: Snapshot contains Assets + Identities |
 | 109 | `internal/core/evaluation/result.go` | 119-130 | Aggregate root: Result contains Findings, Summary, Rows |
-| 110 | `internal/core/asset/episode_history.go` | 12-14 | Aggregate: EpisodeHistory of closed Episodes |
+| 110 | `internal/core/asset/exposure_window_history.go` | 12-14 | Aggregate: ExposureWindowHistory of closed ExposureWindows |
 | 111 | `internal/profile/profile.go` | 47-56 | Aggregate: ProfileReport with Results, CompoundFindings |
 | 112 | `internal/core/evaluation/evidence.go` | 32-53 | Aggregate: Evidence with timing, recurrence, root causes |
 | | | | |
@@ -134,7 +134,7 @@
 | 114 | `internal/core/evaluation/exposure/classify.go` | 26-45 | Domain service: ClassifyExposure pure transformation |
 | 115 | `internal/core/hipaa/compound/compound.go` | 43-58 | Domain service: Detect compound risks from results |
 | 116 | `internal/core/evaluation/result.go` | 59-68 | Domain service: ClassifySafetyStatus from violations |
-| 117 | `internal/core/evaluation/evidence.go` | 93-127 | Domain service: ComputePostureDrift from timeline |
+| 117 | `internal/core/evaluation/evidence.go` | 93-127 | Domain service: ComputePostureDrift from exposure lifecycle |
 | 118 | `internal/core/evaluation/diagnosis/analysis.go` | 42+ | Domain service: Diagnose explains evaluation results |
 | | | | |
 | | *Repositories (collection-like access)* | | |
@@ -152,7 +152,7 @@
 | | | | |
 | | *Bounded Contexts (package boundaries)* | | |
 | 128 | `internal/core/evaluation/` | package | Context: Evaluation (findings, evidence, engine) |
-| 129 | `internal/core/asset/` | package | Context: Asset/Observation (snapshots, timelines) |
+| 129 | `internal/core/asset/` | package | Context: Asset/Observation (snapshots, lifecycles) |
 | 130 | `internal/core/controldef/` | package | Context: Control Definition (rules, predicates) |
 | 131 | `internal/core/hipaa/` | package | Context: HIPAA Compliance (controls, compound risks) |
 | 132 | `internal/core/evaluation/exposure/` | package | Context: Exposure Classification (risk vectors) |
@@ -179,7 +179,7 @@
 | 145 | `internal/core/hipaa/registry.go` | 43 | Receiver: `r` for Registry (1-letter abbreviation) |
 | 146 | `internal/app/diagnose/filter.go` | 22 | Receiver: `f` for Filter |
 | 147 | `internal/core/controldef/severity.go` | 45 | Receiver: `s` for Severity |
-| 148 | `internal/core/asset/timeline.go` | 66 | Receiver: `tl` for Timeline (2-letter) |
+| 148 | `internal/core/asset/exposure_lifecycle.go` | 66 | Receiver: `tl` for ExposureLifecycle (2-letter) |
 | 149 | `internal/app/contracts/ports.go` | 23-74 | Interface "er" suffix: Repository, Marshaler, Reader |
 | 150 | `internal/core/ports/crypto.go` | 7-23 | Interface "er" suffix: Verifier, Digester, Generator |
 | 151 | `internal/core/evaluation/exposure/` | package name | Short package name, no util/common/shared |
@@ -212,8 +212,8 @@
 | 170 | `internal/app/config/evaluator.go` | 22-31 | Getenv injected via constructor, not os.Getenv global call |
 | | | | |
 | | **Tell, Don't Ask** | | |
-| 171 | `internal/core/asset/timeline.go` | 66-81 | Tell: RecordObservation(t, isUnsafe) — caller doesn't inspect state |
-| 172 | `internal/core/asset/episode.go` | 47 | Tell: Close(t) — episode manages its own transition |
+| 171 | `internal/core/asset/exposure_lifecycle.go` | 66-81 | Tell: RecordCheck(t, isUnsafe) — caller doesn't inspect state |
+| 172 | `internal/core/asset/exposure_window.go` | 47 | Tell: Close(t) — exposure window manages its own transition |
 | 173 | `internal/core/hipaa/registry.go` | 33-39 | Tell: MustRegister(ctrl) — registry handles validation internally |
 | 174 | `internal/app/diagnose/filter.go` | 22-46 | Tell: Apply(report) — filter applies itself to data |
 | 175 | `internal/app/eval/evaluation_output.go` | 24-60 | Tell: Pipeline.Run(ctx, w, result) — caller doesn't manage steps |
@@ -222,8 +222,8 @@
 | | **Command-Query Separation** | | |
 | 177 | `internal/core/hipaa/registry.go` | 25-33 | Command: Register() mutates map, returns error |
 | 178 | `internal/core/hipaa/registry.go` | 43-45 | Query: Lookup() reads map, returns value |
-| 179 | `internal/core/asset/timeline.go` | 66-81 | Command: RecordObservation() mutates state |
-| 180 | `internal/core/asset/timeline.go` | 83+ | Query: UnsafeDuration(), IsOpen() return data without mutation |
+| 179 | `internal/core/asset/exposure_lifecycle.go` | 66-81 | Command: RecordCheck() mutates state |
+| 180 | `internal/core/asset/exposure_lifecycle.go` | 83+ | Query: UnsafeDuration(), IsOpen() return data without mutation |
 | 181 | `internal/core/evaluation/result.go` | 59-68 | Query: ClassifySafetyStatus() pure function, no side effects |
 | 182 | `internal/profile/profile.go` | 49 | Command: RecomputeSummary() mutates counts via pointer receiver |
 | | | | |

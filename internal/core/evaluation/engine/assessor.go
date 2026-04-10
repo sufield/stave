@@ -136,7 +136,7 @@ func (a *Assessor) Assess(snapshots []asset.Snapshot, opts ...AssessmentOptions)
 	}
 
 	sequenced := a.sortSnapshots(snapshots)
-	lifecycles, err := BuildTimelinesPerControl(a.Controls, sequenced, a.PredicateEval)
+	lifecycles, err := BuildLifecyclesPerControl(a.Controls, sequenced, a.PredicateEval)
 	if err != nil {
 		return evaluation.ComplianceReport{}, fmt.Errorf("lifecycle analysis failed: %w", err)
 	}

@@ -15,7 +15,7 @@ import (
 // Test helpers
 // ---------------------------------------------------------------------------
 
-func buildTimeline(t *testing.T, observations []struct {
+func buildLifecycle(t *testing.T, observations []struct {
 	at     time.Time
 	unsafe bool
 }) *asset.ExposureLifecycle {
@@ -54,7 +54,7 @@ func TestUnsafeStateStrategy_SafeAsset(t *testing.T) {
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	now := base.Add(2 * time.Hour)
 
-	tl := buildTimeline(t, []struct {
+	tl := buildLifecycle(t, []struct {
 		at     time.Time
 		unsafe bool
 	}{
@@ -80,7 +80,7 @@ func TestUnsafeStateStrategy_UnsafeExceedsThreshold(t *testing.T) {
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	now := base.Add(6 * time.Hour)
 
-	tl := buildTimeline(t, []struct {
+	tl := buildLifecycle(t, []struct {
 		at     time.Time
 		unsafe bool
 	}{
@@ -106,7 +106,7 @@ func TestUnsafeStateStrategy_UnsafeBelowThreshold(t *testing.T) {
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	now := base.Add(2 * time.Hour)
 
-	tl := buildTimeline(t, []struct {
+	tl := buildLifecycle(t, []struct {
 		at     time.Time
 		unsafe bool
 	}{
@@ -136,7 +136,7 @@ func TestUnsafeDurationStrategy_SafeAsset(t *testing.T) {
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	now := base.Add(24 * time.Hour)
 
-	tl := buildTimeline(t, []struct {
+	tl := buildLifecycle(t, []struct {
 		at     time.Time
 		unsafe bool
 	}{
@@ -163,7 +163,7 @@ func TestUnsafeDurationStrategy_ViolationExceedsThreshold(t *testing.T) {
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	now := base.Add(6 * time.Hour)
 
-	tl := buildTimeline(t, []struct {
+	tl := buildLifecycle(t, []struct {
 		at     time.Time
 		unsafe bool
 	}{
@@ -190,7 +190,7 @@ func TestUnsafeDurationStrategy_InconclusiveInsufficientCoverage(t *testing.T) {
 	now := base.Add(time.Hour)
 
 	// Single observation — not enough span for the 168h threshold
-	tl := buildTimeline(t, []struct {
+	tl := buildLifecycle(t, []struct {
 		at     time.Time
 		unsafe bool
 	}{
@@ -216,7 +216,7 @@ func TestUnsafeDurationStrategy_SafeWithAdequateCoverage(t *testing.T) {
 	now := base.Add(6 * time.Hour)
 
 	// 3 safe observations spread over 5 hours — exceeds 4h threshold
-	tl := buildTimeline(t, []struct {
+	tl := buildLifecycle(t, []struct {
 		at     time.Time
 		unsafe bool
 	}{
@@ -247,7 +247,7 @@ func TestUnsafeRecurrenceStrategy_DisabledPolicy(t *testing.T) {
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	now := base.Add(time.Hour)
 
-	tl := buildTimeline(t, []struct {
+	tl := buildLifecycle(t, []struct {
 		at     time.Time
 		unsafe bool
 	}{
@@ -279,7 +279,7 @@ func TestUnsupportedStrategy_ReturnsSkipped(t *testing.T) {
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	now := base.Add(time.Hour)
 
-	tl := buildTimeline(t, []struct {
+	tl := buildLifecycle(t, []struct {
 		at     time.Time
 		unsafe bool
 	}{

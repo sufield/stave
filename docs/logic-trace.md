@@ -31,7 +31,7 @@ list of **Steps** — the reasoning chain the engine followed:
 | `predicate_evaluation` | Always | Whether the unsafe predicate matched the asset's properties |
 | `threshold_check` | When predicate matched | SLA duration, observation gap, whether the threshold was exceeded |
 | `coverage_check` | When threshold not exceeded | Observation span vs required span, data sufficiency |
-| `recurrence_check` | Recurrence controls | Episode count vs limit within the time window |
+| `recurrence_check` | Recurrence controls | ExposureWindow count vs limit within the time window |
 | `verdict_decision` | PASS verdicts | Why the resource was considered compliant |
 
 Every step has an `input` (what the engine examined) and a `result`

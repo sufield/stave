@@ -22,7 +22,7 @@ type strategyDeps interface {
 	currentSpan() ports.AssessmentSpan
 }
 
-// strategy defines how different control types analyze a timeline.
+// strategy defines how different control types analyze a lifecycle.
 type strategy interface {
 	Evaluate(t *asset.ExposureLifecycle, now time.Time, ids IdentityIndex) (evaluation.ResourceCheck, []*evaluation.Finding)
 }
@@ -218,9 +218,9 @@ func (s *unsafeRecurrenceStrategy) Evaluate(t *asset.ExposureLifecycle, now time
 	}
 
 	span.RecordStep("predicate_evaluation", map[string]any{
-		"episode_count":    t.History().Count(),
-		"recurrence_limit": p.Limit,
-		"window_days":      int(p.WindowDuration().Hours() / 24),
+		"exposure_window_count": t.History().Count(),
+		"recurrence_limit":      p.Limit,
+		"window_days":           int(p.WindowDuration().Hours() / 24),
 	}, map[string]any{
 		"matched": t.IsExposed(),
 	})

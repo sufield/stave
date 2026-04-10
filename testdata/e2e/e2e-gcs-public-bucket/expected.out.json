@@ -72,7 +72,7 @@
       },
       "posture_drift": {
         "pattern": "persistent",
-        "episode_count": 1
+        "exposure_window_count": 1
       },
       "remediation": {
         "description": "Bucket has public read access. IAM bindings include allUsers or allAuthenticatedUsers, making objects downloadable by anyone.",

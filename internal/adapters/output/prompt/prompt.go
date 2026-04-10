@@ -142,8 +142,8 @@ func BuildEvidenceSummary(ev evaluation.Evidence) string {
 	if ev.ThresholdHours > 0 {
 		lines = append(lines, fmt.Sprintf("- Threshold: %.1f hours", ev.ThresholdHours))
 	}
-	if ev.EpisodeCount > 0 {
-		lines = append(lines, fmt.Sprintf("- Episodes: %d", ev.EpisodeCount))
+	if ev.ExposureWindowCount > 0 {
+		lines = append(lines, fmt.Sprintf("- Exposure Windows: %d", ev.ExposureWindowCount))
 	}
 	if ev.WindowDays > 0 {
 		lines = append(lines, fmt.Sprintf("- Window: %d days", ev.WindowDays))

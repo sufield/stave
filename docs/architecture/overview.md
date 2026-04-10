@@ -15,7 +15,7 @@ Stave is a single static binary with no plugins, no network, and no persistent s
 flowchart TD
     obs["Observations (JSON)"] --> sv["Schema Validation<br/><i>Reject malformed input early</i>"]
     ctl["Controls (YAML)"] --> sv
-    sv --> tb["Timeline Builder<br/><i>Sort snapshots, build per-asset<br/>timelines of safe/unsafe states</i>"]
+    sv --> tb["Lifecycle Builder<br/><i>Sort snapshots, build per-asset<br/>lifecycles of safe/unsafe states</i>"]
     tb --> ev["Evaluator<br/><i>Match predicates, compute durations,<br/>apply thresholds, emit findings</i>"]
     ev --> ow["Output Writer<br/><i>JSON or text to stdout / --out file</i>"]
 ```
