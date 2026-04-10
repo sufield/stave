@@ -1,41 +1,41 @@
 # NIST SP 800-53 Rev 5 — CM: Configuration Management
 # Summary: 7 controls — 5 MAPPED, 0 NEW, 2 MANUAL
 
-invariants:
+controls:
 
 - id: NIST.CM.1
   title: AWS Config recording all resource types
   nist_control: "CM-2"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.CONFIG.ENABLED.001
+  existing_control: CIS CTL.CONFIG.ENABLED.001
   note: Config provides auditable baseline configuration.
 
 - id: NIST.CM.2
   title: Config rules actively evaluating compliance
   nist_control: "CM-3"
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.CONFIG.RULES.001
+  existing_control: HIPAA CTL.CONFIG.RULES.001
   note: Automated drift detection from baseline.
 
 - id: NIST.CM.3
   title: CloudFormation drift detection
   nist_control: "CM-3"
   mapped_to_existing: true
-  existing_invariant: SOC2 CTL.CLOUDFORMATION.DRIFT.001
+  existing_control: SOC2 CTL.CLOUDFORMATION.DRIFT.001
   note: IaC drift indicates out-of-band changes.
 
 - id: NIST.CM.4
   title: EC2 IMDSv2 required (hardening)
   nist_control: "CM-6"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.EC2.IMDSV2.001
+  existing_control: CIS CTL.EC2.IMDSV2.001
   note: Secure instance metadata configuration.
 
 - id: NIST.CM.5
   title: RDS auto minor version upgrade
   nist_control: "CM-6"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.RDS.AUTOUPGRADE.001
+  existing_control: CIS CTL.RDS.AUTOUPGRADE.001
   note: Security patches applied automatically.
 
 - id: NIST.CM.6

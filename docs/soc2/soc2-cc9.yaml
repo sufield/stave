@@ -3,7 +3,7 @@
 #
 # Summary: 5 controls — 2 MAPPED, 0 NEW, 3 MANUAL
 
-invariants:
+controls:
 
 # --- MAPPED ---
 
@@ -11,7 +11,7 @@ invariants:
   title: No administrative privilege escalation paths
   soc2_criteria: CC9.1
   mapped_to_existing: true
-  existing_invariant: CIS CTL.IAM.POLICY.ADMIN.001
+  existing_control: CIS CTL.IAM.POLICY.ADMIN.001
   note: >
     No IAM entity should have full *:* admin access — covered by CIS 1.16.
 
@@ -19,7 +19,7 @@ invariants:
   title: Continuous compliance monitoring via AWS Config
   soc2_criteria: CC9.1
   mapped_to_existing: true
-  existing_invariant: CIS CTL.CONFIG.ENABLED.001, HIPAA CTL.CONFIG.RULES.001
+  existing_control: CIS CTL.CONFIG.ENABLED.001, HIPAA CTL.CONFIG.RULES.001
   note: >
     Config records changes and evaluates compliance rules — covered
     by CIS 3.3 and HIPAA §164.312(c)(1).

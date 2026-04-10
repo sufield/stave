@@ -8,7 +8,7 @@
 #
 # This file documents the SNS dependency for completeness.
 
-invariants: []
+controls: []
 
 # Cross-service dependencies:
 # SNS is a dependency for all 15 CloudWatch monitoring controls (4.1–4.15).

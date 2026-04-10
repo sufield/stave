@@ -1,14 +1,14 @@
 # FedRAMP — Personnel and Access Control Requirements
 # Summary: 8 controls — 3 MAPPED, 0 NEW, 5 MANUAL
 
-invariants:
+controls:
 
 - id: FEDRAMP.ACCESS.1
   title: Root account MFA with hardware token
   fedramp_control: "IA-2(1)"
   baseline: low
   mapped_to_existing: true
-  existing_invariant: CIS CTL.IAM.ROOT.HWMFA.001
+  existing_control: CIS CTL.IAM.ROOT.HWMFA.001
   note: Hardware MFA required for privileged access.
 
 - id: FEDRAMP.ACCESS.2
@@ -16,7 +16,7 @@ invariants:
   fedramp_control: "AC-6"
   baseline: moderate
   mapped_to_existing: true
-  existing_invariant: CIS CTL.IAM.POLICY.ADMIN.001, CTL.IAM.POLICY.INLINE/DIRECT.001
+  existing_control: CIS CTL.IAM.POLICY.ADMIN.001, CTL.IAM.POLICY.INLINE/DIRECT.001
   note: No wildcard admin, no inline/direct policies.
 
 - id: FEDRAMP.ACCESS.3
@@ -24,7 +24,7 @@ invariants:
   fedramp_control: "IA-2(1)"
   baseline: moderate
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.COGNITO.MFA.001
+  existing_control: HIPAA CTL.COGNITO.MFA.001
   note: MFA for all application-level authentication.
 
 - id: FEDRAMP.ACCESS.4

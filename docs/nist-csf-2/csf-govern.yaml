@@ -1,0 +1,39 @@
+# NIST CSF 2.0 — Govern (GV)
+# Summary: 5 controls — 0 MAPPED, 0 NEW, 5 MANUAL
+
+controls:
+
+- id: CSF.GV.1
+  title: Organizational context documented
+  csf_function: "GV.OC"
+  manual: true
+  reason: Mission alignment and legal obligations are organizational documents.
+  evidence_guidance: Documented organizational context including mission, legal requirements, and how AWS supports both.
+
+- id: CSF.GV.2
+  title: Risk management strategy established
+  csf_function: "GV.RM"
+  manual: true
+  reason: Risk appetite and tolerances are organizational decisions.
+  evidence_guidance: Risk management strategy document with cloud-specific risk appetite and tolerance levels.
+
+- id: CSF.GV.3
+  title: Supply chain risk management for AWS
+  csf_function: "GV.SC"
+  manual: true
+  reason: Third-party risk management is an organizational process.
+  evidence_guidance: AWS shared responsibility documentation, SOC 2 report review, and vendor risk assessment.
+
+- id: CSF.GV.4
+  title: Roles and responsibilities defined
+  csf_function: "GV.RR"
+  manual: true
+  reason: Accountability assignment is an organizational process.
+  evidence_guidance: RACI matrix mapping AWS security responsibilities to specific roles.
+
+- id: CSF.GV.5
+  title: Cybersecurity policy approved
+  csf_function: "GV.OC"
+  manual: true
+  reason: Policy governance is an organizational process.
+  evidence_guidance: Written cybersecurity policy approved by management and communicated to all personnel.

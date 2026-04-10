@@ -1,7 +1,7 @@
 # CIS AWS Foundations Benchmark v3.0 — S3
 # 3 automatable + 1 MANUAL
 
-invariants:
+controls:
 
 - id: CIS.S3.1
   title: Ensure S3 Bucket Policy is set to deny HTTP requests

@@ -1,14 +1,14 @@
 # FedRAMP — FIPS 140 Cryptography Requirements
 # Summary: 6 controls — 4 MAPPED, 1 NEW, 1 MANUAL
 
-invariants:
+controls:
 
 - id: FEDRAMP.FIPS.1
   title: S3 encryption must use KMS (FIPS-validated)
   fedramp_control: "SC-13"
   baseline: moderate
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.S3.ENCRYPT.003
+  existing_control: HIPAA CTL.S3.ENCRYPT.003
   note: >
     KMS uses FIPS 140-2 validated HSMs. SSE-S3 (AES256) also uses
     FIPS-validated modules but lacks key audit trail.
@@ -18,7 +18,7 @@ invariants:
   fedramp_control: "SC-13"
   baseline: moderate
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.RDS.ENCRYPT.001
+  existing_control: HIPAA CTL.RDS.ENCRYPT.001
   note: RDS encryption uses KMS-backed FIPS-validated modules.
 
 - id: FEDRAMP.FIPS.3
@@ -26,7 +26,7 @@ invariants:
   fedramp_control: "SC-13"
   baseline: moderate
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.EC2.EBS.ENCRYPT.001
+  existing_control: HIPAA CTL.EC2.EBS.ENCRYPT.001
   note: EBS encryption uses KMS-backed FIPS-validated modules.
 
 - id: FEDRAMP.FIPS.4
@@ -51,7 +51,7 @@ invariants:
   fedramp_control: "SC-8"
   baseline: moderate
   mapped_to_existing: true
-  existing_invariant: NIST CTL.ELB.TLS.001, CTL.RDS.SSL.001
+  existing_control: NIST CTL.ELB.TLS.001, CTL.RDS.SSL.001
   note: >
     AWS TLS endpoints use FIPS-validated cryptographic modules.
     The ELB and RDS SSL controls verify TLS is enforced; the

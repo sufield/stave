@@ -1,4 +1,4 @@
-# ISO 27001:2022 — Invariant Catalog
+# ISO 27001:2022 — Control Catalog
 
 ISO/IEC 27001:2022 Annex A controls mapped to Stave. Organized by
 the four ISO 27001:2022 themes plus compliance requirements.

@@ -1,48 +1,48 @@
 # FFIEC — Cybersecurity Controls (CAT Domain 3)
 # Summary: 8 controls — 6 MAPPED, 0 NEW, 2 MANUAL
 
-invariants:
+controls:
 
 - id: FFIEC.CYBER.1
   title: AWS Config recording all resources (asset inventory)
   ffiec_reference: "CAT-D3.DC.IM.B.1"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.CONFIG.ENABLED.001
+  existing_control: CIS CTL.CONFIG.ENABLED.001
   note: Current inventory of cloud assets.
 
 - id: FFIEC.CYBER.2
   title: Config rules for compliance monitoring
   ffiec_reference: "CAT-D3.DC.IM.B.2"
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.CONFIG.RULES.001
+  existing_control: HIPAA CTL.CONFIG.RULES.001
   note: Continuous configuration compliance.
 
 - id: FFIEC.CYBER.3
   title: GuardDuty enabled
   ffiec_reference: "CAT-D3.DC.TVM.B.1"
   mapped_to_existing: true
-  existing_invariant: SOC2 CTL.GUARDDUTY.ENABLED.001
+  existing_control: SOC2 CTL.GUARDDUTY.ENABLED.001
   note: Continuous threat detection.
 
 - id: FFIEC.CYBER.4
   title: Security Hub enabled
   ffiec_reference: "CAT-D3.DC.TVM.B.1"
   mapped_to_existing: true
-  existing_invariant: SOC2 CTL.SECURITYHUB.ENABLED.001
+  existing_control: SOC2 CTL.SECURITYHUB.ENABLED.001
   note: Aggregated security findings.
 
 - id: FFIEC.CYBER.5
   title: CloudWatch monitoring alarms
   ffiec_reference: "CAT-D3.DC.TVM.B.2"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.CLOUDWATCH.MONITOR.UNAUTH.001 (+ 14 others)
+  existing_control: CIS CTL.CLOUDWATCH.MONITOR.UNAUTH.001 (+ 14 others)
   note: Automated security event detection.
 
 - id: FFIEC.CYBER.6
   title: IAM Access Analyzer enabled
   ffiec_reference: "CAT-D3.DC.TVM.B.1"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.IAM.ANALYZER.001
+  existing_control: CIS CTL.IAM.ANALYZER.001
   note: External access detection.
 
 - id: FFIEC.CYBER.7

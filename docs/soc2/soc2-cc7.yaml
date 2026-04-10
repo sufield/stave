@@ -3,7 +3,7 @@
 #
 # Summary: 12 controls — 8 MAPPED, 2 NEW, 2 MANUAL
 
-invariants:
+controls:
 
 # --- MAPPED ---
 
@@ -11,7 +11,7 @@ invariants:
   title: CloudTrail enabled in all regions
   soc2_criteria: CC7.2
   mapped_to_existing: true
-  existing_invariant: CIS CTL.CLOUDTRAIL.ENABLED.001
+  existing_control: CIS CTL.CLOUDTRAIL.ENABLED.001
   note: >
     Multi-region trail provides complete audit coverage — covered by CIS 3.1.
 
@@ -19,7 +19,7 @@ invariants:
   title: CloudTrail log file validation enabled
   soc2_criteria: CC7.2
   mapped_to_existing: true
-  existing_invariant: CIS CTL.CLOUDTRAIL.VALIDATION.001
+  existing_control: CIS CTL.CLOUDTRAIL.VALIDATION.001
   note: >
     Log integrity validation prevents tamper — covered by CIS 3.2.
 
@@ -27,7 +27,7 @@ invariants:
   title: CloudTrail S3 bucket has access logging
   soc2_criteria: CC7.2
   mapped_to_existing: true
-  existing_invariant: CIS CTL.CLOUDTRAIL.S3LOG.001
+  existing_control: CIS CTL.CLOUDTRAIL.S3LOG.001
   note: >
     Audit log bucket access must itself be auditable — covered by CIS 3.4.
 
@@ -35,7 +35,7 @@ invariants:
   title: AWS Config recording all resource types
   soc2_criteria: CC7.1
   mapped_to_existing: true
-  existing_invariant: CIS CTL.CONFIG.ENABLED.001
+  existing_control: CIS CTL.CONFIG.ENABLED.001
   note: >
     Config provides configuration change history — covered by CIS 3.3.
 
@@ -43,7 +43,7 @@ invariants:
   title: AWS Config rules actively evaluating compliance
   soc2_criteria: CC7.1
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.CONFIG.RULES.001
+  existing_control: HIPAA CTL.CONFIG.RULES.001
   note: >
     Config rules detect drift from security baseline — covered by
     HIPAA §164.312(c)(1).
@@ -52,7 +52,7 @@ invariants:
   title: VPC flow logging enabled
   soc2_criteria: CC7.1
   mapped_to_existing: true
-  existing_invariant: CIS CTL.VPC.FLOWLOG.001
+  existing_control: CIS CTL.VPC.FLOWLOG.001
   note: >
     Flow logs capture network traffic metadata — covered by CIS 3.7.
 
@@ -60,7 +60,7 @@ invariants:
   title: Unauthorized API calls monitored
   soc2_criteria: CC7.2
   mapped_to_existing: true
-  existing_invariant: CIS CTL.CLOUDWATCH.MONITOR.UNAUTH.001
+  existing_control: CIS CTL.CLOUDWATCH.MONITOR.UNAUTH.001
   note: >
     Metric filter and alarm for AccessDenied events — covered by CIS 4.1.
 
@@ -68,7 +68,7 @@ invariants:
   title: Root account usage monitored
   soc2_criteria: CC7.2
   mapped_to_existing: true
-  existing_invariant: CIS CTL.CLOUDWATCH.MONITOR.ROOT.001
+  existing_control: CIS CTL.CLOUDWATCH.MONITOR.ROOT.001
   note: >
     Any root activity triggers alert — covered by CIS 4.3.
 

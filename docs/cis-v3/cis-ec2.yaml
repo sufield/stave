@@ -1,7 +1,7 @@
 # CIS AWS Foundations Benchmark v3.0 — EC2
 # 3 controls
 
-invariants:
+controls:
 
 - id: CIS.EC2.1
   title: Ensure EBS Volume Encryption is Enabled in all Regions

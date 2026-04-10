@@ -186,12 +186,13 @@ Actual result: **9 domains, 103 controls, 4 vendors, zero engine changes.**
 - Property namespaces: `properties.backup.*`, `properties.availability.*`, `properties.replication.*`
 - Cross-service: applies to any resource type, not tied to a specific AWS service
 
-### Phase 3 Complete: 109 controls, 10 domains, 4 vendors
+### Phase 3 Complete + Compliance Expansion: 185 controls, 26 domains, 5 vendors
 
-All infrastructure gaps from kops #1776, Cloudticity top 10, AWS Config,
-Prowler HIPAA, and AWS blog 2016 are now covered by Stave controls.
-The only remaining gaps are operational (workforce training, incident
-response, breach notification, BAA verification) — outside Stave's scope.
+Infrastructure gaps from all sources closed. 10 compliance framework
+profiles implemented (HIPAA, CIS v3.0, SOC 2, PCI-DSS v4.0, NIST 800-53,
+FedRAMP, GDPR, FFIEC, ISO 27001, NIST CSF 2.0) — all via YAML controls +
+compliance tags with zero engine changes. Compliance catalogs use the term
+"controls" (not "invariants") to match Stave's canonical vocabulary.
 
 ### Gap sources — all resolved
 

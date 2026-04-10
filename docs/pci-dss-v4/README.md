@@ -1,6 +1,6 @@
-# PCI-DSS v4.0 — Invariant Catalog
+# PCI-DSS v4.0 — Control Catalog
 
-Complete mapping of PCI-DSS v4.0 requirements to Stave invariant
+Complete mapping of PCI-DSS v4.0 requirements to Stave control
 definitions. One YAML file per PCI requirement section.
 
 ## Coverage
@@ -23,7 +23,7 @@ definitions. One YAML file per PCI requirement section.
 ## Classification
 
 - **MAPPED (48)**: Already covered by existing HIPAA, CIS v3.0, or SOC 2
-  invariants. Require `pci_dss_v4.0:` compliance tag on existing controls.
+  controls. Require `pci_dss_v4.0:` compliance tag on existing controls.
 - **NEW (2)**: S3 KMS CMK requirement (maps to existing ENCRYPT.003) and
   CloudWatch log retention >= 365 days.
 - **MANUAL (12)**: Organizational processes (policies, training, pen tests,

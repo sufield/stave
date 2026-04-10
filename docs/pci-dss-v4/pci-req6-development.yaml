@@ -1,13 +1,13 @@
 # PCI-DSS v4.0 — Requirement 6: Develop and Maintain Secure Systems
 # Summary: 4 controls — 2 MAPPED, 0 NEW, 2 MANUAL
 
-invariants:
+controls:
 
 - id: PCI.6.1
   title: CloudFormation drift detection must be enabled
   pci_requirement: "6.3.2"
   mapped_to_existing: true
-  existing_invariant: SOC2 CTL.CLOUDFORMATION.DRIFT.001
+  existing_control: SOC2 CTL.CLOUDFORMATION.DRIFT.001
   note: >
     IaC drift indicates out-of-band changes — covered by SOC2 CC8.1.
 
@@ -15,7 +15,7 @@ invariants:
   title: RDS auto minor version upgrade must be enabled
   pci_requirement: "6.3.3"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.RDS.AUTOUPGRADE.001
+  existing_control: CIS CTL.RDS.AUTOUPGRADE.001
   note: >
     Security patches applied automatically — covered by CIS 2.3.2.
 

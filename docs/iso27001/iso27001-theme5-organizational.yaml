@@ -1,20 +1,20 @@
 # ISO 27001:2022 — Theme 5: Organizational Controls
 # Summary: 10 controls — 2 MAPPED, 0 NEW, 8 MANUAL
 
-invariants:
+controls:
 
 - id: ISO.5.9.1
   title: AWS Config as asset inventory
   annex_a: "A.5.9"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.CONFIG.ENABLED.001
+  existing_control: CIS CTL.CONFIG.ENABLED.001
   note: Config provides automated inventory of AWS resources.
 
 - id: ISO.5.24.1
   title: CloudTrail and monitoring for incident detection
   annex_a: "A.5.24"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.CLOUDTRAIL.ENABLED.001, CIS CTL.CLOUDWATCH.MONITOR.UNAUTH.001
+  existing_control: CIS CTL.CLOUDTRAIL.ENABLED.001, CIS CTL.CLOUDWATCH.MONITOR.UNAUTH.001
   note: Incident identification via audit logging and alerts.
 
 - id: ISO.5.1.1

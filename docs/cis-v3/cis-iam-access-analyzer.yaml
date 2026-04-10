@@ -1,7 +1,7 @@
 # CIS AWS Foundations Benchmark v3.0 — IAM Access Analyzer
 # 1 control
 
-invariants:
+controls:
 
 - id: CIS.ACCESS_ANALYZER.1
   title: Ensure that IAM Access Analyzer is enabled for all regions

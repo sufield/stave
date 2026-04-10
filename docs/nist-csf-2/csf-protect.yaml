@@ -1,0 +1,112 @@
+# NIST CSF 2.0 — Protect (PR)
+# Summary: 15 controls — 15 MAPPED, 0 NEW, 0 MANUAL
+
+controls:
+
+# PR.AA — Identity, Authentication, Access Control
+- id: CSF.PR.1
+  title: Root MFA with hardware token
+  csf_function: "PR.AA"
+  mapped_to_existing: true
+  existing_control: CIS CTL.IAM.ROOT.MFA.001, CTL.IAM.ROOT.HWMFA.001
+  note: Strong authentication for privileged accounts.
+
+- id: CSF.PR.2
+  title: Console users have MFA
+  csf_function: "PR.AA"
+  mapped_to_existing: true
+  existing_control: CIS CTL.IAM.CONSOLE.MFA.001
+  note: Multi-factor authentication.
+
+- id: CSF.PR.3
+  title: No full admin IAM policies (least privilege)
+  csf_function: "PR.AA"
+  mapped_to_existing: true
+  existing_control: CIS CTL.IAM.POLICY.ADMIN.001
+  note: Least privilege enforcement.
+
+- id: CSF.PR.4
+  title: Users via groups only
+  csf_function: "PR.AA"
+  mapped_to_existing: true
+  existing_control: CIS CTL.IAM.POLICY.INLINE.001, CTL.IAM.POLICY.DIRECT.001
+  note: Consistent access provisioning.
+
+- id: CSF.PR.5
+  title: Password policy enforced
+  csf_function: "PR.AA"
+  mapped_to_existing: true
+  existing_control: HIPAA CTL.IAM.PASSWORD.LENGTH/REUSE/COMPLEXITY.001
+  note: Strong authentication credentials.
+
+# PR.DS — Data Security
+- id: CSF.PR.6
+  title: S3 encryption at rest with KMS
+  csf_function: "PR.DS"
+  mapped_to_existing: true
+  existing_control: HIPAA CTL.S3.ENCRYPT.001, CTL.S3.ENCRYPT.003
+  note: Data at rest encryption.
+
+- id: CSF.PR.7
+  title: S3 TLS enforcement
+  csf_function: "PR.DS"
+  mapped_to_existing: true
+  existing_control: HIPAA CTL.S3.ENCRYPT.002
+  note: Data in transit encryption.
+
+- id: CSF.PR.8
+  title: RDS/EBS encryption
+  csf_function: "PR.DS"
+  mapped_to_existing: true
+  existing_control: HIPAA CTL.RDS.ENCRYPT.001, CTL.EC2.EBS.ENCRYPT.001
+  note: Service-level encryption.
+
+- id: CSF.PR.9
+  title: KMS key management
+  csf_function: "PR.DS"
+  mapped_to_existing: true
+  existing_control: CIS CTL.KMS.ROTATION.001, HIPAA CTL.KMS.POLICY.001
+  note: Cryptographic key lifecycle.
+
+- id: CSF.PR.10
+  title: Backup encryption
+  csf_function: "PR.DS"
+  mapped_to_existing: true
+  existing_control: HIPAA CTL.BACKUP.ENCRYPT.001
+  note: Data integrity in backups.
+
+# PR.PS — Platform Security
+- id: CSF.PR.11
+  title: S3 Block Public Access
+  csf_function: "PR.PS"
+  mapped_to_existing: true
+  existing_control: CIS CTL.S3.CONTROLS.001
+  note: Platform hardening.
+
+- id: CSF.PR.12
+  title: EC2 IMDSv2 required
+  csf_function: "PR.PS"
+  mapped_to_existing: true
+  existing_control: CIS CTL.EC2.IMDSV2.001
+  note: Instance hardening.
+
+- id: CSF.PR.13
+  title: Configuration baseline via Config
+  csf_function: "PR.PS"
+  mapped_to_existing: true
+  existing_control: CIS CTL.CONFIG.ENABLED.001, HIPAA CTL.CONFIG.RULES.001
+  note: Secure configuration management.
+
+- id: CSF.PR.14
+  title: RDS auto patching
+  csf_function: "PR.PS"
+  mapped_to_existing: true
+  existing_control: CIS CTL.RDS.AUTOUPGRADE.001
+  note: Platform software security.
+
+- id: CSF.PR.15
+  title: ELB TLS enforcement
+  csf_function: "PR.DS"
+  mapped_to_existing: true
+  existing_control: HIPAA CTL.ELB.TLS.001
+  note: Transit encryption at load balancer.

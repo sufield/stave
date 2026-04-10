@@ -1,4 +1,4 @@
-# GDPR Compliance Pack — Invariant Catalog
+# GDPR Compliance Pack — Control Catalog
 
 EU General Data Protection Regulation mapping for Stave. GDPR is
 the most manual-heavy framework because it governs organizational

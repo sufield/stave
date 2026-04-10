@@ -1,7 +1,7 @@
 # CIS AWS Foundations Benchmark v3.0 — CloudTrail
 # 6 controls
 
-invariants:
+controls:
 
 - id: CIS.CLOUDTRAIL.1
   title: Ensure CloudTrail is enabled in all regions

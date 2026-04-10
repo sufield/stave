@@ -1,7 +1,7 @@
-# NIST SP 800-53 Rev 5 — Invariant Catalog
+# NIST SP 800-53 Rev 5 — Control Catalog
 
 Complete mapping of NIST 800-53 Rev 5 control families to Stave
-invariant definitions. One YAML file per control family.
+control definitions. One YAML file per control family.
 
 ## Coverage
 

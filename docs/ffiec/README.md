@@ -1,4 +1,4 @@
-# FFIEC Compliance Pack — Invariant Catalog
+# FFIEC Compliance Pack — Control Catalog
 
 Federal Financial Institutions Examination Council (FFIEC) mapping for
 Stave. Covers the Cybersecurity Assessment Tool (CAT), Information

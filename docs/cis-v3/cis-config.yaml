@@ -1,7 +1,7 @@
 # CIS AWS Foundations Benchmark v3.0 — AWS Config
 # 1 control
 
-invariants:
+controls:
 
 - id: CIS.CONFIG.1
   title: Ensure AWS Config is enabled in all regions

@@ -1,13 +1,13 @@
 # PCI-DSS v4.0 — Requirement 11: Test Security of Systems and Networks
 # Summary: 4 controls — 2 MAPPED, 0 NEW, 2 MANUAL
 
-invariants:
+controls:
 
 - id: PCI.11.1
   title: Security Hub must be enabled
   pci_requirement: "11.3.1"
   mapped_to_existing: true
-  existing_invariant: SOC2 CTL.SECURITYHUB.ENABLED.001
+  existing_control: SOC2 CTL.SECURITYHUB.ENABLED.001
   note: >
     Aggregated security findings — covered by SOC2 CC7.1.
 
@@ -15,7 +15,7 @@ invariants:
   title: IAM Access Analyzer must be enabled
   pci_requirement: "11.3.1"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.IAM.ANALYZER.001
+  existing_control: CIS CTL.IAM.ANALYZER.001
   note: >
     External access detection — covered by CIS 1.20.
 

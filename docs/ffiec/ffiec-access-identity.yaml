@@ -1,88 +1,88 @@
 # FFIEC — Access and Identity Management (CAT Domain 3)
 # Summary: 12 controls — 12 MAPPED, 0 NEW, 0 MANUAL
 
-invariants:
+controls:
 
 - id: FFIEC.ACCESS.1
   title: Root MFA with hardware token
   ffiec_reference: "CAT-D3.DC.AM.B.1"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.IAM.ROOT.MFA.001, CTL.IAM.ROOT.HWMFA.001
+  existing_control: CIS CTL.IAM.ROOT.MFA.001, CTL.IAM.ROOT.HWMFA.001
   note: Hardware MFA for privileged accounts.
 
 - id: FFIEC.ACCESS.2
   title: Console users have MFA
   ffiec_reference: "CAT-D3.DC.AM.B.2"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.IAM.CONSOLE.MFA.001
+  existing_control: CIS CTL.IAM.CONSOLE.MFA.001
   note: MFA for all interactive users.
 
 - id: FFIEC.ACCESS.3
   title: Root access keys removed
   ffiec_reference: "CAT-D3.DC.AM.B.1"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.IAM.ROOT.ACCESSKEY.001
+  existing_control: CIS CTL.IAM.ROOT.ACCESSKEY.001
   note: No programmatic root access.
 
 - id: FFIEC.ACCESS.4
   title: No full admin IAM policies
   ffiec_reference: "CAT-D3.DC.AM.B.3"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.IAM.POLICY.ADMIN.001
+  existing_control: CIS CTL.IAM.POLICY.ADMIN.001
   note: Least privilege enforcement.
 
 - id: FFIEC.ACCESS.5
   title: Users via groups only
   ffiec_reference: "CAT-D3.DC.AM.B.3"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.IAM.POLICY.INLINE.001, CTL.IAM.POLICY.DIRECT.001
+  existing_control: CIS CTL.IAM.POLICY.INLINE.001, CTL.IAM.POLICY.DIRECT.001
   note: Consistent permission governance.
 
 - id: FFIEC.ACCESS.6
   title: Password minimum length 14+
   ffiec_reference: "CAT-D3.DC.AM.B.4"
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.IAM.PASSWORD.LENGTH.001
+  existing_control: HIPAA CTL.IAM.PASSWORD.LENGTH.001
   note: Strong password requirements.
 
 - id: FFIEC.ACCESS.7
   title: Password reuse prevention
   ffiec_reference: "CAT-D3.DC.AM.B.4"
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.IAM.PASSWORD.REUSE.001
+  existing_control: HIPAA CTL.IAM.PASSWORD.REUSE.001
   note: Last 24 passwords prevented.
 
 - id: FFIEC.ACCESS.8
   title: Access key rotation within 90 days
   ffiec_reference: "CAT-D3.DC.AM.B.5"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.IAM.CRED.ROTATION.001
+  existing_control: CIS CTL.IAM.CRED.ROTATION.001
   note: Credential rotation.
 
 - id: FFIEC.ACCESS.9
   title: Unused credentials disabled
   ffiec_reference: "CAT-D3.DC.AM.B.5"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.IAM.CRED.UNUSED.001
+  existing_control: CIS CTL.IAM.CRED.UNUSED.001
   note: Dormant account management.
 
 - id: FFIEC.ACCESS.10
   title: Root not used for daily operations
   ffiec_reference: "CAT-D3.DC.AM.B.1"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.IAM.ROOT.USAGE.001
+  existing_control: CIS CTL.IAM.ROOT.USAGE.001
   note: Unique user identification.
 
 - id: FFIEC.ACCESS.11
   title: Single active access key per user
   ffiec_reference: "CAT-D3.DC.AM.B.5"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.IAM.CRED.SINGLEKEY.001
+  existing_control: CIS CTL.IAM.CRED.SINGLEKEY.001
   note: Reduce attack surface.
 
 - id: FFIEC.ACCESS.12
   title: Cognito MFA for application users
   ffiec_reference: "CAT-D3.DC.AM.B.2"
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.COGNITO.MFA.001
+  existing_control: HIPAA CTL.COGNITO.MFA.001
   note: MFA for external-facing financial systems.

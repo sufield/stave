@@ -1,6 +1,6 @@
-# SOC 2 Trust Service Criteria — Invariant Catalog
+# SOC 2 Trust Service Criteria — Control Catalog
 
-Complete mapping of SOC 2 Trust Service Criteria to Stave invariant
+Complete mapping of SOC 2 Trust Service Criteria to Stave control
 definitions. One YAML file per criteria section.
 
 ## Coverage
@@ -19,10 +19,10 @@ definitions. One YAML file per criteria section.
 ## Classification
 
 - **MAPPED (41)**: Already covered by existing HIPAA or CIS v3.0
-  invariants. These controls need `soc2:` compliance tags added to
+  controls. These controls need `soc2:` compliance tags added to
   existing ctrl.v1 YAML files.
 
-- **NEW (8)**: Genuinely new invariants not covered by HIPAA or CIS.
+- **NEW (8)**: Genuinely new controls not covered by HIPAA or CIS.
   These require new ctrl.v1 controls and potentially new service domains.
 
 - **MANUAL (13)**: Cannot be verified from a static configuration

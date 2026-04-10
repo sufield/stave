@@ -1,35 +1,35 @@
 # FFIEC — Data Integrity and Security (Information Security Handbook)
 # Summary: 13 controls — 13 MAPPED, 0 NEW, 0 MANUAL
 
-invariants:
+controls:
 
 # Encryption at rest (NPPI protection)
 - id: FFIEC.DATA.1
   title: S3 encryption with KMS
   ffiec_reference: "ISH-4.3"
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.S3.ENCRYPT.001, CTL.S3.ENCRYPT.003
+  existing_control: HIPAA CTL.S3.ENCRYPT.001, CTL.S3.ENCRYPT.003
   note: NPPI encrypted at rest with KMS CMK.
 
 - id: FFIEC.DATA.2
   title: RDS storage encryption
   ffiec_reference: "ISH-4.3"
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.RDS.ENCRYPT.001
+  existing_control: HIPAA CTL.RDS.ENCRYPT.001
   note: Database encryption for financial data.
 
 - id: FFIEC.DATA.3
   title: EBS volume encryption
   ffiec_reference: "ISH-4.3"
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.EC2.EBS.ENCRYPT.001
+  existing_control: HIPAA CTL.EC2.EBS.ENCRYPT.001
   note: Block storage encryption.
 
 - id: FFIEC.DATA.4
   title: KMS key rotation and policy
   ffiec_reference: "ISH-4.3"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.KMS.ROTATION.001, HIPAA CTL.KMS.POLICY.001
+  existing_control: CIS CTL.KMS.ROTATION.001, HIPAA CTL.KMS.POLICY.001
   note: Cryptographic key management oversight.
 
 # Preventing unauthorized disclosure
@@ -37,21 +37,21 @@ invariants:
   title: S3 Block Public Access
   ffiec_reference: "ISH-4.1"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.S3.CONTROLS.001
+  existing_control: CIS CTL.S3.CONTROLS.001
   note: Prevent public access to financial data.
 
 - id: FFIEC.DATA.6
   title: S3 not publicly readable
   ffiec_reference: "ISH-4.1"
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.S3.PUBLIC.001
+  existing_control: HIPAA CTL.S3.PUBLIC.001
   note: No public read on NPPI buckets.
 
 - id: FFIEC.DATA.7
   title: RDS not publicly accessible
   ffiec_reference: "ISH-4.1"
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.RDS.PUBLIC.001
+  existing_control: HIPAA CTL.RDS.PUBLIC.001
   note: No public database access.
 
 # Transit encryption
@@ -59,14 +59,14 @@ invariants:
   title: S3 TLS enforcement
   ffiec_reference: "ISH-4.3"
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.S3.ENCRYPT.002
+  existing_control: HIPAA CTL.S3.ENCRYPT.002
   note: End-to-end encryption for data in transit.
 
 - id: FFIEC.DATA.9
   title: ELB/RDS TLS enforcement
   ffiec_reference: "ISH-4.3"
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.ELB.TLS.001, CTL.RDS.SSL.001
+  existing_control: HIPAA CTL.ELB.TLS.001, CTL.RDS.SSL.001
   note: TLS 1.2+ for financial transactions.
 
 # Audit trails
@@ -74,26 +74,26 @@ invariants:
   title: CloudTrail enabled
   ffiec_reference: "ISH-4.2"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.CLOUDTRAIL.ENABLED.001
+  existing_control: CIS CTL.CLOUDTRAIL.ENABLED.001
   note: Complete audit trail for examiner review.
 
 - id: FFIEC.DATA.11
   title: CloudTrail log validation and encryption
   ffiec_reference: "ISH-4.2"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.CLOUDTRAIL.VALIDATION.001, HIPAA CTL.CLOUDTRAIL.ENCRYPT.001
+  existing_control: CIS CTL.CLOUDTRAIL.VALIDATION.001, HIPAA CTL.CLOUDTRAIL.ENCRYPT.001
   note: Immutable, encrypted audit logs.
 
 - id: FFIEC.DATA.12
   title: S3 access logging
   ffiec_reference: "ISH-4.2"
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.S3.LOG.001
+  existing_control: HIPAA CTL.S3.LOG.001
   note: Data access audit trail.
 
 - id: FFIEC.DATA.13
   title: VPC flow logging
   ffiec_reference: "ISH-4.2"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.VPC.FLOWLOG.001
+  existing_control: CIS CTL.VPC.FLOWLOG.001
   note: Network traffic logging for examiner review.

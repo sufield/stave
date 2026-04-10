@@ -1,4 +1,4 @@
-# FedRAMP Compliance Pack — Invariant Catalog
+# FedRAMP Compliance Pack — Control Catalog
 
 FedRAMP Moderate baseline mapping for Stave. FedRAMP inherits NIST SP
 800-53 Rev 5 and adds requirements for FIPS 140 cryptography,

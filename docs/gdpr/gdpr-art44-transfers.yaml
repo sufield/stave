@@ -1,7 +1,7 @@
 # GDPR — Chapter V (Articles 44-49): International Data Transfers
 # Summary: 4 controls — 0 MAPPED, 1 NEW, 3 MANUAL
 
-invariants:
+controls:
 
 - id: GDPR.44.1
   title: S3 buckets must be in approved EU/EEA regions

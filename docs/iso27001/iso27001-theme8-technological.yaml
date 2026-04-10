@@ -1,35 +1,35 @@
 # ISO 27001:2022 — Theme 8: Technological Controls
 # Summary: 20 controls — 20 MAPPED, 0 NEW, 0 MANUAL
 
-invariants:
+controls:
 
 # A.8.3 — Information Access Restriction
 - id: ISO.8.3.1
   title: S3 Block Public Access enforced
   annex_a: "A.8.3"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.S3.CONTROLS.001
+  existing_control: CIS CTL.S3.CONTROLS.001
   note: Default-deny access via BPA.
 
 - id: ISO.8.3.2
   title: S3 not publicly readable
   annex_a: "A.8.3"
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.S3.PUBLIC.001
+  existing_control: HIPAA CTL.S3.PUBLIC.001
   note: No public read on information assets.
 
 - id: ISO.8.3.3
   title: RDS not publicly accessible
   annex_a: "A.8.3"
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.RDS.PUBLIC.001
+  existing_control: HIPAA CTL.RDS.PUBLIC.001
   note: Database access restricted.
 
 - id: ISO.8.3.4
   title: No full admin IAM policies
   annex_a: "A.8.3"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.IAM.POLICY.ADMIN.001
+  existing_control: CIS CTL.IAM.POLICY.ADMIN.001
   note: Least privilege access control.
 
 # A.8.2 — Access Rights
@@ -37,21 +37,21 @@ invariants:
   title: Unused credentials disabled
   annex_a: "A.8.2"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.IAM.CRED.UNUSED.001
+  existing_control: CIS CTL.IAM.CRED.UNUSED.001
   note: Timely removal of access rights.
 
 - id: ISO.8.2.2
   title: Users via groups (no direct policies)
   annex_a: "A.8.2"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.IAM.POLICY.INLINE.001, CTL.IAM.POLICY.DIRECT.001
+  existing_control: CIS CTL.IAM.POLICY.INLINE.001, CTL.IAM.POLICY.DIRECT.001
   note: Formal access provisioning process.
 
 - id: ISO.8.2.3
   title: Access key rotation
   annex_a: "A.8.2"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.IAM.CRED.ROTATION.001
+  existing_control: CIS CTL.IAM.CRED.ROTATION.001
   note: Periodic access rights review.
 
 # A.8.5 — Secure Authentication
@@ -59,21 +59,21 @@ invariants:
   title: Root MFA with hardware token
   annex_a: "A.8.5"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.IAM.ROOT.MFA.001, CTL.IAM.ROOT.HWMFA.001
+  existing_control: CIS CTL.IAM.ROOT.MFA.001, CTL.IAM.ROOT.HWMFA.001
   note: Strong authentication for privileged accounts.
 
 - id: ISO.8.5.2
   title: Console users have MFA
   annex_a: "A.8.5"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.IAM.CONSOLE.MFA.001
+  existing_control: CIS CTL.IAM.CONSOLE.MFA.001
   note: Multi-factor authentication for all users.
 
 - id: ISO.8.5.3
   title: Password policy enforced
   annex_a: "A.8.5"
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.IAM.PASSWORD.LENGTH/REUSE/COMPLEXITY.001
+  existing_control: HIPAA CTL.IAM.PASSWORD.LENGTH/REUSE/COMPLEXITY.001
   note: Strong password requirements.
 
 # A.8.24 — Cryptographic Controls
@@ -81,28 +81,28 @@ invariants:
   title: S3 encryption at rest with KMS
   annex_a: "A.8.24"
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.S3.ENCRYPT.001, CTL.S3.ENCRYPT.003
+  existing_control: HIPAA CTL.S3.ENCRYPT.001, CTL.S3.ENCRYPT.003
   note: Encryption of information at rest.
 
 - id: ISO.8.24.2
   title: S3 TLS enforcement
   annex_a: "A.8.24"
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.S3.ENCRYPT.002
+  existing_control: HIPAA CTL.S3.ENCRYPT.002
   note: Encryption of information in transit.
 
 - id: ISO.8.24.3
   title: RDS/EBS/service encryption
   annex_a: "A.8.24"
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.RDS.ENCRYPT.001, CTL.EC2.EBS.ENCRYPT.001
+  existing_control: HIPAA CTL.RDS.ENCRYPT.001, CTL.EC2.EBS.ENCRYPT.001
   note: Encryption across all data services.
 
 - id: ISO.8.24.4
   title: KMS key rotation and policy
   annex_a: "A.8.24"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.KMS.ROTATION.001, HIPAA CTL.KMS.POLICY.001
+  existing_control: CIS CTL.KMS.ROTATION.001, HIPAA CTL.KMS.POLICY.001
   note: Cryptographic key management.
 
 # A.8.9 — Configuration Management
@@ -110,14 +110,14 @@ invariants:
   title: AWS Config recording all resources
   annex_a: "A.8.9"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.CONFIG.ENABLED.001
+  existing_control: CIS CTL.CONFIG.ENABLED.001
   note: Baseline configuration documented.
 
 - id: ISO.8.9.2
   title: Config rules for compliance
   annex_a: "A.8.9"
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.CONFIG.RULES.001
+  existing_control: HIPAA CTL.CONFIG.RULES.001
   note: Configuration monitoring and review.
 
 # A.8.15 — Logging
@@ -125,14 +125,14 @@ invariants:
   title: CloudTrail enabled
   annex_a: "A.8.15"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.CLOUDTRAIL.ENABLED.001
+  existing_control: CIS CTL.CLOUDTRAIL.ENABLED.001
   note: Event logging for all API activity.
 
 - id: ISO.8.15.2
   title: S3 access logging and VPC flow logs
   annex_a: "A.8.15"
   mapped_to_existing: true
-  existing_invariant: HIPAA CTL.S3.LOG.001, CIS CTL.VPC.FLOWLOG.001
+  existing_control: HIPAA CTL.S3.LOG.001, CIS CTL.VPC.FLOWLOG.001
   note: Data access and network event logging.
 
 # A.8.16 — Monitoring Activities
@@ -140,7 +140,7 @@ invariants:
   title: GuardDuty and Security Hub enabled
   annex_a: "A.8.16"
   mapped_to_existing: true
-  existing_invariant: SOC2 CTL.GUARDDUTY.ENABLED.001, CTL.SECURITYHUB.ENABLED.001
+  existing_control: SOC2 CTL.GUARDDUTY.ENABLED.001, CTL.SECURITYHUB.ENABLED.001
   note: Anomalous behavior detection.
 
 # A.8.8 — Technical Vulnerability Management
@@ -148,5 +148,5 @@ invariants:
   title: IAM Access Analyzer and auto patching
   annex_a: "A.8.8"
   mapped_to_existing: true
-  existing_invariant: CIS CTL.IAM.ANALYZER.001, CTL.RDS.AUTOUPGRADE.001
+  existing_control: CIS CTL.IAM.ANALYZER.001, CTL.RDS.AUTOUPGRADE.001
   note: Vulnerability identification and remediation.
