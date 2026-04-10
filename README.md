@@ -14,7 +14,7 @@ Stave fills this gap. Define safety controls in YAML, compile them to [CEL](http
 
 ## Features
 
-- **184 built-in controls** across 26 domains — AWS S3 (54), AWS IAM (21), GCP Cloud Storage (7), DNS (3)
+- **185 built-in controls** across 26 domains — AWS S3 (55), AWS IAM (21), GCP Cloud Storage (7), DNS (3)
 - **Unsafe duration tracking** — detects how long assets remain misconfigured across snapshots
 - **HIPAA compliance pack** — controls mapped to HIPAA Security Rule sections with compound risk detection
 - **Custom controls** — YAML with `unsafe_predicate` for any asset type, no code changes
@@ -105,9 +105,9 @@ New observation properties are additive and backward-compatible. Existing contro
 
 ## Built-in controls
 
-184 controls across 26 domains:
+185 controls across 26 domains:
 
-### AWS S3 (54 controls)
+### AWS S3 (55 controls)
 
 | Category | Count | What they detect |
 |----------|:---:|-----------------|
@@ -125,7 +125,7 @@ New observation properties are additive and backward-compatible. Existing contro
 | `tenant` | 1 | Prefix-based tenant isolation |
 | `takeover` | 2 | Dangling bucket references, CDN origins |
 | `artifacts` | 1 | VCS artifacts on public buckets |
-| `misc` | 2 | Incomplete data, completeness checks |
+| `misc` | 3 | Incomplete data, completeness checks |
 
 ### AWS IAM (21 controls)
 

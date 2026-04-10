@@ -7,7 +7,7 @@
     "now": "2026-01-14T00:00:00Z",
     "sla_threshold": "0h",
     "snapshots": 2,
-    "policy_fingerprint": "aaffaf76a8e81ef990f9d28f4ea0143c326cd268a1dddc62f300e84d7e82e50b"
+    "policy_fingerprint": "4ebc44b19f2f3dfdcbafa647e691363fc7c0bbb558b5251c8cc8f336e2eaa702"
   },
   "summary": {
     "total_assets": 1,
@@ -177,6 +177,7 @@
       "control_compliance": {
         "cis_aws_v1.4.0": "2.1.5",
         "fedramp_moderate": "AC-3",
+        "gdpr": "Art.32",
         "hipaa": "164.312(a)(1)",
         "nist_800_53_r5": "AC-3",
         "pci_dss_v3.2.1": "1.2.1",

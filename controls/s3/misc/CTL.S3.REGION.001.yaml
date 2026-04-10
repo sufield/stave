@@ -1,0 +1,39 @@
+dsl_version: ctrl.v1
+id: CTL.S3.REGION.001
+name: S3 Buckets Must Be in Approved Regions
+description: >
+  S3 buckets containing personal data must be located in approved
+  regions as determined by data residency requirements (e.g., EU/EEA
+  regions for GDPR). Storing data outside approved regions may violate
+  data transfer restrictions.
+domain: exposure
+severity: high
+compliance:
+  gdpr: "Art.44"
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    S3 bucket is located in a region outside the approved list.
+    Personal data may be subject to unauthorized cross-border transfer.
+  action: >
+    Create a new bucket in an approved region and migrate data.
+    Use S3 replication to move data, then delete the original bucket.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "region": "eu-west-1"
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.region_approved
+      op: eq
+      value: false

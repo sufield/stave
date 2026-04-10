@@ -42,15 +42,17 @@ const (
 	ProfileNIST Profile = "nist-800-53"
 	// ProfileFedRAMP selects the FedRAMP Moderate baseline profile.
 	ProfileFedRAMP Profile = "fedramp"
+	// ProfileGDPR selects the GDPR compliance profile.
+	ProfileGDPR Profile = "gdpr"
 )
 
 // ParseProfile validates and returns a Profile value.
 func ParseProfile(s string) (Profile, error) {
 	switch Profile(s) {
-	case ProfileAWSS3, ProfileAWSIAM, ProfileGCPGCS, ProfileHIPAA, ProfileCISv3, ProfileSOC2, ProfilePCIDSSv4, ProfileNIST, ProfileFedRAMP:
+	case ProfileAWSS3, ProfileAWSIAM, ProfileGCPGCS, ProfileHIPAA, ProfileCISv3, ProfileSOC2, ProfilePCIDSSv4, ProfileNIST, ProfileFedRAMP, ProfileGDPR:
 		return Profile(s), nil
 	default:
-		return "", fmt.Errorf("unsupported --profile %q (supported: aws-s3, aws-iam, gcp-gcs, hipaa, cis-aws-v3.0, soc2, pci-dss-v4.0, nist-800-53, fedramp)", s)
+		return "", fmt.Errorf("unsupported --profile %q (supported: aws-s3, aws-iam, gcp-gcs, hipaa, cis-aws-v3.0, soc2, pci-dss-v4.0, nist-800-53, fedramp, gdpr)", s)
 	}
 }
 
@@ -204,7 +206,7 @@ func profileControlDomain(prof Profile) string {
 		return "iam"
 	case ProfileGCPGCS:
 		return "gcs"
-	case ProfileHIPAA, ProfileCISv3, ProfileSOC2, ProfilePCIDSSv4, ProfileNIST, ProfileFedRAMP:
+	case ProfileHIPAA, ProfileCISv3, ProfileSOC2, ProfilePCIDSSv4, ProfileNIST, ProfileFedRAMP, ProfileGDPR:
 		return "" // Cross-domain: loads all, filtered by compliance ref.
 	default:
 		return "s3"
@@ -228,6 +230,8 @@ func profileComplianceFramework(prof Profile) policy.ComplianceFramework {
 		return "nist_800_53_r5"
 	case ProfileFedRAMP:
 		return "fedramp_moderate"
+	case ProfileGDPR:
+		return "gdpr"
 	default:
 		return ""
 	}

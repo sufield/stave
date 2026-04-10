@@ -1,0 +1,39 @@
+# GDPR — Article 25: Data Protection by Design and by Default
+# Summary: 5 controls — 5 MAPPED, 0 NEW, 0 MANUAL
+
+invariants:
+
+- id: GDPR.25.1
+  title: S3 Block Public Access (default deny)
+  gdpr_article: "Art.25(2)"
+  mapped_to_existing: true
+  existing_invariant: CIS CTL.S3.CONTROLS.001
+  note: Data not accessible by default without explicit authorization.
+
+- id: GDPR.25.2
+  title: S3 not publicly readable
+  gdpr_article: "Art.25(2)"
+  mapped_to_existing: true
+  existing_invariant: HIPAA CTL.S3.PUBLIC.001
+  note: Personal data not accessible to indefinite number of people.
+
+- id: GDPR.25.3
+  title: RDS not publicly accessible
+  gdpr_article: "Art.25(2)"
+  mapped_to_existing: true
+  existing_invariant: HIPAA CTL.RDS.PUBLIC.001
+  note: Database not accessible without authorization.
+
+- id: GDPR.25.4
+  title: EC2 no public IP
+  gdpr_article: "Art.25(2)"
+  mapped_to_existing: true
+  existing_invariant: HIPAA CTL.EC2.PUBLIC.001
+  note: Processing systems not directly reachable.
+
+- id: GDPR.25.5
+  title: IAM least privilege by default
+  gdpr_article: "Art.25(1)"
+  mapped_to_existing: true
+  existing_invariant: CIS CTL.IAM.POLICY.ADMIN.001
+  note: Minimal access by default.

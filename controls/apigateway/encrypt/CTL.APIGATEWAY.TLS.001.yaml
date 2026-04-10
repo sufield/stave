@@ -13,6 +13,7 @@ compliance:
   pci_dss_v4.0: "4.2.1"
   nist_800_53_r5: "SC-8"
   fedramp_moderate: "SC-8"
+  gdpr: "Art.32"
 scope_tags:
   - aws
   - apigateway

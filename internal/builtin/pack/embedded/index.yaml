@@ -331,6 +331,10 @@ packs:
     controls:
       # All NIST 800-53 controls apply, plus FIPS cryptography
       - CTL.KMS.FIPS.001
+  gdpr:
+    description: GDPR technical controls for personal data protection
+    controls:
+      - CTL.S3.REGION.001
   vpc:
     description: AWS VPC network security controls
     controls:
@@ -553,6 +557,7 @@ packs:
       - CTL.S3.ENCRYPT.003
       - CTL.S3.ENCRYPT.004
       - CTL.S3.GOVERNANCE.001
+      - CTL.S3.REGION.001
       - CTL.S3.INCOMPLETE.001
       - CTL.S3.LIFECYCLE.001
       - CTL.S3.LIFECYCLE.002
@@ -660,6 +665,9 @@ controls:
   CTL.S3.CONTROLS.001:
     path: internal/controldata/embedded/s3/misc/CTL.S3.CONTROLS.001.yaml
     summary: Public Access Block Must Be Enabled
+  CTL.S3.REGION.001:
+    path: internal/controldata/embedded/s3/misc/CTL.S3.REGION.001.yaml
+    summary: S3 Buckets Must Be in Approved Regions
   CTL.S3.INCOMPLETE.001:
     path: internal/controldata/embedded/s3/misc/CTL.S3.INCOMPLETE.001.yaml
     summary: Complete Data Required for Safety Assessment

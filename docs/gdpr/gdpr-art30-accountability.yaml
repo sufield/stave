@@ -1,0 +1,53 @@
+# GDPR — Article 30: Records of Processing Activities
+# Summary: 7 controls — 5 MAPPED, 0 NEW, 2 MANUAL
+
+invariants:
+
+- id: GDPR.30.1
+  title: CloudTrail enabled for audit trail
+  gdpr_article: "Art.30"
+  mapped_to_existing: true
+  existing_invariant: CIS CTL.CLOUDTRAIL.ENABLED.001
+  note: Who accessed data, when, and what actions taken.
+
+- id: GDPR.30.2
+  title: CloudTrail data event logging
+  gdpr_article: "Art.30"
+  mapped_to_existing: true
+  existing_invariant: CIS CTL.CLOUDTRAIL.DATAWRITE.001, CTL.CLOUDTRAIL.DATAREAD.001
+  note: Object-level access logging for personal data.
+
+- id: GDPR.30.3
+  title: S3 access logging
+  gdpr_article: "Art.30"
+  mapped_to_existing: true
+  existing_invariant: HIPAA CTL.S3.LOG.001
+  note: Bucket-level access audit trail.
+
+- id: GDPR.30.4
+  title: AWS Config recording all resources
+  gdpr_article: "Art.30"
+  mapped_to_existing: true
+  existing_invariant: CIS CTL.CONFIG.ENABLED.001
+  note: Configuration change history for accountability.
+
+- id: GDPR.30.5
+  title: Log retention >= 365 days
+  gdpr_article: "Art.30"
+  mapped_to_existing: true
+  existing_invariant: PCI CTL.CLOUDWATCH.LOG.RETENTION365.001
+  note: Audit logs retained for accountability demonstration.
+
+- id: GDPR.30.6
+  title: Records of processing activities maintained
+  gdpr_article: "Art.30(1)"
+  manual: true
+  reason: Processing activity records are organizational documents.
+  evidence_guidance: ROPA (Record of Processing Activities) document listing purposes, categories, recipients, retention periods, and data locations.
+
+- id: GDPR.30.7
+  title: Data inventory and classification
+  gdpr_article: "Art.30(1)"
+  manual: true
+  reason: Data inventory requires organizational knowledge of what data is stored and why.
+  evidence_guidance: Data inventory mapping personal data categories to AWS resources, regions, and retention policies.
