@@ -58,6 +58,18 @@ The same bucket with Block Public Access on, customer-managed CMK,
 server and object-level logging, versioning, COMPLIANCE Object Lock,
 VPC-only access, and ACLs disabled. All 14 controls pass.
 
+## Compound risk detection (primary demo)
+
+```bash
+docker compose run --rm -T stave --compound-risks
+```
+
+Detects dangerous combinations that individual checks miss. The pattern
+that caused the $190M Capital One breach — public access + wildcard IAM
+policy — is COMPOUND.001. Each finding is medium individually. Together
+they're critical. No checklist tool can detect this because they evaluate
+settings in isolation.
+
 ## Trusted Advisor blind spots
 
 ```bash
