@@ -154,6 +154,7 @@ Full reference: [Control reference](docs/controls/reference.md)
 | [Authoring controls](docs/controls/authoring.md) | Write custom YAML controls |
 | [Pre-commit hook](docs/integrations/pre-commit.md) | Block unsafe configs before commit |
 | [Atlantis integration](docs/integrations/atlantis.md) | Evaluate Terraform plans before apply |
+| [OPA Rego export](docs/integrations/opa-export.md) | Export controls to OPA/Conftest |
 | [Evaluation semantics](docs/evaluation-semantics.md) | How duration tracking works |
 | [Architecture](docs/architecture/overview.md) | System design overview |
 | [FAQ](docs/faq.md) | Common questions |
