@@ -1,0 +1,48 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.ENABLED.001
+name: CloudTrail Must Be Enabled in All Regions
+description: >
+  CloudTrail must be configured as a multi-region trail. A single-region
+  trail misses API activity in other regions, leaving gaps in the audit
+  record that prevent forensic investigation of unauthorized access.
+domain: exposure
+severity: critical
+compliance:
+  hipaa: "164.312(b)"
+  cis_aws_v1.4.0: "3.1"
+  cis_aws_v3.0: "3.1"
+  soc2: "CC7.1"
+  pci_dss_v4.0: "10.2.1"
+  nist_800_53_r5: "AU-2"
+  fedramp_moderate: "AU-2"
+  gdpr: "Art.30"
+  ffiec: "ISH-4"
+  iso_27001_2022: "A.8.15"
+  nist_csf_2.0: "DE.CM"
+scope_tags:
+  - aws
+  - cloudtrail
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    CloudTrail trail is not configured for multi-region logging. API
+    activity in other regions is not recorded.
+  action: >
+    Update the trail to enable multi-region logging. Run:
+    aws cloudtrail update-trail --name xxx --is-multi-region-trail
+  example: |
+    {
+      "audit_trail": {
+        "kind": "trail",
+        "multi_region_enabled": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.audit_trail.kind
+      op: eq
+      value: trail
+    - field: properties.audit_trail.multi_region_enabled
+      op: eq
+      value: false
