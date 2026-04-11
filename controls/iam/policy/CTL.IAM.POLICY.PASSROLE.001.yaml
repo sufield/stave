@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.POLICY.PASSROLE.001
+name: PassRole Must Be Scoped to Specific Roles
+description: >
+  iam:PassRole permissions must be scoped to specific role ARNs, not
+  wildcard resource *. PassRole allows a principal to assign an IAM
+  role to an AWS service (Lambda, EC2, ECS). With a wildcard resource,
+  an attacker can pass any role — including highly privileged ones —
+  to a service they control, achieving privilege escalation without
+  directly modifying IAM policies.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-6"
+  fedramp_moderate: "AC-6"
+  iso_27001_2022: "A.8.3"
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    IAM entity has iam:PassRole with wildcard resource. Any role can
+    be passed to any service, enabling privilege escalation.
+  action: >
+    Restrict iam:PassRole to specific role ARNs in the Resource field.
+    Example: arn:aws:iam::123456789012:role/my-lambda-role. Use IAM
+    conditions like iam:PassedToService to further limit which services
+    can receive the role.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "policies": {
+          "passrole_unrestricted": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.policies.passrole_unrestricted
+      op: eq
+      value: true

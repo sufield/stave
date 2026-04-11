@@ -41,6 +41,7 @@ packs:
       - CTL.IAM.PASSWORD.COMPLEXITY.001
       - CTL.IAM.PASSWORD.LENGTH.001
       - CTL.IAM.PASSWORD.REUSE.001
+      - CTL.IAM.ACCOUNT.INACTIVE.001
       # §164.312(a)(2)(iv) — Encryption and Decryption
       - CTL.BACKUP.ENCRYPT.001
       - CTL.CLOUDTRAIL.ENCRYPT.001
@@ -77,6 +78,7 @@ packs:
       - CTL.IAM.CONSOLE.MFA.001
       - CTL.IAM.ROOT.MFA.001
       - CTL.RDS.IAMAUTH.001
+      - CTL.IAM.MFA.HWKEY.001
       # §164.312(e)(1) — Transmission Security
       - CTL.EC2.PUBLIC.001
       - CTL.K8S.NETPOL.001
@@ -115,6 +117,8 @@ packs:
       - CTL.IAM.SUPPORT.001
       - CTL.IAM.CERT.EXPIRED.001
       - CTL.IAM.ANALYZER.001
+      - CTL.IAM.MFA.HWKEY.001
+      - CTL.IAM.ACCOUNT.INACTIVE.001
       # Section 4 — Monitoring
       - CTL.CLOUDWATCH.MONITOR.UNAUTH.001
       - CTL.CLOUDWATCH.MONITOR.NOMFA.001
@@ -180,6 +184,12 @@ packs:
       - CTL.S3.OWNERSHIP.001
       - CTL.S3.ACL.OBJECT.001
       - CTL.S3.ACCOUNT.PAB.001
+      - CTL.IAM.POLICY.ESCALATION.001
+      - CTL.IAM.POLICY.PASSROLE.001
+      - CTL.IAM.BOUNDARY.001
+      - CTL.IAM.POLICY.COMPLEXITY.001
+      - CTL.IAM.MFA.HWKEY.001
+      - CTL.IAM.ACCOUNT.INACTIVE.001
       - CTL.S3.PUBLIC.001
       - CTL.S3.ENCRYPT.001
       - CTL.S3.ENCRYPT.002
@@ -256,6 +266,7 @@ packs:
       - CTL.SECURITYHUB.ENABLED.001
       - CTL.S3.DETECT.MACIE.001
       - CTL.S3.DETECT.MACIE.002
+      - CTL.CLOUDWATCH.MONITOR.MFADEVICE.001
       # CC8.1 — Change Management (NEW)
       - CTL.CLOUDFORMATION.DRIFT.001
       # PI1 — Processing Integrity
@@ -323,6 +334,9 @@ packs:
       - CTL.IAM.POLICY.DIRECT.001
       - CTL.S3.PUBLIC.001
       - CTL.RDS.PUBLIC.001
+      - CTL.IAM.POLICY.ESCALATION.001
+      - CTL.IAM.POLICY.PASSROLE.001
+      - CTL.IAM.BOUNDARY.001
       # Req 8 — Authentication
       - CTL.IAM.ROOT.MFA.001
       - CTL.IAM.ROOT.ACCESSKEY.001
@@ -336,6 +350,8 @@ packs:
       - CTL.IAM.CRED.UNUSED.001
       - CTL.IAM.CRED.SINGLEKEY.001
       - CTL.COGNITO.MFA.001
+      - CTL.IAM.MFA.HWKEY.001
+      - CTL.IAM.ACCOUNT.INACTIVE.001
       # Req 10 — Logging
       - CTL.CLOUDTRAIL.ENABLED.001
       - CTL.CLOUDTRAIL.VALIDATION.001
@@ -403,6 +419,9 @@ packs:
       - CTL.S3.OWNERSHIP.001
       - CTL.S3.ACL.OBJECT.001
       - CTL.S3.ACCOUNT.PAB.001
+      - CTL.IAM.POLICY.ESCALATION.001
+      - CTL.IAM.POLICY.PASSROLE.001
+      - CTL.IAM.MFA.HWKEY.001
   nist_csf_2.0:
     description: NIST Cybersecurity Framework v2.0 controls
     controls:
@@ -508,6 +527,7 @@ packs:
       - CTL.CLOUDWATCH.MONITOR.VPC.001
       - CTL.CLOUDWATCH.MONITOR.ORG.001
       - CTL.CLOUDWATCH.INCOMPLETE.001
+      - CTL.CLOUDWATCH.MONITOR.MFADEVICE.001
   cognito:
     description: AWS Cognito identity controls
     controls:
@@ -626,6 +646,12 @@ packs:
       - CTL.IAM.CRED.UNUSED45.001
       - CTL.IAM.CRED.SINGLEKEY.001
       - CTL.IAM.INCOMPLETE.001
+      - CTL.IAM.POLICY.ESCALATION.001
+      - CTL.IAM.POLICY.PASSROLE.001
+      - CTL.IAM.BOUNDARY.001
+      - CTL.IAM.POLICY.COMPLEXITY.001
+      - CTL.IAM.MFA.HWKEY.001
+      - CTL.IAM.ACCOUNT.INACTIVE.001
   s3:
     description: Default S3 built-in pack for MVP
     controls:
@@ -973,6 +999,27 @@ controls:
   CTL.IAM.INCOMPLETE.001:
     path: internal/controldata/embedded/iam/misc/CTL.IAM.INCOMPLETE.001.yaml
     summary: Complete Data Required for IAM Assessment
+  CTL.IAM.POLICY.ESCALATION.001:
+    path: internal/controldata/embedded/iam/policy/CTL.IAM.POLICY.ESCALATION.001.yaml
+    summary: IAM Policies Must Not Grant Self-Modification
+  CTL.IAM.POLICY.PASSROLE.001:
+    path: internal/controldata/embedded/iam/policy/CTL.IAM.POLICY.PASSROLE.001.yaml
+    summary: PassRole Must Be Scoped to Specific Roles
+  CTL.IAM.BOUNDARY.001:
+    path: internal/controldata/embedded/iam/policy/CTL.IAM.BOUNDARY.001.yaml
+    summary: IAM Roles Must Have Permissions Boundary
+  CTL.IAM.POLICY.COMPLEXITY.001:
+    path: internal/controldata/embedded/iam/policy/CTL.IAM.POLICY.COMPLEXITY.001.yaml
+    summary: IAM Policy Complexity Must Be Bounded
+  CTL.IAM.MFA.HWKEY.001:
+    path: internal/controldata/embedded/iam/console/CTL.IAM.MFA.HWKEY.001.yaml
+    summary: Privileged Accounts Must Use Hardware MFA
+  CTL.CLOUDWATCH.MONITOR.MFADEVICE.001:
+    path: internal/controldata/embedded/cloudwatch/monitoring/CTL.CLOUDWATCH.MONITOR.MFADEVICE.001.yaml
+    summary: MFA Device Changes Must Be Monitored
+  CTL.IAM.ACCOUNT.INACTIVE.001:
+    path: internal/controldata/embedded/iam/credentials/CTL.IAM.ACCOUNT.INACTIVE.001.yaml
+    summary: Inactive Accounts Must Be Disabled
   CTL.DNS.DANGLING.001:
     path: internal/controldata/embedded/dns/takeover/CTL.DNS.DANGLING.001.yaml
     summary: DNS Records Must Not Point to Unclaimed Resources

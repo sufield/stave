@@ -4,7 +4,7 @@
 
 Stave spent 2 months on a hexagonal architecture refactoring (3,448 commits,
 60+ domain renames, 44 Strangler Fig extractions). The engine was built to be
-vendor-agnostic and asset-type-agnostic, but all 53 controls were S3-only.
+vendor-agnostic and asset-type-agnostic, but all 64 controls were S3-only.
 
 The IAM control pack is the proof: a second resource domain that requires
 **zero engine code changes**. The observation loader, CEL evaluator, assessment
