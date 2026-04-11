@@ -14,7 +14,7 @@ Stave fills this gap. Define safety controls in YAML, compile them to [CEL](http
 
 ## Features
 
-- **222 built-in controls** across 27 domains (S3, IAM, VPC, EC2, RDS, ELB, K8s, CloudTrail, CloudWatch, KMS, and 16 more)
+- **228 built-in controls** across 28 domains (S3, IAM, VPC, EC2, RDS, ELB, K8s, CloudTrail, CloudWatch, KMS, and 16 more)
 - **10 compliance profiles** — HIPAA, CIS AWS v3.0, SOC 2, PCI-DSS v4.0, NIST 800-53, FedRAMP, GDPR, FFIEC, ISO 27001, NIST CSF 2.0
 - **Unsafe duration tracking** — detects how long assets remain misconfigured across snapshots
 - **Custom controls** — YAML with `unsafe_predicate` for any asset type, no code changes
@@ -109,7 +109,7 @@ New observation properties are additive and backward-compatible. Existing contro
 
 ## Built-in controls
 
-222 controls across 27 domains:
+228 controls across 28 domains:
 
 ### AWS S3 (67 controls)
 
@@ -131,7 +131,7 @@ New observation properties are additive and backward-compatible. Existing contro
 | `artifacts` | 1 | VCS artifacts on public buckets |
 | `misc` | 4 | Incomplete data, completeness checks |
 
-### AWS IAM (31 controls)
+### AWS IAM (32 controls)
 
 Root account MFA and access keys, console user MFA, credential rotation, password policy, inline/direct policy attachment. CIS AWS Benchmark aligned.
 

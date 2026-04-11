@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.ECR.PUBLIC.001
+name: ECR Repository Must Not Be Public
+description: >
+  ECR repositories must not be publicly accessible. A public ECR
+  repository allows anyone to pull container images, potentially
+  exposing proprietary code, embedded credentials, internal
+  architecture details, and software supply chain artifacts. Public
+  repositories should use ECR Public Gallery only for intentionally
+  open-source images.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-3"
+  fedramp_moderate: "AC-3"
+scope_tags:
+  - aws
+  - ecr
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    ECR repository is publicly accessible. Container images can be
+    pulled by anyone.
+  action: >
+    Set the repository policy to restrict access to specific IAM
+    principals. If the repository was created as ECR Public, migrate
+    images to a private ECR repository and update deployment configs.
+  example: |
+    {
+      "container_registry": {
+        "kind": "repository",
+        "access": {
+          "public": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container_registry.kind
+      op: eq
+      value: repository
+    - field: properties.container_registry.access.public
+      op: eq
+      value: true

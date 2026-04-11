@@ -3,27 +3,42 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 222
-**Pack hash:** `addf889db014f8c4a85d7288f6422a79a2f9a0f82b66e82e2109346bb42f1488`
+**Total controls:** 228
+**Pack hash:** `71c5e883d886335dbb2032b6f935547ccd10815df3d6de1bc6e6a7a5d0047ce8`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 31 |
-| high | 94 |
+| critical | 32 |
+| high | 96 |
 | info | 16 |
-| low | 12 |
-| medium | 69 |
+| low | 13 |
+| medium | 71 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 180 |
+| exposure | 185 |
 | governance | 2 |
-| identity | 36 |
+| identity | 37 |
 | storage | 4 |
 
 ## Controls
+
+### CTL.APIGATEWAY.AUTH.001
+
+**API Routes Must Have Authorization Configured**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3; nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+API Gateway routes and methods must have an authorizer configured (Cognito, Lambda, IAM, or JWT). Routes with authorization set to NONE are publicly accessible without any identity verification. The Trello breach (2024) exposed 15 million accounts through an unauthenticated API endpoint. The Spoutible breach (2024) leaked user data through an API without proper auth checks.
+
+**Remediation:** Configure an authorizer on all non-health-check routes. Use Cognito user pools, Lambda authorizers, IAM authorization, or JWT authorizers depending on the client type.
+
+---
 
 ### CTL.APIGATEWAY.INCOMPLETE.001
 
@@ -837,6 +852,50 @@ EBS snapshots must be encrypted. Unencrypted snapshots can be shared across acco
 
 ---
 
+### CTL.ECR.INCOMPLETE.001
+
+**Complete Data Required for ECR Assessment**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+
+ECR repository safety cannot be proven when access control data is missing from the snapshot. The extractor must populate container_registry.access.public to evaluate exposure controls.
+
+**Remediation:** Re-run the extractor with ECR permissions: ecr:DescribeRepositories, ecr:GetRepositoryPolicy.
+
+---
+
+### CTL.ECR.PUBLIC.001
+
+**ECR Repository Must Not Be Public**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3; nist_800_53_r5: AC-3; soc2: CC6.1;
+
+ECR repositories must not be publicly accessible. A public ECR repository allows anyone to pull container images, potentially exposing proprietary code, embedded credentials, internal architecture details, and software supply chain artifacts. Public repositories should use ECR Public Gallery only for intentionally open-source images.
+
+**Remediation:** Set the repository policy to restrict access to specific IAM principals. If the repository was created as ECR Public, migrate images to a private ECR repository and update deployment configs.
+
+---
+
+### CTL.ECR.SCAN.001
+
+**Image Scanning Must Be Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: RA-5; nist_800_53_r5: RA-5; soc2: CC7.1;
+
+ECR repositories must have image scanning enabled (basic or enhanced). Without scanning, container images with known vulnerabilities are deployed to production undetected.
+
+**Remediation:** Enable scan-on-push in the repository configuration. For enhanced scanning, enable Amazon Inspector ECR integration.
+
+---
+
 ### CTL.ELASTICACHE.INCOMPLETE.001
 
 **Complete Data Required for ElastiCache Assessment**
@@ -1534,6 +1593,21 @@ AWS Organizations must have restrictive Service Control Policies beyond the defa
 At least one IAM entity must have the AWSSupportAccess managed policy attached. This ensures someone can open support cases during security incidents without using root.
 
 **Remediation:** Create an IAM role with the AWSSupportAccess policy: aws iam attach-role-policy --role-name SupportRole --policy-arn arn:aws:iam::aws:policy/AWSSupportAccess
+
+---
+
+### CTL.IAM.TRUST.EXTERNALID.001
+
+**Cross-Account Trust Must Require External ID**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.8.3; nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+IAM roles with cross-account trust policies must include an sts:ExternalId condition. Without an external ID, any principal in the trusted account can assume the role — including compromised service accounts, OAuth applications, or test tenants. The Microsoft Midnight Blizzard 2024 breach exploited a legacy test OAuth app to assume a role with full_access_as_app permissions, pivoting from a test tenant to production Exchange mailboxes.
+
+**Remediation:** Add an sts:ExternalId condition to the role trust policy. Generate a unique external ID per trust relationship. Verify the assuming application passes the correct external ID.
 
 ---
 
@@ -3267,6 +3341,21 @@ Network ACLs must not allow inbound traffic from 0.0.0.0/0 or ::/0 to SSH (22) o
 The default VPC security group should not allow any inbound or outbound traffic. Resources should use custom security groups with explicit rules instead of relying on the default group.
 
 **Remediation:** Remove all inbound and outbound rules from the default security group. Assign custom security groups to all resources.
+
+---
+
+### CTL.VPC.SG.EGRESS.001
+
+**Security Groups Must Not Allow Unrestricted Egress**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-7; nist_800_53_r5: SC-7; soc2: CC6.6;
+
+Security groups must not allow all outbound traffic to 0.0.0.0/0 on all ports. Unrestricted egress enables data exfiltration, command-and-control communication, and lateral movement to external attacker infrastructure. While most organizations currently allow all egress by default, restricting outbound traffic to required ports and destinations is a critical APT hardening measure.
+
+**Remediation:** Replace the default allow-all egress rule with specific outbound rules for required ports (443 for HTTPS, 53 for DNS, etc.) and destinations. Use VPC endpoints for AWS service traffic to avoid internet egress entirely.
 
 ---
 

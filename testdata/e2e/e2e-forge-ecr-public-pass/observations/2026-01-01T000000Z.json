@@ -1,0 +1,19 @@
+{
+  "assets": [
+    {
+      "id": "test-ecr-repository",
+      "properties": {
+        "container_registry": {
+          "access": {
+            "public": false
+          },
+          "kind": "repository"
+        }
+      },
+      "type": "aws_ecr_repository",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1"
+}

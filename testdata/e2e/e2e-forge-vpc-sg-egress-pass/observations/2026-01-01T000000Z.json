@@ -1,0 +1,19 @@
+{
+  "assets": [
+    {
+      "id": "test-security-group",
+      "properties": {
+        "network": {
+          "egress": {
+            "unrestricted_all_ports": false
+          },
+          "kind": "security_group"
+        }
+      },
+      "type": "aws_security_group",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1"
+}

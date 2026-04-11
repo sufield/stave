@@ -346,7 +346,7 @@ Stave is a pure function: files in, findings out.
 
 ## Are all controls YAML or are some implemented in Go?
 
-All 222 controls are declarative YAML. Zero controls are implemented as Go functions.
+All 228 controls are declarative YAML. Zero controls are implemented as Go functions.
 
 Every control is a YAML file with an `unsafe_predicate` evaluated by the CEL engine. Adding a new control means writing a YAML file — no Go code, no compilation, no engine changes.
 
