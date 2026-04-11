@@ -33,6 +33,7 @@ packs:
       - CTL.S3.OWNERSHIP.001
       - CTL.S3.ACL.OBJECT.001
       - CTL.S3.ACCOUNT.PAB.001
+      - CTL.S3.ACCESS.PHI.001
       - CTL.SECRETSMANAGER.ACCESS.001
       - CTL.VPC.SG.DEFAULT.001
       # §164.312(a)(2)(i) — Unique User Identification
@@ -69,6 +70,8 @@ packs:
       - CTL.S3.DETECT.MACIE.002
       - CTL.S3.INVENTORY.001
       - CTL.S3.LOG.001
+      - CTL.S3.MALWARE.001
+      - CTL.S3.BREACH.DETECT.001
       - CTL.VPC.FLOWLOG.001
       # §164.312(c)(1) — Integrity
       - CTL.CONFIG.RULES.001
@@ -463,6 +466,16 @@ packs:
       - CTL.EC2.IMDSV2.001
       - CTL.EC2.IAMROLE.001
       - CTL.EC2.INCOMPLETE.001
+  opensearch:
+    description: AWS OpenSearch Service security controls
+    controls:
+      - CTL.OPENSEARCH.PUBLIC.001
+      - CTL.OPENSEARCH.FGAC.001
+      - CTL.OPENSEARCH.ENCRYPT.001
+      - CTL.OPENSEARCH.ENCRYPT.002
+      - CTL.OPENSEARCH.HTTPS.001
+      - CTL.OPENSEARCH.LOG.001
+      - CTL.OPENSEARCH.INCOMPLETE.001
   backup:
     description: Cross-service backup and availability controls
     controls:
@@ -729,6 +742,9 @@ packs:
       - CTL.S3.ACL.OBJECT.001
       - CTL.S3.ACCOUNT.PAB.001
       - CTL.S3.INVENTORY.001
+      - CTL.S3.ACCESS.PHI.001
+      - CTL.S3.MALWARE.001
+      - CTL.S3.BREACH.DETECT.001
 controls:
   CTL.S3.AUDIT.OBJECTLEVEL.001:
     path: internal/controldata/embedded/s3/logging/CTL.S3.AUDIT.OBJECTLEVEL.001.yaml
@@ -922,6 +938,36 @@ controls:
   CTL.S3.INVENTORY.001:
     path: internal/controldata/embedded/s3/inventory/CTL.S3.INVENTORY.001.yaml
     summary: S3 Inventory Must Be Enabled for Visibility
+  CTL.S3.ACCESS.PHI.001:
+    path: internal/controldata/embedded/s3/access/CTL.S3.ACCESS.PHI.001.yaml
+    summary: PHI Bucket Access Must Be Scoped to Specific Principals
+  CTL.S3.MALWARE.001:
+    path: internal/controldata/embedded/s3/logging/CTL.S3.MALWARE.001.yaml
+    summary: PHI Buckets Must Have Malware Scanning Enabled
+  CTL.S3.BREACH.DETECT.001:
+    path: internal/controldata/embedded/s3/logging/CTL.S3.BREACH.DETECT.001.yaml
+    summary: PHI Buckets Must Have Complete Detection Infrastructure
+  CTL.OPENSEARCH.PUBLIC.001:
+    path: internal/controldata/embedded/opensearch/access/CTL.OPENSEARCH.PUBLIC.001.yaml
+    summary: OpenSearch Domain Must Not Be Publicly Accessible
+  CTL.OPENSEARCH.FGAC.001:
+    path: internal/controldata/embedded/opensearch/access/CTL.OPENSEARCH.FGAC.001.yaml
+    summary: Fine-Grained Access Control Must Be Enabled
+  CTL.OPENSEARCH.ENCRYPT.001:
+    path: internal/controldata/embedded/opensearch/encrypt/CTL.OPENSEARCH.ENCRYPT.001.yaml
+    summary: Encryption at Rest Must Be Enabled
+  CTL.OPENSEARCH.ENCRYPT.002:
+    path: internal/controldata/embedded/opensearch/encrypt/CTL.OPENSEARCH.ENCRYPT.002.yaml
+    summary: Node-to-Node Encryption Must Be Enabled
+  CTL.OPENSEARCH.HTTPS.001:
+    path: internal/controldata/embedded/opensearch/encrypt/CTL.OPENSEARCH.HTTPS.001.yaml
+    summary: HTTPS Must Be Enforced
+  CTL.OPENSEARCH.LOG.001:
+    path: internal/controldata/embedded/opensearch/logging/CTL.OPENSEARCH.LOG.001.yaml
+    summary: Audit Logging Must Be Enabled
+  CTL.OPENSEARCH.INCOMPLETE.001:
+    path: internal/controldata/embedded/opensearch/misc/CTL.OPENSEARCH.INCOMPLETE.001.yaml
+    summary: Complete Data Required for OpenSearch Assessment
   CTL.IAM.ROOT.MFA.001:
     path: internal/controldata/embedded/iam/root/CTL.IAM.ROOT.MFA.001.yaml
     summary: Root Account Must Have MFA Enabled

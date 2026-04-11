@@ -1,0 +1,22 @@
+{
+  "assets": [
+    {
+      "id": "test-phi-bucket",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "tags": {
+            "data-classification": "phi"
+          },
+          "breach_detection": {
+            "all_components_active": true
+          }
+        }
+      },
+      "type": "aws_s3_bucket",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1"
+}

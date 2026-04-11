@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.LOG.001
+name: Audit Logging Must Be Enabled
+description: >
+  OpenSearch domains must have audit logging enabled to track
+  authentication attempts, access decisions, and data operations.
+  Without audit logging, unauthorized access to the cluster cannot
+  be detected or investigated after the fact.
+domain: exposure
+severity: medium
+compliance:
+  hipaa: "164.312(b)"
+  soc2: "CC7.1"
+  nist_800_53_r5: "AU-2"
+  fedramp_moderate: "AU-2"
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    OpenSearch domain does not have audit logging enabled. Access
+    events are not recorded for investigation.
+  action: >
+    Enable audit logging in the domain configuration. Configure
+    a CloudWatch log group as the destination. Fine-grained access
+    control must be enabled as a prerequisite for audit logging.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "logging": {
+          "audit_logs_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.logging.audit_logs_enabled
+      op: eq
+      value: false

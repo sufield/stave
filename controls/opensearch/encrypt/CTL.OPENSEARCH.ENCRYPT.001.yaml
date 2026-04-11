@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.ENCRYPT.001
+name: Encryption at Rest Must Be Enabled
+description: >
+  OpenSearch domains must have encryption at rest enabled using
+  AWS KMS. Unencrypted data at rest is exposed if the underlying
+  storage is compromised or if snapshots are shared.
+domain: exposure
+severity: high
+compliance:
+  hipaa: "164.312(a)(2)(iv)"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "3.4.1"
+  nist_800_53_r5: "SC-28"
+  fedramp_moderate: "SC-28"
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    OpenSearch domain does not have encryption at rest enabled.
+    Data is stored unencrypted on disk.
+  action: >
+    Enable encryption at rest in the domain configuration. Note:
+    encryption at rest can only be enabled at domain creation time
+    for some versions. If needed, create a new domain with encryption
+    enabled and migrate data.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "encryption": {
+          "at_rest_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.encryption.at_rest_enabled
+      op: eq
+      value: false

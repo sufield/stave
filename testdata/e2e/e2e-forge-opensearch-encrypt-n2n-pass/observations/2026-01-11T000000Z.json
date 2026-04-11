@@ -1,0 +1,19 @@
+{
+  "assets": [
+    {
+      "id": "test-opensearch",
+      "properties": {
+        "search_service": {
+          "kind": "domain",
+          "encryption": {
+            "node_to_node_enabled": true
+          }
+        }
+      },
+      "type": "aws_opensearch_domain",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1"
+}

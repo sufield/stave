@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.ENCRYPT.002
+name: Node-to-Node Encryption Must Be Enabled
+description: >
+  OpenSearch domains must have node-to-node encryption enabled.
+  Without it, data transmitted between nodes within the cluster
+  travels unencrypted, exposing it to interception on the internal
+  network. Node-to-node encryption is a prerequisite for fine-grained
+  access control.
+domain: exposure
+severity: high
+compliance:
+  hipaa: "164.312(e)(2)(ii)"
+  soc2: "CC6.7"
+  nist_800_53_r5: "SC-8"
+  fedramp_moderate: "SC-8"
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    OpenSearch domain does not have node-to-node encryption enabled.
+    Intra-cluster traffic is unencrypted.
+  action: >
+    Enable node-to-node encryption in the domain configuration.
+    This is required for fine-grained access control.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "encryption": {
+          "node_to_node_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.encryption.node_to_node_enabled
+      op: eq
+      value: false

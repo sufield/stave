@@ -1,0 +1,58 @@
+dsl_version: ctrl.v1
+id: CTL.S3.BREACH.DETECT.001
+name: PHI Buckets Must Have Complete Detection Infrastructure
+description: >
+  S3 buckets tagged with data-classification=phi must have all four
+  detection components active: server access logging, CloudTrail
+  object-level logging, GuardDuty S3 protection, and AWS Config
+  recording. Missing any one component creates a gap in breach
+  detection and incident investigation capability. HIPAA
+  §§164.400-414 requires the ability to detect and investigate
+  unauthorized access to PHI.
+domain: exposure
+severity: high
+compliance:
+  hipaa: "164.400"
+  soc2: "CC7.1"
+  nist_800_53_r5: "IR-4"
+  fedramp_moderate: "IR-4"
+scope_tags:
+  - aws
+  - s3
+  - sensitive-data
+  - hipaa
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    PHI bucket is missing one or more detection infrastructure
+    components required for breach investigation.
+  action: >
+    Ensure all four components are active for this bucket:
+    1. Server access logging (aws s3api put-bucket-logging)
+    2. CloudTrail object-level data events (aws cloudtrail put-event-selectors)
+    3. GuardDuty S3 protection (aws guardduty update-detector)
+    4. AWS Config recording (aws configservice put-configuration-recorder)
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "tags": {
+          "data-classification": "phi"
+        },
+        "breach_detection": {
+          "all_components_active": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.tags.data-classification
+      op: eq
+      value: phi
+    - field: properties.storage.breach_detection.all_components_active
+      op: eq
+      value: false
