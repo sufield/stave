@@ -3,22 +3,22 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 188
-**Pack hash:** `5c2b7f96865d1dcdd5608fe3ada1fc10f43ffb06f1a0e6736e8cab47063e6648`
+**Total controls:** 193
+**Pack hash:** `1bc62db2b8ce4d57f9cd364ee2385526680ccaabfe2034c91ae3e46b63a099e6`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 26 |
-| high | 76 |
+| high | 78 |
 | info | 16 |
 | low | 11 |
-| medium | 59 |
+| medium | 62 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 155 |
+| exposure | 160 |
 | governance | 2 |
 | identity | 27 |
 | storage | 4 |
@@ -1991,6 +1991,36 @@ CloudFront distributions must not reference S3 origins that do not exist. A miss
 
 ---
 
+### CTL.S3.DETECT.MACIE.001
+
+**Sensitive Data Buckets Must Have Macie Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: RA-5; gdpr: Art.30; hipaa: 164.312(b); iso_27001_2022: A.8.12; nist_800_53_r5: RA-5; pci_dss_v4.0: 11.5.1; soc2: CC7.2;
+
+S3 buckets tagged with a non-public data classification (phi, pii, confidential, internal) must be monitored by Amazon Macie. Macie uses machine learning and pattern matching to discover and classify sensitive data, detecting PII, PHI, and credentials that may have been stored without proper controls. Without Macie, sensitive data can accumulate undetected in buckets that were not originally intended for it.
+
+**Remediation:** Enable Amazon Macie in the account and region, then add this bucket to a Macie classification job. Use aws macie2 create-classification-job to configure automated scanning. For organization-wide coverage, enable Macie via AWS Organizations delegated administrator.
+
+---
+
+### CTL.S3.DETECT.MACIE.002
+
+**Macie Automated Sensitive Data Discovery Must Be Active**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SI-4; hipaa: 164.308(a)(1)(ii)(D); nist_800_53_r5: SI-4; soc2: CC7.2;
+
+Buckets monitored by Macie must have automated sensitive data discovery actively running, not just enabled. A Macie classification job can exist but be paused, cancelled, or have never completed a scan. Without active discovery, new sensitive data uploaded after the last scan goes undetected. Automated discovery continuously samples bucket contents to find sensitive data as it arrives.
+
+**Remediation:** Verify the Macie classification job for this bucket is in RUNNING status. If paused, resume it with aws macie2 update-classification-job. Enable automated sensitive data discovery at the account level with aws macie2 update-automated-discovery-configuration to ensure continuous sampling of all monitored buckets.
+
+---
+
 ### CTL.S3.ENCRYPT.001
 
 **Encryption at Rest Required**
@@ -2439,6 +2469,51 @@ S3 bucket prefixes marked as protected must not be publicly readable. Evaluates 
 S3 buckets containing personal data must be located in approved regions as determined by data residency requirements (e.g., EU/EEA regions for GDPR). Storing data outside approved regions may violate data transfer restrictions.
 
 **Remediation:** Create a new bucket in an approved region and migrate data. Use S3 replication to move data, then delete the original bucket.
+
+---
+
+### CTL.S3.REPLICATION.001
+
+**Compliance-Tagged Buckets Must Have Replication Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: CP-9; hipaa: 164.308(a)(7); iso_27001_2022: A.8.13; nist_800_53_r5: CP-9; soc2: A1.1;
+
+S3 buckets tagged with a compliance framework (soc2, gdpr, hipaa, pci-dss, etc.) must have replication configured. Without replication, a regional outage or accidental bucket deletion can cause permanent data loss for regulated data. Replication provides an independent copy that survives single-region failures and supports disaster recovery objectives.
+
+**Remediation:** Configure S3 replication on the bucket using aws s3api put-bucket-replication. Use cross-region replication (CRR) for disaster recovery or same-region replication (SRR) for compliance copies. Ensure versioning is enabled on both source and destination buckets.
+
+---
+
+### CTL.S3.REPLICATION.002
+
+**PHI Replication Must Be Cross-Region**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: CP-6(1); hipaa: 164.308(a)(7)(ii)(A); nist_800_53_r5: CP-6(1); soc2: A1.2;
+
+S3 buckets tagged with data-classification=phi that have replication enabled must replicate to a different AWS region. Same-region replication (SRR) does not protect against regional outages, AZ-wide failures, or region-scoped service disruptions. HIPAA contingency planning requires data to survive regional disasters.
+
+**Remediation:** Update the replication configuration to use a destination bucket in a different AWS region. Ensure the destination bucket has versioning enabled, appropriate encryption, and a bucket policy that permits the replication role.
+
+---
+
+### CTL.S3.REPLICATION.003
+
+**Replication Destination Must Be Encrypted**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-28; gdpr: Art.32; hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-28; pci_dss_v4.0: 3.4.1; soc2: CC6.1;
+
+When S3 replication is enabled, the destination bucket must have server-side encryption configured. Replicating data to an unencrypted destination creates a shadow copy that bypasses the source bucket's encryption controls. This is especially dangerous for sensitive data where the source meets encryption requirements but the replica does not.
+
+**Remediation:** Configure default encryption on the destination bucket using SSE-S3 or SSE-KMS. For replication of encrypted objects, add a ReplicaKmsKeyID to the replication rule so objects are re-encrypted with a key in the destination region.
 
 ---
 
