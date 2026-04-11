@@ -1,0 +1,51 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.AUTH.001
+name: Authentication Must Be Enabled
+description: >
+  OpenSearch domains must have authentication enabled. A domain
+  without authentication allows anyone with network access to query,
+  index, delete, and enumerate all data. The Darkbeam breach (2023)
+  exposed 3.8 billion credentials because the Elasticsearch cluster
+  required zero authentication. The Wyze breach (2019) exposed 2.4
+  million user records via the same pattern. Authentication is the
+  single most critical OpenSearch security control.
+domain: exposure
+severity: critical
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-3"
+  fedramp_moderate: "AC-3"
+  iso_27001_2022: "A.8.5"
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    OpenSearch domain has no authentication mechanism enabled. Anyone
+    with network access can query all data.
+  action: >
+    Enable fine-grained access control with an internal user database
+    or IAM authentication. At minimum, enable the security plugin
+    with a master user. For production, use IAM-based authentication
+    via SAML or Cognito for OpenSearch Dashboards.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "access": {
+          "auth_enabled": true,
+          "fgac_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.access.auth_enabled
+      op: eq
+      value: false

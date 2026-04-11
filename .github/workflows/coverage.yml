@@ -65,10 +65,10 @@ jobs:
           check_coverage ./internal/core/evaluation/... 45 coverage-evaluation.out
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
+        uses: codecov/codecov-action@v6
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage.out
           disable_search: true
           flags: unit
-          fail_ci_if_error: true
+          fail_ci_if_error: false

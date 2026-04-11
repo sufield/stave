@@ -1,7 +1,7 @@
 # Scope and support
 
 ## In scope
-- 217 controls across 26 AWS/GCP/K8s service domains
+- 222 controls across 26 AWS/GCP/K8s service domains
 - Offline analysis of local configuration snapshots (obs.v0.1)
 - Deterministic findings and reports
 - 10 compliance framework profiles: HIPAA, CIS AWS v3.0, SOC 2, PCI-DSS v4.0, NIST 800-53, FedRAMP, GDPR, FFIEC, ISO 27001, NIST CSF 2.0

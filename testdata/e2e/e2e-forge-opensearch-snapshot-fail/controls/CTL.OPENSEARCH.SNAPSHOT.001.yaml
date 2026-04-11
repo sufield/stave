@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.SNAPSHOT.001
+name: Snapshots Must Be Encrypted
+description: >
+  OpenSearch domain snapshots must be stored in encrypted repositories.
+  Unencrypted snapshots expose the same data as the live cluster but
+  are often stored with weaker access controls. Snapshot repositories
+  in S3 must use server-side encryption.
+domain: exposure
+severity: medium
+compliance:
+  hipaa: "164.312(a)(2)(iv)"
+  soc2: "CC6.7"
+  nist_800_53_r5: "SC-28"
+  fedramp_moderate: "SC-28"
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    OpenSearch snapshot repository is not encrypted. Snapshots contain
+    the same data as the live cluster but with weaker access controls.
+  action: >
+    Configure the snapshot repository S3 bucket with default
+    encryption (SSE-S3 or SSE-KMS). Verify the IAM role used for
+    snapshots has minimum required permissions.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "snapshots": {
+          "encrypted": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.snapshots.encrypted
+      op: eq
+      value: false
