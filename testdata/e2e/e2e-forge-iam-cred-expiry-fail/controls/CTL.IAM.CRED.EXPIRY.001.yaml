@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.CRED.EXPIRY.001
+name: Credentials Must Have Defined Expiry
+description: >
+  IAM credentials must have a defined maximum lifetime. Credentials
+  without expiry — access keys created for QA, debugging, or
+  temporary integrations — persist indefinitely and become permanent
+  attack surfaces. Time transforms temporary mistakes into permanent
+  breaches. Every credential must have a TTL enforced at creation
+  time or through automated lifecycle policies.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "8.1.4"
+  nist_800_53_r5: "AC-2"
+  fedramp_moderate: "AC-2"
+  iso_27001_2022: "A.8.5"
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    IAM credential has no defined expiry. The credential will remain
+    valid indefinitely unless manually revoked.
+  action: >
+    Replace long-lived access keys with STS temporary credentials
+    that expire automatically. If access keys are required, enforce
+    a maximum age policy and automate rotation via Secrets Manager.
+    Tag credentials with creation date and intended expiry.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "credentials": {
+          "has_expiry": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.credentials.has_expiry
+      op: eq
+      value: false

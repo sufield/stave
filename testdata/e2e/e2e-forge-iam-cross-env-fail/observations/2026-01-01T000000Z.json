@@ -1,0 +1,18 @@
+{
+  "assets": [
+    {
+      "id": "test-iam-role",
+      "properties": {
+        "identity": {
+          "role": {
+            "cross_env_prod_access": true
+          }
+        }
+      },
+      "type": "aws_iam_role",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1"
+}

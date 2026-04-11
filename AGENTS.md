@@ -222,7 +222,7 @@ These terms are final. The renames are done. Use the canonical term.
 
 Stave is NOT a cloud tool. It is a **policy evaluation engine for JSON-represented infrastructure**. The engine knows nothing about AWS, GCP, Azure, or any specific cloud service. It evaluates predicates against `properties.*` paths on assets with open-ended `type` and `vendor` strings.
 
-### Proven with zero engine changes — 204 controls, 26 domains, 5 vendors
+### Proven with zero engine changes — 207 controls, 26 domains, 5 vendors
 
 10 compliance framework profiles, all implemented via YAML controls + compliance tags:
 

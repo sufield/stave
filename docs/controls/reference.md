@@ -3,15 +3,15 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 204
-**Pack hash:** `a56749e773e152b97eaf99a9eea4bf8c7d64e5de4b94ede20a6c273c5ed2dc53`
+**Total controls:** 207
+**Pack hash:** `170c80d42ab572a9729b71588c9421b5e54ec68aea6b154b34bbacdd2466930d`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 27 |
-| high | 83 |
+| critical | 28 |
+| high | 85 |
 | info | 16 |
 | low | 11 |
 | medium | 67 |
@@ -20,7 +20,7 @@
 |--------|-------|
 | exposure | 165 |
 | governance | 2 |
-| identity | 33 |
+| identity | 36 |
 | storage | 4 |
 
 ## Controls
@@ -1148,6 +1148,21 @@ IAM users with console access must have multi-factor authentication enabled. Con
 
 ---
 
+### CTL.IAM.CRED.EXPIRY.001
+
+**Credentials Must Have Defined Expiry**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-2; iso_27001_2022: A.8.5; nist_800_53_r5: AC-2; pci_dss_v4.0: 8.1.4; soc2: CC6.1;
+
+IAM credentials must have a defined maximum lifetime. Credentials without expiry — access keys created for QA, debugging, or temporary integrations — persist indefinitely and become permanent attack surfaces. Time transforms temporary mistakes into permanent breaches. Every credential must have a TTL enforced at creation time or through automated lifecycle policies.
+
+**Remediation:** Replace long-lived access keys with STS temporary credentials that expire automatically. If access keys are required, enforce a maximum age policy and automate rotation via Secrets Manager. Tag credentials with creation date and intended expiry.
+
+---
+
 ### CTL.IAM.CRED.ROTATION.001
 
 **Access Keys Must Be Rotated Within 90 Days**
@@ -1220,6 +1235,21 @@ IAM credentials unused for 90 days or more must be disabled. Dormant credentials
 IAM credentials (passwords and access keys) unused for 45 or more days must be disabled. CIS v3.0 requires a 45-day threshold, which is stricter than the 90-day HIPAA threshold.
 
 **Remediation:** Disable inactive access keys and console passwords: aws iam update-access-key --status Inactive --access-key-id AKIA...
+
+---
+
+### CTL.IAM.CROSS.ENV.001
+
+**Non-Production Must Not Access Production Resources**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-4; iso_27001_2022: A.8.22; nist_800_53_r5: AC-4; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+IAM roles in non-production environments (test, staging, QA) must not have access to production resources. Cross-environment access collapses security boundaries — a compromised test account becomes a path to production data. The Microsoft breach (2024) demonstrated this exact failure: a test tenant with production-scope grants enabled a nation-state actor to pivot from test to production.
+
+**Remediation:** Remove production resource ARNs from non-production role policies. Use separate AWS accounts for prod and non-prod with no cross- account trust. Enforce environment boundaries via SCPs that deny non-prod accounts from accessing prod resources. Tag all accounts and roles with their environment classification.
 
 ---
 
@@ -1399,6 +1429,21 @@ IAM users must not have inline policies attached directly. Inline policies are h
 iam:PassRole permissions must be scoped to specific role ARNs, not wildcard resource *. PassRole allows a principal to assign an IAM role to an AWS service (Lambda, EC2, ECS). With a wildcard resource, an attacker can pass any role — including highly privileged ones — to a service they control, achieving privilege escalation without directly modifying IAM policies.
 
 **Remediation:** Restrict iam:PassRole to specific role ARNs in the Resource field. Example: arn:aws:iam::123456789012:role/my-lambda-role. Use IAM conditions like iam:PassedToService to further limit which services can receive the role.
+
+---
+
+### CTL.IAM.ROLE.BREAKGLASS.001
+
+**Break-Glass Elevated Roles Must Not Persist**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-2; nist_800_53_r5: AC-2; soc2: CC6.1;
+
+IAM roles granted elevated permissions for incident response (break-glass access) must be revoked within 7 days. Elevated roles that persist beyond the incident become permanent backdoors — they carry admin-level permissions with no active justification. Debug rules, elevated roles, and emergency access must have mandatory time-bounding.
+
+**Remediation:** Revoke the elevated role or revert its permissions to the pre-incident baseline. Implement automated expiry via STS session policies or Lambda-based role revocation. Tag elevated roles with grant timestamp and incident ID for tracking.
 
 ---
 
