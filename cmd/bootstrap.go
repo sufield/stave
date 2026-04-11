@@ -22,10 +22,16 @@ import (
 	"github.com/sufield/stave/internal/platform/logging"
 )
 
+// bootstrap runs as PersistentPreRunE on every command. It executes five
+// phases in a fixed order, each building on the previous one:
+//
+//  1. Context   — cancelable root context for signal handling + CPU profiling
+//  2. Config    — resolve flag defaults from config, env vars, and limits
+//  3. Validate  — offline check, dev/prod guard, config health
+//  4. Logging   — sanitizer, structured logger, config warning replay
+//  5. Enrich    — store logger in Cobra context for commands
 func (a *App) bootstrap(cmd *cobra.Command, _ []string) error {
-	// Create cancelable root context for graceful signal handling.
-	// The signal handler calls a.cancel() instead of os.Exit(),
-	// allowing deferred cleanup to run.
+	// Phase 1: Context setup — cancelable root context + CPU profiling.
 	ctx, cancel := context.WithCancel(cmd.Context()) //nolint:gosec // cancel is stored on a.cancel and called by the signal handler
 	a.cancel = cancel
 	cmd.SetContext(ctx)
@@ -33,21 +39,17 @@ func (a *App) bootstrap(cmd *cobra.Command, _ []string) error {
 	if err := a.startCPUProfile(); err != nil {
 		return err
 	}
-
-	// Validate built-in data integrity (aliases, control IDs) at startup
-	// so errors flow through the normal exit-code path instead of panicking.
 	if err := a.validateBuiltins(); err != nil {
 		return err
 	}
 
-	// Build the resolver explicitly from the filesystem. The result
-	// is stored in Cobra's context — no package-level global state.
+	// Phase 2: Config resolution — build resolver, resolve flags + env + limits.
 	evalResult := projconfig.BuildResolver()
 	a.resolveGlobalFlagDefaults(cmd, evalResult.Resolver)
 	a.resolveEnvVarDefaults(cmd)
-
 	a.resolveConfigurableLimits(evalResult.Resolver)
 
+	// Phase 3: Validation — offline guarantee, dev guard, config health.
 	if err := a.checkRequireOffline(); err != nil {
 		return err
 	}
@@ -57,21 +59,18 @@ func (a *App) bootstrap(cmd *cobra.Command, _ []string) error {
 	if err := a.checkConfigHealth(cmd, evalResult.Err); err != nil {
 		return err
 	}
+
+	// Phase 4: Logging setup — sanitizer, logger, replay config warnings.
 	ui.SetNoColor(a.Flags.NoColor)
 	a.initSanitizer()
 	if err := a.initLogger(); err != nil {
 		return err
 	}
-
-	// Replay config-load warnings through the configured logger.
-	// These were collected during BuildResolver before the logger
-	// was initialized.
 	for _, w := range evalResult.Warnings {
 		a.Logger.Warn("config load warning", "error", w)
 	}
 
-	// Store the logger in Cobra's context so commands retrieve it via
-	// cliflags.LoggerFromCmd(cmd) instead of reading slog.Default().
+	// Phase 5: Context enrichment — store logger for command retrieval.
 	ctx = cmdctx.WithLogger(cmd.Context(), a.Logger)
 	cmd.SetContext(ctx)
 

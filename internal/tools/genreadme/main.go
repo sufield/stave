@@ -157,6 +157,9 @@ func render(tmplPath string, data Data) ([]byte, error) {
 		"domain": func(name string) int {
 			return data.DomainTotals[name]
 		},
+		"subtract": func(a, b int) int {
+			return a - b
+		},
 	}
 
 	tmplContent, err := os.ReadFile(safe) //nolint:gosec // path validated by safeLocalPath
