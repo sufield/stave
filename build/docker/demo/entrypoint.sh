@@ -15,7 +15,7 @@ HIPAA_DIR="$SCENARIOS_DIR/hipaa-compliance"
 
 usage() {
   cat <<'HELP'
-Stave Tutorial Demo — 74 security controls across S3, IAM, GCS, and DNS
+Stave Tutorial Demo — 228 security controls across S3, IAM, OpenSearch, GCS, ECR, DNS, and more
 
 Usage:
   docker run stave-tutorials --list                  List all scenarios

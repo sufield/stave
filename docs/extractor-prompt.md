@@ -94,12 +94,145 @@ def extract():
 
 if __name__ == "__main__":
     extract()
+## Using Steampipe as an Extractor
+
+[Steampipe](https://steampipe.io) is the fastest way to build a Stave extractor without writing code. Steampipe exposes cloud APIs as SQL tables — you write a query, pipe the result through `jq`, and produce `obs.v0.1` JSON directly.
+
+Steampipe has 150+ plugins covering AWS, GCP, Azure, Kubernetes, GitHub, and dozens of other services. Every `aws_s3_bucket`, `aws_iam_role`, `aws_vpc_security_group`, and `aws_opensearch_domain` row maps directly to a Stave observation asset. This makes it the recommended extraction path for teams that want comprehensive coverage without building custom extractors.
+
+```bash
+# Example: extract S3 bucket observations via Steampipe
+steampipe query --output json \
+  "SELECT name, region, versioning_enabled, server_side_encryption_configuration,
+          logging, acl, policy, public_access_block_configuration
+   FROM aws_s3_bucket" \
+  | jq '{
+      schema_version: "obs.v0.1",
+      captured_at: (now | todate),
+      assets: [.[] | {
+        id: .name,
+        type: "aws_s3_bucket",
+        vendor: "aws",
+        properties: {
+          storage: {
+            kind: "bucket",
+            name: .name,
+            versioning: { enabled: (.versioning_enabled // false) },
+            encryption: { at_rest_enabled: (.server_side_encryption_configuration != null) },
+            logging: { enabled: (.logging != null) },
+            controls: { public_access_fully_blocked: (
+              .public_access_block_configuration.BlockPublicAcls and
+              .public_access_block_configuration.BlockPublicPolicy and
+              .public_access_block_configuration.IgnorePublicAcls and
+              .public_access_block_configuration.RestrictPublicBuckets
+            )}
+          }
+        }
+      }]
+    }' > observations/$(date -u +%Y-%m-%dT%H%M%SZ).json
+```
+
+Steampipe + jq + Stave is a complete air-gapped pipeline: query cloud state, transform to obs.v0.1, evaluate offline. No custom code required.
+
+## Using CloudQuery as an Extractor
+
+[CloudQuery](https://www.cloudquery.io) syncs cloud configuration to a local database (Postgres, SQLite, or flat files) on a schedule. If your team already runs CloudQuery for asset inventory, you can query the synced data and transform it to obs.v0.1 without additional API calls.
+
+CloudQuery is the better choice when you need repeatable, scheduled extraction in CI/CD pipelines or when you want to store historical snapshots in a data warehouse for trend analysis.
+
+```bash
+# Sync AWS resources to a local SQLite database
+cloudquery sync aws-config.yml
+
+# Extract S3 observations from the synced database
+sqlite3 -json cloudquery.db \
+  "SELECT name, versioning_status, server_side_encryption_configuration,
+          logging_target_bucket, block_public_acls, block_public_policy,
+          ignore_public_acls, restrict_public_buckets
+   FROM aws_s3_buckets" \
+  | jq '{
+      schema_version: "obs.v0.1",
+      captured_at: (now | todate),
+      assets: [.[] | {
+        id: .name,
+        type: "aws_s3_bucket",
+        vendor: "aws",
+        properties: {
+          storage: {
+            kind: "bucket",
+            name: .name,
+            versioning: { enabled: (.versioning_status == "Enabled") },
+            encryption: { at_rest_enabled: (.server_side_encryption_configuration != null) },
+            logging: { enabled: (.logging_target_bucket != null) },
+            controls: { public_access_fully_blocked: (
+              .block_public_acls and .block_public_policy and
+              .ignore_public_acls and .restrict_public_buckets
+            )}
+          }
+        }
+      }]
+    }' > observations/$(date -u +%Y-%m-%dT%H%M%SZ).json
+```
+
+CloudQuery supports 100+ source plugins (AWS, GCP, Azure, K8s, GitHub, Terraform) and syncs to Postgres, SQLite, BigQuery, S3, or local files. Your team can query the same synced data for both Stave extraction and operational dashboards.
+
+## Using AWS Config as an Extractor
+
+[AWS Config](https://aws.amazon.com/config/) continuously records resource configuration changes. If your organization already has Config enabled, you can export configuration snapshots directly — no additional tooling needed.
+
+This is the lowest-friction path for teams that already have AWS Config deployed and don't want to add Steampipe or CloudQuery to their stack.
+
+```bash
+# Export current configuration for all S3 buckets
+aws configservice select-resource-config \
+  --expression "SELECT resourceId, resourceType, configuration
+                WHERE resourceType = 'AWS::S3::Bucket'" \
+  --output json \
+  | jq '{
+      schema_version: "obs.v0.1",
+      captured_at: (now | todate),
+      assets: [.Results[] | fromjson | {
+        id: .resourceId,
+        type: "aws_s3_bucket",
+        vendor: "aws",
+        properties: {
+          storage: {
+            kind: "bucket",
+            name: .resourceId
+          }
+        }
+      }]
+    }' > observations/$(date -u +%Y-%m-%dT%H%M%SZ).json
+
+# Or export a full configuration snapshot to S3
+aws configservice deliver-config-snapshot \
+  --delivery-channel-name default
+# Then download and transform the snapshot JSON
+```
+
+AWS Config covers 380+ resource types across all AWS services. The `select-resource-config` API returns the full configuration as JSON — the same data Stave controls evaluate. For teams already paying for AWS Config, this is zero additional cost.
+
+## Choosing an Extraction Tool
+
+Pick the tool your team already knows. Stave doesn't care how you produce obs.v0.1 JSON — only that it conforms to the schema.
+
+| Tool | Best for | Setup | Multi-cloud |
+|---|---|---|---|
+| **Steampipe** | Ad-hoc queries, interactive exploration, quick start | Install + plugin | AWS, GCP, Azure, K8s, 150+ |
+| **CloudQuery** | Scheduled CI/CD pipelines, historical snapshots, data warehouse | Config file + sync job | AWS, GCP, Azure, K8s, 100+ |
+| **AWS Config** | Teams already using Config, zero new tooling | Already deployed | AWS only |
+| **Custom (Python/Go)** | Niche sources, exact field control, LLM-generated | Write code | Anything |
+
+All four paths produce the same obs.v0.1 JSON. Stave evaluates the same controls regardless of how the observations were created.
+
+---
+
 Why this is powerful for your project:
 
-Zero Onboarding: Developers don't need to learn 88k-line Stave Go codebase. They only need to know the 10-line JSON contract.
+Zero Onboarding: Developers don't need to learn the Stave Go codebase. They only need to know the 10-line JSON contract.
 
-Language Freedom: One team can use Python because they are data scientists; another can use Go because they are DevOps. Stave core engine doesn't care.
+Language Freedom: One team can use Python, another Go, another SQL + jq, another AWS Config — Stave core engine doesn't care.
 
 Unix Philosophy: It reinforces the pipe workflow.
 
-Instant Scaffolding: This Prompt Template is language-agnostic Scaffolder.
+Instant Scaffolding: The LLM prompt template is a language-agnostic scaffolder. Steampipe, CloudQuery, and AWS Config are zero-code alternatives.
