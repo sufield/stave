@@ -82,6 +82,22 @@ docker compose run --rm -T stave --blind-spots
 
 Three S3 risks that AWS Trusted Advisor cannot detect.
 
+## Export to OPA Rego
+
+```bash
+docker compose run --rm -T stave --export-rego
+```
+
+Translates S3 controls to OPA Rego `deny[msg]` rules. Output is valid
+Rego that works with Conftest, OPA, or Gatekeeper. Shows how the same
+controls run in two different policy engines.
+
+```bash
+docker compose run --rm -T stave --export-rego --all
+```
+
+Exports all 228 controls across all 28 domains.
+
 ## Try with your own bucket
 
 ```bash

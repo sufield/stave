@@ -24,6 +24,7 @@ import (
 	"github.com/sufield/stave/cmd/enforce/fix"
 	"github.com/sufield/stave/cmd/enforce/gate"
 	"github.com/sufield/stave/cmd/evaluate"
+	staveexport "github.com/sufield/stave/cmd/export"
 	"github.com/sufield/stave/cmd/initcmd"
 	initalias "github.com/sufield/stave/cmd/initcmd/alias"
 	initconfig "github.com/sufield/stave/cmd/initcmd/config"
@@ -100,6 +101,9 @@ func WireCommands(app *App) {
 	}
 	root.AddCommand(ciCmd)
 	wireCISubtree(ciCmd, p)
+
+	// Export & Interop
+	root.AddCommand(staveexport.NewCmd(p.NewControlRepo))
 
 	// Data & Artifacts
 	root.AddCommand(enforce.NewGenerateCmd())
