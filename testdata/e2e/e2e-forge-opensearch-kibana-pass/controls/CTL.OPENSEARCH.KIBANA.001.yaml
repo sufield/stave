@@ -1,0 +1,47 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.KIBANA.001
+name: OpenSearch Dashboards Must Not Be Publicly Accessible
+description: >
+  OpenSearch Dashboards (Kibana) endpoints must not be publicly
+  accessible without authentication. Dashboards provide a query
+  interface to the entire cluster — a public, unauthenticated
+  dashboard is functionally equivalent to giving attackers a SQL
+  client connected to your database. The Darkbeam breach exposed
+  both the Elasticsearch API and the Kibana dashboard to the public
+  internet.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-3"
+  fedramp_moderate: "AC-3"
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    OpenSearch Dashboards endpoint is publicly accessible. Anyone
+    can query data through the visual interface.
+  action: >
+    Restrict Dashboards access via VPC, Cognito authentication, or
+    SAML federation. Enable fine-grained access control to enforce
+    role-based access within Dashboards.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "access": {
+          "kibana_public": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.access.kibana_public
+      op: eq
+      value: true

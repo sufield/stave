@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.ACCESS.POLICY.001
+name: Access Policy Must Not Allow Wildcard Principals
+description: >
+  OpenSearch domain access policies must not grant access to wildcard
+  principals (Principal: *). A wildcard principal in the resource-based
+  policy allows any AWS account or unauthenticated user to access the
+  cluster, depending on whether the domain is public or VPC-only.
+  Combined with a public endpoint, this enables completely anonymous
+  access.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-6"
+  fedramp_moderate: "AC-6"
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    OpenSearch access policy grants access to Principal: *. Any
+    identity can access the cluster.
+  action: >
+    Replace wildcard principals with specific IAM role ARNs or
+    account IDs. Use condition keys (aws:SourceIp, aws:SourceVpc)
+    to further restrict access.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "access": {
+          "policy_allows_wildcard": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.access.policy_allows_wildcard
+      op: eq
+      value: true

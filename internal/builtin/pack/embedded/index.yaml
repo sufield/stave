@@ -476,6 +476,11 @@ packs:
       - CTL.OPENSEARCH.HTTPS.001
       - CTL.OPENSEARCH.LOG.001
       - CTL.OPENSEARCH.INCOMPLETE.001
+      - CTL.OPENSEARCH.AUTH.001
+      - CTL.OPENSEARCH.VPC.001
+      - CTL.OPENSEARCH.KIBANA.001
+      - CTL.OPENSEARCH.ACCESS.POLICY.001
+      - CTL.OPENSEARCH.SNAPSHOT.001
   backup:
     description: Cross-service backup and availability controls
     controls:
@@ -968,6 +973,21 @@ controls:
   CTL.OPENSEARCH.INCOMPLETE.001:
     path: internal/controldata/embedded/opensearch/misc/CTL.OPENSEARCH.INCOMPLETE.001.yaml
     summary: Complete Data Required for OpenSearch Assessment
+  CTL.OPENSEARCH.AUTH.001:
+    path: internal/controldata/embedded/opensearch/access/CTL.OPENSEARCH.AUTH.001.yaml
+    summary: Authentication Must Be Enabled
+  CTL.OPENSEARCH.VPC.001:
+    path: internal/controldata/embedded/opensearch/access/CTL.OPENSEARCH.VPC.001.yaml
+    summary: Domain Must Be Deployed in VPC
+  CTL.OPENSEARCH.KIBANA.001:
+    path: internal/controldata/embedded/opensearch/access/CTL.OPENSEARCH.KIBANA.001.yaml
+    summary: OpenSearch Dashboards Must Not Be Publicly Accessible
+  CTL.OPENSEARCH.ACCESS.POLICY.001:
+    path: internal/controldata/embedded/opensearch/access/CTL.OPENSEARCH.ACCESS.POLICY.001.yaml
+    summary: Access Policy Must Not Allow Wildcard Principals
+  CTL.OPENSEARCH.SNAPSHOT.001:
+    path: internal/controldata/embedded/opensearch/misc/CTL.OPENSEARCH.SNAPSHOT.001.yaml
+    summary: Snapshots Must Be Encrypted
   CTL.IAM.ROOT.MFA.001:
     path: internal/controldata/embedded/iam/root/CTL.IAM.ROOT.MFA.001.yaml
     summary: Root Account Must Have MFA Enabled

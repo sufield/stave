@@ -1,0 +1,50 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.VPC.001
+name: Domain Must Be Deployed in VPC
+description: >
+  OpenSearch domains must be deployed within a VPC, not on public
+  endpoints. A domain outside a VPC is directly reachable from the
+  internet, bypassing all network-level controls. Even with
+  authentication enabled, a public endpoint exposes the cluster to
+  brute-force, credential stuffing, and zero-day exploits. VPC
+  deployment restricts access to authorized networks only.
+domain: exposure
+severity: critical
+compliance:
+  soc2: "CC6.6"
+  pci_dss_v4.0: "1.3.1"
+  nist_800_53_r5: "SC-7"
+  fedramp_moderate: "SC-7"
+  iso_27001_2022: "A.8.20"
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    OpenSearch domain is not deployed in a VPC. The cluster endpoint
+    is reachable from the internet.
+  action: >
+    Create a new domain with VPC configuration specifying private
+    subnets and security groups. Migrate data from the public domain.
+    Use VPN, bastion host, or AWS PrivateLink for authorized access.
+    Note: existing domains cannot be migrated to VPC in-place.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "access": {
+          "vpc_enabled": true,
+          "publicly_accessible": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.access.vpc_enabled
+      op: eq
+      value: false

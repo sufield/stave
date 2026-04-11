@@ -3,22 +3,22 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 217
-**Pack hash:** `4901e3dea9fad716aecd178df295ad425505e7875d886ea39a3ee04772610e4d`
+**Total controls:** 222
+**Pack hash:** `addf889db014f8c4a85d7288f6422a79a2f9a0f82b66e82e2109346bb42f1488`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 29 |
-| high | 92 |
+| critical | 31 |
+| high | 94 |
 | info | 16 |
 | low | 12 |
-| medium | 68 |
+| medium | 69 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 175 |
+| exposure | 180 |
 | governance | 2 |
 | identity | 36 |
 | storage | 4 |
@@ -1730,6 +1730,36 @@ Customer-created symmetric KMS keys must have automatic key rotation enabled. Ke
 
 ---
 
+### CTL.OPENSEARCH.ACCESS.POLICY.001
+
+**Access Policy Must Not Allow Wildcard Principals**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-6; nist_800_53_r5: AC-6; soc2: CC6.1;
+
+OpenSearch domain access policies must not grant access to wildcard principals (Principal: *). A wildcard principal in the resource-based policy allows any AWS account or unauthenticated user to access the cluster, depending on whether the domain is public or VPC-only. Combined with a public endpoint, this enables completely anonymous access.
+
+**Remediation:** Replace wildcard principals with specific IAM role ARNs or account IDs. Use condition keys (aws:SourceIp, aws:SourceVpc) to further restrict access.
+
+---
+
+### CTL.OPENSEARCH.AUTH.001
+
+**Authentication Must Be Enabled**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.8.5; nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+OpenSearch domains must have authentication enabled. A domain without authentication allows anyone with network access to query, index, delete, and enumerate all data. The Darkbeam breach (2023) exposed 3.8 billion credentials because the Elasticsearch cluster required zero authentication. The Wyze breach (2019) exposed 2.4 million user records via the same pattern. Authentication is the single most critical OpenSearch security control.
+
+**Remediation:** Enable fine-grained access control with an internal user database or IAM authentication. At minimum, enable the security plugin with a master user. For production, use IAM-based authentication via SAML or Cognito for OpenSearch Dashboards.
+
+---
+
 ### CTL.OPENSEARCH.ENCRYPT.001
 
 **Encryption at Rest Must Be Enabled**
@@ -1804,6 +1834,21 @@ OpenSearch domain safety cannot be proven when access control data is missing fr
 
 ---
 
+### CTL.OPENSEARCH.KIBANA.001
+
+**OpenSearch Dashboards Must Not Be Publicly Accessible**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3; nist_800_53_r5: AC-3; soc2: CC6.1;
+
+OpenSearch Dashboards (Kibana) endpoints must not be publicly accessible without authentication. Dashboards provide a query interface to the entire cluster — a public, unauthenticated dashboard is functionally equivalent to giving attackers a SQL client connected to your database. The Darkbeam breach exposed both the Elasticsearch API and the Kibana dashboard to the public internet.
+
+**Remediation:** Restrict Dashboards access via VPC, Cognito authentication, or SAML federation. Enable fine-grained access control to enforce role-based access within Dashboards.
+
+---
+
 ### CTL.OPENSEARCH.LOG.001
 
 **Audit Logging Must Be Enabled**
@@ -1831,6 +1876,36 @@ OpenSearch domains must have audit logging enabled to track authentication attem
 OpenSearch domains must not have public endpoints accessible from the internet. A publicly accessible domain allows anyone to query, index, or enumerate data without network-level restrictions. The Darkbeam breach (2023) exposed 3.8 billion records from an Elasticsearch instance left unprotected on the public internet. Domains must be deployed within a VPC.
 
 **Remediation:** Migrate the domain to a VPC. Create a new domain with VPC configuration specifying private subnets and security groups. Use VPN, bastion, or AWS PrivateLink for authorized access.
+
+---
+
+### CTL.OPENSEARCH.SNAPSHOT.001
+
+**Snapshots Must Be Encrypted**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-28; hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-28; soc2: CC6.7;
+
+OpenSearch domain snapshots must be stored in encrypted repositories. Unencrypted snapshots expose the same data as the live cluster but are often stored with weaker access controls. Snapshot repositories in S3 must use server-side encryption.
+
+**Remediation:** Configure the snapshot repository S3 bucket with default encryption (SSE-S3 or SSE-KMS). Verify the IAM role used for snapshots has minimum required permissions.
+
+---
+
+### CTL.OPENSEARCH.VPC.001
+
+**Domain Must Be Deployed in VPC**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-7; iso_27001_2022: A.8.20; nist_800_53_r5: SC-7; pci_dss_v4.0: 1.3.1; soc2: CC6.6;
+
+OpenSearch domains must be deployed within a VPC, not on public endpoints. A domain outside a VPC is directly reachable from the internet, bypassing all network-level controls. Even with authentication enabled, a public endpoint exposes the cluster to brute-force, credential stuffing, and zero-day exploits. VPC deployment restricts access to authorized networks only.
+
+**Remediation:** Create a new domain with VPC configuration specifying private subnets and security groups. Migrate data from the public domain. Use VPN, bastion host, or AWS PrivateLink for authorized access. Note: existing domains cannot be migrated to VPC in-place.
 
 ---
 
