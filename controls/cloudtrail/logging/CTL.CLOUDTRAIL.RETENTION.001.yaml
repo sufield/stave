@@ -1,0 +1,53 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.RETENTION.001
+name: CloudTrail Logs Must Be Retained Beyond 90 Days
+description: >
+  CloudTrail trail must deliver logs to an S3 bucket or CloudWatch
+  Logs group with a retention policy that preserves logs beyond the
+  90-day CloudTrail Events History window. Without long-term
+  retention, forensic investigation of incidents older than 90 days
+  is impossible.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "3.3"
+  soc2: "CC7.1"
+  pci_dss_v4.0: "10.7.1"
+  nist_800_53_r5: "AU-11"
+  fedramp_moderate: "AU-11"
+  hipaa: "164.312(b)"
+  gdpr: "Art.30"
+  iso_27001_2022: "A.8.15"
+  nist_csf_2.0: "DE.AE"
+scope_tags:
+  - aws
+  - cloudtrail
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    CloudTrail trail does not have long-term log retention configured.
+    Logs are only available through the 90-day CloudTrail Events
+    History and may not be preserved for incident investigation.
+  action: >
+    Configure the trail to deliver logs to an S3 bucket with a
+    lifecycle policy that retains objects for at least 365 days.
+    Alternatively, deliver logs to a CloudWatch Logs group with
+    a retention policy of 365 days or more.
+  example: |
+    {
+      "audit_trail": {
+        "kind": "trail",
+        "retention": {
+          "long_term_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.audit_trail.kind
+      op: eq
+      value: trail
+    - field: properties.audit_trail.retention.long_term_enabled
+      op: eq
+      value: false

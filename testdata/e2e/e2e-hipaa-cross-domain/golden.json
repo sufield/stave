@@ -7,7 +7,7 @@
     "now": "2026-01-14T00:00:00Z",
     "sla_threshold": "0h",
     "snapshots": 2,
-    "policy_fingerprint": "9e975ec5d29e7dc77d0160ae8989d8f659e8c0242bd5ff8a37812dd49b49b80b"
+    "policy_fingerprint": "bd29f03adbb90a4e267e09dfa924bfb71ede5bfd64350c38d35237682919f9f6"
   },
   "summary": {
     "total_assets": 20,

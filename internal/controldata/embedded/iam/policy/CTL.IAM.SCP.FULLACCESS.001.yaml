@@ -1,0 +1,50 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SCP.FULLACCESS.001
+name: Organizations Must Not Rely Solely on FullAWSAccess SCP
+description: >
+  AWS Organizations must have restrictive Service Control Policies
+  beyond the default FullAWSAccess SCP. An organization that only
+  has FullAWSAccess applied has no organizational guardrails — any
+  IAM permission granted within a member account is allowed,
+  including access to unused services that expand the attack surface.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6"
+  fedramp_moderate: "AC-6"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  iso_27001_2022: "A.8.3"
+  nist_csf_2.0: "PR.AA"
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    AWS Organization relies solely on the default FullAWSAccess SCP
+    with no restrictive policies. Member accounts have no organizational
+    guardrails limiting which services or actions are permitted.
+  action: >
+    Create restrictive SCPs that deny unused services and dangerous
+    actions. Apply them to organizational units. Keep FullAWSAccess
+    on the root but add deny-based SCPs to OUs that restrict the
+    effective permissions.
+  example: |
+    {
+      "identity": {
+        "kind": "organization",
+        "scp": {
+          "has_restrictive_policies": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.identity.scp.has_restrictive_policies
+      op: eq
+      value: false
