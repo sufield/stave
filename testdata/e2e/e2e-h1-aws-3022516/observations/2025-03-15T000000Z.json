@@ -1,0 +1,34 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2025-03-15T00:00:00Z",
+  "assets": [
+    {
+      "id": "acct-123456789012",
+      "type": "aws_account",
+      "vendor": "aws",
+      "properties": {
+        "audit_trail": {
+          "kind": "trail",
+          "multi_region_enabled": true
+        },
+        "monitoring": {
+          "kind": "account",
+          "metric_filters": {
+            "unauthorized_api_calls": {
+              "exists": true
+            }
+          },
+          "alarms": {
+            "unauthorized_api_calls": {
+              "exists": true,
+              "sns_topic_arn": "arn:aws:sns:us-east-1:123456789012:security-alerts"
+            }
+          }
+        },
+        "threat_detection": {
+          "enabled": true
+        }
+      }
+    }
+  ]
+}

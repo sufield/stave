@@ -1,0 +1,25 @@
+{
+  "findings": [],
+  "kind": "ASSESSMENT",
+  "status": "COMPLIANT",
+  "run": {
+    "input_hashes": {
+      "files": {
+        "2025-03-04T000000Z.json": "cd270f9fa618b70acf54866f3e98cab37f64f312fb68c34e9cd554956bce114c",
+        "2025-03-15T000000Z.json": "63d3a40809ebf40a0f0aaff9a9f148cbdb85d1b6a68be86986ec3216afa9545f"
+      },
+      "overall": "acc183119da5270295698bfd5d2d9a2406d12983b654efb6d01fbf3e6bc68a2b"
+    },
+    "sla_threshold": "7d",
+    "now": "2025-03-15T00:00:00Z",
+    "offline": true,
+    "policy_fingerprint": "95d666c73758da7be6545a0460a9c023fbab1e4989bed9b98ba5420aa7679053",
+    "snapshots": 2
+  },
+  "schema_version": "out.v0.1",
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  }
+}
