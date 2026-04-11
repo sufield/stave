@@ -1,0 +1,53 @@
+dsl_version: ctrl.v1
+id: CTL.S3.OWNERSHIP.001
+name: S3 Object Ownership Must Be Bucket Owner Enforced
+description: >
+  S3 buckets must have Object Ownership set to BucketOwnerEnforced,
+  which disables ACLs entirely. When ACLs are disabled, the bucket
+  owner automatically owns every object regardless of who uploaded it,
+  and access is controlled exclusively through IAM and bucket policies.
+  This eliminates the entire class of ACL-based exposure: public grants,
+  privilege escalation via WRITE_ACP, and object-level ACL overrides.
+  Since April 2023 new buckets default to BucketOwnerEnforced, but
+  buckets created before this date may still have ACLs enabled.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "2.1.2"
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-3"
+  fedramp_moderate: "AC-3"
+  iso_27001_2022: "A.8.3"
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Bucket does not have Object Ownership set to BucketOwnerEnforced.
+    ACLs remain active and can grant public or cross-account access
+    to individual objects, bypassing bucket policies.
+  action: >
+    Set Object Ownership to BucketOwnerEnforced using aws s3api
+    put-bucket-ownership-controls. This disables all ACLs on the bucket.
+    Before enabling, audit existing ACL grants and migrate any legitimate
+    access to bucket policies or IAM policies. All existing ACL-based
+    access will stop working once BucketOwnerEnforced is set.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "object_ownership": {
+          "rule": "BucketOwnerEnforced"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.object_ownership.rule
+      op: ne
+      value: BucketOwnerEnforced

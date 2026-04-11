@@ -7,6 +7,7 @@ Controls in this directory detect ACL-based privilege escalation and reconnaissa
 | CTL.S3.ACL.ESCALATION.001 | No Public ACL Modification | WRITE_ACP granted to AllUsers or AuthenticatedUsers via ACL or policy (s3:PutBucketAcl, s3:PutObjectAcl) |
 | CTL.S3.ACL.RECON.001 | No Public ACL Readability | READ_ACP granted to AllUsers via ACL or policy (s3:GetBucketAcl, s3:GetObjectAcl) |
 | CTL.S3.ACL.FULLCONTROL.001 | No FULL_CONTROL ACL Grants to Public | Explicit FULL_CONTROL granted to AllUsers or AuthenticatedUsers |
+| CTL.S3.ACL.OBJECT.001 | Objects Must Not Be Individually Public via ACL | Bucket contains objects with public ACL grants ("Objects can be public" status) |
 
 ## Attack Patterns
 

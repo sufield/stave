@@ -1,0 +1,60 @@
+dsl_version: ctrl.v1
+id: CTL.S3.ACL.OBJECT.001
+name: Objects Must Not Be Individually Public via ACL
+description: >
+  S3 buckets must not contain objects that are individually made public
+  through object-level ACL grants. When a bucket itself is not public,
+  individual objects can still be accessible from the internet if their
+  ACL grants read access to AllUsers or AuthenticatedUsers. This is the
+  "Objects can be public" status in AWS — the bucket is private but
+  objects inside it are exposed. This is a primary vector for data
+  leakage through misplaced sensitive files, where a single object
+  with a public ACL in an otherwise private bucket exposes data that
+  was never intended to be public.
+domain: exposure
+exposure:
+  type: object_acl_public
+  principal_scope: public
+severity: high
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-3"
+  fedramp_moderate: "AC-3"
+  gdpr: "Art.32"
+  iso_27001_2022: "A.8.3"
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Bucket contains objects with public ACL grants. Individual objects
+    are accessible from the internet even though the bucket itself may
+    not be public.
+  action: >
+    Set Object Ownership to BucketOwnerEnforced to disable all ACLs.
+    If that is not immediately possible, enable S3 Block Public Access
+    with IgnorePublicAcls set to true, then audit object ACLs using
+    S3 Inventory with the optional ACL fields. Remove public grants
+    from individual objects using aws s3api put-object-acl.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "acl": {
+          "objects_can_be_public": false
+        },
+        "object_ownership": {
+          "rule": "BucketOwnerEnforced"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.acl.objects_can_be_public
+      op: eq
+      value: true

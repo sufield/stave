@@ -1,0 +1,55 @@
+dsl_version: ctrl.v1
+id: CTL.S3.INVENTORY.001
+name: S3 Inventory Must Be Enabled for Visibility
+description: >
+  S3 buckets must have S3 Inventory configured to provide a complete
+  manifest of all objects, their storage classes, encryption status,
+  and optionally their ACL grants. Without Inventory, organizations
+  have no baseline visibility into what data exists in a bucket,
+  making it impossible to detect misplaced sensitive files, verify
+  encryption coverage, or audit object-level access. S3 Inventory
+  is essential when Amazon Macie is not deployed, as it provides the
+  only mechanism for systematic bucket content auditing at scale.
+domain: exposure
+severity: medium
+compliance:
+  hipaa: "164.312(b)"
+  soc2: "CC7.2"
+  nist_800_53_r5: "CM-8"
+  fedramp_moderate: "CM-8"
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    S3 Inventory is not configured for this bucket. There is no
+    systematic visibility into what objects exist, their encryption
+    status, or their ACL grants.
+  action: >
+    Configure S3 Inventory on the bucket using aws s3api
+    put-bucket-inventory-configuration. Include optional fields for
+    encryption status and ACL grants. Set the inventory to report
+    daily or weekly to a secured destination bucket. Use the inventory
+    reports to audit for misplaced sensitive data, unencrypted objects,
+    and objects with public ACL grants.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "inventory": {
+          "enabled": true,
+          "frequency": "Daily",
+          "optional_fields": ["EncryptionStatus", "ObjectAccessControlList"]
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.inventory.enabled
+      op: eq
+      value: false

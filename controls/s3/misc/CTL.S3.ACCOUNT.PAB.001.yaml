@@ -1,0 +1,58 @@
+dsl_version: ctrl.v1
+id: CTL.S3.ACCOUNT.PAB.001
+name: Account-Level Block Public Access Must Be Enabled
+description: >
+  The AWS account must have S3 Block Public Access enabled at the
+  account level. Account-level PAB overrides all bucket and object
+  settings, providing a hard ceiling that prevents any S3 resource in
+  the account from being made public regardless of bucket policies,
+  ACLs, or access point policies. Without account-level PAB, each
+  bucket's public access depends on its own settings, and a single
+  misconfigured bucket or object ACL can expose data. Account-level
+  PAB is the strongest single defense against accidental public
+  exposure.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "2.1.4"
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-3"
+  fedramp_moderate: "AC-3"
+  gdpr: "Art.32"
+  iso_27001_2022: "A.8.3"
+  nist_csf_2.0: "PR.PS"
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Account-level S3 Block Public Access is not fully enabled. Buckets
+    and objects can be made public through policies or ACLs without an
+    account-level safety net.
+  action: >
+    Enable all four S3 Block Public Access settings at the account level
+    using aws s3control put-public-access-block with the --account-id
+    parameter. This blocks public access for all current and future
+    buckets in the account. If specific buckets require public access,
+    use CloudFront with Origin Access Control instead of making
+    buckets directly public.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "controls": {
+          "account_public_access_fully_blocked": true,
+          "public_access_fully_blocked": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.controls.account_public_access_fully_blocked
+      op: eq
+      value: false
