@@ -1,0 +1,9 @@
+- id: stave-apply
+  name: stave apply
+  description: Check for unsafe cloud configurations
+  entry: stave apply --format text
+  language: system
+  pass_filenames: false
+  types_or: [yaml, json]
+  files: (observations|controls)/
+  always_run: false

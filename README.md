@@ -150,8 +150,10 @@ Full reference: [Control reference](docs/controls/reference.md)
 | | |
 |---|---|
 | [Quickstart](docs/time-to-first-finding.md) | Get your first finding in 5 minutes |
-| [Building an extractor](docs/extractor-prompt.md) | LLM-assisted extractor generation |
+| [Building an extractor](docs/extractor-prompt.md) | Steampipe, CloudQuery, AWS Config, or custom |
 | [Authoring controls](docs/controls/authoring.md) | Write custom YAML controls |
+| [Pre-commit hook](docs/integrations/pre-commit.md) | Block unsafe configs before commit |
+| [Atlantis integration](docs/integrations/atlantis.md) | Evaluate Terraform plans before apply |
 | [Evaluation semantics](docs/evaluation-semantics.md) | How duration tracking works |
 | [Architecture](docs/architecture/overview.md) | System design overview |
 | [FAQ](docs/faq.md) | Common questions |

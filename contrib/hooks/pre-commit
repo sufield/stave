@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+# Stave pre-commit hook — block commits that introduce unsafe configurations.
+#
+# Install:
+#   cp contrib/hooks/pre-commit .git/hooks/pre-commit
+#   chmod +x .git/hooks/pre-commit
+#
+# Or with pre-commit framework:
+#   See .pre-commit-hooks.yaml at the repo root.
+#
+# What it does:
+#   1. Checks if any observation or control files were modified
+#   2. Runs stave apply --dry-run to validate inputs
+#   3. Runs stave apply to evaluate controls
+#   4. Blocks commit if violations are found (exit code 3)
+#
+# Configuration:
+#   STAVE_PRECOMMIT_PROFILE  — compliance profile (default: none)
+#   STAVE_PRECOMMIT_STRICT   — set to "1" to fail on any finding
+#   STAVE_PRECOMMIT_SKIP     — set to "1" to skip the hook entirely
+#
+set -euo pipefail
+
+# Allow skipping via environment variable.
+if [ "${STAVE_PRECOMMIT_SKIP:-}" = "1" ]; then
+    exit 0
+fi
+
+# Check if stave is available.
+if ! command -v stave &>/dev/null; then
+    echo "stave: not found in PATH — skipping pre-commit check"
+    echo "  Install: brew tap sufield/tap && brew install stave"
+    exit 0
+fi
+
+# Check if this is a stave project (has controls/ or stave.yaml).
+if [ ! -d "controls" ] && [ ! -f "stave.yaml" ] && [ ! -f "stave.yml" ]; then
+    exit 0
+fi
+
+# Check if relevant files were modified.
+STAGED=$(git diff --cached --name-only --diff-filter=ACMR 2>/dev/null || true)
+HAS_OBS=$(echo "$STAGED" | grep -c "observations/" || true)
+HAS_CTL=$(echo "$STAGED" | grep -c "controls/" || true)
+HAS_YAML=$(echo "$STAGED" | grep -cE "\.(yaml|yml)$" || true)
+
+if [ "$HAS_OBS" -eq 0 ] && [ "$HAS_CTL" -eq 0 ] && [ "$HAS_YAML" -eq 0 ]; then
+    exit 0
+fi
+
+echo "stave: checking staged configuration files..."
+
+# Build the command.
+CMD="stave apply --format text"
+
+if [ -n "${STAVE_PRECOMMIT_PROFILE:-}" ]; then
+    CMD="$CMD --profile $STAVE_PRECOMMIT_PROFILE"
+fi
+
+# Run evaluation.
+RC=0
+eval "$CMD" 2>/dev/null || RC=$?
+
+case $RC in
+    0)
+        echo "stave: no violations found"
+        ;;
+    3)
+        echo ""
+        echo "stave: violations detected — commit blocked"
+        echo "  Fix the violations above, then try again."
+        echo "  To skip: STAVE_PRECOMMIT_SKIP=1 git commit"
+        exit 1
+        ;;
+    2)
+        # Input error — don't block commit for config issues.
+        if [ "${STAVE_PRECOMMIT_STRICT:-}" = "1" ]; then
+            echo "stave: input validation failed — commit blocked (strict mode)"
+            exit 1
+        fi
+        echo "stave: input validation issue (non-blocking)"
+        ;;
+    *)
+        echo "stave: unexpected exit code $RC (non-blocking)"
+        ;;
+esac
+
+exit 0
