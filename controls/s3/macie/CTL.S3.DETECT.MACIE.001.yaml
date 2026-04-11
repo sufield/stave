@@ -1,0 +1,65 @@
+dsl_version: ctrl.v1
+id: CTL.S3.DETECT.MACIE.001
+name: Sensitive Data Buckets Must Have Macie Enabled
+description: >
+  S3 buckets tagged with a non-public data classification (phi, pii,
+  confidential, internal) must be monitored by Amazon Macie. Macie uses
+  machine learning and pattern matching to discover and classify
+  sensitive data, detecting PII, PHI, and credentials that may have
+  been stored without proper controls. Without Macie, sensitive data
+  can accumulate undetected in buckets that were not originally
+  intended for it.
+domain: exposure
+severity: medium
+compliance:
+  hipaa: "164.312(b)"
+  soc2: "CC7.2"
+  pci_dss_v4.0: "11.5.1"
+  nist_800_53_r5: "RA-5"
+  fedramp_moderate: "RA-5"
+  gdpr: "Art.30"
+  iso_27001_2022: "A.8.12"
+scope_tags:
+  - aws
+  - s3
+  - sensitive-data
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Bucket with sensitive data classification is not monitored by Macie.
+    Sensitive data may accumulate or leak into this bucket without
+    detection.
+  action: >
+    Enable Amazon Macie in the account and region, then add this bucket
+    to a Macie classification job. Use aws macie2 create-classification-job
+    to configure automated scanning. For organization-wide coverage,
+    enable Macie via AWS Organizations delegated administrator.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "tags": {
+          "data-classification": "phi"
+        },
+        "macie": {
+          "enabled": true,
+          "classification_job_active": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.tags.data-classification
+      op: in
+      value:
+        - phi
+        - pii
+        - confidential
+        - internal
+    - field: properties.storage.macie.enabled
+      op: eq
+      value: false

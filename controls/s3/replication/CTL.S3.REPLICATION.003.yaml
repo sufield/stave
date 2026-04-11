@@ -1,0 +1,56 @@
+dsl_version: ctrl.v1
+id: CTL.S3.REPLICATION.003
+name: Replication Destination Must Be Encrypted
+description: >
+  When S3 replication is enabled, the destination bucket must have
+  server-side encryption configured. Replicating data to an unencrypted
+  destination creates a shadow copy that bypasses the source bucket's
+  encryption controls. This is especially dangerous for sensitive data
+  where the source meets encryption requirements but the replica does
+  not.
+domain: exposure
+severity: high
+compliance:
+  hipaa: "164.312(a)(2)(iv)"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "3.4.1"
+  nist_800_53_r5: "SC-28"
+  fedramp_moderate: "SC-28"
+  gdpr: "Art.32"
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Replication destination bucket does not have encryption configured.
+    Replicated data exists in plaintext, bypassing the source bucket's
+    encryption controls.
+  action: >
+    Configure default encryption on the destination bucket using SSE-S3
+    or SSE-KMS. For replication of encrypted objects, add a
+    ReplicaKmsKeyID to the replication rule so objects are re-encrypted
+    with a key in the destination region.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "replication": {
+          "enabled": true,
+          "destination_encrypted": true,
+          "destination_kms_key_id": "arn:aws:kms:us-west-2:123456789012:key/dest-key-id"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.replication.enabled
+      op: eq
+      value: true
+    - field: properties.storage.replication.destination_encrypted
+      op: eq
+      value: false

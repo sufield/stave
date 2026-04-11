@@ -14,6 +14,8 @@ packs:
       - CTL.BACKUP.RECENT.001
       - CTL.BACKUP.MULTIAZ.001
       - CTL.BACKUP.REPLICATION.001
+      - CTL.S3.REPLICATION.001
+      - CTL.S3.REPLICATION.002
       - CTL.ELB.CROSSZONE.001
       - CTL.RDS.BACKUP.001
       - CTL.RDS.MULTIAZ.001
@@ -45,6 +47,7 @@ packs:
       - CTL.K8S.SECRETS.ENCRYPT.001
       - CTL.RDS.ENCRYPT.001
       - CTL.S3.ENCRYPT.001
+      - CTL.S3.REPLICATION.003
       - CTL.SECRETSMANAGER.ENCRYPT.001
       - CTL.SNS.ENCRYPT.001
       - CTL.SQS.ENCRYPT.001
@@ -58,6 +61,8 @@ packs:
       - CTL.K8S.AUDIT.001
       - CTL.RDS.LOG.001
       - CTL.S3.AUDIT.OBJECTLEVEL.001
+      - CTL.S3.DETECT.MACIE.001
+      - CTL.S3.DETECT.MACIE.002
       - CTL.S3.LOG.001
       - CTL.VPC.FLOWLOG.001
       # §164.312(c)(1) — Integrity
@@ -205,6 +210,7 @@ packs:
       - CTL.VPC.FLOWLOG.ENCRYPT.001
       - CTL.KMS.ROTATION.001
       - CTL.S3.ENCRYPT.003
+      - CTL.S3.REPLICATION.003
       # CC7.1 — Monitoring
       - CTL.CLOUDTRAIL.ENABLED.001
       - CTL.CLOUDTRAIL.VALIDATION.001
@@ -238,6 +244,8 @@ packs:
       # CC7.1 — Threat Detection (NEW)
       - CTL.GUARDDUTY.ENABLED.001
       - CTL.SECURITYHUB.ENABLED.001
+      - CTL.S3.DETECT.MACIE.001
+      - CTL.S3.DETECT.MACIE.002
       # CC8.1 — Change Management (NEW)
       - CTL.CLOUDFORMATION.DRIFT.001
       # PI1 — Processing Integrity
@@ -247,6 +255,8 @@ packs:
       - CTL.BACKUP.RECENT.001
       - CTL.BACKUP.MULTIAZ.001
       - CTL.BACKUP.REPLICATION.001
+      - CTL.S3.REPLICATION.001
+      - CTL.S3.REPLICATION.002
       - CTL.RDS.MULTIAZ.001
       - CTL.RDS.BACKUP.001
       - CTL.RDS.AUTOUPGRADE.001
@@ -273,6 +283,7 @@ packs:
       # Req 3 — Stored Data
       - CTL.S3.ENCRYPT.001
       - CTL.S3.ENCRYPT.003
+      - CTL.S3.REPLICATION.003
       - CTL.RDS.ENCRYPT.001
       - CTL.EC2.EBS.ENCRYPT.001
       - CTL.EC2.SNAPSHOT.ENCRYPT.001
@@ -325,6 +336,7 @@ packs:
       - CTL.CLOUDWATCH.LOG.RETENTION365.001
       # Req 11 — Testing
       - CTL.SECURITYHUB.ENABLED.001
+      - CTL.S3.DETECT.MACIE.001
       - CTL.IAM.ANALYZER.001
   fedramp_moderate:
     description: FedRAMP Moderate baseline controls (inherits NIST 800-53)
@@ -335,6 +347,8 @@ packs:
     description: GDPR technical controls for personal data protection
     controls:
       - CTL.S3.REGION.001
+      - CTL.S3.REPLICATION.003
+      - CTL.S3.DETECT.MACIE.001
   ffiec:
     description: FFIEC financial institution compliance controls
     controls:
@@ -369,6 +383,8 @@ packs:
       - CTL.GUARDDUTY.ENABLED.001
       - CTL.SECURITYHUB.ENABLED.001
       - CTL.IAM.ANALYZER.001
+      - CTL.S3.REPLICATION.001
+      - CTL.S3.DETECT.MACIE.001
   nist_csf_2.0:
     description: NIST Cybersecurity Framework v2.0 controls
     controls:
@@ -649,6 +665,11 @@ packs:
       - CTL.S3.MRAP.POLICY.001
       - CTL.S3.CDN.OAC.001
       - CTL.S3.CDN.EXPOSURE.001
+      - CTL.S3.REPLICATION.001
+      - CTL.S3.REPLICATION.002
+      - CTL.S3.REPLICATION.003
+      - CTL.S3.DETECT.MACIE.001
+      - CTL.S3.DETECT.MACIE.002
 controls:
   CTL.S3.AUDIT.OBJECTLEVEL.001:
     path: internal/controldata/embedded/s3/logging/CTL.S3.AUDIT.OBJECTLEVEL.001.yaml
@@ -815,6 +836,21 @@ controls:
   CTL.S3.CDN.EXPOSURE.001:
     path: internal/controldata/embedded/s3/public/CTL.S3.CDN.EXPOSURE.001.yaml
     summary: Private Bucket Must Not Be Publicly Exposed Via CloudFront
+  CTL.S3.REPLICATION.001:
+    path: internal/controldata/embedded/s3/replication/CTL.S3.REPLICATION.001.yaml
+    summary: Compliance-Tagged Buckets Must Have Replication Enabled
+  CTL.S3.REPLICATION.002:
+    path: internal/controldata/embedded/s3/replication/CTL.S3.REPLICATION.002.yaml
+    summary: PHI Replication Must Be Cross-Region
+  CTL.S3.REPLICATION.003:
+    path: internal/controldata/embedded/s3/replication/CTL.S3.REPLICATION.003.yaml
+    summary: Replication Destination Must Be Encrypted
+  CTL.S3.DETECT.MACIE.001:
+    path: internal/controldata/embedded/s3/macie/CTL.S3.DETECT.MACIE.001.yaml
+    summary: Sensitive Data Buckets Must Have Macie Enabled
+  CTL.S3.DETECT.MACIE.002:
+    path: internal/controldata/embedded/s3/macie/CTL.S3.DETECT.MACIE.002.yaml
+    summary: Macie Automated Sensitive Data Discovery Must Be Active
   CTL.IAM.ROOT.MFA.001:
     path: internal/controldata/embedded/iam/root/CTL.IAM.ROOT.MFA.001.yaml
     summary: Root Account Must Have MFA Enabled

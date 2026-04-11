@@ -1,0 +1,60 @@
+dsl_version: ctrl.v1
+id: CTL.S3.REPLICATION.002
+name: PHI Replication Must Be Cross-Region
+description: >
+  S3 buckets tagged with data-classification=phi that have replication
+  enabled must replicate to a different AWS region. Same-region
+  replication (SRR) does not protect against regional outages, AZ-wide
+  failures, or region-scoped service disruptions. HIPAA contingency
+  planning requires data to survive regional disasters.
+domain: exposure
+severity: high
+compliance:
+  hipaa: "164.308(a)(7)(ii)(A)"
+  soc2: "A1.2"
+  nist_800_53_r5: "CP-6(1)"
+  fedramp_moderate: "CP-6(1)"
+scope_tags:
+  - aws
+  - s3
+  - sensitive-data
+  - hipaa
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    PHI bucket replication destination is in the same region as the
+    source. A regional outage would destroy both copies simultaneously.
+  action: >
+    Update the replication configuration to use a destination bucket in
+    a different AWS region. Ensure the destination bucket has versioning
+    enabled, appropriate encryption, and a bucket policy that permits
+    the replication role.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "tags": {
+          "data-classification": "phi"
+        },
+        "replication": {
+          "enabled": true,
+          "destination_region": "us-west-2",
+          "source_region": "us-east-1"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.tags.data-classification
+      op: eq
+      value: phi
+    - field: properties.storage.replication.enabled
+      op: eq
+      value: true
+    - field: properties.storage.replication.destination_region
+      op: eq
+      value: ""

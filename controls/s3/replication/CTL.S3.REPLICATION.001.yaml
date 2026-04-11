@@ -1,0 +1,57 @@
+dsl_version: ctrl.v1
+id: CTL.S3.REPLICATION.001
+name: Compliance-Tagged Buckets Must Have Replication Enabled
+description: >
+  S3 buckets tagged with a compliance framework (soc2, gdpr, hipaa,
+  pci-dss, etc.) must have replication configured. Without replication,
+  a regional outage or accidental bucket deletion can cause permanent
+  data loss for regulated data. Replication provides an independent
+  copy that survives single-region failures and supports disaster
+  recovery objectives.
+domain: exposure
+severity: medium
+compliance:
+  hipaa: "164.308(a)(7)"
+  soc2: "A1.1"
+  nist_800_53_r5: "CP-9"
+  fedramp_moderate: "CP-9"
+  iso_27001_2022: "A.8.13"
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Compliance-tagged bucket does not have replication configured.
+    A regional outage could cause permanent data loss for regulated data.
+  action: >
+    Configure S3 replication on the bucket using aws s3api
+    put-bucket-replication. Use cross-region replication (CRR) for
+    disaster recovery or same-region replication (SRR) for compliance
+    copies. Ensure versioning is enabled on both source and destination
+    buckets.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "tags": {
+          "compliance": "hipaa"
+        },
+        "replication": {
+          "enabled": true,
+          "destination_region": "us-west-2"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.tags.compliance
+      op: present
+      value: true
+    - field: properties.storage.replication.enabled
+      op: eq
+      value: false
