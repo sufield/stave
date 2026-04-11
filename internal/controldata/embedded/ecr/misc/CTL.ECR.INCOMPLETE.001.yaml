@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.ECR.INCOMPLETE.001
+name: Complete Data Required for ECR Assessment
+description: >
+  ECR repository safety cannot be proven when access control data
+  is missing from the snapshot. The extractor must populate
+  container_registry.access.public to evaluate exposure controls.
+domain: exposure
+severity: low
+scope_tags:
+  - aws
+  - ecr
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    ECR assessment data is incomplete. The extractor did not populate
+    required access control properties.
+  action: >
+    Re-run the extractor with ECR permissions:
+    ecr:DescribeRepositories, ecr:GetRepositoryPolicy.
+unsafe_predicate:
+  all:
+    - field: properties.container_registry.kind
+      op: eq
+      value: repository
+    - field: properties.container_registry.access.public
+      op: missing
+      value: true

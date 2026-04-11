@@ -1,0 +1,47 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.SG.EGRESS.001
+name: Security Groups Must Not Allow Unrestricted Egress
+description: >
+  Security groups must not allow all outbound traffic to 0.0.0.0/0
+  on all ports. Unrestricted egress enables data exfiltration,
+  command-and-control communication, and lateral movement to external
+  attacker infrastructure. While most organizations currently allow
+  all egress by default, restricting outbound traffic to required
+  ports and destinations is a critical APT hardening measure.
+domain: exposure
+severity: medium
+compliance:
+  soc2: "CC6.6"
+  nist_800_53_r5: "SC-7"
+  fedramp_moderate: "SC-7"
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Security group allows all outbound traffic to the internet.
+    Data exfiltration and C2 traffic are not restricted.
+  action: >
+    Replace the default allow-all egress rule with specific outbound
+    rules for required ports (443 for HTTPS, 53 for DNS, etc.) and
+    destinations. Use VPC endpoints for AWS service traffic to avoid
+    internet egress entirely.
+  example: |
+    {
+      "network": {
+        "kind": "security_group",
+        "egress": {
+          "unrestricted_all_ports": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: security_group
+    - field: properties.network.egress.unrestricted_all_ports
+      op: eq
+      value: true

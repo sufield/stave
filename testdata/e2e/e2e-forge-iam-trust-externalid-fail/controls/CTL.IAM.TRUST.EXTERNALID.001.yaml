@@ -1,0 +1,47 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.TRUST.EXTERNALID.001
+name: Cross-Account Trust Must Require External ID
+description: >
+  IAM roles with cross-account trust policies must include an
+  sts:ExternalId condition. Without an external ID, any principal in
+  the trusted account can assume the role — including compromised
+  service accounts, OAuth applications, or test tenants. The
+  Microsoft Midnight Blizzard 2024 breach exploited a legacy test
+  OAuth app to assume a role with full_access_as_app permissions,
+  pivoting from a test tenant to production Exchange mailboxes.
+domain: identity
+severity: critical
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-3"
+  fedramp_moderate: "AC-3"
+  iso_27001_2022: "A.8.3"
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Cross-account IAM role trust policy allows assumption without
+    an external ID condition. Any principal in the trusted account
+    can assume this role.
+  action: >
+    Add an sts:ExternalId condition to the role trust policy.
+    Generate a unique external ID per trust relationship. Verify
+    the assuming application passes the correct external ID.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "role": {
+          "cross_account_trust_without_external_id": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.role.cross_account_trust_without_external_id
+      op: eq
+      value: true

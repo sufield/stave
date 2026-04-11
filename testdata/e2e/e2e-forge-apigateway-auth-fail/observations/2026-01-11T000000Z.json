@@ -1,0 +1,19 @@
+{
+  "assets": [
+    {
+      "id": "test-apigateway",
+      "properties": {
+        "api": {
+          "access": {
+            "has_unauthenticated_routes": true
+          },
+          "kind": "gateway"
+        }
+      },
+      "type": "aws_apigateway",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1"
+}

@@ -1,0 +1,47 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.AUTH.001
+name: API Routes Must Have Authorization Configured
+description: >
+  API Gateway routes and methods must have an authorizer configured
+  (Cognito, Lambda, IAM, or JWT). Routes with authorization set to
+  NONE are publicly accessible without any identity verification.
+  The Trello breach (2024) exposed 15 million accounts through an
+  unauthenticated API endpoint. The Spoutible breach (2024) leaked
+  user data through an API without proper auth checks.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-3"
+  fedramp_moderate: "AC-3"
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    API Gateway has routes with authorization set to NONE. These
+    endpoints are publicly accessible without identity verification.
+  action: >
+    Configure an authorizer on all non-health-check routes. Use
+    Cognito user pools, Lambda authorizers, IAM authorization, or
+    JWT authorizers depending on the client type.
+  example: |
+    {
+      "api": {
+        "kind": "gateway",
+        "access": {
+          "has_unauthenticated_routes": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: gateway
+    - field: properties.api.access.has_unauthenticated_routes
+      op: eq
+      value: true

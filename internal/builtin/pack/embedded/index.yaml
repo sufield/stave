@@ -456,7 +456,14 @@ packs:
       - CTL.VPC.SG.IPV6.001
       - CTL.VPC.SG.DEFAULT.001
       - CTL.VPC.NACL.ADMIN.001
+      - CTL.VPC.SG.EGRESS.001
       - CTL.VPC.INCOMPLETE.001
+  ecr:
+    description: AWS ECR container registry security controls
+    controls:
+      - CTL.ECR.PUBLIC.001
+      - CTL.ECR.SCAN.001
+      - CTL.ECR.INCOMPLETE.001
   ec2:
     description: AWS EC2 compute security controls
     controls:
@@ -519,6 +526,7 @@ packs:
     description: AWS API Gateway security controls
     controls:
       - CTL.APIGATEWAY.TLS.001
+      - CTL.APIGATEWAY.AUTH.001
       - CTL.APIGATEWAY.INCOMPLETE.001
   cloudtrail:
     description: AWS CloudTrail audit logging controls
@@ -680,6 +688,7 @@ packs:
       - CTL.IAM.CRED.EXPIRY.001
       - CTL.IAM.ROLE.BREAKGLASS.001
       - CTL.IAM.CROSS.ENV.001
+      - CTL.IAM.TRUST.EXTERNALID.001
   s3:
     description: Default S3 built-in pack for MVP
     controls:
@@ -988,6 +997,24 @@ controls:
   CTL.OPENSEARCH.SNAPSHOT.001:
     path: internal/controldata/embedded/opensearch/misc/CTL.OPENSEARCH.SNAPSHOT.001.yaml
     summary: Snapshots Must Be Encrypted
+  CTL.IAM.TRUST.EXTERNALID.001:
+    path: internal/controldata/embedded/iam/policy/CTL.IAM.TRUST.EXTERNALID.001.yaml
+    summary: Cross-Account Trust Must Require External ID
+  CTL.APIGATEWAY.AUTH.001:
+    path: internal/controldata/embedded/apigateway/access/CTL.APIGATEWAY.AUTH.001.yaml
+    summary: API Routes Must Have Authorization Configured
+  CTL.VPC.SG.EGRESS.001:
+    path: internal/controldata/embedded/vpc/sg/CTL.VPC.SG.EGRESS.001.yaml
+    summary: Security Groups Must Not Allow Unrestricted Egress
+  CTL.ECR.PUBLIC.001:
+    path: internal/controldata/embedded/ecr/access/CTL.ECR.PUBLIC.001.yaml
+    summary: ECR Repository Must Not Be Public
+  CTL.ECR.SCAN.001:
+    path: internal/controldata/embedded/ecr/access/CTL.ECR.SCAN.001.yaml
+    summary: Image Scanning Must Be Enabled
+  CTL.ECR.INCOMPLETE.001:
+    path: internal/controldata/embedded/ecr/misc/CTL.ECR.INCOMPLETE.001.yaml
+    summary: Complete Data Required for ECR Assessment
   CTL.IAM.ROOT.MFA.001:
     path: internal/controldata/embedded/iam/root/CTL.IAM.ROOT.MFA.001.yaml
     summary: Root Account Must Have MFA Enabled

@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.ECR.SCAN.001
+name: Image Scanning Must Be Enabled
+description: >
+  ECR repositories must have image scanning enabled (basic or
+  enhanced). Without scanning, container images with known
+  vulnerabilities are deployed to production undetected.
+domain: exposure
+severity: medium
+compliance:
+  soc2: "CC7.1"
+  nist_800_53_r5: "RA-5"
+  fedramp_moderate: "RA-5"
+scope_tags:
+  - aws
+  - ecr
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    ECR repository does not have image scanning enabled. Vulnerable
+    images are not detected before deployment.
+  action: >
+    Enable scan-on-push in the repository configuration. For
+    enhanced scanning, enable Amazon Inspector ECR integration.
+  example: |
+    {
+      "container_registry": {
+        "kind": "repository",
+        "scanning": {
+          "enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container_registry.kind
+      op: eq
+      value: repository
+    - field: properties.container_registry.scanning.enabled
+      op: eq
+      value: false
