@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ROLE.BREAKGLASS.001
+name: Break-Glass Elevated Roles Must Not Persist
+description: >
+  IAM roles granted elevated permissions for incident response
+  (break-glass access) must be revoked within 7 days. Elevated roles
+  that persist beyond the incident become permanent backdoors —
+  they carry admin-level permissions with no active justification.
+  Debug rules, elevated roles, and emergency access must have
+  mandatory time-bounding.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-2"
+  fedramp_moderate: "AC-2"
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    An IAM role with elevated permissions has persisted beyond 7 days
+    since it was granted. Break-glass access is now a permanent
+    backdoor.
+  action: >
+    Revoke the elevated role or revert its permissions to the
+    pre-incident baseline. Implement automated expiry via STS session
+    policies or Lambda-based role revocation. Tag elevated roles with
+    grant timestamp and incident ID for tracking.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "role": {
+          "elevated_since_days": 0
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.role.elevated_since_days
+      op: gt
+      value: 7

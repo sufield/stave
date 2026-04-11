@@ -190,6 +190,9 @@ packs:
       - CTL.IAM.POLICY.COMPLEXITY.001
       - CTL.IAM.MFA.HWKEY.001
       - CTL.IAM.ACCOUNT.INACTIVE.001
+      - CTL.IAM.CRED.EXPIRY.001
+      - CTL.IAM.ROLE.BREAKGLASS.001
+      - CTL.IAM.CROSS.ENV.001
       - CTL.S3.PUBLIC.001
       - CTL.S3.ENCRYPT.001
       - CTL.S3.ENCRYPT.002
@@ -337,6 +340,7 @@ packs:
       - CTL.IAM.POLICY.ESCALATION.001
       - CTL.IAM.POLICY.PASSROLE.001
       - CTL.IAM.BOUNDARY.001
+      - CTL.IAM.CROSS.ENV.001
       # Req 8 — Authentication
       - CTL.IAM.ROOT.MFA.001
       - CTL.IAM.ROOT.ACCESSKEY.001
@@ -352,6 +356,7 @@ packs:
       - CTL.COGNITO.MFA.001
       - CTL.IAM.MFA.HWKEY.001
       - CTL.IAM.ACCOUNT.INACTIVE.001
+      - CTL.IAM.CRED.EXPIRY.001
       # Req 10 — Logging
       - CTL.CLOUDTRAIL.ENABLED.001
       - CTL.CLOUDTRAIL.VALIDATION.001
@@ -422,6 +427,8 @@ packs:
       - CTL.IAM.POLICY.ESCALATION.001
       - CTL.IAM.POLICY.PASSROLE.001
       - CTL.IAM.MFA.HWKEY.001
+      - CTL.IAM.CRED.EXPIRY.001
+      - CTL.IAM.CROSS.ENV.001
   nist_csf_2.0:
     description: NIST Cybersecurity Framework v2.0 controls
     controls:
@@ -652,6 +659,9 @@ packs:
       - CTL.IAM.POLICY.COMPLEXITY.001
       - CTL.IAM.MFA.HWKEY.001
       - CTL.IAM.ACCOUNT.INACTIVE.001
+      - CTL.IAM.CRED.EXPIRY.001
+      - CTL.IAM.ROLE.BREAKGLASS.001
+      - CTL.IAM.CROSS.ENV.001
   s3:
     description: Default S3 built-in pack for MVP
     controls:
@@ -1020,6 +1030,15 @@ controls:
   CTL.IAM.ACCOUNT.INACTIVE.001:
     path: internal/controldata/embedded/iam/credentials/CTL.IAM.ACCOUNT.INACTIVE.001.yaml
     summary: Inactive Accounts Must Be Disabled
+  CTL.IAM.CRED.EXPIRY.001:
+    path: internal/controldata/embedded/iam/credentials/CTL.IAM.CRED.EXPIRY.001.yaml
+    summary: Credentials Must Have Defined Expiry
+  CTL.IAM.ROLE.BREAKGLASS.001:
+    path: internal/controldata/embedded/iam/policy/CTL.IAM.ROLE.BREAKGLASS.001.yaml
+    summary: Break-Glass Elevated Roles Must Not Persist
+  CTL.IAM.CROSS.ENV.001:
+    path: internal/controldata/embedded/iam/policy/CTL.IAM.CROSS.ENV.001.yaml
+    summary: Non-Production Must Not Access Production Resources
   CTL.DNS.DANGLING.001:
     path: internal/controldata/embedded/dns/takeover/CTL.DNS.DANGLING.001.yaml
     summary: DNS Records Must Not Point to Unclaimed Resources
