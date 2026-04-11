@@ -22,6 +22,9 @@
 
 - [User Documentation](user-docs.md) — Complete user reference
 - [Authoring Controls](controls/authoring.md) — Write custom controls
+- [Building an Extractor](extractor-prompt.md) — Steampipe, CloudQuery, AWS Config, or custom
+- [Pre-Commit Hook](integrations/pre-commit.md) — Block unsafe configs before commit
+- [Atlantis Post-Plan](integrations/atlantis.md) — Evaluate Terraform plans before apply
 - [Sanitization](sanitization.md) — Scrubbing sensitive data from output
 - [Offline and Air-Gapped Operation](offline-airgapped.md) — Running without network access
 
