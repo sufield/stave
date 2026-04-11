@@ -1,0 +1,5 @@
+{
+  "assets": [{"id": "vpc-prod","properties": {"network": {"kind": "vpc","env_isolation": {"mixed_environments": false}}},"type": "aws_vpc","vendor": "aws"}],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1"
+}

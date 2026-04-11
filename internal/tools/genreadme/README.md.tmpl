@@ -133,7 +133,11 @@ New observation properties are additive and backward-compatible. Existing contro
 
 ### AWS IAM ({{domain "iam"}} controls)
 
-Root account MFA and access keys, console user MFA, credential rotation, password policy, inline/direct policy attachment. CIS AWS Benchmark aligned.
+Root account MFA and access keys, console user MFA, credential rotation, password policy, privilege escalation (self-modify, PassRole, AssumeRole), permissions boundaries, break-glass persistence, cross-environment access, inactive accounts. CIS AWS Benchmark aligned.
+
+### AWS OpenSearch ({{domain "opensearch"}} controls)
+
+Authentication enforcement, VPC deployment, fine-grained access control, encryption at rest and node-to-node, HTTPS, Kibana exposure, access policy wildcards, audit logging, snapshot encryption. Prevents the Darkbeam (3.8B records), Wyze, and Microsoft Elasticsearch breach patterns.
 
 ### GCP Cloud Storage ({{domain "gcs"}} controls)
 

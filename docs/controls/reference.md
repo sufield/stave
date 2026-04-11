@@ -3,22 +3,22 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 232
-**Pack hash:** `543475450d77ebcbbe798939c4ddbd094ad940e066832e9662447e937427423d`
+**Total controls:** 233
+**Pack hash:** `edb563821d3ad22333750a071dec0a72772aae146ac31b2d7bfc5c0b00b293fa`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 32 |
-| high | 98 |
+| high | 99 |
 | info | 16 |
 | low | 13 |
 | medium | 73 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 188 |
+| exposure | 189 |
 | governance | 2 |
 | identity | 38 |
 | storage | 4 |
@@ -3327,6 +3327,21 @@ The observation snapshot is missing required SQS queue properties.
 Workloads must not run in the default VPC. The default VPC is created automatically in every region with permissive settings: a public subnet in each AZ, an internet gateway, and a default security group that allows all internal traffic. These defaults create implicit public exposure that custom VPCs avoid. Production and sensitive workloads must use purpose-built VPCs with explicit network design.
 
 **Remediation:** Create a custom VPC with private subnets, explicit route tables, and restrictive security groups. Migrate workloads from the default VPC. Consider deleting the default VPC in production accounts if no workloads require it.
+
+---
+
+### CTL.VPC.ENV.ISOLATION.001
+
+**Production VPC Must Be Isolated from Non-Production**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-7; iso_27001_2022: A.8.22; nist_800_53_r5: SC-7; pci_dss_v4.0: 1.3.1; soc2: CC6.6;
+
+Production VPCs must not share network boundaries with non-production environments. When production and dev/staging workloads share a VPC, a misconfiguration or compromise in a lower environment can reach production resources through security group rules, VPC peering, or shared subnets. Environment isolation requires separate VPCs with explicit, auditable cross-VPC connections.
+
+**Remediation:** Create separate VPCs for each environment (prod, staging, dev). Tag VPCs with an environment classification tag. Use VPC peering or Transit Gateway with explicit route tables for any required cross-environment communication. Ensure security groups do not reference resources in other environments.
 
 ---
 

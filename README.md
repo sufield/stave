@@ -14,7 +14,7 @@ Stave fills this gap. Define safety controls in YAML, compile them to [CEL](http
 
 ## Features
 
-- **232 built-in controls** across 28 domains (S3, IAM, VPC, EC2, RDS, ELB, K8s, CloudTrail, CloudWatch, KMS, and [18 more](docs/controls/reference.md))
+- **233 built-in controls** across 28 domains (S3, IAM, VPC, EC2, RDS, ELB, K8s, CloudTrail, CloudWatch, KMS, and [18 more](docs/controls/reference.md))
 - **10 compliance profiles** — HIPAA, CIS AWS v3.0, SOC 2, PCI-DSS v4.0, NIST 800-53, FedRAMP, GDPR, FFIEC, ISO 27001, NIST CSF 2.0
 - **Unsafe duration tracking** — detects how long assets remain misconfigured across snapshots
 - **Custom controls** — YAML with `unsafe_predicate` for any asset type, no code changes
@@ -109,7 +109,7 @@ New observation properties are additive and backward-compatible. Existing contro
 
 ## Built-in controls
 
-232 controls across 28 domains:
+233 controls across 28 domains:
 
 ### AWS S3 (67 controls)
 
@@ -133,7 +133,11 @@ New observation properties are additive and backward-compatible. Existing contro
 
 ### AWS IAM (33 controls)
 
-Root account MFA and access keys, console user MFA, credential rotation, password policy, inline/direct policy attachment. CIS AWS Benchmark aligned.
+Root account MFA and access keys, console user MFA, credential rotation, password policy, privilege escalation (self-modify, PassRole, AssumeRole), permissions boundaries, break-glass persistence, cross-environment access, inactive accounts. CIS AWS Benchmark aligned.
+
+### AWS OpenSearch (12 controls)
+
+Authentication enforcement, VPC deployment, fine-grained access control, encryption at rest and node-to-node, HTTPS, Kibana exposure, access policy wildcards, audit logging, snapshot encryption. Prevents the Darkbeam (3.8B records), Wyze, and Microsoft Elasticsearch breach patterns.
 
 ### GCP Cloud Storage (7 controls)
 
