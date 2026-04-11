@@ -2,7 +2,7 @@
 
 44 S3 security scenarios in Docker. No AWS credentials required.
 
-Stave ships with 232 controls across 28 domains and 10 compliance
+Stave ships with 233 controls across 28 domains and 10 compliance
 profiles. This Docker demo covers the S3 domain (67 controls) through
 44 curated scenarios that progress from beginner to advanced.
 
@@ -96,7 +96,7 @@ controls run in two different policy engines.
 docker compose run --rm -T stave --export-rego --all
 ```
 
-Exports all 232 controls across all 28 domains.
+Exports all 233 controls across all 28 domains.
 
 ## Try with your own bucket
 
@@ -182,7 +182,7 @@ docker compose build
 
 ## Beyond S3: the full catalog
 
-This demo covers S3. Stave evaluates 232 controls across 28 domains:
+This demo covers S3. Stave evaluates 233 controls across 28 domains:
 
 ```bash
 # Compliance profiles — same engine, different framework lens
