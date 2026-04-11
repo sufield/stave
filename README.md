@@ -14,7 +14,7 @@ Stave fills this gap. Define safety controls in YAML, compile them to [CEL](http
 
 ## Features
 
-- **193 built-in controls** across 26 domains (S3, IAM, VPC, EC2, RDS, ELB, K8s, CloudTrail, CloudWatch, KMS, and 16 more)
+- **197 built-in controls** across 26 domains (S3, IAM, VPC, EC2, RDS, ELB, K8s, CloudTrail, CloudWatch, KMS, and 16 more)
 - **10 compliance profiles** — HIPAA, CIS AWS v3.0, SOC 2, PCI-DSS v4.0, NIST 800-53, FedRAMP, GDPR, FFIEC, ISO 27001, NIST CSF 2.0
 - **Unsafe duration tracking** — detects how long assets remain misconfigured across snapshots
 - **Custom controls** — YAML with `unsafe_predicate` for any asset type, no code changes
@@ -109,14 +109,14 @@ New observation properties are additive and backward-compatible. Existing contro
 
 ## Built-in controls
 
-193 controls across 26 domains:
+197 controls across 26 domains:
 
-### AWS S3 (60 controls)
+### AWS S3 (64 controls)
 
 | Category | Count | What they detect |
 |----------|:---:|-----------------|
 | `public` | 15 | Public read/write/list, website hosting, prefix exposure, CloudFront bypass |
-| `acl` | 3 | ACL escalation, reconnaissance, FULL_CONTROL grants |
+| `acl` | 4 | ACL escalation, reconnaissance, FULL_CONTROL grants |
 | `access` | 8 | Cross-account, wildcard actions, presigned URLs, Access Grants |
 | `encrypt` | 4 | Missing encryption at rest/in transit, KMS for PHI |
 | `network` | 5 | VPC/IP conditions, VPC endpoint policy, Multi-Region Access Point PAB |
@@ -129,7 +129,7 @@ New observation properties are additive and backward-compatible. Existing contro
 | `tenant` | 1 | Prefix-based tenant isolation |
 | `takeover` | 2 | Dangling bucket references, CDN origins |
 | `artifacts` | 1 | VCS artifacts on public buckets |
-| `misc` | 3 | Incomplete data, completeness checks |
+| `misc` | 4 | Incomplete data, completeness checks |
 
 ### AWS IAM (22 controls)
 

@@ -30,6 +30,9 @@ packs:
       - CTL.S3.MRAP.PAB.001
       - CTL.S3.PRESIGNED.001
       - CTL.S3.PUBLIC.001
+      - CTL.S3.OWNERSHIP.001
+      - CTL.S3.ACL.OBJECT.001
+      - CTL.S3.ACCOUNT.PAB.001
       - CTL.SECRETSMANAGER.ACCESS.001
       - CTL.VPC.SG.DEFAULT.001
       # §164.312(a)(2)(i) — Unique User Identification
@@ -63,6 +66,7 @@ packs:
       - CTL.S3.AUDIT.OBJECTLEVEL.001
       - CTL.S3.DETECT.MACIE.001
       - CTL.S3.DETECT.MACIE.002
+      - CTL.S3.INVENTORY.001
       - CTL.S3.LOG.001
       - CTL.VPC.FLOWLOG.001
       # §164.312(c)(1) — Integrity
@@ -131,6 +135,8 @@ packs:
       - CTL.S3.ENCRYPT.002
       - CTL.S3.MFADELETE.001
       - CTL.S3.CONTROLS.001
+      - CTL.S3.OWNERSHIP.001
+      - CTL.S3.ACCOUNT.PAB.001
       - CTL.EC2.EBS.ENCRYPT.001
       - CTL.EC2.IAMROLE.001
       - CTL.RDS.ENCRYPT.001
@@ -171,6 +177,9 @@ packs:
       - CTL.IAM.POLICY.DIRECT.001
       - CTL.IAM.ANALYZER.001
       - CTL.S3.CONTROLS.001
+      - CTL.S3.OWNERSHIP.001
+      - CTL.S3.ACL.OBJECT.001
+      - CTL.S3.ACCOUNT.PAB.001
       - CTL.S3.PUBLIC.001
       - CTL.S3.ENCRYPT.001
       - CTL.S3.ENCRYPT.002
@@ -224,6 +233,7 @@ packs:
       - CTL.RDS.LOG.001
       - CTL.K8S.AUDIT.001
       - CTL.S3.AUDIT.OBJECTLEVEL.001
+      - CTL.S3.INVENTORY.001
       - CTL.S3.LOG.001
       - CTL.CLOUDWATCH.RETENTION.001
       - CTL.CLOUDWATCH.MONITOR.UNAUTH.001
@@ -278,6 +288,8 @@ packs:
       - CTL.VPC.FLOWLOG.001
       # Req 2 — Hardening
       - CTL.S3.CONTROLS.001
+      - CTL.S3.OWNERSHIP.001
+      - CTL.S3.ACCOUNT.PAB.001
       - CTL.EC2.IMDSV2.001
       - CTL.RDS.AUTOUPGRADE.001
       # Req 3 — Stored Data
@@ -349,6 +361,9 @@ packs:
       - CTL.S3.REGION.001
       - CTL.S3.REPLICATION.003
       - CTL.S3.DETECT.MACIE.001
+      - CTL.S3.OWNERSHIP.001
+      - CTL.S3.ACL.OBJECT.001
+      - CTL.S3.ACCOUNT.PAB.001
   ffiec:
     description: FFIEC financial institution compliance controls
     controls:
@@ -385,6 +400,9 @@ packs:
       - CTL.IAM.ANALYZER.001
       - CTL.S3.REPLICATION.001
       - CTL.S3.DETECT.MACIE.001
+      - CTL.S3.OWNERSHIP.001
+      - CTL.S3.ACL.OBJECT.001
+      - CTL.S3.ACCOUNT.PAB.001
   nist_csf_2.0:
     description: NIST Cybersecurity Framework v2.0 controls
     controls:
@@ -393,6 +411,7 @@ packs:
       - CTL.IAM.POLICY.ADMIN.001
       - CTL.S3.ENCRYPT.001
       - CTL.S3.CONTROLS.001
+      - CTL.S3.ACCOUNT.PAB.001
       - CTL.CLOUDTRAIL.ENABLED.001
       - CTL.GUARDDUTY.ENABLED.001
       - CTL.SECURITYHUB.ENABLED.001
@@ -670,6 +689,10 @@ packs:
       - CTL.S3.REPLICATION.003
       - CTL.S3.DETECT.MACIE.001
       - CTL.S3.DETECT.MACIE.002
+      - CTL.S3.OWNERSHIP.001
+      - CTL.S3.ACL.OBJECT.001
+      - CTL.S3.ACCOUNT.PAB.001
+      - CTL.S3.INVENTORY.001
 controls:
   CTL.S3.AUDIT.OBJECTLEVEL.001:
     path: internal/controldata/embedded/s3/logging/CTL.S3.AUDIT.OBJECTLEVEL.001.yaml
@@ -851,6 +874,18 @@ controls:
   CTL.S3.DETECT.MACIE.002:
     path: internal/controldata/embedded/s3/macie/CTL.S3.DETECT.MACIE.002.yaml
     summary: Macie Automated Sensitive Data Discovery Must Be Active
+  CTL.S3.OWNERSHIP.001:
+    path: internal/controldata/embedded/s3/ownership/CTL.S3.OWNERSHIP.001.yaml
+    summary: S3 Object Ownership Must Be Bucket Owner Enforced
+  CTL.S3.ACL.OBJECT.001:
+    path: internal/controldata/embedded/s3/acl/CTL.S3.ACL.OBJECT.001.yaml
+    summary: Objects Must Not Be Individually Public via ACL
+  CTL.S3.ACCOUNT.PAB.001:
+    path: internal/controldata/embedded/s3/misc/CTL.S3.ACCOUNT.PAB.001.yaml
+    summary: Account-Level Block Public Access Must Be Enabled
+  CTL.S3.INVENTORY.001:
+    path: internal/controldata/embedded/s3/inventory/CTL.S3.INVENTORY.001.yaml
+    summary: S3 Inventory Must Be Enabled for Visibility
   CTL.IAM.ROOT.MFA.001:
     path: internal/controldata/embedded/iam/root/CTL.IAM.ROOT.MFA.001.yaml
     summary: Root Account Must Have MFA Enabled

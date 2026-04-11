@@ -3,22 +3,22 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 193
-**Pack hash:** `1bc62db2b8ce4d57f9cd364ee2385526680ccaabfe2034c91ae3e46b63a099e6`
+**Total controls:** 197
+**Pack hash:** `0c350368961dfc538828e3129a927f1d689d5f8738e846e4fe253946a9d4ea93`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 26 |
-| high | 78 |
+| high | 81 |
 | info | 16 |
 | low | 11 |
-| medium | 62 |
+| medium | 63 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 160 |
+| exposure | 164 |
 | governance | 2 |
 | identity | 27 |
 | storage | 4 |
@@ -1815,6 +1815,21 @@ When S3 Access Grants are enabled, IAM Identity Center should be attached to the
 
 ---
 
+### CTL.S3.ACCOUNT.PAB.001
+
+**Account-Level Block Public Access Must Be Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 2.1.4; fedramp_moderate: AC-3; gdpr: Art.32; iso_27001_2022: A.8.3; nist_800_53_r5: AC-3; nist_csf_2.0: PR.PS; soc2: CC6.1;
+
+The AWS account must have S3 Block Public Access enabled at the account level. Account-level PAB overrides all bucket and object settings, providing a hard ceiling that prevents any S3 resource in the account from being made public regardless of bucket policies, ACLs, or access point policies. Without account-level PAB, each bucket's public access depends on its own settings, and a single misconfigured bucket or object ACL can expose data. Account-level PAB is the strongest single defense against accidental public exposure.
+
+**Remediation:** Enable all four S3 Block Public Access settings at the account level using aws s3control put-public-access-block with the --account-id parameter. This blocks public access for all current and future buckets in the account. If specific buckets require public access, use CloudFront with Origin Access Control instead of making buckets directly public.
+
+---
+
 ### CTL.S3.ACL.ESCALATION.001
 
 **No Public ACL Modification**
@@ -1840,6 +1855,21 @@ S3 bucket ACLs must not be writable by AllUsers or AuthenticatedUsers. WRITE_ACP
 S3 bucket ACLs must not grant FULL_CONTROL to AllUsers or AuthenticatedUsers. FULL_CONTROL is the worst-case ACL misconfiguration — the grantee can read, write, and delete objects and modify the ACL itself.
 
 **Remediation:** Replace the bucket ACL with "BucketOwnerFullControl" or remove the FULL_CONTROL grant to public groups. Enable S3 Public Access Block with BlockPublicAcls and IgnorePublicAcls set to true.
+
+---
+
+### CTL.S3.ACL.OBJECT.001
+
+**Objects Must Not Be Individually Public via ACL**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3; gdpr: Art.32; iso_27001_2022: A.8.3; nist_800_53_r5: AC-3; soc2: CC6.1;
+
+S3 buckets must not contain objects that are individually made public through object-level ACL grants. When a bucket itself is not public, individual objects can still be accessible from the internet if their ACL grants read access to AllUsers or AuthenticatedUsers. This is the "Objects can be public" status in AWS — the bucket is private but objects inside it are exposed. This is a primary vector for data leakage through misplaced sensitive files, where a single object with a public ACL in an otherwise private bucket exposes data that was never intended to be public.
+
+**Remediation:** Set Object Ownership to BucketOwnerEnforced to disable all ACLs. If that is not immediately possible, enable S3 Block Public Access with IgnorePublicAcls set to true, then audit object ACLs using S3 Inventory with the optional ACL fields. Remove public grants from individual objects using aws s3api put-object-acl.
 
 ---
 
@@ -2108,6 +2138,21 @@ S3 bucket safety cannot be proven when policy or ACL data is missing from the sn
 
 ---
 
+### CTL.S3.INVENTORY.001
+
+**S3 Inventory Must Be Enabled for Visibility**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: CM-8; hipaa: 164.312(b); nist_800_53_r5: CM-8; soc2: CC7.2;
+
+S3 buckets must have S3 Inventory configured to provide a complete manifest of all objects, their storage classes, encryption status, and optionally their ACL grants. Without Inventory, organizations have no baseline visibility into what data exists in a bucket, making it impossible to detect misplaced sensitive files, verify encryption coverage, or audit object-level access. S3 Inventory is essential when Amazon Macie is not deployed, as it provides the only mechanism for systematic bucket content auditing at scale.
+
+**Remediation:** Configure S3 Inventory on the bucket using aws s3api put-bucket-inventory-configuration. Include optional fields for encryption status and ACL grants. Set the inventory to report daily or weekly to a secured destination bucket. Use the inventory reports to audit for misplaced sensitive data, unencrypted objects, and objects with public ACL grants.
+
+---
+
 ### CTL.S3.LIFECYCLE.001
 
 **Retention-Tagged Buckets Must Have Lifecycle Rules**
@@ -2280,6 +2325,21 @@ VPC endpoint policy must be attached and must not be the default full-access pol
 S3 bucket access must be restricted by a VPC endpoint condition (aws:SourceVpce) or an IP address condition (aws:SourceIp) in the bucket policy. Without network-level restrictions, the bucket is reachable from any network path. This control enforces transmission security for PHI workloads.
 
 **Remediation:** Add a VPC gateway endpoint for S3 and route bucket traffic through it, or add an IP condition (aws:SourceIp) to the bucket policy to restrict access to known CIDR ranges.
+
+---
+
+### CTL.S3.OWNERSHIP.001
+
+**S3 Object Ownership Must Be Bucket Owner Enforced**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 2.1.2; fedramp_moderate: AC-3; iso_27001_2022: A.8.3; nist_800_53_r5: AC-3; soc2: CC6.1;
+
+S3 buckets must have Object Ownership set to BucketOwnerEnforced, which disables ACLs entirely. When ACLs are disabled, the bucket owner automatically owns every object regardless of who uploaded it, and access is controlled exclusively through IAM and bucket policies. This eliminates the entire class of ACL-based exposure: public grants, privilege escalation via WRITE_ACP, and object-level ACL overrides. Since April 2023 new buckets default to BucketOwnerEnforced, but buckets created before this date may still have ACLs enabled.
+
+**Remediation:** Set Object Ownership to BucketOwnerEnforced using aws s3api put-bucket-ownership-controls. This disables all ACLs on the bucket. Before enabling, audit existing ACL grants and migrate any legitimate access to bucket policies or IAM policies. All existing ACL-based access will stop working once BucketOwnerEnforced is set.
 
 ---
 
