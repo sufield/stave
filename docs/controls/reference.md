@@ -3,24 +3,24 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 228
-**Pack hash:** `71c5e883d886335dbb2032b6f935547ccd10815df3d6de1bc6e6a7a5d0047ce8`
+**Total controls:** 232
+**Pack hash:** `543475450d77ebcbbe798939c4ddbd094ad940e066832e9662447e937427423d`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 32 |
-| high | 96 |
+| high | 98 |
 | info | 16 |
 | low | 13 |
-| medium | 71 |
+| medium | 73 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 185 |
+| exposure | 188 |
 | governance | 2 |
-| identity | 37 |
+| identity | 38 |
 | storage | 4 |
 
 ## Controls
@@ -763,6 +763,21 @@ The observation snapshot is missing required DynamoDB properties.
 
 ---
 
+### CTL.DYNAMODB.PITR.001
+
+**Point-in-Time Recovery Must Be Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: CP-9; hipaa: 164.308(a)(7); nist_800_53_r5: CP-9; soc2: A1.1;
+
+DynamoDB tables must have point-in-time recovery (PITR) enabled. Without PITR, accidental deletes, application bugs, or ransomware that corrupts table data cannot be recovered. PITR provides continuous backups with per-second granularity for the last 35 days.
+
+**Remediation:** Enable PITR using aws dynamodb update-continuous-backups --table-name TABLE --point-in-time-recovery-specification PointInTimeRecoveryEnabled=true.
+
+---
+
 ### CTL.EC2.EBS.ENCRYPT.001
 
 **EBS Volumes Must Be Encrypted**
@@ -893,6 +908,21 @@ ECR repositories must not be publicly accessible. A public ECR repository allows
 ECR repositories must have image scanning enabled (basic or enhanced). Without scanning, container images with known vulnerabilities are deployed to production undetected.
 
 **Remediation:** Enable scan-on-push in the repository configuration. For enhanced scanning, enable Amazon Inspector ECR integration.
+
+---
+
+### CTL.ELASTICACHE.AUTH.001
+
+**Redis AUTH Token Must Be Set**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3; nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+ElastiCache Redis clusters must have an AUTH token configured. Without AUTH, any client with network access can read and write data. Combined with a missing VPC or open security group, this creates an unauthenticated database exposure — the same pattern as the Darkbeam Elasticsearch breach.
+
+**Remediation:** Set an AUTH token using aws elasticache modify-replication-group --auth-token. Ensure transit encryption is also enabled (required for AUTH). Rotate the token periodically.
 
 ---
 
@@ -1398,6 +1428,21 @@ The IAM account password policy must prevent reuse of the last 24 passwords. Wit
 No IAM policy with Effect Allow on Action "*" and Resource "*" should be attached to any IAM entity. Full admin policies violate least privilege and grant unrestricted access to all services.
 
 **Remediation:** Replace wildcard admin policies with scoped policies granting only the specific permissions required. Use AWS Access Analyzer to generate least-privilege policies from CloudTrail activity.
+
+---
+
+### CTL.IAM.POLICY.ASSUMEROLE.001
+
+**AssumeRole Must Be Scoped to Specific Roles**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6; nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+sts:AssumeRole permissions must be scoped to specific role ARNs, not wildcard Resource *. With unrestricted AssumeRole, a compromised identity can assume any role in the account — including admin roles, cross-account trust roles, and service roles with elevated permissions. This is a direct privilege escalation path.
+
+**Remediation:** Restrict sts:AssumeRole to specific role ARNs in the Resource field. Use IAM conditions like aws:PrincipalTag to further limit which roles can be assumed.
 
 ---
 
@@ -3267,6 +3312,21 @@ SQS queues must use server-side encryption with a KMS key. Unencrypted queues ex
 The observation snapshot is missing required SQS queue properties.
 
 **Remediation:** Ensure the extractor calls aws sqs get-queue-attributes and maps the KmsMasterKeyId to the messaging.encryption observation properties.
+
+---
+
+### CTL.VPC.DEFAULT.001
+
+**Default VPC Must Not Be Used**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 5.4; fedramp_moderate: SC-7; nist_800_53_r5: SC-7; soc2: CC6.6;
+
+Workloads must not run in the default VPC. The default VPC is created automatically in every region with permissive settings: a public subnet in each AZ, an internet gateway, and a default security group that allows all internal traffic. These defaults create implicit public exposure that custom VPCs avoid. Production and sensitive workloads must use purpose-built VPCs with explicit network design.
+
+**Remediation:** Create a custom VPC with private subnets, explicit route tables, and restrictive security groups. Migrate workloads from the default VPC. Consider deleting the default VPC in production accounts if no workloads require it.
 
 ---
 

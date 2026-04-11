@@ -1,0 +1,18 @@
+{
+  "assets": [
+    {
+      "id": "test-iam-user",
+      "properties": {
+        "identity": {
+          "policies": {
+            "assumerole_unrestricted": true
+          }
+        }
+      },
+      "type": "aws_iam_user",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1"
+}

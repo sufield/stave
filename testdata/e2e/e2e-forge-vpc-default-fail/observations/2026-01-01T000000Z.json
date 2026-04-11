@@ -1,0 +1,16 @@
+{
+  "assets": [
+    {
+      "id": "test-vpc",
+      "properties": {
+        "network": {
+          "is_default_vpc": true
+        }
+      },
+      "type": "aws_vpc",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1"
+}
