@@ -48,7 +48,7 @@ Controls are organized by domain and category:
 
 ```
 controls/
-├── s3/                  # AWS S3 storage (55 controls)
+├── s3/                  # AWS S3 storage (64 controls)
 ├── iam/                 # AWS IAM identity (21 controls)
 ├── cloudwatch/          # AWS CloudWatch (17 controls)
 ├── rds/                 # AWS RDS (10 controls)

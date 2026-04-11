@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.BOUNDARY.001
+name: IAM Roles Must Have Permissions Boundary
+description: >
+  IAM roles must have a permissions boundary attached. A permissions
+  boundary sets a ceiling on the effective permissions of a role,
+  regardless of what identity policies are attached. Without a
+  boundary, a developer who can create or modify roles has no ceiling
+  preventing the provisioned role from granting full admin access.
+domain: identity
+severity: medium
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-6"
+  fedramp_moderate: "AC-6"
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    IAM role does not have a permissions boundary. The role's effective
+    permissions are limited only by its identity policies, with no
+    organizational ceiling.
+  action: >
+    Attach a permissions boundary policy to the role using aws iam
+    put-role-permissions-boundary. Define a boundary that caps
+    permissions to the services and actions required for the role's
+    documented function.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "role": {
+          "has_permissions_boundary": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.role.has_permissions_boundary
+      op: eq
+      value: false

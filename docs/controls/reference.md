@@ -3,24 +3,24 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 197
-**Pack hash:** `0c350368961dfc538828e3129a927f1d689d5f8738e846e4fe253946a9d4ea93`
+**Total controls:** 204
+**Pack hash:** `a56749e773e152b97eaf99a9eea4bf8c7d64e5de4b94ede20a6c273c5ed2dc53`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 26 |
-| high | 81 |
+| critical | 27 |
+| high | 83 |
 | info | 16 |
 | low | 11 |
-| medium | 63 |
+| medium | 67 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 164 |
+| exposure | 165 |
 | governance | 2 |
-| identity | 27 |
+| identity | 33 |
 | storage | 4 |
 
 ## Controls
@@ -421,6 +421,21 @@ A CloudWatch metric filter and alarm must monitor network gateway changes. Gatew
 A CloudWatch metric filter and alarm must monitor iam policy changes. IAM policy modifications (CreatePolicy, DeletePolicy, AttachRolePolicy) are a primary persistence mechanism for attackers.
 
 **Remediation:** Create a CloudWatch log metric filter on the CloudTrail log group matching the CIS-specified pattern for iam policy changes, then create an alarm with an SNS notification action.
+
+---
+
+### CTL.CLOUDWATCH.MONITOR.MFADEVICE.001
+
+**MFA Device Changes Must Be Monitored**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SI-4; nist_800_53_r5: SI-4; soc2: CC7.1;
+
+A CloudWatch metric filter and alarm must monitor MFA device enrollment and deactivation events. MFA device changes (CreateVirtualMFADevice, EnableMFADevice, DeactivateMFADevice, DeleteVirtualMFADevice) are a persistence mechanism — an attacker who gains temporary access can enroll their own MFA device to maintain access after the victim resets their password.
+
+**Remediation:** Create a CloudWatch log metric filter on the CloudTrail log group matching CreateVirtualMFADevice, EnableMFADevice, DeactivateMFADevice, and DeleteVirtualMFADevice events. Create an alarm with an SNS notification action to alert on any MFA device change.
 
 ---
 
@@ -1058,6 +1073,21 @@ The observation snapshot is missing required GuardDuty properties.
 
 ---
 
+### CTL.IAM.ACCOUNT.INACTIVE.001
+
+**Inactive Accounts Must Be Disabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 1.12; fedramp_moderate: AC-2; hipaa: 164.312(a)(2)(i); nist_800_53_r5: AC-2; pci_dss_v4.0: 8.1.4; soc2: CC6.2;
+
+IAM accounts with no login or API activity for 90 days or more must be disabled. Dormant accounts are high-value targets — they have permissions but no active user monitoring their usage. Legacy accounts, test accounts, and accounts from departed employees accumulate over time and provide persistent, unmonitored access paths for attackers.
+
+**Remediation:** Disable or delete the IAM user. If the account is still needed, review and renew its access with a documented justification and an updated expiry date.
+
+---
+
 ### CTL.IAM.ANALYZER.001
 
 **IAM Access Analyzer Must Be Enabled**
@@ -1070,6 +1100,21 @@ The observation snapshot is missing required GuardDuty properties.
 IAM Access Analyzer must be enabled in every region. Access Analyzer identifies resources shared with external entities and generates findings for unintended exposure.
 
 **Remediation:** Create an Access Analyzer in each region: aws accessanalyzer create-analyzer --analyzer-name default --type ACCOUNT --region <region>
+
+---
+
+### CTL.IAM.BOUNDARY.001
+
+**IAM Roles Must Have Permissions Boundary**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6; nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+IAM roles must have a permissions boundary attached. A permissions boundary sets a ceiling on the effective permissions of a role, regardless of what identity policies are attached. Without a boundary, a developer who can create or modify roles has no ceiling preventing the provisioned role from granting full admin access.
+
+**Remediation:** Attach a permissions boundary policy to the role using aws iam put-role-permissions-boundary. Define a boundary that caps permissions to the services and actions required for the role's documented function.
 
 ---
 
@@ -1192,6 +1237,21 @@ IAM account safety cannot be proven when root account MFA status or access key d
 
 ---
 
+### CTL.IAM.MFA.HWKEY.001
+
+**Privileged Accounts Must Use Hardware MFA**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 1.6; fedramp_moderate: IA-2(1); gdpr: Art.32; hipaa: 164.312(d); iso_27001_2022: A.8.5; nist_800_53_r5: IA-2(1); nist_csf_2.0: PR.AA; pci_dss_v4.0: 8.3.1; soc2: CC6.1;
+
+IAM users with admin access must use a hardware MFA device (FIDO2, YubiKey, Gemalto), not a virtual MFA app or SMS. Virtual MFA can be compromised through device theft, seed extraction, or SIM swap attacks. Hardware tokens cannot be cloned or phished via device compromise, providing stronger protection for the most privileged identities.
+
+**Remediation:** Replace virtual MFA with a hardware FIDO2 or TOTP device. Remove the existing virtual MFA device and enroll a hardware token via IAM > Users > Security credentials > MFA.
+
+---
+
 ### CTL.IAM.PASSWORD.COMPLEXITY.001
 
 **Password Policy Must Require All Character Types**
@@ -1267,6 +1327,21 @@ The AWSCloudShellFullAccess managed policy should not be attached to any IAM ent
 
 ---
 
+### CTL.IAM.POLICY.COMPLEXITY.001
+
+**IAM Policy Complexity Must Be Bounded**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6; nist_800_53_r5: AC-6; soc2: CC6.1;
+
+IAM policies with more than 25 statements indicate excessive complexity that increases misconfiguration risk. Complex policies are harder to audit, more likely to contain shadowed statements or contradictory rules, and resist review. Policy complexity is itself a risk factor — it obscures the effective permissions and makes least-privilege verification impractical.
+
+**Remediation:** Refactor complex policies into smaller, focused policies scoped to specific services. Use policy conditions and resource-scoped statements instead of many broad statements. Consider using AWS managed policies where appropriate.
+
+---
+
 ### CTL.IAM.POLICY.DIRECT.001
 
 **No Direct Policy Attachment on IAM Users**
@@ -1282,6 +1357,21 @@ IAM users must not have managed policies attached directly. Policies should be a
 
 ---
 
+### CTL.IAM.POLICY.ESCALATION.001
+
+**IAM Policies Must Not Grant Self-Modification**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.8.3; nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+IAM policies must not grant the ability to modify, create, or attach policies to the principal's own role or user. Permissions like iam:CreatePolicyVersion, iam:AttachRolePolicy, and iam:PutRolePolicy scoped to self enable privilege escalation — a compromised identity can grant itself full admin access without needing any other vulnerability.
+
+**Remediation:** Remove iam:CreatePolicyVersion, iam:AttachRolePolicy, and iam:PutRolePolicy permissions from non-admin roles. Use SCPs to deny self-modification at the organization level.
+
+---
+
 ### CTL.IAM.POLICY.INLINE.001
 
 **No Inline Policies on IAM Users**
@@ -1294,6 +1384,21 @@ IAM users must not have managed policies attached directly. Policies should be a
 IAM users must not have inline policies attached directly. Inline policies are harder to audit, cannot be reused, and create per-user policy sprawl that resists central governance.
 
 **Remediation:** Convert inline policies to managed policies and attach via groups or roles. Delete the inline policies from the user.
+
+---
+
+### CTL.IAM.POLICY.PASSROLE.001
+
+**PassRole Must Be Scoped to Specific Roles**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.8.3; nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+iam:PassRole permissions must be scoped to specific role ARNs, not wildcard resource *. PassRole allows a principal to assign an IAM role to an AWS service (Lambda, EC2, ECS). With a wildcard resource, an attacker can pass any role — including highly privileged ones — to a service they control, achieving privilege escalation without directly modifying IAM policies.
+
+**Remediation:** Restrict iam:PassRole to specific role ARNs in the Resource field. Example: arn:aws:iam::123456789012:role/my-lambda-role. Use IAM conditions like iam:PassedToService to further limit which services can receive the role.
 
 ---
 

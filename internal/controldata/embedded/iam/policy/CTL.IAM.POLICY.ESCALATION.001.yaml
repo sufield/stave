@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.POLICY.ESCALATION.001
+name: IAM Policies Must Not Grant Self-Modification
+description: >
+  IAM policies must not grant the ability to modify, create, or attach
+  policies to the principal's own role or user. Permissions like
+  iam:CreatePolicyVersion, iam:AttachRolePolicy, and iam:PutRolePolicy
+  scoped to self enable privilege escalation — a compromised identity
+  can grant itself full admin access without needing any other
+  vulnerability.
+domain: identity
+severity: critical
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-6"
+  fedramp_moderate: "AC-6"
+  iso_27001_2022: "A.8.3"
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    IAM entity has policies that allow self-modification of its own
+    permissions. A compromised identity can escalate to full admin.
+  action: >
+    Remove iam:CreatePolicyVersion, iam:AttachRolePolicy, and
+    iam:PutRolePolicy permissions from non-admin roles. Use SCPs to
+    deny self-modification at the organization level.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "policies": {
+          "has_self_modify": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.policies.has_self_modify
+      op: eq
+      value: true

@@ -29,7 +29,7 @@ not technical configuration.
 
 ## Relationship to NIST Profile
 
-FedRAMP inherits all NIST 800-53 controls. Running `--profile fedramp`
+FedRAMP inherits all NIST 800-64 controls. Running `--profile fedramp`
 evaluates the same technical controls as `--profile nist-800-53` with
 additional FIPS cryptography validation. The organizational requirements
 (ConMon, POA&M, 3PAO, personnel) are documented as MANUAL entries.
