@@ -53,7 +53,7 @@ Output:
 
 ## What the S3 pack covers
 
-The `aws-s3` profile evaluates 64 controls across these categories:
+The `aws-s3` profile evaluates 67 controls across these categories:
 
 | Category | Controls | What they detect |
 |----------|----------|-----------------|

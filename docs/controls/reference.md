@@ -3,22 +3,22 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 207
-**Pack hash:** `170c80d42ab572a9729b71588c9421b5e54ec68aea6b154b34bbacdd2466930d`
+**Total controls:** 217
+**Pack hash:** `4901e3dea9fad716aecd178df295ad425505e7875d886ea39a3ee04772610e4d`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 28 |
-| high | 85 |
+| critical | 29 |
+| high | 92 |
 | info | 16 |
-| low | 11 |
-| medium | 67 |
+| low | 12 |
+| medium | 68 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 165 |
+| exposure | 175 |
 | governance | 2 |
 | identity | 36 |
 | storage | 4 |
@@ -1730,6 +1730,110 @@ Customer-created symmetric KMS keys must have automatic key rotation enabled. Ke
 
 ---
 
+### CTL.OPENSEARCH.ENCRYPT.001
+
+**Encryption at Rest Must Be Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-28; hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-28; pci_dss_v4.0: 3.4.1; soc2: CC6.1;
+
+OpenSearch domains must have encryption at rest enabled using AWS KMS. Unencrypted data at rest is exposed if the underlying storage is compromised or if snapshots are shared.
+
+**Remediation:** Enable encryption at rest in the domain configuration. Note: encryption at rest can only be enabled at domain creation time for some versions. If needed, create a new domain with encryption enabled and migrate data.
+
+---
+
+### CTL.OPENSEARCH.ENCRYPT.002
+
+**Node-to-Node Encryption Must Be Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-8; hipaa: 164.312(e)(2)(ii); nist_800_53_r5: SC-8; soc2: CC6.7;
+
+OpenSearch domains must have node-to-node encryption enabled. Without it, data transmitted between nodes within the cluster travels unencrypted, exposing it to interception on the internal network. Node-to-node encryption is a prerequisite for fine-grained access control.
+
+**Remediation:** Enable node-to-node encryption in the domain configuration. This is required for fine-grained access control.
+
+---
+
+### CTL.OPENSEARCH.FGAC.001
+
+**Fine-Grained Access Control Must Be Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3; nist_800_53_r5: AC-3; soc2: CC6.1;
+
+OpenSearch domains must have fine-grained access control (FGAC) enabled. Without FGAC, access is controlled only by resource-based policies which cannot restrict access at the index, document, or field level. FGAC enables role-based access control within the cluster, authentication via IAM or internal users, and audit logging of all access decisions.
+
+**Remediation:** Enable fine-grained access control in the domain security configuration. This requires enabling node-to-node encryption and encryption at rest as prerequisites.
+
+---
+
+### CTL.OPENSEARCH.HTTPS.001
+
+**HTTPS Must Be Enforced**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-8; hipaa: 164.312(e)(1); nist_800_53_r5: SC-8; pci_dss_v4.0: 4.2.1; soc2: CC6.7;
+
+OpenSearch domains must enforce HTTPS for all connections. Without HTTPS enforcement, clients can connect over unencrypted HTTP, exposing queries, results, and credentials in transit.
+
+**Remediation:** Enable HTTPS enforcement in the domain endpoint options. Set the TLS security policy to Policy-Min-TLS-1-2-PFS-2023-10 for current best practice.
+
+---
+
+### CTL.OPENSEARCH.INCOMPLETE.001
+
+**Complete Data Required for OpenSearch Assessment**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+
+OpenSearch domain safety cannot be proven when access control data is missing from the snapshot. The extractor must populate search_service.access.publicly_accessible to evaluate public exposure controls.
+
+**Remediation:** Re-run the extractor with OpenSearch permissions: es:DescribeDomain, es:DescribeDomainConfig.
+
+---
+
+### CTL.OPENSEARCH.LOG.001
+
+**Audit Logging Must Be Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AU-2; hipaa: 164.312(b); nist_800_53_r5: AU-2; soc2: CC7.1;
+
+OpenSearch domains must have audit logging enabled to track authentication attempts, access decisions, and data operations. Without audit logging, unauthorized access to the cluster cannot be detected or investigated after the fact.
+
+**Remediation:** Enable audit logging in the domain configuration. Configure a CloudWatch log group as the destination. Fine-grained access control must be enabled as a prerequisite for audit logging.
+
+---
+
+### CTL.OPENSEARCH.PUBLIC.001
+
+**OpenSearch Domain Must Not Be Publicly Accessible**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.8.20; nist_800_53_r5: AC-3; pci_dss_v4.0: 1.3.1; soc2: CC6.1;
+
+OpenSearch domains must not have public endpoints accessible from the internet. A publicly accessible domain allows anyone to query, index, or enumerate data without network-level restrictions. The Darkbeam breach (2023) exposed 3.8 billion records from an Elasticsearch instance left unprotected on the public internet. Domains must be deployed within a VPC.
+
+**Remediation:** Migrate the domain to a VPC. Create a new domain with VPC configuration specifying private subnets and security groups. Use VPN, bastion, or AWS PrivateLink for authorized access.
+
+---
+
 ### CTL.RDS.AUTOUPGRADE.001
 
 **RDS Auto Minor Version Upgrade Must Be Enabled**
@@ -1965,6 +2069,21 @@ When S3 Access Grants are enabled, IAM Identity Center should be attached to the
 
 ---
 
+### CTL.S3.ACCESS.PHI.001
+
+**PHI Bucket Access Must Be Scoped to Specific Principals**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-6; hipaa: 164.502(b); nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+S3 buckets tagged with data-classification=phi must have access restricted to explicitly named principals and prefixes. Broad bucket-level access (wildcard principals, unrestricted actions) on PHI data violates the HIPAA minimum necessary standard (§164.502(b)). Access must be narrowed to the exact IAM roles, account IDs, and object prefixes required for each authorized workflow.
+
+**Remediation:** Restrict bucket policy to named IAM role ARNs and specific object prefixes. Remove wildcard principals and broad s3:* actions. Use IAM Access Analyzer to identify unused permissions and generate least-privilege policies from CloudTrail activity.
+
+---
+
 ### CTL.S3.ACCOUNT.PAB.001
 
 **Account-Level Block Public Access Must Be Enabled**
@@ -2091,6 +2210,21 @@ S3 buckets must not grant read access to all authenticated AWS users. Authentica
 S3 buckets must not grant write or delete access to all authenticated AWS users. AuthenticatedUsers scope means any AWS account holder worldwide can upload, overwrite, or delete objects — enabling data injection, ransomware, and supply chain poisoning.
 
 **Remediation:** Remove the ACL grant or policy statement granting write access to AuthenticatedUsers. Replace with specific IAM principals or use bucket policy with explicit account IDs. Enable S3 Public Access Block with BlockPublicAcls and IgnorePublicAcls set to true.
+
+---
+
+### CTL.S3.BREACH.DETECT.001
+
+**PHI Buckets Must Have Complete Detection Infrastructure**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: IR-4; hipaa: 164.400; nist_800_53_r5: IR-4; soc2: CC7.1;
+
+S3 buckets tagged with data-classification=phi must have all four detection components active: server access logging, CloudTrail object-level logging, GuardDuty S3 protection, and AWS Config recording. Missing any one component creates a gap in breach detection and incident investigation capability. HIPAA §§164.400-414 requires the ability to detect and investigate unauthorized access to PHI.
+
+**Remediation:** Ensure all four components are active for this bucket: 1. Server access logging (aws s3api put-bucket-logging) 2. CloudTrail object-level data events (aws cloudtrail put-event-selectors) 3. GuardDuty S3 protection (aws guardduty update-detector) 4. AWS Config recording (aws configservice put-configuration-recorder)
 
 ---
 
@@ -2387,6 +2521,21 @@ S3 buckets tagged with data-classification=phi that have Object Lock enabled mus
 S3 buckets must have server access logging enabled for audit trail and visibility into data access patterns.
 
 **Remediation:** Enable S3 server access logging and specify a target bucket for log delivery. Ensure the target bucket has appropriate access controls and is in the same region.
+
+---
+
+### CTL.S3.MALWARE.001
+
+**PHI Buckets Must Have Malware Scanning Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SI-3; hipaa: 164.308(a)(5)(ii)(B); nist_800_53_r5: SI-3; soc2: CC6.8;
+
+S3 buckets tagged with data-classification=phi must have malware scanning enabled via GuardDuty S3 Malware Protection or an equivalent scanning pipeline. Without scanning, uploaded files containing malware can persist in PHI storage indefinitely, creating both a security risk (malware distribution) and a compliance violation (HIPAA §164.308(a)(5)(ii)(B) requires protection against malicious software).
+
+**Remediation:** Enable GuardDuty S3 Malware Protection for the bucket. Navigate to GuardDuty > S3 Protection > Enable. Alternatively, deploy a Lambda-based AV scanning pipeline triggered by S3 PutObject events.
 
 ---
 

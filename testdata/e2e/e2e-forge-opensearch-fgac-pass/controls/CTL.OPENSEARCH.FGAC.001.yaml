@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.FGAC.001
+name: Fine-Grained Access Control Must Be Enabled
+description: >
+  OpenSearch domains must have fine-grained access control (FGAC)
+  enabled. Without FGAC, access is controlled only by resource-based
+  policies which cannot restrict access at the index, document, or
+  field level. FGAC enables role-based access control within the
+  cluster, authentication via IAM or internal users, and audit
+  logging of all access decisions.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-3"
+  fedramp_moderate: "AC-3"
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    OpenSearch domain does not have fine-grained access control
+    enabled. Access cannot be restricted at the index or document level.
+  action: >
+    Enable fine-grained access control in the domain security
+    configuration. This requires enabling node-to-node encryption and
+    encryption at rest as prerequisites.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "access": {
+          "fgac_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.access.fgac_enabled
+      op: eq
+      value: false

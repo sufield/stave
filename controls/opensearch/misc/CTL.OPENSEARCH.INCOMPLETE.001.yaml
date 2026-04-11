@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.INCOMPLETE.001
+name: Complete Data Required for OpenSearch Assessment
+description: >
+  OpenSearch domain safety cannot be proven when access control data
+  is missing from the snapshot. The extractor must populate
+  search_service.access.publicly_accessible to evaluate public
+  exposure controls.
+domain: exposure
+severity: low
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    OpenSearch assessment data is incomplete. The extractor did not
+    populate required access control properties.
+  action: >
+    Re-run the extractor with OpenSearch permissions:
+    es:DescribeDomain, es:DescribeDomainConfig.
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.access.publicly_accessible
+      op: missing
+      value: true
