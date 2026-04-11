@@ -1,0 +1,43 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.DEFAULT.001
+name: Default VPC Must Not Be Used
+description: >
+  Workloads must not run in the default VPC. The default VPC is
+  created automatically in every region with permissive settings:
+  a public subnet in each AZ, an internet gateway, and a default
+  security group that allows all internal traffic. These defaults
+  create implicit public exposure that custom VPCs avoid. Production
+  and sensitive workloads must use purpose-built VPCs with explicit
+  network design.
+domain: exposure
+severity: medium
+compliance:
+  cis_aws_v3.0: "5.4"
+  soc2: "CC6.6"
+  nist_800_53_r5: "SC-7"
+  fedramp_moderate: "SC-7"
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Workload is running in the default VPC. The default VPC has
+    permissive network settings that cannot be fully locked down.
+  action: >
+    Create a custom VPC with private subnets, explicit route tables,
+    and restrictive security groups. Migrate workloads from the
+    default VPC. Consider deleting the default VPC in production
+    accounts if no workloads require it.
+  example: |
+    {
+      "network": {
+        "is_default_vpc": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.is_default_vpc
+      op: eq
+      value: true

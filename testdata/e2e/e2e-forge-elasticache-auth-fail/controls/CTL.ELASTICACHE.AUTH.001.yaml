@@ -1,0 +1,40 @@
+dsl_version: ctrl.v1
+id: CTL.ELASTICACHE.AUTH.001
+name: Redis AUTH Token Must Be Set
+description: >
+  ElastiCache Redis clusters must have an AUTH token configured.
+  Without AUTH, any client with network access can read and write
+  data. Combined with a missing VPC or open security group, this
+  creates an unauthenticated database exposure — the same pattern
+  as the Darkbeam Elasticsearch breach.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-3"
+  fedramp_moderate: "AC-3"
+scope_tags:
+  - aws
+  - elasticache
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    ElastiCache Redis cluster does not have an AUTH token. Any client
+    with network access can read and write data without authentication.
+  action: >
+    Set an AUTH token using aws elasticache modify-replication-group
+    --auth-token. Ensure transit encryption is also enabled (required
+    for AUTH). Rotate the token periodically.
+  example: |
+    {
+      "cache": {
+        "auth_token_enabled": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cache.auth_token_enabled
+      op: eq
+      value: false

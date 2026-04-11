@@ -1,0 +1,43 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.POLICY.ASSUMEROLE.001
+name: AssumeRole Must Be Scoped to Specific Roles
+description: >
+  sts:AssumeRole permissions must be scoped to specific role ARNs,
+  not wildcard Resource *. With unrestricted AssumeRole, a compromised
+  identity can assume any role in the account — including admin roles,
+  cross-account trust roles, and service roles with elevated
+  permissions. This is a direct privilege escalation path.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-6"
+  fedramp_moderate: "AC-6"
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    IAM entity has sts:AssumeRole with wildcard Resource. Any role
+    in the account can be assumed, enabling privilege escalation.
+  action: >
+    Restrict sts:AssumeRole to specific role ARNs in the Resource
+    field. Use IAM conditions like aws:PrincipalTag to further
+    limit which roles can be assumed.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "policies": {
+          "assumerole_unrestricted": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.policies.assumerole_unrestricted
+      op: eq
+      value: true

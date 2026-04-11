@@ -1,0 +1,39 @@
+dsl_version: ctrl.v1
+id: CTL.DYNAMODB.PITR.001
+name: Point-in-Time Recovery Must Be Enabled
+description: >
+  DynamoDB tables must have point-in-time recovery (PITR) enabled.
+  Without PITR, accidental deletes, application bugs, or ransomware
+  that corrupts table data cannot be recovered. PITR provides
+  continuous backups with per-second granularity for the last 35 days.
+domain: exposure
+severity: medium
+compliance:
+  hipaa: "164.308(a)(7)"
+  soc2: "A1.1"
+  nist_800_53_r5: "CP-9"
+  fedramp_moderate: "CP-9"
+scope_tags:
+  - aws
+  - dynamodb
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    DynamoDB table does not have point-in-time recovery enabled.
+    Data cannot be recovered from accidental deletes or corruption.
+  action: >
+    Enable PITR using aws dynamodb update-continuous-backups
+    --table-name TABLE --point-in-time-recovery-specification
+    PointInTimeRecoveryEnabled=true.
+  example: |
+    {
+      "database": {
+        "pitr_enabled": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.pitr_enabled
+      op: eq
+      value: false
