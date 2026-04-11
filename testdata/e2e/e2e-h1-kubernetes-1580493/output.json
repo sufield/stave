@@ -1,0 +1,42 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2022-06-01T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2022-05-24T000000Z.json": "50337329d46ba2165f35e618a8c60e69367537598a5a0b1814f3842df21c66db",
+        "2022-06-01T000000Z.json": "537699107945366fcd580adce197a05095f4e92bf8cd5d1b95e24e6044259c89"
+      },
+      "overall": "8bb50330675ad071e4edb8cf20cc5a47a6f0b3729b6f5b0d18ef25cc747eb6a6"
+    },
+    "policy_fingerprint": "1eadbafc9d493baa3596c02d1e20a9cd009ec1ce902c0365266c4069891ab77a"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-h1-kubernetes-1580493/controls",
+      "observations": "testdata/e2e/e2e-h1-kubernetes-1580493/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "cb1eec0e2e60dc2c1c3ab10f41940f342fc736d5",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-h1-kubernetes-1580493/controls/"
+      ]
+    }
+  }
+}

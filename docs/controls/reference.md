@@ -3,15 +3,15 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 185
-**Pack hash:** `4d7acdaece0cb1fcf845d13b18916c82935bd4c5f5668114823abd874949484a`
+**Total controls:** 186
+**Pack hash:** `e0eb0770b02fb20e72804bd9f13301dbe3907b1cf49eacde70bd3e13d61e28c9`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 26 |
-| high | 73 |
+| high | 74 |
 | info | 16 |
 | low | 11 |
 | medium | 59 |
@@ -20,7 +20,7 @@
 |--------|-------|
 | exposure | 154 |
 | governance | 2 |
-| identity | 25 |
+| identity | 26 |
 | storage | 4 |
 
 ## Controls
@@ -1369,6 +1369,21 @@ At least one IAM entity must have the AWSSupportAccess managed policy attached. 
 The Kubernetes API server must have audit logging enabled. Without audit logs, API calls (including unauthorized access attempts) are not recorded for forensic analysis.
 
 **Remediation:** Configure the API server with --audit-policy-file and --audit-log-path. For managed clusters (EKS, GKE), enable control plane logging via the cloud provider console.
+
+---
+
+### CTL.K8S.AUTH.ACCESSKEYMAP.001
+
+**K8s Clusters Must Not Map Identity via AccessKeyID**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_k8s_v1.8.0: 3.1.1; nist_800_53_r5: IA-2; soc2: CC6.1;
+
+Kubernetes clusters using AWS IAM Authenticator must not use {{AccessKeyID}} in identity mapping templates. The AccessKeyID is extracted from client-supplied presigned URL query parameters, not from the STS response, making it vulnerable to parameter injection via case-variant duplication.
+
+**Remediation:** Replace {{AccessKeyID}} with {{SessionName}} or use ARN-based mapping (userARN matching) without template substitution. ARN and SessionName come from the STS GetCallerIdentity response and cannot be manipulated by the client.
 
 ---
 
