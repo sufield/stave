@@ -450,6 +450,7 @@ packs:
       - CTL.CLOUDTRAIL.S3LOG.001
       - CTL.CLOUDTRAIL.DATAWRITE.001
       - CTL.CLOUDTRAIL.DATAREAD.001
+      - CTL.CLOUDTRAIL.RETENTION.001
       - CTL.CLOUDTRAIL.INCOMPLETE.001
   cloudwatch:
     description: AWS CloudWatch observability controls
@@ -580,6 +581,7 @@ packs:
       - CTL.IAM.POLICY.DIRECT.001
       - CTL.IAM.POLICY.ADMIN.001
       - CTL.IAM.POLICY.CLOUDSHELL.001
+      - CTL.IAM.SCP.FULLACCESS.001
       - CTL.IAM.SUPPORT.001
       - CTL.IAM.CERT.EXPIRED.001
       - CTL.IAM.ANALYZER.001
@@ -885,6 +887,9 @@ controls:
   CTL.IAM.POLICY.CLOUDSHELL.001:
     path: internal/controldata/embedded/iam/policy/CTL.IAM.POLICY.CLOUDSHELL.001.yaml
     summary: Restrict AWSCloudShellFullAccess
+  CTL.IAM.SCP.FULLACCESS.001:
+    path: internal/controldata/embedded/iam/policy/CTL.IAM.SCP.FULLACCESS.001.yaml
+    summary: Organizations Must Not Rely Solely on FullAWSAccess SCP
   CTL.IAM.SUPPORT.001:
     path: internal/controldata/embedded/iam/misc/CTL.IAM.SUPPORT.001.yaml
     summary: AWS Support Role Must Exist
@@ -1056,6 +1061,9 @@ controls:
   CTL.CLOUDTRAIL.DATAREAD.001:
     path: internal/controldata/embedded/cloudtrail/logging/CTL.CLOUDTRAIL.DATAREAD.001.yaml
     summary: S3 Object Read Logging Must Be Enabled
+  CTL.CLOUDTRAIL.RETENTION.001:
+    path: internal/controldata/embedded/cloudtrail/logging/CTL.CLOUDTRAIL.RETENTION.001.yaml
+    summary: CloudTrail Logs Must Be Retained Beyond 90 Days
   CTL.CLOUDTRAIL.INCOMPLETE.001:
     path: internal/controldata/embedded/cloudtrail/misc/CTL.CLOUDTRAIL.INCOMPLETE.001.yaml
     summary: Complete Data Required for CloudTrail Assessment

@@ -3,24 +3,24 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 186
-**Pack hash:** `e0eb0770b02fb20e72804bd9f13301dbe3907b1cf49eacde70bd3e13d61e28c9`
+**Total controls:** 188
+**Pack hash:** `5c2b7f96865d1dcdd5608fe3ada1fc10f43ffb06f1a0e6736e8cab47063e6648`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 26 |
-| high | 74 |
+| high | 76 |
 | info | 16 |
 | low | 11 |
 | medium | 59 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 154 |
+| exposure | 155 |
 | governance | 2 |
-| identity | 26 |
+| identity | 27 |
 | storage | 4 |
 
 ## Controls
@@ -272,6 +272,21 @@ CloudTrail logs must be encrypted at rest using a KMS customer-managed key. Defa
 The observation snapshot is missing required CloudTrail properties. A safety assessment cannot be completed without trail configuration data.
 
 **Remediation:** Ensure the extractor calls aws cloudtrail describe-trails and aws cloudtrail get-trail-status and maps the response to the audit_trail observation properties.
+
+---
+
+### CTL.CLOUDTRAIL.RETENTION.001
+
+**CloudTrail Logs Must Be Retained Beyond 90 Days**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 3.3; fedramp_moderate: AU-11; gdpr: Art.30; hipaa: 164.312(b); iso_27001_2022: A.8.15; nist_800_53_r5: AU-11; nist_csf_2.0: DE.AE; pci_dss_v4.0: 10.7.1; soc2: CC7.1;
+
+CloudTrail trail must deliver logs to an S3 bucket or CloudWatch Logs group with a retention policy that preserves logs beyond the 90-day CloudTrail Events History window. Without long-term retention, forensic investigation of incidents older than 90 days is impossible.
+
+**Remediation:** Configure the trail to deliver logs to an S3 bucket with a lifecycle policy that retains objects for at least 365 days. Alternatively, deliver logs to a CloudWatch Logs group with a retention policy of 365 days or more.
 
 ---
 
@@ -1339,6 +1354,21 @@ The AWS root account must have multi-factor authentication enabled. Root has unr
 The root account must not be used for day-to-day operations. Root activity should be limited to account setup tasks. Recent root usage indicates operational reliance on root credentials.
 
 **Remediation:** Create IAM admin users or roles for daily operations. Lock root credentials and use them only for account-level tasks.
+
+---
+
+### CTL.IAM.SCP.FULLACCESS.001
+
+**Organizations Must Not Rely Solely on FullAWSAccess SCP**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.8.3; nist_800_53_r5: AC-6; nist_csf_2.0: PR.AA; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+AWS Organizations must have restrictive Service Control Policies beyond the default FullAWSAccess SCP. An organization that only has FullAWSAccess applied has no organizational guardrails — any IAM permission granted within a member account is allowed, including access to unused services that expand the attack surface.
+
+**Remediation:** Create restrictive SCPs that deny unused services and dangerous actions. Apply them to organizational units. Keep FullAWSAccess on the root but add deny-based SCPs to OUs that restrict the effective permissions.
 
 ---
 

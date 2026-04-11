@@ -1,0 +1,42 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-10T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "da315df9af942a7f067edecf3abf7b7f7c920ac967aa249408a7064a78a4bc99",
+        "2026-01-10T000000Z.json": "5765ac4cda5b807f12cfb2db971e19e0ddfdd44d68766e8524689f809a685f6a"
+      },
+      "overall": "bb1c49de1f0af052bcd1cc6cdb46b0f7932dd1be1d2f179ab9f92e25c7a51998"
+    },
+    "policy_fingerprint": "5e0f793505fcb32b66861258eec1fa3b06b1c815dc74988035806883313fd0db"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-iam-scp-fullaccess/controls",
+      "observations": "testdata/e2e/e2e-iam-scp-fullaccess/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "e81a174ed8964dc2c126a4286c8f44e914a1917a",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-iam-scp-fullaccess/controls/"
+      ]
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-10T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "f1076690a4ae40acf0f7bb5ca1abc2161226047bd824f1664e8773707dc4ac18",
+        "2026-01-10T000000Z.json": "54136b0c185b9a1185baffc0e8a076f192c28fce3b0fe755f16eff9e86addc6b"
+      },
+      "overall": "f22bca4be6f3b61563ca920ba6ec2504f7d94fda56b9c6a50984be250208b52c"
+    },
+    "policy_fingerprint": "53cad94c86c3dc799f46889151eb2d6e33a377e429b47f0c2573fbfdee29841d"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-cloudtrail-retention/controls",
+      "observations": "testdata/e2e/e2e-cloudtrail-retention/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "e81a174ed8964dc2c126a4286c8f44e914a1917a",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-cloudtrail-retention/controls/"
+      ]
+    }
+  }
+}
