@@ -1,0 +1,93 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "1c01c5abeebeb702626c75227b2a3aa4e18d7735fe69e2b40a146de6219e4b94",
+        "2026-01-11T000000Z.json": "daf4c3a7533601b713a37c5b16041f4a21d8b198120b24dcdaefdfc0ffa4f875"
+      },
+      "overall": "998c74284f157fa98c978f6a7a6e9e419c492b6eb8285b14f1b938d54627aae5"
+    },
+    "policy_fingerprint": "930c0d29cb8fba0e2dc447fc8ec5629b61375b43c6a5019781e7a942b3f68852"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.CLOUDWATCH.MONITOR.MFADEVICE.001",
+      "asset_id": "test-cloudwatch-account",
+      "asset_type": "aws_cloudwatch_account",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.CLOUDWATCH.MONITOR.MFADEVICE.001",
+      "control_name": "MFA Device Changes Must Be Monitored",
+      "control_description": "A CloudWatch metric filter and alarm must monitor MFA device enrollment and deactivation events. MFA device changes (CreateVirtualMFADevice, EnableMFADevice, DeactivateMFADevice, DeleteVirtualMFADevice) are a persistence mechanism — an attacker who gains temporary access can enroll their own MFA device to maintain access after the victim resets their password.\n",
+      "asset_id": "test-cloudwatch-account",
+      "asset_type": "aws_cloudwatch_account",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "monitoring.metric_filters.mfa_device_changes.exists",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "fedramp_moderate": "SI-4",
+        "nist_800_53_r5": "SI-4",
+        "soc2": "CC7.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "No metric filter or alarm is configured to monitor MFA device changes. Unauthorized MFA enrollment goes undetected.",
+        "action": "Create a CloudWatch log metric filter on the CloudTrail log group matching CreateVirtualMFADevice, EnableMFADevice, DeactivateMFADevice, and DeleteVirtualMFADevice events. Create an alarm with an SNS notification action to alert on any MFA device change.",
+        "example": "{\n  \"monitoring\": {\n    \"kind\": \"account\",\n    \"metric_filters\": {\n      \"mfa_device_changes\": {\n        \"exists\": true\n      }\n    },\n    \"alarms\": {\n      \"mfa_device_changes\": {\n        \"exists\": true,\n        \"sns_topic_arn\": \"arn:aws:sns:us-east-1:123456789012:security-alerts\"\n      }\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-cloudwatch-monitor-mfadevice-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-cloudwatch-monitor-mfadevice-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
+    }
+  }
+}

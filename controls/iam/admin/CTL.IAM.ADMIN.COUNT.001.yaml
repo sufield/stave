@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ADMIN.COUNT.001
+name: Admin User Count Must Not Exceed Threshold
+description: >
+  AWS accounts must have no more than 2 users with full administrator
+  access. Excessive admin accounts expand the credential compromise
+  surface and violate least privilege. Use IAM roles with temporary
+  elevation (break-glass) instead of permanent admin access.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-6(5)"
+  cis_aws_v3.0: "1.16"
+  pci_dss_v4.0: "7.2.2"
+  fedramp_moderate: "AC-6(5)"
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params:
+  base_impact: 8
+  attack_stage: persistence
+remediation:
+  description: >
+    Account has more than 2 users with full administrator access.
+    Each additional admin is an additional credential compromise path.
+  action: >
+    Reduce admin users to 2 or fewer. Convert permanent admin access
+    to IAM roles with temporary elevation via sts:AssumeRole. Use
+    IAM Access Analyzer to identify unused admin permissions.
+  example: |
+    {
+      "identity": {
+        "kind": "account_summary",
+        "admin_user_count": 2
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: account_summary
+    - field: properties.identity.admin_user_count
+      op: gt
+      value: 2

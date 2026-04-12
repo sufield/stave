@@ -56,6 +56,7 @@ packs:
       - CTL.SECRETSMANAGER.ENCRYPT.001
       - CTL.SNS.ENCRYPT.001
       - CTL.SQS.ENCRYPT.001
+      - CTL.EFS.ENCRYPT.001
       - CTL.VPC.FLOWLOG.ENCRYPT.001
       # §164.312(b) — Audit Controls
       - CTL.CLOUDTRAIL.ENABLED.001
@@ -70,6 +71,7 @@ packs:
       - CTL.S3.DETECT.MACIE.002
       - CTL.S3.INVENTORY.001
       - CTL.S3.LOG.001
+      - CTL.RDS.MONITORING.001
       - CTL.S3.MALWARE.001
       - CTL.S3.BREACH.DETECT.001
       - CTL.VPC.FLOWLOG.001
@@ -83,6 +85,7 @@ packs:
       - CTL.RDS.IAMAUTH.001
       - CTL.IAM.MFA.HWKEY.001
       # §164.312(e)(1) — Transmission Security
+      - CTL.EFS.ENCRYPT.TRANSIT.001
       - CTL.EC2.PUBLIC.001
       - CTL.K8S.NETPOL.001
       - CTL.S3.NETWORK.POLICY.001
@@ -122,6 +125,7 @@ packs:
       - CTL.IAM.ANALYZER.001
       - CTL.IAM.MFA.HWKEY.001
       - CTL.IAM.ACCOUNT.INACTIVE.001
+      - CTL.IAM.ADMIN.COUNT.001
       # Section 4 — Monitoring
       - CTL.CLOUDWATCH.MONITOR.UNAUTH.001
       - CTL.CLOUDWATCH.MONITOR.NOMFA.001
@@ -149,6 +153,8 @@ packs:
       - CTL.RDS.ENCRYPT.001
       - CTL.RDS.AUTOUPGRADE.001
       - CTL.RDS.PUBLIC.001
+      - CTL.EFS.ENCRYPT.001
+      - CTL.EFS.ENCRYPT.TRANSIT.001
       # Section 3 — Logging
       - CTL.CLOUDTRAIL.ENABLED.001
       - CTL.CLOUDTRAIL.VALIDATION.001
@@ -196,6 +202,7 @@ packs:
       - CTL.IAM.CRED.EXPIRY.001
       - CTL.IAM.ROLE.BREAKGLASS.001
       - CTL.IAM.CROSS.ENV.001
+      - CTL.IAM.ADMIN.COUNT.001
       - CTL.S3.PUBLIC.001
       - CTL.S3.ENCRYPT.001
       - CTL.S3.ENCRYPT.002
@@ -236,6 +243,8 @@ packs:
       - CTL.KMS.ROTATION.001
       - CTL.S3.ENCRYPT.003
       - CTL.S3.REPLICATION.003
+      - CTL.EFS.ENCRYPT.001
+      - CTL.EFS.ENCRYPT.TRANSIT.001
       # CC7.1 — Monitoring
       - CTL.CLOUDTRAIL.ENABLED.001
       - CTL.CLOUDTRAIL.VALIDATION.001
@@ -251,6 +260,7 @@ packs:
       - CTL.S3.AUDIT.OBJECTLEVEL.001
       - CTL.S3.INVENTORY.001
       - CTL.S3.LOG.001
+      - CTL.RDS.MONITORING.001
       - CTL.CLOUDWATCH.RETENTION.001
       - CTL.CLOUDWATCH.MONITOR.UNAUTH.001
       - CTL.CLOUDWATCH.MONITOR.NOMFA.001
@@ -321,6 +331,7 @@ packs:
       - CTL.BACKUP.ENCRYPT.001
       - CTL.KMS.ROTATION.001
       - CTL.KMS.POLICY.001
+      - CTL.EFS.ENCRYPT.001
       # Req 4 — Transit
       - CTL.S3.ENCRYPT.002
       - CTL.ELB.TLS.001
@@ -328,6 +339,7 @@ packs:
       - CTL.RDS.SSL.001
       - CTL.APIGATEWAY.TLS.001
       - CTL.ELASTICACHE.TRANSIT.001
+      - CTL.EFS.ENCRYPT.TRANSIT.001
       # Req 5 — Malware
       - CTL.GUARDDUTY.ENABLED.001
       # Req 6 — Development
@@ -344,6 +356,7 @@ packs:
       - CTL.IAM.POLICY.PASSROLE.001
       - CTL.IAM.BOUNDARY.001
       - CTL.IAM.CROSS.ENV.001
+      - CTL.IAM.ADMIN.COUNT.001
       # Req 8 — Authentication
       - CTL.IAM.ROOT.MFA.001
       - CTL.IAM.ROOT.ACCESSKEY.001
@@ -1048,6 +1061,18 @@ controls:
   CTL.IAM.IDENTITY.BLASTRADIUS.003:
     path: internal/controldata/embedded/iam/identity/CTL.IAM.IDENTITY.BLASTRADIUS.003.yaml
     summary: Role Assume Chain Must Not Exceed Depth Threshold
+  CTL.IAM.ADMIN.COUNT.001:
+    path: internal/controldata/embedded/iam/admin/CTL.IAM.ADMIN.COUNT.001.yaml
+    summary: Admin User Count Must Not Exceed Threshold
+  CTL.EFS.ENCRYPT.001:
+    path: internal/controldata/embedded/efs/encrypt/CTL.EFS.ENCRYPT.001.yaml
+    summary: EFS File System Must Be Encrypted at Rest
+  CTL.EFS.ENCRYPT.TRANSIT.001:
+    path: internal/controldata/embedded/efs/encrypt/CTL.EFS.ENCRYPT.TRANSIT.001.yaml
+    summary: EFS File System Must Enforce Encryption in Transit
+  CTL.EFS.INCOMPLETE.001:
+    path: internal/controldata/embedded/efs/misc/CTL.EFS.INCOMPLETE.001.yaml
+    summary: Complete Data Required for EFS Assessment
   CTL.CLOUDFORMATION.ROLLBACK.001:
     path: internal/controldata/embedded/cloudformation/drift/CTL.CLOUDFORMATION.ROLLBACK.001.yaml
     summary: CloudFormation Stacks Must Have Rollback Enabled
@@ -1279,6 +1304,9 @@ controls:
   CTL.RDS.AUTOUPGRADE.001:
     path: internal/controldata/embedded/rds/misc/CTL.RDS.AUTOUPGRADE.001.yaml
     summary: RDS Auto Minor Version Upgrade Must Be Enabled
+  CTL.RDS.MONITORING.001:
+    path: internal/controldata/embedded/rds/monitoring/CTL.RDS.MONITORING.001.yaml
+    summary: RDS Enhanced Monitoring Must Be Enabled
   CTL.RDS.INCOMPLETE.001:
     path: internal/controldata/embedded/rds/misc/CTL.RDS.INCOMPLETE.001.yaml
     summary: Complete Data Required for RDS Assessment

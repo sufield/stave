@@ -1,0 +1,99 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "cf8da9d86d210d373a44f1e492e98dd7c241c154c031891fdf57498cbb230b74",
+        "2026-01-11T000000Z.json": "07bdd69512c5f3ff1386eb106af11462bf3c1b6d671e5bedd885e68367c144a0"
+      },
+      "overall": "1c655d2d0193e7529db3cf9ff6ed273ae5b1b40262d6931eb2b7399a69d12b05"
+    },
+    "policy_fingerprint": "4b1f5d3b2cfbe8bc5b3458969ed813e9c905f1acc4830042377f66479c76e4b6"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.CLOUDFORMATION.STATE.001",
+      "asset_id": "test-terraform-backend",
+      "asset_type": "aws_terraform_backend",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.CLOUDFORMATION.STATE.001",
+      "control_name": "Terraform State Must Be Versioned",
+      "control_description": "Terraform state files must be stored in a versioned backend (S3 with versioning, Terraform Cloud, or equivalent). Unversioned state means a corrupted or accidentally deleted state file cannot be recovered, leaving infrastructure in an unmanaged state with no rollback path.\n",
+      "asset_id": "test-terraform-backend",
+      "asset_type": "aws_terraform_backend",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "iac.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "terraform_backend"
+          },
+          {
+            "property": "iac.state_versioned",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "fedramp_moderate": "CM-3",
+        "nist_800_53_r5": "CM-3",
+        "soc2": "CC8.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Terraform state is not stored in a versioned backend. State corruption or deletion has no recovery path.",
+        "action": "Configure an S3 backend with versioning enabled and DynamoDB state locking. Alternatively, use Terraform Cloud or an equivalent managed backend with built-in versioning.",
+        "example": "{\n  \"iac\": {\n    \"kind\": \"terraform_backend\",\n    \"state_versioned\": true\n  }\n}\n"
+      }
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-cloudformation-state-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-cloudformation-state-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
+    }
+  }
+}

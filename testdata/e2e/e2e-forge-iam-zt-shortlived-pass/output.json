@@ -1,0 +1,39 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "0276c409fe6ad78566609b003f6d5a31b384ee8c0b0ea8d64d6145d65e04862f",
+        "2026-01-11T000000Z.json": "e3d8ec47ebb5055c3b8ab46fc1aedc2e29378d5de080bddf79621c408a362b45"
+      },
+      "overall": "413085a13d72a01aedef8ad00b65c77d7228ba3723ac7031e1167209de5073d2"
+    },
+    "policy_fingerprint": "b7ce890abfede8f0ffe010eeb7e884942436aa4ccaf15dea110d2605e99e7934"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-zt-shortlived-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-zt-shortlived-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
+    }
+  }
+}

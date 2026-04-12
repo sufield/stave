@@ -1,0 +1,107 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "793bbb3576cc8872602098f297afd80922e9d727bf4083deee5dcb52809828c5",
+        "2026-01-11T000000Z.json": "a6e2954593a73b4058fe05fe0671856dcdd8bea072b656e96ec9409a97a201bb"
+      },
+      "overall": "dff904605817d8989b561113bab3ac5664ff3f39e47f5b2c646cba3a1a66aebd"
+    },
+    "policy_fingerprint": "2ef775c4c8f4f0ccca1cde67f56ca72bf5847203ba07736b458b952414989cc9"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.S3.ACCESS.PHI.001",
+      "asset_id": "test-phi-bucket",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.S3.ACCESS.PHI.001",
+      "control_name": "PHI Bucket Access Must Be Scoped to Specific Principals",
+      "control_description": "S3 buckets tagged with data-classification=phi must have access restricted to explicitly named principals and prefixes. Broad bucket-level access (wildcard principals, unrestricted actions) on PHI data violates the HIPAA minimum necessary standard (§164.502(b)). Access must be narrowed to the exact IAM roles, account IDs, and object prefixes required for each authorized workflow.\n",
+      "asset_id": "test-phi-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "storage.access.phi_access_scoped",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "storage.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          },
+          {
+            "property": "storage.tags.data-classification",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "phi"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "fedramp_moderate": "AC-6",
+        "hipaa": "164.502(b)",
+        "nist_800_53_r5": "AC-6",
+        "pci_dss_v4.0": "7.2.1",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "PHI bucket has broad access that exceeds the minimum necessary standard. Access is not scoped to specific principals or prefixes.",
+        "action": "Restrict bucket policy to named IAM role ARNs and specific object prefixes. Remove wildcard principals and broad s3:* actions. Use IAM Access Analyzer to identify unused permissions and generate least-privilege policies from CloudTrail activity.",
+        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"tags\": {\n      \"data-classification\": \"phi\"\n    },\n    \"access\": {\n      \"phi_access_scoped\": true\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-s3-access-phi-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-s3-access-phi-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
+    }
+  }
+}

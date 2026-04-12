@@ -1,0 +1,100 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "b2d023a0989bb392ac2438eb8881fc38be93ab2b4bef007da62770e0d8d17703",
+        "2026-01-11T000000Z.json": "f7db91a4d9cc59ae08e447e40371101d8006a49eba5f686d1b431dd64d0a3534"
+      },
+      "overall": "6d7a426ce068df8803ddab3806f91cc2e98096fcd5ea2fc97c8ff3e4641e824b"
+    },
+    "policy_fingerprint": "e36291c492e264b8d400e3f453753db51e52bea1db673e13de2595c9c1b107d9"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.WAF.RULES.001",
+      "asset_id": "test-waf-web-acl",
+      "asset_type": "aws_waf_web_acl",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.WAF.RULES.001",
+      "control_name": "WAF Must Have Managed Rule Groups Enabled",
+      "control_description": "WAF web ACLs must include AWS managed rule groups for common attack patterns (SQLi, XSS, known bad inputs). Without managed rules, the WAF provides no baseline protection against OWASP Top 10 attacks.\n",
+      "asset_id": "test-waf-web-acl",
+      "asset_type": "aws_waf_web_acl",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "waf.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "web_acl"
+          },
+          {
+            "property": "waf.rules.has_managed_rules",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "fedramp_moderate": "SI-3",
+        "nist_800_53_r5": "SI-3",
+        "pci_dss_v4.0": "6.4.1",
+        "soc2": "CC6.6"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "WAF web ACL does not include managed rule groups. No baseline protection against common web attacks.",
+        "action": "Add AWS managed rule groups to the web ACL: AWSManagedRulesCommonRuleSet, AWSManagedRulesSQLiRuleSet, AWSManagedRulesKnownBadInputsRuleSet.",
+        "example": "{\n  \"waf\": {\n    \"kind\": \"web_acl\",\n    \"rules\": {\n      \"has_managed_rules\": true\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-waf-rules-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-waf-rules-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
+    }
+  }
+}

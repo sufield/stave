@@ -1,0 +1,42 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "d48d6f0f30273a3784a70aa410303120795104a98368481a471f5e9382c97565",
+        "2026-01-11T000000Z.json": "57fcb2d95a15561df871a75eb6382778a1a327f57318b000fc7d786cc9355da9"
+      },
+      "overall": "7511a36d0acc87a1ab1ad735d467cbdd843470931a7da970e5efd0e0d3a35f1d"
+    },
+    "policy_fingerprint": "0d7dac8c51884ae0894a456d2dd8b542556928c4e3ae44fc4418df6192c8a58b"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-efs-encrypt-transit-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-efs-encrypt-transit-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-efs-encrypt-transit-pass/controls/"
+      ]
+    }
+  }
+}

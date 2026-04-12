@@ -1,0 +1,94 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "a1e22a5c30922f0b43b1346d4a291a7fa56ede22340c5d92f5102519a64710c3",
+        "2026-01-11T000000Z.json": "ceb34ea8ae249e4e63c30b0a1be81f34657852b311db40ca3a237b34f71d051c"
+      },
+      "overall": "181fe24a2e5403ddd689f7157dca92de1913f088e901235682c869342f2712b4"
+    },
+    "policy_fingerprint": "cd7bf82ae9f2b355672a7dc149387f7bd1004f5bc0d1876684acf3dbbd5ea58c"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.ELASTICACHE.AUTH.001",
+      "asset_id": "test-elasticache-cluster",
+      "asset_type": "aws_elasticache_cluster",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.ELASTICACHE.AUTH.001",
+      "control_name": "Redis AUTH Token Must Be Set",
+      "control_description": "ElastiCache Redis clusters must have an AUTH token configured. Without AUTH, any client with network access can read and write data. Combined with a missing VPC or open security group, this creates an unauthenticated database exposure — the same pattern as the Darkbeam Elasticsearch breach.\n",
+      "asset_id": "test-elasticache-cluster",
+      "asset_type": "aws_elasticache_cluster",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "cache.auth_token_enabled",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "fedramp_moderate": "AC-3",
+        "nist_800_53_r5": "AC-3",
+        "pci_dss_v4.0": "7.2.1",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "ElastiCache Redis cluster does not have an AUTH token. Any client with network access can read and write data without authentication.",
+        "action": "Set an AUTH token using aws elasticache modify-replication-group --auth-token. Ensure transit encryption is also enabled (required for AUTH). Rotate the token periodically.",
+        "example": "{\n  \"cache\": {\n    \"auth_token_enabled\": true\n  }\n}\n"
+      }
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-elasticache-auth-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-elasticache-auth-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
+    }
+  }
+}

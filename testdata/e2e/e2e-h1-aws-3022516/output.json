@@ -32,11 +32,8 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "77262c924710d7c44f23090ec87eeda597e50714",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-h1-aws-3022516/controls/"
-      ]
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
     }
   }
 }

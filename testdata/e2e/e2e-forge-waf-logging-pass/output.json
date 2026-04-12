@@ -1,0 +1,39 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "cfc39aa05c8a253afd0c001fa4a39452ef8430da032b00bb7439aee74f61a6f0",
+        "2026-01-11T000000Z.json": "763ebccf42a6acec6ed6eca75f071752be37a6f617424534bd58435a9f27d498"
+      },
+      "overall": "46826712b67fca3a19cf81fe2814f3758c8451b7b4143c09796b547552e3e8df"
+    },
+    "policy_fingerprint": "bef694b43e161d8d66445783241625fd238f0e676821009e7fdf383ad06b0629"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-waf-logging-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-waf-logging-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
+    }
+  }
+}

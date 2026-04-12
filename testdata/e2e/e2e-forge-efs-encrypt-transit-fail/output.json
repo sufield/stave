@@ -1,0 +1,105 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "69a610006e394ce1434ccd92b34a6b5e5fd250a2320bbf37f7b8233909704f85",
+        "2026-01-11T000000Z.json": "972a8e604c0c17895bed00fc33e2e188c6b94de8e7a529a8c24e44d2efce8db9"
+      },
+      "overall": "66cf05df03dd4b223a3711e27ed4b11d335002be7c83d887ef83ba3b98d74111"
+    },
+    "policy_fingerprint": "0d7dac8c51884ae0894a456d2dd8b542556928c4e3ae44fc4418df6192c8a58b"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.EFS.ENCRYPT.TRANSIT.001",
+      "asset_id": "test-efs-filesystem",
+      "asset_type": "aws_efs_filesystem",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.EFS.ENCRYPT.TRANSIT.001",
+      "control_name": "EFS File System Must Enforce Encryption in Transit",
+      "control_description": "EFS file systems must enforce encryption in transit via a file system policy that denies unencrypted connections. Without this policy, NFS clients can mount the file system without TLS, exposing data to network-level interception.\n",
+      "asset_id": "test-efs-filesystem",
+      "asset_type": "aws_efs_filesystem",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "filesystem.encryption.in_transit_enforced",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "filesystem.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "efs"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_aws_v3.0": "2.4.1",
+        "fedramp_moderate": "SC-8",
+        "hipaa": "164.312(e)(1)",
+        "nist_800_53_r5": "SC-8",
+        "pci_dss_v4.0": "4.2.1",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "EFS file system does not enforce encryption in transit. NFS clients can mount without TLS.",
+        "action": "Apply a file system policy that denies unencrypted transport. Run: aws efs put-file-system-policy --file-system-id fs-xxx --policy '{\"Statement\":[{\"Effect\":\"Deny\",\"Principal\":{\"AWS\":\"*\"}, \"Action\":\"*\",\"Condition\":{\"Bool\":{\"aws:SecureTransport\":\"false\"}}}]}'",
+        "example": "{\n  \"filesystem\": {\n    \"kind\": \"efs\",\n    \"encryption\": {\n      \"in_transit_enforced\": true\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-efs-encrypt-transit-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-efs-encrypt-transit-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-efs-encrypt-transit-fail/controls/"
+      ]
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "b18c6339b0aa0d1da35e7ceafdc4f4f4e9262b759cc6b52843b88de561b96f24",
+        "2026-01-11T000000Z.json": "c54f49f965b0071fb092dd087956b7e5b95fb9e794a72275b75321fc8cf752da"
+      },
+      "overall": "3114e07f4fa1257b082ec9a6a52f105e683ba1cfe690b19e9ecafef10a8a1ee8"
+    },
+    "policy_fingerprint": "d2879a448e731a912519dd8fc235c1f1b761f38dbec96049c70c89bff535a8ea"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-crosscloud-mfa-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-crosscloud-mfa-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
+    }
+  }
+}

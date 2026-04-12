@@ -1,0 +1,17 @@
+{
+  "assets": [
+    {
+      "id": "test-rds-instance",
+      "properties": {
+        "database": {
+          "kind": "instance",
+          "enhanced_monitoring_enabled": true
+        }
+      },
+      "type": "aws_rds_instance",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1"
+}

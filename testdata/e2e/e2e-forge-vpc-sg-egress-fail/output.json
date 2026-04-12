@@ -1,0 +1,99 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "9cc5fb4b5df8a7e1038d6e4d60085d81b73a6323a3db7d796ef43c4883af56d2",
+        "2026-01-11T000000Z.json": "a40fa807c75b6b00d412b347b0fd8e66fc7bacea725127e8b55c63da2be68b0d"
+      },
+      "overall": "71b8312c8e611b59a46b6ced83c07bd428c39ae6e99f6841cbb6b4a9844aa927"
+    },
+    "policy_fingerprint": "da6d600d4b1b07590a565c55a43279bc7f697ce7be71ae171ceab47e142b7b31"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.VPC.SG.EGRESS.001",
+      "asset_id": "test-security-group",
+      "asset_type": "aws_security_group",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.VPC.SG.EGRESS.001",
+      "control_name": "Security Groups Must Not Allow Unrestricted Egress",
+      "control_description": "Security groups must not allow all outbound traffic to 0.0.0.0/0 on all ports. Unrestricted egress enables data exfiltration, command-and-control communication, and lateral movement to external attacker infrastructure. While most organizations currently allow all egress by default, restricting outbound traffic to required ports and destinations is a critical APT hardening measure.\n",
+      "asset_id": "test-security-group",
+      "asset_type": "aws_security_group",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "network.egress.unrestricted_all_ports",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "network.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "security_group"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "fedramp_moderate": "SC-7",
+        "nist_800_53_r5": "SC-7",
+        "soc2": "CC6.6"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Security group allows all outbound traffic to the internet. Data exfiltration and C2 traffic are not restricted.",
+        "action": "Replace the default allow-all egress rule with specific outbound rules for required ports (443 for HTTPS, 53 for DNS, etc.) and destinations. Use VPC endpoints for AWS service traffic to avoid internet egress entirely.",
+        "example": "{\n  \"network\": {\n    \"kind\": \"security_group\",\n    \"egress\": {\n      \"unrestricted_all_ports\": false\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-vpc-sg-egress-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-vpc-sg-egress-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
+    }
+  }
+}

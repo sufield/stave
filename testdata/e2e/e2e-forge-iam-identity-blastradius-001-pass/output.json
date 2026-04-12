@@ -1,0 +1,39 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "acd08e006426acc2fbd1c12ee5505f6571e73b344df3e434e9d4dcbc93502b76",
+        "2026-01-11T000000Z.json": "754d0fcf22dd341dfd1aa4bc356d77ae64ff844ff2dc8bcec44014c61d18ac11"
+      },
+      "overall": "9a49d3a353f048cbb2b5fa2bb930477bcc664fb11ec0f72004f52700ac168697"
+    },
+    "policy_fingerprint": "7b9e11119e8d1ba7adaccbfc398cfebb4b18fb0a807710ef835d2c35abb89df4"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-identity-blastradius-001-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-identity-blastradius-001-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
+    }
+  }
+}

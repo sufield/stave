@@ -1,0 +1,39 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "b09cbfecf87c53fa28e02518ceaea185b49e8d7471dd3b2130187c487c0b10ca",
+        "2026-01-11T000000Z.json": "b99e18d5840cb5186b533d1f92c0e9b2c3fe1e5c5e61b7109ecbd6a7816a7392"
+      },
+      "overall": "492c2f086acfe73a2a2511b8894665fb2ddee4e77ae3550e0f7f430f75f55963"
+    },
+    "policy_fingerprint": "a234d00879e440c15a2e5a7a93dbf2514c0ceed3bcf4a8fbbff4c10b2927c377"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-policy-sod-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-policy-sod-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
+    }
+  }
+}

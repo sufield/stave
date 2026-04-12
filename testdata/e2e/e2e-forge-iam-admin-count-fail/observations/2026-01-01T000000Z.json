@@ -1,0 +1,17 @@
+{
+  "assets": [
+    {
+      "id": "test-iam-account",
+      "properties": {
+        "identity": {
+          "kind": "account_summary",
+          "admin_user_count": 5
+        }
+      },
+      "type": "aws_iam_account",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1"
+}

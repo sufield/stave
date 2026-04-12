@@ -1,0 +1,99 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "cd043d5134fd8cf54fb1823e28932f4cccfe08ff744e1dfd677ae19d5a375a30",
+        "2026-01-11T000000Z.json": "969ddce6486343530e6e95989242f32183a95d386273a73a68b680883bb053f2"
+      },
+      "overall": "e515ecd6cc96a195201747cfd9bd5cd43a1bb78423c1f68883a6fa01d246f9f8"
+    },
+    "policy_fingerprint": "d92adb16a18eaad01db34ff83bab640c510577ca7dd741a59c3f1953e365f1e7"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.ECR.SCAN.001",
+      "asset_id": "test-ecr-repository",
+      "asset_type": "aws_ecr_repository",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.ECR.SCAN.001",
+      "control_name": "Image Scanning Must Be Enabled",
+      "control_description": "ECR repositories must have image scanning enabled (basic or enhanced). Without scanning, container images with known vulnerabilities are deployed to production undetected.\n",
+      "asset_id": "test-ecr-repository",
+      "asset_type": "aws_ecr_repository",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "container_registry.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "repository"
+          },
+          {
+            "property": "container_registry.scanning.enabled",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "fedramp_moderate": "RA-5",
+        "nist_800_53_r5": "RA-5",
+        "soc2": "CC7.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "ECR repository does not have image scanning enabled. Vulnerable images are not detected before deployment.",
+        "action": "Enable scan-on-push in the repository configuration. For enhanced scanning, enable Amazon Inspector ECR integration.",
+        "example": "{\n  \"container_registry\": {\n    \"kind\": \"repository\",\n    \"scanning\": {\n      \"enabled\": true\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-ecr-scan-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-ecr-scan-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
+    }
+  }
+}

@@ -1,0 +1,99 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "06c366a40e3b934491beb75c64734e6fdc97200a103428c2b6814fe349793b84",
+        "2026-01-11T000000Z.json": "6bca7452bcb5a595c02318e2b90712028df70f391c0191fcb8e3680abcc5c6ea"
+      },
+      "overall": "36b7d132e0f6ca028b3e0310ded7b87a57fbfc4ad0df82e570e4f36df64d38b2"
+    },
+    "policy_fingerprint": "bef694b43e161d8d66445783241625fd238f0e676821009e7fdf383ad06b0629"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.WAF.LOGGING.001",
+      "asset_id": "test-waf-web-acl",
+      "asset_type": "aws_waf_web_acl",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.WAF.LOGGING.001",
+      "control_name": "WAF Logging Must Be Enabled",
+      "control_description": "WAF web ACLs must have logging enabled to record blocked and allowed requests. Without logging, attacks cannot be detected, investigated, or correlated with other security events.\n",
+      "asset_id": "test-waf-web-acl",
+      "asset_type": "aws_waf_web_acl",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "waf.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "web_acl"
+          },
+          {
+            "property": "waf.logging.enabled",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "fedramp_moderate": "AU-2",
+        "nist_800_53_r5": "AU-2",
+        "soc2": "CC7.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "WAF web ACL does not have logging enabled. Attack traffic is not recorded.",
+        "action": "Enable WAF logging to S3, CloudWatch Logs, or Kinesis Data Firehose via aws wafv2 put-logging-configuration.",
+        "example": "{\n  \"waf\": {\n    \"kind\": \"web_acl\",\n    \"logging\": {\n      \"enabled\": true\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-waf-logging-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-waf-logging-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
+    }
+  }
+}

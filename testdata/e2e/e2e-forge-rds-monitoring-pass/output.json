@@ -1,0 +1,42 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "09f93be928bc284161fd810c584c64bb6dd13dbdaf4978a91c43fae906b67578",
+        "2026-01-11T000000Z.json": "3d662ad165504c95bb14a60a6feb081d3d46132decaa011cd2789430ec5c4a85"
+      },
+      "overall": "11d01ee6cd1fca827d5193f70f5b7917e430df8e2447340065bb6b9234f73b4c"
+    },
+    "policy_fingerprint": "03ee6839dfe3808474ce54c21aa780034c36bd47224845bc9923b0e90f295e4e"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-rds-monitoring-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-rds-monitoring-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-rds-monitoring-pass/controls/"
+      ]
+    }
+  }
+}

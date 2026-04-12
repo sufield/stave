@@ -1,0 +1,94 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "83001dc95a660d2ddada2aa06c7f0d40b65852e54cf7542cbf15f1f67763dc1b",
+        "2026-01-11T000000Z.json": "62669084aa6dc63fbdcee344c80ef341b7f8129cfdd4097367f6d0d817ba5311"
+      },
+      "overall": "ac4d259644191eeb4d2a84ea70de94fdf6258f18ad9aa9d74879056bb4f7a78e"
+    },
+    "policy_fingerprint": "9449d70d200d42ccda140af714e22cb6ee2db56308e7627e716188013bbf169b"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.VPC.DEFAULT.001",
+      "asset_id": "test-vpc",
+      "asset_type": "aws_vpc",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.VPC.DEFAULT.001",
+      "control_name": "Default VPC Must Not Be Used",
+      "control_description": "Workloads must not run in the default VPC. The default VPC is created automatically in every region with permissive settings: a public subnet in each AZ, an internet gateway, and a default security group that allows all internal traffic. These defaults create implicit public exposure that custom VPCs avoid. Production and sensitive workloads must use purpose-built VPCs with explicit network design.\n",
+      "asset_id": "test-vpc",
+      "asset_type": "aws_vpc",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "network.is_default_vpc",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "cis_aws_v3.0": "5.4",
+        "fedramp_moderate": "SC-7",
+        "nist_800_53_r5": "SC-7",
+        "soc2": "CC6.6"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Workload is running in the default VPC. The default VPC has permissive network settings that cannot be fully locked down.",
+        "action": "Create a custom VPC with private subnets, explicit route tables, and restrictive security groups. Migrate workloads from the default VPC. Consider deleting the default VPC in production accounts if no workloads require it.",
+        "example": "{\n  \"network\": {\n    \"is_default_vpc\": false\n  }\n}\n"
+      }
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-vpc-default-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-vpc-default-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
+    }
+  }
+}

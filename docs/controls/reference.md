@@ -3,24 +3,24 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 246
-**Pack hash:** `37b57f250877fa01a3ade863b367f8bb257f4ee55b861c49f12788f4c81b2a67`
+**Total controls:** 251
+**Pack hash:** `7e40a93bfe70a883ca004ee952582d002c86709c1e18a94dd30e05130a4fe2e4`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 34 |
-| high | 103 |
+| high | 106 |
 | info | 16 |
-| low | 14 |
-| medium | 79 |
+| low | 15 |
+| medium | 80 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 194 |
+| exposure | 198 |
 | governance | 2 |
-| identity | 46 |
+| identity | 47 |
 | storage | 4 |
 
 ## Controls
@@ -941,6 +941,50 @@ ECR repositories must have image scanning enabled (basic or enhanced). Without s
 
 ---
 
+### CTL.EFS.ENCRYPT.001
+
+**EFS File System Must Be Encrypted at Rest**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 2.4.1; fedramp_moderate: SC-28; gdpr: Art.32; hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-28; pci_dss_v4.0: 3.5.1; soc2: CC6.1;
+
+EFS file systems must have encryption at rest enabled. Data stored on unencrypted file systems is readable if the underlying storage is compromised. EFS encryption uses AWS KMS and must be enabled at creation time — it cannot be enabled on existing file systems.
+
+**Remediation:** Create a new encrypted EFS file system and migrate data. Encryption cannot be enabled on existing file systems. Run: aws efs create-file-system --encrypted --kms-key-id alias/aws/elasticfilesystem
+
+---
+
+### CTL.EFS.ENCRYPT.TRANSIT.001
+
+**EFS File System Must Enforce Encryption in Transit**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 2.4.1; fedramp_moderate: SC-8; hipaa: 164.312(e)(1); nist_800_53_r5: SC-8; pci_dss_v4.0: 4.2.1; soc2: CC6.1;
+
+EFS file systems must enforce encryption in transit via a file system policy that denies unencrypted connections. Without this policy, NFS clients can mount the file system without TLS, exposing data to network-level interception.
+
+**Remediation:** Apply a file system policy that denies unencrypted transport. Run: aws efs put-file-system-policy --file-system-id fs-xxx --policy '{"Statement":[{"Effect":"Deny","Principal":{"AWS":"*"}, "Action":"*","Condition":{"Bool":{"aws:SecureTransport":"false"}}}]}'
+
+---
+
+### CTL.EFS.INCOMPLETE.001
+
+**Complete Data Required for EFS Assessment**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+
+EFS file system safety cannot be assessed when encryption status is missing from the snapshot. The extractor must populate filesystem.encryption.at_rest_enabled.
+
+**Remediation:** Re-run the extractor with EFS permissions: elasticfilesystem:DescribeFileSystems, elasticfilesystem:DescribeFileSystemPolicy.
+
+---
+
 ### CTL.ELASTICACHE.AUTH.001
 
 **Redis AUTH Token Must Be Set**
@@ -1204,6 +1248,21 @@ The observation snapshot is missing required GuardDuty properties.
 IAM accounts with no login or API activity for 90 days or more must be disabled. Dormant accounts are high-value targets — they have permissions but no active user monitoring their usage. Legacy accounts, test accounts, and accounts from departed employees accumulate over time and provide persistent, unmonitored access paths for attackers.
 
 **Remediation:** Disable or delete the IAM user. If the account is still needed, review and renew its access with a documented justification and an updated expiry date.
+
+---
+
+### CTL.IAM.ADMIN.COUNT.001
+
+**Admin User Count Must Not Exceed Threshold**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: AC-6(5); nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.2; soc2: CC6.1;
+
+AWS accounts must have no more than 2 users with full administrator access. Excessive admin accounts expand the credential compromise surface and violate least privilege. Use IAM roles with temporary elevation (break-glass) instead of permanent admin access.
+
+**Remediation:** Reduce admin users to 2 or fewer. Convert permanent admin access to IAM roles with temporary elevation via sts:AssumeRole. Use IAM Access Analyzer to identify unused admin permissions.
 
 ---
 
@@ -2264,6 +2323,21 @@ RDS instance safety cannot be assessed when encryption status is missing from th
 RDS instances must export audit logs to CloudWatch. Without audit logging, database access patterns cannot be monitored and unauthorized queries are undetectable.
 
 **Remediation:** Enable CloudWatch log exports for the database engine. Run: aws rds modify-db-instance --db-instance-identifier xxx --cloudwatch-logs-export-configuration '{"EnableLogTypes":["audit","error","slowquery"]}'
+
+---
+
+### CTL.RDS.MONITORING.001
+
+**RDS Enhanced Monitoring Must Be Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 2.2.1; hipaa: 164.312(b); nist_800_53_r5: SI-4; soc2: CC7.1;
+
+RDS instances must have Enhanced Monitoring enabled. Enhanced Monitoring provides real-time OS-level metrics (CPU, memory, disk I/O, network) that standard CloudWatch metrics do not capture. Without it, performance degradation and resource exhaustion attacks are harder to detect and investigate.
+
+**Remediation:** Enable Enhanced Monitoring with a 60-second granularity. Run: aws rds modify-db-instance --db-instance-identifier xxx --monitoring-interval 60 --monitoring-role-arn arn:aws:iam::ACCOUNT:role/rds-monitoring-role --apply-immediately
 
 ---
 

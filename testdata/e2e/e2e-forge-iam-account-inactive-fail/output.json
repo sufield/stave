@@ -1,0 +1,96 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "4d2da0674a908edb09bfabee913cd36b6ae193f567b0264857a6cb622ea1d380",
+        "2026-01-11T000000Z.json": "661804b450e6209639cefdbeeb49fbadbf1567d74e4a3c7e6f9394e36843fb1a"
+      },
+      "overall": "1bdf891de1f990a6638de5173bcaca1de6bfe41b42f4ba82d0a36cf62f1b06d1"
+    },
+    "policy_fingerprint": "c3dea79c8e4d33f06e9f92a7c10b65f2b42aadc3442b20834a784022721f361f"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.IAM.ACCOUNT.INACTIVE.001",
+      "asset_id": "test-iam-user",
+      "asset_type": "aws_iam_user",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.IAM.ACCOUNT.INACTIVE.001",
+      "control_name": "Inactive Accounts Must Be Disabled",
+      "control_description": "IAM accounts with no login or API activity for 90 days or more must be disabled. Dormant accounts are high-value targets — they have permissions but no active user monitoring their usage. Legacy accounts, test accounts, and accounts from departed employees accumulate over time and provide persistent, unmonitored access paths for attackers.\n",
+      "asset_id": "test-iam-user",
+      "asset_type": "aws_iam_user",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "identity.credentials.inactive_days",
+            "actual_value": "[SANITIZED]",
+            "operator": "gt",
+            "unsafe_value": 90
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "cis_aws_v3.0": "1.12",
+        "fedramp_moderate": "AC-2",
+        "hipaa": "164.312(a)(2)(i)",
+        "nist_800_53_r5": "AC-2",
+        "pci_dss_v4.0": "8.1.4",
+        "soc2": "CC6.2"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "IAM account has had no activity for over 90 days. Dormant accounts are high-value targets with no active monitoring.",
+        "action": "Disable or delete the IAM user. If the account is still needed, review and renew its access with a documented justification and an updated expiry date.",
+        "example": "{\n  \"identity\": {\n    \"kind\": \"user\",\n    \"credentials\": {\n      \"inactive_days\": 15\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-account-inactive-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-account-inactive-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
+    }
+  }
+}

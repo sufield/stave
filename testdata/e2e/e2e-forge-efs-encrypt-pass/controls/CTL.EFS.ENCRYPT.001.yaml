@@ -1,0 +1,50 @@
+dsl_version: ctrl.v1
+id: CTL.EFS.ENCRYPT.001
+name: EFS File System Must Be Encrypted at Rest
+description: >
+  EFS file systems must have encryption at rest enabled. Data stored on
+  unencrypted file systems is readable if the underlying storage is
+  compromised. EFS encryption uses AWS KMS and must be enabled at
+  creation time — it cannot be enabled on existing file systems.
+domain: exposure
+severity: high
+compliance:
+  hipaa: "164.312(a)(2)(iv)"
+  soc2: "CC6.1"
+  nist_800_53_r5: "SC-28"
+  cis_aws_v3.0: "2.4.1"
+  pci_dss_v4.0: "3.5.1"
+  fedramp_moderate: "SC-28"
+  gdpr: "Art.32"
+scope_tags:
+  - aws
+  - efs
+type: unsafe_state
+params:
+  base_impact: 8
+  attack_stage: exfiltration
+remediation:
+  description: >
+    EFS file system is not encrypted at rest. Data is readable if
+    underlying storage is compromised.
+  action: >
+    Create a new encrypted EFS file system and migrate data. Encryption
+    cannot be enabled on existing file systems. Run:
+    aws efs create-file-system --encrypted --kms-key-id alias/aws/elasticfilesystem
+  example: |
+    {
+      "filesystem": {
+        "kind": "efs",
+        "encryption": {
+          "at_rest_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.filesystem.kind
+      op: eq
+      value: efs
+    - field: properties.filesystem.encryption.at_rest_enabled
+      op: eq
+      value: false

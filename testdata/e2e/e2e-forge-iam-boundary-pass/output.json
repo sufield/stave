@@ -1,0 +1,39 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "f50a5818890c77e260b0138d3c018f23d8d0d3b3b58b1068919149fef29f23f1",
+        "2026-01-11T000000Z.json": "57ca7810150cdc83d056c71ab1ce2d4ad4f8ad71266ec85c11734b52c464a751"
+      },
+      "overall": "e8869ec681e80bac2bcf3e7f9e0ce6ff035e30c5ccd2309e640efcedd6eaba7e"
+    },
+    "policy_fingerprint": "8a01b1a7eb6cbcc19d485a993c6a5768ff19d4d9cacc89f9c7933621db8c6d99"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-boundary-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-boundary-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
+    }
+  }
+}

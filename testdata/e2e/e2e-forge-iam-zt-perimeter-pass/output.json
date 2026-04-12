@@ -1,0 +1,39 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "9280c31f7869feebc2fabb80a4d844286fd885f4a65ab25f31f3759f81b43676",
+        "2026-01-11T000000Z.json": "d037e630e0d6b34951a81a93c4ed0a43ea0ff7b66eff1acb79121331ee209ae6"
+      },
+      "overall": "20e12ae2b4b5ca2d7adf3a61a1cddae81e6a617357d34352994e4d36901bedb9"
+    },
+    "policy_fingerprint": "5f3d605a810a3d83939e03e32f4db0ee96f0122e56c2683a146d4ed7331792df"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-zt-perimeter-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-zt-perimeter-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
+    }
+  }
+}

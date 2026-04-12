@@ -32,11 +32,8 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e81a174ed8964dc2c126a4286c8f44e914a1917a",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-iam-scp-fullaccess/controls/"
-      ]
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
     }
   }
 }
