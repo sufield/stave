@@ -815,6 +815,60 @@ sensitive data).
 
 ---
 
+## Shadow logic namespace
+
+The `identity.policy.shadow_logic.*` namespace tracks negative logic
+patterns (NotAction, NotResource) in IAM policies.
+
+| Property | Type | Description |
+|---|---|---|
+| `identity.policy.shadow_logic.has_not_action` | bool | Policy uses NotAction construct |
+| `identity.policy.shadow_logic.has_not_resource` | bool | Policy uses NotResource construct |
+| `identity.policy.shadow_logic.permits_iam_write_via_negative` | bool | Negative logic gap includes IAM write actions |
+| `identity.policy.shadow_logic.shadowed_actions` | string[] | Actions that fall through the negative logic gap |
+
+**Controls:** CTL.IAM.POLICY.SHADOW.001 (NotAction detected),
+.002 (IAM write via negative logic).
+
+---
+
+## KMS concentration namespace
+
+The `cryptography.key_concentration.*` namespace tracks the resource
+density per KMS key.
+
+| Property | Type | Description |
+|---|---|---|
+| `cryptography.kind` | string | Discriminator: `key` |
+| `cryptography.key_concentration.resource_count` | int | Resources encrypted with this key |
+| `cryptography.key_concentration.service_count` | int | Distinct AWS services using this key |
+| `cryptography.key_concentration.has_deletion_protection` | bool | Key has deletion protection enabled |
+| `cryptography.key_concentration.has_multi_region_replica` | bool | Key has multi-region replica |
+
+**Controls:** CTL.KMS.CONCENTRATION.001 (>50 resources),
+.002 (high density + no deletion protection).
+
+---
+
+## Vendor trust namespace
+
+The `identity.vendor_trust.*` namespace tracks third-party SaaS
+vendor access via cross-account roles.
+
+| Property | Type | Description |
+|---|---|---|
+| `identity.vendor_trust.is_external_vendor` | bool | Role trusts an external vendor account |
+| `identity.vendor_trust.vendor_name` | string | Vendor name (datadog, wiz, vanta, etc.) |
+| `identity.vendor_trust.last_used_days_ago` | int | Days since role was last assumed |
+| `identity.vendor_trust.is_dormant` | bool | Unused > 90 days |
+| `identity.vendor_trust.reachable_sensitive_count` | int | Sensitive resources (PHI/PII) reachable |
+| `identity.vendor_trust.has_external_id` | bool | Trust policy requires external ID |
+
+**Controls:** CTL.IAM.VENDOR.DORMANT.001 (ghost access),
+.OVERPRIVILEGED.001 (excessive sensitive reach).
+
+---
+
 ## Important warning
 
 Do not hand-author production observations. Generate observations using an

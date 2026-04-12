@@ -223,6 +223,8 @@ packs:
       - CTL.SECRET.BLAST.001
       - CTL.SECRET.BLAST.002
       - CTL.BACKUP.RECOVERY.ISOLATION.002
+      - CTL.IAM.POLICY.SHADOW.002
+      - CTL.IAM.VENDOR.OVERPRIVILEGED.001
       - CTL.S3.PUBLIC.001
       - CTL.S3.ENCRYPT.001
       - CTL.S3.ENCRYPT.002
@@ -1113,6 +1115,18 @@ controls:
   CTL.IAM.TRUST.OIDC.003:
     path: internal/controldata/embedded/iam/trust/CTL.IAM.TRUST.OIDC.003.yaml
     summary: OIDC Federation Role Must Have Scoped Permissions
+  CTL.IAM.POLICY.SHADOW.001:
+    path: internal/controldata/embedded/iam/policy/CTL.IAM.POLICY.SHADOW.001.yaml
+    summary: IAM Policy Must Not Use NotAction Construct
+  CTL.IAM.POLICY.SHADOW.002:
+    path: internal/controldata/embedded/iam/policy/CTL.IAM.POLICY.SHADOW.002.yaml
+    summary: Negative Logic Must Not Permit IAM Write Actions
+  CTL.IAM.VENDOR.DORMANT.001:
+    path: internal/controldata/embedded/iam/vendor/CTL.IAM.VENDOR.DORMANT.001.yaml
+    summary: Vendor Cross-Account Role Must Not Be Dormant
+  CTL.IAM.VENDOR.OVERPRIVILEGED.001:
+    path: internal/controldata/embedded/iam/vendor/CTL.IAM.VENDOR.OVERPRIVILEGED.001.yaml
+    summary: Vendor Role Must Not Reach Excessive Sensitive Resources
   CTL.IAM.ADMIN.COUNT.001:
     path: internal/controldata/embedded/iam/admin/CTL.IAM.ADMIN.COUNT.001.yaml
     summary: Admin User Count Must Not Exceed Threshold
@@ -1587,6 +1601,12 @@ controls:
   CTL.KMS.ROTATION.001:
     path: internal/controldata/embedded/kms/policy/CTL.KMS.ROTATION.001.yaml
     summary: KMS Customer-Managed Key Rotation Must Be Enabled
+  CTL.KMS.CONCENTRATION.001:
+    path: internal/controldata/embedded/kms/concentration/CTL.KMS.CONCENTRATION.001.yaml
+    summary: KMS Key Must Not Encrypt More Than 50 Resources
+  CTL.KMS.CONCENTRATION.002:
+    path: internal/controldata/embedded/kms/concentration/CTL.KMS.CONCENTRATION.002.yaml
+    summary: High-Density KMS Key Must Have Deletion Protection
   CTL.KMS.INCOMPLETE.001:
     path: internal/controldata/embedded/kms/misc/CTL.KMS.INCOMPLETE.001.yaml
     summary: Complete Data Required for KMS Assessment

@@ -1,0 +1,123 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "dc3b617037e34da3d50267f2d02b469398b021a4eb21e7040e6ad65db4a6e54a",
+        "2026-01-11T000000Z.json": "0a7ee11370764c1cc26b3c3b93a78956aa5a6178d08217417ad158551e4b87c8"
+      },
+      "overall": "a84e5a191ea274bebd15667005ea5f593b7691b322fcf303ba7c17e643e062f8"
+    },
+    "policy_fingerprint": "1abac445099a8f34d12f0aa35ca11447cdbfec5e3842990071754124fdb10890"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.IAM.VENDOR.DORMANT.001",
+      "asset_id": "arn:aws:iam::123:role/datadog-integration",
+      "asset_type": "aws_iam_role",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.IAM.VENDOR.DORMANT.001",
+      "control_name": "Vendor Cross-Account Role Must Not Be Dormant",
+      "control_description": "Cross-account roles granted to external vendors (SaaS providers, auditors, consultants) must be actively used or decommissioned. A vendor role unused for more than 90 days is \"ghost access\" — the vendor may no longer need it, the contract may have ended, but the access persists. Each dormant vendor role is an unmonitored ingress path that can be exploited if the vendor is compromised.\n",
+      "asset_id": "arn:aws:iam::123:role/datadog-integration",
+      "asset_type": "aws_iam_role",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "identity.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "role"
+          },
+          {
+            "property": "identity.vendor_trust.is_dormant",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "identity.vendor_trust.is_external_vendor",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "nist_800_53_r5": "AC-2",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "External vendor role has been unused for more than 90 days. Ghost access persists after the business need has ended.",
+        "action": "Review the vendor relationship. If the contract has ended or the vendor no longer needs access, delete the cross-account role. If access is still needed, re-verify the trust policy and scope permissions to current requirements.",
+        "example": "{\n  \"identity\": {\n    \"kind\": \"role\",\n    \"vendor_trust\": {\n      \"is_external_vendor\": true,\n      \"is_dormant\": false\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.IAM.VENDOR.DORMANT.001",
+      "asset_id": "arn:aws:iam::123:role/datadog-integration",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-vendor-dormant-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-vendor-dormant-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "42f0efd1c3ffc732ae69de55a71ed34635c17ce4",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-iam-vendor-dormant-fail/controls/"
+      ]
+    }
+  }
+}

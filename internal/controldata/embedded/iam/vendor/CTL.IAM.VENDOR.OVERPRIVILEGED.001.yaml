@@ -1,0 +1,57 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.VENDOR.OVERPRIVILEGED.001
+name: Vendor Role Must Not Reach Excessive Sensitive Resources
+description: >
+  External vendor roles must have scoped access to sensitive
+  resources. A vendor that can reach more than 10 sensitive resources
+  (PHI, PII, confidential) has a disproportionate blast radius —
+  if the vendor is compromised, the attacker gains broad access to
+  your most sensitive data through a third-party trust relationship.
+domain: identity
+severity: critical
+compliance:
+  hipaa: "164.312(a)(1)"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.2"
+scope_tags:
+  - aws
+  - iam
+  - supply-chain
+type: unsafe_state
+params:
+  base_impact: 10
+  attack_stage: exfiltration
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    External vendor role can reach more than 10 sensitive resources.
+    Vendor compromise exposes a disproportionate data surface.
+  action: >
+    Scope the vendor role permissions to the minimum required
+    resources. Create per-function roles for different vendor tasks.
+    Use resource-based policies to restrict vendor access to
+    specific non-sensitive resources.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "vendor_trust": {
+          "is_external_vendor": true,
+          "reachable_sensitive_count": 3
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: role
+    - field: properties.identity.vendor_trust.is_external_vendor
+      op: eq
+      value: true
+    - field: properties.identity.vendor_trust.reachable_sensitive_count
+      op: gt
+      value: 10

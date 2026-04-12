@@ -1,0 +1,42 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "cc1d7fd40c49b6d721d09fe086a713c58a7751f4d7980bd5cdb75b02d38f2dd8",
+        "2026-01-11T000000Z.json": "6e0ba85b73c2a28ad6b60eea3ef73f3123cc1a5eaab76a56c1b40f814ffef4a8"
+      },
+      "overall": "4cd1fdb6dcbab8bcac356787f32eebe735a561b6c826dec4f9249ea0d5da3a69"
+    },
+    "policy_fingerprint": "dae117cfdd12d3ca47580a611ffab74b70b54e905a60eae004be998f2fbbc750"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-policy-shadow-002-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-policy-shadow-002-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "42f0efd1c3ffc732ae69de55a71ed34635c17ce4",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-iam-policy-shadow-002-pass/controls/"
+      ]
+    }
+  }
+}

@@ -1,0 +1,1 @@
+{"assets":[{"id":"arn:aws:kms:us-east-1:123:key/master-key","properties":{"cryptography":{"kind":"key","key_concentration":{"resource_count":200,"service_count":5,"has_deletion_protection":true,"has_multi_region_replica":false}}},"type":"aws_kms_key","vendor":"aws"}],"captured_at":"2026-01-11T00:00:00Z","schema_version":"obs.v0.1"}

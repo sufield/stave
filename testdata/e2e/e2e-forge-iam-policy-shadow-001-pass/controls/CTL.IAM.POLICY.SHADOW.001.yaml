@@ -1,0 +1,53 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.POLICY.SHADOW.001
+name: IAM Policy Must Not Use NotAction Construct
+description: >
+  IAM policies using NotAction or NotResource create negative logic
+  that is prone to bypass. A NotAction policy says "allow everything
+  EXCEPT these actions" — but the list of excepted actions rarely
+  covers all dangerous permissions. New AWS services and actions are
+  automatically allowed by the implicit "everything else" grant.
+  Attackers exploit this shadow effect to find actions like
+  iam:PutRolePolicy that fall through the negative logic gap.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-6"
+  fedramp_moderate: "AC-6"
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params:
+  base_impact: 8
+  attack_stage: persistence
+remediation:
+  description: >
+    IAM policy uses NotAction or NotResource. Negative logic creates
+    an implicit allow for all actions and resources not in the
+    exclusion list.
+  action: >
+    Replace NotAction with an explicit Allow list. Enumerate the
+    specific actions needed and grant only those. Negative logic
+    is prone to bypass as new AWS services and actions are added.
+  example: |
+    {
+      "identity": {
+        "kind": "policy",
+        "policy": {
+          "shadow_logic": {
+            "has_not_action": false,
+            "has_not_resource": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: policy
+    - field: properties.identity.policy.shadow_logic.has_not_action
+      op: eq
+      value: true

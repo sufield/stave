@@ -1,0 +1,57 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.CONCENTRATION.002
+name: High-Density KMS Key Must Have Deletion Protection
+description: >
+  KMS keys encrypting more than 50 resources must have deletion
+  protection enabled. Without deletion protection, an accidental
+  or malicious ScheduleKeyDeletion call can render hundreds of
+  resources permanently unrecoverable within the 7-day minimum
+  waiting period.
+domain: storage
+severity: critical
+compliance:
+  soc2: "A1.1"
+  nist_800_53_r5: "SC-12(1)"
+  fedramp_moderate: "SC-12(1)"
+scope_tags:
+  - aws
+  - kms
+type: unsafe_state
+params:
+  base_impact: 10
+  attack_stage: resilience
+  blast_radius:
+    type: recovery
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    High-density KMS key lacks deletion protection. A single
+    ScheduleKeyDeletion call can render hundreds of resources
+    permanently inaccessible.
+  action: >
+    Enable key deletion protection. Apply a key policy that denies
+    kms:ScheduleKeyDeletion from all principals except a dedicated
+    key administrator role. Add an SCP to deny key deletion at
+    the organization level.
+  example: |
+    {
+      "cryptography": {
+        "kind": "key",
+        "key_concentration": {
+          "resource_count": 10,
+          "has_deletion_protection": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: key
+    - field: properties.cryptography.key_concentration.resource_count
+      op: gt
+      value: 50
+    - field: properties.cryptography.key_concentration.has_deletion_protection
+      op: eq
+      value: false

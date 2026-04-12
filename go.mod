@@ -13,6 +13,7 @@ require (
 )
 
 require (
+	github.com/fsnotify/fsnotify v1.9.0
 	github.com/google/cel-go v0.28.0
 	github.com/google/go-cmp v0.7.0
 	github.com/rogpeppe/go-internal v1.14.1

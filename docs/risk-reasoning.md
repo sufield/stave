@@ -59,12 +59,14 @@ escalation_threshold: 2
 compound_severity: critical
 ```
 
-Built-in chains (12): `public_phi_exposure`, `root_compromise_path`,
+Built-in chains (15): `public_phi_exposure`, `root_compromise_path`,
 `detection_blindness`, `identity_blast_radius`,
 `unauthenticated_data_path`, `data_exfiltration_path`,
 `cross_env_pivot`, `privilege_escalation_path`,
 `supply_chain_ingress`, `compromised_secret_path`,
-`recovery_integrity_failure`, `sovereignty_violation`.
+`recovery_integrity_failure`, `sovereignty_violation`,
+`shadow_logic_escalation`, `crypto_concentration_failure`,
+`third_party_exposure_path`.
 
 ## Control risk metadata
 

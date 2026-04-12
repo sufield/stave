@@ -1,0 +1,42 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "a77ebc2d8666e29add9d0383425770c9ffcf56f51671fc004252c7516272ca73",
+        "2026-01-11T000000Z.json": "a71fb2255e6ed9c745634c92c9ade2ed1ea24cbf43b1fc299ed6bd04b253a3ec"
+      },
+      "overall": "243c8aaf32f1a663e833a0e2c2f69ab3b445ad368dde3e0079187edfdd8c13f3"
+    },
+    "policy_fingerprint": "4f919d6228a1e1edc3ca3b3b7525a49b67324755b8ec92641d497b33eef20d78"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-kms-concentration-002-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-kms-concentration-002-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "42f0efd1c3ffc732ae69de55a71ed34635c17ce4",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-kms-concentration-002-pass/controls/"
+      ]
+    }
+  }
+}
