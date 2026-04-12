@@ -1,0 +1,52 @@
+dsl_version: ctrl.v1
+id: CTL.BACKUP.RECOVERY.ISOLATION.002
+name: Data Admin Must Not Have KMS Key Deletion Permission
+description: >
+  The principal that administers the source data must have separate
+  permissions from the principal that manages the backup encryption
+  key. If the same admin can delete both the data and schedule the
+  KMS key for deletion, a compromised credential enables complete
+  and irreversible data destruction — the ransomware path.
+domain: storage
+severity: critical
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "CP-9(1)"
+  fedramp_moderate: "CP-9(1)"
+scope_tags:
+  - aws
+  - backup
+type: unsafe_state
+params:
+  base_impact: 10
+  attack_stage: resilience
+  blast_radius:
+    type: recovery
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    Same principal can delete source data and the backup encryption
+    key. A single credential compromise enables irreversible data
+    destruction.
+  action: >
+    Separate data administration from key management. Use a dedicated
+    backup admin role in a separate account. Apply SCP policies that
+    deny kms:ScheduleKeyDeletion from data admin roles.
+  example: |
+    {
+      "backup": {
+        "kind": "resource",
+        "recovery_isolation": {
+          "admin_is_shared": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.backup.kind
+      op: eq
+      value: resource
+    - field: properties.backup.recovery_isolation.admin_is_shared
+      op: eq
+      value: true

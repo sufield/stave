@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.EXPOSURE.SOVEREIGNTY.INCOMPLETE.001
+name: Complete Data Required for Sovereignty Assessment
+description: >
+  Sovereignty assessment requires the cross_border_access_detected
+  field. The extractor could not determine whether the resource is
+  accessible from outside its jurisdiction.
+domain: exposure
+severity: low
+scope_tags:
+  - aws
+  - cross-service
+  - compliance
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Sovereignty assessment is incomplete. The extractor could not
+    determine cross-border access patterns.
+  action: >
+    Re-run the sovereignty extractor with permissions to enumerate
+    IAM principals, their account regions, and resource-based
+    policies for all sensitive resources.
+unsafe_predicate:
+  all:
+    - field: properties.reachability.kind
+      op: eq
+      value: cross_border
+    - field: properties.reachability.sovereignty.cross_border_access_detected
+      op: missing
+      value: true

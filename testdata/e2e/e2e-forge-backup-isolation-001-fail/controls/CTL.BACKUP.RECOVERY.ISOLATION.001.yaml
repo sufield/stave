@@ -1,0 +1,52 @@
+dsl_version: ctrl.v1
+id: CTL.BACKUP.RECOVERY.ISOLATION.001
+name: Backup KMS Key Must Be in Different Account Than Source Data
+description: >
+  The KMS key used to encrypt backups must reside in a different AWS
+  account than the source data. If both the data and the decryption
+  key are in the same account, a single account compromise destroys
+  both — the attacker can delete the data AND schedule the KMS key
+  for deletion, rendering backups permanently unrecoverable.
+domain: storage
+severity: high
+compliance:
+  soc2: "A1.1"
+  nist_800_53_r5: "CP-9"
+  fedramp_moderate: "CP-9"
+scope_tags:
+  - aws
+  - backup
+type: unsafe_state
+params:
+  base_impact: 8
+  attack_stage: resilience
+  blast_radius:
+    type: recovery
+    scope: resource
+    multiplier: 2.0
+remediation:
+  description: >
+    Backup encryption key is in the same account as the source data.
+    A single account compromise can destroy both.
+  action: >
+    Create a dedicated backup recovery account. Generate a KMS key
+    in the recovery account and use it for backup encryption. Use
+    aws backup start-copy-job to replicate backups to the recovery
+    account.
+  example: |
+    {
+      "backup": {
+        "kind": "resource",
+        "recovery_isolation": {
+          "kms_same_account_as_source": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.backup.kind
+      op: eq
+      value: resource
+    - field: properties.backup.recovery_isolation.kms_same_account_as_source
+      op: eq
+      value: true

@@ -1,0 +1,1 @@
+{"assets":[{"id":"arn:aws:iam::123456789:role/cicd-scoped","properties":{"identity":{"kind":"role","trust":{"oidc":{"has_oidc_trust":true,"has_admin_permissions":false,"provider":"github"}}}},"type":"aws_iam_role","vendor":"aws"}],"captured_at":"2026-01-11T00:00:00Z","schema_version":"obs.v0.1"}

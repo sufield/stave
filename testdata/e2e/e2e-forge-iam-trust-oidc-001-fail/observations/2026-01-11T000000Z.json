@@ -1,0 +1,1 @@
+{"assets":[{"id":"arn:aws:iam::123456789:role/github-deploy","properties":{"identity":{"kind":"role","trust":{"oidc":{"has_oidc_trust":true,"sub_claim_scoped":false,"provider":"github","has_wildcard_sub":false,"has_admin_permissions":false}}}},"type":"aws_iam_role","vendor":"aws"}],"captured_at":"2026-01-11T00:00:00Z","schema_version":"obs.v0.1"}

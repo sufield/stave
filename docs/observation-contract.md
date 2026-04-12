@@ -741,6 +741,80 @@ Additional properties for the existing `identity.role.*` namespace:
 
 ---
 
+## Supply chain trust namespace
+
+The `identity.trust.oidc.*` namespace tracks OIDC federation trust
+policies on IAM roles used by CI/CD pipelines.
+
+| Property | Type | Description |
+|---|---|---|
+| `identity.trust.oidc.has_oidc_trust` | bool | Role trusts an OIDC identity provider |
+| `identity.trust.oidc.provider` | string | `github`, `gitlab`, `bitbucket`, `google` |
+| `identity.trust.oidc.sub_claim_scoped` | bool | Subject claim restricted to specific repo/branch |
+| `identity.trust.oidc.sub_claim_value` | string | The actual sub condition value |
+| `identity.trust.oidc.has_wildcard_sub` | bool | Subject claim uses wildcard (`*`) |
+| `identity.trust.oidc.has_admin_permissions` | bool | Role has AdministratorAccess or wildcard actions |
+
+**Controls:** CTL.IAM.TRUST.OIDC.001 (unscoped trust), .002 (wildcard sub),
+.003 (admin permissions). See [Supply Chain Ingress](supply-chain-ingress.md).
+
+---
+
+## Secret blast radius namespace
+
+The `secret.blast_radius.*` namespace links secrets to the resources
+they unlock and tracks the access surface.
+
+| Property | Type | Description |
+|---|---|---|
+| `secret.kind` | string | Discriminator: `secret` |
+| `secret.blast_radius.target_resource_id` | string | ARN of the resource the secret provides credentials for |
+| `secret.blast_radius.target_sensitivity` | string | `phi`, `pii`, `confidential`, `public`, `none` |
+| `secret.blast_radius.privileged_reader_count` | int | Principals with secretsmanager:GetSecretValue |
+| `secret.blast_radius.access_vector` | string | `same_account`, `cross_account` |
+| `secret.blast_radius.is_rotated` | bool | Secret has been rotated recently |
+
+**Controls:** CTL.SECRET.BLAST.001 (multiple readers + sensitive target),
+.002 (cross-account + sensitive target).
+
+---
+
+## Recovery isolation namespace
+
+The `backup.recovery_isolation.*` namespace tracks whether backup
+recovery is independent of the source data's fate.
+
+| Property | Type | Description |
+|---|---|---|
+| `backup.kind` | string | Discriminator: `resource` |
+| `backup.recovery_isolation.kms_same_account_as_source` | bool | Encryption key in same account as data |
+| `backup.recovery_isolation.kms_key_account` | string | Account holding the backup encryption key |
+| `backup.recovery_isolation.data_account` | string | Account holding the source data |
+| `backup.recovery_isolation.admin_is_shared` | bool | Same principal can delete data AND key |
+
+**Controls:** CTL.BACKUP.RECOVERY.ISOLATION.001 (KMS same account),
+.002 (shared admin — ransomware path).
+
+---
+
+## Sovereignty namespace
+
+The `reachability.sovereignty.*` namespace tracks cross-border
+access patterns for jurisdictional compliance.
+
+| Property | Type | Description |
+|---|---|---|
+| `reachability.kind` | string | Discriminator: `cross_border` |
+| `reachability.sovereignty.cross_border_access_detected` | bool | Resource accessible from outside jurisdiction |
+| `reachability.sovereignty.resource_jurisdiction` | string | `eu`, `us`, `apac`, etc. |
+| `reachability.sovereignty.accessor_jurisdiction` | string | Jurisdiction of the accessing principal |
+| `reachability.sovereignty.target_sensitivity` | string | `phi`, `pii`, `confidential`, `public`, `none` |
+
+**Controls:** CTL.EXPOSURE.SOVEREIGNTY.001 (cross-border access to
+sensitive data).
+
+---
+
 ## Important warning
 
 Do not hand-author production observations. Generate observations using an

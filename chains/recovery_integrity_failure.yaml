@@ -1,0 +1,14 @@
+id: recovery_integrity_failure
+description: >
+  Backup exists but recovery is structurally tied to the same fate
+  as the source data. KMS key and backup reside in the same account
+  as the source — a single account compromise (or ransomware attack)
+  can destroy live data, delete the encryption key, and render
+  backups unrecoverable. This is the "Ransomware Path" SPoF.
+controls:
+  - CTL.BACKUP.RECOVERY.ISOLATION.001
+  - CTL.BACKUP.RECOVERY.ISOLATION.002
+  - CTL.BACKUP.EXISTS.001
+  - CTL.BACKUP.ENCRYPT.001
+escalation_threshold: 2
+compound_severity: high

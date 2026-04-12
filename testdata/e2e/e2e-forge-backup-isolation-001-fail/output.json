@@ -1,0 +1,118 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "7c6d4e46e8fd2a6fefd9965d34720a497b07fe3fadbb695d06f88fe75b789a11",
+        "2026-01-11T000000Z.json": "44832a53aeb5e37492a95574ace79d81b87c731e8ac77223cdbcf5cf38dacc75"
+      },
+      "overall": "598e11da1a093c3fbf2c48feda21921fd30fe474b1fd46ea0345fc02586f7805"
+    },
+    "policy_fingerprint": "835b229b70cc4a5ac93cab8b41a8c13c1cb1a11a27ce0f2f9211872cb6002e33"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.BACKUP.RECOVERY.ISOLATION.001",
+      "asset_id": "arn:aws:backup:us-east-1:123:vault/prod",
+      "asset_type": "aws_backup_vault",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.BACKUP.RECOVERY.ISOLATION.001",
+      "control_name": "Backup KMS Key Must Be in Different Account Than Source Data",
+      "control_description": "The KMS key used to encrypt backups must reside in a different AWS account than the source data. If both the data and the decryption key are in the same account, a single account compromise destroys both — the attacker can delete the data AND schedule the KMS key for deletion, rendering backups permanently unrecoverable.\n",
+      "asset_id": "arn:aws:backup:us-east-1:123:vault/prod",
+      "asset_type": "aws_backup_vault",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "backup.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "resource"
+          },
+          {
+            "property": "backup.recovery_isolation.kms_same_account_as_source",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "fedramp_moderate": "CP-9",
+        "nist_800_53_r5": "CP-9",
+        "soc2": "A1.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Backup encryption key is in the same account as the source data. A single account compromise can destroy both.",
+        "action": "Create a dedicated backup recovery account. Generate a KMS key in the recovery account and use it for backup encryption. Use aws backup start-copy-job to replicate backups to the recovery account.",
+        "example": "{\n  \"backup\": {\n    \"kind\": \"resource\",\n    \"recovery_isolation\": {\n      \"kms_same_account_as_source\": false\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.BACKUP.RECOVERY.ISOLATION.001",
+      "asset_id": "arn:aws:backup:us-east-1:123:vault/prod",
+      "exposure_score": 150,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 2,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-backup-isolation-001-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-backup-isolation-001-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "243a30dff85cc49ea4f541f5b219876b48f5845b",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-backup-isolation-001-fail/controls/"
+      ]
+    }
+  }
+}

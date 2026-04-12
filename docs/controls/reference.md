@@ -3,25 +3,25 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 265
-**Pack hash:** `ea9c6932d2495d52e5ce11f8167578334495c9f543098e06d31374ae648b2f77`
+**Total controls:** 275
+**Pack hash:** `0f0d5ecd79ebbe2beafad5724685601aba3c968c7568bfc5d512b58580b04336`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 39 |
-| high | 110 |
+| critical | 44 |
+| high | 113 |
 | info | 16 |
-| low | 17 |
+| low | 19 |
 | medium | 83 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 207 |
+| exposure | 212 |
 | governance | 2 |
-| identity | 52 |
-| storage | 4 |
+| identity | 55 |
+| storage | 6 |
 
 ## Controls
 
@@ -169,6 +169,36 @@ Resources tagged as critical must be deployed across multiple Availability Zones
 The most recent backup must be within the defined recovery point objective (RPO). Stale backups indicate a broken backup process and increase data loss exposure.
 
 **Remediation:** Verify the backup schedule is active and producing successful backups. Check AWS Backup job history or RDS automated snapshot timestamps.
+
+---
+
+### CTL.BACKUP.RECOVERY.ISOLATION.001
+
+**Backup KMS Key Must Be in Different Account Than Source Data**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** storage
+- **Compliance:** fedramp_moderate: CP-9; nist_800_53_r5: CP-9; soc2: A1.1;
+
+The KMS key used to encrypt backups must reside in a different AWS account than the source data. If both the data and the decryption key are in the same account, a single account compromise destroys both — the attacker can delete the data AND schedule the KMS key for deletion, rendering backups permanently unrecoverable.
+
+**Remediation:** Create a dedicated backup recovery account. Generate a KMS key in the recovery account and use it for backup encryption. Use aws backup start-copy-job to replicate backups to the recovery account.
+
+---
+
+### CTL.BACKUP.RECOVERY.ISOLATION.002
+
+**Data Admin Must Not Have KMS Key Deletion Permission**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** storage
+- **Compliance:** fedramp_moderate: CP-9(1); nist_800_53_r5: CP-9(1); soc2: CC6.1;
+
+The principal that administers the source data must have separate permissions from the principal that manages the backup encryption key. If the same admin can delete both the data and schedule the KMS key for deletion, a compromised credential enables complete and irreversible data destruction — the ransomware path.
+
+**Remediation:** Separate data administration from key management. Use a dedicated backup admin role in a separate account. Apply SCP policies that deny kms:ScheduleKeyDeletion from data admin roles.
 
 ---
 
@@ -1235,6 +1265,35 @@ Data exfiltration path assessment requires the exfiltration kind discriminator a
 
 ---
 
+### CTL.EXPOSURE.SOVEREIGNTY.001
+
+**Sensitive Data Must Not Be Accessible from Outside Its Jurisdiction**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-4; gdpr: Art.44; nist_800_53_r5: AC-4;
+
+Resources containing sensitive data (PHI, PII, confidential) in a specific jurisdiction must have access restricted to principals in the same jurisdiction. A bucket in eu-west-1 accessible by a US-based principal is a structural jurisdictional violation — the data is physically in the EU but logically reachable from outside the EU, defeating data residency controls.
+
+**Remediation:** Restrict access to the resource using IAM condition keys that enforce source VPC or source IP ranges within the jurisdiction. Use SCPs to deny cross-jurisdiction access at the organization level. Review resource-based policies for cross-region grants.
+
+---
+
+### CTL.EXPOSURE.SOVEREIGNTY.INCOMPLETE.001
+
+**Complete Data Required for Sovereignty Assessment**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+
+Sovereignty assessment requires the cross_border_access_detected field. The extractor could not determine whether the resource is accessible from outside its jurisdiction.
+
+**Remediation:** Re-run the sovereignty extractor with permissions to enumerate IAM principals, their account regions, and resource-based policies for all sensitive resources.
+
+---
+
 ### CTL.GCS.ENCRYPT.001
 
 **Customer-Managed Encryption Key Required**
@@ -2039,6 +2098,51 @@ At least one IAM entity must have the AWSSupportAccess managed policy attached. 
 IAM roles with cross-account trust policies must include an sts:ExternalId condition. Without an external ID, any principal in the trusted account can assume the role — including compromised service accounts, OAuth applications, or test tenants. The Microsoft Midnight Blizzard 2024 breach exploited a legacy test OAuth app to assume a role with full_access_as_app permissions, pivoting from a test tenant to production Exchange mailboxes.
 
 **Remediation:** Add an sts:ExternalId condition to the role trust policy. Generate a unique external ID per trust relationship. Verify the assuming application passes the correct external ID.
+
+---
+
+### CTL.IAM.TRUST.OIDC.001
+
+**OIDC Federation Trust Must Be Scoped to Specific Repository**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-3; nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+IAM roles that trust OIDC identity providers (GitHub Actions, GitLab CI, Bitbucket Pipelines) must restrict the subject claim to a specific repository and branch. A trust policy that accepts any repository from the provider allows any project in the provider's namespace to assume the role — a compromised or malicious repository becomes a production ingress path.
+
+**Remediation:** Add a StringEquals or StringLike condition on the sub claim to restrict to specific repositories and branches. Example for GitHub Actions: "token.actions.githubusercontent.com:sub": "repo:org/repo:ref:refs/heads/main"
+
+---
+
+### CTL.IAM.TRUST.OIDC.002
+
+**OIDC Federation Must Not Use Wildcard Subject Claim**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6; nist_800_53_r5: AC-6; soc2: CC6.1;
+
+IAM roles with OIDC federation must use exact or prefix-scoped subject claims. A wildcard sub condition ("*") defeats the purpose of OIDC federation — it accepts any identity from the provider, including pull request workflows from forks, ephemeral runners, and compromised pipelines. This is the supply chain equivalent of s3:* on Resource "*".
+
+**Remediation:** Replace the wildcard with an exact subject match. For GitHub Actions: "repo:myorg/myrepo:ref:refs/heads/main". For GitLab CI: "project_path:mygroup/myproject:ref_type:branch:ref:main".
+
+---
+
+### CTL.IAM.TRUST.OIDC.003
+
+**OIDC Federation Role Must Have Scoped Permissions**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(5); soc2: CC6.1;
+
+IAM roles assumed via OIDC federation (CI/CD pipelines) must have scoped permissions appropriate for their deployment task. A CI/CD role with AdministratorAccess or broad wildcard actions creates a supply chain blast radius — any compromise of the CI/CD pipeline grants full account access. The extractor checks if the role's effective permissions exceed a deployment-appropriate scope.
+
+**Remediation:** Scope the role's permissions to the minimum required for the deployment task. Replace AdministratorAccess with task-specific policies (e.g., s3:PutObject on the deployment bucket, ecs:UpdateService on the target cluster).
 
 ---
 
@@ -3597,6 +3701,50 @@ Signed upload policies must restrict allowed content types. Unrestricted content
 Signed upload policies must restrict write permission to a single exact object key. Prefix-wide permissions (e.g., starts-with $key files/) enable arbitrary overwrite and cross-tenant tampering.
 
 **Remediation:** Change the signed upload policy to use an exact key condition (eq instead of starts-with) that binds each upload to a specific object path. Generate unique object keys server-side.
+
+---
+
+### CTL.SECRET.BLAST.001
+
+**Secret with Multiple Readers Must Not Target Sensitive Resource**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(1); nist_800_53_r5: SC-12; pci_dss_v4.0: 3.4.1; soc2: CC6.1;
+
+Secrets in Secrets Manager that provide credentials to sensitive resources (PHI, PII, confidential) must have a minimal set of readers. A secret readable by more than 3 principals is a high-value target — compromising any one of those principals provides a direct path to the sensitive data, bypassing IAM least privilege on the data resource itself. The extractor maps which principals have secretsmanager:GetSecretValue and which resource the secret unlocks.
+
+**Remediation:** Reduce the number of principals with secretsmanager:GetSecretValue to the minimum required. Use resource-based policies on the secret to restrict access. Enable automatic rotation via aws secretsmanager rotate-secret --secret-id <id>.
+
+---
+
+### CTL.SECRET.BLAST.002
+
+**Cross-Account Secret Access Must Not Target Sensitive Resource**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3; nist_800_53_r5: AC-3; soc2: CC6.1;
+
+Secrets that provide credentials to sensitive resources must have access restricted to the owning account. Cross-account access to a secret that unlocks PHI or PII data doubles the blast radius — the secret is reachable from a wider set of principals across account boundaries.
+
+**Remediation:** Remove cross-account access from the secret resource policy. If cross-account access is required, restrict to specific role ARNs and require an external ID condition.
+
+---
+
+### CTL.SECRET.BLAST.INCOMPLETE.001
+
+**Complete Data Required for Secret Blast Radius Assessment**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+
+Secret blast radius assessment requires the target_sensitivity field. The extractor could not determine which resource the secret provides credentials for.
+
+**Remediation:** Tag secrets with the target resource ARN. Re-run the extractor with permissions to read secret metadata and tags.
 
 ---
 

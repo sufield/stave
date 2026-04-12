@@ -1,0 +1,51 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.TRUST.OIDC.002
+name: OIDC Federation Must Not Use Wildcard Subject Claim
+description: >
+  IAM roles with OIDC federation must use exact or prefix-scoped
+  subject claims. A wildcard sub condition ("*") defeats the purpose
+  of OIDC federation — it accepts any identity from the provider,
+  including pull request workflows from forks, ephemeral runners,
+  and compromised pipelines. This is the supply chain equivalent of
+  s3:* on Resource "*".
+domain: identity
+severity: critical
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-6"
+  fedramp_moderate: "AC-6"
+scope_tags:
+  - aws
+  - iam
+  - supply-chain
+type: unsafe_state
+params:
+  base_impact: 10
+  attack_stage: initial_access
+remediation:
+  description: >
+    OIDC trust policy uses a wildcard subject claim. Any identity
+    from the provider can assume this role.
+  action: >
+    Replace the wildcard with an exact subject match. For GitHub
+    Actions: "repo:myorg/myrepo:ref:refs/heads/main". For GitLab CI:
+    "project_path:mygroup/myproject:ref_type:branch:ref:main".
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "trust": {
+          "oidc": {
+            "has_wildcard_sub": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.trust.oidc.has_oidc_trust
+      op: eq
+      value: true
+    - field: properties.identity.trust.oidc.has_wildcard_sub
+      op: eq
+      value: true

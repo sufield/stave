@@ -1,0 +1,60 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.TRUST.OIDC.001
+name: OIDC Federation Trust Must Be Scoped to Specific Repository
+description: >
+  IAM roles that trust OIDC identity providers (GitHub Actions,
+  GitLab CI, Bitbucket Pipelines) must restrict the subject claim
+  to a specific repository and branch. A trust policy that accepts
+  any repository from the provider allows any project in the
+  provider's namespace to assume the role — a compromised or
+  malicious repository becomes a production ingress path.
+domain: identity
+severity: critical
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-3"
+  fedramp_moderate: "AC-3"
+scope_tags:
+  - aws
+  - iam
+  - supply-chain
+type: unsafe_state
+params:
+  base_impact: 10
+  attack_stage: initial_access
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    OIDC trust policy accepts any repository from the identity
+    provider. Any CI/CD pipeline in the provider's namespace can
+    assume this production role.
+  action: >
+    Add a StringEquals or StringLike condition on the sub claim to
+    restrict to specific repositories and branches. Example for
+    GitHub Actions: "token.actions.githubusercontent.com:sub":
+    "repo:org/repo:ref:refs/heads/main"
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "trust": {
+          "oidc": {
+            "has_oidc_trust": true,
+            "sub_claim_scoped": true,
+            "provider": "github"
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.trust.oidc.has_oidc_trust
+      op: eq
+      value: true
+    - field: properties.identity.trust.oidc.sub_claim_scoped
+      op: eq
+      value: false

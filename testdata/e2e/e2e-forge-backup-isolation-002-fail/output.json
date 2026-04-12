@@ -1,0 +1,118 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "9ba755635b28eb7dce979ace40a0334018f119194be9937e862aeef71048fa80",
+        "2026-01-11T000000Z.json": "6be92f9ff5c07f941ebf175d011042797d7edf9c26d28e0cb30079036041c634"
+      },
+      "overall": "8f7c35190b470e72d4c6f4091730c25261b6e9f6944befe0bbe04ac0e694c1d7"
+    },
+    "policy_fingerprint": "ab919c089d95f32093fa12e5236528509c33d5c100c1b7941c80dedd2ff93b1d"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.BACKUP.RECOVERY.ISOLATION.002",
+      "asset_id": "arn:aws:backup:us-east-1:123:vault/prod",
+      "asset_type": "aws_backup_vault",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.BACKUP.RECOVERY.ISOLATION.002",
+      "control_name": "Data Admin Must Not Have KMS Key Deletion Permission",
+      "control_description": "The principal that administers the source data must have separate permissions from the principal that manages the backup encryption key. If the same admin can delete both the data and schedule the KMS key for deletion, a compromised credential enables complete and irreversible data destruction — the ransomware path.\n",
+      "asset_id": "arn:aws:backup:us-east-1:123:vault/prod",
+      "asset_type": "aws_backup_vault",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "backup.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "resource"
+          },
+          {
+            "property": "backup.recovery_isolation.admin_is_shared",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance": {
+        "fedramp_moderate": "CP-9(1)",
+        "nist_800_53_r5": "CP-9(1)",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Same principal can delete source data and the backup encryption key. A single credential compromise enables irreversible data destruction.",
+        "action": "Separate data administration from key management. Use a dedicated backup admin role in a separate account. Apply SCP policies that deny kms:ScheduleKeyDeletion from data admin roles.",
+        "example": "{\n  \"backup\": {\n    \"kind\": \"resource\",\n    \"recovery_isolation\": {\n      \"admin_is_shared\": false\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.BACKUP.RECOVERY.ISOLATION.002",
+      "asset_id": "arn:aws:backup:us-east-1:123:vault/prod",
+      "exposure_score": 250,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 2.5,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-backup-isolation-002-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-backup-isolation-002-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "243a30dff85cc49ea4f541f5b219876b48f5845b",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-backup-isolation-002-fail/controls/"
+      ]
+    }
+  }
+}
