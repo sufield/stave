@@ -43,6 +43,7 @@ packs:
       - CTL.IAM.PASSWORD.LENGTH.001
       - CTL.IAM.PASSWORD.REUSE.001
       - CTL.IAM.ACCOUNT.INACTIVE.001
+      - CTL.IAM.PASSWORD.ROTATION.001
       # §164.312(a)(2)(iv) — Encryption and Decryption
       - CTL.BACKUP.ENCRYPT.001
       - CTL.CLOUDTRAIL.ENCRYPT.001
@@ -84,6 +85,7 @@ packs:
       - CTL.IAM.ROOT.MFA.001
       - CTL.RDS.IAMAUTH.001
       - CTL.IAM.MFA.HWKEY.001
+      - CTL.IAM.POLICY.MFA.001
       # §164.312(e)(1) — Transmission Security
       - CTL.EFS.ENCRYPT.TRANSIT.001
       - CTL.EC2.PUBLIC.001
@@ -126,6 +128,8 @@ packs:
       - CTL.IAM.MFA.HWKEY.001
       - CTL.IAM.ACCOUNT.INACTIVE.001
       - CTL.IAM.ADMIN.COUNT.001
+      - CTL.IAM.POLICY.MFA.001
+      - CTL.IAM.PASSWORD.ROTATION.001
       # Section 4 — Monitoring
       - CTL.CLOUDWATCH.MONITOR.UNAUTH.001
       - CTL.CLOUDWATCH.MONITOR.NOMFA.001
@@ -203,6 +207,8 @@ packs:
       - CTL.IAM.ROLE.BREAKGLASS.001
       - CTL.IAM.CROSS.ENV.001
       - CTL.IAM.ADMIN.COUNT.001
+      - CTL.IAM.POLICY.MFA.001
+      - CTL.IAM.PASSWORD.ROTATION.001
       - CTL.S3.PUBLIC.001
       - CTL.S3.ENCRYPT.001
       - CTL.S3.ENCRYPT.002
@@ -373,6 +379,8 @@ packs:
       - CTL.IAM.MFA.HWKEY.001
       - CTL.IAM.ACCOUNT.INACTIVE.001
       - CTL.IAM.CRED.EXPIRY.001
+      - CTL.IAM.POLICY.MFA.001
+      - CTL.IAM.PASSWORD.ROTATION.001
       # Req 10 — Logging
       - CTL.CLOUDTRAIL.ENABLED.001
       - CTL.CLOUDTRAIL.VALIDATION.001
@@ -1064,6 +1072,12 @@ controls:
   CTL.IAM.ADMIN.COUNT.001:
     path: internal/controldata/embedded/iam/admin/CTL.IAM.ADMIN.COUNT.001.yaml
     summary: Admin User Count Must Not Exceed Threshold
+  CTL.IAM.POLICY.MFA.001:
+    path: internal/controldata/embedded/iam/policy/CTL.IAM.POLICY.MFA.001.yaml
+    summary: Destructive Actions Must Require MFA
+  CTL.IAM.PASSWORD.ROTATION.001:
+    path: internal/controldata/embedded/iam/password/CTL.IAM.PASSWORD.ROTATION.001.yaml
+    summary: User Passwords Must Be Rotated Within Policy Period
   CTL.EFS.ENCRYPT.001:
     path: internal/controldata/embedded/efs/encrypt/CTL.EFS.ENCRYPT.001.yaml
     summary: EFS File System Must Be Encrypted at Rest

@@ -1,0 +1,105 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "6798d012ff524ed85786196a36223078c0b630831c7b4a565e9cfab4eed7d68b",
+        "2026-01-11T000000Z.json": "7d33eb126e0ba81359a8b402f8b4bb32ca7f5c16ab5f77c1004bba26339da385"
+      },
+      "overall": "f7fc4fc1b2cb6ae656d105bf20485727bb773a0517aade84109865fec6e3c7ef"
+    },
+    "policy_fingerprint": "3dc6ca626fc5a02e4c9cbe07416a3ce58a166e35edbc97cfaa31146d1400279e"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.IAM.POLICY.MFA.001",
+      "asset_id": "test-iam-policy",
+      "asset_type": "aws_iam_policy",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.IAM.POLICY.MFA.001",
+      "control_name": "Destructive Actions Must Require MFA",
+      "control_description": "IAM policies governing destructive operations (s3:DeleteBucket, iam:CreateUser, ec2:TerminateInstances, etc.) must include an aws:MultiFactorAuthPresent condition. Without policy-level MFA enforcement, a compromised access key alone is sufficient to execute destructive actions — the credential becomes the only barrier between an attacker and data loss.\n",
+      "asset_id": "test-iam-policy",
+      "asset_type": "aws_iam_policy",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "identity.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "policy"
+          },
+          {
+            "property": "identity.policy.mfa_required_on_destructive_actions",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_aws_v3.0": "1.4",
+        "fedramp_moderate": "IA-2(1)",
+        "hipaa": "164.312(d)",
+        "nist_800_53_r5": "IA-2(1)",
+        "pci_dss_v4.0": "8.4.1",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "IAM policies on destructive actions do not require MFA. A stolen access key alone can execute destructive operations.",
+        "action": "Add an aws:MultiFactorAuthPresent condition to IAM policies that permit destructive actions. Example condition block: \"Condition\": {\"Bool\": {\"aws:MultiFactorAuthPresent\": \"true\"}} Apply to policies covering s3:Delete*, iam:Create*, iam:Delete*, ec2:Terminate*, rds:Delete*, and similar destructive API calls.",
+        "example": "{\n  \"identity\": {\n    \"kind\": \"policy\",\n    \"policy\": {\n      \"mfa_required_on_destructive_actions\": true\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-policy-mfa-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-policy-mfa-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "ea9ff9b4c84c25287b628c13f56a57d3ee364434",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-iam-policy-mfa-fail/controls/"
+      ]
+    }
+  }
+}

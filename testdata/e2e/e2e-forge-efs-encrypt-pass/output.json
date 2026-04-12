@@ -32,11 +32,8 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-efs-encrypt-pass/controls/"
-      ]
+      "head_commit": "ea9ff9b4c84c25287b628c13f56a57d3ee364434",
+      "dirty": false
     }
   }
 }
