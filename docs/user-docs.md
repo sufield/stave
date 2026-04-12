@@ -705,9 +705,9 @@ stave capabilities
   "inputs": {
     "source_types": [
       {
-        "type": "terraform.plan_json",
-        "description": "Terraform plan JSON output",
-        "tool_min_version": "1.5.0",
+        "type": "aws.config_api",
+        "description": "AWS Config API snapshot",
+        "tool_min_version": "1.0.0",
         "plan_format": "terraform show -json"
       },
       {
@@ -1510,9 +1510,9 @@ Observations capture the state of your infrastructure at a point in time.
 {
   "schema_version": "obs.v0.1",
   "generated_by": {
-    "source_type": "terraform.plan_json",
-    "tool": "terraform",
-    "tool_version": "1.6.3",
+    "source_type": "aws.config_api",
+    "tool": "stave-extract",
+    "tool_version": "1.0.0",
     "provider": "hashicorp/aws",
     "provider_version": "5.31.0"
   },

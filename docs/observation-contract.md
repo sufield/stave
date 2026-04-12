@@ -43,7 +43,7 @@ the schema rejects `additionalProperties`).
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `source_type` | string | Extractor kind (`"aws-s3-snapshot"`, `"terraform.plan_json"`) |
+| `source_type` | string | Extractor kind (`"aws-s3-snapshot"`, `"gcp.asset_inventory"`, `"custom.script"`) |
 | `tool` | string | Tool name (`"stave-extract"`) |
 | `tool_version` | string | Semantic version |
 | `provider` | string | Cloud provider (`"aws"`) |

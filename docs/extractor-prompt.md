@@ -23,7 +23,7 @@ The output MUST be a flat JSON object with this exact structure:
 ```json
 {
   "schema": "obs.v0.1",
-  "source_type": "[e.g., aws_s3, github_repo, terraform_plan]",
+  "source_type": "[e.g., aws_s3, gcp_storage, custom_script]",
   "captured_at": "YYYY-MM-DDTHH:MM:SSZ",
   "assets": [
     {

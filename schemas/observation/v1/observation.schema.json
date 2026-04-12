@@ -35,7 +35,7 @@
         "source_type": {
           "type": "string",
           "title": "Source Type",
-          "description": "Source type identifier indicating the extraction method (e.g., terraform.plan_json, aws.config_api)."
+          "description": "Source type identifier indicating the extraction method (e.g., aws.config_api, gcp.asset_inventory, custom.script)."
         },
         "tool": {
           "type": "string",
