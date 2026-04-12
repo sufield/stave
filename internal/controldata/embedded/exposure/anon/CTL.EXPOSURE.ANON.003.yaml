@@ -1,14 +1,15 @@
 dsl_version: ctrl.v1
 id: CTL.EXPOSURE.ANON.003
-name: Unauthenticated Access Path Must Have Auth Boundary
+name: Unauthenticated Access Path Must Have Authentication Boundary
 description: >
   Any resource reachable from anonymous principals must have at least
-  one authentication or authorization boundary in the access path.
-  Valid boundaries include WAF with managed rule groups, Cognito user
-  pool authorizers, Lambda authorizers, or IAM authorization on API
-  Gateway. A path without any auth boundary means there is zero
-  friction between the public internet and the target resource — no
-  rate limiting, no identity verification, no request filtering.
+  one authentication boundary in the access path — a point where
+  identity is verified (Cognito authorizer, Lambda authorizer, IAM
+  authorization, mTLS). An inspection boundary (WAF, API Gateway
+  threat protection) provides defense-in-depth but does NOT establish
+  identity — a path with only WAF is still unauthenticated. This
+  control flags paths where no identity verification exists between
+  the public internet and the target resource.
 domain: exposure
 severity: high
 compliance:
@@ -29,14 +30,14 @@ params:
     multiplier: 2.0
 remediation:
   description: >
-    Resource is reachable from anonymous with no authentication or
-    authorization boundary in the path. Zero friction between the
-    public internet and the resource.
+    Resource is reachable from anonymous with no authentication
+    boundary in the path. An inspection boundary (WAF) may exist
+    but does not verify identity.
   action: >
-    Add a boundary to the access path. Attach a WAF web ACL with
-    managed rule groups to the API Gateway. Configure a Cognito user
-    pool or Lambda authorizer on API Gateway routes. Enable IAM
-    authorization on the API Gateway stage.
+    Add an authentication boundary to the access path. Configure a
+    Cognito user pool authorizer or Lambda authorizer on API Gateway
+    routes. Enable IAM authorization on the API Gateway stage. If
+    service-to-service, enable mTLS.
   example: |
     {
       "reachability": {
@@ -44,7 +45,8 @@ remediation:
         "anonymous_path": {
           "reachable": true,
           "has_auth_boundary": true,
-          "auth_boundary_type": "waf"
+          "auth_boundary_types": ["cognito"],
+          "inspection_boundary_types": ["waf"]
         }
       }
     }

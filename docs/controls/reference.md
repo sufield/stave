@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 257
-**Pack hash:** `6d96834f8a8c1f13488678065273ccadfab9044f21527e297df699fbec892d21`
+**Total controls:** 259
+**Pack hash:** `8e2f79aa510eea30e1149a690ff62e0bdece8890612f4be03d233adceed7b1d2`
 
 ## Summary
 
@@ -14,11 +14,11 @@
 | high | 109 |
 | info | 16 |
 | low | 16 |
-| medium | 81 |
+| medium | 83 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 202 |
+| exposure | 204 |
 | governance | 2 |
 | identity | 49 |
 | storage | 4 |
@@ -1135,16 +1135,31 @@ Unauthenticated access paths to any resource must not exceed 3 hops. Deep chains
 
 ### CTL.EXPOSURE.ANON.003
 
-**Unauthenticated Access Path Must Have Auth Boundary**
+**Unauthenticated Access Path Must Have Authentication Boundary**
 
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
 - **Compliance:** fedramp_moderate: SC-7; nist_800_53_r5: SC-7; pci_dss_v4.0: 6.4.1; soc2: CC6.6;
 
-Any resource reachable from anonymous principals must have at least one authentication or authorization boundary in the access path. Valid boundaries include WAF with managed rule groups, Cognito user pool authorizers, Lambda authorizers, or IAM authorization on API Gateway. A path without any auth boundary means there is zero friction between the public internet and the target resource — no rate limiting, no identity verification, no request filtering.
+Any resource reachable from anonymous principals must have at least one authentication boundary in the access path — a point where identity is verified (Cognito authorizer, Lambda authorizer, IAM authorization, mTLS). An inspection boundary (WAF, API Gateway threat protection) provides defense-in-depth but does NOT establish identity — a path with only WAF is still unauthenticated. This control flags paths where no identity verification exists between the public internet and the target resource.
 
-**Remediation:** Add a boundary to the access path. Attach a WAF web ACL with managed rule groups to the API Gateway. Configure a Cognito user pool or Lambda authorizer on API Gateway routes. Enable IAM authorization on the API Gateway stage.
+**Remediation:** Add an authentication boundary to the access path. Configure a Cognito user pool authorizer or Lambda authorizer on API Gateway routes. Enable IAM authorization on the API Gateway stage. If service-to-service, enable mTLS.
+
+---
+
+### CTL.EXPOSURE.ANON.004
+
+**Unauthenticated Access Path Should Have Inspection Boundary**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-3; pci_dss_v4.0: 6.4.2;
+
+Any resource reachable from anonymous principals should have at least one inspection boundary in the access path — a point where requests are filtered for malicious content (WAF with managed rule groups, API Gateway request validation). An authentication boundary verifies identity; an inspection boundary verifies request safety. Both are needed for defense-in-depth. This control flags paths where no request inspection exists.
+
+**Remediation:** Attach a WAF web ACL with managed rule groups (AWSManagedRulesCommonRuleSet, AWSManagedRulesKnownBadInputsRuleSet) to the API Gateway stage or ALB. Enable API Gateway request validation.
 
 ---
 
@@ -1159,6 +1174,20 @@ Any resource reachable from anonymous principals must have at least one authenti
 Unauthenticated reachability cannot be assessed when the reachability kind discriminator is present but the reachable field is missing. The extractor encountered an error during graph traversal and could not determine whether the resource is reachable from anonymous principals.
 
 **Remediation:** Re-run the reachability extractor with sufficient IAM permissions to read API Gateway configurations, Lambda function policies, IAM role trust policies, and resource-based policies for all resources in the account.
+
+---
+
+### CTL.EXPOSURE.ANON.PARTIAL.001
+
+**Reachability Path Must Be Fully Resolved**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+
+When the extractor finds a path from anonymous to a resource but cannot fully resolve all intermediate nodes (e.g., access denied on an IAM policy lookup, missing Lambda configuration), the path is marked as partially resolved. Safety cannot be proven because the unresolved segment may contain additional access grants that widen the blast radius. This is the "unknown" state — worse than a confirmed safe path, potentially better than a confirmed unsafe path.
+
+**Remediation:** Grant the reachability extractor read access to the unresolved resources. Required permissions include iam:GetRolePolicy, lambda:GetFunction, apigateway:GetMethod, and resource-based policy read access for all services in the path.
 
 ---
 

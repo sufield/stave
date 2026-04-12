@@ -14,8 +14,8 @@ have the same severity-level findings.
 
 ### Extractor computes, Stave evaluates
 
-Stave does not traverse IAM policy graphs. The extractor performs
-the analysis and stores the results as observation properties:
+The extractor performs the IAM policy graph analysis and stores
+the results as observation properties. Stave evaluates them:
 
 ```
 Extractor                              Stave
@@ -27,8 +27,7 @@ Store in observation properties  →    Evaluate as standard predicates
 ```
 
 This preserves Stave's core promise: deterministic evaluation of
-YAML controls against observation properties. No graph engine in
-the CLI.
+YAML controls against observation properties.
 
 ### Observation properties
 

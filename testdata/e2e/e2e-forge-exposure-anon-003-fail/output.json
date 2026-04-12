@@ -37,8 +37,8 @@
   "findings": [
     {
       "control_id": "CTL.EXPOSURE.ANON.003",
-      "control_name": "Unauthenticated Access Path Must Have Auth Boundary",
-      "control_description": "Any resource reachable from anonymous principals must have at least one authentication or authorization boundary in the access path. Valid boundaries include WAF with managed rule groups, Cognito user pool authorizers, Lambda authorizers, or IAM authorization on API Gateway. A path without any auth boundary means there is zero friction between the public internet and the target resource — no rate limiting, no identity verification, no request filtering.\n",
+      "control_name": "Unauthenticated Access Path Must Have Authentication Boundary",
+      "control_description": "Any resource reachable from anonymous principals must have at least one authentication boundary in the access path — a point where identity is verified (Cognito authorizer, Lambda authorizer, IAM authorization, mTLS). An inspection boundary (WAF, API Gateway threat protection) provides defense-in-depth but does NOT establish identity — a path with only WAF is still unauthenticated. This control flags paths where no identity verification exists between the public internet and the target resource.\n",
       "asset_id": "arn:aws:dynamodb:us-east-1:123456789:table/orders",
       "asset_type": "aws_dynamodb_table",
       "asset_vendor": "aws",
@@ -84,9 +84,9 @@
         "exposure_window_count": 1
       },
       "remediation": {
-        "description": "Resource is reachable from anonymous with no authentication or authorization boundary in the path. Zero friction between the public internet and the resource.",
-        "action": "Add a boundary to the access path. Attach a WAF web ACL with managed rule groups to the API Gateway. Configure a Cognito user pool or Lambda authorizer on API Gateway routes. Enable IAM authorization on the API Gateway stage.",
-        "example": "{\n  \"reachability\": {\n    \"kind\": \"anonymous_path\",\n    \"anonymous_path\": {\n      \"reachable\": true,\n      \"has_auth_boundary\": true,\n      \"auth_boundary_type\": \"waf\"\n    }\n  }\n}\n"
+        "description": "Resource is reachable from anonymous with no authentication boundary in the path. An inspection boundary (WAF) may exist but does not verify identity.",
+        "action": "Add an authentication boundary to the access path. Configure a Cognito user pool authorizer or Lambda authorizer on API Gateway routes. Enable IAM authorization on the API Gateway stage. If service-to-service, enable mTLS.",
+        "example": "{\n  \"reachability\": {\n    \"kind\": \"anonymous_path\",\n    \"anonymous_path\": {\n      \"reachable\": true,\n      \"has_auth_boundary\": true,\n      \"auth_boundary_types\": [\"cognito\"],\n      \"inspection_boundary_types\": [\"waf\"]\n    }\n  }\n}\n"
       },
       "fix_plan": {
         "id": "fix-62b47049ad3cc297",
@@ -193,8 +193,11 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "efc627df5032a342d2ea53287c40c2b12c4c90bc",
-      "dirty": false
+      "head_commit": "b205fe18551faec7f685da8710c5b5602ddc6c50",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-exposure-anon-003-fail/controls/CTL.EXPOSURE.ANON.003.yaml"
+      ]
     }
   }
 }

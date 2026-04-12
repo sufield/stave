@@ -203,9 +203,8 @@ risk has diminishing returns.
 account-wide scores. The math is proportional to the actual blast radius.
 
 **Deterministic.** Given the same controls and chain definitions, the
-same score is always produced. No probabilistic models, no black boxes.
-The auditor can read the chain YAML, verify the multiplier table, and
-reproduce the score by hand.
+same score is always produced. The auditor can read the chain YAML,
+verify the multiplier table, and reproduce the score by hand.
 
 ## Identity blast radius
 

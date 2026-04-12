@@ -1,0 +1,24 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:s3:::resolved-bucket",
+      "properties": {
+        "reachability": {
+          "kind": "anonymous_path",
+          "anonymous_path": {
+            "reachable": true,
+            "path_hop_count": 3,
+            "target_data_classification": "none",
+            "has_auth_boundary": true,
+            "is_fully_resolved": true,
+            "entry_point_type": "apigateway"
+          }
+        }
+      },
+      "type": "aws_s3_bucket",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1"
+}

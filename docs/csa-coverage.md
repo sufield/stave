@@ -22,7 +22,7 @@ How Stave addresses the 7 cloud security lessons from the Cloud Security Allianc
 
 **The problem:** Organizations treated crypto mining as a cost issue rather than recognizing it as evidence of compromised access and potential persistence mechanisms.
 
-**How Stave helps:** Stave proves those gaps exist with duration tracking. `--max-unsafe 168h` means "this bucket has been misconfigured for over 7 days." That's not an alert — it's evidence of a structural gap. A bucket that's been public for months is a different risk than one that was public for 5 minutes during a deploy.
+**How Stave helps:** Stave proves those gaps exist with duration tracking. `--max-unsafe 168h` means "this bucket has been misconfigured for over 7 days." Duration tracking produces evidence of structural gaps — a bucket that's been public for months is a different risk than one that was public for 5 minutes during a deploy.
 
 **Controls:** Every control tracks unsafe duration. `stave diagnose` explains why a finding triggered and for how long.
 
@@ -58,13 +58,13 @@ How Stave addresses the 7 cloud security lessons from the Cloud Security Allianc
 
 **Workflow:** Capture snapshots on a regular cadence (daily or weekly). Run `stave apply` in CI. `stave status` shows when the last evaluation ran and what to do next.
 
-## What Stave does not cover
+## Complementary tools
 
-Stave is the configuration safety layer. It does not cover:
+Stave is the configuration safety layer. These tools cover adjacent concerns:
 
-- **Real-time credential monitoring** — use AWS GuardDuty or CloudTrail anomaly detection
-- **Cost anomaly detection** — use AWS Cost Anomaly Detection
-- **Runtime agent-based detection** — use CSPM agents or EDR tools
-- **Live API querying** — Stave evaluates offline against snapshots, not live infrastructure
+- **Real-time credential monitoring** — AWS GuardDuty, CloudTrail anomaly detection
+- **Cost anomaly detection** — AWS Cost Anomaly Detection
+- **Runtime agent-based detection** — CSPM agents, EDR tools
+- **Live API querying** — CSPM platforms with cloud credentials
 
 Stave's role is to prove that your infrastructure's configuration doesn't have the gaps that make these attacks possible in the first place. It complements runtime detection tools by ensuring the attack surface is minimized before an attacker arrives.

@@ -369,6 +369,7 @@ packs:
       - CTL.IAM.ADMIN.COUNT.001
       - CTL.EXPOSURE.ANON.001
       - CTL.EXPOSURE.ANON.003
+      - CTL.EXPOSURE.ANON.004
       # Req 8 — Authentication
       - CTL.IAM.ROOT.MFA.001
       - CTL.IAM.ROOT.ACCESSKEY.001
@@ -1102,7 +1103,13 @@ controls:
     summary: Unauthenticated Access Path Must Not Exceed Depth Threshold
   CTL.EXPOSURE.ANON.003:
     path: internal/controldata/embedded/exposure/anon/CTL.EXPOSURE.ANON.003.yaml
-    summary: Unauthenticated Access Path Must Have Auth Boundary
+    summary: Unauthenticated Access Path Must Have Authentication Boundary
+  CTL.EXPOSURE.ANON.004:
+    path: internal/controldata/embedded/exposure/anon/CTL.EXPOSURE.ANON.004.yaml
+    summary: Unauthenticated Access Path Should Have Inspection Boundary
+  CTL.EXPOSURE.ANON.PARTIAL.001:
+    path: internal/controldata/embedded/exposure/anon/CTL.EXPOSURE.ANON.PARTIAL.001.yaml
+    summary: Reachability Path Must Be Fully Resolved
   CTL.EXPOSURE.ANON.INCOMPLETE.001:
     path: internal/controldata/embedded/exposure/anon/CTL.EXPOSURE.ANON.INCOMPLETE.001.yaml
     summary: Complete Data Required for Reachability Assessment

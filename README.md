@@ -1,6 +1,6 @@
 # Stave
 
-Deterministic, traceable risk reasoning engine for cloud infrastructure. Evaluates the structural integrity of your safety envelope using local snapshots — no cloud credentials required.
+Deterministic, traceable risk reasoning engine for cloud infrastructure. Evaluates the structural integrity of your safety envelope using local snapshots — fully offline, air-gapped by design.
 
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/sufield/stave/badge)](https://securityscorecards.dev/viewer/?uri=github.com/sufield/stave)
 [![Go Report Card](https://goreportcard.com/badge/github.com/sufield/stave?v=1)](https://goreportcard.com/report/github.com/sufield/stave)
@@ -8,11 +8,11 @@ Deterministic, traceable risk reasoning engine for cloud infrastructure. Evaluat
 
 ## What is Stave?
 
-Stave is not a scanner, not a CSPM, and not an IaC linter. It is a new category: a **safety envelope evaluator** that applies formal safety engineering principles to cloud infrastructure.
+Stave is a **safety envelope evaluator** — a new category that applies formal safety engineering principles to cloud infrastructure.
 
 **Unit of analysis:** Control × Asset → Safety Envelope. Each control defines one layer of protection. Each asset has a safety envelope — the complete set of controls protecting it. Stave evaluates individual layers, then reasons about whether the envelope is intact, degraded, or collapsed.
 
-**Output type:** Reasoning Attestation. Not a list of findings. Not a risk score. A structured, deterministic argument about the integrity of each safety envelope — what failed, what the failures mean in combination, and what to fix first to restore the envelope.
+**Output type:** Reasoning Attestation. A structured, deterministic argument about the integrity of each safety envelope — what failed, what the failures mean in combination, how they compound, and what to fix first to restore the envelope.
 
 This concept comes from safety engineering (IEC 61508, DO-178C) where systems must prove they are safe, not just report what is broken. Stave applies the same discipline to cloud configuration.
 
@@ -47,11 +47,11 @@ Stave sees the same three findings, then reasons:
 
 Same data. Different output. The scanner says "three things are wrong." Stave says "the safety envelope around PHI data has collapsed — this is a total exposure with no audit trail, and enabling CloudTrail would be the cheapest fix to start restoring the envelope."
 
-The output is not a score from an algorithm. It is a **deterministic logical conclusion** from declared invariants — every step traceable, every score reproducible. Define safety controls in YAML, compile them to [CEL](https://github.com/google/cel-go), evaluate JSON snapshots locally. Any vendor, any asset type, air-gapped by design.
+Every score is a **deterministic, traceable reasoning chain**. Compound scores show their full factor breakdown (severity x duration x blast radius x exposure). Chain findings list which controls failed and which fixes break the chain. Given the same inputs, the same ranking is always produced — every step auditable, every conclusion reproducible. Define safety controls in YAML, compile them to [CEL](https://github.com/google/cel-go), evaluate JSON snapshots locally. Any vendor, any asset type, air-gapped by design.
 
 ## Features
 
-- **257 built-in controls** across 31 domains (S3, IAM, VPC, EC2, RDS, ELB, K8s, CloudTrail, CloudWatch, KMS, and [21 more](docs/controls/reference.md))
+- **259 built-in controls** across 31 domains (S3, IAM, VPC, EC2, RDS, ELB, K8s, CloudTrail, CloudWatch, KMS, and [21 more](docs/controls/reference.md))
 - **10 compliance profiles** — HIPAA, CIS AWS v3.0, SOC 2, PCI-DSS v4.0, NIST 800-53, FedRAMP, GDPR, FFIEC, ISO 27001, NIST CSF 2.0
 - **Risk reasoning engine** — compound risk scoring across co-failing controls, MITRE-aligned attack stage summary, blast radius multipliers
 - **Safety chains** — 5 built-in chain definitions detect compound failures (PHI exposure, root compromise, detection blindness, identity blast radius, unauthenticated data path)
@@ -104,7 +104,7 @@ Extract → Validate → Apply → Act
 4. Act        Review findings, remediate, re-evaluate
 ```
 
-Extraction is out of scope — Stave evaluates observations, it does not fetch data from cloud providers. Extractors are separate programs (any language) that produce `obs.v0.1` JSON. See [Building an Extractor](docs/extractor-prompt.md).
+Stave evaluates observations. Extractors are separate programs (any language) that produce `obs.v0.1` JSON from cloud APIs, Terraform state, or any config source. See [Building an Extractor](docs/extractor-prompt.md).
 
 ## Usage examples
 
@@ -149,7 +149,7 @@ New observation properties are additive and backward-compatible. Existing contro
 
 ## Built-in controls
 
-257 controls across 31 domains:
+259 controls across 31 domains:
 
 ### AWS S3 (67 controls)
 

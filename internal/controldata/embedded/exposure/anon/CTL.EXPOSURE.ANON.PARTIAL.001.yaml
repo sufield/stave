@@ -1,0 +1,53 @@
+dsl_version: ctrl.v1
+id: CTL.EXPOSURE.ANON.PARTIAL.001
+name: Reachability Path Must Be Fully Resolved
+description: >
+  When the extractor finds a path from anonymous to a resource but
+  cannot fully resolve all intermediate nodes (e.g., access denied
+  on an IAM policy lookup, missing Lambda configuration), the path
+  is marked as partially resolved. Safety cannot be proven because
+  the unresolved segment may contain additional access grants that
+  widen the blast radius. This is the "unknown" state — worse than
+  a confirmed safe path, potentially better than a confirmed unsafe
+  path.
+domain: exposure
+severity: medium
+scope_tags:
+  - aws
+  - cross-service
+type: unsafe_state
+params:
+  base_impact: 6
+  attack_stage: initial_access
+remediation:
+  description: >
+    Reachability path is partially resolved. The extractor found a
+    path from anonymous but could not prove safety beyond a certain
+    point due to missing metadata.
+  action: >
+    Grant the reachability extractor read access to the unresolved
+    resources. Required permissions include iam:GetRolePolicy,
+    lambda:GetFunction, apigateway:GetMethod, and resource-based
+    policy read access for all services in the path.
+  example: |
+    {
+      "reachability": {
+        "kind": "anonymous_path",
+        "anonymous_path": {
+          "reachable": true,
+          "is_fully_resolved": true,
+          "unresolved_reason": null
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.reachability.kind
+      op: eq
+      value: anonymous_path
+    - field: properties.reachability.anonymous_path.reachable
+      op: eq
+      value: true
+    - field: properties.reachability.anonymous_path.is_fully_resolved
+      op: eq
+      value: false
