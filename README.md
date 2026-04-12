@@ -56,6 +56,7 @@ Every score is a **deterministic, traceable reasoning chain**. Compound scores s
 - **Risk reasoning engine** — compound risk scoring across co-failing controls, MITRE-aligned attack stage summary, blast radius multipliers
 - **Safety chains** — 8 built-in chain definitions detect compound failures (PHI exposure, root compromise, detection blindness, identity blast radius, unauthenticated data path, data exfiltration, cross-env pivot, privilege escalation)
 - **Exposure ranking** — Silent Killer Finder ranks findings by duration × severity × blast radius to answer "what to fix first"
+- **Drift detection** — `stave drift` compares two snapshots and treats configuration changes as violations, exit code 3 for CI/CD gating
 - **Unsafe duration tracking** — detects how long assets remain misconfigured across snapshots
 - **Custom controls** — YAML with `unsafe_predicate` for any asset type, no code changes
 - **CI/CD ready** — exit codes, SARIF output, baseline tracking, policy gating
@@ -203,6 +204,7 @@ Full reference: [Control reference](docs/controls/reference.md)
 | [Identity blast radius](docs/identity-blast-radius.md) | Credential compromise reach analysis |
 | [Unauthenticated reachability](docs/unauthenticated-reachability.md) | Anonymous access path detection |
 | [Data exfiltration](docs/data-exfiltration.md) | Reverse reachability: how data gets out |
+| [Drift detection](docs/drift-detection.md) | Configuration drift as violation |
 | [Evaluation semantics](docs/evaluation-semantics.md) | How duration tracking works |
 | [Architecture](docs/architecture/overview.md) | System design overview |
 | [FAQ](docs/faq.md) | Common questions |

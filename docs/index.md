@@ -18,6 +18,7 @@
 - [Identity Blast Radius](identity-blast-radius.md) — Credential compromise reach, assume chains, extractor patterns
 - [Unauthenticated Reachability](unauthenticated-reachability.md) — Anonymous access path detection, composition attacks, extractor BFS
 - [Data Exfiltration](data-exfiltration.md) — Reverse reachability: how data gets out
+- [Drift Detection](drift-detection.md) — Configuration drift as a violation, baseline comparison
 - [Evaluation Engine Capabilities](evaluation-engine-capabilities.md) — Predicate operators and matching
 - [Observation Contract](observation-contract.md) — Observation data requirements
 - [Contract-First Schemas](contracts.md) — Schema-driven design
