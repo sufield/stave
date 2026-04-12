@@ -1,0 +1,119 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "cd28de7692d56bb6b098b510d0dd64e14b32291af3270ec24f7ad4d5f1036d0b",
+        "2026-01-11T000000Z.json": "efd76dff37925273333bfcce9616035047a640508fc11e411056d572e3b3f229"
+      },
+      "overall": "7da5a1e52f753903ff6b6d18cb8d208e70d427b7eb56aa6fd7b19a3a884186c9"
+    },
+    "policy_fingerprint": "18fbb9585b4133721138e32c91859d7574beb65ba278f836744dadc45ba68076"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.IAM.CROSS.ENV.PATH.001",
+      "asset_id": "arn:aws:iam::prod:role/devops-deploy",
+      "asset_type": "aws_iam_role",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.IAM.CROSS.ENV.PATH.001",
+      "control_name": "Production Must Not Be Reachable from Lower Environment via Transitive Trust",
+      "control_description": "Production resources must have no transitive access path from non-production environments. The extractor traces sts:AssumeRole chains and resource policy grants from non-production accounts to production resources. A direct cross-account role is one hop; a chain through an intermediate shared-services account is two or more. Each hop widens the attack surface — a compromised dev credential becomes a production breach when bridge roles exist.\n",
+      "asset_id": "arn:aws:iam::prod:role/devops-deploy",
+      "asset_type": "aws_iam_role",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "identity.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "role"
+          },
+          {
+            "property": "identity.role.cross_env.reachable_from_lower_env",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance": {
+        "fedramp_moderate": "AC-4",
+        "nist_800_53_r5": "AC-4",
+        "pci_dss_v4.0": "7.2.1",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Production resource is reachable from a non-production environment through a chain of trust relationships. Security boundary between environments is collapsed via transitive access.",
+        "action": "Remove cross-account trust relationships that bridge non-prod to prod. Use separate deployment pipelines per environment. Enforce environment isolation via SCPs that deny non-prod accounts from assuming prod roles.",
+        "example": "{\n  \"identity\": {\n    \"kind\": \"role\",\n    \"role\": {\n      \"cross_env\": {\n        \"reachable_from_lower_env\": false\n      }\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.IAM.CROSS.ENV.PATH.001",
+      "asset_id": "arn:aws:iam::prod:role/devops-deploy",
+      "exposure_score": 250,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 2.5,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-cross-env-path-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-cross-env-path-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "8b468ec12ee68a0de591b8a767b86c1b0399a40d",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-iam-cross-env-path-fail/controls/"
+      ]
+    }
+  }
+}

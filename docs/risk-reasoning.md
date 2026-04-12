@@ -61,7 +61,8 @@ compound_severity: critical
 
 Built-in chains: `public_phi_exposure`, `root_compromise_path`,
 `detection_blindness`, `identity_blast_radius`,
-`unauthenticated_data_path`.
+`unauthenticated_data_path`, `data_exfiltration_path`,
+`cross_env_pivot`, `privilege_escalation_path`.
 
 ## Control risk metadata
 

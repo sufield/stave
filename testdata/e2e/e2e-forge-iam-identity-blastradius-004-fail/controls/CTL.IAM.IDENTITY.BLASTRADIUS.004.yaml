@@ -1,0 +1,55 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.IDENTITY.BLASTRADIUS.004
+name: Role Must Not Reach Excessive Sensitive Resources
+description: >
+  IAM roles must have access to fewer than 20 resources classified
+  as sensitive (PHI, PII, confidential). A role that can reach 85
+  sensitive resources is a qualitatively different risk than one that
+  reaches 5 — credential compromise exposes a proportionally larger
+  data surface. The extractor counts unique sensitive resources
+  reachable through the role's attached and inline policies.
+domain: identity
+severity: critical
+compliance:
+  hipaa: "164.312(a)(1)"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.2"
+  nist_800_53_r5: "AC-6(5)"
+  fedramp_moderate: "AC-6(5)"
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params:
+  base_impact: 10
+  attack_stage: exfiltration
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    Role has access to more than 20 sensitive resources. Credential
+    compromise exposes a disproportionate data surface.
+  action: >
+    Split broad roles into per-service roles scoped to specific
+    resource ARNs. Use IAM Access Analyzer to identify unused
+    permissions on sensitive resources. Apply permissions boundaries
+    that restrict access to classified data.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "role": {
+          "sensitive_resource_count": 5
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: role
+    - field: properties.identity.role.sensitive_resource_count
+      op: gt
+      value: 20

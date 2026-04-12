@@ -1,0 +1,13 @@
+id: privilege_escalation_path
+description: >
+  Principal can escalate to admin through a composition of
+  individually-authorized permissions. Multi-step escalation chain
+  combined with existing self-modification or unrestricted PassRole
+  permissions creates a path from low privilege to full admin.
+controls:
+  - CTL.IAM.ESCALATE.CHAIN.001
+  - CTL.IAM.POLICY.ESCALATION.001
+  - CTL.IAM.POLICY.PASSROLE.001
+  - CTL.IAM.POLICY.SOD.001
+escalation_threshold: 2
+compound_severity: critical

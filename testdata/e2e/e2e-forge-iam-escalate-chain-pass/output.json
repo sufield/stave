@@ -1,0 +1,42 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "131df3e9b5464803326e9f92019dd0b5bb1ecc7d5892543cf73cc5ed7b28941b",
+        "2026-01-11T000000Z.json": "7a92ea3d6d009ab94eb7a00d1e4f75b187321c8c959e198d2b545e30cba01684"
+      },
+      "overall": "4af10cf4575bf56331fc21ba8645f87c650449aa464867d9654f9e60e4c7caf1"
+    },
+    "policy_fingerprint": "4299c3d120609666cdccd9e6aa87a3eb9f2029f9c76123247b859a6b8d160b64"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-escalate-chain-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-escalate-chain-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "8b468ec12ee68a0de591b8a767b86c1b0399a40d",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-iam-escalate-chain-pass/controls/"
+      ]
+    }
+  }
+}

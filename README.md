@@ -51,10 +51,10 @@ Every score is a **deterministic, traceable reasoning chain**. Compound scores s
 
 ## Features
 
-- **259 built-in controls** across 31 domains (S3, IAM, VPC, EC2, RDS, ELB, K8s, CloudTrail, CloudWatch, KMS, and [21 more](docs/controls/reference.md))
+- **265 built-in controls** across 31 domains (S3, IAM, VPC, EC2, RDS, ELB, K8s, CloudTrail, CloudWatch, KMS, and [21 more](docs/controls/reference.md))
 - **10 compliance profiles** — HIPAA, CIS AWS v3.0, SOC 2, PCI-DSS v4.0, NIST 800-53, FedRAMP, GDPR, FFIEC, ISO 27001, NIST CSF 2.0
 - **Risk reasoning engine** — compound risk scoring across co-failing controls, MITRE-aligned attack stage summary, blast radius multipliers
-- **Safety chains** — 5 built-in chain definitions detect compound failures (PHI exposure, root compromise, detection blindness, identity blast radius, unauthenticated data path)
+- **Safety chains** — 8 built-in chain definitions detect compound failures (PHI exposure, root compromise, detection blindness, identity blast radius, unauthenticated data path, data exfiltration, cross-env pivot, privilege escalation)
 - **Exposure ranking** — Silent Killer Finder ranks findings by duration × severity × blast radius to answer "what to fix first"
 - **Unsafe duration tracking** — detects how long assets remain misconfigured across snapshots
 - **Custom controls** — YAML with `unsafe_predicate` for any asset type, no code changes
@@ -149,7 +149,7 @@ New observation properties are additive and backward-compatible. Existing contro
 
 ## Built-in controls
 
-259 controls across 31 domains:
+265 controls across 31 domains:
 
 ### AWS S3 (67 controls)
 
@@ -171,7 +171,7 @@ New observation properties are additive and backward-compatible. Existing contro
 | `artifacts` | 1 | VCS artifacts on public buckets |
 | `misc` | 4 | Incomplete data, completeness checks |
 
-### AWS IAM (44 controls)
+### AWS IAM (47 controls)
 
 Root account MFA and access keys, console user MFA, credential rotation, password policy, privilege escalation (self-modify, PassRole, AssumeRole), permissions boundaries, break-glass persistence, cross-environment access, inactive accounts. CIS AWS Benchmark aligned.
 
@@ -202,6 +202,7 @@ Full reference: [Control reference](docs/controls/reference.md)
 | [Risk reasoning](docs/risk-reasoning.md) | Compound risk scoring and safety chains |
 | [Identity blast radius](docs/identity-blast-radius.md) | Credential compromise reach analysis |
 | [Unauthenticated reachability](docs/unauthenticated-reachability.md) | Anonymous access path detection |
+| [Data exfiltration](docs/data-exfiltration.md) | Reverse reachability: how data gets out |
 | [Evaluation semantics](docs/evaluation-semantics.md) | How duration tracking works |
 | [Architecture](docs/architecture/overview.md) | System design overview |
 | [FAQ](docs/faq.md) | Common questions |

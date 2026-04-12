@@ -1,0 +1,1 @@
+{"assets":[{"id":"arn:aws:iam::123456789:role/data-lake-role","properties":{"identity":{"kind":"role","role":{"reachable_resources_count":200,"sensitive_resource_count":85}}},"type":"aws_iam_role","vendor":"aws"}],"captured_at":"2026-01-01T00:00:00Z","schema_version":"obs.v0.1"}

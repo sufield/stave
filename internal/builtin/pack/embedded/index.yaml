@@ -37,6 +37,7 @@ packs:
       - CTL.SECRETSMANAGER.ACCESS.001
       - CTL.VPC.SG.DEFAULT.001
       - CTL.EXPOSURE.ANON.001
+      - CTL.EXPOSURE.EXFIL.001
       # §164.312(a)(2)(i) — Unique User Identification
       - CTL.IAM.CRED.ROTATION.001
       - CTL.IAM.CRED.UNUSED.001
@@ -212,6 +213,10 @@ packs:
       - CTL.IAM.PASSWORD.ROTATION.001
       - CTL.EXPOSURE.ANON.001
       - CTL.EXPOSURE.ANON.002
+      - CTL.EXPOSURE.EXFIL.001
+      - CTL.IAM.ESCALATE.CHAIN.001
+      - CTL.IAM.CROSS.ENV.PATH.001
+      - CTL.IAM.IDENTITY.BLASTRADIUS.004
       - CTL.S3.PUBLIC.001
       - CTL.S3.ENCRYPT.001
       - CTL.S3.ENCRYPT.002
@@ -370,6 +375,9 @@ packs:
       - CTL.EXPOSURE.ANON.001
       - CTL.EXPOSURE.ANON.003
       - CTL.EXPOSURE.ANON.004
+      - CTL.EXPOSURE.EXFIL.001
+      - CTL.IAM.ESCALATE.CHAIN.001
+      - CTL.IAM.CROSS.ENV.PATH.001
       # Req 8 — Authentication
       - CTL.IAM.ROOT.MFA.001
       - CTL.IAM.ROOT.ACCESSKEY.001
@@ -1077,6 +1085,15 @@ controls:
   CTL.IAM.IDENTITY.BLASTRADIUS.003:
     path: internal/controldata/embedded/iam/identity/CTL.IAM.IDENTITY.BLASTRADIUS.003.yaml
     summary: Role Assume Chain Must Not Exceed Depth Threshold
+  CTL.IAM.IDENTITY.BLASTRADIUS.004:
+    path: internal/controldata/embedded/iam/identity/CTL.IAM.IDENTITY.BLASTRADIUS.004.yaml
+    summary: Role Must Not Reach Excessive Sensitive Resources
+  CTL.IAM.ESCALATE.CHAIN.001:
+    path: internal/controldata/embedded/iam/escalation/CTL.IAM.ESCALATE.CHAIN.001.yaml
+    summary: Principal Must Not Have Multi-Step Path to Admin
+  CTL.IAM.CROSS.ENV.PATH.001:
+    path: internal/controldata/embedded/iam/policy/CTL.IAM.CROSS.ENV.PATH.001.yaml
+    summary: Production Must Not Be Reachable from Lower Environment via Transitive Trust
   CTL.IAM.ADMIN.COUNT.001:
     path: internal/controldata/embedded/iam/admin/CTL.IAM.ADMIN.COUNT.001.yaml
     summary: Admin User Count Must Not Exceed Threshold
@@ -1113,6 +1130,15 @@ controls:
   CTL.EXPOSURE.ANON.INCOMPLETE.001:
     path: internal/controldata/embedded/exposure/anon/CTL.EXPOSURE.ANON.INCOMPLETE.001.yaml
     summary: Complete Data Required for Reachability Assessment
+  CTL.EXPOSURE.EXFIL.001:
+    path: internal/controldata/embedded/exposure/exfil/CTL.EXPOSURE.EXFIL.001.yaml
+    summary: Sensitive Data Must Not Be Readable by Compute with Internet Egress
+  CTL.EXPOSURE.EXFIL.002:
+    path: internal/controldata/embedded/exposure/exfil/CTL.EXPOSURE.EXFIL.002.yaml
+    summary: Compute with Internet Egress Must Not Have Wildcard Write
+  CTL.EXPOSURE.EXFIL.INCOMPLETE.001:
+    path: internal/controldata/embedded/exposure/exfil/CTL.EXPOSURE.EXFIL.INCOMPLETE.001.yaml
+    summary: Complete Data Required for Exfiltration Assessment
   CTL.CLOUDFORMATION.ROLLBACK.001:
     path: internal/controldata/embedded/cloudformation/drift/CTL.CLOUDFORMATION.ROLLBACK.001.yaml
     summary: CloudFormation Stacks Must Have Rollback Enabled

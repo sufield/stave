@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.EXPOSURE.EXFIL.INCOMPLETE.001
+name: Complete Data Required for Exfiltration Assessment
+description: >
+  Data exfiltration path assessment requires the exfiltration kind
+  discriminator and the path_to_internet_exists field. The extractor
+  could not determine whether the compute instance has internet
+  egress.
+domain: exposure
+severity: low
+scope_tags:
+  - aws
+  - cross-service
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Exfiltration assessment is incomplete. The extractor could not
+    determine whether the compute instance has internet egress.
+  action: >
+    Re-run the exfiltration extractor with sufficient permissions to
+    read VPC route tables, NAT gateways, internet gateways, and
+    security group egress rules.
+unsafe_predicate:
+  all:
+    - field: properties.reachability.kind
+      op: eq
+      value: exfiltration_path
+    - field: properties.reachability.exfiltration.path_to_internet_exists
+      op: missing
+      value: true
