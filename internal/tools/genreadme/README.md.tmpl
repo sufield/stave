@@ -60,6 +60,7 @@ Every score is a **deterministic, traceable reasoning chain**. Compound scores s
 - **Continuous monitoring** — `stave watch` monitors observation directories for new snapshots, detects regressions in real time, emits alerts to stdout or JSONL file sinks
 - **Unsafe duration tracking** — detects how long assets remain misconfigured across snapshots
 - **Custom controls** — YAML with `unsafe_predicate` for any asset type, no code changes
+- **Evidence bundling** — `stave bundle` produces signed, portable evidence archives for air-gap GRC integration (ASFF compatible)
 - **CI/CD ready** — exit codes, SARIF output, baseline tracking, policy gating
 - **Extensible by design** — new properties and controls are additive and backward-compatible
 
@@ -206,6 +207,7 @@ Full reference: [Control reference](docs/controls/reference.md)
 | [Unauthenticated reachability](docs/unauthenticated-reachability.md) | Anonymous access path detection |
 | [Data exfiltration](docs/data-exfiltration.md) | Reverse reachability: how data gets out |
 | [Drift detection](docs/drift-detection.md) | Configuration drift as violation |
+| [Evidence bundling](docs/evidence-bundling.md) | Signed portable evidence for GRC |
 | [Evaluation semantics](docs/evaluation-semantics.md) | How duration tracking works |
 | [Architecture](docs/architecture/overview.md) | System design overview |
 | [FAQ](docs/faq.md) | Common questions |

@@ -26,6 +26,7 @@
 - [Shadow Logic Detection](shadow-logic.md) — NotAction/NotResource bypass, negative logic analysis
 - [KMS Concentration Risk](kms-concentration.md) — Cryptographic single point of failure detection
 - [Vendor Trust Leash](vendor-trust-leash.md) — Third-party SaaS access hygiene, ghost access detection
+- [Evidence Bundling](evidence-bundling.md) — Signed portable evidence for air-gap GRC integration
 - [Evaluation Engine Capabilities](evaluation-engine-capabilities.md) — Predicate operators and matching
 - [Observation Contract](observation-contract.md) — Observation data requirements
 - [Contract-First Schemas](contracts.md) — Schema-driven design

@@ -12,6 +12,7 @@ import (
 	applyvalidate "github.com/sufield/stave/cmd/apply/validate"
 	applyverify "github.com/sufield/stave/cmd/apply/verify"
 	"github.com/sufield/stave/cmd/bugreport"
+	stavebundle "github.com/sufield/stave/cmd/bundle"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/diagnose"
 	"github.com/sufield/stave/cmd/diagnose/artifacts"
@@ -137,6 +138,9 @@ func WireCommands(app *App) {
 
 	// Continuous monitoring
 	root.AddCommand(stavewatch.NewCmd())
+
+	// Evidence bundling
+	root.AddCommand(stavebundle.NewCmd())
 
 	// Supportability
 	root.AddCommand(doctor.NewCmd(doctor.Deps{

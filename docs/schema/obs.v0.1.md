@@ -37,7 +37,7 @@ The schema uses `additionalProperties: false` at every level. Extra fields cause
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `source_type` | string | No | Source type identifier (e.g., `terraform.plan_json`) |
+| `source_type` | string | No | Source type identifier (e.g., `aws.config_api`, `custom.script`) |
 | `tool` | string | No | Tool name |
 | `tool_version` | string | No | Tool version |
 | `provider` | string | No | Provider name |
