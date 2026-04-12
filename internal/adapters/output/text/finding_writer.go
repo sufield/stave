@@ -27,7 +27,7 @@ func (w *FindingWriter) MarshalFindings(enriched *appcontracts.EnrichedResult) (
 	d := &drawer{w: &buf}
 	result := enriched.Result
 
-	w.writeHeader(d, result)
+	w.writeHeader(d, &result)
 	if len(result.Findings) == 0 {
 		w.writeNoViolationsSummary(d)
 		if d.err != nil {
@@ -37,10 +37,11 @@ func (w *FindingWriter) MarshalFindings(enriched *appcontracts.EnrichedResult) (
 	}
 
 	remFindings := toRemediationFindings(enriched.Findings)
-	w.writeViolationsFromEnriched(d, result, remFindings)
-	w.writeChainFindings(d, result)
-	w.writeAttackStageSummary(d, result)
-	w.writeTopExposures(d, result)
+	w.writeViolationsFromEnriched(d, &result, remFindings)
+	w.writeChainFindings(d, &result)
+	w.writeAttackStageSummary(d, &result)
+	w.writeTopExposures(d, &result)
+	w.writeFrameworkReadiness(d, &result)
 	w.writeRemediationGroups(d, remFindings)
 	w.writeSkippedControls(d, result.SkippedControls)
 	writeExemptedAssets(d, enriched.ExemptedAssets)
@@ -55,7 +56,7 @@ func (w *FindingWriter) MarshalFindings(enriched *appcontracts.EnrichedResult) (
 	return buf.Bytes(), nil
 }
 
-func (w *FindingWriter) writeHeader(d *drawer, result evaluation.ComplianceReport) {
+func (w *FindingWriter) writeHeader(d *drawer, result *evaluation.ComplianceReport) {
 	d.ln("Evaluation Results")
 	d.ln("==================")
 	d.f("\nRun: %s (max-unsafe: %s, snapshots: %d)\n\n",
@@ -77,7 +78,7 @@ func (w *FindingWriter) writeNoViolationsSummary(d *drawer) {
 }
 
 // writeViolationsFromEnriched renders violation output from pre-enriched findings.
-func (w *FindingWriter) writeViolationsFromEnriched(d *drawer, result evaluation.ComplianceReport, enriched []remediation.Finding) {
+func (w *FindingWriter) writeViolationsFromEnriched(d *drawer, result *evaluation.ComplianceReport, enriched []remediation.Finding) {
 	d.ln("Violations")
 	d.ln("----------")
 	w.writeViolationDomainSummary(d, result.Checks)
@@ -251,7 +252,7 @@ func toRemediationFindings(fs []appcontracts.EnrichedFinding) []remediation.Find
 	return out
 }
 
-func (w *FindingWriter) writeChainFindings(d *drawer, result evaluation.ComplianceReport) {
+func (w *FindingWriter) writeChainFindings(d *drawer, result *evaluation.ComplianceReport) {
 	if len(result.ChainFindings) == 0 {
 		return
 	}
@@ -274,7 +275,7 @@ func (w *FindingWriter) writeChainFindings(d *drawer, result evaluation.Complian
 	}
 }
 
-func (w *FindingWriter) writeAttackStageSummary(d *drawer, result evaluation.ComplianceReport) {
+func (w *FindingWriter) writeAttackStageSummary(d *drawer, result *evaluation.ComplianceReport) {
 	if len(result.AttackStageSummary) == 0 {
 		return
 	}
@@ -292,7 +293,7 @@ func (w *FindingWriter) writeAttackStageSummary(d *drawer, result evaluation.Com
 	}
 }
 
-func (w *FindingWriter) writeTopExposures(d *drawer, result evaluation.ComplianceReport) {
+func (w *FindingWriter) writeTopExposures(d *drawer, result *evaluation.ComplianceReport) {
 	if len(result.TopExposures) == 0 {
 		return
 	}
@@ -312,6 +313,36 @@ func (w *FindingWriter) writeTopExposures(d *drawer, result evaluation.Complianc
 		}
 		d.f("  base=%d \u00d7 duration=%.1f \u00d7 blast=%.1f \u00d7 exposure=%.1f\n",
 			b.BaseScore, b.DurationFactor, b.BlastMultiplier, b.ExposureMultiplier)
+	}
+}
+
+func (w *FindingWriter) writeFrameworkReadiness(d *drawer, result *evaluation.ComplianceReport) {
+	readiness := result.Summary.FrameworkReadiness
+	if len(readiness) == 0 {
+		return
+	}
+	d.f("\nFramework Readiness")
+	d.f("\n-------------------\n")
+	for i := range readiness {
+		r := &readiness[i]
+		d.f("  %-20s %3d%%  (%d/%d controls passing)\n",
+			r.Framework, r.ReadinessPercent, r.PassingControls, r.TotalControls)
+	}
+	if result.Summary.FrameworkCitationsSatisfied > 0 {
+		d.f("\nCompliance ROI: fixing %d violations covers %d framework citations\n",
+			result.Summary.Violations, result.Summary.FrameworkCitationsSatisfied)
+	}
+	if sf := result.Summary.SuperFix; sf != nil {
+		d.f("\n[!] High-Impact Remediation: fixing %s satisfies %d requirements across %s\n",
+			string(sf.ControlID), sf.CitationsFixed, strings.Join(sf.Frameworks, ", "))
+	}
+	if len(result.Summary.NearbyFrameworks) > 0 {
+		d.f("\nNearby Frameworks (already >80%% ready)\n")
+		for i := range result.Summary.NearbyFrameworks {
+			nf := &result.Summary.NearbyFrameworks[i]
+			d.f("  %-20s %3d%% ready (%d gaps to close)\n",
+				nf.Framework, nf.ReadinessPercent, nf.GapCount)
+		}
 	}
 }
 

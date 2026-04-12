@@ -98,7 +98,7 @@ func TestPlannerEnrichFindings(t *testing.T) {
 			{ControlID: "CTL.S3.PUBLIC.001", AssetID: "bucket-1", AssetType: "aws_s3_bucket"},
 		},
 	}
-	enriched := p.EnrichFindings(result)
+	enriched := p.EnrichFindings(&result)
 	if len(enriched) != 1 {
 		t.Fatalf("len = %d", len(enriched))
 	}

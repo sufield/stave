@@ -150,7 +150,7 @@ func TestEnrich_WithSanitizer(t *testing.T) {
 		},
 	}
 
-	enriched, err := Enrich(enricher, s, result)
+	enriched, err := Enrich(enricher, s, &result)
 	if err != nil {
 		t.Fatalf("Enrich: %v", err)
 	}

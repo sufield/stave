@@ -2,10 +2,12 @@ package apply
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
@@ -60,6 +62,28 @@ func ParseProfile(s string) (Profile, error) {
 	default:
 		return "", fmt.Errorf("unsupported --profile %q (supported: aws-s3, aws-iam, gcp-gcs, hipaa, cis-aws-v3.0, soc2, pci-dss-v4.0, nist-800-53, fedramp, gdpr, ffiec, iso-27001, nist-csf-2.0)", s)
 	}
+}
+
+// ParseProfiles parses a comma-separated profile string into a slice.
+// Supports multi-profile evaluation (e.g., "hipaa,soc2,pci-dss-v4.0").
+func ParseProfiles(s string) ([]Profile, error) {
+	parts := strings.Split(s, ",")
+	profiles := make([]Profile, 0, len(parts))
+	for _, p := range parts {
+		trimmed := strings.TrimSpace(p)
+		if trimmed == "" {
+			continue
+		}
+		prof, err := ParseProfile(trimmed)
+		if err != nil {
+			return nil, err
+		}
+		profiles = append(profiles, prof)
+	}
+	if len(profiles) == 0 {
+		return nil, errors.New("no valid profiles specified")
+	}
+	return profiles, nil
 }
 
 // Config holds the parameters for a profile-based apply operation.
@@ -138,6 +162,10 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 		return fmt.Errorf("init CEL evaluator: %w", err)
 	}
 
+	// Load chain definitions for risk reasoning.
+	chainsDir := filepath.Join(getControlsBaseDir(), "..", "chains")
+	chains, _ := ctlyaml.LoadChains(chainsDir)
+
 	done := r.UI.BeginProgress("apply profile observations")
 	defer done()
 
@@ -155,11 +183,14 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 		return fmt.Errorf("evaluate: %w", err)
 	}
 
-	if err := r.writeResults(ctx, cfg, result); err != nil {
+	// Enrich with risk reasoning (chains, attack stages, exposure ranking).
+	appeval.EnrichReport(&result, controls, chains)
+
+	if err := r.writeResults(ctx, cfg, &result); err != nil {
 		return fmt.Errorf("write findings: %w", err)
 	}
 
-	return finalizeProfileEvaluation(cfg.Stderr, cfg.Quiet, result, filtered, ctlDir, cfg.InputFile)
+	return finalizeProfileEvaluation(cfg.Stderr, cfg.Quiet, &result, filtered, ctlDir, cfg.InputFile)
 }
 
 func validateInput(path string) error {
@@ -180,7 +211,12 @@ func validateInput(path string) error {
 }
 
 func (r *Runner) loadControls(ctx context.Context, prof Profile) (string, []policy.ControlDefinition, error) {
-	domain := profileControlDomain(prof)
+	return r.loadControlsMulti(ctx, []Profile{prof})
+}
+
+func (r *Runner) loadControlsMulti(ctx context.Context, profiles []Profile) (string, []policy.ControlDefinition, error) {
+	// Use the first profile to determine the control directory.
+	domain := profileControlDomain(profiles[0])
 	ctlDir := filepath.Join(getControlsBaseDir(), domain)
 
 	controls, err := r.LoadControls(ctx, ctlDir)
@@ -188,15 +224,29 @@ func (r *Runner) loadControls(ctx context.Context, prof Profile) (string, []poli
 		return "", nil, err
 	}
 
-	// Compliance profiles load all domains then filter by framework tag.
-	if fw := profileComplianceFramework(prof); fw != "" {
-		controls = filterByCompliance(controls, fw)
+	// Collect compliance frameworks from all profiles.
+	var frameworks []policy.ComplianceFramework
+	for _, prof := range profiles {
+		if fw := profileComplianceFramework(prof); fw != "" {
+			frameworks = append(frameworks, fw)
+		}
+	}
+
+	// Filter: union across all requested frameworks.
+	if len(frameworks) == 1 {
+		controls = filterByCompliance(controls, frameworks[0])
+	} else if len(frameworks) > 1 {
+		controls = filterByComplianceUnion(controls, frameworks)
 	}
 
 	if len(controls) == 0 {
 		label := domain
 		if label == "" {
-			label = string(prof)
+			var names []string
+			for _, p := range profiles {
+				names = append(names, string(p))
+			}
+			label = strings.Join(names, ",")
 		}
 		return "", nil, fmt.Errorf("%w: no %s controls found in %s", appeval.ErrNoControls, label, ctlDir)
 	}
@@ -254,6 +304,32 @@ func filterByCompliance(controls []policy.ControlDefinition, fw policy.Complianc
 	for i := range controls {
 		if controls[i].HasCompliance(fw) {
 			filtered = append(filtered, controls[i])
+		}
+	}
+	return filtered
+}
+
+// filterByComplianceUnion returns controls that match ANY of the given frameworks.
+// Controls are deduplicated by ID — a control appearing in multiple frameworks
+// is included once with all its compliance citations intact.
+func filterByComplianceUnion(controls []policy.ControlDefinition, frameworks []policy.ComplianceFramework) []policy.ControlDefinition {
+	fwSet := make(map[policy.ComplianceFramework]bool, len(frameworks))
+	for _, fw := range frameworks {
+		fwSet[fw] = true
+	}
+
+	filtered := make([]policy.ControlDefinition, 0, len(controls))
+	seen := make(map[kernel.ControlID]bool)
+	for i := range controls {
+		if seen[controls[i].ID] {
+			continue
+		}
+		for fw := range controls[i].Compliance {
+			if fwSet[fw] {
+				filtered = append(filtered, controls[i])
+				seen[controls[i].ID] = true
+				break
+			}
 		}
 	}
 	return filtered

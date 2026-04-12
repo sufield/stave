@@ -2198,5 +2198,497 @@
       ],
       "finding_count": 1
     }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 4,
+      "control_id": "CTL.CLOUDTRAIL.ENABLED.001",
+      "asset_id": "main-trail",
+      "exposure_score": 250,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 2.5,
+        "exposure_multiplier": 1,
+        "days_blind": 4
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 9,
+      "control_id": "CTL.CONFIG.ENABLED.001",
+      "asset_id": "config-recorder",
+      "exposure_score": 187.5,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 2.5,
+        "exposure_multiplier": 1,
+        "days_blind": 4
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 34,
+      "control_id": "CTL.VPC.FLOWLOG.001",
+      "asset_id": "vpc-prod-001",
+      "exposure_score": 150,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 2,
+        "exposure_multiplier": 1,
+        "days_blind": 4
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 19,
+      "control_id": "CTL.IAM.ROOT.ACCESSKEY.001",
+      "asset_id": "aws-account-root",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 4
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 20,
+      "control_id": "CTL.IAM.ROOT.MFA.001",
+      "asset_id": "aws-account-root",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 4
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 23,
+      "control_id": "CTL.K8S.SECRETS.ENCRYPT.001",
+      "asset_id": "eks-prod-cluster",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 4
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 29,
+      "control_id": "CTL.RDS.PUBLIC.001",
+      "asset_id": "phi-database",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 4
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 0,
+      "control_id": "CTL.APIGATEWAY.TLS.001",
+      "asset_id": "phi-api",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 4
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 1,
+      "control_id": "CTL.BACKUP.EXISTS.001",
+      "asset_id": "backup-phi-database",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 4
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 5,
+      "control_id": "CTL.CLOUDTRAIL.ENCRYPT.001",
+      "asset_id": "main-trail",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 4
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 6,
+      "control_id": "CTL.CLOUDTRAIL.VALIDATION.001",
+      "asset_id": "main-trail",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 4
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 7,
+      "control_id": "CTL.CLOUDWATCH.RETENTION.001",
+      "asset_id": "app-logs",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1.5,
+        "exposure_multiplier": 1,
+        "days_blind": 4
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 8,
+      "control_id": "CTL.COGNITO.MFA.001",
+      "asset_id": "patient-portal",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 4
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 11,
+      "control_id": "CTL.DYNAMODB.ENCRYPT.001",
+      "asset_id": "phi-events-table",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 4
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 12,
+      "control_id": "CTL.EC2.EBS.ENCRYPT.001",
+      "asset_id": "i-0abc123def",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 4
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 13,
+      "control_id": "CTL.EC2.PUBLIC.001",
+      "asset_id": "i-0abc123def",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 4
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 14,
+      "control_id": "CTL.ELASTICACHE.TRANSIT.001",
+      "asset_id": "session-cache",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 4
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 16,
+      "control_id": "CTL.ELB.HTTPS.001",
+      "asset_id": "alb-phi-api",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 4
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 18,
+      "control_id": "CTL.ELB.TLS.001",
+      "asset_id": "alb-phi-api",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 4
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 21,
+      "control_id": "CTL.K8S.AUDIT.001",
+      "asset_id": "eks-prod-cluster",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 4
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 22,
+      "control_id": "CTL.K8S.NETPOL.001",
+      "asset_id": "ns-phi-workloads",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 4
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 24,
+      "control_id": "CTL.KMS.POLICY.001",
+      "asset_id": "phi-cmk",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 4
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 25,
+      "control_id": "CTL.RDS.BACKUP.001",
+      "asset_id": "phi-database",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 4
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 26,
+      "control_id": "CTL.RDS.ENCRYPT.001",
+      "asset_id": "phi-database",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 4
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 31,
+      "control_id": "CTL.SECRETSMANAGER.ENCRYPT.001",
+      "asset_id": "db-credentials",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 4
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 32,
+      "control_id": "CTL.SNS.ENCRYPT.001",
+      "asset_id": "phi-alerts",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 4
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 33,
+      "control_id": "CTL.SQS.ENCRYPT.001",
+      "asset_id": "phi-notifications",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 4
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 2,
+      "control_id": "CTL.BACKUP.MULTIAZ.001",
+      "asset_id": "backup-phi-database",
+      "exposure_score": 50,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 4
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 3,
+      "control_id": "CTL.BACKUP.REPLICATION.001",
+      "asset_id": "backup-phi-database",
+      "exposure_score": 50,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 4
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 10,
+      "control_id": "CTL.CONFIG.RULES.001",
+      "asset_id": "config-recorder",
+      "exposure_score": 50,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 4
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 15,
+      "control_id": "CTL.ELB.CROSSZONE.001",
+      "asset_id": "alb-phi-api",
+      "exposure_score": 50,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 4
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 17,
+      "control_id": "CTL.ELB.LOG.001",
+      "asset_id": "alb-phi-api",
+      "exposure_score": 50,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 4
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 27,
+      "control_id": "CTL.RDS.LOG.001",
+      "asset_id": "phi-database",
+      "exposure_score": 50,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 4
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 28,
+      "control_id": "CTL.RDS.MULTIAZ.001",
+      "asset_id": "phi-database",
+      "exposure_score": 50,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 4
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 30,
+      "control_id": "CTL.SECRETSMANAGER.ACCESS.001",
+      "asset_id": "db-credentials",
+      "exposure_score": 50,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 4
+      },
+      "silent_killer": false
+    }
   ]
 }

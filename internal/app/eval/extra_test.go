@@ -212,7 +212,7 @@ func TestFilterControls_ExcludeByID(t *testing.T) {
 }
 
 func TestPrepareFindings_NilEnricher(t *testing.T) {
-	_, err := PrepareFindings(nil, nil, evaluation.ComplianceReport{})
+	_, err := PrepareFindings(nil, nil, &evaluation.ComplianceReport{})
 	if err == nil || !strings.Contains(err.Error(), "must not be nil") {
 		t.Fatalf("expected must not be nil error, got: %v", err)
 	}
@@ -260,7 +260,7 @@ func TestEnrich_NilSanitizer(t *testing.T) {
 			{ID: "res-1", Reason: "test"},
 		},
 	}
-	enriched, err := Enrich(enricher, nil, result)
+	enriched, err := Enrich(enricher, nil, &result)
 	if err != nil {
 		t.Fatalf("Enrich() error = %v", err)
 	}
@@ -321,12 +321,12 @@ func TestOutputPipeline_Run_Success(t *testing.T) {
 	var buf bytes.Buffer
 	pipeline := &OutputPipeline{
 		Marshaler: &marshalerStub{},
-		Enricher: func(result evaluation.ComplianceReport) (appcontracts.EnrichedResult, error) {
-			return appcontracts.EnrichedResult{Result: result}, nil
+		Enricher: func(result *evaluation.ComplianceReport) (appcontracts.EnrichedResult, error) {
+			return appcontracts.EnrichedResult{Result: *result}, nil
 		},
 	}
 	result := evaluation.ComplianceReport{Summary: evaluation.ComplianceSummary{Violations: 0}}
-	err := pipeline.Run(context.Background(), &buf, result)
+	err := pipeline.Run(context.Background(), &buf, &result)
 	if err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}
@@ -339,11 +339,11 @@ func TestOutputPipeline_Run_EnrichError(t *testing.T) {
 	var buf bytes.Buffer
 	pipeline := &OutputPipeline{
 		Marshaler: &marshalerStub{},
-		Enricher: func(_ evaluation.ComplianceReport) (appcontracts.EnrichedResult, error) {
+		Enricher: func(_ *evaluation.ComplianceReport) (appcontracts.EnrichedResult, error) {
 			return appcontracts.EnrichedResult{}, errors.New("enrich failed")
 		},
 	}
-	err := pipeline.Run(context.Background(), &buf, evaluation.ComplianceReport{})
+	err := pipeline.Run(context.Background(), &buf, &evaluation.ComplianceReport{})
 	if err == nil || !strings.Contains(err.Error(), "enrich") {
 		t.Fatalf("expected enrich error, got: %v", err)
 	}
@@ -356,11 +356,11 @@ func TestOutputPipeline_Run_CancelledContext(t *testing.T) {
 	var buf bytes.Buffer
 	pipeline := &OutputPipeline{
 		Marshaler: &marshalerStub{},
-		Enricher: func(result evaluation.ComplianceReport) (appcontracts.EnrichedResult, error) {
-			return appcontracts.EnrichedResult{Result: result}, nil
+		Enricher: func(result *evaluation.ComplianceReport) (appcontracts.EnrichedResult, error) {
+			return appcontracts.EnrichedResult{Result: *result}, nil
 		},
 	}
-	err := pipeline.Run(ctx, &buf, evaluation.ComplianceReport{})
+	err := pipeline.Run(ctx, &buf, &evaluation.ComplianceReport{})
 	if err == nil {
 		t.Fatal("expected context cancelled error")
 	}

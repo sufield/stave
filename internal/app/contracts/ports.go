@@ -85,7 +85,7 @@ type FindingMarshaler interface {
 
 // EnrichFunc produces an EnrichedResult from an evaluation result.
 // Implementations close over the enricher and sanitizer.
-type EnrichFunc func(result evaluation.ComplianceReport) (EnrichedResult, error)
+type EnrichFunc func(result *evaluation.ComplianceReport) (EnrichedResult, error)
 
 // ContentHasher computes reproducible digests over file system paths.
 // Canonical definition lives in core/ports; this alias preserves backward

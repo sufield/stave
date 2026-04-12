@@ -412,5 +412,77 @@
       ],
       "finding_count": 4
     }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 1,
+      "control_id": "CTL.S3.PUBLIC.PREFIX.001",
+      "asset_id": "private-test-bucket",
+      "exposure_score": 150,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "days_blind": 0
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 2,
+      "control_id": "CTL.S3.PUBLIC.PREFIX.001",
+      "asset_id": "private-test-bucket",
+      "exposure_score": 150,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "days_blind": 0
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 3,
+      "control_id": "CTL.S3.PUBLIC.PREFIX.001",
+      "asset_id": "private-test-bucket",
+      "exposure_score": 150,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "days_blind": 0
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 4,
+      "control_id": "CTL.S3.PUBLIC.PREFIX.001",
+      "asset_id": "private-test-bucket",
+      "exposure_score": 150,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "days_blind": 0
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 0,
+      "control_id": "CTL.S3.OWNERSHIP.001",
+      "asset_id": "private-test-bucket",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 4
+      },
+      "silent_killer": false
+    }
   ]
 }

@@ -35,7 +35,7 @@ func TestFindingWriter_NoViolations(t *testing.T) {
 		},
 	}
 
-	enriched, err := appeval.Enrich(enricher, nil, result)
+	enriched, err := appeval.Enrich(enricher, nil, &result)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -115,7 +115,7 @@ func TestFindingWriter_ViolationsWithSections(t *testing.T) {
 		},
 	}
 
-	enriched, err := appeval.Enrich(enricher, sanitizer, result)
+	enriched, err := appeval.Enrich(enricher, sanitizer, &result)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -202,7 +202,7 @@ func TestFindingWriter_ViolationDomainSummary(t *testing.T) {
 		},
 	}
 
-	enriched, err := appeval.Enrich(enricher, nil, result)
+	enriched, err := appeval.Enrich(enricher, nil, &result)
 	if err != nil {
 		t.Fatal(err)
 	}

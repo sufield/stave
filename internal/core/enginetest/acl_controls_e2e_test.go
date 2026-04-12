@@ -125,7 +125,7 @@ func TestACL_Escalation_TruePositive_PublicWriteACP(t *testing.T) {
 
 	result := ev.Evaluate(aclSnapshot(bucket))
 
-	assertHasFinding(t, result, "CTL.S3.ACL.ESCALATION.001", "vuln-bucket")
+	assertHasFinding(t, &result, "CTL.S3.ACL.ESCALATION.001", "vuln-bucket")
 }
 
 func TestACL_Escalation_TruePositive_AuthenticatedWriteACP(t *testing.T) {
@@ -137,7 +137,7 @@ func TestACL_Escalation_TruePositive_AuthenticatedWriteACP(t *testing.T) {
 
 	result := ev.Evaluate(aclSnapshot(bucket))
 
-	assertHasFinding(t, result, "CTL.S3.ACL.ESCALATION.001", "vuln-bucket")
+	assertHasFinding(t, &result, "CTL.S3.ACL.ESCALATION.001", "vuln-bucket")
 }
 
 func TestACL_Escalation_PABOverride(t *testing.T) {
@@ -150,14 +150,14 @@ func TestACL_Escalation_PABOverride(t *testing.T) {
 
 	result := ev.Evaluate(aclSnapshot(bucket))
 
-	assertNoFinding(t, result, "CTL.S3.ACL.ESCALATION.001", "pab-bucket")
+	assertNoFinding(t, &result, "CTL.S3.ACL.ESCALATION.001", "pab-bucket")
 }
 
 func TestACL_Escalation_TrueNegative_PrivateBucket(t *testing.T) {
 	ev := aclEvaluator(t)
 	result := ev.Evaluate(aclSnapshot(privateBucket("safe-bucket")))
 
-	assertNoFinding(t, result, "CTL.S3.ACL.ESCALATION.001", "safe-bucket")
+	assertNoFinding(t, &result, "CTL.S3.ACL.ESCALATION.001", "safe-bucket")
 }
 
 // --- E2E Tests: CTL.S3.ACL.FULLCONTROL.001 ---
@@ -171,7 +171,7 @@ func TestACL_FullControl_TruePositive_PublicFullControl(t *testing.T) {
 
 	result := ev.Evaluate(aclSnapshot(bucket))
 
-	assertHasFinding(t, result, "CTL.S3.ACL.FULLCONTROL.001", "full-ctl-bucket")
+	assertHasFinding(t, &result, "CTL.S3.ACL.FULLCONTROL.001", "full-ctl-bucket")
 }
 
 func TestACL_FullControl_TruePositive_AuthenticatedFullControl(t *testing.T) {
@@ -183,7 +183,7 @@ func TestACL_FullControl_TruePositive_AuthenticatedFullControl(t *testing.T) {
 
 	result := ev.Evaluate(aclSnapshot(bucket))
 
-	assertHasFinding(t, result, "CTL.S3.ACL.FULLCONTROL.001", "auth-ctl-bucket")
+	assertHasFinding(t, &result, "CTL.S3.ACL.FULLCONTROL.001", "auth-ctl-bucket")
 }
 
 func TestACL_FullControl_PABOverride(t *testing.T) {
@@ -195,14 +195,14 @@ func TestACL_FullControl_PABOverride(t *testing.T) {
 
 	result := ev.Evaluate(aclSnapshot(bucket))
 
-	assertNoFinding(t, result, "CTL.S3.ACL.FULLCONTROL.001", "pab-bucket")
+	assertNoFinding(t, &result, "CTL.S3.ACL.FULLCONTROL.001", "pab-bucket")
 }
 
 func TestACL_FullControl_TrueNegative(t *testing.T) {
 	ev := aclEvaluator(t)
 	result := ev.Evaluate(aclSnapshot(privateBucket("safe-bucket")))
 
-	assertNoFinding(t, result, "CTL.S3.ACL.FULLCONTROL.001", "safe-bucket")
+	assertNoFinding(t, &result, "CTL.S3.ACL.FULLCONTROL.001", "safe-bucket")
 }
 
 // --- E2E Tests: CTL.S3.ACL.RECON.001 (READ_ACP) ---
@@ -215,7 +215,7 @@ func TestACL_Recon_TruePositive_PublicReadACP(t *testing.T) {
 
 	result := ev.Evaluate(aclSnapshot(bucket))
 
-	assertHasFinding(t, result, "CTL.S3.ACL.RECON.001", "recon-bucket")
+	assertHasFinding(t, &result, "CTL.S3.ACL.RECON.001", "recon-bucket")
 }
 
 func TestACL_Recon_PABOverride(t *testing.T) {
@@ -226,14 +226,14 @@ func TestACL_Recon_PABOverride(t *testing.T) {
 
 	result := ev.Evaluate(aclSnapshot(bucket))
 
-	assertNoFinding(t, result, "CTL.S3.ACL.RECON.001", "pab-bucket")
+	assertNoFinding(t, &result, "CTL.S3.ACL.RECON.001", "pab-bucket")
 }
 
 func TestACL_Recon_TrueNegative(t *testing.T) {
 	ev := aclEvaluator(t)
 	result := ev.Evaluate(aclSnapshot(privateBucket("safe-bucket")))
 
-	assertNoFinding(t, result, "CTL.S3.ACL.RECON.001", "safe-bucket")
+	assertNoFinding(t, &result, "CTL.S3.ACL.RECON.001", "safe-bucket")
 }
 
 // --- Cross-control: multiple violations on the same bucket ---
@@ -249,9 +249,9 @@ func TestACL_MultipleViolations_SameBucket(t *testing.T) {
 
 	result := ev.Evaluate(aclSnapshot(bucket))
 
-	assertHasFinding(t, result, "CTL.S3.ACL.ESCALATION.001", "nightmare-bucket")
-	assertHasFinding(t, result, "CTL.S3.ACL.FULLCONTROL.001", "nightmare-bucket")
-	assertHasFinding(t, result, "CTL.S3.ACL.RECON.001", "nightmare-bucket")
+	assertHasFinding(t, &result, "CTL.S3.ACL.ESCALATION.001", "nightmare-bucket")
+	assertHasFinding(t, &result, "CTL.S3.ACL.FULLCONTROL.001", "nightmare-bucket")
+	assertHasFinding(t, &result, "CTL.S3.ACL.RECON.001", "nightmare-bucket")
 }
 
 func TestACL_MultipleViolations_PABOverridesAll(t *testing.T) {
@@ -272,7 +272,7 @@ func TestACL_MultipleViolations_PABOverridesAll(t *testing.T) {
 
 // --- Assertion helpers ---
 
-func assertHasFinding(t *testing.T, result evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
+func assertHasFinding(t *testing.T, result *evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
 	t.Helper()
 	for _, f := range result.Findings {
 		if f.ControlID == controlID && f.AssetID == asset.ID(assetID) {
@@ -282,7 +282,7 @@ func assertHasFinding(t *testing.T, result evaluation.ComplianceReport, controlI
 	t.Errorf("expected finding %s for asset %s, got %d findings", controlID, assetID, len(result.Findings))
 }
 
-func assertNoFinding(t *testing.T, result evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
+func assertNoFinding(t *testing.T, result *evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
 	t.Helper()
 	for _, f := range result.Findings {
 		if f.ControlID == controlID && f.AssetID == asset.ID(assetID) {

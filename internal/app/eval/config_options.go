@@ -70,6 +70,14 @@ func WithGitMetadata(git *evaluation.GitInfo) Option {
 	}
 }
 
+// WithChainDefs sets the chain definitions for compound risk detection.
+func WithChainDefs(defs []policy.ChainDefinition) Option {
+	cloned := slices.Clone(defs)
+	return func(cfg *AssessmentConfig) {
+		cfg.ChainDefs = cloned
+	}
+}
+
 // WithPredicateParser constructs the withpredicateparser component.
 func WithPredicateParser(fn func(any) (*policy.UnsafePredicate, error)) Option {
 	return func(cfg *AssessmentConfig) {

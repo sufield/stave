@@ -32,7 +32,7 @@ func TestWriteFindings_BareJSON(t *testing.T) {
 		Findings: nil,
 	}
 
-	enriched, err := appeval.Enrich(enricher, nil, result)
+	enriched, err := appeval.Enrich(enricher, nil, &result)
 	if err != nil {
 		t.Fatal(err)
 	}

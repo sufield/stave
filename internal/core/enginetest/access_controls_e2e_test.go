@@ -128,7 +128,7 @@ func TestAccess001_TruePositive_ExternalAccountAccess(t *testing.T) {
 
 	result := ev.Evaluate(accessSnapshot(bucket))
 
-	assertHasAccessFinding(t, result, "CTL.S3.ACCESS.001", "xaccount-bucket")
+	assertHasAccessFinding(t, &result, "CTL.S3.ACCESS.001", "xaccount-bucket")
 }
 
 func TestAccess001_TrueNegative_NoExternalAccounts(t *testing.T) {
@@ -139,7 +139,7 @@ func TestAccess001_TrueNegative_NoExternalAccounts(t *testing.T) {
 
 	result := ev.Evaluate(accessSnapshot(bucket))
 
-	assertNoAccessFinding(t, result, "CTL.S3.ACCESS.001", "private-bucket")
+	assertNoAccessFinding(t, &result, "CTL.S3.ACCESS.001", "private-bucket")
 }
 
 // --- E2E Tests: CTL.S3.ACCESS.002 (Wildcard Actions) ---
@@ -152,7 +152,7 @@ func TestAccess002_TruePositive_WildcardPolicy(t *testing.T) {
 
 	result := ev.Evaluate(accessSnapshot(bucket))
 
-	assertHasAccessFinding(t, result, "CTL.S3.ACCESS.002", "wildcard-bucket")
+	assertHasAccessFinding(t, &result, "CTL.S3.ACCESS.002", "wildcard-bucket")
 }
 
 func TestAccess002_TrueNegative_SpecificActions(t *testing.T) {
@@ -163,7 +163,7 @@ func TestAccess002_TrueNegative_SpecificActions(t *testing.T) {
 
 	result := ev.Evaluate(accessSnapshot(bucket))
 
-	assertNoAccessFinding(t, result, "CTL.S3.ACCESS.002", "scoped-bucket")
+	assertNoAccessFinding(t, &result, "CTL.S3.ACCESS.002", "scoped-bucket")
 }
 
 // --- E2E Tests: CTL.S3.ACCESS.003 (External Write) ---
@@ -176,7 +176,7 @@ func TestAccess003_TruePositive_ExternalWriteAccess(t *testing.T) {
 
 	result := ev.Evaluate(accessSnapshot(bucket))
 
-	assertHasAccessFinding(t, result, "CTL.S3.ACCESS.003", "writable-bucket")
+	assertHasAccessFinding(t, &result, "CTL.S3.ACCESS.003", "writable-bucket")
 }
 
 func TestAccess003_TrueNegative_ReadOnlyExternal(t *testing.T) {
@@ -187,7 +187,7 @@ func TestAccess003_TrueNegative_ReadOnlyExternal(t *testing.T) {
 
 	result := ev.Evaluate(accessSnapshot(bucket))
 
-	assertNoAccessFinding(t, result, "CTL.S3.ACCESS.003", "readonly-bucket")
+	assertNoAccessFinding(t, &result, "CTL.S3.ACCESS.003", "readonly-bucket")
 }
 
 // --- E2E Tests: CTL.S3.AUTH.READ.001 (Authenticated Read) ---
@@ -200,7 +200,7 @@ func TestAuthRead001_TruePositive(t *testing.T) {
 
 	result := ev.Evaluate(accessSnapshot(bucket))
 
-	assertHasAccessFinding(t, result, "CTL.S3.AUTH.READ.001", "auth-read-bucket")
+	assertHasAccessFinding(t, &result, "CTL.S3.AUTH.READ.001", "auth-read-bucket")
 }
 
 func TestAuthRead001_TrueNegative(t *testing.T) {
@@ -211,7 +211,7 @@ func TestAuthRead001_TrueNegative(t *testing.T) {
 
 	result := ev.Evaluate(accessSnapshot(bucket))
 
-	assertNoAccessFinding(t, result, "CTL.S3.AUTH.READ.001", "safe-bucket")
+	assertNoAccessFinding(t, &result, "CTL.S3.AUTH.READ.001", "safe-bucket")
 }
 
 // --- E2E Tests: CTL.S3.AUTH.WRITE.001 (Authenticated Write) ---
@@ -224,7 +224,7 @@ func TestAuthWrite001_TruePositive(t *testing.T) {
 
 	result := ev.Evaluate(accessSnapshot(bucket))
 
-	assertHasAccessFinding(t, result, "CTL.S3.AUTH.WRITE.001", "auth-write-bucket")
+	assertHasAccessFinding(t, &result, "CTL.S3.AUTH.WRITE.001", "auth-write-bucket")
 }
 
 func TestAuthWrite001_TrueNegative(t *testing.T) {
@@ -235,7 +235,7 @@ func TestAuthWrite001_TrueNegative(t *testing.T) {
 
 	result := ev.Evaluate(accessSnapshot(bucket))
 
-	assertNoAccessFinding(t, result, "CTL.S3.AUTH.WRITE.001", "safe-bucket")
+	assertNoAccessFinding(t, &result, "CTL.S3.AUTH.WRITE.001", "safe-bucket")
 }
 
 // --- E2E Tests: CTL.S3.ACCESS.GRANTS.001 (Broad Write Grants) ---
@@ -251,7 +251,7 @@ func TestAccessGrants001_TruePositive_BroadWriteGrant(t *testing.T) {
 
 	result := ev.Evaluate(accessSnapshot(bucket))
 
-	assertHasAccessFinding(t, result, "CTL.S3.ACCESS.GRANTS.001", "broad-grant-bucket")
+	assertHasAccessFinding(t, &result, "CTL.S3.ACCESS.GRANTS.001", "broad-grant-bucket")
 }
 
 func TestAccessGrants001_TrueNegative_NoBroadWriteGrant(t *testing.T) {
@@ -263,7 +263,7 @@ func TestAccessGrants001_TrueNegative_NoBroadWriteGrant(t *testing.T) {
 
 	result := ev.Evaluate(accessSnapshot(bucket))
 
-	assertNoAccessFinding(t, result, "CTL.S3.ACCESS.GRANTS.001", "scoped-grant-bucket")
+	assertNoAccessFinding(t, &result, "CTL.S3.ACCESS.GRANTS.001", "scoped-grant-bucket")
 }
 
 func TestAccessGrants001_TrueNegative_NoGrantsInstance(t *testing.T) {
@@ -275,7 +275,7 @@ func TestAccessGrants001_TrueNegative_NoGrantsInstance(t *testing.T) {
 
 	result := ev.Evaluate(accessSnapshot(bucket))
 
-	assertNoAccessFinding(t, result, "CTL.S3.ACCESS.GRANTS.001", "no-grants-bucket")
+	assertNoAccessFinding(t, &result, "CTL.S3.ACCESS.GRANTS.001", "no-grants-bucket")
 }
 
 // --- E2E Tests: CTL.S3.ACCESS.GRANTS.002 (Identity Center Must Be Attached) ---
@@ -291,7 +291,7 @@ func TestAccessGrants002_TruePositive_NoIdentityCenter(t *testing.T) {
 
 	result := ev.Evaluate(accessSnapshot(bucket))
 
-	assertHasAccessFinding(t, result, "CTL.S3.ACCESS.GRANTS.002", "no-ic-bucket")
+	assertHasAccessFinding(t, &result, "CTL.S3.ACCESS.GRANTS.002", "no-ic-bucket")
 }
 
 func TestAccessGrants002_TrueNegative_IdentityCenterAttached(t *testing.T) {
@@ -303,7 +303,7 @@ func TestAccessGrants002_TrueNegative_IdentityCenterAttached(t *testing.T) {
 
 	result := ev.Evaluate(accessSnapshot(bucket))
 
-	assertNoAccessFinding(t, result, "CTL.S3.ACCESS.GRANTS.002", "ic-bucket")
+	assertNoAccessFinding(t, &result, "CTL.S3.ACCESS.GRANTS.002", "ic-bucket")
 }
 
 func TestAccessGrants002_TrueNegative_NoGrantsInstance(t *testing.T) {
@@ -315,7 +315,7 @@ func TestAccessGrants002_TrueNegative_NoGrantsInstance(t *testing.T) {
 
 	result := ev.Evaluate(accessSnapshot(bucket))
 
-	assertNoAccessFinding(t, result, "CTL.S3.ACCESS.GRANTS.002", "no-grants-bucket-2")
+	assertNoAccessFinding(t, &result, "CTL.S3.ACCESS.GRANTS.002", "no-grants-bucket-2")
 }
 
 // --- E2E Tests: CTL.S3.PRESIGNED.001 (Presigned URL Access Must Be Restricted) ---
@@ -330,7 +330,7 @@ func TestPresigned001_TruePositive_Unrestricted(t *testing.T) {
 
 	result := ev.Evaluate(accessSnapshot(bucket))
 
-	assertHasAccessFinding(t, result, "CTL.S3.PRESIGNED.001", "unrestricted-presign-bucket")
+	assertHasAccessFinding(t, &result, "CTL.S3.PRESIGNED.001", "unrestricted-presign-bucket")
 }
 
 func TestPresigned001_TrueNegative_Restricted(t *testing.T) {
@@ -341,7 +341,7 @@ func TestPresigned001_TrueNegative_Restricted(t *testing.T) {
 
 	result := ev.Evaluate(accessSnapshot(bucket))
 
-	assertNoAccessFinding(t, result, "CTL.S3.PRESIGNED.001", "restricted-presign-bucket")
+	assertNoAccessFinding(t, &result, "CTL.S3.PRESIGNED.001", "restricted-presign-bucket")
 }
 
 // --- Cross-control: combined violations ---
@@ -358,11 +358,11 @@ func TestAccess_MultipleViolations_SameBucket(t *testing.T) {
 
 	result := ev.Evaluate(accessSnapshot(bucket))
 
-	assertHasAccessFinding(t, result, "CTL.S3.ACCESS.001", "nightmare-bucket")
-	assertHasAccessFinding(t, result, "CTL.S3.ACCESS.002", "nightmare-bucket")
-	assertHasAccessFinding(t, result, "CTL.S3.ACCESS.003", "nightmare-bucket")
-	assertHasAccessFinding(t, result, "CTL.S3.AUTH.READ.001", "nightmare-bucket")
-	assertHasAccessFinding(t, result, "CTL.S3.AUTH.WRITE.001", "nightmare-bucket")
+	assertHasAccessFinding(t, &result, "CTL.S3.ACCESS.001", "nightmare-bucket")
+	assertHasAccessFinding(t, &result, "CTL.S3.ACCESS.002", "nightmare-bucket")
+	assertHasAccessFinding(t, &result, "CTL.S3.ACCESS.003", "nightmare-bucket")
+	assertHasAccessFinding(t, &result, "CTL.S3.AUTH.READ.001", "nightmare-bucket")
+	assertHasAccessFinding(t, &result, "CTL.S3.AUTH.WRITE.001", "nightmare-bucket")
 }
 
 func TestAccess_AllSafe(t *testing.T) {
@@ -384,7 +384,7 @@ func TestAccess_AllSafe(t *testing.T) {
 
 // --- Assertion helpers (access-specific, reuse the same pattern) ---
 
-func assertHasAccessFinding(t *testing.T, result evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
+func assertHasAccessFinding(t *testing.T, result *evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
 	t.Helper()
 	for _, f := range result.Findings {
 		if f.ControlID == controlID && f.AssetID == asset.ID(assetID) {
@@ -394,7 +394,7 @@ func assertHasAccessFinding(t *testing.T, result evaluation.ComplianceReport, co
 	t.Errorf("expected finding %s for asset %s, got %d findings", controlID, assetID, len(result.Findings))
 }
 
-func assertNoAccessFinding(t *testing.T, result evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
+func assertNoAccessFinding(t *testing.T, result *evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
 	t.Helper()
 	for _, f := range result.Findings {
 		if f.ControlID == controlID && f.AssetID == asset.ID(assetID) {

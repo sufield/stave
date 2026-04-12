@@ -48,7 +48,7 @@ func ReportOpts() cmp.Options {
 // AssertReportEqual compares two ComplianceReports, ignoring non-deterministic
 // fields (timestamps, version) and normalizing sort order. Produces a readable
 // diff on failure.
-func AssertReportEqual(t *testing.T, want, got evaluation.ComplianceReport) {
+func AssertReportEqual(t *testing.T, want, got *evaluation.ComplianceReport) {
 	t.Helper()
 	if diff := cmp.Diff(want, got, ReportOpts()...); diff != "" {
 		t.Errorf("ComplianceReport mismatch (-want +got):\n%s", diff)
@@ -56,7 +56,7 @@ func AssertReportEqual(t *testing.T, want, got evaluation.ComplianceReport) {
 }
 
 // AssertViolationCount verifies the report contains exactly n findings.
-func AssertViolationCount(t *testing.T, got evaluation.ComplianceReport, n int) {
+func AssertViolationCount(t *testing.T, got *evaluation.ComplianceReport, n int) {
 	t.Helper()
 	if len(got.Findings) != n {
 		t.Errorf("findings: got %d, want %d", len(got.Findings), n)
@@ -64,7 +64,7 @@ func AssertViolationCount(t *testing.T, got evaluation.ComplianceReport, n int) 
 }
 
 // AssertSecurityState verifies the report's security state.
-func AssertSecurityState(t *testing.T, got evaluation.ComplianceReport, want evaluation.SecurityState) {
+func AssertSecurityState(t *testing.T, got *evaluation.ComplianceReport, want evaluation.SecurityState) {
 	t.Helper()
 	if got.SecurityState != want {
 		t.Errorf("security state: got %s, want %s", got.SecurityState, want)
@@ -72,7 +72,7 @@ func AssertSecurityState(t *testing.T, got evaluation.ComplianceReport, want eva
 }
 
 // AssertFindingExists verifies a finding exists for the given control+asset pair.
-func AssertFindingExists(t *testing.T, report evaluation.ComplianceReport, controlID kernel.ControlID, assetID asset.ID) {
+func AssertFindingExists(t *testing.T, report *evaluation.ComplianceReport, controlID kernel.ControlID, assetID asset.ID) {
 	t.Helper()
 	f := report.GetFindingByResource(controlID, assetID)
 	if f == nil {

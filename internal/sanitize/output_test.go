@@ -29,10 +29,10 @@ var sensitiveValues = []string{
 	"/home/user/obs/snap1.json",
 }
 
-func makeTestResult() evaluation.ComplianceReport {
+func makeTestResult() *evaluation.ComplianceReport {
 	t1 := time.Date(2026, 1, 14, 0, 0, 0, 0, time.UTC)
 	t2 := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
-	return evaluation.ComplianceReport{
+	return &evaluation.ComplianceReport{
 		Run: evaluation.RunInfo{
 			Now:               t2,
 			Offline:           true,

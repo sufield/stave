@@ -15,7 +15,7 @@ func (e *AuditWorkflow) ExecuteAndWrite(ctx context.Context, cfg AssessmentConfi
 		return "", err
 	}
 
-	enriched, enrichErr := e.ContextEnricher(result)
+	enriched, enrichErr := e.ContextEnricher(&result)
 	if enrichErr != nil {
 		return "", fmt.Errorf("enrich: %w", enrichErr)
 	}

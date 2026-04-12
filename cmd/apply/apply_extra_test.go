@@ -527,7 +527,7 @@ func TestFilterSnapshots_EmptyQuiet(t *testing.T) {
 func TestFinalizeProfileEvaluation_NoFindings(t *testing.T) {
 	var stderr bytes.Buffer
 	result := evaluation.ComplianceReport{Findings: nil}
-	err := finalizeProfileEvaluation(&stderr, false, result, nil, "ctl", "input")
+	err := finalizeProfileEvaluation(&stderr, false, &result, nil, "ctl", "input")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -541,7 +541,7 @@ func TestFinalizeProfileEvaluation_WithFindings(t *testing.T) {
 	result := evaluation.ComplianceReport{
 		Findings: []evaluation.Finding{{ControlID: "CTL.TEST.001"}},
 	}
-	err := finalizeProfileEvaluation(&stderr, false, result, nil, "ctl", "input")
+	err := finalizeProfileEvaluation(&stderr, false, &result, nil, "ctl", "input")
 	if !errors.Is(err, ui.ErrViolationsFound) {
 		t.Fatalf("expected ErrViolationsFound, got: %v", err)
 	}
@@ -550,7 +550,7 @@ func TestFinalizeProfileEvaluation_WithFindings(t *testing.T) {
 func TestFinalizeProfileEvaluation_Quiet(t *testing.T) {
 	var stderr bytes.Buffer
 	result := evaluation.ComplianceReport{Findings: nil}
-	err := finalizeProfileEvaluation(&stderr, true, result, nil, "ctl", "input")
+	err := finalizeProfileEvaluation(&stderr, true, &result, nil, "ctl", "input")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

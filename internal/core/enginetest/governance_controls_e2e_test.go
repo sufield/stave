@@ -67,7 +67,7 @@ func govEvaluator(t *testing.T) *testEvaluator {
 	)
 }
 
-func assertHasGovFinding(t *testing.T, result evaluation.ComplianceReport, assetID string) {
+func assertHasGovFinding(t *testing.T, result *evaluation.ComplianceReport, assetID string) {
 	t.Helper()
 	for _, f := range result.Findings {
 		if f.ControlID == "CTL.S3.GOVERNANCE.001" && f.AssetID == asset.ID(assetID) {
@@ -77,7 +77,7 @@ func assertHasGovFinding(t *testing.T, result evaluation.ComplianceReport, asset
 	t.Errorf("expected finding CTL.S3.GOVERNANCE.001 for asset %s, got %d findings", assetID, len(result.Findings))
 }
 
-func assertNoGovFinding(t *testing.T, result evaluation.ComplianceReport, assetID string) {
+func assertNoGovFinding(t *testing.T, result *evaluation.ComplianceReport, assetID string) {
 	t.Helper()
 	for _, f := range result.Findings {
 		if f.ControlID == "CTL.S3.GOVERNANCE.001" && f.AssetID == asset.ID(assetID) {
@@ -93,7 +93,7 @@ func TestGovernance001_TruePositive_NoClassificationTag(t *testing.T) {
 
 	result := ev.Evaluate(govSnapshot(bucket))
 
-	assertHasGovFinding(t, result, "untagged-bucket")
+	assertHasGovFinding(t, &result, "untagged-bucket")
 }
 
 func TestGovernance001_TrueNegative_HasClassificationTag(t *testing.T) {
@@ -104,5 +104,5 @@ func TestGovernance001_TrueNegative_HasClassificationTag(t *testing.T) {
 
 	result := ev.Evaluate(govSnapshot(bucket))
 
-	assertNoGovFinding(t, result, "tagged-bucket")
+	assertNoGovFinding(t, &result, "tagged-bucket")
 }

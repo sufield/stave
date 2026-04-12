@@ -76,7 +76,7 @@ func versionEvaluator(t *testing.T) *testEvaluator {
 	)
 }
 
-func assertHasVersionFinding(t *testing.T, result evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
+func assertHasVersionFinding(t *testing.T, result *evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
 	t.Helper()
 	for _, f := range result.Findings {
 		if f.ControlID == controlID && f.AssetID == asset.ID(assetID) {
@@ -86,7 +86,7 @@ func assertHasVersionFinding(t *testing.T, result evaluation.ComplianceReport, c
 	t.Errorf("expected finding %s for asset %s, got %d findings", controlID, assetID, len(result.Findings))
 }
 
-func assertNoVersionFinding(t *testing.T, result evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
+func assertNoVersionFinding(t *testing.T, result *evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
 	t.Helper()
 	for _, f := range result.Findings {
 		if f.ControlID == controlID && f.AssetID == asset.ID(assetID) {
@@ -106,7 +106,7 @@ func TestVersion001_TruePositive_VersioningDisabled(t *testing.T) {
 
 	result := ev.Evaluate(versionSnapshot(bucket))
 
-	assertHasVersionFinding(t, result, "CTL.S3.VERSION.001", "no-ver-bucket")
+	assertHasVersionFinding(t, &result, "CTL.S3.VERSION.001", "no-ver-bucket")
 }
 
 func TestVersion001_TrueNegative_VersioningEnabled(t *testing.T) {
@@ -117,7 +117,7 @@ func TestVersion001_TrueNegative_VersioningEnabled(t *testing.T) {
 
 	result := ev.Evaluate(versionSnapshot(bucket))
 
-	assertNoVersionFinding(t, result, "CTL.S3.VERSION.001", "ver-bucket")
+	assertNoVersionFinding(t, &result, "CTL.S3.VERSION.001", "ver-bucket")
 }
 
 // --- VERSION.002: Backup Buckets Must Have MFA Delete ---
@@ -134,7 +134,7 @@ func TestVersion002_TruePositive_BackupWithoutMFADelete(t *testing.T) {
 
 	result := ev.Evaluate(versionSnapshot(bucket))
 
-	assertHasVersionFinding(t, result, "CTL.S3.VERSION.002", "backup-bucket")
+	assertHasVersionFinding(t, &result, "CTL.S3.VERSION.002", "backup-bucket")
 }
 
 func TestVersion002_TrueNegative_BackupWithMFADelete(t *testing.T) {
@@ -147,7 +147,7 @@ func TestVersion002_TrueNegative_BackupWithMFADelete(t *testing.T) {
 
 	result := ev.Evaluate(versionSnapshot(bucket))
 
-	assertNoVersionFinding(t, result, "CTL.S3.VERSION.002", "backup-mfa-bucket")
+	assertNoVersionFinding(t, &result, "CTL.S3.VERSION.002", "backup-mfa-bucket")
 }
 
 func TestVersion002_TrueNegative_NonBackupBucket(t *testing.T) {
@@ -159,5 +159,5 @@ func TestVersion002_TrueNegative_NonBackupBucket(t *testing.T) {
 
 	result := ev.Evaluate(versionSnapshot(bucket))
 
-	assertNoVersionFinding(t, result, "CTL.S3.VERSION.002", "regular-bucket")
+	assertNoVersionFinding(t, &result, "CTL.S3.VERSION.002", "regular-bucket")
 }

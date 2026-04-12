@@ -78,7 +78,7 @@ func lockEvaluator(t *testing.T) *testEvaluator {
 	)
 }
 
-func assertHasLockFinding(t *testing.T, result evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
+func assertHasLockFinding(t *testing.T, result *evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
 	t.Helper()
 	for _, f := range result.Findings {
 		if f.ControlID == controlID && f.AssetID == asset.ID(assetID) {
@@ -88,7 +88,7 @@ func assertHasLockFinding(t *testing.T, result evaluation.ComplianceReport, cont
 	t.Errorf("expected finding %s for asset %s, got %d findings", controlID, assetID, len(result.Findings))
 }
 
-func assertNoLockFinding(t *testing.T, result evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
+func assertNoLockFinding(t *testing.T, result *evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
 	t.Helper()
 	for _, f := range result.Findings {
 		if f.ControlID == controlID && f.AssetID == asset.ID(assetID) {
@@ -111,7 +111,7 @@ func TestLock001_TruePositive_ComplianceTaggedNoLock(t *testing.T) {
 
 	result := ev.Evaluate(lockSnapshot(bucket))
 
-	assertHasLockFinding(t, result, "CTL.S3.LOCK.001", "no-lock-bucket")
+	assertHasLockFinding(t, &result, "CTL.S3.LOCK.001", "no-lock-bucket")
 }
 
 func TestLock001_TrueNegative_ComplianceTaggedWithLock(t *testing.T) {
@@ -124,7 +124,7 @@ func TestLock001_TrueNegative_ComplianceTaggedWithLock(t *testing.T) {
 
 	result := ev.Evaluate(lockSnapshot(bucket))
 
-	assertNoLockFinding(t, result, "CTL.S3.LOCK.001", "locked-bucket")
+	assertNoLockFinding(t, &result, "CTL.S3.LOCK.001", "locked-bucket")
 }
 
 func TestLock001_TrueNegative_NoComplianceTag(t *testing.T) {
@@ -136,7 +136,7 @@ func TestLock001_TrueNegative_NoComplianceTag(t *testing.T) {
 
 	result := ev.Evaluate(lockSnapshot(bucket))
 
-	assertNoLockFinding(t, result, "CTL.S3.LOCK.001", "untagged-bucket")
+	assertNoLockFinding(t, &result, "CTL.S3.LOCK.001", "untagged-bucket")
 }
 
 // --- LOCK.002: PHI Buckets Must Use COMPLIANCE Mode ---
@@ -153,7 +153,7 @@ func TestLock002_TruePositive_PHIWithGovernanceMode(t *testing.T) {
 
 	result := ev.Evaluate(lockSnapshot(bucket))
 
-	assertHasLockFinding(t, result, "CTL.S3.LOCK.002", "phi-gov-bucket")
+	assertHasLockFinding(t, &result, "CTL.S3.LOCK.002", "phi-gov-bucket")
 }
 
 func TestLock002_TrueNegative_PHIWithComplianceMode(t *testing.T) {
@@ -167,7 +167,7 @@ func TestLock002_TrueNegative_PHIWithComplianceMode(t *testing.T) {
 
 	result := ev.Evaluate(lockSnapshot(bucket))
 
-	assertNoLockFinding(t, result, "CTL.S3.LOCK.002", "phi-comp-bucket")
+	assertNoLockFinding(t, &result, "CTL.S3.LOCK.002", "phi-comp-bucket")
 }
 
 func TestLock002_TrueNegative_NonPHIBucket(t *testing.T) {
@@ -182,7 +182,7 @@ func TestLock002_TrueNegative_NonPHIBucket(t *testing.T) {
 
 	result := ev.Evaluate(lockSnapshot(bucket))
 
-	assertNoLockFinding(t, result, "CTL.S3.LOCK.002", "internal-bucket")
+	assertNoLockFinding(t, &result, "CTL.S3.LOCK.002", "internal-bucket")
 }
 
 // --- LOCK.003: PHI Object Lock Retention Must Meet Minimum Period ---
@@ -200,7 +200,7 @@ func TestLock003_TruePositive_ShortRetention(t *testing.T) {
 
 	result := ev.Evaluate(lockSnapshot(bucket))
 
-	assertHasLockFinding(t, result, "CTL.S3.LOCK.003", "short-retention-bucket")
+	assertHasLockFinding(t, &result, "CTL.S3.LOCK.003", "short-retention-bucket")
 }
 
 func TestLock003_TrueNegative_SufficientRetention(t *testing.T) {
@@ -214,7 +214,7 @@ func TestLock003_TrueNegative_SufficientRetention(t *testing.T) {
 
 	result := ev.Evaluate(lockSnapshot(bucket))
 
-	assertNoLockFinding(t, result, "CTL.S3.LOCK.003", "long-retention-bucket")
+	assertNoLockFinding(t, &result, "CTL.S3.LOCK.003", "long-retention-bucket")
 }
 
 func TestLock003_TrueNegative_ExactMinimumRetention(t *testing.T) {
@@ -229,7 +229,7 @@ func TestLock003_TrueNegative_ExactMinimumRetention(t *testing.T) {
 
 	result := ev.Evaluate(lockSnapshot(bucket))
 
-	assertNoLockFinding(t, result, "CTL.S3.LOCK.003", "exact-retention-bucket")
+	assertNoLockFinding(t, &result, "CTL.S3.LOCK.003", "exact-retention-bucket")
 }
 
 func TestLock003_TrueNegative_NonPHIBucket(t *testing.T) {
@@ -244,5 +244,5 @@ func TestLock003_TrueNegative_NonPHIBucket(t *testing.T) {
 
 	result := ev.Evaluate(lockSnapshot(bucket))
 
-	assertNoLockFinding(t, result, "CTL.S3.LOCK.003", "internal-bucket")
+	assertNoLockFinding(t, &result, "CTL.S3.LOCK.003", "internal-bucket")
 }

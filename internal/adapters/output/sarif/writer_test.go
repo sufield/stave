@@ -25,7 +25,7 @@ func TestWriteFindings_EmptyFindings(t *testing.T) {
 		},
 	}
 
-	enriched, err := appeval.Enrich(enricher, nil, result)
+	enriched, err := appeval.Enrich(enricher, nil, &result)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -93,7 +93,7 @@ func TestWriteFindings_SARIFStructure(t *testing.T) {
 		},
 	}
 
-	enriched, err := appeval.Enrich(enricher, nil, result)
+	enriched, err := appeval.Enrich(enricher, nil, &result)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -198,7 +198,7 @@ func TestWriteFindings_RuleDeduplication(t *testing.T) {
 		},
 	}
 
-	enriched, err := appeval.Enrich(enricher, nil, result)
+	enriched, err := appeval.Enrich(enricher, nil, &result)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -266,7 +266,7 @@ func TestWriteFindings_LogicalLocation(t *testing.T) {
 		},
 	}
 
-	enriched, err := appeval.Enrich(enricher, nil, result)
+	enriched, err := appeval.Enrich(enricher, nil, &result)
 	if err != nil {
 		t.Fatal(err)
 	}

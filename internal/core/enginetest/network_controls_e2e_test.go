@@ -75,7 +75,7 @@ func networkEvaluator(t *testing.T) *testEvaluator {
 	)
 }
 
-func assertHasNetworkFinding(t *testing.T, result evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
+func assertHasNetworkFinding(t *testing.T, result *evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
 	t.Helper()
 	for _, f := range result.Findings {
 		if f.ControlID == controlID && f.AssetID == asset.ID(assetID) {
@@ -85,7 +85,7 @@ func assertHasNetworkFinding(t *testing.T, result evaluation.ComplianceReport, c
 	t.Errorf("expected finding %s for asset %s, got %d findings", controlID, assetID, len(result.Findings))
 }
 
-func assertNoNetworkFinding(t *testing.T, result evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
+func assertNoNetworkFinding(t *testing.T, result *evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
 	t.Helper()
 	for _, f := range result.Findings {
 		if f.ControlID == controlID && f.AssetID == asset.ID(assetID) {
@@ -108,7 +108,7 @@ func TestNetwork001_TruePositive_PublicNetworkScope(t *testing.T) {
 
 	result := ev.Evaluate(networkSnapshot(bucket))
 
-	assertHasNetworkFinding(t, result, "CTL.S3.NETWORK.001", "public-net-bucket")
+	assertHasNetworkFinding(t, &result, "CTL.S3.NETWORK.001", "public-net-bucket")
 }
 
 func TestNetwork001_TrueNegative_VPCScope(t *testing.T) {
@@ -121,7 +121,7 @@ func TestNetwork001_TrueNegative_VPCScope(t *testing.T) {
 
 	result := ev.Evaluate(networkSnapshot(bucket))
 
-	assertNoNetworkFinding(t, result, "CTL.S3.NETWORK.001", "vpc-bucket")
+	assertNoNetworkFinding(t, &result, "CTL.S3.NETWORK.001", "vpc-bucket")
 }
 
 // --- NETWORK.VPC.001: VPC Endpoint or IP Condition Required ---
@@ -139,7 +139,7 @@ func TestNetworkVPC001_TruePositive_NoNetworkConditions(t *testing.T) {
 
 	result := ev.Evaluate(networkSnapshot(bucket))
 
-	assertHasNetworkFinding(t, result, "CTL.S3.NETWORK.VPC.001", "no-net-cond-bucket")
+	assertHasNetworkFinding(t, &result, "CTL.S3.NETWORK.VPC.001", "no-net-cond-bucket")
 }
 
 func TestNetworkVPC001_TrueNegative_HasVPCCondition(t *testing.T) {
@@ -154,7 +154,7 @@ func TestNetworkVPC001_TrueNegative_HasVPCCondition(t *testing.T) {
 
 	result := ev.Evaluate(networkSnapshot(bucket))
 
-	assertNoNetworkFinding(t, result, "CTL.S3.NETWORK.VPC.001", "vpc-cond-bucket")
+	assertNoNetworkFinding(t, &result, "CTL.S3.NETWORK.VPC.001", "vpc-cond-bucket")
 }
 
 func TestNetworkVPC001_TrueNegative_HasIPCondition(t *testing.T) {
@@ -169,7 +169,7 @@ func TestNetworkVPC001_TrueNegative_HasIPCondition(t *testing.T) {
 
 	result := ev.Evaluate(networkSnapshot(bucket))
 
-	assertNoNetworkFinding(t, result, "CTL.S3.NETWORK.VPC.001", "ip-cond-bucket")
+	assertNoNetworkFinding(t, &result, "CTL.S3.NETWORK.VPC.001", "ip-cond-bucket")
 }
 
 // --- NETWORK.POLICY.001: VPC Endpoint Policy Must Restrict Access ---
@@ -188,7 +188,7 @@ func TestNetworkPolicy001_TruePositive_PolicyNotAttached(t *testing.T) {
 
 	result := ev.Evaluate(networkSnapshot(bucket))
 
-	assertHasNetworkFinding(t, result, "CTL.S3.NETWORK.POLICY.001", "no-policy-bucket")
+	assertHasNetworkFinding(t, &result, "CTL.S3.NETWORK.POLICY.001", "no-policy-bucket")
 }
 
 func TestNetworkPolicy001_TruePositive_DefaultFullAccess(t *testing.T) {
@@ -204,7 +204,7 @@ func TestNetworkPolicy001_TruePositive_DefaultFullAccess(t *testing.T) {
 
 	result := ev.Evaluate(networkSnapshot(bucket))
 
-	assertHasNetworkFinding(t, result, "CTL.S3.NETWORK.POLICY.001", "default-policy-bucket")
+	assertHasNetworkFinding(t, &result, "CTL.S3.NETWORK.POLICY.001", "default-policy-bucket")
 }
 
 func TestNetworkPolicy001_TrueNegative_RestrictivePolicy(t *testing.T) {
@@ -220,7 +220,7 @@ func TestNetworkPolicy001_TrueNegative_RestrictivePolicy(t *testing.T) {
 
 	result := ev.Evaluate(networkSnapshot(bucket))
 
-	assertNoNetworkFinding(t, result, "CTL.S3.NETWORK.POLICY.001", "restricted-policy-bucket")
+	assertNoNetworkFinding(t, &result, "CTL.S3.NETWORK.POLICY.001", "restricted-policy-bucket")
 }
 
 // --- MRAP.PAB.001: MRAP Must Have Block Public Access ---
@@ -235,7 +235,7 @@ func TestMRAPPAB001_TruePositive_PABDisabled(t *testing.T) {
 
 	result := ev.Evaluate(networkSnapshot(bucket))
 
-	assertHasNetworkFinding(t, result, "CTL.S3.MRAP.PAB.001", "mrap-no-pab-bucket")
+	assertHasNetworkFinding(t, &result, "CTL.S3.MRAP.PAB.001", "mrap-no-pab-bucket")
 }
 
 func TestMRAPPAB001_TrueNegative_PABEnabled(t *testing.T) {
@@ -247,7 +247,7 @@ func TestMRAPPAB001_TrueNegative_PABEnabled(t *testing.T) {
 
 	result := ev.Evaluate(networkSnapshot(bucket))
 
-	assertNoNetworkFinding(t, result, "CTL.S3.MRAP.PAB.001", "mrap-pab-bucket")
+	assertNoNetworkFinding(t, &result, "CTL.S3.MRAP.PAB.001", "mrap-pab-bucket")
 }
 
 // --- MRAP.POLICY.001: MRAP Policy Must Not Be Public ---
@@ -262,7 +262,7 @@ func TestMRAPPolicy001_TruePositive_PublicPolicy(t *testing.T) {
 
 	result := ev.Evaluate(networkSnapshot(bucket))
 
-	assertHasNetworkFinding(t, result, "CTL.S3.MRAP.POLICY.001", "mrap-public-bucket")
+	assertHasNetworkFinding(t, &result, "CTL.S3.MRAP.POLICY.001", "mrap-public-bucket")
 }
 
 func TestMRAPPolicy001_TrueNegative_PrivatePolicy(t *testing.T) {
@@ -274,5 +274,5 @@ func TestMRAPPolicy001_TrueNegative_PrivatePolicy(t *testing.T) {
 
 	result := ev.Evaluate(networkSnapshot(bucket))
 
-	assertNoNetworkFinding(t, result, "CTL.S3.MRAP.POLICY.001", "mrap-private-bucket")
+	assertNoNetworkFinding(t, &result, "CTL.S3.MRAP.POLICY.001", "mrap-private-bucket")
 }

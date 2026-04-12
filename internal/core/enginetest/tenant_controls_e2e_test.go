@@ -78,7 +78,7 @@ func tenantEvaluator(t *testing.T) *testEvaluator {
 	)
 }
 
-func assertHasTenantFinding(t *testing.T, result evaluation.ComplianceReport, assetID string) {
+func assertHasTenantFinding(t *testing.T, result *evaluation.ComplianceReport, assetID string) {
 	t.Helper()
 	for _, f := range result.Findings {
 		if f.ControlID == "CTL.S3.TENANT.ISOLATION.001" && f.AssetID == asset.ID(assetID) {
@@ -88,7 +88,7 @@ func assertHasTenantFinding(t *testing.T, result evaluation.ComplianceReport, as
 	t.Errorf("expected finding CTL.S3.TENANT.ISOLATION.001 for asset %s, got %d findings", assetID, len(result.Findings))
 }
 
-func assertNoTenantFinding(t *testing.T, result evaluation.ComplianceReport, assetID string) {
+func assertNoTenantFinding(t *testing.T, result *evaluation.ComplianceReport, assetID string) {
 	t.Helper()
 	for _, f := range result.Findings {
 		if f.ControlID == "CTL.S3.TENANT.ISOLATION.001" && f.AssetID == asset.ID(assetID) {
@@ -117,7 +117,7 @@ func TestTenantIsolation001_TruePositive_TraversalEnabled(t *testing.T) {
 
 	result := ev.Evaluate(tenantSnapshotWithIdentities(bucket, identities))
 
-	assertHasTenantFinding(t, result, "shared-bucket")
+	assertHasTenantFinding(t, &result, "shared-bucket")
 }
 
 func TestTenantIsolation001_TruePositive_PrefixEnforcementDisabled(t *testing.T) {
@@ -139,7 +139,7 @@ func TestTenantIsolation001_TruePositive_PrefixEnforcementDisabled(t *testing.T)
 
 	result := ev.Evaluate(tenantSnapshotWithIdentities(bucket, identities))
 
-	assertHasTenantFinding(t, result, "shared-bucket-2")
+	assertHasTenantFinding(t, &result, "shared-bucket-2")
 }
 
 func TestTenantIsolation001_TrueNegative_PrefixEnforcedNoTraversal(t *testing.T) {
@@ -161,7 +161,7 @@ func TestTenantIsolation001_TrueNegative_PrefixEnforcedNoTraversal(t *testing.T)
 
 	result := ev.Evaluate(tenantSnapshotWithIdentities(bucket, identities))
 
-	assertNoTenantFinding(t, result, "safe-shared-bucket")
+	assertNoTenantFinding(t, &result, "safe-shared-bucket")
 }
 
 func TestTenantIsolation001_TrueNegative_NotSharedBucket(t *testing.T) {
@@ -184,7 +184,7 @@ func TestTenantIsolation001_TrueNegative_NotSharedBucket(t *testing.T) {
 
 	result := ev.Evaluate(tenantSnapshotWithIdentities(bucket, identities))
 
-	assertNoTenantFinding(t, result, "single-tenant-bucket")
+	assertNoTenantFinding(t, &result, "single-tenant-bucket")
 }
 
 func TestTenantIsolation001_TrueNegative_NoIdentities(t *testing.T) {
@@ -196,5 +196,5 @@ func TestTenantIsolation001_TrueNegative_NoIdentities(t *testing.T) {
 
 	result := ev.Evaluate(tenantSnapshotWithIdentities(bucket, nil))
 
-	assertNoTenantFinding(t, result, "no-id-bucket")
+	assertNoTenantFinding(t, &result, "no-id-bucket")
 }
