@@ -2,6 +2,7 @@ package predicate
 
 import (
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/predicate"
 )
 
@@ -152,7 +153,7 @@ func builtinAliases() map[string]aliasEntry {
 			Service:     "s3",
 			Predicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{
-					{Field: predicate.NewFieldPath("properties.storage.encryption.algorithm"), Op: predicate.OpNe, Value: policy.Str("aws:kms")},
+					{Field: predicate.NewFieldPath("properties.storage.encryption.algorithm"), Op: predicate.OpNe, Value: policy.Str(kernel.AlgorithmAWSKMS.String())},
 					{Field: predicate.NewFieldPath("properties.storage.encryption.kms_key_id"), Op: predicate.OpEq, Value: policy.Str("")},
 				},
 			},

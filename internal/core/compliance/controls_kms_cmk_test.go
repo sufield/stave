@@ -6,6 +6,7 @@ import (
 
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 func TestControls001Strict(t *testing.T) {
@@ -22,24 +23,24 @@ func TestControls001Strict(t *testing.T) {
 	}{
 		{
 			name:     "SSE-KMS with CMK — pass",
-			snap:     snap(encBucket("b", true, "aws:kms", "arn:aws:kms:us-east-1:123:key/abc-123")),
+			snap:     snap(encBucket("b", true, string(kernel.AlgorithmAWSKMS), "arn:aws:kms:us-east-1:123:key/abc-123")),
 			wantPass: true,
 		},
 		{
 			name:        "SSE-KMS with AWS-managed key alias — fail",
-			snap:        snap(encBucket("b", true, "aws:kms", "alias/aws/s3")),
+			snap:        snap(encBucket("b", true, string(kernel.AlgorithmAWSKMS), "alias/aws/s3")),
 			wantPass:    false,
 			findingLike: "cannot be revoked",
 		},
 		{
 			name:        "SSE-S3 (AES256) — fail",
-			snap:        snap(encBucket("b", true, "AES256", "")),
+			snap:        snap(encBucket("b", true, string(kernel.AlgorithmAES256), "")),
 			wantPass:    false,
 			findingLike: "not aws:kms",
 		},
 		{
 			name:        "SSE-KMS but no key ID — fail",
-			snap:        snap(encBucket("b", true, "aws:kms", "")),
+			snap:        snap(encBucket("b", true, string(kernel.AlgorithmAWSKMS), "")),
 			wantPass:    false,
 			findingLike: "no KMS key ID",
 		},

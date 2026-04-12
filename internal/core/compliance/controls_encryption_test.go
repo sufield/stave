@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/sufield/stave/internal/core/asset"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 func encBucket(id string, atRest bool, algorithm, keyID string) asset.Asset {
@@ -32,7 +33,7 @@ func TestControls001(t *testing.T) {
 	}{
 		{
 			name:     "encryption enabled — pass",
-			snap:     snap(encBucket("b", true, "AES256", "")),
+			snap:     snap(encBucket("b", true, string(kernel.AlgorithmAES256), "")),
 			wantPass: true,
 		},
 		{

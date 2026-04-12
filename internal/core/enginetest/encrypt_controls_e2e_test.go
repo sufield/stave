@@ -162,12 +162,12 @@ func TestEncrypt002_TrueNegative_TransitEnforced(t *testing.T) {
 
 // --- E2E Tests: CTL.S3.ENCRYPT.003 (PHI Must Use SSE-KMS with CMK) ---
 // Gated by: tags.data-classification == "phi"
-// Unsafe when: algorithm != "aws:kms" OR kms_key_id == ""
+// Unsafe when: algorithm != string(kernel.AlgorithmAWSKMS) OR kms_key_id == ""
 
 func TestEncrypt003_TruePositive_PHIWithAES256(t *testing.T) {
 	ev := encryptEvaluator(t)
 	bucket := encryptBucket("phi-aes-bucket", map[string]any{
-		"algorithm":  "AES256",
+		"algorithm":  string(kernel.AlgorithmAES256),
 		"kms_key_id": "",
 	}, map[string]any{
 		"data-classification": "phi",
@@ -181,7 +181,7 @@ func TestEncrypt003_TruePositive_PHIWithAES256(t *testing.T) {
 func TestEncrypt003_TruePositive_PHIWithKMSButNoKey(t *testing.T) {
 	ev := encryptEvaluator(t)
 	bucket := encryptBucket("phi-no-key-bucket", map[string]any{
-		"algorithm":  "aws:kms",
+		"algorithm":  string(kernel.AlgorithmAWSKMS),
 		"kms_key_id": "",
 	}, map[string]any{
 		"data-classification": "phi",
@@ -195,7 +195,7 @@ func TestEncrypt003_TruePositive_PHIWithKMSButNoKey(t *testing.T) {
 func TestEncrypt003_TrueNegative_PHIWithKMSAndCMK(t *testing.T) {
 	ev := encryptEvaluator(t)
 	bucket := encryptBucket("phi-kms-bucket", map[string]any{
-		"algorithm":  "aws:kms",
+		"algorithm":  string(kernel.AlgorithmAWSKMS),
 		"kms_key_id": "arn:aws:kms:us-east-1:123456789012:key/example-key-id",
 	}, map[string]any{
 		"data-classification": "phi",
@@ -210,7 +210,7 @@ func TestEncrypt003_TrueNegative_NonPHIBucket(t *testing.T) {
 	ev := encryptEvaluator(t)
 	// Not tagged as PHI — control should not fire even with AES256
 	bucket := encryptBucket("public-bucket", map[string]any{
-		"algorithm":  "AES256",
+		"algorithm":  string(kernel.AlgorithmAES256),
 		"kms_key_id": "",
 	}, map[string]any{
 		"data-classification": "public",
@@ -223,12 +223,12 @@ func TestEncrypt003_TrueNegative_NonPHIBucket(t *testing.T) {
 
 // --- E2E Tests: CTL.S3.ENCRYPT.004 (Sensitive Data Requires KMS) ---
 // Gated by: kind=bucket AND tags.data-classification present AND not "public" AND not "non-sensitive"
-// Unsafe when: algorithm != "aws:kms"
+// Unsafe when: algorithm != string(kernel.AlgorithmAWSKMS)
 
 func TestEncrypt004_TruePositive_ConfidentialWithAES256(t *testing.T) {
 	ev := encryptEvaluator(t)
 	bucket := encryptBucket("conf-aes-bucket", map[string]any{
-		"algorithm": "AES256",
+		"algorithm": string(kernel.AlgorithmAES256),
 	}, map[string]any{
 		"data-classification": "confidential",
 	})
@@ -241,7 +241,7 @@ func TestEncrypt004_TruePositive_ConfidentialWithAES256(t *testing.T) {
 func TestEncrypt004_TrueNegative_ConfidentialWithKMS(t *testing.T) {
 	ev := encryptEvaluator(t)
 	bucket := encryptBucket("conf-kms-bucket", map[string]any{
-		"algorithm": "aws:kms",
+		"algorithm": string(kernel.AlgorithmAWSKMS),
 	}, map[string]any{
 		"data-classification": "confidential",
 	})
@@ -255,7 +255,7 @@ func TestEncrypt004_TrueNegative_PublicClassification(t *testing.T) {
 	ev := encryptEvaluator(t)
 	// "public" classification is excluded from this control
 	bucket := encryptBucket("public-bucket", map[string]any{
-		"algorithm": "AES256",
+		"algorithm": string(kernel.AlgorithmAES256),
 	}, map[string]any{
 		"data-classification": "public",
 	})
@@ -269,7 +269,7 @@ func TestEncrypt004_TrueNegative_NonSensitiveClassification(t *testing.T) {
 	ev := encryptEvaluator(t)
 	// "non-sensitive" classification is excluded from this control
 	bucket := encryptBucket("nonsens-bucket", map[string]any{
-		"algorithm": "AES256",
+		"algorithm": string(kernel.AlgorithmAES256),
 	}, map[string]any{
 		"data-classification": "non-sensitive",
 	})
@@ -283,7 +283,7 @@ func TestEncrypt004_TrueNegative_NoClassificationTag(t *testing.T) {
 	ev := encryptEvaluator(t)
 	// No data-classification tag — control should not fire
 	bucket := encryptBucket("untagged-bucket", map[string]any{
-		"algorithm": "AES256",
+		"algorithm": string(kernel.AlgorithmAES256),
 	}, nil)
 
 	result := ev.Evaluate(encryptSnapshot(bucket))
