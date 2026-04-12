@@ -4,7 +4,7 @@
   "run": {
     "tool_version": "edge",
     "offline": true,
-    "now": "2026-01-14T00:00:00Z",
+    "now": "2026-01-15T00:00:00Z",
     "sla_threshold": "0h",
     "snapshots": 2,
     "policy_fingerprint": "0e59be50922ec87d75f571c8cc720b054caad25492cca26478e50d8ac1355d2c"
@@ -22,7 +22,7 @@
       "asset_type": "aws_s3_bucket",
       "status": "OVERDUE",
       "due_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": -96,
+      "remaining_hours": -120,
       "first_unsafe_at": "2026-01-10T00:00:00Z",
       "threshold_hours": 0
     },
@@ -32,7 +32,7 @@
       "asset_type": "aws_s3_bucket",
       "status": "OVERDUE",
       "due_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": -96,
+      "remaining_hours": -120,
       "first_unsafe_at": "2026-01-10T00:00:00Z",
       "threshold_hours": 0
     },
@@ -42,7 +42,7 @@
       "asset_type": "aws_s3_bucket",
       "status": "OVERDUE",
       "due_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": -96,
+      "remaining_hours": -120,
       "first_unsafe_at": "2026-01-10T00:00:00Z",
       "threshold_hours": 0
     },
@@ -52,7 +52,7 @@
       "asset_type": "aws_s3_bucket",
       "status": "OVERDUE",
       "due_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": -96,
+      "remaining_hours": -120,
       "first_unsafe_at": "2026-01-10T00:00:00Z",
       "threshold_hours": 0
     },
@@ -62,7 +62,7 @@
       "asset_type": "aws_s3_bucket",
       "status": "OVERDUE",
       "due_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": -96,
+      "remaining_hours": -120,
       "first_unsafe_at": "2026-01-10T00:00:00Z",
       "threshold_hours": 0
     }
@@ -78,7 +78,7 @@
       "evidence": {
         "first_unsafe_at": "2026-01-10T00:00:00Z",
         "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
-        "unsafe_duration_hours": 96,
+        "unsafe_duration_hours": 120,
         "misconfigurations": [
           {
             "property": "storage.controls.account_public_access_fully_blocked",
@@ -96,7 +96,7 @@
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset non-compliant for 96 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
       },
       "control_severity": "high",
       "control_compliance": {
@@ -128,7 +128,7 @@
       "evidence": {
         "first_unsafe_at": "2026-01-10T00:00:00Z",
         "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
-        "unsafe_duration_hours": 96,
+        "unsafe_duration_hours": 120,
         "misconfigurations": [
           {
             "property": "storage.kind",
@@ -152,7 +152,7 @@
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset non-compliant for 96 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
       },
       "control_severity": "high",
       "control_compliance": {
@@ -179,7 +179,7 @@
       "evidence": {
         "first_unsafe_at": "2026-01-10T00:00:00Z",
         "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
-        "unsafe_duration_hours": 96,
+        "unsafe_duration_hours": 120,
         "misconfigurations": [
           {
             "property": "storage.access.has_ip_condition",
@@ -203,7 +203,7 @@
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset non-compliant for 96 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
       },
       "control_severity": "high",
       "control_compliance": {
@@ -229,7 +229,7 @@
       "evidence": {
         "first_unsafe_at": "2026-01-10T00:00:00Z",
         "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
-        "unsafe_duration_hours": 96,
+        "unsafe_duration_hours": 120,
         "misconfigurations": [
           {
             "property": "storage.kind",
@@ -247,7 +247,7 @@
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset non-compliant for 96 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
       },
       "control_severity": "high",
       "control_compliance": {
@@ -277,7 +277,7 @@
       "evidence": {
         "first_unsafe_at": "2026-01-10T00:00:00Z",
         "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
-        "unsafe_duration_hours": 96,
+        "unsafe_duration_hours": 120,
         "misconfigurations": [
           {
             "property": "storage.access.public_read",
@@ -289,7 +289,7 @@
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset non-compliant for 96 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
       },
       "control_severity": "critical",
       "control_compliance": {
@@ -701,7 +701,7 @@
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
-        "days_blind": 4
+        "days_blind": 5
       },
       "silent_killer": false
     },
@@ -771,7 +771,7 @@
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
-        "days_blind": 4
+        "days_blind": 5
       },
       "silent_killer": false
     },
@@ -785,7 +785,7 @@
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
-        "days_blind": 4
+        "days_blind": 5
       },
       "silent_killer": false
     },
@@ -799,7 +799,7 @@
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
-        "days_blind": 4
+        "days_blind": 5
       },
       "silent_killer": false
     },
@@ -813,7 +813,7 @@
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
-        "days_blind": 4
+        "days_blind": 5
       },
       "silent_killer": false
     }

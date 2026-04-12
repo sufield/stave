@@ -95,6 +95,62 @@ func TestRecurrence_ExceedsLimit(t *testing.T) {
 	}
 }
 
+func TestRecurrence_ActiveWindowCountedTowardLimit(t *testing.T) {
+	// Regression test: the active (unresolved) exposure window must be
+	// counted toward the recurrence limit. Before the fix, only resolved
+	// windows were counted, causing a false negative when the asset was
+	// currently exposed.
+	//
+	// Limit=3, window=7 days, 2 resolved windows + 1 active = 3 → violation
+	ctl := recurrenceControl("CTL.REC.001", 3, 7)
+	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+
+	a := asset.Asset{ID: "bucket-1", Type: kernel.AssetType("s3_bucket")}
+	tl := asset.NewExposureLifecycle(a)
+
+	// Window 1: resolved
+	_ = tl.RecordCheck(base, true)
+	_ = tl.RecordCheck(base.Add(time.Hour), false)
+
+	// Window 2: resolved
+	_ = tl.RecordCheck(base.Add(24*time.Hour), true)
+	_ = tl.RecordCheck(base.Add(25*time.Hour), false)
+
+	// Window 3: currently active (not resolved)
+	_ = tl.RecordCheck(base.Add(48*time.Hour), true)
+
+	if !tl.IsExposed() {
+		t.Fatal("expected asset to be currently exposed")
+	}
+
+	now := base.Add(72 * time.Hour)
+	findings := EvaluateRecurrenceForControl(tl, ctl, now)
+	if len(findings) != 1 {
+		t.Fatalf("expected 1 recurrence finding (active window should count), got %d", len(findings))
+	}
+	if findings[0].Evidence.ExposureWindowCount != 3 {
+		t.Fatalf("ExposureWindowCount = %d, want 3 (2 resolved + 1 active)", findings[0].Evidence.ExposureWindowCount)
+	}
+}
+
+func TestRecurrence_ActiveWindowOutsideRange(t *testing.T) {
+	// Active window started before the recurrence time range — should not count.
+	ctl := recurrenceControl("CTL.REC.001", 3, 7)
+	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+
+	a := asset.Asset{ID: "bucket-1", Type: kernel.AssetType("s3_bucket")}
+	tl := asset.NewExposureLifecycle(a)
+
+	// Active window started 30 days ago (before the 7-day range)
+	_ = tl.RecordCheck(base, true)
+
+	now := base.Add(30 * 24 * time.Hour)
+	findings := EvaluateRecurrenceForControl(tl, ctl, now)
+	if len(findings) != 0 {
+		t.Fatalf("active window outside range should not count, got %d findings", len(findings))
+	}
+}
+
 // ---------------------------------------------------------------------------
 // CreateRecurrenceFinding
 // ---------------------------------------------------------------------------

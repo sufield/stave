@@ -4,7 +4,7 @@
   "run": {
     "tool_version": "edge",
     "offline": true,
-    "now": "2015-10-26T00:00:00Z",
+    "now": "2026-01-11T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
     "input_hashes": {
@@ -29,7 +29,7 @@
       "asset_type": "aws_s3_bucket",
       "status": "OVERDUE",
       "due_at": "2015-10-18T00:00:00Z",
-      "remaining_hours": -192,
+      "remaining_hours": -89712,
       "first_unsafe_at": "2015-10-18T00:00:00Z",
       "threshold_hours": 0
     },
@@ -39,7 +39,7 @@
       "asset_type": "aws_s3_bucket",
       "status": "OVERDUE",
       "due_at": "2015-10-18T00:00:00Z",
-      "remaining_hours": -192,
+      "remaining_hours": -89712,
       "first_unsafe_at": "2015-10-18T00:00:00Z",
       "threshold_hours": 0
     },
@@ -49,7 +49,7 @@
       "asset_type": "aws_s3_bucket",
       "status": "OVERDUE",
       "due_at": "2015-10-18T00:00:00Z",
-      "remaining_hours": -192,
+      "remaining_hours": -89712,
       "first_unsafe_at": "2015-10-18T00:00:00Z",
       "threshold_hours": 0
     },
@@ -59,7 +59,7 @@
       "asset_type": "aws_s3_bucket",
       "status": "OVERDUE",
       "due_at": "2015-10-25T00:00:00Z",
-      "remaining_hours": -24,
+      "remaining_hours": -89544,
       "first_unsafe_at": "2015-10-18T00:00:00Z",
       "threshold_hours": 168
     },
@@ -69,7 +69,7 @@
       "asset_type": "aws_s3_bucket",
       "status": "OVERDUE",
       "due_at": "2015-10-25T00:00:00Z",
-      "remaining_hours": -24,
+      "remaining_hours": -89544,
       "first_unsafe_at": "2015-10-18T00:00:00Z",
       "threshold_hours": 168
     },
@@ -79,7 +79,7 @@
       "asset_type": "aws_s3_bucket",
       "status": "OVERDUE",
       "due_at": "2015-10-25T00:00:00Z",
-      "remaining_hours": -24,
+      "remaining_hours": -89544,
       "first_unsafe_at": "2015-10-18T00:00:00Z",
       "threshold_hours": 168
     },
@@ -89,7 +89,7 @@
       "asset_type": "aws_s3_bucket",
       "status": "OVERDUE",
       "due_at": "2015-10-25T00:00:00Z",
-      "remaining_hours": -24,
+      "remaining_hours": -89544,
       "first_unsafe_at": "2015-10-18T00:00:00Z",
       "threshold_hours": 168
     },
@@ -99,7 +99,7 @@
       "asset_type": "aws_s3_bucket",
       "status": "OVERDUE",
       "due_at": "2015-10-25T00:00:00Z",
-      "remaining_hours": -24,
+      "remaining_hours": -89544,
       "first_unsafe_at": "2015-10-18T00:00:00Z",
       "threshold_hours": 168
     },
@@ -109,7 +109,7 @@
       "asset_type": "aws_s3_bucket",
       "status": "OVERDUE",
       "due_at": "2015-10-25T00:00:00Z",
-      "remaining_hours": -24,
+      "remaining_hours": -89544,
       "first_unsafe_at": "2015-10-18T00:00:00Z",
       "threshold_hours": 168
     },
@@ -119,7 +119,7 @@
       "asset_type": "aws_s3_bucket",
       "status": "OVERDUE",
       "due_at": "2015-10-25T00:00:00Z",
-      "remaining_hours": -24,
+      "remaining_hours": -89544,
       "first_unsafe_at": "2015-10-18T00:00:00Z",
       "threshold_hours": 168
     },
@@ -129,7 +129,7 @@
       "asset_type": "aws_s3_bucket",
       "status": "OVERDUE",
       "due_at": "2015-10-25T00:00:00Z",
-      "remaining_hours": -24,
+      "remaining_hours": -89544,
       "first_unsafe_at": "2015-10-18T00:00:00Z",
       "threshold_hours": 168
     },
@@ -139,7 +139,7 @@
       "asset_type": "aws_s3_bucket",
       "status": "OVERDUE",
       "due_at": "2015-10-25T00:00:00Z",
-      "remaining_hours": -24,
+      "remaining_hours": -89544,
       "first_unsafe_at": "2015-10-18T00:00:00Z",
       "threshold_hours": 168
     },
@@ -149,7 +149,7 @@
       "asset_type": "aws_s3_bucket",
       "status": "OVERDUE",
       "due_at": "2015-10-25T00:00:00Z",
-      "remaining_hours": -24,
+      "remaining_hours": -89544,
       "first_unsafe_at": "2015-10-18T00:00:00Z",
       "threshold_hours": 168
     }
@@ -165,7 +165,7 @@
       "evidence": {
         "first_unsafe_at": "2015-10-18T00:00:00Z",
         "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
-        "unsafe_duration_hours": 192,
+        "unsafe_duration_hours": 89712,
         "threshold_hours": 168,
         "misconfigurations": [
           {
@@ -184,7 +184,7 @@
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 89712 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -205,7 +205,7 @@
       "evidence": {
         "first_unsafe_at": "2015-10-18T00:00:00Z",
         "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
-        "unsafe_duration_hours": 192,
+        "unsafe_duration_hours": 89712,
         "threshold_hours": 168,
         "misconfigurations": [
           {
@@ -224,7 +224,7 @@
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 89712 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -245,7 +245,7 @@
       "evidence": {
         "first_unsafe_at": "2015-10-18T00:00:00Z",
         "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
-        "unsafe_duration_hours": 192,
+        "unsafe_duration_hours": 89712,
         "threshold_hours": 168,
         "misconfigurations": [
           {
@@ -264,7 +264,7 @@
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 89712 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -285,7 +285,7 @@
       "evidence": {
         "first_unsafe_at": "2015-10-18T00:00:00Z",
         "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
-        "unsafe_duration_hours": 192,
+        "unsafe_duration_hours": 89712,
         "threshold_hours": 168,
         "misconfigurations": [
           {
@@ -322,7 +322,7 @@
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 89712 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -343,7 +343,7 @@
       "evidence": {
         "first_unsafe_at": "2015-10-18T00:00:00Z",
         "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
-        "unsafe_duration_hours": 192,
+        "unsafe_duration_hours": 89712,
         "threshold_hours": 168,
         "misconfigurations": [
           {
@@ -380,7 +380,7 @@
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 89712 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -401,7 +401,7 @@
       "evidence": {
         "first_unsafe_at": "2015-10-18T00:00:00Z",
         "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
-        "unsafe_duration_hours": 192,
+        "unsafe_duration_hours": 89712,
         "threshold_hours": 168,
         "misconfigurations": [
           {
@@ -438,7 +438,7 @@
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 89712 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -459,7 +459,7 @@
       "evidence": {
         "first_unsafe_at": "2015-10-18T00:00:00Z",
         "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
-        "unsafe_duration_hours": 192,
+        "unsafe_duration_hours": 89712,
         "threshold_hours": 168,
         "misconfigurations": [
           {
@@ -478,7 +478,7 @@
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 89712 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -533,7 +533,7 @@
       "evidence": {
         "first_unsafe_at": "2015-10-18T00:00:00Z",
         "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
-        "unsafe_duration_hours": 192,
+        "unsafe_duration_hours": 89712,
         "threshold_hours": 168,
         "misconfigurations": [
           {
@@ -552,7 +552,7 @@
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 89712 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -607,7 +607,7 @@
       "evidence": {
         "first_unsafe_at": "2015-10-18T00:00:00Z",
         "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
-        "unsafe_duration_hours": 192,
+        "unsafe_duration_hours": 89712,
         "threshold_hours": 168,
         "misconfigurations": [
           {
@@ -626,7 +626,7 @@
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 89712 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -681,7 +681,7 @@
       "evidence": {
         "first_unsafe_at": "2015-10-18T00:00:00Z",
         "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
-        "unsafe_duration_hours": 192,
+        "unsafe_duration_hours": 89712,
         "threshold_hours": 168,
         "misconfigurations": [
           {
@@ -694,7 +694,7 @@
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 89712 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -749,7 +749,7 @@
       "evidence": {
         "first_unsafe_at": "2015-10-18T00:00:00Z",
         "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
-        "unsafe_duration_hours": 192,
+        "unsafe_duration_hours": 89712,
         "misconfigurations": [
           {
             "property": "storage.access.read_via_resource",
@@ -761,7 +761,7 @@
         "root_causes": [
           "resource"
         ],
-        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 0 hours). Exposed since 2015-10-18T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 89712 hours (SLA: 0 hours). Exposed since 2015-10-18T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -816,7 +816,7 @@
       "evidence": {
         "first_unsafe_at": "2015-10-18T00:00:00Z",
         "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
-        "unsafe_duration_hours": 192,
+        "unsafe_duration_hours": 89712,
         "misconfigurations": [
           {
             "property": "storage.access.read_via_resource",
@@ -828,7 +828,7 @@
         "root_causes": [
           "resource"
         ],
-        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 0 hours). Exposed since 2015-10-18T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 89712 hours (SLA: 0 hours). Exposed since 2015-10-18T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -883,7 +883,7 @@
       "evidence": {
         "first_unsafe_at": "2015-10-18T00:00:00Z",
         "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
-        "unsafe_duration_hours": 192,
+        "unsafe_duration_hours": 89712,
         "misconfigurations": [
           {
             "property": "storage.access.read_via_resource",
@@ -895,7 +895,7 @@
         "root_causes": [
           "resource"
         ],
-        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 0 hours). Exposed since 2015-10-18T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 89712 hours (SLA: 0 hours). Exposed since 2015-10-18T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -1078,183 +1078,183 @@
       "finding_index": 0,
       "control_id": "CTL.S3.CONTROLS.001",
       "asset_id": "shopify-owned-1",
-      "exposure_score": 10,
+      "exposure_score": 50,
       "breakdown": {
         "base_score": 10,
-        "duration_factor": 1,
+        "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
-        "days_blind": 8
+        "days_blind": 3738
       },
-      "silent_killer": false
+      "silent_killer": true
     },
     {
       "finding_index": 1,
       "control_id": "CTL.S3.CONTROLS.001",
       "asset_id": "shopify-owned-2",
-      "exposure_score": 10,
+      "exposure_score": 50,
       "breakdown": {
         "base_score": 10,
-        "duration_factor": 1,
+        "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
-        "days_blind": 8
+        "days_blind": 3738
       },
-      "silent_killer": false
+      "silent_killer": true
     },
     {
       "finding_index": 2,
       "control_id": "CTL.S3.CONTROLS.001",
       "asset_id": "shopify-writeable-1",
-      "exposure_score": 10,
+      "exposure_score": 50,
       "breakdown": {
         "base_score": 10,
-        "duration_factor": 1,
+        "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
-        "days_blind": 8
+        "days_blind": 3738
       },
-      "silent_killer": false
+      "silent_killer": true
     },
     {
       "finding_index": 3,
       "control_id": "CTL.S3.ENCRYPT.004",
       "asset_id": "shopify-owned-1",
-      "exposure_score": 10,
+      "exposure_score": 50,
       "breakdown": {
         "base_score": 10,
-        "duration_factor": 1,
+        "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
-        "days_blind": 8
+        "days_blind": 3738
       },
-      "silent_killer": false
+      "silent_killer": true
     },
     {
       "finding_index": 4,
       "control_id": "CTL.S3.ENCRYPT.004",
       "asset_id": "shopify-owned-2",
-      "exposure_score": 10,
+      "exposure_score": 50,
       "breakdown": {
         "base_score": 10,
-        "duration_factor": 1,
+        "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
-        "days_blind": 8
+        "days_blind": 3738
       },
-      "silent_killer": false
+      "silent_killer": true
     },
     {
       "finding_index": 5,
       "control_id": "CTL.S3.ENCRYPT.004",
       "asset_id": "shopify-writeable-1",
-      "exposure_score": 10,
+      "exposure_score": 50,
       "breakdown": {
         "base_score": 10,
-        "duration_factor": 1,
+        "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
-        "days_blind": 8
+        "days_blind": 3738
       },
-      "silent_killer": false
+      "silent_killer": true
     },
     {
       "finding_index": 6,
       "control_id": "CTL.S3.PUBLIC.001",
       "asset_id": "shopify-owned-1",
-      "exposure_score": 10,
+      "exposure_score": 50,
       "breakdown": {
         "base_score": 10,
-        "duration_factor": 1,
+        "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
-        "days_blind": 8
+        "days_blind": 3738
       },
-      "silent_killer": false
+      "silent_killer": true
     },
     {
       "finding_index": 7,
       "control_id": "CTL.S3.PUBLIC.001",
       "asset_id": "shopify-owned-2",
-      "exposure_score": 10,
+      "exposure_score": 50,
       "breakdown": {
         "base_score": 10,
-        "duration_factor": 1,
+        "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
-        "days_blind": 8
+        "days_blind": 3738
       },
-      "silent_killer": false
+      "silent_killer": true
     },
     {
       "finding_index": 8,
       "control_id": "CTL.S3.PUBLIC.001",
       "asset_id": "shopify-writeable-1",
-      "exposure_score": 10,
+      "exposure_score": 50,
       "breakdown": {
         "base_score": 10,
-        "duration_factor": 1,
+        "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
-        "days_blind": 8
+        "days_blind": 3738
       },
-      "silent_killer": false
+      "silent_killer": true
     },
     {
       "finding_index": 9,
       "control_id": "CTL.S3.PUBLIC.003",
       "asset_id": "shopify-writeable-1",
-      "exposure_score": 10,
+      "exposure_score": 50,
       "breakdown": {
         "base_score": 10,
-        "duration_factor": 1,
+        "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
-        "days_blind": 8
+        "days_blind": 3738
       },
-      "silent_killer": false
+      "silent_killer": true
     },
     {
       "finding_index": 10,
       "control_id": "CTL.S3.PUBLIC.004",
       "asset_id": "shopify-owned-1",
-      "exposure_score": 10,
+      "exposure_score": 50,
       "breakdown": {
         "base_score": 10,
-        "duration_factor": 1,
+        "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
-        "days_blind": 8
+        "days_blind": 3738
       },
-      "silent_killer": false
+      "silent_killer": true
     },
     {
       "finding_index": 11,
       "control_id": "CTL.S3.PUBLIC.004",
       "asset_id": "shopify-owned-2",
-      "exposure_score": 10,
+      "exposure_score": 50,
       "breakdown": {
         "base_score": 10,
-        "duration_factor": 1,
+        "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
-        "days_blind": 8
+        "days_blind": 3738
       },
-      "silent_killer": false
+      "silent_killer": true
     },
     {
       "finding_index": 12,
       "control_id": "CTL.S3.PUBLIC.004",
       "asset_id": "shopify-writeable-1",
-      "exposure_score": 10,
+      "exposure_score": 50,
       "breakdown": {
         "base_score": 10,
-        "duration_factor": 1,
+        "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
-        "days_blind": 8
+        "days_blind": 3738
       },
-      "silent_killer": false
+      "silent_killer": true
     }
   ],
   "extensions": {
@@ -1266,7 +1266,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "63e47ad36c31f9d3e487f3e985d016523b77d97c",
+      "head_commit": "25417909e3bf93e8f1c56318f325b6daec038dbb",
       "dirty": false
     }
   }

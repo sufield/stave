@@ -4,7 +4,7 @@
   "run": {
     "tool_version": "edge",
     "offline": true,
-    "now": "2017-02-09T00:00:00Z",
+    "now": "2026-01-11T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
     "input_hashes": {
@@ -29,7 +29,7 @@
       "asset_type": "aws_s3_bucket",
       "status": "OVERDUE",
       "due_at": "2017-02-08T00:00:00Z",
-      "remaining_hours": -24,
+      "remaining_hours": -78216,
       "first_unsafe_at": "2017-02-01T00:00:00Z",
       "threshold_hours": 168
     }
@@ -45,7 +45,7 @@
       "evidence": {
         "first_unsafe_at": "2017-02-01T00:00:00Z",
         "last_seen_unsafe_at": "2017-02-09T00:00:00Z",
-        "unsafe_duration_hours": 192,
+        "unsafe_duration_hours": 78384,
         "threshold_hours": 168,
         "misconfigurations": [
           {
@@ -64,7 +64,7 @@
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 168 hours). Exposed since 2017-02-01T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 78384 hours (SLA: 168 hours). Exposed since 2017-02-01T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -159,15 +159,15 @@
       "finding_index": 0,
       "control_id": "CTL.S3.PUBLIC.001",
       "asset_id": "mapbox-private-objects",
-      "exposure_score": 10,
+      "exposure_score": 50,
       "breakdown": {
         "base_score": 10,
-        "duration_factor": 1,
+        "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
-        "days_blind": 8
+        "days_blind": 3266
       },
-      "silent_killer": false
+      "silent_killer": true
     }
   ],
   "extensions": {
@@ -179,7 +179,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "63e47ad36c31f9d3e487f3e985d016523b77d97c",
+      "head_commit": "25417909e3bf93e8f1c56318f325b6daec038dbb",
       "dirty": false
     }
   }

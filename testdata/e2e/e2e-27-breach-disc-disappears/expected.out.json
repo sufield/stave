@@ -4,7 +4,7 @@
   "run": {
     "tool_version": "edge",
     "offline": true,
-    "now": "2026-01-01T02:00:00Z",
+    "now": "2026-01-11T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 3,
     "input_hashes": {
@@ -30,7 +30,7 @@
       "asset_type": "storage_bucket",
       "status": "OVERDUE",
       "due_at": "2026-01-01T01:00:00Z",
-      "remaining_hours": -1,
+      "remaining_hours": -239,
       "first_unsafe_at": "2026-01-01T00:00:00Z",
       "threshold_hours": 1
     }
@@ -50,7 +50,7 @@
       "evidence": {
         "first_unsafe_at": "2026-01-01T00:00:00Z",
         "last_seen_unsafe_at": "2026-01-01T02:00:00Z",
-        "unsafe_duration_hours": 2,
+        "unsafe_duration_hours": 240,
         "threshold_hours": 1,
         "misconfigurations": [
           {
@@ -63,7 +63,7 @@
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset non-compliant for 2 hours (SLA: 1 hours). Exposed since 2026-01-01T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 1 hours). Exposed since 2026-01-01T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -86,7 +86,7 @@
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
-        "days_blind": 0.08333333333333333
+        "days_blind": 10
       },
       "silent_killer": false
     }
@@ -100,7 +100,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "63e47ad36c31f9d3e487f3e985d016523b77d97c",
+      "head_commit": "25417909e3bf93e8f1c56318f325b6daec038dbb",
       "dirty": false
     }
   }

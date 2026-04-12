@@ -27,7 +27,26 @@ func EvaluateRecurrenceForControl(
 		return nil
 	}
 
-	count, first, last := t.History().WindowSummary(p.Window(now))
+	w := p.Window(now)
+	count, first, last := t.History().WindowSummary(w)
+
+	// Include the currently active window if it started within the
+	// recurrence time range. ExposureHistory only stores resolved
+	// windows, so the active window must be counted separately to
+	// avoid false negatives when the asset is currently exposed.
+	if t.HasActiveWindow() {
+		start := t.FirstExposedAt()
+		if start.After(w.Start) && start.Before(w.End) {
+			count++
+			if first.IsZero() || start.Before(first) {
+				first = start
+			}
+			if last.IsZero() || now.After(last) {
+				last = now
+			}
+		}
+	}
+
 	if count < p.Limit {
 		return nil
 	}
