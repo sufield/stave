@@ -26,8 +26,8 @@ Because these are open files and versioned contracts, teams can:
 
 ## What This Means in Practice
 
-- Stave does not require a proprietary agent or hosted control plane.
-- Stave does not require a vendor-specific policy language to start.
-- Stave artifacts remain portable across local development, CI runners, and audit workflows.
+- Stave runs as a standalone CLI — bring your own CI runner, laptop, or air-gapped host.
+- Controls are YAML with a standard predicate DSL — portable across teams and toolchains.
+- Artifacts remain portable across local development, CI runners, and audit workflows.
 
-This is intentional: Stave should be a standards-based safety layer, not a closed ecosystem.
+Stave is a standards-based safety layer designed for composability.

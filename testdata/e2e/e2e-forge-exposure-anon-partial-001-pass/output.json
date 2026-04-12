@@ -1,0 +1,42 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "eee54caa93db5e4fc762e8c6c136e7852ab8ec01bc65a001fb14c5378276cf31",
+        "2026-01-11T000000Z.json": "bb8a2ede74930bc4ffa114dcac89432a8d3c0e1353582c1c31d1a256d1a8c689"
+      },
+      "overall": "3daae3f154be62bfc05837acf3c9e56e67bfc5eef2a3292dd96b6a472cb2f1c4"
+    },
+    "policy_fingerprint": "0e17ef3516a0f92f47f788baa1a6827fbec120c122f5ea629888e31d22e36480"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-exposure-anon-partial-001-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-exposure-anon-partial-001-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "b205fe18551faec7f685da8710c5b5602ddc6c50",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-exposure-anon-partial-001-pass/controls/"
+      ]
+    }
+  }
+}

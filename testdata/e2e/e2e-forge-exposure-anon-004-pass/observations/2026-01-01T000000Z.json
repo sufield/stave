@@ -1,0 +1,26 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:dynamodb:us-east-1:123456789:table/orders",
+      "properties": {
+        "reachability": {
+          "kind": "anonymous_path",
+          "anonymous_path": {
+            "reachable": true,
+            "path_hop_count": 2,
+            "target_data_classification": "public",
+            "has_auth_boundary": true,
+            "has_inspection_boundary": true,
+            "inspection_boundary_types": ["waf"],
+            "is_fully_resolved": true,
+            "entry_point_type": "apigateway"
+          }
+        }
+      },
+      "type": "aws_dynamodb_table",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1"
+}

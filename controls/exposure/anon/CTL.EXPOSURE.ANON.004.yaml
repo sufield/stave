@@ -1,0 +1,53 @@
+dsl_version: ctrl.v1
+id: CTL.EXPOSURE.ANON.004
+name: Unauthenticated Access Path Should Have Inspection Boundary
+description: >
+  Any resource reachable from anonymous principals should have at
+  least one inspection boundary in the access path — a point where
+  requests are filtered for malicious content (WAF with managed rule
+  groups, API Gateway request validation). An authentication boundary
+  verifies identity; an inspection boundary verifies request safety.
+  Both are needed for defense-in-depth. This control flags paths
+  where no request inspection exists.
+domain: exposure
+severity: medium
+compliance:
+  pci_dss_v4.0: "6.4.2"
+  nist_800_53_r5: "SI-3"
+scope_tags:
+  - aws
+  - cross-service
+type: unsafe_state
+params:
+  base_impact: 5
+  attack_stage: initial_access
+remediation:
+  description: >
+    Resource is reachable from anonymous with no inspection boundary
+    in the path. Requests are not filtered for malicious content.
+  action: >
+    Attach a WAF web ACL with managed rule groups (AWSManagedRulesCommonRuleSet,
+    AWSManagedRulesKnownBadInputsRuleSet) to the API Gateway stage
+    or ALB. Enable API Gateway request validation.
+  example: |
+    {
+      "reachability": {
+        "kind": "anonymous_path",
+        "anonymous_path": {
+          "reachable": true,
+          "has_inspection_boundary": true,
+          "inspection_boundary_types": ["waf"]
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.reachability.kind
+      op: eq
+      value: anonymous_path
+    - field: properties.reachability.anonymous_path.reachable
+      op: eq
+      value: true
+    - field: properties.reachability.anonymous_path.has_inspection_boundary
+      op: eq
+      value: false

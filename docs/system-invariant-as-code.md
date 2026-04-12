@@ -83,16 +83,15 @@ If either property is true in a snapshot, Stave emits a finding.
 
 ## How it differs from OPA / tfsec / CSPM
 
-- OPA/Sentinel: general policy engines for decisions. Stave: control evaluation over snapshot history with deterministic findings.
-- tfsec/Checkov: static IaC analysis. Stave: evaluation of normalized observed state snapshots.
-- CSPM: live cloud visibility with credentials and API calls. Stave: offline evaluation with local files only.
+- **OPA/Sentinel:** general policy engines for decisions. **Stave:** control evaluation over snapshot history with compound risk scoring.
+- **tfsec/Checkov:** static IaC analysis. **Stave:** evaluation of normalized observed state snapshots with duration tracking.
+- **CSPM:** live cloud visibility with API calls. **Stave:** offline evaluation with local files, deterministic rankings.
 
-## What Stave does not do
+## Scope boundaries
 
-- It does not continuously crawl cloud APIs.
-- It does not auto-remediate infrastructure.
-- It does not execute plugins or untrusted code.
-- It does not replace all policy engines or CSPM platforms.
+- **Evaluation-only** — Stave evaluates observations; extractors and remediators are separate programs.
+- **Offline by design** — all inputs are local files; cloud API access belongs to extractors.
+- **Deterministic** — same inputs always produce the same findings, scores, and rankings.
 
 ## Developer Workflow
 
