@@ -1,0 +1,113 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "3ccd6f2d424c73b4a46f9467e6e72ffe00f4fd3c0c6cc34e457535fa862b7720",
+        "2026-01-11T000000Z.json": "d5b09df2c45d89ba2e4f2c260b53cb312cae0c30619a4364206ee2b434221379"
+      },
+      "overall": "a30a9f6a3c8eb04d376318583cdd7becdbc527cb357ffac387d3881d9970df5c"
+    },
+    "policy_fingerprint": "4299c3d120609666cdccd9e6aa87a3eb9f2029f9c76123247b859a6b8d160b64"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.IAM.ESCALATE.CHAIN.001",
+      "asset_id": "arn:aws:iam::123456789:user/dev-user",
+      "asset_type": "aws_iam_user",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.IAM.ESCALATE.CHAIN.001",
+      "control_name": "Principal Must Not Have Multi-Step Path to Admin",
+      "control_description": "IAM principals must have no multi-step permission chain that leads to administrative access. The extractor analyzes known escalation patterns (iam:PassRole + lambda:CreateFunction, iam:CreatePolicyVersion on self, sts:AssumeRole to admin role, etc.) and traces whether a low-privileged principal can chain permissions to reach admin. Each step is individually authorized but the composition creates a privilege escalation path that policy reviews miss.\n",
+      "asset_id": "arn:aws:iam::123456789:user/dev-user",
+      "asset_type": "aws_iam_user",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "identity.escalation.can_escalate_to_admin",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance": {
+        "fedramp_moderate": "AC-6(5)",
+        "nist_800_53_r5": "AC-6(5)",
+        "pci_dss_v4.0": "7.2.1",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Principal can escalate to admin through a multi-step permission chain. Each step is individually authorized but the composition enables full privilege escalation.",
+        "action": "Remove the weakest link in the escalation chain. Common fixes: scope iam:PassRole to specific role ARNs, restrict lambda:CreateFunction to approved execution roles, add permissions boundaries that deny IAM self-modification.",
+        "example": "{\n  \"identity\": {\n    \"kind\": \"user\",\n    \"escalation\": {\n      \"can_escalate_to_admin\": false\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.IAM.ESCALATE.CHAIN.001",
+      "asset_id": "arn:aws:iam::123456789:user/dev-user",
+      "exposure_score": 250,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 2.5,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-escalate-chain-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-escalate-chain-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "8b468ec12ee68a0de591b8a767b86c1b0399a40d",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-iam-escalate-chain-fail/controls/"
+      ]
+    }
+  }
+}

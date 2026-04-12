@@ -1,0 +1,120 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "a1d7d81e8f9011775661fbde5ee46e6704f2e78a91b9e44a4dfff5193f2fd5d9",
+        "2026-01-11T000000Z.json": "667267706e250017a77570c8180b033e9b801ec571608aee55cb721362607259"
+      },
+      "overall": "80f86f01462f0cfdd53ee4be191ca6a7bded82a610fc50e9c20ee8609561a92d"
+    },
+    "policy_fingerprint": "099c8c50b3d97217be4d649668cf58aecba39fce09d1cde6b7ba1eee663eb605"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.IAM.IDENTITY.BLASTRADIUS.004",
+      "asset_id": "arn:aws:iam::123456789:role/data-lake-role",
+      "asset_type": "aws_iam_role",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.IAM.IDENTITY.BLASTRADIUS.004",
+      "control_name": "Role Must Not Reach Excessive Sensitive Resources",
+      "control_description": "IAM roles must have access to fewer than 20 resources classified as sensitive (PHI, PII, confidential). A role that can reach 85 sensitive resources is a qualitatively different risk than one that reaches 5 — credential compromise exposes a proportionally larger data surface. The extractor counts unique sensitive resources reachable through the role's attached and inline policies.\n",
+      "asset_id": "arn:aws:iam::123456789:role/data-lake-role",
+      "asset_type": "aws_iam_role",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "identity.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "role"
+          },
+          {
+            "property": "identity.role.sensitive_resource_count",
+            "actual_value": "[SANITIZED]",
+            "operator": "gt",
+            "unsafe_value": 20
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance": {
+        "fedramp_moderate": "AC-6(5)",
+        "hipaa": "164.312(a)(1)",
+        "nist_800_53_r5": "AC-6(5)",
+        "pci_dss_v4.0": "7.2.2",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Role has access to more than 20 sensitive resources. Credential compromise exposes a disproportionate data surface.",
+        "action": "Split broad roles into per-service roles scoped to specific resource ARNs. Use IAM Access Analyzer to identify unused permissions on sensitive resources. Apply permissions boundaries that restrict access to classified data.",
+        "example": "{\n  \"identity\": {\n    \"kind\": \"role\",\n    \"role\": {\n      \"sensitive_resource_count\": 5\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.IAM.IDENTITY.BLASTRADIUS.004",
+      "asset_id": "arn:aws:iam::123456789:role/data-lake-role",
+      "exposure_score": 250,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 2.5,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-identity-blastradius-004-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-identity-blastradius-004-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "8b468ec12ee68a0de591b8a767b86c1b0399a40d",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-iam-identity-blastradius-004-fail/controls/"
+      ]
+    }
+  }
+}

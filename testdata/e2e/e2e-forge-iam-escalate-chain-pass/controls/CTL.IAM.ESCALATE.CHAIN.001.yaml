@@ -1,0 +1,53 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.CHAIN.001
+name: Principal Must Not Have Multi-Step Path to Admin
+description: >
+  IAM principals must have no multi-step permission chain that leads
+  to administrative access. The extractor analyzes known escalation
+  patterns (iam:PassRole + lambda:CreateFunction, iam:CreatePolicyVersion
+  on self, sts:AssumeRole to admin role, etc.) and traces whether a
+  low-privileged principal can chain permissions to reach admin. Each
+  step is individually authorized but the composition creates a
+  privilege escalation path that policy reviews miss.
+domain: identity
+severity: critical
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-6(5)"
+  fedramp_moderate: "AC-6(5)"
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params:
+  base_impact: 10
+  attack_stage: persistence
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    Principal can escalate to admin through a multi-step permission
+    chain. Each step is individually authorized but the composition
+    enables full privilege escalation.
+  action: >
+    Remove the weakest link in the escalation chain. Common fixes:
+    scope iam:PassRole to specific role ARNs, restrict
+    lambda:CreateFunction to approved execution roles, add permissions
+    boundaries that deny IAM self-modification.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "escalation": {
+          "can_escalate_to_admin": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.escalation.can_escalate_to_admin
+      op: eq
+      value: true

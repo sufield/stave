@@ -1,0 +1,1 @@
+{"assets":[{"id":"arn:aws:iam::123456789:role/scoped-role","properties":{"identity":{"kind":"role","role":{"reachable_resources_count":10,"sensitive_resource_count":3}}},"type":"aws_iam_role","vendor":"aws"}],"captured_at":"2026-01-01T00:00:00Z","schema_version":"obs.v0.1"}

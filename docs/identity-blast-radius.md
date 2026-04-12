@@ -98,9 +98,25 @@ blast radius beyond what was intended for the originating role.
 **Remediation:** Flatten the chain. Grant permissions directly to the
 role that needs them rather than chaining through intermediates.
 
+### CTL.IAM.IDENTITY.BLASTRADIUS.004 — Sensitive resource count
+
+```
+Fires when: sensitive_resource_count > 20
+Severity: critical
+```
+
+A role that can reach 85 sensitive resources (PHI, PII, confidential)
+is a qualitatively different risk than one that reaches 5. The
+extractor counts unique sensitive resources reachable through the
+role's policies and stores the count.
+
+**Remediation:** Split broad roles into per-service roles scoped to
+specific resource ARNs. Use IAM Access Analyzer to identify unused
+permissions on sensitive resources.
+
 ## Safety chain: identity_blast_radius
 
-The three blast radius controls participate in a compound chain
+The four blast radius controls participate in a compound chain
 together with credential protection controls:
 
 ```yaml
@@ -180,7 +196,7 @@ through the multiplier, identity blast radius through the chain.
 
 | File | Purpose |
 |---|---|
-| `controls/iam/identity/CTL.IAM.IDENTITY.BLASTRADIUS.001-003.yaml` | 3 blast radius controls |
+| `controls/iam/identity/CTL.IAM.IDENTITY.BLASTRADIUS.001-004.yaml` | 4 blast radius controls |
 | `chains/identity_blast_radius.yaml` | Compound chain definition |
 | `aws-lab/scripts/exp73-iam-identity-blast-radius.sh` | Extractor pattern for computing reachable resources |
 | `docs/blast-radius.md` | Control-level blast radius documentation |

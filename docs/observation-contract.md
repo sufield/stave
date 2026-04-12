@@ -672,6 +672,75 @@ and [Extractor Guide: Reachability](extractor-reachability.md).
 
 ---
 
+## Data exfiltration namespace
+
+The `reachability.exfiltration.*` namespace tracks whether sensitive data
+can reach the internet through compute instances with outbound connectivity.
+The extractor traces from the sensitive resource to compute instances that
+can read it, then checks for internet egress paths.
+
+| Property | Type | Description |
+|---|---|---|
+| `reachability.kind` | string | Discriminator: `exfiltration_path` |
+| `reachability.exfiltration.path_to_internet_exists` | bool | Compute has outbound internet path (IGW, NAT) |
+| `reachability.exfiltration.vector` | string | `compute_with_igw_plus_wildcard_write`, etc. |
+| `reachability.exfiltration.egress_type` | string | `internet_gateway`, `nat_gateway`, `vpc_peering` |
+| `reachability.exfiltration.compute_id` | string | ARN of the compute instance with egress |
+| `reachability.exfiltration.has_wildcard_write` | bool | Instance role has s3:PutObject on Resource "*" |
+| `reachability.exfiltration.sensitive_data_readable` | bool | Compute can read the sensitive resource |
+| `reachability.exfiltration.target_data_classification` | string | `phi`, `pii`, `confidential`, `public`, `none` |
+
+**Controls:** CTL.EXPOSURE.EXFIL.001 (sensitive data + egress),
+.002 (wildcard write + egress).
+
+---
+
+## Cross-environment pivot namespace
+
+The `identity.role.cross_env.*` namespace tracks transitive trust
+paths from non-production to production environments.
+
+| Property | Type | Description |
+|---|---|---|
+| `identity.role.cross_env.reachable_from_lower_env` | bool | Prod resource reachable from non-prod |
+| `identity.role.cross_env.source_env` | string | `development`, `staging`, `qa` |
+| `identity.role.cross_env.path_hop_count` | int | Hops from non-prod to prod |
+| `identity.role.cross_env.via_bridge_role` | string | ARN of the bridge role |
+
+**Controls:** CTL.IAM.CROSS.ENV.PATH.001 (graph-based transitive trust).
+
+---
+
+## Privilege escalation namespace
+
+The `identity.escalation.*` namespace tracks multi-step permission
+chains that lead to administrative access.
+
+| Property | Type | Description |
+|---|---|---|
+| `identity.escalation.can_escalate_to_admin` | bool | Principal can chain to admin |
+| `identity.escalation.escalation_vector` | string | `PassRoleToLambda`, `CreatePolicyVersion`, etc. |
+| `identity.escalation.steps` | string[] | Ordered API actions in the chain |
+| `identity.escalation.target_admin_role` | string | ARN of the admin role reached |
+| `identity.escalation.step_count` | int | Number of steps in the chain |
+
+**Controls:** CTL.IAM.ESCALATE.CHAIN.001 (multi-step escalation path).
+
+---
+
+## Identity blast radius extensions
+
+Additional properties for the existing `identity.role.*` namespace:
+
+| Property | Type | Description |
+|---|---|---|
+| `identity.role.sensitive_resource_count` | int | Sensitive resources (PHI/PII/confidential) reachable |
+| `identity.role.can_delete_all_backups` | bool | Role can delete all backup resources |
+
+**Controls:** CTL.IAM.IDENTITY.BLASTRADIUS.004 (sensitive resource count > 20).
+
+---
+
 ## Important warning
 
 Do not hand-author production observations. Generate observations using an

@@ -1,0 +1,64 @@
+dsl_version: ctrl.v1
+id: CTL.EXPOSURE.EXFIL.001
+name: Sensitive Data Must Not Be Readable by Compute with Internet Egress
+description: >
+  Resources containing sensitive data (PHI, PII, confidential) are
+  readable by a compute instance that has an unmonitored path to the
+  internet. The extractor traces from the sensitive resource to
+  compute instances that can read it, then checks if those instances
+  have outbound internet connectivity (NAT gateway, internet gateway,
+  VPC peering to public subnet). This is the reverse of the
+  unauthenticated reachability check — instead of "who can get in?"
+  it answers "how can data get out?"
+domain: exposure
+severity: critical
+compliance:
+  hipaa: "164.312(a)(1)"
+  soc2: "CC6.7"
+  pci_dss_v4.0: "3.4.1"
+  nist_800_53_r5: "SC-7"
+  fedramp_moderate: "SC-7"
+scope_tags:
+  - aws
+  - cross-service
+type: unsafe_state
+params:
+  base_impact: 10
+  attack_stage: exfiltration
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    Sensitive data is readable by a compute instance with internet
+    egress. A compromised instance can exfiltrate data to an
+    external destination.
+  action: >
+    Remove internet egress from the compute instance's subnet. Place
+    sensitive-data-accessing instances in private subnets with VPC
+    endpoints only. Scope the instance role to the minimum required
+    resources. Enable VPC Flow Logs and CloudTrail data events for
+    audit.
+  example: |
+    {
+      "reachability": {
+        "kind": "exfiltration_path",
+        "exfiltration": {
+          "path_to_internet_exists": false,
+          "sensitive_data_readable": true,
+          "target_data_classification": "phi"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.reachability.kind
+      op: eq
+      value: exfiltration_path
+    - field: properties.reachability.exfiltration.path_to_internet_exists
+      op: eq
+      value: true
+    - field: properties.reachability.exfiltration.sensitive_data_readable
+      op: eq
+      value: true

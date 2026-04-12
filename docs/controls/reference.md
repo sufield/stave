@@ -3,24 +3,24 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 259
-**Pack hash:** `8e2f79aa510eea30e1149a690ff62e0bdece8890612f4be03d233adceed7b1d2`
+**Total controls:** 265
+**Pack hash:** `ea9c6932d2495d52e5ce11f8167578334495c9f543098e06d31374ae648b2f77`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 35 |
-| high | 109 |
+| critical | 39 |
+| high | 110 |
 | info | 16 |
-| low | 16 |
+| low | 17 |
 | medium | 83 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 204 |
+| exposure | 207 |
 | governance | 2 |
-| identity | 49 |
+| identity | 52 |
 | storage | 4 |
 
 ## Controls
@@ -1191,6 +1191,50 @@ When the extractor finds a path from anonymous to a resource but cannot fully re
 
 ---
 
+### CTL.EXPOSURE.EXFIL.001
+
+**Sensitive Data Must Not Be Readable by Compute with Internet Egress**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-7; hipaa: 164.312(a)(1); nist_800_53_r5: SC-7; pci_dss_v4.0: 3.4.1; soc2: CC6.7;
+
+Resources containing sensitive data (PHI, PII, confidential) are readable by a compute instance that has an unmonitored path to the internet. The extractor traces from the sensitive resource to compute instances that can read it, then checks if those instances have outbound internet connectivity (NAT gateway, internet gateway, VPC peering to public subnet). This is the reverse of the unauthenticated reachability check — instead of "who can get in?" it answers "how can data get out?"
+
+**Remediation:** Remove internet egress from the compute instance's subnet. Place sensitive-data-accessing instances in private subnets with VPC endpoints only. Scope the instance role to the minimum required resources. Enable VPC Flow Logs and CloudTrail data events for audit.
+
+---
+
+### CTL.EXPOSURE.EXFIL.002
+
+**Compute with Internet Egress Must Not Have Wildcard Write**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-6; nist_800_53_r5: AC-6; soc2: CC6.1;
+
+Compute instances with internet egress paths must have scoped write permissions. An instance with s3:PutObject on Resource "*" combined with outbound internet access can write data to any S3 bucket — including attacker-controlled external buckets. The extractor checks if the instance role grants wildcard write permissions to storage services.
+
+**Remediation:** Scope the instance role's write permissions to specific resource ARNs. Replace s3:PutObject on Resource "*" with explicit bucket ARNs. Use VPC endpoints with bucket-scoped policies to restrict write targets.
+
+---
+
+### CTL.EXPOSURE.EXFIL.INCOMPLETE.001
+
+**Complete Data Required for Exfiltration Assessment**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+
+Data exfiltration path assessment requires the exfiltration kind discriminator and the path_to_internet_exists field. The extractor could not determine whether the compute instance has internet egress.
+
+**Remediation:** Re-run the exfiltration extractor with sufficient permissions to read VPC route tables, NAT gateways, internet gateways, and security group egress rules.
+
+---
+
 ### CTL.GCS.ENCRYPT.001
 
 **Customer-Managed Encryption Key Required**
@@ -1519,6 +1563,21 @@ IAM roles in non-production environments (test, staging, QA) must not have acces
 
 ---
 
+### CTL.IAM.CROSS.ENV.PATH.001
+
+**Production Must Not Be Reachable from Lower Environment via Transitive Trust**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-4; nist_800_53_r5: AC-4; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+Production resources must have no transitive access path from non-production environments. The extractor traces sts:AssumeRole chains and resource policy grants from non-production accounts to production resources. A direct cross-account role is one hop; a chain through an intermediate shared-services account is two or more. Each hop widens the attack surface — a compromised dev credential becomes a production breach when bridge roles exist.
+
+**Remediation:** Remove cross-account trust relationships that bridge non-prod to prod. Use separate deployment pipelines per environment. Enforce environment isolation via SCPs that deny non-prod accounts from assuming prod roles.
+
+---
+
 ### CTL.IAM.CROSSCLOUD.ADMIN.001
 
 **No Full Admin Policies Across Any Cloud Provider**
@@ -1546,6 +1605,21 @@ No IAM policy on any cloud provider should grant unrestricted administrative acc
 All privileged accounts across all cloud providers must have MFA enforced. This control extends AWS MFA controls to Azure AD (Conditional Access requiring MFA) and GCP (2-Step Verification enforcement). A single cloud account without MFA is a breach vector regardless of how well other clouds are protected.
 
 **Remediation:** Enforce MFA at the identity provider level. AWS: IAM MFA policy conditions. Azure: Conditional Access policies. GCP: 2-Step Verification enforcement in Workspace/Cloud Identity.
+
+---
+
+### CTL.IAM.ESCALATE.CHAIN.001
+
+**Principal Must Not Have Multi-Step Path to Admin**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+IAM principals must have no multi-step permission chain that leads to administrative access. The extractor analyzes known escalation patterns (iam:PassRole + lambda:CreateFunction, iam:CreatePolicyVersion on self, sts:AssumeRole to admin role, etc.) and traces whether a low-privileged principal can chain permissions to reach admin. Each step is individually authorized but the composition creates a privilege escalation path that policy reviews miss.
+
+**Remediation:** Remove the weakest link in the escalation chain. Common fixes: scope iam:PassRole to specific role ARNs, restrict lambda:CreateFunction to approved execution roles, add permissions boundaries that deny IAM self-modification.
 
 ---
 
@@ -1591,6 +1665,21 @@ IAM roles with cross-account blast radius (can reach resources in other AWS acco
 IAM role assumption chains must not exceed 2 hops. Deep chains (Role A assumes Role B which assumes Role C) create hidden transitive access that is difficult to audit and often exceeds the intended permissions of the originating principal. Each hop in the chain potentially widens the blast radius.
 
 **Remediation:** Flatten the role assumption chain. Grant permissions directly to the role that needs them rather than chaining through intermediate roles. Use service-linked roles where possible to avoid manual chain construction.
+
+---
+
+### CTL.IAM.IDENTITY.BLASTRADIUS.004
+
+**Role Must Not Reach Excessive Sensitive Resources**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); hipaa: 164.312(a)(1); nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.2; soc2: CC6.1;
+
+IAM roles must have access to fewer than 20 resources classified as sensitive (PHI, PII, confidential). A role that can reach 85 sensitive resources is a qualitatively different risk than one that reaches 5 — credential compromise exposes a proportionally larger data surface. The extractor counts unique sensitive resources reachable through the role's attached and inline policies.
+
+**Remediation:** Split broad roles into per-service roles scoped to specific resource ARNs. Use IAM Access Analyzer to identify unused permissions on sensitive resources. Apply permissions boundaries that restrict access to classified data.
 
 ---
 
