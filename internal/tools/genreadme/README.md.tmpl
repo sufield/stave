@@ -16,6 +16,8 @@ Stave fills this gap. Define safety controls in YAML, compile them to [CEL](http
 
 - **{{.TotalControls}} built-in controls** across {{len .DomainTotals}} domains (S3, IAM, VPC, EC2, RDS, ELB, K8s, CloudTrail, CloudWatch, KMS, and [{{subtract (len .DomainTotals) 10}} more](docs/controls/reference.md))
 - **10 compliance profiles** — HIPAA, CIS AWS v3.0, SOC 2, PCI-DSS v4.0, NIST 800-53, FedRAMP, GDPR, FFIEC, ISO 27001, NIST CSF 2.0
+- **Risk reasoning engine** — compound risk scoring across co-failing controls, MITRE-aligned attack stage summary, blast radius multipliers
+- **Safety chains** — 3 built-in chain definitions detect compound failures (PHI exposure, root compromise, detection blindness)
 - **Unsafe duration tracking** — detects how long assets remain misconfigured across snapshots
 - **Custom controls** — YAML with `unsafe_predicate` for any asset type, no code changes
 - **CI/CD ready** — exit codes, SARIF output, baseline tracking, policy gating
@@ -159,6 +161,7 @@ Full reference: [Control reference](docs/controls/reference.md)
 | [Pre-commit hook](docs/integrations/pre-commit.md) | Block unsafe configs before commit |
 | [Atlantis integration](docs/integrations/atlantis.md) | Evaluate Terraform plans before apply |
 | [OPA Rego export](docs/integrations/opa-export.md) | Export controls to OPA/Conftest |
+| [Risk reasoning](docs/risk-reasoning.md) | Compound risk scoring and safety chains |
 | [Evaluation semantics](docs/evaluation-semantics.md) | How duration tracking works |
 | [Architecture](docs/architecture/overview.md) | System design overview |
 | [FAQ](docs/faq.md) | Common questions |

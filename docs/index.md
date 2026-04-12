@@ -13,6 +13,7 @@
 - [Design Philosophy](design-philosophy.md) — Why Stave works the way it does
 - [System Controls as Code](system-invariant-as-code.md) — Controls-based safety evaluation
 - [Evaluation Semantics](evaluation-semantics.md) — How findings are produced
+- [Risk Reasoning Engine](risk-reasoning.md) — Compound risk scoring, safety chains, attack stages
 - [Evaluation Engine Capabilities](evaluation-engine-capabilities.md) — Predicate operators and matching
 - [Observation Contract](observation-contract.md) — Observation data requirements
 - [Contract-First Schemas](contracts.md) — Schema-driven design

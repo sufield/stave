@@ -21,7 +21,16 @@ type AuditCapabilities struct {
 	PolicySupport      PolicySupport      `json:"policy_support"`
 	DataIngress        DataIngress        `json:"data_ingress"`
 	PolicyLibrary      []PolicyPack       `json:"policy_library"`
+	RiskReasoning      RiskReasoning      `json:"risk_reasoning"`
 	ComplianceSupport  ComplianceSupport  `json:"compliance_support"`
+}
+
+// RiskReasoning describes the compound risk scoring capabilities.
+type RiskReasoning struct {
+	Enabled      bool     `json:"enabled"`
+	ChainCount   int      `json:"chain_count"`
+	AttackStages []string `json:"attack_stages"`
+	ScoringModel string   `json:"scoring_model"`
 }
 
 // PolicyPack describes a curated collection of pre-defined security controls.
@@ -75,6 +84,15 @@ func Summarize(version string) AuditCapabilities {
 		PolicySupport:      Manifest.policySupport(),
 		DataIngress:        Manifest.ingressSupport(),
 		PolicyLibrary:      Manifest.libraryWithVersion(version),
-		ComplianceSupport:  Manifest.complianceSupport(),
+		RiskReasoning: RiskReasoning{
+			Enabled:    true,
+			ChainCount: 3,
+			AttackStages: []string{
+				"initial_access", "credential_access", "persistence",
+				"exfiltration", "detection_evasion", "resilience",
+			},
+			ScoringModel: "environmental × chain_escalation × blast_multiplier",
+		},
+		ComplianceSupport: Manifest.complianceSupport(),
 	}
 }

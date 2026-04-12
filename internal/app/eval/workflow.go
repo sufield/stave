@@ -10,6 +10,8 @@ import (
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
+	"github.com/sufield/stave/internal/core/evaluation/risk"
+	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/ports"
 )
 
@@ -36,6 +38,7 @@ type AssessmentConfig struct {
 	PredicateParser func(any) (*policy.UnsafePredicate, error)
 	PredicateEval   policy.PredicateEval
 	Tracer          ports.Tracer
+	ChainDefs       []policy.ChainDefinition // Optional chain definitions for risk reasoning
 }
 
 // AuditWorkflow orchestrates the end-to-end security assessment process.
@@ -100,6 +103,10 @@ func (w *AuditWorkflow) PerformAssessment(ctx context.Context, cfg AssessmentCon
 		return evaluation.ComplianceReport{}, "", fmt.Errorf("security assessment failed: %w", err)
 	}
 
+	// Run the risk reasoning engine: detect chain-based compound findings
+	// and build an attack stage summary from the evaluation results.
+	w.enrichWithRiskReasoning(&report, auditData.Controls, cfg.ChainDefs)
+
 	return report, report.SecurityState, nil
 }
 
@@ -117,4 +124,37 @@ func (w *AuditWorkflow) prepareAuditData(ctx context.Context, cfg ObservationCon
 		data.Controls = cfg.ActivePolicies
 	}
 	return data
+}
+
+// enrichWithRiskReasoning runs the chain detection engine and builds
+// an attack stage summary from the evaluation results. This is the
+// inference layer — it transforms individual findings into compound
+// risk assessments.
+func (w *AuditWorkflow) enrichWithRiskReasoning(
+	report *evaluation.ComplianceReport,
+	controls []policy.ControlDefinition,
+	chainDefs []policy.ChainDefinition,
+) {
+	if len(report.Findings) == 0 {
+		return
+	}
+
+	// Build lookup structures.
+	failingIDs := make(map[kernel.ControlID]bool, len(report.Findings))
+	for i := range report.Findings {
+		failingIDs[report.Findings[i].ControlID] = true
+	}
+
+	controlLookup := make(map[kernel.ControlID]*policy.ControlDefinition, len(controls))
+	for i := range controls {
+		controlLookup[controls[i].ID] = &controls[i]
+	}
+
+	// Detect chain-based compound findings.
+	if len(chainDefs) > 0 {
+		report.ChainFindings = risk.DetectChains(failingIDs, chainDefs, controlLookup)
+	}
+
+	// Build attack stage summary.
+	report.AttackStageSummary = risk.BuildAttackStageSummary(failingIDs, controlLookup)
 }

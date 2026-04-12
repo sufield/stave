@@ -82,6 +82,17 @@ docker compose run --rm -T stave --blind-spots
 
 Three S3 risks that AWS Trusted Advisor cannot detect.
 
+## Risk reasoning chains
+
+```bash
+docker compose run --rm -T stave --risk-chains
+```
+
+Shows the 3 built-in safety chains that power the risk reasoning engine.
+Each chain defines which controls form a compound risk when co-failing,
+the escalation threshold, and the blast radius multiplier. Explains
+the three-layer scoring model: Environmental x Chain Escalation x Blast.
+
 ## Export to OPA Rego
 
 ```bash

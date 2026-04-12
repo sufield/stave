@@ -43,13 +43,13 @@ func NewCmd() *cobra.Command {
 		Use:     "evaluate",
 		Aliases: []string{"eval"},
 		Short:   "Evaluate a snapshot against a compliance profile",
-		Long: `Evaluate runs all invariants in a compliance profile against an observation
+		Long: `Evaluate runs all controls in a compliance profile against an observation
 snapshot and produces a report with findings, remediation steps, and
 compliance citations.
 
 Exit Codes:
-  0   All CRITICAL invariants pass
-  1   One or more CRITICAL invariants fail
+  0   All CRITICAL controls pass
+  1   One or more CRITICAL controls fail
   2   Input or configuration error`,
 		Example: `  stave evaluate --snapshot observations/snap.json --profile hipaa
   stave evaluate --snapshot snap.json --profile hipaa --format json --output report.json`,
@@ -161,7 +161,7 @@ func run(w io.Writer, opts *options) error {
 
 	// Exit code based on CRITICAL failures.
 	if report.FailCounts[policy.SeverityCritical] > 0 {
-		return &exitError{code: 1, msg: fmt.Sprintf("%d CRITICAL invariant(s) failed", report.FailCounts[policy.SeverityCritical])}
+		return &exitError{code: 1, msg: fmt.Sprintf("%d CRITICAL control(s) failed", report.FailCounts[policy.SeverityCritical])}
 	}
 
 	return nil

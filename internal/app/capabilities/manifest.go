@@ -63,10 +63,15 @@ func newFeatureManifest() *featureManifest {
 	slices.Sort(policySchemas)
 
 	connectors := []ConnectorSupport{
-		{
-			Type:        kernel.SourceTypeAWSS3Snapshot,
-			Description: "AWS S3 Resource State (JSON Snapshots)",
-		},
+		{Type: kernel.SourceTypeAWSS3Snapshot, Description: "AWS S3 Resource State (JSON Snapshots)"},
+		{Type: "aws-iam-snapshot", Description: "AWS IAM Identity Configuration"},
+		{Type: "aws-opensearch-snapshot", Description: "AWS OpenSearch Domain Configuration"},
+		{Type: "aws-vpc-snapshot", Description: "AWS VPC Network Configuration"},
+		{Type: "aws-rds-snapshot", Description: "AWS RDS Database Configuration"},
+		{Type: "aws-ecr-snapshot", Description: "AWS ECR Container Registry"},
+		{Type: "aws-waf-snapshot", Description: "AWS WAF Web ACL Configuration"},
+		{Type: "gcp-gcs-snapshot", Description: "GCP Cloud Storage Bucket Configuration"},
+		{Type: "dns-record-snapshot", Description: "DNS Record Configuration (vendor-agnostic)"},
 	}
 
 	connectorIndex := make(map[kernel.ObservationSourceType]struct{}, len(connectors))
