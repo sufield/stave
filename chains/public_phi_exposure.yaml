@@ -1,0 +1,13 @@
+id: public_phi_exposure
+description: >
+  PHI data reachable from public internet with no encryption or audit
+  trail — total safety envelope failure. Any two of these co-failing
+  creates a compound risk because the data is both exposed and either
+  unprotected or unmonitored.
+controls:
+  - CTL.S3.PUBLIC.001
+  - CTL.S3.ENCRYPT.001
+  - CTL.S3.LOG.001
+  - CTL.CLOUDTRAIL.DATAREAD.001
+escalation_threshold: 2
+compound_severity: critical
