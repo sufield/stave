@@ -32,6 +32,7 @@ import (
 	"github.com/sufield/stave/cmd/inspect"
 	"github.com/sufield/stave/cmd/prune"
 	"github.com/sufield/stave/cmd/securityaudit"
+	stavewatch "github.com/sufield/stave/cmd/watch"
 	artifact "github.com/sufield/stave/internal/adapters/artifacts"
 	infrabaseline "github.com/sufield/stave/internal/adapters/baseline"
 	infradoctor "github.com/sufield/stave/internal/adapters/doctor"
@@ -133,6 +134,9 @@ func WireCommands(app *App) {
 
 	// Drift detection
 	root.AddCommand(stavedrift.NewCmd())
+
+	// Continuous monitoring
+	root.AddCommand(stavewatch.NewCmd())
 
 	// Supportability
 	root.AddCommand(doctor.NewCmd(doctor.Deps{

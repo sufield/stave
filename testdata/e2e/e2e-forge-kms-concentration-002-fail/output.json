@@ -1,0 +1,124 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "9950ed66ba8b4cabf15b0d2f4d769110acb6cae10e4755a04d4a88abffd9b8a3",
+        "2026-01-11T000000Z.json": "4cdb27d0ea055568c429dcee3aa6dbd64b8d72952c09cb00aaf3f35c67b67a1f"
+      },
+      "overall": "149b036a10ad14fb7e1ed987cf5a9b22eeb454c08b6bb640bb6cae94bfe81c73"
+    },
+    "policy_fingerprint": "4f919d6228a1e1edc3ca3b3b7525a49b67324755b8ec92641d497b33eef20d78"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.KMS.CONCENTRATION.002",
+      "asset_id": "arn:aws:kms:us-east-1:123:key/dangerous-key",
+      "asset_type": "aws_kms_key",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.KMS.CONCENTRATION.002",
+      "control_name": "High-Density KMS Key Must Have Deletion Protection",
+      "control_description": "KMS keys encrypting more than 50 resources must have deletion protection enabled. Without deletion protection, an accidental or malicious ScheduleKeyDeletion call can render hundreds of resources permanently unrecoverable within the 7-day minimum waiting period.\n",
+      "asset_id": "arn:aws:kms:us-east-1:123:key/dangerous-key",
+      "asset_type": "aws_kms_key",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "cryptography.key_concentration.has_deletion_protection",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "cryptography.key_concentration.resource_count",
+            "actual_value": "[SANITIZED]",
+            "operator": "gt",
+            "unsafe_value": 50
+          },
+          {
+            "property": "cryptography.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "key"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance": {
+        "fedramp_moderate": "SC-12(1)",
+        "nist_800_53_r5": "SC-12(1)",
+        "soc2": "A1.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "High-density KMS key lacks deletion protection. A single ScheduleKeyDeletion call can render hundreds of resources permanently inaccessible.",
+        "action": "Enable key deletion protection. Apply a key policy that denies kms:ScheduleKeyDeletion from all principals except a dedicated key administrator role. Add an SCP to deny key deletion at the organization level.",
+        "example": "{\n  \"cryptography\": {\n    \"kind\": \"key\",\n    \"key_concentration\": {\n      \"resource_count\": 10,\n      \"has_deletion_protection\": true\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.KMS.CONCENTRATION.002",
+      "asset_id": "arn:aws:kms:us-east-1:123:key/dangerous-key",
+      "exposure_score": 250,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 2.5,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-kms-concentration-002-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-kms-concentration-002-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "42f0efd1c3ffc732ae69de55a71ed34635c17ce4",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-kms-concentration-002-fail/controls/"
+      ]
+    }
+  }
+}

@@ -1,0 +1,118 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "c92d3208212e07c8ecd347846f8e3a6b52e2476e11908a032a9ab6ce60eb5363",
+        "2026-01-11T000000Z.json": "bab54b327ad92c6d4002eec1feb8322c506189ac0ccf03319e2da114a5836675"
+      },
+      "overall": "ba9421b2cb2871060626622aa7472a864d6765f520e7a72f446b8f2883684e9b"
+    },
+    "policy_fingerprint": "dae117cfdd12d3ca47580a611ffab74b70b54e905a60eae004be998f2fbbc750"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.IAM.POLICY.SHADOW.002",
+      "asset_id": "arn:aws:iam::123:policy/overly-broad",
+      "asset_type": "aws_iam_policy",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.IAM.POLICY.SHADOW.002",
+      "control_name": "Negative Logic Must Not Permit IAM Write Actions",
+      "control_description": "IAM policies using NotAction that allow IAM write actions (iam:PutRolePolicy, iam:CreateUser, iam:AttachRolePolicy) through the negative logic gap are a critical privilege escalation vector. The extractor resolves the effective permissions of NotAction policies and flags when dangerous IAM write actions fall through.\n",
+      "asset_id": "arn:aws:iam::123:policy/overly-broad",
+      "asset_type": "aws_iam_policy",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "identity.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "policy"
+          },
+          {
+            "property": "identity.policy.shadow_logic.permits_iam_write_via_negative",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance": {
+        "fedramp_moderate": "AC-6(5)",
+        "nist_800_53_r5": "AC-6(5)",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Negative logic in IAM policy permits IAM write actions. An attacker who discovers this policy can escalate privileges by exploiting actions that fall through the NotAction gap.",
+        "action": "Replace the NotAction policy with an explicit allow list. Ensure iam:PutRolePolicy, iam:CreateUser, iam:AttachRolePolicy, and iam:CreatePolicyVersion are explicitly denied or absent from the allowed actions.",
+        "example": "{\n  \"identity\": {\n    \"kind\": \"policy\",\n    \"policy\": {\n      \"shadow_logic\": {\n        \"permits_iam_write_via_negative\": false\n      }\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.IAM.POLICY.SHADOW.002",
+      "asset_id": "arn:aws:iam::123:policy/overly-broad",
+      "exposure_score": 250,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 2.5,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-policy-shadow-002-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-policy-shadow-002-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "42f0efd1c3ffc732ae69de55a71ed34635c17ce4",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-iam-policy-shadow-002-fail/controls/"
+      ]
+    }
+  }
+}

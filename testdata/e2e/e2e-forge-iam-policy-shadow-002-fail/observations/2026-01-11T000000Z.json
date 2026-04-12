@@ -1,0 +1,1 @@
+{"assets":[{"id":"arn:aws:iam::123:policy/overly-broad","properties":{"identity":{"kind":"policy","policy":{"shadow_logic":{"has_not_action":true,"permits_iam_write_via_negative":true,"shadowed_actions":["iam:PutRolePolicy","iam:CreateUser"]}}}},"type":"aws_iam_policy","vendor":"aws"}],"captured_at":"2026-01-11T00:00:00Z","schema_version":"obs.v0.1"}

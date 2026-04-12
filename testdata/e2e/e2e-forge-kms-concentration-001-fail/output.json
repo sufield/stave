@@ -1,0 +1,117 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "c6275558b7ceb7dce9ea5d0832b8746f2d2fc4bdccb14a59b508faac034a9179",
+        "2026-01-11T000000Z.json": "f221ba57ff7b850802263eb32c92414134c63aa31e6495885dcdd6376a0b9314"
+      },
+      "overall": "11b36045fc0979f1f66fcd86a8c87b4b42b428c4d023030794e69505e5c1a064"
+    },
+    "policy_fingerprint": "af34660d0f21b3e10d7fabc28c9d2703b4b788275a0715d71bbf33c699c4608e"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.KMS.CONCENTRATION.001",
+      "asset_id": "arn:aws:kms:us-east-1:123:key/master-key",
+      "asset_type": "aws_kms_key",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.KMS.CONCENTRATION.001",
+      "control_name": "KMS Key Must Not Encrypt More Than 50 Resources",
+      "control_description": "A single KMS key encrypting more than 50 resources represents a cryptographic single point of failure. If the key is deleted, disabled, or its policy misconfigured, all dependent resources become inaccessible. The extractor counts the number of unique resources encrypted with each KMS key.\n",
+      "asset_id": "arn:aws:kms:us-east-1:123:key/master-key",
+      "asset_type": "aws_kms_key",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "cryptography.key_concentration.resource_count",
+            "actual_value": "[SANITIZED]",
+            "operator": "gt",
+            "unsafe_value": 50
+          },
+          {
+            "property": "cryptography.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "key"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "nist_800_53_r5": "SC-12",
+        "soc2": "A1.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "KMS key encrypts more than 50 resources. Key deletion or misconfiguration would cause widespread data inaccessibility.",
+        "action": "Create per-service or per-application KMS keys to distribute the encryption dependency. Use key aliases for easy migration. Enable key deletion protection on high-density keys.",
+        "example": "{\n  \"cryptography\": {\n    \"kind\": \"key\",\n    \"key_concentration\": {\n      \"resource_count\": 10\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.KMS.CONCENTRATION.001",
+      "asset_id": "arn:aws:kms:us-east-1:123:key/master-key",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-kms-concentration-001-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-kms-concentration-001-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "42f0efd1c3ffc732ae69de55a71ed34635c17ce4",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-kms-concentration-001-fail/controls/"
+      ]
+    }
+  }
+}

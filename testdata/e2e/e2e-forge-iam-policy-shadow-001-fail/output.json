@@ -1,0 +1,118 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "a1cfebec60024297b3f644506ef307b9bcc4669baa5f3d679e6c165915f8889f",
+        "2026-01-11T000000Z.json": "6512744bd1e60c0ed7dd4e606cac0293aa984436a270f3ffbba4aa63be202c83"
+      },
+      "overall": "c63bf114b9fd03306c34b97522ff0ff1d162e334082c665840191933848c7e08"
+    },
+    "policy_fingerprint": "e4a6bf9ac80fcb6dc760d21b121bc3d4cc3f7f1b1aa8a748512ba11508484553"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.IAM.POLICY.SHADOW.001",
+      "asset_id": "arn:aws:iam::123:policy/dev-policy",
+      "asset_type": "aws_iam_policy",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.IAM.POLICY.SHADOW.001",
+      "control_name": "IAM Policy Must Not Use NotAction Construct",
+      "control_description": "IAM policies using NotAction or NotResource create negative logic that is prone to bypass. A NotAction policy says \"allow everything EXCEPT these actions\" — but the list of excepted actions rarely covers all dangerous permissions. New AWS services and actions are automatically allowed by the implicit \"everything else\" grant. Attackers exploit this shadow effect to find actions like iam:PutRolePolicy that fall through the negative logic gap.\n",
+      "asset_id": "arn:aws:iam::123:policy/dev-policy",
+      "asset_type": "aws_iam_policy",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "identity.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "policy"
+          },
+          {
+            "property": "identity.policy.shadow_logic.has_not_action",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "fedramp_moderate": "AC-6",
+        "nist_800_53_r5": "AC-6",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "IAM policy uses NotAction or NotResource. Negative logic creates an implicit allow for all actions and resources not in the exclusion list.",
+        "action": "Replace NotAction with an explicit Allow list. Enumerate the specific actions needed and grant only those. Negative logic is prone to bypass as new AWS services and actions are added.",
+        "example": "{\n  \"identity\": {\n    \"kind\": \"policy\",\n    \"policy\": {\n      \"shadow_logic\": {\n        \"has_not_action\": false,\n        \"has_not_resource\": false\n      }\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.IAM.POLICY.SHADOW.001",
+      "asset_id": "arn:aws:iam::123:policy/dev-policy",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-policy-shadow-001-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-policy-shadow-001-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "42f0efd1c3ffc732ae69de55a71ed34635c17ce4",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-iam-policy-shadow-001-fail/controls/"
+      ]
+    }
+  }
+}

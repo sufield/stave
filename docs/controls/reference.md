@@ -3,15 +3,15 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 275
-**Pack hash:** `0f0d5ecd79ebbe2beafad5724685601aba3c968c7568bfc5d512b58580b04336`
+**Total controls:** 281
+**Pack hash:** `0e5c7d94f7697e8cfbb8ee56a52e50c64b640cc191cacfb1471a212c79ed32cd`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 44 |
-| high | 113 |
+| critical | 47 |
+| high | 116 |
 | info | 16 |
 | low | 19 |
 | medium | 83 |
@@ -20,8 +20,8 @@
 |--------|-------|
 | exposure | 212 |
 | governance | 2 |
-| identity | 55 |
-| storage | 6 |
+| identity | 59 |
+| storage | 8 |
 
 ## Controls
 
@@ -1966,6 +1966,36 @@ iam:PassRole permissions must be scoped to specific role ARNs, not wildcard reso
 
 ---
 
+### CTL.IAM.POLICY.SHADOW.001
+
+**IAM Policy Must Not Use NotAction Construct**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6; nist_800_53_r5: AC-6; soc2: CC6.1;
+
+IAM policies using NotAction or NotResource create negative logic that is prone to bypass. A NotAction policy says "allow everything EXCEPT these actions" — but the list of excepted actions rarely covers all dangerous permissions. New AWS services and actions are automatically allowed by the implicit "everything else" grant. Attackers exploit this shadow effect to find actions like iam:PutRolePolicy that fall through the negative logic gap.
+
+**Remediation:** Replace NotAction with an explicit Allow list. Enumerate the specific actions needed and grant only those. Negative logic is prone to bypass as new AWS services and actions are added.
+
+---
+
+### CTL.IAM.POLICY.SHADOW.002
+
+**Negative Logic Must Not Permit IAM Write Actions**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); nist_800_53_r5: AC-6(5); soc2: CC6.1;
+
+IAM policies using NotAction that allow IAM write actions (iam:PutRolePolicy, iam:CreateUser, iam:AttachRolePolicy) through the negative logic gap are a critical privilege escalation vector. The extractor resolves the effective permissions of NotAction policies and flags when dangerous IAM write actions fall through.
+
+**Remediation:** Replace the NotAction policy with an explicit allow list. Ensure iam:PutRolePolicy, iam:CreateUser, iam:AttachRolePolicy, and iam:CreatePolicyVersion are explicitly denied or absent from the allowed actions.
+
+---
+
 ### CTL.IAM.POLICY.SOD.001
 
 **IAM Roles Must Not Combine Data Access and IAM Management**
@@ -2146,6 +2176,36 @@ IAM roles assumed via OIDC federation (CI/CD pipelines) must have scoped permiss
 
 ---
 
+### CTL.IAM.VENDOR.DORMANT.001
+
+**Vendor Cross-Account Role Must Not Be Dormant**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-2; soc2: CC6.1;
+
+Cross-account roles granted to external vendors (SaaS providers, auditors, consultants) must be actively used or decommissioned. A vendor role unused for more than 90 days is "ghost access" — the vendor may no longer need it, the contract may have ended, but the access persists. Each dormant vendor role is an unmonitored ingress path that can be exploited if the vendor is compromised.
+
+**Remediation:** Review the vendor relationship. If the contract has ended or the vendor no longer needs access, delete the cross-account role. If access is still needed, re-verify the trust policy and scope permissions to current requirements.
+
+---
+
+### CTL.IAM.VENDOR.OVERPRIVILEGED.001
+
+**Vendor Role Must Not Reach Excessive Sensitive Resources**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** hipaa: 164.312(a)(1); pci_dss_v4.0: 7.2.2; soc2: CC6.1;
+
+External vendor roles must have scoped access to sensitive resources. A vendor that can reach more than 10 sensitive resources (PHI, PII, confidential) has a disproportionate blast radius — if the vendor is compromised, the attacker gains broad access to your most sensitive data through a third-party trust relationship.
+
+**Remediation:** Scope the vendor role permissions to the minimum required resources. Create per-function roles for different vendor tasks. Use resource-based policies to restrict vendor access to specific non-sensitive resources.
+
+---
+
 ### CTL.IAM.ZT.PERIMETER.001
 
 **Sensitive Resources Must Use Identity-Based Access Not Network Perimeter**
@@ -2307,6 +2367,36 @@ Kubernetes Secrets stored in etcd must be encrypted at rest. By default, Secrets
 Secrets should be mounted as files, not environment variables. Environment variables are visible in process listings, crash dumps, and container inspection output, increasing the risk of credential exposure.
 
 **Remediation:** Mount Secrets as volumes instead of environment variables. Use projected volumes with restrictive file permissions (0400).
+
+---
+
+### CTL.KMS.CONCENTRATION.001
+
+**KMS Key Must Not Encrypt More Than 50 Resources**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** storage
+- **Compliance:** nist_800_53_r5: SC-12; soc2: A1.1;
+
+A single KMS key encrypting more than 50 resources represents a cryptographic single point of failure. If the key is deleted, disabled, or its policy misconfigured, all dependent resources become inaccessible. The extractor counts the number of unique resources encrypted with each KMS key.
+
+**Remediation:** Create per-service or per-application KMS keys to distribute the encryption dependency. Use key aliases for easy migration. Enable key deletion protection on high-density keys.
+
+---
+
+### CTL.KMS.CONCENTRATION.002
+
+**High-Density KMS Key Must Have Deletion Protection**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** storage
+- **Compliance:** fedramp_moderate: SC-12(1); nist_800_53_r5: SC-12(1); soc2: A1.1;
+
+KMS keys encrypting more than 50 resources must have deletion protection enabled. Without deletion protection, an accidental or malicious ScheduleKeyDeletion call can render hundreds of resources permanently unrecoverable within the 7-day minimum waiting period.
+
+**Remediation:** Enable key deletion protection. Apply a key policy that denies kms:ScheduleKeyDeletion from all principals except a dedicated key administrator role. Add an SCP to deny key deletion at the organization level.
 
 ---
 

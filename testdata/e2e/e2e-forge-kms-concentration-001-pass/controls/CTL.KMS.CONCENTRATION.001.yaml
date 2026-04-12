@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.CONCENTRATION.001
+name: KMS Key Must Not Encrypt More Than 50 Resources
+description: >
+  A single KMS key encrypting more than 50 resources represents a
+  cryptographic single point of failure. If the key is deleted,
+  disabled, or its policy misconfigured, all dependent resources
+  become inaccessible. The extractor counts the number of unique
+  resources encrypted with each KMS key.
+domain: storage
+severity: high
+compliance:
+  soc2: "A1.1"
+  nist_800_53_r5: "SC-12"
+scope_tags:
+  - aws
+  - kms
+type: unsafe_state
+params:
+  base_impact: 8
+  attack_stage: resilience
+remediation:
+  description: >
+    KMS key encrypts more than 50 resources. Key deletion or
+    misconfiguration would cause widespread data inaccessibility.
+  action: >
+    Create per-service or per-application KMS keys to distribute
+    the encryption dependency. Use key aliases for easy migration.
+    Enable key deletion protection on high-density keys.
+  example: |
+    {
+      "cryptography": {
+        "kind": "key",
+        "key_concentration": {
+          "resource_count": 10
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: key
+    - field: properties.cryptography.key_concentration.resource_count
+      op: gt
+      value: 50

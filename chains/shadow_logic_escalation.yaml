@@ -1,0 +1,12 @@
+id: shadow_logic_escalation
+description: >
+  IAM policy uses negative logic (NotAction) that permits privilege
+  escalation. The shadow effect of NotAction creates an implicit
+  allow for IAM write actions, combined with existing self-modification
+  or escalation vectors.
+controls:
+  - CTL.IAM.POLICY.SHADOW.001
+  - CTL.IAM.POLICY.SHADOW.002
+  - CTL.IAM.POLICY.ESCALATION.001
+escalation_threshold: 2
+compound_severity: critical

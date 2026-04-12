@@ -1,0 +1,42 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "2e2a2a06a3b9f7b27f7721f173c6e0a00d0fa797f33df53ec19c69bc434f65ca",
+        "2026-01-11T000000Z.json": "dac82b6422d16c1ed8a93c7f9a980c5e3aa94db13b45c01b8fdf950217616f07"
+      },
+      "overall": "2ba09247ae716656949852b2d63607fd91cad7de88fe9e18beda8c856cfb52c3"
+    },
+    "policy_fingerprint": "1abac445099a8f34d12f0aa35ca11447cdbfec5e3842990071754124fdb10890"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-vendor-dormant-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-vendor-dormant-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "42f0efd1c3ffc732ae69de55a71ed34635c17ce4",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-iam-vendor-dormant-pass/controls/"
+      ]
+    }
+  }
+}

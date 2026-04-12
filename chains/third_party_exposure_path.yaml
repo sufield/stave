@@ -1,0 +1,12 @@
+id: third_party_exposure_path
+description: >
+  External vendor role has excessive access to sensitive data and
+  lacks protective controls. Dormant or overprivileged vendor roles
+  without external ID conditions create an unmonitored ingress path
+  through third-party trust relationships.
+controls:
+  - CTL.IAM.VENDOR.DORMANT.001
+  - CTL.IAM.VENDOR.OVERPRIVILEGED.001
+  - CTL.IAM.TRUST.EXTERNALID.001
+escalation_threshold: 2
+compound_severity: critical

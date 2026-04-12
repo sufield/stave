@@ -1,0 +1,55 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.POLICY.SHADOW.002
+name: Negative Logic Must Not Permit IAM Write Actions
+description: >
+  IAM policies using NotAction that allow IAM write actions
+  (iam:PutRolePolicy, iam:CreateUser, iam:AttachRolePolicy) through
+  the negative logic gap are a critical privilege escalation vector.
+  The extractor resolves the effective permissions of NotAction
+  policies and flags when dangerous IAM write actions fall through.
+domain: identity
+severity: critical
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-6(5)"
+  fedramp_moderate: "AC-6(5)"
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params:
+  base_impact: 10
+  attack_stage: persistence
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    Negative logic in IAM policy permits IAM write actions. An
+    attacker who discovers this policy can escalate privileges by
+    exploiting actions that fall through the NotAction gap.
+  action: >
+    Replace the NotAction policy with an explicit allow list.
+    Ensure iam:PutRolePolicy, iam:CreateUser, iam:AttachRolePolicy,
+    and iam:CreatePolicyVersion are explicitly denied or absent from
+    the allowed actions.
+  example: |
+    {
+      "identity": {
+        "kind": "policy",
+        "policy": {
+          "shadow_logic": {
+            "permits_iam_write_via_negative": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: policy
+    - field: properties.identity.policy.shadow_logic.permits_iam_write_via_negative
+      op: eq
+      value: true
