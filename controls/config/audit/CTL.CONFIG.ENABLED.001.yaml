@@ -23,7 +23,12 @@ scope_tags:
   - aws
   - config
 type: unsafe_state
-params: {}
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 2.5
 remediation:
   description: >
     AWS Config recorder is not enabled or not recording all resource

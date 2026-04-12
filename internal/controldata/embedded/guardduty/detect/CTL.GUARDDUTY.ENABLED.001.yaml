@@ -18,7 +18,12 @@ scope_tags:
   - aws
   - guardduty
 type: unsafe_state
-params: {}
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 2.5
 remediation:
   description: >
     GuardDuty is not enabled. Threats are not being detected.

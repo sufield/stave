@@ -14,6 +14,8 @@
 - [System Controls as Code](system-invariant-as-code.md) — Controls-based safety evaluation
 - [Evaluation Semantics](evaluation-semantics.md) — How findings are produced
 - [Risk Reasoning Engine](risk-reasoning.md) — Compound risk scoring, safety chains, attack stages
+- [Blast Radius](blast-radius.md) — Scope-aware multipliers, detection blindness, interpreting output
+- [Identity Blast Radius](identity-blast-radius.md) — Credential compromise reach, assume chains, extractor patterns
 - [Evaluation Engine Capabilities](evaluation-engine-capabilities.md) — Predicate operators and matching
 - [Observation Contract](observation-contract.md) — Observation data requirements
 - [Contract-First Schemas](contracts.md) — Schema-driven design

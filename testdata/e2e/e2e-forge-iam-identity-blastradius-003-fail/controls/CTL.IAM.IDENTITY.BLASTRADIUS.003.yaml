@@ -1,0 +1,47 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.IDENTITY.BLASTRADIUS.003
+name: Role Assume Chain Must Not Exceed Depth Threshold
+description: >
+  IAM role assumption chains must not exceed 2 hops. Deep chains
+  (Role A assumes Role B which assumes Role C) create hidden
+  transitive access that is difficult to audit and often exceeds
+  the intended permissions of the originating principal. Each hop
+  in the chain potentially widens the blast radius.
+domain: identity
+severity: medium
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-6"
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params:
+  base_impact: 5
+  attack_stage: persistence
+remediation:
+  description: >
+    Role assumption chain exceeds 2 hops. Transitive access is
+    difficult to audit and may exceed intended permissions.
+  action: >
+    Flatten the role assumption chain. Grant permissions directly
+    to the role that needs them rather than chaining through
+    intermediate roles. Use service-linked roles where possible
+    to avoid manual chain construction.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "role": {
+          "assume_chain_depth": 1
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: role
+    - field: properties.identity.role.assume_chain_depth
+      op: gt
+      value: 2

@@ -1,23 +1,60 @@
 # Stave
 
-Detect insecure cloud configurations using local snapshots — no credentials, no network access, no runtime agents.
+Deterministic, traceable risk reasoning engine for cloud infrastructure. Evaluates the structural integrity of your safety envelope using local snapshots — no cloud credentials required.
 
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/sufield/stave/badge)](https://securityscorecards.dev/viewer/?uri=github.com/sufield/stave)
 [![Go Report Card](https://goreportcard.com/badge/github.com/sufield/stave?v=1)](https://goreportcard.com/report/github.com/sufield/stave)
 [![codecov](https://codecov.io/gh/sufield/stave/graph/badge.svg?token=OQ72PYGVPZ)](https://codecov.io/gh/sufield/stave)
 
-## Why Stave
+## What Stave is
 
-Cloud security tools either require live API access (CSPM) or only lint templates before deployment (IaC policy). Neither evaluates actual running configurations offline or tracks how long misconfigurations persist.
+Stave is not a scanner, not a CSPM, and not an IaC linter. It is a new category: a **safety envelope evaluator** that applies formal safety engineering principles to cloud infrastructure.
 
-Stave fills this gap. Define safety controls in YAML, compile them to [CEL](https://github.com/google/cel-go), and evaluate JSON configuration snapshots locally. Any vendor, any asset type, deterministic output, air-gapped by design.
+**Unit of analysis:** Control × Asset → Safety Envelope. Each control defines one layer of protection. Each asset has a safety envelope — the complete set of controls protecting it. Stave evaluates individual layers, then reasons about whether the envelope is intact, degraded, or collapsed.
+
+**Output type:** Reasoning Attestation. Not a list of findings. Not a risk score. A structured, deterministic argument about the integrity of each safety envelope — what failed, what the failures mean in combination, and what to fix first to restore the envelope.
+
+This concept comes from safety engineering (IEC 61508, DO-178C) where systems must prove they are safe, not just report what is broken. Stave applies the same discipline to cloud configuration.
+
+## Why this exists
+
+Scanners produce disconnected lists: "this bucket is public, that key is unrotated, logging is disabled." The auditor must reason about how they combine. Stave automates that reasoning.
+
+### Example: what reasoning looks like
+
+A scanner reports three independent findings:
+
+```
+[high]     CTL.S3.PUBLIC.001   — bucket is publicly readable
+[high]     CTL.S3.ENCRYPT.001  — bucket is not encrypted
+[medium]   CTL.S3.LOG.001      — access logging is disabled
+```
+
+Three items in a list. The analyst must figure out which matter.
+
+Stave sees the same three findings, then reasons:
+
+```
+[CRITICAL] Chain: public_phi_exposure
+  This bucket holds PHI (sensitivity: 3.0x), is publicly readable
+  (exposure: 2.0x), is unencrypted, and has no audit trail.
+
+  Safety envelope: COLLAPSED (3 of 4 layers failed)
+  Compound score:  150.0
+  Fix any of:      CTL.CLOUDTRAIL.DATAREAD.001
+  Attack stages:   initial_access, exfiltration, detection_evasion
+```
+
+Same data. Different output. The scanner says "three things are wrong." Stave says "the safety envelope around PHI data has collapsed — this is a total exposure with no audit trail, and enabling CloudTrail would be the cheapest fix to start restoring the envelope."
+
+The output is not a score from an algorithm. It is a **deterministic logical conclusion** from declared invariants — every step traceable, every score reproducible. Define safety controls in YAML, compile them to [CEL](https://github.com/google/cel-go), evaluate JSON snapshots locally. Any vendor, any asset type, air-gapped by design.
 
 ## Features
 
-- **243 built-in controls** across 29 domains (S3, IAM, VPC, EC2, RDS, ELB, K8s, CloudTrail, CloudWatch, KMS, and [19 more](docs/controls/reference.md))
+- **246 built-in controls** across 29 domains (S3, IAM, VPC, EC2, RDS, ELB, K8s, CloudTrail, CloudWatch, KMS, and [19 more](docs/controls/reference.md))
 - **10 compliance profiles** — HIPAA, CIS AWS v3.0, SOC 2, PCI-DSS v4.0, NIST 800-53, FedRAMP, GDPR, FFIEC, ISO 27001, NIST CSF 2.0
 - **Risk reasoning engine** — compound risk scoring across co-failing controls, MITRE-aligned attack stage summary, blast radius multipliers
-- **Safety chains** — 3 built-in chain definitions detect compound failures (PHI exposure, root compromise, detection blindness)
+- **Safety chains** — 4 built-in chain definitions detect compound failures (PHI exposure, root compromise, detection blindness, identity blast radius)
 - **Unsafe duration tracking** — detects how long assets remain misconfigured across snapshots
 - **Custom controls** — YAML with `unsafe_predicate` for any asset type, no code changes
 - **CI/CD ready** — exit codes, SARIF output, baseline tracking, policy gating
@@ -111,7 +148,7 @@ New observation properties are additive and backward-compatible. Existing contro
 
 ## Built-in controls
 
-243 controls across 29 domains:
+246 controls across 29 domains:
 
 ### AWS S3 (67 controls)
 
@@ -133,7 +170,7 @@ New observation properties are additive and backward-compatible. Existing contro
 | `artifacts` | 1 | VCS artifacts on public buckets |
 | `misc` | 4 | Incomplete data, completeness checks |
 
-### AWS IAM (38 controls)
+### AWS IAM (41 controls)
 
 Root account MFA and access keys, console user MFA, credential rotation, password policy, privilege escalation (self-modify, PassRole, AssumeRole), permissions boundaries, break-glass persistence, cross-environment access, inactive accounts. CIS AWS Benchmark aligned.
 
@@ -162,6 +199,7 @@ Full reference: [Control reference](docs/controls/reference.md)
 | [Atlantis integration](docs/integrations/atlantis.md) | Evaluate Terraform plans before apply |
 | [OPA Rego export](docs/integrations/opa-export.md) | Export controls to OPA/Conftest |
 | [Risk reasoning](docs/risk-reasoning.md) | Compound risk scoring and safety chains |
+| [Identity blast radius](docs/identity-blast-radius.md) | Credential compromise reach analysis |
 | [Evaluation semantics](docs/evaluation-semantics.md) | How duration tracking works |
 | [Architecture](docs/architecture/overview.md) | System design overview |
 | [FAQ](docs/faq.md) | Common questions |

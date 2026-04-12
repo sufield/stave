@@ -61,8 +61,8 @@ func BuildAttackStageSummary(
 // from a set of compound findings.
 func AttackStagesFromFindings(findings []CompoundFinding) []string {
 	seen := make(map[string]bool)
-	for _, f := range findings {
-		for _, s := range f.AttackStages {
+	for i := range findings {
+		for _, s := range findings[i].AttackStages {
 			seen[s] = true
 		}
 	}

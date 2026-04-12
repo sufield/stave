@@ -38,6 +38,8 @@ func (w *FindingWriter) MarshalFindings(enriched *appcontracts.EnrichedResult) (
 
 	remFindings := toRemediationFindings(enriched.Findings)
 	w.writeViolationsFromEnriched(d, result, remFindings)
+	w.writeChainFindings(d, result)
+	w.writeAttackStageSummary(d, result)
 	w.writeRemediationGroups(d, remFindings)
 	w.writeSkippedControls(d, result.SkippedControls)
 	writeExemptedAssets(d, enriched.ExemptedAssets)
@@ -246,4 +248,53 @@ func toRemediationFindings(fs []appcontracts.EnrichedFinding) []remediation.Find
 		}
 	}
 	return out
+}
+
+func (w *FindingWriter) writeChainFindings(d *drawer, result evaluation.ComplianceReport) {
+	if len(result.ChainFindings) == 0 {
+		return
+	}
+	d.f("\nCompound Risk Chains")
+	d.f("\n--------------------\n")
+	for i := range result.ChainFindings {
+		cf := &result.ChainFindings[i]
+		d.f("\n  [%s] Chain: %s\n", cf.Severity, cf.ChainID)
+		if cf.Description != "" {
+			d.f("  %s\n", strings.TrimSpace(cf.Description))
+		}
+		d.f("  Failing:    %s\n", strings.Join(controlIDStrings(cf.ControlsFailing), ", "))
+		if len(cf.MissingSafeguards) > 0 {
+			d.f("  Fix any of: %s\n", strings.Join(controlIDStrings(cf.MissingSafeguards), ", "))
+		}
+		d.f("  Score:      %.1f\n", cf.CompoundScore)
+		if len(cf.AttackStages) > 0 {
+			d.f("  Stages:     %s\n", strings.Join(cf.AttackStages, ", "))
+		}
+	}
+}
+
+func (w *FindingWriter) writeAttackStageSummary(d *drawer, result evaluation.ComplianceReport) {
+	if len(result.AttackStageSummary) == 0 {
+		return
+	}
+	d.f("\nAttack Stage Summary")
+	d.f("\n--------------------\n")
+	for _, stage := range []string{
+		"initial_access", "credential_access", "persistence",
+		"exfiltration", "detection_evasion", "resilience",
+	} {
+		status, ok := result.AttackStageSummary[stage]
+		if !ok {
+			continue
+		}
+		d.f("  %-20s %s\n", stage, status)
+	}
+}
+
+func controlIDStrings(ids []kernel.ControlID) []string {
+	s := make([]string, len(ids))
+	for i, id := range ids {
+		s[i] = string(id)
+	}
+	return s
 }

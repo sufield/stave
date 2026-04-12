@@ -52,6 +52,10 @@ func TestDetectChains(t *testing.T) {
 		if len(f.ControlsFailing) != 2 {
 			t.Errorf("ControlsFailing = %d, want 2", len(f.ControlsFailing))
 		}
+		// MissingSafeguards = controls in chain that are NOT failing
+		if len(f.MissingSafeguards) != 1 {
+			t.Errorf("MissingSafeguards = %d, want 1 (CTL.S3.LOG.001 is still holding)", len(f.MissingSafeguards))
+		}
 		if f.Severity != policy.SeverityCritical {
 			t.Errorf("Severity = %v, want CRITICAL", f.Severity)
 		}
@@ -99,6 +103,7 @@ func TestDetectChains(t *testing.T) {
 				"attack_stage": "detection_evasion",
 				"blast_radius": map[string]any{
 					"type":       "detection",
+					"scope":      "account",
 					"multiplier": float64(2.5),
 				},
 			}),
@@ -122,9 +127,65 @@ func TestDetectChains(t *testing.T) {
 		if len(findings) != 1 {
 			t.Fatalf("expected 1 finding, got %d", len(findings))
 		}
-		// With blast multiplier 2.5: score = 10 * 1.8 * 2.5 = 45.0
+		// With account-scoped blast multiplier 2.5: score = 10 * 1.8 * 2.5 = 45.0
 		if findings[0].CompoundScore < 40.0 {
 			t.Errorf("CompoundScore = %f, expected >= 40 with blast multiplier", findings[0].CompoundScore)
 		}
+	})
+
+	t.Run("scope attenuation reduces multiplier", func(t *testing.T) {
+		// Resource-scoped blast (S3 logging) should be attenuated.
+		resourceCtl := &policy.ControlDefinition{
+			Params: policy.NewParams(map[string]any{
+				"blast_radius": map[string]any{
+					"type":       "detection",
+					"scope":      "resource",
+					"multiplier": float64(2.0),
+				},
+			}),
+		}
+		// Account-scoped (CloudTrail) should NOT be attenuated.
+		accountCtl := &policy.ControlDefinition{
+			Params: policy.NewParams(map[string]any{
+				"blast_radius": map[string]any{
+					"type":       "detection",
+					"scope":      "account",
+					"multiplier": float64(2.0),
+				},
+			}),
+		}
+
+		chain := []policy.ChainDefinition{{
+			ID:                  "scope_test",
+			ControlIDs:          []kernel.ControlID{"A", "B"},
+			EscalationThreshold: 2,
+			CompoundSeverity:    policy.SeverityHigh,
+		}}
+
+		// Resource-scoped: effective = 1.0 + (2.0-1.0)*0.50 = 1.5
+		resourceFindings := DetectChains(
+			map[kernel.ControlID]bool{"A": true, "B": true},
+			chain,
+			map[kernel.ControlID]*policy.ControlDefinition{"A": resourceCtl, "B": resourceCtl},
+		)
+
+		// Account-scoped: effective = 2.0 (no attenuation)
+		accountFindings := DetectChains(
+			map[kernel.ControlID]bool{"A": true, "B": true},
+			chain,
+			map[kernel.ControlID]*policy.ControlDefinition{"A": accountCtl, "B": accountCtl},
+		)
+
+		if len(resourceFindings) != 1 || len(accountFindings) != 1 {
+			t.Fatal("expected 1 finding each")
+		}
+
+		// Account-scoped score should be higher than resource-scoped.
+		if accountFindings[0].CompoundScore <= resourceFindings[0].CompoundScore {
+			t.Errorf("account score (%f) should be > resource score (%f)",
+				accountFindings[0].CompoundScore, resourceFindings[0].CompoundScore)
+		}
+		t.Logf("account=%f resource=%f",
+			accountFindings[0].CompoundScore, resourceFindings[0].CompoundScore)
 	})
 }

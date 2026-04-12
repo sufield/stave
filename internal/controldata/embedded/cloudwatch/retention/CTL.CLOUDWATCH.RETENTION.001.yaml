@@ -14,7 +14,12 @@ scope_tags:
   - aws
   - cloudwatch
 type: unsafe_state
-params: {}
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 1.5
 remediation:
   description: >
     CloudWatch log group does not have a retention policy. Logs may

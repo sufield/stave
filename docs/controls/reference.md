@@ -3,24 +3,24 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 243
-**Pack hash:** `b75f334c843a47c8bb5a9382b7d4c57202960e26080f75544a4968098e5de613`
+**Total controls:** 246
+**Pack hash:** `37b57f250877fa01a3ade863b367f8bb257f4ee55b861c49f12788f4c81b2a67`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 33 |
-| high | 102 |
+| critical | 34 |
+| high | 103 |
 | info | 16 |
 | low | 14 |
-| medium | 78 |
+| medium | 79 |
 
 | Domain | Count |
 |--------|-------|
 | exposure | 194 |
 | governance | 2 |
-| identity | 43 |
+| identity | 46 |
 | storage | 4 |
 
 ## Controls
@@ -1399,6 +1399,51 @@ No IAM policy on any cloud provider should grant unrestricted administrative acc
 All privileged accounts across all cloud providers must have MFA enforced. This control extends AWS MFA controls to Azure AD (Conditional Access requiring MFA) and GCP (2-Step Verification enforcement). A single cloud account without MFA is a breach vector regardless of how well other clouds are protected.
 
 **Remediation:** Enforce MFA at the identity provider level. AWS: IAM MFA policy conditions. Azure: Conditional Access policies. GCP: 2-Step Verification enforcement in Workspace/Cloud Identity.
+
+---
+
+### CTL.IAM.IDENTITY.BLASTRADIUS.001
+
+**Role Blast Radius Must Not Exceed Resource Threshold**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6; nist_800_53_r5: AC-6; soc2: CC6.1;
+
+IAM roles must not be able to reach more than 50 resources through direct permissions and transitive role assumption chains. A role with wide blast radius means a single credential compromise gives an attacker access to a large surface area. The extractor computes reachable resources by traversing sts:AssumeRole edges and collecting data access permissions per reachable role.
+
+**Remediation:** Reduce the role's permissions to the minimum set of resources required. Split broad roles into per-service roles with scoped Resource ARNs. Use IAM Access Analyzer to identify unused permissions for removal.
+
+---
+
+### CTL.IAM.IDENTITY.BLASTRADIUS.002
+
+**Cross-Account Role Must Require External ID**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-3; nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+IAM roles with cross-account blast radius (can reach resources in other AWS accounts) must require an external ID condition on the trust policy. Without an external ID, any principal in the trusted account can assume the role — including compromised service accounts and test tenants. Combined with cross-account reach, this is the maximum blast radius configuration.
+
+**Remediation:** Add an sts:ExternalId condition to the role trust policy. Restrict the trust to specific role ARNs rather than account-wide principals. Review cross-account access grants for least privilege.
+
+---
+
+### CTL.IAM.IDENTITY.BLASTRADIUS.003
+
+**Role Assume Chain Must Not Exceed Depth Threshold**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+IAM role assumption chains must not exceed 2 hops. Deep chains (Role A assumes Role B which assumes Role C) create hidden transitive access that is difficult to audit and often exceeds the intended permissions of the originating principal. Each hop in the chain potentially widens the blast radius.
+
+**Remediation:** Flatten the role assumption chain. Grant permissions directly to the role that needs them rather than chaining through intermediate roles. Use service-linked roles where possible to avoid manual chain construction.
 
 ---
 

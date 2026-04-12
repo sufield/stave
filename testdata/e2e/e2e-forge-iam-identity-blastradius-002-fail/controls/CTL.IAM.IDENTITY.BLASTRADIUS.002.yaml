@@ -1,0 +1,58 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.IDENTITY.BLASTRADIUS.002
+name: Cross-Account Role Must Require External ID
+description: >
+  IAM roles with cross-account blast radius (can reach resources in
+  other AWS accounts) must require an external ID condition on the
+  trust policy. Without an external ID, any principal in the trusted
+  account can assume the role — including compromised service accounts
+  and test tenants. Combined with cross-account reach, this is the
+  maximum blast radius configuration.
+domain: identity
+severity: critical
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-3"
+  fedramp_moderate: "AC-3"
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params:
+  base_impact: 10
+  attack_stage: persistence
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    Role with cross-account blast radius does not require external ID.
+    Any principal in the trusted account can assume this role and
+    reach resources across accounts.
+  action: >
+    Add an sts:ExternalId condition to the role trust policy.
+    Restrict the trust to specific role ARNs rather than account-wide
+    principals. Review cross-account access grants for least privilege.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "role": {
+          "blast_radius_scope": "account",
+          "cross_account_trust_without_external_id": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: role
+    - field: properties.identity.role.blast_radius_scope
+      op: eq
+      value: cross_account
+    - field: properties.identity.role.cross_account_trust_without_external_id
+      op: eq
+      value: true

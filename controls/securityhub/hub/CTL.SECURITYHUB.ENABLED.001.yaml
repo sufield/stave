@@ -18,7 +18,12 @@ scope_tags:
   - aws
   - securityhub
 type: unsafe_state
-params: {}
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 2.5
 remediation:
   description: >
     Security Hub is not enabled. Security findings are not aggregated.

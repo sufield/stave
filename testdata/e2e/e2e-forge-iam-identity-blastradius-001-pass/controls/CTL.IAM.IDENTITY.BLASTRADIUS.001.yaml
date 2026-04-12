@@ -1,0 +1,54 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.IDENTITY.BLASTRADIUS.001
+name: Role Blast Radius Must Not Exceed Resource Threshold
+description: >
+  IAM roles must not be able to reach more than 50 resources through
+  direct permissions and transitive role assumption chains. A role
+  with wide blast radius means a single credential compromise gives
+  an attacker access to a large surface area. The extractor computes
+  reachable resources by traversing sts:AssumeRole edges and
+  collecting data access permissions per reachable role.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-6"
+  fedramp_moderate: "AC-6"
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params:
+  base_impact: 8
+  attack_stage: persistence
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    IAM role can reach more than 50 resources through direct
+    permissions and role assumption chains. Credential compromise
+    has a wide blast radius.
+  action: >
+    Reduce the role's permissions to the minimum set of resources
+    required. Split broad roles into per-service roles with scoped
+    Resource ARNs. Use IAM Access Analyzer to identify unused
+    permissions for removal.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "role": {
+          "reachable_resources_count": 10
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: role
+    - field: properties.identity.role.reachable_resources_count
+      op: gt
+      value: 50

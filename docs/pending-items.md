@@ -8,7 +8,7 @@ implementations.
 
 ## Current Status (2026-04-11)
 
-**243 controls across 29 domains. All CSA P0, P1, P2 actionable features complete.**
+**246 controls across 29 domains. All CSA P0, P1, P2 actionable features complete.**
 
 ### CSA Feature Completion
 

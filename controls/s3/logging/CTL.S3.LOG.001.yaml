@@ -21,7 +21,12 @@ scope_tags:
   - aws
   - s3
 type: unsafe_state
-params: {}
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: resource
+    multiplier: 1.5
 remediation:
   description: >
     Bucket does not have server access logging enabled. There is no
