@@ -1,0 +1,47 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ZT.SHORTLIVED.001
+name: Service Access Must Use Short-Lived Credentials
+description: >
+  Service-to-service access must use short-lived credentials (STS
+  temporary tokens, IAM Roles Anywhere certificates, OIDC federation)
+  rather than long-lived access keys. Short-lived credentials limit
+  the blast radius of compromise — a stolen token expires
+  automatically. This is a core Zero Trust principle: never trust
+  a credential longer than necessary.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "IA-5"
+  fedramp_moderate: "IA-5"
+  nist_csf_2.0: "PR.AA"
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Service uses long-lived access keys instead of short-lived
+    credentials. A stolen key provides indefinite access.
+  action: >
+    Replace long-lived access keys with IAM roles (for EC2, ECS,
+    Lambda), IAM Roles Anywhere (for on-premises), or OIDC
+    federation (for CI/CD). Use STS AssumeRole with session
+    duration limits.
+  example: |
+    {
+      "identity": {
+        "kind": "service_identity",
+        "credentials": {
+          "uses_short_lived": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: service_identity
+    - field: properties.identity.credentials.uses_short_lived
+      op: eq
+      value: false

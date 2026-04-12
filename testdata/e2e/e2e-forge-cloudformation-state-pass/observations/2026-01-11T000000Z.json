@@ -1,0 +1,17 @@
+{
+  "assets": [
+    {
+      "id": "test-terraform-backend",
+      "properties": {
+        "iac": {
+          "state_versioned": true,
+          "kind": "terraform_backend"
+        }
+      },
+      "type": "aws_terraform_backend",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1"
+}

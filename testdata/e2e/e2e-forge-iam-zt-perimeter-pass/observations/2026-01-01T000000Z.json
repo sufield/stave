@@ -1,0 +1,19 @@
+{
+  "assets": [
+    {
+      "id": "test-resource-access",
+      "properties": {
+        "identity": {
+          "access": {
+            "perimeter_only": false
+          },
+          "kind": "resource_access"
+        }
+      },
+      "type": "aws_resource_access",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1"
+}

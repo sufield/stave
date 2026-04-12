@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFORMATION.ROLLBACK.001
+name: CloudFormation Stacks Must Have Rollback Enabled
+description: >
+  CloudFormation stacks must not have DisableRollback set to true.
+  With rollback disabled, a failed deployment leaves resources in a
+  partially created state that may be insecure. Rollback ensures
+  failed changes are reverted to the last known-good state.
+domain: exposure
+severity: medium
+compliance:
+  soc2: "CC8.1"
+  nist_800_53_r5: "CM-3"
+  fedramp_moderate: "CM-3"
+scope_tags:
+  - aws
+  - cloudformation
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    CloudFormation stack has rollback disabled. Failed deployments
+    leave resources in an inconsistent state.
+  action: >
+    Remove DisableRollback from stack creation/update parameters.
+    Ensure all stacks use the default rollback behavior.
+  example: |
+    {
+      "iac": {
+        "kind": "stack",
+        "rollback_disabled": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.iac.kind
+      op: eq
+      value: stack
+    - field: properties.iac.rollback_disabled
+      op: eq
+      value: true

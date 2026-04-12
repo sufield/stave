@@ -1,0 +1,44 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.CROSSCLOUD.MFA.001
+name: MFA Must Be Enforced Across All Cloud Providers
+description: >
+  All privileged accounts across all cloud providers must have MFA
+  enforced. This control extends AWS MFA controls to Azure AD
+  (Conditional Access requiring MFA) and GCP (2-Step Verification
+  enforcement). A single cloud account without MFA is a breach
+  vector regardless of how well other clouds are protected.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "IA-2(1)"
+scope_tags:
+  - multicloud
+  - iam
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Privileged account does not have MFA enforced. Credential
+    theft leads to full account compromise.
+  action: >
+    Enforce MFA at the identity provider level. AWS: IAM MFA
+    policy conditions. Azure: Conditional Access policies.
+    GCP: 2-Step Verification enforcement in Workspace/Cloud Identity.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "console_access": {
+          "mfa_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user
+    - field: properties.identity.console_access.mfa_enabled
+      op: eq
+      value: false

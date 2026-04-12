@@ -6,6 +6,39 @@ implementations.
 
 ---
 
+## Current Status (2026-04-11)
+
+**243 controls across 29 domains. All CSA P0, P1, P2 actionable features complete.**
+
+### CSA Feature Completion
+
+| Tier | Done | Partial | Out of Scope |
+|------|------|---------|--------------|
+| P0 (13) | 12 | 1 (IaC secrets — SAST) | 0 |
+| P1 (14) | 10 | 0 | 4 (CORS, rate limit, CI/CD, deps) |
+| P2 (7) | 7 | 0 | 0 |
+
+### Remaining work
+
+| Item | Type | Notes |
+|------|------|-------|
+| EFS encryption controls | New domain | Low priority — needs go:embed directive |
+| 5 MVP 1.1+ feature slices | Engine (Go) | identity, drift, composition, rank, check |
+| Service locator refactoring | Refactoring | Deferred — touches apply critical path |
+| HIPAA.REVIEW.001 | Control | Out of scope — human process attestation |
+
+### HIPAA backlog resolved
+
+3 of 4 previously blocked HIPAA controls are now implemented:
+- CTL.S3.ACCESS.PHI.001 (minimum necessary — §164.502(b))
+- CTL.S3.MALWARE.001 (GuardDuty malware — §164.308(a)(5))
+- CTL.S3.BREACH.DETECT.001 (detection infrastructure — §§164.400-414)
+
+HIPAA.REVIEW.001 (log review process) remains out of scope — requires
+human process attestation, not infrastructure configuration.
+
+---
+
 ## Completed (2026-03-30)
 
 All four previously pending HIPAA controls are now implemented:

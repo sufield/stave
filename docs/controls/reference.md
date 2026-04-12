@@ -3,24 +3,24 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 233
-**Pack hash:** `edb563821d3ad22333750a071dec0a72772aae146ac31b2d7bfc5c0b00b293fa`
+**Total controls:** 243
+**Pack hash:** `b75f334c843a47c8bb5a9382b7d4c57202960e26080f75544a4968098e5de613`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 32 |
-| high | 99 |
+| critical | 33 |
+| high | 102 |
 | info | 16 |
-| low | 13 |
-| medium | 73 |
+| low | 14 |
+| medium | 78 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 189 |
+| exposure | 194 |
 | governance | 2 |
-| identity | 38 |
+| identity | 43 |
 | storage | 4 |
 
 ## Controls
@@ -213,6 +213,36 @@ CloudFormation stacks managing production infrastructure must have drift detecti
 The observation snapshot is missing required CloudFormation properties.
 
 **Remediation:** Ensure the extractor calls aws cloudformation describe-stacks.
+
+---
+
+### CTL.CLOUDFORMATION.ROLLBACK.001
+
+**CloudFormation Stacks Must Have Rollback Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: CM-3; nist_800_53_r5: CM-3; soc2: CC8.1;
+
+CloudFormation stacks must not have DisableRollback set to true. With rollback disabled, a failed deployment leaves resources in a partially created state that may be insecure. Rollback ensures failed changes are reverted to the last known-good state.
+
+**Remediation:** Remove DisableRollback from stack creation/update parameters. Ensure all stacks use the default rollback behavior.
+
+---
+
+### CTL.CLOUDFORMATION.STATE.001
+
+**Terraform State Must Be Versioned**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: CM-3; nist_800_53_r5: CM-3; soc2: CC8.1;
+
+Terraform state files must be stored in a versioned backend (S3 with versioning, Terraform Cloud, or equivalent). Unversioned state means a corrupted or accidentally deleted state file cannot be recovered, leaving infrastructure in an unmanaged state with no rollback path.
+
+**Remediation:** Configure an S3 backend with versioning enabled and DynamoDB state locking. Alternatively, use Terraform Cloud or an equivalent managed backend with built-in versioning.
 
 ---
 
@@ -1342,6 +1372,36 @@ IAM roles in non-production environments (test, staging, QA) must not have acces
 
 ---
 
+### CTL.IAM.CROSSCLOUD.ADMIN.001
+
+**No Full Admin Policies Across Any Cloud Provider**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+No IAM policy on any cloud provider should grant unrestricted administrative access (Action: *, Resource: * or equivalent). This control extends CTL.IAM.POLICY.ADMIN.001 beyond AWS to Azure (Contributor/Owner at subscription scope) and GCP (roles/owner, roles/editor at project scope). The same least-privilege principle applies regardless of cloud provider.
+
+**Remediation:** Replace admin policies with scoped policies granting only required permissions. Use cloud-specific access analyzers to identify unused permissions.
+
+---
+
+### CTL.IAM.CROSSCLOUD.MFA.001
+
+**MFA Must Be Enforced Across All Cloud Providers**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: IA-2(1); soc2: CC6.1;
+
+All privileged accounts across all cloud providers must have MFA enforced. This control extends AWS MFA controls to Azure AD (Conditional Access requiring MFA) and GCP (2-Step Verification enforcement). A single cloud account without MFA is a breach vector regardless of how well other clouds are protected.
+
+**Remediation:** Enforce MFA at the identity provider level. AWS: IAM MFA policy conditions. Azure: Conditional Access policies. GCP: 2-Step Verification enforcement in Workspace/Cloud Identity.
+
+---
+
 ### CTL.IAM.INCOMPLETE.001
 
 **Complete Data Required for IAM Assessment**
@@ -1536,6 +1596,21 @@ iam:PassRole permissions must be scoped to specific role ARNs, not wildcard reso
 
 ---
 
+### CTL.IAM.POLICY.SOD.001
+
+**IAM Roles Must Not Combine Data Access and IAM Management**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-5; iso_27001_2022: A.8.3; nist_800_53_r5: AC-5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+No single IAM role should have both data access permissions (s3:GetObject, dynamodb:GetItem, rds:*, secretsmanager:GetSecretValue) and IAM management permissions (iam:CreateRole, iam:AttachPolicy, iam:CreateUser, iam:PutRolePolicy). Combining these creates a privilege escalation path — a compromised role with data access can grant itself additional permissions. Separation of privileged access is required by IAM-09 in CCM v4.1.
+
+**Remediation:** Split into two roles: one for data access (application role) and one for IAM management (admin role). Use separate assume-role policies for each. Apply the principle of least privilege — data-path roles should never modify IAM.
+
+---
+
 ### CTL.IAM.ROLE.BREAKGLASS.001
 
 **Break-Glass Elevated Roles Must Not Persist**
@@ -1653,6 +1728,36 @@ At least one IAM entity must have the AWSSupportAccess managed policy attached. 
 IAM roles with cross-account trust policies must include an sts:ExternalId condition. Without an external ID, any principal in the trusted account can assume the role — including compromised service accounts, OAuth applications, or test tenants. The Microsoft Midnight Blizzard 2024 breach exploited a legacy test OAuth app to assume a role with full_access_as_app permissions, pivoting from a test tenant to production Exchange mailboxes.
 
 **Remediation:** Add an sts:ExternalId condition to the role trust policy. Generate a unique external ID per trust relationship. Verify the assuming application passes the correct external ID.
+
+---
+
+### CTL.IAM.ZT.PERIMETER.001
+
+**Sensitive Resources Must Use Identity-Based Access Not Network Perimeter**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-3; nist_800_53_r5: AC-3; nist_csf_2.0: PR.AA;
+
+Access to sensitive resources must be governed by identity-based controls (IAM policies, conditions, session tags) rather than relying solely on network perimeter (VPC, security groups, NACLs). Network-only access control fails when the perimeter is bypassed — via VPN compromise, lateral movement, or insider threat. Zero Trust requires every access decision to verify identity, device, and context.
+
+**Remediation:** Add IAM-based access controls (resource policies with principal constraints, IAM conditions for aws:PrincipalTag, VPC endpoint policies with principal scoping). Use AWS Verified Access or IAM Roles Anywhere for workload identity.
+
+---
+
+### CTL.IAM.ZT.SHORTLIVED.001
+
+**Service Access Must Use Short-Lived Credentials**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: IA-5; nist_800_53_r5: IA-5; nist_csf_2.0: PR.AA;
+
+Service-to-service access must use short-lived credentials (STS temporary tokens, IAM Roles Anywhere certificates, OIDC federation) rather than long-lived access keys. Short-lived credentials limit the blast radius of compromise — a stolen token expires automatically. This is a core Zero Trust principle: never trust a credential longer than necessary.
+
+**Remediation:** Replace long-lived access keys with IAM roles (for EC2, ECS, Lambda), IAM Roles Anywhere (for on-premises), or OIDC federation (for CI/CD). Use STS AssumeRole with session duration limits.
 
 ---
 
@@ -3461,6 +3566,50 @@ Security groups must not allow inbound SSH (22) or RDP (3389) from ::/0 (IPv6 an
 Security group rules must not allow ingress from 0.0.0.0/0 on sensitive ports (SSH, RDP, database). Unrestricted ingress exposes services to the entire internet.
 
 **Remediation:** Restrict ingress rules to specific CIDR blocks or security group references. Remove 0.0.0.0/0 and ::/0 from ingress rules on ports 22 (SSH), 3389 (RDP), 3306 (MySQL), 5432 (PostgreSQL).
+
+---
+
+### CTL.WAF.INCOMPLETE.001
+
+**Complete Data Required for WAF Assessment**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+
+WAF assessment data is incomplete. The extractor must populate waf.rules.has_managed_rules to evaluate protection controls.
+
+**Remediation:** Re-run the extractor with WAF permissions: wafv2:GetWebACL, wafv2:ListWebACLs, wafv2:GetLoggingConfiguration.
+
+---
+
+### CTL.WAF.LOGGING.001
+
+**WAF Logging Must Be Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AU-2; nist_800_53_r5: AU-2; soc2: CC7.1;
+
+WAF web ACLs must have logging enabled to record blocked and allowed requests. Without logging, attacks cannot be detected, investigated, or correlated with other security events.
+
+**Remediation:** Enable WAF logging to S3, CloudWatch Logs, or Kinesis Data Firehose via aws wafv2 put-logging-configuration.
+
+---
+
+### CTL.WAF.RULES.001
+
+**WAF Must Have Managed Rule Groups Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SI-3; nist_800_53_r5: SI-3; pci_dss_v4.0: 6.4.1; soc2: CC6.6;
+
+WAF web ACLs must include AWS managed rule groups for common attack patterns (SQLi, XSS, known bad inputs). Without managed rules, the WAF provides no baseline protection against OWASP Top 10 attacks.
+
+**Remediation:** Add AWS managed rule groups to the web ACL: AWSManagedRulesCommonRuleSet, AWSManagedRulesSQLiRuleSet, AWSManagedRulesKnownBadInputsRuleSet.
 
 ---
 

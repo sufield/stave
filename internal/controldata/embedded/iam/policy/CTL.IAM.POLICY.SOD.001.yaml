@@ -1,0 +1,50 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.POLICY.SOD.001
+name: IAM Roles Must Not Combine Data Access and IAM Management
+description: >
+  No single IAM role should have both data access permissions
+  (s3:GetObject, dynamodb:GetItem, rds:*, secretsmanager:GetSecretValue)
+  and IAM management permissions (iam:CreateRole, iam:AttachPolicy,
+  iam:CreateUser, iam:PutRolePolicy). Combining these creates a
+  privilege escalation path — a compromised role with data access
+  can grant itself additional permissions. Separation of privileged
+  access is required by IAM-09 in CCM v4.1.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-5"
+  fedramp_moderate: "AC-5"
+  iso_27001_2022: "A.8.3"
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    IAM role has both data access and IAM management permissions.
+    A compromised role can escalate its own privileges.
+  action: >
+    Split into two roles: one for data access (application role)
+    and one for IAM management (admin role). Use separate assume-role
+    policies for each. Apply the principle of least privilege —
+    data-path roles should never modify IAM.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "role": {
+          "has_data_and_iam_access": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: role
+    - field: properties.identity.role.has_data_and_iam_access
+      op: eq
+      value: true
