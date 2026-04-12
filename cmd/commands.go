@@ -32,6 +32,7 @@ import (
 	initconfig "github.com/sufield/stave/cmd/initcmd/config"
 	"github.com/sufield/stave/cmd/inspect"
 	"github.com/sufield/stave/cmd/prune"
+	staverank "github.com/sufield/stave/cmd/rank"
 	"github.com/sufield/stave/cmd/securityaudit"
 	stavewatch "github.com/sufield/stave/cmd/watch"
 	artifact "github.com/sufield/stave/internal/adapters/artifacts"
@@ -141,6 +142,9 @@ func WireCommands(app *App) {
 
 	// Evidence bundling
 	root.AddCommand(stavebundle.NewCmd())
+
+	// Remediation ranking
+	root.AddCommand(staverank.NewCmd())
 
 	// Supportability
 	root.AddCommand(doctor.NewCmd(doctor.Deps{
