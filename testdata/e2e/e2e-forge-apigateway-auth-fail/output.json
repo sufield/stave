@@ -1,0 +1,100 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "d41e490e3c7a1bcde6b5b88a2f62d93d4894212ffeed1940db9fc5fa74a32ece",
+        "2026-01-11T000000Z.json": "106fc9daab02d0ca736f94945164ca8aa5ea4a98d92010e3569136b1cbc3fc40"
+      },
+      "overall": "e5dd987e6ea6d474b923724a2ddf11d793994a25ff2dcf046a5a145a13218808"
+    },
+    "policy_fingerprint": "0f94e909b39f62d5997b032367c82d2d05e9b1b09dd0a44cc94ee60524920122"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.APIGATEWAY.AUTH.001",
+      "asset_id": "test-apigateway",
+      "asset_type": "aws_apigateway",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.APIGATEWAY.AUTH.001",
+      "control_name": "API Routes Must Have Authorization Configured",
+      "control_description": "API Gateway routes and methods must have an authorizer configured (Cognito, Lambda, IAM, or JWT). Routes with authorization set to NONE are publicly accessible without any identity verification. The Trello breach (2024) exposed 15 million accounts through an unauthenticated API endpoint. The Spoutible breach (2024) leaked user data through an API without proper auth checks.\n",
+      "asset_id": "test-apigateway",
+      "asset_type": "aws_apigateway",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "api.access.has_unauthenticated_routes",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "api.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "gateway"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "fedramp_moderate": "AC-3",
+        "nist_800_53_r5": "AC-3",
+        "pci_dss_v4.0": "7.2.1",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "API Gateway has routes with authorization set to NONE. These endpoints are publicly accessible without identity verification.",
+        "action": "Configure an authorizer on all non-health-check routes. Use Cognito user pools, Lambda authorizers, IAM authorization, or JWT authorizers depending on the client type.",
+        "example": "{\n  \"api\": {\n    \"kind\": \"gateway\",\n    \"access\": {\n      \"has_unauthenticated_routes\": false\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-apigateway-auth-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-apigateway-auth-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
+    }
+  }
+}

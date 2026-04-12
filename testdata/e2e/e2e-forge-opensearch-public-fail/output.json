@@ -1,0 +1,179 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "4c37e1529010c5a5626d0a4264af737f03e6624828a03c6d68b94e24d7b05528",
+        "2026-01-11T000000Z.json": "efc174ce1b2558c06b2852d7bde8882bc0ef7ebe0200d2d0ee4894e893aef7b8"
+      },
+      "overall": "99f2528874c8e7f831c80b13f616e1a2747044d5819901d215887b9967e4d547"
+    },
+    "policy_fingerprint": "5902940d2e0cc880f31658747e6f4ec9835aa2f231ea00f9672f080baadbea03"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.OPENSEARCH.PUBLIC.001",
+      "asset_id": "test-opensearch-domain",
+      "asset_type": "aws_opensearch_domain",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.OPENSEARCH.PUBLIC.001",
+      "control_name": "OpenSearch Domain Must Not Be Publicly Accessible",
+      "control_description": "OpenSearch domains must not have public endpoints accessible from the internet. A publicly accessible domain allows anyone to query, index, or enumerate data without network-level restrictions. The Darkbeam breach (2023) exposed 3.8 billion records from an Elasticsearch instance left unprotected on the public internet. Domains must be deployed within a VPC.\n",
+      "asset_id": "test-opensearch-domain",
+      "asset_type": "aws_opensearch_domain",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "search_service.access.publicly_accessible",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "search_service.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "domain"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance": {
+        "fedramp_moderate": "AC-3",
+        "iso_27001_2022": "A.8.20",
+        "nist_800_53_r5": "AC-3",
+        "pci_dss_v4.0": "1.3.1",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "OpenSearch domain is publicly accessible from the internet. Anyone can query or enumerate the data.",
+        "action": "Migrate the domain to a VPC. Create a new domain with VPC configuration specifying private subnets and security groups. Use VPN, bastion, or AWS PrivateLink for authorized access.",
+        "example": "{\n  \"search_service\": {\n    \"kind\": \"domain\",\n    \"access\": {\n      \"publicly_accessible\": false,\n      \"vpc_enabled\": true\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-33ec967978b8cbbe",
+        "target": {
+          "asset_id": "test-opensearch-domain",
+          "asset_type": "aws_opensearch_domain"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+      }
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "test-opensearch-domain",
+      "asset_type": "aws_opensearch_domain",
+      "fix_plan": {
+        "id": "fix-33ec967978b8cbbe",
+        "target": {
+          "asset_id": "test-opensearch-domain",
+          "asset_type": "aws_opensearch_domain"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+      },
+      "contributing_controls": [
+        "CTL.OPENSEARCH.PUBLIC.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-opensearch-public-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-opensearch-public-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
+    }
+  }
+}

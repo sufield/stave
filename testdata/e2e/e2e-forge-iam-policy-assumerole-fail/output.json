@@ -1,0 +1,94 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "bfebcdb89e145862866cf3cd50b2be70e62de45b37c5444df55e92610a56703b",
+        "2026-01-11T000000Z.json": "be04896de225986a59e3bf98833ba7a9e0b09b7b7c31d60f638f04b9cf5d6743"
+      },
+      "overall": "57301e5d54c1c94c9372279d3a27e79e51848fd1ba14f529353e90027197b52b"
+    },
+    "policy_fingerprint": "303d05ec147ca7142960f24beeb986ce5c569c5d32e53f5333d00351d63159a2"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.IAM.POLICY.ASSUMEROLE.001",
+      "asset_id": "test-iam-user",
+      "asset_type": "aws_iam_user",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.IAM.POLICY.ASSUMEROLE.001",
+      "control_name": "AssumeRole Must Be Scoped to Specific Roles",
+      "control_description": "sts:AssumeRole permissions must be scoped to specific role ARNs, not wildcard Resource *. With unrestricted AssumeRole, a compromised identity can assume any role in the account — including admin roles, cross-account trust roles, and service roles with elevated permissions. This is a direct privilege escalation path.\n",
+      "asset_id": "test-iam-user",
+      "asset_type": "aws_iam_user",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "identity.policies.assumerole_unrestricted",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "fedramp_moderate": "AC-6",
+        "nist_800_53_r5": "AC-6",
+        "pci_dss_v4.0": "7.2.1",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "IAM entity has sts:AssumeRole with wildcard Resource. Any role in the account can be assumed, enabling privilege escalation.",
+        "action": "Restrict sts:AssumeRole to specific role ARNs in the Resource field. Use IAM conditions like aws:PrincipalTag to further limit which roles can be assumed.",
+        "example": "{\n  \"identity\": {\n    \"kind\": \"user\",\n    \"policies\": {\n      \"assumerole_unrestricted\": false\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-policy-assumerole-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-policy-assumerole-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
+    }
+  }
+}

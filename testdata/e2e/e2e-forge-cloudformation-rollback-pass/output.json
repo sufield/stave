@@ -1,0 +1,39 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "35a8b09901da1a32dcb1ebf96405ce5ae68e1381f4843dbaa4499646679b30b1",
+        "2026-01-11T000000Z.json": "8e467953c6f9fc91766ab9ef9ff6c6f0959717e6944fe840c0fb8de7de4ffc60"
+      },
+      "overall": "a95c548e8f9534befa82cbb3ea965a1502f3411d9172a097e8584bbade73ebae"
+    },
+    "policy_fingerprint": "249170cd864dc2bc8b698aadc5fd1642eecb3866337003e11a8d6b16531ee51e"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-cloudformation-rollback-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-cloudformation-rollback-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
+    }
+  }
+}

@@ -1,0 +1,177 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "1baa33eb132f4abf8a1da4039dea8bcd789bdc161d4c457780fd00927681699c",
+        "2026-01-11T000000Z.json": "a00a85d40bc8823a141830e3235bc1900f2c628aed564539d8e18bd8cfeceb79"
+      },
+      "overall": "711a0c9deae47855bcaf4f6067f96cadf248673028c68338ab57844427ef7320"
+    },
+    "policy_fingerprint": "c316d03e2eed1c125ac38d3b313c5e33fe1d3a1ef4732aded56b225afc2d1e1b"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.ECR.PUBLIC.001",
+      "asset_id": "test-ecr-repository",
+      "asset_type": "aws_ecr_repository",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.ECR.PUBLIC.001",
+      "control_name": "ECR Repository Must Not Be Public",
+      "control_description": "ECR repositories must not be publicly accessible. A public ECR repository allows anyone to pull container images, potentially exposing proprietary code, embedded credentials, internal architecture details, and software supply chain artifacts. Public repositories should use ECR Public Gallery only for intentionally open-source images.\n",
+      "asset_id": "test-ecr-repository",
+      "asset_type": "aws_ecr_repository",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "container_registry.access.public",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "container_registry.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "repository"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "fedramp_moderate": "AC-3",
+        "nist_800_53_r5": "AC-3",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "ECR repository is publicly accessible. Container images can be pulled by anyone.",
+        "action": "Set the repository policy to restrict access to specific IAM principals. If the repository was created as ECR Public, migrate images to a private ECR repository and update deployment configs.",
+        "example": "{\n  \"container_registry\": {\n    \"kind\": \"repository\",\n    \"access\": {\n      \"public\": false\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-9a290ff936eedd32",
+        "target": {
+          "asset_id": "test-ecr-repository",
+          "asset_type": "aws_ecr_repository"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+      }
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "test-ecr-repository",
+      "asset_type": "aws_ecr_repository",
+      "fix_plan": {
+        "id": "fix-9a290ff936eedd32",
+        "target": {
+          "asset_id": "test-ecr-repository",
+          "asset_type": "aws_ecr_repository"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+      },
+      "contributing_controls": [
+        "CTL.ECR.PUBLIC.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-ecr-public-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-ecr-public-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
+    }
+  }
+}

@@ -91,11 +91,8 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "478b3f281a20527e915cb26538b077c093b760a2",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-dns-bucket-takeover/controls/"
-      ]
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
     }
   }
 }

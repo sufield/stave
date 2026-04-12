@@ -1,0 +1,99 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "752ee6dca3e73f7809a76349abb8842082bbbc1cdd67699b462e675262584263",
+        "2026-01-11T000000Z.json": "1c1a5a19f9dfe037f30a2b43091c4c19aa32e92bb50c04d6db18a3da33c40ca2"
+      },
+      "overall": "07bfb9716eb20c52585270ced8f8bd6d6695291979887f321383850a8443fd8f"
+    },
+    "policy_fingerprint": "b7ce890abfede8f0ffe010eeb7e884942436aa4ccaf15dea110d2605e99e7934"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.IAM.ZT.SHORTLIVED.001",
+      "asset_id": "test-service-identity",
+      "asset_type": "aws_service_identity",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.IAM.ZT.SHORTLIVED.001",
+      "control_name": "Service Access Must Use Short-Lived Credentials",
+      "control_description": "Service-to-service access must use short-lived credentials (STS temporary tokens, IAM Roles Anywhere certificates, OIDC federation) rather than long-lived access keys. Short-lived credentials limit the blast radius of compromise — a stolen token expires automatically. This is a core Zero Trust principle: never trust a credential longer than necessary.\n",
+      "asset_id": "test-service-identity",
+      "asset_type": "aws_service_identity",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "identity.credentials.uses_short_lived",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "identity.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "service_identity"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "fedramp_moderate": "IA-5",
+        "nist_800_53_r5": "IA-5",
+        "nist_csf_2.0": "PR.AA"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Service uses long-lived access keys instead of short-lived credentials. A stolen key provides indefinite access.",
+        "action": "Replace long-lived access keys with IAM roles (for EC2, ECS, Lambda), IAM Roles Anywhere (for on-premises), or OIDC federation (for CI/CD). Use STS AssumeRole with session duration limits.",
+        "example": "{\n  \"identity\": {\n    \"kind\": \"service_identity\",\n    \"credentials\": {\n      \"uses_short_lived\": true\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-zt-shortlived-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-zt-shortlived-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
+    }
+  }
+}

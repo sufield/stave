@@ -1,0 +1,101 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "3fcd3c87b22da8bd818f9be4960088939b84c7d01c7a82cfb660e0838adc0f2f",
+        "2026-01-11T000000Z.json": "d3343332132e8ed5fe1937a0c87135226b0355e34aa82276df41778274081e07"
+      },
+      "overall": "0e3710b800bb87b42478fc8f2d4d6dc8b6086f323db0de8407b165d027be3421"
+    },
+    "policy_fingerprint": "3b40e50143c08205fcca19b79f548421be0388ae613c0d1eecb2976c6bba39cc"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.OPENSEARCH.HTTPS.001",
+      "asset_id": "test-opensearch-domain",
+      "asset_type": "aws_opensearch_domain",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.OPENSEARCH.HTTPS.001",
+      "control_name": "HTTPS Must Be Enforced",
+      "control_description": "OpenSearch domains must enforce HTTPS for all connections. Without HTTPS enforcement, clients can connect over unencrypted HTTP, exposing queries, results, and credentials in transit.\n",
+      "asset_id": "test-opensearch-domain",
+      "asset_type": "aws_opensearch_domain",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "search_service.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "domain"
+          },
+          {
+            "property": "search_service.transport.https_enforced",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "fedramp_moderate": "SC-8",
+        "hipaa": "164.312(e)(1)",
+        "nist_800_53_r5": "SC-8",
+        "pci_dss_v4.0": "4.2.1",
+        "soc2": "CC6.7"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "OpenSearch domain does not enforce HTTPS. Clients can connect over unencrypted HTTP.",
+        "action": "Enable HTTPS enforcement in the domain endpoint options. Set the TLS security policy to Policy-Min-TLS-1-2-PFS-2023-10 for current best practice.",
+        "example": "{\n  \"search_service\": {\n    \"kind\": \"domain\",\n    \"transport\": {\n      \"https_enforced\": true\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-opensearch-https-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-opensearch-https-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
+    }
+  }
+}

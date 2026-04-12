@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.EFS.INCOMPLETE.001
+name: Complete Data Required for EFS Assessment
+description: >
+  EFS file system safety cannot be assessed when encryption status is
+  missing from the snapshot. The extractor must populate
+  filesystem.encryption.at_rest_enabled.
+domain: exposure
+severity: low
+scope_tags:
+  - aws
+  - efs
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    EFS assessment data is incomplete. The extractor did not populate
+    required filesystem properties.
+  action: >
+    Re-run the extractor with EFS permissions:
+    elasticfilesystem:DescribeFileSystems,
+    elasticfilesystem:DescribeFileSystemPolicy.
+unsafe_predicate:
+  all:
+    - field: properties.filesystem.kind
+      op: eq
+      value: efs
+    - field: properties.filesystem.encryption.at_rest_enabled
+      op: missing
+      value: true

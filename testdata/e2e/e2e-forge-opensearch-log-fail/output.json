@@ -1,0 +1,100 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "0970eb0966e247b602d2d998f38c1b0ec38bd1cf814f6a52e8c62fa595b0defb",
+        "2026-01-11T000000Z.json": "43c400354bd965a44879c762699f18137b39d07c12172acb1945f46d5c21e28a"
+      },
+      "overall": "dbb2f6f66242e96e418ef27458c83adff225d63182306ac9a31a1dd414258d7f"
+    },
+    "policy_fingerprint": "c7215834b91155492ff13cc16d44cd9e59ed7012dc71a29aaa5afede434d21df"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.OPENSEARCH.LOG.001",
+      "asset_id": "test-opensearch-domain",
+      "asset_type": "aws_opensearch_domain",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.OPENSEARCH.LOG.001",
+      "control_name": "Audit Logging Must Be Enabled",
+      "control_description": "OpenSearch domains must have audit logging enabled to track authentication attempts, access decisions, and data operations. Without audit logging, unauthorized access to the cluster cannot be detected or investigated after the fact.\n",
+      "asset_id": "test-opensearch-domain",
+      "asset_type": "aws_opensearch_domain",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "search_service.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "domain"
+          },
+          {
+            "property": "search_service.logging.audit_logs_enabled",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "fedramp_moderate": "AU-2",
+        "hipaa": "164.312(b)",
+        "nist_800_53_r5": "AU-2",
+        "soc2": "CC7.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "OpenSearch domain does not have audit logging enabled. Access events are not recorded for investigation.",
+        "action": "Enable audit logging in the domain configuration. Configure a CloudWatch log group as the destination. Fine-grained access control must be enabled as a prerequisite for audit logging.",
+        "example": "{\n  \"search_service\": {\n    \"kind\": \"domain\",\n    \"logging\": {\n      \"audit_logs_enabled\": true\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-opensearch-log-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-opensearch-log-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
+    }
+  }
+}

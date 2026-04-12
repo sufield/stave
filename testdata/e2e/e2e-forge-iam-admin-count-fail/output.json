@@ -1,0 +1,104 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "42e9a1b07c048e6518665062bda96a9763d1297e1241b64df0429a06c6922d47",
+        "2026-01-11T000000Z.json": "24607948a489e22ef96ee897e74a1446a2f31dcc420304ee172d9d554ddcbbf1"
+      },
+      "overall": "5241f9458295fa983f9894543c7781f1849317c9ad855225d11bb0cc792d9965"
+    },
+    "policy_fingerprint": "015ca407dd204726920915267ecf0017bf87b839b444137eb0b5174df58fc857"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.IAM.ADMIN.COUNT.001",
+      "asset_id": "test-iam-account",
+      "asset_type": "aws_iam_account",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.IAM.ADMIN.COUNT.001",
+      "control_name": "Admin User Count Must Not Exceed Threshold",
+      "control_description": "AWS accounts must have no more than 2 users with full administrator access. Excessive admin accounts expand the credential compromise surface and violate least privilege. Use IAM roles with temporary elevation (break-glass) instead of permanent admin access.\n",
+      "asset_id": "test-iam-account",
+      "asset_type": "aws_iam_account",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "identity.admin_user_count",
+            "actual_value": "[SANITIZED]",
+            "operator": "gt",
+            "unsafe_value": 2
+          },
+          {
+            "property": "identity.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "account_summary"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_aws_v3.0": "1.16",
+        "fedramp_moderate": "AC-6(5)",
+        "nist_800_53_r5": "AC-6(5)",
+        "pci_dss_v4.0": "7.2.2",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Account has more than 2 users with full administrator access. Each additional admin is an additional credential compromise path.",
+        "action": "Reduce admin users to 2 or fewer. Convert permanent admin access to IAM roles with temporary elevation via sts:AssumeRole. Use IAM Access Analyzer to identify unused admin permissions.",
+        "example": "{\n  \"identity\": {\n    \"kind\": \"account_summary\",\n    \"admin_user_count\": 2\n  }\n}\n"
+      }
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-admin-count-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-admin-count-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-iam-admin-count-fail/controls/"
+      ]
+    }
+  }
+}

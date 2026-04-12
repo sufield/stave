@@ -1,0 +1,94 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "ecbc1262558f03a10b9c35cbfeec89c1823eca36ae9b3eb9a43b7668dacb40aa",
+        "2026-01-11T000000Z.json": "2d9964435231f42e91c5c56cb2e47e2dd62e2111f18d1cecf8c8e35f00445cfd"
+      },
+      "overall": "6fbccbd4ca7ec98b087051f4a15baca3f8df8361da4d73c6dbb1f087a26d34d6"
+    },
+    "policy_fingerprint": "1d15fa84dc6981176e82c9f2a6303222132992518f4b0aa7ac505b21eef8c0be"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.DYNAMODB.PITR.001",
+      "asset_id": "test-dynamodb-table",
+      "asset_type": "aws_dynamodb_table",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.DYNAMODB.PITR.001",
+      "control_name": "Point-in-Time Recovery Must Be Enabled",
+      "control_description": "DynamoDB tables must have point-in-time recovery (PITR) enabled. Without PITR, accidental deletes, application bugs, or ransomware that corrupts table data cannot be recovered. PITR provides continuous backups with per-second granularity for the last 35 days.\n",
+      "asset_id": "test-dynamodb-table",
+      "asset_type": "aws_dynamodb_table",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "database.pitr_enabled",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "fedramp_moderate": "CP-9",
+        "hipaa": "164.308(a)(7)",
+        "nist_800_53_r5": "CP-9",
+        "soc2": "A1.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "DynamoDB table does not have point-in-time recovery enabled. Data cannot be recovered from accidental deletes or corruption.",
+        "action": "Enable PITR using aws dynamodb update-continuous-backups --table-name TABLE --point-in-time-recovery-specification PointInTimeRecoveryEnabled=true.",
+        "example": "{\n  \"database\": {\n    \"pitr_enabled\": true\n  }\n}\n"
+      }
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-dynamodb-pitr-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-dynamodb-pitr-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
+    }
+  }
+}

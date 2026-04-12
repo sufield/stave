@@ -1,0 +1,39 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "c426a6a7c8828a0db3a1f1a5afcdf3faf6d0d8634b1cb667e67f37029762b8dc",
+        "2026-01-11T000000Z.json": "0f3bcf29717e738fb98ba258d53ff3c4c42b6a7b3bb876b35b1b8413d69d7a09"
+      },
+      "overall": "74c8b727e32364e832b4fb99b9bdbcecd85b4e3abe6fb7aca2b7d963cfe9b997"
+    },
+    "policy_fingerprint": "2ef775c4c8f4f0ccca1cde67f56ca72bf5847203ba07736b458b952414989cc9"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-s3-access-phi-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-s3-access-phi-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
+    }
+  }
+}

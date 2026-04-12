@@ -1,0 +1,39 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "29fae985f90e0e49dc6832a4afd8fd75b9a2d4bf7da62c7db7104f33653fe368",
+        "2026-01-11T000000Z.json": "b50466e00d723dddfd40a01a728ca4660e65ba4dc1e01ad8e28f73941e55563a"
+      },
+      "overall": "ac2839be20fa0757311a54349d3ab7e8cf17acf16e0bd49dca81d9e9d875ae11"
+    },
+    "policy_fingerprint": "f92e20923103025af91971c51391abdf9f1cccd4e882667c3bd62646435e9755"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-cred-expiry-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-cred-expiry-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
+    }
+  }
+}

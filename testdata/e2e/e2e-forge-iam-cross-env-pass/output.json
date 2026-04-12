@@ -1,0 +1,39 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "62cb7488c28dfb1e21e2cd77cd3c663b6e33e396aca611733f11c1c3d62babf7",
+        "2026-01-11T000000Z.json": "70def6acbdd02de363c6301b96bdf75399082ef39b13b9599674c1885be1d32d"
+      },
+      "overall": "070023e25239250f7b913d5932e18465f5573036a7c421112992e8a619455bcc"
+    },
+    "policy_fingerprint": "7648aaf1dcdbc20ff2e58389e21f4ddc473a259af63091f8afa00902cc048fd0"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-cross-env-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-cross-env-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
+    }
+  }
+}

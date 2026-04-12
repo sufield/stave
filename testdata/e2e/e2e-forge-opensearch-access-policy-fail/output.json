@@ -1,0 +1,99 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "ec9e2840f18fc51824e655bff07f6b9bc2c152fedcbfa424bc75958b9c0f2dd0",
+        "2026-01-11T000000Z.json": "5138278d17f03622671de6b19d023b23305e2a1ab6a15df55167773b992972a2"
+      },
+      "overall": "a85b122d804eaa133347159d1f18a1fa1e06ccb7e876c3bda364eb0f6d786916"
+    },
+    "policy_fingerprint": "7ec72e8ffaa0228ff50d3deac55010c89c1ace452dcc3e8d5a5b5598e95adb92"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.OPENSEARCH.ACCESS.POLICY.001",
+      "asset_id": "test-opensearch-domain",
+      "asset_type": "aws_opensearch_domain",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.OPENSEARCH.ACCESS.POLICY.001",
+      "control_name": "Access Policy Must Not Allow Wildcard Principals",
+      "control_description": "OpenSearch domain access policies must not grant access to wildcard principals (Principal: *). A wildcard principal in the resource-based policy allows any AWS account or unauthenticated user to access the cluster, depending on whether the domain is public or VPC-only. Combined with a public endpoint, this enables completely anonymous access.\n",
+      "asset_id": "test-opensearch-domain",
+      "asset_type": "aws_opensearch_domain",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "search_service.access.policy_allows_wildcard",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "search_service.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "domain"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "fedramp_moderate": "AC-6",
+        "nist_800_53_r5": "AC-6",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "OpenSearch access policy grants access to Principal: *. Any identity can access the cluster.",
+        "action": "Replace wildcard principals with specific IAM role ARNs or account IDs. Use condition keys (aws:SourceIp, aws:SourceVpc) to further restrict access.",
+        "example": "{\n  \"search_service\": {\n    \"kind\": \"domain\",\n    \"access\": {\n      \"policy_allows_wildcard\": false\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-opensearch-access-policy-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-opensearch-access-policy-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "6d0c7fe95e52e8d34766de4abab8a9bf59993f9f6dd17a439d9e8ad803e655ec",
+        "2026-01-11T000000Z.json": "7f2e52000b67fa6aa9d6da311c82c7fff229b6f73111b7e78aec7e30a33cdf7f"
+      },
+      "overall": "8e45d0a25b9d936f5ddf8cae53a95f338d6e3c8435e97b9bf3d952a9322a593a"
+    },
+    "policy_fingerprint": "a4003648c7564b2d4409177763cacede969e8413f45019300d0b0716e848e327"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-opensearch-fgac-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-opensearch-fgac-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
+    }
+  }
+}

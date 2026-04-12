@@ -1,0 +1,106 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "ad0897df8ca1de4da95cf2fe1dcd4a7dda6ba57eabf7a9751a955d691b4d0787",
+        "2026-01-11T000000Z.json": "32a797840effed792ac0dcacf45623924f7bdc834109c415641baaf14c91e018"
+      },
+      "overall": "b4111d844f70391c4d849903bdead43107bd263f78f7c6411a66830f4668a4dd"
+    },
+    "policy_fingerprint": "1ff47a46ae2c14846e3317905e8658a44ba6bbe8255f8e6bde988697daf5a085"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.S3.BREACH.DETECT.001",
+      "asset_id": "test-phi-bucket",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.S3.BREACH.DETECT.001",
+      "control_name": "PHI Buckets Must Have Complete Detection Infrastructure",
+      "control_description": "S3 buckets tagged with data-classification=phi must have all four detection components active: server access logging, CloudTrail object-level logging, GuardDuty S3 protection, and AWS Config recording. Missing any one component creates a gap in breach detection and incident investigation capability. HIPAA §§164.400-414 requires the ability to detect and investigate unauthorized access to PHI.\n",
+      "asset_id": "test-phi-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "storage.breach_detection.all_components_active",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "storage.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          },
+          {
+            "property": "storage.tags.data-classification",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "phi"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "fedramp_moderate": "IR-4",
+        "hipaa": "164.400",
+        "nist_800_53_r5": "IR-4",
+        "soc2": "CC7.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "PHI bucket is missing one or more detection infrastructure components required for breach investigation.",
+        "action": "Ensure all four components are active for this bucket: 1. Server access logging (aws s3api put-bucket-logging) 2. CloudTrail object-level data events (aws cloudtrail put-event-selectors) 3. GuardDuty S3 protection (aws guardduty update-detector) 4. AWS Config recording (aws configservice put-configuration-recorder)",
+        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"tags\": {\n      \"data-classification\": \"phi\"\n    },\n    \"breach_detection\": {\n      \"all_components_active\": true\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-s3-breach-detect-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-s3-breach-detect-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
+    }
+  }
+}

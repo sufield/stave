@@ -1,0 +1,39 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "c0526f051e30a19cf92138826248069e84d2189adaa38740dd7158444d0b6b8a",
+        "2026-01-11T000000Z.json": "883969fb35445ac255f94df510139c30d23d50600beed445ee530dd9223b4369"
+      },
+      "overall": "f18fad6a83e8a74a5a2ee1b1285ba9d116b8b89695d2607de2ede3962ccb27c5"
+    },
+    "policy_fingerprint": "d92adb16a18eaad01db34ff83bab640c510577ca7dd741a59c3f1953e365f1e7"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-ecr-scan-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-ecr-scan-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
+    }
+  }
+}

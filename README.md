@@ -51,7 +51,7 @@ The output is not a score from an algorithm. It is a **deterministic logical con
 
 ## Features
 
-- **246 built-in controls** across 29 domains (S3, IAM, VPC, EC2, RDS, ELB, K8s, CloudTrail, CloudWatch, KMS, and [19 more](docs/controls/reference.md))
+- **251 built-in controls** across 30 domains (S3, IAM, VPC, EC2, RDS, ELB, K8s, CloudTrail, CloudWatch, KMS, and [20 more](docs/controls/reference.md))
 - **10 compliance profiles** — HIPAA, CIS AWS v3.0, SOC 2, PCI-DSS v4.0, NIST 800-53, FedRAMP, GDPR, FFIEC, ISO 27001, NIST CSF 2.0
 - **Risk reasoning engine** — compound risk scoring across co-failing controls, MITRE-aligned attack stage summary, blast radius multipliers
 - **Safety chains** — 4 built-in chain definitions detect compound failures (PHI exposure, root compromise, detection blindness, identity blast radius)
@@ -148,7 +148,7 @@ New observation properties are additive and backward-compatible. Existing contro
 
 ## Built-in controls
 
-246 controls across 29 domains:
+251 controls across 30 domains:
 
 ### AWS S3 (67 controls)
 
@@ -170,7 +170,7 @@ New observation properties are additive and backward-compatible. Existing contro
 | `artifacts` | 1 | VCS artifacts on public buckets |
 | `misc` | 4 | Incomplete data, completeness checks |
 
-### AWS IAM (41 controls)
+### AWS IAM (42 controls)
 
 Root account MFA and access keys, console user MFA, credential rotation, password policy, privilege escalation (self-modify, PassRole, AssumeRole), permissions boundaries, break-glass persistence, cross-environment access, inactive accounts. CIS AWS Benchmark aligned.
 

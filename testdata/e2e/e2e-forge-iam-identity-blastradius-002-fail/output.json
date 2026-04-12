@@ -1,0 +1,106 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "884f65505be630c9826856e889a286f13484dcc9a1ed03a666a61614a3562e2a",
+        "2026-01-11T000000Z.json": "b89fc722e933aa7df626adb79bf689c9bcafb696e9e37769db2f81643e343765"
+      },
+      "overall": "748ddcc95631634c460ce06af6fc29ba3f4467f2cbed57604172c1508266d8b2"
+    },
+    "policy_fingerprint": "6eebe295550907c172892c40c201d49fdac2f2736660cdcfc2a92dc6bc4b0c3b"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.IAM.IDENTITY.BLASTRADIUS.002",
+      "asset_id": "role-cross-no-extid",
+      "asset_type": "aws_iam_role",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.IAM.IDENTITY.BLASTRADIUS.002",
+      "control_name": "Cross-Account Role Must Require External ID",
+      "control_description": "IAM roles with cross-account blast radius (can reach resources in other AWS accounts) must require an external ID condition on the trust policy. Without an external ID, any principal in the trusted account can assume the role — including compromised service accounts and test tenants. Combined with cross-account reach, this is the maximum blast radius configuration.\n",
+      "asset_id": "role-cross-no-extid",
+      "asset_type": "aws_iam_role",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "identity.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "role"
+          },
+          {
+            "property": "identity.role.blast_radius_scope",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "cross_account"
+          },
+          {
+            "property": "identity.role.cross_account_trust_without_external_id",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance": {
+        "fedramp_moderate": "AC-3",
+        "nist_800_53_r5": "AC-3",
+        "pci_dss_v4.0": "7.2.1",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Role with cross-account blast radius does not require external ID. Any principal in the trusted account can assume this role and reach resources across accounts.",
+        "action": "Add an sts:ExternalId condition to the role trust policy. Restrict the trust to specific role ARNs rather than account-wide principals. Review cross-account access grants for least privilege.",
+        "example": "{\n  \"identity\": {\n    \"kind\": \"role\",\n    \"role\": {\n      \"blast_radius_scope\": \"account\",\n      \"cross_account_trust_without_external_id\": false\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-identity-blastradius-002-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-identity-blastradius-002-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
+    }
+  }
+}

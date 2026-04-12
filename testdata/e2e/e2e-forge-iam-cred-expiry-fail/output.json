@@ -1,0 +1,95 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "da46d6a70f58241674eace351c87ed754493ef57e552b33f481c3fc7320c8bdd",
+        "2026-01-11T000000Z.json": "a5a6b5cd45ad97af62752f6d74c82ef7c0007aecc533f622d1c9f588f1b58a6f"
+      },
+      "overall": "cde54cb700a0e23e01ac424c57d8b55ffd7539963a6eb7c8c99ff183c9970739"
+    },
+    "policy_fingerprint": "f92e20923103025af91971c51391abdf9f1cccd4e882667c3bd62646435e9755"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.IAM.CRED.EXPIRY.001",
+      "asset_id": "test-iam-user",
+      "asset_type": "aws_iam_user",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.IAM.CRED.EXPIRY.001",
+      "control_name": "Credentials Must Have Defined Expiry",
+      "control_description": "IAM credentials must have a defined maximum lifetime. Credentials without expiry — access keys created for QA, debugging, or temporary integrations — persist indefinitely and become permanent attack surfaces. Time transforms temporary mistakes into permanent breaches. Every credential must have a TTL enforced at creation time or through automated lifecycle policies.\n",
+      "asset_id": "test-iam-user",
+      "asset_type": "aws_iam_user",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "identity.credentials.has_expiry",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "fedramp_moderate": "AC-2",
+        "iso_27001_2022": "A.8.5",
+        "nist_800_53_r5": "AC-2",
+        "pci_dss_v4.0": "8.1.4",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "IAM credential has no defined expiry. The credential will remain valid indefinitely unless manually revoked.",
+        "action": "Replace long-lived access keys with STS temporary credentials that expire automatically. If access keys are required, enforce a maximum age policy and automate rotation via Secrets Manager. Tag credentials with creation date and intended expiry.",
+        "example": "{\n  \"identity\": {\n    \"kind\": \"user\",\n    \"credentials\": {\n      \"has_expiry\": true\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-cred-expiry-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-cred-expiry-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
+    }
+  }
+}

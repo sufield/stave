@@ -1,0 +1,52 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.MONITORING.001
+name: RDS Enhanced Monitoring Must Be Enabled
+description: >
+  RDS instances must have Enhanced Monitoring enabled. Enhanced
+  Monitoring provides real-time OS-level metrics (CPU, memory, disk I/O,
+  network) that standard CloudWatch metrics do not capture. Without it,
+  performance degradation and resource exhaustion attacks are harder to
+  detect and investigate.
+domain: exposure
+severity: medium
+compliance:
+  hipaa: "164.312(b)"
+  soc2: "CC7.1"
+  nist_800_53_r5: "SI-4"
+  cis_aws_v3.0: "2.2.1"
+scope_tags:
+  - aws
+  - rds
+type: unsafe_state
+params:
+  base_impact: 4
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: resource
+    multiplier: 1.5
+remediation:
+  description: >
+    RDS instance does not have Enhanced Monitoring enabled. OS-level
+    metrics are not available for performance investigation.
+  action: >
+    Enable Enhanced Monitoring with a 60-second granularity. Run:
+    aws rds modify-db-instance --db-instance-identifier xxx
+    --monitoring-interval 60
+    --monitoring-role-arn arn:aws:iam::ACCOUNT:role/rds-monitoring-role
+    --apply-immediately
+  example: |
+    {
+      "database": {
+        "kind": "instance",
+        "enhanced_monitoring_enabled": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: instance
+    - field: properties.database.enhanced_monitoring_enabled
+      op: eq
+      value: false

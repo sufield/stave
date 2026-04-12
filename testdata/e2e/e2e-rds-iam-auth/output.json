@@ -1,0 +1,97 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "1b5037ee26b5b54b86a8ccaa15d054d55ba98ec8b338edb55164ff880c8a4301",
+        "2026-01-11T000000Z.json": "b37dac94ee42cd882511f98e9840c71792ef25243ddfe3ff1c29a402e4c63b48"
+      },
+      "overall": "dbffe69e26bf523b0e533ec960d272009deae5442be79686bb311e162fe6851a"
+    },
+    "policy_fingerprint": "895eb4e1baedcdd81ddacb20783603d4ff71b623d904f54a420fa123ce61317d"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.RDS.IAMAUTH.001",
+      "asset_id": "phi-database",
+      "asset_type": "aws_rds_instance",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.RDS.IAMAUTH.001",
+      "control_name": "RDS Must Enable IAM Authentication",
+      "control_description": "RDS instances should enable IAM database authentication. IAM auth eliminates long-lived database passwords and integrates with AWS identity governance for centralized access control and audit.\n",
+      "asset_id": "phi-database",
+      "asset_type": "aws_rds_instance",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "database.access.iam_authentication_enabled",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "database.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "instance"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "hipaa": "164.312(d)"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "RDS instance does not have IAM authentication enabled. Database access relies on long-lived passwords that are harder to rotate and audit.",
+        "action": "Enable IAM authentication on the instance. Run: aws rds modify-db-instance --db-instance-identifier xxx --enable-iam-database-authentication --apply-immediately",
+        "example": "{\n  \"database\": {\n    \"kind\": \"instance\",\n    \"access\": {\n      \"iam_authentication_enabled\": true\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-rds-iam-auth/controls",
+      "observations": "testdata/e2e/e2e-rds-iam-auth/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
+    }
+  }
+}

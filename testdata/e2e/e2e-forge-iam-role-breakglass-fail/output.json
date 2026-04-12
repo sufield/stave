@@ -1,0 +1,93 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "c980ee3e2904ddacae01a35359859026a6f02071f028be08ea58a9612159e2da",
+        "2026-01-11T000000Z.json": "ca0105b5104a59b5ffb0a6b99833fd9cf67d812ed14fa9925932c1006ee7e388"
+      },
+      "overall": "cdd641165799196540979634d22916af182d4ff11e83bf3f514a7a3c116ba94a"
+    },
+    "policy_fingerprint": "7c3a4559386cf458d6c11d7efcaced8f5e692d79630bfab11b964e3e0f040e49"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.IAM.ROLE.BREAKGLASS.001",
+      "asset_id": "test-iam-role",
+      "asset_type": "aws_iam_role",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.IAM.ROLE.BREAKGLASS.001",
+      "control_name": "Break-Glass Elevated Roles Must Not Persist",
+      "control_description": "IAM roles granted elevated permissions for incident response (break-glass access) must be revoked within 7 days. Elevated roles that persist beyond the incident become permanent backdoors — they carry admin-level permissions with no active justification. Debug rules, elevated roles, and emergency access must have mandatory time-bounding.\n",
+      "asset_id": "test-iam-role",
+      "asset_type": "aws_iam_role",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "identity.role.elevated_since_days",
+            "actual_value": "[SANITIZED]",
+            "operator": "gt",
+            "unsafe_value": 7
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "fedramp_moderate": "AC-2",
+        "nist_800_53_r5": "AC-2",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "An IAM role with elevated permissions has persisted beyond 7 days since it was granted. Break-glass access is now a permanent backdoor.",
+        "action": "Revoke the elevated role or revert its permissions to the pre-incident baseline. Implement automated expiry via STS session policies or Lambda-based role revocation. Tag elevated roles with grant timestamp and incident ID for tracking.",
+        "example": "{\n  \"identity\": {\n    \"kind\": \"role\",\n    \"role\": {\n      \"elevated_since_days\": 0\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-role-breakglass-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-role-breakglass-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
+    }
+  }
+}

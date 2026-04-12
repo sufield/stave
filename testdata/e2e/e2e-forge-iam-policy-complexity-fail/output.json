@@ -1,0 +1,93 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "72e9ddd04ce0aca669ff7226d0f2abbe7d5d96fefe2da5042b6e778a8d154634",
+        "2026-01-11T000000Z.json": "177c803e70588f9ed5aab74f8e83932afc4ff06452f533ed19b1e60266273500"
+      },
+      "overall": "31e88434b6ea9e0f933dd77aae0fc51a0bb3362106f938a2e36700dccfd6587e"
+    },
+    "policy_fingerprint": "f43e8bf8d2d216bb8d64ac7f05559b5fe67677c218cb863159bcdcfdc5ac3810"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.IAM.POLICY.COMPLEXITY.001",
+      "asset_id": "test-iam-user",
+      "asset_type": "aws_iam_user",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.IAM.POLICY.COMPLEXITY.001",
+      "control_name": "IAM Policy Complexity Must Be Bounded",
+      "control_description": "IAM policies with more than 25 statements indicate excessive complexity that increases misconfiguration risk. Complex policies are harder to audit, more likely to contain shadowed statements or contradictory rules, and resist review. Policy complexity is itself a risk factor — it obscures the effective permissions and makes least-privilege verification impractical.\n",
+      "asset_id": "test-iam-user",
+      "asset_type": "aws_iam_user",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "identity.policies.statement_count",
+            "actual_value": "[SANITIZED]",
+            "operator": "gt",
+            "unsafe_value": 25
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "fedramp_moderate": "AC-6",
+        "nist_800_53_r5": "AC-6",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "IAM entity has policies with more than 25 total statements. Complex policies obscure effective permissions and resist audit.",
+        "action": "Refactor complex policies into smaller, focused policies scoped to specific services. Use policy conditions and resource-scoped statements instead of many broad statements. Consider using AWS managed policies where appropriate.",
+        "example": "{\n  \"identity\": {\n    \"kind\": \"user\",\n    \"policies\": {\n      \"statement_count\": 10\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-policy-complexity-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-policy-complexity-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
+    }
+  }
+}

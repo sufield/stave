@@ -1,0 +1,39 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "12dad450d3d34fd34aa274234ac94464f317abc322f40703d9ffab782b03be30",
+        "2026-01-11T000000Z.json": "d3906ccd2e1fe958374cb7f32416254a59a875225fa511f8f2b1290c9ad87876"
+      },
+      "overall": "52a81ca254b88df40a9d84d2e870825642fd635c4641356116ebe446104ed20f"
+    },
+    "policy_fingerprint": "930c0d29cb8fba0e2dc447fc8ec5629b61375b43c6a5019781e7a942b3f68852"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-cloudwatch-monitor-mfadevice-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-cloudwatch-monitor-mfadevice-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
+    }
+  }
+}

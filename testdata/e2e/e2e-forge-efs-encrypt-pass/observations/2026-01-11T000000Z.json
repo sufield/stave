@@ -1,0 +1,19 @@
+{
+  "assets": [
+    {
+      "id": "test-efs-filesystem",
+      "properties": {
+        "filesystem": {
+          "kind": "efs",
+          "encryption": {
+            "at_rest_enabled": true
+          }
+        }
+      },
+      "type": "aws_efs_filesystem",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1"
+}

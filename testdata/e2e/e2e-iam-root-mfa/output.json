@@ -93,11 +93,8 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "b472e5a4331ec1a9c14754ddc0885ffb781f71c2",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-iam-root-mfa/controls/"
-      ]
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
     }
   }
 }

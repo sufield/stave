@@ -91,11 +91,8 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "4bcf583e3556ecdc26441e10c5a65b255de43419",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-vpc-flowlog/controls/"
-      ]
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
     }
   }
 }

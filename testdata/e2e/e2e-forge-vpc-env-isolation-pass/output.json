@@ -1,0 +1,39 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "82c19a408721cc6655d70351f638aa48ad6103d81274ba516a527609867f2a04",
+        "2026-01-11T000000Z.json": "4fc3d9f732a39ddf103264687c9e76622eb977c7fb562342d5da8a003f9a1643"
+      },
+      "overall": "181c486205b7459eae29c62580ddda56992c6581136811706290480b324b3857"
+    },
+    "policy_fingerprint": "d93a7f5d524ab77c520c5eaac561088f30ca3e39cdcc453c79d16f2f26d9a9e4"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-vpc-env-isolation-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-vpc-env-isolation-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
+    }
+  }
+}

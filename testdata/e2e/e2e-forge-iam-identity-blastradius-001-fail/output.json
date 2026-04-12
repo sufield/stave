@@ -1,0 +1,99 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "9c12f6f5f519f345a283d694519d47f7c84f0658bc05f5ef531460d50f9af553",
+        "2026-01-11T000000Z.json": "8af642251c0c8aa99a46f5d6203d4fb8a3f03cf2c01c2f79f40b6df90514c2e2"
+      },
+      "overall": "0b236ac97a0e0d3e09851efa0f0bc3b2786ce7925dd0b539de7f1e70f896b91d"
+    },
+    "policy_fingerprint": "7b9e11119e8d1ba7adaccbfc398cfebb4b18fb0a807710ef835d2c35abb89df4"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.IAM.IDENTITY.BLASTRADIUS.001",
+      "asset_id": "test-iam-role",
+      "asset_type": "aws_iam_role",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.IAM.IDENTITY.BLASTRADIUS.001",
+      "control_name": "Role Blast Radius Must Not Exceed Resource Threshold",
+      "control_description": "IAM roles must not be able to reach more than 50 resources through direct permissions and transitive role assumption chains. A role with wide blast radius means a single credential compromise gives an attacker access to a large surface area. The extractor computes reachable resources by traversing sts:AssumeRole edges and collecting data access permissions per reachable role.\n",
+      "asset_id": "test-iam-role",
+      "asset_type": "aws_iam_role",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "identity.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "role"
+          },
+          {
+            "property": "identity.role.reachable_resources_count",
+            "actual_value": "[SANITIZED]",
+            "operator": "gt",
+            "unsafe_value": 50
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "fedramp_moderate": "AC-6",
+        "nist_800_53_r5": "AC-6",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "IAM role can reach more than 50 resources through direct permissions and role assumption chains. Credential compromise has a wide blast radius.",
+        "action": "Reduce the role's permissions to the minimum set of resources required. Split broad roles into per-service roles with scoped Resource ARNs. Use IAM Access Analyzer to identify unused permissions for removal.",
+        "example": "{\n  \"identity\": {\n    \"kind\": \"role\",\n    \"role\": {\n      \"reachable_resources_count\": 10\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-identity-blastradius-001-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-identity-blastradius-001-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
+    }
+  }
+}

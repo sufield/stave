@@ -1,0 +1,99 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "62e101615e18ee5103e8f70df53d80b8c44e21311ca45f80f9cada27c6b2ec0f",
+        "2026-01-11T000000Z.json": "ab08df8f8a36b79a1e54e2c1edf73fa513f55ab321844b952cbb67e52e22d6ba"
+      },
+      "overall": "830581fbf2e15015ee3e8c10cc73ca241addbc753889bf7f1e7fb2e92b432d1b"
+    },
+    "policy_fingerprint": "0d81ed2bd27a4e455fe8a3951b291d1b1eae7551d9c3a343c470a252e1e7bab2"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.OPENSEARCH.KIBANA.001",
+      "asset_id": "test-opensearch-domain",
+      "asset_type": "aws_opensearch_domain",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.OPENSEARCH.KIBANA.001",
+      "control_name": "OpenSearch Dashboards Must Not Be Publicly Accessible",
+      "control_description": "OpenSearch Dashboards (Kibana) endpoints must not be publicly accessible without authentication. Dashboards provide a query interface to the entire cluster — a public, unauthenticated dashboard is functionally equivalent to giving attackers a SQL client connected to your database. The Darkbeam breach exposed both the Elasticsearch API and the Kibana dashboard to the public internet.\n",
+      "asset_id": "test-opensearch-domain",
+      "asset_type": "aws_opensearch_domain",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "search_service.access.kibana_public",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "search_service.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "domain"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "fedramp_moderate": "AC-3",
+        "nist_800_53_r5": "AC-3",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "OpenSearch Dashboards endpoint is publicly accessible. Anyone can query data through the visual interface.",
+        "action": "Restrict Dashboards access via VPC, Cognito authentication, or SAML federation. Enable fine-grained access control to enforce role-based access within Dashboards.",
+        "example": "{\n  \"search_service\": {\n    \"kind\": \"domain\",\n    \"access\": {\n      \"kibana_public\": false\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-opensearch-kibana-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-opensearch-kibana-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
+    }
+  }
+}

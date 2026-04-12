@@ -1,0 +1,106 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "0ec9dc5e57e88f5f65b39e013baf8c023c338fdf101b0d4323c9021ebc50e67a",
+        "2026-01-11T000000Z.json": "f26ba3a6e7bc21543357165d9fe2abd5e3bfa3283ae70a99049b44669aa5cd09"
+      },
+      "overall": "1527dca7fef004e8455bea59a36ea4c3ec698566dbc578f5977edb73ee08e53b"
+    },
+    "policy_fingerprint": "822d5873334c358d236cc8821c0193fd0b39d4947aa1159e88a0d78f4c4ead86"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.EFS.ENCRYPT.001",
+      "asset_id": "test-efs-filesystem",
+      "asset_type": "aws_efs_filesystem",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.EFS.ENCRYPT.001",
+      "control_name": "EFS File System Must Be Encrypted at Rest",
+      "control_description": "EFS file systems must have encryption at rest enabled. Data stored on unencrypted file systems is readable if the underlying storage is compromised. EFS encryption uses AWS KMS and must be enabled at creation time — it cannot be enabled on existing file systems.\n",
+      "asset_id": "test-efs-filesystem",
+      "asset_type": "aws_efs_filesystem",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "filesystem.encryption.at_rest_enabled",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "filesystem.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "efs"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_aws_v3.0": "2.4.1",
+        "fedramp_moderate": "SC-28",
+        "gdpr": "Art.32",
+        "hipaa": "164.312(a)(2)(iv)",
+        "nist_800_53_r5": "SC-28",
+        "pci_dss_v4.0": "3.5.1",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "EFS file system is not encrypted at rest. Data is readable if underlying storage is compromised.",
+        "action": "Create a new encrypted EFS file system and migrate data. Encryption cannot be enabled on existing file systems. Run: aws efs create-file-system --encrypted --kms-key-id alias/aws/elasticfilesystem",
+        "example": "{\n  \"filesystem\": {\n    \"kind\": \"efs\",\n    \"encryption\": {\n      \"at_rest_enabled\": true\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-efs-encrypt-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-efs-encrypt-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-efs-encrypt-fail/controls/"
+      ]
+    }
+  }
+}

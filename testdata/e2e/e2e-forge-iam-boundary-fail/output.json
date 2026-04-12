@@ -1,0 +1,94 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "61d8c634b747fd236ad5a623a315ebb5b4d1385c93d1887d0cd369fad4365ef0",
+        "2026-01-11T000000Z.json": "818f2f2da779457455e254e63e61308da69744e68ee09578cdf2e4c694fb0178"
+      },
+      "overall": "0b5d10d8a99f5c9d82f2d0d9ff9cff7c4514340a7450b2135249fde32f9ed4ce"
+    },
+    "policy_fingerprint": "8a01b1a7eb6cbcc19d485a993c6a5768ff19d4d9cacc89f9c7933621db8c6d99"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.IAM.BOUNDARY.001",
+      "asset_id": "test-iam-role",
+      "asset_type": "aws_iam_role",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.IAM.BOUNDARY.001",
+      "control_name": "IAM Roles Must Have Permissions Boundary",
+      "control_description": "IAM roles must have a permissions boundary attached. A permissions boundary sets a ceiling on the effective permissions of a role, regardless of what identity policies are attached. Without a boundary, a developer who can create or modify roles has no ceiling preventing the provisioned role from granting full admin access.\n",
+      "asset_id": "test-iam-role",
+      "asset_type": "aws_iam_role",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "identity.role.has_permissions_boundary",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "fedramp_moderate": "AC-6",
+        "nist_800_53_r5": "AC-6",
+        "pci_dss_v4.0": "7.2.1",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "IAM role does not have a permissions boundary. The role's effective permissions are limited only by its identity policies, with no organizational ceiling.",
+        "action": "Attach a permissions boundary policy to the role using aws iam put-role-permissions-boundary. Define a boundary that caps permissions to the services and actions required for the role's documented function.",
+        "example": "{\n  \"identity\": {\n    \"kind\": \"role\",\n    \"role\": {\n      \"has_permissions_boundary\": true\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-boundary-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-boundary-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c63904087df347ab5a42ba196ab585bb550fdb01",
+      "dirty": false
+    }
+  }
+}
