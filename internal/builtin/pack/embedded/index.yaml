@@ -707,6 +707,9 @@ packs:
       - CTL.IAM.ZT.SHORTLIVED.001
       - CTL.IAM.CROSSCLOUD.ADMIN.001
       - CTL.IAM.CROSSCLOUD.MFA.001
+      - CTL.IAM.IDENTITY.BLASTRADIUS.001
+      - CTL.IAM.IDENTITY.BLASTRADIUS.002
+      - CTL.IAM.IDENTITY.BLASTRADIUS.003
   s3:
     description: Default S3 built-in pack for MVP
     controls:
@@ -1036,6 +1039,15 @@ controls:
   CTL.IAM.CROSSCLOUD.MFA.001:
     path: internal/controldata/embedded/iam/policy/CTL.IAM.CROSSCLOUD.MFA.001.yaml
     summary: MFA Must Be Enforced Across All Cloud Providers
+  CTL.IAM.IDENTITY.BLASTRADIUS.001:
+    path: internal/controldata/embedded/iam/identity/CTL.IAM.IDENTITY.BLASTRADIUS.001.yaml
+    summary: Role Blast Radius Must Not Exceed Resource Threshold
+  CTL.IAM.IDENTITY.BLASTRADIUS.002:
+    path: internal/controldata/embedded/iam/identity/CTL.IAM.IDENTITY.BLASTRADIUS.002.yaml
+    summary: Cross-Account Role Must Require External ID
+  CTL.IAM.IDENTITY.BLASTRADIUS.003:
+    path: internal/controldata/embedded/iam/identity/CTL.IAM.IDENTITY.BLASTRADIUS.003.yaml
+    summary: Role Assume Chain Must Not Exceed Depth Threshold
   CTL.CLOUDFORMATION.ROLLBACK.001:
     path: internal/controldata/embedded/cloudformation/drift/CTL.CLOUDFORMATION.ROLLBACK.001.yaml
     summary: CloudFormation Stacks Must Have Rollback Enabled

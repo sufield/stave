@@ -1,0 +1,19 @@
+{
+  "assets": [
+    {
+      "id": "test-iam-role",
+      "properties": {
+        "identity": {
+          "role": {
+            "reachable_resources_count": 80
+          },
+          "kind": "role"
+        }
+      },
+      "type": "aws_iam_role",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1"
+}

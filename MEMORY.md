@@ -186,7 +186,7 @@ Actual result: **9 domains, 103 controls, 4 vendors, zero engine changes.**
 - Property namespaces: `properties.backup.*`, `properties.availability.*`, `properties.replication.*`
 - Cross-service: applies to any resource type, not tied to a specific AWS service
 
-### Phase 3 Complete + Compliance Expansion: 243 controls, 29 domains, 5 vendors
+### Phase 3 Complete + Compliance Expansion: 246 controls, 29 domains, 5 vendors
 
 Infrastructure gaps from all sources closed. 10 compliance framework
 profiles implemented (HIPAA, CIS v3.0, SOC 2, PCI-DSS v4.0, NIST 800-53,

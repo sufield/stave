@@ -1,0 +1,14 @@
+id: identity_blast_radius
+description: >
+  Identity with wide blast radius and weak protections. High reachable
+  resource count combined with missing hardware MFA, credential expiry,
+  or separation of duties creates a credential compromise path with
+  maximum damage potential. If this credential is stolen, the attacker
+  reaches many resources with no time-based or identity-based barrier.
+controls:
+  - CTL.IAM.IDENTITY.BLASTRADIUS.001
+  - CTL.IAM.MFA.HWKEY.001
+  - CTL.IAM.CRED.EXPIRY.001
+  - CTL.IAM.POLICY.SOD.001
+escalation_threshold: 2
+compound_severity: critical

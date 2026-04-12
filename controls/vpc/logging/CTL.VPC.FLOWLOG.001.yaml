@@ -19,7 +19,12 @@ scope_tags:
   - aws
   - vpc
 type: unsafe_state
-params: {}
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: network
+    multiplier: 2.0
 remediation:
   description: >
     VPC does not have flow logging enabled. Network traffic patterns
