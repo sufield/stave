@@ -6,7 +6,7 @@ Deterministic, traceable risk reasoning engine for cloud infrastructure. Evaluat
 [![Go Report Card](https://goreportcard.com/badge/github.com/sufield/stave?v=1)](https://goreportcard.com/report/github.com/sufield/stave)
 [![codecov](https://codecov.io/gh/sufield/stave/graph/badge.svg?token=OQ72PYGVPZ)](https://codecov.io/gh/sufield/stave)
 
-## What Stave is
+## What is Stave?
 
 Stave is not a scanner, not a CSPM, and not an IaC linter. It is a new category: a **safety envelope evaluator** that applies formal safety engineering principles to cloud infrastructure.
 
