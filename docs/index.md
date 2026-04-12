@@ -16,6 +16,7 @@
 - [Risk Reasoning Engine](risk-reasoning.md) — Compound risk scoring, safety chains, attack stages
 - [Blast Radius](blast-radius.md) — Scope-aware multipliers, detection blindness, interpreting output
 - [Identity Blast Radius](identity-blast-radius.md) — Credential compromise reach, assume chains, extractor patterns
+- [Unauthenticated Reachability](unauthenticated-reachability.md) — Anonymous access path detection, composition attacks, extractor BFS
 - [Evaluation Engine Capabilities](evaluation-engine-capabilities.md) — Predicate operators and matching
 - [Observation Contract](observation-contract.md) — Observation data requirements
 - [Contract-First Schemas](contracts.md) — Schema-driven design

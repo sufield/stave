@@ -1,0 +1,23 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:s3:::shallow-chain-bucket",
+      "properties": {
+        "reachability": {
+          "kind": "anonymous_path",
+          "anonymous_path": {
+            "reachable": true,
+            "path_hop_count": 2,
+            "target_data_classification": "public",
+            "has_auth_boundary": true,
+            "entry_point_type": "apigateway"
+          }
+        }
+      },
+      "type": "aws_s3_bucket",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1"
+}

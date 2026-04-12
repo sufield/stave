@@ -1,0 +1,187 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "6db007ad8a99f5f5e7e2417f9c98f89932c621ccfb4bbc4937721ba44174fb97",
+        "2026-01-11T000000Z.json": "d679755def20e437fed5601069542e31c7e26a3c14caad30cb2db6ddcd557bdb"
+      },
+      "overall": "93ab69bc4754620bcf03d9c49bbdb269015c8251b991247a8b700ddb73bfb2d9"
+    },
+    "policy_fingerprint": "f788637d48dbdb8b22a7947ad1ecd9ad839bee96e219fa8dc852139fc6636c3a"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.EXPOSURE.ANON.003",
+      "asset_id": "arn:aws:dynamodb:us-east-1:123456789:table/orders",
+      "asset_type": "aws_dynamodb_table",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.EXPOSURE.ANON.003",
+      "control_name": "Unauthenticated Access Path Must Have Auth Boundary",
+      "control_description": "Any resource reachable from anonymous principals must have at least one authentication or authorization boundary in the access path. Valid boundaries include WAF with managed rule groups, Cognito user pool authorizers, Lambda authorizers, or IAM authorization on API Gateway. A path without any auth boundary means there is zero friction between the public internet and the target resource — no rate limiting, no identity verification, no request filtering.\n",
+      "asset_id": "arn:aws:dynamodb:us-east-1:123456789:table/orders",
+      "asset_type": "aws_dynamodb_table",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "reachability.anonymous_path.has_auth_boundary",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "reachability.anonymous_path.reachable",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "reachability.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "anonymous_path"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "fedramp_moderate": "SC-7",
+        "nist_800_53_r5": "SC-7",
+        "pci_dss_v4.0": "6.4.1",
+        "soc2": "CC6.6"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Resource is reachable from anonymous with no authentication or authorization boundary in the path. Zero friction between the public internet and the resource.",
+        "action": "Add a boundary to the access path. Attach a WAF web ACL with managed rule groups to the API Gateway. Configure a Cognito user pool or Lambda authorizer on API Gateway routes. Enable IAM authorization on the API Gateway stage.",
+        "example": "{\n  \"reachability\": {\n    \"kind\": \"anonymous_path\",\n    \"anonymous_path\": {\n      \"reachable\": true,\n      \"has_auth_boundary\": true,\n      \"auth_boundary_type\": \"waf\"\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-62b47049ad3cc297",
+        "target": {
+          "asset_id": "arn:aws:dynamodb:us-east-1:123456789:table/orders",
+          "asset_type": "aws_dynamodb_table"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+      }
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "arn:aws:dynamodb:us-east-1:123456789:table/orders",
+      "asset_type": "aws_dynamodb_table",
+      "fix_plan": {
+        "id": "fix-62b47049ad3cc297",
+        "target": {
+          "asset_id": "arn:aws:dynamodb:us-east-1:123456789:table/orders",
+          "asset_type": "aws_dynamodb_table"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+      },
+      "contributing_controls": [
+        "CTL.EXPOSURE.ANON.003"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-exposure-anon-003-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-exposure-anon-003-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "7b8746067e9da70ba6c25253548e9f49ebd4c922",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-exposure-anon-003-fail/controls/"
+      ]
+    }
+  }
+}

@@ -3,22 +3,22 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 253
-**Pack hash:** `2f1cad2a3a173125012c61f2a0cdc05f9aad4990150465fdeb40a5d9506c4530`
+**Total controls:** 257
+**Pack hash:** `6d96834f8a8c1f13488678065273ccadfab9044f21527e297df699fbec892d21`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 34 |
-| high | 107 |
+| critical | 35 |
+| high | 109 |
 | info | 16 |
-| low | 15 |
+| low | 16 |
 | medium | 81 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 198 |
+| exposure | 202 |
 | governance | 2 |
 | identity | 49 |
 | storage | 4 |
@@ -1100,6 +1100,65 @@ Load balancer access logging must be enabled for audit and forensic analysis. Wi
 Application and Network Load Balancers must use TLS 1.2 or higher for HTTPS listeners. Older TLS versions have known vulnerabilities.
 
 **Remediation:** Update the HTTPS listener to use an ELBSecurityPolicy that enforces TLS 1.2 minimum (e.g., ELBSecurityPolicy-TLS-1-2-2017-01).
+
+---
+
+### CTL.EXPOSURE.ANON.001
+
+**Sensitive Resources Must Not Be Reachable from Anonymous**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3; gdpr: Art.32; hipaa: 164.312(a)(1); nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+Resources tagged with sensitive data classifications (PHI, PII, confidential) must not be reachable from anonymous or unauthenticated principals through any composition of access grants. The extractor traces paths from anonymous through API Gateway routes, Lambda integrations, IAM role assumptions, bucket policies, VPC endpoint policies, and security group rules. This catches the API Gateway → Lambda → IAM Role → S3 Bucket pattern where every resource passes individual inspection but the composition creates an unauthenticated path to sensitive data.
+
+**Remediation:** Add an authorization layer to the path. Configure an API Gateway authorizer (Cognito, Lambda, or IAM), attach a WAF with managed rule groups, or remove the Lambda function's permission to access the sensitive resource. Review the full path and break the chain at the most appropriate point.
+
+---
+
+### CTL.EXPOSURE.ANON.002
+
+**Unauthenticated Access Path Must Not Exceed Depth Threshold**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-6; nist_800_53_r5: AC-6; soc2: CC6.1;
+
+Unauthenticated access paths to any resource must not exceed 3 hops. Deep chains (anonymous → API Gateway → Lambda → Role A → Role B → S3) indicate unintended transitive access. Each hop is an access grant — IAM policy, resource policy, role assumption, or network rule. Shorter paths are more likely intentional and auditable. Deep paths signal accidental composition where intermediate services were granted broader permissions than their design requires.
+
+**Remediation:** Flatten the access chain. Remove unnecessary intermediate services. Scope Lambda execution role permissions to the minimum required resources. Replace broad IAM role assumption chains with direct service-linked roles.
+
+---
+
+### CTL.EXPOSURE.ANON.003
+
+**Unauthenticated Access Path Must Have Auth Boundary**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-7; nist_800_53_r5: SC-7; pci_dss_v4.0: 6.4.1; soc2: CC6.6;
+
+Any resource reachable from anonymous principals must have at least one authentication or authorization boundary in the access path. Valid boundaries include WAF with managed rule groups, Cognito user pool authorizers, Lambda authorizers, or IAM authorization on API Gateway. A path without any auth boundary means there is zero friction between the public internet and the target resource — no rate limiting, no identity verification, no request filtering.
+
+**Remediation:** Add a boundary to the access path. Attach a WAF web ACL with managed rule groups to the API Gateway. Configure a Cognito user pool or Lambda authorizer on API Gateway routes. Enable IAM authorization on the API Gateway stage.
+
+---
+
+### CTL.EXPOSURE.ANON.INCOMPLETE.001
+
+**Complete Data Required for Reachability Assessment**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+
+Unauthenticated reachability cannot be assessed when the reachability kind discriminator is present but the reachable field is missing. The extractor encountered an error during graph traversal and could not determine whether the resource is reachable from anonymous principals.
+
+**Remediation:** Re-run the reachability extractor with sufficient IAM permissions to read API Gateway configurations, Lambda function policies, IAM role trust policies, and resource-based policies for all resources in the account.
 
 ---
 

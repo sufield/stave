@@ -51,7 +51,7 @@ The output is not a score from an algorithm. It is a **deterministic logical con
 
 ## Features
 
-- **253 built-in controls** across 30 domains (S3, IAM, VPC, EC2, RDS, ELB, K8s, CloudTrail, CloudWatch, KMS, and [20 more](docs/controls/reference.md))
+- **257 built-in controls** across 31 domains (S3, IAM, VPC, EC2, RDS, ELB, K8s, CloudTrail, CloudWatch, KMS, and [21 more](docs/controls/reference.md))
 - **10 compliance profiles** — HIPAA, CIS AWS v3.0, SOC 2, PCI-DSS v4.0, NIST 800-53, FedRAMP, GDPR, FFIEC, ISO 27001, NIST CSF 2.0
 - **Risk reasoning engine** — compound risk scoring across co-failing controls, MITRE-aligned attack stage summary, blast radius multipliers
 - **Safety chains** — 4 built-in chain definitions detect compound failures (PHI exposure, root compromise, detection blindness, identity blast radius)
@@ -148,7 +148,7 @@ New observation properties are additive and backward-compatible. Existing contro
 
 ## Built-in controls
 
-253 controls across 30 domains:
+257 controls across 31 domains:
 
 ### AWS S3 (67 controls)
 
@@ -200,6 +200,7 @@ Full reference: [Control reference](docs/controls/reference.md)
 | [OPA Rego export](docs/integrations/opa-export.md) | Export controls to OPA/Conftest |
 | [Risk reasoning](docs/risk-reasoning.md) | Compound risk scoring and safety chains |
 | [Identity blast radius](docs/identity-blast-radius.md) | Credential compromise reach analysis |
+| [Unauthenticated reachability](docs/unauthenticated-reachability.md) | Anonymous access path detection |
 | [Evaluation semantics](docs/evaluation-semantics.md) | How duration tracking works |
 | [Architecture](docs/architecture/overview.md) | System design overview |
 | [FAQ](docs/faq.md) | Common questions |

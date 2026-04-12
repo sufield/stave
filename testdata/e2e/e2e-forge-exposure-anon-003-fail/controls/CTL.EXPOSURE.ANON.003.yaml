@@ -1,0 +1,61 @@
+dsl_version: ctrl.v1
+id: CTL.EXPOSURE.ANON.003
+name: Unauthenticated Access Path Must Have Auth Boundary
+description: >
+  Any resource reachable from anonymous principals must have at least
+  one authentication or authorization boundary in the access path.
+  Valid boundaries include WAF with managed rule groups, Cognito user
+  pool authorizers, Lambda authorizers, or IAM authorization on API
+  Gateway. A path without any auth boundary means there is zero
+  friction between the public internet and the target resource — no
+  rate limiting, no identity verification, no request filtering.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.6"
+  pci_dss_v4.0: "6.4.1"
+  nist_800_53_r5: "SC-7"
+  fedramp_moderate: "SC-7"
+scope_tags:
+  - aws
+  - cross-service
+type: unsafe_state
+params:
+  base_impact: 8
+  attack_stage: initial_access
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    Resource is reachable from anonymous with no authentication or
+    authorization boundary in the path. Zero friction between the
+    public internet and the resource.
+  action: >
+    Add a boundary to the access path. Attach a WAF web ACL with
+    managed rule groups to the API Gateway. Configure a Cognito user
+    pool or Lambda authorizer on API Gateway routes. Enable IAM
+    authorization on the API Gateway stage.
+  example: |
+    {
+      "reachability": {
+        "kind": "anonymous_path",
+        "anonymous_path": {
+          "reachable": true,
+          "has_auth_boundary": true,
+          "auth_boundary_type": "waf"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.reachability.kind
+      op: eq
+      value: anonymous_path
+    - field: properties.reachability.anonymous_path.reachable
+      op: eq
+      value: true
+    - field: properties.reachability.anonymous_path.has_auth_boundary
+      op: eq
+      value: false

@@ -1,0 +1,55 @@
+dsl_version: ctrl.v1
+id: CTL.EXPOSURE.ANON.002
+name: Unauthenticated Access Path Must Not Exceed Depth Threshold
+description: >
+  Unauthenticated access paths to any resource must not exceed 3 hops.
+  Deep chains (anonymous → API Gateway → Lambda → Role A → Role B →
+  S3) indicate unintended transitive access. Each hop is an access
+  grant — IAM policy, resource policy, role assumption, or network
+  rule. Shorter paths are more likely intentional and auditable.
+  Deep paths signal accidental composition where intermediate services
+  were granted broader permissions than their design requires.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-6"
+  fedramp_moderate: "AC-6"
+scope_tags:
+  - aws
+  - cross-service
+type: unsafe_state
+params:
+  base_impact: 7
+  attack_stage: initial_access
+remediation:
+  description: >
+    Unauthenticated access path to a resource exceeds 3 hops. Deep
+    chains indicate unintended transitive access that is difficult
+    to audit and often exceeds intended permissions.
+  action: >
+    Flatten the access chain. Remove unnecessary intermediate services.
+    Scope Lambda execution role permissions to the minimum required
+    resources. Replace broad IAM role assumption chains with direct
+    service-linked roles.
+  example: |
+    {
+      "reachability": {
+        "kind": "anonymous_path",
+        "anonymous_path": {
+          "reachable": true,
+          "path_hop_count": 2
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.reachability.kind
+      op: eq
+      value: anonymous_path
+    - field: properties.reachability.anonymous_path.reachable
+      op: eq
+      value: true
+    - field: properties.reachability.anonymous_path.path_hop_count
+      op: gt
+      value: 3

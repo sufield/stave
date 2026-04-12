@@ -60,7 +60,8 @@ compound_severity: critical
 ```
 
 Built-in chains: `public_phi_exposure`, `root_compromise_path`,
-`detection_blindness`.
+`detection_blindness`, `identity_blast_radius`,
+`unauthenticated_data_path`.
 
 ## Control risk metadata
 

@@ -36,6 +36,7 @@ packs:
       - CTL.S3.ACCESS.PHI.001
       - CTL.SECRETSMANAGER.ACCESS.001
       - CTL.VPC.SG.DEFAULT.001
+      - CTL.EXPOSURE.ANON.001
       # §164.312(a)(2)(i) — Unique User Identification
       - CTL.IAM.CRED.ROTATION.001
       - CTL.IAM.CRED.UNUSED.001
@@ -209,6 +210,8 @@ packs:
       - CTL.IAM.ADMIN.COUNT.001
       - CTL.IAM.POLICY.MFA.001
       - CTL.IAM.PASSWORD.ROTATION.001
+      - CTL.EXPOSURE.ANON.001
+      - CTL.EXPOSURE.ANON.002
       - CTL.S3.PUBLIC.001
       - CTL.S3.ENCRYPT.001
       - CTL.S3.ENCRYPT.002
@@ -234,6 +237,7 @@ packs:
       - CTL.RDS.SSL.001
       - CTL.APIGATEWAY.TLS.001
       - CTL.ELASTICACHE.TRANSIT.001
+      - CTL.EXPOSURE.ANON.003
       # CC6.7 — Data Protection
       - CTL.EC2.EBS.ENCRYPT.001
       - CTL.EC2.SNAPSHOT.ENCRYPT.001
@@ -363,6 +367,8 @@ packs:
       - CTL.IAM.BOUNDARY.001
       - CTL.IAM.CROSS.ENV.001
       - CTL.IAM.ADMIN.COUNT.001
+      - CTL.EXPOSURE.ANON.001
+      - CTL.EXPOSURE.ANON.003
       # Req 8 — Authentication
       - CTL.IAM.ROOT.MFA.001
       - CTL.IAM.ROOT.ACCESSKEY.001
@@ -409,6 +415,7 @@ packs:
       - CTL.S3.OWNERSHIP.001
       - CTL.S3.ACL.OBJECT.001
       - CTL.S3.ACCOUNT.PAB.001
+      - CTL.EXPOSURE.ANON.001
   ffiec:
     description: FFIEC financial institution compliance controls
     controls:
@@ -1087,6 +1094,18 @@ controls:
   CTL.EFS.INCOMPLETE.001:
     path: internal/controldata/embedded/efs/misc/CTL.EFS.INCOMPLETE.001.yaml
     summary: Complete Data Required for EFS Assessment
+  CTL.EXPOSURE.ANON.001:
+    path: internal/controldata/embedded/exposure/anon/CTL.EXPOSURE.ANON.001.yaml
+    summary: Sensitive Resources Must Not Be Reachable from Anonymous
+  CTL.EXPOSURE.ANON.002:
+    path: internal/controldata/embedded/exposure/anon/CTL.EXPOSURE.ANON.002.yaml
+    summary: Unauthenticated Access Path Must Not Exceed Depth Threshold
+  CTL.EXPOSURE.ANON.003:
+    path: internal/controldata/embedded/exposure/anon/CTL.EXPOSURE.ANON.003.yaml
+    summary: Unauthenticated Access Path Must Have Auth Boundary
+  CTL.EXPOSURE.ANON.INCOMPLETE.001:
+    path: internal/controldata/embedded/exposure/anon/CTL.EXPOSURE.ANON.INCOMPLETE.001.yaml
+    summary: Complete Data Required for Reachability Assessment
   CTL.CLOUDFORMATION.ROLLBACK.001:
     path: internal/controldata/embedded/cloudformation/drift/CTL.CLOUDFORMATION.ROLLBACK.001.yaml
     summary: CloudFormation Stacks Must Have Rollback Enabled

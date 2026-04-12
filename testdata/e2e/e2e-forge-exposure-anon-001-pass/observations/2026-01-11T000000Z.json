@@ -1,0 +1,23 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:s3:::my-phi-bucket",
+      "properties": {
+        "reachability": {
+          "kind": "anonymous_path",
+          "anonymous_path": {
+            "reachable": false,
+            "path_hop_count": 0,
+            "target_data_classification": "phi",
+            "has_auth_boundary": true,
+            "entry_point_type": null
+          }
+        }
+      },
+      "type": "aws_s3_bucket",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1"
+}
