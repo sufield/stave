@@ -15,7 +15,7 @@ HIPAA_DIR="$SCENARIOS_DIR/hipaa-compliance"
 
 usage() {
   cat <<'HELP'
-Stave Tutorial Demo — 228 security controls across S3, IAM, OpenSearch, GCS, ECR, DNS, and more
+Stave Risk Reasoning Engine — 243 controls across 29 domains
 
 Usage:
   docker run stave-tutorials --list                  List all scenarios
@@ -25,8 +25,9 @@ Usage:
   docker run stave-tutorials --hipaa                 Run HIPAA compliance profile (violations)
   docker run stave-tutorials --hipaa --fixed         Run HIPAA profile (fully remediated)
   docker run stave-tutorials --hipaa --json          Run HIPAA profile with JSON output
-  docker run stave-tutorials --export-rego            Export S3 controls to OPA Rego format
-  docker run stave-tutorials --export-rego --all      Export all 228 controls to Rego
+  docker run stave-tutorials --risk-chains           Show the 3 built-in safety chains
+  docker run stave-tutorials --export-rego           Export S3 controls to OPA Rego format
+  docker run stave-tutorials --export-rego --all     Export all 243 controls to Rego
   docker run stave-tutorials --try-your-own           Run stave on your own AWS bucket
 HELP
 }
@@ -407,6 +408,69 @@ Try with your own AWS data
 OWN
 }
 
+run_risk_chains() {
+  cat <<'CHAINS'
+================================================================
+  Stave Risk Reasoning Engine — Safety Chains
+================================================================
+
+Stave reasons across co-failing controls to detect compound risks
+that individual checks miss. Three built-in safety chains:
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Chain: public_phi_exposure
+  PHI data reachable from public internet with no encryption
+  or audit trail — total safety envelope failure.
+
+  Controls: CTL.S3.PUBLIC.001 + CTL.S3.ENCRYPT.001
+            + CTL.S3.LOG.001 + CTL.CLOUDTRAIL.DATAREAD.001
+  Threshold: 2 co-failing → CRITICAL compound finding
+  Attack stages: initial_access + exfiltration + detection_evasion
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Chain: root_compromise_path
+  Root account lacks fundamental protections. Without MFA,
+  with active access keys, and admin policies — single
+  credential theft gives unrestricted account control.
+
+  Controls: CTL.IAM.ROOT.MFA.001 + CTL.IAM.ROOT.ACCESSKEY.001
+            + CTL.IAM.POLICY.ADMIN.001 + CTL.IAM.ROOT.HWMFA.001
+  Threshold: 2 co-failing → CRITICAL compound finding
+  Attack stages: credential_access + persistence
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Chain: detection_blindness
+  Multiple detection controls disabled simultaneously.
+  Every other violation becomes invisible — the blast radius
+  of any misconfiguration becomes unbounded.
+
+  Controls: CTL.CLOUDTRAIL.ENABLED.001 + CTL.GUARDDUTY.ENABLED.001
+            + CTL.CONFIG.ENABLED.001 + CTL.VPC.FLOWLOG.001
+  Threshold: 2 co-failing → CRITICAL compound finding
+  Blast radius: 2.5x multiplier on all co-occurring findings
+
+================================================================
+
+How risk scoring works:
+
+  Environmental = base_impact × asset_sensitivity × exposure_vector
+  Compound      = environmental × chain_escalation × blast_multiplier
+
+  Chain escalation: 1 control=1.0x, 2=1.8x, 3+=2.5x (bounded)
+
+  Asset sensitivity: phi=3.0, production=2.0, dev=0.5
+  Exposure vector:   public=2.0, cross_account=1.5, vpc=1.0
+
+The output is not a list of findings — it is a structured argument
+about compound risk.
+
+================================================================
+CHAINS
+}
+
 case "${1:-}" in
   --list|-l)
     list_scenarios
@@ -430,6 +494,9 @@ case "${1:-}" in
       mode="fixed"
     fi
     run_blind_spots "$mode"
+    ;;
+  --risk-chains)
+    run_risk_chains
     ;;
   --hipaa)
     run_hipaa "$@"

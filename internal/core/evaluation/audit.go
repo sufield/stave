@@ -86,16 +86,18 @@ type SkippedControl struct {
 
 // ComplianceReport is the root aggregate of an evaluation execution.
 type ComplianceReport struct {
-	Run              RunInfo               `json:"run"`
-	Summary          ComplianceSummary     `json:"summary"`
-	SecurityState    SecurityState         `json:"security_state"`
-	RiskSignals      risk.ThresholdItems   `json:"risk_signals,omitempty"`
-	Findings         []Finding             `json:"findings"`
-	ExceptedFindings []ExceptedFinding     `json:"excepted_findings,omitempty"`
-	SkippedControls  []SkippedControl      `json:"skipped_controls,omitempty"`
-	ExemptedAssets   []asset.ExemptedAsset `json:"exempted_assets,omitempty"`
-	Metadata         Metadata              `json:"-"`
-	Checks           []ResourceCheck       `json:"checks,omitempty"`
+	Run                RunInfo                `json:"run"`
+	Summary            ComplianceSummary      `json:"summary"`
+	SecurityState      SecurityState          `json:"security_state"`
+	RiskSignals        risk.ThresholdItems    `json:"risk_signals,omitempty"`
+	Findings           []Finding              `json:"findings"`
+	ChainFindings      []risk.CompoundFinding `json:"chain_findings,omitempty"`
+	AttackStageSummary map[string]string      `json:"attack_stage_summary,omitempty"`
+	ExceptedFindings   []ExceptedFinding      `json:"excepted_findings,omitempty"`
+	SkippedControls    []SkippedControl       `json:"skipped_controls,omitempty"`
+	ExemptedAssets     []asset.ExemptedAsset  `json:"exempted_assets,omitempty"`
+	Metadata           Metadata               `json:"-"`
+	Checks             []ResourceCheck        `json:"checks,omitempty"`
 }
 
 // GetFindingByResource retrieves a finding for a specific control/asset pair.

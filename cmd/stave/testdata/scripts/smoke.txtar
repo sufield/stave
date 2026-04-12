@@ -3,4 +3,4 @@ exec stave --version
 stdout 'stave version'
 
 exec stave --help
-stdout 'Stave detects infrastructure'
+stdout 'Stave is a deterministic, traceable risk reasoning'

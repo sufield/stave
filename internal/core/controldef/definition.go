@@ -262,6 +262,27 @@ func (d *ControlDefinition) BlastMultiplier() float64 {
 	return v
 }
 
+// BlastScope returns the scope of the blast radius (account, network, resource).
+// Read from params.blast_radius.scope. Defaults to "resource".
+// Account scope means disabling this control blinds the entire account.
+// Network scope means it affects resources in the same VPC.
+// Resource scope means it only affects this specific resource.
+func (d *ControlDefinition) BlastScope() string {
+	raw, ok := d.Params.Get("blast_radius")
+	if !ok {
+		return "resource"
+	}
+	m, ok := raw.(map[string]any)
+	if !ok {
+		return "resource"
+	}
+	s := getParam[string](m, "scope")
+	if s == "" {
+		return "resource"
+	}
+	return s
+}
+
 // paramString returns a string parameter or empty string if not found.
 func (p ControlParams) paramString(key string) string {
 	return getParam[string](p.m, key)

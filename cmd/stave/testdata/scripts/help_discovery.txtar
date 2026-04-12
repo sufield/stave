@@ -2,9 +2,9 @@
 
 # Root help
 exec stave --help
-stdout 'Stave detects infrastructure'
+stdout 'Stave is a deterministic, traceable risk reasoning'
 exec stave -h
-stdout 'Stave detects infrastructure'
+stdout 'Stave is a deterministic, traceable risk reasoning'
 
 # Version
 exec stave --version
@@ -46,4 +46,4 @@ stdout 'acl'
 
 # No-args shows help, not error
 exec stave
-stdout 'Stave detects infrastructure'
+stdout 'Stave is a deterministic, traceable risk reasoning'

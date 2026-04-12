@@ -1,7 +1,9 @@
 package cmd
 
-const rootLongHelp = `Stave detects infrastructure assets that have remained unsafe for too long,
-using only configuration snapshots-no cloud credentials required.
+const rootLongHelp = `Stave is a deterministic, traceable risk reasoning engine for cloud infrastructure.
+It evaluates configuration snapshots against safety controls, detects compound
+risk through co-failing control chains, and scores findings against asset
+sensitivity and exposure context. No cloud credentials required.
 Output is deterministic when --now is set (required for reproducible CI/CD runs).
 
 Getting Started:

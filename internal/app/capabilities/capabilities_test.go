@@ -12,7 +12,7 @@ import (
 func TestCapabilities_ConnectorCount(t *testing.T) {
 	caps := capabilities.Summarize("test-v1")
 	got := len(caps.DataIngress.Connectors)
-	want := 1
+	want := 9
 	if got != want {
 		t.Errorf("connector count = %d, want %d (update this test when adding connectors)", got, want)
 	}

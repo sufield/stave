@@ -20,19 +20,35 @@ type Framework string
 
 // Supported compliance framework identifiers.
 const (
-	FrameworkNIST   Framework = "nist_800_53"
-	FrameworkCISAWS Framework = "cis_aws_v1.4.0"
-	FrameworkSOC2   Framework = "soc2"
-	FrameworkPCIDSS Framework = "pci_dss_v3.2.1"
-	FrameworkHIPAA  Framework = "hipaa"
+	FrameworkNIST     Framework = "nist_800_53"
+	FrameworkNISTR5   Framework = "nist_800_53_r5"
+	FrameworkCISAWS   Framework = "cis_aws_v1.4.0"
+	FrameworkCISAWSV3 Framework = "cis_aws_v3.0"
+	FrameworkSOC2     Framework = "soc2"
+	FrameworkPCIDSS   Framework = "pci_dss_v3.2.1"
+	FrameworkPCIDSSV4 Framework = "pci_dss_v4.0"
+	FrameworkHIPAA    Framework = "hipaa"
+	FrameworkFedRAMP  Framework = "fedramp_moderate"
+	FrameworkGDPR     Framework = "gdpr"
+	FrameworkFFIEC    Framework = "ffiec"
+	FrameworkISO27001 Framework = "iso_27001_2022"
+	FrameworkNISTCSF  Framework = "nist_csf_2.0"
 )
 
 var supportedFrameworks = map[Framework]struct{}{
-	FrameworkNIST:   {},
-	FrameworkCISAWS: {},
-	FrameworkSOC2:   {},
-	FrameworkPCIDSS: {},
-	FrameworkHIPAA:  {},
+	FrameworkNIST:     {},
+	FrameworkNISTR5:   {},
+	FrameworkCISAWS:   {},
+	FrameworkCISAWSV3: {},
+	FrameworkSOC2:     {},
+	FrameworkPCIDSS:   {},
+	FrameworkPCIDSSV4: {},
+	FrameworkHIPAA:    {},
+	FrameworkFedRAMP:  {},
+	FrameworkGDPR:     {},
+	FrameworkFFIEC:    {},
+	FrameworkISO27001: {},
+	FrameworkNISTCSF:  {},
 }
 
 // ParseFramework validates and normalizes a raw string into a Framework type.
@@ -47,7 +63,14 @@ func ParseFramework(s string) (Framework, error) {
 
 // SupportedFrameworks returns the list of frameworks recognized by the system, sorted alphabetically.
 func SupportedFrameworks() []Framework {
-	return []Framework{FrameworkCISAWS, FrameworkHIPAA, FrameworkNIST, FrameworkPCIDSS, FrameworkSOC2}
+	return []Framework{
+		FrameworkCISAWS, FrameworkCISAWSV3,
+		FrameworkFedRAMP, FrameworkFFIEC, FrameworkGDPR,
+		FrameworkHIPAA, FrameworkISO27001,
+		FrameworkNIST, FrameworkNISTR5, FrameworkNISTCSF,
+		FrameworkPCIDSS, FrameworkPCIDSSV4,
+		FrameworkSOC2,
+	}
 }
 
 // CrosswalkResolution captures the mapping between internal audit checks and external controls.
