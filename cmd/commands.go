@@ -18,6 +18,7 @@ import (
 	diagdocs "github.com/sufield/stave/cmd/diagnose/docs"
 	diagreport "github.com/sufield/stave/cmd/diagnose/report"
 	"github.com/sufield/stave/cmd/doctor"
+	stavedrift "github.com/sufield/stave/cmd/drift"
 	"github.com/sufield/stave/cmd/enforce"
 	"github.com/sufield/stave/cmd/enforce/baseline"
 	"github.com/sufield/stave/cmd/enforce/cidiff"
@@ -129,6 +130,9 @@ func WireCommands(app *App) {
 
 	// Compliance evaluation
 	root.AddCommand(evaluate.NewCmd())
+
+	// Drift detection
+	root.AddCommand(stavedrift.NewCmd())
 
 	// Supportability
 	root.AddCommand(doctor.NewCmd(doctor.Deps{

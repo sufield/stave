@@ -1,0 +1,1 @@
+drift --baseline $CASE_DIR/baseline.json --current $CASE_DIR/current.json --format json
