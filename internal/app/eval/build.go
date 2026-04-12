@@ -12,6 +12,7 @@ import (
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
+	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/ports"
 )
 
@@ -34,6 +35,7 @@ type RuntimeConfig struct {
 	PredicateParser   func(any) (*policy.UnsafePredicate, error)
 	CELEvaluator      policy.PredicateEval
 	Tracer            ports.Tracer
+	ChainDefs         []policy.ChainDefinition
 }
 
 // OutputWriters holds the destination writers for evaluation output.
@@ -102,6 +104,7 @@ func BuildDependencies(ctx context.Context, in *BuildDependenciesInput) (BuildDe
 		WithPredicateParser(in.Runtime.PredicateParser),
 		WithCELEvaluator(in.Runtime.CELEvaluator),
 		WithTracer(in.Runtime.Tracer),
+		WithChainDefs(filterResolvedChains(in.Runtime.ChainDefs, preloaded)),
 	}
 	if resolved.ControlSource.Source != "" {
 		opts = append(opts, WithControlSource(resolved.ControlSource))
@@ -145,6 +148,33 @@ func resolveOutputWriters(output, stderr io.Writer) (io.Writer, io.Writer) {
 		stderr = io.Discard
 	}
 	return output, stderr
+}
+
+// filterResolvedChains returns only chains whose controls are ALL present
+// in the active control set. Chains referencing missing controls (e.g.,
+// excluded by profile filtering) are silently dropped.
+func filterResolvedChains(chains []policy.ChainDefinition, controls []policy.ControlDefinition) []policy.ChainDefinition {
+	if len(chains) == 0 {
+		return nil
+	}
+	activeIDs := make(map[kernel.ControlID]bool, len(controls))
+	for i := range controls {
+		activeIDs[controls[i].ID] = true
+	}
+	var resolved []policy.ChainDefinition
+	for i := range chains {
+		allPresent := true
+		for _, ctlID := range chains[i].ControlIDs {
+			if !activeIDs[ctlID] {
+				allPresent = false
+				break
+			}
+		}
+		if allPresent {
+			resolved = append(resolved, chains[i])
+		}
+	}
+	return resolved
 }
 
 func validateBuildDependenciesInput(in *BuildDependenciesInput) error {

@@ -84,7 +84,7 @@ func takeoverEvaluator(t *testing.T) *testEvaluator {
 	)
 }
 
-func assertHasTakeoverFinding(t *testing.T, result evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
+func assertHasTakeoverFinding(t *testing.T, result *evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
 	t.Helper()
 	for _, f := range result.Findings {
 		if f.ControlID == controlID && f.AssetID == asset.ID(assetID) {
@@ -94,7 +94,7 @@ func assertHasTakeoverFinding(t *testing.T, result evaluation.ComplianceReport, 
 	t.Errorf("expected finding %s for asset %s, got %d findings", controlID, assetID, len(result.Findings))
 }
 
-func assertNoTakeoverFinding(t *testing.T, result evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
+func assertNoTakeoverFinding(t *testing.T, result *evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
 	t.Helper()
 	for _, f := range result.Findings {
 		if f.ControlID == controlID && f.AssetID == asset.ID(assetID) {
@@ -116,7 +116,7 @@ func TestBucketTakeover001_TruePositive_BucketNotExist(t *testing.T) {
 
 	result := ev.Evaluate(takeoverSnapshot(a))
 
-	assertHasTakeoverFinding(t, result, "CTL.S3.BUCKET.TAKEOVER.001", "dangling-ref")
+	assertHasTakeoverFinding(t, &result, "CTL.S3.BUCKET.TAKEOVER.001", "dangling-ref")
 }
 
 func TestBucketTakeover001_TruePositive_BucketNotOwned(t *testing.T) {
@@ -128,7 +128,7 @@ func TestBucketTakeover001_TruePositive_BucketNotOwned(t *testing.T) {
 
 	result := ev.Evaluate(takeoverSnapshot(a))
 
-	assertHasTakeoverFinding(t, result, "CTL.S3.BUCKET.TAKEOVER.001", "unowned-ref")
+	assertHasTakeoverFinding(t, &result, "CTL.S3.BUCKET.TAKEOVER.001", "unowned-ref")
 }
 
 func TestBucketTakeover001_TrueNegative_BucketExistsAndOwned(t *testing.T) {
@@ -140,7 +140,7 @@ func TestBucketTakeover001_TrueNegative_BucketExistsAndOwned(t *testing.T) {
 
 	result := ev.Evaluate(takeoverSnapshot(a))
 
-	assertNoTakeoverFinding(t, result, "CTL.S3.BUCKET.TAKEOVER.001", "owned-ref")
+	assertNoTakeoverFinding(t, &result, "CTL.S3.BUCKET.TAKEOVER.001", "owned-ref")
 }
 
 // --- DANGLING.ORIGIN.001: CDN S3 Origins Must Not Be Dangling ---
@@ -155,7 +155,7 @@ func TestDanglingOrigin001_TruePositive_DanglingS3Origin(t *testing.T) {
 
 	result := ev.Evaluate(takeoverSnapshot(a))
 
-	assertHasTakeoverFinding(t, result, "CTL.S3.DANGLING.ORIGIN.001", "cf-dist-dangling")
+	assertHasTakeoverFinding(t, &result, "CTL.S3.DANGLING.ORIGIN.001", "cf-dist-dangling")
 }
 
 func TestDanglingOrigin001_TrueNegative_NoDanglingOrigin(t *testing.T) {
@@ -167,7 +167,7 @@ func TestDanglingOrigin001_TrueNegative_NoDanglingOrigin(t *testing.T) {
 
 	result := ev.Evaluate(takeoverSnapshot(a))
 
-	assertNoTakeoverFinding(t, result, "CTL.S3.DANGLING.ORIGIN.001", "cf-dist-safe")
+	assertNoTakeoverFinding(t, &result, "CTL.S3.DANGLING.ORIGIN.001", "cf-dist-safe")
 }
 
 func TestDanglingOrigin001_TrueNegative_NotADistribution(t *testing.T) {
@@ -180,5 +180,5 @@ func TestDanglingOrigin001_TrueNegative_NotADistribution(t *testing.T) {
 
 	result := ev.Evaluate(takeoverSnapshot(a))
 
-	assertNoTakeoverFinding(t, result, "CTL.S3.DANGLING.ORIGIN.001", "not-dist")
+	assertNoTakeoverFinding(t, &result, "CTL.S3.DANGLING.ORIGIN.001", "not-dist")
 }

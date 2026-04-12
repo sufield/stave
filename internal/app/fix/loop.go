@@ -108,11 +108,11 @@ func (s *Service) Loop(ctx context.Context, req LoopRequest, deps LoopDeps, am *
 	verification := cmp.Attestation
 
 	// 6. Build envelopes
-	beforeEnv, err := eb.BuildEvaluation(*before.Result)
+	beforeEnv, err := eb.BuildEvaluation(before.Result)
 	if err != nil {
 		return fmt.Errorf("build before evaluation: %w", err)
 	}
-	afterEnv, err := eb.BuildEvaluation(*after.Result)
+	afterEnv, err := eb.BuildEvaluation(after.Result)
 	if err != nil {
 		return fmt.Errorf("build after evaluation: %w", err)
 	}

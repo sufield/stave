@@ -104,7 +104,7 @@ func publicEvaluator(t *testing.T) *testEvaluator {
 
 // --- Assertion helpers ---
 
-func assertHasPublicFinding(t *testing.T, result evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
+func assertHasPublicFinding(t *testing.T, result *evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
 	t.Helper()
 	for _, f := range result.Findings {
 		if f.ControlID == controlID && f.AssetID == asset.ID(assetID) {
@@ -114,7 +114,7 @@ func assertHasPublicFinding(t *testing.T, result evaluation.ComplianceReport, co
 	t.Errorf("expected finding %s for asset %s, got %d findings", controlID, assetID, len(result.Findings))
 }
 
-func assertNoPublicFinding(t *testing.T, result evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
+func assertNoPublicFinding(t *testing.T, result *evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
 	t.Helper()
 	for _, f := range result.Findings {
 		if f.ControlID == controlID && f.AssetID == asset.ID(assetID) {
@@ -135,7 +135,7 @@ func TestPublic001_TruePositive_PublicRead(t *testing.T) {
 
 	result := ev.Evaluate(publicSnapshot(bucket))
 
-	assertHasPublicFinding(t, result, "CTL.S3.PUBLIC.001", "public-read-bucket")
+	assertHasPublicFinding(t, &result, "CTL.S3.PUBLIC.001", "public-read-bucket")
 }
 
 func TestPublic001_TrueNegative_PrivateRead(t *testing.T) {
@@ -146,7 +146,7 @@ func TestPublic001_TrueNegative_PrivateRead(t *testing.T) {
 
 	result := ev.Evaluate(publicSnapshot(bucket))
 
-	assertNoPublicFinding(t, result, "CTL.S3.PUBLIC.001", "private-bucket")
+	assertNoPublicFinding(t, &result, "CTL.S3.PUBLIC.001", "private-bucket")
 }
 
 // ===== PUBLIC.002: No Public Sensitive Data =====
@@ -161,7 +161,7 @@ func TestPublic002_TruePositive_PublicReadPHI(t *testing.T) {
 
 	result := ev.Evaluate(publicSnapshot(bucket))
 
-	assertHasPublicFinding(t, result, "CTL.S3.PUBLIC.002", "phi-public-bucket")
+	assertHasPublicFinding(t, &result, "CTL.S3.PUBLIC.002", "phi-public-bucket")
 }
 
 func TestPublic002_TruePositive_PublicListPII(t *testing.T) {
@@ -173,7 +173,7 @@ func TestPublic002_TruePositive_PublicListPII(t *testing.T) {
 
 	result := ev.Evaluate(publicSnapshot(bucket))
 
-	assertHasPublicFinding(t, result, "CTL.S3.PUBLIC.002", "pii-list-bucket")
+	assertHasPublicFinding(t, &result, "CTL.S3.PUBLIC.002", "pii-list-bucket")
 }
 
 func TestPublic002_TrueNegative_PublicReadButPublicClassification(t *testing.T) {
@@ -185,7 +185,7 @@ func TestPublic002_TrueNegative_PublicReadButPublicClassification(t *testing.T) 
 
 	result := ev.Evaluate(publicSnapshot(bucket))
 
-	assertNoPublicFinding(t, result, "CTL.S3.PUBLIC.002", "public-class-bucket")
+	assertNoPublicFinding(t, &result, "CTL.S3.PUBLIC.002", "public-class-bucket")
 }
 
 func TestPublic002_TrueNegative_PrivatePHI(t *testing.T) {
@@ -197,7 +197,7 @@ func TestPublic002_TrueNegative_PrivatePHI(t *testing.T) {
 
 	result := ev.Evaluate(publicSnapshot(bucket))
 
-	assertNoPublicFinding(t, result, "CTL.S3.PUBLIC.002", "private-phi-bucket")
+	assertNoPublicFinding(t, &result, "CTL.S3.PUBLIC.002", "private-phi-bucket")
 }
 
 // ===== PUBLIC.003: No Public Write =====
@@ -211,7 +211,7 @@ func TestPublic003_TruePositive_PublicWrite(t *testing.T) {
 
 	result := ev.Evaluate(publicSnapshot(bucket))
 
-	assertHasPublicFinding(t, result, "CTL.S3.PUBLIC.003", "public-write-bucket")
+	assertHasPublicFinding(t, &result, "CTL.S3.PUBLIC.003", "public-write-bucket")
 }
 
 func TestPublic003_TrueNegative_NoPublicWrite(t *testing.T) {
@@ -222,7 +222,7 @@ func TestPublic003_TrueNegative_NoPublicWrite(t *testing.T) {
 
 	result := ev.Evaluate(publicSnapshot(bucket))
 
-	assertNoPublicFinding(t, result, "CTL.S3.PUBLIC.003", "no-write-bucket")
+	assertNoPublicFinding(t, &result, "CTL.S3.PUBLIC.003", "no-write-bucket")
 }
 
 // ===== PUBLIC.004: No Public Read via ACL =====
@@ -237,7 +237,7 @@ func TestPublic004_TruePositive_ReadViaResource(t *testing.T) {
 
 	result := ev.Evaluate(publicSnapshot(bucket))
 
-	assertHasPublicFinding(t, result, "CTL.S3.PUBLIC.004", "acl-read-bucket")
+	assertHasPublicFinding(t, &result, "CTL.S3.PUBLIC.004", "acl-read-bucket")
 }
 
 func TestPublic004_TrueNegative_NoReadViaResource(t *testing.T) {
@@ -248,7 +248,7 @@ func TestPublic004_TrueNegative_NoReadViaResource(t *testing.T) {
 
 	result := ev.Evaluate(publicSnapshot(bucket))
 
-	assertNoPublicFinding(t, result, "CTL.S3.PUBLIC.004", "no-acl-read-bucket")
+	assertNoPublicFinding(t, &result, "CTL.S3.PUBLIC.004", "no-acl-read-bucket")
 }
 
 // ===== PUBLIC.005: No Latent Public Read Exposure =====
@@ -262,7 +262,7 @@ func TestPublic005_TruePositive_LatentPublicRead(t *testing.T) {
 
 	result := ev.Evaluate(publicSnapshot(bucket))
 
-	assertHasPublicFinding(t, result, "CTL.S3.PUBLIC.005", "latent-read-bucket")
+	assertHasPublicFinding(t, &result, "CTL.S3.PUBLIC.005", "latent-read-bucket")
 }
 
 func TestPublic005_TrueNegative_NoLatentPublicRead(t *testing.T) {
@@ -273,7 +273,7 @@ func TestPublic005_TrueNegative_NoLatentPublicRead(t *testing.T) {
 
 	result := ev.Evaluate(publicSnapshot(bucket))
 
-	assertNoPublicFinding(t, result, "CTL.S3.PUBLIC.005", "no-latent-bucket")
+	assertNoPublicFinding(t, &result, "CTL.S3.PUBLIC.005", "no-latent-bucket")
 }
 
 // ===== PUBLIC.006: No Latent Public Bucket Listing =====
@@ -288,7 +288,7 @@ func TestPublic006_TruePositive_LatentPublicList(t *testing.T) {
 
 	result := ev.Evaluate(publicSnapshot(bucket))
 
-	assertHasPublicFinding(t, result, "CTL.S3.PUBLIC.006", "latent-list-bucket")
+	assertHasPublicFinding(t, &result, "CTL.S3.PUBLIC.006", "latent-list-bucket")
 }
 
 func TestPublic006_TrueNegative_NoLatentPublicList(t *testing.T) {
@@ -300,7 +300,7 @@ func TestPublic006_TrueNegative_NoLatentPublicList(t *testing.T) {
 
 	result := ev.Evaluate(publicSnapshot(bucket))
 
-	assertNoPublicFinding(t, result, "CTL.S3.PUBLIC.006", "no-latent-list-bucket")
+	assertNoPublicFinding(t, &result, "CTL.S3.PUBLIC.006", "no-latent-list-bucket")
 }
 
 // ===== PUBLIC.007: No Public Read via Policy =====
@@ -314,7 +314,7 @@ func TestPublic007_TruePositive_ReadViaIdentity(t *testing.T) {
 
 	result := ev.Evaluate(publicSnapshot(bucket))
 
-	assertHasPublicFinding(t, result, "CTL.S3.PUBLIC.007", "policy-read-bucket")
+	assertHasPublicFinding(t, &result, "CTL.S3.PUBLIC.007", "policy-read-bucket")
 }
 
 func TestPublic007_TrueNegative_NoReadViaIdentity(t *testing.T) {
@@ -325,7 +325,7 @@ func TestPublic007_TrueNegative_NoReadViaIdentity(t *testing.T) {
 
 	result := ev.Evaluate(publicSnapshot(bucket))
 
-	assertNoPublicFinding(t, result, "CTL.S3.PUBLIC.007", "no-policy-read-bucket")
+	assertNoPublicFinding(t, &result, "CTL.S3.PUBLIC.007", "no-policy-read-bucket")
 }
 
 // ===== PUBLIC.008: No Public List via Policy =====
@@ -339,7 +339,7 @@ func TestPublic008_TruePositive_ListViaIdentity(t *testing.T) {
 
 	result := ev.Evaluate(publicSnapshot(bucket))
 
-	assertHasPublicFinding(t, result, "CTL.S3.PUBLIC.008", "policy-list-bucket")
+	assertHasPublicFinding(t, &result, "CTL.S3.PUBLIC.008", "policy-list-bucket")
 }
 
 func TestPublic008_TrueNegative_NoListViaIdentity(t *testing.T) {
@@ -350,7 +350,7 @@ func TestPublic008_TrueNegative_NoListViaIdentity(t *testing.T) {
 
 	result := ev.Evaluate(publicSnapshot(bucket))
 
-	assertNoPublicFinding(t, result, "CTL.S3.PUBLIC.008", "no-policy-list-bucket")
+	assertNoPublicFinding(t, &result, "CTL.S3.PUBLIC.008", "no-policy-list-bucket")
 }
 
 // ===== PUBLIC.LIST.001: No Public S3 Bucket Listing =====
@@ -364,7 +364,7 @@ func TestPublicList001_TruePositive_PublicList(t *testing.T) {
 
 	result := ev.Evaluate(publicSnapshot(bucket))
 
-	assertHasPublicFinding(t, result, "CTL.S3.PUBLIC.LIST.001", "public-list-bucket")
+	assertHasPublicFinding(t, &result, "CTL.S3.PUBLIC.LIST.001", "public-list-bucket")
 }
 
 func TestPublicList001_TrueNegative_NoPublicList(t *testing.T) {
@@ -375,7 +375,7 @@ func TestPublicList001_TrueNegative_NoPublicList(t *testing.T) {
 
 	result := ev.Evaluate(publicSnapshot(bucket))
 
-	assertNoPublicFinding(t, result, "CTL.S3.PUBLIC.LIST.001", "private-list-bucket")
+	assertNoPublicFinding(t, &result, "CTL.S3.PUBLIC.LIST.001", "private-list-bucket")
 }
 
 // ===== PUBLIC.LIST.002: Anonymous Listing Must Be Explicitly Intended =====
@@ -390,7 +390,7 @@ func TestPublicList002_TruePositive_PublicListNoIntentTag(t *testing.T) {
 
 	result := ev.Evaluate(publicSnapshot(bucket))
 
-	assertHasPublicFinding(t, result, "CTL.S3.PUBLIC.LIST.002", "unintended-list-bucket")
+	assertHasPublicFinding(t, &result, "CTL.S3.PUBLIC.LIST.002", "unintended-list-bucket")
 }
 
 func TestPublicList002_TrueNegative_PublicListWithIntentTag(t *testing.T) {
@@ -404,7 +404,7 @@ func TestPublicList002_TrueNegative_PublicListWithIntentTag(t *testing.T) {
 
 	result := ev.Evaluate(publicSnapshot(bucket))
 
-	assertNoPublicFinding(t, result, "CTL.S3.PUBLIC.LIST.002", "intended-list-bucket")
+	assertNoPublicFinding(t, &result, "CTL.S3.PUBLIC.LIST.002", "intended-list-bucket")
 }
 
 func TestPublicList002_TrueNegative_NotPublicList(t *testing.T) {
@@ -416,7 +416,7 @@ func TestPublicList002_TrueNegative_NotPublicList(t *testing.T) {
 
 	result := ev.Evaluate(publicSnapshot(bucket))
 
-	assertNoPublicFinding(t, result, "CTL.S3.PUBLIC.LIST.002", "private-bucket-2")
+	assertNoPublicFinding(t, &result, "CTL.S3.PUBLIC.LIST.002", "private-bucket-2")
 }
 
 // ===== WEBSITE.PUBLIC.001: No Public Website Hosting with Public Read =====
@@ -431,7 +431,7 @@ func TestWebsitePublic001_TruePositive_WebsiteWithPublicRead(t *testing.T) {
 
 	result := ev.Evaluate(publicSnapshot(bucket))
 
-	assertHasPublicFinding(t, result, "CTL.S3.WEBSITE.PUBLIC.001", "website-bucket")
+	assertHasPublicFinding(t, &result, "CTL.S3.WEBSITE.PUBLIC.001", "website-bucket")
 }
 
 func TestWebsitePublic001_TrueNegative_WebsiteWithoutPublicRead(t *testing.T) {
@@ -443,7 +443,7 @@ func TestWebsitePublic001_TrueNegative_WebsiteWithoutPublicRead(t *testing.T) {
 
 	result := ev.Evaluate(publicSnapshot(bucket))
 
-	assertNoPublicFinding(t, result, "CTL.S3.WEBSITE.PUBLIC.001", "website-private-bucket")
+	assertNoPublicFinding(t, &result, "CTL.S3.WEBSITE.PUBLIC.001", "website-private-bucket")
 }
 
 func TestWebsitePublic001_TrueNegative_NoWebsiteHosting(t *testing.T) {
@@ -455,7 +455,7 @@ func TestWebsitePublic001_TrueNegative_NoWebsiteHosting(t *testing.T) {
 
 	result := ev.Evaluate(publicSnapshot(bucket))
 
-	assertNoPublicFinding(t, result, "CTL.S3.WEBSITE.PUBLIC.001", "no-website-bucket")
+	assertNoPublicFinding(t, &result, "CTL.S3.WEBSITE.PUBLIC.001", "no-website-bucket")
 }
 
 // ===== CDN.OAC.001: CloudFront Access Must Use OAC Not Legacy OAI =====
@@ -472,7 +472,7 @@ func TestCDNOAC001_TruePositive_LegacyOAI(t *testing.T) {
 
 	result := ev.Evaluate(publicSnapshot(bucket))
 
-	assertHasPublicFinding(t, result, "CTL.S3.CDN.OAC.001", "oai-bucket")
+	assertHasPublicFinding(t, &result, "CTL.S3.CDN.OAC.001", "oai-bucket")
 }
 
 func TestCDNOAC001_TrueNegative_UsingOAC(t *testing.T) {
@@ -487,7 +487,7 @@ func TestCDNOAC001_TrueNegative_UsingOAC(t *testing.T) {
 
 	result := ev.Evaluate(publicSnapshot(bucket))
 
-	assertNoPublicFinding(t, result, "CTL.S3.CDN.OAC.001", "oac-bucket")
+	assertNoPublicFinding(t, &result, "CTL.S3.CDN.OAC.001", "oac-bucket")
 }
 
 // ===== CDN.EXPOSURE.001: Private Bucket Must Not Be Publicly Exposed Via CloudFront =====
@@ -507,7 +507,7 @@ func TestCDNExposure001_TruePositive_PABEnabledWithCFGrant(t *testing.T) {
 
 	result := ev.Evaluate(publicSnapshot(bucket))
 
-	assertHasPublicFinding(t, result, "CTL.S3.CDN.EXPOSURE.001", "cdn-exposed-bucket")
+	assertHasPublicFinding(t, &result, "CTL.S3.CDN.EXPOSURE.001", "cdn-exposed-bucket")
 }
 
 func TestCDNExposure001_TrueNegative_PABEnabledNoCFGrant(t *testing.T) {
@@ -524,7 +524,7 @@ func TestCDNExposure001_TrueNegative_PABEnabledNoCFGrant(t *testing.T) {
 
 	result := ev.Evaluate(publicSnapshot(bucket))
 
-	assertNoPublicFinding(t, result, "CTL.S3.CDN.EXPOSURE.001", "no-cdn-bucket")
+	assertNoPublicFinding(t, &result, "CTL.S3.CDN.EXPOSURE.001", "no-cdn-bucket")
 }
 
 func TestCDNExposure001_TrueNegative_PABDisabledWithCFGrant(t *testing.T) {
@@ -543,7 +543,7 @@ func TestCDNExposure001_TrueNegative_PABDisabledWithCFGrant(t *testing.T) {
 
 	result := ev.Evaluate(publicSnapshot(bucket))
 
-	assertNoPublicFinding(t, result, "CTL.S3.CDN.EXPOSURE.001", "pab-off-bucket")
+	assertNoPublicFinding(t, &result, "CTL.S3.CDN.EXPOSURE.001", "pab-off-bucket")
 }
 
 // ===== ACL.WRITE.001: No Public Write via ACL =====
@@ -557,7 +557,7 @@ func TestACLWrite001_TruePositive_WriteViaResource(t *testing.T) {
 
 	result := ev.Evaluate(publicSnapshot(bucket))
 
-	assertHasPublicFinding(t, result, "CTL.S3.ACL.WRITE.001", "acl-write-bucket")
+	assertHasPublicFinding(t, &result, "CTL.S3.ACL.WRITE.001", "acl-write-bucket")
 }
 
 func TestACLWrite001_TrueNegative_NoWriteViaResource(t *testing.T) {
@@ -568,5 +568,5 @@ func TestACLWrite001_TrueNegative_NoWriteViaResource(t *testing.T) {
 
 	result := ev.Evaluate(publicSnapshot(bucket))
 
-	assertNoPublicFinding(t, result, "CTL.S3.ACL.WRITE.001", "no-acl-write-bucket")
+	assertNoPublicFinding(t, &result, "CTL.S3.ACL.WRITE.001", "no-acl-write-bucket")
 }

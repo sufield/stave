@@ -73,7 +73,7 @@ func logEvaluator(t *testing.T) *testEvaluator {
 	)
 }
 
-func assertHasLogFinding(t *testing.T, result evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
+func assertHasLogFinding(t *testing.T, result *evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
 	t.Helper()
 	for _, f := range result.Findings {
 		if f.ControlID == controlID && f.AssetID == asset.ID(assetID) {
@@ -83,7 +83,7 @@ func assertHasLogFinding(t *testing.T, result evaluation.ComplianceReport, contr
 	t.Errorf("expected finding %s for asset %s, got %d findings", controlID, assetID, len(result.Findings))
 }
 
-func assertNoLogFinding(t *testing.T, result evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
+func assertNoLogFinding(t *testing.T, result *evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
 	t.Helper()
 	for _, f := range result.Findings {
 		if f.ControlID == controlID && f.AssetID == asset.ID(assetID) {
@@ -103,7 +103,7 @@ func TestLog001_TruePositive_LoggingDisabled(t *testing.T) {
 
 	result := ev.Evaluate(logSnapshot(bucket))
 
-	assertHasLogFinding(t, result, "CTL.S3.LOG.001", "no-log-bucket")
+	assertHasLogFinding(t, &result, "CTL.S3.LOG.001", "no-log-bucket")
 }
 
 func TestLog001_TrueNegative_LoggingEnabled(t *testing.T) {
@@ -114,7 +114,7 @@ func TestLog001_TrueNegative_LoggingEnabled(t *testing.T) {
 
 	result := ev.Evaluate(logSnapshot(bucket))
 
-	assertNoLogFinding(t, result, "CTL.S3.LOG.001", "logged-bucket")
+	assertNoLogFinding(t, &result, "CTL.S3.LOG.001", "logged-bucket")
 }
 
 // --- AUDIT.OBJECTLEVEL.001: CloudTrail Object-Level Logging ---
@@ -129,7 +129,7 @@ func TestAuditObjectLevel001_TruePositive_ObjectLoggingDisabled(t *testing.T) {
 
 	result := ev.Evaluate(logSnapshot(bucket))
 
-	assertHasLogFinding(t, result, "CTL.S3.AUDIT.OBJECTLEVEL.001", "no-ct-bucket")
+	assertHasLogFinding(t, &result, "CTL.S3.AUDIT.OBJECTLEVEL.001", "no-ct-bucket")
 }
 
 func TestAuditObjectLevel001_TrueNegative_ObjectLoggingEnabled(t *testing.T) {
@@ -143,5 +143,5 @@ func TestAuditObjectLevel001_TrueNegative_ObjectLoggingEnabled(t *testing.T) {
 
 	result := ev.Evaluate(logSnapshot(bucket))
 
-	assertNoLogFinding(t, result, "CTL.S3.AUDIT.OBJECTLEVEL.001", "ct-bucket")
+	assertNoLogFinding(t, &result, "CTL.S3.AUDIT.OBJECTLEVEL.001", "ct-bucket")
 }

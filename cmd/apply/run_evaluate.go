@@ -64,7 +64,7 @@ func executeEvaluation(ctx context.Context, ec evalContext) (EvaluateResult, err
 		Enricher:  deps.Runner.ContextEnricher,
 		Logger:    ec.Logger,
 	}
-	if err := pipeline.Run(ctx, deps.Config.Output, result); err != nil {
+	if err := pipeline.Run(ctx, deps.Config.Output, &result); err != nil {
 		return EvaluateResult{}, fmt.Errorf("run output pipeline: %w", err)
 	}
 

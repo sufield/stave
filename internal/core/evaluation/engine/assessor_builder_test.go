@@ -31,8 +31,8 @@ func TestBuilder_BasicViolation(t *testing.T) {
 
 	result, err := a.Assess(snaps)
 	testutil.AssertNoError(t, err)
-	testutil.AssertViolationCount(t, result, 1)
-	testutil.AssertSecurityState(t, result, evaluation.StateNonCompliant)
+	testutil.AssertViolationCount(t, &result, 1)
+	testutil.AssertSecurityState(t, &result, evaluation.StateNonCompliant)
 }
 
 func TestBuilder_CompliantResult(t *testing.T) {
@@ -52,8 +52,8 @@ func TestBuilder_CompliantResult(t *testing.T) {
 
 	result, err := a.Assess(snaps)
 	testutil.AssertNoError(t, err)
-	testutil.AssertSecurityState(t, result, evaluation.StateCompliant)
-	testutil.AssertViolationCount(t, result, 0)
+	testutil.AssertSecurityState(t, &result, evaluation.StateCompliant)
+	testutil.AssertViolationCount(t, &result, 0)
 }
 
 func TestBuilder_WithTracer(t *testing.T) {
@@ -76,7 +76,7 @@ func TestBuilder_WithTracer(t *testing.T) {
 
 	result, err := a.Assess(snaps)
 	testutil.AssertNoError(t, err)
-	testutil.AssertViolationCount(t, result, 1)
+	testutil.AssertViolationCount(t, &result, 1)
 
 	// Verify the tracer captured the assessment trace with reasoning steps.
 	lt := tracer.Finalize("test-run", "test", nil)

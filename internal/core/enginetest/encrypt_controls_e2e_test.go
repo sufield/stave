@@ -92,7 +92,7 @@ func encryptEvaluator(t *testing.T) *testEvaluator {
 
 // --- Assertion helpers ---
 
-func assertHasEncryptFinding(t *testing.T, result evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
+func assertHasEncryptFinding(t *testing.T, result *evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
 	t.Helper()
 	for _, f := range result.Findings {
 		if f.ControlID == controlID && f.AssetID == asset.ID(assetID) {
@@ -102,7 +102,7 @@ func assertHasEncryptFinding(t *testing.T, result evaluation.ComplianceReport, c
 	t.Errorf("expected finding %s for asset %s, got %d findings", controlID, assetID, len(result.Findings))
 }
 
-func assertNoEncryptFinding(t *testing.T, result evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
+func assertNoEncryptFinding(t *testing.T, result *evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
 	t.Helper()
 	for _, f := range result.Findings {
 		if f.ControlID == controlID && f.AssetID == asset.ID(assetID) {
@@ -122,7 +122,7 @@ func TestEncrypt001_TruePositive_NoEncryption(t *testing.T) {
 
 	result := ev.Evaluate(encryptSnapshot(bucket))
 
-	assertHasEncryptFinding(t, result, "CTL.S3.ENCRYPT.001", "unencrypted-bucket")
+	assertHasEncryptFinding(t, &result, "CTL.S3.ENCRYPT.001", "unencrypted-bucket")
 }
 
 func TestEncrypt001_TrueNegative_Encrypted(t *testing.T) {
@@ -133,7 +133,7 @@ func TestEncrypt001_TrueNegative_Encrypted(t *testing.T) {
 
 	result := ev.Evaluate(encryptSnapshot(bucket))
 
-	assertNoEncryptFinding(t, result, "CTL.S3.ENCRYPT.001", "encrypted-bucket")
+	assertNoEncryptFinding(t, &result, "CTL.S3.ENCRYPT.001", "encrypted-bucket")
 }
 
 // --- E2E Tests: CTL.S3.ENCRYPT.002 (Transport Encryption) ---
@@ -146,7 +146,7 @@ func TestEncrypt002_TruePositive_NoTransitEncryption(t *testing.T) {
 
 	result := ev.Evaluate(encryptSnapshot(bucket))
 
-	assertHasEncryptFinding(t, result, "CTL.S3.ENCRYPT.002", "no-tls-bucket")
+	assertHasEncryptFinding(t, &result, "CTL.S3.ENCRYPT.002", "no-tls-bucket")
 }
 
 func TestEncrypt002_TrueNegative_TransitEnforced(t *testing.T) {
@@ -157,7 +157,7 @@ func TestEncrypt002_TrueNegative_TransitEnforced(t *testing.T) {
 
 	result := ev.Evaluate(encryptSnapshot(bucket))
 
-	assertNoEncryptFinding(t, result, "CTL.S3.ENCRYPT.002", "tls-bucket")
+	assertNoEncryptFinding(t, &result, "CTL.S3.ENCRYPT.002", "tls-bucket")
 }
 
 // --- E2E Tests: CTL.S3.ENCRYPT.003 (PHI Must Use SSE-KMS with CMK) ---
@@ -175,7 +175,7 @@ func TestEncrypt003_TruePositive_PHIWithAES256(t *testing.T) {
 
 	result := ev.Evaluate(encryptSnapshot(bucket))
 
-	assertHasEncryptFinding(t, result, "CTL.S3.ENCRYPT.003", "phi-aes-bucket")
+	assertHasEncryptFinding(t, &result, "CTL.S3.ENCRYPT.003", "phi-aes-bucket")
 }
 
 func TestEncrypt003_TruePositive_PHIWithKMSButNoKey(t *testing.T) {
@@ -189,7 +189,7 @@ func TestEncrypt003_TruePositive_PHIWithKMSButNoKey(t *testing.T) {
 
 	result := ev.Evaluate(encryptSnapshot(bucket))
 
-	assertHasEncryptFinding(t, result, "CTL.S3.ENCRYPT.003", "phi-no-key-bucket")
+	assertHasEncryptFinding(t, &result, "CTL.S3.ENCRYPT.003", "phi-no-key-bucket")
 }
 
 func TestEncrypt003_TrueNegative_PHIWithKMSAndCMK(t *testing.T) {
@@ -203,7 +203,7 @@ func TestEncrypt003_TrueNegative_PHIWithKMSAndCMK(t *testing.T) {
 
 	result := ev.Evaluate(encryptSnapshot(bucket))
 
-	assertNoEncryptFinding(t, result, "CTL.S3.ENCRYPT.003", "phi-kms-bucket")
+	assertNoEncryptFinding(t, &result, "CTL.S3.ENCRYPT.003", "phi-kms-bucket")
 }
 
 func TestEncrypt003_TrueNegative_NonPHIBucket(t *testing.T) {
@@ -218,7 +218,7 @@ func TestEncrypt003_TrueNegative_NonPHIBucket(t *testing.T) {
 
 	result := ev.Evaluate(encryptSnapshot(bucket))
 
-	assertNoEncryptFinding(t, result, "CTL.S3.ENCRYPT.003", "public-bucket")
+	assertNoEncryptFinding(t, &result, "CTL.S3.ENCRYPT.003", "public-bucket")
 }
 
 // --- E2E Tests: CTL.S3.ENCRYPT.004 (Sensitive Data Requires KMS) ---
@@ -235,7 +235,7 @@ func TestEncrypt004_TruePositive_ConfidentialWithAES256(t *testing.T) {
 
 	result := ev.Evaluate(encryptSnapshot(bucket))
 
-	assertHasEncryptFinding(t, result, "CTL.S3.ENCRYPT.004", "conf-aes-bucket")
+	assertHasEncryptFinding(t, &result, "CTL.S3.ENCRYPT.004", "conf-aes-bucket")
 }
 
 func TestEncrypt004_TrueNegative_ConfidentialWithKMS(t *testing.T) {
@@ -248,7 +248,7 @@ func TestEncrypt004_TrueNegative_ConfidentialWithKMS(t *testing.T) {
 
 	result := ev.Evaluate(encryptSnapshot(bucket))
 
-	assertNoEncryptFinding(t, result, "CTL.S3.ENCRYPT.004", "conf-kms-bucket")
+	assertNoEncryptFinding(t, &result, "CTL.S3.ENCRYPT.004", "conf-kms-bucket")
 }
 
 func TestEncrypt004_TrueNegative_PublicClassification(t *testing.T) {
@@ -262,7 +262,7 @@ func TestEncrypt004_TrueNegative_PublicClassification(t *testing.T) {
 
 	result := ev.Evaluate(encryptSnapshot(bucket))
 
-	assertNoEncryptFinding(t, result, "CTL.S3.ENCRYPT.004", "public-bucket")
+	assertNoEncryptFinding(t, &result, "CTL.S3.ENCRYPT.004", "public-bucket")
 }
 
 func TestEncrypt004_TrueNegative_NonSensitiveClassification(t *testing.T) {
@@ -276,7 +276,7 @@ func TestEncrypt004_TrueNegative_NonSensitiveClassification(t *testing.T) {
 
 	result := ev.Evaluate(encryptSnapshot(bucket))
 
-	assertNoEncryptFinding(t, result, "CTL.S3.ENCRYPT.004", "nonsens-bucket")
+	assertNoEncryptFinding(t, &result, "CTL.S3.ENCRYPT.004", "nonsens-bucket")
 }
 
 func TestEncrypt004_TrueNegative_NoClassificationTag(t *testing.T) {
@@ -288,5 +288,5 @@ func TestEncrypt004_TrueNegative_NoClassificationTag(t *testing.T) {
 
 	result := ev.Evaluate(encryptSnapshot(bucket))
 
-	assertNoEncryptFinding(t, result, "CTL.S3.ENCRYPT.004", "untagged-bucket")
+	assertNoEncryptFinding(t, &result, "CTL.S3.ENCRYPT.004", "untagged-bucket")
 }

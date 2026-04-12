@@ -84,7 +84,7 @@ func miscEvaluator(t *testing.T) *testEvaluator {
 	)
 }
 
-func assertHasMiscFinding(t *testing.T, result evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
+func assertHasMiscFinding(t *testing.T, result *evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
 	t.Helper()
 	for _, f := range result.Findings {
 		if f.ControlID == controlID && f.AssetID == asset.ID(assetID) {
@@ -94,7 +94,7 @@ func assertHasMiscFinding(t *testing.T, result evaluation.ComplianceReport, cont
 	t.Errorf("expected finding %s for asset %s, got %d findings", controlID, assetID, len(result.Findings))
 }
 
-func assertNoMiscFinding(t *testing.T, result evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
+func assertNoMiscFinding(t *testing.T, result *evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
 	t.Helper()
 	for _, f := range result.Findings {
 		if f.ControlID == controlID && f.AssetID == asset.ID(assetID) {
@@ -115,7 +115,7 @@ func TestControls001_TruePositive_PABNotFullyBlocked(t *testing.T) {
 
 	result := ev.Evaluate(miscSnapshot(bucket))
 
-	assertHasMiscFinding(t, result, "CTL.S3.CONTROLS.001", "no-pab-bucket")
+	assertHasMiscFinding(t, &result, "CTL.S3.CONTROLS.001", "no-pab-bucket")
 }
 
 func TestControls001_TrueNegative_PABFullyBlocked(t *testing.T) {
@@ -126,7 +126,7 @@ func TestControls001_TrueNegative_PABFullyBlocked(t *testing.T) {
 
 	result := ev.Evaluate(miscSnapshot(bucket))
 
-	assertNoMiscFinding(t, result, "CTL.S3.CONTROLS.001", "pab-bucket")
+	assertNoMiscFinding(t, &result, "CTL.S3.CONTROLS.001", "pab-bucket")
 }
 
 // --- INCOMPLETE.001: Complete Data Required for Safety Assessment ---
@@ -139,7 +139,7 @@ func TestIncomplete001_TruePositive_SafetyNotProvable(t *testing.T) {
 
 	result := ev.Evaluate(miscSnapshot(a))
 
-	assertHasMiscFinding(t, result, "CTL.S3.INCOMPLETE.001", "incomplete-bucket")
+	assertHasMiscFinding(t, &result, "CTL.S3.INCOMPLETE.001", "incomplete-bucket")
 }
 
 func TestIncomplete001_TrueNegative_SafetyProvable(t *testing.T) {
@@ -148,5 +148,5 @@ func TestIncomplete001_TrueNegative_SafetyProvable(t *testing.T) {
 
 	result := ev.Evaluate(miscSnapshot(a))
 
-	assertNoMiscFinding(t, result, "CTL.S3.INCOMPLETE.001", "complete-bucket")
+	assertNoMiscFinding(t, &result, "CTL.S3.INCOMPLETE.001", "complete-bucket")
 }

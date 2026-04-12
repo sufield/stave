@@ -16,7 +16,7 @@ func TestAssertReportEqual_Identical(t *testing.T) {
 		Summary:       evaluation.ComplianceSummary{TotalAssets: 1},
 	}
 	// Should not fail.
-	AssertReportEqual(t, r, r)
+	AssertReportEqual(t, &r, &r)
 }
 
 func TestReportOpts_IgnoresTimestamps(t *testing.T) {
@@ -30,12 +30,12 @@ func TestAssertViolationCount(t *testing.T) {
 	r := evaluation.ComplianceReport{
 		Findings: []evaluation.Finding{{ControlID: "CTL.A.B.001"}},
 	}
-	AssertViolationCount(t, r, 1)
+	AssertViolationCount(t, &r, 1)
 }
 
 func TestAssertSecurityState(t *testing.T) {
 	r := evaluation.ComplianceReport{SecurityState: evaluation.StateCompliant}
-	AssertSecurityState(t, r, evaluation.StateCompliant)
+	AssertSecurityState(t, &r, evaluation.StateCompliant)
 }
 
 func TestAssertFindingExists(t *testing.T) {
@@ -44,7 +44,7 @@ func TestAssertFindingExists(t *testing.T) {
 			{ControlID: "CTL.S3.PUBLIC.001", AssetID: "bucket-1"},
 		},
 	}
-	AssertFindingExists(t, r, kernel.ControlID("CTL.S3.PUBLIC.001"), asset.ID("bucket-1"))
+	AssertFindingExists(t, &r, kernel.ControlID("CTL.S3.PUBLIC.001"), asset.ID("bucket-1"))
 }
 
 func TestAssertTraceHasAssessment(t *testing.T) {

@@ -73,7 +73,7 @@ func writeScopeEvaluator(t *testing.T) *testEvaluator {
 	)
 }
 
-func assertHasWriteScopeFinding(t *testing.T, result evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
+func assertHasWriteScopeFinding(t *testing.T, result *evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
 	t.Helper()
 	for _, f := range result.Findings {
 		if f.ControlID == controlID && f.AssetID == asset.ID(assetID) {
@@ -83,7 +83,7 @@ func assertHasWriteScopeFinding(t *testing.T, result evaluation.ComplianceReport
 	t.Errorf("expected finding %s for asset %s, got %d findings", controlID, assetID, len(result.Findings))
 }
 
-func assertNoWriteScopeFinding(t *testing.T, result evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
+func assertNoWriteScopeFinding(t *testing.T, result *evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
 	t.Helper()
 	for _, f := range result.Findings {
 		if f.ControlID == controlID && f.AssetID == asset.ID(assetID) {
@@ -105,7 +105,7 @@ func TestWriteScope001_TruePositive_PrefixKeyMode(t *testing.T) {
 
 	result := ev.Evaluate(writeScopeSnapshot(a))
 
-	assertHasWriteScopeFinding(t, result, "CTL.S3.WRITE.SCOPE.001", "prefix-policy")
+	assertHasWriteScopeFinding(t, &result, "CTL.S3.WRITE.SCOPE.001", "prefix-policy")
 }
 
 func TestWriteScope001_TrueNegative_ExactKeyMode(t *testing.T) {
@@ -117,7 +117,7 @@ func TestWriteScope001_TrueNegative_ExactKeyMode(t *testing.T) {
 
 	result := ev.Evaluate(writeScopeSnapshot(a))
 
-	assertNoWriteScopeFinding(t, result, "CTL.S3.WRITE.SCOPE.001", "exact-policy")
+	assertNoWriteScopeFinding(t, &result, "CTL.S3.WRITE.SCOPE.001", "exact-policy")
 }
 
 func TestWriteScope001_TrueNegative_ReadOperation(t *testing.T) {
@@ -130,7 +130,7 @@ func TestWriteScope001_TrueNegative_ReadOperation(t *testing.T) {
 
 	result := ev.Evaluate(writeScopeSnapshot(a))
 
-	assertNoWriteScopeFinding(t, result, "CTL.S3.WRITE.SCOPE.001", "read-policy")
+	assertNoWriteScopeFinding(t, &result, "CTL.S3.WRITE.SCOPE.001", "read-policy")
 }
 
 // --- WRITE.CONTENT.001: Signed Upload Must Restrict Content Types ---
@@ -145,7 +145,7 @@ func TestWriteContent001_TruePositive_UnrestrictedContentType(t *testing.T) {
 
 	result := ev.Evaluate(writeScopeSnapshot(a))
 
-	assertHasWriteScopeFinding(t, result, "CTL.S3.WRITE.CONTENT.001", "unrestricted-policy")
+	assertHasWriteScopeFinding(t, &result, "CTL.S3.WRITE.CONTENT.001", "unrestricted-policy")
 }
 
 func TestWriteContent001_TrueNegative_RestrictedContentType(t *testing.T) {
@@ -158,7 +158,7 @@ func TestWriteContent001_TrueNegative_RestrictedContentType(t *testing.T) {
 
 	result := ev.Evaluate(writeScopeSnapshot(a))
 
-	assertNoWriteScopeFinding(t, result, "CTL.S3.WRITE.CONTENT.001", "restricted-policy")
+	assertNoWriteScopeFinding(t, &result, "CTL.S3.WRITE.CONTENT.001", "restricted-policy")
 }
 
 func TestWriteContent001_TrueNegative_ReadOperation(t *testing.T) {
@@ -171,7 +171,7 @@ func TestWriteContent001_TrueNegative_ReadOperation(t *testing.T) {
 
 	result := ev.Evaluate(writeScopeSnapshot(a))
 
-	assertNoWriteScopeFinding(t, result, "CTL.S3.WRITE.CONTENT.001", "read-policy-2")
+	assertNoWriteScopeFinding(t, &result, "CTL.S3.WRITE.CONTENT.001", "read-policy-2")
 }
 
 // --- Cross-control: same asset, both violations ---
@@ -186,6 +186,6 @@ func TestWriteScope_BothViolations(t *testing.T) {
 
 	result := ev.Evaluate(writeScopeSnapshot(a))
 
-	assertHasWriteScopeFinding(t, result, "CTL.S3.WRITE.SCOPE.001", "bad-policy")
-	assertHasWriteScopeFinding(t, result, "CTL.S3.WRITE.CONTENT.001", "bad-policy")
+	assertHasWriteScopeFinding(t, &result, "CTL.S3.WRITE.SCOPE.001", "bad-policy")
+	assertHasWriteScopeFinding(t, &result, "CTL.S3.WRITE.CONTENT.001", "bad-policy")
 }

@@ -45,7 +45,14 @@ Maps MITRE ATT&CK-aligned stages to worst severity:
 
 ## Chain definitions
 
-Chains live in `chains/*.yaml`:
+Chains are auto-discovered from the `chains/` directory sibling to
+your controls path. When you run `stave apply --controls ./controls`,
+the engine automatically loads `./chains/*.yaml` and evaluates them
+against the active findings. Chains whose controls are all present
+in the active policy set are evaluated; chains referencing excluded
+controls are silently filtered.
+
+Chain YAML format:
 
 ```yaml
 id: public_phi_exposure

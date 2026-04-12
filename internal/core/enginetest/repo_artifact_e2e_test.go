@@ -88,7 +88,7 @@ func TestRepoArtifact_TruePositive_PublicReadWithArtifacts(t *testing.T) {
 
 	result := ev.Evaluate(artifactSnapshot(bucket))
 
-	assertArtifactFinding(t, result, "website-bucket")
+	assertArtifactFinding(t, &result, "website-bucket")
 }
 
 func TestRepoArtifact_TruePositive_PublicListWithArtifacts(t *testing.T) {
@@ -100,7 +100,7 @@ func TestRepoArtifact_TruePositive_PublicListWithArtifacts(t *testing.T) {
 
 	result := ev.Evaluate(artifactSnapshot(bucket))
 
-	assertArtifactFinding(t, result, "listing-bucket")
+	assertArtifactFinding(t, &result, "listing-bucket")
 }
 
 // --- True Negative: only one condition met ---
@@ -114,7 +114,7 @@ func TestRepoArtifact_TrueNegative_PublicButNoArtifacts(t *testing.T) {
 
 	result := ev.Evaluate(artifactSnapshot(bucket))
 
-	assertNoArtifactFinding(t, result, "clean-public-bucket")
+	assertNoArtifactFinding(t, &result, "clean-public-bucket")
 }
 
 func TestRepoArtifact_TrueNegative_ArtifactsPresentButPrivate(t *testing.T) {
@@ -126,7 +126,7 @@ func TestRepoArtifact_TrueNegative_ArtifactsPresentButPrivate(t *testing.T) {
 
 	result := ev.Evaluate(artifactSnapshot(bucket))
 
-	assertNoArtifactFinding(t, result, "private-with-git")
+	assertNoArtifactFinding(t, &result, "private-with-git")
 }
 
 func TestRepoArtifact_TrueNegative_FullyPrivate(t *testing.T) {
@@ -138,12 +138,12 @@ func TestRepoArtifact_TrueNegative_FullyPrivate(t *testing.T) {
 
 	result := ev.Evaluate(artifactSnapshot(bucket))
 
-	assertNoArtifactFinding(t, result, "safe-bucket")
+	assertNoArtifactFinding(t, &result, "safe-bucket")
 }
 
 // --- Assertion helpers ---
 
-func assertArtifactFinding(t *testing.T, result evaluation.ComplianceReport, assetID string) {
+func assertArtifactFinding(t *testing.T, result *evaluation.ComplianceReport, assetID string) {
 	t.Helper()
 	for _, f := range result.Findings {
 		if f.ControlID == controlRepoArtifact && f.AssetID == asset.ID(assetID) {
@@ -153,7 +153,7 @@ func assertArtifactFinding(t *testing.T, result evaluation.ComplianceReport, ass
 	t.Errorf("expected finding %s for asset %s, got %d findings", controlRepoArtifact, assetID, len(result.Findings))
 }
 
-func assertNoArtifactFinding(t *testing.T, result evaluation.ComplianceReport, assetID string) {
+func assertNoArtifactFinding(t *testing.T, result *evaluation.ComplianceReport, assetID string) {
 	t.Helper()
 	for _, f := range result.Findings {
 		if f.ControlID == controlRepoArtifact && f.AssetID == asset.ID(assetID) {

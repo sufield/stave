@@ -72,9 +72,172 @@ func (c *ResourceCheck) MarkInconclusive(reason string) {
 
 // ComplianceSummary provides high-level metrics for an evaluation run.
 type ComplianceSummary struct {
-	TotalAssets      int `json:"total_assets"`
-	ExposedResources int `json:"exposed_resources"`
-	Violations       int `json:"violations"`
+	TotalAssets                 int                  `json:"total_assets"`
+	ExposedResources            int                  `json:"exposed_resources"`
+	Violations                  int                  `json:"violations"`
+	FrameworkReadiness          []FrameworkReadiness `json:"framework_readiness,omitempty"`
+	FrameworkCitationsSatisfied int                  `json:"framework_citations_satisfied,omitempty"`
+	SuperFix                    *SuperFix            `json:"super_fix,omitempty"`
+	NearbyFrameworks            []NearbyFramework    `json:"nearby_frameworks,omitempty"`
+}
+
+// FrameworkReadiness shows per-framework compliance scores.
+type FrameworkReadiness struct {
+	Framework        string `json:"framework"`
+	TotalControls    int    `json:"total_controls"`
+	PassingControls  int    `json:"passing_controls"`
+	ReadinessPercent int    `json:"readiness_percent"`
+}
+
+// SuperFix identifies the single highest-impact remediation —
+// the violated control that satisfies the most framework citations.
+type SuperFix struct {
+	ControlID      kernel.ControlID `json:"control_id"`
+	FrameworkCount int              `json:"framework_count"`
+	Frameworks     []string         `json:"frameworks"`
+	CitationsFixed int              `json:"citations_fixed"`
+}
+
+// NearbyFramework is a framework the user did not request but is
+// nearly compliant with based on the evaluated controls.
+type NearbyFramework struct {
+	Framework        string `json:"framework"`
+	ReadinessPercent int    `json:"readiness_percent"`
+	GapCount         int    `json:"gap_count"`
+}
+
+// CalculateReadiness computes per-framework readiness scores from
+// the evaluated controls and findings. Each framework is scored
+// independently: readiness = passing / total × 100.
+func (r *ComplianceReport) CalculateReadiness(frameworks []string, allControlIDs []kernel.ControlID, controlCompliance map[kernel.ControlID]map[string]string) {
+	if len(frameworks) == 0 {
+		return
+	}
+
+	failingIDs := make(map[kernel.ControlID]bool, len(r.Findings))
+	for i := range r.Findings {
+		failingIDs[r.Findings[i].ControlID] = true
+	}
+
+	var totalCitations int
+	readiness := make([]FrameworkReadiness, 0, len(frameworks))
+
+	for _, fw := range frameworks {
+		total := 0
+		passing := 0
+		for _, ctlID := range allControlIDs {
+			cc, ok := controlCompliance[ctlID]
+			if !ok {
+				continue
+			}
+			if _, hasFW := cc[fw]; !hasFW {
+				continue
+			}
+			total++
+			totalCitations++
+			if !failingIDs[ctlID] {
+				passing++
+			}
+		}
+		pct := 100
+		if total > 0 {
+			pct = passing * 100 / total
+		}
+		readiness = append(readiness, FrameworkReadiness{
+			Framework:        fw,
+			TotalControls:    total,
+			PassingControls:  passing,
+			ReadinessPercent: pct,
+		})
+	}
+
+	r.Summary.FrameworkReadiness = readiness
+	r.Summary.FrameworkCitationsSatisfied = totalCitations
+
+	// Super-Fix: find the violated control covering the most frameworks.
+	r.Summary.SuperFix = computeSuperFix(failingIDs, controlCompliance, frameworks)
+
+	// Nearby frameworks: check all frameworks for near-readiness.
+	requestedSet := make(map[string]bool, len(frameworks))
+	for _, fw := range frameworks {
+		requestedSet[fw] = true
+	}
+	r.Summary.NearbyFrameworks = computeNearbyFrameworks(failingIDs, allControlIDs, controlCompliance, requestedSet)
+}
+
+func computeSuperFix(failingIDs map[kernel.ControlID]bool, controlCompliance map[kernel.ControlID]map[string]string, frameworks []string) *SuperFix {
+	fwSet := make(map[string]bool, len(frameworks))
+	for _, fw := range frameworks {
+		fwSet[fw] = true
+	}
+
+	var best *SuperFix
+	for ctlID := range failingIDs {
+		cc, ok := controlCompliance[ctlID]
+		if !ok {
+			continue
+		}
+		var fws []string
+		for fw := range cc {
+			if fwSet[fw] {
+				fws = append(fws, fw)
+			}
+		}
+		if len(fws) > 0 && (best == nil || len(fws) > best.FrameworkCount) {
+			best = &SuperFix{
+				ControlID:      ctlID,
+				FrameworkCount: len(fws),
+				Frameworks:     fws,
+				CitationsFixed: len(fws),
+			}
+		}
+	}
+	return best
+}
+
+func computeNearbyFrameworks(failingIDs map[kernel.ControlID]bool, allControlIDs []kernel.ControlID, controlCompliance map[kernel.ControlID]map[string]string, requestedSet map[string]bool) []NearbyFramework {
+	// Discover all frameworks across all controls.
+	allFWs := make(map[string]bool)
+	for _, cc := range controlCompliance {
+		for fw := range cc {
+			if !requestedSet[fw] {
+				allFWs[fw] = true
+			}
+		}
+	}
+
+	var nearby []NearbyFramework
+	for fw := range allFWs {
+		total := 0
+		passing := 0
+		for _, ctlID := range allControlIDs {
+			cc, ok := controlCompliance[ctlID]
+			if !ok {
+				continue
+			}
+			if _, has := cc[fw]; !has {
+				continue
+			}
+			total++
+			if !failingIDs[ctlID] {
+				passing++
+			}
+		}
+		if total == 0 {
+			continue
+		}
+		pct := passing * 100 / total
+		gap := total - passing
+		// Only report frameworks with >= 80% readiness.
+		if pct >= 80 {
+			nearby = append(nearby, NearbyFramework{
+				Framework:        fw,
+				ReadinessPercent: pct,
+				GapCount:         gap,
+			})
+		}
+	}
+	return nearby
 }
 
 // SkippedControl identifies a control that was ignored during the run.

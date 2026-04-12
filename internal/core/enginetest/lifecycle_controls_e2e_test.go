@@ -76,7 +76,7 @@ func lifecycleEvaluator(t *testing.T) *testEvaluator {
 	)
 }
 
-func assertHasLifecycleFinding(t *testing.T, result evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
+func assertHasLifecycleFinding(t *testing.T, result *evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
 	t.Helper()
 	for _, f := range result.Findings {
 		if f.ControlID == controlID && f.AssetID == asset.ID(assetID) {
@@ -86,7 +86,7 @@ func assertHasLifecycleFinding(t *testing.T, result evaluation.ComplianceReport,
 	t.Errorf("expected finding %s for asset %s, got %d findings", controlID, assetID, len(result.Findings))
 }
 
-func assertNoLifecycleFinding(t *testing.T, result evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
+func assertNoLifecycleFinding(t *testing.T, result *evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
 	t.Helper()
 	for _, f := range result.Findings {
 		if f.ControlID == controlID && f.AssetID == asset.ID(assetID) {
@@ -109,7 +109,7 @@ func TestLifecycle001_TruePositive_RetentionTaggedNoRules(t *testing.T) {
 
 	result := ev.Evaluate(lifecycleSnapshot(bucket))
 
-	assertHasLifecycleFinding(t, result, "CTL.S3.LIFECYCLE.001", "no-rules-bucket")
+	assertHasLifecycleFinding(t, &result, "CTL.S3.LIFECYCLE.001", "no-rules-bucket")
 }
 
 func TestLifecycle001_TrueNegative_RetentionTaggedWithRules(t *testing.T) {
@@ -122,7 +122,7 @@ func TestLifecycle001_TrueNegative_RetentionTaggedWithRules(t *testing.T) {
 
 	result := ev.Evaluate(lifecycleSnapshot(bucket))
 
-	assertNoLifecycleFinding(t, result, "CTL.S3.LIFECYCLE.001", "rules-bucket")
+	assertNoLifecycleFinding(t, &result, "CTL.S3.LIFECYCLE.001", "rules-bucket")
 }
 
 func TestLifecycle001_TrueNegative_NoRetentionTag(t *testing.T) {
@@ -134,7 +134,7 @@ func TestLifecycle001_TrueNegative_NoRetentionTag(t *testing.T) {
 
 	result := ev.Evaluate(lifecycleSnapshot(bucket))
 
-	assertNoLifecycleFinding(t, result, "CTL.S3.LIFECYCLE.001", "untagged-bucket")
+	assertNoLifecycleFinding(t, &result, "CTL.S3.LIFECYCLE.001", "untagged-bucket")
 }
 
 // --- LIFECYCLE.002: PHI Buckets Must Not Expire Data Before Minimum Retention ---
@@ -152,7 +152,7 @@ func TestLifecycle002_TruePositive_PHIShortExpiration(t *testing.T) {
 
 	result := ev.Evaluate(lifecycleSnapshot(bucket))
 
-	assertHasLifecycleFinding(t, result, "CTL.S3.LIFECYCLE.002", "short-exp-bucket")
+	assertHasLifecycleFinding(t, &result, "CTL.S3.LIFECYCLE.002", "short-exp-bucket")
 }
 
 func TestLifecycle002_TrueNegative_PHISufficientExpiration(t *testing.T) {
@@ -166,7 +166,7 @@ func TestLifecycle002_TrueNegative_PHISufficientExpiration(t *testing.T) {
 
 	result := ev.Evaluate(lifecycleSnapshot(bucket))
 
-	assertNoLifecycleFinding(t, result, "CTL.S3.LIFECYCLE.002", "long-exp-bucket")
+	assertNoLifecycleFinding(t, &result, "CTL.S3.LIFECYCLE.002", "long-exp-bucket")
 }
 
 func TestLifecycle002_TrueNegative_PHINoExpiration(t *testing.T) {
@@ -181,7 +181,7 @@ func TestLifecycle002_TrueNegative_PHINoExpiration(t *testing.T) {
 
 	result := ev.Evaluate(lifecycleSnapshot(bucket))
 
-	assertNoLifecycleFinding(t, result, "CTL.S3.LIFECYCLE.002", "no-exp-bucket")
+	assertNoLifecycleFinding(t, &result, "CTL.S3.LIFECYCLE.002", "no-exp-bucket")
 }
 
 func TestLifecycle002_TrueNegative_NonPHIBucket(t *testing.T) {
@@ -196,5 +196,5 @@ func TestLifecycle002_TrueNegative_NonPHIBucket(t *testing.T) {
 
 	result := ev.Evaluate(lifecycleSnapshot(bucket))
 
-	assertNoLifecycleFinding(t, result, "CTL.S3.LIFECYCLE.002", "internal-bucket")
+	assertNoLifecycleFinding(t, &result, "CTL.S3.LIFECYCLE.002", "internal-bucket")
 }

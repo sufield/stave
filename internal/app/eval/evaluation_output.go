@@ -21,7 +21,7 @@ type OutputPipeline struct {
 }
 
 // Run executes the pipeline, writing the marshaled result to w.
-func (p *OutputPipeline) Run(ctx context.Context, w io.Writer, result evaluation.ComplianceReport) error {
+func (p *OutputPipeline) Run(ctx context.Context, w io.Writer, result *evaluation.ComplianceReport) error {
 	if err := ctx.Err(); err != nil {
 		return err
 	}

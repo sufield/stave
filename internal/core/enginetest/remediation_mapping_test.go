@@ -55,7 +55,7 @@ func TestRemediationPlanner_EnrichFindings_SpecMapping(t *testing.T) {
 				},
 			}
 
-			enriched := planner.EnrichFindings(result)
+			enriched := planner.EnrichFindings(&result)
 			if len(enriched) != 1 {
 				t.Fatalf("expected 1 enriched finding, got %d", len(enriched))
 			}
@@ -89,7 +89,7 @@ func TestRemediationPlanner_YAMLRemediationPrecedence(t *testing.T) {
 		},
 	}
 
-	enriched := planner.EnrichFindings(result)
+	enriched := planner.EnrichFindings(&result)
 	if len(enriched) != 1 {
 		t.Fatalf("expected 1 enriched finding, got %d", len(enriched))
 	}
@@ -122,7 +122,7 @@ func TestRemediationPlanner_YAMLExampleFieldFlowsThrough(t *testing.T) {
 		},
 	}
 
-	enriched := planner.EnrichFindings(result)
+	enriched := planner.EnrichFindings(&result)
 	if len(enriched) != 1 {
 		t.Fatalf("expected 1 enriched finding, got %d", len(enriched))
 	}
@@ -146,7 +146,7 @@ func TestRemediationPlanner_FallbackWhenNoYAMLRemediation(t *testing.T) {
 		},
 	}
 
-	enriched := planner.EnrichFindings(result)
+	enriched := planner.EnrichFindings(&result)
 	if len(enriched) != 1 {
 		t.Fatalf("expected 1 enriched finding, got %d", len(enriched))
 	}
@@ -167,7 +167,7 @@ func TestRemediationPlanner_EnrichFindings(t *testing.T) {
 		},
 	}
 
-	enriched := planner.EnrichFindings(result)
+	enriched := planner.EnrichFindings(&result)
 
 	if len(enriched) != 2 {
 		t.Fatalf("expected 2 enriched findings, got %d", len(enriched))

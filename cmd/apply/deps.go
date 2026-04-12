@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"path/filepath"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
@@ -96,6 +97,10 @@ func (b *Builder) Build(ctx context.Context, plan *appeval.EvaluationPlan) (*app
 		return nil, fmt.Errorf("initialize CEL evaluator: %w", err)
 	}
 
+	// Auto-discover chain definitions from chains/ directory.
+	chainsDir := filepath.Join(filepath.Dir(b.Opts.ControlsDir), "chains")
+	chains, _ := ctlyaml.LoadChains(chainsDir)
+
 	built, err := appeval.BuildDependencies(ctx, &appeval.BuildDependenciesInput{
 		Logger: b.Logger,
 		Plan:   *plan,
@@ -115,6 +120,7 @@ func (b *Builder) Build(ctx context.Context, plan *appeval.EvaluationPlan) (*app
 			PredicateParser:   ctlyaml.ParsePredicate,
 			CELEvaluator:      celEval,
 			Tracer:            b.Tracer,
+			ChainDefs:         chains,
 		},
 		Writers: appeval.OutputWriters{
 			Stdout: b.Stdout,
@@ -163,7 +169,7 @@ func (b *Builder) buildAdapters() (adapters, error) {
 // into findings with remediation plans. Pure function — no closure over builder state.
 func buildEnrichFn(sanitizer kernel.Sanitizer) appcontracts.EnrichFunc {
 	enricher := remediation.NewPlanner()
-	return func(result evaluation.ComplianceReport) (appcontracts.EnrichedResult, error) {
+	return func(result *evaluation.ComplianceReport) (appcontracts.EnrichedResult, error) {
 		return appeval.Enrich(enricher, sanitizer, result)
 	}
 }

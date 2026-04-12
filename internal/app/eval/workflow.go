@@ -172,3 +172,11 @@ func (w *AuditWorkflow) enrichWithRiskReasoning(
 	}
 	report.TopExposures = risk.RankExposures(rankInputs, controlLookup, 0)
 }
+
+// EnrichReport applies risk reasoning (chains, attack stages, exposure
+// ranking) to an evaluation report. Exported for use by the profile
+// runner which bypasses the standard assessment workflow.
+func EnrichReport(report *evaluation.ComplianceReport, controls []policy.ControlDefinition, chainDefs []policy.ChainDefinition) {
+	w := &AuditWorkflow{}
+	w.enrichWithRiskReasoning(report, controls, chainDefs)
+}

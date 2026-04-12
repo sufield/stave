@@ -85,12 +85,7 @@ func mapFinding(f *remediation.Finding, timestamp string) ASFFinding {
 			Type: string(f.AssetType),
 			ID:   string(f.AssetID),
 		}},
-		ProductFields: map[string]string{
-			"ControlId":     string(f.ControlID),
-			"SecurityState": "NON_COMPLIANT",
-			"DurationHours": fmt.Sprintf("%.1f", f.Evidence.UnsafeDurationHours),
-			"StaveVersion":  "edge",
-		},
+		ProductFields: buildProductFields(f),
 	}
 
 	if f.RemediationSpec.Action != "" {
@@ -140,6 +135,23 @@ func MarshalASFF(assessment *report.Assessment) ([]byte, error) {
 	findings := MapAssessment(assessment)
 	findings = append(findings, MapChainFindings(assessment.ChainFindings, now)...)
 	return json.MarshalIndent(findings, "", "  ")
+}
+
+// buildProductFields creates ASFF ProductFields with all compliance
+// citations from the finding's ComplianceMapping. GRC tools see the
+// finding mapped to every relevant framework dashboard.
+func buildProductFields(f *remediation.Finding) map[string]string {
+	fields := map[string]string{
+		"ControlId":     string(f.ControlID),
+		"SecurityState": "NON_COMPLIANT",
+		"DurationHours": fmt.Sprintf("%.1f", f.Evidence.UnsafeDurationHours),
+		"StaveVersion":  "edge",
+	}
+	// Add all compliance citations as separate ProductFields.
+	for fw, req := range f.ControlCompliance {
+		fields["Compliance."+string(fw)] = req
+	}
+	return fields
 }
 
 func mapSeverity(sev string) ASFFSeverity {
