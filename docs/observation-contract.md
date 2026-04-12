@@ -532,6 +532,54 @@ GDPR, FFIEC, and ISO 27001 compliance coverage. Each follows the same
 
 ---
 
+## Unauthenticated reachability namespace
+
+The `reachability.*` namespace is a cross-cutting concern overlaid on any
+asset type (S3 bucket, DynamoDB table, Secrets Manager secret, etc.). The
+extractor performs BFS from an anonymous principal node through access
+grants (IAM policies, bucket policies, role assumptions, VPC endpoint
+policies, security group rules) and annotates each reachable target
+resource with path metadata.
+
+| Property | Type | Description |
+|---|---|---|
+| `reachability.kind` | string | Discriminator: `anonymous_path` |
+| `reachability.anonymous_path.reachable` | bool | Resource is reachable from anonymous |
+| `reachability.anonymous_path.path_hop_count` | int | Edges in shortest path from anonymous |
+| `reachability.anonymous_path.path_summary` | string[] | Ordered node names in the path (diagnostic) |
+| `reachability.anonymous_path.target_data_classification` | string | `phi`, `pii`, `confidential`, `public`, `none` |
+| `reachability.anonymous_path.has_auth_boundary` | bool | WAF, Cognito, Lambda authorizer, or IAM auth in path |
+| `reachability.anonymous_path.auth_boundary_type` | string/null | `waf`, `cognito`, `lambda_authorizer`, `iam`, or null |
+| `reachability.anonymous_path.entry_point_type` | string/null | First externally-facing service (`apigateway`, `elb`, etc.) |
+
+**Example observation:**
+
+```json
+{
+  "id": "arn:aws:s3:::my-phi-bucket",
+  "type": "aws_s3_bucket",
+  "vendor": "aws",
+  "properties": {
+    "reachability": {
+      "kind": "anonymous_path",
+      "anonymous_path": {
+        "reachable": true,
+        "path_hop_count": 4,
+        "path_summary": ["anonymous", "apigateway:my-api/GET/*", "lambda:my-fn", "iam_role:lambda-role", "s3:my-phi-bucket"],
+        "target_data_classification": "phi",
+        "has_auth_boundary": false,
+        "entry_point_type": "apigateway"
+      }
+    }
+  }
+}
+```
+
+**Controls:** CTL.EXPOSURE.ANON.001 (sensitive reachable), .002 (deep chain),
+.003 (no auth boundary). See [Unauthenticated Reachability](unauthenticated-reachability.md).
+
+---
+
 ## Important warning
 
 Do not hand-author production observations. Generate observations using an

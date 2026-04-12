@@ -1,0 +1,193 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "e7baeaa217a2120e9702ca4b79a1cf6fb4522ac10d1e12ae87e78da57dbb3748",
+        "2026-01-11T000000Z.json": "7fde85425ae90d5bd00e967359c826d41fd52ecc90daba1fc1263a40cc4c9977"
+      },
+      "overall": "0a15a28508d3a452b7aed4d742a5c8c5202b31fe9ee730e3e26ee8566916e11f"
+    },
+    "policy_fingerprint": "0bdd0043fa9b13b8803f0532f730ade2e940807774217a5ad216a2be4b96e33c"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.EXPOSURE.ANON.001",
+      "asset_id": "arn:aws:s3:::my-phi-bucket",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.EXPOSURE.ANON.001",
+      "control_name": "Sensitive Resources Must Not Be Reachable from Anonymous",
+      "control_description": "Resources tagged with sensitive data classifications (PHI, PII, confidential) must not be reachable from anonymous or unauthenticated principals through any composition of access grants. The extractor traces paths from anonymous through API Gateway routes, Lambda integrations, IAM role assumptions, bucket policies, VPC endpoint policies, and security group rules. This catches the API Gateway → Lambda → IAM Role → S3 Bucket pattern where every resource passes individual inspection but the composition creates an unauthenticated path to sensitive data.\n",
+      "asset_id": "arn:aws:s3:::my-phi-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "reachability.anonymous_path.reachable",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "reachability.anonymous_path.target_data_classification",
+            "actual_value": "[SANITIZED]",
+            "operator": "in",
+            "unsafe_value": [
+              "phi",
+              "pii",
+              "confidential"
+            ]
+          },
+          {
+            "property": "reachability.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "anonymous_path"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance": {
+        "fedramp_moderate": "AC-3",
+        "gdpr": "Art.32",
+        "hipaa": "164.312(a)(1)",
+        "nist_800_53_r5": "AC-3",
+        "pci_dss_v4.0": "7.2.1",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "A sensitive resource is reachable from the public internet through a chain of access grants. No individual resource is misconfigured, but the composition creates an unauthenticated path to data classified as sensitive.",
+        "action": "Add an authorization layer to the path. Configure an API Gateway authorizer (Cognito, Lambda, or IAM), attach a WAF with managed rule groups, or remove the Lambda function's permission to access the sensitive resource. Review the full path and break the chain at the most appropriate point.",
+        "example": "{\n  \"reachability\": {\n    \"kind\": \"anonymous_path\",\n    \"anonymous_path\": {\n      \"reachable\": false,\n      \"target_data_classification\": \"phi\"\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-bbc4c88c349311b3",
+        "target": {
+          "asset_id": "arn:aws:s3:::my-phi-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+      }
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "arn:aws:s3:::my-phi-bucket",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-bbc4c88c349311b3",
+        "target": {
+          "asset_id": "arn:aws:s3:::my-phi-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+      },
+      "contributing_controls": [
+        "CTL.EXPOSURE.ANON.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-exposure-anon-001-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-exposure-anon-001-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "7b8746067e9da70ba6c25253548e9f49ebd4c922",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-exposure-anon-001-fail/controls/"
+      ]
+    }
+  }
+}

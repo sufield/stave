@@ -95,11 +95,8 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "ea9ff9b4c84c25287b628c13f56a57d3ee364434",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-iam-password-rotation-fail/controls/"
-      ]
+      "head_commit": "7b8746067e9da70ba6c25253548e9f49ebd4c922",
+      "dirty": false
     }
   }
 }

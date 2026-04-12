@@ -1,0 +1,186 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "97d2f12e23af72ed698b113389f12cd35bc251542497bab8a481f2d4a730f28b",
+        "2026-01-11T000000Z.json": "7e7685dec5756a87c6aaea9202e81bcc31ceece748b2c0d2e3bbc5afbeda9d92"
+      },
+      "overall": "b1b7f08d8e73488f7a3372bf9ba6466ddf281fe8163e52919891b7ab2567b3b9"
+    },
+    "policy_fingerprint": "52a077562ca7e5045969bf5b8ac659dedac9f53cadd820bdece0d52eee52a23d"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.EXPOSURE.ANON.002",
+      "asset_id": "arn:aws:s3:::deep-chain-bucket",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.EXPOSURE.ANON.002",
+      "control_name": "Unauthenticated Access Path Must Not Exceed Depth Threshold",
+      "control_description": "Unauthenticated access paths to any resource must not exceed 3 hops. Deep chains (anonymous → API Gateway → Lambda → Role A → Role B → S3) indicate unintended transitive access. Each hop is an access grant — IAM policy, resource policy, role assumption, or network rule. Shorter paths are more likely intentional and auditable. Deep paths signal accidental composition where intermediate services were granted broader permissions than their design requires.\n",
+      "asset_id": "arn:aws:s3:::deep-chain-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "reachability.anonymous_path.path_hop_count",
+            "actual_value": "[SANITIZED]",
+            "operator": "gt",
+            "unsafe_value": 3
+          },
+          {
+            "property": "reachability.anonymous_path.reachable",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "reachability.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "anonymous_path"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "fedramp_moderate": "AC-6",
+        "nist_800_53_r5": "AC-6",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Unauthenticated access path to a resource exceeds 3 hops. Deep chains indicate unintended transitive access that is difficult to audit and often exceeds intended permissions.",
+        "action": "Flatten the access chain. Remove unnecessary intermediate services. Scope Lambda execution role permissions to the minimum required resources. Replace broad IAM role assumption chains with direct service-linked roles.",
+        "example": "{\n  \"reachability\": {\n    \"kind\": \"anonymous_path\",\n    \"anonymous_path\": {\n      \"reachable\": true,\n      \"path_hop_count\": 2\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-7f20c4be52f0872a",
+        "target": {
+          "asset_id": "arn:aws:s3:::deep-chain-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+      }
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "arn:aws:s3:::deep-chain-bucket",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-7f20c4be52f0872a",
+        "target": {
+          "asset_id": "arn:aws:s3:::deep-chain-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+      },
+      "contributing_controls": [
+        "CTL.EXPOSURE.ANON.002"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-exposure-anon-002-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-exposure-anon-002-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "7b8746067e9da70ba6c25253548e9f49ebd4c922",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-exposure-anon-002-fail/controls/"
+      ]
+    }
+  }
+}
