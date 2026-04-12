@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/sufield/stave/internal/core/asset"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // ObjectLockMode represents the S3 Object Lock retention mode.
@@ -70,7 +71,7 @@ type S3Encryption struct {
 
 // IsKMS reports whether the encryption algorithm is SSE-KMS (aws:kms).
 func (e S3Encryption) IsKMS() bool {
-	return strings.EqualFold(e.Algorithm, "aws:kms")
+	return strings.EqualFold(e.Algorithm, string(kernel.AlgorithmAWSKMS))
 }
 
 // IsAWSManagedKey reports whether the KMS key is the AWS-managed default
