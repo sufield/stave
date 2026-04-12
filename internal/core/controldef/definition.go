@@ -186,6 +186,82 @@ func getParam[T any](m map[string]any, key string) T {
 	return v
 }
 
+// --- Risk Metadata Accessors ---
+// These read from the Params bag, so existing controls without risk metadata
+// return safe defaults (0, "", nil, 1.0). New controls opt in by adding params.
+
+// BaseImpact returns the numeric base impact score (0-100).
+// Read from params.base_impact. Defaults to 0.
+func (d *ControlDefinition) BaseImpact() int {
+	v := getParam[float64](d.Params.m, "base_impact")
+	return int(v)
+}
+
+// AttackStage returns the MITRE ATT&CK-aligned attack stage.
+// Read from params.attack_stage. Defaults to "".
+// Values: initial_access, credential_access, persistence, exfiltration,
+// detection_evasion, resilience.
+func (d *ControlDefinition) AttackStage() string {
+	return getParam[string](d.Params.m, "attack_stage")
+}
+
+// ChainIDs returns the chain definition IDs this control participates in.
+// Read from params.chain_ids. Defaults to nil.
+func (d *ControlDefinition) ChainIDs() []string {
+	raw, ok := d.Params.Get("chain_ids")
+	if !ok {
+		return nil
+	}
+	switch v := raw.(type) {
+	case []any:
+		ids := make([]string, 0, len(v))
+		for _, item := range v {
+			if s, ok := item.(string); ok {
+				ids = append(ids, s)
+			}
+		}
+		return ids
+	case []string:
+		return v
+	default:
+		return nil
+	}
+}
+
+// BlastRadiusType returns the blast radius category (detection, prevention, recovery).
+// Read from params.blast_radius.type. Defaults to "".
+func (d *ControlDefinition) BlastRadiusType() string {
+	raw, ok := d.Params.Get("blast_radius")
+	if !ok {
+		return ""
+	}
+	m, ok := raw.(map[string]any)
+	if !ok {
+		return ""
+	}
+	return getParam[string](m, "type")
+}
+
+// BlastMultiplier returns the blast radius multiplier.
+// Read from params.blast_radius.multiplier. Defaults to 1.0.
+// Detection controls (e.g., CloudTrail) may have 2.5+ because disabling
+// them makes all other violations invisible.
+func (d *ControlDefinition) BlastMultiplier() float64 {
+	raw, ok := d.Params.Get("blast_radius")
+	if !ok {
+		return 1.0
+	}
+	m, ok := raw.(map[string]any)
+	if !ok {
+		return 1.0
+	}
+	v := getParam[float64](m, "multiplier")
+	if v == 0 {
+		return 1.0
+	}
+	return v
+}
+
 // paramString returns a string parameter or empty string if not found.
 func (p ControlParams) paramString(key string) string {
 	return getParam[string](p.m, key)

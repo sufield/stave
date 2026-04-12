@@ -1,0 +1,13 @@
+id: root_compromise_path
+description: >
+  Root account lacks fundamental protections. Without MFA, with active
+  access keys, and with admin policies attached — a single credential
+  theft gives unrestricted account control. This is the highest-impact
+  identity chain.
+controls:
+  - CTL.IAM.ROOT.MFA.001
+  - CTL.IAM.ROOT.ACCESSKEY.001
+  - CTL.IAM.POLICY.ADMIN.001
+  - CTL.IAM.ROOT.HWMFA.001
+escalation_threshold: 2
+compound_severity: critical

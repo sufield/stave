@@ -26,46 +26,52 @@ const (
 
 // AssessmentRequest bundles inputs for constructing a security assessment.
 type AssessmentRequest struct {
-	Run              evaluation.RunInfo
-	Summary          evaluation.ComplianceSummary
-	SecurityState    evaluation.SecurityState
-	RiskSignals      risk.ThresholdItems
-	Findings         []remediation.Finding
-	SkippedControls  []evaluation.SkippedControl
-	ExemptedAssets   []asset.ExemptedAsset
-	ExceptedFindings []evaluation.ExceptedFinding
+	Run                evaluation.RunInfo
+	Summary            evaluation.ComplianceSummary
+	SecurityState      evaluation.SecurityState
+	RiskSignals        risk.ThresholdItems
+	Findings           []remediation.Finding
+	ChainFindings      []risk.CompoundFinding
+	AttackStageSummary map[string]string
+	SkippedControls    []evaluation.SkippedControl
+	ExemptedAssets     []asset.ExemptedAsset
+	ExceptedFindings   []evaluation.ExceptedFinding
 }
 
 // Assessment is the top-level schema for a security evaluation outcome.
 type Assessment struct {
-	SchemaVersion     kernel.Schema                `json:"schema_version"`
-	Kind              Kind                         `json:"kind"`
-	Run               evaluation.RunInfo           `json:"run"`
-	Summary           evaluation.ComplianceSummary `json:"summary"`
-	Status            evaluation.SecurityState     `json:"status"`
-	RiskSignals       risk.ThresholdItems          `json:"risk_signals,omitempty"`
-	Findings          []remediation.Finding        `json:"findings"`
-	ExceptedFindings  []evaluation.ExceptedFinding `json:"excepted_findings,omitempty"`
-	RemediationGroups []remediation.Group          `json:"remediation_groups,omitempty"`
-	SkippedControls   []evaluation.SkippedControl  `json:"skipped_controls,omitempty"`
-	ExemptedAssets    []asset.ExemptedAsset        `json:"exempted_assets,omitempty"`
-	Extensions        *evaluation.Extensions       `json:"extensions,omitempty"`
+	SchemaVersion      kernel.Schema                `json:"schema_version"`
+	Kind               Kind                         `json:"kind"`
+	Run                evaluation.RunInfo           `json:"run"`
+	Summary            evaluation.ComplianceSummary `json:"summary"`
+	Status             evaluation.SecurityState     `json:"status"`
+	RiskSignals        risk.ThresholdItems          `json:"risk_signals,omitempty"`
+	Findings           []remediation.Finding        `json:"findings"`
+	ChainFindings      []risk.CompoundFinding       `json:"chain_findings,omitempty"`
+	AttackStageSummary map[string]string            `json:"attack_stage_summary,omitempty"`
+	ExceptedFindings   []evaluation.ExceptedFinding `json:"excepted_findings,omitempty"`
+	RemediationGroups  []remediation.Group          `json:"remediation_groups,omitempty"`
+	SkippedControls    []evaluation.SkippedControl  `json:"skipped_controls,omitempty"`
+	ExemptedAssets     []asset.ExemptedAsset        `json:"exempted_assets,omitempty"`
+	Extensions         *evaluation.Extensions       `json:"extensions,omitempty"`
 }
 
 // NewAssessment constructs an Assessment with normalized slices
 // (nil → [] for stable JSON output).
 func NewAssessment(req AssessmentRequest) *Assessment {
 	return &Assessment{
-		SchemaVersion:    kernel.SchemaOutput,
-		Kind:             KindAssessment,
-		Run:              req.Run,
-		Summary:          req.Summary,
-		Status:           req.SecurityState,
-		RiskSignals:      req.RiskSignals,
-		Findings:         emptyIfNil(req.Findings),
-		ExceptedFindings: emptyIfNil(req.ExceptedFindings),
-		SkippedControls:  emptyIfNil(req.SkippedControls),
-		ExemptedAssets:   emptyIfNil(req.ExemptedAssets),
+		SchemaVersion:      kernel.SchemaOutput,
+		Kind:               KindAssessment,
+		Run:                req.Run,
+		Summary:            req.Summary,
+		Status:             req.SecurityState,
+		RiskSignals:        req.RiskSignals,
+		Findings:           emptyIfNil(req.Findings),
+		ChainFindings:      req.ChainFindings,
+		AttackStageSummary: req.AttackStageSummary,
+		ExceptedFindings:   emptyIfNil(req.ExceptedFindings),
+		SkippedControls:    emptyIfNil(req.SkippedControls),
+		ExemptedAssets:     emptyIfNil(req.ExemptedAssets),
 	}
 }
 
