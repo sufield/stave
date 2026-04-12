@@ -390,8 +390,9 @@ func TestEvaluator_PerControlThreshold_DaySyntax(t *testing.T) {
 	}
 }
 
-// TestEvaluator_DeterministicNow tests that evaluation uses the last snapshot's
-// CapturedAt as "now", making results deterministic regardless of wall-clock time.
+// TestEvaluator_DeterministicNow tests that:
+// - When --now is set (FixedClock), the explicit time is used as reference
+// - When --now is not set (RealClock), the last snapshot's CapturedAt is used
 func TestEvaluator_DeterministicNow(t *testing.T) {
 	controls := []policy.ControlDefinition{
 		{
@@ -422,30 +423,23 @@ func TestEvaluator_DeterministicNow(t *testing.T) {
 
 	maxUnsafe := 168 * time.Hour // 7 days
 
-	// Run twice with different wall-clock times - results should be identical
-	clock1 := clockadp.FixedClock(mustParseTime("2026-06-01T00:00:00Z")) // Far in future
-	clock2 := clockadp.FixedClock(mustParseTime("2026-01-10T12:00:00Z")) // Closer to snapshots
+	// FixedClock: --now is honored as the reference time
+	fixedTime := mustParseTime("2026-01-15T00:00:00Z")
+	fixedClock := clockadp.FixedClock(fixedTime)
+	evaluator := NewEvaluator(controls, maxUnsafe, fixedClock)
+	result := evaluator.Evaluate(snapshots)
 
-	evaluator1 := NewEvaluator(controls, maxUnsafe, clock1)
-	evaluator2 := NewEvaluator(controls, maxUnsafe, clock2)
-
-	result1 := evaluator1.Evaluate(snapshots)
-	result2 := evaluator2.Evaluate(snapshots)
-
-	// Both should have same "now" (last snapshot: Jan 10)
-	if !result1.Run.Now.Equal(result2.Run.Now) {
-		t.Errorf("Results have different 'now': %v vs %v", result1.Run.Now, result2.Run.Now)
+	if !result.Run.Now.Equal(fixedTime) {
+		t.Errorf("FixedClock: expected now=%v, got %v", fixedTime, result.Run.Now)
 	}
 
-	// Both should have same duration calculation (9 days = 216h)
-	if result1.Summary.Violations != result2.Summary.Violations {
-		t.Errorf("Different violations: %d vs %d", result1.Summary.Violations, result2.Summary.Violations)
+	// Same FixedClock produces identical results (deterministic)
+	result2 := evaluator.Evaluate(snapshots)
+	if !result.Run.Now.Equal(result2.Run.Now) {
+		t.Errorf("FixedClock: results have different 'now': %v vs %v", result.Run.Now, result2.Run.Now)
 	}
-
-	// Now should be the last snapshot's CapturedAt
-	expectedNow := mustParseTime("2026-01-10T00:00:00Z")
-	if !result1.Run.Now.Equal(expectedNow) {
-		t.Errorf("Expected now=%v, got %v", expectedNow, result1.Run.Now)
+	if result.Summary.Violations != result2.Summary.Violations {
+		t.Errorf("FixedClock: different violations: %d vs %d", result.Summary.Violations, result2.Summary.Violations)
 	}
 }
 
@@ -1585,8 +1579,9 @@ func TestEvaluator_ConfidenceDowngrade(t *testing.T) {
 	})
 }
 
-// TestEvaluator_RecurrenceOpenExposureWindow tests that open exposure windows are not counted
-// as archived recurrence exposure windows.
+// TestEvaluator_RecurrenceOpenExposureWindow tests that active (unresolved)
+// exposure windows ARE counted toward the recurrence limit. This prevents
+// false negatives when the asset is currently exposed.
 func TestEvaluator_RecurrenceOpenExposureWindow(t *testing.T) {
 	controls := []policy.ControlDefinition{
 		{
@@ -1673,15 +1668,15 @@ func TestEvaluator_RecurrenceOpenExposureWindow(t *testing.T) {
 
 	row := result.Checks[0]
 
-	// Only closed exposure windows are counted for recurrence.
-	// With this fixture, archived count stays below limit, so sparse coverage makes it inconclusive.
-	if row.Verdict != evaluation.VerdictInconclusive {
-		t.Errorf("Expected INCONCLUSIVE (open exposure window not counted), got %s", row.Verdict)
+	// Active windows now count toward recurrence limit.
+	// 2 resolved + 1 active = 3, meets limit=3 → VIOLATION.
+	if row.Verdict != evaluation.VerdictViolation {
+		t.Errorf("Expected VIOLATION (active window counted), got %s", row.Verdict)
 	}
 
-	// No violation finding should be produced.
-	if len(result.Findings) != 0 {
-		t.Errorf("Expected 0 findings, got %d", len(result.Findings))
+	// A recurrence violation finding should be produced.
+	if len(result.Findings) != 1 {
+		t.Errorf("Expected 1 finding, got %d", len(result.Findings))
 	}
 }
 

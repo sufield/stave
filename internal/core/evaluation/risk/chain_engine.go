@@ -1,6 +1,7 @@
 package risk
 
 import (
+	"slices"
 	"strings"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
@@ -69,6 +70,7 @@ func DetectChains(
 		for s := range stageSet {
 			stages = append(stages, s)
 		}
+		slices.Sort(stages)
 
 		escalation := ChainEscalation(len(failing))
 		// Use a base score of 10 (default) × escalation × blast for chains

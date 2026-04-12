@@ -4,7 +4,7 @@
   "run": {
     "tool_version": "edge",
     "offline": true,
-    "now": "2026-01-10T00:00:00Z",
+    "now": "2026-01-11T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 3,
     "input_hashes": {
@@ -20,10 +20,56 @@
   "summary": {
     "total_assets": 1,
     "exposed_resources": 1,
-    "violations": 0
+    "violations": 1
   },
-  "status": "COMPLIANT",
-  "findings": [],
+  "status": "NON_COMPLIANT",
+  "findings": [
+    {
+      "control_id": "CTL.EXP.RECURRENCE.001",
+      "control_name": "Unsafe Exposure Recurrence Limit",
+      "control_description": "An asset must not have too many unsafe episodes within a rolling window.",
+      "asset_id": "res:aws:s3:bucket:recurring-bucket",
+      "asset_type": "storage_bucket",
+      "asset_vendor": "aws",
+      "source": {
+        "file": "main.tf",
+        "line": 42
+      },
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "exposure_window_count": 2,
+        "window_days": 90,
+        "recurrence_limit": 2,
+        "first_exposure_window_at": "2026-01-01T00:00:00Z",
+        "last_exposure_window_at": "2026-01-11T00:00:00Z"
+      },
+      "posture_drift": {
+        "pattern": "intermittent",
+        "exposure_window_count": 2
+      },
+      "remediation": {
+        "description": "Resource configuration deviates from security baseline.",
+        "action": "Review the misconfigured properties and revert to compliant values."
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.EXP.RECURRENCE.001",
+      "asset_id": "res:aws:s3:bucket:recurring-bucket",
+      "exposure_score": 10,
+      "breakdown": {
+        "base_score": 10,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 0
+      },
+      "silent_killer": false
+    }
+  ],
   "extensions": {
     "selected_controls_source": "dir",
     "context_name": "stave",
@@ -33,7 +79,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "63e47ad36c31f9d3e487f3e985d016523b77d97c",
+      "head_commit": "25417909e3bf93e8f1c56318f325b6daec038dbb",
       "dirty": false
     }
   }

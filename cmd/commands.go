@@ -249,7 +249,10 @@ func wireCISubtree(ciCmd *cobra.Command, p *compose.Provider) {
 			Clock:          ports.RealClock{},
 		},
 	}))
-	celEval, _ := p.NewCELEvaluator()
+	celEval, celErr := p.NewCELEvaluator()
+	if celErr != nil {
+		panic("initialize CEL evaluator for fix command: " + celErr.Error())
+	}
 	ciCmd.AddCommand(enforce.NewFixCmd(fix.Deps{
 		UseCaseDeps: usecase.FixDeps{
 			Loader: &infrafix.FindingLoader{CELEvaluator: celEval},

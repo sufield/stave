@@ -8,10 +8,11 @@ import (
 )
 
 func resolveProfileMode(o *Options, cs cobraState) (RunConfig, error) {
-	prof, err := ParseProfile(o.Profile)
+	profiles, err := ParseProfiles(o.Profile)
 	if err != nil {
 		return RunConfig{}, &ui.UserError{Err: err}
 	}
+	prof := profiles[0] // Primary profile for Config.Profile field
 
 	if o.InputFile == "" {
 		return RunConfig{}, &ui.UserError{Err: fmt.Errorf("--input is required when using --profile %s", o.Profile)}

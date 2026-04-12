@@ -118,14 +118,16 @@ func (s *unsafeStateStrategy) Evaluate(t *asset.ExposureLifecycle, now time.Time
 			Identities:        ids.At(t.LastObservedAt()),
 			PredicateParser:   s.deps.predicateParser(),
 		})
-		return finalizeRow(observation, evaluation.VerdictViolation, evaluation.ConfidenceHigh), []*evaluation.Finding{finding}
+		confidence := s.deps.confidenceCalculator().Derive(t.Stats().MaxGap(), maxUnsafe)
+		return finalizeRow(observation, evaluation.VerdictViolation, confidence), []*evaluation.Finding{finding}
 	}
 
 	span.RecordStep("verdict_decision", nil, map[string]any{
 		"verdict": "PASS",
 		"reason":  "predicate matched but exposure within SLA threshold",
 	})
-	return finalizeRow(observation, evaluation.VerdictPass, evaluation.ConfidenceHigh), nil
+	confidence := s.deps.confidenceCalculator().Derive(t.Stats().MaxGap(), maxUnsafe)
+	return finalizeRow(observation, evaluation.VerdictPass, confidence), nil
 }
 
 type unsafeDurationStrategy struct {

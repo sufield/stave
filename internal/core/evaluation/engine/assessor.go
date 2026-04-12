@@ -90,9 +90,13 @@ func (a *Assessor) sortSnapshots(snapshots []asset.Snapshot) []asset.Snapshot {
 	return sorted
 }
 
-// referenceTime establishes the "audit now" timestamp, using the latest snapshot
-// for reproducibility in historical audits.
+// referenceTime establishes the "audit now" timestamp.
+// If --now was set (FixedClock), the user's explicit time takes precedence.
+// Otherwise, the latest snapshot's CapturedAt is used for reproducibility.
 func (a *Assessor) referenceTime(snapshots []asset.Snapshot) time.Time {
+	if _, isFixed := a.Clock.(ports.FixedClock); isFixed {
+		return a.Clock.Now()
+	}
 	if len(snapshots) > 0 {
 		return snapshots[len(snapshots)-1].CapturedAt
 	}

@@ -45,11 +45,13 @@ func Evaluate(cp CompiledPredicate, a asset.Asset, identities []asset.CloudIdent
 // stringifyNamedTypes recursively converts named string types (like
 // kernel.AssetType, kernel.Vendor, asset.ID) to plain strings so CEL's
 // == operator can compare them with string literals.
+// Returns a new map — does not mutate the input.
 func stringifyNamedTypes(m map[string]any) map[string]any {
+	out := make(map[string]any, len(m))
 	for k, v := range m {
-		m[k] = stringifyValue(v)
+		out[k] = stringifyValue(v)
 	}
-	return m
+	return out
 }
 
 func stringifyValue(v any) any {
@@ -62,12 +64,13 @@ func stringifyValue(v any) any {
 	case bool, float64, int, int64, float32:
 		return val
 	case map[string]any:
-		return stringifyNamedTypes(val)
+		return stringifyNamedTypes(val) // returns new map, no mutation
 	case []any:
+		cp := make([]any, len(val))
 		for i, elem := range val {
-			val[i] = stringifyValue(elem)
+			cp[i] = stringifyValue(elem)
 		}
-		return val
+		return cp
 	default:
 		rv := reflect.ValueOf(v)
 		if rv.Kind() == reflect.String {
