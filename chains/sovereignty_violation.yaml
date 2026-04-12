@@ -1,0 +1,12 @@
+id: sovereignty_violation
+description: >
+  Sensitive data in a jurisdiction is structurally accessible from
+  outside that jurisdiction. Data residency is physically correct
+  (resource in EU) but logically violated (US principal can read it).
+  Combined with missing region enforcement, this creates a data
+  export path that defeats regulatory controls.
+controls:
+  - CTL.EXPOSURE.SOVEREIGNTY.001
+  - CTL.S3.REGION.001
+escalation_threshold: 2
+compound_severity: high

@@ -1,0 +1,206 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "3b175ed2207a087414b91569707db9b9533afb466036da9dd24c6c9ce449d98f",
+        "2026-01-11T000000Z.json": "fd98e6404dc690abccce92172f727eaeba86174b7ab446af97c6401c8109189c"
+      },
+      "overall": "d339156f06165f201e72651cd476c9003e05dbe60067753c2398e66394ba2155"
+    },
+    "policy_fingerprint": "46b1eecaefb799eb9a48e4583a0476ec97be528fdfb7bff37d67ab2856c3a668"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.EXPOSURE.SOVEREIGNTY.001",
+      "asset_id": "arn:aws:s3:::eu-patient-records",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.EXPOSURE.SOVEREIGNTY.001",
+      "control_name": "Sensitive Data Must Not Be Accessible from Outside Its Jurisdiction",
+      "control_description": "Resources containing sensitive data (PHI, PII, confidential) in a specific jurisdiction must have access restricted to principals in the same jurisdiction. A bucket in eu-west-1 accessible by a US-based principal is a structural jurisdictional violation — the data is physically in the EU but logically reachable from outside the EU, defeating data residency controls.\n",
+      "asset_id": "arn:aws:s3:::eu-patient-records",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "reachability.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "cross_border"
+          },
+          {
+            "property": "reachability.sovereignty.cross_border_access_detected",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "reachability.sovereignty.target_sensitivity",
+            "actual_value": "[SANITIZED]",
+            "operator": "in",
+            "unsafe_value": [
+              "phi",
+              "pii",
+              "confidential"
+            ]
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "fedramp_moderate": "AC-4",
+        "gdpr": "Art.44",
+        "nist_800_53_r5": "AC-4"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Sensitive data in a jurisdiction is accessible from a principal in a different jurisdiction. Data residency is structurally violated.",
+        "action": "Restrict access to the resource using IAM condition keys that enforce source VPC or source IP ranges within the jurisdiction. Use SCPs to deny cross-jurisdiction access at the organization level. Review resource-based policies for cross-region grants.",
+        "example": "{\n  \"reachability\": {\n    \"kind\": \"cross_border\",\n    \"sovereignty\": {\n      \"cross_border_access_detected\": false,\n      \"resource_jurisdiction\": \"eu\",\n      \"target_sensitivity\": \"pii\"\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-3499446e99474ec4",
+        "target": {
+          "asset_id": "arn:aws:s3:::eu-patient-records",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+      }
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "arn:aws:s3:::eu-patient-records",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-3499446e99474ec4",
+        "target": {
+          "asset_id": "arn:aws:s3:::eu-patient-records",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+      },
+      "contributing_controls": [
+        "CTL.EXPOSURE.SOVEREIGNTY.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.EXPOSURE.SOVEREIGNTY.001",
+      "asset_id": "arn:aws:s3:::eu-patient-records",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-exposure-sovereignty-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-exposure-sovereignty-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "243a30dff85cc49ea4f541f5b219876b48f5845b",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-exposure-sovereignty-fail/controls/"
+      ]
+    }
+  }
+}

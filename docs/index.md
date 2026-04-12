@@ -19,6 +19,10 @@
 - [Unauthenticated Reachability](unauthenticated-reachability.md) — Anonymous access path detection, composition attacks, extractor BFS
 - [Data Exfiltration](data-exfiltration.md) — Reverse reachability: how data gets out
 - [Drift Detection](drift-detection.md) — Configuration drift as a violation, baseline comparison
+- [Supply Chain Ingress](supply-chain-ingress.md) — OIDC federation trust analysis, CI/CD ingress risks
+- [Secret Blast Radius](secret-blast-radius.md) — Secret-to-data lateral movement, credential blast radius
+- [Recovery Isolation](recovery-isolation.md) — Decoupled recovery, anti-ransomware SPoF detection
+- [Data Sovereignty](data-sovereignty.md) — Cross-border access detection, jurisdictional compliance
 - [Evaluation Engine Capabilities](evaluation-engine-capabilities.md) — Predicate operators and matching
 - [Observation Contract](observation-contract.md) — Observation data requirements
 - [Contract-First Schemas](contracts.md) — Schema-driven design
@@ -33,6 +37,7 @@
 - [Exfiltration Extractor Guide](extractor-exfiltration.md) — Reverse reachability, egress detection, wildcard write analysis
 - [Cross-Env Extractor Guide](extractor-cross-env.md) — Transitive trust traversal across accounts
 - [Escalation Extractor Guide](extractor-escalation.md) — Multi-step privilege escalation chain analysis
+- [Supply Chain Extractor Guide](extractor-supply-chain.md) — OIDC trust policy analysis
 - [Pre-Commit Hook](integrations/pre-commit.md) — Block unsafe configs before commit
 - [Atlantis Post-Plan](integrations/atlantis.md) — Evaluate Terraform plans before apply
 - [OPA Rego Export](integrations/opa-export.md) — Export controls to OPA/Conftest Rego format

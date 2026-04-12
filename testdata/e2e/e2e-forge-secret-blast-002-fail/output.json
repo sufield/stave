@@ -1,0 +1,128 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "3c7df9692af8e653a3725a4934c5f83e4a3cecf228da572a9c6544c11b35e0d0",
+        "2026-01-11T000000Z.json": "3408095f89674c1064baa1092e6269e4541847789e909594bbfb7d51ab6f005b"
+      },
+      "overall": "666d51c4df130e524b31fa6f78d80c2bab177f31a208ea4dc015452216231527"
+    },
+    "policy_fingerprint": "cd6e4a5f4d7d938183aa1f36c85cc9a738681519922e8b4af4964032c4dc05e1"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.SECRET.BLAST.002",
+      "asset_id": "arn:aws:secretsmanager:us-east-1:123:secret/shared-db-creds",
+      "asset_type": "aws_secretsmanager_secret",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.SECRET.BLAST.002",
+      "control_name": "Cross-Account Secret Access Must Not Target Sensitive Resource",
+      "control_description": "Secrets that provide credentials to sensitive resources must have access restricted to the owning account. Cross-account access to a secret that unlocks PHI or PII data doubles the blast radius — the secret is reachable from a wider set of principals across account boundaries.\n",
+      "asset_id": "arn:aws:secretsmanager:us-east-1:123:secret/shared-db-creds",
+      "asset_type": "aws_secretsmanager_secret",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "secret.blast_radius.access_vector",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "cross_account"
+          },
+          {
+            "property": "secret.blast_radius.target_sensitivity",
+            "actual_value": "[SANITIZED]",
+            "operator": "in",
+            "unsafe_value": [
+              "phi",
+              "pii",
+              "confidential"
+            ]
+          },
+          {
+            "property": "secret.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "secret"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance": {
+        "fedramp_moderate": "AC-3",
+        "nist_800_53_r5": "AC-3",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Secret targeting sensitive resource is readable from another AWS account. Cross-account access widens the credential compromise surface.",
+        "action": "Remove cross-account access from the secret resource policy. If cross-account access is required, restrict to specific role ARNs and require an external ID condition.",
+        "example": "{\n  \"secret\": {\n    \"kind\": \"secret\",\n    \"blast_radius\": {\n      \"access_vector\": \"same_account\",\n      \"target_sensitivity\": \"phi\"\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.SECRET.BLAST.002",
+      "asset_id": "arn:aws:secretsmanager:us-east-1:123:secret/shared-db-creds",
+      "exposure_score": 250,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 2.5,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-secret-blast-002-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-secret-blast-002-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "243a30dff85cc49ea4f541f5b219876b48f5845b",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-secret-blast-002-fail/controls/"
+      ]
+    }
+  }
+}

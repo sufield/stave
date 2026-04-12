@@ -3,6 +3,7 @@ package cmd
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -154,13 +155,14 @@ func (r *VersionRunner) enrichWithIntegrity(out *versionOutput) {
 // ---------------------------------------------------------------------------
 
 func newVersionCmd(edition Edition) *cobra.Command {
-	var verbose, verify bool
+	var verbose, verify, sbom bool
 	cmd := &cobra.Command{
 		Use:   "version",
 		Short: "Print version and environment state",
 		Long: `Version prints binary version and, with --verbose, schema and lockfile status.
 With --verify, prints integrity hashes for the binary, embedded policy library,
 and Go module dependencies. Auditors compare these against known-good values.
+With --sbom, outputs a CycloneDX JSON Software Bill of Materials.
 
 Exit Codes:
   0   - Success
@@ -169,12 +171,16 @@ Exit Codes:
 Examples:
   stave version
   stave version --verbose
-  stave version --verify` + OfflineHelpSuffix,
+  stave version --verify
+  stave version --sbom > stave-sbom.json` + OfflineHelpSuffix,
 		Example:       `  stave version --verify`,
 		Args:          cobra.NoArgs,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			if sbom {
+				return writeSBOM(cmd.OutOrStdout(), edition)
+			}
 			runner := &VersionRunner{
 				Stdout: cmd.OutOrStdout(),
 			}
@@ -183,6 +189,7 @@ Examples:
 	}
 	cmd.Flags().BoolVar(&verbose, "verbose", false, "Include schema and lockfile status")
 	cmd.Flags().BoolVar(&verify, "verify", false, "Print binary and policy library integrity hashes")
+	cmd.Flags().BoolVar(&sbom, "sbom", false, "Output CycloneDX JSON Software Bill of Materials")
 	return cmd
 }
 
@@ -219,6 +226,74 @@ Examples:
 			return jsonutil.WriteIndented(cmd.OutOrStdout(), caps)
 		},
 	}
+}
+
+// writeSBOM generates a CycloneDX 1.5 JSON SBOM from Go build info.
+func writeSBOM(w io.Writer, _ Edition) error {
+	bi, ok := debug.ReadBuildInfo()
+	if !ok {
+		return errors.New("build info unavailable (binary built without module support)")
+	}
+
+	type sbomComponent struct {
+		Type    string `json:"type"`
+		Name    string `json:"name"`
+		Version string `json:"version"`
+		Purl    string `json:"purl,omitempty"`
+	}
+
+	type sbomTool struct {
+		Vendor  string `json:"vendor"`
+		Name    string `json:"name"`
+		Version string `json:"version"`
+	}
+
+	type sbomMetadata struct {
+		Timestamp string     `json:"timestamp"`
+		Tools     []sbomTool `json:"tools"`
+		Component struct {
+			Type    string `json:"type"`
+			Name    string `json:"name"`
+			Version string `json:"version"`
+		} `json:"component"`
+	}
+
+	type cyclonedx struct {
+		BOMFormat   string          `json:"bomFormat"`
+		SpecVersion string          `json:"specVersion"`
+		Version     int             `json:"version"`
+		Metadata    sbomMetadata    `json:"metadata"`
+		Components  []sbomComponent `json:"components"`
+	}
+
+	components := make([]sbomComponent, 0, len(bi.Deps))
+	for _, dep := range bi.Deps {
+		components = append(components, sbomComponent{
+			Type:    "library",
+			Name:    dep.Path,
+			Version: dep.Version,
+			Purl:    "pkg:golang/" + dep.Path + "@" + dep.Version,
+		})
+	}
+
+	doc := cyclonedx{
+		BOMFormat:   "CycloneDX",
+		SpecVersion: "1.5",
+		Version:     1,
+		Metadata: sbomMetadata{
+			Tools: []sbomTool{{
+				Vendor:  "sufield",
+				Name:    "stave",
+				Version: Version(),
+			}},
+		},
+		Components: components,
+	}
+	doc.Metadata.Component.Type = "application"
+	doc.Metadata.Component.Name = "stave"
+	doc.Metadata.Component.Version = Version()
+
+	return jsonutil.WriteIndented(w, doc)
 }
 
 // versionOutput represents the structured metadata for the binary.

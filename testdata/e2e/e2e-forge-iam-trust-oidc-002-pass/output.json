@@ -1,0 +1,39 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "2ebfb1e7ecedba2e9b10e6183820857994af555122b0fb4106581c5ecca98fb8",
+        "2026-01-11T000000Z.json": "a9f2382446f24e0c3d2138e9fe517c1a6c4e8d1e77b8a8cc40a73eeb30fcc1f1"
+      },
+      "overall": "f706f5f0ff0a2903cb7b925c21112cd8b4b9e049078316084a93edfa2fa72aeb"
+    },
+    "policy_fingerprint": "55d1cca9f06bee824ca9bd5f4cac3529bea994a0e516b9fecc9862aaee3f2108"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-trust-oidc-002-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-trust-oidc-002-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "243a30dff85cc49ea4f541f5b219876b48f5845b",
+      "dirty": false
+    }
+  }
+}

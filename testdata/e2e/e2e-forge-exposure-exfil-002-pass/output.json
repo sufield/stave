@@ -32,11 +32,8 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "8b468ec12ee68a0de591b8a767b86c1b0399a40d",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-exposure-exfil-002-pass/controls/"
-      ]
+      "head_commit": "243a30dff85cc49ea4f541f5b219876b48f5845b",
+      "dirty": false
     }
   }
 }

@@ -1,0 +1,1 @@
+{"assets":[{"id":"arn:aws:secretsmanager:us-east-1:123:secret/shared-db-creds","properties":{"secret":{"kind":"secret","blast_radius":{"target_sensitivity":"pii","access_vector":"cross_account","privileged_reader_count":3}}},"type":"aws_secretsmanager_secret","vendor":"aws"}],"captured_at":"2026-01-11T00:00:00Z","schema_version":"obs.v0.1"}

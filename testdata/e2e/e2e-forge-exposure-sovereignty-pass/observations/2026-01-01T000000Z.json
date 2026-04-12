@@ -1,0 +1,1 @@
+{"assets":[{"id":"arn:aws:s3:::eu-patient-records","properties":{"reachability":{"kind":"cross_border","sovereignty":{"cross_border_access_detected":false,"resource_jurisdiction":"eu","accessor_jurisdiction":"eu","target_sensitivity":"pii"}}},"type":"aws_s3_bucket","vendor":"aws"}],"captured_at":"2026-01-01T00:00:00Z","schema_version":"obs.v0.1"}

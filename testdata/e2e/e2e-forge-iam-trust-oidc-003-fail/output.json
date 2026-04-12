@@ -1,0 +1,114 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "c8c41e68947a30f5d3d39f4a11ac8ee00cedab457c6a88b864436d2fab487da5",
+        "2026-01-11T000000Z.json": "46b195807558011fec50f2df8f7eab3274102c01ffc79bd9333a3d28f0ac00ca"
+      },
+      "overall": "b75ab95264b2b846092bd7d3ad7e00b3b865dde0365ed024f1eaf71d1868826c"
+    },
+    "policy_fingerprint": "7fdf3335b9aa5eeb4804f7fdb7fc92b885149c07267bcf75de7d9b9597eae226"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.IAM.TRUST.OIDC.003",
+      "asset_id": "arn:aws:iam::123456789:role/cicd-admin",
+      "asset_type": "aws_iam_role",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.IAM.TRUST.OIDC.003",
+      "control_name": "OIDC Federation Role Must Have Scoped Permissions",
+      "control_description": "IAM roles assumed via OIDC federation (CI/CD pipelines) must have scoped permissions appropriate for their deployment task. A CI/CD role with AdministratorAccess or broad wildcard actions creates a supply chain blast radius — any compromise of the CI/CD pipeline grants full account access. The extractor checks if the role's effective permissions exceed a deployment-appropriate scope.\n",
+      "asset_id": "arn:aws:iam::123456789:role/cicd-admin",
+      "asset_type": "aws_iam_role",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "identity.trust.oidc.has_admin_permissions",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "identity.trust.oidc.has_oidc_trust",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "nist_800_53_r5": "AC-6(5)",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "OIDC-trusted CI/CD role has overly broad permissions. Pipeline compromise grants excessive access.",
+        "action": "Scope the role's permissions to the minimum required for the deployment task. Replace AdministratorAccess with task-specific policies (e.g., s3:PutObject on the deployment bucket, ecs:UpdateService on the target cluster).",
+        "example": "{\n  \"identity\": {\n    \"kind\": \"role\",\n    \"trust\": {\n      \"oidc\": {\n        \"has_oidc_trust\": true,\n        \"has_admin_permissions\": false\n      }\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.IAM.TRUST.OIDC.003",
+      "asset_id": "arn:aws:iam::123456789:role/cicd-admin",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-trust-oidc-003-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-trust-oidc-003-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "243a30dff85cc49ea4f541f5b219876b48f5845b",
+      "dirty": false
+    }
+  }
+}

@@ -38,6 +38,7 @@ packs:
       - CTL.VPC.SG.DEFAULT.001
       - CTL.EXPOSURE.ANON.001
       - CTL.EXPOSURE.EXFIL.001
+      - CTL.SECRET.BLAST.001
       # §164.312(a)(2)(i) — Unique User Identification
       - CTL.IAM.CRED.ROTATION.001
       - CTL.IAM.CRED.UNUSED.001
@@ -217,6 +218,11 @@ packs:
       - CTL.IAM.ESCALATE.CHAIN.001
       - CTL.IAM.CROSS.ENV.PATH.001
       - CTL.IAM.IDENTITY.BLASTRADIUS.004
+      - CTL.IAM.TRUST.OIDC.001
+      - CTL.IAM.TRUST.OIDC.002
+      - CTL.SECRET.BLAST.001
+      - CTL.SECRET.BLAST.002
+      - CTL.BACKUP.RECOVERY.ISOLATION.002
       - CTL.S3.PUBLIC.001
       - CTL.S3.ENCRYPT.001
       - CTL.S3.ENCRYPT.002
@@ -378,6 +384,9 @@ packs:
       - CTL.EXPOSURE.EXFIL.001
       - CTL.IAM.ESCALATE.CHAIN.001
       - CTL.IAM.CROSS.ENV.PATH.001
+      - CTL.IAM.TRUST.OIDC.001
+      - CTL.IAM.TRUST.OIDC.002
+      - CTL.IAM.TRUST.OIDC.003
       # Req 8 — Authentication
       - CTL.IAM.ROOT.MFA.001
       - CTL.IAM.ROOT.ACCESSKEY.001
@@ -425,6 +434,7 @@ packs:
       - CTL.S3.ACL.OBJECT.001
       - CTL.S3.ACCOUNT.PAB.001
       - CTL.EXPOSURE.ANON.001
+      - CTL.EXPOSURE.SOVEREIGNTY.001
   ffiec:
     description: FFIEC financial institution compliance controls
     controls:
@@ -1094,6 +1104,15 @@ controls:
   CTL.IAM.CROSS.ENV.PATH.001:
     path: internal/controldata/embedded/iam/policy/CTL.IAM.CROSS.ENV.PATH.001.yaml
     summary: Production Must Not Be Reachable from Lower Environment via Transitive Trust
+  CTL.IAM.TRUST.OIDC.001:
+    path: internal/controldata/embedded/iam/trust/CTL.IAM.TRUST.OIDC.001.yaml
+    summary: OIDC Federation Trust Must Be Scoped to Specific Repository
+  CTL.IAM.TRUST.OIDC.002:
+    path: internal/controldata/embedded/iam/trust/CTL.IAM.TRUST.OIDC.002.yaml
+    summary: OIDC Federation Must Not Use Wildcard Subject Claim
+  CTL.IAM.TRUST.OIDC.003:
+    path: internal/controldata/embedded/iam/trust/CTL.IAM.TRUST.OIDC.003.yaml
+    summary: OIDC Federation Role Must Have Scoped Permissions
   CTL.IAM.ADMIN.COUNT.001:
     path: internal/controldata/embedded/iam/admin/CTL.IAM.ADMIN.COUNT.001.yaml
     summary: Admin User Count Must Not Exceed Threshold
@@ -1139,6 +1158,12 @@ controls:
   CTL.EXPOSURE.EXFIL.INCOMPLETE.001:
     path: internal/controldata/embedded/exposure/exfil/CTL.EXPOSURE.EXFIL.INCOMPLETE.001.yaml
     summary: Complete Data Required for Exfiltration Assessment
+  CTL.EXPOSURE.SOVEREIGNTY.001:
+    path: internal/controldata/embedded/exposure/sovereignty/CTL.EXPOSURE.SOVEREIGNTY.001.yaml
+    summary: Sensitive Data Must Not Be Accessible from Outside Its Jurisdiction
+  CTL.EXPOSURE.SOVEREIGNTY.INCOMPLETE.001:
+    path: internal/controldata/embedded/exposure/sovereignty/CTL.EXPOSURE.SOVEREIGNTY.INCOMPLETE.001.yaml
+    summary: Complete Data Required for Sovereignty Assessment
   CTL.CLOUDFORMATION.ROLLBACK.001:
     path: internal/controldata/embedded/cloudformation/drift/CTL.CLOUDFORMATION.ROLLBACK.001.yaml
     summary: CloudFormation Stacks Must Have Rollback Enabled
@@ -1433,6 +1458,12 @@ controls:
   CTL.BACKUP.REPLICATION.001:
     path: internal/controldata/embedded/backup/availability/CTL.BACKUP.REPLICATION.001.yaml
     summary: Critical Data Must Have Cross-Region Replication
+  CTL.BACKUP.RECOVERY.ISOLATION.001:
+    path: internal/controldata/embedded/backup/recovery/CTL.BACKUP.RECOVERY.ISOLATION.001.yaml
+    summary: Backup KMS Key Must Be in Different Account Than Source Data
+  CTL.BACKUP.RECOVERY.ISOLATION.002:
+    path: internal/controldata/embedded/backup/recovery/CTL.BACKUP.RECOVERY.ISOLATION.002.yaml
+    summary: Data Admin Must Not Have KMS Key Deletion Permission
   CTL.BACKUP.INCOMPLETE.001:
     path: internal/controldata/embedded/backup/misc/CTL.BACKUP.INCOMPLETE.001.yaml
     summary: Complete Data Required for Backup Assessment
@@ -1568,6 +1599,15 @@ controls:
   CTL.SECRETSMANAGER.INCOMPLETE.001:
     path: internal/controldata/embedded/secretsmanager/misc/CTL.SECRETSMANAGER.INCOMPLETE.001.yaml
     summary: Complete Data Required for Secrets Manager Assessment
+  CTL.SECRET.BLAST.001:
+    path: internal/controldata/embedded/secretsmanager/blast/CTL.SECRET.BLAST.001.yaml
+    summary: Secret with Multiple Readers Must Not Target Sensitive Resource
+  CTL.SECRET.BLAST.002:
+    path: internal/controldata/embedded/secretsmanager/blast/CTL.SECRET.BLAST.002.yaml
+    summary: Cross-Account Secret Access Must Not Target Sensitive Resource
+  CTL.SECRET.BLAST.INCOMPLETE.001:
+    path: internal/controldata/embedded/secretsmanager/blast/CTL.SECRET.BLAST.INCOMPLETE.001.yaml
+    summary: Complete Data Required for Secret Blast Radius Assessment
   CTL.SNS.ENCRYPT.001:
     path: internal/controldata/embedded/sns/encrypt/CTL.SNS.ENCRYPT.001.yaml
     summary: SNS Topics Must Be Encrypted with KMS
