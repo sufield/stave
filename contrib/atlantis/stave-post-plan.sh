@@ -19,7 +19,7 @@
 # Environment:
 #   PLANFILE          — path to terraform plan JSON (set by Atlantis)
 #   STAVE_CONTROLS    — controls directory (default: controls/)
-#   STAVE_PROFILE     — compliance profile (optional)
+#   STAVE_PROFILE     — compliance profile (optional, must be alphanumeric/hyphen)
 #   STAVE_MAX_UNSAFE  — max unsafe duration (default: 0s for plan checks)
 #
 set -euo pipefail
@@ -37,9 +37,9 @@ if ! command -v jq &>/dev/null; then
     exit 0
 fi
 
-PLANFILE="${PLANFILE:-$SHOWFILE}"
-if [ ! -f "$PLANFILE" ]; then
-    echo "stave: no plan file found at $PLANFILE — skipping"
+PLANFILE="${PLANFILE:-${SHOWFILE:-}}"
+if [ -z "$PLANFILE" ] || [ ! -f "$PLANFILE" ]; then
+    echo "stave: no plan file found — skipping"
     exit 0
 fi
 
@@ -47,10 +47,18 @@ CONTROLS="${STAVE_CONTROLS:-controls}"
 MAX_UNSAFE="${STAVE_MAX_UNSAFE:-0s}"
 NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 
+# Sanitize STAVE_PROFILE — allow only alphanumeric, hyphen, underscore.
+PROFILE="${STAVE_PROFILE:-}"
+if [ -n "$PROFILE" ] && ! echo "$PROFILE" | grep -qE '^[a-zA-Z0-9_-]+$'; then
+    echo "stave: invalid STAVE_PROFILE value — skipping"
+    exit 0
+fi
+
 # ── Convert plan to observations ─────────────────────────
 
 WORKDIR=$(mktemp -d)
 trap 'rm -rf "$WORKDIR"' EXIT
+mkdir -p "$WORKDIR/observations"
 
 # Generate plan JSON if not already JSON.
 if file "$PLANFILE" | grep -q "text"; then
@@ -61,13 +69,14 @@ else
 fi
 
 # Extract planned resource configurations to obs.v0.1.
-# This is a minimal extractor — production use should use a full
-# Terraform-to-obs extractor (Steampipe, CloudQuery, or custom).
+# Recursively walks root_module and all child_modules to catch
+# resources in nested Terraform modules.
+OBS_FILE="$WORKDIR/observations/$NOW.json"
 jq '{
   schema_version: "obs.v0.1",
   captured_at: "'"$NOW"'",
   assets: [
-    .planned_values.root_module.resources[]? | {
+    [.. | .resources? // empty] | flatten | .[] | {
       id: .address,
       type: .type,
       vendor: (if .type | startswith("aws_") then "aws"
@@ -77,27 +86,46 @@ jq '{
       properties: .values
     }
   ]
-}' "$PLAN_JSON" > "$WORKDIR/observations/$NOW.json" 2>/dev/null || {
+}' "$PLAN_JSON" > "$OBS_FILE" 2>/dev/null || {
     echo "stave: failed to parse plan JSON — skipping"
     exit 0
 }
 
-# Create a second snapshot (required for duration-based controls).
-cp "$WORKDIR/observations/$NOW.json" "$WORKDIR/observations/$(date -u -d '+1 hour' +%Y-%m-%dT%H%M%SZ 2>/dev/null || date -u -v+1H +%Y-%m-%dT%H%M%SZ).json"
+# For plan checks, use --max-unsafe 0s (any unsafe state = fail).
+# No need for a second snapshot — 0s threshold means even a single
+# point-in-time violation triggers a finding. The dual-snapshot
+# pattern is only needed for duration-based controls (e.g., "unsafe
+# for >168h"). Plan checks are instantaneous safety gates.
 
 # ── Run evaluation ───────────────────────────────────────
 
 echo "## Stave Security Check"
 echo ""
 
-CMD="stave apply --controls $CONTROLS --observations $WORKDIR/observations --max-unsafe $MAX_UNSAFE --now $NOW --allow-unknown-input --format text"
-
-if [ -n "${STAVE_PROFILE:-}" ]; then
-    CMD="stave apply --profile $STAVE_PROFILE --input $WORKDIR/observations/$NOW.json --now $NOW --format text"
-fi
-
 RC=0
-eval "$CMD" 2>/dev/null || RC=$?
+if [ -n "$PROFILE" ]; then
+    stave apply \
+        --profile "$PROFILE" \
+        --input "$OBS_FILE" \
+        --now "$NOW" \
+        --format text \
+        2>/dev/null || RC=$?
+else
+    # Single-snapshot mode: copy to create the minimum two snapshots
+    # required by the observations directory loader.
+    SECOND_TS=$(date -u +%Y-%m-%dT%H%M%SZ)
+    jq ".captured_at = \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"" "$OBS_FILE" \
+        > "$WORKDIR/observations/${SECOND_TS}.json"
+
+    stave apply \
+        --controls "$CONTROLS" \
+        --observations "$WORKDIR/observations" \
+        --max-unsafe "$MAX_UNSAFE" \
+        --now "$NOW" \
+        --allow-unknown-input \
+        --format text \
+        2>/dev/null || RC=$?
+fi
 
 echo ""
 
