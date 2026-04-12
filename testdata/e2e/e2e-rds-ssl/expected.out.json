@@ -82,6 +82,22 @@
       }
     }
   ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.RDS.SSL.001",
+      "asset_id": "phi-database",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
   "extensions": {
     "selected_controls_source": "dir",
     "context_name": "stave",
@@ -91,11 +107,8 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "64cd44ad7abd3bc3113713ab1bb3f17e889af2fc",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-rds-ssl/controls/"
-      ]
+      "head_commit": "efc627df5032a342d2ea53287c40c2b12c4c90bc",
+      "dirty": false
     }
   }
 }

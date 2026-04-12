@@ -18,6 +18,7 @@ func FromEvaluation(e *report.Assessment) ResultDTO {
 		RemediationGroups: fromRemediationGroups(e.RemediationGroups),
 		SkippedControls:   fromSkippedControls(e.SkippedControls),
 		ExemptedAssets:    fromExemptedAssets(e.ExemptedAssets),
+		TopExposures:      e.TopExposures,
 		Extensions:        fromExtensions(e.Extensions),
 	}
 }

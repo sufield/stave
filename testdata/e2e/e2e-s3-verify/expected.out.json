@@ -1,28 +1,29 @@
 {
-  "regressions": [],
+  "schema_version": "out.v0.1",
   "kind": "ATTESTATION",
-  "open": [],
+  "run": {
+    "sla_threshold": "168h0m0s",
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "before_snapshots": 2,
+    "after_snapshots": 2
+  },
+  "summary": {
+    "previous_violations": 1,
+    "current_violations": 0,
+    "remediated": 1,
+    "open": 0,
+    "regressions": 0
+  },
   "remediated": [
     {
-      "asset_id": "patient-records-bucket",
-      "asset_type": "aws_s3_bucket",
       "control_id": "CTL.S3.PUBLIC.001",
-      "control_name": "No Public Read via Bucket Policy"
+      "control_name": "No Public Read via Bucket Policy",
+      "asset_id": "patient-records-bucket",
+      "asset_type": "aws_s3_bucket"
     }
   ],
-  "run": {
-    "after_snapshots": 2,
-    "before_snapshots": 2,
-    "sla_threshold": "168h0m0s",
-    "now": "2026-01-11T00:00:00Z",
-    "offline": true
-  },
-  "schema_version": "out.v0.1",
-  "summary": {
-    "current_violations": 0,
-    "previous_violations": 1,
-    "regressions": 0,
-    "open": 0,
-    "remediated": 1
-  }
+  "open": [],
+  "regressions": []
 }

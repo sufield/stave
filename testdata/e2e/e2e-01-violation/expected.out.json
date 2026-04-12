@@ -1,59 +1,12 @@
 {
-  "risk_signals": [
-    {
-      "asset_id": "res:aws:s3:bucket:public-bucket",
-      "asset_type": "storage_bucket",
-      "control_id": "CTL.EXP.DURATION.001",
-      "due_at": "2026-01-08T00:00:00Z",
-      "first_unsafe_at": "2026-01-01T00:00:00Z",
-      "remaining_hours": -72,
-      "status": "OVERDUE",
-      "threshold_hours": 168
-    }
-  ],
-  "findings": [
-    {
-      "asset_id": "res:aws:s3:bucket:public-bucket",
-      "asset_type": "storage_bucket",
-      "asset_vendor": "aws",
-      "control_description": "An asset must not remain unsafe beyond the configured time window.",
-      "control_id": "CTL.EXP.DURATION.001",
-      "control_name": "Unsafe Exposure Duration Bound",
-      "evidence": {
-        "first_unsafe_at": "2026-01-01T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
-        "misconfigurations": [
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "property": "public",
-            "unsafe_value": true
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "threshold_hours": 168,
-        "unsafe_duration_hours": 240,
-        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
-      },
-      "posture_drift": {
-        "exposure_window_count": 1,
-        "pattern": "persistent"
-      },
-      "remediation": {
-        "action": "Review the misconfigured properties and revert to compliant values.",
-        "description": "Resource configuration deviates from security baseline."
-      },
-      "source": {
-        "file": "main.tf",
-        "line": 42
-      }
-    }
-  ],
+  "schema_version": "out.v0.1",
   "kind": "ASSESSMENT",
-  "status": "NON_COMPLIANT",
   "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 3,
     "input_hashes": {
       "files": {
         "2026-01-01T000000Z.json": "331e89f4f17ec09fe14c04a307661497b498e60cc36c5aec467341982842c562",
@@ -62,16 +15,93 @@
       },
       "overall": "8168ee8c116bf4b7ebb1129d99c846eee7c76e8447d0d97e61f5acaac0db240b"
     },
-    "sla_threshold": "7d",
-    "now": "2026-01-11T00:00:00Z",
-    "offline": true,
-    "policy_fingerprint": "7bcf15e5ea903b200455d21a403d99dce695b2006b42a82173fc30bc44a616db",
-    "snapshots": 3
+    "policy_fingerprint": "7bcf15e5ea903b200455d21a403d99dce695b2006b42a82173fc30bc44a616db"
   },
-  "schema_version": "out.v0.1",
   "summary": {
     "total_assets": 2,
     "exposed_resources": 1,
     "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.EXP.DURATION.001",
+      "asset_id": "res:aws:s3:bucket:public-bucket",
+      "asset_type": "storage_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.EXP.DURATION.001",
+      "control_name": "Unsafe Exposure Duration Bound",
+      "control_description": "An asset must not remain unsafe beyond the configured time window.",
+      "asset_id": "res:aws:s3:bucket:public-bucket",
+      "asset_type": "storage_bucket",
+      "asset_vendor": "aws",
+      "source": {
+        "file": "main.tf",
+        "line": 42
+      },
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "public",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Resource configuration deviates from security baseline.",
+        "action": "Review the misconfigured properties and revert to compliant values."
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.EXP.DURATION.001",
+      "asset_id": "res:aws:s3:bucket:public-bucket",
+      "exposure_score": 10,
+      "breakdown": {
+        "base_score": 10,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-01-violation/controls",
+      "observations": "testdata/e2e/e2e-01-violation/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "efc627df5032a342d2ea53287c40c2b12c4c90bc",
+      "dirty": false
+    }
   }
 }

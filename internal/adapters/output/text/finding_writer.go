@@ -40,6 +40,7 @@ func (w *FindingWriter) MarshalFindings(enriched *appcontracts.EnrichedResult) (
 	w.writeViolationsFromEnriched(d, result, remFindings)
 	w.writeChainFindings(d, result)
 	w.writeAttackStageSummary(d, result)
+	w.writeTopExposures(d, result)
 	w.writeRemediationGroups(d, remFindings)
 	w.writeSkippedControls(d, result.SkippedControls)
 	writeExemptedAssets(d, enriched.ExemptedAssets)
@@ -288,6 +289,29 @@ func (w *FindingWriter) writeAttackStageSummary(d *drawer, result evaluation.Com
 			continue
 		}
 		d.f("  %-20s %s\n", stage, status)
+	}
+}
+
+func (w *FindingWriter) writeTopExposures(d *drawer, result evaluation.ComplianceReport) {
+	if len(result.TopExposures) == 0 {
+		return
+	}
+	d.f("\nTop Exposures")
+	d.f("\n-------------\n")
+	limit := min(len(result.TopExposures), 10)
+	for i := range limit {
+		r := &result.TopExposures[i]
+		d.f("  %2d  %7.1f  %5.0fd  %-30s %s\n",
+			i+1, r.ExposureScore, r.Breakdown.DaysBlind,
+			string(r.ControlID), string(r.AssetID))
+		b := &r.Breakdown
+		if r.SilentKiller {
+			d.f("      SILENT KILLER")
+		} else {
+			d.f("     ")
+		}
+		d.f("  base=%d \u00d7 duration=%.1f \u00d7 blast=%.1f \u00d7 exposure=%.1f\n",
+			b.BaseScore, b.DurationFactor, b.BlastMultiplier, b.ExposureMultiplier)
 	}
 }
 

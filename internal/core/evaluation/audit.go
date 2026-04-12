@@ -93,6 +93,7 @@ type ComplianceReport struct {
 	Findings           []Finding              `json:"findings"`
 	ChainFindings      []risk.CompoundFinding `json:"chain_findings,omitempty"`
 	AttackStageSummary map[string]string      `json:"attack_stage_summary,omitempty"`
+	TopExposures       []risk.ExposureRank    `json:"top_exposures,omitempty"`
 	ExceptedFindings   []ExceptedFinding      `json:"excepted_findings,omitempty"`
 	SkippedControls    []SkippedControl       `json:"skipped_controls,omitempty"`
 	ExemptedAssets     []asset.ExemptedAsset  `json:"exempted_assets,omitempty"`

@@ -1,8 +1,12 @@
 {
-  "findings": [],
+  "schema_version": "out.v0.1",
   "kind": "ASSESSMENT",
-  "status": "COMPLIANT",
   "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
     "input_hashes": {
       "files": {
         "2026-01-01T000000Z.json": "cee426503e8d9d28c771e81b4daded682cadfe38d5eb915ab488273ccff0618c",
@@ -10,13 +14,15 @@
       },
       "overall": "da5a89df2e2f18104b96aea75fdc222071125b54c6347b313940aaeb97c581e8"
     },
-    "sla_threshold": "7d",
-    "now": "2026-01-11T00:00:00Z",
-    "offline": true,
-    "policy_fingerprint": "d35f1f4104337cec0597a5b8e3754d4da764d8dfb89525de9cff277d9e7d9eff",
-    "snapshots": 2
+    "policy_fingerprint": "d35f1f4104337cec0597a5b8e3754d4da764d8dfb89525de9cff277d9e7d9eff"
   },
-  "schema_version": "out.v0.1",
+  "summary": {
+    "total_assets": 0,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
   "skipped_controls": [
     {
       "control_id": "CTL.PROC.MAIL.001",
@@ -24,9 +30,17 @@
       "reason": "control type cannot be evaluated: audience_boundary"
     }
   ],
-  "summary": {
-    "total_assets": 0,
-    "exposed_resources": 0,
-    "violations": 0
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-10-audience-mismatch/controls",
+      "observations": "testdata/e2e/e2e-10-audience-mismatch/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "efc627df5032a342d2ea53287c40c2b12c4c90bc",
+      "dirty": false
+    }
   }
 }

@@ -1,210 +1,12 @@
 {
-  "risk_signals": [
-    {
-      "asset_id": "exposed-bucket",
-      "asset_type": "aws_s3_bucket",
-      "control_id": "CTL.S3.PUBLIC.001",
-      "due_at": "2026-01-01T00:00:00Z",
-      "first_unsafe_at": "2026-01-01T00:00:00Z",
-      "remaining_hours": -240,
-      "status": "OVERDUE",
-      "threshold_hours": 0
-    },
-    {
-      "asset_id": "exposed-bucket",
-      "asset_type": "aws_s3_bucket",
-      "control_id": "CTL.S3.PUBLIC.004",
-      "due_at": "2026-01-01T00:00:00Z",
-      "first_unsafe_at": "2026-01-01T00:00:00Z",
-      "remaining_hours": -240,
-      "status": "OVERDUE",
-      "threshold_hours": 0
-    }
-  ],
-  "findings": [
-    {
-      "asset_id": "exposed-bucket",
-      "asset_type": "aws_s3_bucket",
-      "asset_vendor": "aws",
-      "control_description": "S3 bucket policies must not grant public read access (Principal=*) to PHI data.",
-      "control_id": "CTL.S3.PUBLIC.001",
-      "control_name": "No Public Read via Bucket Policy",
-      "evidence": {
-        "first_unsafe_at": "2026-01-01T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
-        "misconfigurations": [
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "property": "storage.access.read_via_identity",
-            "unsafe_value": true
-          }
-        ],
-        "root_causes": [
-          "identity"
-        ],
-        "unsafe_duration_hours": 240,
-        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
-      },
-      "fix_plan": {
-        "actions": [
-          {
-            "action_type": "set",
-            "path": "security_posture.block_identity_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_metadata_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
-            "value": true
-          }
-        ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
-        "id": "fix-feace1b24c72a549",
-        "preconditions": [
-          "Confirm resource ownership and internal change window approval.",
-          "Ensure public access is not explicitly required for this specific resource's function."
-        ],
-        "target": {
-          "asset_id": "exposed-bucket",
-          "asset_type": "aws_s3_bucket"
-        }
-      },
-      "posture_drift": {
-        "exposure_window_count": 1,
-        "pattern": "persistent"
-      },
-      "remediation": {
-        "action": "Restrict access to authorized principals only.",
-        "description": "Resource is exposed to the public internet."
-      }
-    },
-    {
-      "asset_id": "exposed-bucket",
-      "asset_type": "aws_s3_bucket",
-      "asset_vendor": "aws",
-      "control_description": "S3 bucket ACLs must not grant read access to AllUsers or AuthenticatedUsers for PHI data.",
-      "control_id": "CTL.S3.PUBLIC.004",
-      "control_name": "No Public Read via ACL",
-      "evidence": {
-        "first_unsafe_at": "2026-01-01T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
-        "misconfigurations": [
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "property": "storage.access.read_via_resource",
-            "unsafe_value": true
-          }
-        ],
-        "root_causes": [
-          "resource"
-        ],
-        "unsafe_duration_hours": 240,
-        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
-      },
-      "fix_plan": {
-        "actions": [
-          {
-            "action_type": "set",
-            "path": "security_posture.block_identity_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_metadata_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
-            "value": true
-          }
-        ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
-        "id": "fix-feace1b24c72a549",
-        "preconditions": [
-          "Confirm resource ownership and internal change window approval.",
-          "Ensure public access is not explicitly required for this specific resource's function."
-        ],
-        "target": {
-          "asset_id": "exposed-bucket",
-          "asset_type": "aws_s3_bucket"
-        }
-      },
-      "posture_drift": {
-        "exposure_window_count": 1,
-        "pattern": "persistent"
-      },
-      "remediation": {
-        "action": "Restrict access to authorized principals only.",
-        "description": "Resource is exposed to the public internet."
-      }
-    }
-  ],
+  "schema_version": "out.v0.1",
   "kind": "ASSESSMENT",
-  "status": "NON_COMPLIANT",
-  "remediation_groups": [
-    {
-      "asset_id": "exposed-bucket",
-      "asset_type": "aws_s3_bucket",
-      "contributing_controls": [
-        "CTL.S3.PUBLIC.001",
-        "CTL.S3.PUBLIC.004"
-      ],
-      "finding_count": 2,
-      "fix_plan": {
-        "actions": [
-          {
-            "action_type": "set",
-            "path": "security_posture.block_identity_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_metadata_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
-            "value": true
-          }
-        ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
-        "id": "fix-feace1b24c72a549",
-        "preconditions": [
-          "Confirm resource ownership and internal change window approval.",
-          "Ensure public access is not explicitly required for this specific resource's function."
-        ],
-        "target": {
-          "asset_id": "exposed-bucket",
-          "asset_type": "aws_s3_bucket"
-        }
-      }
-    }
-  ],
   "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
     "input_hashes": {
       "files": {
         "2026-01-01T000000Z.json": "c40e2205fd986b9bf5143d3a7b6218cea7aa81b5bec729f4a91513a76a8a837b",
@@ -212,16 +14,258 @@
       },
       "overall": "418af032c34d7cc51d937c953ee702a933f3286bc6a54ee8ff4c9bc70b0d1989"
     },
-    "sla_threshold": "7d",
-    "now": "2026-01-11T00:00:00Z",
-    "offline": true,
-    "policy_fingerprint": "c99d10df055f3b9ad5fd7465f065d9c4d4e0b67fae6f316676fa5d035d6c9f2f",
-    "snapshots": 2
+    "policy_fingerprint": "c99d10df055f3b9ad5fd7465f065d9c4d4e0b67fae6f316676fa5d035d6c9f2f"
   },
-  "schema_version": "out.v0.1",
   "summary": {
     "total_assets": 1,
     "exposed_resources": 1,
     "violations": 2
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.S3.PUBLIC.001",
+      "asset_id": "exposed-bucket",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-01T00:00:00Z",
+      "remaining_hours": -240,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 0
+    },
+    {
+      "control_id": "CTL.S3.PUBLIC.004",
+      "asset_id": "exposed-bucket",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-01T00:00:00Z",
+      "remaining_hours": -240,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 0
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.S3.PUBLIC.001",
+      "control_name": "No Public Read via Bucket Policy",
+      "control_description": "S3 bucket policies must not grant public read access (Principal=*) to PHI data.",
+      "asset_id": "exposed-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "misconfigurations": [
+          {
+            "property": "storage.access.read_via_identity",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "identity"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Resource is exposed to the public internet.",
+        "action": "Restrict access to authorized principals only."
+      },
+      "fix_plan": {
+        "id": "fix-feace1b24c72a549",
+        "target": {
+          "asset_id": "exposed-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+      }
+    },
+    {
+      "control_id": "CTL.S3.PUBLIC.004",
+      "control_name": "No Public Read via ACL",
+      "control_description": "S3 bucket ACLs must not grant read access to AllUsers or AuthenticatedUsers for PHI data.",
+      "asset_id": "exposed-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "misconfigurations": [
+          {
+            "property": "storage.access.read_via_resource",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "resource"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Resource is exposed to the public internet.",
+        "action": "Restrict access to authorized principals only."
+      },
+      "fix_plan": {
+        "id": "fix-feace1b24c72a549",
+        "target": {
+          "asset_id": "exposed-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+      }
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "exposed-bucket",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-feace1b24c72a549",
+        "target": {
+          "asset_id": "exposed-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+      },
+      "contributing_controls": [
+        "CTL.S3.PUBLIC.001",
+        "CTL.S3.PUBLIC.004"
+      ],
+      "finding_count": 2
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.S3.PUBLIC.001",
+      "asset_id": "exposed-bucket",
+      "exposure_score": 10,
+      "breakdown": {
+        "base_score": 10,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 1,
+      "control_id": "CTL.S3.PUBLIC.004",
+      "asset_id": "exposed-bucket",
+      "exposure_score": 10,
+      "breakdown": {
+        "base_score": 10,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-s3-source-evidence/controls",
+      "observations": "testdata/e2e/e2e-s3-source-evidence/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "efc627df5032a342d2ea53287c40c2b12c4c90bc",
+      "dirty": false
+    }
   }
 }
