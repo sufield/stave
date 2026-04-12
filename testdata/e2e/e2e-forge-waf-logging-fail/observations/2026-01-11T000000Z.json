@@ -1,0 +1,19 @@
+{
+  "assets": [
+    {
+      "id": "test-waf-web-acl",
+      "properties": {
+        "waf": {
+          "logging": {
+            "enabled": false
+          },
+          "kind": "web_acl"
+        }
+      },
+      "type": "aws_waf_web_acl",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1"
+}

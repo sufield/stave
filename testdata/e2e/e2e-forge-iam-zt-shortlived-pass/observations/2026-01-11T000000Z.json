@@ -1,0 +1,19 @@
+{
+  "assets": [
+    {
+      "id": "test-service-identity",
+      "properties": {
+        "identity": {
+          "credentials": {
+            "uses_short_lived": true
+          },
+          "kind": "service_identity"
+        }
+      },
+      "type": "aws_service_identity",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1"
+}

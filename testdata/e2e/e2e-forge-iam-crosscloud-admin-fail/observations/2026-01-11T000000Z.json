@@ -1,0 +1,19 @@
+{
+  "assets": [
+    {
+      "id": "test-iam-user",
+      "properties": {
+        "identity": {
+          "policies": {
+            "has_admin_access": true
+          },
+          "kind": "user"
+        }
+      },
+      "type": "cloud_iam_user",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1"
+}

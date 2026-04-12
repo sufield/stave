@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.WAF.LOGGING.001
+name: WAF Logging Must Be Enabled
+description: >
+  WAF web ACLs must have logging enabled to record blocked and
+  allowed requests. Without logging, attacks cannot be detected,
+  investigated, or correlated with other security events.
+domain: exposure
+severity: medium
+compliance:
+  soc2: "CC7.1"
+  nist_800_53_r5: "AU-2"
+  fedramp_moderate: "AU-2"
+scope_tags:
+  - aws
+  - waf
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    WAF web ACL does not have logging enabled. Attack traffic is
+    not recorded.
+  action: >
+    Enable WAF logging to S3, CloudWatch Logs, or Kinesis Data
+    Firehose via aws wafv2 put-logging-configuration.
+  example: |
+    {
+      "waf": {
+        "kind": "web_acl",
+        "logging": {
+          "enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.waf.kind
+      op: eq
+      value: web_acl
+    - field: properties.waf.logging.enabled
+      op: eq
+      value: false

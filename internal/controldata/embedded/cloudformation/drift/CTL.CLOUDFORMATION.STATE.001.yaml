@@ -1,0 +1,43 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFORMATION.STATE.001
+name: Terraform State Must Be Versioned
+description: >
+  Terraform state files must be stored in a versioned backend (S3
+  with versioning, Terraform Cloud, or equivalent). Unversioned state
+  means a corrupted or accidentally deleted state file cannot be
+  recovered, leaving infrastructure in an unmanaged state with no
+  rollback path.
+domain: exposure
+severity: medium
+compliance:
+  soc2: "CC8.1"
+  nist_800_53_r5: "CM-3"
+  fedramp_moderate: "CM-3"
+scope_tags:
+  - aws
+  - cloudformation
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Terraform state is not stored in a versioned backend. State
+    corruption or deletion has no recovery path.
+  action: >
+    Configure an S3 backend with versioning enabled and DynamoDB
+    state locking. Alternatively, use Terraform Cloud or an
+    equivalent managed backend with built-in versioning.
+  example: |
+    {
+      "iac": {
+        "kind": "terraform_backend",
+        "state_versioned": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.iac.kind
+      op: eq
+      value: terraform_backend
+    - field: properties.iac.state_versioned
+      op: eq
+      value: false

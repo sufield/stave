@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.CROSSCLOUD.ADMIN.001
+name: No Full Admin Policies Across Any Cloud Provider
+description: >
+  No IAM policy on any cloud provider should grant unrestricted
+  administrative access (Action: *, Resource: * or equivalent).
+  This control extends CTL.IAM.POLICY.ADMIN.001 beyond AWS to
+  Azure (Contributor/Owner at subscription scope) and GCP
+  (roles/owner, roles/editor at project scope). The same
+  least-privilege principle applies regardless of cloud provider.
+domain: identity
+severity: critical
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-6"
+scope_tags:
+  - multicloud
+  - iam
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    IAM entity has full admin access. Any compromised identity
+    can perform any action on any resource.
+  action: >
+    Replace admin policies with scoped policies granting only
+    required permissions. Use cloud-specific access analyzers
+    to identify unused permissions.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "policies": {
+          "has_admin_access": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user
+    - field: properties.identity.policies.has_admin_access
+      op: eq
+      value: true

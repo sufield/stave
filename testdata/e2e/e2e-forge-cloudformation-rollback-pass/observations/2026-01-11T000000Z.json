@@ -1,0 +1,17 @@
+{
+  "assets": [
+    {
+      "id": "test-cloudformation-stack",
+      "properties": {
+        "iac": {
+          "rollback_disabled": false,
+          "kind": "stack"
+        }
+      },
+      "type": "aws_cloudformation_stack",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1"
+}

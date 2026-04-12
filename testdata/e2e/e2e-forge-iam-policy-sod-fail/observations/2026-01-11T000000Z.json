@@ -1,0 +1,1 @@
+{"assets":[{"id":"role-app-admin","properties":{"identity":{"kind":"role","role":{"has_data_and_iam_access":true}}},"type":"aws_iam_role","vendor":"aws"}],"captured_at":"2026-01-11T00:00:00Z","schema_version":"obs.v0.1"}

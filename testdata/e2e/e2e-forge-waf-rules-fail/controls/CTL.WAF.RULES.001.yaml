@@ -1,0 +1,44 @@
+dsl_version: ctrl.v1
+id: CTL.WAF.RULES.001
+name: WAF Must Have Managed Rule Groups Enabled
+description: >
+  WAF web ACLs must include AWS managed rule groups for common attack
+  patterns (SQLi, XSS, known bad inputs). Without managed rules, the
+  WAF provides no baseline protection against OWASP Top 10 attacks.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.6"
+  pci_dss_v4.0: "6.4.1"
+  nist_800_53_r5: "SI-3"
+  fedramp_moderate: "SI-3"
+scope_tags:
+  - aws
+  - waf
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    WAF web ACL does not include managed rule groups. No baseline
+    protection against common web attacks.
+  action: >
+    Add AWS managed rule groups to the web ACL:
+    AWSManagedRulesCommonRuleSet, AWSManagedRulesSQLiRuleSet,
+    AWSManagedRulesKnownBadInputsRuleSet.
+  example: |
+    {
+      "waf": {
+        "kind": "web_acl",
+        "rules": {
+          "has_managed_rules": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.waf.kind
+      op: eq
+      value: web_acl
+    - field: properties.waf.rules.has_managed_rules
+      op: eq
+      value: false

@@ -518,7 +518,15 @@ packs:
     description: AWS CloudFormation IaC controls
     controls:
       - CTL.CLOUDFORMATION.DRIFT.001
+      - CTL.CLOUDFORMATION.ROLLBACK.001
+      - CTL.CLOUDFORMATION.STATE.001
       - CTL.CLOUDFORMATION.INCOMPLETE.001
+  waf:
+    description: AWS WAF web application firewall controls
+    controls:
+      - CTL.WAF.RULES.001
+      - CTL.WAF.LOGGING.001
+      - CTL.WAF.INCOMPLETE.001
   route53:
     description: AWS Route 53 DNS service controls
     controls:
@@ -694,6 +702,11 @@ packs:
       - CTL.IAM.CROSS.ENV.001
       - CTL.IAM.TRUST.EXTERNALID.001
       - CTL.IAM.POLICY.ASSUMEROLE.001
+      - CTL.IAM.POLICY.SOD.001
+      - CTL.IAM.ZT.PERIMETER.001
+      - CTL.IAM.ZT.SHORTLIVED.001
+      - CTL.IAM.CROSSCLOUD.ADMIN.001
+      - CTL.IAM.CROSSCLOUD.MFA.001
   s3:
     description: Default S3 built-in pack for MVP
     controls:
@@ -1008,6 +1021,36 @@ controls:
   CTL.IAM.POLICY.ASSUMEROLE.001:
     path: internal/controldata/embedded/iam/policy/CTL.IAM.POLICY.ASSUMEROLE.001.yaml
     summary: AssumeRole Must Be Scoped to Specific Roles
+  CTL.IAM.POLICY.SOD.001:
+    path: internal/controldata/embedded/iam/policy/CTL.IAM.POLICY.SOD.001.yaml
+    summary: IAM Roles Must Not Combine Data Access and IAM Management
+  CTL.IAM.ZT.PERIMETER.001:
+    path: internal/controldata/embedded/iam/policy/CTL.IAM.ZT.PERIMETER.001.yaml
+    summary: Sensitive Resources Must Use Identity-Based Access
+  CTL.IAM.ZT.SHORTLIVED.001:
+    path: internal/controldata/embedded/iam/policy/CTL.IAM.ZT.SHORTLIVED.001.yaml
+    summary: Service Access Must Use Short-Lived Credentials
+  CTL.IAM.CROSSCLOUD.ADMIN.001:
+    path: internal/controldata/embedded/iam/policy/CTL.IAM.CROSSCLOUD.ADMIN.001.yaml
+    summary: No Full Admin Policies Across Any Cloud Provider
+  CTL.IAM.CROSSCLOUD.MFA.001:
+    path: internal/controldata/embedded/iam/policy/CTL.IAM.CROSSCLOUD.MFA.001.yaml
+    summary: MFA Must Be Enforced Across All Cloud Providers
+  CTL.CLOUDFORMATION.ROLLBACK.001:
+    path: internal/controldata/embedded/cloudformation/drift/CTL.CLOUDFORMATION.ROLLBACK.001.yaml
+    summary: CloudFormation Stacks Must Have Rollback Enabled
+  CTL.CLOUDFORMATION.STATE.001:
+    path: internal/controldata/embedded/cloudformation/drift/CTL.CLOUDFORMATION.STATE.001.yaml
+    summary: Terraform State Must Be Versioned
+  CTL.WAF.RULES.001:
+    path: internal/controldata/embedded/waf/rules/CTL.WAF.RULES.001.yaml
+    summary: WAF Must Have Managed Rule Groups Enabled
+  CTL.WAF.LOGGING.001:
+    path: internal/controldata/embedded/waf/rules/CTL.WAF.LOGGING.001.yaml
+    summary: WAF Logging Must Be Enabled
+  CTL.WAF.INCOMPLETE.001:
+    path: internal/controldata/embedded/waf/misc/CTL.WAF.INCOMPLETE.001.yaml
+    summary: Complete Data Required for WAF Assessment
   CTL.ELASTICACHE.AUTH.001:
     path: internal/controldata/embedded/elasticache/access/CTL.ELASTICACHE.AUTH.001.yaml
     summary: Redis AUTH Token Must Be Set

@@ -1,0 +1,27 @@
+dsl_version: ctrl.v1
+id: CTL.WAF.INCOMPLETE.001
+name: Complete Data Required for WAF Assessment
+description: >
+  WAF assessment data is incomplete. The extractor must populate
+  waf.rules.has_managed_rules to evaluate protection controls.
+domain: exposure
+severity: low
+scope_tags:
+  - aws
+  - waf
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    WAF assessment data is incomplete.
+  action: >
+    Re-run the extractor with WAF permissions:
+    wafv2:GetWebACL, wafv2:ListWebACLs, wafv2:GetLoggingConfiguration.
+unsafe_predicate:
+  all:
+    - field: properties.waf.kind
+      op: eq
+      value: web_acl
+    - field: properties.waf.rules.has_managed_rules
+      op: missing
+      value: true

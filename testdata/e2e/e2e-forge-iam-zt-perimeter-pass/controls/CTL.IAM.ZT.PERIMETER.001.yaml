@@ -1,0 +1,48 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ZT.PERIMETER.001
+name: Sensitive Resources Must Use Identity-Based Access Not Network Perimeter
+description: >
+  Access to sensitive resources must be governed by identity-based
+  controls (IAM policies, conditions, session tags) rather than
+  relying solely on network perimeter (VPC, security groups, NACLs).
+  Network-only access control fails when the perimeter is bypassed
+  — via VPN compromise, lateral movement, or insider threat. Zero
+  Trust requires every access decision to verify identity, device,
+  and context.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-3"
+  fedramp_moderate: "AC-3"
+  nist_csf_2.0: "PR.AA"
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Sensitive resource relies on network perimeter alone for access
+    control. No identity-based authorization is enforced.
+  action: >
+    Add IAM-based access controls (resource policies with principal
+    constraints, IAM conditions for aws:PrincipalTag, VPC endpoint
+    policies with principal scoping). Use AWS Verified Access or
+    IAM Roles Anywhere for workload identity.
+  example: |
+    {
+      "identity": {
+        "kind": "resource_access",
+        "access": {
+          "perimeter_only": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: resource_access
+    - field: properties.identity.access.perimeter_only
+      op: eq
+      value: true
