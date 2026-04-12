@@ -1,0 +1,42 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "94ff8cae14d828e80bc707110bd9056af41b72cdebd23765eb87da30203be508",
+        "2026-01-11T000000Z.json": "223f41f002bf7a573791b4aa1e45c86399ffe4d897f26f75e2489e92291b03b8"
+      },
+      "overall": "379b571b80d8077da166704281d22e79938fe5bceb2fe06a39e7784f6eaeea03"
+    },
+    "policy_fingerprint": "2729384d3f56be8fdef2d3bbe586ff4d3c92292269f9bf9f7d11b4fd021afe65"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-password-rotation-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-password-rotation-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "ea9ff9b4c84c25287b628c13f56a57d3ee364434",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-iam-password-rotation-pass/controls/"
+      ]
+    }
+  }
+}

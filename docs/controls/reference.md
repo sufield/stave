@@ -3,24 +3,24 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 251
-**Pack hash:** `7e40a93bfe70a883ca004ee952582d002c86709c1e18a94dd30e05130a4fe2e4`
+**Total controls:** 253
+**Pack hash:** `2f1cad2a3a173125012c61f2a0cdc05f9aad4990150465fdeb40a5d9506c4530`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 34 |
-| high | 106 |
+| high | 107 |
 | info | 16 |
 | low | 15 |
-| medium | 80 |
+| medium | 81 |
 
 | Domain | Count |
 |--------|-------|
 | exposure | 198 |
 | governance | 2 |
-| identity | 47 |
+| identity | 49 |
 | storage | 4 |
 
 ## Controls
@@ -1580,6 +1580,21 @@ The IAM account password policy must prevent reuse of the last 24 passwords. Wit
 
 ---
 
+### CTL.IAM.PASSWORD.ROTATION.001
+
+**User Passwords Must Be Rotated Within Policy Period**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 1.12; fedramp_moderate: IA-5(1); hipaa: 164.312(a)(2)(i); nist_800_53_r5: IA-5(1); pci_dss_v4.0: 8.3.9; soc2: CC6.1;
+
+IAM user console passwords must be rotated per organizational policy (typically 90 days). The credential report tracks password_last_changed; passwords older than the policy period have accumulated exposure risk and may have been shared, phished, or brute-forced. This complements access key rotation (CTL.IAM.CRED.ROTATION.001) to cover the full credential lifecycle.
+
+**Remediation:** Require the user to change their password. Enforce a maximum password age via the account password policy. Run: aws iam update-account-password-policy --max-password-age 90
+
+---
+
 ### CTL.IAM.POLICY.ADMIN.001
 
 **No Full Admin Policies Attached**
@@ -1682,6 +1697,21 @@ IAM policies must not grant the ability to modify, create, or attach policies to
 IAM users must not have inline policies attached directly. Inline policies are harder to audit, cannot be reused, and create per-user policy sprawl that resists central governance.
 
 **Remediation:** Convert inline policies to managed policies and attach via groups or roles. Delete the inline policies from the user.
+
+---
+
+### CTL.IAM.POLICY.MFA.001
+
+**Destructive Actions Must Require MFA**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 1.4; fedramp_moderate: IA-2(1); hipaa: 164.312(d); nist_800_53_r5: IA-2(1); pci_dss_v4.0: 8.4.1; soc2: CC6.1;
+
+IAM policies governing destructive operations (s3:DeleteBucket, iam:CreateUser, ec2:TerminateInstances, etc.) must include an aws:MultiFactorAuthPresent condition. Without policy-level MFA enforcement, a compromised access key alone is sufficient to execute destructive actions — the credential becomes the only barrier between an attacker and data loss.
+
+**Remediation:** Add an aws:MultiFactorAuthPresent condition to IAM policies that permit destructive actions. Example condition block: "Condition": {"Bool": {"aws:MultiFactorAuthPresent": "true"}} Apply to policies covering s3:Delete*, iam:Create*, iam:Delete*, ec2:Terminate*, rds:Delete*, and similar destructive API calls.
 
 ---
 

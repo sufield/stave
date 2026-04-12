@@ -1,0 +1,19 @@
+{
+  "assets": [
+    {
+      "id": "test-iam-policy",
+      "properties": {
+        "identity": {
+          "kind": "policy",
+          "policy": {
+            "mfa_required_on_destructive_actions": true
+          }
+        }
+      },
+      "type": "aws_iam_policy",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1"
+}

@@ -1,0 +1,53 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.POLICY.MFA.001
+name: Destructive Actions Must Require MFA
+description: >
+  IAM policies governing destructive operations (s3:DeleteBucket,
+  iam:CreateUser, ec2:TerminateInstances, etc.) must include an
+  aws:MultiFactorAuthPresent condition. Without policy-level MFA
+  enforcement, a compromised access key alone is sufficient to
+  execute destructive actions — the credential becomes the only
+  barrier between an attacker and data loss.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "IA-2(1)"
+  cis_aws_v3.0: "1.4"
+  pci_dss_v4.0: "8.4.1"
+  fedramp_moderate: "IA-2(1)"
+  hipaa: "164.312(d)"
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params:
+  base_impact: 8
+  attack_stage: persistence
+remediation:
+  description: >
+    IAM policies on destructive actions do not require MFA. A stolen
+    access key alone can execute destructive operations.
+  action: >
+    Add an aws:MultiFactorAuthPresent condition to IAM policies that
+    permit destructive actions. Example condition block:
+    "Condition": {"Bool": {"aws:MultiFactorAuthPresent": "true"}}
+    Apply to policies covering s3:Delete*, iam:Create*, iam:Delete*,
+    ec2:Terminate*, rds:Delete*, and similar destructive API calls.
+  example: |
+    {
+      "identity": {
+        "kind": "policy",
+        "policy": {
+          "mfa_required_on_destructive_actions": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: policy
+    - field: properties.identity.policy.mfa_required_on_destructive_actions
+      op: eq
+      value: false

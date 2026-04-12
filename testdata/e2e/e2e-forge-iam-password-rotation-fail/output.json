@@ -1,0 +1,105 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "49c58650679c1505f532eee7b864a5fb5d09559033cb5680e11830f6f564bff9",
+        "2026-01-11T000000Z.json": "170fe37a264e42efb46c3da3d158c69416c8421a52b7186232ac37f5977e7a85"
+      },
+      "overall": "9bd762adfe03901d26143dc137368c9047a012642fab4d5f8569180d01aef7aa"
+    },
+    "policy_fingerprint": "2729384d3f56be8fdef2d3bbe586ff4d3c92292269f9bf9f7d11b4fd021afe65"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.IAM.PASSWORD.ROTATION.001",
+      "asset_id": "test-iam-user",
+      "asset_type": "aws_iam_user",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.IAM.PASSWORD.ROTATION.001",
+      "control_name": "User Passwords Must Be Rotated Within Policy Period",
+      "control_description": "IAM user console passwords must be rotated per organizational policy (typically 90 days). The credential report tracks password_last_changed; passwords older than the policy period have accumulated exposure risk and may have been shared, phished, or brute-forced. This complements access key rotation (CTL.IAM.CRED.ROTATION.001) to cover the full credential lifecycle.\n",
+      "asset_id": "test-iam-user",
+      "asset_type": "aws_iam_user",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "identity.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "user"
+          },
+          {
+            "property": "identity.password.has_stale_password",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "cis_aws_v3.0": "1.12",
+        "fedramp_moderate": "IA-5(1)",
+        "hipaa": "164.312(a)(2)(i)",
+        "nist_800_53_r5": "IA-5(1)",
+        "pci_dss_v4.0": "8.3.9",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "IAM user console password has not been rotated within the organizational policy period. Stale passwords accumulate compromise risk.",
+        "action": "Require the user to change their password. Enforce a maximum password age via the account password policy. Run: aws iam update-account-password-policy --max-password-age 90",
+        "example": "{\n  \"identity\": {\n    \"kind\": \"user\",\n    \"password\": {\n      \"has_stale_password\": false\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-password-rotation-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-password-rotation-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "ea9ff9b4c84c25287b628c13f56a57d3ee364434",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-iam-password-rotation-fail/controls/"
+      ]
+    }
+  }
+}
