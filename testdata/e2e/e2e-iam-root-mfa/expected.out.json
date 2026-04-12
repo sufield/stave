@@ -79,9 +79,38 @@
       },
       "remediation": {
         "description": "Root account does not have MFA enabled. An attacker with root credentials can perform any action in the AWS account.",
-        "action": "Enable MFA on the root account using a hardware MFA device or virtual MFA app. Navigate to IAM > Security credentials > MFA.",
+        "action": "Enable MFA on the root account using a hardware MFA device or virtual MFA app. Navigate to IAM \u003e Security credentials \u003e MFA.",
         "example": "{\n  \"identity\": {\n    \"kind\": \"account\",\n    \"root\": {\n      \"mfa_enabled\": true\n    }\n  }\n}\n"
       }
     }
-  ]
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.IAM.ROOT.MFA.001",
+      "asset_id": "aws-account-root",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-iam-root-mfa/controls",
+      "observations": "testdata/e2e/e2e-iam-root-mfa/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "efc627df5032a342d2ea53287c40c2b12c4c90bc",
+      "dirty": false
+    }
+  }
 }

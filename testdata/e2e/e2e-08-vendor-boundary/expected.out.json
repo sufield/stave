@@ -1,8 +1,12 @@
 {
-  "findings": [],
+  "schema_version": "out.v0.1",
   "kind": "ASSESSMENT",
-  "status": "COMPLIANT",
   "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
     "input_hashes": {
       "files": {
         "2026-01-01T000000Z.json": "91d37210f634d532ed7b0b93bc295fabe2369d216d7f801eeec6927e7ea1ce6c",
@@ -10,13 +14,15 @@
       },
       "overall": "c73da21f39d6aeb7fb98de52798dbc09bab7319b577aa429ccbf0261784f657b"
     },
-    "sla_threshold": "7d",
-    "now": "2026-01-11T00:00:00Z",
-    "offline": true,
-    "policy_fingerprint": "6a5cf52efaa5bdc83ec3eb9d5011d4278835db68a4eda55c464859b38337ec46",
-    "snapshots": 2
+    "policy_fingerprint": "6a5cf52efaa5bdc83ec3eb9d5011d4278835db68a4eda55c464859b38337ec46"
   },
-  "schema_version": "out.v0.1",
+  "summary": {
+    "total_assets": 0,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
   "skipped_controls": [
     {
       "control_id": "CTL.TP.VENDOR.001",
@@ -24,9 +30,17 @@
       "reason": "control type cannot be evaluated: authorization_boundary"
     }
   ],
-  "summary": {
-    "total_assets": 0,
-    "exposed_resources": 0,
-    "violations": 0
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-08-vendor-boundary/controls",
+      "observations": "testdata/e2e/e2e-08-vendor-boundary/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "efc627df5032a342d2ea53287c40c2b12c4c90bc",
+      "dirty": false
+    }
   }
 }

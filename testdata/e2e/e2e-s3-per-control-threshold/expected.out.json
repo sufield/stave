@@ -1,64 +1,12 @@
 {
-  "risk_signals": [
-    {
-      "asset_id": "test-public-bucket",
-      "asset_type": "aws_s3_bucket",
-      "control_id": "CTL.TEST.OVERRIDE.001",
-      "due_at": "2026-01-10T23:00:00Z",
-      "first_unsafe_at": "2026-01-10T23:00:00Z",
-      "remaining_hours": -1,
-      "status": "OVERDUE",
-      "threshold_hours": 0
-    },
-    {
-      "asset_id": "test-public-bucket",
-      "asset_type": "aws_s3_bucket",
-      "control_id": "CTL.TEST.DEFAULT.002",
-      "due_at": "2026-01-11T23:00:00Z",
-      "first_unsafe_at": "2026-01-10T23:00:00Z",
-      "remaining_hours": 23,
-      "status": "UPCOMING",
-      "threshold_hours": 24
-    }
-  ],
-  "findings": [
-    {
-      "asset_id": "test-public-bucket",
-      "asset_type": "aws_s3_bucket",
-      "asset_vendor": "aws",
-      "control_description": "Tests per-control max_unsafe_duration=0h overriding CLI default.",
-      "control_id": "CTL.TEST.OVERRIDE.001",
-      "control_name": "Immediate Violation (0h override)",
-      "evidence": {
-        "first_unsafe_at": "2026-01-10T23:00:00Z",
-        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
-        "misconfigurations": [
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "property": "storage.access.public_read",
-            "unsafe_value": true
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "unsafe_duration_hours": 1,
-        "temporal_risk": "Asset non-compliant for 1 hours (SLA: 0 hours). Exposed since 2026-01-10T23:00:00Z."
-      },
-      "posture_drift": {
-        "exposure_window_count": 1,
-        "pattern": "persistent"
-      },
-      "remediation": {
-        "action": "Review the misconfigured properties and revert to compliant values.",
-        "description": "Resource configuration deviates from security baseline."
-      }
-    }
-  ],
+  "schema_version": "out.v0.1",
   "kind": "ASSESSMENT",
-  "status": "NON_COMPLIANT",
   "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "1d",
+    "snapshots": 2,
     "input_hashes": {
       "files": {
         "2026-01-10T230000Z.json": "d41318db2698432e452b87703e3098af4b7acd437f43a8f3dac91a6fc59b686f",
@@ -66,16 +14,98 @@
       },
       "overall": "0c4379fab582d4393aa625d46108d74b4a5be16dd40d6f3df9cde4af7aa369f2"
     },
-    "sla_threshold": "1d",
-    "now": "2026-01-11T00:00:00Z",
-    "offline": true,
-    "policy_fingerprint": "cdbb17ac7321c439f566401dfd8cf24c69959caf103ff76a5cf56eb2a67ef022",
-    "snapshots": 2
+    "policy_fingerprint": "cdbb17ac7321c439f566401dfd8cf24c69959caf103ff76a5cf56eb2a67ef022"
   },
-  "schema_version": "out.v0.1",
   "summary": {
     "total_assets": 1,
     "exposed_resources": 1,
     "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.TEST.OVERRIDE.001",
+      "asset_id": "test-public-bucket",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-10T23:00:00Z",
+      "remaining_hours": -1,
+      "first_unsafe_at": "2026-01-10T23:00:00Z",
+      "threshold_hours": 0
+    },
+    {
+      "control_id": "CTL.TEST.DEFAULT.002",
+      "asset_id": "test-public-bucket",
+      "asset_type": "aws_s3_bucket",
+      "status": "UPCOMING",
+      "due_at": "2026-01-11T23:00:00Z",
+      "remaining_hours": 23,
+      "first_unsafe_at": "2026-01-10T23:00:00Z",
+      "threshold_hours": 24
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.TEST.OVERRIDE.001",
+      "control_name": "Immediate Violation (0h override)",
+      "control_description": "Tests per-control max_unsafe_duration=0h overriding CLI default.",
+      "asset_id": "test-public-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T23:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 1,
+        "misconfigurations": [
+          {
+            "property": "storage.access.public_read",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 1 hours (SLA: 0 hours). Exposed since 2026-01-10T23:00:00Z."
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Resource configuration deviates from security baseline.",
+        "action": "Review the misconfigured properties and revert to compliant values."
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.TEST.OVERRIDE.001",
+      "asset_id": "test-public-bucket",
+      "exposure_score": 10,
+      "breakdown": {
+        "base_score": 10,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 0.041666666666666664
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-s3-per-control-threshold/controls",
+      "observations": "testdata/e2e/e2e-s3-per-control-threshold/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "efc627df5032a342d2ea53287c40c2b12c4c90bc",
+      "dirty": false
+    }
   }
 }

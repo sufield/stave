@@ -1,67 +1,12 @@
 {
-  "risk_signals": [
-    {
-      "asset_id": "upload-api-bcm-hk",
-      "asset_type": "s3_upload_policy",
-      "control_id": "CTL.S3.WRITE.SCOPE.001",
-      "due_at": "2019-12-22T00:00:00Z",
-      "first_unsafe_at": "2019-12-15T00:00:00Z",
-      "remaining_hours": -72,
-      "status": "OVERDUE",
-      "threshold_hours": 168
-    }
-  ],
-  "findings": [
-    {
-      "asset_id": "upload-api-bcm-hk",
-      "asset_type": "s3_upload_policy",
-      "asset_vendor": "aws",
-      "control_description": "Signed upload policies must restrict write permission to a single exact object key. Prefix-wide permissions (e.g., starts-with $key files/) enable arbitrary overwrite and cross-tenant tampering.\n",
-      "control_id": "CTL.S3.WRITE.SCOPE.001",
-      "control_name": "S3 Signed Upload Must Bind To Exact Object Key",
-      "evidence": {
-        "first_unsafe_at": "2019-12-15T00:00:00Z",
-        "last_seen_unsafe_at": "2019-12-25T00:00:00Z",
-        "misconfigurations": [
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "property": "s3_upload.allowed_key_mode",
-            "unsafe_value": "prefix"
-          },
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "property": "s3_upload.operation",
-            "unsafe_value": "write"
-          },
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "property": "type",
-            "unsafe_value": "s3_upload_policy"
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "threshold_hours": 168,
-        "unsafe_duration_hours": 240,
-        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2019-12-15T00:00:00Z."
-      },
-      "posture_drift": {
-        "exposure_window_count": 1,
-        "pattern": "persistent"
-      },
-      "remediation": {
-        "action": "Review the misconfigured properties and revert to compliant values.",
-        "description": "Resource configuration deviates from security baseline."
-      }
-    }
-  ],
+  "schema_version": "out.v0.1",
   "kind": "ASSESSMENT",
-  "status": "NON_COMPLIANT",
   "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2019-12-25T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
     "input_hashes": {
       "files": {
         "2019-12-15T000000Z.json": "4e09fc0bf082b5e004e71a2f719a0f0b7bdfb355b9a110dac1582652d961e3e4",
@@ -69,16 +14,101 @@
       },
       "overall": "d940060924cb0b56a7b2a37654100715aedbc6cb0cc0519edc071aed33bf54cb"
     },
-    "sla_threshold": "7d",
-    "now": "2019-12-25T00:00:00Z",
-    "offline": true,
-    "policy_fingerprint": "7b70102872bd7757639698e298525ef22ee7279ba48ce95de838d147f1dc0080",
-    "snapshots": 2
+    "policy_fingerprint": "7b70102872bd7757639698e298525ef22ee7279ba48ce95de838d147f1dc0080"
   },
-  "schema_version": "out.v0.1",
   "summary": {
     "total_assets": 2,
     "exposed_resources": 1,
     "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.S3.WRITE.SCOPE.001",
+      "asset_id": "upload-api-bcm-hk",
+      "asset_type": "s3_upload_policy",
+      "status": "OVERDUE",
+      "due_at": "2019-12-22T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2019-12-15T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.S3.WRITE.SCOPE.001",
+      "control_name": "S3 Signed Upload Must Bind To Exact Object Key",
+      "control_description": "Signed upload policies must restrict write permission to a single exact object key. Prefix-wide permissions (e.g., starts-with $key files/) enable arbitrary overwrite and cross-tenant tampering.\n",
+      "asset_id": "upload-api-bcm-hk",
+      "asset_type": "s3_upload_policy",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2019-12-15T00:00:00Z",
+        "last_seen_unsafe_at": "2019-12-25T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "s3_upload.allowed_key_mode",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "prefix"
+          },
+          {
+            "property": "s3_upload.operation",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "write"
+          },
+          {
+            "property": "type",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "s3_upload_policy"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2019-12-15T00:00:00Z."
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Resource configuration deviates from security baseline.",
+        "action": "Review the misconfigured properties and revert to compliant values."
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.S3.WRITE.SCOPE.001",
+      "asset_id": "upload-api-bcm-hk",
+      "exposure_score": 10,
+      "breakdown": {
+        "base_score": 10,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-h1-bcm-764243/controls",
+      "observations": "testdata/e2e/e2e-h1-bcm-764243/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "efc627df5032a342d2ea53287c40c2b12c4c90bc",
+      "dirty": false
+    }
   }
 }

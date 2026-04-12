@@ -13,7 +13,7 @@
 - [Design Philosophy](design-philosophy.md) — Why Stave works the way it does
 - [System Controls as Code](system-invariant-as-code.md) — Controls-based safety evaluation
 - [Evaluation Semantics](evaluation-semantics.md) — How findings are produced
-- [Risk Reasoning Engine](risk-reasoning.md) — Compound risk scoring, safety chains, attack stages
+- [Risk Reasoning Engine](risk-reasoning.md) — Compound risk scoring, safety chains, attack stages, exposure ranking
 - [Blast Radius](blast-radius.md) — Scope-aware multipliers, detection blindness, interpreting output
 - [Identity Blast Radius](identity-blast-radius.md) — Credential compromise reach, assume chains, extractor patterns
 - [Unauthenticated Reachability](unauthenticated-reachability.md) — Anonymous access path detection, composition attacks, extractor BFS

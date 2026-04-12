@@ -1,56 +1,12 @@
 {
-  "risk_signals": [
-    {
-      "asset_id": "acl-readable-bucket",
-      "asset_type": "aws_s3_bucket",
-      "control_id": "CTL.S3.ACL.RECON.001",
-      "due_at": "2026-01-08T00:00:00Z",
-      "first_unsafe_at": "2026-01-01T00:00:00Z",
-      "remaining_hours": -72,
-      "status": "OVERDUE",
-      "threshold_hours": 168
-    }
-  ],
-  "findings": [
-    {
-      "asset_id": "acl-readable-bucket",
-      "asset_type": "aws_s3_bucket",
-      "asset_vendor": "aws",
-      "control_description": "S3 bucket ACLs should not be readable by unauthenticated users. READ_ACP permission enables attackers to enumerate ACL grants, discover which principals have access, and find escalation paths.\n",
-      "control_id": "CTL.S3.ACL.RECON.001",
-      "control_name": "No Public ACL Readability",
-      "evidence": {
-        "first_unsafe_at": "2026-01-01T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
-        "misconfigurations": [
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "property": "storage.access.public_admin",
-            "unsafe_value": true
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "threshold_hours": 168,
-        "unsafe_duration_hours": 240,
-        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
-      },
-      "posture_drift": {
-        "exposure_window_count": 1,
-        "pattern": "persistent"
-      },
-      "remediation": {
-        "action": "Remove READ_ACP grants from the bucket ACL and remove policy statements granting s3:GetBucketAcl or s3:GetObjectAcl to public principals. Enable S3 Public Access Block with BlockPublicAcls set to true.",
-        "description": "Bucket grants ACL read access (READ_ACP) to public users. An attacker can call GetBucketAcl to discover which principals have access and identify escalation paths.",
-        "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_admin\": false\n    }\n  }\n}\n"
-      }
-    }
-  ],
+  "schema_version": "out.v0.1",
   "kind": "ASSESSMENT",
-  "status": "NON_COMPLIANT",
   "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
     "input_hashes": {
       "files": {
         "2026-01-01T000000Z.json": "6200885a2ad86ecc2bce64514b24a75159706113de470da0500492364fcac007",
@@ -58,16 +14,90 @@
       },
       "overall": "95ea69b653ec6af496be4a6f1666617cbded2a31b72bfce0f7715d213ae3ffb9"
     },
-    "sla_threshold": "7d",
-    "now": "2026-01-11T00:00:00Z",
-    "offline": true,
-    "policy_fingerprint": "db3f38df6126d442df4328d57c383d85be200dc75f81137e78bacb1691c86f6d",
-    "snapshots": 2
+    "policy_fingerprint": "db3f38df6126d442df4328d57c383d85be200dc75f81137e78bacb1691c86f6d"
   },
-  "schema_version": "out.v0.1",
   "summary": {
     "total_assets": 2,
     "exposed_resources": 1,
     "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.S3.ACL.RECON.001",
+      "asset_id": "acl-readable-bucket",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.S3.ACL.RECON.001",
+      "control_name": "No Public ACL Readability",
+      "control_description": "S3 bucket ACLs should not be readable by unauthenticated users. READ_ACP permission enables attackers to enumerate ACL grants, discover which principals have access, and find escalation paths.\n",
+      "asset_id": "acl-readable-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "storage.access.public_admin",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Bucket grants ACL read access (READ_ACP) to public users. An attacker can call GetBucketAcl to discover which principals have access and identify escalation paths.",
+        "action": "Remove READ_ACP grants from the bucket ACL and remove policy statements granting s3:GetBucketAcl or s3:GetObjectAcl to public principals. Enable S3 Public Access Block with BlockPublicAcls set to true.",
+        "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_admin\": false\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.S3.ACL.RECON.001",
+      "asset_id": "acl-readable-bucket",
+      "exposure_score": 10,
+      "breakdown": {
+        "base_score": 10,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-s3-acl-recon/controls",
+      "observations": "testdata/e2e/e2e-s3-acl-recon/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "efc627df5032a342d2ea53287c40c2b12c4c90bc",
+      "dirty": false
+    }
   }
 }

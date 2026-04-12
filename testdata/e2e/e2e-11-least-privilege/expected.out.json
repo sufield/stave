@@ -1,8 +1,12 @@
 {
-  "findings": [],
+  "schema_version": "out.v0.1",
   "kind": "ASSESSMENT",
-  "status": "COMPLIANT",
   "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
     "input_hashes": {
       "files": {
         "2026-01-01T000000Z.json": "1fa3077f6cdc37566b168120b301c684096fc8ddc3589dbdd5a3562432bbbd23",
@@ -10,13 +14,15 @@
       },
       "overall": "b6d049a19a82feaa980eb74d5887fb064874d012ecc98effd81c7015e1d7349a"
     },
-    "sla_threshold": "7d",
-    "now": "2026-01-11T00:00:00Z",
-    "offline": true,
-    "policy_fingerprint": "f56d344fac2d14182415baeb96c212e5f5c9b4dff1f5a15b07327f846acb8a3d",
-    "snapshots": 2
+    "policy_fingerprint": "f56d344fac2d14182415baeb96c212e5f5c9b4dff1f5a15b07327f846acb8a3d"
   },
-  "schema_version": "out.v0.1",
+  "summary": {
+    "total_assets": 0,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
   "skipped_controls": [
     {
       "control_id": "CTL.ID.AUTHZ.001",
@@ -24,9 +30,17 @@
       "reason": "control type cannot be evaluated: authorization_boundary"
     }
   ],
-  "summary": {
-    "total_assets": 0,
-    "exposed_resources": 0,
-    "violations": 0
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-11-least-privilege/controls",
+      "observations": "testdata/e2e/e2e-11-least-privilege/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "efc627df5032a342d2ea53287c40c2b12c4c90bc",
+      "dirty": false
+    }
   }
 }

@@ -78,6 +78,22 @@
       }
     }
   ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.IAM.BOUNDARY.001",
+      "asset_id": "test-iam-role",
+      "exposure_score": 50,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
   "extensions": {
     "selected_controls_source": "dir",
     "context_name": "stave",
@@ -87,7 +103,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "7b8746067e9da70ba6c25253548e9f49ebd4c922",
+      "head_commit": "efc627df5032a342d2ea53287c40c2b12c4c90bc",
       "dirty": false
     }
   }

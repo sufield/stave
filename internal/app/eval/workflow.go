@@ -157,4 +157,18 @@ func (w *AuditWorkflow) enrichWithRiskReasoning(
 
 	// Build attack stage summary.
 	report.AttackStageSummary = risk.BuildAttackStageSummary(failingIDs, controlLookup)
+
+	// Rank findings by exposure score (silent killer detection).
+	rankInputs := make([]risk.RankInput, len(report.Findings))
+	for i := range report.Findings {
+		f := &report.Findings[i]
+		rankInputs[i] = risk.RankInput{
+			ControlID:           f.ControlID,
+			AssetID:             f.AssetID,
+			ControlSeverity:     f.ControlSeverity,
+			Exposure:            f.Exposure,
+			UnsafeDurationHours: f.Evidence.UnsafeDurationHours,
+		}
+	}
+	report.TopExposures = risk.RankExposures(rankInputs, controlLookup, 0)
 }

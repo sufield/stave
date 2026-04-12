@@ -38,7 +38,7 @@
     {
       "control_id": "CTL.DNS.DANGLING.001",
       "control_name": "DNS Records Must Not Point to Unclaimed Resources",
-      "control_description": "DNS records (CNAME, ALIAS, A) that reference external cloud resources must resolve to resources that exist and are owned by the organization. A dangling DNS record pointing to a deleted or unclaimed resource enables subdomain takeover \u2014 the attacker claims the resource and serves content under the organization's domain.\n",
+      "control_description": "DNS records (CNAME, ALIAS, A) that reference external cloud resources must resolve to resources that exist and are owned by the organization. A dangling DNS record pointing to a deleted or unclaimed resource enables subdomain takeover — the attacker claims the resource and serves content under the organization's domain.\n",
       "asset_id": "a2.bime.io-cname",
       "asset_type": "dns_record",
       "asset_vendor": "cloudflare",
@@ -76,10 +76,39 @@
         "exposure_window_count": 1
       },
       "remediation": {
-        "description": "A DNS record points to a cloud resource that does not exist or is not owned by the organization. An attacker can claim the resource and serve content under your domain \u2014 phishing, malware, or credential harvesting that appears to originate from a trusted hostname.",
+        "description": "A DNS record points to a cloud resource that does not exist or is not owned by the organization. An attacker can claim the resource and serve content under your domain — phishing, malware, or credential harvesting that appears to originate from a trusted hostname.",
         "action": "Either claim the target resource in your cloud account to block takeover, or delete the DNS record that points to the unclaimed resource. Audit all DNS zones for records pointing to decommissioned infrastructure.",
         "example": "{\n  \"dns\": {\n    \"record_type\": \"CNAME\",\n    \"target_exists\": true,\n    \"target_owned\": true\n  }\n}\n"
       }
     }
-  ]
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.DNS.DANGLING.001",
+      "asset_id": "a2.bime.io-cname",
+      "exposure_score": 200,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-dns-bucket-takeover/controls",
+      "observations": "testdata/e2e/e2e-dns-bucket-takeover/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "efc627df5032a342d2ea53287c40c2b12c4c90bc",
+      "dirty": false
+    }
+  }
 }

@@ -1,8 +1,12 @@
 {
-  "findings": [],
+  "schema_version": "out.v0.1",
   "kind": "ASSESSMENT",
-  "status": "COMPLIANT",
   "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
     "input_hashes": {
       "files": {
         "2026-01-01T000000Z.json": "46366f7a1582f27c45043ee13ae186a1a6a88eb9ef38d687017235c925e79273",
@@ -10,16 +14,26 @@
       },
       "overall": "32f8104dcf8749e55a51285d619036344284ee3308a0f5da6a6d55a247bbcb5a"
     },
-    "sla_threshold": "7d",
-    "now": "2026-01-11T00:00:00Z",
-    "offline": true,
-    "policy_fingerprint": "5569c0ea77304ab6bb5c1e932ad299b037790563f57a4cf579136136d930d1a8",
-    "snapshots": 2
+    "policy_fingerprint": "5569c0ea77304ab6bb5c1e932ad299b037790563f57a4cf579136136d930d1a8"
   },
-  "schema_version": "out.v0.1",
   "summary": {
     "total_assets": 2,
     "exposed_resources": 0,
     "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-20-identity-clean/controls",
+      "observations": "testdata/e2e/e2e-20-identity-clean/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "efc627df5032a342d2ea53287c40c2b12c4c90bc",
+      "dirty": false
+    }
   }
 }

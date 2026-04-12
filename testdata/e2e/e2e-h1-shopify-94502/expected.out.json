@@ -1,1058 +1,12 @@
 {
-  "risk_signals": [
-    {
-      "asset_id": "shopify-owned-1",
-      "asset_type": "aws_s3_bucket",
-      "control_id": "CTL.S3.PUBLIC.004",
-      "due_at": "2015-10-18T00:00:00Z",
-      "first_unsafe_at": "2015-10-18T00:00:00Z",
-      "remaining_hours": -192,
-      "status": "OVERDUE",
-      "threshold_hours": 0
-    },
-    {
-      "asset_id": "shopify-owned-2",
-      "asset_type": "aws_s3_bucket",
-      "control_id": "CTL.S3.PUBLIC.004",
-      "due_at": "2015-10-18T00:00:00Z",
-      "first_unsafe_at": "2015-10-18T00:00:00Z",
-      "remaining_hours": -192,
-      "status": "OVERDUE",
-      "threshold_hours": 0
-    },
-    {
-      "asset_id": "shopify-writeable-1",
-      "asset_type": "aws_s3_bucket",
-      "control_id": "CTL.S3.PUBLIC.004",
-      "due_at": "2015-10-18T00:00:00Z",
-      "first_unsafe_at": "2015-10-18T00:00:00Z",
-      "remaining_hours": -192,
-      "status": "OVERDUE",
-      "threshold_hours": 0
-    },
-    {
-      "asset_id": "shopify-owned-1",
-      "asset_type": "aws_s3_bucket",
-      "control_id": "CTL.S3.CONTROLS.001",
-      "due_at": "2015-10-25T00:00:00Z",
-      "first_unsafe_at": "2015-10-18T00:00:00Z",
-      "remaining_hours": -24,
-      "status": "OVERDUE",
-      "threshold_hours": 168
-    },
-    {
-      "asset_id": "shopify-owned-2",
-      "asset_type": "aws_s3_bucket",
-      "control_id": "CTL.S3.CONTROLS.001",
-      "due_at": "2015-10-25T00:00:00Z",
-      "first_unsafe_at": "2015-10-18T00:00:00Z",
-      "remaining_hours": -24,
-      "status": "OVERDUE",
-      "threshold_hours": 168
-    },
-    {
-      "asset_id": "shopify-writeable-1",
-      "asset_type": "aws_s3_bucket",
-      "control_id": "CTL.S3.CONTROLS.001",
-      "due_at": "2015-10-25T00:00:00Z",
-      "first_unsafe_at": "2015-10-18T00:00:00Z",
-      "remaining_hours": -24,
-      "status": "OVERDUE",
-      "threshold_hours": 168
-    },
-    {
-      "asset_id": "shopify-owned-1",
-      "asset_type": "aws_s3_bucket",
-      "control_id": "CTL.S3.ENCRYPT.004",
-      "due_at": "2015-10-25T00:00:00Z",
-      "first_unsafe_at": "2015-10-18T00:00:00Z",
-      "remaining_hours": -24,
-      "status": "OVERDUE",
-      "threshold_hours": 168
-    },
-    {
-      "asset_id": "shopify-owned-2",
-      "asset_type": "aws_s3_bucket",
-      "control_id": "CTL.S3.ENCRYPT.004",
-      "due_at": "2015-10-25T00:00:00Z",
-      "first_unsafe_at": "2015-10-18T00:00:00Z",
-      "remaining_hours": -24,
-      "status": "OVERDUE",
-      "threshold_hours": 168
-    },
-    {
-      "asset_id": "shopify-writeable-1",
-      "asset_type": "aws_s3_bucket",
-      "control_id": "CTL.S3.ENCRYPT.004",
-      "due_at": "2015-10-25T00:00:00Z",
-      "first_unsafe_at": "2015-10-18T00:00:00Z",
-      "remaining_hours": -24,
-      "status": "OVERDUE",
-      "threshold_hours": 168
-    },
-    {
-      "asset_id": "shopify-owned-1",
-      "asset_type": "aws_s3_bucket",
-      "control_id": "CTL.S3.PUBLIC.001",
-      "due_at": "2015-10-25T00:00:00Z",
-      "first_unsafe_at": "2015-10-18T00:00:00Z",
-      "remaining_hours": -24,
-      "status": "OVERDUE",
-      "threshold_hours": 168
-    },
-    {
-      "asset_id": "shopify-owned-2",
-      "asset_type": "aws_s3_bucket",
-      "control_id": "CTL.S3.PUBLIC.001",
-      "due_at": "2015-10-25T00:00:00Z",
-      "first_unsafe_at": "2015-10-18T00:00:00Z",
-      "remaining_hours": -24,
-      "status": "OVERDUE",
-      "threshold_hours": 168
-    },
-    {
-      "asset_id": "shopify-writeable-1",
-      "asset_type": "aws_s3_bucket",
-      "control_id": "CTL.S3.PUBLIC.001",
-      "due_at": "2015-10-25T00:00:00Z",
-      "first_unsafe_at": "2015-10-18T00:00:00Z",
-      "remaining_hours": -24,
-      "status": "OVERDUE",
-      "threshold_hours": 168
-    },
-    {
-      "asset_id": "shopify-writeable-1",
-      "asset_type": "aws_s3_bucket",
-      "control_id": "CTL.S3.PUBLIC.003",
-      "due_at": "2015-10-25T00:00:00Z",
-      "first_unsafe_at": "2015-10-18T00:00:00Z",
-      "remaining_hours": -24,
-      "status": "OVERDUE",
-      "threshold_hours": 168
-    }
-  ],
-  "findings": [
-    {
-      "asset_id": "shopify-owned-1",
-      "asset_type": "aws_s3_bucket",
-      "asset_vendor": "aws",
-      "control_description": "S3 buckets must have the public access block fully enabled. When disabled, the bucket has no safety net against accidental public exposure from policy or ACL changes. This detects the enabling condition for public access, not the exposure itself.\n",
-      "control_id": "CTL.S3.CONTROLS.001",
-      "control_name": "Public Access Block Must Be Enabled",
-      "evidence": {
-        "first_unsafe_at": "2015-10-18T00:00:00Z",
-        "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
-        "misconfigurations": [
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "property": "storage.controls.public_access_fully_blocked",
-            "unsafe_value": false
-          },
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "property": "storage.kind",
-            "unsafe_value": "bucket"
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "threshold_hours": 168,
-        "unsafe_duration_hours": 192,
-        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
-      },
-      "posture_drift": {
-        "exposure_window_count": 1,
-        "pattern": "persistent"
-      },
-      "remediation": {
-        "action": "Review the misconfigured properties and revert to compliant values.",
-        "description": "Resource configuration deviates from security baseline."
-      }
-    },
-    {
-      "asset_id": "shopify-owned-2",
-      "asset_type": "aws_s3_bucket",
-      "asset_vendor": "aws",
-      "control_description": "S3 buckets must have the public access block fully enabled. When disabled, the bucket has no safety net against accidental public exposure from policy or ACL changes. This detects the enabling condition for public access, not the exposure itself.\n",
-      "control_id": "CTL.S3.CONTROLS.001",
-      "control_name": "Public Access Block Must Be Enabled",
-      "evidence": {
-        "first_unsafe_at": "2015-10-18T00:00:00Z",
-        "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
-        "misconfigurations": [
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "property": "storage.controls.public_access_fully_blocked",
-            "unsafe_value": false
-          },
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "property": "storage.kind",
-            "unsafe_value": "bucket"
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "threshold_hours": 168,
-        "unsafe_duration_hours": 192,
-        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
-      },
-      "posture_drift": {
-        "exposure_window_count": 1,
-        "pattern": "persistent"
-      },
-      "remediation": {
-        "action": "Review the misconfigured properties and revert to compliant values.",
-        "description": "Resource configuration deviates from security baseline."
-      }
-    },
-    {
-      "asset_id": "shopify-writeable-1",
-      "asset_type": "aws_s3_bucket",
-      "asset_vendor": "aws",
-      "control_description": "S3 buckets must have the public access block fully enabled. When disabled, the bucket has no safety net against accidental public exposure from policy or ACL changes. This detects the enabling condition for public access, not the exposure itself.\n",
-      "control_id": "CTL.S3.CONTROLS.001",
-      "control_name": "Public Access Block Must Be Enabled",
-      "evidence": {
-        "first_unsafe_at": "2015-10-18T00:00:00Z",
-        "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
-        "misconfigurations": [
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "property": "storage.controls.public_access_fully_blocked",
-            "unsafe_value": false
-          },
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "property": "storage.kind",
-            "unsafe_value": "bucket"
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "threshold_hours": 168,
-        "unsafe_duration_hours": 192,
-        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
-      },
-      "posture_drift": {
-        "exposure_window_count": 1,
-        "pattern": "persistent"
-      },
-      "remediation": {
-        "action": "Review the misconfigured properties and revert to compliant values.",
-        "description": "Resource configuration deviates from security baseline."
-      }
-    },
-    {
-      "asset_id": "shopify-owned-1",
-      "asset_type": "aws_s3_bucket",
-      "asset_vendor": "aws",
-      "control_description": "S3 buckets with any non-public data classification must use SSE-KMS encryption with a customer-managed key, not SSE-S3 (AES256). AES256 uses AWS-managed keys with no customer control over key rotation, access policies, or audit trails. This fires on all classified data except explicitly public or non-sensitive buckets.\n",
-      "control_id": "CTL.S3.ENCRYPT.004",
-      "control_name": "Sensitive Data Requires KMS Encryption",
-      "evidence": {
-        "first_unsafe_at": "2015-10-18T00:00:00Z",
-        "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
-        "misconfigurations": [
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "ne",
-            "property": "storage.encryption.algorithm",
-            "unsafe_value": "aws:kms"
-          },
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "property": "storage.kind",
-            "unsafe_value": "bucket"
-          },
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "ne",
-            "property": "storage.tags.data-classification",
-            "unsafe_value": "non-sensitive"
-          },
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "ne",
-            "property": "storage.tags.data-classification",
-            "unsafe_value": "public"
-          },
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "present",
-            "property": "storage.tags.data-classification",
-            "unsafe_value": true
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "threshold_hours": 168,
-        "unsafe_duration_hours": 192,
-        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
-      },
-      "posture_drift": {
-        "exposure_window_count": 1,
-        "pattern": "persistent"
-      },
-      "remediation": {
-        "action": "Enable server-side encryption using a managed key.",
-        "description": "Resource data is not encrypted at rest."
-      }
-    },
-    {
-      "asset_id": "shopify-owned-2",
-      "asset_type": "aws_s3_bucket",
-      "asset_vendor": "aws",
-      "control_description": "S3 buckets with any non-public data classification must use SSE-KMS encryption with a customer-managed key, not SSE-S3 (AES256). AES256 uses AWS-managed keys with no customer control over key rotation, access policies, or audit trails. This fires on all classified data except explicitly public or non-sensitive buckets.\n",
-      "control_id": "CTL.S3.ENCRYPT.004",
-      "control_name": "Sensitive Data Requires KMS Encryption",
-      "evidence": {
-        "first_unsafe_at": "2015-10-18T00:00:00Z",
-        "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
-        "misconfigurations": [
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "ne",
-            "property": "storage.encryption.algorithm",
-            "unsafe_value": "aws:kms"
-          },
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "property": "storage.kind",
-            "unsafe_value": "bucket"
-          },
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "ne",
-            "property": "storage.tags.data-classification",
-            "unsafe_value": "non-sensitive"
-          },
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "ne",
-            "property": "storage.tags.data-classification",
-            "unsafe_value": "public"
-          },
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "present",
-            "property": "storage.tags.data-classification",
-            "unsafe_value": true
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "threshold_hours": 168,
-        "unsafe_duration_hours": 192,
-        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
-      },
-      "posture_drift": {
-        "exposure_window_count": 1,
-        "pattern": "persistent"
-      },
-      "remediation": {
-        "action": "Enable server-side encryption using a managed key.",
-        "description": "Resource data is not encrypted at rest."
-      }
-    },
-    {
-      "asset_id": "shopify-writeable-1",
-      "asset_type": "aws_s3_bucket",
-      "asset_vendor": "aws",
-      "control_description": "S3 buckets with any non-public data classification must use SSE-KMS encryption with a customer-managed key, not SSE-S3 (AES256). AES256 uses AWS-managed keys with no customer control over key rotation, access policies, or audit trails. This fires on all classified data except explicitly public or non-sensitive buckets.\n",
-      "control_id": "CTL.S3.ENCRYPT.004",
-      "control_name": "Sensitive Data Requires KMS Encryption",
-      "evidence": {
-        "first_unsafe_at": "2015-10-18T00:00:00Z",
-        "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
-        "misconfigurations": [
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "ne",
-            "property": "storage.encryption.algorithm",
-            "unsafe_value": "aws:kms"
-          },
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "property": "storage.kind",
-            "unsafe_value": "bucket"
-          },
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "ne",
-            "property": "storage.tags.data-classification",
-            "unsafe_value": "non-sensitive"
-          },
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "ne",
-            "property": "storage.tags.data-classification",
-            "unsafe_value": "public"
-          },
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "present",
-            "property": "storage.tags.data-classification",
-            "unsafe_value": true
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "threshold_hours": 168,
-        "unsafe_duration_hours": 192,
-        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
-      },
-      "posture_drift": {
-        "exposure_window_count": 1,
-        "pattern": "persistent"
-      },
-      "remediation": {
-        "action": "Enable server-side encryption using a managed key.",
-        "description": "Resource data is not encrypted at rest."
-      }
-    },
-    {
-      "asset_id": "shopify-owned-1",
-      "asset_type": "aws_s3_bucket",
-      "asset_vendor": "aws",
-      "control_description": "S3 buckets must not allow public read or list access. Detects buckets with public access via bucket policies, ACLs, or missing public access block settings.\n",
-      "control_id": "CTL.S3.PUBLIC.001",
-      "control_name": "No Public S3 Buckets",
-      "evidence": {
-        "first_unsafe_at": "2015-10-18T00:00:00Z",
-        "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
-        "misconfigurations": [
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "property": "storage.access.public_list",
-            "unsafe_value": true
-          },
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "property": "storage.access.public_read",
-            "unsafe_value": true
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "threshold_hours": 168,
-        "unsafe_duration_hours": 192,
-        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
-      },
-      "fix_plan": {
-        "actions": [
-          {
-            "action_type": "set",
-            "path": "security_posture.block_identity_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_metadata_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
-            "value": true
-          }
-        ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
-        "id": "fix-728fc9e1572de8e9",
-        "preconditions": [
-          "Confirm resource ownership and internal change window approval.",
-          "Ensure public access is not explicitly required for this specific resource's function."
-        ],
-        "target": {
-          "asset_id": "shopify-owned-1",
-          "asset_type": "aws_s3_bucket"
-        }
-      },
-      "posture_drift": {
-        "exposure_window_count": 1,
-        "pattern": "persistent"
-      },
-      "remediation": {
-        "action": "Restrict access to authorized principals only.",
-        "description": "Resource is exposed to the public internet."
-      }
-    },
-    {
-      "asset_id": "shopify-owned-2",
-      "asset_type": "aws_s3_bucket",
-      "asset_vendor": "aws",
-      "control_description": "S3 buckets must not allow public read or list access. Detects buckets with public access via bucket policies, ACLs, or missing public access block settings.\n",
-      "control_id": "CTL.S3.PUBLIC.001",
-      "control_name": "No Public S3 Buckets",
-      "evidence": {
-        "first_unsafe_at": "2015-10-18T00:00:00Z",
-        "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
-        "misconfigurations": [
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "property": "storage.access.public_list",
-            "unsafe_value": true
-          },
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "property": "storage.access.public_read",
-            "unsafe_value": true
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "threshold_hours": 168,
-        "unsafe_duration_hours": 192,
-        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
-      },
-      "fix_plan": {
-        "actions": [
-          {
-            "action_type": "set",
-            "path": "security_posture.block_identity_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_metadata_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
-            "value": true
-          }
-        ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
-        "id": "fix-cb40dd526a18d441",
-        "preconditions": [
-          "Confirm resource ownership and internal change window approval.",
-          "Ensure public access is not explicitly required for this specific resource's function."
-        ],
-        "target": {
-          "asset_id": "shopify-owned-2",
-          "asset_type": "aws_s3_bucket"
-        }
-      },
-      "posture_drift": {
-        "exposure_window_count": 1,
-        "pattern": "persistent"
-      },
-      "remediation": {
-        "action": "Restrict access to authorized principals only.",
-        "description": "Resource is exposed to the public internet."
-      }
-    },
-    {
-      "asset_id": "shopify-writeable-1",
-      "asset_type": "aws_s3_bucket",
-      "asset_vendor": "aws",
-      "control_description": "S3 buckets must not allow public read or list access. Detects buckets with public access via bucket policies, ACLs, or missing public access block settings.\n",
-      "control_id": "CTL.S3.PUBLIC.001",
-      "control_name": "No Public S3 Buckets",
-      "evidence": {
-        "first_unsafe_at": "2015-10-18T00:00:00Z",
-        "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
-        "misconfigurations": [
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "property": "storage.access.public_list",
-            "unsafe_value": true
-          },
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "property": "storage.access.public_read",
-            "unsafe_value": true
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "threshold_hours": 168,
-        "unsafe_duration_hours": 192,
-        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
-      },
-      "fix_plan": {
-        "actions": [
-          {
-            "action_type": "set",
-            "path": "security_posture.block_identity_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_metadata_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
-            "value": true
-          }
-        ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
-        "id": "fix-1c9e0099685bba81",
-        "preconditions": [
-          "Confirm resource ownership and internal change window approval.",
-          "Ensure public access is not explicitly required for this specific resource's function."
-        ],
-        "target": {
-          "asset_id": "shopify-writeable-1",
-          "asset_type": "aws_s3_bucket"
-        }
-      },
-      "posture_drift": {
-        "exposure_window_count": 1,
-        "pattern": "persistent"
-      },
-      "remediation": {
-        "action": "Restrict access to authorized principals only.",
-        "description": "Resource is exposed to the public internet."
-      }
-    },
-    {
-      "asset_id": "shopify-writeable-1",
-      "asset_type": "aws_s3_bucket",
-      "asset_vendor": "aws",
-      "control_description": "S3 buckets must not allow public write or delete access. Public write enables data injection, ransomware, and policy takeover.\n",
-      "control_id": "CTL.S3.PUBLIC.003",
-      "control_name": "No Public Write Access",
-      "evidence": {
-        "first_unsafe_at": "2015-10-18T00:00:00Z",
-        "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
-        "misconfigurations": [
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "property": "storage.access.public_write",
-            "unsafe_value": true
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "threshold_hours": 168,
-        "unsafe_duration_hours": 192,
-        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
-      },
-      "fix_plan": {
-        "actions": [
-          {
-            "action_type": "set",
-            "path": "security_posture.block_identity_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_metadata_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
-            "value": true
-          }
-        ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
-        "id": "fix-1c9e0099685bba81",
-        "preconditions": [
-          "Confirm resource ownership and internal change window approval.",
-          "Ensure public access is not explicitly required for this specific resource's function."
-        ],
-        "target": {
-          "asset_id": "shopify-writeable-1",
-          "asset_type": "aws_s3_bucket"
-        }
-      },
-      "posture_drift": {
-        "exposure_window_count": 1,
-        "pattern": "persistent"
-      },
-      "remediation": {
-        "action": "Restrict access to authorized principals only.",
-        "description": "Resource is exposed to the public internet."
-      }
-    },
-    {
-      "asset_id": "shopify-owned-1",
-      "asset_type": "aws_s3_bucket",
-      "asset_vendor": "aws",
-      "control_description": "S3 bucket ACLs must not grant read access to AllUsers or AuthenticatedUsers for PHI data.",
-      "control_id": "CTL.S3.PUBLIC.004",
-      "control_name": "No Public Read via ACL",
-      "evidence": {
-        "first_unsafe_at": "2015-10-18T00:00:00Z",
-        "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
-        "misconfigurations": [
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "property": "storage.access.read_via_resource",
-            "unsafe_value": true
-          }
-        ],
-        "root_causes": [
-          "resource"
-        ],
-        "unsafe_duration_hours": 192,
-        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 0 hours). Exposed since 2015-10-18T00:00:00Z."
-      },
-      "fix_plan": {
-        "actions": [
-          {
-            "action_type": "set",
-            "path": "security_posture.block_identity_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_metadata_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
-            "value": true
-          }
-        ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
-        "id": "fix-728fc9e1572de8e9",
-        "preconditions": [
-          "Confirm resource ownership and internal change window approval.",
-          "Ensure public access is not explicitly required for this specific resource's function."
-        ],
-        "target": {
-          "asset_id": "shopify-owned-1",
-          "asset_type": "aws_s3_bucket"
-        }
-      },
-      "posture_drift": {
-        "exposure_window_count": 1,
-        "pattern": "persistent"
-      },
-      "remediation": {
-        "action": "Restrict access to authorized principals only.",
-        "description": "Resource is exposed to the public internet."
-      }
-    },
-    {
-      "asset_id": "shopify-owned-2",
-      "asset_type": "aws_s3_bucket",
-      "asset_vendor": "aws",
-      "control_description": "S3 bucket ACLs must not grant read access to AllUsers or AuthenticatedUsers for PHI data.",
-      "control_id": "CTL.S3.PUBLIC.004",
-      "control_name": "No Public Read via ACL",
-      "evidence": {
-        "first_unsafe_at": "2015-10-18T00:00:00Z",
-        "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
-        "misconfigurations": [
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "property": "storage.access.read_via_resource",
-            "unsafe_value": true
-          }
-        ],
-        "root_causes": [
-          "resource"
-        ],
-        "unsafe_duration_hours": 192,
-        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 0 hours). Exposed since 2015-10-18T00:00:00Z."
-      },
-      "fix_plan": {
-        "actions": [
-          {
-            "action_type": "set",
-            "path": "security_posture.block_identity_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_metadata_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
-            "value": true
-          }
-        ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
-        "id": "fix-cb40dd526a18d441",
-        "preconditions": [
-          "Confirm resource ownership and internal change window approval.",
-          "Ensure public access is not explicitly required for this specific resource's function."
-        ],
-        "target": {
-          "asset_id": "shopify-owned-2",
-          "asset_type": "aws_s3_bucket"
-        }
-      },
-      "posture_drift": {
-        "exposure_window_count": 1,
-        "pattern": "persistent"
-      },
-      "remediation": {
-        "action": "Restrict access to authorized principals only.",
-        "description": "Resource is exposed to the public internet."
-      }
-    },
-    {
-      "asset_id": "shopify-writeable-1",
-      "asset_type": "aws_s3_bucket",
-      "asset_vendor": "aws",
-      "control_description": "S3 bucket ACLs must not grant read access to AllUsers or AuthenticatedUsers for PHI data.",
-      "control_id": "CTL.S3.PUBLIC.004",
-      "control_name": "No Public Read via ACL",
-      "evidence": {
-        "first_unsafe_at": "2015-10-18T00:00:00Z",
-        "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
-        "misconfigurations": [
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "property": "storage.access.read_via_resource",
-            "unsafe_value": true
-          }
-        ],
-        "root_causes": [
-          "resource"
-        ],
-        "unsafe_duration_hours": 192,
-        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 0 hours). Exposed since 2015-10-18T00:00:00Z."
-      },
-      "fix_plan": {
-        "actions": [
-          {
-            "action_type": "set",
-            "path": "security_posture.block_identity_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_metadata_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
-            "value": true
-          }
-        ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
-        "id": "fix-1c9e0099685bba81",
-        "preconditions": [
-          "Confirm resource ownership and internal change window approval.",
-          "Ensure public access is not explicitly required for this specific resource's function."
-        ],
-        "target": {
-          "asset_id": "shopify-writeable-1",
-          "asset_type": "aws_s3_bucket"
-        }
-      },
-      "posture_drift": {
-        "exposure_window_count": 1,
-        "pattern": "persistent"
-      },
-      "remediation": {
-        "action": "Restrict access to authorized principals only.",
-        "description": "Resource is exposed to the public internet."
-      }
-    }
-  ],
+  "schema_version": "out.v0.1",
   "kind": "ASSESSMENT",
-  "status": "NON_COMPLIANT",
-  "remediation_groups": [
-    {
-      "asset_id": "shopify-owned-1",
-      "asset_type": "aws_s3_bucket",
-      "contributing_controls": [
-        "CTL.S3.PUBLIC.001",
-        "CTL.S3.PUBLIC.004"
-      ],
-      "finding_count": 2,
-      "fix_plan": {
-        "actions": [
-          {
-            "action_type": "set",
-            "path": "security_posture.block_identity_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_metadata_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
-            "value": true
-          }
-        ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
-        "id": "fix-728fc9e1572de8e9",
-        "preconditions": [
-          "Confirm resource ownership and internal change window approval.",
-          "Ensure public access is not explicitly required for this specific resource's function."
-        ],
-        "target": {
-          "asset_id": "shopify-owned-1",
-          "asset_type": "aws_s3_bucket"
-        }
-      }
-    },
-    {
-      "asset_id": "shopify-owned-2",
-      "asset_type": "aws_s3_bucket",
-      "contributing_controls": [
-        "CTL.S3.PUBLIC.001",
-        "CTL.S3.PUBLIC.004"
-      ],
-      "finding_count": 2,
-      "fix_plan": {
-        "actions": [
-          {
-            "action_type": "set",
-            "path": "security_posture.block_identity_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_metadata_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
-            "value": true
-          }
-        ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
-        "id": "fix-cb40dd526a18d441",
-        "preconditions": [
-          "Confirm resource ownership and internal change window approval.",
-          "Ensure public access is not explicitly required for this specific resource's function."
-        ],
-        "target": {
-          "asset_id": "shopify-owned-2",
-          "asset_type": "aws_s3_bucket"
-        }
-      }
-    },
-    {
-      "asset_id": "shopify-writeable-1",
-      "asset_type": "aws_s3_bucket",
-      "contributing_controls": [
-        "CTL.S3.PUBLIC.001",
-        "CTL.S3.PUBLIC.003",
-        "CTL.S3.PUBLIC.004"
-      ],
-      "finding_count": 3,
-      "fix_plan": {
-        "actions": [
-          {
-            "action_type": "set",
-            "path": "security_posture.block_identity_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_metadata_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
-            "value": true
-          }
-        ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
-        "id": "fix-1c9e0099685bba81",
-        "preconditions": [
-          "Confirm resource ownership and internal change window approval.",
-          "Ensure public access is not explicitly required for this specific resource's function."
-        ],
-        "target": {
-          "asset_id": "shopify-writeable-1",
-          "asset_type": "aws_s3_bucket"
-        }
-      }
-    }
-  ],
   "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2015-10-26T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
     "input_hashes": {
       "files": {
         "2015-10-18T000000Z.json": "28cfba2bbd008cfe4c71502c61f9f7bdbc146e1b84e56c22827481f226fe583b",
@@ -1060,16 +14,1260 @@
       },
       "overall": "c11f8d70325223b3697dcb0fb083b5ec3131f6a60642ff70c9520308de68a479"
     },
-    "sla_threshold": "7d",
-    "now": "2015-10-26T00:00:00Z",
-    "offline": true,
-    "policy_fingerprint": "3a43d33d6946a4821fb859b9790af47b5e39df446d519796faf7ed7af579facf",
-    "snapshots": 2
+    "policy_fingerprint": "3a43d33d6946a4821fb859b9790af47b5e39df446d519796faf7ed7af579facf"
   },
-  "schema_version": "out.v0.1",
   "summary": {
     "total_assets": 3,
     "exposed_resources": 3,
     "violations": 13
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.S3.PUBLIC.004",
+      "asset_id": "shopify-owned-1",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2015-10-18T00:00:00Z",
+      "remaining_hours": -192,
+      "first_unsafe_at": "2015-10-18T00:00:00Z",
+      "threshold_hours": 0
+    },
+    {
+      "control_id": "CTL.S3.PUBLIC.004",
+      "asset_id": "shopify-owned-2",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2015-10-18T00:00:00Z",
+      "remaining_hours": -192,
+      "first_unsafe_at": "2015-10-18T00:00:00Z",
+      "threshold_hours": 0
+    },
+    {
+      "control_id": "CTL.S3.PUBLIC.004",
+      "asset_id": "shopify-writeable-1",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2015-10-18T00:00:00Z",
+      "remaining_hours": -192,
+      "first_unsafe_at": "2015-10-18T00:00:00Z",
+      "threshold_hours": 0
+    },
+    {
+      "control_id": "CTL.S3.CONTROLS.001",
+      "asset_id": "shopify-owned-1",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2015-10-25T00:00:00Z",
+      "remaining_hours": -24,
+      "first_unsafe_at": "2015-10-18T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.CONTROLS.001",
+      "asset_id": "shopify-owned-2",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2015-10-25T00:00:00Z",
+      "remaining_hours": -24,
+      "first_unsafe_at": "2015-10-18T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.CONTROLS.001",
+      "asset_id": "shopify-writeable-1",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2015-10-25T00:00:00Z",
+      "remaining_hours": -24,
+      "first_unsafe_at": "2015-10-18T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.ENCRYPT.004",
+      "asset_id": "shopify-owned-1",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2015-10-25T00:00:00Z",
+      "remaining_hours": -24,
+      "first_unsafe_at": "2015-10-18T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.ENCRYPT.004",
+      "asset_id": "shopify-owned-2",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2015-10-25T00:00:00Z",
+      "remaining_hours": -24,
+      "first_unsafe_at": "2015-10-18T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.ENCRYPT.004",
+      "asset_id": "shopify-writeable-1",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2015-10-25T00:00:00Z",
+      "remaining_hours": -24,
+      "first_unsafe_at": "2015-10-18T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.PUBLIC.001",
+      "asset_id": "shopify-owned-1",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2015-10-25T00:00:00Z",
+      "remaining_hours": -24,
+      "first_unsafe_at": "2015-10-18T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.PUBLIC.001",
+      "asset_id": "shopify-owned-2",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2015-10-25T00:00:00Z",
+      "remaining_hours": -24,
+      "first_unsafe_at": "2015-10-18T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.PUBLIC.001",
+      "asset_id": "shopify-writeable-1",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2015-10-25T00:00:00Z",
+      "remaining_hours": -24,
+      "first_unsafe_at": "2015-10-18T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.PUBLIC.003",
+      "asset_id": "shopify-writeable-1",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2015-10-25T00:00:00Z",
+      "remaining_hours": -24,
+      "first_unsafe_at": "2015-10-18T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.S3.CONTROLS.001",
+      "control_name": "Public Access Block Must Be Enabled",
+      "control_description": "S3 buckets must have the public access block fully enabled. When disabled, the bucket has no safety net against accidental public exposure from policy or ACL changes. This detects the enabling condition for public access, not the exposure itself.\n",
+      "asset_id": "shopify-owned-1",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2015-10-18T00:00:00Z",
+        "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
+        "unsafe_duration_hours": 192,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "storage.controls.public_access_fully_blocked",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "storage.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Resource configuration deviates from security baseline.",
+        "action": "Review the misconfigured properties and revert to compliant values."
+      }
+    },
+    {
+      "control_id": "CTL.S3.CONTROLS.001",
+      "control_name": "Public Access Block Must Be Enabled",
+      "control_description": "S3 buckets must have the public access block fully enabled. When disabled, the bucket has no safety net against accidental public exposure from policy or ACL changes. This detects the enabling condition for public access, not the exposure itself.\n",
+      "asset_id": "shopify-owned-2",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2015-10-18T00:00:00Z",
+        "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
+        "unsafe_duration_hours": 192,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "storage.controls.public_access_fully_blocked",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "storage.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Resource configuration deviates from security baseline.",
+        "action": "Review the misconfigured properties and revert to compliant values."
+      }
+    },
+    {
+      "control_id": "CTL.S3.CONTROLS.001",
+      "control_name": "Public Access Block Must Be Enabled",
+      "control_description": "S3 buckets must have the public access block fully enabled. When disabled, the bucket has no safety net against accidental public exposure from policy or ACL changes. This detects the enabling condition for public access, not the exposure itself.\n",
+      "asset_id": "shopify-writeable-1",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2015-10-18T00:00:00Z",
+        "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
+        "unsafe_duration_hours": 192,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "storage.controls.public_access_fully_blocked",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "storage.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Resource configuration deviates from security baseline.",
+        "action": "Review the misconfigured properties and revert to compliant values."
+      }
+    },
+    {
+      "control_id": "CTL.S3.ENCRYPT.004",
+      "control_name": "Sensitive Data Requires KMS Encryption",
+      "control_description": "S3 buckets with any non-public data classification must use SSE-KMS encryption with a customer-managed key, not SSE-S3 (AES256). AES256 uses AWS-managed keys with no customer control over key rotation, access policies, or audit trails. This fires on all classified data except explicitly public or non-sensitive buckets.\n",
+      "asset_id": "shopify-owned-1",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2015-10-18T00:00:00Z",
+        "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
+        "unsafe_duration_hours": 192,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "storage.encryption.algorithm",
+            "actual_value": "[SANITIZED]",
+            "operator": "ne",
+            "unsafe_value": "aws:kms"
+          },
+          {
+            "property": "storage.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          },
+          {
+            "property": "storage.tags.data-classification",
+            "actual_value": "[SANITIZED]",
+            "operator": "ne",
+            "unsafe_value": "non-sensitive"
+          },
+          {
+            "property": "storage.tags.data-classification",
+            "actual_value": "[SANITIZED]",
+            "operator": "ne",
+            "unsafe_value": "public"
+          },
+          {
+            "property": "storage.tags.data-classification",
+            "actual_value": "[SANITIZED]",
+            "operator": "present",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Resource data is not encrypted at rest.",
+        "action": "Enable server-side encryption using a managed key."
+      }
+    },
+    {
+      "control_id": "CTL.S3.ENCRYPT.004",
+      "control_name": "Sensitive Data Requires KMS Encryption",
+      "control_description": "S3 buckets with any non-public data classification must use SSE-KMS encryption with a customer-managed key, not SSE-S3 (AES256). AES256 uses AWS-managed keys with no customer control over key rotation, access policies, or audit trails. This fires on all classified data except explicitly public or non-sensitive buckets.\n",
+      "asset_id": "shopify-owned-2",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2015-10-18T00:00:00Z",
+        "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
+        "unsafe_duration_hours": 192,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "storage.encryption.algorithm",
+            "actual_value": "[SANITIZED]",
+            "operator": "ne",
+            "unsafe_value": "aws:kms"
+          },
+          {
+            "property": "storage.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          },
+          {
+            "property": "storage.tags.data-classification",
+            "actual_value": "[SANITIZED]",
+            "operator": "ne",
+            "unsafe_value": "non-sensitive"
+          },
+          {
+            "property": "storage.tags.data-classification",
+            "actual_value": "[SANITIZED]",
+            "operator": "ne",
+            "unsafe_value": "public"
+          },
+          {
+            "property": "storage.tags.data-classification",
+            "actual_value": "[SANITIZED]",
+            "operator": "present",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Resource data is not encrypted at rest.",
+        "action": "Enable server-side encryption using a managed key."
+      }
+    },
+    {
+      "control_id": "CTL.S3.ENCRYPT.004",
+      "control_name": "Sensitive Data Requires KMS Encryption",
+      "control_description": "S3 buckets with any non-public data classification must use SSE-KMS encryption with a customer-managed key, not SSE-S3 (AES256). AES256 uses AWS-managed keys with no customer control over key rotation, access policies, or audit trails. This fires on all classified data except explicitly public or non-sensitive buckets.\n",
+      "asset_id": "shopify-writeable-1",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2015-10-18T00:00:00Z",
+        "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
+        "unsafe_duration_hours": 192,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "storage.encryption.algorithm",
+            "actual_value": "[SANITIZED]",
+            "operator": "ne",
+            "unsafe_value": "aws:kms"
+          },
+          {
+            "property": "storage.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          },
+          {
+            "property": "storage.tags.data-classification",
+            "actual_value": "[SANITIZED]",
+            "operator": "ne",
+            "unsafe_value": "non-sensitive"
+          },
+          {
+            "property": "storage.tags.data-classification",
+            "actual_value": "[SANITIZED]",
+            "operator": "ne",
+            "unsafe_value": "public"
+          },
+          {
+            "property": "storage.tags.data-classification",
+            "actual_value": "[SANITIZED]",
+            "operator": "present",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Resource data is not encrypted at rest.",
+        "action": "Enable server-side encryption using a managed key."
+      }
+    },
+    {
+      "control_id": "CTL.S3.PUBLIC.001",
+      "control_name": "No Public S3 Buckets",
+      "control_description": "S3 buckets must not allow public read or list access. Detects buckets with public access via bucket policies, ACLs, or missing public access block settings.\n",
+      "asset_id": "shopify-owned-1",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2015-10-18T00:00:00Z",
+        "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
+        "unsafe_duration_hours": 192,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "storage.access.public_list",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "storage.access.public_read",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Resource is exposed to the public internet.",
+        "action": "Restrict access to authorized principals only."
+      },
+      "fix_plan": {
+        "id": "fix-728fc9e1572de8e9",
+        "target": {
+          "asset_id": "shopify-owned-1",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+      }
+    },
+    {
+      "control_id": "CTL.S3.PUBLIC.001",
+      "control_name": "No Public S3 Buckets",
+      "control_description": "S3 buckets must not allow public read or list access. Detects buckets with public access via bucket policies, ACLs, or missing public access block settings.\n",
+      "asset_id": "shopify-owned-2",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2015-10-18T00:00:00Z",
+        "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
+        "unsafe_duration_hours": 192,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "storage.access.public_list",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "storage.access.public_read",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Resource is exposed to the public internet.",
+        "action": "Restrict access to authorized principals only."
+      },
+      "fix_plan": {
+        "id": "fix-cb40dd526a18d441",
+        "target": {
+          "asset_id": "shopify-owned-2",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+      }
+    },
+    {
+      "control_id": "CTL.S3.PUBLIC.001",
+      "control_name": "No Public S3 Buckets",
+      "control_description": "S3 buckets must not allow public read or list access. Detects buckets with public access via bucket policies, ACLs, or missing public access block settings.\n",
+      "asset_id": "shopify-writeable-1",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2015-10-18T00:00:00Z",
+        "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
+        "unsafe_duration_hours": 192,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "storage.access.public_list",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "storage.access.public_read",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Resource is exposed to the public internet.",
+        "action": "Restrict access to authorized principals only."
+      },
+      "fix_plan": {
+        "id": "fix-1c9e0099685bba81",
+        "target": {
+          "asset_id": "shopify-writeable-1",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+      }
+    },
+    {
+      "control_id": "CTL.S3.PUBLIC.003",
+      "control_name": "No Public Write Access",
+      "control_description": "S3 buckets must not allow public write or delete access. Public write enables data injection, ransomware, and policy takeover.\n",
+      "asset_id": "shopify-writeable-1",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2015-10-18T00:00:00Z",
+        "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
+        "unsafe_duration_hours": 192,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "storage.access.public_write",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Resource is exposed to the public internet.",
+        "action": "Restrict access to authorized principals only."
+      },
+      "fix_plan": {
+        "id": "fix-1c9e0099685bba81",
+        "target": {
+          "asset_id": "shopify-writeable-1",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+      }
+    },
+    {
+      "control_id": "CTL.S3.PUBLIC.004",
+      "control_name": "No Public Read via ACL",
+      "control_description": "S3 bucket ACLs must not grant read access to AllUsers or AuthenticatedUsers for PHI data.",
+      "asset_id": "shopify-owned-1",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2015-10-18T00:00:00Z",
+        "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
+        "unsafe_duration_hours": 192,
+        "misconfigurations": [
+          {
+            "property": "storage.access.read_via_resource",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "resource"
+        ],
+        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 0 hours). Exposed since 2015-10-18T00:00:00Z."
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Resource is exposed to the public internet.",
+        "action": "Restrict access to authorized principals only."
+      },
+      "fix_plan": {
+        "id": "fix-728fc9e1572de8e9",
+        "target": {
+          "asset_id": "shopify-owned-1",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+      }
+    },
+    {
+      "control_id": "CTL.S3.PUBLIC.004",
+      "control_name": "No Public Read via ACL",
+      "control_description": "S3 bucket ACLs must not grant read access to AllUsers or AuthenticatedUsers for PHI data.",
+      "asset_id": "shopify-owned-2",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2015-10-18T00:00:00Z",
+        "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
+        "unsafe_duration_hours": 192,
+        "misconfigurations": [
+          {
+            "property": "storage.access.read_via_resource",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "resource"
+        ],
+        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 0 hours). Exposed since 2015-10-18T00:00:00Z."
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Resource is exposed to the public internet.",
+        "action": "Restrict access to authorized principals only."
+      },
+      "fix_plan": {
+        "id": "fix-cb40dd526a18d441",
+        "target": {
+          "asset_id": "shopify-owned-2",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+      }
+    },
+    {
+      "control_id": "CTL.S3.PUBLIC.004",
+      "control_name": "No Public Read via ACL",
+      "control_description": "S3 bucket ACLs must not grant read access to AllUsers or AuthenticatedUsers for PHI data.",
+      "asset_id": "shopify-writeable-1",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2015-10-18T00:00:00Z",
+        "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
+        "unsafe_duration_hours": 192,
+        "misconfigurations": [
+          {
+            "property": "storage.access.read_via_resource",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "resource"
+        ],
+        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 0 hours). Exposed since 2015-10-18T00:00:00Z."
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Resource is exposed to the public internet.",
+        "action": "Restrict access to authorized principals only."
+      },
+      "fix_plan": {
+        "id": "fix-1c9e0099685bba81",
+        "target": {
+          "asset_id": "shopify-writeable-1",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+      }
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "shopify-owned-1",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-728fc9e1572de8e9",
+        "target": {
+          "asset_id": "shopify-owned-1",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+      },
+      "contributing_controls": [
+        "CTL.S3.PUBLIC.001",
+        "CTL.S3.PUBLIC.004"
+      ],
+      "finding_count": 2
+    },
+    {
+      "asset_id": "shopify-owned-2",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-cb40dd526a18d441",
+        "target": {
+          "asset_id": "shopify-owned-2",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+      },
+      "contributing_controls": [
+        "CTL.S3.PUBLIC.001",
+        "CTL.S3.PUBLIC.004"
+      ],
+      "finding_count": 2
+    },
+    {
+      "asset_id": "shopify-writeable-1",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-1c9e0099685bba81",
+        "target": {
+          "asset_id": "shopify-writeable-1",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+      },
+      "contributing_controls": [
+        "CTL.S3.PUBLIC.001",
+        "CTL.S3.PUBLIC.003",
+        "CTL.S3.PUBLIC.004"
+      ],
+      "finding_count": 3
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.S3.CONTROLS.001",
+      "asset_id": "shopify-owned-1",
+      "exposure_score": 10,
+      "breakdown": {
+        "base_score": 10,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 8
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 1,
+      "control_id": "CTL.S3.CONTROLS.001",
+      "asset_id": "shopify-owned-2",
+      "exposure_score": 10,
+      "breakdown": {
+        "base_score": 10,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 8
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 2,
+      "control_id": "CTL.S3.CONTROLS.001",
+      "asset_id": "shopify-writeable-1",
+      "exposure_score": 10,
+      "breakdown": {
+        "base_score": 10,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 8
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 3,
+      "control_id": "CTL.S3.ENCRYPT.004",
+      "asset_id": "shopify-owned-1",
+      "exposure_score": 10,
+      "breakdown": {
+        "base_score": 10,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 8
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 4,
+      "control_id": "CTL.S3.ENCRYPT.004",
+      "asset_id": "shopify-owned-2",
+      "exposure_score": 10,
+      "breakdown": {
+        "base_score": 10,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 8
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 5,
+      "control_id": "CTL.S3.ENCRYPT.004",
+      "asset_id": "shopify-writeable-1",
+      "exposure_score": 10,
+      "breakdown": {
+        "base_score": 10,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 8
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 6,
+      "control_id": "CTL.S3.PUBLIC.001",
+      "asset_id": "shopify-owned-1",
+      "exposure_score": 10,
+      "breakdown": {
+        "base_score": 10,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 8
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 7,
+      "control_id": "CTL.S3.PUBLIC.001",
+      "asset_id": "shopify-owned-2",
+      "exposure_score": 10,
+      "breakdown": {
+        "base_score": 10,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 8
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 8,
+      "control_id": "CTL.S3.PUBLIC.001",
+      "asset_id": "shopify-writeable-1",
+      "exposure_score": 10,
+      "breakdown": {
+        "base_score": 10,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 8
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 9,
+      "control_id": "CTL.S3.PUBLIC.003",
+      "asset_id": "shopify-writeable-1",
+      "exposure_score": 10,
+      "breakdown": {
+        "base_score": 10,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 8
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 10,
+      "control_id": "CTL.S3.PUBLIC.004",
+      "asset_id": "shopify-owned-1",
+      "exposure_score": 10,
+      "breakdown": {
+        "base_score": 10,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 8
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 11,
+      "control_id": "CTL.S3.PUBLIC.004",
+      "asset_id": "shopify-owned-2",
+      "exposure_score": 10,
+      "breakdown": {
+        "base_score": 10,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 8
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 12,
+      "control_id": "CTL.S3.PUBLIC.004",
+      "asset_id": "shopify-writeable-1",
+      "exposure_score": 10,
+      "breakdown": {
+        "base_score": 10,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 8
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-h1-shopify-94502/controls",
+      "observations": "testdata/e2e/e2e-h1-shopify-94502/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "efc627df5032a342d2ea53287c40c2b12c4c90bc",
+      "dirty": false
+    }
   }
 }
