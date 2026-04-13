@@ -1,0 +1,24 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:wafv2::123:webacl/prod-api",
+      "type": "aws_wafv2_web_acl",
+      "vendor": "aws",
+      "properties": {
+        "waf": {
+          "kind": "web_acl",
+          "origin_lockdown": {
+            "allows_direct_ingress": false
+          }
+        }
+      }
+    }
+  ]
+}

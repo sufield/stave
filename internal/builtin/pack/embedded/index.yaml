@@ -96,6 +96,7 @@ packs:
       - CTL.S3.NETWORK.POLICY.001
       - CTL.S3.NETWORK.VPC.001
       - CTL.VPC.SG.UNRESTRICTED.001
+      - CTL.WAF.ORIGIN.LOCKDOWN.001
       # §164.312(e)(2)(ii) — Encryption in Transit
       - CTL.APIGATEWAY.TLS.001
       - CTL.ELASTICACHE.TRANSIT.001
@@ -578,6 +579,7 @@ packs:
     controls:
       - CTL.WAF.RULES.001
       - CTL.WAF.RULES.OWASP.001
+      - CTL.WAF.ORIGIN.LOCKDOWN.001
       - CTL.WAF.LOGGING.001
       - CTL.WAF.INCOMPLETE.001
   route53:
@@ -766,6 +768,7 @@ packs:
       - CTL.IAM.ROLE.ENTROPY.INCOMPLETE.001
       - CTL.WAF.RULES.BLOCKMODE.001
       - CTL.WAF.RULES.OWASP.001
+      - CTL.WAF.ORIGIN.LOCKDOWN.001
       - CTL.IAM.SCP.DANGEROUS.ALLOWS.001
       - CTL.IAM.SCP.OU.COVERAGE.001
       - CTL.CONFIG.REMEDIATION.001
@@ -1118,6 +1121,9 @@ controls:
   CTL.WAF.RULES.OWASP.001:
     path: internal/controldata/embedded/guardrail/CTL.WAF.RULES.OWASP.001.yaml
     summary: WAF Must Have OWASP Core Rule Coverage
+  CTL.WAF.ORIGIN.LOCKDOWN.001:
+    path: internal/controldata/embedded/guardrail/CTL.WAF.ORIGIN.LOCKDOWN.001.yaml
+    summary: WAF Origin Must Not Accept Direct Internet Traffic
   CTL.IAM.SCP.DANGEROUS.ALLOWS.001:
     path: internal/controldata/embedded/guardrail/CTL.IAM.SCP.DANGEROUS.ALLOWS.001.yaml
     summary: SCPs Must Not Explicitly Allow Dangerous Administrative Actions

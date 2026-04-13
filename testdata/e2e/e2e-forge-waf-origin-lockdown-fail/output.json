@@ -1,0 +1,120 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "1e566a168d27ca9262993aa1a5c92bafb03856475a53563c7fb304bd4006a361",
+        "2026-01-11T000000Z.json": "3ca45d37b626dc01f73e6a1ce41b08dd8c9281817c504d08ee3d585fa4697fe4"
+      },
+      "overall": "5788b66ce4929220aecc47dbeefc1d815e1752c3cc6a97600105b91cf26776e0"
+    },
+    "policy_fingerprint": "6bfc58a1a6603b59d800c08fdca89b5fd98cba72498f7b3d4e482f763fdbd6b9"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.WAF.ORIGIN.LOCKDOWN.001",
+      "asset_id": "arn:aws:wafv2::123:webacl/prod-api",
+      "asset_type": "aws_wafv2_web_acl",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.WAF.ORIGIN.LOCKDOWN.001",
+      "control_name": "WAF Origin Must Not Accept Direct Internet Traffic",
+      "control_description": "When a WAF Web ACL is associated with an origin server (ALB, API Gateway, EC2 instance), the origin's network ingress controls must not permit inbound connections on application ports from the public internet. A WAF that sits in front of an origin provides zero protection if the origin also accepts direct connections from 0.0.0.0/0 or ::/0 — an attacker who discovers the origin IP address through Censys, Shodan, certificate transparency logs, historical DNS records, or timing analysis can send traffic directly to the origin, bypassing every WAF rule, DDoS protection, and rate limit. This is the architectural prerequisite for all other WAF controls — without origin lockdown, the entire WAF safety envelope is irrelevant regardless of how well the WAF rules are configured. HackerOne report (Linode) documents this exact pattern: an origin behind Cloudflare was discoverable via Censys, allowing direct unfiltered payload delivery and denial-of-service against the unprotected origin.\n",
+      "asset_id": "arn:aws:wafv2::123:webacl/prod-api",
+      "asset_type": "aws_wafv2_web_acl",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "waf.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "web_acl"
+          },
+          {
+            "property": "waf.origin_lockdown.allows_direct_ingress",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance": {
+        "fedramp_moderate": "SC-7",
+        "hipaa": "164.312(e)(1)",
+        "nist_800_53_r5": "SC-7",
+        "pci_dss_v4.0": "1.3.1",
+        "soc2": "CC6.6"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "The WAF Web ACL's associated origin server accepts direct inbound traffic from the public internet on application ports. Security group or NACL rules permit 0.0.0.0/0 or ::/0 ingress, allowing attackers to bypass the WAF entirely by connecting directly to the origin IP. Origin IPs are routinely discoverable through Censys, Shodan, certificate transparency logs, and historical DNS records.",
+        "action": "Restrict the origin's security group inbound rules on application ports (80, 443, custom) to allow traffic only from WAF or CDN provider IP ranges. For CloudFront, use the AWS-managed prefix list com.amazonaws.global.cloudfront.origin-facing in the security group rule. For regional ALBs behind AWS WAF, restrict to the WAF endpoint subnet CIDRs. Remove all 0.0.0.0/0 and ::/0 ingress rules on application ports.",
+        "example": "{\n  \"waf\": {\n    \"kind\": \"web_acl\",\n    \"origin_lockdown\": {\n      \"allows_direct_ingress\": false\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.WAF.ORIGIN.LOCKDOWN.001",
+      "asset_id": "arn:aws:wafv2::123:webacl/prod-api",
+      "exposure_score": 250,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 2.5,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-waf-origin-lockdown-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-waf-origin-lockdown-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "8624ef387c4412c89d9affa05d42ac95ea120830",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-waf-origin-lockdown-fail/controls/"
+      ]
+    }
+  }
+}

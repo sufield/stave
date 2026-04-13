@@ -3,14 +3,14 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 298
-**Pack hash:** `aa88ab8ec2ddb0a1d24c6db18eb0a7fc9cfd11443b30b1f958c43f57ff0a5470`
+**Total controls:** 299
+**Pack hash:** `bb2dbf290c81e9e4d2c8fe51092821fd214a620c77b06a55653ba5975db4996d`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 53 |
+| critical | 54 |
 | high | 124 |
 | info | 16 |
 | low | 22 |
@@ -18,7 +18,7 @@
 
 | Domain | Count |
 |--------|-------|
-| exposure | 215 |
+| exposure | 216 |
 | governance | 7 |
 | identity | 68 |
 | storage | 8 |
@@ -4382,6 +4382,21 @@ WAF assessment data is incomplete. The extractor must populate waf.rules.has_man
 WAF web ACLs must have logging enabled to record blocked and allowed requests. Without logging, attacks cannot be detected, investigated, or correlated with other security events.
 
 **Remediation:** Enable WAF logging to S3, CloudWatch Logs, or Kinesis Data Firehose via aws wafv2 put-logging-configuration.
+
+---
+
+### CTL.WAF.ORIGIN.LOCKDOWN.001
+
+**WAF Origin Must Not Accept Direct Internet Traffic**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-7; hipaa: 164.312(e)(1); nist_800_53_r5: SC-7; pci_dss_v4.0: 1.3.1; soc2: CC6.6;
+
+When a WAF Web ACL is associated with an origin server (ALB, API Gateway, EC2 instance), the origin's network ingress controls must not permit inbound connections on application ports from the public internet. A WAF that sits in front of an origin provides zero protection if the origin also accepts direct connections from 0.0.0.0/0 or ::/0 — an attacker who discovers the origin IP address through Censys, Shodan, certificate transparency logs, historical DNS records, or timing analysis can send traffic directly to the origin, bypassing every WAF rule, DDoS protection, and rate limit. This is the architectural prerequisite for all other WAF controls — without origin lockdown, the entire WAF safety envelope is irrelevant regardless of how well the WAF rules are configured. HackerOne report (Linode) documents this exact pattern: an origin behind Cloudflare was discoverable via Censys, allowing direct unfiltered payload delivery and denial-of-service against the unprotected origin.
+
+**Remediation:** Restrict the origin's security group inbound rules on application ports (80, 443, custom) to allow traffic only from WAF or CDN provider IP ranges. For CloudFront, use the AWS-managed prefix list com.amazonaws.global.cloudfront.origin-facing in the security group rule. For regional ALBs behind AWS WAF, restrict to the WAF endpoint subnet CIDRs. Remove all 0.0.0.0/0 and ::/0 ingress rules on application ports.
 
 ---
 

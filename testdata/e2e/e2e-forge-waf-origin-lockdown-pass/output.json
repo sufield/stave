@@ -1,0 +1,42 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "bc04677f6425c2e9949833bae7f7d0e98094ab7ec383a518ff89d489d82fc679",
+        "2026-01-11T000000Z.json": "fc9adf9a0b4ca406c038e9027576f752040bbcdd4f9d37736f2419e4d00c5a65"
+      },
+      "overall": "6643b18551007f70cada6ab13b6308b5502a9f8e14c1285ca4f61566236d0f30"
+    },
+    "policy_fingerprint": "6bfc58a1a6603b59d800c08fdca89b5fd98cba72498f7b3d4e482f763fdbd6b9"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-waf-origin-lockdown-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-waf-origin-lockdown-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "8624ef387c4412c89d9affa05d42ac95ea120830",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-waf-origin-lockdown-pass/controls/"
+      ]
+    }
+  }
+}

@@ -1,0 +1,13 @@
+id: waf_safety_envelope_collapse
+description: >
+  The WAF safety envelope has collapsed on multiple dimensions. The origin
+  accepts direct internet traffic bypassing the WAF, and the WAF's own
+  rules are misconfigured. An attacker has independent paths to deliver
+  unfiltered traffic to the origin — directly to the origin IP, or
+  through the WAF which is not blocking or lacks OWASP coverage.
+controls:
+  - CTL.WAF.ORIGIN.LOCKDOWN.001
+  - CTL.WAF.RULES.BLOCKMODE.001
+  - CTL.WAF.RULES.OWASP.001
+escalation_threshold: 2
+compound_severity: critical
