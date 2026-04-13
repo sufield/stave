@@ -272,15 +272,14 @@ func TestComputeFingerprint_CanonicalKey_UsedForHashing(t *testing.T) {
 type stubDigester struct{}
 
 func (stubDigester) Digest(parts []string, sep byte) kernel.Digest {
-	combined := ""
+	var b strings.Builder
 	for i, p := range parts {
 		if i > 0 {
-			combined += string(sep)
+			b.WriteByte(sep)
 		}
-		combined += p
+		b.WriteString(p)
 	}
 	// Return a 24-char digest so [:16] slice works.
-	padded := combined + "000000000000000000000000"
+	padded := b.String() + "000000000000000000000000"
 	return kernel.Digest(padded[:24])
 }
-
