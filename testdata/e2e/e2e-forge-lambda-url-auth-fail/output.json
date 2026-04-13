@@ -1,0 +1,120 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "d22c71b3470e3b92c4d71231f06c55a8d55f391fa8cfd14bfb0de15411f07a50",
+        "2026-01-11T000000Z.json": "ed4281cf5baf562402b4134e3a1ba2f7b7adfe0e5a0e60efc99e5a5c69970d48"
+      },
+      "overall": "efc03659929a25905264a09d4bd668e7c7b45010a37c4e7df005c23829df543e"
+    },
+    "policy_fingerprint": "2d8880becd398215b0b8d2c35f22121d8f706476ad3c1c583917ee05203c9aae"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.LAMBDA.URL.AUTH.001",
+      "asset_id": "arn:aws:lambda:us-east-1:123456789012:function:public-api",
+      "asset_type": "aws_lambda_function",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.LAMBDA.URL.AUTH.001",
+      "control_name": "Lambda Function URLs Must Require Authentication",
+      "control_description": "Lambda function URLs must not be configured with AuthType NONE. A function URL with no authentication creates a publicly invocable HTTPS endpoint — no API Gateway, no Cognito, no IAM signature, no network boundary. Any person on the internet can invoke the function with no credentials. The function executes with its full IAM execution role permissions and generates costs for every invocation including attacker-driven invocations. Function URLs bypass every network perimeter control — VPC, security groups, NACLs — that would otherwise restrict access to Lambda invocation. This is distinct from public invocation via the Lambda resource-based policy: a function with a restrictive resource policy can still be publicly invocable if it has a function URL with AuthType NONE. The Denial of Wallet risk is significant — Lambda pricing is per invocation and an unauthenticated endpoint allows unlimited invocations with no cost ceiling.\n",
+      "asset_id": "arn:aws:lambda:us-east-1:123456789012:function:public-api",
+      "asset_type": "aws_lambda_function",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "compute.function_url.auth_type_none",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "compute.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "function"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance": {
+        "fedramp_moderate": "AC-3",
+        "hipaa": "164.312(a)(1)",
+        "nist_800_53_r5": "AC-3",
+        "pci_dss_v4.0": "7.2.1",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Lambda function URL is configured with AuthType NONE. The function is publicly invocable from any source on the internet with no authentication. The function's IAM execution role permissions are available to any caller. Invocation costs are unbounded.",
+        "action": "Set the function URL AuthType to AWS_IAM to require IAM signature authentication for all invocations. If the function URL is not needed, remove it entirely via aws lambda delete-function-url-config. Note that Lambda resource-based policy restrictions do not apply to function URL invocations — AuthType is the only authentication gate for function URLs.",
+        "example": "{\n  \"compute\": {\n    \"kind\": \"function\",\n    \"function_url\": {\n      \"auth_type_none\": false\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.LAMBDA.URL.AUTH.001",
+      "asset_id": "arn:aws:lambda:us-east-1:123456789012:function:public-api",
+      "exposure_score": 200,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 2,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-lambda-url-auth-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-lambda-url-auth-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "97c7a2fa449f25e77180df81d8be06a9118a172b",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-lambda-url-auth-fail/controls/"
+      ]
+    }
+  }
+}

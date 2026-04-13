@@ -3,14 +3,14 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 303
-**Pack hash:** `5940b575044ff5810303ddcf44a6a81c0767d0d9aca651469cbcd0336953f7ef`
+**Total controls:** 304
+**Pack hash:** `7c28b93be69d35ee5af5fab4546909daf25ed39f114094b2067cc02ab06051da`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 55 |
+| critical | 56 |
 | high | 127 |
 | info | 16 |
 | low | 22 |
@@ -18,7 +18,7 @@
 
 | Domain | Count |
 |--------|-------|
-| exposure | 220 |
+| exposure | 221 |
 | governance | 7 |
 | identity | 68 |
 | storage | 8 |
@@ -2694,6 +2694,21 @@ Customer-created symmetric KMS keys must have automatic key rotation enabled. Ke
 Lambda functions must not run on runtimes that AWS has deprecated. Deprecated runtimes no longer receive security patches from AWS. Unlike EC2 where the operator controls patching, Lambda runtimes are AWS-managed — the only remediation is upgrading the runtime version. AWS publishes deprecation dates months in advance. A function on a deprecated runtime is running on an unpatched execution environment for every invocation. The operator has no mechanism to patch the underlying runtime independently — the runtime version is the patch level. AWS does not forcibly block invocations on deprecated runtimes immediately; functions continue working in a vulnerable state until AWS removes the runtime entirely, at which point the function breaks rather than degrading gracefully. This control detects the compliance gap during the window between deprecation and forced removal.
 
 **Remediation:** Upgrade the Lambda function runtime to a supported version. Check the AWS Lambda runtimes documentation for the current supported runtime list and deprecation schedule. Test the function with the new runtime in a non-production environment before updating production. For Python, Node.js, and Java runtimes, review breaking changes in the language version upgrade guide.
+
+---
+
+### CTL.LAMBDA.URL.AUTH.001
+
+**Lambda Function URLs Must Require Authentication**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3; hipaa: 164.312(a)(1); nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+Lambda function URLs must not be configured with AuthType NONE. A function URL with no authentication creates a publicly invocable HTTPS endpoint — no API Gateway, no Cognito, no IAM signature, no network boundary. Any person on the internet can invoke the function with no credentials. The function executes with its full IAM execution role permissions and generates costs for every invocation including attacker-driven invocations. Function URLs bypass every network perimeter control — VPC, security groups, NACLs — that would otherwise restrict access to Lambda invocation. This is distinct from public invocation via the Lambda resource-based policy: a function with a restrictive resource policy can still be publicly invocable if it has a function URL with AuthType NONE. The Denial of Wallet risk is significant — Lambda pricing is per invocation and an unauthenticated endpoint allows unlimited invocations with no cost ceiling.
+
+**Remediation:** Set the function URL AuthType to AWS_IAM to require IAM signature authentication for all invocations. If the function URL is not needed, remove it entirely via aws lambda delete-function-url-config. Note that Lambda resource-based policy restrictions do not apply to function URL invocations — AuthType is the only authentication gate for function URLs.
 
 ---
 
