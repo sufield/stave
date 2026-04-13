@@ -1,0 +1,58 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.CODESIGN.ENFORCE.001
+name: Lambda Code Signing Must Be Enabled and in Enforce Mode
+description: >
+  Lambda functions must have a code signing configuration attached with
+  the policy mode set to Enforce. Lambda code signing uses AWS Signer to
+  cryptographically verify that deployment packages were signed by a
+  trusted publisher before the function accepts them. Without a code
+  signing configuration, any package from any source is deployed without
+  integrity verification. In Warn mode, unsigned packages generate a
+  finding but are deployed successfully — this provides observability
+  without protection, the same failure mode as WAF COUNT mode and ECR
+  image signing in audit mode. Only Enforce mode prevents unsigned or
+  invalidly signed packages from being deployed. A supply chain attack
+  that replaces a legitimate package executes immediately with the
+  function's full IAM execution role permissions.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-7"
+  fedramp_moderate: "SI-7"
+  pci_dss_v4.0: "6.3.2"
+  soc2: "CC7.1"
+  hipaa: "164.312(c)(1)"
+scope_tags:
+  - aws
+  - lambda
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Lambda function has no code signing configuration or is configured
+    in Warn mode. Deployment packages are not cryptographically verified
+    before execution.
+  action: >
+    Create an AWS Signer signing profile for your build pipeline.
+    Create a Lambda code signing configuration referencing the signing
+    profile. Attach the code signing configuration to the function with
+    the policy mode set to Enforce. Update the CI/CD pipeline to sign
+    packages with the Signer profile before deployment. Verify that
+    unsigned deployment attempts are rejected.
+  example: |
+    {
+      "compute": {
+        "kind": "function",
+        "code_signing": {
+          "enforce_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
+    - field: properties.compute.code_signing.enforce_enabled
+      op: eq
+      value: false

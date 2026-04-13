@@ -1,0 +1,120 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "0e8cb064457c8b384aa5c83bd62882b9ad559bcecff6bc3ebe910909570b5cf3",
+        "2026-01-11T000000Z.json": "741100b093b1c092317d685b3de300680fbb42daf69ee88266839769c5fd9b31"
+      },
+      "overall": "48ed231361c077acb421b2b07bb4f551d46ad53bd45dc2ce94d9cce43b032f86"
+    },
+    "policy_fingerprint": "96c2e04cc62c74aa6aa02930f71022ad77945a48fd51c5e56819ef14d3528af2"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.LAMBDA.CODESIGN.ENFORCE.001",
+      "asset_id": "arn:aws:lambda:us-east-1:123456789012:function:api-handler",
+      "asset_type": "aws_lambda_function",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.LAMBDA.CODESIGN.ENFORCE.001",
+      "control_name": "Lambda Code Signing Must Be Enabled and in Enforce Mode",
+      "control_description": "Lambda functions must have a code signing configuration attached with the policy mode set to Enforce. Lambda code signing uses AWS Signer to cryptographically verify that deployment packages were signed by a trusted publisher before the function accepts them. Without a code signing configuration, any package from any source is deployed without integrity verification. In Warn mode, unsigned packages generate a finding but are deployed successfully — this provides observability without protection, the same failure mode as WAF COUNT mode and ECR image signing in audit mode. Only Enforce mode prevents unsigned or invalidly signed packages from being deployed. A supply chain attack that replaces a legitimate package executes immediately with the function's full IAM execution role permissions.\n",
+      "asset_id": "arn:aws:lambda:us-east-1:123456789012:function:api-handler",
+      "asset_type": "aws_lambda_function",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "compute.code_signing.enforce_enabled",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "compute.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "function"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "fedramp_moderate": "SI-7",
+        "hipaa": "164.312(c)(1)",
+        "nist_800_53_r5": "SI-7",
+        "pci_dss_v4.0": "6.3.2",
+        "soc2": "CC7.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Lambda function has no code signing configuration or is configured in Warn mode. Deployment packages are not cryptographically verified before execution.",
+        "action": "Create an AWS Signer signing profile for your build pipeline. Create a Lambda code signing configuration referencing the signing profile. Attach the code signing configuration to the function with the policy mode set to Enforce. Update the CI/CD pipeline to sign packages with the Signer profile before deployment. Verify that unsigned deployment attempts are rejected.",
+        "example": "{\n  \"compute\": {\n    \"kind\": \"function\",\n    \"code_signing\": {\n      \"enforce_enabled\": true\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.LAMBDA.CODESIGN.ENFORCE.001",
+      "asset_id": "arn:aws:lambda:us-east-1:123456789012:function:api-handler",
+      "exposure_score": 50,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-lambda-codesign-enforce-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-lambda-codesign-enforce-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "f709f5ece88b40f933d4ef164ce839b60be555f1",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-lambda-codesign-enforce-fail/controls/"
+      ]
+    }
+  }
+}

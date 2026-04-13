@@ -95,6 +95,7 @@ packs:
       - CTL.RDS.ENGINE.EOL.001
       - CTL.APIGATEWAY.VALIDATION.001
       - CTL.ECR.SIGNING.001
+      - CTL.LAMBDA.CODESIGN.ENFORCE.001
       # §164.312(d) — Person or Entity Authentication
       - CTL.COGNITO.MFA.001
       - CTL.COGNITO.PASSWORD.001
@@ -612,6 +613,7 @@ packs:
       - CTL.LAMBDA.ROLE.LEASTPRIV.001
       - CTL.LAMBDA.ENV.SECRETS.001
       - CTL.LAMBDA.LOG.001
+      - CTL.LAMBDA.CODESIGN.ENFORCE.001
   ecs:
     description: AWS ECS container task security controls
     controls:
@@ -1611,6 +1613,9 @@ controls:
   CTL.LAMBDA.LOG.001:
     path: internal/controldata/embedded/lambda/logging/CTL.LAMBDA.LOG.001.yaml
     summary: Lambda Functions Must Have CloudWatch Logging Enabled
+  CTL.LAMBDA.CODESIGN.ENFORCE.001:
+    path: internal/controldata/embedded/lambda/integrity/CTL.LAMBDA.CODESIGN.ENFORCE.001.yaml
+    summary: Lambda Code Signing Must Be Enabled and in Enforce Mode
   CTL.ECS.TASKMETADATA.001:
     path: internal/controldata/embedded/ecs/identity/CTL.ECS.TASKMETADATA.001.yaml
     summary: ECS Task Role Must Follow Least Privilege

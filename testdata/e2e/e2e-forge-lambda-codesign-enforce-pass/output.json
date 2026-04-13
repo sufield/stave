@@ -1,0 +1,42 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "836224eff586fd9abf37422a68c9a82224d4f3f2500be8a7d6d3773be1f483b7",
+        "2026-01-11T000000Z.json": "dda4e310f394424d9fa5980d5ad8f5b8850f5b4da6406d16fde09aed9c47c3ea"
+      },
+      "overall": "ca4d42b41418a81eb011f92e81f40539208cef557981c0101e5d9e6a209c5ecc"
+    },
+    "policy_fingerprint": "96c2e04cc62c74aa6aa02930f71022ad77945a48fd51c5e56819ef14d3528af2"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-lambda-codesign-enforce-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-lambda-codesign-enforce-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "f709f5ece88b40f933d4ef164ce839b60be555f1",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-lambda-codesign-enforce-pass/controls/"
+      ]
+    }
+  }
+}

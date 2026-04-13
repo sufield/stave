@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 315
-**Pack hash:** `f42a48a36c9812dcbb97246affcfe920f4efcd0f5dcb8e019cb453aa3c663a46`
+**Total controls:** 316
+**Pack hash:** `f7fb507e2d3aa0a87c09e160fcf5f9169e75278c9c26673d2ce4463b48bec909`
 
 ## Summary
 
@@ -14,11 +14,11 @@
 | high | 131 |
 | info | 16 |
 | low | 22 |
-| medium | 88 |
+| medium | 89 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 231 |
+| exposure | 232 |
 | governance | 7 |
 | identity | 69 |
 | storage | 8 |
@@ -2784,6 +2784,21 @@ KMS key policies must not grant wildcard principal access. A key policy with Pri
 Customer-created symmetric KMS keys must have automatic key rotation enabled. Key rotation limits the amount of data encrypted with a single key version, reducing the blast radius of key compromise.
 
 **Remediation:** Enable key rotation: aws kms enable-key-rotation --key-id <key-id>
+
+---
+
+### CTL.LAMBDA.CODESIGN.ENFORCE.001
+
+**Lambda Code Signing Must Be Enabled and in Enforce Mode**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SI-7; hipaa: 164.312(c)(1); nist_800_53_r5: SI-7; pci_dss_v4.0: 6.3.2; soc2: CC7.1;
+
+Lambda functions must have a code signing configuration attached with the policy mode set to Enforce. Lambda code signing uses AWS Signer to cryptographically verify that deployment packages were signed by a trusted publisher before the function accepts them. Without a code signing configuration, any package from any source is deployed without integrity verification. In Warn mode, unsigned packages generate a finding but are deployed successfully — this provides observability without protection, the same failure mode as WAF COUNT mode and ECR image signing in audit mode. Only Enforce mode prevents unsigned or invalidly signed packages from being deployed. A supply chain attack that replaces a legitimate package executes immediately with the function's full IAM execution role permissions.
+
+**Remediation:** Create an AWS Signer signing profile for your build pipeline. Create a Lambda code signing configuration referencing the signing profile. Attach the code signing configuration to the function with the policy mode set to Enforce. Update the CI/CD pipeline to sign packages with the Signer profile before deployment. Verify that unsigned deployment attempts are rejected.
 
 ---
 

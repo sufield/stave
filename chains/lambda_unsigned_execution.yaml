@@ -1,0 +1,13 @@
+id: lambda_unsigned_execution
+description: >
+  Lambda functions accept unsigned deployment packages and run with an
+  over-privileged execution role. A supply chain attack replacing a
+  deployment package executes immediately with broad AWS permissions
+  and no cryptographic verification. Both ZIP and container image
+  deployment paths are unverified.
+controls:
+  - CTL.LAMBDA.CODESIGN.ENFORCE.001
+  - CTL.LAMBDA.ROLE.LEASTPRIV.001
+  - CTL.ECR.SIGNING.001
+escalation_threshold: 2
+compound_severity: high
