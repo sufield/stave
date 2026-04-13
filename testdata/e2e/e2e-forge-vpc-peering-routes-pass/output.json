@@ -1,0 +1,42 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "6121c6dc1989de8c44bb08373dd78e6d826efa98752e7da181e33b3295aa0271",
+        "2026-01-11T000000Z.json": "ce960aa433abccb46d1a7aa33378d5c4a5a443e3b9478df6af64729ebebcd3e9"
+      },
+      "overall": "855d1cab0eed03e416d9a54ee568c3733fcef2961a5dec19e843711ce8b11411"
+    },
+    "policy_fingerprint": "91e424a8716c0eeee05a8584c7a687091f578bb91667f20d416e8552aa610623"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-vpc-peering-routes-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-vpc-peering-routes-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "2846027435bfe39cd065759c1873261e4a555197",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-vpc-peering-routes-pass/controls/"
+      ]
+    }
+  }
+}

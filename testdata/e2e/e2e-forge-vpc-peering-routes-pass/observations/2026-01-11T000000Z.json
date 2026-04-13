@@ -1,0 +1,24 @@
+{
+  "assets": [
+    {
+      "id": "rtb-0abc123def456789",
+      "properties": {
+        "network": {
+          "peering_route": {
+            "has_broad_destination": false
+          },
+          "kind": "route_table"
+        }
+      },
+      "type": "aws_route_table",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  }
+}

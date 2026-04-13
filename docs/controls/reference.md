@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 321
-**Pack hash:** `1d091a401f21be1219fe7ef7cb0d8ed6c0ec75e99d4ea05b16b54a3c5868e3e1`
+**Total controls:** 322
+**Pack hash:** `81e407cd4b2d6ea4f855bb7385b76a3217af22670574adc71232c008c20e4429`
 
 ## Summary
 
@@ -14,11 +14,11 @@
 | high | 132 |
 | info | 16 |
 | low | 22 |
-| medium | 93 |
+| medium | 94 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 236 |
+| exposure | 237 |
 | governance | 7 |
 | identity | 70 |
 | storage | 8 |
@@ -4578,6 +4578,21 @@ VPC safety cannot be assessed when flow logging status is missing from the snaps
 Network ACLs must not allow inbound traffic from 0.0.0.0/0 or ::/0 to SSH (22) or RDP (3389) ports. NACLs apply to entire subnets — open admin ports expose all instances.
 
 **Remediation:** Replace the allow rule with a specific CIDR for authorized admin IP ranges using aws ec2 replace-network-acl-entry.
+
+---
+
+### CTL.VPC.PEERING.ROUTES.001
+
+**VPC Peering Route Tables Must Follow Least Access**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 5.5; fedramp_moderate: SC-7; hipaa: 164.312(e)(1); nist_800_53_r5: SC-7; pci_dss_v4.0: 1.3.2; soc2: CC6.6;
+
+Route table entries for VPC peering connections must reference specific subnet CIDRs within the peered VPC, not the entire VPC CIDR. A route to the full peer VPC CIDR means any resource in the local VPC can reach any resource in the peered VPC — collapsing the network boundary between VPCs that were segmented for a reason. This is the routing-layer equivalent of east-west security group over-permissiveness (CTL.VPC.SG.EASTWEST.001). Cross-environment peering routes — production routing to development or vice versa — are a finding regardless of route specificity, as they violate environment isolation at the routing layer. CIS 5.5 requires that VPC peering route tables follow least access.
+
+**Remediation:** Replace the broad VPC CIDR route with specific subnet CIDR routes that target only the subnets hosting the services that require cross-VPC connectivity. For example, replace a route to 10.1.0.0/16 (entire peer VPC) with a route to 10.1.2.0/24 (specific application subnet). Remove peering routes that cross environment boundaries (production to development) unless explicitly justified.
 
 ---
 

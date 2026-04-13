@@ -1,0 +1,59 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.PEERING.ROUTES.001
+name: VPC Peering Route Tables Must Follow Least Access
+description: >
+  Route table entries for VPC peering connections must reference specific
+  subnet CIDRs within the peered VPC, not the entire VPC CIDR. A route
+  to the full peer VPC CIDR means any resource in the local VPC can
+  reach any resource in the peered VPC — collapsing the network boundary
+  between VPCs that were segmented for a reason. This is the routing-layer
+  equivalent of east-west security group over-permissiveness
+  (CTL.VPC.SG.EASTWEST.001). Cross-environment peering routes —
+  production routing to development or vice versa — are a finding
+  regardless of route specificity, as they violate environment isolation
+  at the routing layer. CIS 5.5 requires that VPC peering route tables
+  follow least access.
+domain: exposure
+severity: medium
+compliance:
+  cis_aws_v3.0: "5.5"
+  nist_800_53_r5: "SC-7"
+  fedramp_moderate: "SC-7"
+  pci_dss_v4.0: "1.3.2"
+  soc2: "CC6.6"
+  hipaa: "164.312(e)(1)"
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: >
+    Route table has a peering route that references the entire peer VPC
+    CIDR. Any resource in the local VPC can reach any resource in the
+    peered VPC.
+  action: >
+    Replace the broad VPC CIDR route with specific subnet CIDR routes
+    that target only the subnets hosting the services that require
+    cross-VPC connectivity. For example, replace a route to 10.1.0.0/16
+    (entire peer VPC) with a route to 10.1.2.0/24 (specific application
+    subnet). Remove peering routes that cross environment boundaries
+    (production to development) unless explicitly justified.
+  example: |
+    {
+      "network": {
+        "kind": "route_table",
+        "peering_route": {
+          "has_broad_destination": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: route_table
+    - field: properties.network.peering_route.has_broad_destination
+      op: eq
+      value: true

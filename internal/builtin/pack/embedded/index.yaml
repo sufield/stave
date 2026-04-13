@@ -119,6 +119,7 @@ packs:
       - CTL.ECS.TASKMETADATA.001
       - CTL.ECS.TASKMETADATA.002
       - CTL.VPC.SG.EASTWEST.001
+      - CTL.VPC.PEERING.ROUTES.001
       # §164.312(e)(2)(ii) — Encryption in Transit
       - CTL.APIGATEWAY.TLS.001
       - CTL.ELASTICACHE.TRANSIT.001
@@ -535,6 +536,7 @@ packs:
       - CTL.VPC.NACL.ADMIN.001
       - CTL.VPC.SG.EGRESS.001
       - CTL.VPC.SG.EASTWEST.001
+      - CTL.VPC.PEERING.ROUTES.001
       - CTL.VPC.DEFAULT.001
       - CTL.VPC.ENV.ISOLATION.001
       - CTL.VPC.INCOMPLETE.001
@@ -1517,6 +1519,9 @@ controls:
   CTL.VPC.SG.EASTWEST.001:
     path: internal/controldata/embedded/vpc/sg/CTL.VPC.SG.EASTWEST.001.yaml
     summary: Security Groups Must Not Allow Unrestricted Access Between Internal Services
+  CTL.VPC.PEERING.ROUTES.001:
+    path: internal/controldata/embedded/vpc/peering/CTL.VPC.PEERING.ROUTES.001.yaml
+    summary: VPC Peering Route Tables Must Follow Least Access
   CTL.VPC.INCOMPLETE.001:
     path: internal/controldata/embedded/vpc/misc/CTL.VPC.INCOMPLETE.001.yaml
     summary: Complete Data Required for VPC Assessment

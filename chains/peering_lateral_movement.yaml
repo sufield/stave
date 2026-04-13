@@ -1,0 +1,12 @@
+id: peering_lateral_movement
+description: >
+  A VPC peering route references the entire peer VPC CIDR and the peer
+  VPC has over-permissive east-west security group rules. An attacker
+  who crosses the peering boundary finds a flat internal network. Two
+  segmentation boundaries have failed — the inter-VPC boundary and the
+  intra-VPC service boundary.
+controls:
+  - CTL.VPC.PEERING.ROUTES.001
+  - CTL.VPC.SG.EASTWEST.001
+escalation_threshold: 2
+compound_severity: high

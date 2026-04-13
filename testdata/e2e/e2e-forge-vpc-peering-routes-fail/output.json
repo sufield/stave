@@ -1,0 +1,121 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "60b52e06419940285d8f593a17611a1ad1117ef09b159fc2dc7b5f12a6f9bcad",
+        "2026-01-11T000000Z.json": "43d42993d34e64ae632a7b5781ae2d12db2883f64fc072f99ed7b272396b881e"
+      },
+      "overall": "06fe9df4b57d98702feb22744d7d4af35ba164b944fa6dca4a5f9caceeeb99d8"
+    },
+    "policy_fingerprint": "91e424a8716c0eeee05a8584c7a687091f578bb91667f20d416e8552aa610623"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.VPC.PEERING.ROUTES.001",
+      "asset_id": "rtb-0abc123def456789",
+      "asset_type": "aws_route_table",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.VPC.PEERING.ROUTES.001",
+      "control_name": "VPC Peering Route Tables Must Follow Least Access",
+      "control_description": "Route table entries for VPC peering connections must reference specific subnet CIDRs within the peered VPC, not the entire VPC CIDR. A route to the full peer VPC CIDR means any resource in the local VPC can reach any resource in the peered VPC — collapsing the network boundary between VPCs that were segmented for a reason. This is the routing-layer equivalent of east-west security group over-permissiveness (CTL.VPC.SG.EASTWEST.001). Cross-environment peering routes — production routing to development or vice versa — are a finding regardless of route specificity, as they violate environment isolation at the routing layer. CIS 5.5 requires that VPC peering route tables follow least access.\n",
+      "asset_id": "rtb-0abc123def456789",
+      "asset_type": "aws_route_table",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "network.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "route_table"
+          },
+          {
+            "property": "network.peering_route.has_broad_destination",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "cis_aws_v3.0": "5.5",
+        "fedramp_moderate": "SC-7",
+        "hipaa": "164.312(e)(1)",
+        "nist_800_53_r5": "SC-7",
+        "pci_dss_v4.0": "1.3.2",
+        "soc2": "CC6.6"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Route table has a peering route that references the entire peer VPC CIDR. Any resource in the local VPC can reach any resource in the peered VPC.",
+        "action": "Replace the broad VPC CIDR route with specific subnet CIDR routes that target only the subnets hosting the services that require cross-VPC connectivity. For example, replace a route to 10.1.0.0/16 (entire peer VPC) with a route to 10.1.2.0/24 (specific application subnet). Remove peering routes that cross environment boundaries (production to development) unless explicitly justified.",
+        "example": "{\n  \"network\": {\n    \"kind\": \"route_table\",\n    \"peering_route\": {\n      \"has_broad_destination\": false\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.VPC.PEERING.ROUTES.001",
+      "asset_id": "rtb-0abc123def456789",
+      "exposure_score": 50,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-vpc-peering-routes-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-vpc-peering-routes-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "2846027435bfe39cd065759c1873261e4a555197",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-vpc-peering-routes-fail/controls/"
+      ]
+    }
+  }
+}
