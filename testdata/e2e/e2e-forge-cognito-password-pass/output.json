@@ -1,0 +1,42 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "ebc5c1cbed82bb09c83b56af07afacc7b5cbc8ddf7d93624270f4df4fc36a0f8",
+        "2026-01-11T000000Z.json": "6c1e3fe3c6c402384f3be37f5c8bab4e93991c7f3c557b59b17873d96d0034ff"
+      },
+      "overall": "a0c81059a2bbfc178851201745b60dc196c8aca955f1e3899a92b17684f3f220"
+    },
+    "policy_fingerprint": "649f455e734930e38294f27c296c5a58d5be83885e6eb15fec57ba27acedbcac"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-cognito-password-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-cognito-password-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "ec246d5cb69d055b7c40c555f1470d2698ce27c4",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-cognito-password-pass/controls/"
+      ]
+    }
+  }
+}

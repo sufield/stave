@@ -1,0 +1,24 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:cognito-idp:us-east-1:123456789012:userpool/us-east-1_abc123",
+      "properties": {
+        "identity": {
+          "password_policy": {
+            "is_weak": true
+          },
+          "kind": "user_pool"
+        }
+      },
+      "type": "aws_cognito_user_pool",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  }
+}

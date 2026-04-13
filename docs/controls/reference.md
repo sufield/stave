@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 312
-**Pack hash:** `8976ad9b7a5a64201e9b47c109e61740ce2f3e7a31feb844f42f06c2a5e4f11d`
+**Total controls:** 313
+**Pack hash:** `a8d44203ca071da77c189c177f1e22382c84a34c53baa138d2604099dd694ae5`
 
 ## Summary
 
@@ -14,13 +14,13 @@
 | high | 131 |
 | info | 16 |
 | low | 22 |
-| medium | 85 |
+| medium | 86 |
 
 | Domain | Count |
 |--------|-------|
 | exposure | 229 |
 | governance | 7 |
-| identity | 68 |
+| identity | 69 |
 | storage | 8 |
 
 ## Controls
@@ -735,6 +735,21 @@ The observation snapshot is missing required Cognito user pool properties.
 Cognito user pools handling PHI must enforce multi-factor authentication. Without MFA, a compromised password grants full access to the application and any PHI it serves.
 
 **Remediation:** Set MfaConfiguration to ON (required) on the user pool. Run: aws cognito-idp set-user-pool-mfa-config --user-pool-id xxx --mfa-configuration ON --software-token-mfa-configuration Enabled=true
+
+---
+
+### CTL.COGNITO.PASSWORD.001
+
+**Cognito User Pools Must Enforce a Strong Password Policy**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: IA-5(1); hipaa: 164.312(d); nist_800_53_r5: IA-5(1); pci_dss_v4.0: 8.3.6; soc2: CC6.1;
+
+Cognito user pools must enforce a minimum password length of 12 characters and require at least three of four character classes (uppercase, lowercase, numbers, special characters). Cognito password policy is independent of the IAM account password policy — a strong IAM policy does not protect application users authenticated through Cognito. A user pool with weak defaults allows end users to set trivially guessable passwords. Temporary password validity must not exceed 7 days — temporary passwords issued during account creation or password reset that remain valid for extended periods are a credential exposure risk if the invitation email is intercepted. For user pools handling PHI (patient portals, healthcare applications), weak application passwords are a direct credential compromise risk that IAM password controls cannot address.
+
+**Remediation:** Update the user pool password policy via the Cognito console or UpdateUserPool API. Set minimum password length to 12 or higher. Require at least three of: uppercase, lowercase, numbers, special characters. Set temporary password validity to 7 days or less. Consider enabling Cognito advanced security features for compromised credential detection as a complementary control.
 
 ---
 

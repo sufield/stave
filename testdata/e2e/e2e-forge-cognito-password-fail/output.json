@@ -1,0 +1,120 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "4c6ea27fdec749c58609d79d30499db9cf580437a141ea63dbfa49f3aa292c81",
+        "2026-01-11T000000Z.json": "98b0e43ab49ff60f3f00fbd2fc0ccacec8a0a317dcc52960d14634171a103e76"
+      },
+      "overall": "6c608c6ed222630dcc7e8b90f521b72a2cdcdda8afdb75cd70fc1987d23af29d"
+    },
+    "policy_fingerprint": "649f455e734930e38294f27c296c5a58d5be83885e6eb15fec57ba27acedbcac"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.COGNITO.PASSWORD.001",
+      "asset_id": "arn:aws:cognito-idp:us-east-1:123456789012:userpool/us-east-1_abc123",
+      "asset_type": "aws_cognito_user_pool",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.COGNITO.PASSWORD.001",
+      "control_name": "Cognito User Pools Must Enforce a Strong Password Policy",
+      "control_description": "Cognito user pools must enforce a minimum password length of 12 characters and require at least three of four character classes (uppercase, lowercase, numbers, special characters). Cognito password policy is independent of the IAM account password policy — a strong IAM policy does not protect application users authenticated through Cognito. A user pool with weak defaults allows end users to set trivially guessable passwords. Temporary password validity must not exceed 7 days — temporary passwords issued during account creation or password reset that remain valid for extended periods are a credential exposure risk if the invitation email is intercepted. For user pools handling PHI (patient portals, healthcare applications), weak application passwords are a direct credential compromise risk that IAM password controls cannot address.\n",
+      "asset_id": "arn:aws:cognito-idp:us-east-1:123456789012:userpool/us-east-1_abc123",
+      "asset_type": "aws_cognito_user_pool",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "identity.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "user_pool"
+          },
+          {
+            "property": "identity.password_policy.is_weak",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "fedramp_moderate": "IA-5(1)",
+        "hipaa": "164.312(d)",
+        "nist_800_53_r5": "IA-5(1)",
+        "pci_dss_v4.0": "8.3.6",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Cognito user pool password policy is weak. Minimum length is below 12 characters, required character classes are insufficient, or temporary password validity exceeds 7 days.",
+        "action": "Update the user pool password policy via the Cognito console or UpdateUserPool API. Set minimum password length to 12 or higher. Require at least three of: uppercase, lowercase, numbers, special characters. Set temporary password validity to 7 days or less. Consider enabling Cognito advanced security features for compromised credential detection as a complementary control.",
+        "example": "{\n  \"identity\": {\n    \"kind\": \"user_pool\",\n    \"password_policy\": {\n      \"is_weak\": false\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.COGNITO.PASSWORD.001",
+      "asset_id": "arn:aws:cognito-idp:us-east-1:123456789012:userpool/us-east-1_abc123",
+      "exposure_score": 50,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-cognito-password-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-cognito-password-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "ec246d5cb69d055b7c40c555f1470d2698ce27c4",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-cognito-password-fail/controls/"
+      ]
+    }
+  }
+}
