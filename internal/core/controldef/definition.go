@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/core/ports"
 )
 
 // AliasResolver resolves a predicate alias name to its expanded UnsafePredicate.
@@ -383,6 +384,22 @@ type ControlMetadata struct {
 	Compliance  ComplianceMapping
 	Remediation *RemediationSpec
 	Exposure    *Exposure
+}
+
+// Fingerprint computes a stable hash of the control's identity and logic
+// fields. Changes when ID, Severity, Type, or UnsafePredicate changes.
+// Display-only fields (Name, Description, Remediation) are excluded.
+func (ctl *ControlDefinition) Fingerprint(h ports.Digester) kernel.Digest {
+	if h == nil {
+		return ""
+	}
+	components := []string{
+		string(ctl.ID),
+		ctl.Severity.String(),
+		ctl.Type.String(),
+		fmt.Sprintf("%v", ctl.UnsafePredicate),
+	}
+	return h.Digest(components, '\n')
 }
 
 // Metadata returns the control's identity and classification fields

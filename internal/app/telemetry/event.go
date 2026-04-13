@@ -8,16 +8,19 @@ import "time"
 // Event represents a single telemetry record for one finding.
 // One JSON object per line in NDJSON output.
 type Event struct {
-	SchemaVersion     string    `json:"schema_version"`
-	CapturedAt        time.Time `json:"captured_at"`
-	ControlID         string    `json:"control_id"`
-	ControlName       string    `json:"control_name"`
-	Severity          string    `json:"severity"`
-	ResourceID        string    `json:"resource_id"`
-	ResourceType      string    `json:"resource_type"`
-	Verdict           string    `json:"verdict"`
-	PolicyFingerprint string    `json:"policy_fingerprint"`
-	Status            string    `json:"status"`
+	SchemaVersion      string    `json:"schema_version"`
+	CapturedAt         time.Time `json:"captured_at"`
+	ControlID          string    `json:"control_id"`
+	ControlName        string    `json:"control_name"`
+	Severity           string    `json:"severity"`
+	ResourceID         string    `json:"resource_id"`
+	ResourceType       string    `json:"resource_type"`
+	Verdict            string    `json:"verdict"`
+	PolicyFingerprint  string    `json:"policy_fingerprint"`
+	ControlFingerprint string    `json:"control_fingerprint,omitempty"`
+	EnvironmentalScore *float64  `json:"environmental_score,omitempty"`
+	WindowID           *string   `json:"window_id,omitempty"`
+	Status             string    `json:"status"`
 }
 
-const schemaVersion = "telemetry.v1"
+const schemaVersion = "telemetry.v2"

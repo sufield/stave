@@ -4,6 +4,8 @@ import (
 	"strings"
 
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
+	"github.com/sufield/stave/internal/core/evaluation/risk"
+	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/report"
 )
 
@@ -13,16 +15,20 @@ type Filter struct {
 	ResourceARN string          // empty = all
 }
 
+// ControlFingerprints maps control IDs to their per-control hashes.
+// Populated by the CLI layer using ControlDefinition.Fingerprint().
+type ControlFingerprints map[kernel.ControlID]kernel.Digest
+
 // MapAssessment converts an Assessment into a slice of telemetry Events.
-// One event per finding.
-func MapAssessment(a *report.Assessment, filter Filter) []Event {
+// One event per finding. controlFPs is optional (nil = no per-control fingerprints).
+func MapAssessment(a *report.Assessment, filter Filter, controlFPs ControlFingerprints) []Event {
 	var events []Event
 	for i := range a.Findings {
 		f := &a.Findings[i]
 		if !matchesFilter(f, filter) {
 			continue
 		}
-		events = append(events, Event{
+		e := Event{
 			SchemaVersion:     schemaVersion,
 			CapturedAt:        a.Run.Now,
 			ControlID:         string(f.ControlID),
@@ -33,7 +39,25 @@ func MapAssessment(a *report.Assessment, filter Filter) []Event {
 			Verdict:           "violation",
 			PolicyFingerprint: string(a.Run.PolicyFingerprint),
 			Status:            string(a.Status),
-		})
+		}
+		if controlFPs != nil {
+			e.ControlFingerprint = string(controlFPs[f.ControlID])
+		}
+		if score := computeEnvironmentalScore(f); score > 0 {
+			e.EnvironmentalScore = &score
+		}
+		events = append(events, e)
+	}
+	return events
+}
+
+// MapAssessmentWithWindows converts an Assessment into events with window tracking.
+// The tracker is updated in place — call CloseAbsent after processing each assessment.
+func MapAssessmentWithWindows(a *report.Assessment, filter Filter, controlFPs ControlFingerprints, tracker *WindowTracker) []Event {
+	events := MapAssessment(a, filter, controlFPs)
+	for i := range events {
+		wid := tracker.Track(events[i].ResourceID, events[i].ControlID, events[i].CapturedAt)
+		events[i].WindowID = &wid
 	}
 	return events
 }
@@ -48,4 +72,16 @@ func matchesFilter(f *remediation.Finding, filter Filter) bool {
 		return false
 	}
 	return true
+}
+
+func computeEnvironmentalScore(f *remediation.Finding) float64 {
+	baseImpact := 5 // default
+	sensitivity := 1.0
+	exposure := 1.0
+
+	if f.Exposure != nil {
+		exposure = risk.LookupExposure(f.Exposure.PrincipalScope.String())
+	}
+
+	return risk.Environmental(baseImpact, sensitivity, exposure)
 }

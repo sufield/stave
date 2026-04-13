@@ -89,7 +89,7 @@ func run(stdout io.Writer, opts *options) error {
 	}
 
 	filter := buildFilter(opts)
-	events := apptelemetry.MapAssessment(&assessment, filter)
+	events := apptelemetry.MapAssessment(&assessment, filter, nil)
 
 	// Stream NDJSON: one JSON object per line.
 	enc := json.NewEncoder(stdout)
