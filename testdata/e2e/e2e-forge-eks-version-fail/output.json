@@ -1,0 +1,120 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "8f4fa902ad63f637c4a4531efd37475b91f5ccfd93937156f0a2255843aed945",
+        "2026-01-11T000000Z.json": "968cab8453ee260f733df2ea83d6b0c71d42ea84a83de8fc1146bcf87103fe21"
+      },
+      "overall": "5cbe5caa054c7a3139b9809040d2c28da1c02ad44eb0b061be4efec9197c9033"
+    },
+    "policy_fingerprint": "705f0dada06b3526a1dc0c038650cf0a154aa2fb63b0f8d1d3f1da9ef147e794"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.EKS.VERSION.001",
+      "asset_id": "arn:aws:eks:us-east-1:123456789012:cluster/prod-cluster",
+      "asset_type": "aws_eks_cluster",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.EKS.VERSION.001",
+      "control_name": "EKS Clusters Must Not Run Deprecated Kubernetes Versions",
+      "control_description": "EKS clusters must not run Kubernetes versions that have reached end-of-support. AWS publishes a Kubernetes version support lifecycle for EKS — each minor version is supported for approximately 14 months after release. After end-of-support, the cluster no longer receives security patches for the Kubernetes control plane or EKS-managed components. Kubernetes has a high rate of critical CVEs affecting the API server, kubelet, and container runtime. An EKS cluster on a deprecated version is running an unpatched control plane against which known exploits exist. EKS version upgrades require a defined upgrade path and may involve breaking API changes, causing clusters to accumulate version debt due to upgrade friction rather than deliberate choice. For organizations that have invested in Kubernetes network policies, RBAC, and secrets encryption, running a deprecated control plane version undermines every other security control in the cluster.\n",
+      "asset_id": "arn:aws:eks:us-east-1:123456789012:cluster/prod-cluster",
+      "asset_type": "aws_eks_cluster",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "k8s.cluster.version_deprecated",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "k8s.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "cluster"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "fedramp_moderate": "CM-6",
+        "hipaa": "164.312(a)(2)(i)",
+        "nist_800_53_r5": "CM-6",
+        "pci_dss_v4.0": "2.2.1",
+        "soc2": "CC7.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "EKS cluster is running a Kubernetes version that has reached end-of-support. The control plane has known unpatched CVEs.",
+        "action": "Upgrade the EKS cluster to a supported Kubernetes version. Review the AWS EKS Kubernetes version support lifecycle for the current end-of-support dates. Follow the EKS upgrade guide — upgrade one minor version at a time. Test workloads against the new version in a staging cluster before upgrading production. Check for deprecated API usage with kubectl deprecations or the Kubernetes API deprecation guide for your target version.",
+        "example": "{\n  \"k8s\": {\n    \"kind\": \"cluster\",\n    \"cluster\": {\n      \"version_deprecated\": false\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.EKS.VERSION.001",
+      "asset_id": "arn:aws:eks:us-east-1:123456789012:cluster/prod-cluster",
+      "exposure_score": 112.5,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1.5,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-eks-version-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-eks-version-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "00bc4472ab9a057de7332ec9c627b8dbcb72258b",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-eks-version-fail/controls/"
+      ]
+    }
+  }
+}

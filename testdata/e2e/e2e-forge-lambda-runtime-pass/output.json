@@ -1,0 +1,42 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "1d811a761914b3d9f495c08fb4e41b5362d201023e05a3eb817d6803c99d3929",
+        "2026-01-11T000000Z.json": "4de8cd5a98f554092d1b8b8ae7b49cf4e0c717ae37175b38f406d84545de7838"
+      },
+      "overall": "cc079c5f7d5fac4f500272b924d7b9a31f58862cd5c5cebfd005307484d37ffd"
+    },
+    "policy_fingerprint": "e8684e8595f54c628f8639c26ddf412e341e6f585fa4173dad24a4fd56ebf2ec"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-lambda-runtime-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-lambda-runtime-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "00bc4472ab9a057de7332ec9c627b8dbcb72258b",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-lambda-runtime-pass/controls/"
+      ]
+    }
+  }
+}

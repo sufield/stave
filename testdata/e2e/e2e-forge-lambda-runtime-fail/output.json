@@ -1,0 +1,120 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "91543bf554ce762d893646ccc84d0cd99127809ac0b0ed9e6acb9664e563251b",
+        "2026-01-11T000000Z.json": "5328d3b944418189e125a9fc889b83e197dd8933ef14c26c521178dd93d78a17"
+      },
+      "overall": "83a1eb425af86262e7585ce866198cb85cbb8c859224815858c8f510a2190e5f"
+    },
+    "policy_fingerprint": "e8684e8595f54c628f8639c26ddf412e341e6f585fa4173dad24a4fd56ebf2ec"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.LAMBDA.RUNTIME.001",
+      "asset_id": "arn:aws:lambda:us-east-1:123456789012:function:api-handler",
+      "asset_type": "aws_lambda_function",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.LAMBDA.RUNTIME.001",
+      "control_name": "Lambda Functions Must Not Use Deprecated Runtimes",
+      "control_description": "Lambda functions must not run on runtimes that AWS has deprecated. Deprecated runtimes no longer receive security patches from AWS. Unlike EC2 where the operator controls patching, Lambda runtimes are AWS-managed — the only remediation is upgrading the runtime version. AWS publishes deprecation dates months in advance. A function on a deprecated runtime is running on an unpatched execution environment for every invocation. The operator has no mechanism to patch the underlying runtime independently — the runtime version is the patch level. AWS does not forcibly block invocations on deprecated runtimes immediately; functions continue working in a vulnerable state until AWS removes the runtime entirely, at which point the function breaks rather than degrading gracefully. This control detects the compliance gap during the window between deprecation and forced removal.\n",
+      "asset_id": "arn:aws:lambda:us-east-1:123456789012:function:api-handler",
+      "asset_type": "aws_lambda_function",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "compute.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "function"
+          },
+          {
+            "property": "compute.runtime.is_deprecated",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "fedramp_moderate": "CM-6",
+        "hipaa": "164.312(a)(2)(iv)",
+        "nist_800_53_r5": "CM-6",
+        "pci_dss_v4.0": "2.2.1",
+        "soc2": "CC7.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Lambda function is running on a deprecated runtime that no longer receives security patches. The execution environment has known unpatched vulnerabilities.",
+        "action": "Upgrade the Lambda function runtime to a supported version. Check the AWS Lambda runtimes documentation for the current supported runtime list and deprecation schedule. Test the function with the new runtime in a non-production environment before updating production. For Python, Node.js, and Java runtimes, review breaking changes in the language version upgrade guide.",
+        "example": "{\n  \"compute\": {\n    \"kind\": \"function\",\n    \"runtime\": {\n      \"is_deprecated\": false\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.LAMBDA.RUNTIME.001",
+      "asset_id": "arn:aws:lambda:us-east-1:123456789012:function:api-handler",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-lambda-runtime-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-lambda-runtime-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "00bc4472ab9a057de7332ec9c627b8dbcb72258b",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-lambda-runtime-fail/controls/"
+      ]
+    }
+  }
+}

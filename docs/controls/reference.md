@@ -3,22 +3,22 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 301
-**Pack hash:** `a1e723143cfa85601a085d33a8dd8233884412c5933af45da80755b84d9e6634`
+**Total controls:** 303
+**Pack hash:** `5940b575044ff5810303ddcf44a6a81c0767d0d9aca651469cbcd0336953f7ef`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 55 |
-| high | 125 |
+| high | 127 |
 | info | 16 |
 | low | 22 |
 | medium | 83 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 218 |
+| exposure | 220 |
 | governance | 7 |
 | identity | 68 |
 | storage | 8 |
@@ -1042,6 +1042,21 @@ EFS file systems must enforce encryption in transit via a file system policy tha
 EFS file system safety cannot be assessed when encryption status is missing from the snapshot. The extractor must populate filesystem.encryption.at_rest_enabled.
 
 **Remediation:** Re-run the extractor with EFS permissions: elasticfilesystem:DescribeFileSystems, elasticfilesystem:DescribeFileSystemPolicy.
+
+---
+
+### CTL.EKS.VERSION.001
+
+**EKS Clusters Must Not Run Deprecated Kubernetes Versions**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: CM-6; hipaa: 164.312(a)(2)(i); nist_800_53_r5: CM-6; pci_dss_v4.0: 2.2.1; soc2: CC7.1;
+
+EKS clusters must not run Kubernetes versions that have reached end-of-support. AWS publishes a Kubernetes version support lifecycle for EKS — each minor version is supported for approximately 14 months after release. After end-of-support, the cluster no longer receives security patches for the Kubernetes control plane or EKS-managed components. Kubernetes has a high rate of critical CVEs affecting the API server, kubelet, and container runtime. An EKS cluster on a deprecated version is running an unpatched control plane against which known exploits exist. EKS version upgrades require a defined upgrade path and may involve breaking API changes, causing clusters to accumulate version debt due to upgrade friction rather than deliberate choice. For organizations that have invested in Kubernetes network policies, RBAC, and secrets encryption, running a deprecated control plane version undermines every other security control in the cluster.
+
+**Remediation:** Upgrade the EKS cluster to a supported Kubernetes version. Review the AWS EKS Kubernetes version support lifecycle for the current end-of-support dates. Follow the EKS upgrade guide — upgrade one minor version at a time. Test workloads against the new version in a staging cluster before upgrading production. Check for deprecated API usage with kubectl deprecations or the Kubernetes API deprecation guide for your target version.
 
 ---
 
@@ -2664,6 +2679,21 @@ KMS key policies must not grant wildcard principal access. A key policy with Pri
 Customer-created symmetric KMS keys must have automatic key rotation enabled. Key rotation limits the amount of data encrypted with a single key version, reducing the blast radius of key compromise.
 
 **Remediation:** Enable key rotation: aws kms enable-key-rotation --key-id <key-id>
+
+---
+
+### CTL.LAMBDA.RUNTIME.001
+
+**Lambda Functions Must Not Use Deprecated Runtimes**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: CM-6; hipaa: 164.312(a)(2)(iv); nist_800_53_r5: CM-6; pci_dss_v4.0: 2.2.1; soc2: CC7.1;
+
+Lambda functions must not run on runtimes that AWS has deprecated. Deprecated runtimes no longer receive security patches from AWS. Unlike EC2 where the operator controls patching, Lambda runtimes are AWS-managed — the only remediation is upgrading the runtime version. AWS publishes deprecation dates months in advance. A function on a deprecated runtime is running on an unpatched execution environment for every invocation. The operator has no mechanism to patch the underlying runtime independently — the runtime version is the patch level. AWS does not forcibly block invocations on deprecated runtimes immediately; functions continue working in a vulnerable state until AWS removes the runtime entirely, at which point the function breaks rather than degrading gracefully. This control detects the compliance gap during the window between deprecation and forced removal.
+
+**Remediation:** Upgrade the Lambda function runtime to a supported version. Check the AWS Lambda runtimes documentation for the current supported runtime list and deprecation schedule. Test the function with the new runtime in a non-production environment before updating production. For Python, Node.js, and Java runtimes, review breaking changes in the language version upgrade guide.
 
 ---
 

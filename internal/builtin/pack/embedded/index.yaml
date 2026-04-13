@@ -47,6 +47,7 @@ packs:
       - CTL.IAM.PASSWORD.REUSE.001
       - CTL.IAM.ACCOUNT.INACTIVE.001
       - CTL.IAM.PASSWORD.ROTATION.001
+      - CTL.EKS.VERSION.001
       # §164.312(a)(2)(iv) — Encryption and Decryption
       - CTL.BACKUP.ENCRYPT.001
       - CTL.CLOUDTRAIL.ENCRYPT.001
@@ -62,6 +63,7 @@ packs:
       - CTL.SQS.ENCRYPT.001
       - CTL.EFS.ENCRYPT.001
       - CTL.VPC.FLOWLOG.ENCRYPT.001
+      - CTL.LAMBDA.RUNTIME.001
       # §164.312(b) — Audit Controls
       - CTL.CLOUDTRAIL.ENABLED.001
       - CTL.CLOUDTRAIL.VALIDATION.001
@@ -586,6 +588,10 @@ packs:
       - CTL.WAF.PARSERLIMIT.PROTECT.001
       - CTL.WAF.LOGGING.001
       - CTL.WAF.INCOMPLETE.001
+  lambda:
+    description: AWS Lambda serverless function controls
+    controls:
+      - CTL.LAMBDA.RUNTIME.001
   route53:
     description: AWS Route 53 DNS service controls
     controls:
@@ -690,6 +696,7 @@ packs:
       - CTL.K8S.SECRETS.ENCRYPT.001
       - CTL.K8S.SECRETS.PLAINTEXT.001
       - CTL.K8S.INCOMPLETE.001
+      - CTL.EKS.VERSION.001
   rds:
     description: AWS RDS database security controls
     controls:
@@ -1544,6 +1551,12 @@ controls:
   CTL.K8S.INCOMPLETE.001:
     path: internal/controldata/embedded/k8s/misc/CTL.K8S.INCOMPLETE.001.yaml
     summary: Complete Data Required for Kubernetes Assessment
+  CTL.EKS.VERSION.001:
+    path: internal/controldata/embedded/eks/CTL.EKS.VERSION.001.yaml
+    summary: EKS Clusters Must Not Run Deprecated Kubernetes Versions
+  CTL.LAMBDA.RUNTIME.001:
+    path: internal/controldata/embedded/lambda/runtime/CTL.LAMBDA.RUNTIME.001.yaml
+    summary: Lambda Functions Must Not Use Deprecated Runtimes
   CTL.BACKUP.EXISTS.001:
     path: internal/controldata/embedded/backup/verification/CTL.BACKUP.EXISTS.001.yaml
     summary: Critical Resources Must Have Backups

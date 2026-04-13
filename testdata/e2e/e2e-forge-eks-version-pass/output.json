@@ -1,0 +1,42 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "c40ff1220c09073ccd8b8a6d4cfbe2e9085a34aaaad0fe6f275e07f67f0b2cc8",
+        "2026-01-11T000000Z.json": "b4e459c6c17169f662b2f8a5564e87e96f7a34b06da87dfe3fd5557c2a5c1b1c"
+      },
+      "overall": "4d78cfc195144e5e3d57f553a62bfcdbdb440a80fd0fdddfa9e5584ef891fd29"
+    },
+    "policy_fingerprint": "705f0dada06b3526a1dc0c038650cf0a154aa2fb63b0f8d1d3f1da9ef147e794"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-eks-version-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-eks-version-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "00bc4472ab9a057de7332ec9c627b8dbcb72258b",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-eks-version-pass/controls/"
+      ]
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:eks:us-east-1:123456789012:cluster/prod-cluster",
+      "type": "aws_eks_cluster",
+      "vendor": "aws",
+      "properties": {
+        "k8s": {
+          "kind": "cluster",
+          "cluster": {
+            "version_deprecated": true
+          }
+        }
+      }
+    }
+  ]
+}

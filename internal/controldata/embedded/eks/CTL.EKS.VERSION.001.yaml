@@ -1,0 +1,67 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.VERSION.001
+name: EKS Clusters Must Not Run Deprecated Kubernetes Versions
+description: >
+  EKS clusters must not run Kubernetes versions that have reached
+  end-of-support. AWS publishes a Kubernetes version support lifecycle
+  for EKS — each minor version is supported for approximately 14 months
+  after release. After end-of-support, the cluster no longer receives
+  security patches for the Kubernetes control plane or EKS-managed
+  components. Kubernetes has a high rate of critical CVEs affecting the
+  API server, kubelet, and container runtime. An EKS cluster on a
+  deprecated version is running an unpatched control plane against which
+  known exploits exist. EKS version upgrades require a defined upgrade
+  path and may involve breaking API changes, causing clusters to
+  accumulate version debt due to upgrade friction rather than deliberate
+  choice. For organizations that have invested in Kubernetes network
+  policies, RBAC, and secrets encryption, running a deprecated control
+  plane version undermines every other security control in the cluster.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "CM-6"
+  fedramp_moderate: "CM-6"
+  pci_dss_v4.0: "2.2.1"
+  soc2: "CC7.1"
+  hipaa: "164.312(a)(2)(i)"
+scope_tags:
+  - aws
+  - eks
+  - k8s
+type: unsafe_state
+params:
+  base_impact: 8
+  attack_stage: initial_access
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 1.5
+remediation:
+  description: >
+    EKS cluster is running a Kubernetes version that has reached
+    end-of-support. The control plane has known unpatched CVEs.
+  action: >
+    Upgrade the EKS cluster to a supported Kubernetes version. Review
+    the AWS EKS Kubernetes version support lifecycle for the current
+    end-of-support dates. Follow the EKS upgrade guide — upgrade one
+    minor version at a time. Test workloads against the new version in
+    a staging cluster before upgrading production. Check for deprecated
+    API usage with kubectl deprecations or the Kubernetes API deprecation
+    guide for your target version.
+  example: |
+    {
+      "k8s": {
+        "kind": "cluster",
+        "cluster": {
+          "version_deprecated": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.kind
+      op: eq
+      value: cluster
+    - field: properties.k8s.cluster.version_deprecated
+      op: eq
+      value: true

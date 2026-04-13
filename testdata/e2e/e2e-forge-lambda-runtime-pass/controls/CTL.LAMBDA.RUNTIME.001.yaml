@@ -1,0 +1,65 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.RUNTIME.001
+name: Lambda Functions Must Not Use Deprecated Runtimes
+description: >
+  Lambda functions must not run on runtimes that AWS has deprecated.
+  Deprecated runtimes no longer receive security patches from AWS. Unlike
+  EC2 where the operator controls patching, Lambda runtimes are
+  AWS-managed — the only remediation is upgrading the runtime version.
+  AWS publishes deprecation dates months in advance. A function on a
+  deprecated runtime is running on an unpatched execution environment for
+  every invocation. The operator has no mechanism to patch the underlying
+  runtime independently — the runtime version is the patch level. AWS
+  does not forcibly block invocations on deprecated runtimes immediately;
+  functions continue working in a vulnerable state until AWS removes the
+  runtime entirely, at which point the function breaks rather than
+  degrading gracefully. This control detects the compliance gap during
+  the window between deprecation and forced removal.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "CM-6"
+  fedramp_moderate: "CM-6"
+  pci_dss_v4.0: "2.2.1"
+  soc2: "CC7.1"
+  hipaa: "164.312(a)(2)(iv)"
+scope_tags:
+  - aws
+  - lambda
+type: unsafe_state
+params:
+  base_impact: 8
+  attack_stage: initial_access
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 1.0
+remediation:
+  description: >
+    Lambda function is running on a deprecated runtime that no longer
+    receives security patches. The execution environment has known
+    unpatched vulnerabilities.
+  action: >
+    Upgrade the Lambda function runtime to a supported version. Check
+    the AWS Lambda runtimes documentation for the current supported
+    runtime list and deprecation schedule. Test the function with the
+    new runtime in a non-production environment before updating
+    production. For Python, Node.js, and Java runtimes, review breaking
+    changes in the language version upgrade guide.
+  example: |
+    {
+      "compute": {
+        "kind": "function",
+        "runtime": {
+          "is_deprecated": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
+    - field: properties.compute.runtime.is_deprecated
+      op: eq
+      value: true
