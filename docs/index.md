@@ -19,6 +19,7 @@
 - [Unauthenticated Reachability](unauthenticated-reachability.md) — Anonymous access path detection, composition attacks, extractor BFS
 - [Data Exfiltration](data-exfiltration.md) — Reverse reachability: how data gets out
 - [Drift Detection](drift-detection.md) — Configuration drift as a violation, baseline comparison
+- [Security Chronology](bisect-timeline.md) — Binary search for violation onset, violation window discovery, Patient Zero forensics
 - [Supply Chain Ingress](supply-chain-ingress.md) — OIDC federation trust analysis, CI/CD ingress risks
 - [Secret Blast Radius](secret-blast-radius.md) — Secret-to-data lateral movement, credential blast radius
 - [Recovery Isolation](recovery-isolation.md) — Decoupled recovery, anti-ransomware SPoF detection

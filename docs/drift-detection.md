@@ -154,11 +154,13 @@ stave drift \
 |---|---|
 | `stave apply` | Is the current state safe? |
 | `stave drift` | What changed between two points in time? |
+| `stave bisect` | When was a violation first introduced? |
 | `stave apply --dry-run` | Are inputs well-formed before evaluation? |
 
-`stave apply` evaluates safety. `stave drift` detects change. Use
-them together: `stave drift` finds what changed, `stave apply`
-determines if the change made things unsafe.
+`stave apply` evaluates safety. `stave drift` detects change.
+`stave bisect` finds the temporal origin of a violation. Use them
+together: drift finds *what* changed, bisect finds *when* the
+violation started, apply determines *if* the change made things unsafe.
 
 ## Key files
 

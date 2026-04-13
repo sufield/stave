@@ -50,6 +50,15 @@ All commands ship in the standard `stave` binary. No build tags are required.
 | `enforce` | Generate enforcement output from evaluation | `--input` evaluation JSON | Enforcement artifacts | After `apply` to generate remediation artifacts |
 | `report` | Plain-text or JSON summary for stakeholders | `--in` evaluation JSON | Human-readable report | For auditors, management, or compliance documentation |
 
+## Forensics & Timeline
+
+| Command | Purpose | Input | Output | When to use |
+|---|---|---|---|---|
+| `bisect` | Find when a violation was introduced | `--controls` dir, `--observations` dir, `--control-id` | Transition point with property delta | Incident response — "when did this misconfiguration first appear?" |
+| `drift` | Compare two snapshots for changes | `--baseline` file, `--current` file | Changed, added, removed fields per asset | Investigating what changed between two points in time |
+
+Bisect supports two modes: `--mode bisect` (O(log N) binary search, default) finds the transition into the current violation window. `--mode scan` (O(N) linear scan) finds ALL violation windows including Patient Zero. Use scan when the history is non-monotonic (fix-then-re-break patterns).
+
 ## Snapshot Lifecycle
 
 | Command | Purpose | Input | Output | When to use |

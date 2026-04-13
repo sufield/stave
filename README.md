@@ -57,6 +57,7 @@ Every score is a **deterministic, traceable reasoning chain**. Compound scores s
 - **Safety chains** — 15 built-in chain definitions detect compound failures across data protection, identity, detection, recovery, sovereignty, supply chain, and cryptographic concentration
 - **Remediation ranking** — `stave rank` produces a prioritized remediation roadmap with SLA urgency, risk impact percentages, and remediation bundles
 - **Drift detection** — `stave drift` compares two snapshots and treats configuration changes as violations, exit code 3 for CI/CD gating
+- **Security chronology** — `stave bisect` binary-searches snapshot history to find when a violation was first introduced, with scan mode for full violation window discovery
 - **Continuous monitoring** — `stave watch` monitors observation directories for new snapshots, detects regressions in real time, emits alerts to stdout or JSONL file sinks
 - **Unsafe duration tracking** — detects how long assets remain misconfigured across snapshots
 - **Custom controls** — YAML with `unsafe_predicate` for any asset type, no code changes

@@ -12,6 +12,7 @@ import (
 	"github.com/sufield/stave/cmd/apply"
 	applyvalidate "github.com/sufield/stave/cmd/apply/validate"
 	applyverify "github.com/sufield/stave/cmd/apply/verify"
+	stavebisect "github.com/sufield/stave/cmd/bisect"
 	"github.com/sufield/stave/cmd/bugreport"
 	stavebundle "github.com/sufield/stave/cmd/bundle"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
@@ -151,6 +152,9 @@ func WireCommands(app *App) {
 
 	// Drift detection
 	root.AddCommand(stavedrift.NewCmd())
+
+	// Security chronology
+	root.AddCommand(stavebisect.NewCmd())
 
 	// Continuous monitoring
 	root.AddCommand(stavewatch.NewCmd())
