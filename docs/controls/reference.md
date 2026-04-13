@@ -3,27 +3,42 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 309
-**Pack hash:** `f1a88458be1f047b5d06b099541691543966258853f969f45bcbda374ad816dc`
+**Total controls:** 310
+**Pack hash:** `e3e538585c8acce5728c056b3a0674c4dfc6fdc9b254a5031b51411c3097207a`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 58 |
-| high | 129 |
+| high | 130 |
 | info | 16 |
 | low | 22 |
 | medium | 84 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 226 |
+| exposure | 227 |
 | governance | 7 |
 | identity | 68 |
 | storage | 8 |
 
 ## Controls
+
+### CTL.ACM.CERT.EXPIRY.001
+
+**ACM Imported Certificates Must Not Be Near Expiry**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-12; hipaa: 164.312(e)(2)(ii); nist_800_53_r5: SC-12; pci_dss_v4.0: 4.2.1; soc2: CC6.7;
+
+SSL/TLS certificates imported into ACM must not be within 30 days of expiry or already expired. ACM automatically renews certificates it provisions (AMAZON_ISSUED) but does not renew imported certificates. Imported certificates expire silently on their expiry date with no enforcement mechanism — services continue serving traffic on an expired certificate until clients reject it. An expired certificate on a production load balancer or CloudFront distribution causes TLS negotiation failures for all clients that enforce certificate validity. For HIPAA and PCI-DSS environments, serving traffic on an expired certificate is a direct compliance violation. This control evaluates only IMPORTED certificates — AMAZON_ISSUED certificates are auto-renewed and out of scope.
+
+**Remediation:** Renew or replace the imported certificate. Import the new certificate into ACM via aws acm import-certificate. If the certificate was originally from a private CA, re-issue from the CA and re-import. Consider migrating to an ACM-managed certificate (AMAZON_ISSUED) for automatic renewal — ACM provisions free public certificates for domains validated via DNS or email. After importing the new certificate, verify the associated services (load balancers, CloudFront distributions, API Gateway domains) are serving the updated certificate.
+
+---
 
 ### CTL.APIGATEWAY.AUTH.001
 

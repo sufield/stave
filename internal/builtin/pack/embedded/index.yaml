@@ -116,6 +116,7 @@ packs:
       - CTL.ELB.TLS.001
       - CTL.RDS.SSL.001
       - CTL.S3.ENCRYPT.002
+      - CTL.ACM.CERT.EXPIRY.001
       # §164.316(b)(2) — Documentation Retention
       - CTL.S3.LOCK.001
   cis_aws_v3.0:
@@ -609,6 +610,10 @@ packs:
     controls:
       - CTL.ECS.TASKMETADATA.001
       - CTL.ECS.TASKMETADATA.002
+  acm:
+    description: AWS Certificate Manager certificate controls
+    controls:
+      - CTL.ACM.CERT.EXPIRY.001
   route53:
     description: AWS Route 53 DNS service controls
     controls:
@@ -1592,6 +1597,9 @@ controls:
   CTL.ECS.TASKMETADATA.002:
     path: internal/controldata/embedded/ecs/identity/CTL.ECS.TASKMETADATA.002.yaml
     summary: PHI ECS Tasks Must Have Scoped Task Roles
+  CTL.ACM.CERT.EXPIRY.001:
+    path: internal/controldata/embedded/acm/CTL.ACM.CERT.EXPIRY.001.yaml
+    summary: ACM Imported Certificates Must Not Be Near Expiry
   CTL.BACKUP.EXISTS.001:
     path: internal/controldata/embedded/backup/verification/CTL.BACKUP.EXISTS.001.yaml
     summary: Critical Resources Must Have Backups
