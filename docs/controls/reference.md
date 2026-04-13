@@ -3,24 +3,24 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 318
-**Pack hash:** `6631ef540a85b24828edfff53a88b71377a6cbd6358f6d445bc820939671f8ac`
+**Total controls:** 320
+**Pack hash:** `e4511b2185f4d3f18e7ccb1b1a319a3be45dd5514d5d87b144ccc7cfef126d47`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 58 |
-| high | 131 |
+| high | 132 |
 | info | 16 |
 | low | 22 |
-| medium | 91 |
+| medium | 92 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 234 |
+| exposure | 235 |
 | governance | 7 |
-| identity | 69 |
+| identity | 70 |
 | storage | 8 |
 
 ## Controls
@@ -318,6 +318,21 @@ Terraform state files must be stored in a versioned backend (S3 with versioning,
 CloudFront distributions must use a security policy that enforces TLS 1.2 or higher for all viewer connections. TLS 1.0 and TLS 1.1 have known cryptographic weaknesses (BEAST, POODLE, SWEET32) that are structural properties of the protocol, not implementation bugs. The default CloudFront security policy permits TLS 1.0 for backwards compatibility with older clients. Organizations that accept this default are unknowingly accepting protocol-downgrade attacks. TLS 1.2 enforcement exists for ALB (CTL.ELB.TLS.001), API Gateway (CTL.APIGATEWAY.TLS.001), RDS (CTL.RDS.SSL.001), and OpenSearch (CTL.OPENSEARCH.HTTPS.001) — this control closes the CloudFront gap. PCI-DSS explicitly prohibits TLS 1.0 for cardholder data. NIST SP 800-52r2 requires TLS 1.2 minimum for federal systems. Acceptable policies: TLSv1.2_2021, TLSv1.2_2019, TLSv1.2_2018.
 
 **Remediation:** Update the CloudFront distribution viewer certificate configuration to use TLSv1.2_2021 security policy. This requires a custom SSL certificate (not the default CloudFront certificate). Use ACM to provision a certificate in us-east-1, attach it to the distribution, and select TLSv1.2_2021 as the minimum protocol version. All modern browsers and clients released after 2015 support TLS 1.2.
+
+---
+
+### CTL.CLOUDTRAIL.CWLOGS.001
+
+**CloudTrail Trails Must Be Integrated with CloudWatch Logs**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 3.4; fedramp_moderate: AU-6; hipaa: 164.312(b); nist_800_53_r5: AU-6; pci_dss_v4.0: 10.5.1; soc2: CC7.1;
+
+CloudTrail trails must be configured to deliver events to a CloudWatch Logs log group with active delivery. CloudTrail delivers events to S3 by default. CloudWatch Logs integration is a separate configuration that enables real-time metric filtering and alerting. Without it, all 17 CIS-required CloudWatch metric filter controls (CTL.CLOUDWATCH.MONITOR.*) evaluate an empty event stream — the filters exist, the alarms are configured, but nothing fires. This is a silent gap: all monitoring controls appear to pass individually while the event pipeline is broken. CTL.CLOUDTRAIL.ENABLED.001 verifies the trail is active. This control verifies the trail is delivering to CloudWatch Logs — the prerequisite for real-time monitoring.
+
+**Remediation:** Configure the trail to deliver to a CloudWatch Logs log group via the CloudTrail console or update-trail API. Create or specify a log group and grant CloudTrail the cloudwatch:PutLogEvents permission via an IAM role. Verify delivery is active after configuration.
 
 ---
 
@@ -1663,6 +1678,21 @@ AWS accounts must have no more than 2 users with full administrator access. Exce
 IAM Access Analyzer must be enabled in every region. Access Analyzer identifies resources shared with external entities and generates findings for unintended exposure.
 
 **Remediation:** Create an Access Analyzer in each region: aws accessanalyzer create-analyzer --analyzer-name default --type ACCOUNT --region <region>
+
+---
+
+### CTL.IAM.ANALYZER.MONITOR.001
+
+**IAM Access Analyzer Must Be Configured for Continuous Monitoring**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 1.21; fedramp_moderate: SI-4; nist_800_53_r5: SI-4; pci_dss_v4.0: 11.3.1; soc2: CC7.1;
+
+IAM Access Analyzer must be in ACTIVE status and findings must be reviewed within 30 days. CIS 1.21 requires not just enablement (covered by CTL.IAM.ANALYZER.001) but active monitoring and finding review. An analyzer with unreviewed findings has detected external access paths — S3 buckets, IAM roles, KMS keys, Lambda functions accessible outside the account — that have not been evaluated for legitimacy. Active findings are confirmed external access paths waiting to be investigated, not theoretical risks. For PHI environments, any unreviewed external access path is a potential breach path.
+
+**Remediation:** Verify the analyzer is in ACTIVE status in all regions. Review all active (unarchived) findings. For each finding, determine if the external access is intended — archive intended access, remediate unintended access. Establish an operational process to review new findings within 30 days of detection.
 
 ---
 

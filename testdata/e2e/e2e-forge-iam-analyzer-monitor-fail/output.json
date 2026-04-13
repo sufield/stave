@@ -1,0 +1,120 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "81cc99c9678642fb7c84c8c8f4bf6533d3d668c23c926a12697a4180bc1c3d80",
+        "2026-01-11T000000Z.json": "4298bb97a708e265a99e7ebc515bbfc7f54a7b9ccc9f25a4ca0a47e9c84bcd3a"
+      },
+      "overall": "e01b2190989f3e5ee3b41ee7f455fed70f7e9cda8734c946ecc29c17182e5e2b"
+    },
+    "policy_fingerprint": "a535e0aa69925cf9c6d168c8ac06fdbd0a3ee8e613a34ef3bac77f35411d204e"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.IAM.ANALYZER.MONITOR.001",
+      "asset_id": "arn:aws:access-analyzer:us-east-1:123456789012:analyzer/account-analyzer",
+      "asset_type": "aws_iam_access_analyzer",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.IAM.ANALYZER.MONITOR.001",
+      "control_name": "IAM Access Analyzer Must Be Configured for Continuous Monitoring",
+      "control_description": "IAM Access Analyzer must be in ACTIVE status and findings must be reviewed within 30 days. CIS 1.21 requires not just enablement (covered by CTL.IAM.ANALYZER.001) but active monitoring and finding review. An analyzer with unreviewed findings has detected external access paths — S3 buckets, IAM roles, KMS keys, Lambda functions accessible outside the account — that have not been evaluated for legitimacy. Active findings are confirmed external access paths waiting to be investigated, not theoretical risks. For PHI environments, any unreviewed external access path is a potential breach path.\n",
+      "asset_id": "arn:aws:access-analyzer:us-east-1:123456789012:analyzer/account-analyzer",
+      "asset_type": "aws_iam_access_analyzer",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "identity.analyzer.is_actively_monitored",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "identity.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "access_analyzer"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "cis_aws_v3.0": "1.21",
+        "fedramp_moderate": "SI-4",
+        "nist_800_53_r5": "SI-4",
+        "pci_dss_v4.0": "11.3.1",
+        "soc2": "CC7.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "IAM Access Analyzer is not in ACTIVE status or has unreviewed findings older than 30 days. External access paths have been detected and not evaluated.",
+        "action": "Verify the analyzer is in ACTIVE status in all regions. Review all active (unarchived) findings. For each finding, determine if the external access is intended — archive intended access, remediate unintended access. Establish an operational process to review new findings within 30 days of detection.",
+        "example": "{\n  \"identity\": {\n    \"kind\": \"access_analyzer\",\n    \"analyzer\": {\n      \"is_actively_monitored\": true\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.IAM.ANALYZER.MONITOR.001",
+      "asset_id": "arn:aws:access-analyzer:us-east-1:123456789012:analyzer/account-analyzer",
+      "exposure_score": 50,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-analyzer-monitor-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-analyzer-monitor-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "dc675858eeca53b840d41a80b057c928df57b811",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-iam-analyzer-monitor-fail/controls/"
+      ]
+    }
+  }
+}

@@ -1,0 +1,56 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.CWLOGS.001
+name: CloudTrail Trails Must Be Integrated with CloudWatch Logs
+description: >
+  CloudTrail trails must be configured to deliver events to a CloudWatch
+  Logs log group with active delivery. CloudTrail delivers events to S3
+  by default. CloudWatch Logs integration is a separate configuration
+  that enables real-time metric filtering and alerting. Without it, all
+  17 CIS-required CloudWatch metric filter controls (CTL.CLOUDWATCH.MONITOR.*)
+  evaluate an empty event stream — the filters exist, the alarms are
+  configured, but nothing fires. This is a silent gap: all monitoring
+  controls appear to pass individually while the event pipeline is broken.
+  CTL.CLOUDTRAIL.ENABLED.001 verifies the trail is active. This control
+  verifies the trail is delivering to CloudWatch Logs — the prerequisite
+  for real-time monitoring.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "3.4"
+  nist_800_53_r5: "AU-6"
+  fedramp_moderate: "AU-6"
+  pci_dss_v4.0: "10.5.1"
+  soc2: "CC7.1"
+  hipaa: "164.312(b)"
+scope_tags:
+  - aws
+  - cloudtrail
+type: unsafe_state
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    CloudTrail trail is not delivering events to CloudWatch Logs. All
+    real-time metric filter monitoring has no event source.
+  action: >
+    Configure the trail to deliver to a CloudWatch Logs log group via
+    the CloudTrail console or update-trail API. Create or specify a log
+    group and grant CloudTrail the cloudwatch:PutLogEvents permission
+    via an IAM role. Verify delivery is active after configuration.
+  example: |
+    {
+      "audit": {
+        "kind": "trail",
+        "cloudwatch_logs": {
+          "delivery_active": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.audit.kind
+      op: eq
+      value: trail
+    - field: properties.audit.cloudwatch_logs.delivery_active
+      op: eq
+      value: false

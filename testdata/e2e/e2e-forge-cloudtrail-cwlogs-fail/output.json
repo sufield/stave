@@ -1,0 +1,121 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "d5b4112fbc68cd05a52494bd11cd3d7e2dbcbde7fabef7b5c7e59ac55632aa57",
+        "2026-01-11T000000Z.json": "3917f9914c15ea4d8298a62de413a89f844c71ee7a269981db5a30eb35e143b8"
+      },
+      "overall": "997da20352337b80b59011cff0e06e0d6ea191c991b23c61e4a5e86957bdec7d"
+    },
+    "policy_fingerprint": "e0b9aed3f293b3c9c8b7c1a386ac41a75aef048c8af459875b563de23845e7dc"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.CLOUDTRAIL.CWLOGS.001",
+      "asset_id": "arn:aws:cloudtrail:us-east-1:123456789012:trail/main-trail",
+      "asset_type": "aws_cloudtrail_trail",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.CLOUDTRAIL.CWLOGS.001",
+      "control_name": "CloudTrail Trails Must Be Integrated with CloudWatch Logs",
+      "control_description": "CloudTrail trails must be configured to deliver events to a CloudWatch Logs log group with active delivery. CloudTrail delivers events to S3 by default. CloudWatch Logs integration is a separate configuration that enables real-time metric filtering and alerting. Without it, all 17 CIS-required CloudWatch metric filter controls (CTL.CLOUDWATCH.MONITOR.*) evaluate an empty event stream — the filters exist, the alarms are configured, but nothing fires. This is a silent gap: all monitoring controls appear to pass individually while the event pipeline is broken. CTL.CLOUDTRAIL.ENABLED.001 verifies the trail is active. This control verifies the trail is delivering to CloudWatch Logs — the prerequisite for real-time monitoring.\n",
+      "asset_id": "arn:aws:cloudtrail:us-east-1:123456789012:trail/main-trail",
+      "asset_type": "aws_cloudtrail_trail",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "audit.cloudwatch_logs.delivery_active",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "audit.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "trail"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_aws_v3.0": "3.4",
+        "fedramp_moderate": "AU-6",
+        "hipaa": "164.312(b)",
+        "nist_800_53_r5": "AU-6",
+        "pci_dss_v4.0": "10.5.1",
+        "soc2": "CC7.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "CloudTrail trail is not delivering events to CloudWatch Logs. All real-time metric filter monitoring has no event source.",
+        "action": "Configure the trail to deliver to a CloudWatch Logs log group via the CloudTrail console or update-trail API. Create or specify a log group and grant CloudTrail the cloudwatch:PutLogEvents permission via an IAM role. Verify delivery is active after configuration.",
+        "example": "{\n  \"audit\": {\n    \"kind\": \"trail\",\n    \"cloudwatch_logs\": {\n      \"delivery_active\": true\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.CLOUDTRAIL.CWLOGS.001",
+      "asset_id": "arn:aws:cloudtrail:us-east-1:123456789012:trail/main-trail",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-cloudtrail-cwlogs-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-cloudtrail-cwlogs-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "dc675858eeca53b840d41a80b057c928df57b811",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-cloudtrail-cwlogs-fail/controls/"
+      ]
+    }
+  }
+}

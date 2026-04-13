@@ -1,0 +1,42 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "31dcc2e393c37347a1bdcecec6d0898074c2b7132b5fe4fd0bf6ad7fe70e0470",
+        "2026-01-11T000000Z.json": "784dbe0de4a78635d2a08bb18013f55a4e82296fff7d4175ca8861aa97efcc9d"
+      },
+      "overall": "121f4d0b77855dad33c0a07cd57f985e1b732c7516efe6d4c9548218e294f86b"
+    },
+    "policy_fingerprint": "e0b9aed3f293b3c9c8b7c1a386ac41a75aef048c8af459875b563de23845e7dc"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-cloudtrail-cwlogs-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-cloudtrail-cwlogs-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "dc675858eeca53b840d41a80b057c928df57b811",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-cloudtrail-cwlogs-pass/controls/"
+      ]
+    }
+  }
+}

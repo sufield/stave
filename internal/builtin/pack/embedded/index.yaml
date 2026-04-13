@@ -89,6 +89,7 @@ packs:
       - CTL.VPC.FLOWLOG.001
       - CTL.WAF.EVASION.OBSERVE.001
       - CTL.LAMBDA.LOG.001
+      - CTL.CLOUDTRAIL.CWLOGS.001
       # §164.312(c)(1) — Integrity
       - CTL.CONFIG.RULES.001
       - CTL.S3.VERSION.001
@@ -652,6 +653,7 @@ packs:
       - CTL.CLOUDTRAIL.DATAWRITE.001
       - CTL.CLOUDTRAIL.DATAREAD.001
       - CTL.CLOUDTRAIL.RETENTION.001
+      - CTL.CLOUDTRAIL.CWLOGS.001
       - CTL.CLOUDTRAIL.INCOMPLETE.001
   cloudwatch:
     description: AWS CloudWatch observability controls
@@ -793,6 +795,7 @@ packs:
       - CTL.IAM.SUPPORT.001
       - CTL.IAM.CERT.EXPIRED.001
       - CTL.IAM.ANALYZER.001
+      - CTL.IAM.ANALYZER.MONITOR.001
       - CTL.IAM.ROOT.HWMFA.001
       - CTL.IAM.ROOT.USAGE.001
       - CTL.IAM.CRED.SETUPKEY.001
@@ -1436,6 +1439,9 @@ controls:
   CTL.IAM.ANALYZER.001:
     path: internal/controldata/embedded/iam/misc/CTL.IAM.ANALYZER.001.yaml
     summary: IAM Access Analyzer Must Be Enabled
+  CTL.IAM.ANALYZER.MONITOR.001:
+    path: internal/controldata/embedded/iam/analyzer/CTL.IAM.ANALYZER.MONITOR.001.yaml
+    summary: IAM Access Analyzer Must Be Configured for Continuous Monitoring
   CTL.IAM.INCOMPLETE.001:
     path: internal/controldata/embedded/iam/misc/CTL.IAM.INCOMPLETE.001.yaml
     summary: Complete Data Required for IAM Assessment
@@ -1691,6 +1697,9 @@ controls:
   CTL.CLOUDTRAIL.RETENTION.001:
     path: internal/controldata/embedded/cloudtrail/logging/CTL.CLOUDTRAIL.RETENTION.001.yaml
     summary: CloudTrail Logs Must Be Retained Beyond 90 Days
+  CTL.CLOUDTRAIL.CWLOGS.001:
+    path: internal/controldata/embedded/cloudtrail/logging/CTL.CLOUDTRAIL.CWLOGS.001.yaml
+    summary: CloudTrail Trails Must Be Integrated with CloudWatch Logs
   CTL.CLOUDTRAIL.INCOMPLETE.001:
     path: internal/controldata/embedded/cloudtrail/misc/CTL.CLOUDTRAIL.INCOMPLETE.001.yaml
     summary: Complete Data Required for CloudTrail Assessment

@@ -1,0 +1,56 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ANALYZER.MONITOR.001
+name: IAM Access Analyzer Must Be Configured for Continuous Monitoring
+description: >
+  IAM Access Analyzer must be in ACTIVE status and findings must be
+  reviewed within 30 days. CIS 1.21 requires not just enablement
+  (covered by CTL.IAM.ANALYZER.001) but active monitoring and finding
+  review. An analyzer with unreviewed findings has detected external
+  access paths — S3 buckets, IAM roles, KMS keys, Lambda functions
+  accessible outside the account — that have not been evaluated for
+  legitimacy. Active findings are confirmed external access paths
+  waiting to be investigated, not theoretical risks. For PHI
+  environments, any unreviewed external access path is a potential
+  breach path.
+domain: identity
+severity: medium
+compliance:
+  cis_aws_v3.0: "1.21"
+  nist_800_53_r5: "SI-4"
+  fedramp_moderate: "SI-4"
+  pci_dss_v4.0: "11.3.1"
+  soc2: "CC7.1"
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    IAM Access Analyzer is not in ACTIVE status or has unreviewed
+    findings older than 30 days. External access paths have been
+    detected and not evaluated.
+  action: >
+    Verify the analyzer is in ACTIVE status in all regions. Review
+    all active (unarchived) findings. For each finding, determine
+    if the external access is intended — archive intended access,
+    remediate unintended access. Establish an operational process
+    to review new findings within 30 days of detection.
+  example: |
+    {
+      "identity": {
+        "kind": "access_analyzer",
+        "analyzer": {
+          "is_actively_monitored": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: access_analyzer
+    - field: properties.identity.analyzer.is_actively_monitored
+      op: eq
+      value: false

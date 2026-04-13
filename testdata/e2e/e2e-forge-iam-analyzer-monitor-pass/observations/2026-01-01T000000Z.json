@@ -1,0 +1,24 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:access-analyzer:us-east-1:123456789012:analyzer/account-analyzer",
+      "properties": {
+        "identity": {
+          "analyzer": {
+            "is_actively_monitored": true
+          },
+          "kind": "access_analyzer"
+        }
+      },
+      "type": "aws_iam_access_analyzer",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  }
+}
