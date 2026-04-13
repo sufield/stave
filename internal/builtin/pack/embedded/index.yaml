@@ -79,6 +79,7 @@ packs:
       - CTL.S3.MALWARE.001
       - CTL.S3.BREACH.DETECT.001
       - CTL.VPC.FLOWLOG.001
+      - CTL.WAF.EVASION.OBSERVE.001
       # §164.312(c)(1) — Integrity
       - CTL.CONFIG.RULES.001
       - CTL.S3.VERSION.001
@@ -97,6 +98,7 @@ packs:
       - CTL.S3.NETWORK.VPC.001
       - CTL.VPC.SG.UNRESTRICTED.001
       - CTL.WAF.ORIGIN.LOCKDOWN.001
+      - CTL.WAF.PARSERLIMIT.PROTECT.001
       # §164.312(e)(2)(ii) — Encryption in Transit
       - CTL.APIGATEWAY.TLS.001
       - CTL.ELASTICACHE.TRANSIT.001
@@ -580,6 +582,8 @@ packs:
       - CTL.WAF.RULES.001
       - CTL.WAF.RULES.OWASP.001
       - CTL.WAF.ORIGIN.LOCKDOWN.001
+      - CTL.WAF.EVASION.OBSERVE.001
+      - CTL.WAF.PARSERLIMIT.PROTECT.001
       - CTL.WAF.LOGGING.001
       - CTL.WAF.INCOMPLETE.001
   route53:
@@ -769,6 +773,8 @@ packs:
       - CTL.WAF.RULES.BLOCKMODE.001
       - CTL.WAF.RULES.OWASP.001
       - CTL.WAF.ORIGIN.LOCKDOWN.001
+      - CTL.WAF.EVASION.OBSERVE.001
+      - CTL.WAF.PARSERLIMIT.PROTECT.001
       - CTL.IAM.SCP.DANGEROUS.ALLOWS.001
       - CTL.IAM.SCP.OU.COVERAGE.001
       - CTL.CONFIG.REMEDIATION.001
@@ -1124,6 +1130,12 @@ controls:
   CTL.WAF.ORIGIN.LOCKDOWN.001:
     path: internal/controldata/embedded/guardrail/CTL.WAF.ORIGIN.LOCKDOWN.001.yaml
     summary: WAF Origin Must Not Accept Direct Internet Traffic
+  CTL.WAF.EVASION.OBSERVE.001:
+    path: internal/controldata/embedded/guardrail/CTL.WAF.EVASION.OBSERVE.001.yaml
+    summary: WAF Must Have Full Body Inspection and Request Sampling Enabled
+  CTL.WAF.PARSERLIMIT.PROTECT.001:
+    path: internal/controldata/embedded/guardrail/CTL.WAF.PARSERLIMIT.PROTECT.001.yaml
+    summary: WAF Must Block Requests That Exceed Parser Limits
   CTL.IAM.SCP.DANGEROUS.ALLOWS.001:
     path: internal/controldata/embedded/guardrail/CTL.IAM.SCP.DANGEROUS.ALLOWS.001.yaml
     summary: SCPs Must Not Explicitly Allow Dangerous Administrative Actions

@@ -218,11 +218,63 @@ These terms are final. The renames are done. Use the canonical term.
 - `make e2e` runs against the built binary.
 - `make fuzz` runs fuzz tests on security-critical parsers.
 
+## Golden File Regeneration
+
+After adding or modifying controls, golden files must be regenerated. There are
+**two separate golden file systems** with different regeneration workflows:
+
+### E2E forge fixtures (`testdata/e2e/e2e-*`)
+
+`make golden` regenerates `output.json`, `expected.summary.json`, and
+`expected.findings.count` for all `e2e-*` directories. These use
+`--controls`/`--observations` flags and `--now 2026-01-11T00:00:00Z`.
+
+### Profile-based golden files (`testdata/e2e/{profile-name}`)
+
+`make golden` does NOT handle profile tests. These must be regenerated manually:
+
+```bash
+# HIPAA profile (if control added to hipaa pack)
+./stave apply --profile hipaa \
+  --input testdata/e2e/e2e-hipaa-cross-domain/observations.json \
+  --now 2026-01-15T00:00:00Z --include-all \
+  > testdata/e2e/e2e-hipaa-cross-domain/golden.json \
+  2> testdata/e2e/e2e-hipaa-cross-domain/err.txt || true
+
+# S3 profile (if control added to s3 pack)
+./stave apply --profile aws-s3 \
+  --input testdata/e2e/aws-s3-obs-public/observations.json \
+  --now 2026-01-15T00:00:00Z \
+  > testdata/e2e/aws-s3-obs-public/golden.json 2>/dev/null || true
+# Same pattern for aws-s3-obs-private
+```
+
+Profile golden files are compared byte-for-byte in `TestApplyProfileE2E`
+(`cmd/apply/profile_e2e_test.go`). If a new control fires on existing
+observations, also update `wantViol` count in the test.
+
+### Full regeneration sequence after adding controls
+
+```bash
+make sync-controls        # controls/ → internal/controldata/embedded/
+make golden               # regenerate e2e fixture golden files
+# Regenerate profile goldens (hipaa, s3, etc.) manually per above
+make docs-controls        # regenerate docs/controls/reference.md
+make readme               # regenerate README.md with control counts
+```
+
+### Why so many output.json changes
+
+Every `output.json` contains `head_commit` (current git SHA) and
+`policy_fingerprint` (hash of control definitions). Adding a control changes
+the fingerprint, which changes every `output.json`. This is expected — the
+diffs are just the commit hash line.
+
 ## Identity: Stave Is a Formal Proof System
 
 Stave is NOT a cloud tool. It is a **policy evaluation engine for JSON-represented infrastructure**. The engine knows nothing about AWS, GCP, Azure, or any specific cloud service. It evaluates predicates against `properties.*` paths on assets with open-ended `type` and `vendor` strings.
 
-### Proven with zero engine changes — 246 controls, 29 domains, 5 vendors
+### Proven with zero engine changes — 299 controls, 32 domains, 5 vendors
 
 10 compliance framework profiles, all implemented via YAML controls + compliance tags:
 
@@ -315,6 +367,13 @@ Stave's multi-domain capability is a **schema specification**, not code. The obs
 - Create controls without a `remediation.action` field. Every control must have a remediation path.
 - Create controls without test fixtures. Untested controls are invisible regressions.
 - Place controls directly in `internal/controldata/embedded/`. That directory is build-generated from `controls/`.
+
+### After adding controls, also update
+
+- `aws-lab/COVERAGE.md` — control-to-experiment mapping table
+- `aws-lab/experiments.md` — experiment index (if experiment covers the service)
+- `aws-lab/scripts/exp*.sh` — add extractor pattern and observation examples
+- Chain definitions in `chains/` (if the control belongs to a threat chain)
 
 ## Exit Codes
 

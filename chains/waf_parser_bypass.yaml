@@ -1,0 +1,13 @@
+id: waf_parser_bypass
+description: >
+  Parser limit protection is absent, evasion observability is missing,
+  and OWASP coverage is incomplete. Attackers can overflow the WAF parser
+  to bypass all rule evaluation, and the bypass leaves no forensic trace.
+  Any WAF rule — OWASP coverage, custom rules, managed rule groups — is
+  neutralized for requests crafted to exceed the parser limit.
+controls:
+  - CTL.WAF.PARSERLIMIT.PROTECT.001
+  - CTL.WAF.EVASION.OBSERVE.001
+  - CTL.WAF.RULES.OWASP.001
+escalation_threshold: 2
+compound_severity: critical

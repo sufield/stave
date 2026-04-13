@@ -1,0 +1,70 @@
+dsl_version: ctrl.v1
+id: CTL.WAF.EVASION.OBSERVE.001
+name: WAF Must Have Full Body Inspection and Request Sampling Enabled
+description: >
+  WAF Web ACLs must have full request body inspection enabled and sampled
+  allowed-request logging active. Signature-based WAF rules can be evaded
+  through encoding techniques such as CRLF injection, Unicode surrogate
+  pairs, and HTML parser confusion. HackerOne report #2921905 documents a
+  WAF bypass using CRLF and HTML attribute confusion that evaded
+  Cloudflare rule matching entirely. Prevention of encoding evasion is a
+  vendor responsibility, but the organization must ensure that when evasion
+  occurs it is observable. Without full body inspection, payloads in POST
+  bodies, JSON fields, and multipart uploads are invisible to all WAF
+  rules. Without sampled allowed-request logging, successful bypass
+  attempts leave no forensic trace — the organization cannot distinguish
+  between no attacks and undetected attacks. This control differs from
+  CTL.WAF.LOGGING.001 (which checks logging is enabled) by verifying the
+  logging and inspection configuration captures enough detail to detect
+  evasion patterns.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SI-4"
+  fedramp_moderate: "SI-4"
+  pci_dss_v4.0: "10.2.1"
+  soc2: "CC7.1"
+  hipaa: "164.312(b)"
+scope_tags:
+  - aws
+  - waf
+type: unsafe_state
+params:
+  base_impact: 8
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 1.5
+remediation:
+  description: >
+    WAF Web ACL does not have full request body inspection enabled or
+    sampled allowed-request logging is not active. Payloads embedded in
+    request bodies are invisible to WAF rules, and successful bypass
+    attempts leave no forensic record.
+  action: >
+    Enable full request body inspection on the Web ACL and increase the
+    body size inspection limit beyond the default 8KB to cover modern API
+    payloads. Enable sampled request logging for allowed requests — not
+    only blocked requests. For AWS WAF, configure the Web ACL body
+    inspection to inspect the full body and enable request sampling via
+    the AWS WAF console or UpdateWebACL API. Reference: HackerOne
+    report #2921905 documents a WAF bypass via CRLF injection that would
+    be detectable with full body inspection and request sampling.
+  example: |
+    {
+      "waf": {
+        "kind": "web_acl",
+        "evasion_observability": {
+          "enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.waf.kind
+      op: eq
+      value: web_acl
+    - field: properties.waf.evasion_observability.enabled
+      op: eq
+      value: false

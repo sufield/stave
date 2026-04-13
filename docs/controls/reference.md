@@ -3,22 +3,22 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 299
-**Pack hash:** `bb2dbf290c81e9e4d2c8fe51092821fd214a620c77b06a55653ba5975db4996d`
+**Total controls:** 301
+**Pack hash:** `a1e723143cfa85601a085d33a8dd8233884412c5933af45da80755b84d9e6634`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 54 |
-| high | 124 |
+| critical | 55 |
+| high | 125 |
 | info | 16 |
 | low | 22 |
 | medium | 83 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 216 |
+| exposure | 218 |
 | governance | 7 |
 | identity | 68 |
 | storage | 8 |
@@ -4356,6 +4356,21 @@ Security group rules must not allow ingress from 0.0.0.0/0 on sensitive ports (S
 
 ---
 
+### CTL.WAF.EVASION.OBSERVE.001
+
+**WAF Must Have Full Body Inspection and Request Sampling Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SI-4; hipaa: 164.312(b); nist_800_53_r5: SI-4; pci_dss_v4.0: 10.2.1; soc2: CC7.1;
+
+WAF Web ACLs must have full request body inspection enabled and sampled allowed-request logging active. Signature-based WAF rules can be evaded through encoding techniques such as CRLF injection, Unicode surrogate pairs, and HTML parser confusion. HackerOne report #2921905 documents a WAF bypass using CRLF and HTML attribute confusion that evaded Cloudflare rule matching entirely. Prevention of encoding evasion is a vendor responsibility, but the organization must ensure that when evasion occurs it is observable. Without full body inspection, payloads in POST bodies, JSON fields, and multipart uploads are invisible to all WAF rules. Without sampled allowed-request logging, successful bypass attempts leave no forensic trace — the organization cannot distinguish between no attacks and undetected attacks. This control differs from CTL.WAF.LOGGING.001 (which checks logging is enabled) by verifying the logging and inspection configuration captures enough detail to detect evasion patterns.
+
+**Remediation:** Enable full request body inspection on the Web ACL and increase the body size inspection limit beyond the default 8KB to cover modern API payloads. Enable sampled request logging for allowed requests — not only blocked requests. For AWS WAF, configure the Web ACL body inspection to inspect the full body and enable request sampling via the AWS WAF console or UpdateWebACL API. Reference: HackerOne report #2921905 documents a WAF bypass via CRLF injection that would be detectable with full body inspection and request sampling.
+
+---
+
 ### CTL.WAF.INCOMPLETE.001
 
 **Complete Data Required for WAF Assessment**
@@ -4397,6 +4412,21 @@ WAF web ACLs must have logging enabled to record blocked and allowed requests. W
 When a WAF Web ACL is associated with an origin server (ALB, API Gateway, EC2 instance), the origin's network ingress controls must not permit inbound connections on application ports from the public internet. A WAF that sits in front of an origin provides zero protection if the origin also accepts direct connections from 0.0.0.0/0 or ::/0 — an attacker who discovers the origin IP address through Censys, Shodan, certificate transparency logs, historical DNS records, or timing analysis can send traffic directly to the origin, bypassing every WAF rule, DDoS protection, and rate limit. This is the architectural prerequisite for all other WAF controls — without origin lockdown, the entire WAF safety envelope is irrelevant regardless of how well the WAF rules are configured. HackerOne report (Linode) documents this exact pattern: an origin behind Cloudflare was discoverable via Censys, allowing direct unfiltered payload delivery and denial-of-service against the unprotected origin.
 
 **Remediation:** Restrict the origin's security group inbound rules on application ports (80, 443, custom) to allow traffic only from WAF or CDN provider IP ranges. For CloudFront, use the AWS-managed prefix list com.amazonaws.global.cloudfront.origin-facing in the security group rule. For regional ALBs behind AWS WAF, restrict to the WAF endpoint subnet CIDRs. Remove all 0.0.0.0/0 and ::/0 ingress rules on application ports.
+
+---
+
+### CTL.WAF.PARSERLIMIT.PROTECT.001
+
+**WAF Must Block Requests That Exceed Parser Limits**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SI-10; hipaa: 164.312(e)(1); nist_800_53_r5: SI-10; pci_dss_v4.0: 6.4.1; soc2: CC6.6;
+
+WAF Web ACLs must contain a highest-priority rule that detects when the WAF's internal parser limits have been exceeded and blocks the request. Every WAF has parser limits — maximum header count, maximum header size, maximum body size, maximum cookie count. When a request exceeds these limits, rule evaluation silently stops at the truncation point. Rules configured to inspect content beyond the limit never fire. The request passes through as if clean. A Cloudflare HackerOne report (High severity, $1,250 bounty, 2025-11-18) documented this: 94+ HTTP headers caused all WAF rules, cache key evaluation, and cache rules to bypass simultaneously. Cloudflare's mitigation: a rule checking http.request.headers.truncated at highest priority in BLOCK mode. This vulnerability class applies to every WAF vendor — the invariant is vendor-neutral. The parser limit protection rule must execute before all other rules. A rule at lower priority allows other rules to evaluate truncated content before the overflow is detected, creating a race condition attackers can exploit. This control is the prerequisite for all other WAF rule controls — if the parser can be overflowed, managed rules, OWASP coverage, and custom rules are irrelevant for any request designed to exceed the limit.
+
+**Remediation:** Add a rule at the highest priority position (priority 0 or the lowest numeric value) that detects parser overflow and blocks the request. For Cloudflare, check http.request.headers.truncated == true. For AWS WAF, use a size constraint rule checking header count or total header size against the documented parser limit. The rule must be in BLOCK mode — COUNT mode detects but does not prevent the bypass. Verify the rule has higher priority than all managed rule groups and custom rules in the Web ACL.
 
 ---
 
