@@ -94,6 +94,7 @@ packs:
       - CTL.S3.VERSION.001
       - CTL.RDS.ENGINE.EOL.001
       - CTL.APIGATEWAY.VALIDATION.001
+      - CTL.ECR.SIGNING.001
       # §164.312(d) — Person or Entity Authentication
       - CTL.COGNITO.MFA.001
       - CTL.COGNITO.PASSWORD.001
@@ -535,6 +536,7 @@ packs:
     controls:
       - CTL.ECR.PUBLIC.001
       - CTL.ECR.SCAN.001
+      - CTL.ECR.SIGNING.001
       - CTL.ECR.INCOMPLETE.001
   ec2:
     description: AWS EC2 compute security controls
@@ -1334,6 +1336,9 @@ controls:
   CTL.ECR.SCAN.001:
     path: internal/controldata/embedded/ecr/access/CTL.ECR.SCAN.001.yaml
     summary: Image Scanning Must Be Enabled
+  CTL.ECR.SIGNING.001:
+    path: internal/controldata/embedded/ecr/integrity/CTL.ECR.SIGNING.001.yaml
+    summary: ECR Repositories Must Have Image Signing Verification Enabled
   CTL.ECR.INCOMPLETE.001:
     path: internal/controldata/embedded/ecr/misc/CTL.ECR.INCOMPLETE.001.yaml
     summary: Complete Data Required for ECR Assessment

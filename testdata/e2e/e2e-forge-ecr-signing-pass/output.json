@@ -1,0 +1,42 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "cf7dface8aa278c9106f34c5be36d9ab0532f5ad665fcc1633692a46c3bbef1c",
+        "2026-01-11T000000Z.json": "c4833d4883506b394b4d19cfd8b0b7ffc2fb4b844851dab263f370f0a88c2d0d"
+      },
+      "overall": "95d3386f505c880790a8359edbe8910808a1099496de1e99dbe433eb60bbb1f4"
+    },
+    "policy_fingerprint": "ebe82eeaa699ef2b95377ed7ceb8e781819daf017ce9a8f5814d848a0fb6bce0"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-ecr-signing-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-ecr-signing-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "710ecc64d930aa52dae3ca8f105aed0d630309b5",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-ecr-signing-pass/controls/"
+      ]
+    }
+  }
+}

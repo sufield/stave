@@ -1,0 +1,57 @@
+dsl_version: ctrl.v1
+id: CTL.ECR.SIGNING.001
+name: ECR Repositories Must Have Image Signing Verification Enabled
+description: >
+  ECR repositories must have container image signing verification
+  configured in enforce mode. Image signing cryptographically verifies
+  that container images were built by a trusted source and have not been
+  tampered with. Without signing verification, any image pushed to the
+  repository — including one from a compromised CI/CD pipeline or supply
+  chain attack — can be deployed without proof of origin or integrity.
+  AWS ECR supports signing through AWS Signer with Notation and Sigstore
+  Cosign. Verification must be in enforce mode — audit mode detects
+  unsigned images but still allows deployment, providing observability
+  without protection. This mirrors the WAF COUNT vs BLOCK and Lambda
+  code signing Warn vs Enforce distinction.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-7"
+  fedramp_moderate: "SI-7"
+  pci_dss_v4.0: "6.3.2"
+  soc2: "CC7.1"
+  hipaa: "164.312(c)(1)"
+scope_tags:
+  - aws
+  - ecr
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    ECR repository does not have image signing verification configured
+    or verification is in audit mode only. Container images can be
+    deployed without cryptographic verification of origin or integrity.
+  action: >
+    Configure image signing using AWS Signer with Notation or Sigstore
+    Cosign. Set the ECR registry policy or repository policy to enforce
+    signature verification — unsigned or invalidly signed images must be
+    rejected at pull time. For Kubernetes workloads, configure an
+    admission controller (Kyverno, OPA Gatekeeper) to verify signatures.
+    For ECS, configure the ECR registry signing policy in enforce mode.
+  example: |
+    {
+      "container_registry": {
+        "kind": "repository",
+        "signing": {
+          "enforced": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container_registry.kind
+      op: eq
+      value: repository
+    - field: properties.container_registry.signing.enforced
+      op: eq
+      value: false

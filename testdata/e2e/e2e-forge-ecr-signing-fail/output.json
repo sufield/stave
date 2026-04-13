@@ -1,0 +1,120 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "f8a440086548ab3ab1738e885a9976b7ec10382be60a584a9ea7bdd5c12d3b80",
+        "2026-01-11T000000Z.json": "26bcbe0d192896f2b4b7a36917d84c5c320e27fb70437db739758330aaf54686"
+      },
+      "overall": "5d07cd5a5dc10b4ff11244983c5073b56ffdc8d4886cad16b01a566494d336a6"
+    },
+    "policy_fingerprint": "ebe82eeaa699ef2b95377ed7ceb8e781819daf017ce9a8f5814d848a0fb6bce0"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.ECR.SIGNING.001",
+      "asset_id": "arn:aws:ecr:us-east-1:123456789012:repository/prod-api",
+      "asset_type": "aws_ecr_repository",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.ECR.SIGNING.001",
+      "control_name": "ECR Repositories Must Have Image Signing Verification Enabled",
+      "control_description": "ECR repositories must have container image signing verification configured in enforce mode. Image signing cryptographically verifies that container images were built by a trusted source and have not been tampered with. Without signing verification, any image pushed to the repository — including one from a compromised CI/CD pipeline or supply chain attack — can be deployed without proof of origin or integrity. AWS ECR supports signing through AWS Signer with Notation and Sigstore Cosign. Verification must be in enforce mode — audit mode detects unsigned images but still allows deployment, providing observability without protection. This mirrors the WAF COUNT vs BLOCK and Lambda code signing Warn vs Enforce distinction.\n",
+      "asset_id": "arn:aws:ecr:us-east-1:123456789012:repository/prod-api",
+      "asset_type": "aws_ecr_repository",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "container_registry.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "repository"
+          },
+          {
+            "property": "container_registry.signing.enforced",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "fedramp_moderate": "SI-7",
+        "hipaa": "164.312(c)(1)",
+        "nist_800_53_r5": "SI-7",
+        "pci_dss_v4.0": "6.3.2",
+        "soc2": "CC7.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "ECR repository does not have image signing verification configured or verification is in audit mode only. Container images can be deployed without cryptographic verification of origin or integrity.",
+        "action": "Configure image signing using AWS Signer with Notation or Sigstore Cosign. Set the ECR registry policy or repository policy to enforce signature verification — unsigned or invalidly signed images must be rejected at pull time. For Kubernetes workloads, configure an admission controller (Kyverno, OPA Gatekeeper) to verify signatures. For ECS, configure the ECR registry signing policy in enforce mode.",
+        "example": "{\n  \"container_registry\": {\n    \"kind\": \"repository\",\n    \"signing\": {\n      \"enforced\": true\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.ECR.SIGNING.001",
+      "asset_id": "arn:aws:ecr:us-east-1:123456789012:repository/prod-api",
+      "exposure_score": 50,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-ecr-signing-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-ecr-signing-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "710ecc64d930aa52dae3ca8f105aed0d630309b5",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-ecr-signing-fail/controls/"
+      ]
+    }
+  }
+}

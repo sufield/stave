@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 313
-**Pack hash:** `a8d44203ca071da77c189c177f1e22382c84a34c53baa138d2604099dd694ae5`
+**Total controls:** 314
+**Pack hash:** `5b91ba39a16a4b5353ff7f283be198d4c6cf3fad41fb8e5786c54071e6f79fe0`
 
 ## Summary
 
@@ -14,11 +14,11 @@
 | high | 131 |
 | info | 16 |
 | low | 22 |
-| medium | 86 |
+| medium | 87 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 229 |
+| exposure | 230 |
 | governance | 7 |
 | identity | 69 |
 | storage | 8 |
@@ -1043,6 +1043,21 @@ ECR repositories must not be publicly accessible. A public ECR repository allows
 ECR repositories must have image scanning enabled (basic or enhanced). Without scanning, container images with known vulnerabilities are deployed to production undetected.
 
 **Remediation:** Enable scan-on-push in the repository configuration. For enhanced scanning, enable Amazon Inspector ECR integration.
+
+---
+
+### CTL.ECR.SIGNING.001
+
+**ECR Repositories Must Have Image Signing Verification Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SI-7; hipaa: 164.312(c)(1); nist_800_53_r5: SI-7; pci_dss_v4.0: 6.3.2; soc2: CC7.1;
+
+ECR repositories must have container image signing verification configured in enforce mode. Image signing cryptographically verifies that container images were built by a trusted source and have not been tampered with. Without signing verification, any image pushed to the repository — including one from a compromised CI/CD pipeline or supply chain attack — can be deployed without proof of origin or integrity. AWS ECR supports signing through AWS Signer with Notation and Sigstore Cosign. Verification must be in enforce mode — audit mode detects unsigned images but still allows deployment, providing observability without protection. This mirrors the WAF COUNT vs BLOCK and Lambda code signing Warn vs Enforce distinction.
+
+**Remediation:** Configure image signing using AWS Signer with Notation or Sigstore Cosign. Set the ECR registry policy or repository policy to enforce signature verification — unsigned or invalidly signed images must be rejected at pull time. For Kubernetes workloads, configure an admission controller (Kyverno, OPA Gatekeeper) to verify signatures. For ECS, configure the ECR registry signing policy in enforce mode.
 
 ---
 
