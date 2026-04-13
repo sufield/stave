@@ -27,6 +27,7 @@
 - [Shadow Logic Detection](shadow-logic.md) — NotAction/NotResource bypass, negative logic analysis
 - [KMS Concentration Risk](kms-concentration.md) — Cryptographic single point of failure detection
 - [Vendor Trust Leash](vendor-trust-leash.md) — Third-party SaaS access hygiene, ghost access detection
+- [Telemetry Bridge](telemetry-bridge.md) — NDJSON telemetry for dashboards, SIEM, and compliance trending
 - [Evidence Bundling](evidence-bundling.md) — Signed portable evidence for air-gap GRC integration
 - [Multi-Profile Evaluation](multi-profile.md) — Compliance compression, per-framework readiness, remediation ROI
 - [Remediation Ranking](remediation-ranking.md) — Prioritized roadmap, SLA urgency, remediation bundles

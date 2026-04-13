@@ -50,6 +50,15 @@ All commands ship in the standard `stave` binary. No build tags are required.
 | `enforce` | Generate enforcement output from evaluation | `--input` evaluation JSON | Enforcement artifacts | After `apply` to generate remediation artifacts |
 | `report` | Plain-text or JSON summary for stakeholders | `--in` evaluation JSON | Human-readable report | For auditors, management, or compliance documentation |
 
+## Telemetry & Integration
+
+| Command | Purpose | Input | Output | When to use |
+|---|---|---|---|---|
+| `telemetry` | Emit structured NDJSON from assessment | stdin or `--in` assessment JSON | One NDJSON line per finding | Feeding Splunk, Grafana, Elastic, or compliance trending pipelines |
+| `export` | Export controls to OPA Rego format | `--controls` dir | Rego policy file | Integrating Stave controls with Conftest or OPA |
+
+Telemetry supports `--severity` and `--resource` filters. Output is append-safe (NDJSON) and air-gap compatible.
+
 ## Forensics & Timeline
 
 | Command | Purpose | Input | Output | When to use |

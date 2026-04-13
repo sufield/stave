@@ -36,6 +36,7 @@ import (
 	"github.com/sufield/stave/cmd/prune"
 	staverank "github.com/sufield/stave/cmd/rank"
 	"github.com/sufield/stave/cmd/securityaudit"
+	stavetelemetry "github.com/sufield/stave/cmd/telemetry"
 	stavewatch "github.com/sufield/stave/cmd/watch"
 	artifact "github.com/sufield/stave/internal/adapters/artifacts"
 	infrabaseline "github.com/sufield/stave/internal/adapters/baseline"
@@ -164,6 +165,9 @@ func WireCommands(app *App) {
 
 	// Remediation ranking
 	root.AddCommand(staverank.NewCmd())
+
+	// Telemetry bridge
+	root.AddCommand(stavetelemetry.NewCmd())
 
 	// Supportability
 	root.AddCommand(doctor.NewCmd(doctor.Deps{
