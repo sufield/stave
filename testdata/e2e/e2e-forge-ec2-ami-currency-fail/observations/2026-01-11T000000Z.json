@@ -1,0 +1,24 @@
+{
+  "assets": [
+    {
+      "id": "i-0abc123def456789",
+      "properties": {
+        "compute": {
+          "ami": {
+            "is_deprecated_or_aged": true
+          },
+          "kind": "instance"
+        }
+      },
+      "type": "aws_ec2_instance",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  }
+}

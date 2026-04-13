@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 316
-**Pack hash:** `f7fb507e2d3aa0a87c09e160fcf5f9169e75278c9c26673d2ce4463b48bec909`
+**Total controls:** 317
+**Pack hash:** `25b8ccd08e8cbc3a0eaceafd16e0c6588ea0821c123075dd64a7999fc15f2775`
 
 ## Summary
 
@@ -14,11 +14,11 @@
 | high | 131 |
 | info | 16 |
 | low | 22 |
-| medium | 89 |
+| medium | 90 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 232 |
+| exposure | 233 |
 | governance | 7 |
 | identity | 69 |
 | storage | 8 |
@@ -925,6 +925,21 @@ The observation snapshot is missing required DynamoDB properties.
 DynamoDB tables must have point-in-time recovery (PITR) enabled. Without PITR, accidental deletes, application bugs, or ransomware that corrupts table data cannot be recovered. PITR provides continuous backups with per-second granularity for the last 35 days.
 
 **Remediation:** Enable PITR using aws dynamodb update-continuous-backups --table-name TABLE --point-in-time-recovery-specification PointInTimeRecoveryEnabled=true.
+
+---
+
+### CTL.EC2.AMI.CURRENCY.001
+
+**EC2 Instances Must Not Run Deprecated or End-of-Life AMIs**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SI-2; nist_800_53_r5: SI-2; pci_dss_v4.0: 6.3.3; soc2: CC7.1;
+
+EC2 instances must not run on AMIs that are deprecated by AWS or the AMI owner, or that exceed the maximum AMI age threshold (default 180 days). Deprecated AMIs represent an OS-level version currency gap — the underlying operating system, kernel, and pre-installed packages are not receiving security patches. Unlike Lambda runtimes and RDS engine versions where AWS manages the execution environment, EC2 AMIs are operator-selected and operator-maintained. SSM Patch Manager patches running instances but does not update the underlying AMI — when instances are replaced through auto-scaling or redeployment, they launch from the same aged AMI with accumulated patches missing. The 180-day default threshold represents two quarterly patching cycles with buffer. Organizations can override per-instance via a stave/ami-max-age-days tag.
+
+**Remediation:** Replace the instance with one launched from a current, non-deprecated AMI. For auto-scaling groups, update the launch template to reference a current AMI and perform a rolling replacement. For standalone instances, launch a replacement from a current AMI and migrate the workload. Establish an AMI refresh pipeline that builds updated AMIs on a regular cadence and deprecates old ones.
 
 ---
 
