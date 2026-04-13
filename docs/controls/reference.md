@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 311
-**Pack hash:** `626985e9f21da5030ddc0fcf4500534d5881d92580be37de7d5a6afeb6d6158c`
+**Total controls:** 312
+**Pack hash:** `8976ad9b7a5a64201e9b47c109e61740ce2f3e7a31feb844f42f06c2a5e4f11d`
 
 ## Summary
 
@@ -14,11 +14,11 @@
 | high | 131 |
 | info | 16 |
 | low | 22 |
-| medium | 84 |
+| medium | 85 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 228 |
+| exposure | 229 |
 | governance | 7 |
 | identity | 68 |
 | storage | 8 |
@@ -81,6 +81,21 @@ The observation snapshot is missing required API Gateway properties.
 API Gateway stages must enforce TLS 1.2 or higher. Allowing older TLS versions exposes API traffic to known cryptographic attacks (BEAST, POODLE, etc).
 
 **Remediation:** Set the minimum TLS version on the custom domain or API stage. For REST APIs, configure a security policy of TLS_1_2 on the custom domain name.
+
+---
+
+### CTL.APIGATEWAY.VALIDATION.001
+
+**API Gateway Must Have Request Validation Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SI-10; hipaa: 164.312(c)(1); nist_800_53_r5: SI-10; pci_dss_v4.0: 6.2.4; soc2: CC6.6;
+
+API Gateway REST APIs must have request validation configured. API Gateway can validate incoming requests against a defined schema — checking required parameters, parameter types and formats, and request body conformance to a JSON schema — before the request reaches the backend. Without validation, malformed and malicious inputs are forwarded to the backend uninspected. This is complementary to WAF protection: WAF managed rules detect known-malicious patterns (SQLi, XSS, known exploits), while request validation detects structural violations (missing fields, wrong types, malformed bodies). A backend that receives only structurally valid requests is harder to attack through injection because type confusion, null pointer paths, and unexpected field exploitation are blocked at the API boundary. Request validation is particularly valuable for APIs handling PHI or financial data where the backend may make trust assumptions about well-formed input.
+
+**Remediation:** Configure a request validator on the REST API via the API Gateway console or PutRestApi/UpdateMethod API. Define request models (JSON schemas) for endpoints that accept request bodies. Enable parameter validation for all methods. For REST APIs handling PHI or sensitive data, enable both parameter and body validation against defined model schemas.
 
 ---
 

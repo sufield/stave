@@ -92,6 +92,7 @@ packs:
       - CTL.CONFIG.RULES.001
       - CTL.S3.VERSION.001
       - CTL.RDS.ENGINE.EOL.001
+      - CTL.APIGATEWAY.VALIDATION.001
       # §164.312(d) — Person or Entity Authentication
       - CTL.COGNITO.MFA.001
       - CTL.IAM.CONSOLE.MFA.001
@@ -625,6 +626,7 @@ packs:
     controls:
       - CTL.APIGATEWAY.TLS.001
       - CTL.APIGATEWAY.AUTH.001
+      - CTL.APIGATEWAY.VALIDATION.001
       - CTL.APIGATEWAY.INCOMPLETE.001
   cloudtrail:
     description: AWS CloudTrail audit logging controls
@@ -1635,6 +1637,9 @@ controls:
   CTL.APIGATEWAY.INCOMPLETE.001:
     path: internal/controldata/embedded/apigateway/misc/CTL.APIGATEWAY.INCOMPLETE.001.yaml
     summary: Complete Data Required for API Gateway Assessment
+  CTL.APIGATEWAY.VALIDATION.001:
+    path: internal/controldata/embedded/apigateway/validation/CTL.APIGATEWAY.VALIDATION.001.yaml
+    summary: API Gateway Must Have Request Validation Enabled
   CTL.CLOUDTRAIL.ENABLED.001:
     path: internal/controldata/embedded/cloudtrail/logging/CTL.CLOUDTRAIL.ENABLED.001.yaml
     summary: CloudTrail Must Be Enabled in All Regions

@@ -1,0 +1,12 @@
+id: api_unvalidated_injection_path
+description: >
+  API Gateway has no request validation and no WAF coverage. Requests
+  reaching the backend are uninspected at both the schema conformance
+  layer and the known-attack-pattern layer. Injection payloads,
+  malformed inputs, and known exploit patterns all reach the backend
+  without any rejection at the API boundary.
+controls:
+  - CTL.APIGATEWAY.VALIDATION.001
+  - CTL.WAF.RULES.001
+escalation_threshold: 2
+compound_severity: high

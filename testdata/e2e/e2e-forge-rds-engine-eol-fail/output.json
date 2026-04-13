@@ -110,11 +110,8 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "450edddd4e9749a80454028777ef5fa2624fe8d4",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-rds-engine-eol-fail/controls/"
-      ]
+      "head_commit": "01d76f1295e5d2ccb0e64b4af0eec16f91f8accb",
+      "dirty": false
     }
   }
 }

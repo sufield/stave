@@ -1,0 +1,24 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:apigateway:us-east-1::/restapis/abc123",
+      "properties": {
+        "apigateway": {
+          "request_validation": {
+            "enabled": false
+          },
+          "kind": "rest_api"
+        }
+      },
+      "type": "aws_apigateway_rest_api",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  }
+}

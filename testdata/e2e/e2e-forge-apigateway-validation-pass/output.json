@@ -1,0 +1,42 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "c2bee058f6c0e5d8571a10d0b11b9b97a27575d461d216256cd63a86211e2aa1",
+        "2026-01-11T000000Z.json": "147c8413159628da174cac19d7d7b3f1fc237e676ff54b3ce0ef0167fb597523"
+      },
+      "overall": "232dc6a379935d5a22fc7ef5d92788f7fc2b8b6f86d3cd53e31d00adceda7521"
+    },
+    "policy_fingerprint": "a0ef06a4238be2c8eca3cb0f4dbbbf00b39039efa585a66fb5683b16ef1548c4"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-apigateway-validation-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-apigateway-validation-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "01d76f1295e5d2ccb0e64b4af0eec16f91f8accb",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-apigateway-validation-pass/controls/"
+      ]
+    }
+  }
+}
