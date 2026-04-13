@@ -123,37 +123,28 @@ func TestSafeMkdirAll_IntermediateSymlinkNotDetected(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// Bug 3: CheckSymlinkSafety silently succeeds at maxParentWalk depth
+// Bug 3 (FIXED): CheckSymlinkSafety accepts deep paths after cap raise
 // ---------------------------------------------------------------------------
 
-func TestCheckSymlinkSafety_DeepPathExceedsWalkLimit(t *testing.T) {
+func TestCheckSymlinkSafety_DeepPathAccepted(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("deep path test requires Unix")
 	}
 
 	base := t.TempDir()
 
-	// Build a path deeper than maxParentWalk (16 levels).
-	// None of the intermediate directories exist.
-	parts := make([]string, maxParentWalk+5)
+	// Build a 25-level deep path. With maxPathDepth=512, the walk
+	// reaches the existing base dir without hitting the limit.
+	parts := make([]string, 25)
 	parts[0] = base
 	for i := 1; i < len(parts); i++ {
 		parts[i] = "d"
 	}
 	deepPath := filepath.Join(parts...)
 
-	// Create a symlink at a level above maxParentWalk.
-	// CheckSymlinkSafety should either walk all the way to the root
-	// or return an error if it hits the walk limit without finding
-	// an existing path component.
 	err := CheckSymlinkSafety(deepPath)
-
-	// BUG: The current implementation silently returns nil after hitting
-	// maxParentWalk without finding an existing ancestor. A correct
-	// implementation should return an error — an unresolvable path
-	// should not be assumed safe.
-	if err == nil {
-		t.Error("CheckSymlinkSafety should return an error when walk limit is exhausted without finding an existing ancestor")
+	if err != nil {
+		t.Errorf("deep path should be accepted with raised cap: %v", err)
 	}
 }
 

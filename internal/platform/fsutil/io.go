@@ -266,8 +266,10 @@ func SafeOpenAppend(path string, opts WriteOptions) (*os.File, error) {
 	return f, nil
 }
 
-// maxParentWalk is a safety cap to prevent infinite loops on malformed paths.
-const maxParentWalk = 16
+// maxPathDepth is a safety cap to prevent infinite loops on malformed paths.
+// It is not a policy limit on path depth — 512 is unreachable on any real
+// filesystem (Linux PATH_MAX is 4096 bytes).
+const maxPathDepth = 512
 
 // CheckSymlinkSafety checks the target and its first existing ancestor for symlinks.
 // Callers that obtain a file handle should also use verifyHandle for TOCTOU-safe
@@ -275,7 +277,7 @@ const maxParentWalk = 16
 func CheckSymlinkSafety(path string) error {
 	cur := filepath.Clean(path)
 
-	for range maxParentWalk {
+	for range maxPathDepth {
 		fi, err := os.Lstat(cur)
 		if err == nil {
 			if fi.Mode()&os.ModeSymlink != 0 {
@@ -294,7 +296,7 @@ func CheckSymlinkSafety(path string) error {
 		cur = parent
 	}
 
-	return fmt.Errorf("security check failed for %q: path too deep (exceeded %d ancestor checks)", path, maxParentWalk)
+	return fmt.Errorf("security check failed for %q: path depth exceeds safety limit of %d components", path, maxPathDepth)
 }
 
 // verifyHandle confirms the opened file handle points to the same inode as the

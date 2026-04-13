@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"slices"
+	"strings"
 
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/platform/crypto"
@@ -43,9 +44,7 @@ func (v *Validator) Verify(m Manifest) error {
 			}
 		}
 		slices.Sort(extra)
-		if len(extra) > 0 {
-			return fmt.Errorf("%w: %s", ErrUntrustedFile, extra[0])
-		}
+		return fmt.Errorf("%w: %s", ErrUntrustedFile, strings.Join(extra, ", "))
 	}
 
 	if v.ActualHashes.Overall != m.Overall {
