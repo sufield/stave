@@ -51,7 +51,7 @@ Every score is a **deterministic, traceable reasoning chain**. Compound scores s
 
 ## Features
 
-- **306 built-in controls** across 37 domains (S3, IAM, VPC, EC2, RDS, ELB, K8s, CloudTrail, CloudWatch, KMS, and [27 more](docs/controls/reference.md))
+- **307 built-in controls** across 37 domains (S3, IAM, VPC, EC2, RDS, ELB, K8s, CloudTrail, CloudWatch, KMS, and [27 more](docs/controls/reference.md))
 - **10 compliance profiles** — HIPAA, CIS AWS v3.0, SOC 2, PCI-DSS v4.0, NIST 800-53, FedRAMP, GDPR, FFIEC, ISO 27001, NIST CSF 2.0
 - **Risk reasoning engine** — compound risk scoring across co-failing controls, MITRE-aligned attack stage summary, blast radius multipliers
 - **Safety chains** — 15 built-in chain definitions detect compound failures across data protection, identity, detection, recovery, sovereignty, supply chain, and cryptographic concentration
@@ -152,9 +152,9 @@ New observation properties are additive and backward-compatible. Existing contro
 
 ## Built-in controls
 
-306 controls across 37 domains:
+307 controls across 37 domains:
 
-### AWS S3 (67 controls)
+### AWS S3 (68 controls)
 
 | Category | Count | What they detect |
 |----------|:---:|-----------------|
@@ -167,7 +167,7 @@ New observation properties are additive and backward-compatible. Existing contro
 | `lock` | 3 | Object lock mode, retention period |
 | `logging` | 4 | Access logging, CloudTrail object-level audit |
 | `lifecycle` | 2 | Lifecycle rules, PHI retention |
-| `governance` | 1 | Data classification tags |
+| `governance` | 2 | Data classification tags |
 | `write_scope` | 2 | Upload scope, content type restriction |
 | `tenant` | 1 | Prefix-based tenant isolation |
 | `takeover` | 2 | Dangling bucket references, CDN origins |

@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 320
-**Pack hash:** `e4511b2185f4d3f18e7ccb1b1a319a3be45dd5514d5d87b144ccc7cfef126d47`
+**Total controls:** 321
+**Pack hash:** `1d091a401f21be1219fe7ef7cb0d8ed6c0ec75e99d4ea05b16b54a3c5868e3e1`
 
 ## Summary
 
@@ -14,11 +14,11 @@
 | high | 132 |
 | info | 16 |
 | low | 22 |
-| medium | 92 |
+| medium | 93 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 235 |
+| exposure | 236 |
 | governance | 7 |
 | identity | 70 |
 | storage | 8 |
@@ -3570,6 +3570,21 @@ When S3 objects are served via CloudFront, Origin Access Control (OAC) should be
 **Remediation:** 1. Create an Origin Access Control for the distribution. 2. Update the distribution origin to use OAC instead of OAI. 3. Update the bucket policy to grant cloudfront.amazonaws.com
    with a Condition restricting to the distribution ARN.
 4. Remove the legacy OAI.
+
+---
+
+### CTL.S3.CLASSIFY.COVERAGE.001
+
+**All S3 Buckets Must Have a Data Classification Tag**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 2.1.3; fedramp_moderate: CM-8; gdpr: Art.30; hipaa: 164.308(a)(1)(ii)(A); nist_800_53_r5: CM-8; pci_dss_v4.0: 12.5.2; soc2: CC6.1;
+
+Every S3 bucket must have a data-classification tag with a value from the recognized taxonomy (phi, pii, confidential, internal, public, non-sensitive). The data-classification tag is the gating condition for the majority of Stave's sensitive data controls — PHI encryption, Object Lock, Macie scanning, lifecycle retention, and access scoping are all conditional on this tag. A bucket without the tag silently passes all tag-conditional controls regardless of its actual contents. CIS 2.1.3 requires that all S3 data is discovered, classified, and secured. This control establishes the classification baseline — it does not verify what classification was applied, only that every bucket has been explicitly classified so downstream controls can evaluate it.
+
+**Remediation:** Apply a data-classification tag to the bucket with a value from the recognized taxonomy: phi, pii, confidential, internal, public, or non-sensitive. Use AWS Tag Editor or the S3 PutBucketTagging API to apply tags. Establish a tagging policy requiring classification at bucket creation time. Use AWS Config rules or SCPs to enforce mandatory tagging.
 
 ---
 

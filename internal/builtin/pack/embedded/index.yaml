@@ -19,6 +19,8 @@ packs:
       - CTL.ELB.CROSSZONE.001
       - CTL.RDS.BACKUP.001
       - CTL.RDS.MULTIAZ.001
+      # §164.308(a)(1)(ii)(A) — Risk Analysis
+      - CTL.S3.CLASSIFY.COVERAGE.001
       # §164.312(a)(1) — Access Control
       - CTL.IAM.POLICY.DIRECT.001
       - CTL.IAM.POLICY.INLINE.001
@@ -857,6 +859,7 @@ packs:
       - CTL.S3.ENCRYPT.003
       - CTL.S3.ENCRYPT.004
       - CTL.S3.GOVERNANCE.001
+      - CTL.S3.CLASSIFY.COVERAGE.001
       - CTL.S3.REGION.001
       - CTL.S3.INCOMPLETE.001
       - CTL.S3.LIFECYCLE.001
@@ -956,6 +959,9 @@ controls:
   CTL.S3.GOVERNANCE.001:
     path: internal/controldata/embedded/s3/governance/CTL.S3.GOVERNANCE.001.yaml
     summary: Data Classification Tag Required
+  CTL.S3.CLASSIFY.COVERAGE.001:
+    path: internal/controldata/embedded/s3/governance/CTL.S3.CLASSIFY.COVERAGE.001.yaml
+    summary: All S3 Buckets Must Have a Data Classification Tag
   CTL.S3.LIFECYCLE.001:
     path: internal/controldata/embedded/s3/lifecycle/CTL.S3.LIFECYCLE.001.yaml
     summary: Retention-Tagged Buckets Must Have Lifecycle Rules
