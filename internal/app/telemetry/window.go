@@ -40,8 +40,3 @@ func (w *WindowTracker) CloseAbsent(currentFindings map[string]bool) []string {
 	}
 	return closed
 }
-
-// FindingKey returns the tracking key for a (resource, control) pair.
-func FindingKey(resourceID, controlID string) string {
-	return resourceID + "/" + controlID
-}

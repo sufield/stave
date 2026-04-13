@@ -1,0 +1,13 @@
+id: guardrail_blindspot
+description: >
+  Multiple enforcement layers are simultaneously in non-enforcing or
+  degraded state. Documented security controls are present but not
+  functioning. Breaches occurring during this window are undetected
+  and unchallenged.
+controls:
+  - CTL.WAF.RULES.BLOCKMODE.001
+  - CTL.WAF.RULES.OWASP.001
+  - CTL.GUARDDUTY.SUPPRESSION.001
+  - CTL.CONFIG.RULE.STATUS.001
+escalation_threshold: 2
+compound_severity: critical

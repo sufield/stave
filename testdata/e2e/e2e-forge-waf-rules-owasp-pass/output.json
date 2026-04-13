@@ -1,0 +1,42 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "2c3124d8867edb0a5caf4b17992b351ee48ac60bd0c4adac62733cc2d5a50794",
+        "2026-01-11T000000Z.json": "76d349c8a23eb780f3a18000da45ca10b9dca7cb46fe82a1b16b99e74de958d0"
+      },
+      "overall": "b783478eb5c50e11c24b9fd7a85baacf1f85f064e1ee17d68b30e1465a6a0919"
+    },
+    "policy_fingerprint": "f39241184acc652315d01bc1dfb5ebe3560b474c08ee2c0da6fb2a5d42c97211"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-waf-rules-owasp-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-waf-rules-owasp-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "016a3de4529b74e2c7f89a202aec81cdb67a8cab",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-waf-rules-owasp-pass/controls/"
+      ]
+    }
+  }
+}

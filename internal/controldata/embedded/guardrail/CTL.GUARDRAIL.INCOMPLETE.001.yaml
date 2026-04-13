@@ -1,0 +1,26 @@
+dsl_version: ctrl.v1
+id: CTL.GUARDRAIL.INCOMPLETE.001
+name: Complete Data Required for Safety Mechanism Integrity Assessment
+domain: governance
+description: >
+  Safety mechanism integrity control. Checks that security guardrails
+  are actively enforcing, not just present.
+severity: low
+scope_tags:
+  - aws
+  - guardrail
+type: unsafe_state
+params:
+  base_impact: 2
+remediation:
+  description: >
+    Safety mechanism integrity check detected a guardrail in non-enforcing
+    or degraded state.
+  action: >
+    Review the specific guardrail identified in this finding and restore
+    it to an enforcing state.
+unsafe_predicate:
+  all:
+    - field: properties.guardrail.integrity_data_complete
+      op: eq
+      value: false

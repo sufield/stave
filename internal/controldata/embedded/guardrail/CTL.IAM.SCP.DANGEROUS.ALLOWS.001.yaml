@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SCP.DANGEROUS.ALLOWS.001
+name: SCPs Must Not Explicitly Allow Dangerous Administrative Actions
+description: >
+  SCPs must not contain Allow statements for actions that undermine the
+  organization's security posture: audit evasion (DeleteTrail, StopLogging,
+  DeleteDetector), data destruction (DeleteBucket, ScheduleKeyDeletion),
+  boundary removal (DeletePolicy, DetachPolicy), or privilege escalation
+  (CreatePolicyVersion, AttachRolePolicy). An Allow for these actions signals
+  that someone has deliberately removed the organizational-level protection.
+  To determine when the Allow was introduced, run stave bisect with this
+  control against the snapshot archive.
+domain: identity
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-6"
+  fedramp_moderate: "AC-6"
+  iso_27001_2022: "A.8.3"
+  pci_dss_v4.0: "7.2.1"
+  soc2: "CC6.1"
+scope_tags:
+  - aws
+  - scp
+type: unsafe_state
+params:
+  base_impact: 10
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    An SCP explicitly allows dangerous administrative actions that undermine
+    audit trails, data protection, or organizational guardrails.
+  action: >
+    Remove the Allow statements for dangerous actions from the SCP. If the
+    actions are legitimately needed, scope them to specific resources or
+    conditions rather than blanket Allow. Use stave bisect to determine
+    when the Allow statement was introduced.
+unsafe_predicate:
+  all:
+    - field: properties.scp.has_dangerous_allows
+      op: eq
+      value: true

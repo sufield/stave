@@ -3,24 +3,24 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 289
-**Pack hash:** `0df9fcd37068cfd3294f0963b681ec752db44db884a1fcd0285d65b828a615a3`
+**Total controls:** 298
+**Pack hash:** `aa88ab8ec2ddb0a1d24c6db18eb0a7fc9cfd11443b30b1f958c43f57ff0a5470`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 50 |
-| high | 119 |
+| critical | 53 |
+| high | 124 |
 | info | 16 |
-| low | 21 |
+| low | 22 |
 | medium | 83 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 213 |
-| governance | 2 |
-| identity | 66 |
+| exposure | 215 |
+| governance | 7 |
+| identity | 68 |
 | storage | 8 |
 
 ## Controls
@@ -737,6 +737,36 @@ The observation snapshot is missing required AWS Config properties.
 
 ---
 
+### CTL.CONFIG.REMEDIATION.001
+
+**Critical Config Rules Must Have Automatic Remediation**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-6; nist_800_53_r5: CM-6; pci_dss_v4.0: 6.3.2; soc2: CC7.1;
+
+Safety mechanism integrity control. Checks that security guardrails are actively enforcing, not just present.
+
+**Remediation:** Review the specific guardrail identified in this finding and restore it to an enforcing state.
+
+---
+
+### CTL.CONFIG.RULE.STATUS.001
+
+**Config Rules Must Not Be in ERROR State**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-3; nist_800_53_r5: CM-3; soc2: CC7.1;
+
+Safety mechanism integrity control. Checks that security guardrails are actively enforcing, not just present.
+
+**Remediation:** Review the specific guardrail identified in this finding and restore it to an enforcing state.
+
+---
+
 ### CTL.CONFIG.RULES.001
 
 **AWS Config Must Have Active Rules**
@@ -1424,6 +1454,35 @@ GuardDuty must be enabled to provide continuous threat detection. It analyzes Cl
 The observation snapshot is missing required GuardDuty properties.
 
 **Remediation:** Ensure the extractor calls aws guardduty list-detectors and get-detector.
+
+---
+
+### CTL.GUARDDUTY.SUPPRESSION.001
+
+**GuardDuty Must Not Have Broad Suppression Rules**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: SI-4; iso_27001_2022: A.8.16; nist_800_53_r5: SI-4; soc2: CC7.1;
+
+Safety mechanism integrity control. Checks that security guardrails are actively enforcing, not just present.
+
+**Remediation:** Review the specific guardrail identified in this finding and restore it to an enforcing state.
+
+---
+
+### CTL.GUARDRAIL.INCOMPLETE.001
+
+**Complete Data Required for Safety Mechanism Integrity Assessment**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+
+Safety mechanism integrity control. Checks that security guardrails are actively enforcing, not just present.
+
+**Remediation:** Review the specific guardrail identified in this finding and restore it to an enforcing state.
 
 ---
 
@@ -2160,6 +2219,21 @@ The root account must not be used for day-to-day operations. Root activity shoul
 
 ---
 
+### CTL.IAM.SCP.DANGEROUS.ALLOWS.001
+
+**SCPs Must Not Explicitly Allow Dangerous Administrative Actions**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.8.3; nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+SCPs must not contain Allow statements for actions that undermine the organization's security posture: audit evasion (DeleteTrail, StopLogging, DeleteDetector), data destruction (DeleteBucket, ScheduleKeyDeletion), boundary removal (DeletePolicy, DetachPolicy), or privilege escalation (CreatePolicyVersion, AttachRolePolicy). An Allow for these actions signals that someone has deliberately removed the organizational-level protection. To determine when the Allow was introduced, run stave bisect with this control against the snapshot archive.
+
+**Remediation:** Remove the Allow statements for dangerous actions from the SCP. If the actions are legitimately needed, scope them to specific resources or conditions rather than blanket Allow. Use stave bisect to determine when the Allow statement was introduced.
+
+---
+
 ### CTL.IAM.SCP.FULLACCESS.001
 
 **Organizations Must Not Rely Solely on FullAWSAccess SCP**
@@ -2172,6 +2246,21 @@ The root account must not be used for day-to-day operations. Root activity shoul
 AWS Organizations must have restrictive Service Control Policies beyond the default FullAWSAccess SCP. An organization that only has FullAWSAccess applied has no organizational guardrails — any IAM permission granted within a member account is allowed, including access to unused services that expand the attack surface.
 
 **Remediation:** Create restrictive SCPs that deny unused services and dangerous actions. Apply them to organizational units. Keep FullAWSAccess on the root but add deny-based SCPs to OUs that restrict the effective permissions.
+
+---
+
+### CTL.IAM.SCP.OU.COVERAGE.001
+
+**Production OUs Must Have Restrictive SCPs**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.8.22; nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+Safety mechanism integrity control. Checks that security guardrails are actively enforcing, not just present.
+
+**Remediation:** Review the specific guardrail identified in this finding and restore it to an enforcing state.
 
 ---
 
@@ -4030,6 +4119,21 @@ The observation snapshot is missing required Security Hub properties.
 
 ---
 
+### CTL.SECURITYHUB.STANDARDS.001
+
+**Security Hub Must Have Relevant Standards Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: SI-4; nist_800_53_r5: SI-4; pci_dss_v4.0: 11.3.1; soc2: CC7.1;
+
+Safety mechanism integrity control. Checks that security guardrails are actively enforcing, not just present.
+
+**Remediation:** Review the specific guardrail identified in this finding and restore it to an enforcing state.
+
+---
+
 ### CTL.SNS.ENCRYPT.001
 
 **SNS Topics Must Be Encrypted with KMS**
@@ -4293,6 +4397,36 @@ WAF web ACLs must have logging enabled to record blocked and allowed requests. W
 WAF web ACLs must include AWS managed rule groups for common attack patterns (SQLi, XSS, known bad inputs). Without managed rules, the WAF provides no baseline protection against OWASP Top 10 attacks.
 
 **Remediation:** Add AWS managed rule groups to the web ACL: AWSManagedRulesCommonRuleSet, AWSManagedRulesSQLiRuleSet, AWSManagedRulesKnownBadInputsRuleSet.
+
+---
+
+### CTL.WAF.RULES.BLOCKMODE.001
+
+**WAF Rules Must Be in BLOCK Mode, Not COUNT Mode**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SI-3; nist_800_53_r5: SI-3; pci_dss_v4.0: 6.4.1; soc2: CC6.6;
+
+All WAF rules and rule groups must have their effective action set to BLOCK. A rule in COUNT mode observes and logs attacks but does not block them. AWS WAF defaults newly added rules to COUNT mode during tuning. This becomes a permanent misconfiguration when teams never transition to BLOCK. The WAF appears active in every compliance report while blocking nothing. COUNT mode may be intentional during tuning — the stave/waf-count-mode-justified tag documents this exception.
+
+**Remediation:** Transition COUNT-mode rules to BLOCK mode. If COUNT mode is intentional during tuning, add a stave/waf-count-mode-justified tag to the WebACL with the justification (e.g., ticket number).
+
+---
+
+### CTL.WAF.RULES.OWASP.001
+
+**WAF Must Have OWASP Core Rule Coverage**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SI-3; nist_800_53_r5: SI-3; owasp_top10_2021: A03; pci_dss_v4.0: 6.4.1; soc2: CC6.6;
+
+WAF web ACLs must include the three core AWS managed rule groups that cover OWASP Top 10 attack categories: AWSManagedRulesCommonRuleSet (XSS, path traversal, HTTP violations), AWSManagedRulesSQLiRuleSet (SQL injection), and AWSManagedRulesKnownBadInputsRuleSet (Log4Shell, deserialization, known CVE payloads). All three groups must be attached and enforcing in BLOCK mode. A WAF with custom rules only, or with managed rule groups that cover IP reputation or bot management but not OWASP attack categories, provides incomplete coverage. This control differs from CTL.WAF.RULES.001 (which checks for any managed rules) by requiring the specific groups needed for baseline OWASP coverage. HackerOne report #382625 documents a stored XSS bypass against a production WAF that was active and blocking with custom rules but lacked AWSManagedRulesCommonRuleSet — the payload used a marquee element with an inline event handler, a known vector covered by the CrossSiteScripting_BODY rule in the common rule set.
+
+**Remediation:** Add the following AWS managed rule groups to the web ACL and ensure each is in BLOCK mode with no COUNT override at the group level or rule action override level: (1) AWSManagedRulesCommonRuleSet — covers XSS, path traversal, common exploits, (2) AWSManagedRulesSQLiRuleSet — covers SQL injection attack patterns, (3) AWSManagedRulesKnownBad InputsRuleSet — covers known CVE exploits including Log4j and Spring4Shell.
 
 ---
 

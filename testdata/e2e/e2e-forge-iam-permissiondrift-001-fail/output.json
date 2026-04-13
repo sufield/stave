@@ -117,11 +117,8 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "d6dcd041b6885c7885737981755a62c942e9efa7",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-iam-permissiondrift-001-fail/controls/"
-      ]
+      "head_commit": "016a3de4529b74e2c7f89a202aec81cdb67a8cab",
+      "dirty": false
     }
   }
 }

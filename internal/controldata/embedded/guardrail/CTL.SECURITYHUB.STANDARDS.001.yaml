@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.SECURITYHUB.STANDARDS.001
+name: Security Hub Must Have Relevant Standards Enabled
+domain: governance
+description: >
+  Safety mechanism integrity control. Checks that security guardrails
+  are actively enforcing, not just present.
+severity: high
+compliance:
+  nist_800_53_r5: "SI-4"
+  fedramp_moderate: "SI-4"
+  pci_dss_v4.0: "11.3.1"
+  soc2: "CC7.1"
+scope_tags:
+  - aws
+  - securityhub
+type: unsafe_state
+params:
+  base_impact: 7
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Safety mechanism integrity check detected a guardrail in non-enforcing
+    or degraded state.
+  action: >
+    Review the specific guardrail identified in this finding and restore
+    it to an enforcing state.
+unsafe_predicate:
+  all:
+    - field: properties.securityhub.missing_required_standards
+      op: eq
+      value: true

@@ -1,0 +1,10 @@
+id: scp_governance_collapse
+description: >
+  SCPs explicitly permit dangerous administrative actions AND production
+  OUs lack restrictive SCP coverage. Organizational guardrails have
+  failed at both the policy content level and the coverage level.
+controls:
+  - CTL.IAM.SCP.DANGEROUS.ALLOWS.001
+  - CTL.IAM.SCP.OU.COVERAGE.001
+escalation_threshold: 2
+compound_severity: critical

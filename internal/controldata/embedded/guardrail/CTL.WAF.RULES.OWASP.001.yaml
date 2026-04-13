@@ -1,0 +1,71 @@
+dsl_version: ctrl.v1
+id: CTL.WAF.RULES.OWASP.001
+name: WAF Must Have OWASP Core Rule Coverage
+description: >
+  WAF web ACLs must include the three core AWS managed rule groups that
+  cover OWASP Top 10 attack categories: AWSManagedRulesCommonRuleSet
+  (XSS, path traversal, HTTP violations), AWSManagedRulesSQLiRuleSet
+  (SQL injection), and AWSManagedRulesKnownBadInputsRuleSet (Log4Shell,
+  deserialization, known CVE payloads). All three groups must be attached
+  and enforcing in BLOCK mode. A WAF with custom rules only, or with
+  managed rule groups that cover IP reputation or bot management but not
+  OWASP attack categories, provides incomplete coverage. This control
+  differs from CTL.WAF.RULES.001 (which checks for any managed rules)
+  by requiring the specific groups needed for baseline OWASP coverage.
+  HackerOne report #382625 documents a stored XSS bypass against a
+  production WAF that was active and blocking with custom rules but
+  lacked AWSManagedRulesCommonRuleSet — the payload used a marquee
+  element with an inline event handler, a known vector covered by
+  the CrossSiteScripting_BODY rule in the common rule set.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SI-3"
+  fedramp_moderate: "SI-3"
+  pci_dss_v4.0: "6.4.1"
+  soc2: "CC6.6"
+  owasp_top10_2021: "A03"
+scope_tags:
+  - aws
+  - waf
+type: unsafe_state
+params:
+  base_impact: 8
+  attack_stage: initial_access
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 1.5
+remediation:
+  description: >
+    WAF web ACL is missing one or more of the three required OWASP core
+    rule groups, or the groups are attached but overridden to COUNT mode.
+    Custom blacklist rules do not satisfy this requirement — HackerOne
+    report #382625 demonstrates a WAF bypass where a blacklist-based WAF
+    failed to block a known XSS vector that AWSManagedRulesCommonRuleSet
+    covers explicitly.
+  action: >
+    Add the following AWS managed rule groups to the web ACL and ensure
+    each is in BLOCK mode with no COUNT override at the group level or
+    rule action override level: (1) AWSManagedRulesCommonRuleSet — covers
+    XSS, path traversal, common exploits, (2) AWSManagedRulesSQLiRuleSet
+    — covers SQL injection attack patterns, (3) AWSManagedRulesKnownBad
+    InputsRuleSet — covers known CVE exploits including Log4j and
+    Spring4Shell.
+  example: |
+    {
+      "waf": {
+        "kind": "web_acl",
+        "rules": {
+          "has_owasp_coverage": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.waf.kind
+      op: eq
+      value: web_acl
+    - field: properties.waf.rules.has_owasp_coverage
+      op: eq
+      value: false

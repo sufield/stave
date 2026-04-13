@@ -577,6 +577,7 @@ packs:
     description: AWS WAF web application firewall controls
     controls:
       - CTL.WAF.RULES.001
+      - CTL.WAF.RULES.OWASP.001
       - CTL.WAF.LOGGING.001
       - CTL.WAF.INCOMPLETE.001
   route53:
@@ -763,6 +764,15 @@ packs:
       - CTL.IAM.ROLE.INTENTTAG.001
       - CTL.IAM.ROLE.INTENTMISMATCH.001
       - CTL.IAM.ROLE.ENTROPY.INCOMPLETE.001
+      - CTL.WAF.RULES.BLOCKMODE.001
+      - CTL.WAF.RULES.OWASP.001
+      - CTL.IAM.SCP.DANGEROUS.ALLOWS.001
+      - CTL.IAM.SCP.OU.COVERAGE.001
+      - CTL.CONFIG.REMEDIATION.001
+      - CTL.CONFIG.RULE.STATUS.001
+      - CTL.GUARDDUTY.SUPPRESSION.001
+      - CTL.SECURITYHUB.STANDARDS.001
+      - CTL.GUARDRAIL.INCOMPLETE.001
       - CTL.IAM.ZT.PERIMETER.001
       - CTL.IAM.ZT.SHORTLIVED.001
       - CTL.IAM.CROSSCLOUD.ADMIN.001
@@ -1102,6 +1112,33 @@ controls:
   CTL.IAM.ROLE.ENTROPY.INCOMPLETE.001:
     path: internal/controldata/embedded/iam/entropy/CTL.IAM.ROLE.ENTROPY.INCOMPLETE.001.yaml
     summary: Complete Data Required for Entitlement Entropy Assessment
+  CTL.WAF.RULES.BLOCKMODE.001:
+    path: internal/controldata/embedded/guardrail/CTL.WAF.RULES.BLOCKMODE.001.yaml
+    summary: WAF Rules Must Be in BLOCK Mode, Not COUNT Mode
+  CTL.WAF.RULES.OWASP.001:
+    path: internal/controldata/embedded/guardrail/CTL.WAF.RULES.OWASP.001.yaml
+    summary: WAF Must Have OWASP Core Rule Coverage
+  CTL.IAM.SCP.DANGEROUS.ALLOWS.001:
+    path: internal/controldata/embedded/guardrail/CTL.IAM.SCP.DANGEROUS.ALLOWS.001.yaml
+    summary: SCPs Must Not Explicitly Allow Dangerous Administrative Actions
+  CTL.IAM.SCP.OU.COVERAGE.001:
+    path: internal/controldata/embedded/guardrail/CTL.IAM.SCP.OU.COVERAGE.001.yaml
+    summary: Production OUs Must Have Restrictive SCPs
+  CTL.CONFIG.REMEDIATION.001:
+    path: internal/controldata/embedded/guardrail/CTL.CONFIG.REMEDIATION.001.yaml
+    summary: Critical Config Rules Must Have Automatic Remediation
+  CTL.CONFIG.RULE.STATUS.001:
+    path: internal/controldata/embedded/guardrail/CTL.CONFIG.RULE.STATUS.001.yaml
+    summary: Config Rules Must Not Be in ERROR State
+  CTL.GUARDDUTY.SUPPRESSION.001:
+    path: internal/controldata/embedded/guardrail/CTL.GUARDDUTY.SUPPRESSION.001.yaml
+    summary: GuardDuty Must Not Have Broad Suppression Rules
+  CTL.SECURITYHUB.STANDARDS.001:
+    path: internal/controldata/embedded/guardrail/CTL.SECURITYHUB.STANDARDS.001.yaml
+    summary: Security Hub Must Have Relevant Standards Enabled
+  CTL.GUARDRAIL.INCOMPLETE.001:
+    path: internal/controldata/embedded/guardrail/CTL.GUARDRAIL.INCOMPLETE.001.yaml
+    summary: Complete Data Required for Safety Mechanism Integrity Assessment
   CTL.IAM.POLICY.ASSUMEROLE.001:
     path: internal/controldata/embedded/iam/policy/CTL.IAM.POLICY.ASSUMEROLE.001.yaml
     summary: AssumeRole Must Be Scoped to Specific Roles

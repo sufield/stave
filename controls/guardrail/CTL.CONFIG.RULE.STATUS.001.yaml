@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.CONFIG.RULE.STATUS.001
+name: Config Rules Must Not Be in ERROR State
+domain: governance
+description: >
+  Safety mechanism integrity control. Checks that security guardrails
+  are actively enforcing, not just present.
+severity: high
+compliance:
+  nist_800_53_r5: "CM-3"
+  fedramp_moderate: "CM-3"
+  soc2: "CC7.1"
+scope_tags:
+  - aws
+  - config
+type: unsafe_state
+params:
+  base_impact: 8
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Safety mechanism integrity check detected a guardrail in non-enforcing
+    or degraded state.
+  action: >
+    Review the specific guardrail identified in this finding and restore
+    it to an enforcing state.
+unsafe_predicate:
+  all:
+    - field: properties.config.has_error_state_rules
+      op: eq
+      value: true

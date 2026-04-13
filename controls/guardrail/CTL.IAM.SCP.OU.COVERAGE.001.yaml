@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SCP.OU.COVERAGE.001
+name: Production OUs Must Have Restrictive SCPs
+domain: identity
+description: >
+  Safety mechanism integrity control. Checks that security guardrails
+  are actively enforcing, not just present.
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6"
+  fedramp_moderate: "AC-6"
+  iso_27001_2022: "A.8.22"
+  pci_dss_v4.0: "7.2.1"
+  soc2: "CC6.1"
+scope_tags:
+  - aws
+  - scp
+type: unsafe_state
+params:
+  base_impact: 8
+  attack_stage: persistence
+remediation:
+  description: >
+    Safety mechanism integrity check detected a guardrail in non-enforcing
+    or degraded state.
+  action: >
+    Review the specific guardrail identified in this finding and restore
+    it to an enforcing state.
+unsafe_predicate:
+  all:
+    - field: properties.scp.production_ou_missing_restrictive_scp
+      op: eq
+      value: true

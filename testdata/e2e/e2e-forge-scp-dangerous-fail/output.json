@@ -1,0 +1,110 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "ea4334c03d241a61ffd43ba590566468cce84655d068f3c3bef08a28bbc93db7",
+        "2026-01-11T000000Z.json": "35d0040b44980bb877c28aa3018e2e5171e39e5e2e11106b08757f2f76e3f0c1"
+      },
+      "overall": "dc2a86133665cf351f33ac096e7df779635168dd8be535e187128e6ccf7b89fd"
+    },
+    "policy_fingerprint": "bc07d9ec6836afb3df656216709d32b5426df7f75891032b45510c0c4cb40b9a"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.IAM.SCP.DANGEROUS.ALLOWS.001",
+      "asset_id": "p-abc123",
+      "asset_type": "aws_organizations_policy",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.IAM.SCP.DANGEROUS.ALLOWS.001",
+      "control_name": "SCPs Must Not Explicitly Allow Dangerous Administrative Actions",
+      "control_description": "SCPs must not contain Allow statements for actions that undermine the organization's security posture: audit evasion (DeleteTrail, StopLogging, DeleteDetector), data destruction (DeleteBucket, ScheduleKeyDeletion), boundary removal (DeletePolicy, DetachPolicy), or privilege escalation (CreatePolicyVersion, AttachRolePolicy). An Allow for these actions signals that someone has deliberately removed the organizational-level protection. To determine when the Allow was introduced, run stave bisect with this control against the snapshot archive.\n",
+      "asset_id": "p-abc123",
+      "asset_type": "aws_organizations_policy",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "scp.has_dangerous_allows",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance": {
+        "fedramp_moderate": "AC-6",
+        "iso_27001_2022": "A.8.3",
+        "nist_800_53_r5": "AC-6",
+        "pci_dss_v4.0": "7.2.1",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "An SCP explicitly allows dangerous administrative actions that undermine audit trails, data protection, or organizational guardrails.",
+        "action": "Remove the Allow statements for dangerous actions from the SCP. If the actions are legitimately needed, scope them to specific resources or conditions rather than blanket Allow. Use stave bisect to determine when the Allow statement was introduced."
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.IAM.SCP.DANGEROUS.ALLOWS.001",
+      "asset_id": "p-abc123",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-scp-dangerous-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-scp-dangerous-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "016a3de4529b74e2c7f89a202aec81cdb67a8cab",
+      "dirty": false
+    }
+  }
+}

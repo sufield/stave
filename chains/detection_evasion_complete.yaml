@@ -1,0 +1,13 @@
+id: detection_evasion_complete
+description: >
+  Every major detection layer is simultaneously disabled, degraded, or
+  non-enforcing. An attacker operating in this environment has no
+  detection pressure — no alerts fire, no drift is detected, no audit
+  trail is complete.
+controls:
+  - CTL.CLOUDTRAIL.ENABLED.001
+  - CTL.GUARDDUTY.SUPPRESSION.001
+  - CTL.CONFIG.RULE.STATUS.001
+  - CTL.WAF.RULES.BLOCKMODE.001
+escalation_threshold: 3
+compound_severity: critical

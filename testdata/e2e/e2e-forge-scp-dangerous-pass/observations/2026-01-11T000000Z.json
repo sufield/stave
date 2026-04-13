@@ -1,0 +1,21 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "assets": [
+    {
+      "id": "p-abc123",
+      "type": "aws_organizations_policy",
+      "vendor": "aws",
+      "properties": {
+        "scp": {
+          "has_dangerous_allows": false
+        }
+      }
+    }
+  ]
+}

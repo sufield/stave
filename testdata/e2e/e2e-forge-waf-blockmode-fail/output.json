@@ -1,0 +1,122 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "bb49dea2e48359ae405224c7a3ea06280cd8a15ec2c4e80a92b2bbe6f3318782",
+        "2026-01-11T000000Z.json": "ca2f3ee4264a1e094b30c50cf7a6c0b9283e7f77cbb8b00e3705f6300919ec5e"
+      },
+      "overall": "5b713146b817bfdb14306f89f583b826b91dc5166a84b00672f9d3d8cb7974ae"
+    },
+    "policy_fingerprint": "7b115a076e2d3f1b01e81f9d923c3da9a7cbd27deb0e88d1ebcdefbe220cb40e"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.WAF.RULES.BLOCKMODE.001",
+      "asset_id": "arn:aws:wafv2::123:webacl/prod-api",
+      "asset_type": "aws_wafv2_web_acl",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.WAF.RULES.BLOCKMODE.001",
+      "control_name": "WAF Rules Must Be in BLOCK Mode, Not COUNT Mode",
+      "control_description": "All WAF rules and rule groups must have their effective action set to BLOCK. A rule in COUNT mode observes and logs attacks but does not block them. AWS WAF defaults newly added rules to COUNT mode during tuning. This becomes a permanent misconfiguration when teams never transition to BLOCK. The WAF appears active in every compliance report while blocking nothing. COUNT mode may be intentional during tuning — the stave/waf-count-mode-justified tag documents this exception.\n",
+      "asset_id": "arn:aws:wafv2::123:webacl/prod-api",
+      "asset_type": "aws_wafv2_web_acl",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "waf.count_mode_justified",
+            "actual_value": "[SANITIZED]",
+            "operator": "ne",
+            "unsafe_value": true
+          },
+          {
+            "property": "waf.has_count_mode_rules",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "waf.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "web_acl"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance": {
+        "fedramp_moderate": "SI-3",
+        "nist_800_53_r5": "SI-3",
+        "pci_dss_v4.0": "6.4.1",
+        "soc2": "CC6.6"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "One or more WAF rules are in COUNT mode — observing attacks but not blocking them. The WAF provides no protection while appearing active.",
+        "action": "Transition COUNT-mode rules to BLOCK mode. If COUNT mode is intentional during tuning, add a stave/waf-count-mode-justified tag to the WebACL with the justification (e.g., ticket number).",
+        "example": "{\n  \"waf\": {\n    \"kind\": \"web_acl\",\n    \"has_count_mode_rules\": false\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.WAF.RULES.BLOCKMODE.001",
+      "asset_id": "arn:aws:wafv2::123:webacl/prod-api",
+      "exposure_score": 200,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 2,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-waf-blockmode-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-waf-blockmode-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "016a3de4529b74e2c7f89a202aec81cdb67a8cab",
+      "dirty": false
+    }
+  }
+}
