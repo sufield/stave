@@ -1,6 +1,7 @@
 package fsutil
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -9,35 +10,78 @@ import (
 )
 
 // ---------------------------------------------------------------------------
-// Bug 1: LimitedReadAll allocates limit+1 bytes into memory before checking
+// Bug 1 (FIXED): LimitedReadAll probe-based overflow detection
 // ---------------------------------------------------------------------------
 
-func TestLimitedReadAll_AllocatesFullLimitBeforeError(t *testing.T) {
-	// When input exceeds the limit, LimitedReadAll uses
-	// io.ReadAll(io.LimitReader(r, limit+1)) which reads limit+1 bytes
-	// into a byte slice before checking len(data) > limit.
-	//
-	// This means a 256MB+ stream causes a 256MB allocation even though
-	// the function's purpose is to reject oversized input.
-	//
-	// A safer implementation would use a bounded buffer or io.CopyN to
-	// detect oversized input without allocating the full limit.
+func TestLimitedReadAll_ProbeDetectsOverflow(t *testing.T) {
+	// Fixed: LimitedReadAll now reads up to the limit via io.LimitReader
+	// (no +1 overshoot), then probes one byte from the original reader.
+	// This prevents io.ReadAll from doubling its buffer past the limit.
 
-	// Use a small limit to avoid actual memory pressure in tests.
 	origLimit := maxInputFileBytes
 	maxInputFileBytes = 1024 // 1KB limit for test
 	t.Cleanup(func() { maxInputFileBytes = origLimit })
 
-	// Input is 2x the limit — the current implementation will allocate
-	// limit+1 bytes before returning the error.
+	// Input is 2x the limit — rejected via the 1-byte probe.
 	oversized := strings.NewReader(strings.Repeat("x", 2048))
 
 	_, err := LimitedReadAll(oversized, "test-stream")
 	if err == nil {
 		t.Fatal("expected error for oversized input")
 	}
-	if !strings.Contains(err.Error(), "safety limit") {
-		t.Fatalf("expected safety limit error, got: %v", err)
+	if !errors.Is(err, ErrFileTooLarge) {
+		t.Fatalf("expected ErrFileTooLarge, got: %v", err)
+	}
+}
+
+func TestLimitedReadAll_ExactlyAtLimit(t *testing.T) {
+	origLimit := maxInputFileBytes
+	maxInputFileBytes = 1024
+	t.Cleanup(func() { maxInputFileBytes = origLimit })
+
+	// Input is exactly at the limit — should succeed.
+	exact := strings.NewReader(strings.Repeat("x", 1024))
+
+	data, err := LimitedReadAll(exact, "exact-stream")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(data) != 1024 {
+		t.Fatalf("expected 1024 bytes, got %d", len(data))
+	}
+}
+
+func TestLimitedReadAll_OneByteOverLimit(t *testing.T) {
+	origLimit := maxInputFileBytes
+	maxInputFileBytes = 1024
+	t.Cleanup(func() { maxInputFileBytes = origLimit })
+
+	// Input is 1 byte over the limit — rejected by the probe.
+	over := strings.NewReader(strings.Repeat("x", 1025))
+
+	_, err := LimitedReadAll(over, "over-stream")
+	if err == nil {
+		t.Fatal("expected error for input 1 byte over limit")
+	}
+	if !errors.Is(err, ErrFileTooLarge) {
+		t.Fatalf("expected ErrFileTooLarge, got: %v", err)
+	}
+}
+
+func TestReadFileOrStdin_UsesLimit(t *testing.T) {
+	// Verify that ReadFileOrStdin applies the safety limit to stdin,
+	// not raw io.ReadAll (which had no limit at all).
+	origLimit := maxInputFileBytes
+	maxInputFileBytes = 1024
+	t.Cleanup(func() { maxInputFileBytes = origLimit })
+
+	oversized := strings.NewReader(strings.Repeat("x", 2048))
+	_, err := ReadFileOrStdin("", oversized)
+	if err == nil {
+		t.Fatal("expected error for oversized stdin")
+	}
+	if !errors.Is(err, ErrFileTooLarge) {
+		t.Fatalf("expected ErrFileTooLarge, got: %v", err)
 	}
 }
 

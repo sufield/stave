@@ -2,6 +2,7 @@
 package state
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -29,7 +30,9 @@ func FirstRunMarkerPath() (string, error) {
 // marker already exists, avoiding redundant disk I/O on every command run.
 func MarkFirstRunSeen(path string) error {
 	if _, err := os.Stat(path); err == nil {
-		return nil
+		return nil // marker exists
+	} else if !os.IsNotExist(err) {
+		return fmt.Errorf("check first-run marker %s: %w", path, err)
 	}
 	if err := fsutil.SafeMkdirAll(filepath.Dir(path), fsutil.WriteOptions{Perm: 0o700}); err != nil {
 		return err

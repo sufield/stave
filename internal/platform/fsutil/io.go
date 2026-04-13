@@ -68,22 +68,36 @@ func ReadFileLimited(path string) ([]byte, error) {
 }
 
 // ReadFileOrStdin reads from a file path if non-empty, otherwise from stdin.
-// File reads go through ReadFileLimited; stdin reads use io.ReadAll.
+// Both paths enforce the active safety limit to prevent resource exhaustion.
 func ReadFileOrStdin(file string, stdin io.Reader) ([]byte, error) {
 	if file != "" {
 		return ReadFileLimited(file)
 	}
-	return io.ReadAll(stdin)
+	return LimitedReadAll(stdin, "stdin")
 }
 
 // LimitedReadAll reads from r up to the active safety limit (default 256 MB).
-// Returns a descriptive error if the stream exceeds the limit.
+// Returns ErrFileTooLarge if the stream exceeds the limit.
+//
+// Uses a two-phase approach to prevent resource exhaustion:
+//  1. Read up to the limit via io.LimitReader, which caps io.ReadAll's
+//     internal buffer at exactly the limit — preventing the capacity
+//     doubling that occurs when reading limit+1 bytes.
+//  2. Probe one additional byte from the original reader to detect
+//     overflow without allocating beyond the limit.
 func LimitedReadAll(r io.Reader, sourceName string) ([]byte, error) {
-	data, err := io.ReadAll(io.LimitReader(r, maxInputFileBytes+1))
+	// Phase 1: read up to the limit. The LimitReader ensures io.ReadAll
+	// never grows its buffer past maxInputFileBytes.
+	data, err := io.ReadAll(io.LimitReader(r, maxInputFileBytes))
 	if err != nil {
 		return nil, err
 	}
-	if int64(len(data)) > maxInputFileBytes {
+
+	// Phase 2: probe for overflow. If even one more byte is available,
+	// the stream exceeds the limit — reject without further allocation.
+	var probe [1]byte
+	n, _ := r.Read(probe[:])
+	if n > 0 {
 		return nil, fmt.Errorf(
 			"%w: input from %s exceeds the internal safety limit of %dMB; "+
 				"to prevent resource exhaustion, Stave does not process input larger than this — "+
@@ -91,6 +105,7 @@ func LimitedReadAll(r io.Reader, sourceName string) ([]byte, error) {
 			ErrFileTooLarge,
 			sourceName, maxInputFileBytes>>20)
 	}
+
 	return data, nil
 }
 
@@ -342,10 +357,10 @@ func WriteFileAtomic(path string, data []byte, perm os.FileMode) error {
 	if err := tmpFile.Sync(); err != nil {
 		return fmt.Errorf("sync temp file: %w", err)
 	}
+	closed = true // prevent deferred double-close regardless of Close outcome
 	if err := tmpFile.Close(); err != nil {
 		return fmt.Errorf("close temp file: %w", err)
 	}
-	closed = true
 
 	// #nosec G703 -- destination path is a local CLI output path; symlink safety checked above.
 	return os.Rename(tmpPath, path)

@@ -14,8 +14,9 @@ import (
 )
 
 // Dir discovers YAML files under root and lints them all.
+// readFile must enforce size limits (e.g., fsutil.ReadFileLimited).
 // It returns a sorted slice of diagnostics.
-func Dir(ctx context.Context, root string) ([]Diagnostic, error) {
+func Dir(ctx context.Context, root string, readFile func(string) ([]byte, error)) ([]Diagnostic, error) {
 	files, err := CollectYAMLFiles(ctx, root)
 	if err != nil {
 		return nil, err
@@ -37,7 +38,7 @@ func Dir(ctx context.Context, root string) ([]Diagnostic, error) {
 				return err
 			}
 			clean := filepath.Clean(file)
-			data, readErr := os.ReadFile(clean) //nolint:gosec // paths from CollectYAMLFiles, caller-controlled
+			data, readErr := readFile(clean)
 			if readErr != nil {
 				return fmt.Errorf("read %s: %w", clean, readErr)
 			}

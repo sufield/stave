@@ -28,7 +28,7 @@ items:
   - value: a
 `)
 
-	diags, err := Dir(context.Background(), dir)
+	diags, err := Dir(context.Background(), dir, os.ReadFile)
 	if err != nil {
 		t.Fatalf("Dir error: %v", err)
 	}
@@ -70,7 +70,7 @@ unsafe_predicate:
       value: true
 `)
 
-	diags, err := Dir(context.Background(), dir)
+	diags, err := Dir(context.Background(), dir, os.ReadFile)
 	if err != nil {
 		t.Fatalf("Dir error: %v", err)
 	}
@@ -81,7 +81,7 @@ unsafe_predicate:
 
 func TestLintDir_NoFiles(t *testing.T) {
 	dir := t.TempDir()
-	_, err := Dir(context.Background(), dir)
+	_, err := Dir(context.Background(), dir, os.ReadFile)
 	if err == nil {
 		t.Fatal("expected error for empty directory")
 	}

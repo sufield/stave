@@ -1,6 +1,8 @@
 package yaml
 
 import (
+	"log/slog"
+
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/exposure"
 	"github.com/sufield/stave/internal/core/kernel"
@@ -80,7 +82,10 @@ func exposureToDomain(y *yamlExposure) *policy.Exposure {
 	if y == nil {
 		return nil
 	}
-	scope, _ := kernel.ParsePrincipalScope(y.PrincipalScope)
+	scope, err := kernel.ParsePrincipalScope(y.PrincipalScope)
+	if err != nil && y.PrincipalScope != "" {
+		slog.Warn("invalid principal_scope in exposure", "value", y.PrincipalScope, "error", err)
+	}
 	return &policy.Exposure{
 		Type:           exposure.Type(y.Type),
 		PrincipalScope: scope,

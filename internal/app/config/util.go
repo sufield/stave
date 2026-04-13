@@ -1,6 +1,7 @@
 package config
 
 import (
+	"log/slog"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -26,7 +27,12 @@ func SortedTierNames(tiers map[string]retention.Tier) []string {
 // ResolveTierForPath identifies the appropriate tier for a file path based on glob rules.
 func ResolveTierForPath(relPath string, rules []retention.Rule, defaultTier string) string {
 	for _, rule := range rules {
-		if matched, _ := MatchGlob(rule.Pattern, relPath); matched {
+		matched, matchErr := MatchGlob(rule.Pattern, relPath)
+		if matchErr != nil {
+			slog.Warn("invalid glob pattern in retention rule", "pattern", rule.Pattern, "error", matchErr)
+			continue
+		}
+		if matched {
 			return rule.Tier
 		}
 	}

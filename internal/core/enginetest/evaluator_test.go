@@ -997,7 +997,7 @@ func TestExposureLifecycle_CoverageMetrics(t *testing.T) {
 	evaluator := NewEvaluator(controls, maxUnsafe, clock)
 
 	// Get lifecycles directly to check coverage metrics
-	lifecycles, btErr := engine.BuildLifecyclesPerControl(evaluator.Controls(), snapshots, nil)
+	lifecycles, btErr := engine.BuildLifecyclesPerControl(evaluator.Controls(), snapshots, testCELEvaluator())
 	if btErr != nil {
 		t.Fatal(btErr)
 	}
@@ -1080,7 +1080,7 @@ func TestExposureLifecycle_CoverageWithAbsence(t *testing.T) {
 	clock := clockadp.FixedClock(mustParseTime("2026-01-10T00:00:00Z"))
 	evaluator := NewEvaluator(controls, maxUnsafe, clock)
 
-	lifecycles, btErr := engine.BuildLifecyclesPerControl(evaluator.Controls(), snapshots, nil)
+	lifecycles, btErr := engine.BuildLifecyclesPerControl(evaluator.Controls(), snapshots, testCELEvaluator())
 	if btErr != nil {
 		t.Fatal(btErr)
 	}

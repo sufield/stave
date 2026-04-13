@@ -7,6 +7,7 @@ import (
 	"sort"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/platform/fsutil"
 	yamlv3 "gopkg.in/yaml.v3"
 )
 
@@ -27,7 +28,7 @@ func LoadChains(dir string) ([]policy.ChainDefinition, error) {
 			continue
 		}
 		path := filepath.Join(dir, entry.Name())
-		data, readErr := os.ReadFile(path) //nolint:gosec // path from trusted directory
+		data, readErr := fsutil.ReadFileLimited(path)
 		if readErr != nil {
 			return nil, fmt.Errorf("read chain %q: %w", path, readErr)
 		}

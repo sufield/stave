@@ -438,13 +438,12 @@ func TestLimitedReadAll_WithinLimit(t *testing.T) {
 }
 
 func TestLimitedReadAll_ExceedsLimit(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping: allocates 256MB+")
-	}
+	// Use a small limit to avoid OOM under the race detector
+	// (which adds ~10x memory overhead to the 256MB default).
+	origLimit := maxInputFileBytes
+	maxInputFileBytes = 1 << 20 // 1MB
+	t.Cleanup(func() { maxInputFileBytes = origLimit })
 
-	// Use an infinite zero reader so we don't pre-allocate 256MB.
-	// LimitedReadAll will read maxInputFileBytes+1 bytes via its
-	// internal LimitReader, then reject.
 	_, err := LimitedReadAll(io.LimitReader(zeroReader{}, maxInputFileBytes+2), "oversized-stdin")
 	if err == nil {
 		t.Fatal("expected error for oversized input")

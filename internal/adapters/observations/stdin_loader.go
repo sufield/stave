@@ -1,6 +1,7 @@
 package observations
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -8,6 +9,9 @@ import (
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/core/asset"
+	"github.com/sufield/stave/internal/core/evaluation"
+	"github.com/sufield/stave/internal/core/kernel"
+	platformcrypto "github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
@@ -56,11 +60,24 @@ func NewStdinObservationLoader(loader appcontracts.SnapshotReader, r io.Reader) 
 
 // LoadSnapshots implements contracts.ObservationRepository by reading from stdin.
 // The dir parameter is ignored; data is read from the configured reader.
-// The returned LoadResult has nil Hashes because stdin doesn't support hashing.
+// Stdin data is hashed so that integrity verification can proceed normally.
 func (s *StdinObservationLoader) LoadSnapshots(ctx context.Context, _ string) (appcontracts.LoadResult, error) {
-	snap, err := s.loader.LoadSnapshotFromReader(ctx, s.reader, "stdin")
+	// Read and hash stdin data before parsing so integrity verification
+	// is not silently skipped for piped input.
+	data, err := fsutil.LimitedReadAll(s.reader, "stdin")
+	if err != nil {
+		return appcontracts.LoadResult{}, fmt.Errorf("read from stdin: %w", err)
+	}
+	hash := platformcrypto.HashBytes(data)
+
+	snap, err := s.loader.LoadSnapshotFromReader(ctx, bytes.NewReader(data), "stdin")
 	if err != nil {
 		return appcontracts.LoadResult{}, err
 	}
-	return appcontracts.LoadResult{Snapshots: []asset.Snapshot{snap}}, nil
+
+	hashes := &evaluation.InputHashes{
+		Files:   map[evaluation.FilePath]kernel.Digest{"stdin": hash},
+		Overall: hash,
+	}
+	return appcontracts.LoadResult{Snapshots: []asset.Snapshot{snap}, Hashes: hashes}, nil
 }

@@ -4,7 +4,6 @@ package observations
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -76,7 +75,6 @@ func (l *ObservationLoader) LoadSnapshots(ctx context.Context, dir string) (appc
 
 	var snapshots []asset.Snapshot
 	fileHashes := make(map[string]string, len(entries))
-	var joinedErr error
 	total := len(entries)
 
 	for i, entry := range entries {
@@ -87,23 +85,17 @@ func (l *ObservationLoader) LoadSnapshots(ctx context.Context, dir string) (appc
 		path := filepath.Join(dir, entry.Name())
 		data, err := fsutil.ReadFileLimited(path)
 		if err != nil {
-			joinedErr = errors.Join(joinedErr, fmt.Errorf("load snapshot %s: %w", path, err))
-			continue
+			return appcontracts.LoadResult{}, fmt.Errorf("load snapshot %s: %w", path, err)
 		}
 
 		snap, hash, err := l.process(data, path)
 		if err != nil {
-			joinedErr = errors.Join(joinedErr, fmt.Errorf("load snapshot %s: %w", path, err))
-			continue
+			return appcontracts.LoadResult{}, fmt.Errorf("load snapshot %s: %w", path, err)
 		}
 		snapshots = append(snapshots, snap)
 		fileHashes[entry.Name()] = hash
 
 		l.onProgress(i+1, total)
-	}
-
-	if joinedErr != nil {
-		return appcontracts.LoadResult{}, joinedErr
 	}
 
 	hashes := buildInputHashes(fileHashes)
