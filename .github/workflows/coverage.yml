@@ -65,7 +65,7 @@ jobs:
           check_coverage ./internal/core/evaluation/... 45 coverage-evaluation.out
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v6
+        uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage.out
