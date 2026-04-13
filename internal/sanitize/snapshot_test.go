@@ -336,5 +336,3 @@ func TestSanitizer_Snapshot_ARNBucketName(t *testing.T) {
 		t.Errorf("unexpected sanitized ARN: %q", a.ID)
 	}
 }
-
-
