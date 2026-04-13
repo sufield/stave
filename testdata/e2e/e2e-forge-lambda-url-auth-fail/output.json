@@ -110,11 +110,8 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "97c7a2fa449f25e77180df81d8be06a9118a172b",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-lambda-url-auth-fail/controls/"
-      ]
+      "head_commit": "73a1c22724814860c5b4669c0ea9289e06178006",
+      "dirty": false
     }
   }
 }

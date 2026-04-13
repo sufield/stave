@@ -1,0 +1,42 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "24d3e09057d1694252768085e6e4723665c3ef2f2b50c0266003440470154f5b",
+        "2026-01-11T000000Z.json": "f657fa6ff0634ec82655ca7d3dc3c384c1b750bcac4f34cfa16ba320237dbb6e"
+      },
+      "overall": "e3bb6841da9e6f59025aff98e2e8b421daccfa925030ec1cb5bb8295bdf4dce6"
+    },
+    "policy_fingerprint": "149ccf9275b05b8363042dd817b1fbee4868610103c3f3668185e65041a8af1f"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-lambda-env-secrets-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-lambda-env-secrets-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "73a1c22724814860c5b4669c0ea9289e06178006",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-lambda-env-secrets-pass/controls/"
+      ]
+    }
+  }
+}

@@ -1,0 +1,53 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.LOG.001
+name: Lambda Functions Must Have CloudWatch Logging Enabled
+description: >
+  Lambda functions must have CloudWatch Logs enabled. Without logging,
+  function invocations — including unauthorized or malicious invocations
+  — produce no observable output. Error conditions, security events, and
+  application behavior are invisible. For functions with public function
+  URLs, missing logging means a Denial of Wallet attack generates AWS
+  costs with no audit trail. Lambda logging requires the execution role
+  to have logs:CreateLogGroup, logs:CreateLogStream, and logs:PutLogEvents
+  permissions — a missing log group or insufficient permissions silently
+  disables logging without failing the function invocation.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-2"
+  fedramp_moderate: "AU-2"
+  pci_dss_v4.0: "10.2.1"
+  soc2: "CC7.1"
+  hipaa: "164.312(b)"
+scope_tags:
+  - aws
+  - lambda
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Lambda function does not have CloudWatch logging enabled. Function
+    invocations produce no audit trail.
+  action: >
+    Grant the execution role CloudWatch Logs permissions:
+    logs:CreateLogGroup, logs:CreateLogStream, logs:PutLogEvents. Verify
+    the log group exists in CloudWatch Logs. If using a custom log group
+    name via the function's logging configuration, ensure the log group
+    is created and the retention policy is set.
+  example: |
+    {
+      "compute": {
+        "kind": "function",
+        "logging": {
+          "enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
+    - field: properties.compute.logging.enabled
+      op: eq
+      value: false

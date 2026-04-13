@@ -39,6 +39,7 @@ packs:
       - CTL.EXPOSURE.ANON.001
       - CTL.EXPOSURE.EXFIL.001
       - CTL.LAMBDA.URL.AUTH.001
+      - CTL.LAMBDA.ROLE.LEASTPRIV.001
       - CTL.SECRET.BLAST.001
       # §164.312(a)(2)(i) — Unique User Identification
       - CTL.IAM.CRED.ROTATION.001
@@ -65,6 +66,7 @@ packs:
       - CTL.EFS.ENCRYPT.001
       - CTL.VPC.FLOWLOG.ENCRYPT.001
       - CTL.LAMBDA.RUNTIME.001
+      - CTL.LAMBDA.ENV.SECRETS.001
       # §164.312(b) — Audit Controls
       - CTL.CLOUDTRAIL.ENABLED.001
       - CTL.CLOUDTRAIL.VALIDATION.001
@@ -83,6 +85,7 @@ packs:
       - CTL.S3.BREACH.DETECT.001
       - CTL.VPC.FLOWLOG.001
       - CTL.WAF.EVASION.OBSERVE.001
+      - CTL.LAMBDA.LOG.001
       # §164.312(c)(1) — Integrity
       - CTL.CONFIG.RULES.001
       - CTL.S3.VERSION.001
@@ -594,6 +597,9 @@ packs:
     controls:
       - CTL.LAMBDA.RUNTIME.001
       - CTL.LAMBDA.URL.AUTH.001
+      - CTL.LAMBDA.ROLE.LEASTPRIV.001
+      - CTL.LAMBDA.ENV.SECRETS.001
+      - CTL.LAMBDA.LOG.001
   route53:
     description: AWS Route 53 DNS service controls
     controls:
@@ -1562,6 +1568,15 @@ controls:
   CTL.LAMBDA.URL.AUTH.001:
     path: internal/controldata/embedded/lambda/access/CTL.LAMBDA.URL.AUTH.001.yaml
     summary: Lambda Function URLs Must Require Authentication
+  CTL.LAMBDA.ROLE.LEASTPRIV.001:
+    path: internal/controldata/embedded/lambda/identity/CTL.LAMBDA.ROLE.LEASTPRIV.001.yaml
+    summary: Lambda Execution Role Must Follow Least Privilege
+  CTL.LAMBDA.ENV.SECRETS.001:
+    path: internal/controldata/embedded/lambda/secrets/CTL.LAMBDA.ENV.SECRETS.001.yaml
+    summary: Lambda Functions Must Not Store Secrets in Environment Variables
+  CTL.LAMBDA.LOG.001:
+    path: internal/controldata/embedded/lambda/logging/CTL.LAMBDA.LOG.001.yaml
+    summary: Lambda Functions Must Have CloudWatch Logging Enabled
   CTL.BACKUP.EXISTS.001:
     path: internal/controldata/embedded/backup/verification/CTL.BACKUP.EXISTS.001.yaml
     summary: Critical Resources Must Have Backups

@@ -1,0 +1,120 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "19629f92405f9c41335694cafa34b05835df651a86ede0c5d5880581518da165",
+        "2026-01-11T000000Z.json": "798de7054519e0fa14c2f98c1ed1f2c73c81ca753af3297d125a0173f6d219f0"
+      },
+      "overall": "95599de9cdd39e4c428630ddd63c0b473ed6cd0e50dadf1f22680d5b8c2b75b9"
+    },
+    "policy_fingerprint": "630dc6e899df3fda0987f8c4f9efdc95e37042c412d7b543b34206183a68ca49"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.LAMBDA.LOG.001",
+      "asset_id": "arn:aws:lambda:us-east-1:123456789012:function:api-handler",
+      "asset_type": "aws_lambda_function",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.LAMBDA.LOG.001",
+      "control_name": "Lambda Functions Must Have CloudWatch Logging Enabled",
+      "control_description": "Lambda functions must have CloudWatch Logs enabled. Without logging, function invocations — including unauthorized or malicious invocations — produce no observable output. Error conditions, security events, and application behavior are invisible. For functions with public function URLs, missing logging means a Denial of Wallet attack generates AWS costs with no audit trail. Lambda logging requires the execution role to have logs:CreateLogGroup, logs:CreateLogStream, and logs:PutLogEvents permissions — a missing log group or insufficient permissions silently disables logging without failing the function invocation.\n",
+      "asset_id": "arn:aws:lambda:us-east-1:123456789012:function:api-handler",
+      "asset_type": "aws_lambda_function",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "compute.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "function"
+          },
+          {
+            "property": "compute.logging.enabled",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "fedramp_moderate": "AU-2",
+        "hipaa": "164.312(b)",
+        "nist_800_53_r5": "AU-2",
+        "pci_dss_v4.0": "10.2.1",
+        "soc2": "CC7.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Lambda function does not have CloudWatch logging enabled. Function invocations produce no audit trail.",
+        "action": "Grant the execution role CloudWatch Logs permissions: logs:CreateLogGroup, logs:CreateLogStream, logs:PutLogEvents. Verify the log group exists in CloudWatch Logs. If using a custom log group name via the function's logging configuration, ensure the log group is created and the retention policy is set.",
+        "example": "{\n  \"compute\": {\n    \"kind\": \"function\",\n    \"logging\": {\n      \"enabled\": true\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.LAMBDA.LOG.001",
+      "asset_id": "arn:aws:lambda:us-east-1:123456789012:function:api-handler",
+      "exposure_score": 50,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-lambda-log-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-lambda-log-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "73a1c22724814860c5b4669c0ea9289e06178006",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-lambda-log-fail/controls/"
+      ]
+    }
+  }
+}

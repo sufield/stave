@@ -3,22 +3,22 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 304
-**Pack hash:** `7c28b93be69d35ee5af5fab4546909daf25ed39f114094b2067cc02ab06051da`
+**Total controls:** 307
+**Pack hash:** `764cf72f9fec54c90effded9827422bf02e5041f06e0503ba399958bbe58e020`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 56 |
-| high | 127 |
+| critical | 57 |
+| high | 128 |
 | info | 16 |
 | low | 22 |
-| medium | 83 |
+| medium | 84 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 221 |
+| exposure | 224 |
 | governance | 7 |
 | identity | 68 |
 | storage | 8 |
@@ -2679,6 +2679,51 @@ KMS key policies must not grant wildcard principal access. A key policy with Pri
 Customer-created symmetric KMS keys must have automatic key rotation enabled. Key rotation limits the amount of data encrypted with a single key version, reducing the blast radius of key compromise.
 
 **Remediation:** Enable key rotation: aws kms enable-key-rotation --key-id <key-id>
+
+---
+
+### CTL.LAMBDA.ENV.SECRETS.001
+
+**Lambda Functions Must Not Store Secrets in Environment Variables**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-28; hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-28; pci_dss_v4.0: 3.5.1; soc2: CC6.1;
+
+Lambda function environment variables must not contain plaintext secrets such as database credentials, API keys, or tokens. Environment variables are visible in plaintext to anyone with lambda:GetFunction permission, are included in CloudTrail logs for UpdateFunctionConfiguration events, and are stored in the Lambda service's configuration store without application-level encryption. AWS Secrets Manager and SSM Parameter Store SecureString provide encrypted storage with rotation, audit logging, and fine-grained access control. Moving secrets out of environment variables is the single most impactful Lambda security improvement for most functions.
+
+**Remediation:** Move secrets to AWS Secrets Manager or SSM Parameter Store SecureString. Update the function code to retrieve secrets at runtime via the AWS SDK. Remove the plaintext values from the environment variable configuration. Use the Lambda Secrets Manager extension for cached retrieval with minimal latency impact.
+
+---
+
+### CTL.LAMBDA.LOG.001
+
+**Lambda Functions Must Have CloudWatch Logging Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AU-2; hipaa: 164.312(b); nist_800_53_r5: AU-2; pci_dss_v4.0: 10.2.1; soc2: CC7.1;
+
+Lambda functions must have CloudWatch Logs enabled. Without logging, function invocations — including unauthorized or malicious invocations — produce no observable output. Error conditions, security events, and application behavior are invisible. For functions with public function URLs, missing logging means a Denial of Wallet attack generates AWS costs with no audit trail. Lambda logging requires the execution role to have logs:CreateLogGroup, logs:CreateLogStream, and logs:PutLogEvents permissions — a missing log group or insufficient permissions silently disables logging without failing the function invocation.
+
+**Remediation:** Grant the execution role CloudWatch Logs permissions: logs:CreateLogGroup, logs:CreateLogStream, logs:PutLogEvents. Verify the log group exists in CloudWatch Logs. If using a custom log group name via the function's logging configuration, ensure the log group is created and the retention policy is set.
+
+---
+
+### CTL.LAMBDA.ROLE.LEASTPRIV.001
+
+**Lambda Execution Role Must Follow Least Privilege**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-6; hipaa: 164.312(a)(1); nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+Lambda function execution roles must not have overly broad permissions. An over-privileged execution role grants the function — and any attacker who compromises or invokes it — access to AWS resources beyond what the function requires. Common violations include admin policies, wildcard resource ARNs on sensitive actions, or managed policies like AmazonS3FullAccess attached to functions that only need read access to a single bucket. When combined with a public function URL or a compromised dependency, an over-privileged role converts a single function compromise into account-wide lateral movement.
+
+**Remediation:** Scope the execution role policy to only the specific actions and resource ARNs the function needs. Replace managed policies like AmazonS3FullAccess with inline policies scoped to specific buckets and actions. Use IAM Access Analyzer to identify unused permissions and generate a least-privilege policy from actual function activity.
 
 ---
 
