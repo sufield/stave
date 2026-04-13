@@ -27,7 +27,8 @@ scope_tags:
   - aws
   - cloudfront
 type: unsafe_state
-params: {}
+params:
+  attack_stage: exfiltration
 remediation:
   description: >
     CloudFront distribution security policy permits TLS 1.0 or TLS 1.1

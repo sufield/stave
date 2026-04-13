@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 317
-**Pack hash:** `25b8ccd08e8cbc3a0eaceafd16e0c6588ea0821c123075dd64a7999fc15f2775`
+**Total controls:** 318
+**Pack hash:** `6631ef540a85b24828edfff53a88b71377a6cbd6358f6d445bc820939671f8ac`
 
 ## Summary
 
@@ -14,11 +14,11 @@
 | high | 131 |
 | info | 16 |
 | low | 22 |
-| medium | 90 |
+| medium | 91 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 233 |
+| exposure | 234 |
 | governance | 7 |
 | identity | 69 |
 | storage | 8 |
@@ -4548,6 +4548,21 @@ Network ACLs must not allow inbound traffic from 0.0.0.0/0 or ::/0 to SSH (22) o
 The default VPC security group should not allow any inbound or outbound traffic. Resources should use custom security groups with explicit rules instead of relying on the default group.
 
 **Remediation:** Remove all inbound and outbound rules from the default security group. Assign custom security groups to all resources.
+
+---
+
+### CTL.VPC.SG.EASTWEST.001
+
+**Security Groups Must Not Allow Unrestricted Access Between Internal Services**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-7; hipaa: 164.312(e)(1); nist_800_53_r5: SC-7; pci_dss_v4.0: 1.3.2; soc2: CC6.6;
+
+Security groups on private resources must not allow inbound traffic on application ports from broad internal CIDR ranges or all-port rules from internal sources. East-west over-permissiveness enables lateral movement — a compromised service in the source range inherits access to every destination that grants broad internal access. This is distinct from CTL.VPC.SG.UNRESTRICTED.001 which detects north-south exposure (0.0.0.0/0). Specific conditions: inbound rules from CIDRs broader than /28 (16 addresses), rules referencing the entire VPC CIDR range, or all-port rules from any internal source. The /28 threshold accommodates small dedicated subnets while flagging rules that effectively open access to large internal populations. NSA/CISA advisory AA23-278A identifies flat internal networks as one of the ten most exploited misconfigurations — attackers consistently use over-permissive east-west rules for lateral movement from low-privilege footholds to high-value targets.
+
+**Remediation:** Replace broad CIDR source rules with specific security group references that identify the exact source service. Replace all-port internal rules with rules specifying only the ports the service relationship requires. For database security groups, restrict inbound to the specific application server security group on the database port only. Verify no rule references the entire VPC CIDR range as a source.
 
 ---
 

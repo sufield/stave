@@ -1,0 +1,62 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.SG.EASTWEST.001
+name: Security Groups Must Not Allow Unrestricted Access Between Internal Services
+description: >
+  Security groups on private resources must not allow inbound traffic on
+  application ports from broad internal CIDR ranges or all-port rules
+  from internal sources. East-west over-permissiveness enables lateral
+  movement — a compromised service in the source range inherits access
+  to every destination that grants broad internal access. This is
+  distinct from CTL.VPC.SG.UNRESTRICTED.001 which detects north-south
+  exposure (0.0.0.0/0). Specific conditions: inbound rules from CIDRs
+  broader than /28 (16 addresses), rules referencing the entire VPC
+  CIDR range, or all-port rules from any internal source. The /28
+  threshold accommodates small dedicated subnets while flagging rules
+  that effectively open access to large internal populations. NSA/CISA
+  advisory AA23-278A identifies flat internal networks as one of the
+  ten most exploited misconfigurations — attackers consistently use
+  over-permissive east-west rules for lateral movement from low-privilege
+  footholds to high-value targets.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7"
+  fedramp_moderate: "SC-7"
+  pci_dss_v4.0: "1.3.2"
+  soc2: "CC6.6"
+  hipaa: "164.312(e)(1)"
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Security group has overly permissive east-west inbound rules. Internal
+    services grant broader access than their function requires, enabling
+    lateral movement if any source service is compromised.
+  action: >
+    Replace broad CIDR source rules with specific security group
+    references that identify the exact source service. Replace all-port
+    internal rules with rules specifying only the ports the service
+    relationship requires. For database security groups, restrict inbound
+    to the specific application server security group on the database
+    port only. Verify no rule references the entire VPC CIDR range as
+    a source.
+  example: |
+    {
+      "network": {
+        "kind": "security_group",
+        "security_group": {
+          "has_broad_eastwest_rules": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: security_group
+    - field: properties.network.security_group.has_broad_eastwest_rules
+      op: eq
+      value: true

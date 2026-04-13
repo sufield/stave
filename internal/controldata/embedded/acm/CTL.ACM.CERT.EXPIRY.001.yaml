@@ -28,7 +28,7 @@ scope_tags:
 type: unsafe_state
 params:
   base_impact: 8
-  attack_stage: initial_access
+  attack_stage: exfiltration
   blast_radius:
     type: detection
     scope: account

@@ -32,11 +32,8 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "af8fd36dac11986f9dec98c9c15cc0d0e9f636ae",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-ec2-ami-currency-pass/controls/"
-      ]
+      "head_commit": "fb8ac846db81448a4d5b7c15c54439d5a36ef163",
+      "dirty": false
     }
   }
 }

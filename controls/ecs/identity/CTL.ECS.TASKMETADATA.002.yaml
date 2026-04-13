@@ -25,7 +25,7 @@ scope_tags:
 type: unsafe_state
 params:
   base_impact: 10
-  attack_stage: initial_access
+  attack_stage: credential_access
   blast_radius:
     type: detection
     scope: account

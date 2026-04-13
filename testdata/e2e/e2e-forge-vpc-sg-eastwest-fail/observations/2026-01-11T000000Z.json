@@ -1,0 +1,24 @@
+{
+  "assets": [
+    {
+      "id": "sg-0abc123def456789",
+      "properties": {
+        "network": {
+          "security_group": {
+            "has_broad_eastwest_rules": true
+          },
+          "kind": "security_group"
+        }
+      },
+      "type": "aws_security_group",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  }
+}
