@@ -1,0 +1,121 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "6667e8198121fef71f42cfa4c5db1c8b4c685183ae9aae2621c9bdf09ce3ffb6",
+        "2026-01-11T000000Z.json": "f6dacc06484617e8c48c26082cc657aeb9e52ad34943de6e571dd0dbaa0c4552"
+      },
+      "overall": "a0cb4ace871461b053d5bb05ee5a9ce4aeae7541061ff4a0222f3c8f8052e7ab"
+    },
+    "policy_fingerprint": "3476eb1827af3e530fb477c50118a8281117086c0e9f0c92fadc29bc85cccb92"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.ORG.REGION.SCP.001",
+      "asset_id": "o-abc123def4",
+      "asset_type": "aws_organizations_policy_set",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.ORG.REGION.SCP.001",
+      "control_name": "AWS Organizations Must Have an SCP Restricting Resource Creation to Approved Regions",
+      "control_description": "AWS Organizations must have a Service Control Policy that restricts resource creation to an approved set of AWS regions. Without a region restriction SCP, any IAM principal can create resources in any of 30+ regions — including regions where the organization has no CloudTrail, no GuardDuty, no Config recording, and no monitoring infrastructure. MITRE ATT\u0026CK T1535 documents this as a defense evasion technique: attackers deliberately operate in unused regions to bypass cloud monitoring. A region restriction SCP closes all unmonitored regions simultaneously with a single organizational policy rather than requiring monitoring deployment to every region. This is the architectural complement to per-region monitoring controls — it eliminates the regions where monitoring is not deployed.\n",
+      "asset_id": "o-abc123def4",
+      "asset_type": "aws_organizations_policy_set",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "organization.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "scp_policy_set"
+          },
+          {
+            "property": "organization.region_restriction.has_scp",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "fedramp_moderate": "CM-7",
+        "gdpr": "Art.32",
+        "hipaa": "164.312(b)",
+        "nist_800_53_r5": "CM-7",
+        "pci_dss_v4.0": "12.5.2",
+        "soc2": "CC7.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "No SCP restricts resource creation to approved AWS regions. Resources can be created in any region, including regions with no monitoring infrastructure.",
+        "action": "Attach an SCP to the organization root with a Deny statement conditioned on aws:RequestedRegion that restricts resource creation to the organization's approved operating regions. Example condition: StringNotEquals aws:RequestedRegion [us-east-1, us-west-2, eu-west-1]. Exclude global services (IAM, CloudFront, Route 53) from the restriction using a NotAction list.",
+        "example": "{\n  \"organization\": {\n    \"kind\": \"scp_policy_set\",\n    \"region_restriction\": {\n      \"has_scp\": true\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.ORG.REGION.SCP.001",
+      "asset_id": "o-abc123def4",
+      "exposure_score": 150,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 2,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-org-region-scp-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-org-region-scp-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "b3ec125f213a15eb935b3bcf5230d2ffc749d16d",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-org-region-scp-fail/controls/"
+      ]
+    }
+  }
+}

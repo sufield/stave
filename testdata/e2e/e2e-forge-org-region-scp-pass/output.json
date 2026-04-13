@@ -1,0 +1,42 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "4236def5ad7a44ea15ac3cf7b7614efc37f1f22a0c82ee2d8247935b7b1049a7",
+        "2026-01-11T000000Z.json": "5477b3a75d364b70cf2858fb3e7667d8c779968440a37b6165f334ed7f61a12b"
+      },
+      "overall": "551b56cbad48b297d65196007ed6840ccf59314b3095142377d2e9dd209df41e"
+    },
+    "policy_fingerprint": "3476eb1827af3e530fb477c50118a8281117086c0e9f0c92fadc29bc85cccb92"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-org-region-scp-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-org-region-scp-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "b3ec125f213a15eb935b3bcf5230d2ffc749d16d",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-org-region-scp-pass/controls/"
+      ]
+    }
+  }
+}

@@ -92,6 +92,7 @@ packs:
       - CTL.WAF.EVASION.OBSERVE.001
       - CTL.LAMBDA.LOG.001
       - CTL.CLOUDTRAIL.CWLOGS.001
+      - CTL.ORG.REGION.SCP.001
       # §164.312(c)(1) — Integrity
       - CTL.CONFIG.RULES.001
       - CTL.S3.VERSION.001
@@ -631,6 +632,10 @@ packs:
     description: AWS CloudFront distribution security controls
     controls:
       - CTL.CLOUDFRONT.TLS.001
+  org:
+    description: AWS Organizations governance controls
+    controls:
+      - CTL.ORG.REGION.SCP.001
   acm:
     description: AWS Certificate Manager certificate controls
     controls:
@@ -1654,6 +1659,9 @@ controls:
   CTL.CLOUDFRONT.TLS.001:
     path: internal/controldata/embedded/cloudfront/encrypt/CTL.CLOUDFRONT.TLS.001.yaml
     summary: CloudFront Distributions Must Enforce TLS 1.2 or Higher
+  CTL.ORG.REGION.SCP.001:
+    path: internal/controldata/embedded/org/region/CTL.ORG.REGION.SCP.001.yaml
+    summary: AWS Organizations Must Have an SCP Restricting Resource Creation to Approved Regions
   CTL.BACKUP.EXISTS.001:
     path: internal/controldata/embedded/backup/verification/CTL.BACKUP.EXISTS.001.yaml
     summary: Critical Resources Must Have Backups
