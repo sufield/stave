@@ -2,6 +2,7 @@ package evaluation
 
 import (
 	"encoding/json"
+	"strings"
 	"testing"
 
 	"github.com/sufield/stave/internal/core/kernel"
@@ -194,10 +195,10 @@ func TestRemediationAction_CanonicalKey(t *testing.T) {
 		t.Fatal("CanonicalKey should not be empty")
 	}
 	// Key must contain the action type and path.
-	if !containsStr(key, "set") {
+	if !strings.Contains(key, "set") {
 		t.Errorf("key should contain action type 'set': %q", key)
 	}
-	if !containsStr(key, "security_posture.block_public_access") {
+	if !strings.Contains(key, "security_posture.block_public_access") {
 		t.Errorf("key should contain path: %q", key)
 	}
 }
@@ -237,7 +238,7 @@ func TestRemediationAction_CanonicalKey_NilValue(t *testing.T) {
 		Value:      nil,
 	}
 	key := a.CanonicalKey()
-	if !containsStr(key, "null") {
+	if !strings.Contains(key, "null") {
 		t.Errorf("nil value should serialize to 'null': %q", key)
 	}
 }
@@ -283,15 +284,3 @@ func (stubDigester) Digest(parts []string, sep byte) kernel.Digest {
 	return kernel.Digest(padded[:24])
 }
 
-func containsStr(s, sub string) bool {
-	return len(s) >= len(sub) && (s == sub || len(s) > 0 && containsBytes(s, sub))
-}
-
-func containsBytes(s, sub string) bool {
-	for i := 0; i <= len(s)-len(sub); i++ {
-		if s[i:i+len(sub)] == sub {
-			return true
-		}
-	}
-	return false
-}
