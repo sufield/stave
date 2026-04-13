@@ -221,6 +221,8 @@ packs:
       - CTL.IAM.IDENTITY.BLASTRADIUS.004
       - CTL.IAM.TRUST.OIDC.001
       - CTL.IAM.TRUST.OIDC.002
+      - CTL.IAM.TRUST.CONFUSEDDEPUTY.001
+      - CTL.IAM.TRUST.SOURCEARN.001
       - CTL.SECRET.BLAST.001
       - CTL.SECRET.BLAST.002
       - CTL.BACKUP.RECOVERY.ISOLATION.002
@@ -752,6 +754,8 @@ packs:
       - CTL.IAM.ROLE.BREAKGLASS.001
       - CTL.IAM.CROSS.ENV.001
       - CTL.IAM.TRUST.EXTERNALID.001
+      - CTL.IAM.TRUST.CONFUSEDDEPUTY.001
+      - CTL.IAM.TRUST.SOURCEARN.001
       - CTL.IAM.POLICY.ASSUMEROLE.001
       - CTL.IAM.POLICY.SOD.001
       - CTL.IAM.ZT.PERIMETER.001
@@ -1072,6 +1076,12 @@ controls:
   CTL.IAM.TRUST.EXTERNALID.001:
     path: internal/controldata/embedded/iam/policy/CTL.IAM.TRUST.EXTERNALID.001.yaml
     summary: Cross-Account Trust Must Require External ID
+  CTL.IAM.TRUST.CONFUSEDDEPUTY.001:
+    path: internal/controldata/embedded/iam/trust/CTL.IAM.TRUST.CONFUSEDDEPUTY.001.yaml
+    summary: Third-Party Role Trust Must Have Confused Deputy Protection
+  CTL.IAM.TRUST.SOURCEARN.001:
+    path: internal/controldata/embedded/iam/trust/CTL.IAM.TRUST.SOURCEARN.001.yaml
+    summary: AWS Service Principal Trust Must Have SourceArn or SourceAccount Condition
   CTL.IAM.POLICY.ASSUMEROLE.001:
     path: internal/controldata/embedded/iam/policy/CTL.IAM.POLICY.ASSUMEROLE.001.yaml
     summary: AssumeRole Must Be Scoped to Specific Roles

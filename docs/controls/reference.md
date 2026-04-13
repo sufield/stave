@@ -3,15 +3,15 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 282
-**Pack hash:** `f99f326517139dc2db615ca7f1bc557249f4aeaf4a8faa69f085a39d4038fabe`
+**Total controls:** 284
+**Pack hash:** `e2918191cc13c8b09e89267294c1935bfd4b2616c232af87b09704fb76a706b7`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 48 |
-| high | 116 |
+| critical | 49 |
+| high | 117 |
 | info | 16 |
 | low | 19 |
 | medium | 83 |
@@ -20,7 +20,7 @@
 |--------|-------|
 | exposure | 213 |
 | governance | 2 |
-| identity | 59 |
+| identity | 61 |
 | storage | 8 |
 
 ## Controls
@@ -2116,6 +2116,21 @@ At least one IAM entity must have the AWSSupportAccess managed policy attached. 
 
 ---
 
+### CTL.IAM.TRUST.CONFUSEDDEPUTY.001
+
+**Third-Party Role Trust Must Have Confused Deputy Protection**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-3; hipaa: 164.312(a)(1); iso_27001_2022: A.8.3; nist_800_53_r5: AC-3, AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1, CC9.2;
+
+IAM roles trusted by third-party AWS accounts (accounts outside your organization) must include sts:ExternalId or aws:SourceAccount conditions. Without these guardrails, the confused deputy problem allows any customer of the same third-party vendor to assume your role through the vendor's IAM system. The Microsoft Midnight Blizzard 2024 breach exploited a legacy cross-tenant trust without per-customer binding to pivot from a test tenant to production Exchange mailboxes. Coupa/Corecard-pattern SaaS integrations with shared IAM roles and no ExternalId allow cross-customer data access if the vendor's IAM system is compromised.
+
+**Remediation:** Add an sts:ExternalId condition with a unique per-relationship value to the role trust policy. Alternatively, add aws:SourceAccount scoped to the specific account that should be permitted. Do not use wildcard values — ExternalId set to * provides no protection.
+
+---
+
 ### CTL.IAM.TRUST.EXTERNALID.001
 
 **Cross-Account Trust Must Require External ID**
@@ -2173,6 +2188,21 @@ IAM roles with OIDC federation must use exact or prefix-scoped subject claims. A
 IAM roles assumed via OIDC federation (CI/CD pipelines) must have scoped permissions appropriate for their deployment task. A CI/CD role with AdministratorAccess or broad wildcard actions creates a supply chain blast radius — any compromise of the CI/CD pipeline grants full account access. The extractor checks if the role's effective permissions exceed a deployment-appropriate scope.
 
 **Remediation:** Scope the role's permissions to the minimum required for the deployment task. Replace AdministratorAccess with task-specific policies (e.g., s3:PutObject on the deployment bucket, ecs:UpdateService on the target cluster).
+
+---
+
+### CTL.IAM.TRUST.SOURCEARN.001
+
+**AWS Service Principal Trust Must Have SourceArn or SourceAccount Condition**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-3; nist_800_53_r5: AC-3, AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+IAM roles trusted by AWS service principals (*.amazonaws.com) must include aws:SourceArn or aws:SourceAccount conditions. Without these conditions, the service can assume the role when acting on behalf of any resource in any account — including attacker-controlled resources. AWS Lambda execution roles without aws:SourceArn allow any Lambda function in any account to assume the role. SNS/S3 notification roles without SourceArn allow any bucket or topic in any account to trigger the role assumption.
+
+**Remediation:** Add aws:SourceArn scoped to the specific resource ARN that should trigger the role assumption. If the resource ARN is not known at deploy time, add aws:SourceAccount scoped to your account ID.
 
 ---
 

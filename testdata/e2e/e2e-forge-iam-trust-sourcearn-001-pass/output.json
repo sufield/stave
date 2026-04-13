@@ -1,0 +1,42 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "7829685945fa635b0e217884913c311148ab3d508e61ffee71c8d91e3e37b503",
+        "2026-01-11T000000Z.json": "b64ba4902c3df85ee48a84239297e181940c3d4296e8602bf20e419192c1e24f"
+      },
+      "overall": "1e403eb66efbdc1d453c62993805ed0008146c0e0abbd42221777f6d4c86e1ea"
+    },
+    "policy_fingerprint": "0e78837fc8b367d686d4cc29b236462d51065c04fb72c30d62411b66f25297c5"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-trust-sourcearn-001-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-trust-sourcearn-001-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "300a66de1ba44fba6172e4aa26a17eaf0766718f",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-iam-trust-sourcearn-001-pass/controls/"
+      ]
+    }
+  }
+}

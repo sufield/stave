@@ -1,0 +1,10 @@
+id: service_role_lateral_movement
+description: >
+  AWS service principal trust lacks SourceArn AND the role has broad
+  IAM or data permissions. An attacker controlling a resource in the
+  trusted AWS service can assume this role and move laterally.
+controls:
+  - CTL.IAM.TRUST.SOURCEARN.001
+  - CTL.IAM.POLICY.ADMIN.001
+escalation_threshold: 2
+compound_severity: critical

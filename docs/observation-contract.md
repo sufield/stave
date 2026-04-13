@@ -510,7 +510,7 @@ GDPR, FFIEC, and ISO 27001 compliance coverage. Each follows the same
 | Asset Type | Namespace | Kind | Key Properties |
 |---|---|---|---|
 | `aws_cloudtrail_trail` | `audit_trail.*` | `trail` | `multi_region_enabled`, `log_file_validation_enabled`, `encryption.*`, `s3_data_events.*` |
-| `aws_kms_key` | `cryptography.*` | `key` | `key_rotation_enabled`, `origin`, `policy.has_wildcard_principal` |
+| `aws_kms_key` | `cryptography.*` | `key` | `key_rotation_enabled`, `origin`, `policy.has_wildcard_principal`, `key_isolation.*` (derived) |
 | `aws_secretsmanager_secret` | `secret.*` | `secret` | `encryption.customer_managed_key`, `access.rotation_enabled` |
 | `aws_dynamodb_table` | `database.*` | `table` | `encryption.sse_type`, `encryption.sse_enabled` |
 | `aws_sqs_queue` | `messaging.*` | `queue` | `encryption.encrypted`, `dead_letter_queue.enabled` |
@@ -850,6 +850,33 @@ density per KMS key.
 
 ---
 
+## KMS key isolation namespace
+
+The `cryptography.key_isolation.*` namespace tracks whether a KMS key
+is shared across data classification domains. These properties are
+**derived by the Stave assessor** during evaluation (not by the
+extractor) by cross-referencing `cryptography.kms_key_id` and
+`tags.data-classification` across all assets in the snapshot.
+
+The extractor must supply `cryptography.kms_key_id` on each resource
+and `tags.data-classification` (phi, cde, confidential, internal,
+public, non-sensitive) for isolation analysis. Resources missing the
+classification tag are treated as `unclassified`.
+
+| Property | Type | Description |
+|---|---|---|
+| `cryptography.key_isolation.is_exclusive_to_domain` | bool | Key encrypts resources within a single sensitivity level |
+| `cryptography.key_isolation.domain_count` | int | Distinct data-classification values using this key |
+| `cryptography.key_isolation.mixed_classification` | bool | Key encrypts resources at different sensitivity levels |
+
+**Sensitivity hierarchy** (highest to lowest):
+`phi`/`cde` > `confidential` > `internal` > `public`/`non-sensitive` > `unclassified`
+
+**Controls:** CTL.KMS.ISOLATION.001 (key shared across sensitivity
+domains — cryptographic boundary collapse).
+
+---
+
 ## Vendor trust namespace
 
 The `identity.vendor_trust.*` namespace tracks third-party SaaS
@@ -866,6 +893,33 @@ vendor access via cross-account roles.
 
 **Controls:** CTL.IAM.VENDOR.DORMANT.001 (ghost access),
 .OVERPRIVILEGED.001 (excessive sensitive reach).
+
+---
+
+## Trust policy namespace
+
+The `identity.trust_policy.*` namespace tracks confused deputy
+protection on IAM role trust policies. The extractor analyzes each
+role's trust policy document and computes boolean flags indicating
+whether protective conditions are present.
+
+| Property | Type | Description |
+|---|---|---|
+| `identity.trust_policy.has_third_party_principal` | bool | Trust policy contains a principal from an AWS account outside the organization |
+| `identity.trust_policy.confused_deputy_protected` | bool | Trust policy has sts:ExternalId or aws:SourceAccount condition (non-wildcard) |
+| `identity.trust_policy.has_aws_service_principal` | bool | Trust policy contains an AWS service principal (*.amazonaws.com) |
+| `identity.trust_policy.source_arn_protected` | bool | Trust policy has aws:SourceArn or aws:SourceAccount condition |
+
+The extractor must classify each principal in the trust policy:
+- **AWS service** — ends with `.amazonaws.com` (Lambda, S3, SNS, etc.)
+- **Same-org account** — 12-digit account ID in the organization's account list
+- **Third-party account** — 12-digit account ID NOT in the organization
+
+A condition key set to `*` (wildcard) does NOT count as protection.
+
+**Controls:** CTL.IAM.TRUST.CONFUSEDDEPUTY.001 (third-party trust
+without ExternalId), CTL.IAM.TRUST.SOURCEARN.001 (service principal
+without SourceArn).
 
 ---
 

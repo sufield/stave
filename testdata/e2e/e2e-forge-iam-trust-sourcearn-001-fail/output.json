@@ -1,0 +1,119 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "fa6a12710d2af4b64dcce5a920bef89e5f151c0700f054a5d3d534f846c63f71",
+        "2026-01-11T000000Z.json": "418db4debeabc5ed779b9b8a0dfaba47c11e3372592472b3ab7c2794936a0261"
+      },
+      "overall": "e8e2e9a46f74e034570dd3466147861588bf4457edd3f1ce29ce9a61c5463e9e"
+    },
+    "policy_fingerprint": "0e78837fc8b367d686d4cc29b236462d51065c04fb72c30d62411b66f25297c5"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.IAM.TRUST.SOURCEARN.001",
+      "asset_id": "test-role",
+      "asset_type": "aws_iam_role",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.IAM.TRUST.SOURCEARN.001",
+      "control_name": "AWS Service Principal Trust Must Have SourceArn or SourceAccount Condition",
+      "control_description": "IAM roles trusted by AWS service principals (*.amazonaws.com) must include aws:SourceArn or aws:SourceAccount conditions. Without these conditions, the service can assume the role when acting on behalf of any resource in any account — including attacker-controlled resources. AWS Lambda execution roles without aws:SourceArn allow any Lambda function in any account to assume the role. SNS/S3 notification roles without SourceArn allow any bucket or topic in any account to trigger the role assumption.\n",
+      "asset_id": "test-role",
+      "asset_type": "aws_iam_role",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "identity.trust_policy.has_aws_service_principal",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "identity.trust_policy.source_arn_protected",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "fedramp_moderate": "AC-3",
+        "nist_800_53_r5": "AC-3, AC-6",
+        "pci_dss_v4.0": "7.2.1",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "An IAM role trusts an AWS service principal without SourceArn or SourceAccount conditions. Any resource in the trusted AWS service — including resources in other accounts — can assume this role.",
+        "action": "Add aws:SourceArn scoped to the specific resource ARN that should trigger the role assumption. If the resource ARN is not known at deploy time, add aws:SourceAccount scoped to your account ID.",
+        "example": "{\n  \"identity\": {\n    \"kind\": \"role\",\n    \"trust_policy\": {\n      \"has_aws_service_principal\": true,\n      \"source_arn_protected\": true\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.IAM.TRUST.SOURCEARN.001",
+      "asset_id": "test-role",
+      "exposure_score": 112.5,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1.5,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-trust-sourcearn-001-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-trust-sourcearn-001-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "300a66de1ba44fba6172e4aa26a17eaf0766718f",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-iam-trust-sourcearn-001-fail/controls/"
+      ]
+    }
+  }
+}

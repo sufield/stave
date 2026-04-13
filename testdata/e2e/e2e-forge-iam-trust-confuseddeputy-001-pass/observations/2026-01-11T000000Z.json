@@ -1,0 +1,25 @@
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "assets": [
+    {
+      "id": "test-role",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "trust_policy": {
+            "has_third_party_principal": true,
+            "confused_deputy_protected": true
+          }
+        }
+      }
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z"
+}

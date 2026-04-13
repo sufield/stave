@@ -79,4 +79,13 @@ compound_severity: critical
 | File | Purpose |
 |---|---|
 | `controls/kms/concentration/CTL.KMS.CONCENTRATION.001-002.yaml` | 2 concentration controls |
-| `chains/crypto_concentration_failure.yaml` | Compound chain definition |
+| `controls/kms/isolation/CTL.KMS.ISOLATION.001.yaml` | Key domain isolation control |
+| `chains/crypto_concentration_failure.yaml` | Concentration compound chain |
+| `chains/cryptographic_boundary_collapse.yaml` | Isolation + cross-env compound chain |
+
+## Related: Cryptographic isolation
+
+Concentration checks how many resources depend on one key.
+Isolation checks whether a key is shared across sensitivity domains.
+See CTL.KMS.ISOLATION.001 — a PHI key shared with a dev bucket
+collapses the cryptographic boundary even if concentration is low.

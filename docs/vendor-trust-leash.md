@@ -85,4 +85,16 @@ compound_severity: critical
 |---|---|
 | `controls/iam/vendor/CTL.IAM.VENDOR.DORMANT.001.yaml` | Dormant vendor detection |
 | `controls/iam/vendor/CTL.IAM.VENDOR.OVERPRIVILEGED.001.yaml` | Overprivileged vendor detection |
+| `controls/iam/trust/CTL.IAM.TRUST.CONFUSEDDEPUTY.001.yaml` | Confused deputy protection |
+| `controls/iam/trust/CTL.IAM.TRUST.SOURCEARN.001.yaml` | Service principal SourceArn protection |
 | `chains/third_party_exposure_path.yaml` | Compound chain definition |
+| `chains/vendor_attack_path.yaml` | Confused deputy + S3 access chain |
+
+## Related: Confused deputy protection
+
+Vendor trust leash controls detect dormant or overprivileged vendor
+roles. Confused deputy controls detect the structural vulnerability
+that enables cross-customer exploitation even with correctly scoped
+principals. See CTL.IAM.TRUST.CONFUSEDDEPUTY.001 for third-party
+account trust without ExternalId, and CTL.IAM.TRUST.SOURCEARN.001
+for AWS service principals without SourceArn.

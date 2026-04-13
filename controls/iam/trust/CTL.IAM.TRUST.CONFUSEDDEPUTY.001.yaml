@@ -1,0 +1,61 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.TRUST.CONFUSEDDEPUTY.001
+name: Third-Party Role Trust Must Have Confused Deputy Protection
+description: >
+  IAM roles trusted by third-party AWS accounts (accounts outside your
+  organization) must include sts:ExternalId or aws:SourceAccount conditions.
+  Without these guardrails, the confused deputy problem allows any customer
+  of the same third-party vendor to assume your role through the vendor's
+  IAM system. The Microsoft Midnight Blizzard 2024 breach exploited a legacy
+  cross-tenant trust without per-customer binding to pivot from a test tenant
+  to production Exchange mailboxes. Coupa/Corecard-pattern SaaS integrations
+  with shared IAM roles and no ExternalId allow cross-customer data access
+  if the vendor's IAM system is compromised.
+domain: identity
+severity: critical
+compliance:
+  hipaa: "164.312(a)(1)"
+  nist_800_53_r5: "AC-3, AC-6"
+  fedramp_moderate: "AC-3"
+  pci_dss_v4.0: "7.2.1"
+  soc2: "CC6.1, CC9.2"
+  iso_27001_2022: "A.8.3"
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params:
+  base_impact: 10
+  attack_stage: persistence
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    An IAM role trusts a third-party AWS account without confused deputy
+    protection. Any customer of the third-party vendor can assume this role
+    through the vendor's IAM system.
+  action: >
+    Add an sts:ExternalId condition with a unique per-relationship value to
+    the role trust policy. Alternatively, add aws:SourceAccount scoped to the
+    specific account that should be permitted. Do not use wildcard values —
+    ExternalId set to * provides no protection.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "trust_policy": {
+          "has_third_party_principal": true,
+          "confused_deputy_protected": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.trust_policy.has_third_party_principal
+      op: eq
+      value: true
+    - field: properties.identity.trust_policy.confused_deputy_protected
+      op: eq
+      value: false

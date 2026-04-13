@@ -1,0 +1,121 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "7a2138ac0c6b065aa415c7ed2749cda5d9730f4fad3f9c8e23953ea55c13effd",
+        "2026-01-11T000000Z.json": "7705cd098bbb086d80786c858543cae21889d0f750ec79ff8f04b62d263cec23"
+      },
+      "overall": "f16d7a2bc73d9bc18d998d46c928ac96bc2b77674941d04d0c26a8cec1871047"
+    },
+    "policy_fingerprint": "27f18fd653b7e8a4fc0aa58824f221f255ca512e53632dd05f947a11e7b37138"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.IAM.TRUST.CONFUSEDDEPUTY.001",
+      "asset_id": "test-role",
+      "asset_type": "aws_iam_role",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.IAM.TRUST.CONFUSEDDEPUTY.001",
+      "control_name": "Third-Party Role Trust Must Have Confused Deputy Protection",
+      "control_description": "IAM roles trusted by third-party AWS accounts (accounts outside your organization) must include sts:ExternalId or aws:SourceAccount conditions. Without these guardrails, the confused deputy problem allows any customer of the same third-party vendor to assume your role through the vendor's IAM system. The Microsoft Midnight Blizzard 2024 breach exploited a legacy cross-tenant trust without per-customer binding to pivot from a test tenant to production Exchange mailboxes. Coupa/Corecard-pattern SaaS integrations with shared IAM roles and no ExternalId allow cross-customer data access if the vendor's IAM system is compromised.\n",
+      "asset_id": "test-role",
+      "asset_type": "aws_iam_role",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "identity.trust_policy.confused_deputy_protected",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "identity.trust_policy.has_third_party_principal",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance": {
+        "fedramp_moderate": "AC-3",
+        "hipaa": "164.312(a)(1)",
+        "iso_27001_2022": "A.8.3",
+        "nist_800_53_r5": "AC-3, AC-6",
+        "pci_dss_v4.0": "7.2.1",
+        "soc2": "CC6.1, CC9.2"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "An IAM role trusts a third-party AWS account without confused deputy protection. Any customer of the third-party vendor can assume this role through the vendor's IAM system.",
+        "action": "Add an sts:ExternalId condition with a unique per-relationship value to the role trust policy. Alternatively, add aws:SourceAccount scoped to the specific account that should be permitted. Do not use wildcard values — ExternalId set to * provides no protection.",
+        "example": "{\n  \"identity\": {\n    \"kind\": \"role\",\n    \"trust_policy\": {\n      \"has_third_party_principal\": true,\n      \"confused_deputy_protected\": true\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.IAM.TRUST.CONFUSEDDEPUTY.001",
+      "asset_id": "test-role",
+      "exposure_score": 200,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 2,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-trust-confuseddeputy-001-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-trust-confuseddeputy-001-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "300a66de1ba44fba6172e4aa26a17eaf0766718f",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-iam-trust-confuseddeputy-001-fail/controls/"
+      ]
+    }
+  }
+}
