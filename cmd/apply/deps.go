@@ -23,6 +23,17 @@ import (
 	"github.com/sufield/stave/internal/version"
 )
 
+// Deps holds the adapter factories required by the apply command.
+// Each factory is passed explicitly — the command never receives a
+// Provider or Factories struct.
+type Deps struct {
+	NewObsRepo       compose.ObsRepoFactory
+	NewCtlRepo       compose.CtlRepoFactory
+	NewStdinObsRepo  func(io.Reader) (appcontracts.ObservationRepository, error)
+	NewFindingWriter compose.FindingWriterFactory
+	NewCELEvaluator  compose.CELEvaluatorFactory
+}
+
 // Builder encapsulates the cmd-layer resolution needed before building
 // apply dependencies. It resolves adapters, loads exemptions, audits
 // git status, and delegates final assembly to BuildDependencies.

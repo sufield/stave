@@ -125,9 +125,9 @@ func TestRunValidate_DirectoryMode_ValidatesBothArtifacts(t *testing.T) {
 	cmd.SetErr(&stderr)
 
 	// Exercise full validate command flow (directory mode).
-	p := compose.NewDefaultProvider()
+	f := compose.DefaultFactories()
 	err := runValidate(cmd, validateDeps{
-		NewObsRepo: p.NewObservationRepo, NewCtlRepo: p.NewControlRepo, NewCELEvaluator: p.NewCELEvaluator,
+		NewObsRepo: f.NewObsRepo, NewCtlRepo: f.NewCtlRepo, NewCELEvaluator: f.NewCELEvaluator,
 	}, ui.DefaultRuntime(), opts)
 	if err != nil {
 		t.Fatalf("expected directory validate to pass, got: %v\nstderr: %s", err, stderr.String())
@@ -384,8 +384,8 @@ func TestOutputAndExit_JSONOutput_WithFixHints(t *testing.T) {
 
 // TestValidateHelpText verifies validate command help contains required sections.
 func TestValidateHelpText(t *testing.T) {
-	vp := compose.NewDefaultProvider()
-	help := NewCmd(vp.NewObservationRepo, vp.NewControlRepo, vp.NewCELEvaluator, ui.DefaultRuntime()).Long
+	vf := compose.DefaultFactories()
+	help := NewCmd(vf.NewObsRepo, vf.NewCtlRepo, vf.NewCELEvaluator, ui.DefaultRuntime()).Long
 	required := []string{"What it checks:", "Control schema", "Observation schema", "Duration format"}
 	for _, section := range required {
 		if !strings.Contains(help, section) {
@@ -396,8 +396,8 @@ func TestValidateHelpText(t *testing.T) {
 
 // TestDiagnoseHelpText verifies diagnose command help contains required sections.
 func TestDiagnoseHelpText(t *testing.T) {
-	p := compose.NewDefaultProvider()
-	cmd := diagnose.NewDiagnoseCmd(p.NewObservationRepo, p.NewControlRepo)
+	df := compose.DefaultFactories()
+	cmd := diagnose.NewDiagnoseCmd(df.NewObsRepo, df.NewCtlRepo)
 	help := cmd.Long
 	required := []string{"Inputs:", "Outputs:", "Exit Codes:"}
 	for _, section := range required {

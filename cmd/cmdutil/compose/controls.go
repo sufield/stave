@@ -45,11 +45,6 @@ func FindControlByID(ctx context.Context, repo appcontracts.ControlRepository, d
 
 // --- Package Level Helpers (Functional API) ---
 
-// LoadControls is a convenience wrapper for one-off loading via Provider.
-func LoadControls(ctx context.Context, p *Provider, dir string) ([]policy.ControlDefinition, error) {
-	return LoadControlsFrom(ctx, p.NewControlRepo, dir)
-}
-
 // LoadControlsFrom loads controls using an explicit factory function.
 func LoadControlsFrom(ctx context.Context, newCtlRepo CtlRepoFactory, dir string) ([]policy.ControlDefinition, error) {
 	repo, err := newCtlRepo()

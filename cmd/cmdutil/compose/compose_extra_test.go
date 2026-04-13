@@ -2,13 +2,13 @@ package compose
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"strings"
 	"testing"
 	"time"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/ports"
 )
@@ -226,107 +226,56 @@ func TestDefaultFindingWriter_Invalid(t *testing.T) {
 	}
 }
 
-// --- Provider nil checks ---
+// --- DefaultFactories ---
 
-func TestProvider_NewObservationRepo_NilFunc(t *testing.T) {
-	p := &Provider{}
-	_, err := p.NewObservationRepo()
+func TestDefaultFactories_NotNil(t *testing.T) {
+	f := DefaultFactories()
+	if f.NewObsRepo == nil {
+		t.Fatal("NewObsRepo should not be nil")
+	}
+	if f.NewCtlRepo == nil {
+		t.Fatal("NewCtlRepo should not be nil")
+	}
+	if f.NewStdinObsRepo == nil {
+		t.Fatal("NewStdinObsRepo should not be nil")
+	}
+	if f.NewFindingWriter == nil {
+		t.Fatal("NewFindingWriter should not be nil")
+	}
+	if f.NewCELEvaluator == nil {
+		t.Fatal("NewCELEvaluator should not be nil")
+	}
+	if f.NewSnapshotRepo == nil {
+		t.Fatal("NewSnapshotRepo should not be nil")
+	}
+}
+
+func TestDefaultFactories_Callable(t *testing.T) {
+	f := DefaultFactories()
+
+	if _, err := f.NewObsRepo(); err != nil {
+		t.Fatalf("NewObsRepo() error: %v", err)
+	}
+	if _, err := f.NewCtlRepo(); err != nil {
+		t.Fatalf("NewCtlRepo() error: %v", err)
+	}
+	if _, err := f.NewCELEvaluator(); err != nil {
+		t.Fatalf("NewCELEvaluator() error: %v", err)
+	}
+	if _, err := f.NewSnapshotRepo(); err != nil {
+		t.Fatalf("NewSnapshotRepo() error: %v", err)
+	}
+}
+
+// --- LoadSnapshotsFrom nil factory ---
+
+func TestLoadSnapshotsFrom_NilFactory(t *testing.T) {
+	nilFactory := func() (appcontracts.ObservationRepository, error) {
+		return nil, errors.New("nil factory")
+	}
+	_, err := LoadSnapshotsFrom(t.Context(), nilFactory, "some-dir")
 	if err == nil {
-		t.Fatal("expected error for nil ObsRepoFunc")
-	}
-}
-
-func TestProvider_NewControlRepo_NilFunc(t *testing.T) {
-	p := &Provider{}
-	_, err := p.NewControlRepo()
-	if err == nil {
-		t.Fatal("expected error for nil ControlRepoFunc")
-	}
-}
-
-func TestProvider_NewStdinObsRepo_NilFunc(t *testing.T) {
-	p := &Provider{}
-	_, err := p.NewStdinObsRepo(strings.NewReader(""))
-	if err == nil {
-		t.Fatal("expected error for nil StdinObsRepoFunc")
-	}
-}
-
-func TestProvider_NewSnapshotRepo_NilFunc(t *testing.T) {
-	p := &Provider{}
-	_, err := p.NewSnapshotRepo()
-	if err == nil {
-		t.Fatal("expected error for nil SnapshotRepoFunc")
-	}
-}
-
-func TestProvider_NewFindingWriter_NilFunc(t *testing.T) {
-	p := &Provider{}
-	_, err := p.NewFindingWriter(appcontracts.FormatJSON, false)
-	if err == nil {
-		t.Fatal("expected error for nil FindingWriterFunc")
-	}
-}
-
-func TestProvider_NewCELEvaluator_DefaultFunc(t *testing.T) {
-	p := &Provider{}
-	eval, err := p.NewCELEvaluator()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if eval == nil {
-		t.Fatal("expected non-nil evaluator")
-	}
-}
-
-func TestProvider_NewCELEvaluator_CustomFunc(t *testing.T) {
-	called := false
-	p := &Provider{
-		CELEvalFunc: func() (policy.PredicateEval, error) {
-			called = true
-			return nil, nil
-		},
-	}
-	_, _ = p.NewCELEvaluator()
-	if !called {
-		t.Fatal("expected custom CELEvalFunc to be called")
-	}
-}
-
-// --- NewDefaultProvider ---
-
-func TestNewDefaultProvider_NotNil(t *testing.T) {
-	p := NewDefaultProvider()
-	if p == nil {
-		t.Fatal("expected non-nil provider")
-	}
-	if p.ObsRepoFunc == nil {
-		t.Fatal("ObsRepoFunc should not be nil")
-	}
-	if p.ControlRepoFunc == nil {
-		t.Fatal("ControlRepoFunc should not be nil")
-	}
-	if p.StdinObsRepoFunc == nil {
-		t.Fatal("StdinObsRepoFunc should not be nil")
-	}
-	if p.FindingWriterFunc == nil {
-		t.Fatal("FindingWriterFunc should not be nil")
-	}
-	if p.CELEvalFunc == nil {
-		t.Fatal("CELEvalFunc should not be nil")
-	}
-	if p.SnapshotRepoFunc == nil {
-		t.Fatal("SnapshotRepoFunc should not be nil")
-	}
-}
-
-// --- LoadSnapshots nil ObsRepoFunc ---
-
-func TestProvider_LoadSnapshots_NilObsRepoFunc(t *testing.T) {
-	p := &Provider{}
-	_, err := p.LoadSnapshots(t.Context(), "some-dir")
-	if err == nil {
-		t.Fatal("expected error for nil ObsRepoFunc")
+		t.Fatal("expected error for nil factory")
 	}
 }
 

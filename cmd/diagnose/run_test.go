@@ -103,9 +103,9 @@ func TestDiagnoseParseHelpers(t *testing.T) {
 }
 
 func TestRunnerBuildAppConfig(t *testing.T) {
-	p := compose.NewDefaultProvider()
-	obsRepo, _ := p.NewObservationRepo()
-	ctlRepo, _ := p.NewControlRepo()
+	f := compose.DefaultFactories()
+	obsRepo, _ := f.NewObsRepo()
+	ctlRepo, _ := f.NewCtlRepo()
 	runner := NewRunner(obsRepo, ctlRepo, clockadp.RealClock{})
 
 	fakeStdin := strings.NewReader(`{"findings":[]}`)

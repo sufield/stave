@@ -58,8 +58,9 @@ func TestRunFixLoopWritesArtifacts(t *testing.T) {
 	clock := ports.FixedClock(time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC))
 	runner := newTestRunner(t)
 	runner.Clock = clock
-	runner.NewCtlRepo = compose.NewDefaultProvider().NewControlRepo
-	runner.NewObsRepo = compose.NewDefaultProvider().NewObservationRepo
+	f := compose.DefaultFactories()
+	runner.NewCtlRepo = f.NewCtlRepo
+	runner.NewObsRepo = f.NewObsRepo
 	runner.FileOptions = fileout.FileOptions{
 		Overwrite: true,
 		DirPerms:  0o700,

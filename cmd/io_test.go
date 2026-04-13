@@ -136,17 +136,23 @@ func TestEnforceFlagRegistered(t *testing.T) {
 
 // TestValidateInFlagRegistered verifies --in flag exists on validate.
 func TestValidateInFlagRegistered(t *testing.T) {
-	vp := compose.NewDefaultProvider()
-	f := applyvalidate.NewCmd(vp.NewObservationRepo, vp.NewControlRepo, vp.NewCELEvaluator, ui.DefaultRuntime()).Flags().Lookup("in")
+	vf := compose.DefaultFactories()
+	f := applyvalidate.NewCmd(vf.NewObsRepo, vf.NewCtlRepo, vf.NewCELEvaluator, ui.DefaultRuntime()).Flags().Lookup("in")
 	if f == nil {
 		t.Error("validate missing --in flag")
 	}
 }
 
 func TestCommonShortAliasesRegistered(t *testing.T) {
-	diagProvider := compose.NewDefaultProvider()
-	applyCmd := apply.NewApplyCmd(diagProvider)
-	validateCmd := applyvalidate.NewCmd(diagProvider.NewObservationRepo, diagProvider.NewControlRepo, diagProvider.NewCELEvaluator, ui.DefaultRuntime())
+	f := compose.DefaultFactories()
+	applyCmd := apply.NewApplyCmd(apply.Deps{
+		NewObsRepo:       f.NewObsRepo,
+		NewCtlRepo:       f.NewCtlRepo,
+		NewStdinObsRepo:  f.NewStdinObsRepo,
+		NewFindingWriter: f.NewFindingWriter,
+		NewCELEvaluator:  f.NewCELEvaluator,
+	})
+	validateCmd := applyvalidate.NewCmd(f.NewObsRepo, f.NewCtlRepo, f.NewCELEvaluator, ui.DefaultRuntime())
 	cases := []struct {
 		name      string
 		shorthand string
@@ -156,7 +162,7 @@ func TestCommonShortAliasesRegistered(t *testing.T) {
 		{name: "apply observations", shorthand: "o", flags: applyCmd.Flags()},
 		{name: "validate controls", shorthand: "i", flags: validateCmd.Flags()},
 		{name: "validate observations", shorthand: "o", flags: validateCmd.Flags()},
-		{name: "diagnose previous-output", shorthand: "p", flags: diagnose.NewDiagnoseCmd(diagProvider.NewObservationRepo, diagProvider.NewControlRepo).Flags()},
+		{name: "diagnose previous-output", shorthand: "p", flags: diagnose.NewDiagnoseCmd(f.NewObsRepo, f.NewCtlRepo).Flags()},
 	}
 
 	for _, tc := range cases {

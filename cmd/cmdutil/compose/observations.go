@@ -2,21 +2,16 @@ package compose
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/core/asset"
 )
 
-// LoadSnapshots loads observations from the specified directory using
-// the provider's configured repository.
-func (p *Provider) LoadSnapshots(ctx context.Context, dir string) ([]asset.Snapshot, error) {
-	if p.ObsRepoFunc == nil {
-		return nil, errors.New("observation repository function not configured")
-	}
-
-	repo, err := p.ObsRepoFunc()
+// LoadSnapshotsFrom loads observations from the specified directory using
+// the provided factory function.
+func LoadSnapshotsFrom(ctx context.Context, newObs ObsRepoFactory, dir string) ([]asset.Snapshot, error) {
+	repo, err := newObs()
 	if err != nil {
 		return nil, fmt.Errorf("initializing observation repository: %w", err)
 	}

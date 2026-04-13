@@ -3,11 +3,13 @@ package apply
 import (
 	"context"
 	"fmt"
+	"io"
 	"log/slog"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/runid"
 	appconfig "github.com/sufield/stave/internal/app/config"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/evaluation"
@@ -15,7 +17,9 @@ import (
 
 // evalContext groups the parameters needed by the evaluation pipeline.
 type evalContext struct {
-	Provider          *compose.Provider
+	NewFindingWriter  compose.FindingWriterFactory
+	NewCtlRepo        compose.CtlRepoFactory
+	NewStdinObsRepo   func(io.Reader) (appcontracts.ObservationRepository, error)
 	Opts              *Options
 	Params            applyParams
 	IO                StandardIO
@@ -27,7 +31,7 @@ type evalContext struct {
 }
 
 // runStandardApply executes the standard plan → evaluate → output pipeline.
-func runStandardApply(ctx context.Context, logger *slog.Logger, p *compose.Provider, opts *Options, params applyParams, sio StandardIO, cfg RunConfig) error {
+func runStandardApply(ctx context.Context, logger *slog.Logger, deps Deps, opts *Options, params applyParams, sio StandardIO, cfg RunConfig) error {
 	pc, pcErr := resolveProjectContext()
 	if pcErr != nil {
 		return decorateError(pcErr)
@@ -46,7 +50,9 @@ func runStandardApply(ctx context.Context, logger *slog.Logger, p *compose.Provi
 	rt.Quiet = sio.Quiet
 
 	ec := evalContext{
-		Provider:          p,
+		NewFindingWriter:  deps.NewFindingWriter,
+		NewCtlRepo:        deps.NewCtlRepo,
+		NewStdinObsRepo:   deps.NewStdinObsRepo,
 		Opts:              opts,
 		Params:            params,
 		IO:                sio,

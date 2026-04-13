@@ -8,7 +8,6 @@ import (
 	"time"
 
 	applyvalidate "github.com/sufield/stave/cmd/apply/validate"
-	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/prereq"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/app/readiness"
@@ -103,9 +102,9 @@ type readinessJSONReport struct {
 
 // runDryRun performs only readiness checks (replacing the removed plan command).
 // It is invoked by apply --dry-run.
-func runDryRun(ctx context.Context, p *compose.Provider, cfg ReadinessConfig) error {
+func runDryRun(ctx context.Context, deps Deps, cfg ReadinessConfig) error {
 	factory := func(ctlDir, obsDir string, sanitize bool) ReadinessValidator {
-		return applyvalidate.NewReadinessValidator(ctx, p.NewObservationRepo, p.NewControlRepo, ctlDir, obsDir, sanitize, applyvalidate.PackConfigIssues)
+		return applyvalidate.NewReadinessValidator(ctx, deps.NewObsRepo, deps.NewCtlRepo, ctlDir, obsDir, sanitize, applyvalidate.PackConfigIssues)
 	}
 	runner := NewReadinessRunner(factory)
 	return runner.Execute(cfg)

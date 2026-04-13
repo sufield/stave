@@ -9,7 +9,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
-	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/metadata"
@@ -68,12 +67,6 @@ type App struct {
 	cpuProfileFile *os.File           // held open during execution, closed in postRun
 	cancel         context.CancelFunc // set by bootstrap, called by signal handler
 
-	// Provider holds the adapter constructor wiring used by command handlers.
-	// It is initialised from compose.NewDefaultProvider() and threaded through
-	// command constructors at registration time. Replace it before calling
-	// NewApp to swap adapters in tests or custom entry points.
-	Provider *compose.Provider
-
 	// Confidence holds the configurable confidence thresholds, set during
 	// bootstrap from stave.yaml. Passed to the engine Runner.
 	Confidence evaluation.ConfidenceCalculator
@@ -90,7 +83,6 @@ func NewApp(opts ...AppOption) *App {
 	app := &App{
 		Edition:  EditionProd,
 		ExitFunc: os.Exit,
-		Provider: compose.NewDefaultProvider(),
 	}
 	app.Root = &cobra.Command{
 		Use:                CLIName,

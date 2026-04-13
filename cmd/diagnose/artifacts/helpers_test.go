@@ -24,8 +24,8 @@ func getTestRootCmd() *cobra.Command {
 	root.PersistentFlags().String("path-mode", "base", "Path rendering mode")
 	root.PersistentFlags().String("log-file", "", "Log file path")
 
-	p := compose.NewDefaultProvider()
-	root.AddCommand(NewControlsCmd(p.NewControlRepo))
+	f := compose.DefaultFactories()
+	root.AddCommand(NewControlsCmd(f.NewCtlRepo))
 	root.AddCommand(NewPacksCmd())
 	root.AddCommand(NewLintCmd())
 	root.AddCommand(NewFmtCmd())

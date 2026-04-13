@@ -13,7 +13,7 @@ import (
 // runApply is the single dispatch function called by the thin RunE wrapper.
 // All CLI state has already been extracted into cs. Context flows as the
 // first parameter per Go convention.
-func runApply(ctx context.Context, p *compose.Provider, opts *Options, cs cobraState) error {
+func runApply(ctx context.Context, deps Deps, opts *Options, cs cobraState) error {
 	if err := opts.validate(); err != nil {
 		return fmt.Errorf("validate options: %w", err)
 	}
@@ -31,7 +31,7 @@ func runApply(ctx context.Context, p *compose.Provider, opts *Options, cs cobraS
 		if dryErr != nil {
 			return fmt.Errorf("resolve dry-run config: %w", dryErr)
 		}
-		return runDryRun(ctx, p, dryCfg)
+		return runDryRun(ctx, deps, dryCfg)
 	}
 
 	if err = runStrictIntegrityCheck(cs.GlobalFlags.Strict, cs.Stdout, cs.Stderr); err != nil {
@@ -47,11 +47,11 @@ func runApply(ctx context.Context, p *compose.Provider, opts *Options, cs cobraS
 		rt := ui.NewRuntime(cs.Stdout, cs.Stderr)
 		rt.Quiet = cfg.Profile.Quiet
 		runner := NewRunner(
-			p.NewCELEvaluator,
+			deps.NewCELEvaluator,
 			func(ctx context.Context, dir string) ([]policy.ControlDefinition, error) {
-				return compose.LoadControls(ctx, p, dir)
+				return compose.LoadControlsFrom(ctx, deps.NewCtlRepo, dir)
 			},
-			p.NewFindingWriter,
+			deps.NewFindingWriter,
 			WithClock(cfg.profileClock),
 			WithUI(rt),
 		)
@@ -62,5 +62,5 @@ func runApply(ctx context.Context, p *compose.Provider, opts *Options, cs cobraS
 	if err != nil {
 		return fmt.Errorf("resolve output config: %w", err)
 	}
-	return runStandardApply(ctx, cs.Logger, p, opts, *cfg.Params, sio, cfg)
+	return runStandardApply(ctx, cs.Logger, deps, opts, *cfg.Params, sio, cfg)
 }

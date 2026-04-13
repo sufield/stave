@@ -37,8 +37,8 @@ unsafe_predicate:
 		t.Fatalf("write control: %v", err)
 	}
 
-	p := compose.NewDefaultProvider()
-	repo, err := p.NewControlRepo()
+	f := compose.DefaultFactories()
+	repo, err := f.NewCtlRepo()
 	if err != nil {
 		t.Fatalf("create repo: %v", err)
 	}
@@ -75,8 +75,8 @@ func TestExplainNotFound(t *testing.T) {
 		t.Fatalf("mkdir controls: %v", err)
 	}
 
-	p := compose.NewDefaultProvider()
-	repo, err := p.NewControlRepo()
+	f := compose.DefaultFactories()
+	repo, err := f.NewCtlRepo()
 	if err != nil {
 		t.Fatalf("create repo: %v", err)
 	}

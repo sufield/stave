@@ -45,7 +45,7 @@ func findRepoRoot(t *testing.T) string {
 
 func TestResolveApplyOptions(t *testing.T) {
 	fixture := testdataDir(t, "e2e-01-violation")
-	cmd := NewApplyCmd(compose.NewDefaultProvider())
+	cmd := NewApplyCmd(testApplyDeps())
 	cs := cobraState{
 		Stdout:      cmd.OutOrStdout(),
 		Stderr:      cmd.ErrOrStderr(),
@@ -225,7 +225,7 @@ func buildWithNewPlan(b *Builder) (*appeval.ApplyDeps, error) {
 func testBuilder(opts *Options, params applyParams) *Builder {
 	format, _ := ui.ParseOutputFormat(opts.Format)
 	hasher := crypto.NewHasher()
-	p := compose.NewDefaultProvider()
+	f := compose.DefaultFactories()
 	return &Builder{
 		Logger:           slog.Default(),
 		Stdout:           io.Discard,
@@ -236,9 +236,9 @@ func testBuilder(opts *Options, params applyParams) *Builder {
 		Digester:         hasher,
 		Opts:             opts,
 		Params:           params,
-		NewFindingWriter: p.NewFindingWriter,
-		NewCtlRepo:       p.NewControlRepo,
-		NewStdinObsRepo:  p.NewStdinObsRepo,
+		NewFindingWriter: f.NewFindingWriter,
+		NewCtlRepo:       f.NewCtlRepo,
+		NewStdinObsRepo:  f.NewStdinObsRepo,
 	}
 }
 

@@ -15,22 +15,27 @@ import (
 )
 
 // Commands returns the snapshot lifecycle commands.
-func Commands(p *compose.Provider) []*cobra.Command {
+func Commands(
+	newObs compose.ObsRepoFactory,
+	newSnapshot compose.SnapshotRepoFactory,
+	loadAssets compose.AssetLoaderFunc,
+	loadSnapshots compose.SnapshotLoader,
+) []*cobra.Command {
 	return []*cobra.Command{
-		archive.NewCmd(p.NewSnapshotRepo),
-		upcoming.NewCmd(p.LoadAssets),
-		snapshot.NewQualityCmd(p.LoadSnapshots),
-		snapshot.NewPlanCmd(p.NewSnapshotRepo),
-		hygiene.NewStatusCmd(p.NewObservationRepo, p.NewSnapshotRepo),
-		hygiene.NewRiskCmd(p.LoadAssets),
+		archive.NewCmd(newSnapshot),
+		upcoming.NewCmd(loadAssets),
+		snapshot.NewQualityCmd(loadSnapshots),
+		snapshot.NewPlanCmd(newSnapshot),
+		hygiene.NewStatusCmd(newObs, newSnapshot),
+		hygiene.NewRiskCmd(loadAssets),
 		manifest.NewCmd(),
 	}
 }
 
 // DevCommands returns snapshot commands that are destructive and
 // guarded by the production safety check.
-func DevCommands(p *compose.Provider) []*cobra.Command {
+func DevCommands(newSnapshot compose.SnapshotRepoFactory) []*cobra.Command {
 	return []*cobra.Command{
-		cleanup.NewCmd(p.NewSnapshotRepo),
+		cleanup.NewCmd(newSnapshot),
 	}
 }

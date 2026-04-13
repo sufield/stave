@@ -104,17 +104,15 @@ func (m *mockCtlRepo) LoadControls(_ context.Context, _ string) ([]policy.Contro
 	return m.controls, m.err
 }
 
-func TestProviderLoadAssets_Success(t *testing.T) {
+func TestLoadAssets_Success(t *testing.T) {
 	snap := asset.Snapshot{CapturedAt: time.Now()}
 	ctl := policy.ControlDefinition{ID: "TEST.001"}
 	obs := &mockObsRepo{snapshots: []asset.Snapshot{snap}}
 	ctlR := &mockCtlRepo{controls: []policy.ControlDefinition{ctl}}
-	p := &compose.Provider{
-		ObsRepoFunc:     func() (appcontracts.ObservationRepository, error) { return obs, nil },
-		ControlRepoFunc: func() (appcontracts.ControlRepository, error) { return ctlR, nil },
-	}
+	newObs := func() (appcontracts.ObservationRepository, error) { return obs, nil }
+	newCtl := func() (appcontracts.ControlRepository, error) { return ctlR, nil }
 
-	res, err := p.LoadAssets(context.Background(), "obs", "ctl")
+	res, err := compose.LoadAssets(context.Background(), newObs, newCtl, "obs", "ctl")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -126,16 +124,14 @@ func TestProviderLoadAssets_Success(t *testing.T) {
 	}
 }
 
-func TestProviderLoadAssets_ObsError(t *testing.T) {
+func TestLoadAssets_ObsError(t *testing.T) {
 	obsErr := errors.New("obs boom")
 	obs := &mockObsRepo{err: obsErr}
 	ctlR := &mockCtlRepo{controls: []policy.ControlDefinition{{ID: "T"}}}
-	p := &compose.Provider{
-		ObsRepoFunc:     func() (appcontracts.ObservationRepository, error) { return obs, nil },
-		ControlRepoFunc: func() (appcontracts.ControlRepository, error) { return ctlR, nil },
-	}
+	newObs := func() (appcontracts.ObservationRepository, error) { return obs, nil }
+	newCtl := func() (appcontracts.ControlRepository, error) { return ctlR, nil }
 
-	_, err := p.LoadAssets(context.Background(), "obs", "ctl")
+	_, err := compose.LoadAssets(context.Background(), newObs, newCtl, "obs", "ctl")
 	if err == nil {
 		t.Fatal("expected error")
 	}
@@ -144,16 +140,14 @@ func TestProviderLoadAssets_ObsError(t *testing.T) {
 	}
 }
 
-func TestProviderLoadAssets_CtlError(t *testing.T) {
+func TestLoadAssets_CtlError(t *testing.T) {
 	ctlErr := errors.New("ctl boom")
 	obs := &mockObsRepo{snapshots: []asset.Snapshot{{}}}
 	ctlR := &mockCtlRepo{err: ctlErr}
-	p := &compose.Provider{
-		ObsRepoFunc:     func() (appcontracts.ObservationRepository, error) { return obs, nil },
-		ControlRepoFunc: func() (appcontracts.ControlRepository, error) { return ctlR, nil },
-	}
+	newObs := func() (appcontracts.ObservationRepository, error) { return obs, nil }
+	newCtl := func() (appcontracts.ControlRepository, error) { return ctlR, nil }
 
-	_, err := p.LoadAssets(context.Background(), "obs", "ctl")
+	_, err := compose.LoadAssets(context.Background(), newObs, newCtl, "obs", "ctl")
 	if err == nil {
 		t.Fatal("expected error")
 	}

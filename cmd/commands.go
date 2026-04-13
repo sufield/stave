@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/ports"
 
 	"github.com/sufield/stave/cmd/apply"
@@ -70,20 +71,34 @@ const (
 // command hierarchy harder to reason about and the registration order non-obvious.
 func WireCommands(app *App) {
 	root := app.Root
-	p := app.Provider
+	f := compose.DefaultFactories()
+
+	// Convenience closures for commands that need composed loaders.
+	loadSnapshots := func(ctx context.Context, dir string) ([]asset.Snapshot, error) {
+		return compose.LoadSnapshotsFrom(ctx, f.NewObsRepo, dir)
+	}
+	loadAssets := func(ctx context.Context, obsDir, ctlDir string) (compose.Assets, error) {
+		return compose.LoadAssets(ctx, f.NewObsRepo, f.NewCtlRepo, obsDir, ctlDir)
+	}
 
 	// Getting started
 	root.AddCommand(initcmd.NewInitCmd())
 	root.AddCommand(initcmd.NewGenerateCmd())
 
 	// Control Engine
-	root.AddCommand(applyvalidate.NewCmd(p.NewObservationRepo, p.NewControlRepo, p.NewCELEvaluator, ui.DefaultRuntime()))
-	root.AddCommand(apply.NewApplyCmd(p))
-	root.AddCommand(applyverify.NewCmd(p.NewObservationRepo, p.NewControlRepo, p.NewCELEvaluator, ui.DefaultRuntime()))
-	root.AddCommand(diagnose.NewDiagnoseCmd(p.NewObservationRepo, p.NewControlRepo))
-	root.AddCommand(diagnose.NewExplainCmd(p.NewControlRepo))
-	root.AddCommand(diagnose.NewTraceCmd(p.NewControlRepo, p.NewSnapshotRepo))
-	root.AddCommand(diagnose.NewPromptCmd(p.NewControlRepo, p.LoadSnapshots))
+	root.AddCommand(applyvalidate.NewCmd(f.NewObsRepo, f.NewCtlRepo, f.NewCELEvaluator, ui.DefaultRuntime()))
+	root.AddCommand(apply.NewApplyCmd(apply.Deps{
+		NewObsRepo:       f.NewObsRepo,
+		NewCtlRepo:       f.NewCtlRepo,
+		NewStdinObsRepo:  f.NewStdinObsRepo,
+		NewFindingWriter: f.NewFindingWriter,
+		NewCELEvaluator:  f.NewCELEvaluator,
+	}))
+	root.AddCommand(applyverify.NewCmd(f.NewObsRepo, f.NewCtlRepo, f.NewCELEvaluator, ui.DefaultRuntime()))
+	root.AddCommand(diagnose.NewDiagnoseCmd(f.NewObsRepo, f.NewCtlRepo))
+	root.AddCommand(diagnose.NewExplainCmd(f.NewCtlRepo))
+	root.AddCommand(diagnose.NewTraceCmd(f.NewCtlRepo, f.NewSnapshotRepo))
+	root.AddCommand(diagnose.NewPromptCmd(f.NewCtlRepo, loadSnapshots))
 
 	// Workflow & CI
 	root.AddCommand(enforce.NewStatusCmd())
@@ -95,7 +110,7 @@ func WireCommands(app *App) {
 		Args:  cobra.NoArgs,
 	}
 	root.AddCommand(snapshotCmd)
-	wireSnapshotSubtree(snapshotCmd, p)
+	wireSnapshotSubtree(snapshotCmd, f.NewObsRepo, f.NewSnapshotRepo, loadAssets, loadSnapshots)
 
 	ciCmd := &cobra.Command{
 		Use:   "ci",
@@ -104,10 +119,10 @@ func WireCommands(app *App) {
 		Args:  cobra.NoArgs,
 	}
 	root.AddCommand(ciCmd)
-	wireCISubtree(ciCmd, p)
+	wireCISubtree(ciCmd, f.NewCELEvaluator, f.NewCtlRepo, f.NewObsRepo, loadAssets)
 
 	// Export & Interop
-	root.AddCommand(staveexport.NewCmd(p.NewControlRepo))
+	root.AddCommand(staveexport.NewCmd(f.NewCtlRepo))
 
 	// Data & Artifacts
 	root.AddCommand(enforce.NewGenerateCmd())
@@ -122,7 +137,7 @@ func WireCommands(app *App) {
 	}))
 	root.AddCommand(artifacts.NewLintCmd())
 	root.AddCommand(artifacts.NewFmtCmd())
-	root.AddCommand(artifacts.NewControlsCmd(p.NewControlRepo))
+	root.AddCommand(artifacts.NewControlsCmd(f.NewCtlRepo))
 	root.AddCommand(artifacts.NewPacksCmd())
 
 	// Introspection
@@ -153,7 +168,7 @@ func WireCommands(app *App) {
 		},
 	}))
 	root.AddCommand(bugreport.NewCmd())
-	root.AddCommand(enforce.NewGraphCmd(p.NewControlRepo, p.LoadSnapshots))
+	root.AddCommand(enforce.NewGraphCmd(f.NewCtlRepo, loadSnapshots))
 	root.AddCommand(initalias.NewCmd(root))
 	root.AddCommand(newCapabilitiesCmd())
 	root.AddCommand(newCompletionCmd())
@@ -174,17 +189,29 @@ func WireCommands(app *App) {
 	root.AddCommand(initconfig.NewConfigCmd(ui.DefaultRuntime()))
 }
 
-func wireSnapshotSubtree(snapshotCmd *cobra.Command, p *compose.Provider) {
-	snapshotCmd.AddCommand(enforce.NewDiffCmd(p.LoadSnapshots))
-	for _, subCmd := range prune.Commands(p) {
+func wireSnapshotSubtree(
+	snapshotCmd *cobra.Command,
+	newObs compose.ObsRepoFactory,
+	newSnapshot compose.SnapshotRepoFactory,
+	loadAssets compose.AssetLoaderFunc,
+	loadSnapshots compose.SnapshotLoader,
+) {
+	snapshotCmd.AddCommand(enforce.NewDiffCmd(loadSnapshots))
+	for _, subCmd := range prune.Commands(newObs, newSnapshot, loadAssets, loadSnapshots) {
 		snapshotCmd.AddCommand(subCmd)
 	}
-	for _, subCmd := range prune.DevCommands(p) {
+	for _, subCmd := range prune.DevCommands(newSnapshot) {
 		snapshotCmd.AddCommand(subCmd)
 	}
 }
 
-func wireCISubtree(ciCmd *cobra.Command, p *compose.Provider) {
+func wireCISubtree(
+	ciCmd *cobra.Command,
+	newCELEvaluator compose.CELEvaluatorFactory,
+	newCtlRepo compose.CtlRepoFactory,
+	newObsRepo compose.ObsRepoFactory,
+	loadAssets compose.AssetLoaderFunc,
+) {
 	loader := artifact.NewLoader()
 
 	baselineFileOpts := fileout.FileOptions{}
@@ -223,7 +250,7 @@ func wireCISubtree(ciCmd *cobra.Command, p *compose.Provider) {
 			},
 			OverdueCounter: &infragate.OverdueCounter{
 				LoadAssets: func(ctx context.Context, obsDir, ctlDir string) (infragate.Assets, error) {
-					a, err := p.LoadAssets(ctx, obsDir, ctlDir)
+					a, err := loadAssets(ctx, obsDir, ctlDir)
 					if err != nil {
 						return infragate.Assets{}, err
 					}
@@ -232,15 +259,15 @@ func wireCISubtree(ciCmd *cobra.Command, p *compose.Provider) {
 						Controls:  a.Controls,
 					}, nil
 				},
-				NewCELEvaluator: p.NewCELEvaluator,
+				NewCELEvaluator: newCELEvaluator,
 			},
 			Clock: ports.RealClock{},
 		},
 	}))
 	ciCmd.AddCommand(enforce.NewFixLoopCmd(fix.LoopDeps{
-		NewCELEvaluator: p.NewCELEvaluator,
-		NewCtlRepo:      p.NewControlRepo,
-		NewObsRepo:      p.NewObservationRepo,
+		NewCELEvaluator: newCELEvaluator,
+		NewCtlRepo:      newCtlRepo,
+		NewObsRepo:      newObsRepo,
 	}))
 	ciCmd.AddCommand(enforce.NewCiDiffCmd(cidiff.Deps{
 		UseCaseDeps: reporting.CIDiffDeps{
@@ -249,7 +276,7 @@ func wireCISubtree(ciCmd *cobra.Command, p *compose.Provider) {
 			Clock:          ports.RealClock{},
 		},
 	}))
-	celEval, celErr := p.NewCELEvaluator()
+	celEval, celErr := newCELEvaluator()
 	if celErr != nil {
 		panic("initialize CEL evaluator for fix command: " + celErr.Error())
 	}

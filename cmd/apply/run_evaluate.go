@@ -30,9 +30,9 @@ func executeEvaluation(ctx context.Context, ec evalContext) (EvaluateResult, err
 	}
 
 	builder := NewBuilder(ec.Logger, ec.Opts, ec.Params, ec.IO)
-	builder.NewFindingWriter = ec.Provider.NewFindingWriter
-	builder.NewCtlRepo = ec.Provider.NewControlRepo
-	builder.NewStdinObsRepo = ec.Provider.NewStdinObsRepo
+	builder.NewFindingWriter = ec.NewFindingWriter
+	builder.NewCtlRepo = ec.NewCtlRepo
+	builder.NewStdinObsRepo = ec.NewStdinObsRepo
 	builder.ProjectConfig = ec.ProjectConfig
 	builder.ProjectConfigPath = ec.ProjectConfigPath
 	builder.OnObsProgress = progress.Update

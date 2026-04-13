@@ -6,7 +6,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
-	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -88,7 +87,7 @@ func (o *Options) normalize() {
 }
 
 // NewApplyCmd constructs the apply command.
-func NewApplyCmd(p *compose.Provider) *cobra.Command {
+func NewApplyCmd(deps Deps) *cobra.Command {
 	opts := &Options{}
 
 	cmd := &cobra.Command{
@@ -149,7 +148,7 @@ Exit Codes:
 				FormatChanged: cmd.Flags().Changed("format"),
 				ObsChanged:    cmd.Flags().Changed("observations"),
 			}
-			return runApply(cmd.Context(), p, opts, cs)
+			return runApply(cmd.Context(), deps, opts, cs)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
