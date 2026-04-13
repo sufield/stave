@@ -40,6 +40,8 @@ packs:
       - CTL.EXPOSURE.EXFIL.001
       - CTL.LAMBDA.URL.AUTH.001
       - CTL.LAMBDA.ROLE.LEASTPRIV.001
+      - CTL.ECS.TASKMETADATA.001
+      - CTL.ECS.TASKMETADATA.002
       - CTL.SECRET.BLAST.001
       # §164.312(a)(2)(i) — Unique User Identification
       - CTL.IAM.CRED.ROTATION.001
@@ -105,6 +107,8 @@ packs:
       - CTL.VPC.SG.UNRESTRICTED.001
       - CTL.WAF.ORIGIN.LOCKDOWN.001
       - CTL.WAF.PARSERLIMIT.PROTECT.001
+      - CTL.ECS.TASKMETADATA.001
+      - CTL.ECS.TASKMETADATA.002
       # §164.312(e)(2)(ii) — Encryption in Transit
       - CTL.APIGATEWAY.TLS.001
       - CTL.ELASTICACHE.TRANSIT.001
@@ -600,6 +604,11 @@ packs:
       - CTL.LAMBDA.ROLE.LEASTPRIV.001
       - CTL.LAMBDA.ENV.SECRETS.001
       - CTL.LAMBDA.LOG.001
+  ecs:
+    description: AWS ECS container task security controls
+    controls:
+      - CTL.ECS.TASKMETADATA.001
+      - CTL.ECS.TASKMETADATA.002
   route53:
     description: AWS Route 53 DNS service controls
     controls:
@@ -1577,6 +1586,12 @@ controls:
   CTL.LAMBDA.LOG.001:
     path: internal/controldata/embedded/lambda/logging/CTL.LAMBDA.LOG.001.yaml
     summary: Lambda Functions Must Have CloudWatch Logging Enabled
+  CTL.ECS.TASKMETADATA.001:
+    path: internal/controldata/embedded/ecs/identity/CTL.ECS.TASKMETADATA.001.yaml
+    summary: ECS Task Role Must Follow Least Privilege
+  CTL.ECS.TASKMETADATA.002:
+    path: internal/controldata/embedded/ecs/identity/CTL.ECS.TASKMETADATA.002.yaml
+    summary: PHI ECS Tasks Must Have Scoped Task Roles
   CTL.BACKUP.EXISTS.001:
     path: internal/controldata/embedded/backup/verification/CTL.BACKUP.EXISTS.001.yaml
     summary: Critical Resources Must Have Backups

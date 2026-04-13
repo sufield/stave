@@ -1,0 +1,120 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "614ff5a4115ac52ee49ae0e4b63d8d0fc2386d4755a1656f505594941f194d31",
+        "2026-01-11T000000Z.json": "11c2269b124c405ee7267ddb2c923be7a06b82cf78506db7d8812a0a321429ce"
+      },
+      "overall": "6eef61d2aad8ba803a2d4ea4a00bcb3fea29205fb5c11895564cf88636752898"
+    },
+    "policy_fingerprint": "b2ba8d602bf1260ab90005d582f1cc31ddbc474fe8e4bb7d4825a2b362ee397e"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.ECS.TASKMETADATA.002",
+      "asset_id": "arn:aws:ecs:us-east-1:123456789012:task-definition/api-service:1",
+      "asset_type": "aws_ecs_task_definition",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.ECS.TASKMETADATA.002",
+      "control_name": "PHI ECS Tasks Must Have Scoped Task Roles",
+      "control_description": "ECS task definitions tagged with data-classification phi or pii must have task roles scoped exclusively to the services required for the task's declared function. For PHI workloads, the task role defines the blast radius of any SSRF exploit — a task processing PHI with a role granting broad S3 access is one SSRF vulnerability away from a HIPAA breach. The task metadata endpoint exposes credentials to every container in the task with no session-based protection. Cross-service access beyond the PHI data path increases the regulatory exposure from a credential theft without providing functional value.\n",
+      "asset_id": "arn:aws:ecs:us-east-1:123456789012:task-definition/api-service:1",
+      "asset_type": "aws_ecs_task_definition",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "container.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "task_definition"
+          },
+          {
+            "property": "container.task_role.phi_overprivileged",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance": {
+        "fedramp_moderate": "AC-6",
+        "hipaa": "164.312(a)(1)",
+        "nist_800_53_r5": "AC-6",
+        "pci_dss_v4.0": "7.2.1",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "PHI/PII ECS task has a task role granting access to services outside the minimum necessary for its declared function. Credential theft via SSRF would expose PHI data paths and cross-service access.",
+        "action": "Scope the task role to only the services in the PHI data path. Remove access to services the task does not require. For PHI tasks accessing S3, restrict to specific bucket ARNs. For tasks accessing DynamoDB, restrict to specific table ARNs. Ensure no wildcard resource ARNs exist on data-plane actions.",
+        "example": "{\n  \"container\": {\n    \"kind\": \"task_definition\",\n    \"task_role\": {\n      \"phi_overprivileged\": false\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.ECS.TASKMETADATA.002",
+      "asset_id": "arn:aws:ecs:us-east-1:123456789012:task-definition/api-service:1",
+      "exposure_score": 200,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 2,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-ecs-taskmetadata-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-ecs-taskmetadata-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "d8d7cc1cf5a1760976ed074a47ceec96d0944770",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-ecs-taskmetadata-fail/controls/"
+      ]
+    }
+  }
+}

@@ -3,22 +3,22 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 307
-**Pack hash:** `764cf72f9fec54c90effded9827422bf02e5041f06e0503ba399958bbe58e020`
+**Total controls:** 309
+**Pack hash:** `f1a88458be1f047b5d06b099541691543966258853f969f45bcbda374ad816dc`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 57 |
-| high | 128 |
+| critical | 58 |
+| high | 129 |
 | info | 16 |
 | low | 22 |
 | medium | 84 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 224 |
+| exposure | 226 |
 | governance | 7 |
 | identity | 68 |
 | storage | 8 |
@@ -998,6 +998,36 @@ ECR repositories must not be publicly accessible. A public ECR repository allows
 ECR repositories must have image scanning enabled (basic or enhanced). Without scanning, container images with known vulnerabilities are deployed to production undetected.
 
 **Remediation:** Enable scan-on-push in the repository configuration. For enhanced scanning, enable Amazon Inspector ECR integration.
+
+---
+
+### CTL.ECS.TASKMETADATA.001
+
+**ECS Task Role Must Follow Least Privilege**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-6; hipaa: 164.312(a)(1); nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+ECS task definitions must not have over-privileged task IAM roles. The task metadata endpoint (TMDEv4) exposes the task role credentials to every container in the task via a link-local HTTP endpoint with no session-based protection. An SSRF vulnerability in any container can retrieve valid short-lived AWS credentials in a single HTTP request. The blast radius of a credential theft is defined entirely by the task role's permissions — wildcard actions or wildcard resources on data-plane services (S3, DynamoDB, RDS, Secrets Manager, KMS) make the credential theft equivalent to account-wide lateral movement. This is the container equivalent of the EC2 IMDS vulnerability that CTL.EC2.IMDSV2.001 addresses, but structurally more exposed because the ECS metadata endpoint has no IMDSv2-style session token protection.
+
+**Remediation:** Scope the task role to only the specific actions and resource ARNs the task requires. Replace managed policies like AmazonS3FullAccess with inline policies scoped to specific resources. Use IAM Access Analyzer to generate a least-privilege policy from actual task activity. If the task does not need AWS API access, remove the task role entirely.
+
+---
+
+### CTL.ECS.TASKMETADATA.002
+
+**PHI ECS Tasks Must Have Scoped Task Roles**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-6; hipaa: 164.312(a)(1); nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+ECS task definitions tagged with data-classification phi or pii must have task roles scoped exclusively to the services required for the task's declared function. For PHI workloads, the task role defines the blast radius of any SSRF exploit — a task processing PHI with a role granting broad S3 access is one SSRF vulnerability away from a HIPAA breach. The task metadata endpoint exposes credentials to every container in the task with no session-based protection. Cross-service access beyond the PHI data path increases the regulatory exposure from a credential theft without providing functional value.
+
+**Remediation:** Scope the task role to only the services in the PHI data path. Remove access to services the task does not require. For PHI tasks accessing S3, restrict to specific bucket ARNs. For tasks accessing DynamoDB, restrict to specific table ARNs. Ensure no wildcard resource ARNs exist on data-plane actions.
 
 ---
 

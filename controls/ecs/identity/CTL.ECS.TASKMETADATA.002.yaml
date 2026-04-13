@@ -1,0 +1,60 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.TASKMETADATA.002
+name: PHI ECS Tasks Must Have Scoped Task Roles
+description: >
+  ECS task definitions tagged with data-classification phi or pii must
+  have task roles scoped exclusively to the services required for the
+  task's declared function. For PHI workloads, the task role defines the
+  blast radius of any SSRF exploit — a task processing PHI with a role
+  granting broad S3 access is one SSRF vulnerability away from a HIPAA
+  breach. The task metadata endpoint exposes credentials to every
+  container in the task with no session-based protection. Cross-service
+  access beyond the PHI data path increases the regulatory exposure from
+  a credential theft without providing functional value.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-6"
+  fedramp_moderate: "AC-6"
+  pci_dss_v4.0: "7.2.1"
+  soc2: "CC6.1"
+  hipaa: "164.312(a)(1)"
+scope_tags:
+  - aws
+  - ecs
+type: unsafe_state
+params:
+  base_impact: 10
+  attack_stage: initial_access
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    PHI/PII ECS task has a task role granting access to services outside
+    the minimum necessary for its declared function. Credential theft via
+    SSRF would expose PHI data paths and cross-service access.
+  action: >
+    Scope the task role to only the services in the PHI data path. Remove
+    access to services the task does not require. For PHI tasks accessing
+    S3, restrict to specific bucket ARNs. For tasks accessing DynamoDB,
+    restrict to specific table ARNs. Ensure no wildcard resource ARNs
+    exist on data-plane actions.
+  example: |
+    {
+      "container": {
+        "kind": "task_definition",
+        "task_role": {
+          "phi_overprivileged": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: task_definition
+    - field: properties.container.task_role.phi_overprivileged
+      op: eq
+      value: true
