@@ -1,0 +1,13 @@
+id: eol_database_phi_exposure
+description: >
+  RDS instance is running an EOL database engine with no security patches
+  available. The instance is either unencrypted, publicly accessible, or
+  both. An unpatched database engine with known CVEs is exposed through
+  the public network or unencrypted storage. For PHI workloads this
+  constitutes a direct compliance failure across multiple requirements.
+controls:
+  - CTL.RDS.ENGINE.EOL.001
+  - CTL.RDS.ENCRYPT.001
+  - CTL.RDS.PUBLIC.001
+escalation_threshold: 2
+compound_severity: critical

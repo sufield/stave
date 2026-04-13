@@ -1,0 +1,120 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "efe0ee33286b6ec0c8e1fc224c98c83479703745527bf86c08e718cf926ac400",
+        "2026-01-11T000000Z.json": "1dbded629403a3c001262e6a56e1592a0c62e85a8da0d9e422cc07dc13d6bc8b"
+      },
+      "overall": "4f044d7c4527f7bfd7400a25d601970042f34f34cb7b37d99bcf80bf8a95a1ae"
+    },
+    "policy_fingerprint": "4cfec447d2487aef2ec3a54955edf9908553080a7a401c50f90e203d95d6bdc2"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.RDS.ENGINE.EOL.001",
+      "asset_id": "arn:aws:rds:us-east-1:123456789012:db:prod-database",
+      "asset_type": "aws_rds_instance",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.RDS.ENGINE.EOL.001",
+      "control_name": "RDS Instances Must Not Run End-of-Life Database Engine Versions",
+      "control_description": "RDS instances must not run major database engine versions that have reached end-of-life (EOL) and no longer receive security patches from the engine vendor. This is distinct from CTL.RDS.AUTOUPGRADE.001 which covers automatic minor version upgrades within a supported major version. Auto minor upgrade does not upgrade between major versions — an EOL major version receives no further patches regardless of the auto-upgrade setting. PostgreSQL 11 (EOL November 2023), MySQL 5.7 (EOL October 2023), and MariaDB 10.4 (EOL June 2024) are examples of major versions that continue running on RDS but receive no security patches from the upstream vendor. The engine version is permanently unpatched against any vulnerability disclosed after EOL. For PHI and cardholder data environments, running an EOL engine is a direct compliance finding — HIPAA requires maintained software and PCI-DSS 6.3.3 requires protection from known vulnerabilities through patching.\n",
+      "asset_id": "arn:aws:rds:us-east-1:123456789012:db:prod-database",
+      "asset_type": "aws_rds_instance",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "database.engine_version.is_eol",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "database.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "instance"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "fedramp_moderate": "SI-2",
+        "hipaa": "164.312(c)(1)",
+        "nist_800_53_r5": "SI-2",
+        "pci_dss_v4.0": "6.3.3",
+        "soc2": "CC7.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "RDS instance is running a database engine major version that has reached end-of-life. No security patches are available from the engine vendor. Known CVEs accumulate without remediation.",
+        "action": "Upgrade the RDS instance to a supported major engine version. For PostgreSQL, upgrade to PostgreSQL 14 or later. For MySQL, upgrade to MySQL 8.0. For MariaDB, upgrade to MariaDB 10.6 or later. Use a blue-green deployment or read replica promotion to minimize downtime. Test the application against the new major version in a staging environment before upgrading production — major version upgrades may include breaking changes in SQL behavior, function signatures, or default settings.",
+        "example": "{\n  \"database\": {\n    \"kind\": \"instance\",\n    \"engine_version\": {\n      \"is_eol\": false\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.RDS.ENGINE.EOL.001",
+      "asset_id": "arn:aws:rds:us-east-1:123456789012:db:prod-database",
+      "exposure_score": 112.5,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1.5,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-rds-engine-eol-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-rds-engine-eol-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "450edddd4e9749a80454028777ef5fa2624fe8d4",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-rds-engine-eol-fail/controls/"
+      ]
+    }
+  }
+}

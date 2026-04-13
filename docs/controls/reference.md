@@ -3,22 +3,22 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 310
-**Pack hash:** `e3e538585c8acce5728c056b3a0674c4dfc6fdc9b254a5031b51411c3097207a`
+**Total controls:** 311
+**Pack hash:** `626985e9f21da5030ddc0fcf4500534d5881d92580be37de7d5a6afeb6d6158c`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 58 |
-| high | 130 |
+| high | 131 |
 | info | 16 |
 | low | 22 |
 | medium | 84 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 227 |
+| exposure | 228 |
 | governance | 7 |
 | identity | 68 |
 | storage | 8 |
@@ -3023,6 +3023,21 @@ RDS instances must have automated backups enabled with a retention period of at 
 RDS instances must have storage encryption enabled. Unencrypted database storage exposes data at rest to unauthorized access if the underlying storage is compromised.
 
 **Remediation:** Storage encryption can only be enabled at creation time. Create a snapshot, copy it with encryption enabled, then restore to a new encrypted instance. Enable encryption by default for new instances.
+
+---
+
+### CTL.RDS.ENGINE.EOL.001
+
+**RDS Instances Must Not Run End-of-Life Database Engine Versions**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SI-2; hipaa: 164.312(c)(1); nist_800_53_r5: SI-2; pci_dss_v4.0: 6.3.3; soc2: CC7.1;
+
+RDS instances must not run major database engine versions that have reached end-of-life (EOL) and no longer receive security patches from the engine vendor. This is distinct from CTL.RDS.AUTOUPGRADE.001 which covers automatic minor version upgrades within a supported major version. Auto minor upgrade does not upgrade between major versions — an EOL major version receives no further patches regardless of the auto-upgrade setting. PostgreSQL 11 (EOL November 2023), MySQL 5.7 (EOL October 2023), and MariaDB 10.4 (EOL June 2024) are examples of major versions that continue running on RDS but receive no security patches from the upstream vendor. The engine version is permanently unpatched against any vulnerability disclosed after EOL. For PHI and cardholder data environments, running an EOL engine is a direct compliance finding — HIPAA requires maintained software and PCI-DSS 6.3.3 requires protection from known vulnerabilities through patching.
+
+**Remediation:** Upgrade the RDS instance to a supported major engine version. For PostgreSQL, upgrade to PostgreSQL 14 or later. For MySQL, upgrade to MySQL 8.0. For MariaDB, upgrade to MariaDB 10.6 or later. Use a blue-green deployment or read replica promotion to minimize downtime. Test the application against the new major version in a staging environment before upgrading production — major version upgrades may include breaking changes in SQL behavior, function signatures, or default settings.
 
 ---
 

@@ -91,6 +91,7 @@ packs:
       # §164.312(c)(1) — Integrity
       - CTL.CONFIG.RULES.001
       - CTL.S3.VERSION.001
+      - CTL.RDS.ENGINE.EOL.001
       # §164.312(d) — Person or Entity Authentication
       - CTL.COGNITO.MFA.001
       - CTL.IAM.CONSOLE.MFA.001
@@ -730,6 +731,7 @@ packs:
       - CTL.RDS.LOG.001
       - CTL.RDS.SSL.001
       - CTL.RDS.AUTOUPGRADE.001
+      - CTL.RDS.ENGINE.EOL.001
       - CTL.RDS.INCOMPLETE.001
   elb:
     description: AWS ELB load balancer security controls
@@ -1531,6 +1533,9 @@ controls:
   CTL.RDS.INCOMPLETE.001:
     path: internal/controldata/embedded/rds/misc/CTL.RDS.INCOMPLETE.001.yaml
     summary: Complete Data Required for RDS Assessment
+  CTL.RDS.ENGINE.EOL.001:
+    path: internal/controldata/embedded/rds/version/CTL.RDS.ENGINE.EOL.001.yaml
+    summary: RDS Instances Must Not Run End-of-Life Database Engine Versions
   CTL.ELB.TLS.001:
     path: internal/controldata/embedded/elb/encrypt/CTL.ELB.TLS.001.yaml
     summary: Load Balancer Must Use TLS 1.2 or Higher

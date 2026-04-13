@@ -1,0 +1,42 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "c870d31d624dc25a22c12f2e569f0c49a7bfc9eda15ca344d87b1e4b155d44d2",
+        "2026-01-11T000000Z.json": "6ca571be7c1ab33cbc012537c70437c0a2903d5d3578e967bb0ceabfe3ee6e26"
+      },
+      "overall": "5a6314faa6ab8c3916a79d6e5a1c5fdb832618a50a6ebc2c6429f058c06df471"
+    },
+    "policy_fingerprint": "4cfec447d2487aef2ec3a54955edf9908553080a7a401c50f90e203d95d6bdc2"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-rds-engine-eol-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-rds-engine-eol-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "450edddd4e9749a80454028777ef5fa2624fe8d4",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-rds-engine-eol-pass/controls/"
+      ]
+    }
+  }
+}
