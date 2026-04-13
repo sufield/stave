@@ -1,6 +1,7 @@
 package sanitize
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -327,7 +328,7 @@ func TestSanitizer_Snapshot_ARNBucketName(t *testing.T) {
 	result := s.Snapshot(snap)
 	a := result.Assets[0]
 	// ARN prefix should be preserved, bucket name part sanitized.
-	if !hasPrefix(string(a.ID), "arn:aws:s3:::SANITIZED_") {
+	if !strings.HasPrefix(string(a.ID), "arn:aws:s3:::SANITIZED_") {
 		t.Errorf("ARN sanitization malformed: %q", a.ID)
 	}
 	tok := crypto.ShortToken("my-phi-bucket")
@@ -336,6 +337,4 @@ func TestSanitizer_Snapshot_ARNBucketName(t *testing.T) {
 	}
 }
 
-func hasPrefix(s, prefix string) bool {
-	return len(s) >= len(prefix) && s[:len(prefix)] == prefix
-}
+
