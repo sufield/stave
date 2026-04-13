@@ -86,10 +86,10 @@ func TestReadFileOrStdin_UsesLimit(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// Bug 2: SafeMkdirAll doesn't catch intermediate symlinks
+// Bug 2 (VERIFIED): SafeMkdirAll detects intermediate symlinks
 // ---------------------------------------------------------------------------
 
-func TestSafeMkdirAll_IntermediateSymlinkNotDetected(t *testing.T) {
+func TestSafeMkdirAll_IntermediateSymlinkDetected(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("symlink test requires Unix")
 	}
@@ -104,22 +104,16 @@ func TestSafeMkdirAll_IntermediateSymlinkNotDetected(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Ask SafeMkdirAll to create base/link/subdir.
-	// CheckSymlinkSafety checks "base/link/subdir" which doesn't exist,
-	// then walks up to "base/link" — which IS a symlink and should fail.
-	// But os.MkdirAll would follow the symlink and create subdir inside
-	// the target directory.
+	// SafeMkdirAll walks component-by-component with Lstat and catches
+	// the symlink at "link" before creating "subdir".
 	path := filepath.Join(link, "subdir")
 	err := SafeMkdirAll(path, WriteOptions{Perm: 0o755})
-
 	if err == nil {
-		// If this passes (no error), the symlink was followed silently.
-		// Check if the directory was created in the wrong location.
-		if _, statErr := os.Stat(filepath.Join(target, "subdir")); statErr == nil {
-			t.Error("SafeMkdirAll followed an intermediate symlink and created a directory in the wrong location")
-		}
+		t.Fatal("SafeMkdirAll should reject intermediate symlink")
 	}
-	// If err != nil, the implementation correctly detected the symlink.
+	if !errors.Is(err, ErrSymlinkForbidden) {
+		t.Errorf("expected ErrSymlinkForbidden, got: %v", err)
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -219,7 +213,7 @@ func TestJoinWithinRoot_SeparatorPrefixedPath(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// Bug 6: SafeMkdirAll doesn't check each path component individually
+// Bug 6 (VERIFIED): SafeMkdirAll checks each path component for symlinks
 // ---------------------------------------------------------------------------
 
 func TestSafeMkdirAll_SymlinkInMiddleComponent(t *testing.T) {
@@ -242,23 +236,24 @@ func TestSafeMkdirAll_SymlinkInMiddleComponent(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Ask SafeMkdirAll to create base/a/b/c/d.
-	// "b" is a symlink — a secure implementation must reject this.
+	// SafeMkdirAll walks component-by-component with Lstat and catches
+	// the symlink at "b" before creating "c/d".
 	target := filepath.Join(base, "a", "b", "c", "d")
 	err := SafeMkdirAll(target, WriteOptions{Perm: 0o755})
-
 	if err == nil {
-		// Check if directories were created outside the intended tree.
-		if _, statErr := os.Stat(filepath.Join(outsideDir, "c", "d")); statErr == nil {
-			t.Error("SafeMkdirAll followed a symlink in a middle path component and created directories outside the intended tree")
-		} else {
-			t.Error("SafeMkdirAll should have rejected the symlink at component 'b'")
-		}
+		t.Fatal("SafeMkdirAll should reject symlink at middle component 'b'")
+	}
+	if !errors.Is(err, ErrSymlinkForbidden) {
+		t.Errorf("expected ErrSymlinkForbidden, got: %v", err)
+	}
+	// Verify nothing was created outside the intended tree.
+	if _, statErr := os.Stat(filepath.Join(outsideDir, "c")); statErr == nil {
+		t.Error("directories should not have been created outside the intended tree")
 	}
 }
 
 // ---------------------------------------------------------------------------
-// Bug 7: SafeMkdirAll path component is a file (not a directory)
+// Bug 7 (VERIFIED): SafeMkdirAll rejects file blocking directory path
 // ---------------------------------------------------------------------------
 
 func TestSafeMkdirAll_FileBlocksDirectory(t *testing.T) {
@@ -270,10 +265,13 @@ func TestSafeMkdirAll_FileBlocksDirectory(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Ask SafeMkdirAll to create base/a/b — should fail because "a" is a file.
+	// SafeMkdirAll detects that "a" is a file (not a directory) and rejects.
 	target := filepath.Join(base, "a", "b")
 	err := SafeMkdirAll(target, WriteOptions{Perm: 0o755})
 	if err == nil {
-		t.Error("SafeMkdirAll should fail when a path component is a regular file")
+		t.Fatal("SafeMkdirAll should fail when a path component is a regular file")
+	}
+	if !strings.Contains(err.Error(), "not a directory") {
+		t.Errorf("expected 'not a directory' error, got: %v", err)
 	}
 }
