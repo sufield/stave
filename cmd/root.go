@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
+	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/metadata"
@@ -74,6 +75,10 @@ type App struct {
 	// sanitizer is initialized from CLI flags during bootstrap and used for
 	// path/message sanitization in error handling and panic recovery.
 	sanitizer *sanitize.Sanitizer
+
+	// configResult holds the config resolution result between bootstrap phases.
+	// Set in phaseConfig, consumed in phaseValidate and phaseLogging.
+	configResult projconfig.ResolverResult
 }
 
 // NewApp creates a fully-wired CLI application.

@@ -2,6 +2,7 @@ package initcmd
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/internal/metadata"
 )
@@ -54,6 +55,7 @@ Exit Codes:
 			}
 			return runner.Run(&req)
 		},
+		Annotations:   map[string]string{cmdutil.AnnotationConfigOptional: "true"},
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
@@ -70,10 +72,11 @@ Exit Codes:
 // NewGenerateCmd constructs the generate command tree.
 func NewGenerateCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "generate",
-		Short: "Generate starter artifacts",
-		Long:  "Generate creates minimal deterministic templates for controls and observations." + metadata.OfflineHelpSuffix,
-		Args:  cobra.NoArgs,
+		Use:         "generate",
+		Short:       "Generate starter artifacts",
+		Long:        "Generate creates minimal deterministic templates for controls and observations." + metadata.OfflineHelpSuffix,
+		Args:        cobra.NoArgs,
+		Annotations: map[string]string{cmdutil.AnnotationConfigOptional: "true"},
 	}
 
 	cmd.AddCommand(newGenerateControlCmd())

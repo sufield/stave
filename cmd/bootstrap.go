@@ -9,6 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
@@ -22,58 +23,82 @@ import (
 	"github.com/sufield/stave/internal/platform/logging"
 )
 
-// bootstrap runs as PersistentPreRunE on every command. It executes five
-// phases in a fixed order, each building on the previous one:
-//
-//  1. Context   — cancelable root context for signal handling + CPU profiling
-//  2. Config    — resolve flag defaults from config, env vars, and limits
-//  3. Validate  — offline check, dev/prod guard, config health
-//  4. Logging   — sanitizer, structured logger, config warning replay
-//  5. Enrich    — store logger in Cobra context for commands
+// bootstrapPhase is a named step in the bootstrap pipeline.
+type bootstrapPhase struct {
+	Name string
+	Run  func(cmd *cobra.Command) error
+}
+
+// bootstrap runs as PersistentPreRunE on every command.
+// It executes a declared pipeline of phases in order.
 func (a *App) bootstrap(cmd *cobra.Command, _ []string) error {
-	// Phase 1: Context setup — cancelable root context + CPU profiling.
-	ctx, cancel := context.WithCancel(cmd.Context()) //nolint:gosec // cancel is stored on a.cancel and called by the signal handler
+	for _, p := range a.bootstrapPipeline() {
+		if err := p.Run(cmd); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (a *App) bootstrapPipeline() []bootstrapPhase {
+	return []bootstrapPhase{
+		{"context", a.phaseContext},
+		{"config", a.phaseConfig},
+		{"validate", a.phaseValidate},
+		{"logging", a.phaseLogging},
+		{"enrich", a.phaseEnrich},
+	}
+}
+
+// phaseContext sets up the cancelable root context and validates builtins.
+func (a *App) phaseContext(cmd *cobra.Command) error {
+	ctx, cancel := context.WithCancel(cmd.Context()) //nolint:gosec // cancel stored on a.cancel, called by signal handler
 	a.cancel = cancel
 	cmd.SetContext(ctx)
 
 	if err := a.startCPUProfile(); err != nil {
 		return err
 	}
-	if err := a.validateBuiltins(); err != nil {
-		return err
-	}
+	return a.validateBuiltins()
+}
 
-	// Phase 2: Config resolution — build resolver, resolve flags + env + limits.
-	evalResult := projconfig.BuildResolver()
-	a.resolveGlobalFlagDefaults(cmd, evalResult.Resolver)
+// phaseConfig resolves flag defaults from project/user config, env vars, and limits.
+func (a *App) phaseConfig(cmd *cobra.Command) error {
+	a.configResult = projconfig.BuildResolver()
+	a.resolveGlobalFlagDefaults(cmd, a.configResult.Resolver)
 	a.resolveEnvVarDefaults(cmd)
-	a.resolveConfigurableLimits(evalResult.Resolver)
+	a.resolveConfigurableLimits(a.configResult.Resolver)
+	return nil
+}
 
-	// Phase 3: Validation — offline guarantee, dev guard, config health.
+// phaseValidate checks the offline guarantee, dev/prod guard, and config health.
+func (a *App) phaseValidate(cmd *cobra.Command) error {
 	if err := a.checkRequireOffline(); err != nil {
 		return err
 	}
 	if err := a.checkDevProductionGuard(cmd); err != nil {
 		return err
 	}
-	if err := a.checkConfigHealth(cmd, evalResult.Err); err != nil {
-		return err
-	}
+	return a.checkConfigHealth(cmd, a.configResult.Err)
+}
 
-	// Phase 4: Logging setup — sanitizer, logger, replay config warnings.
+// phaseLogging initializes the sanitizer, structured logger, and replays config warnings.
+func (a *App) phaseLogging(_ *cobra.Command) error {
 	ui.SetNoColor(a.Flags.NoColor)
 	a.initSanitizer()
 	if err := a.initLogger(); err != nil {
 		return err
 	}
-	for _, w := range evalResult.Warnings {
+	for _, w := range a.configResult.Warnings {
 		a.Logger.Warn("config load warning", "error", w)
 	}
+	return nil
+}
 
-	// Phase 5: Context enrichment — store logger for command retrieval.
-	ctx = cmdctx.WithLogger(cmd.Context(), a.Logger)
+// phaseEnrich stores the logger in the Cobra context for command retrieval.
+func (a *App) phaseEnrich(cmd *cobra.Command) error {
+	ctx := cmdctx.WithLogger(cmd.Context(), a.Logger)
 	cmd.SetContext(ctx)
-
 	return nil
 }
 
@@ -113,18 +138,17 @@ func (a *App) resolveEnvVarDefaults(cmd *cobra.Command) {
 }
 
 // checkConfigHealth enforces config loading errors for commands that need config.
-// Commands that can operate without a project config (init, generate, help, etc.)
-// are tolerant of config failures. cfgErr is the error from BuildResolver().
+// Commands annotated with AnnotationConfigOptional tolerate config failures.
+// cfgErr is the error from BuildResolver().
 func (a *App) checkConfigHealth(cmd *cobra.Command, cfgErr error) error {
 	if cfgErr == nil {
 		return nil
 	}
-	// Commands that work without config
-	tolerant := map[string]bool{
-		"init": true, "generate": true, "help": true,
-		"completion": true, "doctor": true,
+	if hasAnnotation(cmd, cmdutil.AnnotationConfigOptional) {
+		return nil
 	}
-	if tolerant[cmd.Name()] {
+	// Cobra's built-in help command cannot be annotated at definition time.
+	if cmd.Name() == "help" {
 		return nil
 	}
 	return &ui.UserError{Err: fmt.Errorf(
@@ -132,6 +156,18 @@ func (a *App) checkConfigHealth(cmd *cobra.Command, cfgErr error) error {
 			"Fix: check stave.yaml syntax or run 'stave init' to create a new one",
 		cfgErr,
 	)}
+}
+
+// hasAnnotation returns true if the command or any ancestor has the given
+// annotation set to "true". This allows parent commands to mark all children
+// as config-optional.
+func hasAnnotation(cmd *cobra.Command, key string) bool {
+	for c := cmd; c != nil; c = c.Parent() {
+		if v, ok := c.Annotations[key]; ok && v == "true" {
+			return true
+		}
+	}
+	return false
 }
 
 func (a *App) postRun(cmd *cobra.Command, _ []string) {

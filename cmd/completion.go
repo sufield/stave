@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/sufield/stave/cmd/cmdutil"
 )
 
 func newCompletionCmd() *cobra.Command {
@@ -35,6 +36,7 @@ Exit Codes:
 		DisableFlagsInUseLine: true,
 		ValidArgs:             []string{"bash", "zsh", "fish", "powershell"},
 		Args:                  cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
+		Annotations:           map[string]string{cmdutil.AnnotationConfigOptional: "true"},
 		SilenceUsage:          true,
 		SilenceErrors:         true,
 		RunE: func(cmd *cobra.Command, args []string) error {
