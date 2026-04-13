@@ -18,7 +18,8 @@ scope_tags:
   - aws
   - iam
 type: unsafe_state
-params: {}
+params:
+  attack_stage: privilege_escalation
 remediation:
   description: >
     An IAM role with elevated permissions has persisted beyond 7 days

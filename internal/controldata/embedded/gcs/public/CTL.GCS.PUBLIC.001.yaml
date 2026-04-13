@@ -14,7 +14,8 @@ scope_tags:
   - gcp
   - gcs
 type: unsafe_state
-params: {}
+params:
+  attack_stage: initial_access
 remediation:
   description: >
     Bucket has public read access. IAM bindings include allUsers or

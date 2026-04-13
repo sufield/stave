@@ -21,7 +21,8 @@ scope_tags:
   - aws
   - iam
 type: unsafe_state
-params: {}
+params:
+  attack_stage: credential_access
 remediation:
   description: >
     Root account uses a virtual MFA device. Virtual MFA can be

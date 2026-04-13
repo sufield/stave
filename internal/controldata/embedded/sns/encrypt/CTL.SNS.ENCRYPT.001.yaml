@@ -14,7 +14,8 @@ scope_tags:
   - aws
   - sns
 type: unsafe_state
-params: {}
+params:
+  attack_stage: exfiltration
 remediation:
   description: >
     SNS topic is not encrypted with KMS. Notification data is stored

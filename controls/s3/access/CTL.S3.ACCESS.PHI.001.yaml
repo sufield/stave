@@ -23,7 +23,8 @@ scope_tags:
   - sensitive-data
   - hipaa
 type: unsafe_state
-params: {}
+params:
+  attack_stage: exfiltration
 remediation:
   description: >
     PHI bucket has broad access that exceeds the minimum necessary

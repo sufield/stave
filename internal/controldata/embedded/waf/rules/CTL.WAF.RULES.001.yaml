@@ -16,7 +16,8 @@ scope_tags:
   - aws
   - waf
 type: unsafe_state
-params: {}
+params:
+  attack_stage: initial_access
 remediation:
   description: >
     WAF web ACL does not include managed rule groups. No baseline

@@ -17,7 +17,8 @@ scope_tags:
   - aws
   - cognito
 type: unsafe_state
-params: {}
+params:
+  attack_stage: credential_access
 remediation:
   description: >
     Cognito user pool does not enforce MFA. User authentication

@@ -16,6 +16,7 @@ scope_tags:
   - s3
 type: unsafe_state
 params:
+  attack_stage: resilience
   # Minimum retention period in days. Default is 2190 (6 years, HIPAA minimum).
   # To customize: copy this control to your controls directory and change the
   # value 2190 in the predicate below to match your organization's policy.

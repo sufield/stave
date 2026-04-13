@@ -13,7 +13,8 @@ exposure:
 severity: high
 scope_tags: [aws, s3]
 type: unsafe_state
-params: {}
+params:
+  attack_stage: exfiltration
 remediation:
   description: >
     Signed upload policy does not restrict content types. An attacker

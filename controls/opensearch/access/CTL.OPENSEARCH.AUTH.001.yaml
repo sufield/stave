@@ -21,7 +21,8 @@ scope_tags:
   - aws
   - opensearch
 type: unsafe_state
-params: {}
+params:
+  attack_stage: initial_access
 remediation:
   description: >
     OpenSearch domain has no authentication mechanism enabled. Anyone

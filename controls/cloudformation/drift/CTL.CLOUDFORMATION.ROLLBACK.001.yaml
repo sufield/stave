@@ -16,7 +16,8 @@ scope_tags:
   - aws
   - cloudformation
 type: unsafe_state
-params: {}
+params:
+  attack_stage: resilience
 remediation:
   description: >
     CloudFormation stack has rollback disabled. Failed deployments

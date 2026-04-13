@@ -18,7 +18,8 @@ scope_tags:
   - aws
   - elasticache
 type: unsafe_state
-params: {}
+params:
+  attack_stage: initial_access
 remediation:
   description: >
     ElastiCache Redis cluster does not have an AUTH token. Any client

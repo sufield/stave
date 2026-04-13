@@ -14,7 +14,8 @@ scope_tags:
   - aws
   - cloudformation
 type: unsafe_state
-params: {}
+params:
+  attack_stage: detection_evasion
 remediation:
   description: >
     CloudFormation stack does not have drift detection enabled.

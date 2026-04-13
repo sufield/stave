@@ -25,7 +25,8 @@ scope_tags:
   - aws
   - s3
 type: unsafe_state
-params: {}
+params:
+  attack_stage: initial_access
 remediation:
   description: >
     Account-level S3 Block Public Access is not fully enabled. Buckets

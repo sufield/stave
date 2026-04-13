@@ -19,6 +19,7 @@ scope_tags:
   - s3
 type: unsafe_state
 params:
+  attack_stage: exfiltration
   # External AWS account IDs (12-digit) allowed to access this bucket.
   # Empty list means no external account access is allowed.
   allowed_accounts: []

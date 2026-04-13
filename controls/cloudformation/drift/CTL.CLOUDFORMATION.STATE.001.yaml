@@ -17,7 +17,8 @@ scope_tags:
   - aws
   - cloudformation
 type: unsafe_state
-params: {}
+params:
+  attack_stage: resilience
 remediation:
   description: >
     Terraform state is not stored in a versioned backend. State

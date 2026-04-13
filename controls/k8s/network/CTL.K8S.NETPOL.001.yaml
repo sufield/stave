@@ -14,7 +14,8 @@ scope_tags:
   - kubernetes
   - network
 type: unsafe_state
-params: {}
+params:
+  attack_stage: lateral_movement
 remediation:
   description: >
     Namespace has no NetworkPolicy. All pods can communicate with all

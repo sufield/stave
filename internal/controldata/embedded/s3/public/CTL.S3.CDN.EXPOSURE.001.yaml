@@ -20,7 +20,8 @@ scope_tags:
   - s3
   - cloudfront
 type: unsafe_state
-params: {}
+params:
+  attack_stage: exfiltration
 remediation:
   description: >
     This bucket has Block Public Access enabled but serves objects publicly

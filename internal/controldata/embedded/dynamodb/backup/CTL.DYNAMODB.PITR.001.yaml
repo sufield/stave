@@ -17,7 +17,8 @@ scope_tags:
   - aws
   - dynamodb
 type: unsafe_state
-params: {}
+params:
+  attack_stage: resilience
 remediation:
   description: >
     DynamoDB table does not have point-in-time recovery enabled.

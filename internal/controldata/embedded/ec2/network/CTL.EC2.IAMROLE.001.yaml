@@ -14,7 +14,8 @@ scope_tags:
   - aws
   - ec2
 type: unsafe_state
-params: {}
+params:
+  attack_stage: credential_access
 remediation:
   description: >
     EC2 instance does not have an IAM instance profile attached.

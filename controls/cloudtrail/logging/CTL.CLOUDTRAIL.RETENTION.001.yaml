@@ -23,7 +23,8 @@ scope_tags:
   - aws
   - cloudtrail
 type: unsafe_state
-params: {}
+params:
+  attack_stage: detection_evasion
 remediation:
   description: >
     CloudTrail trail does not have long-term log retention configured.

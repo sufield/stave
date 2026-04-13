@@ -15,7 +15,8 @@ scope_tags:
   - aws
   - waf
 type: unsafe_state
-params: {}
+params:
+  attack_stage: detection_evasion
 remediation:
   description: >
     WAF web ACL does not have logging enabled. Attack traffic is

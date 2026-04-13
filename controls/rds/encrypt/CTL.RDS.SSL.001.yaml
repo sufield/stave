@@ -20,7 +20,8 @@ scope_tags:
   - aws
   - rds
 type: unsafe_state
-params: {}
+params:
+  attack_stage: exfiltration
 remediation:
   description: >
     RDS instance does not require SSL connections. Database traffic

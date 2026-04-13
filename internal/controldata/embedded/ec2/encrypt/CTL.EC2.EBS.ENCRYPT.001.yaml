@@ -23,7 +23,8 @@ scope_tags:
   - aws
   - ec2
 type: unsafe_state
-params: {}
+params:
+  attack_stage: exfiltration
 remediation:
   description: >
     EBS volume is not encrypted. Data at rest is stored in plaintext

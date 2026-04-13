@@ -15,7 +15,8 @@ scope_tags:
   - aws
   - s3
 type: unsafe_state
-params: {}
+params:
+  attack_stage: exfiltration
 remediation:
   description: >
     VPC endpoint policy is missing or uses the default full-access

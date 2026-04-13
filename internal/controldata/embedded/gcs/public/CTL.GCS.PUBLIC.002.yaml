@@ -12,7 +12,8 @@ scope_tags:
   - gcp
   - gcs
 type: unsafe_state
-params: {}
+params:
+  attack_stage: initial_access
 remediation:
   description: >
     Bucket allows public listing. Anonymous users can enumerate all

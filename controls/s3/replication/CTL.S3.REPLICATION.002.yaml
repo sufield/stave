@@ -20,7 +20,8 @@ scope_tags:
   - sensitive-data
   - hipaa
 type: unsafe_state
-params: {}
+params:
+  attack_stage: resilience
 remediation:
   description: >
     PHI bucket replication destination is in the same region as the

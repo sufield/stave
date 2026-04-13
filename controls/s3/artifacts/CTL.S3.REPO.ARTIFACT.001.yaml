@@ -11,7 +11,8 @@ scope_tags:
   - aws
   - s3
 type: unsafe_state
-params: {}
+params:
+  attack_stage: exfiltration
 remediation:
   description: >
     Public bucket exposes version control artifacts (.git/, .svn/) that

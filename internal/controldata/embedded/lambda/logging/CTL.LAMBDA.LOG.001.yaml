@@ -23,7 +23,8 @@ scope_tags:
   - aws
   - lambda
 type: unsafe_state
-params: {}
+params:
+  attack_stage: detection_evasion
 remediation:
   description: >
     Lambda function does not have CloudWatch logging enabled. Function

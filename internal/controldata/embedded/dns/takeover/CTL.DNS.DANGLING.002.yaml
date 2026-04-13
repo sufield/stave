@@ -14,7 +14,8 @@ severity: critical
 scope_tags:
   - dns
 type: unsafe_state
-params: {}
+params:
+  attack_stage: initial_access
 remediation:
   description: >
     A DNS record references a cloud storage bucket that does not exist or

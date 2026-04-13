@@ -13,6 +13,8 @@ scope_tags:
 - aws
 - s3
 version: ctrl.v1
+params:
+  attack_stage: initial_access
 type: unsafe_state
 remediation:
   description: >

@@ -32,11 +32,8 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "2846027435bfe39cd065759c1873261e4a555197",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-vpc-peering-routes-pass/controls/"
-      ]
+      "head_commit": "fd0c8ec45c7f2016a0eb7239c0baf70ad711aaff",
+      "dirty": false
     }
   }
 }

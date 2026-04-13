@@ -12,7 +12,8 @@ scope_tags:
   - gcp
   - gcs
 type: unsafe_state
-params: {}
+params:
+  attack_stage: detection_evasion
 remediation:
   description: >
     Bucket does not have access logging enabled. Access events are not

@@ -13,7 +13,8 @@ scope_tags:
   - aws
   - cloudwatch
 type: unsafe_state
-params: {}
+params:
+  attack_stage: detection_evasion
 remediation:
   description: >
     No metric filter or alarm is configured to monitor root account usage.

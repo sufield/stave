@@ -24,7 +24,8 @@ scope_tags:
   - aws
   - iam
 type: unsafe_state
-params: {}
+params:
+  attack_stage: credential_access
 remediation:
   description: >
     IAM user has console access enabled but MFA is not configured.

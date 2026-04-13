@@ -19,7 +19,8 @@ scope_tags:
   - aws
   - cloudtrail
 type: unsafe_state
-params: {}
+params:
+  attack_stage: detection_evasion
 remediation:
   description: >
     CloudTrail logs are not encrypted with a KMS customer-managed key.

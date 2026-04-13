@@ -24,7 +24,8 @@ scope_tags:
   - s3
   - sensitive-data
 type: unsafe_state
-params: {}
+params:
+  attack_stage: exfiltration
 remediation:
   description: >
     Bucket with sensitive data classification is not monitored by Macie.

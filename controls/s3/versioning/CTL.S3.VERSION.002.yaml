@@ -14,7 +14,8 @@ scope_tags:
   - aws
   - s3
 type: unsafe_state
-params: {}
+params:
+  attack_stage: resilience
 remediation:
   description: >
     Backup bucket does not have MFA delete enabled. Any principal with

@@ -12,7 +12,8 @@ scope_tags:
   - aws
   - s3
 type: unsafe_state
-params: {}
+params:
+  attack_stage: initial_access
 remediation:
   description: >
     Bucket policy grants public read (Principal \"*\" with read action).

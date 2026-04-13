@@ -15,7 +15,8 @@ scope_tags:
   - aws
   - ecr
 type: unsafe_state
-params: {}
+params:
+  attack_stage: initial_access
 remediation:
   description: >
     ECR repository does not have image scanning enabled. Vulnerable

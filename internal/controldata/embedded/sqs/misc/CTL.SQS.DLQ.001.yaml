@@ -11,7 +11,8 @@ scope_tags:
   - aws
   - sqs
 type: unsafe_state
-params: {}
+params:
+  attack_stage: resilience
 remediation:
   description: >
     SQS queue does not have a dead-letter queue configured.

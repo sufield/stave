@@ -19,7 +19,8 @@ scope_tags:
   - aws
   - vpc
 type: unsafe_state
-params: {}
+params:
+  attack_stage: initial_access
 remediation:
   description: >
     Security group allows ingress from 0.0.0.0/0 on sensitive ports.

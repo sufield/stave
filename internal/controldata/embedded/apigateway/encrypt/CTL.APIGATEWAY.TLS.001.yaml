@@ -18,7 +18,8 @@ scope_tags:
   - aws
   - apigateway
 type: unsafe_state
-params: {}
+params:
+  attack_stage: exfiltration
 remediation:
   description: >
     API Gateway does not enforce TLS 1.2. Clients can connect with

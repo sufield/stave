@@ -17,7 +17,8 @@ scope_tags:
   - aws
   - opensearch
 type: unsafe_state
-params: {}
+params:
+  attack_stage: exfiltration
 remediation:
   description: >
     OpenSearch snapshot repository is not encrypted. Snapshots contain

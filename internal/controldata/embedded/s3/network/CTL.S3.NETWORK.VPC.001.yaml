@@ -15,7 +15,8 @@ scope_tags:
   - aws
   - s3
 type: unsafe_state
-params: {}
+params:
+  attack_stage: exfiltration
 remediation:
   description: >
     Bucket has no VPC endpoint or IP condition restricting access.

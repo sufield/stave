@@ -19,7 +19,8 @@ scope_tags:
   - aws
   - vpc
 type: unsafe_state
-params: {}
+params:
+  attack_stage: initial_access
 remediation:
   description: >
     Default security group allows traffic. Resources using the default

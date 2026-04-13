@@ -14,7 +14,8 @@ scope_tags:
   - aws
   - sqs
 type: unsafe_state
-params: {}
+params:
+  attack_stage: exfiltration
 remediation:
   description: >
     SQS queue is not encrypted with KMS. Message data is stored

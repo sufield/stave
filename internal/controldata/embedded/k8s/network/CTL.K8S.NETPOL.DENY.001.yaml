@@ -13,7 +13,8 @@ scope_tags:
   - kubernetes
   - network
 type: unsafe_state
-params: {}
+params:
+  attack_stage: lateral_movement
 remediation:
   description: >
     Namespace has network policies but no default-deny. Traffic not

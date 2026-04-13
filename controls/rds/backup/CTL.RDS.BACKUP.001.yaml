@@ -15,7 +15,8 @@ scope_tags:
   - aws
   - rds
 type: unsafe_state
-params: {}
+params:
+  attack_stage: resilience
 remediation:
   description: >
     RDS instance has automated backups disabled or retention period

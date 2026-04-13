@@ -18,7 +18,8 @@ scope_tags:
   - aws
   - dynamodb
 type: unsafe_state
-params: {}
+params:
+  attack_stage: exfiltration
 remediation:
   description: >
     DynamoDB table is not encrypted with a customer-managed KMS key.

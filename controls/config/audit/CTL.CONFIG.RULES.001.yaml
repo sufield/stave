@@ -17,7 +17,8 @@ scope_tags:
   - aws
   - config
 type: unsafe_state
-params: {}
+params:
+  attack_stage: detection_evasion
 remediation:
   description: >
     AWS Config has no active rules. Configuration drift will not be

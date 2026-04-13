@@ -22,7 +22,8 @@ scope_tags:
   - aws
   - rds
 type: unsafe_state
-params: {}
+params:
+  attack_stage: initial_access
 remediation:
   description: >
     RDS instance is publicly accessible. The database can be reached

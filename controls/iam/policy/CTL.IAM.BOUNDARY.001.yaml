@@ -18,7 +18,8 @@ scope_tags:
   - aws
   - iam
 type: unsafe_state
-params: {}
+params:
+  attack_stage: privilege_escalation
 remediation:
   description: >
     IAM role does not have a permissions boundary. The role's effective

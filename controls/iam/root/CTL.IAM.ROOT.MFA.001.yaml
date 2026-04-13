@@ -24,7 +24,8 @@ scope_tags:
   - aws
   - iam
 type: unsafe_state
-params: {}
+params:
+  attack_stage: credential_access
 remediation:
   description: >
     Root account does not have MFA enabled. An attacker with root

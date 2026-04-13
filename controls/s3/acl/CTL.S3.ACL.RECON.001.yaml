@@ -12,7 +12,8 @@ exposure:
 severity: high
 scope_tags: [aws, s3]
 type: unsafe_state
-params: {}
+params:
+  attack_stage: initial_access
 remediation:
   description: >
     Bucket grants ACL read access (READ_ACP) to public users.

@@ -24,7 +24,8 @@ scope_tags:
   - aws
   - s3
 type: unsafe_state
-params: {}
+params:
+  attack_stage: initial_access
 remediation:
   description: >
     Public Access Block is not fully enabled. The bucket has no safety net

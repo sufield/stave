@@ -21,7 +21,8 @@ scope_tags:
   - aws
   - iam
 type: unsafe_state
-params: {}
+params:
+  attack_stage: privilege_escalation
 remediation:
   description: >
     IAM role has both data access and IAM management permissions.

@@ -17,7 +17,8 @@ scope_tags:
   - aws
   - elb
 type: unsafe_state
-params: {}
+params:
+  attack_stage: exfiltration
 remediation:
   description: >
     Load balancer accepts HTTP traffic without redirecting to HTTPS.

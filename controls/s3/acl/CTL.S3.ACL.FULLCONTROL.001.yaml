@@ -13,7 +13,8 @@ exposure:
 severity: critical
 scope_tags: [aws, s3]
 type: unsafe_state
-params: {}
+params:
+  attack_stage: initial_access
 remediation:
   description: >
     Bucket ACL grants FULL_CONTROL to AllUsers or AuthenticatedUsers.

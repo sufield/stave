@@ -16,7 +16,8 @@ scope_tags:
   - aws
   - cloudwatch
 type: unsafe_state
-params: {}
+params:
+  attack_stage: detection_evasion
 remediation:
   description: >
     CloudWatch log group retention is less than 365 days. Audit logs

@@ -24,7 +24,8 @@ scope_tags:
   - sensitive-data
   - hipaa
 type: unsafe_state
-params: {}
+params:
+  attack_stage: exfiltration
 remediation:
   description: >
     PHI bucket is not using SSE-KMS with a customer-managed key. The

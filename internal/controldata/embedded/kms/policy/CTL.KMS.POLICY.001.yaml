@@ -22,7 +22,8 @@ scope_tags:
   - aws
   - kms
 type: unsafe_state
-params: {}
+params:
+  attack_stage: exfiltration
 remediation:
   description: >
     KMS key policy grants access to wildcard principals. Any IAM

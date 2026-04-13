@@ -14,7 +14,8 @@ scope_tags:
   - s3
   - sensitive-data
 type: unsafe_state
-params: {}
+params:
+  attack_stage: initial_access
 remediation:
   description: >
     A bucket containing sensitive data (PHI, PII, or confidential) has public

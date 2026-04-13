@@ -20,7 +20,8 @@ scope_tags:
   - aws
   - vpc
 type: unsafe_state
-params: {}
+params:
+  attack_stage: initial_access
 remediation:
   description: >
     Workload is running in the default VPC. The default VPC has

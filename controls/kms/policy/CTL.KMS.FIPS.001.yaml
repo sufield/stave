@@ -14,7 +14,8 @@ scope_tags:
   - aws
   - kms
 type: unsafe_state
-params: {}
+params:
+  attack_stage: exfiltration
 remediation:
   description: >
     KMS key does not use AWS_KMS origin. The key may not be backed

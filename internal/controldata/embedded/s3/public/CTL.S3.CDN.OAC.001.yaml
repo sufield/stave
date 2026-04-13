@@ -14,7 +14,8 @@ scope_tags:
   - s3
   - cloudfront
 type: unsafe_state
-params: {}
+params:
+  attack_stage: exfiltration
 remediation:
   description: >
     A CloudFront distribution accesses this bucket using a legacy

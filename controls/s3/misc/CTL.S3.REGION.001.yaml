@@ -14,7 +14,8 @@ scope_tags:
   - aws
   - s3
 type: unsafe_state
-params: {}
+params:
+  attack_stage: exfiltration
 remediation:
   description: >
     S3 bucket is located in a region outside the approved list.

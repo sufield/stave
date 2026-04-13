@@ -15,7 +15,8 @@ scope_tags:
   - aws
   - elb
 type: unsafe_state
-params: {}
+params:
+  attack_stage: resilience
 remediation:
   description: >
     Load balancer does not have cross-zone load balancing enabled.

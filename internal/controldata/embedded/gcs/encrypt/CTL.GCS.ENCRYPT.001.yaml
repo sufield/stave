@@ -14,7 +14,8 @@ scope_tags:
   - gcp
   - gcs
 type: unsafe_state
-params: {}
+params:
+  attack_stage: exfiltration
 remediation:
   description: >
     Bucket uses Google-managed encryption (default). No customer control

@@ -14,7 +14,8 @@ scope_tags:
   - aws
   - backup
 type: unsafe_state
-params: {}
+params:
+  attack_stage: resilience
 remediation:
   description: >
     Resource is deployed in a single Availability Zone. An AZ outage

@@ -18,7 +18,8 @@ scope_tags:
   - aws
   - elasticache
 type: unsafe_state
-params: {}
+params:
+  attack_stage: exfiltration
 remediation:
   description: >
     ElastiCache cluster does not have in-transit encryption enabled.

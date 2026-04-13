@@ -11,7 +11,8 @@ scope_tags:
   - aws
   - route53
 type: unsafe_state
-params: {}
+params:
+  attack_stage: resilience
 remediation:
   description: >
     Route 53 hosted zone has no health checks configured.

@@ -17,7 +17,8 @@ scope_tags:
   - kubernetes
   - auth
 type: unsafe_state
-params: {}
+params:
+  attack_stage: credential_access
 remediation:
   description: >
     Kubernetes cluster uses {{AccessKeyID}} in an identity mapping

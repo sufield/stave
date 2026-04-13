@@ -11,7 +11,8 @@ scope_tags:
   - aws
   - autoscaling
 type: unsafe_state
-params: {}
+params:
+  attack_stage: resilience
 remediation:
   description: >
     Auto Scaling group is configured in a single Availability Zone.

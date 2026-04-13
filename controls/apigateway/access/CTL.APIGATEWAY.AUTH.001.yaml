@@ -19,7 +19,8 @@ scope_tags:
   - aws
   - apigateway
 type: unsafe_state
-params: {}
+params:
+  attack_stage: initial_access
 remediation:
   description: >
     API Gateway has routes with authorization set to NONE. These

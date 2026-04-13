@@ -13,7 +13,8 @@ scope_tags:
   - aws
   - s3
 type: unsafe_state
-params: {}
+params:
+  attack_stage: exfiltration
 remediation:
   description: >
     Bucket with classified data is using SSE-S3 (AES256) instead of

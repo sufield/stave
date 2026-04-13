@@ -15,7 +15,8 @@ severity: critical
 scope_tags:
   - dns
 type: unsafe_state
-params: {}
+params:
+  attack_stage: initial_access
 remediation:
   description: >
     A reference to a software distribution endpoint points to a resource

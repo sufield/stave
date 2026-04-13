@@ -15,7 +15,8 @@ scope_tags:
   - aws
   - backup
 type: unsafe_state
-params: {}
+params:
+  attack_stage: resilience
 remediation:
   description: >
     Resource does not have cross-region replication configured.

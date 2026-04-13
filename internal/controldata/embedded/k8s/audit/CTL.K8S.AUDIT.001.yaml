@@ -15,7 +15,8 @@ scope_tags:
   - kubernetes
   - audit
 type: unsafe_state
-params: {}
+params:
+  attack_stage: detection_evasion
 remediation:
   description: >
     Kubernetes API server does not have audit logging enabled. API

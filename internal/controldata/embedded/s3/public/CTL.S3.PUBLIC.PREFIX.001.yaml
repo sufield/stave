@@ -16,6 +16,7 @@ scope_tags:
   - s3
 type: prefix_exposure
 params:
+  attack_stage: initial_access
   protected_prefixes:
     - "invoices/"
     - "secrets/"
