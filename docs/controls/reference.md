@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 314
-**Pack hash:** `5b91ba39a16a4b5353ff7f283be198d4c6cf3fad41fb8e5786c54071e6f79fe0`
+**Total controls:** 315
+**Pack hash:** `f42a48a36c9812dcbb97246affcfe920f4efcd0f5dcb8e019cb453aa3c663a46`
 
 ## Summary
 
@@ -14,11 +14,11 @@
 | high | 131 |
 | info | 16 |
 | low | 22 |
-| medium | 87 |
+| medium | 88 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 230 |
+| exposure | 231 |
 | governance | 7 |
 | identity | 69 |
 | storage | 8 |
@@ -303,6 +303,21 @@ CloudFormation stacks must not have DisableRollback set to true. With rollback d
 Terraform state files must be stored in a versioned backend (S3 with versioning, Terraform Cloud, or equivalent). Unversioned state means a corrupted or accidentally deleted state file cannot be recovered, leaving infrastructure in an unmanaged state with no rollback path.
 
 **Remediation:** Configure an S3 backend with versioning enabled and DynamoDB state locking. Alternatively, use Terraform Cloud or an equivalent managed backend with built-in versioning.
+
+---
+
+### CTL.CLOUDFRONT.TLS.001
+
+**CloudFront Distributions Must Enforce TLS 1.2 or Higher**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-8; hipaa: 164.312(e)(2)(ii); nist_800_53_r5: SC-8; pci_dss_v4.0: 4.2.1; soc2: CC6.6;
+
+CloudFront distributions must use a security policy that enforces TLS 1.2 or higher for all viewer connections. TLS 1.0 and TLS 1.1 have known cryptographic weaknesses (BEAST, POODLE, SWEET32) that are structural properties of the protocol, not implementation bugs. The default CloudFront security policy permits TLS 1.0 for backwards compatibility with older clients. Organizations that accept this default are unknowingly accepting protocol-downgrade attacks. TLS 1.2 enforcement exists for ALB (CTL.ELB.TLS.001), API Gateway (CTL.APIGATEWAY.TLS.001), RDS (CTL.RDS.SSL.001), and OpenSearch (CTL.OPENSEARCH.HTTPS.001) — this control closes the CloudFront gap. PCI-DSS explicitly prohibits TLS 1.0 for cardholder data. NIST SP 800-52r2 requires TLS 1.2 minimum for federal systems. Acceptable policies: TLSv1.2_2021, TLSv1.2_2019, TLSv1.2_2018.
+
+**Remediation:** Update the CloudFront distribution viewer certificate configuration to use TLSv1.2_2021 security policy. This requires a custom SSL certificate (not the default CloudFront certificate). Use ACM to provision a certificate in us-east-1, attach it to the distribution, and select TLSv1.2_2021 as the minimum protocol version. All modern browsers and clients released after 2015 support TLS 1.2.
 
 ---
 

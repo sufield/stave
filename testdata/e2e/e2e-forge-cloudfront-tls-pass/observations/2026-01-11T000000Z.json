@@ -1,0 +1,24 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:cloudfront::123456789012:distribution/E1ABC2DEF3GH",
+      "properties": {
+        "cdn": {
+          "tls": {
+            "allows_below_1_2": false
+          },
+          "kind": "distribution"
+        }
+      },
+      "type": "aws_cloudfront_distribution",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  }
+}

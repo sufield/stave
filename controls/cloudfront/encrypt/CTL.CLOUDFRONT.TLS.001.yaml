@@ -1,0 +1,59 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.TLS.001
+name: CloudFront Distributions Must Enforce TLS 1.2 or Higher
+description: >
+  CloudFront distributions must use a security policy that enforces TLS
+  1.2 or higher for all viewer connections. TLS 1.0 and TLS 1.1 have
+  known cryptographic weaknesses (BEAST, POODLE, SWEET32) that are
+  structural properties of the protocol, not implementation bugs. The
+  default CloudFront security policy permits TLS 1.0 for backwards
+  compatibility with older clients. Organizations that accept this
+  default are unknowingly accepting protocol-downgrade attacks. TLS
+  1.2 enforcement exists for ALB (CTL.ELB.TLS.001), API Gateway
+  (CTL.APIGATEWAY.TLS.001), RDS (CTL.RDS.SSL.001), and OpenSearch
+  (CTL.OPENSEARCH.HTTPS.001) — this control closes the CloudFront gap.
+  PCI-DSS explicitly prohibits TLS 1.0 for cardholder data. NIST SP
+  800-52r2 requires TLS 1.2 minimum for federal systems. Acceptable
+  policies: TLSv1.2_2021, TLSv1.2_2019, TLSv1.2_2018.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-8"
+  fedramp_moderate: "SC-8"
+  pci_dss_v4.0: "4.2.1"
+  soc2: "CC6.6"
+  hipaa: "164.312(e)(2)(ii)"
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    CloudFront distribution security policy permits TLS 1.0 or TLS 1.1
+    viewer connections. Traffic is vulnerable to known protocol-level
+    cryptographic attacks.
+  action: >
+    Update the CloudFront distribution viewer certificate configuration
+    to use TLSv1.2_2021 security policy. This requires a custom SSL
+    certificate (not the default CloudFront certificate). Use ACM to
+    provision a certificate in us-east-1, attach it to the distribution,
+    and select TLSv1.2_2021 as the minimum protocol version. All modern
+    browsers and clients released after 2015 support TLS 1.2.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "tls": {
+          "allows_below_1_2": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.tls.allows_below_1_2
+      op: eq
+      value: true

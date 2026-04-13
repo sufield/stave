@@ -1,0 +1,120 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "eacf321444d306642aa97334a2dfe0848998a620dd4339915f6dd9563fb0fe2d",
+        "2026-01-11T000000Z.json": "78e1ed20238d1a0d1181fd6b0e41f74a292159a9514b75119740f8ec2a36e610"
+      },
+      "overall": "9135a493c790babc093df350b49158939597811871f7d2526de52642c0396877"
+    },
+    "policy_fingerprint": "c9020a1e0e96f7025d309203e18f4b753c7228458fa0ed3276354e27f086e5f6"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.CLOUDFRONT.TLS.001",
+      "asset_id": "arn:aws:cloudfront::123456789012:distribution/E1ABC2DEF3GH",
+      "asset_type": "aws_cloudfront_distribution",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.CLOUDFRONT.TLS.001",
+      "control_name": "CloudFront Distributions Must Enforce TLS 1.2 or Higher",
+      "control_description": "CloudFront distributions must use a security policy that enforces TLS 1.2 or higher for all viewer connections. TLS 1.0 and TLS 1.1 have known cryptographic weaknesses (BEAST, POODLE, SWEET32) that are structural properties of the protocol, not implementation bugs. The default CloudFront security policy permits TLS 1.0 for backwards compatibility with older clients. Organizations that accept this default are unknowingly accepting protocol-downgrade attacks. TLS 1.2 enforcement exists for ALB (CTL.ELB.TLS.001), API Gateway (CTL.APIGATEWAY.TLS.001), RDS (CTL.RDS.SSL.001), and OpenSearch (CTL.OPENSEARCH.HTTPS.001) — this control closes the CloudFront gap. PCI-DSS explicitly prohibits TLS 1.0 for cardholder data. NIST SP 800-52r2 requires TLS 1.2 minimum for federal systems. Acceptable policies: TLSv1.2_2021, TLSv1.2_2019, TLSv1.2_2018.\n",
+      "asset_id": "arn:aws:cloudfront::123456789012:distribution/E1ABC2DEF3GH",
+      "asset_type": "aws_cloudfront_distribution",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "cdn.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "distribution"
+          },
+          {
+            "property": "cdn.tls.allows_below_1_2",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "fedramp_moderate": "SC-8",
+        "hipaa": "164.312(e)(2)(ii)",
+        "nist_800_53_r5": "SC-8",
+        "pci_dss_v4.0": "4.2.1",
+        "soc2": "CC6.6"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "CloudFront distribution security policy permits TLS 1.0 or TLS 1.1 viewer connections. Traffic is vulnerable to known protocol-level cryptographic attacks.",
+        "action": "Update the CloudFront distribution viewer certificate configuration to use TLSv1.2_2021 security policy. This requires a custom SSL certificate (not the default CloudFront certificate). Use ACM to provision a certificate in us-east-1, attach it to the distribution, and select TLSv1.2_2021 as the minimum protocol version. All modern browsers and clients released after 2015 support TLS 1.2.",
+        "example": "{\n  \"cdn\": {\n    \"kind\": \"distribution\",\n    \"tls\": {\n      \"allows_below_1_2\": false\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.CLOUDFRONT.TLS.001",
+      "asset_id": "arn:aws:cloudfront::123456789012:distribution/E1ABC2DEF3GH",
+      "exposure_score": 50,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-cloudfront-tls-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-cloudfront-tls-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "ea04f89c6278caa81f15acfeeeefcb00e58914d6",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-cloudfront-tls-fail/controls/"
+      ]
+    }
+  }
+}
