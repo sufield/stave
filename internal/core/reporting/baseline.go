@@ -1,8 +1,10 @@
 package reporting
 
 import (
+	"cmp"
 	"context"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/sufield/stave/internal/core/ports"
@@ -176,6 +178,7 @@ func compareFindings(baseline, current []BaselineFinding) (newFindings, resolved
 			newFindings = append(newFindings, f)
 		}
 	}
+	slices.SortFunc(newFindings, compareBaselineFindings)
 
 	resolved = make([]BaselineFinding, 0)
 	for k, f := range baseMap {
@@ -183,8 +186,17 @@ func compareFindings(baseline, current []BaselineFinding) (newFindings, resolved
 			resolved = append(resolved, f)
 		}
 	}
+	slices.SortFunc(resolved, compareBaselineFindings)
 
 	return newFindings, resolved
+}
+
+// compareBaselineFindings provides deterministic ordering by ControlID then AssetID.
+func compareBaselineFindings(a, b BaselineFinding) int {
+	if c := cmp.Compare(a.ControlID, b.ControlID); c != 0 {
+		return c
+	}
+	return cmp.Compare(a.AssetID, b.AssetID)
 }
 
 // --- Baseline Types ---

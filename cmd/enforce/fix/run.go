@@ -13,6 +13,7 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/ports"
 	"github.com/sufield/stave/internal/platform/fileout"
+	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 // Runner is a thin CLI wrapper that delegates to internal/app/fix.Service.
@@ -31,6 +32,7 @@ func NewRunner(celEval policy.PredicateEval, clock ports.Clock) *Runner {
 	svc := appfix.NewService(clock, remediation.NewPlanner())
 	svc.ParseFindings = evaljson.ParseFindings
 	svc.CELEvaluator = celEval
+	svc.ReadFile = fsutil.ReadFileLimited
 	return &Runner{
 		Clock:   clock,
 		service: svc,

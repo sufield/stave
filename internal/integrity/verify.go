@@ -3,6 +3,7 @@ package integrity
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/platform/crypto"
@@ -32,12 +33,18 @@ func (v *Validator) Verify(m Manifest) error {
 
 	// If counts differ, at least one actual file isn't in the manifest.
 	// The first loop already confirmed every manifest file exists in actual,
-	// so a count mismatch means extra files — find one for reporting.
+	// so a count mismatch means extra files — collect and sort for
+	// deterministic error output.
 	if len(v.ActualHashes.Files) != len(m.Files) {
+		var extra []string
 		for name := range v.ActualHashes.Files {
 			if _, ok := m.Files[name]; !ok {
-				return fmt.Errorf("%w: %s", ErrUntrustedFile, name)
+				extra = append(extra, string(name))
 			}
+		}
+		slices.Sort(extra)
+		if len(extra) > 0 {
+			return fmt.Errorf("%w: %s", ErrUntrustedFile, extra[0])
 		}
 	}
 

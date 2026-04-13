@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -30,6 +29,7 @@ type Service struct {
 	Sanitizer     kernel.Sanitizer
 	ParseFindings FindingsParser
 	CELEvaluator  policy.PredicateEval
+	ReadFile      func(string) ([]byte, error) // injected by cmd layer; must enforce size limits
 }
 
 // NewService creates a Service. The caller must set ParseFindings
@@ -59,7 +59,11 @@ func (s *Service) Fix(ctx context.Context, req Request) error {
 	}
 
 	path := filepath.Clean(req.InputPath)
-	data, err := os.ReadFile(path)
+	readFn := s.ReadFile
+	if readFn == nil {
+		return errors.New("ReadFile not configured on fix.Service")
+	}
+	data, err := readFn(path)
 	if err != nil {
 		return fmt.Errorf("reading input file: %w", err)
 	}

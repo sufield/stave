@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"errors"
 	"fmt"
+	"log/slog"
 	"slices"
 	"strings"
 
@@ -89,10 +90,15 @@ func ResolveProjectConfig(in ProjectConfigInput) (ResolvedProjectConfig, error) 
 		return ResolvedProjectConfig{}, err
 	}
 
-	// Best-effort: registry metadata is informational, not on the critical path.
-	// Version and hash enrich evaluation output but do not affect correctness.
-	v, _ := in.PackRegistry.RegistryVersion()
-	h, _ := in.PackRegistry.RegistryHash()
+	// Registry metadata enriches evaluation output but does not affect correctness.
+	v, vErr := in.PackRegistry.RegistryVersion()
+	if vErr != nil {
+		slog.Debug("registry version unavailable", "error", vErr)
+	}
+	h, hErr := in.PackRegistry.RegistryHash()
+	if hErr != nil {
+		slog.Debug("registry hash unavailable", "error", hErr)
+	}
 	result.PreloadedControls = loaded
 	result.ControlSource = evaluation.ControlSourceInfo{
 		Source:             evaluation.ControlSourcePacks,

@@ -222,7 +222,10 @@ func snapshotLimitError(dir string, limit int) error {
 
 // skipDir decides whether to skip a directory during recursive walk.
 func skipDir(path, root string, d os.DirEntry, excludes map[string]bool) error {
-	abs, _ := filepath.Abs(path)
+	abs, absErr := filepath.Abs(path)
+	if absErr != nil {
+		return fmt.Errorf("resolve absolute path %s: %w", path, absErr)
+	}
 	if excludes[abs] {
 		return filepath.SkipDir
 	}

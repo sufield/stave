@@ -93,14 +93,15 @@ func TestBuildLifecyclesPerControl_NilEvaluator(t *testing.T) {
 		},
 	}
 
-	// Nil evaluator should return safe (false)
+	// Nil evaluator → inconclusive checks are skipped (fail-closed).
+	// Lifecycle exists but has no observations, so IsExposed is false.
 	lifecycles, err := BuildLifecyclesPerControl(controls, snapshots, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 	tl := lifecycles["CTL.A.001"]["bucket-1"]
 	if tl.IsExposed() {
-		t.Fatal("nil evaluator should default to safe")
+		t.Fatal("nil evaluator should skip recording (inconclusive)")
 	}
 }
 
@@ -113,9 +114,12 @@ func TestCheckUnsafe_NilEvaluator(t *testing.T) {
 	a := asset.Asset{ID: "bucket-1"}
 	snap := asset.Snapshot{}
 
-	result := checkUnsafe(ctl, a, snap, nil)
+	result, err := checkUnsafe(ctl, a, snap, nil)
+	if err == nil {
+		t.Fatal("nil evaluator should return error")
+	}
 	if result {
-		t.Fatal("nil evaluator should return false")
+		t.Fatal("nil evaluator result should be false")
 	}
 }
 
@@ -128,9 +132,12 @@ func TestCheckUnsafe_EvaluatorError(t *testing.T) {
 		return true, errors.New("some error")
 	}
 
-	result := checkUnsafe(ctl, a, snap, eval)
+	result, err := checkUnsafe(ctl, a, snap, eval)
+	if err == nil {
+		t.Fatal("evaluator error should propagate")
+	}
 	if result {
-		t.Fatal("error should return false")
+		t.Fatal("error result should be false")
 	}
 }
 

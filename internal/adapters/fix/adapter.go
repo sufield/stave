@@ -2,8 +2,8 @@ package fix
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"os"
 	"path/filepath"
 
 	evaljson "github.com/sufield/stave/internal/adapters/evaluation"
@@ -14,13 +14,18 @@ import (
 // FindingLoader loads a single finding from an evaluation artifact.
 type FindingLoader struct {
 	CELEvaluator policy.PredicateEval
+	ReadFile     func(string) ([]byte, error) // injected by cmd layer; must enforce size limits
 }
 
 // LoadFindingWithPlan loads an evaluation, selects the matching finding,
 // generates a remediation plan if missing, and returns it.
 func (l *FindingLoader) LoadFindingWithPlan(_ context.Context, inputPath, findingRef string) (any, error) {
 	path := filepath.Clean(inputPath)
-	data, err := os.ReadFile(path)
+	readFn := l.ReadFile
+	if readFn == nil {
+		return nil, errors.New("ReadFile not configured on FindingLoader")
+	}
+	data, err := readFn(path)
 	if err != nil {
 		return nil, fmt.Errorf("reading input file: %w", err)
 	}

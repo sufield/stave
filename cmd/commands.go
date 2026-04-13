@@ -255,7 +255,7 @@ func wireCISubtree(ciCmd *cobra.Command, p *compose.Provider) {
 	}
 	ciCmd.AddCommand(enforce.NewFixCmd(fix.Deps{
 		UseCaseDeps: usecase.FixDeps{
-			Loader: &infrafix.FindingLoader{CELEvaluator: celEval},
+			Loader: &infrafix.FindingLoader{CELEvaluator: celEval, ReadFile: fsutil.ReadFileLimited},
 		},
 	}))
 }

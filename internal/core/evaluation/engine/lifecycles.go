@@ -2,6 +2,7 @@ package engine
 
 import (
 	"fmt"
+	"log/slog"
 
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
@@ -55,7 +56,11 @@ func recordAssetObservation(
 			lcs[a.ID] = t
 		}
 
-		isUnsafe := checkUnsafe(*ctl, a, snap, celEval)
+		isUnsafe, evalErr := checkUnsafe(*ctl, a, snap, celEval)
+		if evalErr != nil {
+			slog.Warn("skipping inconclusive check", "control", ctl.ID, "asset", a.ID, "error", evalErr)
+			continue // Do not record — check is inconclusive
+		}
 		if err := t.RecordCheck(snap.CapturedAt, isUnsafe); err != nil {
 			return fmt.Errorf("record observation for control %s, asset %s: %w", ctl.ID, a.ID, err)
 		}
@@ -65,18 +70,20 @@ func recordAssetObservation(
 }
 
 // checkUnsafe evaluates an asset against a control predicate using the CEL evaluator.
+// Returns (result, err). On error, the caller must NOT record the asset as safe —
+// the check is inconclusive and should be skipped.
 func checkUnsafe(
 	ctl policy.ControlDefinition,
 	a asset.Asset,
 	snap asset.Snapshot,
 	celEval policy.PredicateEval,
-) bool {
+) (bool, error) {
 	if celEval == nil {
-		return false
+		return false, fmt.Errorf("CEL evaluator is nil for control %s on asset %s", ctl.ID, a.ID)
 	}
 	result, err := celEval(ctl, a, snap.Identities)
 	if err != nil {
-		return false
+		return false, fmt.Errorf("CEL evaluation failed for control %s on asset %s: %w", ctl.ID, a.ID, err)
 	}
-	return result
+	return result, nil
 }

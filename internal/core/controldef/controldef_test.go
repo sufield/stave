@@ -441,9 +441,9 @@ func TestControlDefinitionPrepareInvalidDuration(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for invalid duration")
 	}
-	// Still marked ready after error (Prepare still sets Ready)
-	if !ctl.Prepared.Ready {
-		t.Fatal("should be ready even on error")
+	// Not marked ready on error — prevents silently using zero-value duration.
+	if ctl.Prepared.Ready {
+		t.Fatal("should not be ready after parse error")
 	}
 }
 

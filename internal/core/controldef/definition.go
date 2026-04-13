@@ -2,6 +2,7 @@ package controldef
 
 import (
 	"fmt"
+	"log/slog"
 	"maps"
 	"slices"
 	"time"
@@ -53,7 +54,8 @@ func (ctl *ControlDefinition) HasCompliance(key ComplianceFramework) bool {
 }
 
 // Prepare extracts and validates typed parameters from the raw Params map.
-// Idempotent — safe to call multiple times.
+// Idempotent — safe to call multiple times but not concurrently.
+// See PreparedParams for concurrency notes.
 func (ctl *ControlDefinition) Prepare() error {
 	if ctl.Prepared.Ready {
 		return nil
@@ -64,10 +66,6 @@ func (ctl *ControlDefinition) Prepare() error {
 	ctl.Prepared.PrefixExposure = preparePrefixExposure(ctl.Params)
 
 	// Failable param — duration parsing.
-	// Mark Ready regardless: recurrence and prefix exposure are valid even
-	// if the duration fails. The error is returned for the loader to report.
-	ctl.Prepared.Ready = true
-
 	if raw := ctl.Params.paramString("max_unsafe_duration"); raw != "" {
 		d, err := kernel.ParseDuration(raw)
 		if err != nil {
@@ -77,6 +75,8 @@ func (ctl *ControlDefinition) Prepare() error {
 		ctl.Prepared.HasMaxUnsafeDuration = true
 	}
 
+	// Mark Ready only after all parsing succeeds.
+	ctl.Prepared.Ready = true
 	return nil
 }
 
@@ -119,9 +119,13 @@ func (ctl *ControlDefinition) ExposurePrefixes() PrefixExposureParams {
 }
 
 // ensurePrepared lazily calls Prepare() on first access.
-// Thread-safe via sync.Once inside Prepare().
+// Logs errors instead of silently discarding them so that
+// misconfigurations in control YAML (e.g., invalid duration)
+// are visible in diagnostic output.
 func (ctl *ControlDefinition) ensurePrepared() {
-	_ = ctl.Prepare()
+	if err := ctl.Prepare(); err != nil {
+		slog.Warn("control prepare failed", "control", ctl.ID, "error", err)
+	}
 }
 
 // --- Parameter Handling ---
@@ -335,6 +339,12 @@ func (p ControlParams) paramStringSlice(key string) []string {
 
 // PreparedParams holds validated, typed parameters extracted once at load time
 // from the raw ControlParams map.
+//
+// Not thread-safe: ControlDefinition is a value type used by-value in
+// PredicateEval, slice iteration, and many callers. Embedding sync.Once
+// would trigger copylocks across the codebase. Callers must ensure
+// Prepare() completes during single-threaded control loading before
+// evaluation begins.
 type PreparedParams struct {
 	Ready                bool
 	MaxUnsafeDuration    time.Duration
