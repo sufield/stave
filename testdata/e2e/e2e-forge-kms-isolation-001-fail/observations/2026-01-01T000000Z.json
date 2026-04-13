@@ -1,0 +1,39 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:s3:::phi-records-prod",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "cryptography": {
+          "kms_key_id": "arn:aws:kms:us-east-1:123456789012:key/shared-key-001"
+        },
+        "tags": {
+          "data-classification": "phi",
+          "environment": "production"
+        }
+      }
+    },
+    {
+      "id": "arn:aws:s3:::dev-sandbox-logs",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "cryptography": {
+          "kms_key_id": "arn:aws:kms:us-east-1:123456789012:key/shared-key-001"
+        },
+        "tags": {
+          "data-classification": "non-sensitive",
+          "environment": "dev"
+        }
+      }
+    }
+  ]
+}

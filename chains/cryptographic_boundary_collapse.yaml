@@ -1,0 +1,12 @@
+id: cryptographic_boundary_collapse
+description: >
+  Encryption key shared across sensitivity domains AND cross-environment
+  IAM access detected. The cryptographic boundary and the identity
+  boundary have both collapsed. A compromised non-production identity
+  can reach production PHI data through both the IAM path and the
+  shared KMS key.
+controls:
+  - CTL.KMS.ISOLATION.001
+  - CTL.IAM.CROSS.ENV.001
+escalation_threshold: 2
+compound_severity: critical

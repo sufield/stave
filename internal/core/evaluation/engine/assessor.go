@@ -140,6 +140,13 @@ func (a *Assessor) Assess(snapshots []asset.Snapshot, opts ...AssessmentOptions)
 	}
 
 	sequenced := a.sortSnapshots(snapshots)
+
+	// Pre-pass: derive cross-resource properties (e.g., KMS key isolation).
+	// This enriches asset properties with derived fields before control
+	// evaluation, enabling cross-resource reasoning via standard predicates.
+	keyIdx := BuildKeyUsageIndex(sequenced)
+	sequenced = EnrichKeyIsolation(sequenced, keyIdx)
+
 	lifecycles, err := BuildLifecyclesPerControl(a.Controls, sequenced, a.PredicateEval)
 	if err != nil {
 		return evaluation.ComplianceReport{}, fmt.Errorf("lifecycle analysis failed: %w", err)

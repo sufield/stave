@@ -614,3 +614,126 @@ func TestReadinessConfig_Defaults(t *testing.T) {
 		t.Fatal("default Sanitize should be false")
 	}
 }
+
+// --- ParseProfiles ---
+
+func TestParseProfiles_Single(t *testing.T) {
+	profiles, err := ParseProfiles("hipaa")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(profiles) != 1 || profiles[0] != ProfileHIPAA {
+		t.Fatalf("expected [hipaa], got %v", profiles)
+	}
+}
+
+func TestParseProfiles_Multiple(t *testing.T) {
+	profiles, err := ParseProfiles("hipaa,soc2,pci-dss-v4.0")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(profiles) != 3 {
+		t.Fatalf("expected 3 profiles, got %d", len(profiles))
+	}
+	if profiles[0] != ProfileHIPAA || profiles[1] != ProfileSOC2 || profiles[2] != ProfilePCIDSSv4 {
+		t.Fatalf("unexpected profiles: %v", profiles)
+	}
+}
+
+func TestParseProfiles_Whitespace(t *testing.T) {
+	profiles, err := ParseProfiles(" hipaa , soc2 ")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(profiles) != 2 {
+		t.Fatalf("expected 2 profiles, got %d", len(profiles))
+	}
+}
+
+func TestParseProfiles_Empty(t *testing.T) {
+	_, err := ParseProfiles("")
+	if err == nil {
+		t.Fatal("expected error for empty string")
+	}
+	if !strings.Contains(err.Error(), "no valid profiles") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestParseProfiles_InvalidInList(t *testing.T) {
+	_, err := ParseProfiles("hipaa,bogus,soc2")
+	if err == nil {
+		t.Fatal("expected error for invalid profile in list")
+	}
+	if !strings.Contains(err.Error(), "unsupported --profile") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestParseProfiles_TrailingComma(t *testing.T) {
+	profiles, err := ParseProfiles("hipaa,")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(profiles) != 1 {
+		t.Fatalf("expected 1 profile (trailing comma ignored), got %d", len(profiles))
+	}
+}
+
+// --- filterByComplianceUnion ---
+
+func TestFilterByComplianceUnion_SingleFramework(t *testing.T) {
+	controls := []policy.ControlDefinition{
+		{ID: "CTL.A", Compliance: policy.ComplianceMapping{"hipaa": ""}},
+		{ID: "CTL.B", Compliance: policy.ComplianceMapping{"soc2": ""}},
+		{ID: "CTL.C", Compliance: policy.ComplianceMapping{"hipaa": ""}},
+	}
+	result := filterByComplianceUnion(controls, []policy.ComplianceFramework{"hipaa"})
+	if len(result) != 2 {
+		t.Fatalf("expected 2 controls for hipaa, got %d", len(result))
+	}
+}
+
+func TestFilterByComplianceUnion_MultiFramework(t *testing.T) {
+	controls := []policy.ControlDefinition{
+		{ID: "CTL.A", Compliance: policy.ComplianceMapping{"hipaa": ""}},
+		{ID: "CTL.B", Compliance: policy.ComplianceMapping{"soc2": ""}},
+		{ID: "CTL.C", Compliance: policy.ComplianceMapping{"pci-dss": ""}},
+	}
+	result := filterByComplianceUnion(controls, []policy.ComplianceFramework{"hipaa", "soc2"})
+	if len(result) != 2 {
+		t.Fatalf("expected 2 controls (hipaa + soc2 union), got %d", len(result))
+	}
+}
+
+func TestFilterByComplianceUnion_Dedup(t *testing.T) {
+	// Control matches both frameworks — should appear once.
+	controls := []policy.ControlDefinition{
+		{ID: "CTL.A", Compliance: policy.ComplianceMapping{"hipaa": "", "soc2": ""}},
+		{ID: "CTL.B", Compliance: policy.ComplianceMapping{"hipaa": ""}},
+	}
+	result := filterByComplianceUnion(controls, []policy.ComplianceFramework{"hipaa", "soc2"})
+	if len(result) != 2 {
+		t.Fatalf("expected 2 controls (deduped), got %d", len(result))
+	}
+}
+
+func TestFilterByComplianceUnion_NoMatch(t *testing.T) {
+	controls := []policy.ControlDefinition{
+		{ID: "CTL.A", Compliance: policy.ComplianceMapping{"hipaa": ""}},
+	}
+	result := filterByComplianceUnion(controls, []policy.ComplianceFramework{"soc2"})
+	if len(result) != 0 {
+		t.Fatalf("expected 0 controls for non-matching framework, got %d", len(result))
+	}
+}
+
+func TestFilterByComplianceUnion_EmptyFrameworks(t *testing.T) {
+	controls := []policy.ControlDefinition{
+		{ID: "CTL.A", Compliance: policy.ComplianceMapping{"hipaa": ""}},
+	}
+	result := filterByComplianceUnion(controls, nil)
+	if len(result) != 0 {
+		t.Fatalf("expected 0 controls for nil frameworks, got %d", len(result))
+	}
+}

@@ -321,13 +321,14 @@ func filterByComplianceUnion(controls []policy.ControlDefinition, frameworks []p
 	filtered := make([]policy.ControlDefinition, 0, len(controls))
 	seen := make(map[kernel.ControlID]bool)
 	for i := range controls {
-		if seen[controls[i].ID] {
+		ctl := &controls[i]
+		if seen[ctl.ID] {
 			continue
 		}
-		for fw := range controls[i].Compliance {
+		for fw := range ctl.Compliance {
 			if fwSet[fw] {
-				filtered = append(filtered, controls[i])
-				seen[controls[i].ID] = true
+				filtered = append(filtered, *ctl)
+				seen[ctl.ID] = true
 				break
 			}
 		}

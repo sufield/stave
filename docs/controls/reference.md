@@ -3,14 +3,14 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 281
-**Pack hash:** `0e5c7d94f7697e8cfbb8ee56a52e50c64b640cc191cacfb1471a212c79ed32cd`
+**Total controls:** 282
+**Pack hash:** `f99f326517139dc2db615ca7f1bc557249f4aeaf4a8faa69f085a39d4038fabe`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 47 |
+| critical | 48 |
 | high | 116 |
 | info | 16 |
 | low | 19 |
@@ -18,7 +18,7 @@
 
 | Domain | Count |
 |--------|-------|
-| exposure | 212 |
+| exposure | 213 |
 | governance | 2 |
 | identity | 59 |
 | storage | 8 |
@@ -2426,6 +2426,21 @@ KMS keys must have AWS_KMS origin, confirming they are generated and stored in F
 The observation snapshot is missing required KMS key properties. A safety assessment cannot be completed without key policy data.
 
 **Remediation:** Ensure the extractor calls aws kms get-key-policy and maps the response to the cryptography observation properties.
+
+---
+
+### CTL.KMS.ISOLATION.001
+
+**PHI/CDE Encryption Key Must Not Be Shared Across Sensitivity Domains**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-12; hipaa: 164.312(a)(2)(iv); iso_27001_2022: A.8.24; nist_800_53_r5: SC-12, SC-28; pci_dss_v4.0: 3.6.1; soc2: CC6.7;
+
+KMS keys protecting PHI or CDE data must not be shared with resources at a lower sensitivity classification. Shared keys collapse the cryptographic boundary between trust domains. A compromised developer account with access to a shared key can decrypt production PHI data even if all other access controls are correctly configured. Encryption is only as strong as the isolation of its keys.
+
+**Remediation:** Create dedicated KMS keys per sensitivity domain. Apply key policies that restrict usage to IAM roles operating within that domain. Rotate existing PHI/CDE data to new domain-exclusive keys. Use KMS key tags (sensitivity=phi) and SCPs to prevent cross-domain key usage at the organizational level.
 
 ---
 

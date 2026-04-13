@@ -189,3 +189,77 @@ func TestDetectChains(t *testing.T) {
 			accountFindings[0].CompoundScore, resourceFindings[0].CompoundScore)
 	})
 }
+
+func TestScopeAdjustedBlast_MultiplierAtOne(t *testing.T) {
+	ctl := &policy.ControlDefinition{
+		Params: policy.NewParams(map[string]any{
+			"blast_radius": map[string]any{"scope": "account", "multiplier": float64(1.0)},
+		}),
+	}
+	got := scopeAdjustedBlast(ctl)
+	if got != 1.0 {
+		t.Fatalf("multiplier=1.0 should return 1.0, got %f", got)
+	}
+}
+
+func TestScopeAdjustedBlast_MultiplierBelowOne(t *testing.T) {
+	ctl := &policy.ControlDefinition{
+		Params: policy.NewParams(map[string]any{
+			"blast_radius": map[string]any{"scope": "account", "multiplier": float64(0.5)},
+		}),
+	}
+	got := scopeAdjustedBlast(ctl)
+	if got != 1.0 {
+		t.Fatalf("multiplier<1.0 should return 1.0, got %f", got)
+	}
+}
+
+func TestScopeAdjustedBlast_NetworkScope(t *testing.T) {
+	ctl := &policy.ControlDefinition{
+		Params: policy.NewParams(map[string]any{
+			"blast_radius": map[string]any{"scope": "network", "multiplier": float64(2.0)},
+		}),
+	}
+	got := scopeAdjustedBlast(ctl)
+	// Network: 1.0 + (2.0-1.0)*0.75 = 1.75
+	if got != 1.75 {
+		t.Fatalf("network scope got %f, want 1.75", got)
+	}
+}
+
+func TestScopeAdjustedBlast_ResourceScope(t *testing.T) {
+	ctl := &policy.ControlDefinition{
+		Params: policy.NewParams(map[string]any{
+			"blast_radius": map[string]any{"scope": "resource", "multiplier": float64(2.0)},
+		}),
+	}
+	got := scopeAdjustedBlast(ctl)
+	// Resource: 1.0 + (2.0-1.0)*0.50 = 1.50
+	if got != 1.50 {
+		t.Fatalf("resource scope got %f, want 1.50", got)
+	}
+}
+
+func TestScopeAdjustedBlast_UnknownScope(t *testing.T) {
+	ctl := &policy.ControlDefinition{
+		Params: policy.NewParams(map[string]any{
+			"blast_radius": map[string]any{"scope": "unknown", "multiplier": float64(3.0)},
+		}),
+	}
+	got := scopeAdjustedBlast(ctl)
+	// Unknown scope falls through to default — returns full multiplier.
+	if got != 3.0 {
+		t.Fatalf("unknown scope got %f, want 3.0 (full multiplier)", got)
+	}
+}
+
+func TestScopeAdjustedBlast_NoBlastRadius(t *testing.T) {
+	ctl := &policy.ControlDefinition{
+		Params: policy.NewParams(map[string]any{}),
+	}
+	got := scopeAdjustedBlast(ctl)
+	// No blast_radius → BlastMultiplier() returns 1.0 → early exit.
+	if got != 1.0 {
+		t.Fatalf("no blast radius got %f, want 1.0", got)
+	}
+}

@@ -1,0 +1,62 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.ISOLATION.001
+name: PHI/CDE Encryption Key Must Not Be Shared Across Sensitivity Domains
+description: >
+  KMS keys protecting PHI or CDE data must not be shared with resources at a lower
+  sensitivity classification. Shared keys collapse the cryptographic boundary between
+  trust domains. A compromised developer account with access to a shared key can
+  decrypt production PHI data even if all other access controls are correctly configured.
+  Encryption is only as strong as the isolation of its keys.
+domain: exposure
+severity: critical
+type: unsafe_state
+scope_tags:
+  - aws
+  - kms
+compliance:
+  hipaa: "164.312(a)(2)(iv)"
+  nist_800_53_r5: "SC-12, SC-28"
+  fedramp_moderate: "SC-12"
+  pci_dss_v4.0: "3.6.1"
+  soc2: "CC6.7"
+  iso_27001_2022: "A.8.24"
+params:
+  base_impact: 10
+  attack_stage: exfiltration
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    A KMS key encrypts resources across multiple data classification domains.
+    This means a single compromised key grants access to data at different
+    sensitivity levels, collapsing the cryptographic isolation boundary.
+  action: >
+    Create dedicated KMS keys per sensitivity domain. Apply key policies that restrict
+    usage to IAM roles operating within that domain. Rotate existing PHI/CDE data to
+    new domain-exclusive keys. Use KMS key tags (sensitivity=phi) and SCPs to prevent
+    cross-domain key usage at the organizational level.
+  example: |
+    {
+      "properties": {
+        "cryptography": {
+          "kms_key_id": "arn:aws:kms:us-east-1:123:key/phi-exclusive",
+          "key_isolation": {
+            "is_exclusive_to_domain": true,
+            "domain_count": 1,
+            "mixed_classification": false
+          }
+        },
+        "tags": {
+          "data-classification": "phi"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kms_key_id
+      op: present
+    - field: properties.cryptography.key_isolation.is_exclusive_to_domain
+      op: eq
+      value: false

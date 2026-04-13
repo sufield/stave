@@ -171,6 +171,7 @@ packs:
       - CTL.CLOUDTRAIL.DATAREAD.001
       - CTL.CONFIG.ENABLED.001
       - CTL.KMS.ROTATION.001
+      - CTL.KMS.ISOLATION.001
       - CTL.VPC.FLOWLOG.001
       # Section 5 — Networking
       - CTL.VPC.NACL.ADMIN.001
@@ -649,6 +650,7 @@ packs:
       - CTL.KMS.POLICY.001
       - CTL.KMS.ROTATION.001
       - CTL.KMS.FIPS.001
+      - CTL.KMS.ISOLATION.001
       - CTL.KMS.INCOMPLETE.001
   secretsmanager:
     description: AWS Secrets Manager security controls
@@ -1607,6 +1609,9 @@ controls:
   CTL.KMS.CONCENTRATION.002:
     path: internal/controldata/embedded/kms/concentration/CTL.KMS.CONCENTRATION.002.yaml
     summary: High-Density KMS Key Must Have Deletion Protection
+  CTL.KMS.ISOLATION.001:
+    path: internal/controldata/embedded/kms/isolation/CTL.KMS.ISOLATION.001.yaml
+    summary: PHI/CDE Encryption Key Must Not Be Shared Across Sensitivity Domains
   CTL.KMS.INCOMPLETE.001:
     path: internal/controldata/embedded/kms/misc/CTL.KMS.INCOMPLETE.001.yaml
     summary: Complete Data Required for KMS Assessment
