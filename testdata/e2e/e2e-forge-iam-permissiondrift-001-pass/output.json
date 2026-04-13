@@ -1,0 +1,42 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "1e4379619ddd78cd52377cbcb26b7fd6be7efb42c96bf3183fe075c6901e6081",
+        "2026-01-11T000000Z.json": "069b4b088e7b1c070affb4a031fde194dd999ceba66e205b293949ef5fe380b0"
+      },
+      "overall": "df533861ece75c05589d9546ef71a20d9d48d1defd05ddd11e566827fcb8dd43"
+    },
+    "policy_fingerprint": "a4ee0e67f0a8136086b55dc80567c8c3ff597466ac090aad824a42b21dcf1767"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-permissiondrift-001-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-permissiondrift-001-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "d6dcd041b6885c7885737981755a62c942e9efa7",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-iam-permissiondrift-001-pass/controls/"
+      ]
+    }
+  }
+}

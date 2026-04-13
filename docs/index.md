@@ -25,6 +25,7 @@
 - [Recovery Isolation](recovery-isolation.md) — Decoupled recovery, anti-ransomware SPoF detection
 - [Data Sovereignty](data-sovereignty.md) — Cross-border access detection, jurisdictional compliance
 - [Shadow Logic Detection](shadow-logic.md) — NotAction/NotResource bypass, negative logic analysis
+- [Entitlement Entropy](entitlement-entropy.md) — Shadow admin detection, privilege creep, permission category mixing
 - [KMS Concentration Risk](kms-concentration.md) — Cryptographic single point of failure detection
 - [Vendor Trust Leash](vendor-trust-leash.md) — Third-party SaaS access hygiene, ghost access detection
 - [Telemetry Bridge](telemetry-bridge.md) — NDJSON telemetry for dashboards, SIEM, and compliance trending

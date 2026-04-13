@@ -1,0 +1,42 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "0e08a0e6f376593d3a99e983ba6e1b9d37164a5b938711c8c4022fbcc448630b",
+        "2026-01-11T000000Z.json": "29bff80cd9fcbb73355eb105684052b6bddff5bc7c7423457bfa62110c6cf34f"
+      },
+      "overall": "4a1053113f65e58ff748669ee323a702e2cd172500af29753c010a542b0b9aab"
+    },
+    "policy_fingerprint": "5f4c425e9a33e4b6c4ea463f034c51569f774a851607ed48915c78ee37a5c40b"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-categorymix-001-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-categorymix-001-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "d6dcd041b6885c7885737981755a62c942e9efa7",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-iam-categorymix-001-pass/controls/"
+      ]
+    }
+  }
+}

@@ -38,11 +38,11 @@ Every major log shipper treats NDJSON as native input:
 - Splunk Universal Forwarder: `KV_MODE = json`
 - Logstash: `json` codec
 
-## Schema: telemetry.v1
+## Schema: telemetry.v2
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `schema_version` | string | `"telemetry.v1"` |
+| `schema_version` | string | `"telemetry.v2"` |
 | `captured_at` | RFC3339 | Evaluation timestamp |
 | `control_id` | string | Control that fired |
 | `control_name` | string | Human-readable name |
@@ -50,12 +50,40 @@ Every major log shipper treats NDJSON as native input:
 | `resource_id` | string | Asset identifier |
 | `resource_type` | string | Asset type |
 | `verdict` | string | `"violation"` |
-| `policy_fingerprint` | string | Control set hash for governance drift detection |
+| `policy_fingerprint` | string | Control set hash (catalog-wide) |
+| `control_fingerprint` | string | Per-control logic hash (ID + severity + type + predicate) |
+| `environmental_score` | float | `base_impact x sensitivity x exposure` (nil when inputs missing) |
+| `window_id` | string | Violation window ID (null in single-assessment mode) |
 | `status` | string | Overall security state |
 
-The `policy_fingerprint` enables governance drift detection: if a
-CISO's violation count drops but the fingerprint changed, a control
-may have been removed rather than the posture genuinely improving.
+### Two fingerprints for governance drift
+
+`policy_fingerprint` changes when ANY control is added, removed, or
+modified. `control_fingerprint` changes when THIS control's logic or
+severity changes. Together they catch:
+- Catalog-level deletion (fingerprint changes, control disappears)
+- Control logic change (control fingerprint changes, catalog stable)
+- Genuine posture improvement (both fingerprints stable, violations drop)
+
+### Violation window tracking
+
+In `--history` mode (directory of assessment JSONs), `window_id`
+groups all events in the same continuous violation period for a
+specific (control, resource) pair. Format:
+`<resource_id>/<control_id>/<window_start_RFC3339>`
+
+State transitions:
+- Finding appears → new window opens, new window_id assigned
+- Finding persists → same window_id reused
+- Finding disappears → window closes
+- Finding reappears → new window with new window_id
+
+### Environmental score
+
+Computed from `risk.Environmental(base_impact, sensitivity, exposure)`:
+- `base_impact`: from control params (default 5)
+- `sensitivity`: from asset data classification tag (phi=3.0, production=2.0)
+- `exposure`: from control exposure vector (public=2.0, vpc=1.0)
 
 ## Three audiences
 

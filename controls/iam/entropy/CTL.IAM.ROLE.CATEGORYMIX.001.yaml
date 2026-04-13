@@ -1,0 +1,59 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ROLE.CATEGORYMIX.001
+name: Roles Must Not Span Incompatible Permission Categories
+description: >
+  IAM roles must not combine permissions from structurally incompatible
+  categories. A role with data_read + iam_write can access data AND modify
+  who else can access it. A role with compute_control + iam_write can
+  create compute AND grant it permissions (Shadow Admin escalation). A role
+  with audit_control + data_read can access data AND cover tracks. No
+  single permission is alarming. The combination is catastrophic. The
+  extractor categorizes permissions against a defined taxonomy and flags
+  roles that span incompatible pairs: data+iam_write, data+secrets,
+  compute+iam_write, audit_control+sensitive, crypto_control+data.
+domain: identity
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-5"
+  fedramp_moderate: "AC-5"
+  iso_27001_2022: "A.8.3"
+  pci_dss_v4.0: "7.2.1"
+  soc2: "CC6.1"
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params:
+  base_impact: 10
+  attack_stage: persistence
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    This role combines permissions from incompatible categories, creating
+    a structural privilege escalation path. The specific incompatible pair
+    is identified in the finding evidence.
+  action: >
+    Split the role into separate roles with narrowly scoped permissions.
+    Data access roles must not have IAM write permissions. Compute roles
+    must not have IAM write permissions. Audit control roles must not have
+    data access permissions. Use separate roles with separate trust
+    policies for each function.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "has_incompatible_categories": false,
+        "permission_categories": ["data_read", "crypto_use"]
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: role
+    - field: properties.identity.has_incompatible_categories
+      op: eq
+      value: true

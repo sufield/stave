@@ -1,0 +1,12 @@
+id: shadow_admin_by_accumulation
+description: >
+  Role has accumulated permissions far beyond its declared scope, spans
+  incompatible categories, and retains unused permissions. The combined
+  effect is a role that functions as a Shadow Admin despite no admin
+  policy being attached.
+controls:
+  - CTL.IAM.ROLE.PERMISSIONDRIFT.001
+  - CTL.IAM.ROLE.CATEGORYMIX.001
+  - CTL.IAM.ROLE.INTENTMISMATCH.001
+escalation_threshold: 2
+compound_severity: critical

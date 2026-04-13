@@ -758,6 +758,11 @@ packs:
       - CTL.IAM.TRUST.SOURCEARN.001
       - CTL.IAM.POLICY.ASSUMEROLE.001
       - CTL.IAM.POLICY.SOD.001
+      - CTL.IAM.ROLE.PERMISSIONDRIFT.001
+      - CTL.IAM.ROLE.CATEGORYMIX.001
+      - CTL.IAM.ROLE.INTENTTAG.001
+      - CTL.IAM.ROLE.INTENTMISMATCH.001
+      - CTL.IAM.ROLE.ENTROPY.INCOMPLETE.001
       - CTL.IAM.ZT.PERIMETER.001
       - CTL.IAM.ZT.SHORTLIVED.001
       - CTL.IAM.CROSSCLOUD.ADMIN.001
@@ -1082,6 +1087,21 @@ controls:
   CTL.IAM.TRUST.SOURCEARN.001:
     path: internal/controldata/embedded/iam/trust/CTL.IAM.TRUST.SOURCEARN.001.yaml
     summary: AWS Service Principal Trust Must Have SourceArn or SourceAccount Condition
+  CTL.IAM.ROLE.PERMISSIONDRIFT.001:
+    path: internal/controldata/embedded/iam/entropy/CTL.IAM.ROLE.PERMISSIONDRIFT.001.yaml
+    summary: Roles Must Not Accumulate Unused Permissions
+  CTL.IAM.ROLE.CATEGORYMIX.001:
+    path: internal/controldata/embedded/iam/entropy/CTL.IAM.ROLE.CATEGORYMIX.001.yaml
+    summary: Roles Must Not Span Incompatible Permission Categories
+  CTL.IAM.ROLE.INTENTTAG.001:
+    path: internal/controldata/embedded/iam/entropy/CTL.IAM.ROLE.INTENTTAG.001.yaml
+    summary: Roles Must Have a Declared Purpose Tag
+  CTL.IAM.ROLE.INTENTMISMATCH.001:
+    path: internal/controldata/embedded/iam/entropy/CTL.IAM.ROLE.INTENTMISMATCH.001.yaml
+    summary: Role Permissions Must Match Declared Purpose
+  CTL.IAM.ROLE.ENTROPY.INCOMPLETE.001:
+    path: internal/controldata/embedded/iam/entropy/CTL.IAM.ROLE.ENTROPY.INCOMPLETE.001.yaml
+    summary: Complete Data Required for Entitlement Entropy Assessment
   CTL.IAM.POLICY.ASSUMEROLE.001:
     path: internal/controldata/embedded/iam/policy/CTL.IAM.POLICY.ASSUMEROLE.001.yaml
     summary: AssumeRole Must Be Scoped to Specific Roles

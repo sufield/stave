@@ -1,0 +1,10 @@
+id: privilege_creep_lateral_movement
+description: >
+  Role with data access and IAM write permissions that has been active
+  for more than 90 days with a high proportion of unused permissions.
+  Permissions were added for specific tasks and never removed.
+controls:
+  - CTL.IAM.ROLE.CATEGORYMIX.001
+  - CTL.IAM.ROLE.PERMISSIONDRIFT.001
+escalation_threshold: 2
+compound_severity: critical

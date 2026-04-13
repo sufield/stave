@@ -1,0 +1,62 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ROLE.PERMISSIONDRIFT.001
+name: Roles Must Not Accumulate Unused Permissions
+description: >
+  IAM roles must not retain access to services that have never been used or
+  were last used more than 90 days ago, when the role itself has been active
+  for more than 90 days. A role with 30 accessible services where 25 are
+  never used has accumulated permissions far beyond its operational scope.
+  An attacker who compromises this role has access to 30 services but the
+  legitimate owner only uses 5. The unused 25 are the hidden blast radius.
+  Access Advisor data from AWS provides exact timestamps of last permission
+  use — this is an operational fact, not a security assertion.
+domain: identity
+severity: high
+compliance:
+  hipaa: "164.312(a)(2)(i)"
+  cis_aws_v3.0: "1.12"
+  nist_800_53_r5: "AC-2"
+  fedramp_moderate: "AC-2"
+  pci_dss_v4.0: "8.1.4"
+  soc2: "CC6.3"
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params:
+  base_impact: 8
+  attack_stage: persistence
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 1.5
+remediation:
+  description: >
+    This role has accumulated permissions to services that are never used
+    or have not been used in over 90 days. The unused services represent
+    hidden blast radius that an attacker can exploit.
+  action: >
+    Review the unused service namespaces listed in this finding. Remove
+    permissions for services that are no longer needed. For services that
+    are intentionally retained for emergency use, set the
+    stave/permission-drift-threshold tag on the role to document the
+    justified exception (e.g., stave/permission-drift-threshold=0.40).
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "unused_service_ratio": 0.15,
+        "role_active_days": 180
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: role
+    - field: properties.identity.role_active_days
+      op: gt
+      value: 90
+    - field: properties.identity.unused_service_ratio
+      op: gt
+      value: 0.20

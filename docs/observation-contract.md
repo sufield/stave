@@ -923,6 +923,43 @@ without SourceArn).
 
 ---
 
+## Entitlement entropy namespace
+
+The `identity.*` namespace extends with properties for privilege creep
+detection. The extractor computes these by analyzing attached policies,
+Access Advisor last-accessed data, and the role's tag inventory.
+
+| Property | Type | Description |
+|---|---|---|
+| `identity.role_active_days` | int | Days since role was created or last assumed |
+| `identity.unused_service_ratio` | float | Ratio of services with last_authenticated nil or >90d to total accessible services |
+| `identity.has_incompatible_categories` | bool | Role spans structurally incompatible permission category pairs |
+| `identity.permission_categories` | []string | Categories present: data_read, data_write, iam_write, secrets_access, compute_control, etc. |
+| `identity.intent_mismatch` | bool | Actual permission categories contradict declared role-type tag |
+| `identity.entropy_data_complete` | bool | Access Advisor, policy inventory, and tags all present |
+| `identity.tags.role-type` | string | Declared purpose: application, data-pipeline, readonly, admin, security, ci-cd, break-glass, service-account |
+
+**Permission category taxonomy** — the extractor categorizes each
+IAM action into one of: data_read, data_write, iam_read, iam_write,
+secrets_access, compute_control, network_control, crypto_control,
+crypto_use, audit_read, audit_control. A role is flagged for
+incompatible categories when it spans pairs like data_read+iam_write,
+compute_control+iam_write, or audit_control+data_read.
+
+**Access Advisor** — the extractor calls
+`iam:GenerateServiceLastAccessedDetails` (async) and
+`iam:GetServiceLastAccessedDetails` to determine which services have
+been used. Services with `last_authenticated` nil or older than 90
+days count as unused.
+
+**Controls:** CTL.IAM.ROLE.PERMISSIONDRIFT.001 (unused accumulation),
+.CATEGORYMIX.001 (incompatible categories),
+.INTENTTAG.001 (missing role-type tag),
+.INTENTMISMATCH.001 (tag vs. actual),
+.ENTROPY.INCOMPLETE.001 (missing data).
+
+---
+
 ## Important warning
 
 Do not hand-author production observations. Generate observations using an

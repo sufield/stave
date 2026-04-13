@@ -1,0 +1,49 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ROLE.INTENTTAG.001
+name: Roles Must Have a Declared Purpose Tag
+description: >
+  All IAM roles must have a role-type tag with a value from the defined
+  taxonomy (application, data-pipeline, readonly, admin, security, ci-cd,
+  break-glass, service-account). Without a declared purpose, access reviews
+  cannot systematically verify whether a role's permissions match its
+  intent. A missing tag means no one has formally declared what this role
+  is supposed to do. The role-type tag is the machine-readable anchor for
+  intent-versus-permissions checking.
+domain: identity
+severity: low
+compliance:
+  nist_800_53_r5: "CM-8"
+  fedramp_moderate: "CM-8"
+  soc2: "CC6.3"
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params:
+  base_impact: 3
+  attack_stage: persistence
+remediation:
+  description: >
+    This IAM role does not have a role-type tag declaring its intended
+    purpose. Without this tag, intent-versus-permissions checking cannot
+    be performed.
+  action: >
+    Add a role-type tag with one of: application, data-pipeline, readonly,
+    admin, security, ci-cd, break-glass, service-account. Choose the value
+    that best describes the role's intended function.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "tags": {
+          "role-type": "application"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: role
+    - field: properties.identity.tags.role-type
+      op: missing

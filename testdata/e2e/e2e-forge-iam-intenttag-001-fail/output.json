@@ -1,0 +1,117 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "c61aa9f296e5d241db59ab94e66b1be93327117cafe48fab4257f16ca8899c28",
+        "2026-01-11T000000Z.json": "88eb68efef482202f4bb79101593b804b12af58ba068248c49ad0ab269755b4f"
+      },
+      "overall": "af6a676c45df35f1355931da749330e64917b6834cdaa16361b93835fb146a9a"
+    },
+    "policy_fingerprint": "52078f3ff30eb7223919694e3c70a011753e4c50f9225af3459fd2bf9208677b"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.IAM.ROLE.INTENTTAG.001",
+      "asset_id": "arn:aws:iam::123:role/test-role",
+      "asset_type": "aws_iam_role",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.IAM.ROLE.INTENTTAG.001",
+      "control_name": "Roles Must Have a Declared Purpose Tag",
+      "control_description": "All IAM roles must have a role-type tag with a value from the defined taxonomy (application, data-pipeline, readonly, admin, security, ci-cd, break-glass, service-account). Without a declared purpose, access reviews cannot systematically verify whether a role's permissions match its intent. A missing tag means no one has formally declared what this role is supposed to do. The role-type tag is the machine-readable anchor for intent-versus-permissions checking.\n",
+      "asset_id": "arn:aws:iam::123:role/test-role",
+      "asset_type": "aws_iam_role",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "identity.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "role"
+          },
+          {
+            "property": "identity.tags.role-type",
+            "actual_value": "[SANITIZED]",
+            "operator": "missing"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "low",
+      "control_compliance": {
+        "fedramp_moderate": "CM-8",
+        "nist_800_53_r5": "CM-8",
+        "soc2": "CC6.3"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "This IAM role does not have a role-type tag declaring its intended purpose. Without this tag, intent-versus-permissions checking cannot be performed.",
+        "action": "Add a role-type tag with one of: application, data-pipeline, readonly, admin, security, ci-cd, break-glass, service-account. Choose the value that best describes the role's intended function.",
+        "example": "{\n  \"identity\": {\n    \"kind\": \"role\",\n    \"tags\": {\n      \"role-type\": \"application\"\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.IAM.ROLE.INTENTTAG.001",
+      "asset_id": "arn:aws:iam::123:role/test-role",
+      "exposure_score": 25,
+      "breakdown": {
+        "base_score": 25,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-intenttag-001-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-intenttag-001-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "d6dcd041b6885c7885737981755a62c942e9efa7",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-iam-intenttag-001-fail/controls/"
+      ]
+    }
+  }
+}

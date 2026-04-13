@@ -3,24 +3,24 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 284
-**Pack hash:** `e2918191cc13c8b09e89267294c1935bfd4b2616c232af87b09704fb76a706b7`
+**Total controls:** 289
+**Pack hash:** `0df9fcd37068cfd3294f0963b681ec752db44db884a1fcd0285d65b828a615a3`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 49 |
-| high | 117 |
+| critical | 50 |
+| high | 119 |
 | info | 16 |
-| low | 19 |
+| low | 21 |
 | medium | 83 |
 
 | Domain | Count |
 |--------|-------|
 | exposure | 213 |
 | governance | 2 |
-| identity | 61 |
+| identity | 66 |
 | storage | 8 |
 
 ## Controls
@@ -2023,6 +2023,80 @@ No single IAM role should have both data access permissions (s3:GetObject, dynam
 IAM roles granted elevated permissions for incident response (break-glass access) must be revoked within 7 days. Elevated roles that persist beyond the incident become permanent backdoors — they carry admin-level permissions with no active justification. Debug rules, elevated roles, and emergency access must have mandatory time-bounding.
 
 **Remediation:** Revoke the elevated role or revert its permissions to the pre-incident baseline. Implement automated expiry via STS session policies or Lambda-based role revocation. Tag elevated roles with grant timestamp and incident ID for tracking.
+
+---
+
+### CTL.IAM.ROLE.CATEGORYMIX.001
+
+**Roles Must Not Span Incompatible Permission Categories**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-5; iso_27001_2022: A.8.3; nist_800_53_r5: AC-5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+IAM roles must not combine permissions from structurally incompatible categories. A role with data_read + iam_write can access data AND modify who else can access it. A role with compute_control + iam_write can create compute AND grant it permissions (Shadow Admin escalation). A role with audit_control + data_read can access data AND cover tracks. No single permission is alarming. The combination is catastrophic. The extractor categorizes permissions against a defined taxonomy and flags roles that span incompatible pairs: data+iam_write, data+secrets, compute+iam_write, audit_control+sensitive, crypto_control+data.
+
+**Remediation:** Split the role into separate roles with narrowly scoped permissions. Data access roles must not have IAM write permissions. Compute roles must not have IAM write permissions. Audit control roles must not have data access permissions. Use separate roles with separate trust policies for each function.
+
+---
+
+### CTL.IAM.ROLE.ENTROPY.INCOMPLETE.001
+
+**Complete Data Required for Entitlement Entropy Assessment**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** identity
+
+Access Advisor data, permission policy inventory, or tag inventory is absent from the snapshot. Without this data, permission drift, category mixing, and intent mismatch controls cannot evaluate. Re-run the extractor with iam:GenerateServiceLastAccessedDetails, iam:GetServiceLastAccessedDetails, iam:ListAttachedRolePolicies, iam:ListRolePolicies, and iam:ListRoleTags permissions.
+
+**Remediation:** Re-run the extractor with permissions to collect Access Advisor data (iam:GenerateServiceLastAccessedDetails, iam:GetServiceLastAccessedDetails), policy inventory (iam:ListAttachedRolePolicies, iam:ListRolePolicies), and tags (iam:ListRoleTags).
+
+---
+
+### CTL.IAM.ROLE.INTENTMISMATCH.001
+
+**Role Permissions Must Match Declared Purpose**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6; nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.3;
+
+The permission categories present on a role must be consistent with its declared role-type tag. A role tagged readonly must not have iam_write or compute_control permissions. A role tagged application must not have iam_write or network_control permissions. The extractor computes intent_mismatch by comparing the role's actual permission categories against the compatibility matrix for its declared role-type. Requires CTL.IAM.ROLE.INTENTTAG.001 to pass first — if role-type is absent, this control cannot evaluate.
+
+**Remediation:** Review the forbidden permission categories listed in this finding. Either remove the permissions that contradict the declared purpose, or update the role-type tag to accurately reflect the role's actual function. If the role legitimately needs cross-category permissions, consider splitting it into separate roles.
+
+---
+
+### CTL.IAM.ROLE.INTENTTAG.001
+
+**Roles Must Have a Declared Purpose Tag**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: CM-8; nist_800_53_r5: CM-8; soc2: CC6.3;
+
+All IAM roles must have a role-type tag with a value from the defined taxonomy (application, data-pipeline, readonly, admin, security, ci-cd, break-glass, service-account). Without a declared purpose, access reviews cannot systematically verify whether a role's permissions match its intent. A missing tag means no one has formally declared what this role is supposed to do. The role-type tag is the machine-readable anchor for intent-versus-permissions checking.
+
+**Remediation:** Add a role-type tag with one of: application, data-pipeline, readonly, admin, security, ci-cd, break-glass, service-account. Choose the value that best describes the role's intended function.
+
+---
+
+### CTL.IAM.ROLE.PERMISSIONDRIFT.001
+
+**Roles Must Not Accumulate Unused Permissions**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 1.12; fedramp_moderate: AC-2; hipaa: 164.312(a)(2)(i); nist_800_53_r5: AC-2; pci_dss_v4.0: 8.1.4; soc2: CC6.3;
+
+IAM roles must not retain access to services that have never been used or were last used more than 90 days ago, when the role itself has been active for more than 90 days. A role with 30 accessible services where 25 are never used has accumulated permissions far beyond its operational scope. An attacker who compromises this role has access to 30 services but the legitimate owner only uses 5. The unused 25 are the hidden blast radius. Access Advisor data from AWS provides exact timestamps of last permission use — this is an operational fact, not a security assertion.
+
+**Remediation:** Review the unused service namespaces listed in this finding. Remove permissions for services that are no longer needed. For services that are intentionally retained for emergency use, set the stave/permission-drift-threshold tag on the role to document the justified exception (e.g., stave/permission-drift-threshold=0.40).
 
 ---
 

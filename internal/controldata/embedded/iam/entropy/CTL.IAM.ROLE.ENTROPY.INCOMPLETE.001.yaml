@@ -1,0 +1,43 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ROLE.ENTROPY.INCOMPLETE.001
+name: Complete Data Required for Entitlement Entropy Assessment
+description: >
+  Access Advisor data, permission policy inventory, or tag inventory is
+  absent from the snapshot. Without this data, permission drift, category
+  mixing, and intent mismatch controls cannot evaluate. Re-run the
+  extractor with iam:GenerateServiceLastAccessedDetails,
+  iam:GetServiceLastAccessedDetails, iam:ListAttachedRolePolicies,
+  iam:ListRolePolicies, and iam:ListRoleTags permissions.
+domain: identity
+severity: low
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params:
+  base_impact: 2
+remediation:
+  description: >
+    The snapshot does not contain the data required for entitlement
+    entropy assessment.
+  action: >
+    Re-run the extractor with permissions to collect Access Advisor data
+    (iam:GenerateServiceLastAccessedDetails,
+    iam:GetServiceLastAccessedDetails), policy inventory
+    (iam:ListAttachedRolePolicies, iam:ListRolePolicies), and tags
+    (iam:ListRoleTags).
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "entropy_data_complete": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: role
+    - field: properties.identity.entropy_data_complete
+      op: eq
+      value: false

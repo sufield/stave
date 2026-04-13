@@ -1,0 +1,127 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "72d13f3899b41b6876d3d89d5f621f6a2e36640ddd2e6b2800b34330d1b0c2ad",
+        "2026-01-11T000000Z.json": "8bcaa0b50223902d79c6bbe9f8439b38c51efb45636072b9c0257b886b1e90d0"
+      },
+      "overall": "3701c9415107c5dcc20f6506f05fa3ef7a37e3bc3dabe5908d60baa25b8548df"
+    },
+    "policy_fingerprint": "a4ee0e67f0a8136086b55dc80567c8c3ff597466ac090aad824a42b21dcf1767"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.IAM.ROLE.PERMISSIONDRIFT.001",
+      "asset_id": "arn:aws:iam::123:role/test-role",
+      "asset_type": "aws_iam_role",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.IAM.ROLE.PERMISSIONDRIFT.001",
+      "control_name": "Roles Must Not Accumulate Unused Permissions",
+      "control_description": "IAM roles must not retain access to services that have never been used or were last used more than 90 days ago, when the role itself has been active for more than 90 days. A role with 30 accessible services where 25 are never used has accumulated permissions far beyond its operational scope. An attacker who compromises this role has access to 30 services but the legitimate owner only uses 5. The unused 25 are the hidden blast radius. Access Advisor data from AWS provides exact timestamps of last permission use — this is an operational fact, not a security assertion.\n",
+      "asset_id": "arn:aws:iam::123:role/test-role",
+      "asset_type": "aws_iam_role",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "identity.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "role"
+          },
+          {
+            "property": "identity.role_active_days",
+            "actual_value": "[SANITIZED]",
+            "operator": "gt",
+            "unsafe_value": 90
+          },
+          {
+            "property": "identity.unused_service_ratio",
+            "actual_value": "[SANITIZED]",
+            "operator": "gt",
+            "unsafe_value": 0.2
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_aws_v3.0": "1.12",
+        "fedramp_moderate": "AC-2",
+        "hipaa": "164.312(a)(2)(i)",
+        "nist_800_53_r5": "AC-2",
+        "pci_dss_v4.0": "8.1.4",
+        "soc2": "CC6.3"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "This role has accumulated permissions to services that are never used or have not been used in over 90 days. The unused services represent hidden blast radius that an attacker can exploit.",
+        "action": "Review the unused service namespaces listed in this finding. Remove permissions for services that are no longer needed. For services that are intentionally retained for emergency use, set the stave/permission-drift-threshold tag on the role to document the justified exception (e.g., stave/permission-drift-threshold=0.40).",
+        "example": "{\n  \"identity\": {\n    \"kind\": \"role\",\n    \"unused_service_ratio\": 0.15,\n    \"role_active_days\": 180\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.IAM.ROLE.PERMISSIONDRIFT.001",
+      "asset_id": "arn:aws:iam::123:role/test-role",
+      "exposure_score": 112.5,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1.5,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-permissiondrift-001-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-permissiondrift-001-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "d6dcd041b6885c7885737981755a62c942e9efa7",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-iam-permissiondrift-001-fail/controls/"
+      ]
+    }
+  }
+}

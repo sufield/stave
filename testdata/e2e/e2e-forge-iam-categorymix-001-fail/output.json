@@ -1,0 +1,120 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "f8ab17fd16dd8619f9c003c043b6dc1b89949f1a2e1fae934e3ad551bcbd25c8",
+        "2026-01-11T000000Z.json": "11560b62fb96a211a4048095cbbbf885b5caf87493cbb666eb490f73bef9c3d3"
+      },
+      "overall": "818c079a0f87776ee7b5b1c54746021d96da24b2983102afce20dbaac45f6f53"
+    },
+    "policy_fingerprint": "5f4c425e9a33e4b6c4ea463f034c51569f774a851607ed48915c78ee37a5c40b"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.IAM.ROLE.CATEGORYMIX.001",
+      "asset_id": "arn:aws:iam::123:role/test-role",
+      "asset_type": "aws_iam_role",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.IAM.ROLE.CATEGORYMIX.001",
+      "control_name": "Roles Must Not Span Incompatible Permission Categories",
+      "control_description": "IAM roles must not combine permissions from structurally incompatible categories. A role with data_read + iam_write can access data AND modify who else can access it. A role with compute_control + iam_write can create compute AND grant it permissions (Shadow Admin escalation). A role with audit_control + data_read can access data AND cover tracks. No single permission is alarming. The combination is catastrophic. The extractor categorizes permissions against a defined taxonomy and flags roles that span incompatible pairs: data+iam_write, data+secrets, compute+iam_write, audit_control+sensitive, crypto_control+data.\n",
+      "asset_id": "arn:aws:iam::123:role/test-role",
+      "asset_type": "aws_iam_role",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "identity.has_incompatible_categories",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "identity.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "role"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance": {
+        "fedramp_moderate": "AC-5",
+        "iso_27001_2022": "A.8.3",
+        "nist_800_53_r5": "AC-5",
+        "pci_dss_v4.0": "7.2.1",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "This role combines permissions from incompatible categories, creating a structural privilege escalation path. The specific incompatible pair is identified in the finding evidence.",
+        "action": "Split the role into separate roles with narrowly scoped permissions. Data access roles must not have IAM write permissions. Compute roles must not have IAM write permissions. Audit control roles must not have data access permissions. Use separate roles with separate trust policies for each function.",
+        "example": "{\n  \"identity\": {\n    \"kind\": \"role\",\n    \"has_incompatible_categories\": false,\n    \"permission_categories\": [\"data_read\", \"crypto_use\"]\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.IAM.ROLE.CATEGORYMIX.001",
+      "asset_id": "arn:aws:iam::123:role/test-role",
+      "exposure_score": 200,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 2,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-categorymix-001-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-categorymix-001-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "d6dcd041b6885c7885737981755a62c942e9efa7",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-iam-categorymix-001-fail/controls/"
+      ]
+    }
+  }
+}
