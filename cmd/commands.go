@@ -84,7 +84,6 @@ func WireCommands(app *App) {
 	}
 
 	// Getting started
-	root.AddCommand(initcmd.NewInitCmd())
 	root.AddCommand(initcmd.NewGenerateCmd())
 
 	// Control Engine

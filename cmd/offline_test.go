@@ -15,7 +15,6 @@ func TestOfflineHelpSuffix_ProdCommands(t *testing.T) {
 	// Command paths that must contain the offline help text in the prod binary.
 	required := [][]string{
 		{"apply"},
-		{"init"},
 		{"ci"},
 		{"ci", "baseline"},
 		{"ci", "gate"},

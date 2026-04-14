@@ -9,7 +9,6 @@ func TestRootHelpGroupsAssigned(t *testing.T) {
 	}
 
 	checks := map[string]string{
-		"init":     groupGettingStarted,
 		"generate": groupGettingStarted,
 		"validate": groupCore,
 		"apply":    groupCore,

@@ -17,27 +17,12 @@ type GenerateRequest struct {
 	Out  string
 }
 
-// GenerateRunner orchestrates the creation of starter control and observation templates.
+// GenerateRunner orchestrates the creation of starter observation templates.
 type GenerateRunner struct {
 	Out          io.Writer
 	Force        bool
 	Quiet        bool
 	AllowSymlink bool
-}
-
-// RunControl generates a canonical control YAML template.
-func (r *GenerateRunner) RunControl(req GenerateRequest) error {
-	name := strings.TrimSpace(req.Name)
-	if name == "" {
-		return errors.New("control name cannot be empty")
-	}
-	id := controlIDFromName(name)
-	content := strings.ReplaceAll(strings.TrimLeft(templateControlCanonical, "\n"), "CTL.S3.PUBLIC.901", id)
-	out := strings.TrimSpace(req.Out)
-	if out == "" {
-		out = filepath.Join("controls", id+".yaml")
-	}
-	return r.writeFile(out, []byte(content))
 }
 
 // RunObservation generates an observation JSON template.
