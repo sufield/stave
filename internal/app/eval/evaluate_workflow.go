@@ -12,18 +12,19 @@ import (
 
 // EvaluateInput holds loaded models and runtime options for evaluation processing.
 type EvaluateInput struct {
-	Controls          []policy.ControlDefinition
-	Snapshots         []asset.Snapshot
-	MaxUnsafeDuration time.Duration
-	Confidence        evaluation.ConfidenceCalculator
-	Clock             ports.Clock
-	Hasher            ports.Digester
-	ExemptionConfig   *policy.ExemptionConfig
-	ExceptionConfig   *policy.ExceptionConfig
-	StaveVersion      string
-	InputHashes       *evaluation.InputHashes
-	PredicateParser   func(any) (*policy.UnsafePredicate, error)
-	Metadata          evaluation.Metadata
+	Controls             []policy.ControlDefinition
+	Snapshots            []asset.Snapshot
+	MaxUnsafeDuration    time.Duration
+	Confidence           evaluation.ConfidenceCalculator
+	Clock                ports.Clock
+	Hasher               ports.Digester
+	ExemptionConfig      *policy.ExemptionConfig
+	ExceptionConfig      *policy.ExceptionConfig
+	AcknowledgmentConfig *policy.AcknowledgmentConfig
+	StaveVersion         string
+	InputHashes          *evaluation.InputHashes
+	PredicateParser      func(any) (*policy.UnsafePredicate, error)
+	Metadata             evaluation.Metadata
 
 	// CELEvaluator evaluates predicates using the CEL engine.
 	CELEvaluator policy.PredicateEval
@@ -49,6 +50,7 @@ func Evaluate(input EvaluateInput) (evaluation.ComplianceReport, error) {
 	runner.Hasher = input.Hasher
 	runner.Exemptions = input.ExemptionConfig
 	runner.Exceptions = input.ExceptionConfig
+	runner.Acknowledgments = input.AcknowledgmentConfig
 	runner.PredicateParser = input.PredicateParser
 	runner.PredicateEval = input.CELEvaluator
 	runner.Tracer = input.Tracer

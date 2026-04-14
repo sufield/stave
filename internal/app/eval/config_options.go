@@ -41,6 +41,13 @@ func WithExemptionConfig(exemptionConfig *policy.ExemptionConfig) Option {
 	}
 }
 
+// WithAcknowledgmentConfig sets the acknowledgment configuration.
+func WithAcknowledgmentConfig(ackConfig *policy.AcknowledgmentConfig) Option {
+	return func(cfg *AssessmentConfig) {
+		cfg.AcknowledgmentRules = ackConfig
+	}
+}
+
 // WithExceptionConfig constructs the withexceptionconfig component.
 func WithExceptionConfig(exceptionConfig *policy.ExceptionConfig) Option {
 	return func(cfg *AssessmentConfig) {

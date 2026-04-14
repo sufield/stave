@@ -68,6 +68,7 @@ type Options struct {
 	DryRun             bool
 	AllowUnknown       bool
 	ExemptionFile      string
+	AcknowledgmentFile string
 	IntegrityManifest  string
 	IntegrityPublicKey string
 	Profile            string
@@ -81,6 +82,7 @@ type Options struct {
 func (o *Options) normalize() {
 	o.SharedOptions.normalize()
 	o.ExemptionFile = fsutil.CleanUserPath(o.ExemptionFile)
+	o.AcknowledgmentFile = fsutil.CleanUserPath(o.AcknowledgmentFile)
 	o.IntegrityManifest = fsutil.CleanUserPath(o.IntegrityManifest)
 	o.IntegrityPublicKey = fsutil.CleanUserPath(o.IntegrityPublicKey)
 	o.InputFile = fsutil.CleanUserPath(o.InputFile)
@@ -169,6 +171,7 @@ func (o *Options) bindApplySpecific(cmd *cobra.Command) {
 	f := cmd.Flags()
 	f.BoolVar(&o.AllowUnknown, "allow-unknown-input", false, cliflags.WithDynamicDefaultHelp("Allow unknown source types"))
 	f.StringVar(&o.ExemptionFile, "exemption-file", "", "Path to asset exemption list YAML file")
+	f.StringVar(&o.AcknowledgmentFile, "acknowledgment-file", "", "Path to acknowledgment config YAML file")
 	f.StringVar(&o.IntegrityManifest, "integrity-manifest", "", "Path to manifest JSON containing expected hashes")
 	f.StringVar(&o.IntegrityPublicKey, "integrity-public-key", "", "Path to Ed25519 public key for signed manifests")
 	f.StringVarP(&o.Profile, "profile", "p", "", "Evaluation profile (e.g. aws-s3)")

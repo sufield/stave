@@ -96,6 +96,11 @@ func (b *Builder) Build(ctx context.Context, plan *appeval.EvaluationPlan) (*app
 		return nil, fmt.Errorf("load exemption config: %w", err)
 	}
 
+	ackCfg, err := loadAcknowledgmentConfig(b.Opts.AcknowledgmentFile)
+	if err != nil {
+		return nil, fmt.Errorf("load acknowledgment config: %w", err)
+	}
+
 	gitMeta := compose.AuditGitStatus(ctx, plan.ProjectRoot, []string{b.Opts.ControlsDir, b.ProjectConfigPath})
 
 	projCfgInput, err := b.buildProjectConfigFromLoaded(b.ProjectConfig)
@@ -122,16 +127,17 @@ func (b *Builder) Build(ctx context.Context, plan *appeval.EvaluationPlan) (*app
 			ControlLoader:     a.ctlLoader,
 		},
 		Runtime: appeval.RuntimeConfig{
-			MaxUnsafeDuration: b.Params.maxUnsafeDuration,
-			Clock:             b.Params.clock,
-			Hasher:            b.Digester,
-			StaveVersion:      version.String,
-			AllowUnknownInput: b.Opts.AllowUnknown,
-			ExemptionConfig:   exemptionCfg,
-			PredicateParser:   ctlyaml.ParsePredicate,
-			CELEvaluator:      celEval,
-			Tracer:            b.Tracer,
-			ChainDefs:         chains,
+			MaxUnsafeDuration:    b.Params.maxUnsafeDuration,
+			Clock:                b.Params.clock,
+			Hasher:               b.Digester,
+			StaveVersion:         version.String,
+			AllowUnknownInput:    b.Opts.AllowUnknown,
+			ExemptionConfig:      exemptionCfg,
+			AcknowledgmentConfig: ackCfg,
+			PredicateParser:      ctlyaml.ParsePredicate,
+			CELEvaluator:         celEval,
+			Tracer:               b.Tracer,
+			ChainDefs:            chains,
 		},
 		Writers: appeval.OutputWriters{
 			Stdout: b.Stdout,

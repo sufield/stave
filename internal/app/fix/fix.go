@@ -99,6 +99,7 @@ func WriteFixResult(w io.Writer, f remediation.Finding) error {
 	changes := policy.DeriveChanges(f.Evidence.Misconfigurations)
 
 	out := struct {
+		FindingID   string                      `json:"finding_id"`
 		Finding     string                      `json:"finding"`
 		ControlID   string                      `json:"control_id"`
 		ControlName string                      `json:"control_name"`
@@ -109,6 +110,7 @@ func WriteFixResult(w io.Writer, f remediation.Finding) error {
 		Changes     []policy.PropertyChange     `json:"changes"`
 		FixPlan     *evaluation.RemediationPlan `json:"fix_plan"`
 	}{
+		FindingID:   f.FindingID,
 		Finding:     FindingKey(f),
 		ControlID:   f.ControlID.String(),
 		ControlName: f.ControlName,

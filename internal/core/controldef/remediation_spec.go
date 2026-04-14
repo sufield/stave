@@ -24,6 +24,10 @@ type RemediationSpec struct {
 	// Changes provides machine-readable, IaC-agnostic property changes
 	// derived from the finding's misconfigurations.
 	Changes []PropertyChange `json:"changes,omitempty"`
+
+	// FindingID is the stable fingerprint for the (control, asset) pair.
+	// Copied from Finding.FindingID at construction — not recomputed.
+	FindingID string `json:"finding_id,omitempty"`
 }
 
 // PropertyChange is a single structured property change.

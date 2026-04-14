@@ -17,9 +17,10 @@ import (
 )
 
 type options struct {
-	InputPath string
-	TopN      int
-	Format    string
+	InputPath           string
+	TopN                int
+	Format              string
+	IncludeAcknowledged bool
 }
 
 // NewCmd constructs the top-level rank command.
@@ -62,6 +63,7 @@ Exit Codes:
 	cmd.Flags().StringVar(&opts.InputPath, "in", "", "Path to assessment JSON (default: stdin)")
 	cmd.Flags().IntVar(&opts.TopN, "top", opts.TopN, "Number of top findings to show")
 	cmd.Flags().StringVarP(&opts.Format, "format", "f", opts.Format, "Output format: text or json")
+	cmd.Flags().BoolVar(&opts.IncludeAcknowledged, "include-acknowledged", false, "Include acknowledged findings in output")
 
 	return cmd
 }
@@ -105,6 +107,29 @@ func run(stdout, _ io.Writer, opts *options) error {
 		fmt.Fprintln(stdout, string(output))
 	default:
 		writeTextRoadmap(stdout, roadmap)
+	}
+
+	// Show acknowledged findings if requested.
+	if opts.IncludeAcknowledged && len(assessment.AcknowledgedFindings) > 0 {
+		fmt.Fprintf(stdout, "\nACKNOWLEDGED FINDINGS (%d)\n", len(assessment.AcknowledgedFindings))
+		fmt.Fprintln(stdout, strings.Repeat("-", 50))
+		for i := range assessment.AcknowledgedFindings {
+			af := &assessment.AcknowledgedFindings[i]
+			status := "[ACK]"
+			if !af.Valid {
+				status = "[INVALID: " + af.InvalidReason + "]"
+			}
+			fmt.Fprintf(stdout, "  %s  %s on %s\n", status, af.ControlID, af.AssetID)
+			if af.Rationale != "" {
+				fmt.Fprintf(stdout, "         Rationale: %s\n", af.Rationale)
+			}
+			if af.AcknowledgedBy != "" {
+				fmt.Fprintf(stdout, "         By: %s on %s\n", af.AcknowledgedBy, af.AcknowledgedDate)
+			}
+			if af.ExpiryDate != "" {
+				fmt.Fprintf(stdout, "         Expires: %s\n", af.ExpiryDate)
+			}
+		}
 	}
 
 	return nil

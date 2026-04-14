@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/sufield/stave/internal/adapters/acknowledgment"
 	ctlbuiltin "github.com/sufield/stave/internal/adapters/controls/builtin"
 	"github.com/sufield/stave/internal/adapters/exemption"
 	appconfig "github.com/sufield/stave/internal/app/config"
@@ -54,6 +55,18 @@ func mapExceptions(in []appconfig.PolicyException) []appeval.ExceptionInput {
 		}
 	}
 	return out
+}
+
+// loadAcknowledgmentConfig loads acknowledgments from a YAML file. Returns nil if path is empty.
+func loadAcknowledgmentConfig(path string) (*policy.AcknowledgmentConfig, error) {
+	if strings.TrimSpace(path) == "" {
+		return nil, nil
+	}
+	cfg, err := acknowledgment.Load(path)
+	if err != nil {
+		return nil, fmt.Errorf("loading acknowledgments from %q: %w", path, err)
+	}
+	return cfg, nil
 }
 
 // loadExemptionConfig loads exemptions from a YAML file. Returns nil if path is empty.

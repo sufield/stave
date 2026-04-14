@@ -26,16 +26,17 @@ type Adapters struct {
 
 // RuntimeConfig holds evaluation parameters that control behavior.
 type RuntimeConfig struct {
-	MaxUnsafeDuration time.Duration
-	Clock             ports.Clock
-	Hasher            ports.Digester
-	StaveVersion      string
-	AllowUnknownInput bool
-	ExemptionConfig   *policy.ExemptionConfig
-	PredicateParser   func(any) (*policy.UnsafePredicate, error)
-	CELEvaluator      policy.PredicateEval
-	Tracer            ports.Tracer
-	ChainDefs         []policy.ChainDefinition
+	MaxUnsafeDuration    time.Duration
+	Clock                ports.Clock
+	Hasher               ports.Digester
+	StaveVersion         string
+	AllowUnknownInput    bool
+	ExemptionConfig      *policy.ExemptionConfig
+	AcknowledgmentConfig *policy.AcknowledgmentConfig
+	PredicateParser      func(any) (*policy.UnsafePredicate, error)
+	CELEvaluator         policy.PredicateEval
+	Tracer               ports.Tracer
+	ChainDefs            []policy.ChainDefinition
 }
 
 // OutputWriters holds the destination writers for evaluation output.
@@ -99,6 +100,7 @@ func BuildDependencies(ctx context.Context, in *BuildDependenciesInput) (BuildDe
 		WithAllowUnknownInput(in.Runtime.AllowUnknownInput),
 		WithExemptionConfig(in.Runtime.ExemptionConfig),
 		WithExceptionConfig(resolved.ExceptionConfig),
+		WithAcknowledgmentConfig(in.Runtime.AcknowledgmentConfig),
 		WithPreloadedControls(preloaded),
 		WithGitMetadata(in.Project.GitMetadata),
 		WithPredicateParser(in.Runtime.PredicateParser),

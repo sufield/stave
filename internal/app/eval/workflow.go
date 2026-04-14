@@ -27,18 +27,19 @@ type ObservationConfig struct {
 // AssessmentConfig defines the parameters and environment for a security audit.
 type AssessmentConfig struct {
 	ObservationConfig
-	SLAThreshold    time.Duration
-	Clock           ports.Clock
-	Hasher          ports.Digester
-	Output          io.Writer
-	ExemptionRules  *policy.ExemptionConfig
-	ExceptionRules  *policy.ExceptionConfig
-	BuildVersion    string
-	Metadata        evaluation.Metadata
-	PredicateParser func(any) (*policy.UnsafePredicate, error)
-	PredicateEval   policy.PredicateEval
-	Tracer          ports.Tracer
-	ChainDefs       []policy.ChainDefinition // Optional chain definitions for risk reasoning
+	SLAThreshold        time.Duration
+	Clock               ports.Clock
+	Hasher              ports.Digester
+	Output              io.Writer
+	ExemptionRules      *policy.ExemptionConfig
+	ExceptionRules      *policy.ExceptionConfig
+	AcknowledgmentRules *policy.AcknowledgmentConfig
+	BuildVersion        string
+	Metadata            evaluation.Metadata
+	PredicateParser     func(any) (*policy.UnsafePredicate, error)
+	PredicateEval       policy.PredicateEval
+	Tracer              ports.Tracer
+	ChainDefs           []policy.ChainDefinition // Optional chain definitions for risk reasoning
 }
 
 // AuditWorkflow orchestrates the end-to-end security assessment process.
@@ -85,19 +86,20 @@ func (w *AuditWorkflow) PerformAssessment(ctx context.Context, cfg AssessmentCon
 	}
 
 	report, err := Evaluate(EvaluateInput{
-		Controls:          auditData.Controls,
-		Snapshots:         auditData.Snapshots,
-		MaxUnsafeDuration: cfg.SLAThreshold,
-		Clock:             cfg.Clock,
-		Hasher:            cfg.Hasher,
-		ExemptionConfig:   cfg.ExemptionRules,
-		ExceptionConfig:   cfg.ExceptionRules,
-		StaveVersion:      cfg.BuildVersion,
-		InputHashes:       auditData.Hashes,
-		PredicateParser:   cfg.PredicateParser,
-		CELEvaluator:      cfg.PredicateEval,
-		Metadata:          cfg.Metadata,
-		Tracer:            cfg.Tracer,
+		Controls:             auditData.Controls,
+		Snapshots:            auditData.Snapshots,
+		MaxUnsafeDuration:    cfg.SLAThreshold,
+		Clock:                cfg.Clock,
+		Hasher:               cfg.Hasher,
+		ExemptionConfig:      cfg.ExemptionRules,
+		ExceptionConfig:      cfg.ExceptionRules,
+		AcknowledgmentConfig: cfg.AcknowledgmentRules,
+		StaveVersion:         cfg.BuildVersion,
+		InputHashes:          auditData.Hashes,
+		PredicateParser:      cfg.PredicateParser,
+		CELEvaluator:         cfg.PredicateEval,
+		Metadata:             cfg.Metadata,
+		Tracer:               cfg.Tracer,
 	})
 	if err != nil {
 		return evaluation.ComplianceReport{}, "", fmt.Errorf("security assessment failed: %w", err)
