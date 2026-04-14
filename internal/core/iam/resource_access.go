@@ -33,6 +33,11 @@ func (idx *ResourceAccessIndex) EntriesFor(resourceARN string) []ResourceAccessE
 	return idx.entries[resourceARN]
 }
 
+// AddEntry adds a single access entry for a resource ARN.
+func (idx *ResourceAccessIndex) AddEntry(resourceARN string, entry ResourceAccessEntry) {
+	idx.entries[resourceARN] = append(idx.entries[resourceARN], entry)
+}
+
 // HasNonDesignatedPHIAccess checks if a PHI resource has any accessor
 // that is not in the designated principal set.
 func (idx *ResourceAccessIndex) HasNonDesignatedPHIAccess(
