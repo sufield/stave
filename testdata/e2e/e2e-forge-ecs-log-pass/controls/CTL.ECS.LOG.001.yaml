@@ -1,0 +1,22 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.LOG.001
+name: ECS Task Definitions Must Have CloudWatch Logging Configured
+description: >
+  Detects assets where driver_configured is eq false.
+domain: exposure
+severity: high
+scope_tags:
+  - aws
+  - ecs
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Detects assets where driver_configured is eq false.
+  action: >
+    Configure a log driver for all essential containers.
+unsafe_predicate:
+  all:
+    - field: properties.container.logging.driver_configured
+      op: eq
+      value: false

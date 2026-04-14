@@ -1,0 +1,22 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.PRIV.001
+name: ECS Containers Must Not Run in Privileged Mode
+description: >
+  Detects assets where enabled is eq true.
+domain: exposure
+severity: critical
+scope_tags:
+  - aws
+  - ecs
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Detects assets where enabled is eq true.
+  action: >
+    Remove privileged: true from container definitions.
+unsafe_predicate:
+  all:
+    - field: properties.container.privileged.enabled
+      op: eq
+      value: true

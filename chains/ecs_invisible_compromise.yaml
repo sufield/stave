@@ -1,0 +1,10 @@
+id: ecs_invisible_compromise
+description: >
+  Container has no audit trail and stores credentials in plaintext env
+  vars. A compromised container can exfiltrate credentials and operate
+  with no observable signal.
+controls:
+  - CTL.ECS.LOG.001
+  - CTL.ECS.SECRETS.001
+escalation_threshold: 2
+compound_severity: critical

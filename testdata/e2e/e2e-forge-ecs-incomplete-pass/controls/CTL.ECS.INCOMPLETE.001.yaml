@@ -1,0 +1,22 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.INCOMPLETE.001
+name: Complete Data Required for ECS Assessment
+description: >
+  Detects assets where has_plaintext_secrets is missing true.
+domain: exposure
+severity: low
+scope_tags:
+  - aws
+  - ecs
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Detects assets where has_plaintext_secrets is missing true.
+  action: >
+    Re-run extractor with ecs:DescribeTaskDefinition permissions.
+unsafe_predicate:
+  all:
+    - field: properties.container.env.has_plaintext_secrets
+      op: missing
+      value: true

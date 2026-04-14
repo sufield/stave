@@ -1,0 +1,4 @@
+[ERR] Command failed (INTERNAL_ERROR)
+  Message: --controls path "testdatacontrols" does not exist: verify the path or create the directory
+  Fix:     Try `stave init --profile aws-s3`. Check the command arguments and rerun with -v or -vv for additional context.
+  Help:    run 'stave docs search init controls directory not accessible'

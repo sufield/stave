@@ -1,0 +1,106 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "c5120229e149ebab133d1ba961a310de447b748aaaf520d3da4940382b24e2fd",
+        "2026-01-11T000000Z.json": "729f91c3e3db537f88c5d58b00da202a33387735f1c6d2d4cc2be12971f0a1c1"
+      },
+      "overall": "a716b0d75e8f29aef87f856070d3e2e246d054fa48e53f700229ce94ceb69f7d"
+    },
+    "policy_fingerprint": "dc645a85f66a636fd00ee8df1a5aae9318e4154c6c4a2ad0a150977cf4e2f7bf"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.ECS.INCOMPLETE.001",
+      "asset_id": "arn:aws:ecs:us-east-1:123456789012:task-definition/api-service:1",
+      "asset_type": "aws_ecs_task_definition",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.ECS.INCOMPLETE.001",
+      "control_name": "Complete Data Required for ECS Assessment",
+      "control_description": "Detects assets where has_plaintext_secrets is missing true.\n",
+      "asset_id": "arn:aws:ecs:us-east-1:123456789012:task-definition/api-service:1",
+      "asset_type": "aws_ecs_task_definition",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "container.env.has_plaintext_secrets",
+            "actual_value": "[SANITIZED]",
+            "operator": "missing",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "low",
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Detects assets where has_plaintext_secrets is missing true.",
+        "action": "Re-run extractor with ecs:DescribeTaskDefinition permissions."
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.ECS.INCOMPLETE.001",
+      "asset_id": "arn:aws:ecs:us-east-1:123456789012:task-definition/api-service:1",
+      "exposure_score": 25,
+      "breakdown": {
+        "base_score": 25,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-ecs-incomplete-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-ecs-incomplete-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "1227ca1be8b7c5cfd60c6611c1a48058d1427752",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-ecs-incomplete-fail/controls/"
+      ]
+    }
+  }
+}

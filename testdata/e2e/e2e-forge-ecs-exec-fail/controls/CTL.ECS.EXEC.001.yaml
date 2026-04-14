@@ -1,0 +1,22 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.EXEC.001
+name: ECS Exec Must Be Disabled on Production Services
+description: >
+  Detects assets where enabled_in_production is eq true.
+domain: exposure
+severity: high
+scope_tags:
+  - aws
+  - ecs
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Detects assets where enabled_in_production is eq true.
+  action: >
+    Disable ECS Exec on production services.
+unsafe_predicate:
+  all:
+    - field: properties.container.exec.enabled_in_production
+      op: eq
+      value: true

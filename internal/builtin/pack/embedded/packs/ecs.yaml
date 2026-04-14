@@ -3,3 +3,11 @@ description: AWS ECS container task security controls
 controls:
     - CTL.ECS.TASKMETADATA.001
     - CTL.ECS.TASKMETADATA.002
+    - CTL.ECS.SECRETS.001
+    - CTL.ECS.PRIV.001
+    - CTL.ECS.ROOT.001
+    - CTL.ECS.NETWORK.001
+    - CTL.ECS.LOG.001
+    - CTL.ECS.IMAGE.001
+    - CTL.ECS.EXEC.001
+    - CTL.ECS.INCOMPLETE.001

@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.ROOT.001
+name: ECS Containers Must Not Run as Root User
+description: >
+  ECS containers must set the user field to a non-root UID. An empty user field means the container runs as whatever user the image defines — frequently root. Running as root inside a container means a process breakout gives root access to the host.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "CM-7"
+  fedramp_moderate: "CM-7"
+  pci_dss_v4.0: "2.2.1"
+  soc2: "CC6.6"
+scope_tags:
+  - aws
+  - ecs
+type: unsafe_state
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    ECS container runs as root user.
+  action: >
+    Set the user field to a non-root UID in the container definition. Build images with a non-root USER directive.
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: task_definition
+    - field: properties.container.user.is_root
+      op: eq
+      value: true

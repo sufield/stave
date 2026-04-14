@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.EXEC.001
+name: ECS Exec Must Be Disabled on Production Services
+description: >
+  ECS services in production environments must not have enableExecuteCommand: true. ECS Exec provides interactive shell access to running containers — an always-available persistence and lateral movement primitive for any IAM principal with ecs:ExecuteCommand permission. Intended for debugging, it creates a direct access path to production container runtime, filesystem, secrets, and execution role credentials.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-17"
+  fedramp_moderate: "AC-17"
+  hipaa: "164.312(a)(1)"
+  pci_dss_v4.0: "7.2.1"
+  soc2: "CC6.1"
+scope_tags:
+  - aws
+  - ecs
+type: unsafe_state
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    ECS Exec is enabled on a production service.
+  action: >
+    Disable ECS Exec on production services via aws ecs update-service --enable-execute-command false.
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: ecs_service
+    - field: properties.container.exec.enabled_in_production
+      op: eq
+      value: true

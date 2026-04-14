@@ -1,0 +1,42 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "c9c759a0c7c55c8a02bbe7763bd6ef0aa26c97fbab8c4129ea4017cb2d161b81",
+        "2026-01-11T000000Z.json": "19acfb2a0d8fc9518b029b35f4b26bc2632116d23c0b806efc6a65acfb48a256"
+      },
+      "overall": "b0a2352ac10ef43e1b22890c2d09ed4969878699bdd7f5b3627a88127104760c"
+    },
+    "policy_fingerprint": "6076f4ef94db37e311399befe123d4d1d4a580bb8a6c88b08875754f64796736"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-ecs-network-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-ecs-network-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "1227ca1be8b7c5cfd60c6611c1a48058d1427752",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-ecs-network-pass/controls/"
+      ]
+    }
+  }
+}

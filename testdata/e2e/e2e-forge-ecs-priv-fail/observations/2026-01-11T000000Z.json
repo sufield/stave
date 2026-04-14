@@ -1,0 +1,18 @@
+{
+  "assets": [
+    {
+      "id": "test-ecs-task-definition",
+      "properties": {
+        "container": {
+          "privileged": {
+            "enabled": true
+          }
+        }
+      },
+      "type": "aws_ecs_task_definition",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1"
+}

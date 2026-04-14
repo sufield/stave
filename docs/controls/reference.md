@@ -3,22 +3,22 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 344
-**Pack hash:** `d75c3599b8e4acc03e7110da2958794721f5fb5e11ba92b0cf50c4bb4489fbd8`
+**Total controls:** 352
+**Pack hash:** `a84de11e3bbf0d4961f00bf83c80fb8b4517b1105c047646663c2a7bf8734774`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 60 |
-| high | 146 |
+| critical | 62 |
+| high | 150 |
 | info | 16 |
-| low | 24 |
-| medium | 98 |
+| low | 25 |
+| medium | 99 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 253 |
+| exposure | 261 |
 | governance | 7 |
 | identity | 76 |
 | storage | 8 |
@@ -1178,6 +1178,125 @@ ECR repositories must have image scanning enabled (basic or enhanced). Without s
 ECR repositories must have container image signing verification configured in enforce mode. Image signing cryptographically verifies that container images were built by a trusted source and have not been tampered with. Without signing verification, any image pushed to the repository — including one from a compromised CI/CD pipeline or supply chain attack — can be deployed without proof of origin or integrity. AWS ECR supports signing through AWS Signer with Notation and Sigstore Cosign. Verification must be in enforce mode — audit mode detects unsigned images but still allows deployment, providing observability without protection. This mirrors the WAF COUNT vs BLOCK and Lambda code signing Warn vs Enforce distinction.
 
 **Remediation:** Configure image signing using AWS Signer with Notation or Sigstore Cosign. Set the ECR registry policy or repository policy to enforce signature verification — unsigned or invalidly signed images must be rejected at pull time. For Kubernetes workloads, configure an admission controller (Kyverno, OPA Gatekeeper) to verify signatures. For ECS, configure the ECR registry signing policy in enforce mode.
+
+---
+
+### CTL.ECS.EXEC.001
+
+**ECS Exec Must Be Disabled on Production Services**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-17; hipaa: 164.312(a)(1); nist_800_53_r5: AC-17; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+ECS services in production environments must not have enableExecuteCommand: true. ECS Exec provides interactive shell access to running containers — an always-available persistence and lateral movement primitive for any IAM principal with ecs:ExecuteCommand permission. Intended for debugging, it creates a direct access path to production container runtime, filesystem, secrets, and execution role credentials.
+
+**Remediation:** Disable ECS Exec on production services via aws ecs update-service --enable-execute-command false.
+
+---
+
+### CTL.ECS.IMAGE.001
+
+**ECS Container Images Must Not Use the latest Tag**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SI-7; nist_800_53_r5: SI-7; pci_dss_v4.0: 6.3.2; soc2: CC8.1;
+
+ECS container images must use specific tags or digest references, not the latest tag. The latest tag is mutable — a compromised pipeline can push a malicious image that automatically deploys on next task restart. Pinned tags or digests provide immutable references for forensic reproducibility.
+
+**Remediation:** Pin container images to specific version tags or use digest references (@sha256:...) for immutability.
+
+---
+
+### CTL.ECS.INCOMPLETE.001
+
+**Complete Data Required for ECS Assessment**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+
+ECS task definition or service configuration is missing required properties for security assessment. Re-run the extractor with ecs:DescribeTaskDefinition, ecs:DescribeServices, ecs:ListTaskDefinitions, and ecs:ListServices permissions.
+
+**Remediation:** Re-run extractor with full ECS permissions.
+
+---
+
+### CTL.ECS.LOG.001
+
+**ECS Task Definitions Must Have CloudWatch Logging Configured**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AU-2; hipaa: 164.312(b); nist_800_53_r5: AU-2; pci_dss_v4.0: 10.2.1; soc2: CC7.1;
+
+ECS essential containers must have a log driver configured. Without logging, container stdout and stderr are discarded — invocations, errors, and execution output leave no audit trail. A compromised container generating no logs is forensically invisible.
+
+**Remediation:** Configure the awslogs log driver for all essential containers in the task definition.
+
+---
+
+### CTL.ECS.NETWORK.001
+
+**ECS Task Definitions Must Not Use Host Network Mode**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-7; hipaa: 164.312(e)(1); nist_800_53_r5: SC-7; pci_dss_v4.0: 1.3.2; soc2: CC6.6;
+
+ECS task definitions must not use host network mode. Host networking removes network isolation between the container and the EC2 host — the container shares the host network namespace, can bind to any host port, and can access services on localhost including the ECS agent and metadata endpoint. Use awsvpc mode for per-task network isolation.
+
+**Remediation:** Switch to awsvpc network mode for per-task ENI with dedicated security group.
+
+---
+
+### CTL.ECS.PRIV.001
+
+**ECS Containers Must Not Run in Privileged Mode**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: CM-7; hipaa: 164.312(a)(1); nist_800_53_r5: CM-7; pci_dss_v4.0: 2.2.1; soc2: CC6.6;
+
+ECS container definitions must not enable privileged mode. A privileged container has full host device access and kernel capabilities — effectively root on the underlying host. Container escape gives access to EC2 instance role, host networking, and all other containers.
+
+**Remediation:** Remove privileged: true from container definitions. If host device access is required, use specific Linux capabilities instead.
+
+---
+
+### CTL.ECS.ROOT.001
+
+**ECS Containers Must Not Run as Root User**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: CM-7; nist_800_53_r5: CM-7; pci_dss_v4.0: 2.2.1; soc2: CC6.6;
+
+ECS containers must set the user field to a non-root UID. An empty user field means the container runs as whatever user the image defines — frequently root. Running as root inside a container means a process breakout gives root access to the host.
+
+**Remediation:** Set the user field to a non-root UID in the container definition. Build images with a non-root USER directive.
+
+---
+
+### CTL.ECS.SECRETS.001
+
+**ECS Task Definitions Must Not Pass Secrets as Plaintext Environment Variables**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: IA-5; hipaa: 164.312(a)(2)(iv); nist_800_53_r5: IA-5; pci_dss_v4.0: 3.4.1; soc2: CC6.1;
+
+ECS container definitions must not pass credentials as plaintext environment variables. Plaintext env vars are stored in the task definition, visible in the ECS console, logged in CloudTrail, and accessible to any process in the container. Use Secrets Manager or SSM Parameter Store references via the secrets field instead.
+
+**Remediation:** Move secrets to Secrets Manager or SSM Parameter Store. Reference them via the secrets field in the container definition.
 
 ---
 

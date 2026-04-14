@@ -1,0 +1,22 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.ROOT.001
+name: ECS Containers Must Not Run as Root User
+description: >
+  Detects assets where is_root is eq true.
+domain: exposure
+severity: high
+scope_tags:
+  - aws
+  - ecs
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Detects assets where is_root is eq true.
+  action: >
+    Set the user field to a non-root UID in container definitions.
+unsafe_predicate:
+  all:
+    - field: properties.container.user.is_root
+      op: eq
+      value: true

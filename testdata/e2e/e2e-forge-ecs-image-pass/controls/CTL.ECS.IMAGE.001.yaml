@@ -1,0 +1,22 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.IMAGE.001
+name: ECS Container Images Must Not Use the latest Tag
+description: >
+  Detects assets where uses_latest_tag is eq true.
+domain: exposure
+severity: medium
+scope_tags:
+  - aws
+  - ecs
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Detects assets where uses_latest_tag is eq true.
+  action: >
+    Pin container images to specific tags or digests.
+unsafe_predicate:
+  all:
+    - field: properties.container.image.uses_latest_tag
+      op: eq
+      value: true

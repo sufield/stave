@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.PRIV.001
+name: ECS Containers Must Not Run in Privileged Mode
+description: >
+  ECS container definitions must not enable privileged mode. A privileged container has full host device access and kernel capabilities — effectively root on the underlying host. Container escape gives access to EC2 instance role, host networking, and all other containers.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "CM-7"
+  fedramp_moderate: "CM-7"
+  hipaa: "164.312(a)(1)"
+  pci_dss_v4.0: "2.2.1"
+  soc2: "CC6.6"
+scope_tags:
+  - aws
+  - ecs
+type: unsafe_state
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    ECS container runs in privileged mode.
+  action: >
+    Remove privileged: true from container definitions. If host device access is required, use specific Linux capabilities instead.
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: task_definition
+    - field: properties.container.privileged.enabled
+      op: eq
+      value: true

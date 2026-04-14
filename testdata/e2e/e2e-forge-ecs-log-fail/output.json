@@ -1,0 +1,106 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "e5d383256362f31fdc4ab3e4c25e8037d7c267a18ca2f0db6508d102c2352439",
+        "2026-01-11T000000Z.json": "f75d515846dd5047c2c8d1b3c967269545ec8ff1ee4618e6416f25ba179462aa"
+      },
+      "overall": "bfebed232bb472524d08269b905875a9b7c00ba4d3240983fde8f6080ead19d3"
+    },
+    "policy_fingerprint": "f397f30daa92c52db312e231b8bc333d6ca427c1e87c6da396a58c9ad655137f"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.ECS.LOG.001",
+      "asset_id": "test-ecs-task-definition",
+      "asset_type": "aws_ecs_task_definition",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.ECS.LOG.001",
+      "control_name": "ECS Task Definitions Must Have CloudWatch Logging Configured",
+      "control_description": "Detects assets where driver_configured is eq false.\n",
+      "asset_id": "test-ecs-task-definition",
+      "asset_type": "aws_ecs_task_definition",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "container.logging.driver_configured",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Detects assets where driver_configured is eq false.",
+        "action": "Configure a log driver for all essential containers."
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.ECS.LOG.001",
+      "asset_id": "test-ecs-task-definition",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-ecs-log-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-ecs-log-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "1227ca1be8b7c5cfd60c6611c1a48058d1427752",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-ecs-log-fail/controls/"
+      ]
+    }
+  }
+}

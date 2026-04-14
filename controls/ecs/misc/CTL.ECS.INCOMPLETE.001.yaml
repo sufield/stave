@@ -1,0 +1,26 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.INCOMPLETE.001
+name: Complete Data Required for ECS Assessment
+description: >
+  ECS task definition or service configuration is missing required properties for security assessment. Re-run the extractor with ecs:DescribeTaskDefinition, ecs:DescribeServices, ecs:ListTaskDefinitions, and ecs:ListServices permissions.
+domain: exposure
+severity: low
+
+scope_tags:
+  - aws
+  - ecs
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    ECS assessment data is incomplete.
+  action: >
+    Re-run extractor with full ECS permissions.
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: task_definition
+    - field: properties.container.env.has_plaintext_secrets
+      op: missing
+      value: true

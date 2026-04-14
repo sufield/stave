@@ -1,0 +1,18 @@
+{
+  "assets": [
+    {
+      "id": "test-ecs-service",
+      "properties": {
+        "container": {
+          "exec": {
+            "enabled_in_production": false
+          }
+        }
+      },
+      "type": "aws_ecs_service",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1"
+}
