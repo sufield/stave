@@ -61,6 +61,8 @@ func SanitizeFindings(s kernel.Sanitizer, findings []remediation.Finding) []reme
 
 // sanitizeFinding returns a deep copy of the Finding with infrastructure
 // identifiers masked. This is presentation/privacy logic, not domain logic.
+//
+//nolint:gocritic // hugeParam: deep-copy semantics require value parameter
 func sanitizeFinding(f remediation.Finding, s kernel.Sanitizer) remediation.Finding {
 	out := f
 	out.AssetID = asset.ID(s.ID(string(f.AssetID)))

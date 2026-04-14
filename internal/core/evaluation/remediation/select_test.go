@@ -20,7 +20,7 @@ func makeTestFinding(controlID, assetID string) Finding {
 
 func TestFindingKey(t *testing.T) {
 	f := makeTestFinding("CTL.S3.001", "my-bucket")
-	got := FindingKey(f)
+	got := FindingKey(&f)
 	want := "CTL.S3.001@my-bucket"
 	if got != want {
 		t.Errorf("FindingKey() = %q, want %q", got, want)
@@ -29,7 +29,7 @@ func TestFindingKey(t *testing.T) {
 
 func TestFindingKey_EmptyFields(t *testing.T) {
 	f := makeTestFinding("", "")
-	got := FindingKey(f)
+	got := FindingKey(&f)
 	if got != "@" {
 		t.Errorf("FindingKey with empty fields = %q, want @", got)
 	}

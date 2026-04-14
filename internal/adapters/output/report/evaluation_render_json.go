@@ -87,7 +87,7 @@ func buildReportViewModel(eval corereport.Assessment, toolVersion string) report
 	complianceData := make(map[string]*reportComplianceEntry)
 	for i := range eval.Findings {
 		finding := &eval.Findings[i]
-		appendReportFinding(&out, complianceData, *finding)
+		appendReportFinding(&out, complianceData, finding)
 	}
 
 	sortReportFindings(out.Findings)
@@ -121,7 +121,7 @@ func newReportOutput(eval corereport.Assessment, toolVersion string) reportOutpu
 func appendReportFinding(
 	out *reportOutput,
 	complianceData map[string]*reportComplianceEntry,
-	finding remediation.Finding,
+	finding *remediation.Finding,
 ) {
 	rf := toReportFinding(finding)
 	out.Findings = append(out.Findings, rf)
@@ -130,7 +130,7 @@ func appendReportFinding(
 	updateComplianceData(complianceData, finding.ControlCompliance, rf.Severity)
 }
 
-func toReportFinding(finding remediation.Finding) reportFinding {
+func toReportFinding(finding *remediation.Finding) reportFinding {
 	sev := finding.ControlSeverity
 	out := reportFinding{
 		ControlID:  string(finding.ControlID),
@@ -152,7 +152,7 @@ func toReportFinding(finding remediation.Finding) reportFinding {
 	return out
 }
 
-func toReportRemediation(finding remediation.Finding) reportRemediation {
+func toReportRemediation(finding *remediation.Finding) reportRemediation {
 	return reportRemediation{
 		ControlID:   string(finding.ControlID),
 		AssetID:     string(finding.AssetID),

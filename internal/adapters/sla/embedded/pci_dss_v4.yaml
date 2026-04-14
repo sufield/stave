@@ -1,0 +1,14 @@
+id: pci_dss_v4
+name: PCI-DSS v4.0 Remediation SLA Policy
+description: >
+  PCI-DSS v4.0 Requirement 6.3.3 requires critical vulnerabilities
+  to be addressed within one month. These are conservative deadlines
+  relative to common enterprise SLA policies.
+
+deadlines:
+  critical: 24h
+  high:     168h
+  medium:   720h
+  low:      2160h
+
+escalation_factor: 1.5

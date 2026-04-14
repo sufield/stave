@@ -77,6 +77,15 @@ func (ctl *ControlDefinition) Prepare() error {
 		ctl.Prepared.HasMaxUnsafeDuration = true
 	}
 
+	if raw := ctl.Params.paramString("sla_deadline"); raw != "" {
+		d, err := kernel.ParseDuration(raw)
+		if err != nil {
+			return fmt.Errorf("invalid sla_deadline %q: %w", raw, err)
+		}
+		ctl.Prepared.SLADeadline = d
+		ctl.Prepared.HasSLADeadline = true
+	}
+
 	// Mark Ready only after all parsing succeeds.
 	ctl.Prepared.Ready = true
 	return nil
@@ -102,6 +111,18 @@ func (ctl *ControlDefinition) RecurrencePolicy() RecurrencePolicy {
 func (ctl *ControlDefinition) MaxUnsafeDuration() time.Duration {
 	ctl.ensurePrepared()
 	return ctl.Prepared.MaxUnsafeDuration
+}
+
+// SLADeadline returns the per-control sla_deadline if set, otherwise 0.
+func (ctl *ControlDefinition) SLADeadline() time.Duration {
+	ctl.ensurePrepared()
+	return ctl.Prepared.SLADeadline
+}
+
+// HasSLADeadline reports whether this control has an explicit sla_deadline param.
+func (ctl *ControlDefinition) HasSLADeadline() bool {
+	ctl.ensurePrepared()
+	return ctl.Prepared.HasSLADeadline
 }
 
 // EffectiveMaxUnsafeDuration returns the per-control max_unsafe_duration if explicitly set,
@@ -351,6 +372,8 @@ type PreparedParams struct {
 	Ready                bool
 	MaxUnsafeDuration    time.Duration
 	HasMaxUnsafeDuration bool
+	SLADeadline          time.Duration
+	HasSLADeadline       bool
 	Recurrence           RecurrencePolicy
 	PrefixExposure       PrefixExposureParams
 }

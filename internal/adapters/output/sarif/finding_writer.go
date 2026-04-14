@@ -88,7 +88,7 @@ func buildRules(findings []remediation.Finding) ([]sarifRule, map[kernel.Control
 		if f.RemediationSpec.Action != "" {
 			rule.Help = &sarifMessage{Text: f.RemediationSpec.Action}
 		}
-		tags := buildRuleTags(*f)
+		tags := buildRuleTags(f)
 		if len(tags) > 0 {
 			rule.Properties = map[string]any{"tags": tags}
 		}
@@ -121,9 +121,9 @@ func buildResults(findings []remediation.Finding, ruleIndex map[kernel.ControlID
 			RuleIndex: ruleIndex[f.ControlID],
 			Level:     mapSeverityToSarif(f.ControlSeverity),
 			Message: sarifMessage{
-				Text: buildMessage(*f),
+				Text: buildMessage(f),
 			},
-			Locations: buildLocations(*f),
+			Locations: buildLocations(f),
 		}
 
 		// Add fix suggestion from remediation.
@@ -154,7 +154,7 @@ func buildResults(findings []remediation.Finding, ruleIndex map[kernel.ControlID
 	return results
 }
 
-func buildLocations(f remediation.Finding) []sarifLocation {
+func buildLocations(f *remediation.Finding) []sarifLocation {
 	if f.Source != nil {
 		return []sarifLocation{
 			{
@@ -185,7 +185,7 @@ func buildLocations(f remediation.Finding) []sarifLocation {
 
 // buildMessage creates a human-readable message for a SARIF result.
 // Chain-member findings get an [ATTACK PATH] prefix.
-func buildMessage(f remediation.Finding) string {
+func buildMessage(f *remediation.Finding) string {
 	var prefix string
 	var suffix string
 	if len(f.ChainMembership) > 0 {
@@ -203,7 +203,7 @@ func buildMessage(f remediation.Finding) string {
 }
 
 // buildRuleTags creates the tags array for a SARIF rule's properties.
-func buildRuleTags(f remediation.Finding) []string {
+func buildRuleTags(f *remediation.Finding) []string {
 	var tags []string
 	if f.ControlSeverity.String() != "" {
 		tags = append(tags, "severity:"+f.ControlSeverity.String())

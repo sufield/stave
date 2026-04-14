@@ -10,7 +10,7 @@ import (
 )
 
 // FromFinding projects a single remediation.Finding into a FindingDTO.
-func FromFinding(f remediation.Finding) FindingDTO {
+func FromFinding(f *remediation.Finding) FindingDTO {
 	dto := FindingDTO{
 		FindingID:          f.FindingID,
 		ControlID:          f.ControlID,
@@ -48,6 +48,12 @@ func FromFinding(f remediation.Finding) FindingDTO {
 		dto.ChainMembership = mapSlice(f.ChainMembership, fromChainMembershipEntry)
 	}
 
+	dto.SLADeadlineHours = f.SLADeadlineHours
+	dto.SLABreached = f.SLABreached
+	dto.SLAOverdueHours = f.SLAOverdueHours
+	dto.SLAEscalatedSeverity = f.SLAEscalatedSeverity
+	dto.SLAPolicySource = f.SLAPolicySource
+
 	// Normalize empty severity to match omitempty behavior.
 	if dto.ControlSeverity == "" {
 		dto.ControlSeverity = ""
@@ -63,7 +69,7 @@ func fromFindings(fs []remediation.Finding) []FindingDTO {
 	if fs != nil && len(fs) == 0 {
 		return []FindingDTO{}
 	}
-	return mapSlice(fs, func(f remediation.Finding) FindingDTO { return FromFinding(f) })
+	return mapSlice(fs, func(f remediation.Finding) FindingDTO { return FromFinding(&f) })
 }
 
 func fromEvidence(e evaluation.Evidence) EvidenceDTO {

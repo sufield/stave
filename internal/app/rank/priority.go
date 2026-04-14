@@ -33,6 +33,8 @@ type PriorityEntry struct {
 	IsChainMember bool                    `json:"is_chain_member"`
 	ChainSeverity string                  `json:"chain_severity,omitempty"`
 	ChainID       string                  `json:"chain_id,omitempty"`
+	SLABreached   bool                    `json:"sla_breached,omitempty"`
+	SLAOverdue    string                  `json:"sla_overdue,omitempty"`
 }
 
 // RemediationBundle groups findings by a shared fix action.
@@ -147,6 +149,10 @@ func BuildRoadmap(findings []remediation.Finding, topExposures []risk.ExposureRa
 			entry.ChainSeverity = f.ChainMembership[0].ChainSeverity
 			entry.ChainID = f.ChainMembership[0].ChainID
 		}
+		if f.SLABreached && f.SLAOverdueHours != nil {
+			entry.SLABreached = true
+			entry.SLAOverdue = formatOverdue(*f.SLAOverdueHours)
+		}
 		entries = append(entries, entry)
 	}
 
@@ -154,6 +160,10 @@ func BuildRoadmap(findings []remediation.Finding, topExposures []risk.ExposureRa
 		// Chain-member findings sort before isolated findings.
 		if entries[i].IsChainMember != entries[j].IsChainMember {
 			return entries[i].IsChainMember
+		}
+		// SLA-breached findings sort before non-breached at same priority.
+		if entries[i].SLABreached != entries[j].SLABreached {
+			return entries[i].SLABreached
 		}
 		if entries[i].PriorityScore != entries[j].PriorityScore {
 			return entries[i].PriorityScore > entries[j].PriorityScore
@@ -262,6 +272,13 @@ func priorityNarrative(f *remediation.Finding, bd risk.ScoreBreakdown, silentKil
 	default:
 		return fmt.Sprintf("%s: %s requires remediation.", f.ControlID, f.AssetID)
 	}
+}
+
+func formatOverdue(hours float64) string {
+	if hours >= 24 {
+		return fmt.Sprintf("+%.0fd", hours/24)
+	}
+	return fmt.Sprintf("+%.0fh", hours)
 }
 
 // deriveEntryConfidence returns confidence based on whether all changes

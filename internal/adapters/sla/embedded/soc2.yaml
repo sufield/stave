@@ -1,0 +1,10 @@
+id: soc2
+name: SOC 2 Remediation SLA Policy
+
+deadlines:
+  critical: 48h
+  high:     336h
+  medium:   1440h
+  low:      4320h
+
+escalation_factor: 1.5

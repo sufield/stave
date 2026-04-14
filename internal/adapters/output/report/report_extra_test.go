@@ -29,7 +29,7 @@ func TestToReportFinding(t *testing.T) {
 			},
 		},
 	}
-	rf := toReportFinding(f)
+	rf := toReportFinding(&f)
 	if rf.ControlID != "CTL.S3.PUBLIC.001" {
 		t.Fatalf("ControlID = %q", rf.ControlID)
 	}
@@ -56,7 +56,7 @@ func TestToReportRemediation(t *testing.T) {
 			Example:     "example",
 		},
 	}
-	r := toReportRemediation(f)
+	r := toReportRemediation(&f)
 	if r.ControlID != "CTL.S3.PUBLIC.001" {
 		t.Fatalf("ControlID = %q", r.ControlID)
 	}

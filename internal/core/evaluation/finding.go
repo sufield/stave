@@ -32,6 +32,13 @@ type Finding struct {
 	// ChainMembership is non-empty when this finding is a member
 	// of one or more chains that are currently firing.
 	ChainMembership []ChainMembershipEntry `json:"chain_membership,omitempty"`
+
+	// SLA fields — populated when an SLA deadline applies to this finding.
+	SLADeadlineHours     *float64 `json:"sla_deadline_hours,omitempty"`
+	SLABreached          bool     `json:"sla_breached,omitempty"`
+	SLAOverdueHours      *float64 `json:"sla_overdue_hours,omitempty"`
+	SLAEscalatedSeverity string   `json:"sla_escalated_severity,omitempty"`
+	SLAPolicySource      string   `json:"sla_policy_source,omitempty"`
 }
 
 // ChainMembershipEntry records that a finding contributed to a fired chain.

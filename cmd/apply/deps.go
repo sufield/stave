@@ -11,6 +11,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	"github.com/sufield/stave/internal/adapters/observations"
+	"github.com/sufield/stave/internal/adapters/sla"
 	appconfig "github.com/sufield/stave/internal/app/config"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
@@ -117,6 +118,25 @@ func (b *Builder) Build(ctx context.Context, plan *appeval.EvaluationPlan) (*app
 	chainsDir := filepath.Join(filepath.Dir(b.Opts.ControlsDir), "chains")
 	chains, _ := ctlyaml.LoadChains(chainsDir)
 
+	// Load SLA policy if specified.
+	var slaCfg *evaluation.SLAConfig
+	if b.Opts.SLAProfile != "" {
+		pol, slaErr := sla.LoadEmbedded(b.Opts.SLAProfile)
+		if slaErr != nil {
+			return nil, fmt.Errorf("load sla profile: %w", slaErr)
+		}
+		slaCfg = &evaluation.SLAConfig{
+			ProfileID: pol.ID,
+			DeadlineBySeverity: map[string]float64{
+				"critical": pol.DeadlineHoursFor("critical"),
+				"high":     pol.DeadlineHoursFor("high"),
+				"medium":   pol.DeadlineHoursFor("medium"),
+				"low":      pol.DeadlineHoursFor("low"),
+			},
+			EscalationFactor: pol.EscalationFactor,
+		}
+	}
+
 	built, err := appeval.BuildDependencies(ctx, &appeval.BuildDependenciesInput{
 		Logger: b.Logger,
 		Plan:   *plan,
@@ -138,6 +158,7 @@ func (b *Builder) Build(ctx context.Context, plan *appeval.EvaluationPlan) (*app
 			CELEvaluator:         celEval,
 			Tracer:               b.Tracer,
 			ChainDefs:            chains,
+			SLAConfig:            slaCfg,
 		},
 		Writers: appeval.OutputWriters{
 			Stdout: b.Stdout,

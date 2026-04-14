@@ -78,6 +78,7 @@ func newAccumulator() *accumulator {
 	}
 }
 
+//nolint:gocritic // hugeParam: internal method, not worth interface change
 func (a *accumulator) add(f Finding) {
 	key := fmt.Sprintf("%s:%s", f.AssetID, f.RemediationPlan.ActionsFingerprint)
 

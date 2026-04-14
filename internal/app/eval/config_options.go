@@ -77,6 +77,13 @@ func WithGitMetadata(git *evaluation.GitInfo) Option {
 	}
 }
 
+// WithSLAConfig sets the SLA policy for deadline enforcement on findings.
+func WithSLAConfig(cfg *evaluation.SLAConfig) Option {
+	return func(acfg *AssessmentConfig) {
+		acfg.SLAConfig = cfg
+	}
+}
+
 // WithChainDefs sets the chain definitions for compound risk detection.
 func WithChainDefs(defs []policy.ChainDefinition) Option {
 	cloned := slices.Clone(defs)

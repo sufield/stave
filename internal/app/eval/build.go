@@ -37,6 +37,7 @@ type RuntimeConfig struct {
 	CELEvaluator         policy.PredicateEval
 	Tracer               ports.Tracer
 	ChainDefs            []policy.ChainDefinition
+	SLAConfig            *evaluation.SLAConfig
 }
 
 // OutputWriters holds the destination writers for evaluation output.
@@ -107,6 +108,7 @@ func BuildDependencies(ctx context.Context, in *BuildDependenciesInput) (BuildDe
 		WithCELEvaluator(in.Runtime.CELEvaluator),
 		WithTracer(in.Runtime.Tracer),
 		WithChainDefs(filterResolvedChains(in.Runtime.ChainDefs, preloaded)),
+		WithSLAConfig(in.Runtime.SLAConfig),
 	}
 	if resolved.ControlSource.Source != "" {
 		opts = append(opts, WithControlSource(resolved.ControlSource))

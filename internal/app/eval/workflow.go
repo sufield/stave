@@ -40,6 +40,7 @@ type AssessmentConfig struct {
 	PredicateEval       policy.PredicateEval
 	Tracer              ports.Tracer
 	ChainDefs           []policy.ChainDefinition // Optional chain definitions for risk reasoning
+	SLAConfig           *evaluation.SLAConfig    // Optional SLA policy for deadline enforcement
 }
 
 // AuditWorkflow orchestrates the end-to-end security assessment process.
@@ -108,6 +109,18 @@ func (w *AuditWorkflow) PerformAssessment(ctx context.Context, cfg AssessmentCon
 	// Run the risk reasoning engine: detect chain-based compound findings
 	// and build an attack stage summary from the evaluation results.
 	w.enrichWithRiskReasoning(&report, auditData.Controls, cfg.ChainDefs)
+
+	// Annotate findings with SLA deadline data.
+	if cfg.SLAConfig != nil {
+		ctlLookup := make(map[kernel.ControlID]*policy.ControlDefinition, len(auditData.Controls))
+		for i := range auditData.Controls {
+			ctlLookup[auditData.Controls[i].ID] = &auditData.Controls[i]
+		}
+		for i := range report.Findings {
+			ctl := ctlLookup[report.Findings[i].ControlID]
+			evaluation.AnnotateFindingSLA(&report.Findings[i], ctl, cfg.SLAConfig)
+		}
+	}
 
 	return report, report.SecurityState, nil
 }

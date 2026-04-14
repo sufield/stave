@@ -169,6 +169,9 @@ func writeTextRoadmap(w io.Writer, rm apprank.Roadmap) {
 		} else {
 			fmt.Fprintf(w, "      %s on %s\n", e.ControlID, e.AssetID)
 		}
+		if e.SLABreached {
+			fmt.Fprintf(w, "      SLA: BREACHED  %s overdue\n", e.SLAOverdue)
+		}
 		if e.Narrative != "" {
 			fmt.Fprintf(w, "      %s\n", e.Narrative)
 		}

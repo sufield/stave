@@ -1,0 +1,10 @@
+id: default
+name: Default Remediation SLA Policy
+
+deadlines:
+  critical: 72h
+  high:     336h
+  medium:   1440h
+  low:      4320h
+
+escalation_factor: 1.5

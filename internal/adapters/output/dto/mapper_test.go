@@ -136,7 +136,7 @@ func TestFromFinding_AllFields(t *testing.T) {
 		},
 	}
 
-	dto := FromFinding(f)
+	dto := FromFinding(&f)
 
 	if dto.ControlID != "CTL.S3.PUBLIC.001" {
 		t.Errorf("ControlID = %q", dto.ControlID)
@@ -204,7 +204,7 @@ func TestFromFinding_MinimalFields(t *testing.T) {
 			AssetID:   "res-1",
 		},
 	}
-	dto := FromFinding(f)
+	dto := FromFinding(&f)
 
 	if dto.ControlID != "CTL.TEST.001" {
 		t.Errorf("ControlID = %q", dto.ControlID)

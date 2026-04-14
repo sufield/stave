@@ -1,0 +1,10 @@
+id: fedramp_moderate
+name: FedRAMP Moderate Remediation SLA Policy
+
+deadlines:
+  critical: 72h
+  high:     720h
+  medium:   2160h
+  low:      4320h
+
+escalation_factor: 1.5

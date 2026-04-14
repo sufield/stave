@@ -10,6 +10,7 @@ import (
 
 type publicExposurePlanner struct{}
 
+//nolint:gocritic // hugeParam: Specialist interface requires value receiver
 func (p publicExposurePlanner) Plan(f Finding) *evaluation.RemediationPlan {
 	// Actions use normalized domain paths.
 	// The 'apply' layer is responsible for translating these to vendor-specific APIs.

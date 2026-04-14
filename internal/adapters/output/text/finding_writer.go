@@ -102,7 +102,7 @@ func (w *FindingWriter) writeViolationsFromEnriched(d *drawer, result *evaluatio
 	if len(chainFindings) > 0 {
 		for i := range chainFindings {
 			f := &chainFindings[i]
-			w.writeChainMemberFinding(d, num, *f)
+			w.writeChainMemberFinding(d, num, f)
 			num++
 		}
 		if len(isolatedFindings) > 0 {
@@ -111,7 +111,7 @@ func (w *FindingWriter) writeViolationsFromEnriched(d *drawer, result *evaluatio
 	}
 	for i := range isolatedFindings {
 		f := &isolatedFindings[i]
-		w.writeIsolatedFinding(d, num, *f)
+		w.writeIsolatedFinding(d, num, f)
 		num++
 	}
 }
@@ -200,7 +200,7 @@ func joinControls(ids []kernel.ControlID) string {
 }
 
 // writeChainMemberFinding writes a finding that is part of an active attack chain.
-func (w *FindingWriter) writeChainMemberFinding(d *drawer, num int, f remediation.Finding) {
+func (w *FindingWriter) writeChainMemberFinding(d *drawer, num int, f *remediation.Finding) {
 	cm := f.ChainMembership[0]
 	d.f("\n%d. [ATTACK PATH] %s  %s\n", num, cm.ChainID, cm.ChainSeverity)
 	d.f("   %s  %s\n", f.ControlID, f.AssetID)
@@ -214,33 +214,33 @@ func (w *FindingWriter) writeChainMemberFinding(d *drawer, num int, f remediatio
 }
 
 // writeIsolatedFinding writes a finding not part of any active attack chain.
-func (w *FindingWriter) writeIsolatedFinding(d *drawer, num int, f remediation.Finding) {
+func (w *FindingWriter) writeIsolatedFinding(d *drawer, num int, f *remediation.Finding) {
 	writeFindingHeader(d, num, f)
 	writeFindingSource(d, f)
 	writeFindingEvidence(d, f)
 	writeFindingRemediation(d, f)
 }
 
-func writeFindingHeader(d *drawer, num int, f remediation.Finding) {
+func writeFindingHeader(d *drawer, num int, f *remediation.Finding) {
 	d.f("\n%d. %s\n", num, f.ControlID)
 	d.f("   %s\n", f.ControlName)
 	d.f("   Asset: %s (%s/%s)\n", f.AssetID, f.AssetVendor, f.AssetType)
 }
 
-func writeFindingSource(d *drawer, f remediation.Finding) {
+func writeFindingSource(d *drawer, f *remediation.Finding) {
 	if f.Source == nil {
 		return
 	}
 	d.f("   Source: %s:%d\n", f.Source.File, f.Source.Line)
 }
 
-func writeFindingEvidence(d *drawer, f remediation.Finding) {
+func writeFindingEvidence(d *drawer, f *remediation.Finding) {
 	d.f("   Evidence:\n")
 	writeFindingEvidenceLifecycle(d, f)
 	writeFindingEvidenceContext(d, f)
 }
 
-func writeFindingEvidenceLifecycle(d *drawer, f remediation.Finding) {
+func writeFindingEvidenceLifecycle(d *drawer, f *remediation.Finding) {
 	if !f.Evidence.FirstUnsafeAt.IsZero() {
 		d.f("     First unsafe: %s\n", f.Evidence.FirstUnsafeAt.Format("2006-01-02 15:04:05 UTC"))
 	}
@@ -252,7 +252,7 @@ func writeFindingEvidenceLifecycle(d *drawer, f remediation.Finding) {
 	}
 }
 
-func writeFindingEvidenceContext(d *drawer, f remediation.Finding) {
+func writeFindingEvidenceContext(d *drawer, f *remediation.Finding) {
 	if f.Evidence.ExposureWindowCount > 0 {
 		d.f("     Exposure Windows:     %d (limit: %d within %d days)\n", f.Evidence.ExposureWindowCount, f.Evidence.RecurrenceLimit, f.Evidence.WindowDays)
 	}
@@ -261,7 +261,7 @@ func writeFindingEvidenceContext(d *drawer, f remediation.Finding) {
 	}
 }
 
-func writeFindingRemediation(d *drawer, f remediation.Finding) {
+func writeFindingRemediation(d *drawer, f *remediation.Finding) {
 	if f.RemediationSpec.Description == "" && f.RemediationSpec.Action == "" {
 		return
 	}

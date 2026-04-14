@@ -34,6 +34,8 @@ func (p *Planner) Register(class kernel.ControlClass, s Specialist) {
 
 // PlanFor returns a remediation plan for the finding's control class,
 // or nil if no specialist is registered for that class.
+//
+//nolint:gocritic // hugeParam: PlanFor is an interface boundary — callers pass by value
 func (p *Planner) PlanFor(f Finding) *evaluation.RemediationPlan {
 	if s, ok := p.specialists[f.ControlID.Classify()]; ok {
 		return s.Plan(f)
