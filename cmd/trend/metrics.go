@@ -1,0 +1,188 @@
+package trend
+
+import (
+	"time"
+
+	"github.com/sufield/stave/internal/core/report"
+)
+
+// RunMetrics captures posture metrics for a single assessment run.
+type RunMetrics struct {
+	CapturedAt         time.Time      `json:"captured_at"`
+	FilePath           string         `json:"-"`
+	ViolationCount     int            `json:"violation_count"`
+	PassCount          int            `json:"pass_count"`
+	IncompleteCount    int            `json:"incomplete_count"`
+	ViolationRate      float64        `json:"violation_rate"`
+	BySeverity         map[string]int `json:"by_severity"`
+	ByAttackStage      map[string]int `json:"by_attack_stage,omitempty"`
+	ViolationsAdded    int            `json:"violations_added"`
+	ViolationsResolved int            `json:"violations_resolved"`
+}
+
+// MTTREntry holds MTTR data for a single severity level.
+type MTTREntry struct {
+	AvgDays     float64 `json:"avg_days"`
+	WindowCount int     `json:"window_count"`
+}
+
+// TrendReport is the complete trend analysis output.
+type TrendReport struct {
+	GeneratedAt time.Time            `json:"generated_at"`
+	Period      Period               `json:"period"`
+	Summary     TrendSummary         `json:"summary"`
+	Runs        []RunMetrics         `json:"runs"`
+	MTTR        map[string]MTTREntry `json:"mttr,omitempty"`
+	Velocity    VelocityMetrics      `json:"velocity"`
+	Projection  *ProjectionMetrics   `json:"projection,omitempty"`
+}
+
+// Period defines the time range of the trend analysis.
+type Period struct {
+	Start    time.Time `json:"start"`
+	End      time.Time `json:"end"`
+	RunCount int       `json:"run_count"`
+}
+
+// TrendSummary provides high-level direction.
+type TrendSummary struct {
+	FirstViolationRate  float64 `json:"first_violation_rate"`
+	LatestViolationRate float64 `json:"latest_violation_rate"`
+	NetChangePercent    float64 `json:"net_change_percent"`
+	Direction           string  `json:"direction"`
+}
+
+// VelocityMetrics captures the rate of change.
+type VelocityMetrics struct {
+	WindowRuns   int     `json:"window_runs"`
+	AvgNetChange float64 `json:"avg_net_change_per_run"`
+	Direction    string  `json:"direction"`
+}
+
+// ProjectionMetrics provides a linear extrapolation.
+type ProjectionMetrics struct {
+	TargetRate    float64 `json:"target_rate"`
+	EstimatedRuns int     `json:"estimated_runs"`
+	Basis         string  `json:"basis"`
+	Caveat        string  `json:"caveat"`
+}
+
+// computeRunMetrics extracts metrics from a single assessment.
+func computeRunMetrics(a *report.Assessment, prev *RunMetrics) RunMetrics {
+	violations := len(a.Findings)
+	total := a.Summary.TotalAssets
+	passCount := total - a.Summary.ExposedResources
+
+	rate := 0.0
+	if total > 0 {
+		rate = float64(violations) / float64(total)
+	}
+
+	bySeverity := make(map[string]int)
+	currentKeys := make(map[string]bool)
+	for i := range a.Findings {
+		f := &a.Findings[i]
+		sev := f.ControlSeverity.String()
+		if sev == "" {
+			sev = "unknown"
+		}
+		bySeverity[sev]++
+		currentKeys[string(f.ControlID)+":"+string(f.AssetID)] = true
+	}
+
+	byStage := make(map[string]int)
+	for stage, count := range a.AttackStageSummary {
+		n := 0
+		for _, c := range count {
+			if c >= '0' && c <= '9' {
+				n = n*10 + int(c-'0')
+			}
+		}
+		if n > 0 {
+			byStage[stage] = n
+		}
+	}
+
+	m := RunMetrics{
+		CapturedAt:     a.Run.Now,
+		ViolationCount: violations,
+		PassCount:      passCount,
+		ViolationRate:  rate,
+		BySeverity:     bySeverity,
+		ByAttackStage:  byStage,
+	}
+
+	// Compute delta from previous run.
+	if prev != nil {
+		// Count from the difference perspective: what's new vs what's gone.
+		m.ViolationsAdded = max(0, violations-prev.ViolationCount)
+		m.ViolationsResolved = max(0, prev.ViolationCount-violations)
+	}
+
+	return m
+}
+
+// computeVelocity computes rolling average net change.
+func computeVelocity(runs []RunMetrics, windowSize int) VelocityMetrics {
+	if len(runs) < 2 {
+		return VelocityMetrics{Direction: "insufficient_data"}
+	}
+
+	start := 0
+	if windowSize > 0 && len(runs) > windowSize {
+		start = len(runs) - windowSize
+	}
+	window := runs[start:]
+
+	totalDelta := 0.0
+	for i := 1; i < len(window); i++ {
+		totalDelta += float64(window[i].ViolationCount - window[i-1].ViolationCount)
+	}
+	avg := totalDelta / float64(len(window)-1)
+
+	dir := "steady"
+	if avg < -0.5 {
+		dir = "improving"
+	} else if avg > 0.5 {
+		dir = "regressing"
+	}
+
+	return VelocityMetrics{
+		WindowRuns:   len(window),
+		AvgNetChange: avg,
+		Direction:    dir,
+	}
+}
+
+// computeProjection provides a linear extrapolation if improving.
+func computeProjection(runs []RunMetrics, velocity VelocityMetrics) *ProjectionMetrics {
+	if velocity.Direction != "improving" || len(runs) == 0 {
+		return nil
+	}
+
+	latestRate := runs[len(runs)-1].ViolationRate
+	targetRate := 0.05
+
+	if latestRate <= targetRate {
+		return nil // already at target
+	}
+
+	// Estimate: how many runs at current velocity to reach target.
+	latestCount := float64(runs[len(runs)-1].ViolationCount)
+	if velocity.AvgNetChange >= 0 {
+		return nil
+	}
+
+	targetCount := targetRate * float64(runs[len(runs)-1].ViolationCount+runs[len(runs)-1].PassCount)
+	runsNeeded := int((latestCount - targetCount) / (-velocity.AvgNetChange))
+	if runsNeeded <= 0 {
+		runsNeeded = 1
+	}
+
+	return &ProjectionMetrics{
+		TargetRate:    targetRate,
+		EstimatedRuns: runsNeeded,
+		Basis:         "linear_extrapolation",
+		Caveat:        "Linear projection only. Security posture is not linear.",
+	}
+}

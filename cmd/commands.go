@@ -39,6 +39,7 @@ import (
 	staverank "github.com/sufield/stave/cmd/rank"
 	"github.com/sufield/stave/cmd/securityaudit"
 	stavetelemetry "github.com/sufield/stave/cmd/telemetry"
+	stavetrend "github.com/sufield/stave/cmd/trend"
 	stavewatch "github.com/sufield/stave/cmd/watch"
 	artifact "github.com/sufield/stave/internal/adapters/artifacts"
 	infrabaseline "github.com/sufield/stave/internal/adapters/baseline"
@@ -170,6 +171,9 @@ func WireCommands(app *App) {
 
 	// Control authoring
 	root.AddCommand(staveforge.NewCmd())
+
+	// Posture trending
+	root.AddCommand(stavetrend.NewCmd())
 
 	// Remediation ranking
 	root.AddCommand(staverank.NewCmd())
