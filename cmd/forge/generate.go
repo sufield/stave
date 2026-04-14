@@ -34,6 +34,18 @@ func runNonInteractive(ctx context.Context, w io.Writer, opts nonInteractiveOpts
 	if opts.ID == "" || opts.Name == "" || opts.Field == "" || opts.Remediation == "" {
 		return errors.New("--id, --name, --field, and --remediation are required in non-interactive mode")
 	}
+	if err := fsutil.SafeFilename(opts.ID); err != nil {
+		return fmt.Errorf("--id: %w", err)
+	}
+	if opts.Out != "" {
+		cwd, cwdErr := os.Getwd()
+		if cwdErr != nil {
+			return fmt.Errorf("cannot determine working directory: %w", cwdErr)
+		}
+		if _, dirErr := fsutil.SafeDir(opts.Out, cwd); dirErr != nil {
+			return fmt.Errorf("--out: %w", dirErr)
+		}
+	}
 
 	args := []string{
 		"run", "./internal/tools/gencontrol",
@@ -73,7 +85,10 @@ func runNonInteractive(ctx context.Context, w io.Writer, opts nonInteractiveOpts
 
 	fmt.Fprintf(w, "Generating control %s...\n", opts.ID)
 
-	cmd := exec.CommandContext(ctx, "go", args...) //nolint:gosec // args built from validated CLI flags
+	// Arguments are built from validated CLI flag values and passed
+	// as a slice to exec.Command — no shell interpolation occurs.
+	// G204: subprocess launched with variable — safe, no shell.
+	cmd := exec.CommandContext(ctx, "go", args...) //nolint:gosec
 	cmd.Stdout = w
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {

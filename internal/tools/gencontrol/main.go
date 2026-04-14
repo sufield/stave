@@ -36,6 +36,8 @@ import (
 	"time"
 
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
+	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/internal/yamlutil"
 )
 
 func main() {
@@ -94,6 +96,9 @@ func (c *config) validate() error {
 	if c.ID == "" {
 		return fmt.Errorf("--id is required")
 	}
+	if err := fsutil.SafeFilename(c.ID); err != nil {
+		return fmt.Errorf("--id: %w", err)
+	}
 	if c.Name == "" {
 		return fmt.Errorf("--name is required")
 	}
@@ -102,6 +107,13 @@ func (c *config) validate() error {
 	}
 	if c.Remediation == "" {
 		return fmt.Errorf("--remediation is required (every control must have a remediation path)")
+	}
+	cwd, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("cannot determine working directory: %w", err)
+	}
+	if _, err := fsutil.SafeDir(c.OutDir, cwd); err != nil {
+		return fmt.Errorf("--out: %w", err)
 	}
 	return nil
 }
@@ -411,7 +423,7 @@ func typedValue(v string) string {
 	default:
 		for _, c := range v {
 			if c < '0' || c > '9' {
-				return `"` + v + `"`
+				return yamlutil.Quote(v)
 			}
 		}
 		return v
