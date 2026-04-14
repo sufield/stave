@@ -28,7 +28,6 @@ type AuditCapabilities struct {
 // RiskReasoning describes the compound risk scoring capabilities.
 type RiskReasoning struct {
 	Enabled      bool     `json:"enabled"`
-	ChainCount   int      `json:"chain_count"`
 	AttackStages []string `json:"attack_stages"`
 	ScoringModel string   `json:"scoring_model"`
 }
@@ -84,15 +83,7 @@ func Summarize(version string) AuditCapabilities {
 		PolicySupport:      Manifest.policySupport(),
 		DataIngress:        Manifest.ingressSupport(),
 		PolicyLibrary:      Manifest.libraryWithVersion(version),
-		RiskReasoning: RiskReasoning{
-			Enabled:    true,
-			ChainCount: 3,
-			AttackStages: []string{
-				"initial_access", "credential_access", "persistence",
-				"exfiltration", "detection_evasion", "resilience",
-			},
-			ScoringModel: "environmental × chain_escalation × blast_multiplier",
-		},
-		ComplianceSupport: Manifest.complianceSupport(),
+		RiskReasoning:      Manifest.riskReasoning(),
+		ComplianceSupport:  Manifest.complianceSupport(),
 	}
 }

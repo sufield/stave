@@ -1,13 +1,17 @@
 package capabilities
 
 import (
+	"io/fs"
 	"slices"
+	"strings"
 
 	"github.com/sufield/stave/internal/app/securityaudit/evidence"
 	"github.com/sufield/stave/internal/builtin/pack"
 	"github.com/sufield/stave/internal/compliance"
+	"github.com/sufield/stave/internal/controldata"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/securityaudit"
+	"gopkg.in/yaml.v3"
 )
 
 // featureManifest holds pre-sorted, immutable data describing the tool's
@@ -19,6 +23,7 @@ type featureManifest struct {
 	connectorIndex     map[kernel.ObservationSourceType]struct{}
 	policyLibrary      []PolicyPack
 	complianceFeatures ComplianceSupport
+	riskFeatures       RiskReasoning
 }
 
 func (m *featureManifest) observationSupport() ObservationSupport {
@@ -39,6 +44,10 @@ func (m *featureManifest) libraryWithVersion(version string) []PolicyPack {
 		result[i].Version = version
 	}
 	return result
+}
+
+func (m *featureManifest) riskReasoning() RiskReasoning {
+	return m.riskFeatures
 }
 
 func (m *featureManifest) complianceSupport() ComplianceSupport {
@@ -101,6 +110,8 @@ func newFeatureManifest() *featureManifest {
 		SecurityFrameworks: compliance.FrameworkStrings(compliance.SupportedFrameworks()),
 	}
 
+	attackStages := deriveAttackStages()
+
 	return &featureManifest{
 		observationSchemas: observationSchemas,
 		policySchemas:      policySchemas,
@@ -108,5 +119,50 @@ func newFeatureManifest() *featureManifest {
 		connectorIndex:     connectorIndex,
 		policyLibrary:      library,
 		complianceFeatures: complianceFeatures,
+		riskFeatures: RiskReasoning{
+			Enabled:      true,
+			AttackStages: attackStages,
+			ScoringModel: "environmental × chain_escalation × blast_multiplier",
+		},
 	}
+}
+
+// controlParams is a minimal struct for extracting attack_stage from
+// control YAML without importing the adapters layer.
+type controlParams struct {
+	Params struct {
+		AttackStage string `yaml:"attack_stage"`
+	} `yaml:"params"`
+}
+
+// deriveAttackStages scans the embedded control YAMLs and returns the
+// sorted, deduplicated set of attack_stage values actually used.
+func deriveAttackStages() []string {
+	seen := make(map[string]struct{})
+	_ = fs.WalkDir(controldata.FS, "embedded", func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() || !strings.HasSuffix(path, ".yaml") {
+			return nil
+		}
+		data, readErr := fs.ReadFile(controldata.FS, path)
+		if readErr != nil {
+			return nil //nolint:nilerr // skip unreadable
+		}
+		var cp controlParams
+		if yamlErr := yaml.Unmarshal(data, &cp); yamlErr != nil {
+			return nil //nolint:nilerr // skip unparseable
+		}
+		if cp.Params.AttackStage != "" {
+			seen[cp.Params.AttackStage] = struct{}{}
+		}
+		return nil
+	})
+	stages := make([]string, 0, len(seen))
+	for s := range seen {
+		stages = append(stages, s)
+	}
+	slices.Sort(stages)
+	return stages
 }
