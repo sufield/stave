@@ -2,3 +2,4 @@ id: cloudfront
 description: AWS CloudFront distribution security controls
 controls:
     - CTL.CLOUDFRONT.TLS.001
+    - CTL.CLOUDFRONT.HEADERS.001

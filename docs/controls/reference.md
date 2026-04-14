@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 340
-**Pack hash:** `4cb2d1c82fe16f7b2936e293e73efc807e4160b6a613a56cf66357ca218054f5`
+**Total controls:** 341
+**Pack hash:** `d9385e27476bad2738ebc7fa75530835301f9a1ef626d87537a63c8e51763b27`
 
 ## Summary
 
@@ -13,12 +13,12 @@
 | critical | 60 |
 | high | 146 |
 | info | 16 |
-| low | 22 |
+| low | 23 |
 | medium | 96 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 249 |
+| exposure | 250 |
 | governance | 7 |
 | identity | 76 |
 | storage | 8 |
@@ -333,6 +333,21 @@ CloudFormation stacks must not have DisableRollback set to true. With rollback d
 Terraform state files must be stored in a versioned backend (S3 with versioning, Terraform Cloud, or equivalent). Unversioned state means a corrupted or accidentally deleted state file cannot be recovered, leaving infrastructure in an unmanaged state with no rollback path.
 
 **Remediation:** Configure an S3 backend with versioning enabled and DynamoDB state locking. Alternatively, use Terraform Cloud or an equivalent managed backend with built-in versioning.
+
+---
+
+### CTL.CLOUDFRONT.HEADERS.001
+
+**CloudFront Distributions Must Enforce Security Response Headers**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-8; nist_800_53_r5: SC-8; pci_dss_v4.0: 6.4.1; soc2: CC6.6;
+
+CloudFront distributions must have a response headers policy attached that includes Strict-Transport-Security (HSTS) with max-age >= 31536000, X-Frame-Options set to DENY or SAMEORIGIN, X-Content-Type-Options set to nosniff, and Referrer-Policy set to a restrictive value. Without these headers, browsers do not enforce transport security, framing protection, MIME type enforcement, or referrer leakage prevention. Content-Security-Policy (CSP) is not required — it requires application-specific source definitions outside Stave's scope. This pairs with CTL.CLOUDFRONT.TLS.001: TLS enforces encrypted transport, response headers enforce browser-layer security.
+
+**Remediation:** Create or update a response headers policy with the four required headers: Strict-Transport-Security (max-age=31536000; includeSubDomains), X-Frame-Options (DENY or SAMEORIGIN), X-Content-Type-Options (nosniff), and Referrer-Policy (strict-origin-when-cross-origin or no-referrer). Attach the policy to the distribution via the CloudFront console or UpdateDistribution API.
 
 ---
 

@@ -1,0 +1,119 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "ee6fdf502d4aca49fe87717017a4e186f280b5ef97dca643a84fd02d25ea2fb1",
+        "2026-01-11T000000Z.json": "0dd0c9e650392a007c09f16295bcd0ca78368c48f99eff9bf7a5f6b030ca2056"
+      },
+      "overall": "4a777ef33679b70660de32b3ae5ec51ec7dc53b64f77886c0040420378b2bb39"
+    },
+    "policy_fingerprint": "ff5cdd676db8417a9c26c8892965a9f0b32dc7c360f02d026ce5dd819d3e3700"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.CLOUDFRONT.HEADERS.001",
+      "asset_id": "arn:aws:cloudfront::123456789012:distribution/E1ABC2DEF3GH",
+      "asset_type": "aws_cloudfront_distribution",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.CLOUDFRONT.HEADERS.001",
+      "control_name": "CloudFront Distributions Must Enforce Security Response Headers",
+      "control_description": "CloudFront distributions must have a response headers policy attached that includes Strict-Transport-Security (HSTS) with max-age \u003e= 31536000, X-Frame-Options set to DENY or SAMEORIGIN, X-Content-Type-Options set to nosniff, and Referrer-Policy set to a restrictive value. Without these headers, browsers do not enforce transport security, framing protection, MIME type enforcement, or referrer leakage prevention. Content-Security-Policy (CSP) is not required — it requires application-specific source definitions outside Stave's scope. This pairs with CTL.CLOUDFRONT.TLS.001: TLS enforces encrypted transport, response headers enforce browser-layer security.\n",
+      "asset_id": "arn:aws:cloudfront::123456789012:distribution/E1ABC2DEF3GH",
+      "asset_type": "aws_cloudfront_distribution",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "cdn.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "distribution"
+          },
+          {
+            "property": "cdn.security_headers.all_required_present",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "low",
+      "control_compliance": {
+        "fedramp_moderate": "SC-8",
+        "nist_800_53_r5": "SC-8",
+        "pci_dss_v4.0": "6.4.1",
+        "soc2": "CC6.6"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "CloudFront distribution has no response headers policy or the policy is missing one or more required security headers.",
+        "action": "Create or update a response headers policy with the four required headers: Strict-Transport-Security (max-age=31536000; includeSubDomains), X-Frame-Options (DENY or SAMEORIGIN), X-Content-Type-Options (nosniff), and Referrer-Policy (strict-origin-when-cross-origin or no-referrer). Attach the policy to the distribution via the CloudFront console or UpdateDistribution API.",
+        "example": "{\n  \"cdn\": {\n    \"kind\": \"distribution\",\n    \"security_headers\": {\n      \"all_required_present\": true\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.CLOUDFRONT.HEADERS.001",
+      "asset_id": "arn:aws:cloudfront::123456789012:distribution/E1ABC2DEF3GH",
+      "exposure_score": 25,
+      "breakdown": {
+        "base_score": 25,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-cloudfront-headers-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-cloudfront-headers-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "2303585f80b398afd39d584daff3a981b1f1909e",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-cloudfront-headers-fail/controls/"
+      ]
+    }
+  }
+}

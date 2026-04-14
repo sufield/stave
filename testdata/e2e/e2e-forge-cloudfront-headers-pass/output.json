@@ -1,0 +1,42 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "a4f91a8cf686f8241e50f96e1d2c711adb52f5cdeb675133046f0a9236c33066",
+        "2026-01-11T000000Z.json": "89a198a94143d24884b76be7dd676c622589118d1fae6423535dad5a875d4721"
+      },
+      "overall": "02ad9eba181a3612df065b40b16f6fbe0ac20a0e5f18a9001f59298ef4542fb1"
+    },
+    "policy_fingerprint": "ff5cdd676db8417a9c26c8892965a9f0b32dc7c360f02d026ce5dd819d3e3700"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-cloudfront-headers-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-cloudfront-headers-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "2303585f80b398afd39d584daff3a981b1f1909e",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-cloudfront-headers-pass/controls/"
+      ]
+    }
+  }
+}
