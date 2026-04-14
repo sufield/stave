@@ -11,7 +11,9 @@
             "target_data_classification": "public",
             "has_auth_boundary": true,
             "has_inspection_boundary": true,
-            "inspection_boundary_types": ["waf"],
+            "inspection_boundary_types": [
+              "waf"
+            ],
             "is_fully_resolved": true,
             "entry_point_type": "apigateway"
           }
@@ -22,5 +24,6 @@
     }
   ],
   "captured_at": "2026-01-11T00:00:00Z",
-  "schema_version": "obs.v0.1"
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
 }

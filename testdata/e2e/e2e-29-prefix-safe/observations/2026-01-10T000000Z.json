@@ -20,8 +20,12 @@
               "sid": "AllowPublicImages",
               "effect": "Allow",
               "principal": "*",
-              "actions": ["s3:GetObject"],
-              "assets": ["arn:aws:s3:::example-bucket/images/*"]
+              "actions": [
+                "s3:GetObject"
+              ],
+              "assets": [
+                "arn:aws:s3:::example-bucket/images/*"
+              ]
             }
           ],
           "public_access_block": {
@@ -33,5 +37,6 @@
         }
       }
     }
-  ]
+  ],
+  "source": "deployed"
 }

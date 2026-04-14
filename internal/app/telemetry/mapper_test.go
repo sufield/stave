@@ -17,6 +17,7 @@ func makeAssessment(findings []remediation.Finding) *report.Assessment {
 		Run: evaluation.RunInfo{
 			Now:               time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC),
 			PolicyFingerprint: kernel.Digest("sha256:abcd1234"),
+			EvaluatedState:    "deployed",
 		},
 		Status:   evaluation.StateNonCompliant,
 		Findings: findings,

@@ -292,6 +292,7 @@ func (s *assessmentSession) compileReport() evaluation.ComplianceReport {
 			Snapshots:         len(s.snapshots),
 			InputHashes:       s.opts.InputHashes,
 			PolicyFingerprint: s.assessor.FingerprintPolicy(),
+			EvaluatedState:    evaluatedState(s.snapshots),
 		},
 		Summary: evaluation.ComplianceSummary{
 			TotalAssets:      len(s.collector.seenAssets),
@@ -365,3 +366,11 @@ func (a *Assessor) FingerprintPolicy() kernel.Digest {
 const DefaultContinuityLimit = 12 * time.Hour
 
 func (a *Assessor) continuityLimit() time.Duration { return a.ContinuityLimit }
+
+// evaluatedState extracts the source context from the latest snapshot.
+func evaluatedState(snapshots []asset.Snapshot) string {
+	if len(snapshots) == 0 {
+		return ""
+	}
+	return string(snapshots[len(snapshots)-1].Source)
+}

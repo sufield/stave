@@ -23,6 +23,7 @@ func TestWriteFindings_BareJSON(t *testing.T) {
 			Now:               time.Date(2026, 2, 1, 12, 0, 0, 0, time.UTC),
 			MaxUnsafeDuration: kernel.Duration(24 * time.Hour),
 			Snapshots:         0,
+			EvaluatedState:    "deployed",
 		},
 		Summary: evaluation.ComplianceSummary{
 			TotalAssets:      0,

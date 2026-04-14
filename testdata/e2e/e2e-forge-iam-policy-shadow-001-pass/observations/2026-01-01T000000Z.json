@@ -1,1 +1,24 @@
-{"assets":[{"id":"arn:aws:iam::123:policy/dev-policy","properties":{"identity":{"kind":"policy","policy":{"shadow_logic":{"has_not_action":false,"has_not_resource":false,"permits_iam_write_via_negative":false}}}},"type":"aws_iam_policy","vendor":"aws"}],"captured_at":"2026-01-01T00:00:00Z","schema_version":"obs.v0.1"}
+{
+  "assets": [
+    {
+      "id": "arn:aws:iam::123:policy/dev-policy",
+      "properties": {
+        "identity": {
+          "kind": "policy",
+          "policy": {
+            "shadow_logic": {
+              "has_not_action": false,
+              "has_not_resource": false,
+              "permits_iam_write_via_negative": false
+            }
+          }
+        }
+      },
+      "type": "aws_iam_policy",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

@@ -17,7 +17,11 @@
         "encryption": "none",
         "breach_type": "DISC"
       },
-      "source": { "file": "infra/storage.tf", "line": 15 }
+      "source": {
+        "file": "infra/storage.tf",
+        "line": 15
+      }
     }
-  ]
+  ],
+  "source": "deployed"
 }

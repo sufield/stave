@@ -15,12 +15,25 @@
         "dispatch_id": "email-001",
         "channel": "email",
         "sender": "hr@company.com",
-        "intended_audience": ["alice@company.com", "bob@company.com"],
-        "actual_audience": ["alice@company.com", "bob@company.com", "eve@attacker.com"],
-        "data_tags": ["PII", "PHI"],
+        "intended_audience": [
+          "alice@company.com",
+          "bob@company.com"
+        ],
+        "actual_audience": [
+          "alice@company.com",
+          "bob@company.com",
+          "eve@attacker.com"
+        ],
+        "data_tags": [
+          "PII",
+          "PHI"
+        ],
         "timestamp": "2026-01-01T00:00:00Z"
       },
-      "source": { "file": "dispatch/email.json", "line": 1 }
+      "source": {
+        "file": "dispatch/email.json",
+        "line": 1
+      }
     },
     {
       "id": "dispatch:email:002-valid",
@@ -30,12 +43,21 @@
         "dispatch_id": "email-002",
         "channel": "email",
         "sender": "finance@company.com",
-        "intended_audience": ["cfo@company.com"],
-        "actual_audience": ["cfo@company.com"],
-        "data_tags": ["PII"],
+        "intended_audience": [
+          "cfo@company.com"
+        ],
+        "actual_audience": [
+          "cfo@company.com"
+        ],
+        "data_tags": [
+          "PII"
+        ],
         "timestamp": "2026-01-01T00:00:00Z"
       },
-      "source": { "file": "dispatch/email.json", "line": 20 }
+      "source": {
+        "file": "dispatch/email.json",
+        "line": 20
+      }
     },
     {
       "id": "dispatch:print:003-empty-intended",
@@ -46,11 +68,18 @@
         "channel": "print",
         "sender": "mailroom@company.com",
         "intended_audience": [],
-        "actual_audience": ["customer@external.com"],
-        "data_tags": ["PHI"],
+        "actual_audience": [
+          "customer@external.com"
+        ],
+        "data_tags": [
+          "PHI"
+        ],
         "timestamp": "2026-01-01T00:00:00Z"
       },
-      "source": { "file": "dispatch/print.json", "line": 1 }
+      "source": {
+        "file": "dispatch/print.json",
+        "line": 1
+      }
     },
     {
       "id": "dispatch:portal:004-empty-actual",
@@ -60,12 +89,20 @@
         "dispatch_id": "portal-004",
         "channel": "portal",
         "sender": "support@company.com",
-        "intended_audience": ["customer@external.com"],
+        "intended_audience": [
+          "customer@external.com"
+        ],
         "actual_audience": [],
-        "data_tags": ["PII"],
+        "data_tags": [
+          "PII"
+        ],
         "timestamp": "2026-01-01T00:00:00Z"
       },
-      "source": { "file": "dispatch/portal.json", "line": 1 }
+      "source": {
+        "file": "dispatch/portal.json",
+        "line": 1
+      }
     }
-  ]
+  ],
+  "source": "deployed"
 }

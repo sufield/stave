@@ -23,7 +23,7 @@ func sampleEvaluation() corereport.Assessment {
 	return corereport.Assessment{
 		SchemaVersion: "out.v0.1",
 		Kind:          corereport.KindAssessment,
-		Run:           evaluation.RunInfo{Now: now, MaxUnsafeDuration: kernel.Duration(24 * time.Hour), Snapshots: 2, Offline: true},
+		Run:           evaluation.RunInfo{Now: now, MaxUnsafeDuration: kernel.Duration(24 * time.Hour), Snapshots: 2, Offline: true, EvaluatedState: "deployed"},
 		Summary:       evaluation.ComplianceSummary{TotalAssets: 10, ExposedResources: 2, Violations: 2},
 		Findings: []remediation.Finding{
 			{

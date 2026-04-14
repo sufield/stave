@@ -1,1 +1,23 @@
-{"assets":[{"id":"arn:aws:backup:us-east-1:123:vault/prod","properties":{"backup":{"kind":"resource","recovery_isolation":{"kms_same_account_as_source":false,"kms_key_account":"999999999999","data_account":"123456789012","admin_is_shared":false}}},"type":"aws_backup_vault","vendor":"aws"}],"captured_at":"2026-01-11T00:00:00Z","schema_version":"obs.v0.1"}
+{
+  "assets": [
+    {
+      "id": "arn:aws:backup:us-east-1:123:vault/prod",
+      "properties": {
+        "backup": {
+          "kind": "resource",
+          "recovery_isolation": {
+            "kms_same_account_as_source": false,
+            "kms_key_account": "999999999999",
+            "data_account": "123456789012",
+            "admin_is_shared": false
+          }
+        }
+      },
+      "type": "aws_backup_vault",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

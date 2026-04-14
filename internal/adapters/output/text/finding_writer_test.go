@@ -27,6 +27,7 @@ func TestFindingWriter_NoViolations(t *testing.T) {
 			Now:               time.Date(2026, 2, 1, 12, 0, 0, 0, time.UTC),
 			MaxUnsafeDuration: kernel.Duration(24 * time.Hour),
 			Snapshots:         2,
+			EvaluatedState:    "deployed",
 		},
 		Summary: evaluation.ComplianceSummary{
 			TotalAssets:      2,
@@ -68,6 +69,7 @@ func TestFindingWriter_ViolationsWithSections(t *testing.T) {
 			Now:               now,
 			MaxUnsafeDuration: kernel.Duration(24 * time.Hour),
 			Snapshots:         3,
+			EvaluatedState:    "deployed",
 		},
 		Summary: evaluation.ComplianceSummary{
 			TotalAssets:      3,
@@ -160,6 +162,7 @@ func TestFindingWriter_ViolationDomainSummary(t *testing.T) {
 			Now:               now,
 			MaxUnsafeDuration: kernel.Duration(24 * time.Hour),
 			Snapshots:         2,
+			EvaluatedState:    "deployed",
 		},
 		Summary: evaluation.ComplianceSummary{
 			TotalAssets:      2,

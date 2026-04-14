@@ -26,5 +26,6 @@
         "binds_to_cluster_admin": true
       }
     }
-  ]
+  ],
+  "source": "deployed"
 }

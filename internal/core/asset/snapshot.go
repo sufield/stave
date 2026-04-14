@@ -6,6 +6,15 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
+// SnapshotSource indicates the origin context of a snapshot.
+type SnapshotSource string
+
+const (
+	SourceDeployed SnapshotSource = "deployed" // CI/CD or scheduled scan against production/staging
+	SourcePlanned  SnapshotSource = "planned"  // IaC plan snapshot pre-deployment
+	SourceLocal    SnapshotSource = "local"    // ad-hoc run from developer workstation
+)
+
 // Snapshot represents a point-in-time observation of infrastructure assets.
 // Each snapshot captures the state of assets at a specific moment,
 // identified by CapturedAt. Stave processes multiple snapshots to track
@@ -13,6 +22,7 @@ import (
 type Snapshot struct {
 	SchemaVersion kernel.Schema   `json:"schema_version"`
 	GeneratedBy   *GeneratedBy    `json:"generated_by,omitempty"`
+	Source        SnapshotSource  `json:"source"`
 	CapturedAt    time.Time       `json:"captured_at"`
 	Assets        []Asset         `json:"assets"`
 	Identities    []CloudIdentity `json:"identities,omitempty"`

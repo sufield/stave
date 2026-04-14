@@ -1,1 +1,24 @@
-{"assets":[{"id":"arn:aws:iam::123456789:role/gitlab-deploy","properties":{"identity":{"kind":"role","trust":{"oidc":{"has_oidc_trust":true,"has_wildcard_sub":false,"provider":"gitlab"}}}},"type":"aws_iam_role","vendor":"aws"}],"captured_at":"2026-01-01T00:00:00Z","schema_version":"obs.v0.1"}
+{
+  "assets": [
+    {
+      "id": "arn:aws:iam::123456789:role/gitlab-deploy",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "trust": {
+            "oidc": {
+              "has_oidc_trust": true,
+              "has_wildcard_sub": false,
+              "provider": "gitlab"
+            }
+          }
+        }
+      },
+      "type": "aws_iam_role",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

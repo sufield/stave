@@ -16,7 +16,10 @@
         "integration_enabled": true,
         "boundary_declared": false
       },
-      "source": { "file": "integrations/analytics.tf", "line": 10 }
+      "source": {
+        "file": "integrations/analytics.tf",
+        "line": 10
+      }
     },
     {
       "id": "res:integration:segment:declared",
@@ -27,7 +30,10 @@
         "integration_enabled": true,
         "boundary_declared": true
       },
-      "source": { "file": "integrations/segment.tf", "line": 15 }
+      "source": {
+        "file": "integrations/segment.tf",
+        "line": 15
+      }
     },
     {
       "id": "res:integration:slack:disabled",
@@ -37,7 +43,11 @@
         "third_party_platform": "slack",
         "integration_enabled": false
       },
-      "source": { "file": "integrations/slack.tf", "line": 20 }
+      "source": {
+        "file": "integrations/slack.tf",
+        "line": 20
+      }
     }
-  ]
+  ],
+  "source": "deployed"
 }

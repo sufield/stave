@@ -31,5 +31,6 @@
         "policy_json": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"PublicReadWrite\",\"Effect\":\"Allow\",\"Principal\":\"*\",\"Action\":\"s3:*\",\"Resource\":[\"arn:aws:s3:::phi-data-bucket\",\"arn:aws:s3:::phi-data-bucket/*\"]}]}"
       }
     }
-  ]
+  ],
+  "source": "deployed"
 }

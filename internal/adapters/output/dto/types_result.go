@@ -17,6 +17,7 @@ type RunInfoDTO struct {
 	Snapshots         int             `json:"snapshots"`
 	InputHashes       *InputHashesDTO `json:"input_hashes,omitempty"`
 	PolicyFingerprint kernel.Digest   `json:"policy_fingerprint,omitempty"`
+	EvaluatedState    string          `json:"evaluated_state"`
 }
 
 // InputHashesDTO mirrors evaluation.InputHashes.

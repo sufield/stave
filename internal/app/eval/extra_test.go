@@ -255,6 +255,7 @@ func TestEnrich_NilSanitizer(t *testing.T) {
 			StaveVersion:      "test",
 			Now:               time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC),
 			MaxUnsafeDuration: kernel.Duration(24 * time.Hour),
+			EvaluatedState:    "deployed",
 		},
 		ExemptedAssets: []asset.ExemptedAsset{
 			{ID: "res-1", Reason: "test"},

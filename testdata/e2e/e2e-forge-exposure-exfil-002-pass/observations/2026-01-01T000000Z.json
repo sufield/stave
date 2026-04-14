@@ -1,1 +1,23 @@
-{"assets":[{"id":"i-abc123","properties":{"reachability":{"kind":"exfiltration_path","exfiltration":{"path_to_internet_exists":true,"egress_type":"nat_gateway","has_wildcard_write":false,"sensitive_data_readable":false}}},"type":"aws_ec2_instance","vendor":"aws"}],"captured_at":"2026-01-01T00:00:00Z","schema_version":"obs.v0.1"}
+{
+  "assets": [
+    {
+      "id": "i-abc123",
+      "properties": {
+        "reachability": {
+          "kind": "exfiltration_path",
+          "exfiltration": {
+            "path_to_internet_exists": true,
+            "egress_type": "nat_gateway",
+            "has_wildcard_write": false,
+            "sensitive_data_readable": false
+          }
+        }
+      },
+      "type": "aws_ec2_instance",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

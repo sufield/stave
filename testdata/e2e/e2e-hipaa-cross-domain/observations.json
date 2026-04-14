@@ -129,7 +129,10 @@
               "is_default": true,
               "allows_all_traffic": true,
               "has_unrestricted_ingress": true,
-              "unrestricted_ports": [22, 3389]
+              "unrestricted_ports": [
+                22,
+                3389
+              ]
             }
           }
         },
@@ -313,7 +316,8 @@
             }
           }
         }
-      ]
+      ],
+      "source": "deployed"
     },
     {
       "schema_version": "obs.v0.1",
@@ -443,7 +447,10 @@
               "is_default": true,
               "allows_all_traffic": true,
               "has_unrestricted_ingress": true,
-              "unrestricted_ports": [22, 3389]
+              "unrestricted_ports": [
+                22,
+                3389
+              ]
             }
           }
         },
@@ -627,7 +634,8 @@
             }
           }
         }
-      ]
+      ],
+      "source": "deployed"
     }
   ]
 }

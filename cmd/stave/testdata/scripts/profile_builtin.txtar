@@ -6,6 +6,7 @@ exec stave apply --profile aws-s3 --input observations.json --now 2026-01-15T00:
 -- observations.json --
 {
   "schema_version": "obs.v0.1",
+  "source": "deployed",
   "generated_by": {"source_type": "aws-s3-snapshot", "tool": "stave-extractor"},
   "captured_at": "2026-01-14T00:00:00Z",
   "snapshots": [

@@ -75,5 +75,6 @@
         "policy_json": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"DenyNonTLS\",\"Effect\":\"Deny\",\"Principal\":\"*\",\"Action\":\"s3:*\",\"Resource\":[\"arn:aws:s3:::phi-patient-records\",\"arn:aws:s3:::phi-patient-records/*\"],\"Condition\":{\"Bool\":{\"aws:SecureTransport\":\"false\"}}},{\"Sid\":\"DenyOldPresignedUrls\",\"Effect\":\"Deny\",\"Principal\":\"*\",\"Action\":\"s3:GetObject\",\"Resource\":\"arn:aws:s3:::phi-patient-records/*\",\"Condition\":{\"NumericGreaterThan\":{\"s3:signatureAge\":600000}}},{\"Sid\":\"VPCOnly\",\"Effect\":\"Deny\",\"Principal\":\"*\",\"Action\":\"s3:*\",\"Resource\":[\"arn:aws:s3:::phi-patient-records\",\"arn:aws:s3:::phi-patient-records/*\"],\"Condition\":{\"StringNotEquals\":{\"aws:SourceVpce\":\"vpce-0123456789abcdef0\"}}}]}"
       }
     }
-  ]
+  ],
+  "source": "deployed"
 }

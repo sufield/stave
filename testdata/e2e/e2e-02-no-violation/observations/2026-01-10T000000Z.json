@@ -1,13 +1,19 @@
 {
   "schema_version": "obs.v0.1",
-  "generated_by": { "source_type": "aws-s3-snapshot" },
+  "generated_by": {
+    "source_type": "aws-s3-snapshot"
+  },
   "captured_at": "2026-01-10T00:00:00Z",
   "assets": [
     {
       "id": "res:aws:s3:bucket:public-bucket",
       "type": "storage_bucket",
       "vendor": "aws",
-      "properties": { "public": false, "acl": "private" }
+      "properties": {
+        "public": false,
+        "acl": "private"
+      }
     }
-  ]
+  ],
+  "source": "deployed"
 }

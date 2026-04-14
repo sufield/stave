@@ -66,5 +66,6 @@
         "policy_json": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"AllowPublicRead\",\"Effect\":\"Allow\",\"Principal\":\"*\",\"Action\":\"s3:*\",\"Resource\":[\"arn:aws:s3:::phi-patient-records\",\"arn:aws:s3:::phi-patient-records/*\"]}]}"
       }
     }
-  ]
+  ],
+  "source": "deployed"
 }

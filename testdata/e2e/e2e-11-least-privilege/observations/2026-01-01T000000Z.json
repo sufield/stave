@@ -21,7 +21,10 @@
         "actor_subject_id": "patient:alice",
         "timestamp": "2026-01-01T00:00:00Z"
       },
-      "source": { "file": "access/events.json", "line": 1 }
+      "source": {
+        "file": "access/events.json",
+        "line": 1
+      }
     },
     {
       "id": "access:002-other-data-violation",
@@ -37,7 +40,10 @@
         "actor_subject_id": "patient:bob",
         "timestamp": "2026-01-01T00:00:00Z"
       },
-      "source": { "file": "access/events.json", "line": 20 }
+      "source": {
+        "file": "access/events.json",
+        "line": 20
+      }
     },
     {
       "id": "access:003-export-allowed",
@@ -50,10 +56,17 @@
         "asset_type": "record",
         "asset_id": "rec:patient:alice-12345",
         "subject_id": "patient:alice",
-        "allowed_subjects": ["patient:alice", "patient:bob", "patient:charlie"],
+        "allowed_subjects": [
+          "patient:alice",
+          "patient:bob",
+          "patient:charlie"
+        ],
         "timestamp": "2026-01-01T00:00:00Z"
       },
-      "source": { "file": "access/events.json", "line": 40 }
+      "source": {
+        "file": "access/events.json",
+        "line": 40
+      }
     },
     {
       "id": "access:004-export-not-allowed-violation",
@@ -66,10 +79,16 @@
         "asset_type": "document",
         "asset_id": "doc:patient:eve-67890",
         "subject_id": "patient:eve",
-        "allowed_subjects": ["patient:alice", "patient:bob"],
+        "allowed_subjects": [
+          "patient:alice",
+          "patient:bob"
+        ],
         "timestamp": "2026-01-01T00:00:00Z"
       },
-      "source": { "file": "access/events.json", "line": 60 }
+      "source": {
+        "file": "access/events.json",
+        "line": 60
+      }
     },
     {
       "id": "access:005-read-not-in-allowlist-safe",
@@ -82,10 +101,15 @@
         "asset_type": "record",
         "asset_id": "rec:patient:eve-67890",
         "subject_id": "patient:eve",
-        "allowed_subjects": ["patient:alice"],
+        "allowed_subjects": [
+          "patient:alice"
+        ],
         "timestamp": "2026-01-01T00:00:00Z"
       },
-      "source": { "file": "access/events.json", "line": 80 }
+      "source": {
+        "file": "access/events.json",
+        "line": 80
+      }
     },
     {
       "id": "access:006-service-principal-safe",
@@ -100,7 +124,10 @@
         "subject_id": "patient:alice",
         "timestamp": "2026-01-01T00:00:00Z"
       },
-      "source": { "file": "access/events.json", "line": 100 }
+      "source": {
+        "file": "access/events.json",
+        "line": 100
+      }
     },
     {
       "id": "access:007-export-no-allowlist-violation",
@@ -115,7 +142,11 @@
         "subject_id": "patient:mallory",
         "timestamp": "2026-01-01T00:00:00Z"
       },
-      "source": { "file": "access/events.json", "line": 120 }
+      "source": {
+        "file": "access/events.json",
+        "line": 120
+      }
     }
-  ]
+  ],
+  "source": "deployed"
 }

@@ -16,7 +16,11 @@
         "contains_pii": true,
         "encryption": "AES256"
       },
-      "source": { "file": "infra/storage.tf", "line": 55 }
+      "source": {
+        "file": "infra/storage.tf",
+        "line": 55
+      }
     }
-  ]
+  ],
+  "source": "deployed"
 }

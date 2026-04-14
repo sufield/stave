@@ -27,6 +27,7 @@ unsafe_predicate:
 -- observations/2026-01-09T000000Z.json --
 {
   "schema_version": "obs.v0.1",
+  "source": "deployed",
   "generated_by": {"source_type": "test-snapshot", "tool": "testscript"},
   "captured_at": "2026-01-09T00:00:00Z",
   "assets": [{"id": "test-bucket", "type": "aws_s3_bucket", "vendor": "aws", "properties": {"public": true}}]
@@ -35,6 +36,7 @@ unsafe_predicate:
 -- observations/2026-01-11T000000Z.json --
 {
   "schema_version": "obs.v0.1",
+  "source": "deployed",
   "generated_by": {"source_type": "test-snapshot", "tool": "testscript"},
   "captured_at": "2026-01-11T00:00:00Z",
   "assets": [{"id": "test-bucket", "type": "aws_s3_bucket", "vendor": "aws", "properties": {"public": true}}]
@@ -43,6 +45,7 @@ unsafe_predicate:
 -- observations-clean/2026-01-09T000000Z.json --
 {
   "schema_version": "obs.v0.1",
+  "source": "deployed",
   "generated_by": {"source_type": "test-snapshot", "tool": "testscript"},
   "captured_at": "2026-01-09T00:00:00Z",
   "assets": [{"id": "safe-bucket", "type": "aws_s3_bucket", "vendor": "aws", "properties": {"public": false}}]
@@ -51,6 +54,7 @@ unsafe_predicate:
 -- observations-clean/2026-01-11T000000Z.json --
 {
   "schema_version": "obs.v0.1",
+  "source": "deployed",
   "generated_by": {"source_type": "test-snapshot", "tool": "testscript"},
   "captured_at": "2026-01-11T00:00:00Z",
   "assets": [{"id": "safe-bucket", "type": "aws_s3_bucket", "vendor": "aws", "properties": {"public": false}}]

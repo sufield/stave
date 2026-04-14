@@ -44,6 +44,7 @@ unsafe_predicate:
 -- observations/2026-01-09T000000Z.json --
 {
   "schema_version": "obs.v0.1",
+  "source": "deployed",
   "generated_by": {"source_type": "aws-s3-snapshot", "tool": "stave-extractor"},
   "captured_at": "2026-01-09T00:00:00Z",
   "assets": [{
@@ -57,6 +58,7 @@ unsafe_predicate:
 -- observations/2026-01-11T000000Z.json --
 {
   "schema_version": "obs.v0.1",
+  "source": "deployed",
   "generated_by": {"source_type": "aws-s3-snapshot", "tool": "stave-extractor"},
   "captured_at": "2026-01-11T00:00:00Z",
   "assets": [{

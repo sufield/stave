@@ -1,1 +1,28 @@
-{"assets":[{"id":"arn:aws:iam::123456789:user/dev-user","properties":{"identity":{"kind":"user","escalation":{"can_escalate_to_admin":true,"escalation_vector":"PassRoleToLambda","steps":["iam:PassRole","lambda:CreateFunction","lambda:InvokeFunction"],"target_admin_role":"arn:aws:iam::123456789:role/AdminRole","step_count":3}}},"type":"aws_iam_user","vendor":"aws"}],"captured_at":"2026-01-11T00:00:00Z","schema_version":"obs.v0.1"}
+{
+  "assets": [
+    {
+      "id": "arn:aws:iam::123456789:user/dev-user",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "escalation": {
+            "can_escalate_to_admin": true,
+            "escalation_vector": "PassRoleToLambda",
+            "steps": [
+              "iam:PassRole",
+              "lambda:CreateFunction",
+              "lambda:InvokeFunction"
+            ],
+            "target_admin_role": "arn:aws:iam::123456789:role/AdminRole",
+            "step_count": 3
+          }
+        }
+      },
+      "type": "aws_iam_user",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

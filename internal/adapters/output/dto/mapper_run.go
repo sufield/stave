@@ -13,6 +13,7 @@ func fromRunInfo(r evaluation.RunInfo) RunInfoDTO {
 		MaxUnsafeDuration: r.MaxUnsafeDuration,
 		Snapshots:         r.Snapshots,
 		PolicyFingerprint: r.PolicyFingerprint,
+		EvaluatedState:    r.EvaluatedState,
 	}
 	if r.InputHashes != nil {
 		dto.InputHashes = fromInputHashes(r.InputHashes)

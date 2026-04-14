@@ -23,6 +23,7 @@ func TestFromEvaluation_MinimalEnvelope(t *testing.T) {
 			Now:               time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC),
 			MaxUnsafeDuration: kernel.Duration(24 * time.Hour),
 			Snapshots:         2,
+			EvaluatedState:    "deployed",
 		},
 		Summary: evaluation.ComplianceSummary{
 			TotalAssets:      3,
@@ -403,6 +404,7 @@ func TestFromRunInfo_WithInputHashes(t *testing.T) {
 			Files:   map[evaluation.FilePath]kernel.Digest{"a.json": "sha256:abc"},
 			Overall: "sha256:def",
 		},
+		EvaluatedState: "deployed",
 	}
 	dto := fromRunInfo(ri)
 	if dto.InputHashes == nil {
@@ -417,7 +419,7 @@ func TestFromRunInfo_WithInputHashes(t *testing.T) {
 }
 
 func TestFromRunInfo_NilInputHashes(t *testing.T) {
-	ri := evaluation.RunInfo{StaveVersion: "v1"}
+	ri := evaluation.RunInfo{StaveVersion: "v1", EvaluatedState: "deployed"}
 	dto := fromRunInfo(ri)
 	if dto.InputHashes != nil {
 		t.Error("InputHashes should be nil")

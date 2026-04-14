@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:stave:schema:snapshot:external",
+  "title": "Stave Snapshot Contract — External Producer Guide",
+  "description": "Schema for external tools (Terraform plan renderers, CloudFormation renderers, test fixtures) that produce Stave-compatible observation snapshots. Any tool that writes a JSON file conforming to this schema can feed Stave's assessment engine.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "captured_at",
+    "assets"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "enum": ["obs.v1", "obs.v0.1"],
+      "description": "Schema version. Use 'obs.v0.1' for current compatibility."
+    },
+    "captured_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC timestamp (RFC 3339) when the observation was captured. For IaC plan snapshots, use the time the plan was generated."
+    },
+    "source": {
+      "type": "string",
+      "enum": ["deployed", "planned", "local"],
+      "description": "Origin context. 'deployed' for CI/CD scans against live infrastructure. 'planned' for IaC plan snapshots (pre-deployment). 'local' for developer workstation runs."
+    },
+    "generated_by": {
+      "type": "object",
+      "description": "Metadata about the tool that produced this snapshot.",
+      "properties": {
+        "source_type": {
+          "type": "string",
+          "description": "Extraction method identifier (e.g., 'aws.config_api', 'terraform.plan', 'custom.script')."
+        },
+        "tool": {
+          "type": "string",
+          "description": "Name of the producing tool (e.g., 'stave-extract', 'tf-stave-renderer')."
+        },
+        "tool_version": {
+          "type": "string",
+          "description": "Semantic version of the producing tool."
+        },
+        "provider": {
+          "type": "string",
+          "description": "Cloud provider (e.g., 'aws', 'gcp', 'azure')."
+        },
+        "provider_version": {
+          "type": "string",
+          "description": "Provider plugin or API version."
+        }
+      }
+    },
+    "assets": {
+      "type": "array",
+      "description": "Infrastructure assets to evaluate.",
+      "items": { "$ref": "#/$defs/asset" }
+    },
+    "identities": {
+      "type": "array",
+      "description": "IAM identities to evaluate (optional).",
+      "items": { "$ref": "#/$defs/identity" }
+    }
+  },
+  "$defs": {
+    "asset": {
+      "type": "object",
+      "required": ["id", "type", "vendor", "properties"],
+      "additionalProperties": false,
+      "description": "A single infrastructure resource.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Unique identifier (ARN, resource name, or synthetic ID)."
+        },
+        "type": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-z0-9][a-z0-9_.-]*$",
+          "description": "Asset type (e.g., 'storage_bucket', 'iam_role'). Lowercase, digits, _, ., - only."
+        },
+        "vendor": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Cloud vendor (e.g., 'aws', 'gcp', 'azure')."
+        },
+        "properties": {
+          "type": "object",
+          "description": "Configuration properties evaluated by control predicates. Structure depends on asset type — see existing extractor output for examples."
+        },
+        "source": {
+          "type": "object",
+          "description": "Optional reference to source file (e.g., Terraform config).",
+          "properties": {
+            "file": { "type": "string" },
+            "line": { "type": "integer", "minimum": 1 }
+          }
+        }
+      }
+    },
+    "identity": {
+      "type": "object",
+      "required": ["id", "type", "vendor", "properties"],
+      "additionalProperties": false,
+      "description": "An IAM identity (user, role, service account).",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Unique identifier (ARN, email, principal ID)."
+        },
+        "type": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-z0-9][a-z0-9_.-]*$",
+          "description": "Identity type (e.g., 'iam_role', 'service_account')."
+        },
+        "vendor": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Cloud vendor managing this identity."
+        },
+        "properties": {
+          "type": "object",
+          "description": "Identity attributes evaluated by control predicates."
+        },
+        "source": {
+          "type": "object",
+          "properties": {
+            "file": { "type": "string" },
+            "line": { "type": "integer", "minimum": 1 }
+          }
+        }
+      }
+    }
+  }
+}

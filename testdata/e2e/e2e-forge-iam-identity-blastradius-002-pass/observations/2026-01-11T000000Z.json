@@ -1,1 +1,21 @@
-{"assets":[{"id":"role-cross-with-extid","properties":{"identity":{"kind":"role","role":{"blast_radius_scope":"cross_account","cross_account_trust_without_external_id":false}}},"type":"aws_iam_role","vendor":"aws"}],"captured_at":"2026-01-11T00:00:00Z","schema_version":"obs.v0.1"}
+{
+  "assets": [
+    {
+      "id": "role-cross-with-extid",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "role": {
+            "blast_radius_scope": "cross_account",
+            "cross_account_trust_without_external_id": false
+          }
+        }
+      },
+      "type": "aws_iam_role",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

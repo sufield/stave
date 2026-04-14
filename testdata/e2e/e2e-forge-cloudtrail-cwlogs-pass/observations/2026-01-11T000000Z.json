@@ -20,5 +20,6 @@
     "source_type": "aws.config_api",
     "tool": "stave-test",
     "tool_version": "1.0.0"
-  }
+  },
+  "source": "deployed"
 }

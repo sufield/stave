@@ -1,1 +1,23 @@
-{"assets":[{"id":"arn:aws:s3:::eu-patient-records","properties":{"reachability":{"kind":"cross_border","sovereignty":{"cross_border_access_detected":true,"resource_jurisdiction":"eu","accessor_jurisdiction":"us","target_sensitivity":"pii"}}},"type":"aws_s3_bucket","vendor":"aws"}],"captured_at":"2026-01-11T00:00:00Z","schema_version":"obs.v0.1"}
+{
+  "assets": [
+    {
+      "id": "arn:aws:s3:::eu-patient-records",
+      "properties": {
+        "reachability": {
+          "kind": "cross_border",
+          "sovereignty": {
+            "cross_border_access_detected": true,
+            "resource_jurisdiction": "eu",
+            "accessor_jurisdiction": "us",
+            "target_sensitivity": "pii"
+          }
+        }
+      },
+      "type": "aws_s3_bucket",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

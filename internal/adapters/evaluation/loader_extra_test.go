@@ -24,6 +24,7 @@ func TestLoader_LoadFromFile_ValidJSON(t *testing.T) {
 			StaveVersion:      "test",
 			MaxUnsafeDuration: kernel.Duration(24 * time.Hour),
 			Snapshots:         2,
+			EvaluatedState:    "deployed",
 		},
 		Summary: evaluation.ComplianceSummary{TotalAssets: 1},
 	}
@@ -70,6 +71,7 @@ func TestLoader_LoadEnvelopeFromFile_ValidEnvelope(t *testing.T) {
 			Now:               time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC),
 			MaxUnsafeDuration: kernel.Duration(24 * time.Hour),
 			Snapshots:         2,
+			EvaluatedState:    "deployed",
 		},
 		Summary:       evaluation.ComplianceSummary{TotalAssets: 1},
 		SecurityState: evaluation.StateCompliant,

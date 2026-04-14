@@ -15,6 +15,7 @@ func TestBuildAssessmentFromEnriched_NilFindings(t *testing.T) {
 		Run: evaluation.RunInfo{
 			Now:               time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 			MaxUnsafeDuration: kernel.Duration(24 * time.Hour),
+			EvaluatedState:    "deployed",
 		},
 		Result: evaluation.ComplianceReport{
 			Summary:       evaluation.ComplianceSummary{TotalAssets: 5},
@@ -36,6 +37,7 @@ func TestBuildAssessmentFromEnriched_WithFindings(t *testing.T) {
 		Run: evaluation.RunInfo{
 			Now:               time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 			MaxUnsafeDuration: kernel.Duration(24 * time.Hour),
+			EvaluatedState:    "deployed",
 		},
 		Result: evaluation.ComplianceReport{
 			Summary: evaluation.ComplianceSummary{

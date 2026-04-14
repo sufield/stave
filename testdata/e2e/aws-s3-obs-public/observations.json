@@ -97,7 +97,8 @@
             }
           }
         }
-      ]
+      ],
+      "source": "deployed"
     },
     {
       "schema_version": "obs.v0.1",
@@ -195,7 +196,8 @@
             }
           }
         }
-      ]
+      ],
+      "source": "deployed"
     }
   ]
 }

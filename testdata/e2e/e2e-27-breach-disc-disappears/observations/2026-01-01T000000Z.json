@@ -13,8 +13,15 @@
       "id": "res:aws:s3:bucket:disappearing-bucket",
       "type": "storage_bucket",
       "vendor": "aws",
-      "properties": { "public": true, "acl": "public-read" },
-      "source": { "file": "infra/main.tf", "line": 42 }
+      "properties": {
+        "public": true,
+        "acl": "public-read"
+      },
+      "source": {
+        "file": "infra/main.tf",
+        "line": 42
+      }
     }
-  ]
+  ],
+  "source": "deployed"
 }

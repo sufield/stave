@@ -21,7 +21,7 @@ func TestOutputPipeline_Success(t *testing.T) {
 			return appcontracts.EnrichedResult{Result: *r, Run: r.Run}, nil
 		},
 	}
-	err := p.Run(context.Background(), &buf, &evaluation.ComplianceReport{Run: evaluation.RunInfo{StaveVersion: "test"}})
+	err := p.Run(context.Background(), &buf, &evaluation.ComplianceReport{Run: evaluation.RunInfo{StaveVersion: "test", EvaluatedState: "deployed"}})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

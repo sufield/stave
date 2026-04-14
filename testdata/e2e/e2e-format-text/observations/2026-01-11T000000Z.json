@@ -13,15 +13,28 @@
       "id": "res:aws:s3:bucket:public-bucket",
       "type": "storage_bucket",
       "vendor": "aws",
-      "properties": { "public": true, "acl": "public-read" },
-      "source": { "file": "infra/main.tf", "line": 42 }
+      "properties": {
+        "public": true,
+        "acl": "public-read"
+      },
+      "source": {
+        "file": "infra/main.tf",
+        "line": 42
+      }
     },
     {
       "id": "res:aws:s3:bucket:private-bucket",
       "type": "storage_bucket",
       "vendor": "aws",
-      "properties": { "public": false, "acl": "private" },
-      "source": { "file": "infra/main.tf", "line": 58 }
+      "properties": {
+        "public": false,
+        "acl": "private"
+      },
+      "source": {
+        "file": "infra/main.tf",
+        "line": 58
+      }
     }
-  ]
+  ],
+  "source": "deployed"
 }

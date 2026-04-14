@@ -11,22 +11,39 @@
       "id": "res:aws:s3:bucket:public-no-owner",
       "type": "storage_bucket",
       "vendor": "aws",
-      "properties": { "public": true },
-      "source": { "file": "infra/main.tf", "line": 42 }
+      "properties": {
+        "public": true
+      },
+      "source": {
+        "file": "infra/main.tf",
+        "line": 42
+      }
     },
     {
       "id": "res:aws:s3:bucket:public-with-owner",
       "type": "storage_bucket",
       "vendor": "aws",
-      "properties": { "public": true, "owner": "team-security" },
-      "source": { "file": "infra/main.tf", "line": 58 }
+      "properties": {
+        "public": true,
+        "owner": "team-security"
+      },
+      "source": {
+        "file": "infra/main.tf",
+        "line": 58
+      }
     },
     {
       "id": "res:aws:s3:bucket:private-no-owner",
       "type": "storage_bucket",
       "vendor": "aws",
-      "properties": { "public": false },
-      "source": { "file": "infra/main.tf", "line": 74 }
+      "properties": {
+        "public": false
+      },
+      "source": {
+        "file": "infra/main.tf",
+        "line": 74
+      }
     }
-  ]
+  ],
+  "source": "deployed"
 }

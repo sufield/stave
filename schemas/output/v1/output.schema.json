@@ -53,6 +53,12 @@
               "title": "Snapshot Count",
               "description": "Number of observation snapshots loaded for this evaluation."
             },
+            "evaluated_state": {
+              "type": "string",
+              "enum": ["deployed", "planned", "local"],
+              "title": "Evaluated State",
+              "description": "Origin context of the evaluated snapshot: deployed (CI/CD), planned (IaC plan), or local (developer workstation)."
+            },
             "input_hashes": {
               "type": "object",
               "title": "Input Content Hashes",

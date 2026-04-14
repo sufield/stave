@@ -59,6 +59,12 @@
         }
       }
     },
+    "source": {
+      "type": "string",
+      "enum": ["deployed", "planned", "local"],
+      "title": "Snapshot Source",
+      "description": "Origin context of the snapshot: deployed (CI/CD or scheduled scan), planned (IaC plan), or local (developer workstation)."
+    },
     "assets": {
       "type": "array",
       "title": "Assets",

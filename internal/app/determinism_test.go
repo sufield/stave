@@ -27,8 +27,8 @@ func TestEvaluateOutput_ByteIdentical(t *testing.T) {
 
 	snapshots := []asset.Snapshot{
 		{
-			SchemaVersion: "obs.v0.1",
-			CapturedAt:    baseTime,
+			SchemaVersion: "obs.v0.1", Source: asset.SourceDeployed,
+			CapturedAt: baseTime,
 			Assets: []asset.Asset{
 				{
 					ID:     "my-bucket",
@@ -57,8 +57,8 @@ func TestEvaluateOutput_ByteIdentical(t *testing.T) {
 			},
 		},
 		{
-			SchemaVersion: "obs.v0.1",
-			CapturedAt:    laterTime,
+			SchemaVersion: "obs.v0.1", Source: asset.SourceDeployed,
+			CapturedAt: laterTime,
 			Assets: []asset.Asset{
 				{
 					ID:     "my-bucket",
@@ -167,8 +167,8 @@ func TestEvaluateOutput_ByteIdentical_MultipleControls(t *testing.T) {
 	}
 
 	snapshots := []asset.Snapshot{
-		{SchemaVersion: "obs.v0.1", CapturedAt: baseTime, Assets: resources},
-		{SchemaVersion: "obs.v0.1", CapturedAt: laterTime, Assets: resources},
+		{SchemaVersion: "obs.v0.1", Source: asset.SourceDeployed, CapturedAt: baseTime, Assets: resources},
+		{SchemaVersion: "obs.v0.1", Source: asset.SourceDeployed, CapturedAt: laterTime, Assets: resources},
 	}
 
 	ctlZ := policy.ControlDefinition{

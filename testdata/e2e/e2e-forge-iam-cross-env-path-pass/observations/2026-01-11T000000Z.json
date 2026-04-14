@@ -1,1 +1,22 @@
-{"assets":[{"id":"arn:aws:iam::prod:role/devops-deploy","properties":{"identity":{"kind":"role","role":{"cross_env":{"reachable_from_lower_env":false}}}},"type":"aws_iam_role","vendor":"aws"}],"captured_at":"2026-01-11T00:00:00Z","schema_version":"obs.v0.1"}
+{
+  "assets": [
+    {
+      "id": "arn:aws:iam::prod:role/devops-deploy",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "role": {
+            "cross_env": {
+              "reachable_from_lower_env": false
+            }
+          }
+        }
+      },
+      "type": "aws_iam_role",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

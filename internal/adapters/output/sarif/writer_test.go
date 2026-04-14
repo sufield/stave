@@ -22,6 +22,7 @@ func TestWriteFindings_EmptyFindings(t *testing.T) {
 			Now:               time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 			MaxUnsafeDuration: kernel.Duration(12 * time.Hour),
 			Snapshots:         2,
+			EvaluatedState:    "deployed",
 		},
 	}
 
@@ -68,6 +69,7 @@ func TestWriteFindings_SARIFStructure(t *testing.T) {
 			Now:               now,
 			MaxUnsafeDuration: kernel.Duration(12 * time.Hour),
 			Snapshots:         2,
+			EvaluatedState:    "deployed",
 		},
 		Findings: []evaluation.Finding{
 			{
@@ -169,6 +171,7 @@ func TestWriteFindings_RuleDeduplication(t *testing.T) {
 			Now:               time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 			MaxUnsafeDuration: kernel.Duration(12 * time.Hour),
 			Snapshots:         2,
+			EvaluatedState:    "deployed",
 		},
 		Findings: []evaluation.Finding{
 			{
@@ -252,6 +255,7 @@ func TestWriteFindings_LogicalLocation(t *testing.T) {
 			Now:               time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 			MaxUnsafeDuration: kernel.Duration(12 * time.Hour),
 			Snapshots:         2,
+			EvaluatedState:    "deployed",
 		},
 		Findings: []evaluation.Finding{
 			{

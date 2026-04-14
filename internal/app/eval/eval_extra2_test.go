@@ -144,6 +144,7 @@ func TestEnrich_WithSanitizer(t *testing.T) {
 				},
 				Overall: "sha256:combined",
 			},
+			EvaluatedState: "deployed",
 		},
 		ExemptedAssets: []asset.ExemptedAsset{
 			{ID: "bucket-secret", Pattern: "bucket-*", Reason: "temp"},

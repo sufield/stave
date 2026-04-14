@@ -1,1 +1,24 @@
-{"assets":[{"id":"arn:aws:secretsmanager:us-east-1:123:secret/prod-db-creds","properties":{"secret":{"kind":"secret","blast_radius":{"target_resource_id":"arn:aws:rds:us-east-1:123:db/prod","target_sensitivity":"phi","privileged_reader_count":7,"access_vector":"same_account","is_rotated":false}}},"type":"aws_secretsmanager_secret","vendor":"aws"}],"captured_at":"2026-01-01T00:00:00Z","schema_version":"obs.v0.1"}
+{
+  "assets": [
+    {
+      "id": "arn:aws:secretsmanager:us-east-1:123:secret/prod-db-creds",
+      "properties": {
+        "secret": {
+          "kind": "secret",
+          "blast_radius": {
+            "target_resource_id": "arn:aws:rds:us-east-1:123:db/prod",
+            "target_sensitivity": "phi",
+            "privileged_reader_count": 7,
+            "access_vector": "same_account",
+            "is_rotated": false
+          }
+        }
+      },
+      "type": "aws_secretsmanager_secret",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

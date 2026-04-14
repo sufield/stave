@@ -45,6 +45,7 @@ func makeTestResult() *evaluation.ComplianceReport {
 					"/home/user/obs/snap1.json": "hash1",
 				},
 			},
+			EvaluatedState: "deployed",
 		},
 		Summary: evaluation.ComplianceSummary{
 			TotalAssets:      1,

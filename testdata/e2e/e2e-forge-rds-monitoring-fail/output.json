@@ -9,12 +9,13 @@
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2026-01-01T000000Z.json": "6c07855b874b48bd1ccf94afd7419f5759e7ed444712eefa500108179500da6e",
-        "2026-01-11T000000Z.json": "ed9f03190528c483f526b2537f56a64005a4456c77041430168a104a138cf7b6"
+        "2026-01-01T000000Z.json": "6fecdd6d0abfdf1805053291608497154470c6560aaf94c1c5237bfb3969a142",
+        "2026-01-11T000000Z.json": "feb5a2ab32f1c0a745e4b0d95d780e5d4e0215ac51d66c0aded1d6ba5ff9da9e"
       },
-      "overall": "7623b79c00b50a195f4249778b83a5d956cfeabe88bac29d2f401fb954d6f54e"
+      "overall": "2515c1a4e94d075c38d4804e162b9d2a2566404ed4f393725da42f6ed86e2708"
     },
-    "policy_fingerprint": "03ee6839dfe3808474ce54c21aa780034c36bd47224845bc9923b0e90f295e4e"
+    "policy_fingerprint": "03ee6839dfe3808474ce54c21aa780034c36bd47224845bc9923b0e90f295e4e",
+    "evaluated_state": "deployed"
   },
   "summary": {
     "total_assets": 1,
@@ -109,7 +110,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "305460d4366d875cf14ecee453203f16ae0419b3",
+      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
       "dirty": false
     }
   }

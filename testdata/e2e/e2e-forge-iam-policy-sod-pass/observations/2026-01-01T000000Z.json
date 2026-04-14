@@ -1,1 +1,20 @@
-{"assets":[{"id":"role-app-data","properties":{"identity":{"kind":"role","role":{"has_data_and_iam_access":false}}},"type":"aws_iam_role","vendor":"aws"}],"captured_at":"2026-01-01T00:00:00Z","schema_version":"obs.v0.1"}
+{
+  "assets": [
+    {
+      "id": "role-app-data",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "role": {
+            "has_data_and_iam_access": false
+          }
+        }
+      },
+      "type": "aws_iam_role",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

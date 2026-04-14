@@ -32,5 +32,6 @@
         "purpose": "enforce_prefix=true allow_traversal=false"
       }
     }
-  ]
+  ],
+  "source": "deployed"
 }

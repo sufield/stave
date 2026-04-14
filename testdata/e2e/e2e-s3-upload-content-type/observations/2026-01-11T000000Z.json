@@ -32,9 +32,13 @@
           "operation": "write",
           "allowed_key_mode": "exact",
           "content_type_restricted": true,
-          "allowed_content_types": ["image/jpeg", "image/png"]
+          "allowed_content_types": [
+            "image/jpeg",
+            "image/png"
+          ]
         }
       }
     }
-  ]
+  ],
+  "source": "deployed"
 }

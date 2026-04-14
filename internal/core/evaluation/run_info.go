@@ -32,4 +32,7 @@ type RunInfo struct {
 	// PolicyFingerprint is a deterministic hash of the exact control set used
 	// during the run, ensuring that the evaluation logic itself is auditable.
 	PolicyFingerprint kernel.Digest `json:"policy_fingerprint,omitempty"`
+	// EvaluatedState records the origin context of the evaluated snapshot:
+	// "deployed" (CI/CD), "planned" (IaC plan), or "local" (developer workstation).
+	EvaluatedState string `json:"evaluated_state"`
 }
