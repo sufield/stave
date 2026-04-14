@@ -1,0 +1,36 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.SG.RECUR.001
+name: Security Group Must Not Have Unrestricted Ingress Appear Repeatedly
+description: >
+  Security group has had unrestricted ingress (0.0.0.0/0 or ::/0) added, removed, and added again more than twice in 30 days. Security group rules are not accidental — adding a rule is a deliberate API call. Repeated re-addition after removal indicates either a broken change process or an attacker re-enabling their access path after detection.
+domain: exposure
+severity: critical
+compliance:
+  soc2: "CC7.1"
+  nist_800_53_r5: "IR-5"
+  fedramp_moderate: "IR-5"
+  hipaa: "164.312(e)(1)"
+  pci_dss_v4.0: "12.10"
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_recurrence
+params:
+  recurrence_limit: 2
+  window_days: 30
+  attack_stage: initial_access
+remediation:
+  description: >
+    Resource has oscillated between safe and unsafe state repeatedly.
+    This is not a single misconfiguration — it is a pattern requiring
+    investigation.
+  action: >
+    Investigate the root cause of the repeated oscillation. Determine
+    whether the pattern indicates a broken process, operational
+    workaround, or active compromise. Review CloudTrail for the API
+    calls that triggered each transition.
+unsafe_predicate:
+  all:
+    - field: properties.network.security_group.has_unrestricted_ingress
+      op: eq
+      value: true

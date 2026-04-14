@@ -1,0 +1,34 @@
+dsl_version: ctrl.v1
+id: CTL.S3.ACL.RECUR.001
+name: S3 Bucket ACL Must Not Oscillate to Public-Read Repeatedly
+description: >
+  S3 bucket ACL has been set to public-read more than once within 7 days. ACL modification is a deliberate action — not accidental IaC drift. A single recurrence within a week is a strong signal of intentional repeated action requiring investigation.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC7.1"
+  nist_800_53_r5: "IR-5"
+  hipaa: "164.308(a)(1)(ii)(D)"
+scope_tags:
+  - aws
+  - s3
+type: unsafe_recurrence
+params:
+  recurrence_limit: 1
+  window_days: 7
+  attack_stage: initial_access
+remediation:
+  description: >
+    Resource has oscillated between safe and unsafe state repeatedly.
+    This is not a single misconfiguration — it is a pattern requiring
+    investigation.
+  action: >
+    Investigate the root cause of the repeated oscillation. Determine
+    whether the pattern indicates a broken process, operational
+    workaround, or active compromise. Review CloudTrail for the API
+    calls that triggered each transition.
+unsafe_predicate:
+  all:
+    - field: properties.storage.acl.public_read_grant
+      op: eq
+      value: true

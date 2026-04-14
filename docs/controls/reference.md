@@ -3,24 +3,24 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 352
-**Pack hash:** `a84de11e3bbf0d4961f00bf83c80fb8b4517b1105c047646663c2a7bf8734774`
+**Total controls:** 358
+**Pack hash:** `18c7181634aa8fbd54046601148192c37b52a9664e50539505e97c18f3b995ea`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 62 |
-| high | 150 |
+| critical | 66 |
+| high | 152 |
 | info | 16 |
 | low | 25 |
 | medium | 99 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 261 |
+| exposure | 265 |
 | governance | 7 |
-| identity | 76 |
+| identity | 78 |
 | storage | 8 |
 
 ## Controls
@@ -408,6 +408,21 @@ CloudTrail must log S3 data read events (GetObject). Read logging provides evide
 CloudTrail must log S3 data write events (PutObject, DeleteObject). Without object-level write logging, individual object mutations are invisible to the audit trail.
 
 **Remediation:** Add S3 data write event selectors to the trail using advanced event selectors with readOnly=false.
+
+---
+
+### CTL.CLOUDTRAIL.DISABLE.RECUR.001
+
+**CloudTrail Must Not Be Stopped and Restarted Repeatedly**
+
+- **Severity:** critical
+- **Type:** unsafe_recurrence
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 3.1; fedramp_moderate: AU-9; hipaa: 164.312(b); nist_800_53_r5: AU-9; pci_dss_v4.0: 10.5.1; soc2: CC7.1;
+
+CloudTrail trail has been stopped and restarted more than once in 30 days. Stopping CloudTrail creates gaps in the audit record. Repeated stop/start cycles are the forensic signature of deliberate audit evasion across multiple attacker sessions — the attacker stops the trail, takes actions, restarts it, and repeats.
+
+**Remediation:** Investigate the root cause of the repeated oscillation. Determine whether the pattern indicates a broken process, operational workaround, or active compromise. Review CloudTrail for the API calls that triggered each transition.
 
 ---
 
@@ -1950,6 +1965,21 @@ IAM credentials must have a defined maximum lifetime. Credentials without expiry
 
 ---
 
+### CTL.IAM.CRED.RECUR.001
+
+**IAM Console Password Must Not Be Disabled and Re-Enabled Repeatedly**
+
+- **Severity:** high
+- **Type:** unsafe_recurrence
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-2; hipaa: 164.312(a)(2)(i); nist_800_53_r5: AC-2; pci_dss_v4.0: 8.1.4; soc2: CC7.1;
+
+IAM user console password has been disabled and re-enabled more than once in 30 days. Password lifecycle manipulation — disable, re-enable, repeat — is the pattern of an attacker maintaining persistence through credential lifecycle events that would otherwise revoke access.
+
+**Remediation:** Investigate the root cause of the repeated oscillation. Determine whether the pattern indicates a broken process, operational workaround, or active compromise. Review CloudTrail for the API calls that triggered each transition.
+
+---
+
 ### CTL.IAM.CRED.ROTATION.001
 
 **Access Keys Must Be Rotated Within 90 Days**
@@ -2605,6 +2635,21 @@ The root account must use a hardware MFA device, not a virtual one. Hardware tok
 The AWS root account must have multi-factor authentication enabled. Root has unrestricted access to all resources. Compromise without MFA is the highest-severity identity risk.
 
 **Remediation:** Enable MFA on the root account using a hardware MFA device or virtual MFA app. Navigate to IAM > Security credentials > MFA.
+
+---
+
+### CTL.IAM.ROOT.RECUR.001
+
+**Root Account Must Not Be Used Repeatedly**
+
+- **Severity:** critical
+- **Type:** unsafe_recurrence
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 1.7; fedramp_moderate: AC-2; hipaa: 164.312(a)(2)(i); nist_800_53_r5: AC-2; pci_dss_v4.0: 8.1.1; soc2: CC7.1;
+
+Root account API activity has occurred more than once in 30 days. A single root usage may be a legitimate break-glass event. Two or more usages within a month requires investigation — either the organization has not addressed the process that led to the first usage, or root credentials have been compromised and are being actively used.
+
+**Remediation:** Investigate the root cause of the repeated oscillation. Determine whether the pattern indicates a broken process, operational workaround, or active compromise. Review CloudTrail for the API calls that triggered each transition.
 
 ---
 
@@ -3887,6 +3932,21 @@ S3 bucket ACLs should not be readable by unauthenticated users. READ_ACP permiss
 
 ---
 
+### CTL.S3.ACL.RECUR.001
+
+**S3 Bucket ACL Must Not Oscillate to Public-Read Repeatedly**
+
+- **Severity:** high
+- **Type:** unsafe_recurrence
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.308(a)(1)(ii)(D); nist_800_53_r5: IR-5; soc2: CC7.1;
+
+S3 bucket ACL has been set to public-read more than once within 7 days. ACL modification is a deliberate action — not accidental IaC drift. A single recurrence within a week is a strong signal of intentional repeated action requiring investigation.
+
+**Remediation:** Investigate the root cause of the repeated oscillation. Determine whether the pattern indicates a broken process, operational workaround, or active compromise. Review CloudTrail for the API calls that triggered each transition.
+
+---
+
 ### CTL.S3.ACL.WRITE.001
 
 **No Public Write via ACL**
@@ -4562,6 +4622,21 @@ S3 bucket prefixes marked as protected must not be publicly readable. Evaluates 
 
 ---
 
+### CTL.S3.PUBLIC.RECUR.001
+
+**S3 Bucket Must Not Become Publicly Accessible Repeatedly**
+
+- **Severity:** critical
+- **Type:** unsafe_recurrence
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: IR-5; hipaa: 164.308(a)(1)(ii)(D); nist_800_53_r5: IR-5; pci_dss_v4.0: 12.10; soc2: CC7.1;
+
+S3 bucket has oscillated between private and publicly accessible more than twice within 30 days. Repeated public exposure indicates a broken deployment process, operational workaround, or an attacker re-enabling public access. The response is investigation, not remediation — determine who is making the bucket public and how they still have access.
+
+**Remediation:** Investigate the root cause of the repeated oscillation. Determine whether the pattern indicates a broken process, operational workaround, or active compromise. Review CloudTrail for the API calls that triggered each transition.
+
+---
+
 ### CTL.S3.REGION.001
 
 **S3 Buckets Must Be in Approved Regions**
@@ -5102,6 +5177,21 @@ Security groups must not allow all outbound traffic to 0.0.0.0/0 on all ports. U
 Security groups must not allow inbound SSH (22) or RDP (3389) from ::/0 (IPv6 any). IPv6 open admin ports are equally dangerous as IPv4 and are often overlooked during security reviews.
 
 **Remediation:** Revoke the IPv6 ingress rule: aws ec2 revoke-security-group-ingress --group-id <sg-id> --ip-permissions IpProtocol=tcp,FromPort=22,ToPort=22,Ipv6Ranges=[{CidrIpv6=::/0}]
+
+---
+
+### CTL.VPC.SG.RECUR.001
+
+**Security Group Must Not Have Unrestricted Ingress Appear Repeatedly**
+
+- **Severity:** critical
+- **Type:** unsafe_recurrence
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: IR-5; hipaa: 164.312(e)(1); nist_800_53_r5: IR-5; pci_dss_v4.0: 12.10; soc2: CC7.1;
+
+Security group has had unrestricted ingress (0.0.0.0/0 or ::/0) added, removed, and added again more than twice in 30 days. Security group rules are not accidental — adding a rule is a deliberate API call. Repeated re-addition after removal indicates either a broken change process or an attacker re-enabling their access path after detection.
+
+**Remediation:** Investigate the root cause of the repeated oscillation. Determine whether the pattern indicates a broken process, operational workaround, or active compromise. Review CloudTrail for the API calls that triggered each transition.
 
 ---
 

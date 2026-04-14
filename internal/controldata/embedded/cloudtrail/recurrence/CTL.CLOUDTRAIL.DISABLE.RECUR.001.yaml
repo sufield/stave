@@ -1,0 +1,37 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.DISABLE.RECUR.001
+name: CloudTrail Must Not Be Stopped and Restarted Repeatedly
+description: >
+  CloudTrail trail has been stopped and restarted more than once in 30 days. Stopping CloudTrail creates gaps in the audit record. Repeated stop/start cycles are the forensic signature of deliberate audit evasion across multiple attacker sessions — the attacker stops the trail, takes actions, restarts it, and repeats.
+domain: exposure
+severity: critical
+compliance:
+  soc2: "CC7.1"
+  nist_800_53_r5: "AU-9"
+  fedramp_moderate: "AU-9"
+  cis_aws_v3.0: "3.1"
+  hipaa: "164.312(b)"
+  pci_dss_v4.0: "10.5.1"
+scope_tags:
+  - aws
+  - cloudtrail
+type: unsafe_recurrence
+params:
+  recurrence_limit: 1
+  window_days: 30
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Resource has oscillated between safe and unsafe state repeatedly.
+    This is not a single misconfiguration — it is a pattern requiring
+    investigation.
+  action: >
+    Investigate the root cause of the repeated oscillation. Determine
+    whether the pattern indicates a broken process, operational
+    workaround, or active compromise. Review CloudTrail for the API
+    calls that triggered each transition.
+unsafe_predicate:
+  all:
+    - field: properties.audit.trail_stopped
+      op: eq
+      value: true

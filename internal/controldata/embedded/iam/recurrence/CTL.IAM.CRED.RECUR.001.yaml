@@ -1,0 +1,36 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.CRED.RECUR.001
+name: IAM Console Password Must Not Be Disabled and Re-Enabled Repeatedly
+description: >
+  IAM user console password has been disabled and re-enabled more than once in 30 days. Password lifecycle manipulation — disable, re-enable, repeat — is the pattern of an attacker maintaining persistence through credential lifecycle events that would otherwise revoke access.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC7.1"
+  nist_800_53_r5: "AC-2"
+  fedramp_moderate: "AC-2"
+  hipaa: "164.312(a)(2)(i)"
+  pci_dss_v4.0: "8.1.4"
+scope_tags:
+  - aws
+  - iam
+type: unsafe_recurrence
+params:
+  recurrence_limit: 1
+  window_days: 30
+  attack_stage: persistence
+remediation:
+  description: >
+    Resource has oscillated between safe and unsafe state repeatedly.
+    This is not a single misconfiguration — it is a pattern requiring
+    investigation.
+  action: >
+    Investigate the root cause of the repeated oscillation. Determine
+    whether the pattern indicates a broken process, operational
+    workaround, or active compromise. Review CloudTrail for the API
+    calls that triggered each transition.
+unsafe_predicate:
+  all:
+    - field: properties.identity.console_password.disabled
+      op: eq
+      value: true

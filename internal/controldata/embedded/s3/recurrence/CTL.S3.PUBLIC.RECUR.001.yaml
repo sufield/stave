@@ -1,0 +1,36 @@
+dsl_version: ctrl.v1
+id: CTL.S3.PUBLIC.RECUR.001
+name: S3 Bucket Must Not Become Publicly Accessible Repeatedly
+description: >
+  S3 bucket has oscillated between private and publicly accessible more than twice within 30 days. Repeated public exposure indicates a broken deployment process, operational workaround, or an attacker re-enabling public access. The response is investigation, not remediation — determine who is making the bucket public and how they still have access.
+domain: exposure
+severity: critical
+compliance:
+  soc2: "CC7.1"
+  nist_800_53_r5: "IR-5"
+  fedramp_moderate: "IR-5"
+  hipaa: "164.308(a)(1)(ii)(D)"
+  pci_dss_v4.0: "12.10"
+scope_tags:
+  - aws
+  - s3
+type: unsafe_recurrence
+params:
+  recurrence_limit: 2
+  window_days: 30
+  attack_stage: initial_access
+remediation:
+  description: >
+    Resource has oscillated between safe and unsafe state repeatedly.
+    This is not a single misconfiguration — it is a pattern requiring
+    investigation.
+  action: >
+    Investigate the root cause of the repeated oscillation. Determine
+    whether the pattern indicates a broken process, operational
+    workaround, or active compromise. Review CloudTrail for the API
+    calls that triggered each transition.
+unsafe_predicate:
+  all:
+    - field: properties.storage.access.public_read
+      op: eq
+      value: true
