@@ -92,3 +92,5 @@ packs:
     path: packs/shield.yaml
   - id: codecommit
     path: packs/codecommit.yaml
+  - id: ssm
+    path: packs/ssm.yaml

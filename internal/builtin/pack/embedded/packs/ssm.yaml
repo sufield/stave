@@ -1,0 +1,4 @@
+id: ssm
+description: AWS Systems Manager controls
+controls:
+    - CTL.SSM.SECURETYPE.001

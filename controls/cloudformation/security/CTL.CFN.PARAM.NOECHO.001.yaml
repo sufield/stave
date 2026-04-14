@@ -1,0 +1,56 @@
+dsl_version: ctrl.v1
+id: CTL.CFN.PARAM.NOECHO.001
+name: CloudFormation Parameters for Sensitive Values Must Have NoEcho Enabled
+description: >
+  CloudFormation template parameters that are likely to contain sensitive
+  values must have NoEcho set to true. Without NoEcho, parameter values
+  are visible in stack events, stack details, and change set descriptions.
+  Any IAM principal with cloudformation:DescribeStacks can read them in
+  plaintext. This control checks the NoEcho property — not the parameter
+  value or default.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-28"
+  fedramp_moderate: "SC-28"
+  hipaa: "164.312(a)(2)(iv)"
+  pci_dss_v4.0: "3.4.1"
+  soc2: "CC6.1"
+scope_tags:
+  - aws
+  - cloudformation
+type: unsafe_state
+params:
+  attack_stage: credential_access
+observation_fields:
+  - cfn.template.parameter.is_sensitive_name
+  - cfn.template.parameter.no_echo
+remediation:
+  description: >
+    CloudFormation parameter with a sensitive name does not have NoEcho
+    enabled. The parameter value is visible in CloudFormation console,
+    API responses, and CloudTrail event metadata.
+  action: >
+    Add NoEcho: true to the parameter definition in the CloudFormation
+    template. Redeploy the stack. Note that existing stack events may
+    still contain the plaintext value — rotate the credential after
+    enabling NoEcho.
+  example: |
+    {
+      "cfn": {
+        "template": {
+          "parameter": {
+            "no_echo": true,
+            "is_sensitive_name": true
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cfn.template.parameter.is_sensitive_name
+      op: eq
+      value: true
+    - field: properties.cfn.template.parameter.no_echo
+      op: eq
+      value: false

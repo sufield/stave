@@ -3,22 +3,22 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 362
-**Pack hash:** `8e75b698b60ae757f4fa6af6e880f74deb20c48cbe1813b0691e64367d06fc3a`
+**Total controls:** 364
+**Pack hash:** `059bb83cb36d4870f6f1e13056c48eb379cc552e7f859ae96ec6b2dbc7c6a85d`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 69 |
-| high | 153 |
+| high | 155 |
 | info | 16 |
 | low | 25 |
 | medium | 99 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 265 |
+| exposure | 267 |
 | governance | 7 |
 | identity | 82 |
 | storage | 8 |
@@ -274,6 +274,21 @@ The principal that administers the source data must have separate permissions fr
 Data classified as critical or PHI must have cross-region replication configured for disaster recovery. Single-region data is vulnerable to regional outages and cannot meet recovery time objectives (RTO) for multi-region failover.
 
 **Remediation:** Configure cross-region replication: S3 CRR, RDS cross-region read replica, or AWS Backup cross-region copy rule.
+
+---
+
+### CTL.CFN.PARAM.NOECHO.001
+
+**CloudFormation Parameters for Sensitive Values Must Have NoEcho Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-28; hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-28; pci_dss_v4.0: 3.4.1; soc2: CC6.1;
+
+CloudFormation template parameters that are likely to contain sensitive values must have NoEcho set to true. Without NoEcho, parameter values are visible in stack events, stack details, and change set descriptions. Any IAM principal with cloudformation:DescribeStacks can read them in plaintext. This control checks the NoEcho property — not the parameter value or default.
+
+**Remediation:** Add NoEcho: true to the parameter definition in the CloudFormation template. Redeploy the stack. Note that existing stack events may still contain the plaintext value — rotate the credential after enabling NoEcho.
 
 ---
 
@@ -5073,6 +5088,21 @@ SQS queues must use server-side encryption with a KMS key. Unencrypted queues ex
 The observation snapshot is missing required SQS queue properties.
 
 **Remediation:** Ensure the extractor calls aws sqs get-queue-attributes and maps the KmsMasterKeyId to the messaging.encryption observation properties.
+
+---
+
+### CTL.SSM.SECURETYPE.001
+
+**SSM Parameters in Sensitive Paths Must Use SecureString Type**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-28; hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-28; pci_dss_v4.0: 3.4.1; soc2: CC6.1;
+
+AWS Systems Manager Parameter Store parameters that store values in String or StringList type when their path indicates sensitive content are readable by any IAM principal with ssm:GetParameter. SecureString parameters are KMS-encrypted at rest and require kms:Decrypt to read. This control checks the parameter type field — not the parameter value.
+
+**Remediation:** Create a new SecureString parameter with the same value and update all references. SSM does not support changing parameter type in place — you must create a new parameter. Use aws ssm put-parameter --name <path> --type SecureString --value <value> --overwrite.
 
 ---
 

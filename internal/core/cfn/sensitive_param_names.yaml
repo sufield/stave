@@ -1,0 +1,25 @@
+# Sensitive parameter name patterns for CloudFormation templates.
+#
+# A parameter whose logical name contains any of these strings
+# (case-insensitive) is classified as sensitive and must have NoEcho: true.
+#
+# This catalog is the contract between Stave controls and CFN extractors.
+# Organizations can add patterns by contributing to this file.
+#
+# Used by: CTL.CFN.PARAM.NOECHO.001
+sensitive_param_name_patterns:
+  - Password
+  - Passwd
+  - Secret
+  - Token
+  - ApiKey
+  - APIKey
+  - AccessKey
+  - PrivateKey
+  - Certificate
+  - Credential
+  - AuthToken
+  - DBPassword
+  - MasterPassword
+  - AdminPassword
+  - ServicePassword

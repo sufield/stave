@@ -1,0 +1,25 @@
+# Sensitive path patterns for SSM Parameter Store.
+#
+# A parameter whose path contains any of these segments (at any position)
+# is classified as sensitive and must use SecureString type.
+#
+# This catalog is the contract between Stave controls and SSM extractors.
+# Organizations can add patterns by contributing to this file.
+#
+# Used by: CTL.SSM.SECURETYPE.001
+sensitive_path_prefixes:
+  - /prod/
+  - /staging/
+  - /database/
+  - /db/
+  - /rds/
+  - /credentials/
+  - /secrets/
+  - /keys/
+  - /tokens/
+  - /api/
+  - /auth/
+  - /password/
+  - /passwd/
+  - /cert/
+  - /certificate/

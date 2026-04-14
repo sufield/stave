@@ -1,0 +1,53 @@
+dsl_version: ctrl.v1
+id: CTL.SSM.SECURETYPE.001
+name: SSM Parameters in Sensitive Paths Must Use SecureString Type
+description: >
+  AWS Systems Manager Parameter Store parameters that store values in
+  String or StringList type when their path indicates sensitive content
+  are readable by any IAM principal with ssm:GetParameter. SecureString
+  parameters are KMS-encrypted at rest and require kms:Decrypt to read.
+  This control checks the parameter type field — not the parameter value.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-28"
+  fedramp_moderate: "SC-28"
+  hipaa: "164.312(a)(2)(iv)"
+  pci_dss_v4.0: "3.4.1"
+  soc2: "CC6.1"
+scope_tags:
+  - aws
+  - ssm
+type: unsafe_state
+params:
+  attack_stage: credential_access
+observation_fields:
+  - ssm.parameter.type
+  - ssm.parameter.in_sensitive_path
+remediation:
+  description: >
+    SSM parameter in a sensitive path is stored as String or StringList
+    type. The value is readable in plaintext by any principal with
+    ssm:GetParameter permission on this path.
+  action: >
+    Create a new SecureString parameter with the same value and update
+    all references. SSM does not support changing parameter type in
+    place — you must create a new parameter. Use aws ssm put-parameter
+    --name <path> --type SecureString --value <value> --overwrite.
+  example: |
+    {
+      "ssm": {
+        "parameter": {
+          "type": "SecureString",
+          "in_sensitive_path": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ssm.parameter.in_sensitive_path
+      op: eq
+      value: true
+    - field: properties.ssm.parameter.type
+      op: ne
+      value: SecureString
