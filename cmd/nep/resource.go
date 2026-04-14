@@ -17,14 +17,16 @@ import (
 )
 
 type resourceOpts struct {
-	Snapshot    string
-	ResourceARN string
-	Format      string
-	Actions     string
+	Snapshot       string
+	ResourceARN    string
+	Format         string
+	Actions        string
+	Classification string
+	ShowDesignated bool
 }
 
 func newResourceCmd() *cobra.Command {
-	opts := &resourceOpts{Format: "table"}
+	opts := &resourceOpts{Format: "table", Classification: "phi"}
 
 	cmd := &cobra.Command{
 		Use:   "resource",
@@ -32,6 +34,9 @@ func newResourceCmd() *cobra.Command {
 		Long: `Show all principals with resolved effective access to a specific
 resource ARN, with access path attribution (identity-based, resource
 policy, or both).
+
+By default shows only non-designated principals. Use --all to include
+designated principals.
 
 Exit Codes:
   0   No non-designated access to the resource
@@ -44,20 +49,26 @@ Examples:
     --resource arn:aws:s3:::phi-patient-records
 
   stave nep resource --snapshot obs.json \
-    --resource arn:aws:s3:::phi-records \
-    --format json`,
-		Example:       `  stave nep resource --snapshot obs.json --resource arn:aws:s3:::phi-records`,
+    --resource arn:aws:s3:::phi-records --all
+
+  stave nep resource --snapshot obs.json \
+    --resource arn:aws:s3:::phi-records --format dot | dot -Tpng > access.png`,
+		Example: `  stave nep resource --snapshot obs.json --resource arn:aws:s3:::phi-records
+  stave nep resource --snapshot obs.json --resource arn:aws:s3:::phi-records --all --format dot`,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runResource(cmd.OutOrStdout(), opts)
+			return runResource(cmd.OutOrStdout(), cmd.ErrOrStderr(), opts)
 		},
 	}
 
 	cmd.Flags().StringVar(&opts.Snapshot, "snapshot", "", "path to snapshot file (required)")
 	cmd.Flags().StringVar(&opts.ResourceARN, "resource", "", "resource ARN to query (required)")
-	cmd.Flags().StringVarP(&opts.Format, "format", "f", "table", "output format: table | json")
+	cmd.Flags().StringVarP(&opts.Format, "format", "f", "table", "output format: table | json | dot")
 	cmd.Flags().StringVar(&opts.Actions, "actions", "", "comma-separated action filter")
+	cmd.Flags().StringVar(&opts.Classification, "classification", "phi", "data classification tag value to filter resources")
+	cmd.Flags().BoolVar(&opts.ShowDesignated, "all", false, "show all principals including designated")
+	cmd.Flags().BoolVar(&opts.ShowDesignated, "show-designated", false, "show designated principals (alias for --all)")
 
 	_ = cmd.MarkFlagRequired("snapshot")
 	_ = cmd.MarkFlagRequired("resource")
@@ -65,12 +76,11 @@ Examples:
 	return cmd
 }
 
-func runResource(w io.Writer, opts *resourceOpts) error {
+func runResource(w io.Writer, stderr io.Writer, opts *resourceOpts) error {
 	if _, err := os.Stat(opts.Snapshot); err != nil {
 		return fmt.Errorf("snapshot file not found: %s", opts.Snapshot)
 	}
 
-	// Load snapshot bundle.
 	snapshots, err := observations.LoadBundle(opts.Snapshot)
 	if err != nil {
 		return fmt.Errorf("load snapshot: %w", err)
@@ -80,45 +90,82 @@ func runResource(w io.Writer, opts *resourceOpts) error {
 	}
 	snap := &snapshots[len(snapshots)-1]
 
-	// Build resource access index from resource policies in the snapshot.
-	idx := buildResourceAccessIndex(snap)
+	// Classification tag check.
+	if opts.Classification != "" {
+		checkClassificationTag(stderr, snap, opts.ResourceARN, opts.Classification)
+	}
 
-	// Resolve identity-based access for the target resource.
+	// Build resource access index.
+	idx := buildResourceAccessIndex(snap)
 	addIdentityBasedAccess(idx, snap, opts.ResourceARN)
 
 	entries := idx.EntriesFor(opts.ResourceARN)
+	designated := buildDesignatedSet(snap)
+
+	// Filter to non-designated only (default).
+	displayEntries := entries
+	if !opts.ShowDesignated {
+		displayEntries = filterNonDesignated(entries, designated)
+	}
 
 	switch opts.Format {
 	case "json":
-		if err := renderResourceJSON(w, opts.ResourceARN, entries); err != nil {
+		if err := renderResourceJSON(w, opts.ResourceARN, displayEntries, opts.ShowDesignated); err != nil {
+			return err
+		}
+	case "dot":
+		if err := renderResourceDOT(w, opts.ResourceARN, entries, designated, opts.ShowDesignated); err != nil {
 			return err
 		}
 	default:
-		if err := renderResourceTable(w, opts.ResourceARN, entries); err != nil {
+		if err := renderResourceTable(w, opts.ResourceARN, displayEntries, opts.ShowDesignated); err != nil {
 			return err
 		}
 	}
 
-	// Exit code 1 if any non-designated principal has access.
 	if hasNonDesignatedAccess(entries, snap) {
 		return ui.ErrSecurityAuditFindings
 	}
 	return nil
 }
 
-// resourcePolicyPaths maps property paths where resource policy JSON
-// is stored per resource type. The extractor places the policy document
-// at these paths in the asset properties.
-var resourcePolicyPaths = [][]string{
-	{"storage", "policy_json"},          // S3 bucket policy
-	{"encryption", "key_policy_json"},   // KMS key policy
-	{"compute", "resource_policy_json"}, // Lambda resource policy
-	{"messaging", "policy_json"},        // SQS queue / SNS topic policy
-	{"secret", "resource_policy_json"},  // Secrets Manager resource policy
+// checkClassificationTag warns if the resource lacks the expected classification tag.
+func checkClassificationTag(stderr io.Writer, snap *asset.Snapshot, resourceARN, classification string) {
+	a, ok := snap.FindAsset(resourceARN)
+	if !ok {
+		return
+	}
+	tags := resolveMapProperty(a.Properties, []string{"tags"})
+	if tags == nil {
+		tags = resolveMapProperty(a.Properties, []string{"storage", "tags"})
+	}
+	if tags == nil {
+		return
+	}
+	if v, ok := tags["data-classification"]; ok && fmt.Sprintf("%v", v) == classification {
+		return
+	}
+	fmt.Fprintf(stderr, "Warning: resource %s does not have tag data-classification=%s. Showing access results anyway.\n", resourceARN, classification)
 }
 
-// buildResourceAccessIndex scans assets in the snapshot for resource-based
-// policies and indexes the principals they grant access to.
+func filterNonDesignated(entries []iam.ResourceAccessEntry, designated map[string]bool) []iam.ResourceAccessEntry {
+	var filtered []iam.ResourceAccessEntry
+	for i := range entries {
+		if entries[i].IsPublic || !designated[entries[i].PrincipalARN] {
+			filtered = append(filtered, entries[i])
+		}
+	}
+	return filtered
+}
+
+var resourcePolicyPaths = [][]string{
+	{"storage", "policy_json"},
+	{"encryption", "key_policy_json"},
+	{"compute", "resource_policy_json"},
+	{"messaging", "policy_json"},
+	{"secret", "resource_policy_json"},
+}
+
 func buildResourceAccessIndex(snap *asset.Snapshot) *iam.ResourceAccessIndex {
 	idx := iam.NewResourceAccessIndex()
 	for i := range snap.Assets {
@@ -135,7 +182,6 @@ func buildResourceAccessIndex(snap *asset.Snapshot) *iam.ResourceAccessIndex {
 	return idx
 }
 
-// readClassActions defines which actions constitute read access per service.
 var readClassActions = map[string][]string{
 	"s3":             {"s3:GetObject", "s3:ListBucket"},
 	"kms":            {"kms:Decrypt", "kms:GenerateDataKey"},
@@ -144,39 +190,28 @@ var readClassActions = map[string][]string{
 	"lambda":         {"lambda:InvokeFunction"},
 }
 
-// addIdentityBasedAccess scans IAM identities and checks if their resolved
-// effective allows include read-class actions on the target resource ARN.
 func addIdentityBasedAccess(idx *iam.ResourceAccessIndex, snap *asset.Snapshot, targetARN string) {
 	targetService := extractService(targetARN)
 	readActions := readClassActions[targetService]
 	if len(readActions) == 0 {
 		return
 	}
-
 	for i := range snap.Identities {
 		id := &snap.Identities[i]
 		policiesJSON := resolveStringProperty(id.Properties, []string{"identity", "policies_json"})
 		if policiesJSON == "" {
 			continue
 		}
-
-		input := iam.ResolutionInput{
-			PrincipalARN: string(id.ID),
-		}
-
-		// Parse identity policies.
+		input := iam.ResolutionInput{PrincipalARN: string(id.ID)}
 		doc, err := iam.ParsePolicyDocument(policiesJSON)
 		if err != nil {
 			continue
 		}
 		input.IdentityPolicies = []iam.PolicyDocument{doc}
-
 		result := iam.Resolve(input)
 		if result.Incomplete {
 			continue
 		}
-
-		// Check if any effective allow matches a read-class action on the target.
 		for _, grant := range result.EffectiveAllow {
 			if matchesReadAccess(grant, targetARN, readActions) {
 				idx.AddEntry(string(id.ID), iam.ResourceAccessEntry{
@@ -190,8 +225,6 @@ func addIdentityBasedAccess(idx *iam.ResourceAccessIndex, snap *asset.Snapshot, 
 	}
 }
 
-// matchesReadAccess checks if a grant matches any of the read-class actions
-// on the target resource ARN.
 func matchesReadAccess(grant iam.ActionGrant, targetARN string, readActions []string) bool {
 	actionMatch := false
 	for _, ra := range readActions {
@@ -207,29 +240,22 @@ func matchesReadAccess(grant iam.ActionGrant, targetARN string, readActions []st
 		strings.HasPrefix(targetARN, strings.TrimSuffix(grant.Resource, "*"))
 }
 
-// designatedTags are the tag key/value pairs that mark a principal as
-// designated for PHI access.
 var designatedTags = []struct{ key, value string }{
 	{"stave/phi-authorized", "true"},
 	{"stave/role-type", "phi-processor"},
 	{"stave/role-type", "administrative"},
 }
 
-// hasNonDesignatedAccess checks if any entry is from a non-designated principal.
 func hasNonDesignatedAccess(entries []iam.ResourceAccessEntry, snap *asset.Snapshot) bool {
 	designated := buildDesignatedSet(snap)
 	for _, e := range entries {
-		if e.IsPublic {
-			return true
-		}
-		if !designated[e.PrincipalARN] {
+		if e.IsPublic || !designated[e.PrincipalARN] {
 			return true
 		}
 	}
 	return false
 }
 
-// buildDesignatedSet builds a set of principal ARNs that carry designated tags.
 func buildDesignatedSet(snap *asset.Snapshot) map[string]bool {
 	designated := make(map[string]bool)
 	for i := range snap.Identities {
@@ -248,7 +274,6 @@ func buildDesignatedSet(snap *asset.Snapshot) map[string]bool {
 	return designated
 }
 
-// resolveStringProperty traverses nested maps to extract a string value.
 func resolveStringProperty(props map[string]any, path []string) string {
 	var current any = props
 	for _, key := range path {
@@ -268,7 +293,6 @@ func resolveStringProperty(props map[string]any, path []string) string {
 	return s
 }
 
-// resolveMapProperty traverses nested maps to extract a map value.
 func resolveMapProperty(props map[string]any, path []string) map[string]any {
 	var current any = props
 	for _, key := range path {
@@ -288,7 +312,6 @@ func resolveMapProperty(props map[string]any, path []string) map[string]any {
 	return m
 }
 
-// extractAccountID extracts the AWS account ID from an ARN string.
 func extractAccountID(arn string) string {
 	parts := strings.Split(arn, ":")
 	if len(parts) >= 5 {
@@ -297,7 +320,6 @@ func extractAccountID(arn string) string {
 	return ""
 }
 
-// extractService extracts the AWS service prefix from an ARN string.
 func extractService(arn string) string {
 	parts := strings.Split(arn, ":")
 	if len(parts) >= 3 {
@@ -306,10 +328,18 @@ func extractService(arn string) string {
 	return ""
 }
 
-func renderResourceJSON(w io.Writer, resourceARN string, entries []iam.ResourceAccessEntry) error {
+// dotQuote wraps a string in double quotes for DOT format, escaping inner quotes.
+func dotQuote(s string) string {
+	escaped := strings.ReplaceAll(s, `\`, `\\`)
+	escaped = strings.ReplaceAll(escaped, `"`, `\"`)
+	return `"` + escaped + `"`
+}
+
+func renderResourceJSON(w io.Writer, resourceARN string, entries []iam.ResourceAccessEntry, showAll bool) error {
 	out := map[string]any{
-		"resource_arn":   resourceARN,
-		"accessor_count": len(entries),
+		"resource_arn":    resourceARN,
+		"accessor_count":  len(entries),
+		"show_designated": showAll,
 	}
 	if len(entries) > 0 {
 		accessors := make([]map[string]any, len(entries))
@@ -323,18 +353,23 @@ func renderResourceJSON(w io.Writer, resourceARN string, entries []iam.ResourceA
 		}
 		out["accessors"] = accessors
 	}
-
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
 	return enc.Encode(out)
 }
 
-func renderResourceTable(w io.Writer, resourceARN string, entries []iam.ResourceAccessEntry) error {
-	fmt.Fprintf(w, "Resource: %s\n", resourceARN)
+func renderResourceTable(w io.Writer, resourceARN string, entries []iam.ResourceAccessEntry, showAll bool) error {
+	if showAll {
+		fmt.Fprintf(w, "ALL ACCESS — %s\n", resourceARN)
+		fmt.Fprintln(w, "Showing: all principals")
+	} else {
+		fmt.Fprintf(w, "NON-DESIGNATED ACCESS — %s\n", resourceARN)
+		fmt.Fprintln(w, "Showing: non-designated principals only  |  use --all to show all")
+	}
 	fmt.Fprintf(w, "Accessors: %d\n", len(entries))
 
 	if len(entries) == 0 {
-		fmt.Fprintln(w, "\nNo principals with effective access found in snapshot.")
+		fmt.Fprintln(w, "\nNo principals with effective access found.")
 		return nil
 	}
 
@@ -354,6 +389,63 @@ func renderResourceTable(w io.Writer, resourceARN string, entries []iam.Resource
 		fmt.Fprintf(w, "%-50s %-12s %s\n",
 			truncateARN(e.PrincipalARN, 50), crossAcct, public)
 	}
+	return nil
+}
 
+func renderResourceDOT(w io.Writer, resourceARN string, allEntries []iam.ResourceAccessEntry, designated map[string]bool, showAll bool) error {
+	fmt.Fprintln(w, "digraph PHIAccess {")
+	fmt.Fprintln(w, `    rankdir=LR`)
+	fmt.Fprintln(w, `    node [fontname="Helvetica" fontsize=11]`)
+	fmt.Fprintln(w)
+
+	// Resource node.
+	shortRes := shortARN(resourceARN)
+	fmt.Fprintf(w, "    %s [label=%s, shape=cylinder, style=filled, fillcolor=%s]\n",
+		dotQuote(resourceARN),
+		dotQuote(shortRes),
+		dotQuote("#FAEEDA"))
+	fmt.Fprintln(w)
+
+	// Principal nodes and edges.
+	for i := range allEntries {
+		e := &allEntries[i]
+		isDesignated := designated[e.PrincipalARN]
+
+		if !showAll && isDesignated {
+			continue
+		}
+
+		shortP := shortARN(e.PrincipalARN)
+		if isDesignated {
+			fmt.Fprintf(w, "    %s [label=%s, shape=box, style=filled, fillcolor=%s]\n",
+				dotQuote(e.PrincipalARN),
+				dotQuote(shortP+"\nDESIGNATED"),
+				dotQuote("#E1F5EE"))
+			fmt.Fprintf(w, "    %s -> %s\n", dotQuote(e.PrincipalARN), dotQuote(resourceARN))
+		} else if e.IsCrossAccount {
+			fmt.Fprintf(w, "    %s [label=%s, shape=box, style=filled, fillcolor=%s, color=%s]\n",
+				dotQuote(e.PrincipalARN),
+				dotQuote(shortP+"\nCROSS-ACCOUNT"),
+				dotQuote("#FCEBEB"),
+				dotQuote("#E24B4A"))
+			fmt.Fprintf(w, "    %s -> %s [style=dashed, color=%s, label=%s]\n",
+				dotQuote(e.PrincipalARN), dotQuote(resourceARN),
+				dotQuote("#E24B4A"), dotQuote("cross-account"))
+		} else {
+			label := shortP + "\nNON-DESIGNATED"
+			if e.IsPublic {
+				label = "PUBLIC\nACCESS"
+			}
+			fmt.Fprintf(w, "    %s [label=%s, shape=box, style=filled, fillcolor=%s]\n",
+				dotQuote(e.PrincipalARN),
+				dotQuote(label),
+				dotQuote("#FCEBEB"))
+			fmt.Fprintf(w, "    %s -> %s [color=%s]\n",
+				dotQuote(e.PrincipalARN), dotQuote(resourceARN),
+				dotQuote("#E24B4A"))
+		}
+	}
+
+	fmt.Fprintln(w, "}")
 	return nil
 }

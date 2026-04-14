@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -57,7 +58,7 @@ func TestRunResource_PublicAccessDetected(t *testing.T) {
 		ResourceARN: "arn:aws:s3:::phi-bucket",
 		Format:      "json",
 	}
-	err := runResource(&buf, opts)
+	err := runResource(&buf, io.Discard, opts)
 
 	// Should return exit-1 error (non-designated public access)
 	if !errors.Is(err, ui.ErrSecurityAuditFindings) {
@@ -110,7 +111,7 @@ func TestRunResource_DesignatedOnlyNoError(t *testing.T) {
 		ResourceARN: "arn:aws:s3:::phi-bucket",
 		Format:      "json",
 	}
-	err := runResource(&buf, opts)
+	err := runResource(&buf, io.Discard, opts)
 
 	if err != nil {
 		t.Fatalf("expected no error for designated-only access, got: %v", err)
@@ -139,7 +140,7 @@ func TestRunResource_EmptyAccess(t *testing.T) {
 		ResourceARN: "arn:aws:s3:::phi-bucket",
 		Format:      "table",
 	}
-	err := runResource(&buf, opts)
+	err := runResource(&buf, io.Discard, opts)
 
 	if err != nil {
 		t.Fatalf("expected no error for empty access, got: %v", err)
@@ -176,7 +177,7 @@ func TestRunResource_CrossAccountFlagged(t *testing.T) {
 		ResourceARN: "arn:aws:kms:us-east-1:123456789012:key/abc-123",
 		Format:      "json",
 	}
-	_ = runResource(&buf, opts)
+	_ = runResource(&buf, io.Discard, opts)
 
 	out := buf.String()
 	if !strings.Contains(out, `"is_cross_account": true`) {
@@ -210,6 +211,98 @@ func TestExtractService(t *testing.T) {
 	for _, tt := range tests {
 		if got := extractService(tt.arn); got != tt.want {
 			t.Errorf("extractService(%q) = %q, want %q", tt.arn, got, tt.want)
+		}
+	}
+}
+
+func TestRunResource_DefaultExcludesDesignated(t *testing.T) {
+	snap := map[string]any{
+		"schema_version": "obs.v0.1",
+		"source":         "deployed",
+		"captured_at":    "2026-01-15T00:00:00Z",
+		"assets": []any{
+			map[string]any{
+				"id": "arn:aws:s3:::phi-bucket", "type": "storage_bucket", "vendor": "aws",
+				"properties": map[string]any{
+					"storage": map[string]any{
+						"policy_json": `{"Statement":[{"Effect":"Allow","Action":["s3:GetObject"],"Resource":["arn:aws:iam::123456789012:role/phi-proc","arn:aws:iam::123456789012:role/rogue"]}]}`,
+					},
+				},
+			},
+		},
+		"identities": []any{
+			map[string]any{
+				"id": "arn:aws:iam::123456789012:role/phi-proc", "type": "iam_role", "vendor": "aws",
+				"properties": map[string]any{"identity": map[string]any{"tags": map[string]any{"stave/role-type": "phi-processor"}}},
+			},
+			map[string]any{
+				"id": "arn:aws:iam::123456789012:role/rogue", "type": "iam_role", "vendor": "aws",
+				"properties": map[string]any{"identity": map[string]any{"tags": map[string]any{}}},
+			},
+		},
+	}
+	path := writeTestSnapshot(t, snap)
+
+	var buf bytes.Buffer
+	opts := &resourceOpts{
+		Snapshot: path, ResourceARN: "arn:aws:s3:::phi-bucket",
+		Format: "json", Classification: "phi", ShowDesignated: false,
+	}
+	_ = runResource(&buf, io.Discard, opts)
+
+	// Default: only non-designated shown
+	if strings.Contains(buf.String(), "phi-proc") {
+		t.Error("designated principal phi-proc should be excluded in default mode")
+	}
+	if !strings.Contains(buf.String(), "rogue") {
+		t.Error("non-designated principal rogue should be shown")
+	}
+}
+
+func TestRunResource_AllIncludesDesignated(t *testing.T) {
+	snap := map[string]any{
+		"schema_version": "obs.v0.1",
+		"source":         "deployed",
+		"captured_at":    "2026-01-15T00:00:00Z",
+		"assets": []any{
+			map[string]any{
+				"id": "arn:aws:s3:::phi-bucket", "type": "storage_bucket", "vendor": "aws",
+				"properties": map[string]any{
+					"storage": map[string]any{
+						"policy_json": `{"Statement":[{"Effect":"Allow","Action":["s3:GetObject"],"Resource":["arn:aws:iam::123456789012:role/phi-proc"]}]}`,
+					},
+				},
+			},
+		},
+		"identities": []any{
+			map[string]any{
+				"id": "arn:aws:iam::123456789012:role/phi-proc", "type": "iam_role", "vendor": "aws",
+				"properties": map[string]any{"identity": map[string]any{"tags": map[string]any{"stave/role-type": "phi-processor"}}},
+			},
+		},
+	}
+	path := writeTestSnapshot(t, snap)
+
+	var buf bytes.Buffer
+	opts := &resourceOpts{
+		Snapshot: path, ResourceARN: "arn:aws:s3:::phi-bucket",
+		Format: "json", Classification: "phi", ShowDesignated: true,
+	}
+	_ = runResource(&buf, io.Discard, opts)
+
+	if !strings.Contains(buf.String(), "phi-proc") {
+		t.Error("--all should show designated principal phi-proc")
+	}
+}
+
+func TestDotQuote(t *testing.T) {
+	tests := []struct{ input, want string }{
+		{"hello", `"hello"`},
+		{`say "hi"`, `"say \"hi\""`},
+	}
+	for _, tt := range tests {
+		if got := dotQuote(tt.input); got != tt.want {
+			t.Errorf("dotQuote(%q) = %q, want %q", tt.input, got, tt.want)
 		}
 	}
 }

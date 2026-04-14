@@ -407,3 +407,53 @@ stave alias delete ev
    # Summary counts
    jq '.summary' audit_trace.json
    ```
+
+---
+
+## 13. PHI Access Governance
+
+**When to use:** You need to know who has effective access to resources tagged `data-classification: phi` and whether any non-designated principals have access.
+
+`stave nep resource` resolves all access paths (resource policies + identity-based policies) and classifies each principal as designated or non-designated.
+
+1. **Show non-designated access to a PHI resource:**
+
+   ```bash
+   stave nep resource --snapshot obs.json \
+     --resource arn:aws:s3:::phi-patient-records
+   ```
+
+2. **Show all principals including designated:**
+
+   ```bash
+   stave nep resource --snapshot obs.json \
+     --resource arn:aws:s3:::phi-patient-records --all
+   ```
+
+3. **Use a different classification tag:**
+
+   ```bash
+   stave nep resource --snapshot obs.json \
+     --resource arn:aws:s3:::pii-data --classification pii
+   ```
+
+4. **Graph visualization:**
+
+   ```bash
+   stave nep resource --snapshot obs.json \
+     --resource arn:aws:s3:::phi-patient-records \
+     --format dot | dot -Tpng > phi-access.png
+   ```
+
+5. **Exit codes:**
+   - Exit 0: only designated principals have access
+   - Exit 1: one or more non-designated principals have access
+
+6. **Designated principal tags:**
+
+   Mark a principal as authorized for PHI access with any of these tags:
+   - `stave/phi-authorized: "true"`
+   - `stave/role-type: "phi-processor"`
+   - `stave/role-type: "administrative"`
+
+**Relationship to CTL.IAM.NEP.PHI.001:** The control fires only when non-designated access exists. `stave nep resource` shows the complete access picture including designated principals (with `--all`), giving full visibility for audit.
