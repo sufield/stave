@@ -1,0 +1,63 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.STAGE.LIFECYCLE.001
+name: API Gateway Stages Must Not Have Orphaned or Deprecated Versions Accessible
+description: >
+  API Gateway REST APIs must not have orphaned stages accessible with
+  weaker security controls than the production stage. Orphaned stages
+  from previous deployments, testing, and migrations accumulate without
+  security controls applied to the current stage — no WAF association,
+  no throttling, potentially no authorization. OWASP API9:2023 (Improper
+  Inventory Management) identifies this as a primary API security gap.
+  Older stages may retain endpoints that were fixed or removed in current
+  versions. The security delta between orphaned and production stages
+  defines the attack surface an attacker gains by discovering the old
+  endpoint. A stage with no invocations in 30 days and missing controls
+  present on the production stage is considered orphaned.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "CM-7"
+  fedramp_moderate: "CM-7"
+  hipaa: "164.312(a)(1)"
+  pci_dss_v4.0: "6.3.2"
+  soc2: "CC7.1"
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+params:
+  attack_stage: initial_access
+  base_impact: 8
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 1.5
+remediation:
+  description: >
+    API Gateway has orphaned or deprecated stages accessible with
+    weaker security controls than the production stage. Shadow API
+    surfaces bypass WAF, throttling, and authorization.
+  action: >
+    Decommission orphaned stages by deleting the deployment from the
+    API Gateway console or DeleteStage API. If the stage must remain
+    for legacy integration, apply equivalent security controls — WAF
+    association, throttling, and authorization — matching the production
+    stage. Document intentional multi-stage deployments with a
+    stave/api-stage-lookback-days tag.
+  example: |
+    {
+      "apigateway": {
+        "kind": "rest_api",
+        "stages": {
+          "has_orphaned_or_unprotected": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.apigateway.kind
+      op: eq
+      value: rest_api
+    - field: properties.apigateway.stages.has_orphaned_or_unprotected
+      op: eq
+      value: true

@@ -3,22 +3,22 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 328
-**Pack hash:** `1e25b511514a0863947448271e8a7aec7d8c7e5b655fe8abe6417b2a26cfdca1`
+**Total controls:** 329
+**Pack hash:** `4d844735a54666282f3d8aa1483ad1e11a498fc47731ec3256659164d45f752f`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 58 |
-| high | 137 |
+| high | 138 |
 | info | 16 |
 | low | 22 |
 | medium | 95 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 242 |
+| exposure | 243 |
 | governance | 7 |
 | identity | 71 |
 | storage | 8 |
@@ -66,6 +66,21 @@ API Gateway routes and methods must have an authorizer configured (Cognito, Lamb
 The observation snapshot is missing required API Gateway properties.
 
 **Remediation:** Ensure the extractor calls aws apigateway get-rest-apis and aws apigateway get-domain-names and maps security policy to the api observation properties.
+
+---
+
+### CTL.APIGATEWAY.STAGE.LIFECYCLE.001
+
+**API Gateway Stages Must Not Have Orphaned or Deprecated Versions Accessible**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: CM-7; hipaa: 164.312(a)(1); nist_800_53_r5: CM-7; pci_dss_v4.0: 6.3.2; soc2: CC7.1;
+
+API Gateway REST APIs must not have orphaned stages accessible with weaker security controls than the production stage. Orphaned stages from previous deployments, testing, and migrations accumulate without security controls applied to the current stage — no WAF association, no throttling, potentially no authorization. OWASP API9:2023 (Improper Inventory Management) identifies this as a primary API security gap. Older stages may retain endpoints that were fixed or removed in current versions. The security delta between orphaned and production stages defines the attack surface an attacker gains by discovering the old endpoint. A stage with no invocations in 30 days and missing controls present on the production stage is considered orphaned.
+
+**Remediation:** Decommission orphaned stages by deleting the deployment from the API Gateway console or DeleteStage API. If the stage must remain for legacy integration, apply equivalent security controls — WAF association, throttling, and authorization — matching the production stage. Document intentional multi-stage deployments with a stave/api-stage-lookback-days tag.
 
 ---
 

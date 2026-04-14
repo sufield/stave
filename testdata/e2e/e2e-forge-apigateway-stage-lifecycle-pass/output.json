@@ -1,0 +1,42 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "b961e67c8fec0bbffa5e808597637c79f8917ffc89ef725384c2901138348606",
+        "2026-01-11T000000Z.json": "ba833e29caa554a028ea1edb6cbdc744119f9d9e6afeb424b11a0bea8c1e36fa"
+      },
+      "overall": "ee6a6c64078d140d438242fef05423e452307dc44b8ab2deabe2076f3a965ff4"
+    },
+    "policy_fingerprint": "316ed808afb8321ae286efb471a0ba198c276b36b28847240925e13317cd2880"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-apigateway-stage-lifecycle-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-apigateway-stage-lifecycle-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "bc9f1c781bc80e1b52a32001aa6c805277281bde",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-apigateway-stage-lifecycle-pass/controls/"
+      ]
+    }
+  }
+}

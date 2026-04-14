@@ -1,0 +1,12 @@
+id: shadow_api_exposure
+description: >
+  Orphaned API Gateway stages with weaker security controls are accessible
+  alongside unauthenticated Lambda function URLs or unauthorized API
+  routes. Multiple unintended public API surfaces with inconsistent
+  security controls.
+controls:
+  - CTL.APIGATEWAY.STAGE.LIFECYCLE.001
+  - CTL.LAMBDA.URL.AUTH.001
+  - CTL.APIGATEWAY.AUTH.001
+escalation_threshold: 2
+compound_severity: high
