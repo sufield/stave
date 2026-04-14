@@ -1,0 +1,22 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.TIMEOUT.001
+name: Lambda Function Timeout Must Not Exceed Safe Threshold
+description: >
+  Detects assets where exceeds_threshold is eq true.
+domain: exposure
+severity: medium
+scope_tags:
+  - aws
+  - lambda
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Detects assets where exceeds_threshold is eq true.
+  action: >
+    Reduce timeout to 60 seconds or add a stave/lambda-timeout-justified tag.
+unsafe_predicate:
+  all:
+    - field: properties.compute.timeout.exceeds_threshold
+      op: eq
+      value: true

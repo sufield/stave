@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 341
-**Pack hash:** `d9385e27476bad2738ebc7fa75530835301f9a1ef626d87537a63c8e51763b27`
+**Total controls:** 344
+**Pack hash:** `d75c3599b8e4acc03e7110da2958794721f5fb5e11ba92b0cf50c4bb4489fbd8`
 
 ## Summary
 
@@ -13,12 +13,12 @@
 | critical | 60 |
 | high | 146 |
 | info | 16 |
-| low | 23 |
-| medium | 96 |
+| low | 24 |
+| medium | 98 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 250 |
+| exposure | 253 |
 | governance | 7 |
 | identity | 76 |
 | storage | 8 |
@@ -2982,6 +2982,21 @@ Lambda functions must have a code signing configuration attached with the policy
 
 ---
 
+### CTL.LAMBDA.CONCURRENCY.001
+
+**Lambda Functions Must Have Reserved Concurrency Configured**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-5; hipaa: 164.308(a)(7); nist_800_53_r5: SC-5; pci_dss_v4.0: 1.3.2; soc2: A1.1;
+
+Lambda functions must have reserved concurrency set to a non-zero value. Without reserved concurrency, a function competes for the account-wide concurrency pool with every other function. A single function experiencing a traffic spike can exhaust the account limit and prevent all other functions from executing. Reserved concurrency provides both a ceiling (blast radius limitation) and a floor (availability guarantee) for each function.
+
+**Remediation:** Set reserved concurrency via aws lambda put-function-concurrency --reserved-concurrent-executions <value>. Choose a value that bounds the function's maximum invocations while leaving headroom for other critical functions.
+
+---
+
 ### CTL.LAMBDA.DLQ.001
 
 **Lambda Async Invocations Must Have a Dead Letter Queue**
@@ -3114,6 +3129,36 @@ Each Lambda function must use a unique execution role not shared with other func
 Lambda functions must not run on runtimes that AWS has deprecated. Deprecated runtimes no longer receive security patches from AWS. Unlike EC2 where the operator controls patching, Lambda runtimes are AWS-managed — the only remediation is upgrading the runtime version. AWS publishes deprecation dates months in advance. A function on a deprecated runtime is running on an unpatched execution environment for every invocation. The operator has no mechanism to patch the underlying runtime independently — the runtime version is the patch level. AWS does not forcibly block invocations on deprecated runtimes immediately; functions continue working in a vulnerable state until AWS removes the runtime entirely, at which point the function breaks rather than degrading gracefully. This control detects the compliance gap during the window between deprecation and forced removal.
 
 **Remediation:** Upgrade the Lambda function runtime to a supported version. Check the AWS Lambda runtimes documentation for the current supported runtime list and deprecation schedule. Test the function with the new runtime in a non-production environment before updating production. For Python, Node.js, and Java runtimes, review breaking changes in the language version upgrade guide.
+
+---
+
+### CTL.LAMBDA.TIMEOUT.001
+
+**Lambda Function Timeout Must Not Exceed Safe Threshold**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-5; hipaa: 164.308(a)(7); nist_800_53_r5: SC-5; soc2: A1.1;
+
+Lambda functions must not have a timeout exceeding the safe threshold (default 60 seconds) without a documented justification. Excessively long timeouts amplify Denial of Wallet attacks (pricing is per-millisecond), mask hung or compromised functions, and contribute to account-wide concurrency exhaustion. The threshold is configurable per function via a stave/lambda-timeout-justified tag.
+
+**Remediation:** Reduce the timeout to 60 seconds or less for synchronous API-serving functions. If a longer timeout is operationally required, add a stave/lambda-timeout-justified tag documenting the reason.
+
+---
+
+### CTL.LAMBDA.TRACE.001
+
+**Lambda Functions Must Have Active X-Ray Tracing Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AU-12; hipaa: 164.312(b); nist_800_53_r5: AU-12; pci_dss_v4.0: 10.2.1; soc2: CC7.1;
+
+Lambda functions must have X-Ray tracing set to Active, not PassThrough. Active tracing captures downstream service calls independently of function log output — providing an audit trail of what the function actually did at the infrastructure layer. PassThrough tracing only traces requests with upstream sampling decisions, creating a detection gap exploitable by compromised functions that suppress their own log output.
+
+**Remediation:** Set the function tracing mode to Active via aws lambda update-function-configuration --tracing-config Mode=Active.
 
 ---
 

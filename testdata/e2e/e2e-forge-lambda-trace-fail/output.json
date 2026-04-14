@@ -1,0 +1,106 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "4833e97fce814722fdca7a4060382a979de71a7a88c45833d03b7a4d7e248ea5",
+        "2026-01-11T000000Z.json": "580f569516070ed94113b9847c385987a57a7c17fe8acc2faf125f46c0fab839"
+      },
+      "overall": "9cabf152919f893da3bbcd47c13696af9938a1ff19be414d2ee4531d76753d46"
+    },
+    "policy_fingerprint": "5df4725a3d7e013ebb11b114761418b3b89f5958da445b034010e4cb3cf83f53"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.LAMBDA.TRACE.001",
+      "asset_id": "test-lambda-function",
+      "asset_type": "aws_lambda_function",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.LAMBDA.TRACE.001",
+      "control_name": "Lambda Functions Must Have Active X-Ray Tracing Enabled",
+      "control_description": "Detects assets where mode_active is eq false.\n",
+      "asset_id": "test-lambda-function",
+      "asset_type": "aws_lambda_function",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "compute.tracing.mode_active",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Detects assets where mode_active is eq false.",
+        "action": "Set tracing mode to Active."
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.LAMBDA.TRACE.001",
+      "asset_id": "test-lambda-function",
+      "exposure_score": 50,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-lambda-trace-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-lambda-trace-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "9bafb6b330fd64c923a705798535447cacb8a68e",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-lambda-trace-fail/controls/"
+      ]
+    }
+  }
+}

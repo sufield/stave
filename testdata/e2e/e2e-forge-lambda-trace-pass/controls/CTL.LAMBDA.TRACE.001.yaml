@@ -1,0 +1,22 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.TRACE.001
+name: Lambda Functions Must Have Active X-Ray Tracing Enabled
+description: >
+  Detects assets where mode_active is eq false.
+domain: exposure
+severity: medium
+scope_tags:
+  - aws
+  - lambda
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Detects assets where mode_active is eq false.
+  action: >
+    Set tracing mode to Active.
+unsafe_predicate:
+  all:
+    - field: properties.compute.tracing.mode_active
+      op: eq
+      value: false

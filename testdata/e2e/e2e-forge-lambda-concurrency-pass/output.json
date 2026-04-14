@@ -1,0 +1,42 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "7eb1cfde02268337145d456739dca040de39c97f7bb0a0b7cfad25100afec4a7",
+        "2026-01-11T000000Z.json": "289c32e5ec39973f0422b7d6aca354547e22e9a73a99edb86975e1211de6740e"
+      },
+      "overall": "52d4206bbefebf3b10ad9f5705afb2012628bb14f3b1fdb199c979ac043cc93e"
+    },
+    "policy_fingerprint": "03830b017474ba6f566caa238dfbca55f363bdba788f9bac03bcc1fea9e889d6"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-lambda-concurrency-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-lambda-concurrency-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "9bafb6b330fd64c923a705798535447cacb8a68e",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-lambda-concurrency-pass/controls/"
+      ]
+    }
+  }
+}

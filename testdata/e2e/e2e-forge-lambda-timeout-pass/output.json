@@ -1,0 +1,42 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "9416fac5d01049413f22f39f779fcc7fa22fb27fa5042f2ef16921335ee74b35",
+        "2026-01-11T000000Z.json": "500eb6e2e8e8026e6a4fa83a7fc65c429955041a4cd02011dbc4dd1376ec43d8"
+      },
+      "overall": "84a658402b9342e0d4e82ef13a282acee73ed27d6b3ab5764dfdde9991ec69b3"
+    },
+    "policy_fingerprint": "f35694ca944f2b6710ef2af310d2b885bdbf2170e207e1892ab44ac4342b61f9"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-lambda-timeout-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-lambda-timeout-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "9bafb6b330fd64c923a705798535447cacb8a68e",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-lambda-timeout-pass/controls/"
+      ]
+    }
+  }
+}

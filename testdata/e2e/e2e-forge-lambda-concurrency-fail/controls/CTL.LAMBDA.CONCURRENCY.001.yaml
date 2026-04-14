@@ -1,0 +1,22 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.CONCURRENCY.001
+name: Lambda Functions Must Have Reserved Concurrency Configured
+description: >
+  Detects assets where reserved_set is eq false.
+domain: exposure
+severity: low
+scope_tags:
+  - aws
+  - lambda
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Detects assets where reserved_set is eq false.
+  action: >
+    Set reserved concurrency to a non-zero value.
+unsafe_predicate:
+  all:
+    - field: properties.compute.concurrency.reserved_set
+      op: eq
+      value: false

@@ -1,6 +1,6 @@
 # Stave
 
-Deterministic, traceable risk reasoning engine for cloud infrastructure. Evaluates the structural integrity of your safety envelope using local snapshots — fully offline, air-gapped by design.
+Deterministic, traceable, and inspectable risk reasoning engine for cloud infrastructure. Built on System Invariant as Code. Control catalog validated against six major security frameworks. Compound reasoning chains fire on attack paths no per-resource scanner can detect. Evaluates local snapshots — no cloud credentials required.
 
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/sufield/stave/badge)](https://securityscorecards.dev/viewer/?uri=github.com/sufield/stave)
 [![Go Report Card](https://goreportcard.com/badge/github.com/sufield/stave?v=1)](https://goreportcard.com/report/github.com/sufield/stave)
@@ -51,7 +51,7 @@ Every score is a **deterministic, traceable reasoning chain**. Compound scores s
 
 ## Features
 
-- **322 built-in controls** across 40 domains (S3, IAM, VPC, EC2, RDS, ELB, K8s, CloudTrail, CloudWatch, KMS, and [30 more](docs/controls/reference.md))
+- **325 built-in controls** across 40 domains (S3, IAM, VPC, EC2, RDS, ELB, K8s, CloudTrail, CloudWatch, KMS, and [30 more](docs/controls/reference.md))
 - **10 compliance profiles** — HIPAA, CIS AWS v3.0, SOC 2, PCI-DSS v4.0, NIST 800-53, FedRAMP, GDPR, FFIEC, ISO 27001, NIST CSF 2.0
 - **Risk reasoning engine** — compound risk scoring across co-failing controls, MITRE-aligned attack stage summary, blast radius multipliers
 - **Safety chains** — 15 built-in chain definitions detect compound failures across data protection, identity, detection, recovery, sovereignty, supply chain, and cryptographic concentration
@@ -152,7 +152,7 @@ New observation properties are additive and backward-compatible. Existing contro
 
 ## Built-in controls
 
-322 controls across 40 domains:
+325 controls across 40 domains:
 
 ### AWS S3 (68 controls)
 

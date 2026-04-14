@@ -1,0 +1,18 @@
+{
+  "assets": [
+    {
+      "id": "test-lambda-function",
+      "properties": {
+        "compute": {
+          "timeout": {
+            "exceeds_threshold": true
+          }
+        }
+      },
+      "type": "aws_lambda_function",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1"
+}
