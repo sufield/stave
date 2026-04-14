@@ -1,0 +1,39 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.ROLE.SHARED.001
+name: Lambda Execution Roles Must Not Be Shared Across Functions
+description: >
+  Each Lambda function must use a unique execution role not shared with other functions. Shared roles mean a compromise of one function grants the attacker the same permissions as every other function using that role. Blast radius isolation requires per-function roles.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6"
+  fedramp_moderate: "AC-6"
+  soc2: "CC6.1"
+scope_tags:
+  - aws
+  - lambda
+type: unsafe_state
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Lambda execution role is shared with other functions.
+  action: >
+    Create a unique IAM execution role per Lambda function scoped to the minimum permissions that function requires.
+  example: |
+    {
+      "compute": {
+        "kind": "function",
+        "execution_role": {
+          "is_shared": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
+    - field: properties.compute.execution_role.is_shared
+      op: eq
+      value: true

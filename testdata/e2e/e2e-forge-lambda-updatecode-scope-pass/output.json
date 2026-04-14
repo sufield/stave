@@ -1,0 +1,42 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "27764de6352746cb036955772596b75aeeee3d97b7c40a7e73dcaa0b3f82da8c",
+        "2026-01-11T000000Z.json": "7c1e082b11fe7c7d14bc5391f1d4cc73710437c5c5d08c8bb7e72946d30581bc"
+      },
+      "overall": "2f17f5652bfef2d5773dc50cfc651f177870a31836105d4e897769e6f070982d"
+    },
+    "policy_fingerprint": "d9e4a7abba8f409e356db7100765c27920e6d4ba574634c2d04d434e73e9a9ca"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-lambda-updatecode-scope-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-lambda-updatecode-scope-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "bb226af3ced9f7650b8ac19f25e08126a5deed33",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-lambda-updatecode-scope-pass/controls/"
+      ]
+    }
+  }
+}

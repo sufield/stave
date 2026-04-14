@@ -1,0 +1,42 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "163924491a92d359d7fb9f8bc2308d7ce00c131208556d8ff18bd00afc7696e9",
+        "2026-01-11T000000Z.json": "af9f160be057bc3a7972cfa5c431035894ba09830efa0535b19dc144221fadfc"
+      },
+      "overall": "63c61db746aa2032d4742cc3f48f650312dfd5212b5823c95a3418a4cc0076eb"
+    },
+    "policy_fingerprint": "26c383612f8869f728c9e153e50c4eb6e9ed48d6cac59ebbe5e6392b101c9de3"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-lambda-layer-origin-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-lambda-layer-origin-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "bb226af3ced9f7650b8ac19f25e08126a5deed33",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-lambda-layer-origin-pass/controls/"
+      ]
+    }
+  }
+}

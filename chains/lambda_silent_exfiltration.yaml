@@ -1,0 +1,11 @@
+id: lambda_silent_exfiltration
+description: >
+  Function has no audit trail, unencrypted environment variables, and
+  an over-privileged role. Exfiltration is undetectable and the blast
+  radius is unbounded.
+controls:
+  - CTL.LAMBDA.LOG.001
+  - CTL.LAMBDA.ENV.ENCRYPT.001
+  - CTL.LAMBDA.ROLE.LEASTPRIV.001
+escalation_threshold: 2
+compound_severity: critical

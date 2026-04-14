@@ -1,0 +1,40 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.VPC.SUBNET.001
+name: Lambda Functions in VPC Must Use Private Subnets
+description: >
+  Lambda functions configured to run in a VPC must use private subnets with no direct route to an internet gateway. A function in a public subnet retains direct internet egress despite VPC enrollment — negating the network isolation that VPC membership is intended to provide. This is the complement to CTL.LAMBDA.VPC.SENSITIVE.001: VPC enrollment plus private subnet enforcement together close the network isolation requirement.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  fedramp_moderate: "SC-7"
+  pci_dss_v4.0: "1.3.1"
+  soc2: "CC6.6"
+scope_tags:
+  - aws
+  - lambda
+type: unsafe_state
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    Lambda function in VPC is attached to a public subnet.
+  action: >
+    Move the function to private subnets. Use a NAT gateway in a public subnet for outbound access.
+  example: |
+    {
+      "compute": {
+        "kind": "function",
+        "vpc": {
+          "has_public_subnet": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
+    - field: properties.compute.vpc.has_public_subnet
+      op: eq
+      value: true

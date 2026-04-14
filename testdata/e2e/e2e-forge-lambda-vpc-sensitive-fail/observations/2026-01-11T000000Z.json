@@ -1,0 +1,18 @@
+{
+  "assets": [
+    {
+      "id": "test-lambda-function",
+      "properties": {
+        "compute": {
+          "vpc": {
+            "sensitive_without_vpc": true
+          }
+        }
+      },
+      "type": "aws_lambda_function",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1"
+}

@@ -1,0 +1,42 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "5049e9f9adad5484cc9bf1112c031a6371030cd30217ca92cbec3037c6b3fef3",
+        "2026-01-11T000000Z.json": "57617975db4af4b98709a6fcdf6917eb0a6a415c80b0c0bf82948bff4ea172a6"
+      },
+      "overall": "cee42f6b5f782aca641e5716c6582bfadd9b29be0d5fdfcb54249540fab0aa26"
+    },
+    "policy_fingerprint": "77164e9b822231ef4634caefdbffcf40f91323cca6ff6ceaca410cb00399f00b"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-lambda-dlq-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-lambda-dlq-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "bb226af3ced9f7650b8ac19f25e08126a5deed33",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-lambda-dlq-pass/controls/"
+      ]
+    }
+  }
+}

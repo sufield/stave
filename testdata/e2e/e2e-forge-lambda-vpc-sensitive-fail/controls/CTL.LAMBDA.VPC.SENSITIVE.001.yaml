@@ -1,0 +1,22 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.VPC.SENSITIVE.001
+name: Lambda Functions Accessing Sensitive Data Must Be in VPC
+description: >
+  Detects assets where sensitive_without_vpc is eq true.
+domain: exposure
+severity: high
+scope_tags:
+  - aws
+  - lambda
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Detects assets where sensitive_without_vpc is eq true.
+  action: >
+    Enable VPC configuration for the function.
+unsafe_predicate:
+  all:
+    - field: properties.compute.vpc.sensitive_without_vpc
+      op: eq
+      value: true

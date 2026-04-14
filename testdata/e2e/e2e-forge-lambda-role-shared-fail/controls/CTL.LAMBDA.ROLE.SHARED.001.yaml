@@ -1,0 +1,22 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.ROLE.SHARED.001
+name: Lambda Execution Roles Must Not Be Shared Across Functions
+description: >
+  Detects assets where is_shared is eq true.
+domain: identity
+severity: high
+scope_tags:
+  - aws
+  - lambda
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Detects assets where is_shared is eq true.
+  action: >
+    Create a unique execution role per Lambda function.
+unsafe_predicate:
+  all:
+    - field: properties.compute.execution_role.is_shared
+      op: eq
+      value: true

@@ -1,0 +1,106 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "3c37ba96ba596af71f834e564a01bcc659cc251b77bd7d53f471eac15ca0cf79",
+        "2026-01-11T000000Z.json": "5de744ce5d3920ac3d61d35fe53b7e877df579225023b5d9b48baf3b75b382b6"
+      },
+      "overall": "42d24dabc11f0761b79bf18096591239436cb6717bd870d2a05d6f933486edb7"
+    },
+    "policy_fingerprint": "5ad3fb113201593fff2f8faeb0cd0f5239071daeba880c93ddcc08ab18dd6393"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.LAMBDA.ROLE.SHARED.001",
+      "asset_id": "test-lambda-function",
+      "asset_type": "aws_lambda_function",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.LAMBDA.ROLE.SHARED.001",
+      "control_name": "Lambda Execution Roles Must Not Be Shared Across Functions",
+      "control_description": "Detects assets where is_shared is eq true.\n",
+      "asset_id": "test-lambda-function",
+      "asset_type": "aws_lambda_function",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "compute.execution_role.is_shared",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Detects assets where is_shared is eq true.",
+        "action": "Create a unique execution role per Lambda function."
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.LAMBDA.ROLE.SHARED.001",
+      "asset_id": "test-lambda-function",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-lambda-role-shared-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-lambda-role-shared-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "bb226af3ced9f7650b8ac19f25e08126a5deed33",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-lambda-role-shared-fail/controls/"
+      ]
+    }
+  }
+}

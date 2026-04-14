@@ -3,24 +3,24 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 329
-**Pack hash:** `4d844735a54666282f3d8aa1483ad1e11a498fc47731ec3256659164d45f752f`
+**Total controls:** 337
+**Pack hash:** `651c52839415e06128f6ff21fa95395a674bcf6ff68280ebf836112625a64c89`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 58 |
-| high | 138 |
+| critical | 59 |
+| high | 144 |
 | info | 16 |
 | low | 22 |
-| medium | 95 |
+| medium | 96 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 243 |
+| exposure | 248 |
 | governance | 7 |
-| identity | 71 |
+| identity | 74 |
 | storage | 8 |
 
 ## Controls
@@ -2922,6 +2922,36 @@ Lambda functions must have a code signing configuration attached with the policy
 
 ---
 
+### CTL.LAMBDA.DLQ.001
+
+**Lambda Async Invocations Must Have a Dead Letter Queue**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.308(a)(7); soc2: PI1.1;
+
+Lambda functions with asynchronous invocation sources must have a dead-letter queue (SQS or SNS) configured. Without a DLQ, failed async invocations are silently discarded after retries. For functions processing PHI events or compliance-relevant data, silent discard is an undetectable data integrity violation.
+
+**Remediation:** Configure a dead-letter queue (SQS queue or SNS topic) for the function via aws lambda update-function-configuration --dead-letter-config.
+
+---
+
+### CTL.LAMBDA.ENV.ENCRYPT.001
+
+**Lambda Environment Variables Must Be Encrypted with CMK**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-28; hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-28; pci_dss_v4.0: 3.4.1; soc2: CC6.7;
+
+Lambda functions with environment variables must encrypt them using a customer-managed KMS key, not the default AWS-managed key. Without CMK encryption, environment variable values are encrypted with a default key that any principal with lambda:GetFunction can decrypt. A CMK provides fine-grained access control over decryption — only principals with kms:Decrypt on the specific key can read the values.
+
+**Remediation:** Create a KMS key and configure the function to use it for environment variable encryption via the aws lambda update-function-configuration --kms-key-arn command.
+
+---
+
 ### CTL.LAMBDA.ENV.SECRETS.001
 
 **Lambda Functions Must Not Store Secrets in Environment Variables**
@@ -2934,6 +2964,21 @@ Lambda functions must have a code signing configuration attached with the policy
 Lambda function environment variables must not contain plaintext secrets such as database credentials, API keys, or tokens. Environment variables are visible in plaintext to anyone with lambda:GetFunction permission, are included in CloudTrail logs for UpdateFunctionConfiguration events, and are stored in the Lambda service's configuration store without application-level encryption. AWS Secrets Manager and SSM Parameter Store SecureString provide encrypted storage with rotation, audit logging, and fine-grained access control. Moving secrets out of environment variables is the single most impactful Lambda security improvement for most functions.
 
 **Remediation:** Move secrets to AWS Secrets Manager or SSM Parameter Store SecureString. Update the function code to retrieve secrets at runtime via the AWS SDK. Remove the plaintext values from the environment variable configuration. Use the Lambda Secrets Manager extension for cached retrieval with minimal latency impact.
+
+---
+
+### CTL.LAMBDA.LAYER.ORIGIN.001
+
+**Lambda Layers Must Originate from Trusted Accounts**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SI-7; gdpr: Art.32; nist_800_53_r5: SI-7; soc2: CC7.1;
+
+All Lambda layers referenced by a function must have ARNs whose account IDs are in the organization's trusted account list. Lambda layers execute in the function runtime with the function's execution role permissions. A layer from an untrusted account is unaudited code executing with full function permissions — a supply chain risk independent of the function's own code.
+
+**Remediation:** Replace external layers with organization-owned layers. If third-party layers are required, vendor them into an organization-owned account and reference the vendored copy.
 
 ---
 
@@ -2952,6 +2997,21 @@ Lambda functions must have CloudWatch Logs enabled. Without logging, function in
 
 ---
 
+### CTL.LAMBDA.PASSROLE.001
+
+**Lambda Execution Role Must Not Have Unconstrained iam:PassRole**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.8.3; nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+Lambda execution roles must not have iam:PassRole with Resource: *. Unconstrained PassRole allows the function to attach any IAM role to new resources — effectively enabling privilege escalation to any role in the account including admin roles.
+
+**Remediation:** Scope iam:PassRole in the execution role policy to specific role ARNs that the function legitimately needs to pass.
+
+---
+
 ### CTL.LAMBDA.ROLE.LEASTPRIV.001
 
 **Lambda Execution Role Must Follow Least Privilege**
@@ -2964,6 +3024,21 @@ Lambda functions must have CloudWatch Logs enabled. Without logging, function in
 Lambda function execution roles must not have overly broad permissions. An over-privileged execution role grants the function — and any attacker who compromises or invokes it — access to AWS resources beyond what the function requires. Common violations include admin policies, wildcard resource ARNs on sensitive actions, or managed policies like AmazonS3FullAccess attached to functions that only need read access to a single bucket. When combined with a public function URL or a compromised dependency, an over-privileged role converts a single function compromise into account-wide lateral movement.
 
 **Remediation:** Scope the execution role policy to only the specific actions and resource ARNs the function needs. Replace managed policies like AmazonS3FullAccess with inline policies scoped to specific buckets and actions. Use IAM Access Analyzer to identify unused permissions and generate a least-privilege policy from actual function activity.
+
+---
+
+### CTL.LAMBDA.ROLE.SHARED.001
+
+**Lambda Execution Roles Must Not Be Shared Across Functions**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6; nist_800_53_r5: AC-6; soc2: CC6.1;
+
+Each Lambda function must use a unique execution role not shared with other functions. Shared roles mean a compromise of one function grants the attacker the same permissions as every other function using that role. Blast radius isolation requires per-function roles.
+
+**Remediation:** Create a unique IAM execution role per Lambda function scoped to the minimum permissions that function requires.
 
 ---
 
@@ -2982,6 +3057,21 @@ Lambda functions must not run on runtimes that AWS has deprecated. Deprecated ru
 
 ---
 
+### CTL.LAMBDA.UPDATECODE.SCOPE.001
+
+**lambda:UpdateFunctionCode Must Not Be Broadly Granted**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6; nist_800_53_r5: AC-6; soc2: CC6.1;
+
+IAM policies must not grant lambda:UpdateFunctionCode with Resource: * to non-administrative principals. Broad UpdateFunctionCode allows any developer to replace the code of any Lambda function in the account — injecting malicious code that executes with that function's execution role permissions.
+
+**Remediation:** Scope lambda:UpdateFunctionCode to specific function ARNs in IAM policies. Restrict code deployment to CI/CD pipeline roles only.
+
+---
+
 ### CTL.LAMBDA.URL.AUTH.001
 
 **Lambda Function URLs Must Require Authentication**
@@ -2994,6 +3084,36 @@ Lambda functions must not run on runtimes that AWS has deprecated. Deprecated ru
 Lambda function URLs must not be configured with AuthType NONE. A function URL with no authentication creates a publicly invocable HTTPS endpoint — no API Gateway, no Cognito, no IAM signature, no network boundary. Any person on the internet can invoke the function with no credentials. The function executes with its full IAM execution role permissions and generates costs for every invocation including attacker-driven invocations. Function URLs bypass every network perimeter control — VPC, security groups, NACLs — that would otherwise restrict access to Lambda invocation. This is distinct from public invocation via the Lambda resource-based policy: a function with a restrictive resource policy can still be publicly invocable if it has a function URL with AuthType NONE. The Denial of Wallet risk is significant — Lambda pricing is per invocation and an unauthenticated endpoint allows unlimited invocations with no cost ceiling.
 
 **Remediation:** Set the function URL AuthType to AWS_IAM to require IAM signature authentication for all invocations. If the function URL is not needed, remove it entirely via aws lambda delete-function-url-config. Note that Lambda resource-based policy restrictions do not apply to function URL invocations — AuthType is the only authentication gate for function URLs.
+
+---
+
+### CTL.LAMBDA.VPC.SENSITIVE.001
+
+**Lambda Functions Accessing Sensitive Data Must Be in VPC**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-7; hipaa: 164.312(e)(1); nist_800_53_r5: SC-7; pci_dss_v4.0: 1.3.1; soc2: CC6.6;
+
+Lambda functions tagged with data-classification phi or pii, or functions whose execution role grants access to RDS, DocumentDB, or DynamoDB, must be configured to run inside a VPC. Without VPC, the function executes in AWS-managed infrastructure with direct internet egress — data accessed by the function can be exfiltrated without traversing any network controls.
+
+**Remediation:** Configure the function to run in a VPC with private subnets. Use a NAT gateway for outbound internet access if needed.
+
+---
+
+### CTL.LAMBDA.VPC.SUBNET.001
+
+**Lambda Functions in VPC Must Use Private Subnets**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-7; nist_800_53_r5: SC-7; pci_dss_v4.0: 1.3.1; soc2: CC6.6;
+
+Lambda functions configured to run in a VPC must use private subnets with no direct route to an internet gateway. A function in a public subnet retains direct internet egress despite VPC enrollment — negating the network isolation that VPC membership is intended to provide. This is the complement to CTL.LAMBDA.VPC.SENSITIVE.001: VPC enrollment plus private subnet enforcement together close the network isolation requirement.
+
+**Remediation:** Move the function to private subnets. Use a NAT gateway in a public subnet for outbound access.
 
 ---
 

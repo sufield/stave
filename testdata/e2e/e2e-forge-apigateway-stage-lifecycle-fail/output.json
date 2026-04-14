@@ -110,11 +110,8 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "bc9f1c781bc80e1b52a32001aa6c805277281bde",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-apigateway-stage-lifecycle-fail/controls/"
-      ]
+      "head_commit": "bb226af3ced9f7650b8ac19f25e08126a5deed33",
+      "dirty": false
     }
   }
 }

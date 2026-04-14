@@ -1,0 +1,22 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.VPC.SUBNET.001
+name: Lambda Functions in VPC Must Use Private Subnets
+description: >
+  Detects assets where has_public_subnet is eq true.
+domain: exposure
+severity: high
+scope_tags:
+  - aws
+  - lambda
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Detects assets where has_public_subnet is eq true.
+  action: >
+    Move the function to private subnets.
+unsafe_predicate:
+  all:
+    - field: properties.compute.vpc.has_public_subnet
+      op: eq
+      value: true

@@ -1,0 +1,22 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.UPDATECODE.SCOPE.001
+name: lambda:UpdateFunctionCode Must Not Be Broadly Granted
+description: >
+  Detects assets where broadly_granted is eq true.
+domain: identity
+severity: high
+scope_tags:
+  - aws
+  - lambda
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Detects assets where broadly_granted is eq true.
+  action: >
+    Scope lambda:UpdateFunctionCode to specific function ARNs.
+unsafe_predicate:
+  all:
+    - field: properties.compute.update_code.broadly_granted
+      op: eq
+      value: true

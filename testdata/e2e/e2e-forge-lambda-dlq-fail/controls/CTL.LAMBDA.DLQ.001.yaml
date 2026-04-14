@@ -1,0 +1,22 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.DLQ.001
+name: Lambda Async Invocations Must Have a Dead Letter Queue
+description: >
+  Detects assets where dlq_configured is eq false.
+domain: exposure
+severity: medium
+scope_tags:
+  - aws
+  - lambda
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Detects assets where dlq_configured is eq false.
+  action: >
+    Configure a dead-letter queue for async invocations.
+unsafe_predicate:
+  all:
+    - field: properties.compute.async.dlq_configured
+      op: eq
+      value: false

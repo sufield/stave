@@ -1,0 +1,106 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "ff4c9572666c5ec439c2716630672ce2f1c2cedb263547d22ce3584c612aab7a",
+        "2026-01-11T000000Z.json": "2f312adbcd109c591fb989f56bea1ef0d53b632e3c6dd0fd306ba2de4681990c"
+      },
+      "overall": "5c933efba090fac9f9179bc1f5832171eeec33eb0edfe119aa6558006d174fab"
+    },
+    "policy_fingerprint": "d9e4a7abba8f409e356db7100765c27920e6d4ba574634c2d04d434e73e9a9ca"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.LAMBDA.UPDATECODE.SCOPE.001",
+      "asset_id": "test-lambda-function",
+      "asset_type": "aws_lambda_function",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.LAMBDA.UPDATECODE.SCOPE.001",
+      "control_name": "lambda:UpdateFunctionCode Must Not Be Broadly Granted",
+      "control_description": "Detects assets where broadly_granted is eq true.\n",
+      "asset_id": "test-lambda-function",
+      "asset_type": "aws_lambda_function",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "compute.update_code.broadly_granted",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Detects assets where broadly_granted is eq true.",
+        "action": "Scope lambda:UpdateFunctionCode to specific function ARNs."
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.LAMBDA.UPDATECODE.SCOPE.001",
+      "asset_id": "test-lambda-function",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-lambda-updatecode-scope-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-lambda-updatecode-scope-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "bb226af3ced9f7650b8ac19f25e08126a5deed33",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-lambda-updatecode-scope-fail/controls/"
+      ]
+    }
+  }
+}

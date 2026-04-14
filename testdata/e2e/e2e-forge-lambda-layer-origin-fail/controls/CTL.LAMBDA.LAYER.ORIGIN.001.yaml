@@ -1,0 +1,22 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.LAYER.ORIGIN.001
+name: Lambda Layers Must Originate from Trusted Accounts
+description: >
+  Detects assets where has_untrusted_origin is eq true.
+domain: exposure
+severity: high
+scope_tags:
+  - aws
+  - lambda
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Detects assets where has_untrusted_origin is eq true.
+  action: >
+    Replace layers from untrusted accounts with organization-owned layers.
+unsafe_predicate:
+  all:
+    - field: properties.compute.layers.has_untrusted_origin
+      op: eq
+      value: true

@@ -1,0 +1,22 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.PASSROLE.001
+name: Lambda Execution Role Must Not Have Unconstrained iam:PassRole
+description: >
+  Detects assets where has_wildcard_passrole is eq true.
+domain: identity
+severity: critical
+scope_tags:
+  - aws
+  - lambda
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Detects assets where has_wildcard_passrole is eq true.
+  action: >
+    Scope iam:PassRole to specific role ARNs.
+unsafe_predicate:
+  all:
+    - field: properties.compute.execution_role.has_wildcard_passrole
+      op: eq
+      value: true
