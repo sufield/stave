@@ -25,6 +25,9 @@ params:
     type: detection
     scope: network
     multiplier: 2.0
+observation_fields:
+  - network.kind
+  - network.flow_log.enabled
 remediation:
   description: >
     VPC does not have flow logging enabled. Network traffic patterns

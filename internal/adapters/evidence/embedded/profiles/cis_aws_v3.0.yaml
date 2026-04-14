@@ -1,0 +1,372 @@
+id: cis_aws_v3.0
+name: CIS AWS Foundations Benchmark
+version: '3.0'
+description: Center for Internet Security AWS Foundations Benchmark v3.0
+framework_key: cis_aws_v3.0
+requirements:
+- id: '1.4'
+  description: CIS 1.4
+  section: Section 1 — IAM
+  controls:
+  - CTL.IAM.POLICY.MFA.001
+  - CTL.IAM.ROOT.ACCESSKEY.001
+  pass_threshold: all
+- id: '1.5'
+  description: CIS 1.5
+  section: Section 1 — IAM
+  controls:
+  - CTL.IAM.ROOT.MFA.001
+  pass_threshold: all
+- id: '1.6'
+  description: CIS 1.6
+  section: Section 1 — IAM
+  controls:
+  - CTL.IAM.MFA.HWKEY.001
+  - CTL.IAM.ROOT.HWMFA.001
+  pass_threshold: all
+- id: '1.7'
+  description: CIS 1.7
+  section: Section 1 — IAM
+  controls:
+  - CTL.IAM.ROOT.RECUR.001
+  - CTL.IAM.ROOT.USAGE.001
+  pass_threshold: all
+- id: '1.8'
+  description: CIS 1.8
+  section: Section 1 — IAM
+  controls:
+  - CTL.IAM.PASSWORD.LENGTH.001
+  pass_threshold: all
+- id: '1.9'
+  description: CIS 1.9
+  section: Section 1 — IAM
+  controls:
+  - CTL.IAM.PASSWORD.REUSE.001
+  pass_threshold: all
+- id: '1.10'
+  description: CIS 1.10
+  section: Section 1 — IAM
+  controls:
+  - CTL.IAM.CONSOLE.MFA.001
+  pass_threshold: all
+- id: '1.11'
+  description: CIS 1.11
+  section: Section 1 — IAM
+  controls:
+  - CTL.IAM.CRED.SETUPKEY.001
+  pass_threshold: all
+- id: '1.12'
+  description: CIS 1.12
+  section: Section 1 — IAM
+  controls:
+  - CTL.IAM.ACCOUNT.INACTIVE.001
+  - CTL.IAM.CRED.UNUSED.001
+  - CTL.IAM.CRED.UNUSED45.001
+  - CTL.IAM.PASSWORD.ROTATION.001
+  - CTL.IAM.ROLE.PERMISSIONDRIFT.001
+  pass_threshold: all
+- id: '1.13'
+  description: CIS 1.13
+  section: Section 1 — IAM
+  controls:
+  - CTL.IAM.CRED.SINGLEKEY.001
+  pass_threshold: all
+- id: '1.14'
+  description: CIS 1.14
+  section: Section 1 — IAM
+  controls:
+  - CTL.IAM.CRED.ROTATION.001
+  pass_threshold: all
+- id: '1.15'
+  description: CIS 1.15
+  section: Section 1 — IAM
+  controls:
+  - CTL.IAM.POLICY.DIRECT.001
+  - CTL.IAM.POLICY.INLINE.001
+  pass_threshold: all
+- id: '1.16'
+  description: CIS 1.16
+  section: Section 1 — IAM
+  controls:
+  - CTL.IAM.ADMIN.COUNT.001
+  - CTL.IAM.NEP.ESCALATION.001
+  - CTL.IAM.POLICY.ADMIN.001
+  pass_threshold: all
+- id: '1.17'
+  description: CIS 1.17
+  section: Section 1 — IAM
+  controls:
+  - CTL.IAM.SUPPORT.001
+  pass_threshold: all
+- id: '1.18'
+  description: CIS 1.18
+  section: Section 1 — IAM
+  controls:
+  - CTL.EC2.IAMROLE.001
+  pass_threshold: all
+- id: '1.19'
+  description: CIS 1.19
+  section: Section 1 — IAM
+  controls:
+  - CTL.IAM.CERT.EXPIRED.001
+  pass_threshold: all
+- id: '1.20'
+  description: CIS 1.20
+  section: Section 1 — IAM
+  controls:
+  - CTL.IAM.ANALYZER.001
+  pass_threshold: all
+- id: '1.21'
+  description: CIS 1.21
+  section: Section 1 — IAM
+  controls:
+  - CTL.IAM.ANALYZER.MONITOR.001
+  pass_threshold: all
+- id: '1.22'
+  description: CIS 1.22
+  section: Section 1 — IAM
+  controls:
+  - CTL.IAM.POLICY.CLOUDSHELL.001
+  pass_threshold: all
+- id: 2.1.1
+  description: CIS 2.1.1
+  section: Section 2 — Storage
+  controls:
+  - CTL.S3.ENCRYPT.002
+  pass_threshold: all
+- id: 2.1.2
+  description: CIS 2.1.2
+  section: Section 2 — Storage
+  controls:
+  - CTL.S3.MFADELETE.001
+  - CTL.S3.OWNERSHIP.001
+  pass_threshold: all
+- id: 2.1.3
+  description: CIS 2.1.3
+  section: Section 2 — Storage
+  controls:
+  - CTL.S3.CLASSIFY.COVERAGE.001
+  pass_threshold: all
+- id: 2.1.4
+  description: CIS 2.1.4
+  section: Section 2 — Storage
+  controls:
+  - CTL.S3.ACCOUNT.PAB.001
+  - CTL.S3.CONTROLS.001
+  pass_threshold: all
+- id: 2.2.1
+  description: CIS 2.2.1
+  section: Section 2 — Storage
+  controls:
+  - CTL.EC2.EBS.ENCRYPT.001
+  - CTL.RDS.MONITORING.001
+  pass_threshold: all
+- id: 2.3.1
+  description: CIS 2.3.1
+  section: Section 2 — Storage
+  controls:
+  - CTL.RDS.ENCRYPT.001
+  pass_threshold: all
+- id: 2.3.2
+  description: CIS 2.3.2
+  section: Section 2 — Storage
+  controls:
+  - CTL.RDS.AUTOUPGRADE.001
+  pass_threshold: all
+- id: 2.3.3
+  description: CIS 2.3.3
+  section: Section 2 — Storage
+  controls:
+  - CTL.RDS.PUBLIC.001
+  pass_threshold: all
+- id: 2.4.1
+  description: CIS 2.4.1
+  section: Section 2 — Storage
+  controls:
+  - CTL.EFS.ENCRYPT.001
+  - CTL.EFS.ENCRYPT.TRANSIT.001
+  pass_threshold: all
+- id: '3.1'
+  description: CIS 3.1
+  section: Section 3 — Logging
+  controls:
+  - CTL.CLOUDTRAIL.DISABLE.RECUR.001
+  - CTL.CLOUDTRAIL.ENABLED.001
+  pass_threshold: all
+- id: '3.2'
+  description: CIS 3.2
+  section: Section 3 — Logging
+  controls:
+  - CTL.CLOUDTRAIL.VALIDATION.001
+  pass_threshold: all
+- id: '3.3'
+  description: CIS 3.3
+  section: Section 3 — Logging
+  controls:
+  - CTL.CLOUDTRAIL.RETENTION.001
+  - CTL.CONFIG.ENABLED.001
+  pass_threshold: all
+- id: '3.4'
+  description: CIS 3.4
+  section: Section 3 — Logging
+  controls:
+  - CTL.CLOUDTRAIL.CWLOGS.001
+  - CTL.CLOUDTRAIL.S3LOG.001
+  pass_threshold: all
+- id: '3.5'
+  description: CIS 3.5
+  section: Section 3 — Logging
+  controls:
+  - CTL.CLOUDTRAIL.ENCRYPT.001
+  pass_threshold: all
+- id: '3.6'
+  description: CIS 3.6
+  section: Section 3 — Logging
+  controls:
+  - CTL.KMS.ROTATION.001
+  pass_threshold: all
+- id: '3.7'
+  description: CIS 3.7
+  section: Section 3 — Logging
+  controls:
+  - CTL.VPC.FLOWLOG.001
+  pass_threshold: all
+- id: '3.8'
+  description: CIS 3.8
+  section: Section 3 — Logging
+  controls:
+  - CTL.CLOUDTRAIL.DATAWRITE.001
+  pass_threshold: all
+- id: '3.9'
+  description: CIS 3.9
+  section: Section 3 — Logging
+  controls:
+  - CTL.CLOUDTRAIL.DATAREAD.001
+  pass_threshold: all
+- id: '4.1'
+  description: CIS 4.1
+  section: Section 4 — Monitoring
+  controls:
+  - CTL.CLOUDWATCH.MONITOR.UNAUTH.001
+  pass_threshold: all
+- id: '4.2'
+  description: CIS 4.2
+  section: Section 4 — Monitoring
+  controls:
+  - CTL.CLOUDWATCH.MONITOR.NOMFA.001
+  pass_threshold: all
+- id: '4.3'
+  description: CIS 4.3
+  section: Section 4 — Monitoring
+  controls:
+  - CTL.CLOUDWATCH.MONITOR.ROOT.001
+  pass_threshold: all
+- id: '4.4'
+  description: CIS 4.4
+  section: Section 4 — Monitoring
+  controls:
+  - CTL.CLOUDWATCH.MONITOR.IAMPOLICY.001
+  pass_threshold: all
+- id: '4.5'
+  description: CIS 4.5
+  section: Section 4 — Monitoring
+  controls:
+  - CTL.CLOUDWATCH.MONITOR.TRAIL.001
+  pass_threshold: all
+- id: '4.6'
+  description: CIS 4.6
+  section: Section 4 — Monitoring
+  controls:
+  - CTL.CLOUDWATCH.MONITOR.AUTHFAIL.001
+  pass_threshold: all
+- id: '4.7'
+  description: CIS 4.7
+  section: Section 4 — Monitoring
+  controls:
+  - CTL.CLOUDWATCH.MONITOR.CMK.001
+  pass_threshold: all
+- id: '4.8'
+  description: CIS 4.8
+  section: Section 4 — Monitoring
+  controls:
+  - CTL.CLOUDWATCH.MONITOR.S3POLICY.001
+  pass_threshold: all
+- id: '4.9'
+  description: CIS 4.9
+  section: Section 4 — Monitoring
+  controls:
+  - CTL.CLOUDWATCH.MONITOR.CONFIG.001
+  pass_threshold: all
+- id: '4.10'
+  description: CIS 4.10
+  section: Section 4 — Monitoring
+  controls:
+  - CTL.CLOUDWATCH.MONITOR.SG.001
+  pass_threshold: all
+- id: '4.11'
+  description: CIS 4.11
+  section: Section 4 — Monitoring
+  controls:
+  - CTL.CLOUDWATCH.MONITOR.NACL.001
+  pass_threshold: all
+- id: '4.12'
+  description: CIS 4.12
+  section: Section 4 — Monitoring
+  controls:
+  - CTL.CLOUDWATCH.MONITOR.GW.001
+  pass_threshold: all
+- id: '4.13'
+  description: CIS 4.13
+  section: Section 4 — Monitoring
+  controls:
+  - CTL.CLOUDWATCH.MONITOR.ROUTE.001
+  pass_threshold: all
+- id: '4.14'
+  description: CIS 4.14
+  section: Section 4 — Monitoring
+  controls:
+  - CTL.CLOUDWATCH.MONITOR.VPC.001
+  pass_threshold: all
+- id: '4.15'
+  description: CIS 4.15
+  section: Section 4 — Monitoring
+  controls:
+  - CTL.CLOUDWATCH.MONITOR.ORG.001
+  pass_threshold: all
+- id: '5.1'
+  description: CIS 5.1
+  section: Section 5 — Networking
+  controls:
+  - CTL.VPC.NACL.ADMIN.001
+  pass_threshold: all
+- id: '5.2'
+  description: CIS 5.2
+  section: Section 5 — Networking
+  controls:
+  - CTL.VPC.SG.UNRESTRICTED.001
+  pass_threshold: all
+- id: '5.3'
+  description: CIS 5.3
+  section: Section 5 — Networking
+  controls:
+  - CTL.VPC.SG.IPV6.001
+  pass_threshold: all
+- id: '5.4'
+  description: CIS 5.4
+  section: Section 5 — Networking
+  controls:
+  - CTL.VPC.DEFAULT.001
+  - CTL.VPC.SG.DEFAULT.001
+  pass_threshold: all
+- id: '5.5'
+  description: CIS 5.5
+  section: Section 5 — Networking
+  controls:
+  - CTL.VPC.PEERING.ROUTES.001
+  pass_threshold: all
+- id: '5.6'
+  description: CIS 5.6
+  section: Section 5 — Networking
+  controls:
+  - CTL.EC2.IMDSV2.001
+  pass_threshold: all

@@ -1,0 +1,133 @@
+package evidence
+
+import (
+	"fmt"
+	"strconv"
+	"strings"
+)
+
+// ThresholdMode defines how pass/fail is determined for a requirement.
+type ThresholdMode int
+
+const (
+	ThresholdAll     ThresholdMode = iota // Every mapped control must pass
+	ThresholdAny                          // At least one mapped control must pass
+	ThresholdPercent                      // >=N% of mapped controls must pass
+)
+
+// String returns the wire-format name of the threshold mode.
+func (m ThresholdMode) String() string {
+	switch m {
+	case ThresholdAll:
+		return "all"
+	case ThresholdAny:
+		return "any"
+	case ThresholdPercent:
+		return "percent"
+	default:
+		return "unknown"
+	}
+}
+
+// PassThreshold defines how many controls must pass for a requirement to be met.
+type PassThreshold struct {
+	Mode    ThresholdMode
+	Percent float64 // only used when Mode == ThresholdPercent
+}
+
+// ParsePassThreshold parses a threshold string: "all", "any", or "percent:N".
+func ParsePassThreshold(s string) (PassThreshold, error) {
+	s = strings.TrimSpace(s)
+	switch {
+	case s == "" || s == "all":
+		return PassThreshold{Mode: ThresholdAll}, nil
+	case s == "any":
+		return PassThreshold{Mode: ThresholdAny}, nil
+	case strings.HasPrefix(s, "percent:"):
+		pct, err := strconv.ParseFloat(strings.TrimPrefix(s, "percent:"), 64)
+		if err != nil {
+			return PassThreshold{}, fmt.Errorf("invalid percent threshold %q: %w", s, err)
+		}
+		if pct < 0 || pct > 100 {
+			return PassThreshold{}, fmt.Errorf("percent threshold must be 0-100, got %v", pct)
+		}
+		return PassThreshold{Mode: ThresholdPercent, Percent: pct}, nil
+	default:
+		return PassThreshold{}, fmt.Errorf("unknown threshold %q: expected all, any, or percent:N", s)
+	}
+}
+
+// Requirement is a single regulatory requirement within a framework profile.
+type Requirement struct {
+	ID            string
+	Description   string
+	Section       string
+	ControlIDs    []string
+	PassThreshold PassThreshold
+}
+
+// FrameworkProfile defines the compliance profile for a regulatory framework.
+type FrameworkProfile struct {
+	ID           string
+	Name         string
+	Version      string
+	Description  string
+	FrameworkKey string // matches controldef.ComplianceFramework key
+	Requirements []Requirement
+}
+
+// RequirementStatus is the outcome of evaluating a single regulatory requirement.
+type RequirementStatus int
+
+const (
+	RequirementMet          RequirementStatus = iota // All thresholds satisfied
+	RequirementNotMet                                // Threshold not reached
+	RequirementNotEvaluated                          // No evidence records for any control
+	RequirementIncomplete                            // Evidence exists but contains incomplete verdicts
+)
+
+// String returns the wire-format name of the requirement status.
+func (s RequirementStatus) String() string {
+	switch s {
+	case RequirementMet:
+		return "met"
+	case RequirementNotMet:
+		return "not_met"
+	case RequirementNotEvaluated:
+		return "not_evaluated"
+	case RequirementIncomplete:
+		return "incomplete"
+	default:
+		return "unknown"
+	}
+}
+
+// RequirementAssessment is the evaluation result for a single requirement.
+type RequirementAssessment struct {
+	RequirementID     string
+	Description       string
+	Section           string
+	Status            RequirementStatus
+	PassCount         int
+	FailCount         int
+	IncompleteCount   int
+	TotalControls     int     // len(Requirement.ControlIDs)
+	EvaluatedControls int     // controls with at least one evidence record
+	CoveragePercent   float64 // PassCount / max(EvaluatedControls, 1) * 100
+	Evidence          []*EvidenceRecord
+}
+
+// ProfileAssessment is the complete result of evaluating a framework profile
+// against an EvidencePackage.
+type ProfileAssessment struct {
+	FrameworkID       string
+	FrameworkName     string
+	FrameworkVersion  string
+	Requirements      []RequirementAssessment
+	MetCount          int
+	NotMetCount       int
+	NotEvaluatedCount int
+	IncompleteCount   int
+	TotalRequirements int
+	CoveragePercent   float64 // MetCount / TotalRequirements * 100
+}

@@ -1,0 +1,346 @@
+id: pci_dss_v4.0
+name: PCI-DSS v4.0
+version: '4.0'
+description: Payment Card Industry Data Security Standard version 4.0
+framework_key: pci_dss_v4.0
+requirements:
+- id: 1.2.1
+  description: Network segmentation
+  section: Req 1 — Network Security
+  controls:
+  - CTL.VPC.FLOWLOG.001
+  pass_threshold: all
+- id: 1.3.1
+  description: Inbound traffic restricted
+  section: Req 1 — Network Security
+  controls:
+  - CTL.LAMBDA.VPC.SENSITIVE.001
+  - CTL.LAMBDA.VPC.SUBNET.001
+  - CTL.OPENSEARCH.PUBLIC.001
+  - CTL.OPENSEARCH.VPC.001
+  - CTL.SHIELD.ADVANCED.001
+  - CTL.VPC.ENV.ISOLATION.001
+  - CTL.VPC.NACL.ADMIN.001
+  - CTL.VPC.SG.IPV6.001
+  - CTL.VPC.SG.UNRESTRICTED.001
+  - CTL.WAF.ORIGIN.LOCKDOWN.001
+  pass_threshold: all
+- id: 1.3.2
+  description: Outbound traffic restricted
+  section: Req 1 — Network Security
+  controls:
+  - CTL.ECS.NETWORK.001
+  - CTL.LAMBDA.CONCURRENCY.001
+  - CTL.VPC.PEERING.ROUTES.001
+  - CTL.VPC.SG.DEFAULT.001
+  - CTL.VPC.SG.EASTWEST.001
+  pass_threshold: all
+- id: 1.3.4
+  description: Network connections documented
+  section: Req 1 — Network Security
+  controls:
+  - CTL.EC2.PUBLIC.001
+  pass_threshold: all
+- id: 2.2.1
+  description: System hardening standards
+  section: Req 2 — Secure Configuration
+  controls:
+  - CTL.EC2.IMDSV2.001
+  - CTL.ECS.PRIV.001
+  - CTL.ECS.ROOT.001
+  - CTL.EKS.VERSION.001
+  - CTL.LAMBDA.RUNTIME.001
+  - CTL.RDS.AUTOUPGRADE.001
+  - CTL.S3.CONTROLS.001
+  pass_threshold: all
+- id: 3.4.1
+  description: Render PAN unreadable
+  section: Req 3 — Protect Stored Data
+  controls:
+  - CTL.BACKUP.ENCRYPT.001
+  - CTL.DYNAMODB.ENCRYPT.001
+  - CTL.EC2.EBS.ENCRYPT.001
+  - CTL.EC2.SNAPSHOT.ENCRYPT.001
+  - CTL.ECS.SECRETS.001
+  - CTL.EXPOSURE.EXFIL.001
+  - CTL.KMS.POLICY.001
+  - CTL.LAMBDA.ENV.ENCRYPT.001
+  - CTL.OPENSEARCH.ENCRYPT.001
+  - CTL.RDS.ENCRYPT.001
+  - CTL.S3.ENCRYPT.001
+  - CTL.S3.REPLICATION.003
+  - CTL.SECRET.BLAST.001
+  - CTL.SECRETSMANAGER.ENCRYPT.001
+  pass_threshold: all
+- id: 3.5.1
+  description: Cryptographic key management
+  section: Req 3 — Protect Stored Data
+  controls:
+  - CTL.EFS.ENCRYPT.001
+  - CTL.LAMBDA.ENV.SECRETS.001
+  - CTL.S3.ENCRYPT.003
+  pass_threshold: all
+- id: 3.6.1
+  description: Key management procedures
+  section: Req 3 — Protect Stored Data
+  controls:
+  - CTL.IAM.POLICY.GHOSTREF.003
+  - CTL.KMS.ISOLATION.001
+  - CTL.KMS.ROTATION.001
+  pass_threshold: all
+- id: 4.2.1
+  description: Strong cryptography in transit
+  section: Req 4 — Encrypt Transmission
+  controls:
+  - CTL.ACM.CERT.EXPIRY.001
+  - CTL.APIGATEWAY.TLS.001
+  - CTL.CLOUDFRONT.TLS.001
+  - CTL.EFS.ENCRYPT.TRANSIT.001
+  - CTL.ELASTICACHE.TRANSIT.001
+  - CTL.ELB.HTTPS.001
+  - CTL.ELB.TLS.001
+  - CTL.OPENSEARCH.HTTPS.001
+  - CTL.RDS.SSL.001
+  - CTL.S3.ENCRYPT.002
+  pass_threshold: all
+- id: '5.2'
+  description: Anti-malware solutions
+  section: Req 5 — Malware Protection
+  controls:
+  - CTL.GUARDDUTY.ENABLED.001
+  pass_threshold: all
+- id: 6.2.4
+  description: Software engineering techniques
+  section: Req 6 — Secure Development
+  controls:
+  - CTL.APIGATEWAY.VALIDATION.001
+  pass_threshold: all
+- id: 6.3.2
+  description: Custom code review
+  section: Req 6 — Secure Development
+  controls:
+  - CTL.APIGATEWAY.STAGE.LIFECYCLE.001
+  - CTL.CLOUDFORMATION.DRIFT.001
+  - CTL.CODECOMMIT.APPROVAL.001
+  - CTL.CONFIG.ENABLED.001
+  - CTL.CONFIG.REMEDIATION.001
+  - CTL.CONFIG.RULES.001
+  - CTL.ECR.SIGNING.001
+  - CTL.ECS.IMAGE.001
+  - CTL.LAMBDA.CODESIGN.ENFORCE.001
+  pass_threshold: all
+- id: 6.3.3
+  description: Security patches
+  section: Req 6 — Secure Development
+  controls:
+  - CTL.EC2.AMI.CURRENCY.001
+  - CTL.RDS.ENGINE.EOL.001
+  pass_threshold: all
+- id: 6.4.1
+  description: Web application protection
+  section: Req 6 — Secure Development
+  controls:
+  - CTL.APIGATEWAY.THROTTLE.001
+  - CTL.CLOUDFRONT.HEADERS.001
+  - CTL.EXPOSURE.ANON.003
+  - CTL.WAF.PARSERLIMIT.PROTECT.001
+  - CTL.WAF.RULES.001
+  - CTL.WAF.RULES.BLOCKMODE.001
+  - CTL.WAF.RULES.OWASP.001
+  pass_threshold: all
+- id: 6.4.2
+  description: Public-facing web app protection
+  section: Req 6 — Secure Development
+  controls:
+  - CTL.EXPOSURE.ANON.004
+  pass_threshold: all
+- id: 7.2.1
+  description: Access control model
+  section: Req 7 — Access Control
+  controls:
+  - CTL.APIGATEWAY.AUTH.001
+  - CTL.CODECOMMIT.ACCESS.001
+  - CTL.ECS.EXEC.001
+  - CTL.ECS.TASKMETADATA.001
+  - CTL.ECS.TASKMETADATA.002
+  - CTL.ELASTICACHE.AUTH.001
+  - CTL.EXPOSURE.ANON.001
+  - CTL.IAM.BOUNDARY.001
+  - CTL.IAM.CROSS.ENV.001
+  - CTL.IAM.CROSS.ENV.PATH.001
+  - CTL.IAM.ESCALATE.CHAIN.001
+  - CTL.IAM.IDENTITY.BLASTRADIUS.002
+  - CTL.IAM.NEP.ADMIN.001
+  - CTL.IAM.NEP.ESCALATION.001
+  - CTL.IAM.NEP.PHI.001
+  - CTL.IAM.POLICY.ADMIN.001
+  - CTL.IAM.POLICY.ASSUMEROLE.001
+  - CTL.IAM.POLICY.ESCALATION.001
+  - CTL.IAM.POLICY.GHOSTREF.001
+  - CTL.IAM.POLICY.GHOSTREF.002
+  - CTL.IAM.POLICY.PASSROLE.001
+  - CTL.IAM.POLICY.SOD.001
+  - CTL.IAM.ROLE.CATEGORYMIX.001
+  - CTL.IAM.ROLE.INTENTMISMATCH.001
+  - CTL.IAM.SCP.CREATEACCOUNT.001
+  - CTL.IAM.SCP.DANGEROUS.ALLOWS.001
+  - CTL.IAM.SCP.FULLACCESS.001
+  - CTL.IAM.SCP.OU.COVERAGE.001
+  - CTL.IAM.TRUST.CONFUSEDDEPUTY.001
+  - CTL.IAM.TRUST.EXTERNALID.001
+  - CTL.IAM.TRUST.OIDC.001
+  - CTL.IAM.TRUST.SOURCEARN.001
+  - CTL.LAMBDA.PASSROLE.001
+  - CTL.LAMBDA.ROLE.LEASTPRIV.001
+  - CTL.LAMBDA.URL.AUTH.001
+  - CTL.OPENSEARCH.AUTH.001
+  - CTL.RDS.PUBLIC.001
+  - CTL.S3.ACCESS.PHI.001
+  - CTL.S3.PUBLIC.001
+  pass_threshold: percent:90
+- id: 7.2.2
+  description: Access assigned by job function
+  section: Req 7 — Access Control
+  controls:
+  - CTL.IAM.ADMIN.COUNT.001
+  - CTL.IAM.IDENTITY.BLASTRADIUS.004
+  - CTL.IAM.POLICY.DIRECT.001
+  - CTL.IAM.POLICY.INLINE.001
+  - CTL.IAM.VENDOR.OVERPRIVILEGED.001
+  pass_threshold: all
+- id: 8.1.1
+  description: User ID management
+  section: Req 8 — Authentication
+  controls:
+  - CTL.IAM.ROOT.RECUR.001
+  - CTL.IAM.ROOT.USAGE.001
+  pass_threshold: all
+- id: 8.1.4
+  description: Credential lifecycle
+  section: Req 8 — Authentication
+  controls:
+  - CTL.IAM.ACCOUNT.INACTIVE.001
+  - CTL.IAM.CRED.EXPIRY.001
+  - CTL.IAM.CRED.RECUR.001
+  - CTL.IAM.CRED.UNUSED.001
+  - CTL.IAM.ROLE.PERMISSIONDRIFT.001
+  pass_threshold: all
+- id: 8.3.1
+  description: Multi-factor authentication
+  section: Req 8 — Authentication
+  controls:
+  - CTL.COGNITO.MFA.001
+  - CTL.IAM.CONSOLE.MFA.001
+  - CTL.IAM.MFA.HWKEY.001
+  - CTL.IAM.ROOT.HWMFA.001
+  - CTL.IAM.ROOT.MFA.001
+  pass_threshold: all
+- id: 8.3.4
+  description: Authentication lockout
+  section: Req 8 — Authentication
+  controls:
+  - CTL.IAM.CRED.SINGLEKEY.001
+  - CTL.IAM.ROOT.ACCESSKEY.001
+  pass_threshold: all
+- id: 8.3.6
+  description: Password complexity
+  section: Req 8 — Authentication
+  controls:
+  - CTL.COGNITO.PASSWORD.001
+  - CTL.IAM.PASSWORD.COMPLEXITY.001
+  - CTL.IAM.PASSWORD.LENGTH.001
+  pass_threshold: all
+- id: 8.3.7
+  description: Password history
+  section: Req 8 — Authentication
+  controls:
+  - CTL.IAM.PASSWORD.REUSE.001
+  pass_threshold: all
+- id: 8.3.9
+  description: Password rotation
+  section: Req 8 — Authentication
+  controls:
+  - CTL.IAM.CRED.ROTATION.001
+  - CTL.IAM.PASSWORD.ROTATION.001
+  pass_threshold: all
+- id: 8.4.1
+  description: MFA for admin access
+  section: Req 8 — Authentication
+  controls:
+  - CTL.IAM.POLICY.MFA.001
+  pass_threshold: all
+- id: 10.2.1
+  description: Audit trail enabled
+  section: Req 10 — Logging
+  controls:
+  - CTL.CLOUDTRAIL.ENABLED.001
+  - CTL.CLOUDTRAIL.VALIDATION.001
+  - CTL.ECS.LOG.001
+  - CTL.LAMBDA.LOG.001
+  - CTL.LAMBDA.TRACE.001
+  - CTL.WAF.EVASION.OBSERVE.001
+  pass_threshold: all
+- id: 10.2.1.3
+  description: Admin activity logged
+  section: Req 10 — Logging
+  controls:
+  - CTL.S3.AUDIT.OBJECTLEVEL.001
+  - CTL.S3.LOG.001
+  pass_threshold: all
+- id: 10.2.1.7
+  description: Security event logging
+  section: Req 10 — Logging
+  controls:
+  - CTL.CLOUDTRAIL.DATAREAD.001
+  - CTL.CLOUDTRAIL.DATAWRITE.001
+  pass_threshold: all
+- id: 10.5.1
+  description: Audit trail integrity
+  section: Req 10 — Logging
+  controls:
+  - CTL.CLOUDTRAIL.CWLOGS.001
+  - CTL.CLOUDTRAIL.DISABLE.RECUR.001
+  - CTL.CLOUDTRAIL.ENCRYPT.001
+  - CTL.CLOUDTRAIL.S3LOG.001
+  pass_threshold: all
+- id: '10.7'
+  description: Log retention
+  section: Req 10 — Logging
+  controls:
+  - CTL.CLOUDWATCH.LOG.RETENTION365.001
+  pass_threshold: all
+- id: 10.7.1
+  description: Log retention 12 months
+  section: Req 10 — Logging
+  controls:
+  - CTL.CLOUDTRAIL.RETENTION.001
+  pass_threshold: all
+- id: 11.3.1
+  description: Vulnerability scanning
+  section: Req 11 — Testing
+  controls:
+  - CTL.IAM.ANALYZER.001
+  - CTL.IAM.ANALYZER.MONITOR.001
+  - CTL.SECURITYHUB.ENABLED.001
+  - CTL.SECURITYHUB.STANDARDS.001
+  pass_threshold: all
+- id: 11.5.1
+  description: Intrusion detection
+  section: Req 11 — Testing
+  controls:
+  - CTL.S3.DETECT.MACIE.001
+  pass_threshold: all
+- id: 12.5.2
+  description: Scope documentation
+  section: Req 12 — Policy
+  controls:
+  - CTL.ORG.REGION.SCP.001
+  - CTL.S3.CLASSIFY.COVERAGE.001
+  pass_threshold: all
+- id: '12.10'
+  description: Incident response plan
+  section: Req 12 — Policy
+  controls:
+  - CTL.S3.PUBLIC.RECUR.001
+  - CTL.VPC.SG.RECUR.001
+  pass_threshold: all

@@ -204,6 +204,15 @@
           "title": "Configurable Parameters",
           "description": "Configurable parameters referenced by value_from_param in predicate rules. Intentionally flexible (any JSON object) to support diverse parameterization patterns."
         },
+        "observation_fields": {
+          "type": "array",
+          "title": "Observation Fields",
+          "description": "Asset property paths to include in compliance evidence records. When present, the evidence builder extracts these specific values from the snapshot for the evaluated resource.",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
         "unsafe_predicate": {
           "$ref": "#/$defs/predicate",
           "title": "Unsafe Predicate",

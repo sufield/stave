@@ -25,6 +25,9 @@ scope_tags:
 type: unsafe_state
 params:
   attack_stage: exfiltration
+observation_fields:
+  - database.kind
+  - database.encryption.storage_encrypted
 remediation:
   description: >
     RDS instance does not have storage encryption enabled. Database

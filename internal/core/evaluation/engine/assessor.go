@@ -105,8 +105,9 @@ func (a *Assessor) referenceTime(snapshots []asset.Snapshot) time.Time {
 
 // AssessmentOptions holds ephemeral parameters for a specific evaluation run.
 type AssessmentOptions struct {
-	StaveVersion string
-	InputHashes  *evaluation.InputHashes
+	StaveVersion     string
+	InputHashes      *evaluation.InputHashes
+	GenerateEvidence bool
 }
 
 // assessmentSession maintains the state of a single execution of the engine.
@@ -282,7 +283,7 @@ func (s *assessmentSession) compileReport() evaluation.ComplianceReport {
 
 	posture := evaluation.DeriveSecurityState(len(activeFindings), riskSignals)
 
-	return evaluation.ComplianceReport{
+	report := evaluation.ComplianceReport{
 		Run: evaluation.RunInfo{
 			StaveVersion:      s.opts.StaveVersion,
 			Offline:           true,
@@ -305,6 +306,19 @@ func (s *assessmentSession) compileReport() evaluation.ComplianceReport {
 		ExemptedAssets:   s.collector.exemptedAssets,
 		Checks:           s.collector.checks,
 	}
+
+	if s.opts.GenerateEvidence && len(s.snapshots) > 0 {
+		latestSnap := &s.snapshots[len(s.snapshots)-1]
+		report.EvidencePackage = buildEvidencePackage(
+			activeFindings,
+			s.collector.checks,
+			s.assessor.Controls,
+			latestSnap,
+			s.auditTime,
+		)
+	}
+
+	return report
 }
 
 // partitionFindings separates violations into active findings and accepted exceptions.

@@ -26,6 +26,10 @@ scope_tags:
 type: unsafe_state
 params:
   attack_stage: credential_access
+observation_fields:
+  - identity.kind
+  - identity.console_access.enabled
+  - identity.console_access.mfa_enabled
 remediation:
   description: >
     IAM user has console access enabled but MFA is not configured.

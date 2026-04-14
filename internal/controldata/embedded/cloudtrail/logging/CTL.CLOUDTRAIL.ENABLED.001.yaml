@@ -29,6 +29,9 @@ params:
     type: detection
     scope: account
     multiplier: 2.5
+observation_fields:
+  - audit_trail.kind
+  - audit_trail.multi_region_enabled
 remediation:
   description: >
     CloudTrail trail is not configured for multi-region logging. API

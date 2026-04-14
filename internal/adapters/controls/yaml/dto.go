@@ -24,6 +24,7 @@ type yamlControlDefinition struct {
 	UnsafePredicateAlias string                   `yaml:"unsafe_predicate_alias,omitempty"`
 	Remediation          *yamlRemediationSpec     `yaml:"remediation,omitempty"`
 	Exposure             *yamlExposure            `yaml:"exposure,omitempty"`
+	ObservationFields    []string                 `yaml:"observation_fields,omitempty"`
 }
 
 // yamlUnsafePredicate is the YAML wire-format for policy.UnsafePredicate.

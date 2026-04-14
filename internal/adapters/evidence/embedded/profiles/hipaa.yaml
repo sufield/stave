@@ -1,0 +1,237 @@
+id: hipaa
+name: HIPAA Security Rule
+version: '2013'
+description: Health Insurance Portability and Accountability Act Security Rule technical safeguards
+framework_key: hipaa
+requirements:
+- id: 164.308(a)(1)(ii)(A)
+  description: Risk Analysis
+  section: Administrative Safeguards
+  controls:
+  - CTL.S3.CLASSIFY.COVERAGE.001
+  pass_threshold: all
+- id: 164.308(a)(1)(ii)(B)
+  description: Risk Management
+  section: Administrative Safeguards
+  controls:
+  - CTL.APIGATEWAY.THROTTLE.001
+  pass_threshold: all
+- id: 164.308(a)(1)(ii)(D)
+  description: Recurrence Detection
+  section: Administrative Safeguards
+  controls:
+  - CTL.S3.ACL.RECUR.001
+  - CTL.S3.DETECT.MACIE.002
+  - CTL.S3.PUBLIC.RECUR.001
+  pass_threshold: all
+- id: 164.308(a)(5)(ii)(B)
+  description: Security Awareness Training
+  section: Administrative Safeguards
+  controls:
+  - CTL.S3.MALWARE.001
+  pass_threshold: all
+- id: 164.308(a)(7)
+  description: Contingency Plan
+  section: Administrative Safeguards
+  controls:
+  - CTL.BACKUP.EXISTS.001
+  - CTL.BACKUP.MULTIAZ.001
+  - CTL.BACKUP.RECENT.001
+  - CTL.BACKUP.REPLICATION.001
+  - CTL.DYNAMODB.PITR.001
+  - CTL.ELB.CROSSZONE.001
+  - CTL.LAMBDA.CONCURRENCY.001
+  - CTL.LAMBDA.DLQ.001
+  - CTL.LAMBDA.TIMEOUT.001
+  - CTL.RDS.BACKUP.001
+  - CTL.RDS.MULTIAZ.001
+  - CTL.S3.REPLICATION.001
+  - CTL.SHIELD.ADVANCED.001
+  pass_threshold: all
+- id: 164.308(a)(7)(ii)(A)
+  description: Data Backup Plan
+  section: Administrative Safeguards
+  controls:
+  - CTL.S3.REPLICATION.002
+  pass_threshold: all
+- id: 164.312(a)(1)
+  description: Access Control
+  section: Technical Safeguards
+  controls:
+  - CTL.APIGATEWAY.STAGE.LIFECYCLE.001
+  - CTL.CODECOMMIT.ACCESS.001
+  - CTL.ECS.EXEC.001
+  - CTL.ECS.PRIV.001
+  - CTL.ECS.TASKMETADATA.001
+  - CTL.ECS.TASKMETADATA.002
+  - CTL.EXPOSURE.ANON.001
+  - CTL.EXPOSURE.EXFIL.001
+  - CTL.IAM.IDENTITY.BLASTRADIUS.004
+  - CTL.IAM.NEP.ADMIN.001
+  - CTL.IAM.NEP.ESCALATION.001
+  - CTL.IAM.NEP.PHI.001
+  - CTL.IAM.POLICY.DIRECT.001
+  - CTL.IAM.POLICY.GHOSTREF.002
+  - CTL.IAM.POLICY.INLINE.001
+  - CTL.IAM.ROOT.ACCESSKEY.001
+  - CTL.IAM.TRUST.CONFUSEDDEPUTY.001
+  - CTL.IAM.VENDOR.OVERPRIVILEGED.001
+  - CTL.KMS.POLICY.001
+  - CTL.LAMBDA.ROLE.LEASTPRIV.001
+  - CTL.LAMBDA.URL.AUTH.001
+  - CTL.RDS.PUBLIC.001
+  - CTL.S3.ACCESS.GRANTS.001
+  - CTL.S3.CDN.EXPOSURE.001
+  - CTL.S3.MRAP.PAB.001
+  - CTL.S3.PRESIGNED.001
+  - CTL.S3.PUBLIC.001
+  - CTL.SECRET.BLAST.001
+  - CTL.SECRETSMANAGER.ACCESS.001
+  - CTL.VPC.SG.DEFAULT.001
+  pass_threshold: percent:90
+- id: 164.312(a)(2)(i)
+  description: Unique User Identification
+  section: Technical Safeguards
+  controls:
+  - CTL.EKS.VERSION.001
+  - CTL.IAM.ACCOUNT.INACTIVE.001
+  - CTL.IAM.CRED.RECUR.001
+  - CTL.IAM.CRED.ROTATION.001
+  - CTL.IAM.CRED.UNUSED.001
+  - CTL.IAM.PASSWORD.COMPLEXITY.001
+  - CTL.IAM.PASSWORD.LENGTH.001
+  - CTL.IAM.PASSWORD.REUSE.001
+  - CTL.IAM.PASSWORD.ROTATION.001
+  - CTL.IAM.ROLE.PERMISSIONDRIFT.001
+  - CTL.IAM.ROOT.RECUR.001
+  - CTL.IAM.SCP.CREATEACCOUNT.001
+  pass_threshold: all
+- id: 164.312(a)(2)(iv)
+  description: Encryption and Decryption
+  section: Technical Safeguards
+  controls:
+  - CTL.BACKUP.ENCRYPT.001
+  - CTL.CLOUDTRAIL.ENCRYPT.001
+  - CTL.DYNAMODB.ENCRYPT.001
+  - CTL.EC2.EBS.ENCRYPT.001
+  - CTL.EC2.SNAPSHOT.ENCRYPT.001
+  - CTL.ECS.SECRETS.001
+  - CTL.EFS.ENCRYPT.001
+  - CTL.IAM.POLICY.GHOSTREF.003
+  - CTL.K8S.SECRETS.ENCRYPT.001
+  - CTL.KMS.ISOLATION.001
+  - CTL.LAMBDA.ENV.ENCRYPT.001
+  - CTL.LAMBDA.ENV.SECRETS.001
+  - CTL.LAMBDA.RUNTIME.001
+  - CTL.OPENSEARCH.ENCRYPT.001
+  - CTL.OPENSEARCH.SNAPSHOT.001
+  - CTL.RDS.ENCRYPT.001
+  - CTL.S3.ENCRYPT.001
+  - CTL.S3.REPLICATION.003
+  - CTL.SECRETSMANAGER.ENCRYPT.001
+  - CTL.SNS.ENCRYPT.001
+  - CTL.SQS.ENCRYPT.001
+  - CTL.VPC.FLOWLOG.ENCRYPT.001
+  pass_threshold: percent:90
+- id: 164.312(b)
+  description: Audit Controls
+  section: Technical Safeguards
+  controls:
+  - CTL.CLOUDTRAIL.CWLOGS.001
+  - CTL.CLOUDTRAIL.DISABLE.RECUR.001
+  - CTL.CLOUDTRAIL.ENABLED.001
+  - CTL.CLOUDTRAIL.RETENTION.001
+  - CTL.CLOUDTRAIL.VALIDATION.001
+  - CTL.CLOUDWATCH.RETENTION.001
+  - CTL.CONFIG.ENABLED.001
+  - CTL.ECS.LOG.001
+  - CTL.ELB.LOG.001
+  - CTL.K8S.AUDIT.001
+  - CTL.LAMBDA.LOG.001
+  - CTL.LAMBDA.TRACE.001
+  - CTL.OPENSEARCH.LOG.001
+  - CTL.ORG.REGION.SCP.001
+  - CTL.RDS.LOG.001
+  - CTL.RDS.MONITORING.001
+  - CTL.S3.AUDIT.OBJECTLEVEL.001
+  - CTL.S3.DETECT.MACIE.001
+  - CTL.S3.INVENTORY.001
+  - CTL.S3.LOG.001
+  - CTL.VPC.FLOWLOG.001
+  - CTL.WAF.EVASION.OBSERVE.001
+  pass_threshold: percent:90
+- id: 164.312(c)(1)
+  description: Integrity Controls
+  section: Technical Safeguards
+  controls:
+  - CTL.APIGATEWAY.VALIDATION.001
+  - CTL.CODECOMMIT.APPROVAL.001
+  - CTL.CONFIG.RULES.001
+  - CTL.ECR.SIGNING.001
+  - CTL.LAMBDA.CODESIGN.ENFORCE.001
+  - CTL.RDS.ENGINE.EOL.001
+  - CTL.S3.VERSION.001
+  pass_threshold: all
+- id: 164.312(d)
+  description: Person or Entity Authentication
+  section: Technical Safeguards
+  controls:
+  - CTL.COGNITO.MFA.001
+  - CTL.COGNITO.PASSWORD.001
+  - CTL.IAM.CONSOLE.MFA.001
+  - CTL.IAM.MFA.HWKEY.001
+  - CTL.IAM.POLICY.MFA.001
+  - CTL.IAM.ROOT.MFA.001
+  - CTL.RDS.IAMAUTH.001
+  pass_threshold: all
+- id: 164.312(e)(1)
+  description: Transmission Security
+  section: Technical Safeguards
+  controls:
+  - CTL.EC2.PUBLIC.001
+  - CTL.ECS.NETWORK.001
+  - CTL.EFS.ENCRYPT.TRANSIT.001
+  - CTL.K8S.NETPOL.001
+  - CTL.LAMBDA.VPC.SENSITIVE.001
+  - CTL.OPENSEARCH.HTTPS.001
+  - CTL.S3.NETWORK.POLICY.001
+  - CTL.S3.NETWORK.VPC.001
+  - CTL.VPC.PEERING.ROUTES.001
+  - CTL.VPC.SG.EASTWEST.001
+  - CTL.VPC.SG.RECUR.001
+  - CTL.VPC.SG.UNRESTRICTED.001
+  - CTL.WAF.ORIGIN.LOCKDOWN.001
+  - CTL.WAF.PARSERLIMIT.PROTECT.001
+  pass_threshold: all
+- id: 164.312(e)(2)(ii)
+  description: Encryption in Transit
+  section: Technical Safeguards
+  controls:
+  - CTL.ACM.CERT.EXPIRY.001
+  - CTL.APIGATEWAY.TLS.001
+  - CTL.CLOUDFRONT.TLS.001
+  - CTL.ELASTICACHE.TRANSIT.001
+  - CTL.ELB.HTTPS.001
+  - CTL.ELB.TLS.001
+  - CTL.OPENSEARCH.ENCRYPT.002
+  - CTL.RDS.SSL.001
+  - CTL.S3.ENCRYPT.002
+  pass_threshold: all
+- id: 164.316(b)(2)
+  description: Documentation Retention
+  section: Documentation Requirements
+  controls:
+  - CTL.S3.LOCK.001
+  pass_threshold: all
+- id: '164.400'
+  description: Breach Notification
+  section: Breach Notification Rule
+  controls:
+  - CTL.S3.BREACH.DETECT.001
+  pass_threshold: all
+- id: 164.502(b)
+  description: Minimum Necessary
+  section: Privacy Rule
+  controls:
+  - CTL.S3.ACCESS.PHI.001
+  pass_threshold: all

@@ -26,6 +26,8 @@ scope_tags:
 type: unsafe_state
 params:
   attack_stage: initial_access
+observation_fields:
+  - storage.access.public_read
 remediation:
   description: >
     Bucket has public read access enabled via policy or ACL.

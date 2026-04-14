@@ -28,6 +28,7 @@ func controlDefinitionToDomain(y yamlControlDefinition) policy.ControlDefinition
 		UnsafePredicateAlias: y.UnsafePredicateAlias,
 		Remediation:          remediationToDomain(y.Remediation),
 		Exposure:             exposureToDomain(y.Exposure),
+		ObservationFields:    y.ObservationFields,
 	}
 }
 

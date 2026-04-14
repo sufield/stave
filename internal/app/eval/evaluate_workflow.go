@@ -32,6 +32,11 @@ type EvaluateInput struct {
 	// records every decision step for both PASS and VIOLATION verdicts.
 	// Nil means no tracing (zero overhead via nopSpan).
 	Tracer ports.Tracer
+
+	// GenerateEvidence enables compliance evidence record generation.
+	// When true, every finding and pass check produces structured
+	// EvidenceRecords with regulatory citations and reasoning traces.
+	GenerateEvidence bool
 }
 
 // Evaluate runs domain evaluation over already-loaded inputs.
@@ -51,8 +56,9 @@ func Evaluate(input EvaluateInput) (evaluation.ComplianceReport, error) {
 		runner.Confidence = input.Confidence
 	}
 	result, err := runner.Assess(input.Snapshots, engine.AssessmentOptions{
-		StaveVersion: input.StaveVersion,
-		InputHashes:  input.InputHashes,
+		StaveVersion:     input.StaveVersion,
+		InputHashes:      input.InputHashes,
+		GenerateEvidence: input.GenerateEvidence,
 	})
 	if err != nil {
 		return evaluation.ComplianceReport{}, err

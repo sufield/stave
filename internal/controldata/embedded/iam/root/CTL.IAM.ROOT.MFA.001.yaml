@@ -26,6 +26,9 @@ scope_tags:
 type: unsafe_state
 params:
   attack_stage: credential_access
+observation_fields:
+  - identity.kind
+  - identity.root.mfa_enabled
 remediation:
   description: >
     Root account does not have MFA enabled. An attacker with root

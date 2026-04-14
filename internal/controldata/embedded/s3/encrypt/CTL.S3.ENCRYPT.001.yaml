@@ -24,6 +24,9 @@ scope_tags:
 type: unsafe_state
 params:
   attack_stage: exfiltration
+observation_fields:
+  - storage.kind
+  - storage.encryption.at_rest_enabled
 remediation:
   description: >
     Bucket does not have server-side encryption enabled. Objects are
