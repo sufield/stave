@@ -1,6 +1,8 @@
 package trend
 
 import (
+	"bytes"
+	"strings"
 	"testing"
 	"time"
 
@@ -170,5 +172,107 @@ func TestComputeProjection_Regressing(t *testing.T) {
 	p := computeProjection(runs, velocity)
 	if p != nil {
 		t.Error("expected nil projection for regression")
+	}
+}
+
+func TestRenderOpenMetrics_ContainsAllMetrics(t *testing.T) {
+	r := &TrendReport{
+		Runs: []RunMetrics{{
+			CapturedAt:     time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC),
+			ViolationCount: 10,
+			PassCount:      90,
+			ViolationRate:  0.1,
+			BySeverity:     map[string]int{"critical": 3, "high": 7},
+		}},
+		MTTR: map[string]MTTREntry{
+			"critical": {AvgDays: 3.2, WindowCount: 5},
+		},
+		FrameworkTrends: []FrameworkTrend{
+			{Framework: "hipaa", Scores: []float64{0.8}, Direction: "stable"},
+		},
+		Velocity: VelocityMetrics{AvgNetChange: -2.0, Direction: "improving"},
+	}
+
+	var buf bytes.Buffer
+	if err := renderTrendOpenMetrics(&buf, r); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+
+	checks := []string{
+		"stave_violations_total",
+		"stave_violation_rate",
+		"stave_mttr_days",
+		"stave_framework_coverage",
+		"stave_velocity_per_run",
+		"# EOF",
+	}
+	for _, c := range checks {
+		if !strings.Contains(out, c) {
+			t.Errorf("openmetrics output missing %q", c)
+		}
+	}
+}
+
+func TestRenderOpenMetrics_MTTROmittedWhenNoWindows(t *testing.T) {
+	r := &TrendReport{
+		Runs: []RunMetrics{{
+			CapturedAt:    time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC),
+			ViolationRate: 0.1,
+			BySeverity:    map[string]int{"high": 5},
+		}},
+		MTTR:     nil, // no closed windows
+		Velocity: VelocityMetrics{AvgNetChange: 0},
+	}
+
+	var buf bytes.Buffer
+	_ = renderTrendOpenMetrics(&buf, r)
+	out := buf.String()
+
+	if strings.Contains(out, "stave_mttr_days") {
+		t.Error("stave_mttr_days should be omitted when no closed windows")
+	}
+	if !strings.Contains(out, "# EOF") {
+		t.Error("missing # EOF")
+	}
+}
+
+func TestComputeFrameworkTrends_Direction(t *testing.T) {
+	t1 := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	t2 := time.Date(2026, 1, 8, 0, 0, 0, 0, time.UTC)
+	t3 := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
+
+	// Run 1: 2 HIPAA violations, Run 2: 1, Run 3: 0
+	assessments := []*report.Assessment{
+		makeAssessment(t1, []evaluation.Finding{
+			{ControlID: "CTL.A", AssetID: "r1", ControlSeverity: policy.SeverityHigh,
+				ControlCompliance: policy.ComplianceMapping{"hipaa": "164.312(a)(1)"}},
+			{ControlID: "CTL.B", AssetID: "r2", ControlSeverity: policy.SeverityHigh,
+				ControlCompliance: policy.ComplianceMapping{"hipaa": "164.312(b)"}},
+		}, 10, 2),
+		makeAssessment(t2, []evaluation.Finding{
+			{ControlID: "CTL.A", AssetID: "r1", ControlSeverity: policy.SeverityHigh,
+				ControlCompliance: policy.ComplianceMapping{"hipaa": "164.312(a)(1)"}},
+		}, 10, 1),
+		makeAssessment(t3, []evaluation.Finding{}, 10, 0),
+	}
+
+	trends := computeFrameworkTrends(assessments, "hipaa")
+
+	if len(trends) == 0 {
+		t.Fatal("expected at least one framework trend")
+	}
+	if trends[0].Framework != "hipaa" {
+		t.Errorf("Framework = %q", trends[0].Framework)
+	}
+	if len(trends[0].Scores) != 3 {
+		t.Fatalf("expected 3 scores, got %d", len(trends[0].Scores))
+	}
+	if trends[0].Direction != "improving" {
+		t.Errorf("Direction = %q, want improving", trends[0].Direction)
+	}
+	// Last run has 0 violations = 100% coverage
+	if trends[0].Scores[2] < 0.99 {
+		t.Errorf("last score = %f, want ~1.0", trends[0].Scores[2])
 	}
 }

@@ -44,6 +44,33 @@ func renderTrendTable(w io.Writer, r *TrendReport) error { //nolint:unparam // e
 		fmt.Fprintln(w)
 	}
 
+	// Framework trajectory.
+	if len(r.FrameworkTrends) > 0 {
+		fmt.Fprintln(w, "FRAMEWORK COVERAGE TRAJECTORY")
+		fmt.Fprintln(w, sep)
+		for i := range r.FrameworkTrends {
+			ft := &r.FrameworkTrends[i]
+			var scoreParts []string
+			showCount := 5
+			start := 0
+			if len(ft.Scores) > showCount {
+				start = len(ft.Scores) - showCount
+			}
+			for _, s := range ft.Scores[start:] {
+				scoreParts = append(scoreParts, fmt.Sprintf("%.0f%%", s*100))
+			}
+			arrow := ""
+			switch ft.Direction {
+			case "improving":
+				arrow = "  ↑ improving"
+			case "regressing":
+				arrow = "  ↓ regressing"
+			}
+			fmt.Fprintf(w, "  %-12s %s%s\n", ft.Framework, strings.Join(scoreParts, " → "), arrow)
+		}
+		fmt.Fprintln(w)
+	}
+
 	// Velocity.
 	fmt.Fprintln(w, "VELOCITY")
 	fmt.Fprintln(w, sep)

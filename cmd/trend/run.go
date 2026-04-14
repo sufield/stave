@@ -59,6 +59,9 @@ func runTrend(ctx context.Context, w io.Writer, opts *trendOptions) error {
 	// Compute projection.
 	projection := computeProjection(runs, velocity)
 
+	// Compute framework trends.
+	frameworkTrends := computeFrameworkTrends(assessments, opts.Compliance)
+
 	// Build report.
 	trendReport := TrendReport{
 		GeneratedAt: time.Now().UTC(),
@@ -71,10 +74,11 @@ func runTrend(ctx context.Context, w io.Writer, opts *trendOptions) error {
 			FirstViolationRate:  runs[0].ViolationRate,
 			LatestViolationRate: runs[len(runs)-1].ViolationRate,
 		},
-		Runs:       runs,
-		MTTR:       mttr,
-		Velocity:   velocity,
-		Projection: projection,
+		Runs:            runs,
+		MTTR:            mttr,
+		FrameworkTrends: frameworkTrends,
+		Velocity:        velocity,
+		Projection:      projection,
 	}
 
 	// Compute summary direction.
@@ -99,6 +103,8 @@ func runTrend(ctx context.Context, w io.Writer, opts *trendOptions) error {
 	switch opts.Format {
 	case "json":
 		return renderTrendJSON(out, &trendReport)
+	case "openmetrics":
+		return renderTrendOpenMetrics(out, &trendReport)
 	default:
 		return renderTrendTable(out, &trendReport)
 	}

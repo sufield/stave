@@ -43,10 +43,11 @@ Examples:
 
 	cmd.Flags().StringVar(&opts.HistoryDir, "history", "", "directory of out.v0.1 assessment files")
 	cmd.Flags().StringVar(&opts.Files, "files", "", "comma-separated assessment files in chronological order")
-	cmd.Flags().StringVarP(&opts.Format, "format", "f", "table", "output format: table | json")
+	cmd.Flags().StringVarP(&opts.Format, "format", "f", "table", "output format: table | json | openmetrics")
 	cmd.Flags().StringVar(&opts.Out, "out", "", "write output to file instead of stdout")
 	cmd.Flags().IntVar(&opts.Window, "window", 0, "limit to most recent N assessments (0 = all)")
 	cmd.Flags().IntVar(&opts.MinRuns, "min-runs", 2, "minimum assessment files required")
+	cmd.Flags().StringVar(&opts.Compliance, "compliance", "", "comma-separated framework profiles for trajectory (hipaa,soc2,...)")
 
 	return cmd
 }
@@ -54,6 +55,7 @@ Examples:
 type trendOptions struct {
 	HistoryDir string
 	Files      string
+	Compliance string
 	Format     string
 	Out        string
 	Window     int

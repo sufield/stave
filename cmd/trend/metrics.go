@@ -1,8 +1,11 @@
 package trend
 
 import (
+	"strings"
 	"time"
 
+	evidenceadapter "github.com/sufield/stave/internal/adapters/evidence"
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/report"
 )
 
@@ -26,15 +29,23 @@ type MTTREntry struct {
 	WindowCount int     `json:"window_count"`
 }
 
+// FrameworkTrend captures a framework's satisfaction rate over time.
+type FrameworkTrend struct {
+	Framework string    `json:"framework"`
+	Scores    []float64 `json:"scores"`
+	Direction string    `json:"direction"`
+}
+
 // TrendReport is the complete trend analysis output.
 type TrendReport struct {
-	GeneratedAt time.Time            `json:"generated_at"`
-	Period      Period               `json:"period"`
-	Summary     TrendSummary         `json:"summary"`
-	Runs        []RunMetrics         `json:"runs"`
-	MTTR        map[string]MTTREntry `json:"mttr,omitempty"`
-	Velocity    VelocityMetrics      `json:"velocity"`
-	Projection  *ProjectionMetrics   `json:"projection,omitempty"`
+	GeneratedAt     time.Time            `json:"generated_at"`
+	Period          Period               `json:"period"`
+	Summary         TrendSummary         `json:"summary"`
+	Runs            []RunMetrics         `json:"runs"`
+	MTTR            map[string]MTTREntry `json:"mttr,omitempty"`
+	FrameworkTrends []FrameworkTrend     `json:"framework_trends"`
+	Velocity        VelocityMetrics      `json:"velocity"`
+	Projection      *ProjectionMetrics   `json:"projection,omitempty"`
 }
 
 // Period defines the time range of the trend analysis.
@@ -185,4 +196,68 @@ func computeProjection(runs []RunMetrics, velocity VelocityMetrics) *ProjectionM
 		Basis:         "linear_extrapolation",
 		Caveat:        "Linear projection only. Security posture is not linear.",
 	}
+}
+
+// computeFrameworkTrends computes per-framework satisfaction rates across runs.
+func computeFrameworkTrends(assessments []*report.Assessment, complianceFlag string) []FrameworkTrend {
+	if complianceFlag == "" {
+		return []FrameworkTrend{}
+	}
+
+	frameworks := strings.Split(complianceFlag, ",")
+	for i := range frameworks {
+		frameworks[i] = strings.TrimSpace(frameworks[i])
+	}
+
+	// Load framework profiles for requirement counts.
+	profileReqs := make(map[string]int) // framework → total requirements
+	for _, fw := range frameworks {
+		p, err := evidenceadapter.LoadProfile(fw)
+		if err != nil {
+			continue
+		}
+		profileReqs[fw] = len(p.Requirements)
+	}
+
+	var trends []FrameworkTrend
+	for _, fw := range frameworks {
+		totalReqs := profileReqs[fw]
+		if totalReqs == 0 {
+			continue
+		}
+
+		var scores []float64
+		for _, a := range assessments {
+			// Count how many requirements have violations.
+			violatedReqs := make(map[string]bool)
+			for i := range a.Findings {
+				f := &a.Findings[i]
+				req := f.ControlCompliance.Get(policy.ComplianceFramework(fw))
+				if req != "" {
+					violatedReqs[req] = true
+				}
+			}
+			satisfied := totalReqs - len(violatedReqs)
+			score := float64(satisfied) / float64(totalReqs)
+			scores = append(scores, score)
+		}
+
+		dir := "stable"
+		if len(scores) >= 2 {
+			last := scores[len(scores)-1]
+			prev := scores[len(scores)-2]
+			if last > prev {
+				dir = "improving"
+			} else if last < prev {
+				dir = "regressing"
+			}
+		}
+
+		trends = append(trends, FrameworkTrend{
+			Framework: fw,
+			Scores:    scores,
+			Direction: dir,
+		})
+	}
+	return trends
 }
