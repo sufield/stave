@@ -3,15 +3,15 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 358
-**Pack hash:** `18c7181634aa8fbd54046601148192c37b52a9664e50539505e97c18f3b995ea`
+**Total controls:** 360
+**Pack hash:** `9c464c85cdd5531c20293cf2de8cf37d24f43f6e43de891aedf007f6ad8346fe`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 66 |
-| high | 152 |
+| critical | 67 |
+| high | 153 |
 | info | 16 |
 | low | 25 |
 | medium | 99 |
@@ -20,7 +20,7 @@
 |--------|-------|
 | exposure | 265 |
 | governance | 7 |
-| identity | 78 |
+| identity | 80 |
 | storage | 8 |
 
 ## Controls
@@ -2216,6 +2216,36 @@ IAM account safety cannot be proven when root account MFA status or access key d
 IAM users with admin access must use a hardware MFA device (FIDO2, YubiKey, Gemalto), not a virtual MFA app or SMS. Virtual MFA can be compromised through device theft, seed extraction, or SIM swap attacks. Hardware tokens cannot be cloned or phished via device compromise, providing stronger protection for the most privileged identities.
 
 **Remediation:** Replace virtual MFA with a hardware FIDO2 or TOTP device. Remove the existing virtual MFA device and enroll a hardware token via IAM > Users > Security credentials > MFA.
+
+---
+
+### CTL.IAM.NEP.ADMIN.001
+
+**Net Effective Permissions Must Not Include Admin-Equivalent Actions**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6; hipaa: 164.312(a)(1); nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+After resolving all policy layers (SCPs, permission boundaries, identity-based policies, explicit denies), a principal not designated as administrative must not have admin-equivalent effective permissions. This is distinct from CTL.IAM.POLICY.ADMIN.001 which checks policy content — this control checks the resolved effective permissions after organizational constraints are applied. A principal may have an AdminAccess policy attached but be effectively constrained by an SCP.
+
+**Remediation:** Review the identity-based policies granting admin-equivalent actions. Apply an SCP or permission boundary to constrain the effective permissions. If the principal requires admin access, tag it with stave/role-type: administrative to document the intent.
+
+---
+
+### CTL.IAM.NEP.BOUNDARY.001
+
+**Permission Boundaries Must Meaningfully Constrain Effective Permissions**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6; nist_800_53_r5: AC-6; soc2: CC6.1;
+
+A principal with a permission boundary must have a boundary that meaningfully constrains its effective permissions. A boundary that allows iam:* or *:* on Resource: * is not a meaningful constraint. A boundary that is broader than the identity-based policy constrains nothing. Both conditions create a false sense of security — the boundary exists but provides no actual restriction.
+
+**Remediation:** Review the permission boundary policy. Narrow it to exclude iam:* and *:* on Resource: *. Ensure the boundary is stricter than the identity-based policies — a boundary that is broader than the identity policy constrains nothing.
 
 ---
 

@@ -1,0 +1,36 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.NEP.BOUNDARY.001
+name: Permission Boundaries Must Meaningfully Constrain Effective Permissions
+description: >
+  A principal with a permission boundary must have a boundary that
+  meaningfully constrains its effective permissions. A boundary that
+  allows iam:* or *:* on Resource: * is not a meaningful constraint.
+  A boundary that is broader than the identity-based policy constrains
+  nothing. Both conditions create a false sense of security — the
+  boundary exists but provides no actual restriction.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6"
+  fedramp_moderate: "AC-6"
+  soc2: "CC6.1"
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    Permission boundary exists but provides no meaningful constraint
+    on effective permissions.
+  action: >
+    Review the permission boundary policy. Narrow it to exclude iam:*
+    and *:* on Resource: *. Ensure the boundary is stricter than the
+    identity-based policies — a boundary that is broader than the
+    identity policy constrains nothing.
+unsafe_predicate:
+  all:
+    - field: properties.identity.nep.boundary_effective
+      op: eq
+      value: false
