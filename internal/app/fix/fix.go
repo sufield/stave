@@ -94,8 +94,10 @@ func SelectFinding(findings []remediation.Finding, needle string) (remediation.F
 	return remediation.SelectFinding(findings, needle)
 }
 
-// WriteFixResult writes the fix plan as JSON.
+// WriteFixResult writes the fix plan as JSON with structured changes.
 func WriteFixResult(w io.Writer, f remediation.Finding) error {
+	changes := policy.DeriveChanges(f.Evidence.Misconfigurations)
+
 	out := struct {
 		Finding     string                      `json:"finding"`
 		ControlID   string                      `json:"control_id"`
@@ -103,6 +105,8 @@ func WriteFixResult(w io.Writer, f remediation.Finding) error {
 		AssetID     string                      `json:"asset_id"`
 		AssetType   string                      `json:"asset_type"`
 		Remediation string                      `json:"remediation,omitempty"`
+		Confidence  float64                     `json:"confidence"`
+		Changes     []policy.PropertyChange     `json:"changes"`
 		FixPlan     *evaluation.RemediationPlan `json:"fix_plan"`
 	}{
 		Finding:     FindingKey(f),
@@ -111,9 +115,30 @@ func WriteFixResult(w io.Writer, f remediation.Finding) error {
 		AssetID:     f.AssetID.String(),
 		AssetType:   f.AssetType.String(),
 		Remediation: strings.TrimSpace(f.RemediationSpec.Action),
+		Confidence:  deriveConfidence(changes),
+		Changes:     changes,
 		FixPlan:     f.RemediationPlan,
 	}
 	return jsonutil.WriteIndented(w, out)
+}
+
+// deriveConfidence returns a confidence score based on whether all
+// changes have safe defaults.
+func deriveConfidence(changes []policy.PropertyChange) float64 {
+	if len(changes) == 0 {
+		return policy.ConfidenceFloat("")
+	}
+	allSafe := true
+	for i := range changes {
+		if !changes[i].HasSafeDefault {
+			allSafe = false
+			break
+		}
+	}
+	if allSafe {
+		return policy.ConfidenceFloat("HIGH")
+	}
+	return policy.ConfidenceFloat("MEDIUM")
 }
 
 // FindingKey returns the canonical string selector for a finding.

@@ -133,7 +133,8 @@ func writeTextRoadmap(w io.Writer, rm apprank.Roadmap) {
 		if e.Narrative != "" {
 			fmt.Fprintf(w, "      %s\n", e.Narrative)
 		}
-		fmt.Fprintf(w, "      Risk Impact: %.0f%% of total environment risk\n", e.RiskImpact)
+		fmt.Fprintf(w, "      Risk Impact: %.0f%% of total environment risk  |  Changes: %d  |  Confidence: %.0f%%\n",
+			e.RiskImpact, len(e.Changes), e.Confidence*100)
 
 		b := &e.Breakdown
 		fmt.Fprintf(w, "      Score: base=%d \u00d7 duration=%.1f \u00d7 blast=%.1f \u00d7 exposure=%.1f",

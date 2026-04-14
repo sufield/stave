@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/sufield/stave/internal/core/asset"
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/kernel"
@@ -16,17 +17,19 @@ import (
 
 // PriorityEntry represents a single finding in the remediation roadmap.
 type PriorityEntry struct {
-	Rank          int                 `json:"rank"`
-	ControlID     kernel.ControlID    `json:"control_id"`
-	ControlName   string              `json:"control_name"`
-	AssetID       asset.ID            `json:"asset_id"`
-	PriorityScore float64             `json:"priority_score"`
-	RiskImpact    float64             `json:"risk_impact_percent"`
-	Breakdown     risk.ScoreBreakdown `json:"breakdown"`
-	SLAUrgency    float64             `json:"sla_urgency_multiplier"`
-	SilentKiller  bool                `json:"silent_killer"`
-	Narrative     string              `json:"narrative"`
-	FixAction     string              `json:"fix_action,omitempty"`
+	Rank          int                     `json:"rank"`
+	ControlID     kernel.ControlID        `json:"control_id"`
+	ControlName   string                  `json:"control_name"`
+	AssetID       asset.ID                `json:"asset_id"`
+	PriorityScore float64                 `json:"priority_score"`
+	RiskImpact    float64                 `json:"risk_impact_percent"`
+	Breakdown     risk.ScoreBreakdown     `json:"breakdown"`
+	SLAUrgency    float64                 `json:"sla_urgency_multiplier"`
+	SilentKiller  bool                    `json:"silent_killer"`
+	Narrative     string                  `json:"narrative"`
+	FixAction     string                  `json:"fix_action,omitempty"`
+	Changes       []policy.PropertyChange `json:"changes"`
+	Confidence    float64                 `json:"confidence"`
 }
 
 // RemediationBundle groups findings by a shared fix action.
@@ -120,6 +123,9 @@ func BuildRoadmap(findings []remediation.Finding, topExposures []risk.ExposureRa
 			fixAction = strings.TrimSpace(f.RemediationSpec.Action)
 		}
 
+		changes := policy.DeriveChanges(f.Evidence.Misconfigurations)
+		confidence := deriveEntryConfidence(changes)
+
 		entries = append(entries, PriorityEntry{
 			ControlID:     f.ControlID,
 			ControlName:   f.ControlName,
@@ -130,12 +136,17 @@ func BuildRoadmap(findings []remediation.Finding, topExposures []risk.ExposureRa
 			SilentKiller:  silentKiller,
 			FixAction:     fixAction,
 			Narrative:     priorityNarrative(f, breakdown, silentKiller, isOverdue),
+			Changes:       changes,
+			Confidence:    confidence,
 		})
 	}
 
 	sort.Slice(entries, func(i, j int) bool {
 		if entries[i].PriorityScore != entries[j].PriorityScore {
 			return entries[i].PriorityScore > entries[j].PriorityScore
+		}
+		if entries[i].Confidence != entries[j].Confidence {
+			return entries[i].Confidence > entries[j].Confidence
 		}
 		return entries[i].ControlID < entries[j].ControlID
 	})
@@ -238,4 +249,18 @@ func priorityNarrative(f *remediation.Finding, bd risk.ScoreBreakdown, silentKil
 	default:
 		return fmt.Sprintf("%s: %s requires remediation.", f.ControlID, f.AssetID)
 	}
+}
+
+// deriveEntryConfidence returns confidence based on whether all changes
+// have safe defaults.
+func deriveEntryConfidence(changes []policy.PropertyChange) float64 {
+	if len(changes) == 0 {
+		return policy.ConfidenceFloat("")
+	}
+	for i := range changes {
+		if !changes[i].HasSafeDefault {
+			return policy.ConfidenceFloat("MEDIUM")
+		}
+	}
+	return policy.ConfidenceFloat("HIGH")
 }

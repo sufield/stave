@@ -7,7 +7,11 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
+
+	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
+	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 type nonInteractiveOpts struct {
@@ -68,7 +72,6 @@ func runNonInteractive(ctx context.Context, w io.Writer, opts nonInteractiveOpts
 	}
 
 	fmt.Fprintf(w, "Generating control %s...\n", opts.ID)
-	fmt.Fprintf(w, "  go %s\n", strings.Join(args, " "))
 
 	cmd := exec.CommandContext(ctx, "go", args...) //nolint:gosec // args built from validated CLI flags
 	cmd.Stdout = w
@@ -78,5 +81,59 @@ func runNonInteractive(ctx context.Context, w io.Writer, opts nonInteractiveOpts
 	}
 
 	fmt.Fprintln(w, "\nGeneration complete.")
+
+	// Validate the generated control YAML.
+	validateGeneratedControl(w, opts.ID, opts.Out)
+
 	return nil
+}
+
+// validateGeneratedControl finds and validates the generated control YAML
+// using the same parsing path as stave validate.
+func validateGeneratedControl(w io.Writer, controlID, outDir string) {
+	if outDir == "" {
+		outDir = "testdata/e2e"
+	}
+
+	// Find the generated YAML by walking the output directory for the control ID.
+	var yamlPath string
+	_ = filepath.Walk(outDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			return nil
+		}
+		if strings.HasSuffix(path, ".yaml") && strings.Contains(filepath.Base(path), controlID) {
+			yamlPath = path
+			return filepath.SkipAll
+		}
+		return nil
+	})
+
+	if yamlPath == "" {
+		fmt.Fprintln(w, "\nValidating generated control...  SKIPPED (YAML file not found)")
+		return
+	}
+
+	data, err := fsutil.ReadFileLimited(yamlPath)
+	if err != nil {
+		fmt.Fprintf(w, "\nValidating generated control...  FAILED\n  error: %v\n", err)
+		return
+	}
+
+	ctl, err := ctlyaml.UnmarshalControlDefinition(data)
+	if err != nil {
+		fmt.Fprintf(w, "\nValidating generated control...  FAILED\n  error: %v\n", err)
+		fmt.Fprintf(w, "\nThe generated control has a schema error. Edit the file and\nrun 'stave validate %s' to verify.\n", yamlPath)
+		return
+	}
+
+	if err := ctl.Prepare(); err != nil {
+		fmt.Fprintf(w, "\nValidating generated control...  FAILED\n  error: %v\n", err)
+		fmt.Fprintf(w, "\nThe generated control has a preparation error. Edit the file and\nrun 'stave validate %s' to verify.\n", yamlPath)
+		return
+	}
+
+	fmt.Fprintln(w, "\nValidating generated control...  OK")
 }

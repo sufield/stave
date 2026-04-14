@@ -2029,3 +2029,77 @@ A bucket with a public policy granting `s3:GetObject` on `arn:aws:s3:::my-bucket
 | `policy_statements[]` | Bucket policy | Public read detection per prefix |
 | `public_access_block` | PAB config | Negates policy/ACL exposure |
 | `acl_grants[]` | Bucket ACL | Public grantee detection |
+
+---
+
+## Custom Controls
+
+`stave forge` provides interactive tools for creating, previewing, and
+testing custom security controls.
+
+### Interactive Authoring
+
+Create a new control with the interactive wizard:
+
+```bash
+# With a snapshot for live preview and path discovery
+stave forge new --snapshot obs.json
+
+# Without a snapshot (no preview, no path browsing)
+stave forge new
+```
+
+The wizard guides you through 11 steps: asset type, control ID, name,
+severity, attack stage, property path selection, predicate authoring,
+live preview, remediation text, compliance citations, and confirmation.
+
+### Property Path Discovery
+
+List all observable properties for a given asset type:
+
+```bash
+stave forge paths --snapshot obs.json --asset-type aws_s3_bucket
+```
+
+Shows every property path with its type, presence count across resources,
+and distinct values for small value sets. Tag map keys are expanded
+individually with per-key presence counts.
+
+### Live Predicate Testing
+
+Test a predicate against a snapshot without generating any files:
+
+```bash
+stave forge preview \
+  --snapshot obs.json \
+  --field properties.storage.access.public_read \
+  --op eq --value true
+```
+
+Uses the identical CEL evaluation path as `stave apply` — if preview
+says FAIL, apply will say FAIL.
+
+### Non-Interactive Mode
+
+For CI/CD or scripted control generation:
+
+```bash
+stave forge new --non-interactive \
+  --id CTL.S3.TAGS.001 \
+  --name "All production S3 buckets must have a team tag" \
+  --asset-type aws_s3_bucket \
+  --field properties.storage.tags.team \
+  --op missing \
+  --severity high \
+  --remediation "Add a team tag to all production S3 buckets"
+```
+
+Produces the same output as the interactive wizard — control YAML and
+E2E test fixtures.
+
+### After Generation
+
+1. Review the generated YAML in `controls/`
+2. Update the E2E fixture with realistic test data
+3. Run `stave apply` to verify against a real snapshot
+4. Run `go test ./...` to confirm E2E tests pass
