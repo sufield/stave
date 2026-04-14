@@ -12,6 +12,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/internal/adapters/observations"
 	apprank "github.com/sufield/stave/internal/app/rank"
 	"github.com/sufield/stave/internal/core/report"
 )
@@ -21,6 +22,8 @@ type options struct {
 	TopN                int
 	Format              string
 	IncludeAcknowledged bool
+	Identity            bool
+	SnapshotPath        string
 }
 
 // NewCmd constructs the top-level rank command.
@@ -64,6 +67,8 @@ Exit Codes:
 	cmd.Flags().IntVar(&opts.TopN, "top", opts.TopN, "Number of top findings to show")
 	cmd.Flags().StringVarP(&opts.Format, "format", "f", opts.Format, "Output format: text or json")
 	cmd.Flags().BoolVar(&opts.IncludeAcknowledged, "include-acknowledged", false, "Include acknowledged findings in output")
+	cmd.Flags().BoolVar(&opts.Identity, "identity", false, "Identity-centric blast radius ranking")
+	cmd.Flags().StringVar(&opts.SnapshotPath, "snapshot", "", "Path to observation snapshot (required for --identity)")
 
 	return cmd
 }
@@ -92,6 +97,11 @@ func run(stdout, _ io.Writer, opts *options) error {
 	var assessment report.Assessment
 	if jsonErr := json.Unmarshal(data, &assessment); jsonErr != nil {
 		return fmt.Errorf("parse assessment: %w", jsonErr)
+	}
+
+	// Identity-centric ranking.
+	if opts.Identity {
+		return runIdentity(stdout, opts, &assessment)
 	}
 
 	// Build roadmap.
@@ -193,6 +203,98 @@ func writeTextRoadmap(w io.Writer, rm apprank.Roadmap) {
 			fmt.Fprintf(w, "  %d. Resolve %d findings (risk reduced: %.0f, efficiency: %.1f)\n",
 				i+1, b.FindingCount, b.TotalRiskReduced, b.Efficiency)
 			fmt.Fprintf(w, "     %s\n", action)
+		}
+	}
+}
+
+func runIdentity(stdout io.Writer, opts *options, assessment *report.Assessment) error {
+	if opts.SnapshotPath == "" {
+		return errors.New("--snapshot is required for --identity (path to observation snapshots)")
+	}
+
+	snapshots, err := observations.LoadBundle(opts.SnapshotPath)
+	if err != nil {
+		return fmt.Errorf("load snapshot: %w", err)
+	}
+
+	ranking := apprank.BuildIdentityRanking(
+		assessment.Findings,
+		assessment.TopExposures,
+		snapshots,
+		opts.TopN,
+	)
+
+	switch opts.Format {
+	case "json":
+		output, marshalErr := json.MarshalIndent(ranking, "", "  ")
+		if marshalErr != nil {
+			return fmt.Errorf("marshal identity ranking: %w", marshalErr)
+		}
+		fmt.Fprintln(stdout, string(output))
+	default:
+		writeTextIdentityRanking(stdout, ranking)
+	}
+	return nil
+}
+
+func writeTextIdentityRanking(w io.Writer, ranking apprank.IdentityRanking) {
+	if len(ranking.Entries) == 0 {
+		fmt.Fprintln(w, "No identity risk entries found.")
+		return
+	}
+
+	fmt.Fprintf(w, "IDENTITY BLAST RADIUS RANKING\n")
+	fmt.Fprintf(w, "Identities evaluated: %d  |  Total risk score: %.0f\n",
+		ranking.IdentitiesEvaluated, ranking.TotalPortfolioRisk)
+	fmt.Fprintln(w, strings.Repeat("=", 90))
+
+	for idx := range ranking.Entries {
+		e := &ranking.Entries[idx]
+
+		privilegeLabel := strings.ToUpper(e.PrivilegeLevel)
+		if privilegeLabel == "" {
+			privilegeLabel = "STANDARD"
+		}
+
+		directLabel := "\u2014"
+		if len(e.DirectFindingIDs) > 0 {
+			directLabel = fmt.Sprintf("%d findings (%s)", len(e.DirectFindingIDs), strings.ToUpper(e.DirectSeverity))
+		}
+
+		fmt.Fprintf(w, "\n[#%d]  %s\n", e.Rank, e.IdentityARN)
+		fmt.Fprintf(w, "      Type: %s  |  Privilege: %s  |  Reaches: %d resources  |  Risk\u2193 %.1f%%\n",
+			e.IdentityType, privilegeLabel, e.ReachableCount, e.RiskReductionPercent)
+		fmt.Fprintf(w, "      Direct: %s\n", directLabel)
+
+		if len(e.ReachableResources) > 0 {
+			fmt.Fprintf(w, "      Reachable resources with findings:\n")
+			limit := min(len(e.ReachableResources), 10)
+			for ri := range limit {
+				rr := &e.ReachableResources[ri]
+				if len(rr.FindingIDs) == 0 {
+					continue
+				}
+				sevLabel := strings.ToUpper(rr.MaxSeverity)
+				if sevLabel == "" {
+					sevLabel = "?"
+				}
+				fmt.Fprintf(w, "        %-50s [%s] via %s\n",
+					rr.ResourceARN, sevLabel, rr.AccessPath)
+			}
+			if len(e.ReachableResources) > 10 {
+				fmt.Fprintf(w, "        ... (%d more resources)\n", len(e.ReachableResources)-10)
+			}
+		}
+
+		if len(e.RemediationActions) > 0 {
+			fmt.Fprintf(w, "      Recommended actions:\n")
+			for i, act := range e.RemediationActions {
+				action := act
+				if len(action) > 76 {
+					action = action[:73] + "..."
+				}
+				fmt.Fprintf(w, "        %d. %s\n", i+1, action)
+			}
 		}
 	}
 }
