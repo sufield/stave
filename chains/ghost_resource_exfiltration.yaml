@@ -1,0 +1,12 @@
+id: ghost_resource_exfiltration
+description: >
+  A policy allows writing to a resource name that no longer exists and
+  can be claimed by an attacker. Write events to the ghost resource are
+  not logged. If the resource name is claimed, data exfiltration begins
+  immediately and silently.
+controls:
+  - CTL.IAM.POLICY.GHOSTREF.002
+  - CTL.CLOUDTRAIL.DATAWRITE.001
+  - CTL.S3.LOG.001
+escalation_threshold: 2
+compound_severity: critical

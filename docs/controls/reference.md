@@ -3,24 +3,24 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 337
-**Pack hash:** `651c52839415e06128f6ff21fa95395a674bcf6ff68280ebf836112625a64c89`
+**Total controls:** 340
+**Pack hash:** `4cb2d1c82fe16f7b2936e293e73efc807e4160b6a613a56cf66357ca218054f5`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 59 |
-| high | 144 |
+| critical | 60 |
+| high | 146 |
 | info | 16 |
 | low | 22 |
 | medium | 96 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 248 |
+| exposure | 249 |
 | governance | 7 |
-| identity | 74 |
+| identity | 76 |
 | storage | 8 |
 
 ## Controls
@@ -2202,6 +2202,51 @@ IAM users must not have managed policies attached directly. Policies should be a
 IAM policies must not grant the ability to modify, create, or attach policies to the principal's own role or user. Permissions like iam:CreatePolicyVersion, iam:AttachRolePolicy, and iam:PutRolePolicy scoped to self enable privilege escalation — a compromised identity can grant itself full admin access without needing any other vulnerability.
 
 **Remediation:** Remove iam:CreatePolicyVersion, iam:AttachRolePolicy, and iam:PutRolePolicy permissions from non-admin roles. Use SCPs to deny self-modification at the organization level.
+
+---
+
+### CTL.IAM.POLICY.GHOSTREF.001
+
+**IAM Policies Must Not Reference Non-Existent Resources**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-3; nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+All fully-qualified non-wildcard ARNs in IAM policy Allow statements must resolve to resources present in the snapshot inventory. A dangling reference — an Allow statement granting permissions on a resource that no longer exists — is a persistence mechanism waiting to be exploited. An attacker who can create a resource with the same name inherits all permissions that reference it. For S3 buckets, which have globally unique names and no account-scoped protection, this is an active supply chain takeover vector. This control cross-references the IAM policy ARN inventory against the resource inventory and only fires when snapshot completeness for the relevant resource types is confirmed.
+
+**Remediation:** Remove or update Allow statements referencing ARNs for resources that no longer exist. If the resource was intentionally deleted, remove the policy statement. If the resource was renamed, update the ARN.
+
+---
+
+### CTL.IAM.POLICY.GHOSTREF.002
+
+**Write-Permission Dangling References Are Critical Severity**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-3; gdpr: Art.32; hipaa: 164.312(a)(1); nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+IAM policy Allow statements granting write permissions to non-existent reclaimable resource names are an active exfiltration path. The victim's systems attempt to write to the resource — if an attacker registers the name, data flows directly to attacker-controlled infrastructure. S3 bucket ARNs contain no account ID and are globally reclaimable. Write-class permissions (PutObject, SendMessage, Publish, PutRecord) on non-existent S3 buckets, SQS queues, SNS topics, and Kinesis streams are the highest-severity ghost reference findings. This control only evaluates ARN types with confirmed complete collection in the snapshot.
+
+**Remediation:** Remove write-permission Allow statements referencing non-existent resources. For S3 buckets, re-create the bucket in the account before an attacker claims the name, or remove the policy statement entirely.
+
+---
+
+### CTL.IAM.POLICY.GHOSTREF.003
+
+**Dangling KMS Key References Must Not Exist in Active Policies**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-12; hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-12; pci_dss_v4.0: 3.6.1; soc2: CC6.7;
+
+IAM policies granting KMS permissions must only reference KMS key ARNs in enabled status. A policy referencing a pending-deletion or deleted KMS key means systems depending on that policy for encrypt/decrypt operations will fail silently — data integrity violations for PHI workloads. KMS key ARNs include the account ID and a random key ID so they cannot be claimed cross-account, but the operational impact of referencing a non-functional key is a direct compliance failure.
+
+**Remediation:** Cancel the key deletion if the key is still needed, or remove the KMS permissions from the policy. If a replacement key exists, update the policy to reference the new key ARN.
 
 ---
 

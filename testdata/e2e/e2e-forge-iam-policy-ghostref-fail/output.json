@@ -1,0 +1,106 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "ffc710034409d447a2d84e7db429fd94e40c1b9976fbb31f4125477d724377f7",
+        "2026-01-11T000000Z.json": "00afae269fbe65b97446baf61d56a66b99f66e0de11f1b87071a2c36a8990784"
+      },
+      "overall": "170675536c346cdb2ee2bd18312d380439bedae0352762c5b344974f488a77bb"
+    },
+    "policy_fingerprint": "e97fc415fda4cb69cb969095d8181881a3710e75d83d271a398909d949a64f7c"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.IAM.POLICY.GHOSTREF.003",
+      "asset_id": "test-iam-policy",
+      "asset_type": "aws_iam_policy",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.IAM.POLICY.GHOSTREF.003",
+      "control_name": "Dangling KMS Key References Must Not Exist in Active Policies",
+      "control_description": "Detects assets where has_dangling_kms_refs is eq true.\n",
+      "asset_id": "test-iam-policy",
+      "asset_type": "aws_iam_policy",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "identity.policy.has_dangling_kms_refs",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Detects assets where has_dangling_kms_refs is eq true.",
+        "action": "Remove KMS permissions referencing deleted or pending-deletion keys."
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.IAM.POLICY.GHOSTREF.003",
+      "asset_id": "test-iam-policy",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-policy-ghostref-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-policy-ghostref-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "a3e86f796a9059b05b2a9dc1408d0543ed307cf6",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-iam-policy-ghostref-fail/controls/"
+      ]
+    }
+  }
+}

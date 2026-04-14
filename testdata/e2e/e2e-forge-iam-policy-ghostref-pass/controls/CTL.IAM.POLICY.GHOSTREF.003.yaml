@@ -1,0 +1,23 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.POLICY.GHOSTREF.003
+name: Dangling KMS Key References Must Not Exist in Active Policies
+description: >
+  Detects assets where has_dangling_kms_refs is eq true.
+domain: exposure
+severity: high
+scope_tags:
+  - aws
+  - iam
+  - kms
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Detects assets where has_dangling_kms_refs is eq true.
+  action: >
+    Remove KMS permissions referencing deleted or pending-deletion keys.
+unsafe_predicate:
+  all:
+    - field: properties.identity.policy.has_dangling_kms_refs
+      op: eq
+      value: true

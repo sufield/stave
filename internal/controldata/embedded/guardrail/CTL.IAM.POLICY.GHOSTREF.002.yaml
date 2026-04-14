@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.POLICY.GHOSTREF.002
+name: Write-Permission Dangling References Are Critical Severity
+description: >
+  IAM policy Allow statements granting write permissions to non-existent reclaimable resource names are an active exfiltration path. The victim's systems attempt to write to the resource — if an attacker registers the name, data flows directly to attacker-controlled infrastructure. S3 bucket ARNs contain no account ID and are globally reclaimable. Write-class permissions (PutObject, SendMessage, Publish, PutRecord) on non-existent S3 buckets, SQS queues, SNS topics, and Kinesis streams are the highest-severity ghost reference findings. This control only evaluates ARN types with confirmed complete collection in the snapshot.
+domain: identity
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-3"
+  fedramp_moderate: "AC-3"
+  hipaa: "164.312(a)(1)"
+  pci_dss_v4.0: "7.2.1"
+  soc2: "CC6.1"
+  gdpr: "Art.32"
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    IAM policy grants write permissions to a non-existent reclaimable resource name — an active exfiltration path.
+  action: >
+    Remove write-permission Allow statements referencing non-existent resources. For S3 buckets, re-create the bucket in the account before an attacker claims the name, or remove the policy statement entirely.
+unsafe_predicate:
+  all:
+    - field: properties.identity.policy.has_write_ghost_refs
+      op: eq
+      value: true

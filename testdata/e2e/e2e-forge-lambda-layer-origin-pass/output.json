@@ -32,11 +32,8 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "bb226af3ced9f7650b8ac19f25e08126a5deed33",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-lambda-layer-origin-pass/controls/"
-      ]
+      "head_commit": "a3e86f796a9059b05b2a9dc1408d0543ed307cf6",
+      "dirty": false
     }
   }
 }

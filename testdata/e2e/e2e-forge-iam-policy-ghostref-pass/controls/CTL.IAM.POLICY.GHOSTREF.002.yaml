@@ -1,0 +1,22 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.POLICY.GHOSTREF.002
+name: Write-Permission Dangling References Are Critical Severity
+description: >
+  Detects assets where has_write_ghost_refs is eq true.
+domain: identity
+severity: critical
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Detects assets where has_write_ghost_refs is eq true.
+  action: >
+    Remove write-permission Allow statements referencing reclaimable non-existent resource names.
+unsafe_predicate:
+  all:
+    - field: properties.identity.policy.has_write_ghost_refs
+      op: eq
+      value: true
