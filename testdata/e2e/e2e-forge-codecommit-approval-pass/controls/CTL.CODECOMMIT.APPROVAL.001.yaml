@@ -1,0 +1,62 @@
+dsl_version: ctrl.v1
+id: CTL.CODECOMMIT.APPROVAL.001
+name: CodeCommit Repositories Must Have Branch Protection and Approval Rules
+description: >
+  CodeCommit repositories must have approval rule templates configured
+  on protected branches requiring at least one reviewer. Without branch
+  protection, any principal with push permissions can commit directly
+  to the main branch — bypassing code review, inserting malicious code
+  into the deployment pipeline, and establishing persistence through
+  the CI/CD chain. This is a supply chain persistence technique: the
+  attacker uses the legitimate deployment pipeline to deliver their
+  payload. Lambda code signing and ECR image signing enforce integrity
+  at the artifact level; this control enforces integrity at the source
+  level before the artifact is built.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SI-7"
+  fedramp_moderate: "SI-7"
+  hipaa: "164.312(c)(1)"
+  pci_dss_v4.0: "6.3.2"
+  soc2: "CC8.1"
+  iso_27001_2022: "A.8.4"
+scope_tags:
+  - aws
+  - codecommit
+type: unsafe_state
+params:
+  attack_stage: persistence
+  base_impact: 8
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 1.5
+remediation:
+  description: >
+    CodeCommit repository has no approval rule templates on its default
+    branch. Any principal with push permissions can commit directly
+    without code review.
+  action: >
+    Create an approval rule template requiring at least one reviewer
+    from a designated reviewer group. Apply the template to the default
+    branch (main/master). Prevent force-push on the default branch. Use
+    aws codecommit create-approval-rule-template to create the template
+    and associate-approval-rule-template-with-repository to apply it.
+  example: |
+    {
+      "repository": {
+        "kind": "codecommit",
+        "branch_protection": {
+          "approval_enforced": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.repository.kind
+      op: eq
+      value: codecommit
+    - field: properties.repository.branch_protection.approval_enforced
+      op: eq
+      value: false

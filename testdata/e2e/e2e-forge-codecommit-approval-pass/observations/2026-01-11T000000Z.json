@@ -1,0 +1,24 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:codecommit:us-east-1:123456789012:prod-api",
+      "properties": {
+        "repository": {
+          "branch_protection": {
+            "approval_enforced": true
+          },
+          "kind": "codecommit"
+        }
+      },
+      "type": "aws_codecommit_repository",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  }
+}

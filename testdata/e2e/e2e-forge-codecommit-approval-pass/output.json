@@ -1,0 +1,42 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "9a0c869f9dff1b1d0af93079efcf1623506623476035d68ea5bf8a0434e8b018",
+        "2026-01-11T000000Z.json": "7ce6613d25fd29973bed38ef642594d5bb8c55b53a6d8b578d6cab97588fc8a2"
+      },
+      "overall": "72aa08942e71cdb5c6c29fdb95a7106f912209838eb83f12bf0d0aedf48a5ed9"
+    },
+    "policy_fingerprint": "26c6770a79b5e0aed724af2620fae088df80f44619a943c5d0a34cc3728cba52"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-codecommit-approval-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-codecommit-approval-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "79637d36231b841eebb78505a3819873d4309517",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-codecommit-approval-pass/controls/"
+      ]
+    }
+  }
+}

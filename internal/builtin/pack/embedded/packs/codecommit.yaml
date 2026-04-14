@@ -1,0 +1,5 @@
+id: codecommit
+description: AWS CodeCommit repository security controls
+controls:
+  - CTL.CODECOMMIT.ACCESS.001
+  - CTL.CODECOMMIT.APPROVAL.001

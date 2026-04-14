@@ -1,0 +1,121 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "e53d154bb6182306f091725d1f4c5863d0f84da71798e6850c49021bdbe9c2ea",
+        "2026-01-11T000000Z.json": "4ad694e5cfd453346dc7d60fc31227b9217029ef93113d8c6ed4fe3648601868"
+      },
+      "overall": "941d17840a82f5a0b649a29dcd35f49b4a435966eac2d6db2febc21c8f187759"
+    },
+    "policy_fingerprint": "dcd01fcfd7a294403013fe11e95ec3db17495a9f89817d6a07933f068b502cd4"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.CODECOMMIT.ACCESS.001",
+      "asset_id": "arn:aws:codecommit:us-east-1:123456789012:prod-api",
+      "asset_type": "aws_codecommit_repository",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.CODECOMMIT.ACCESS.001",
+      "control_name": "CodeCommit Repositories Must Have Restrictive Resource Policies",
+      "control_description": "CodeCommit repositories must not allow overly broad access through wildcard principal resource policies or unrestricted IAM read permissions. Repositories contain source code, configuration files, infrastructure definitions, and frequently embedded secrets. MITRE ATT\u0026CK T1213.003 documents code repository access as a collection technique — attackers use repository access to gather credentials and understand internal architecture before moving to higher-value targets. A compromised IAM role with broad CodeCommit read permissions can exfiltrate the entire codebase including hardcoded credentials, IaC files, and CI/CD pipeline configurations.\n",
+      "asset_id": "arn:aws:codecommit:us-east-1:123456789012:prod-api",
+      "asset_type": "aws_codecommit_repository",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "repository.access.is_overly_broad",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "repository.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "codecommit"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "fedramp_moderate": "AC-3",
+        "gdpr": "Art.32",
+        "hipaa": "164.312(a)(1)",
+        "nist_800_53_r5": "AC-3",
+        "pci_dss_v4.0": "7.2.1",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "CodeCommit repository has overly broad access. Source code is readable by wildcard principals or through unrestricted IAM policies.",
+        "action": "Restrict repository resource policies to named principals. Scope IAM policies granting codecommit:GitPull and read actions to specific repository ARNs rather than Resource *. Enable CloudTrail data events for CodeCommit to audit repository access.",
+        "example": "{\n  \"repository\": {\n    \"kind\": \"codecommit\",\n    \"access\": {\n      \"is_overly_broad\": false\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.CODECOMMIT.ACCESS.001",
+      "asset_id": "arn:aws:codecommit:us-east-1:123456789012:prod-api",
+      "exposure_score": 112.5,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1.5,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-codecommit-access-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-codecommit-access-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "79637d36231b841eebb78505a3819873d4309517",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-codecommit-access-fail/controls/"
+      ]
+    }
+  }
+}

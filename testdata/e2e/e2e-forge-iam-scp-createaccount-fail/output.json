@@ -105,11 +105,8 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "ad1d7c26980a03621b6a2f52c1e39711bc55bb7f",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-iam-scp-createaccount-fail/controls/"
-      ]
+      "head_commit": "79637d36231b841eebb78505a3819873d4309517",
+      "dirty": false
     }
   }
 }

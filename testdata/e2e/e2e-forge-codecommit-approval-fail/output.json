@@ -1,0 +1,121 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "69f50f4da8a8885e602991e302368be2f557279e4366f85d52a6d2eefed6f1bd",
+        "2026-01-11T000000Z.json": "fe87a8f0c421fe9f21097bd867bd880e671e0cce96bf800b4ca387b979c93fb6"
+      },
+      "overall": "0b8246f8e428b68e5a38118c8886c28ff57fda3605def2286f6ecc2c6c7fbc01"
+    },
+    "policy_fingerprint": "26c6770a79b5e0aed724af2620fae088df80f44619a943c5d0a34cc3728cba52"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.CODECOMMIT.APPROVAL.001",
+      "asset_id": "arn:aws:codecommit:us-east-1:123456789012:prod-api",
+      "asset_type": "aws_codecommit_repository",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.CODECOMMIT.APPROVAL.001",
+      "control_name": "CodeCommit Repositories Must Have Branch Protection and Approval Rules",
+      "control_description": "CodeCommit repositories must have approval rule templates configured on protected branches requiring at least one reviewer. Without branch protection, any principal with push permissions can commit directly to the main branch — bypassing code review, inserting malicious code into the deployment pipeline, and establishing persistence through the CI/CD chain. This is a supply chain persistence technique: the attacker uses the legitimate deployment pipeline to deliver their payload. Lambda code signing and ECR image signing enforce integrity at the artifact level; this control enforces integrity at the source level before the artifact is built.\n",
+      "asset_id": "arn:aws:codecommit:us-east-1:123456789012:prod-api",
+      "asset_type": "aws_codecommit_repository",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "repository.branch_protection.approval_enforced",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "repository.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "codecommit"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "fedramp_moderate": "SI-7",
+        "hipaa": "164.312(c)(1)",
+        "iso_27001_2022": "A.8.4",
+        "nist_800_53_r5": "SI-7",
+        "pci_dss_v4.0": "6.3.2",
+        "soc2": "CC8.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "CodeCommit repository has no approval rule templates on its default branch. Any principal with push permissions can commit directly without code review.",
+        "action": "Create an approval rule template requiring at least one reviewer from a designated reviewer group. Apply the template to the default branch (main/master). Prevent force-push on the default branch. Use aws codecommit create-approval-rule-template to create the template and associate-approval-rule-template-with-repository to apply it.",
+        "example": "{\n  \"repository\": {\n    \"kind\": \"codecommit\",\n    \"branch_protection\": {\n      \"approval_enforced\": true\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.CODECOMMIT.APPROVAL.001",
+      "asset_id": "arn:aws:codecommit:us-east-1:123456789012:prod-api",
+      "exposure_score": 112.5,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1.5,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-codecommit-approval-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-codecommit-approval-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "79637d36231b841eebb78505a3819873d4309517",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-codecommit-approval-fail/controls/"
+      ]
+    }
+  }
+}

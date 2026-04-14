@@ -1,0 +1,60 @@
+dsl_version: ctrl.v1
+id: CTL.CODECOMMIT.ACCESS.001
+name: CodeCommit Repositories Must Have Restrictive Resource Policies
+description: >
+  CodeCommit repositories must not allow overly broad access through
+  wildcard principal resource policies or unrestricted IAM read
+  permissions. Repositories contain source code, configuration files,
+  infrastructure definitions, and frequently embedded secrets.
+  MITRE ATT&CK T1213.003 documents code repository access as a
+  collection technique — attackers use repository access to gather
+  credentials and understand internal architecture before moving to
+  higher-value targets. A compromised IAM role with broad CodeCommit
+  read permissions can exfiltrate the entire codebase including
+  hardcoded credentials, IaC files, and CI/CD pipeline configurations.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  fedramp_moderate: "AC-3"
+  hipaa: "164.312(a)(1)"
+  pci_dss_v4.0: "7.2.1"
+  soc2: "CC6.1"
+  gdpr: "Art.32"
+scope_tags:
+  - aws
+  - codecommit
+type: unsafe_state
+params:
+  attack_stage: exfiltration
+  base_impact: 8
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 1.5
+remediation:
+  description: >
+    CodeCommit repository has overly broad access. Source code is
+    readable by wildcard principals or through unrestricted IAM policies.
+  action: >
+    Restrict repository resource policies to named principals. Scope
+    IAM policies granting codecommit:GitPull and read actions to specific
+    repository ARNs rather than Resource *. Enable CloudTrail data events
+    for CodeCommit to audit repository access.
+  example: |
+    {
+      "repository": {
+        "kind": "codecommit",
+        "access": {
+          "is_overly_broad": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.repository.kind
+      op: eq
+      value: codecommit
+    - field: properties.repository.access.is_overly_broad
+      op: eq
+      value: true

@@ -90,3 +90,5 @@ packs:
     path: packs/s3.yaml
   - id: shield
     path: packs/shield.yaml
+  - id: codecommit
+    path: packs/codecommit.yaml
