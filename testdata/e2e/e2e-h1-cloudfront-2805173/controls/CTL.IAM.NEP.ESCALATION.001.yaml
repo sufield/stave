@@ -1,0 +1,44 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.NEP.ESCALATION.001
+name: No Principal May Have Net Effective Permissions to Escalate Privileges
+description: >
+  After resolving all policy layers including transitive role assumption
+  chains, no non-administrative principal may have effective permissions
+  to escalate beyond their intended privilege scope. Escalation is
+  detected in two forms: direct escalation primitives
+  (iam:CreatePolicyVersion, iam:AttachRolePolicy, etc.) in the resolved
+  effective allow set, and transitive escalation through role chains
+  that reach higher privilege levels than the principal's direct
+  permissions. A developer role that can assume a pipeline role that can
+  assume an admin role has effective admin access — neither individual
+  role appears dangerous, but the chain is the finding.
+domain: identity
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-6"
+  fedramp_moderate: "AC-6"
+  pci_dss_v4.0: "7.2.1"
+  soc2: "CC6.1"
+  hipaa: "164.312(a)(1)"
+  cis_aws_v3.0: "1.16"
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    Principal has effective privilege escalation capability — either a
+    direct escalation primitive or a transitive role chain reaching
+    admin-equivalent permissions.
+  action: >
+    For direct primitives: remove or scope the escalation action to
+    specific resource ARNs. For transitive chains: remove the
+    sts:AssumeRole grant that enables the chain, or scope it to
+    specific non-admin role ARNs.
+unsafe_predicate:
+  all:
+    - field: properties.identity.nep.has_escalation_path
+      op: eq
+      value: true

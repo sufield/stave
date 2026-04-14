@@ -1,0 +1,127 @@
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-extract-iam"
+  },
+  "captured_at": "2026-01-01T00:00:00Z",
+  "assets": [
+    {
+      "id": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-CloudFrontConfigVersionCo-rAgdktzDTPRh",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "nep": {
+            "has_escalation_path": true,
+            "is_admin": false,
+            "escalation_actions": ["iam:AttachRolePolicy", "iam:CreatePolicy", "iam:CreateRole"],
+            "privilege_level": "high"
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-RepoConstructExtDeployerR-wBEukYirZfbr",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "nep": {
+            "has_escalation_path": true,
+            "is_admin": true,
+            "escalation_actions": ["iam:*"],
+            "privilege_level": "admin"
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:lambda:us-east-1:123456789012:function/cf_config_version_exporter",
+      "type": "aws_lambda_function",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "function",
+          "execution_role": {
+            "role_arn": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-CloudFrontConfigVersionCo-rAgdktzDTPRh",
+            "is_overprivileged": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:lambda:us-east-1:123456789012:function/cf_config_version_manager",
+      "type": "aws_lambda_function",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "function",
+          "execution_role": {
+            "role_arn": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-CloudFrontConfigVersionCo-rAgdktzDTPRh",
+            "is_overprivileged": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:lambda:us-east-1:123456789012:function/cf_config_version_manager_graphql",
+      "type": "aws_lambda_function",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "function",
+          "execution_role": {
+            "role_arn": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-CloudFrontConfigVersionCo-rAgdktzDTPRh",
+            "is_overprivileged": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:lambda:us-east-1:123456789012:function/cloudFrontExtensionsConso-SingletonLambdaf7d4f7304-ZbLF9YFgQ4eq",
+      "type": "aws_lambda_function",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "function",
+          "execution_role": {
+            "role_arn": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-CloudFrontConfigVersionCo-rAgdktzDTPRh",
+            "is_overprivileged": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:lambda:us-east-1:123456789012:function/cloudFrontExtensionsConso-RepoConstructSyncExtensi-ydrYwNGQCoFr",
+      "type": "aws_lambda_function",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "function",
+          "execution_role": {
+            "role_arn": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-RepoConstructExtDeployerR-wBEukYirZfbr",
+            "is_overprivileged": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:lambda:us-east-1:123456789012:function/cloudFrontExtensionsConso-RepoConstructExtDeployer-1uHGWxrjog9S",
+      "type": "aws_lambda_function",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "function",
+          "execution_role": {
+            "role_arn": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-RepoConstructExtDeployerR-wBEukYirZfbr",
+            "is_overprivileged": true
+          }
+        }
+      }
+    }
+  ],
+  "source": "deployed"
+}
