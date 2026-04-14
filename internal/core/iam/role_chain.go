@@ -199,13 +199,13 @@ func HasTransitiveAdmin(chains []RoleChain) bool {
 
 // MaxDepth returns the deepest chain depth found.
 func MaxDepth(chains []RoleChain) int {
-	max := 0
+	maxDepth := 0
 	for _, chain := range chains {
-		if len(chain.Hops) > max {
-			max = len(chain.Hops)
+		if len(chain.Hops) > maxDepth {
+			maxDepth = len(chain.Hops)
 		}
 	}
-	return max
+	return maxDepth
 }
 
 func appendHop(hops []RoleHop, from, to, accountID string) []RoleHop {

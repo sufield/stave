@@ -1,6 +1,7 @@
 package iam
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -14,20 +15,24 @@ func buildResolvedIndex(entries map[string]ResolvedPermissions) map[string]*Reso
 
 func trustDoc(t *testing.T, principals ...string) *PolicyDocument {
 	t.Helper()
-	var resources string
+	var b strings.Builder
 	if len(principals) == 1 {
-		resources = `"` + principals[0] + `"`
+		b.WriteByte('"')
+		b.WriteString(principals[0])
+		b.WriteByte('"')
 	} else {
-		resources = `[`
+		b.WriteByte('[')
 		for i, p := range principals {
 			if i > 0 {
-				resources += ","
+				b.WriteByte(',')
 			}
-			resources += `"` + p + `"`
+			b.WriteByte('"')
+			b.WriteString(p)
+			b.WriteByte('"')
 		}
-		resources += `]`
+		b.WriteByte(']')
 	}
-	doc := mustParse(t, `{"Statement":[{"Effect":"Allow","Action":"sts:AssumeRole","Resource":`+resources+`}]}`)
+	doc := mustParse(t, `{"Statement":[{"Effect":"Allow","Action":"sts:AssumeRole","Resource":`+b.String()+`}]}`)
 	return &doc
 }
 
