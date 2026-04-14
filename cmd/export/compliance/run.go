@@ -2,7 +2,6 @@ package compliance
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -106,10 +105,21 @@ func runCompliance(
 		out = f
 	}
 
-	enc := json.NewEncoder(out)
-	enc.SetIndent("", "  ")
-	if err := enc.Encode(export); err != nil {
-		return fmt.Errorf("encode JSON: %w", err)
+	switch opts.Format {
+	case "json":
+		if err := renderJSON(out, export); err != nil {
+			return err
+		}
+	case "table":
+		if err := renderTable(out, export, opts.Verbose); err != nil {
+			return err
+		}
+	case "markdown":
+		if err := renderMarkdown(out, export); err != nil {
+			return err
+		}
+	default:
+		return &ui.UserError{Err: fmt.Errorf("unsupported format: %q (supported: json, table, markdown)", opts.Format)}
 	}
 
 	// 9. Determine exit code.

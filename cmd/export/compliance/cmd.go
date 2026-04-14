@@ -9,20 +9,23 @@ import (
 type options struct {
 	Snapshot    string
 	Profile     string
+	Format      string
 	Out         string
 	MinSeverity string
 	IncludePass bool
+	Verbose     bool
 }
 
 // NewCmd creates the compliance evidence export subcommand.
 func NewCmd(newCtlRepo compose.CtlRepoFactory, newCELEvaluator compose.CELEvaluatorFactory) *cobra.Command {
 	opts := &options{
+		Format:      "json",
 		MinSeverity: "all",
 	}
 
 	cmd := &cobra.Command{
 		Use:   "compliance",
-		Short: "Export compliance evidence package as JSON",
+		Short: "Export compliance evidence package",
 		Long: `Evaluate a snapshot against a compliance framework profile and
 export a structured evidence package as JSON.
 
@@ -63,9 +66,11 @@ Examples:
 
 	cmd.Flags().StringVar(&opts.Snapshot, "snapshot", "", "path to snapshot file (required)")
 	cmd.Flags().StringVar(&opts.Profile, "profile", "", "compliance profile ID (required)")
+	cmd.Flags().StringVarP(&opts.Format, "format", "f", "json", "output format: json | table | markdown")
 	cmd.Flags().StringVar(&opts.Out, "out", "", "write output to file instead of stdout")
 	cmd.Flags().StringVar(&opts.MinSeverity, "min-severity", "all", "minimum severity filter: critical|high|medium|low|all")
 	cmd.Flags().BoolVar(&opts.IncludePass, "include-pass", false, "include passing evidence records")
+	cmd.Flags().BoolVar(&opts.Verbose, "verbose", false, "include reasoning traces in table output")
 
 	_ = cmd.MarkFlagRequired("snapshot")
 	_ = cmd.MarkFlagRequired("profile")
