@@ -1,0 +1,5 @@
+id: autoscaling
+description: AWS Auto Scaling availability controls
+controls:
+    - CTL.AUTOSCALING.MULTIAZ.001
+    - CTL.AUTOSCALING.INCOMPLETE.001

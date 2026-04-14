@@ -1,0 +1,9 @@
+id: backup
+description: Cross-service backup and availability controls
+controls:
+    - CTL.BACKUP.EXISTS.001
+    - CTL.BACKUP.RECENT.001
+    - CTL.BACKUP.ENCRYPT.001
+    - CTL.BACKUP.MULTIAZ.001
+    - CTL.BACKUP.REPLICATION.001
+    - CTL.BACKUP.INCOMPLETE.001

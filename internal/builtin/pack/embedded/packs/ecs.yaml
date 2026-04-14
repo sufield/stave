@@ -1,0 +1,5 @@
+id: ecs
+description: AWS ECS container task security controls
+controls:
+    - CTL.ECS.TASKMETADATA.001
+    - CTL.ECS.TASKMETADATA.002

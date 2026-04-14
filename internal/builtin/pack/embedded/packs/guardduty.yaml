@@ -1,0 +1,5 @@
+id: guardduty
+description: AWS GuardDuty threat detection controls
+controls:
+    - CTL.GUARDDUTY.ENABLED.001
+    - CTL.GUARDDUTY.INCOMPLETE.001

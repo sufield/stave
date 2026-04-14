@@ -1,0 +1,8 @@
+id: elb
+description: AWS ELB load balancer security controls
+controls:
+    - CTL.ELB.TLS.001
+    - CTL.ELB.HTTPS.001
+    - CTL.ELB.LOG.001
+    - CTL.ELB.CROSSZONE.001
+    - CTL.ELB.INCOMPLETE.001

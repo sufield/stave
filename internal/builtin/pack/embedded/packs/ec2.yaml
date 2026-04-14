@@ -1,0 +1,10 @@
+id: ec2
+description: AWS EC2 compute security controls
+controls:
+    - CTL.EC2.EBS.ENCRYPT.001
+    - CTL.EC2.SNAPSHOT.ENCRYPT.001
+    - CTL.EC2.PUBLIC.001
+    - CTL.EC2.IMDSV2.001
+    - CTL.EC2.IAMROLE.001
+    - CTL.EC2.AMI.CURRENCY.001
+    - CTL.EC2.INCOMPLETE.001

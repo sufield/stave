@@ -1,0 +1,10 @@
+id: waf
+description: AWS WAF web application firewall controls
+controls:
+    - CTL.WAF.RULES.001
+    - CTL.WAF.RULES.OWASP.001
+    - CTL.WAF.ORIGIN.LOCKDOWN.001
+    - CTL.WAF.EVASION.OBSERVE.001
+    - CTL.WAF.PARSERLIMIT.PROTECT.001
+    - CTL.WAF.LOGGING.001
+    - CTL.WAF.INCOMPLETE.001

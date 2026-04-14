@@ -1,0 +1,6 @@
+id: dynamodb
+description: AWS DynamoDB database security controls
+controls:
+    - CTL.DYNAMODB.ENCRYPT.001
+    - CTL.DYNAMODB.PITR.001
+    - CTL.DYNAMODB.INCOMPLETE.001

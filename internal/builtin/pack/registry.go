@@ -11,11 +11,12 @@ import (
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/sufield/stave/internal/controldata"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/platform/crypto"
 )
 
-//go:embed embedded/index.yaml
+//go:embed embedded/index.yaml embedded/packs/*.yaml
 var embeddedRegistryFS embed.FS
 
 // ControlRef describes a single control entry in the registry index.
@@ -25,14 +26,20 @@ type ControlRef struct {
 }
 
 type packSpec struct {
+	ID          string             `yaml:"id"`
 	Description string             `yaml:"description"`
 	Controls    []kernel.ControlID `yaml:"controls"`
 }
 
+// packRef is a manifest entry pointing to a pack file.
+type packRef struct {
+	ID   string `yaml:"id"`
+	Path string `yaml:"path"`
+}
+
 type registryIndex struct {
-	Version  string                `yaml:"version"`
-	Packs    map[string]packSpec   `yaml:"packs"`
-	Controls map[string]ControlRef `yaml:"controls"`
+	Version string    `yaml:"version"`
+	Packs   []packRef `yaml:"packs"`
 }
 
 // Pack describes a named control pack.
@@ -53,9 +60,18 @@ type Index struct {
 	controls map[string]ControlRef
 }
 
-// NewIndex parses YAML data into a Index with all packs pre-sorted.
+// testRegistryIndex is the legacy inline format used by unit tests.
+type testRegistryIndex struct {
+	Version  string                `yaml:"version"`
+	Packs    map[string]packSpec   `yaml:"packs"`
+	Controls map[string]ControlRef `yaml:"controls"`
+}
+
+// NewIndex parses inline YAML data into an Index. This supports the legacy
+// format where packs and controls are defined inline — used by unit tests.
+// Production code uses NewEmbeddedRegistry which reads per-pack files.
 func NewIndex(data []byte) (*Index, error) {
-	var idx registryIndex
+	var idx testRegistryIndex
 	if err := yaml.Unmarshal(data, &idx); err != nil {
 		return nil, fmt.Errorf("parse registry: %w", err)
 	}
@@ -70,7 +86,12 @@ func NewIndex(data []byte) (*Index, error) {
 		r.controls = map[string]ControlRef{}
 	}
 
-	if err := r.loadPacks(idx.Packs); err != nil {
+	specs := make(map[string]packSpec, len(idx.Packs))
+	for name, spec := range idx.Packs {
+		spec.ID = name
+		specs[name] = spec
+	}
+	if err := r.loadPacks(specs); err != nil {
 		return nil, err
 	}
 	slices.Sort(r.packNames)
@@ -78,14 +99,30 @@ func NewIndex(data []byte) (*Index, error) {
 	return r, nil
 }
 
+// PopulateControlRefs derives the controls metadata map from the embedded
+// filesystem, replacing any hand-maintained controls: section from the YAML.
+// This must be called after NewIndex and before ValidateStrict.
+func (r *Index) PopulateControlRefs(fsys embed.FS, root string) error {
+	refs, err := DeriveControlRefs(fsys, root)
+	if err != nil {
+		return err
+	}
+	r.controls = refs
+	return nil
+}
+
 func (r *Index) loadPacks(specs map[string]packSpec) error {
 	for name, spec := range specs {
 		ids := slices.Clone(spec.Controls)
 		slices.Sort(ids)
 
-		for _, id := range ids {
-			if _, ok := r.controls[string(id)]; !ok {
-				return fmt.Errorf("pack %q: undefined control %q", name, id)
+		// When controls: map is populated (backward compat), validate
+		// that every pack control ID has a metadata entry.
+		if len(r.controls) > 0 {
+			for _, id := range ids {
+				if _, ok := r.controls[string(id)]; !ok {
+					return fmt.Errorf("pack %q: undefined control %q", name, id)
+				}
 			}
 		}
 
@@ -206,13 +243,56 @@ func (r *Index) VerifyNoOrphans(fsys embed.FS, root string) ([]string, error) {
 	return orphans, nil
 }
 
-// NewEmbeddedRegistry creates a registry from the bundled embedded index.yaml.
+// NewEmbeddedRegistry creates a registry from the bundled manifest and
+// per-pack YAML files. Control metadata is derived from the embedded
+// control YAML files.
 func NewEmbeddedRegistry() (*Index, error) {
 	data, err := embeddedRegistryFS.ReadFile("embedded/index.yaml")
 	if err != nil {
 		return nil, fmt.Errorf("read embedded pack registry: %w", err)
 	}
-	return NewIndex(data)
+
+	var manifest registryIndex
+	if err := yaml.Unmarshal(data, &manifest); err != nil {
+		return nil, fmt.Errorf("parse registry manifest: %w", err)
+	}
+
+	r := &Index{
+		version:   strings.TrimSpace(manifest.Version),
+		hash:      crypto.HashBytes(data),
+		packs:     make(map[string]Pack, len(manifest.Packs)),
+		controls:  map[string]ControlRef{},
+		packNames: make([]string, 0, len(manifest.Packs)),
+	}
+
+	// Derive control metadata from embedded control YAMLs.
+	if err := r.PopulateControlRefs(controldata.FS, "embedded"); err != nil {
+		return nil, fmt.Errorf("derive control refs: %w", err)
+	}
+
+	// Load each pack file from the manifest.
+	specs := make(map[string]packSpec, len(manifest.Packs))
+	for _, ref := range manifest.Packs {
+		packData, readErr := embeddedRegistryFS.ReadFile("embedded/" + ref.Path)
+		if readErr != nil {
+			return nil, fmt.Errorf("read pack %q: %w", ref.ID, readErr)
+		}
+		var spec packSpec
+		if yamlErr := yaml.Unmarshal(packData, &spec); yamlErr != nil {
+			return nil, fmt.Errorf("parse pack %q: %w", ref.ID, yamlErr)
+		}
+		if spec.ID == "" {
+			spec.ID = ref.ID
+		}
+		specs[spec.ID] = spec
+	}
+
+	if err := r.loadPacks(specs); err != nil {
+		return nil, err
+	}
+	slices.Sort(r.packNames)
+
+	return r, nil
 }
 
 func clonePack(p Pack) Pack {

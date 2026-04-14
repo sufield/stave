@@ -1,0 +1,6 @@
+id: cognito
+description: AWS Cognito identity controls
+controls:
+    - CTL.COGNITO.MFA.001
+    - CTL.COGNITO.PASSWORD.001
+    - CTL.COGNITO.INCOMPLETE.001

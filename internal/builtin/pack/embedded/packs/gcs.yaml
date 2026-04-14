@@ -1,0 +1,10 @@
+id: gcs
+description: GCP Cloud Storage security controls
+controls:
+    - CTL.GCS.PUBLIC.001
+    - CTL.GCS.PUBLIC.002
+    - CTL.GCS.UNIFORM.001
+    - CTL.GCS.ENCRYPT.001
+    - CTL.GCS.LOG.001
+    - CTL.GCS.VERSION.001
+    - CTL.GCS.INCOMPLETE.001

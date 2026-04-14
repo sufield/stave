@@ -1,0 +1,6 @@
+id: sqs
+description: AWS SQS queue security controls
+controls:
+    - CTL.SQS.ENCRYPT.001
+    - CTL.SQS.DLQ.001
+    - CTL.SQS.INCOMPLETE.001

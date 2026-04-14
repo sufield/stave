@@ -1,0 +1,11 @@
+id: gdpr
+description: GDPR technical controls for personal data protection
+controls:
+    - CTL.S3.REGION.001
+    - CTL.S3.REPLICATION.003
+    - CTL.S3.DETECT.MACIE.001
+    - CTL.S3.OWNERSHIP.001
+    - CTL.S3.ACL.OBJECT.001
+    - CTL.S3.ACCOUNT.PAB.001
+    - CTL.EXPOSURE.ANON.001
+    - CTL.EXPOSURE.SOVEREIGNTY.001

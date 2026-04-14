@@ -1,0 +1,13 @@
+id: rds
+description: AWS RDS database security controls
+controls:
+    - CTL.RDS.ENCRYPT.001
+    - CTL.RDS.IAMAUTH.001
+    - CTL.RDS.PUBLIC.001
+    - CTL.RDS.MULTIAZ.001
+    - CTL.RDS.BACKUP.001
+    - CTL.RDS.LOG.001
+    - CTL.RDS.SSL.001
+    - CTL.RDS.AUTOUPGRADE.001
+    - CTL.RDS.ENGINE.EOL.001
+    - CTL.RDS.INCOMPLETE.001

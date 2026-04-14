@@ -1,0 +1,4 @@
+id: org
+description: AWS Organizations governance controls
+controls:
+    - CTL.ORG.REGION.SCP.001

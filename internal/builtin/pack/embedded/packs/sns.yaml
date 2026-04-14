@@ -1,0 +1,5 @@
+id: sns
+description: AWS SNS topic security controls
+controls:
+    - CTL.SNS.ENCRYPT.001
+    - CTL.SNS.INCOMPLETE.001

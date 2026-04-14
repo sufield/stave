@@ -1,0 +1,7 @@
+id: cloudformation
+description: AWS CloudFormation IaC controls
+controls:
+    - CTL.CLOUDFORMATION.DRIFT.001
+    - CTL.CLOUDFORMATION.ROLLBACK.001
+    - CTL.CLOUDFORMATION.STATE.001
+    - CTL.CLOUDFORMATION.INCOMPLETE.001

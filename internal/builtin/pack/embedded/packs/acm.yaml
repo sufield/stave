@@ -1,0 +1,4 @@
+id: acm
+description: AWS Certificate Manager certificate controls
+controls:
+    - CTL.ACM.CERT.EXPIRY.001

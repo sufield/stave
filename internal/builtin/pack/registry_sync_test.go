@@ -51,7 +51,13 @@ func TestRegistryEmbeddedFilesExist(t *testing.T) {
 			}
 
 			cleanPath := filepath.ToSlash(filepath.Clean(ctlRef.Path))
-			info, statErr := fs.Stat(rootFS, cleanPath)
+			// Derived paths use embedded/ prefix (FS root-relative).
+			// Disk paths need internal/controldata/ prefix (module root-relative).
+			diskPath := cleanPath
+			if strings.HasPrefix(diskPath, "embedded/") {
+				diskPath = "internal/controldata/" + diskPath
+			}
+			info, statErr := fs.Stat(rootFS, diskPath)
 			if statErr != nil {
 				t.Fatalf("file missing for control %s: %s (%v)", ctlID, ctlRef.Path, statErr)
 			}

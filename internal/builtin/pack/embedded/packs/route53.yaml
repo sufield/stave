@@ -1,0 +1,5 @@
+id: route53
+description: AWS Route 53 DNS service controls
+controls:
+    - CTL.ROUTE53.HEALTHCHECK.001
+    - CTL.ROUTE53.INCOMPLETE.001

@@ -1,0 +1,7 @@
+id: ecr
+description: AWS ECR container registry security controls
+controls:
+    - CTL.ECR.PUBLIC.001
+    - CTL.ECR.SCAN.001
+    - CTL.ECR.SIGNING.001
+    - CTL.ECR.INCOMPLETE.001

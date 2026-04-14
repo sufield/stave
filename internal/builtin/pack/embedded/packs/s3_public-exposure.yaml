@@ -1,0 +1,6 @@
+id: s3/public-exposure
+description: S3 public exposure baseline pack
+controls:
+    - CTL.S3.PUBLIC.001
+    - CTL.S3.PUBLIC.003
+    - CTL.S3.ACL.WRITE.001

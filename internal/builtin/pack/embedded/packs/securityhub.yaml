@@ -1,0 +1,5 @@
+id: securityhub
+description: AWS Security Hub aggregation controls
+controls:
+    - CTL.SECURITYHUB.ENABLED.001
+    - CTL.SECURITYHUB.INCOMPLETE.001

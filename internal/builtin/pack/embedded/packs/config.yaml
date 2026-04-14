@@ -1,0 +1,6 @@
+id: config
+description: AWS Config compliance controls
+controls:
+    - CTL.CONFIG.ENABLED.001
+    - CTL.CONFIG.RULES.001
+    - CTL.CONFIG.INCOMPLETE.001

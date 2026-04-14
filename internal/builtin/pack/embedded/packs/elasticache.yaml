@@ -1,0 +1,6 @@
+id: elasticache
+description: AWS ElastiCache security controls
+controls:
+    - CTL.ELASTICACHE.TRANSIT.001
+    - CTL.ELASTICACHE.AUTH.001
+    - CTL.ELASTICACHE.INCOMPLETE.001

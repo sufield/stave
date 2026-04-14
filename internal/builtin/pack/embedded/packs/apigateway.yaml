@@ -1,0 +1,7 @@
+id: apigateway
+description: AWS API Gateway security controls
+controls:
+    - CTL.APIGATEWAY.TLS.001
+    - CTL.APIGATEWAY.AUTH.001
+    - CTL.APIGATEWAY.VALIDATION.001
+    - CTL.APIGATEWAY.INCOMPLETE.001

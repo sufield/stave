@@ -1,0 +1,5 @@
+id: fedramp_moderate
+description: FedRAMP Moderate baseline controls (inherits NIST 800-53)
+controls:
+    # All NIST 800-53 controls apply, plus FIPS cryptography
+    - CTL.KMS.FIPS.001

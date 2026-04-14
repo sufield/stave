@@ -1,0 +1,6 @@
+id: dns
+description: DNS record security controls (vendor-agnostic)
+controls:
+    - CTL.DNS.DANGLING.001
+    - CTL.DNS.DANGLING.002
+    - CTL.DNS.DANGLING.003

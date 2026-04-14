@@ -1,0 +1,8 @@
+id: kms
+description: AWS KMS key management controls
+controls:
+    - CTL.KMS.POLICY.001
+    - CTL.KMS.ROTATION.001
+    - CTL.KMS.FIPS.001
+    - CTL.KMS.ISOLATION.001
+    - CTL.KMS.INCOMPLETE.001
