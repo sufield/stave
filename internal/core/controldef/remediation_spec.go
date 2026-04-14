@@ -13,6 +13,41 @@ type RemediationSpec struct {
 
 	// Example provides an optional concrete sample of the remediated state or command.
 	Example string `json:"example,omitempty"`
+
+	// Confidence indicates how certain Stave is that the suggested changes
+	// resolve the finding. Range 0.0–1.0. Populated from ConfidenceLevel.
+	Confidence float64 `json:"confidence,omitempty"`
+
+	// RiskScore is the environmental exposure score if available.
+	RiskScore *float64 `json:"risk_score,omitempty"`
+
+	// Changes provides machine-readable, IaC-agnostic property changes
+	// derived from the finding's misconfigurations.
+	Changes []PropertyChange `json:"changes,omitempty"`
+}
+
+// PropertyChange is a single structured property change.
+// It is IaC-tool-agnostic — any tool can consume it.
+type PropertyChange struct {
+	// PropertyPath is the observation property path that needs to change.
+	PropertyPath string `json:"property_path"`
+
+	// CurrentValue is the observed value from the snapshot.
+	CurrentValue string `json:"current_value"`
+
+	// RequiredValue is the value needed to satisfy the control.
+	// Empty when HasSafeDefault is false (context-dependent).
+	RequiredValue string `json:"required_value"`
+
+	// ResourceType is the AWS resource type this property belongs to.
+	ResourceType string `json:"resource_type,omitempty"`
+
+	// Description explains what this specific change does.
+	Description string `json:"description"`
+
+	// HasSafeDefault indicates whether Stave knows the required value
+	// with high certainty (true) or it depends on context (false).
+	HasSafeDefault bool `json:"has_safe_default"`
 }
 
 // NewRemediationSpec constructs a spec with whitespace-trimmed Description and Action.
