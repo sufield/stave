@@ -1,0 +1,42 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "afd140a92c94e182346268a8160f019513aa212018d1cf411fd09f1553ef4c33",
+        "2026-01-11T000000Z.json": "085348131cc00614816df12cde80164338f1a2dd7a46f870d1cd3505ee08397d"
+      },
+      "overall": "4f9d0209d615164138d173c8471b9adddd055f82a6552ebd42482c4e05c335e0"
+    },
+    "policy_fingerprint": "e4de27f974c34c32e917857e373b400db4041c6ad616972e904fb7b62a4dfe0c"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-scp-createaccount-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-scp-createaccount-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "ad1d7c26980a03621b6a2f52c1e39711bc55bb7f",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-iam-scp-createaccount-pass/controls/"
+      ]
+    }
+  }
+}

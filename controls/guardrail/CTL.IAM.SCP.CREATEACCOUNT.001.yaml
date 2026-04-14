@@ -1,0 +1,57 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SCP.CREATEACCOUNT.001
+name: SCPs Must Restrict Unauthorized IAM User and Account Creation
+description: >
+  AWS Organizations must have an SCP restricting who can create IAM users
+  (iam:CreateUser) and new AWS accounts (organizations:CreateAccount).
+  Without this restriction, any principal with these permissions can
+  create persistent identities that survive credential rotation and
+  incident response. MITRE ATT&CK T1136/T1136.003 documents account
+  creation as a primary persistence technique after initial compromise.
+  An attacker-created IAM user has separate credentials unknown to the
+  incident response team. An attacker-created AWS account starts with
+  no monitoring infrastructure deployed — a fresh environment inside
+  the organization's trust boundary but outside its detection field.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-2"
+  fedramp_moderate: "AC-2"
+  hipaa: "164.312(a)(2)(i)"
+  pci_dss_v4.0: "7.2.1"
+  soc2: "CC6.1"
+  iso_27001_2022: "A.8.2"
+scope_tags:
+  - aws
+  - scp
+type: unsafe_state
+params:
+  attack_stage: persistence
+  base_impact: 10
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    No SCP restricts IAM user or AWS account creation. Any principal
+    with sufficient permissions can create persistent identities without
+    organizational guardrails.
+  action: >
+    Attach an SCP to the organization root with Deny statements on
+    iam:CreateUser and organizations:CreateAccount. Use conditions to
+    allow only authorized principals (e.g., a specific CI/CD role or
+    identity management role) to perform these actions. Verify the
+    conditions cannot be trivially satisfied by an attacker's existing
+    permissions.
+  example: |
+    {
+      "scp": {
+        "has_create_account_restriction": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.scp.has_create_account_restriction
+      op: eq
+      value: false

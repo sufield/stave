@@ -1,0 +1,21 @@
+{
+  "assets": [
+    {
+      "id": "p-abc123def4",
+      "properties": {
+        "scp": {
+          "has_create_account_restriction": true
+        }
+      },
+      "type": "aws_organizations_policy",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  }
+}

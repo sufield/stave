@@ -3,15 +3,15 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 324
-**Pack hash:** `3df70b9289049f582d3d29b63eb746b9db1daf5c5cf25368fbf4cd1fe2c3c989`
+**Total controls:** 325
+**Pack hash:** `76ee8ef7c6231c236d8eafa78e0c577f9647b806d04755b3a039ae4297cfc3e3`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 58 |
-| high | 133 |
+| high | 134 |
 | info | 16 |
 | low | 22 |
 | medium | 95 |
@@ -20,7 +20,7 @@
 |--------|-------|
 | exposure | 239 |
 | governance | 7 |
-| identity | 70 |
+| identity | 71 |
 | storage | 8 |
 
 ## Controls
@@ -2381,6 +2381,21 @@ The AWS root account must have multi-factor authentication enabled. Root has unr
 The root account must not be used for day-to-day operations. Root activity should be limited to account setup tasks. Recent root usage indicates operational reliance on root credentials.
 
 **Remediation:** Create IAM admin users or roles for daily operations. Lock root credentials and use them only for account-level tasks.
+
+---
+
+### CTL.IAM.SCP.CREATEACCOUNT.001
+
+**SCPs Must Restrict Unauthorized IAM User and Account Creation**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-2; hipaa: 164.312(a)(2)(i); iso_27001_2022: A.8.2; nist_800_53_r5: AC-2; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+AWS Organizations must have an SCP restricting who can create IAM users (iam:CreateUser) and new AWS accounts (organizations:CreateAccount). Without this restriction, any principal with these permissions can create persistent identities that survive credential rotation and incident response. MITRE ATT&CK T1136/T1136.003 documents account creation as a primary persistence technique after initial compromise. An attacker-created IAM user has separate credentials unknown to the incident response team. An attacker-created AWS account starts with no monitoring infrastructure deployed — a fresh environment inside the organization's trust boundary but outside its detection field.
+
+**Remediation:** Attach an SCP to the organization root with Deny statements on iam:CreateUser and organizations:CreateAccount. Use conditions to allow only authorized principals (e.g., a specific CI/CD role or identity management role) to perform these actions. Verify the conditions cannot be trivially satisfied by an attacker's existing permissions.
 
 ---
 

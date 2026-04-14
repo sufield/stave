@@ -1,0 +1,115 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "73f837edd77dafeafa7226372ad7103031e39def5a99cf928bef92098e9bb703",
+        "2026-01-11T000000Z.json": "55a0d8282887a8476a54ecc5f95042b6fea60a8fee3001066bd3ba85c04d179e"
+      },
+      "overall": "f920b71f7aba84afd4e4a7a212590dddfc007a564a928128f21054fc6e7a896f"
+    },
+    "policy_fingerprint": "e4de27f974c34c32e917857e373b400db4041c6ad616972e904fb7b62a4dfe0c"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.IAM.SCP.CREATEACCOUNT.001",
+      "asset_id": "p-abc123def4",
+      "asset_type": "aws_organizations_policy",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.IAM.SCP.CREATEACCOUNT.001",
+      "control_name": "SCPs Must Restrict Unauthorized IAM User and Account Creation",
+      "control_description": "AWS Organizations must have an SCP restricting who can create IAM users (iam:CreateUser) and new AWS accounts (organizations:CreateAccount). Without this restriction, any principal with these permissions can create persistent identities that survive credential rotation and incident response. MITRE ATT\u0026CK T1136/T1136.003 documents account creation as a primary persistence technique after initial compromise. An attacker-created IAM user has separate credentials unknown to the incident response team. An attacker-created AWS account starts with no monitoring infrastructure deployed — a fresh environment inside the organization's trust boundary but outside its detection field.\n",
+      "asset_id": "p-abc123def4",
+      "asset_type": "aws_organizations_policy",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "scp.has_create_account_restriction",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "fedramp_moderate": "AC-2",
+        "hipaa": "164.312(a)(2)(i)",
+        "iso_27001_2022": "A.8.2",
+        "nist_800_53_r5": "AC-2",
+        "pci_dss_v4.0": "7.2.1",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "No SCP restricts IAM user or AWS account creation. Any principal with sufficient permissions can create persistent identities without organizational guardrails.",
+        "action": "Attach an SCP to the organization root with Deny statements on iam:CreateUser and organizations:CreateAccount. Use conditions to allow only authorized principals (e.g., a specific CI/CD role or identity management role) to perform these actions. Verify the conditions cannot be trivially satisfied by an attacker's existing permissions.",
+        "example": "{\n  \"scp\": {\n    \"has_create_account_restriction\": true\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.IAM.SCP.CREATEACCOUNT.001",
+      "asset_id": "p-abc123def4",
+      "exposure_score": 150,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 2,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-scp-createaccount-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-scp-createaccount-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "ad1d7c26980a03621b6a2f52c1e39711bc55bb7f",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-iam-scp-createaccount-fail/controls/"
+      ]
+    }
+  }
+}
