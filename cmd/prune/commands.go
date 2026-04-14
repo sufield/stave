@@ -7,6 +7,7 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/prune/hygiene"
+	"github.com/sufield/stave/cmd/prune/inventory"
 	"github.com/sufield/stave/cmd/prune/snapshot"
 	"github.com/sufield/stave/cmd/prune/upcoming"
 )
@@ -24,6 +25,7 @@ func Commands(
 		snapshot.NewPlanCmd(newSnapshot),
 		hygiene.NewStatusCmd(newObs, newSnapshot),
 		hygiene.NewRiskCmd(loadAssets),
+		inventory.NewCmd(),
 	}
 }
 
