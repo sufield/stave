@@ -1,0 +1,11 @@
+id: api_resource_exhaustion
+description: >
+  API Gateway stage has no throttling and no WAF rate-based rule coverage.
+  Any client can send unlimited requests. Resource exhaustion, Denial of
+  Wallet, and business flow abuse are possible with no rate limiting at
+  either the WAF or application layer.
+controls:
+  - CTL.APIGATEWAY.THROTTLE.001
+  - CTL.WAF.RULES.001
+escalation_threshold: 2
+compound_severity: high

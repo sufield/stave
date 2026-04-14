@@ -3,22 +3,22 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 327
-**Pack hash:** `a74d03f595d56e84f7882579f755ae5e41c3b1986838d698385ca551386e1534`
+**Total controls:** 328
+**Pack hash:** `1e25b511514a0863947448271e8a7aec7d8c7e5b655fe8abe6417b2a26cfdca1`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 58 |
-| high | 136 |
+| high | 137 |
 | info | 16 |
 | low | 22 |
 | medium | 95 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 241 |
+| exposure | 242 |
 | governance | 7 |
 | identity | 71 |
 | storage | 8 |
@@ -66,6 +66,21 @@ API Gateway routes and methods must have an authorizer configured (Cognito, Lamb
 The observation snapshot is missing required API Gateway properties.
 
 **Remediation:** Ensure the extractor calls aws apigateway get-rest-apis and aws apigateway get-domain-names and maps security policy to the api observation properties.
+
+---
+
+### CTL.APIGATEWAY.THROTTLE.001
+
+**API Gateway Stages Must Have Throttling Limits Configured**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-5; hipaa: 164.308(a)(1)(ii)(B); nist_800_53_r5: SC-5; pci_dss_v4.0: 6.4.1; soc2: A1.1;
+
+API Gateway stages must have default throttling limits configured with non-zero burst and rate values. Without throttling, a single client can send unlimited requests — exhausting backend resources, generating unbounded AWS costs (Denial of Wallet on Lambda), enabling credential brute force, and abusing sensitive business flows at machine speed. OWASP API4:2023 (Unrestricted Resource Consumption) and API6:2023 (Unrestricted Access to Sensitive Business Flows) both share this infrastructure gap. WAF rate-based rules limit requests per IP at the WAF layer; API Gateway throttling limits requests per stage or per API key at the application layer. Both are needed — WAF addresses anonymous volume attacks, API Gateway throttling addresses authenticated API abuse and distributed attacks that evade per-IP limits.
+
+**Remediation:** Configure stage-level throttling via the API Gateway console or UpdateStage API. Set a burst limit and rate limit appropriate for the API's expected traffic. For REST APIs handling sensitive operations, create a usage plan with per-consumer throttle limits and associate API keys with it.
 
 ---
 

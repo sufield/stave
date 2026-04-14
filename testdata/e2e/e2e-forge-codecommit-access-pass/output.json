@@ -32,11 +32,8 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "79637d36231b841eebb78505a3819873d4309517",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-codecommit-access-pass/controls/"
-      ]
+      "head_commit": "e38c27348df792a080291c394b8d5a0d2ad32a72",
+      "dirty": false
     }
   }
 }
