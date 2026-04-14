@@ -6,10 +6,7 @@ func TestGroupedCommandAliasesExist_Dev(t *testing.T) {
 	root := getDevRootCmd()
 
 	paths := [][]string{
-		{"docs"},
-		{"docs", "search"},
-		{"docs", "open"},
-		{"snapshot", "prune"},
+		{"snapshot"},
 	}
 
 	for _, path := range paths {

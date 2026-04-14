@@ -34,7 +34,7 @@ func TestDomainLayerBoundary(t *testing.T) {
 	engineDirs := []string{
 		"kernel", "asset", "evaluation", "controldef", "predicate",
 		"ports", "maps", "retention", "snapplan", "schemaval",
-		"diag", "s3", "securityaudit",
+		"diag", "s3",
 	}
 
 	fset := token.NewFileSet()

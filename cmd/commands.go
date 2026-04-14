@@ -13,12 +13,10 @@ import (
 	applyvalidate "github.com/sufield/stave/cmd/apply/validate"
 	applyverify "github.com/sufield/stave/cmd/apply/verify"
 	stavebisect "github.com/sufield/stave/cmd/bisect"
-	"github.com/sufield/stave/cmd/bugreport"
 	stavebundle "github.com/sufield/stave/cmd/bundle"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/diagnose"
 	"github.com/sufield/stave/cmd/diagnose/artifacts"
-	diagdocs "github.com/sufield/stave/cmd/diagnose/docs"
 	diagreport "github.com/sufield/stave/cmd/diagnose/report"
 	"github.com/sufield/stave/cmd/doctor"
 	stavedrift "github.com/sufield/stave/cmd/drift"
@@ -37,7 +35,6 @@ import (
 	stavenep "github.com/sufield/stave/cmd/nep"
 	"github.com/sufield/stave/cmd/prune"
 	staverank "github.com/sufield/stave/cmd/rank"
-	"github.com/sufield/stave/cmd/securityaudit"
 	stavetelemetry "github.com/sufield/stave/cmd/telemetry"
 	stavetrend "github.com/sufield/stave/cmd/trend"
 	stavewatch "github.com/sufield/stave/cmd/watch"
@@ -148,9 +145,6 @@ func WireCommands(app *App) {
 	// Introspection
 	root.AddCommand(inspect.NewInspectCmd())
 
-	// Security
-	root.AddCommand(securityaudit.NewCmd())
-
 	// Compliance evaluation
 	root.AddCommand(evaluate.NewCmd())
 
@@ -187,23 +181,12 @@ func WireCommands(app *App) {
 			Runner: &infradoctor.CheckRunner{},
 		},
 	}))
-	root.AddCommand(bugreport.NewCmd())
 	root.AddCommand(enforce.NewGraphCmd(f.NewCtlRepo, loadSnapshots))
 	root.AddCommand(initalias.NewCmd(root))
 	root.AddCommand(newCapabilitiesCmd())
 	root.AddCommand(newCompletionCmd())
 	root.AddCommand(newSchemasCmd())
 	root.AddCommand(newVersionCmd(app.Edition))
-
-	// Documentation
-	docsCmd := &cobra.Command{
-		Use:   "docs",
-		Short: "Documentation workflow commands",
-		Long:  "Grouped docs commands: search, open." + OfflineHelpSuffix,
-		Args:  cobra.NoArgs,
-	}
-	docsCmd.AddCommand(diagdocs.NewDocsSearchCmd(), diagdocs.NewDocsOpenCmd())
-	root.AddCommand(docsCmd)
 
 	// Settings
 	root.AddCommand(initconfig.NewConfigCmd(ui.DefaultRuntime()))

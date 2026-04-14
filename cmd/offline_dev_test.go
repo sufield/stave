@@ -12,7 +12,6 @@ func TestOfflineHelpSuffix_DevCommands(t *testing.T) {
 
 	required := [][]string{
 		{"doctor"},
-		{"bug-report"},
 		{"controls"},
 		{"capabilities"},
 	}

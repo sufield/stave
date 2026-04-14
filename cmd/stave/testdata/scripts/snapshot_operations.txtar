@@ -13,9 +13,6 @@ exec stave snapshot upcoming --controls controls --observations observations --n
 # Snapshot plan
 exec stave snapshot plan --observations-root observations --now 2026-01-11T00:00:00Z
 
-# Snapshot archive dry-run
-exec stave snapshot archive --observations observations --archive-dir archive --older-than 1h --now 2026-01-11T00:00:00Z --dry-run
-
 # Snapshot status
 exec stave snapshot status --observations observations --now 2026-01-11T00:00:00Z
 

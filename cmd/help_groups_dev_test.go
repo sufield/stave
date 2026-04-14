@@ -7,9 +7,7 @@ func TestPromotedCommandsRegistered(t *testing.T) {
 
 	promoted := []string{
 		"doctor",
-		"bug-report",
 		"graph",
-		"docs",
 		"alias",
 		"schemas",
 		"capabilities",

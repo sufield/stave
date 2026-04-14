@@ -60,12 +60,10 @@ type ConnectorSupport struct {
 	Description string                       `json:"description"`
 }
 
-// ComplianceSupport describes the supported security audit frameworks and reporting.
+// ComplianceSupport describes the supported compliance frameworks and reporting.
 type ComplianceSupport struct {
 	Enabled            bool     `json:"enabled"`
 	ReportFormats      []string `json:"report_formats"`
-	SBOMFormats        []string `json:"sbom_formats"`
-	VulnSources        []string `json:"vuln_sources"`
 	SLAThresholds      []string `json:"sla_thresholds"`
 	SecurityFrameworks []string `json:"security_frameworks"`
 }

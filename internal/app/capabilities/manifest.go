@@ -5,12 +5,10 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/sufield/stave/internal/app/securityaudit/evidence"
 	"github.com/sufield/stave/internal/builtin/pack"
 	"github.com/sufield/stave/internal/compliance"
 	"github.com/sufield/stave/internal/controldata"
 	"github.com/sufield/stave/internal/core/kernel"
-	"github.com/sufield/stave/internal/core/securityaudit"
 	"gopkg.in/yaml.v3"
 )
 
@@ -54,8 +52,6 @@ func (m *featureManifest) complianceSupport() ComplianceSupport {
 	return ComplianceSupport{
 		Enabled:            m.complianceFeatures.Enabled,
 		ReportFormats:      slices.Clone(m.complianceFeatures.ReportFormats),
-		SBOMFormats:        slices.Clone(m.complianceFeatures.SBOMFormats),
-		VulnSources:        slices.Clone(m.complianceFeatures.VulnSources),
 		SLAThresholds:      slices.Clone(m.complianceFeatures.SLAThresholds),
 		SecurityFrameworks: slices.Clone(m.complianceFeatures.SecurityFrameworks),
 	}
@@ -103,9 +99,7 @@ func newFeatureManifest() *featureManifest {
 
 	complianceFeatures := ComplianceSupport{
 		Enabled:            true,
-		ReportFormats:      securityaudit.AllReportFormats(),
-		SBOMFormats:        evidence.AllSBOMFormats(),
-		VulnSources:        evidence.AllVulnSources(),
+		ReportFormats:      []string{"text", "json", "sarif", "markdown"},
 		SLAThresholds:      []string{"critical", "high", "medium", "low", "none"},
 		SecurityFrameworks: compliance.FrameworkStrings(compliance.SupportedFrameworks()),
 	}

@@ -70,12 +70,6 @@ func TestCapabilitiesJSONContract(t *testing.T) {
 	if formats := assertArrayField(t, compliance, "report_formats"); len(formats) == 0 {
 		t.Fatal("compliance_support.report_formats must be non-empty")
 	}
-	if sbom := assertArrayField(t, compliance, "sbom_formats"); len(sbom) == 0 {
-		t.Fatal("compliance_support.sbom_formats must be non-empty")
-	}
-	if vuln := assertArrayField(t, compliance, "vuln_sources"); len(vuln) == 0 {
-		t.Fatal("compliance_support.vuln_sources must be non-empty")
-	}
 	if failOn := assertArrayField(t, compliance, "sla_thresholds"); len(failOn) == 0 {
 		t.Fatal("compliance_support.sla_thresholds must be non-empty")
 	}
