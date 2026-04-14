@@ -77,6 +77,7 @@ type EvaluationRequest struct {
 	StaveVersion      string
 	PredicateParser   func(any) (*policy.UnsafePredicate, error)
 	CELEvaluator      policy.PredicateEval
+	GenerateEvidence  bool
 }
 
 // EvaluateLoaded evaluates already-loaded controls and snapshots.
@@ -95,5 +96,6 @@ func EvaluateLoaded(req EvaluationRequest) (evaluation.ComplianceReport, error) 
 		StaveVersion:      req.StaveVersion,
 		PredicateParser:   req.PredicateParser,
 		CELEvaluator:      req.CELEvaluator,
+		GenerateEvidence:  req.GenerateEvidence,
 	})
 }

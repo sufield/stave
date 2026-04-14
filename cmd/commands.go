@@ -125,7 +125,7 @@ func WireCommands(app *App) {
 	wireCISubtree(ciCmd, f.NewCELEvaluator, f.NewCtlRepo, f.NewObsRepo, loadAssets)
 
 	// Export & Interop
-	root.AddCommand(staveexport.NewCmd(f.NewCtlRepo))
+	root.AddCommand(staveexport.NewCmd(f.NewCtlRepo, f.NewCELEvaluator))
 
 	// Data & Artifacts
 	root.AddCommand(enforce.NewGenerateCmd())
