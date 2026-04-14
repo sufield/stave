@@ -3,6 +3,7 @@ package nep
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
@@ -35,11 +36,11 @@ Exit Codes:
 Examples:
   stave nep summary --snapshot obs.json
   stave nep summary --snapshot obs.json --threshold critical --format json`,
-		Example: `  stave nep summary --snapshot obs.json`,
+		Example:       `  stave nep summary --snapshot obs.json`,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runSummary(opts)
+			return runSummary(cmd.OutOrStdout(), opts)
 		},
 	}
 
@@ -67,7 +68,7 @@ type nepSummary struct {
 	IneffectiveBoundaries int `json:"ineffective_boundaries"`
 }
 
-func runSummary(opts *summaryOpts) error {
+func runSummary(w io.Writer, opts *summaryOpts) error {
 	if _, err := os.Stat(opts.Snapshot); err != nil {
 		return fmt.Errorf("snapshot file not found: %s", opts.Snapshot)
 	}
@@ -80,48 +81,48 @@ func runSummary(opts *summaryOpts) error {
 
 	switch opts.Format {
 	case "json":
-		return renderSummaryJSON(summary)
+		return renderSummaryJSON(w, summary)
 	default:
-		return renderSummaryTable(summary, opts)
+		return renderSummaryTable(w, summary, opts)
 	}
 }
 
-func renderSummaryJSON(summary nepSummary) error {
-	enc := json.NewEncoder(os.Stdout)
+func renderSummaryJSON(w io.Writer, summary nepSummary) error {
+	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
 	return enc.Encode(summary)
 }
 
-func renderSummaryTable(summary nepSummary, opts *summaryOpts) error {
-	fmt.Println("NET EFFECTIVE PERMISSIONS SUMMARY")
-	fmt.Printf("Snapshot: %s\n", opts.Snapshot)
-	fmt.Printf("Evaluated: %d principals  |  %d incomplete\n",
+func renderSummaryTable(w io.Writer, summary nepSummary, opts *summaryOpts) error {
+	fmt.Fprintln(w, "NET EFFECTIVE PERMISSIONS SUMMARY")
+	fmt.Fprintf(w, "Snapshot: %s\n", opts.Snapshot)
+	fmt.Fprintf(w, "Evaluated: %d principals  |  %d incomplete\n",
 		summary.TotalPrincipals, summary.IncompletePrincipals)
 
-	fmt.Println("\nPRIVILEGE DISTRIBUTION")
-	fmt.Println(strings.Repeat("-", 60))
-	printBar("Admin", summary.AdminCount, summary.TotalPrincipals)
-	printBar("Elevated", summary.ElevatedCount, summary.TotalPrincipals)
-	printBar("Standard", summary.StandardCount, summary.TotalPrincipals)
-	printBar("Limited", summary.LimitedCount, summary.TotalPrincipals)
-	printBar("None", summary.NoneCount, summary.TotalPrincipals)
+	fmt.Fprintln(w, "\nPRIVILEGE DISTRIBUTION")
+	fmt.Fprintln(w, strings.Repeat("-", 60))
+	printBar(w, "Admin", summary.AdminCount, summary.TotalPrincipals)
+	printBar(w, "Elevated", summary.ElevatedCount, summary.TotalPrincipals)
+	printBar(w, "Standard", summary.StandardCount, summary.TotalPrincipals)
+	printBar(w, "Limited", summary.LimitedCount, summary.TotalPrincipals)
+	printBar(w, "None", summary.NoneCount, summary.TotalPrincipals)
 
 	if summary.TransitiveAdmin > 0 || summary.CrossAccountChains > 0 {
-		fmt.Println("\nTRANSITIVE CHAINS")
-		fmt.Println(strings.Repeat("-", 60))
-		fmt.Printf("  Chains reaching admin:   %d\n", summary.TransitiveAdmin)
-		fmt.Printf("  Cross-account chains:    %d\n", summary.CrossAccountChains)
-		fmt.Printf("  Max chain depth:         %d\n", summary.MaxChainDepth)
+		fmt.Fprintln(w, "\nTRANSITIVE CHAINS")
+		fmt.Fprintln(w, strings.Repeat("-", 60))
+		fmt.Fprintf(w, "  Chains reaching admin:   %d\n", summary.TransitiveAdmin)
+		fmt.Fprintf(w, "  Cross-account chains:    %d\n", summary.CrossAccountChains)
+		fmt.Fprintf(w, "  Max chain depth:         %d\n", summary.MaxChainDepth)
 	}
 
 	if summary.IneffectiveBoundaries > 0 {
-		fmt.Printf("\nIneffective boundaries: %d\n", summary.IneffectiveBoundaries)
+		fmt.Fprintf(w, "\nIneffective boundaries: %d\n", summary.IneffectiveBoundaries)
 	}
 
 	return nil
 }
 
-func printBar(label string, count, total int) {
+func printBar(w io.Writer, label string, count, total int) {
 	width := 20
 	filled := 0
 	if total > 0 {
@@ -131,5 +132,5 @@ func printBar(label string, count, total int) {
 		filled = width
 	}
 	bar := strings.Repeat("#", filled) + strings.Repeat(".", width-filled)
-	fmt.Printf("  %-10s %s  %d\n", label, bar, count)
+	fmt.Fprintf(w, "  %-10s %s  %d\n", label, bar, count)
 }

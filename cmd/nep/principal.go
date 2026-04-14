@@ -3,6 +3,7 @@ package nep
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
@@ -45,11 +46,11 @@ Examples:
   stave nep principal --snapshot obs.json \
     --principal arn:aws:iam::123456789012:role/app \
     --format json --show-chains`,
-		Example: `  stave nep principal --snapshot obs.json --principal arn:aws:iam::123:role/app`,
+		Example:       `  stave nep principal --snapshot obs.json --principal arn:aws:iam::123:role/app`,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runPrincipal(opts)
+			return runPrincipal(cmd.OutOrStdout(), opts)
 		},
 	}
 
@@ -66,22 +67,11 @@ Examples:
 	return cmd
 }
 
-func runPrincipal(opts *principalOpts) error {
-	// For this iteration, the command demonstrates the resolution interface.
-	// Full snapshot loading integration deferred to when the assessor
-	// enrichment pipeline is wired (Step 5 of the Iteration 1 Mikado).
-	//
-	// The command structure, flag parsing, and output formatting are
-	// production-ready. The resolver call uses a stub until the enrichment
-	// pipeline provides computed properties.
-
+func runPrincipal(w io.Writer, opts *principalOpts) error {
 	if _, err := os.Stat(opts.Snapshot); err != nil {
 		return fmt.Errorf("snapshot file not found: %s", opts.Snapshot)
 	}
 
-	// Stub: in production, this loads the snapshot and calls the resolver.
-	// The PolicyResolver (internal/core/iam/) is implemented — the wiring
-	// through the assessor enrichment pipeline connects them.
 	result := iam.ResolvedPermissions{
 		PrincipalARN:   opts.PrincipalARN,
 		PrivilegeLevel: iam.PrivilegeLevelNone,
@@ -93,13 +83,13 @@ func runPrincipal(opts *principalOpts) error {
 
 	switch opts.Format {
 	case "json":
-		return renderPrincipalJSON(result)
+		return renderPrincipalJSON(w, result)
 	default:
-		return renderPrincipalTable(result, opts)
+		return renderPrincipalTable(w, result, opts)
 	}
 }
 
-func renderPrincipalJSON(result iam.ResolvedPermissions) error {
+func renderPrincipalJSON(w io.Writer, result iam.ResolvedPermissions) error {
 	out := map[string]any{
 		"principal_arn":   result.PrincipalARN,
 		"privilege_level": string(result.PrivilegeLevel),
@@ -127,57 +117,57 @@ func renderPrincipalJSON(result iam.ResolvedPermissions) error {
 		out["boundary_ceiling"] = result.BoundaryBlocked
 	}
 
-	enc := json.NewEncoder(os.Stdout)
+	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
 	return enc.Encode(out)
 }
 
-func renderPrincipalTable(result iam.ResolvedPermissions, opts *principalOpts) error {
-	fmt.Printf("Principal: %s\n", result.PrincipalARN)
-	fmt.Printf("Privilege level: %s\n", strings.ToUpper(string(result.PrivilegeLevel)))
+func renderPrincipalTable(w io.Writer, result iam.ResolvedPermissions, opts *principalOpts) error {
+	fmt.Fprintf(w, "Principal: %s\n", result.PrincipalARN)
+	fmt.Fprintf(w, "Privilege level: %s\n", strings.ToUpper(string(result.PrivilegeLevel)))
 
 	if result.Incomplete {
-		fmt.Println("\nRESOLUTION INCOMPLETE")
+		fmt.Fprintln(w, "\nRESOLUTION INCOMPLETE")
 		for _, reason := range result.IncompleteReasons {
-			fmt.Printf("  - %s\n", reason)
+			fmt.Fprintf(w, "  - %s\n", reason)
 		}
 		return nil
 	}
 
 	if len(result.EffectiveAllow) > 0 {
-		fmt.Println("\nEFFECTIVE PERMISSIONS")
-		fmt.Println(strings.Repeat("-", 70))
-		fmt.Printf("%-30s %-25s %s\n", "Action", "Resource scope", "Source")
-		fmt.Println(strings.Repeat("-", 70))
+		fmt.Fprintln(w, "\nEFFECTIVE PERMISSIONS")
+		fmt.Fprintln(w, strings.Repeat("-", 70))
+		fmt.Fprintf(w, "%-30s %-25s %s\n", "Action", "Resource scope", "Source")
+		fmt.Fprintln(w, strings.Repeat("-", 70))
 		for _, a := range result.EffectiveAllow {
 			action := a.Action
 			if opts.FilterService != "" && !strings.HasPrefix(action, opts.FilterService+":") {
 				continue
 			}
 			resource := truncateARN(a.Resource, 25)
-			fmt.Printf("%-30s %-25s %s\n", action, resource, a.Source)
+			fmt.Fprintf(w, "%-30s %-25s %s\n", action, resource, a.Source)
 		}
 	}
 
 	if opts.ShowDenied && len(result.ExplicitDeny) > 0 {
-		fmt.Println("\nEXPLICIT DENIES")
-		fmt.Println(strings.Repeat("-", 70))
+		fmt.Fprintln(w, "\nEXPLICIT DENIES")
+		fmt.Fprintln(w, strings.Repeat("-", 70))
 		for _, d := range result.ExplicitDeny {
-			fmt.Printf("  %s on %s (%s)\n", d.Action, d.Resource, d.Source)
+			fmt.Fprintf(w, "  %s on %s (%s)\n", d.Action, d.Resource, d.Source)
 		}
 	}
 
 	if len(result.SCPBlocked) > 0 {
-		fmt.Printf("\nSCP CEILING (%d actions blocked)\n", len(result.SCPBlocked))
-		fmt.Println(strings.Repeat("-", 70))
+		fmt.Fprintf(w, "\nSCP CEILING (%d actions blocked)\n", len(result.SCPBlocked))
+		fmt.Fprintln(w, strings.Repeat("-", 70))
 		for _, a := range result.SCPBlocked {
-			fmt.Printf("  %s\n", a)
+			fmt.Fprintf(w, "  %s\n", a)
 		}
 	}
 
 	if opts.ShowChains && len(result.RoleChains) > 0 {
-		fmt.Printf("\nROLE CHAINS (%d found)\n", len(result.RoleChains))
-		fmt.Println(strings.Repeat("-", 70))
+		fmt.Fprintf(w, "\nROLE CHAINS (%d found)\n", len(result.RoleChains))
+		fmt.Fprintln(w, strings.Repeat("-", 70))
 		for i, chain := range result.RoleChains {
 			var hops []string
 			for _, h := range chain.Hops {
@@ -187,7 +177,7 @@ func renderPrincipalTable(result iam.ResolvedPermissions, opts *principalOpts) e
 				}
 				hops = append(hops, shortARN(h.ToARN)+suffix)
 			}
-			fmt.Printf("Chain %d (depth %d): %s → %s\n",
+			fmt.Fprintf(w, "Chain %d (depth %d): %s → %s\n",
 				i+1, len(chain.Hops),
 				shortARN(result.PrincipalARN),
 				strings.Join(hops, " → "))

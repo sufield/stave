@@ -3662,7 +3662,7 @@ RDS instances must have automatic minor version upgrades enabled. Minor versions
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** hipaa: 164.308(a)(7); hipaa_retention: 164.316(b)(2); soc2: A1.1;
+- **Compliance:** hipaa: 164.308(a)(7); soc2: A1.1;
 
 RDS instances must have automated backups enabled with a retention period of at least 7 days. Without backups, data loss from accidental deletion, corruption, or ransomware is permanent.
 

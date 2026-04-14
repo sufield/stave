@@ -3,6 +3,7 @@ package nep
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
@@ -41,11 +42,11 @@ Examples:
   stave nep resource --snapshot obs.json \
     --resource arn:aws:s3:::phi-records \
     --format json`,
-		Example: `  stave nep resource --snapshot obs.json --resource arn:aws:s3:::phi-records`,
+		Example:       `  stave nep resource --snapshot obs.json --resource arn:aws:s3:::phi-records`,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runResource(opts)
+			return runResource(cmd.OutOrStdout(), opts)
 		},
 	}
 
@@ -60,7 +61,7 @@ Examples:
 	return cmd
 }
 
-func runResource(opts *resourceOpts) error {
+func runResource(w io.Writer, opts *resourceOpts) error {
 	if _, err := os.Stat(opts.Snapshot); err != nil {
 		return fmt.Errorf("snapshot file not found: %s", opts.Snapshot)
 	}
@@ -72,13 +73,13 @@ func runResource(opts *resourceOpts) error {
 
 	switch opts.Format {
 	case "json":
-		return renderResourceJSON(opts.ResourceARN, entries)
+		return renderResourceJSON(w, opts.ResourceARN, entries)
 	default:
-		return renderResourceTable(opts.ResourceARN, entries)
+		return renderResourceTable(w, opts.ResourceARN, entries)
 	}
 }
 
-func renderResourceJSON(resourceARN string, entries []iam.ResourceAccessEntry) error {
+func renderResourceJSON(w io.Writer, resourceARN string, entries []iam.ResourceAccessEntry) error {
 	out := map[string]any{
 		"resource_arn":   resourceARN,
 		"accessor_count": len(entries),
@@ -96,24 +97,24 @@ func renderResourceJSON(resourceARN string, entries []iam.ResourceAccessEntry) e
 		out["accessors"] = accessors
 	}
 
-	enc := json.NewEncoder(os.Stdout)
+	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
 	return enc.Encode(out)
 }
 
-func renderResourceTable(resourceARN string, entries []iam.ResourceAccessEntry) error {
-	fmt.Printf("Resource: %s\n", resourceARN)
-	fmt.Printf("Accessors: %d\n", len(entries))
+func renderResourceTable(w io.Writer, resourceARN string, entries []iam.ResourceAccessEntry) error {
+	fmt.Fprintf(w, "Resource: %s\n", resourceARN)
+	fmt.Fprintf(w, "Accessors: %d\n", len(entries))
 
 	if len(entries) == 0 {
-		fmt.Println("\nNo principals with effective access found in snapshot.")
+		fmt.Fprintln(w, "\nNo principals with effective access found in snapshot.")
 		return nil
 	}
 
-	fmt.Println("\nEFFECTIVE ACCESS")
-	fmt.Println(strings.Repeat("-", 90))
-	fmt.Printf("%-50s %-12s %s\n", "Principal", "Cross-acct", "Public")
-	fmt.Println(strings.Repeat("-", 90))
+	fmt.Fprintln(w, "\nEFFECTIVE ACCESS")
+	fmt.Fprintln(w, strings.Repeat("-", 90))
+	fmt.Fprintf(w, "%-50s %-12s %s\n", "Principal", "Cross-acct", "Public")
+	fmt.Fprintln(w, strings.Repeat("-", 90))
 	for _, e := range entries {
 		crossAcct := "no"
 		if e.IsCrossAccount {
@@ -123,7 +124,7 @@ func renderResourceTable(resourceARN string, entries []iam.ResourceAccessEntry) 
 		if e.IsPublic {
 			public = "YES"
 		}
-		fmt.Printf("%-50s %-12s %s\n",
+		fmt.Fprintf(w, "%-50s %-12s %s\n",
 			truncateARN(e.PrincipalARN, 50), crossAcct, public)
 	}
 
