@@ -3,3 +3,9 @@ description: FedRAMP Moderate baseline controls (inherits NIST 800-53)
 controls:
     # All NIST 800-53 controls apply, plus FIPS cryptography
     - CTL.KMS.FIPS.001
+    # Recurrence Detection (IR-5, AC-2, AU-9)
+    - CTL.S3.PUBLIC.RECUR.001
+    - CTL.IAM.ROOT.RECUR.001
+    - CTL.IAM.CRED.RECUR.001
+    - CTL.CLOUDTRAIL.DISABLE.RECUR.001
+    - CTL.VPC.SG.RECUR.001

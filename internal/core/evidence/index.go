@@ -55,8 +55,8 @@ func (idx *CitationIndex) Coverage(framework string, totalRequirements int) Cita
 	prefix := framework + ":"
 	covered := make(map[string]bool)
 	for key := range idx.entries {
-		if strings.HasPrefix(key, prefix) {
-			req := strings.TrimPrefix(key, prefix)
+		if after, ok := strings.CutPrefix(key, prefix); ok {
+			req := after
 			covered[req] = true
 		}
 	}
@@ -94,8 +94,8 @@ func (idx *CitationIndex) RequirementsFor(framework string) []string {
 	prefix := framework + ":"
 	var reqs []string
 	for key := range idx.entries {
-		if strings.HasPrefix(key, prefix) {
-			reqs = append(reqs, strings.TrimPrefix(key, prefix))
+		if after, ok := strings.CutPrefix(key, prefix); ok {
+			reqs = append(reqs, after)
 		}
 	}
 	sort.Strings(reqs)
