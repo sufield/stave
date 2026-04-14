@@ -32,11 +32,8 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "b3ec125f213a15eb935b3bcf5230d2ffc749d16d",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-org-region-scp-pass/controls/"
-      ]
+      "head_commit": "253025713fa7cd1f56b01dcecd157da36b5cef05",
+      "dirty": false
     }
   }
 }

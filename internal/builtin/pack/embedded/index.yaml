@@ -88,3 +88,5 @@ packs:
     path: packs/iam.yaml
   - id: s3
     path: packs/s3.yaml
+  - id: shield
+    path: packs/shield.yaml

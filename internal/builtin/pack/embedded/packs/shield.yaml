@@ -1,0 +1,4 @@
+id: shield
+description: AWS Shield Advanced DDoS protection controls
+controls:
+  - CTL.SHIELD.ADVANCED.001

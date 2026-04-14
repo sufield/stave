@@ -1,0 +1,120 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "922c52b2457c2ff089d2d22c4e290bde417a213f685e6a03819efc08e6406608",
+        "2026-01-11T000000Z.json": "e417c327c586c2f0c6fb780fccd025863dd40c17c761f021be9fc2d0209aadaa"
+      },
+      "overall": "2396675a61dc4d3d0ceb5e9519e20072292870904e6e82a1b2fe9396edb85dc9"
+    },
+    "policy_fingerprint": "1368c9d89d74440d7f08584bcd136e0c291e04dde5c625dc4b24d8b62dd14520"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.SHIELD.ADVANCED.001",
+      "asset_id": "arn:aws:shield::123456789012:subscription",
+      "asset_type": "aws_shield_subscription",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.SHIELD.ADVANCED.001",
+      "control_name": "Shield Advanced Must Be Enabled for Internet-Facing Resources",
+      "control_description": "AWS accounts with internet-facing resources must have Shield Advanced enabled with all internet-facing resources registered as protected. Shield Standard provides basic DDoS protection automatically. Shield Advanced provides volumetric DDoS mitigation at the network edge, 24/7 DDoS Response Team (DRT) access, cost protection against scaling charges during attacks, and attack diagnostics. WAF controls protect against application-layer attacks but do not protect against volumetric network-layer DDoS that exhausts bandwidth or connection capacity before WAF can evaluate requests. A 100 Gbps UDP flood cannot be mitigated by WAF rules — it requires scrubbing at the network edge. For PHI and financial services, unmitigated DDoS is both an operational and compliance risk — HIPAA and PCI-DSS require availability of regulated systems.\n",
+      "asset_id": "arn:aws:shield::123456789012:subscription",
+      "asset_type": "aws_shield_subscription",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "account.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "shield_subscription"
+          },
+          {
+            "property": "account.shield_advanced.all_resources_protected",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "fedramp_moderate": "SC-5",
+        "hipaa": "164.308(a)(7)",
+        "nist_800_53_r5": "SC-5",
+        "pci_dss_v4.0": "1.3.1",
+        "soc2": "A1.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Shield Advanced is not subscribed or internet-facing resources are not registered as protected. Volumetric DDoS attacks are mitigated only by Shield Standard basic protection.",
+        "action": "Subscribe to AWS Shield Advanced via the Shield console or API. Register all internet-facing resources (ALBs, NLBs, CloudFront distributions, Route 53 hosted zones, Elastic IPs) as protected resources. Configure Route 53 health checks for protected resources to enable proactive engagement by the DDoS Response Team.",
+        "example": "{\n  \"account\": {\n    \"kind\": \"shield_subscription\",\n    \"shield_advanced\": {\n      \"all_resources_protected\": true\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.SHIELD.ADVANCED.001",
+      "asset_id": "arn:aws:shield::123456789012:subscription",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1.5,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-shield-advanced-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-shield-advanced-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "253025713fa7cd1f56b01dcecd157da36b5cef05",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-shield-advanced-fail/controls/"
+      ]
+    }
+  }
+}

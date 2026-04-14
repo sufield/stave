@@ -1,0 +1,42 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "0a09ef042f0a781c7ab17347e763ac6fd84b191a962a802724fd72bd550ec0ff",
+        "2026-01-11T000000Z.json": "030b08e51aafb59f652c569178d665045dcfd66b0f1f1ddde8c427b220532263"
+      },
+      "overall": "d23d6e8018d59f2512e869d76c5eae32276cb1a0711953f0df1249be0e35aa0a"
+    },
+    "policy_fingerprint": "1368c9d89d74440d7f08584bcd136e0c291e04dde5c625dc4b24d8b62dd14520"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-shield-advanced-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-shield-advanced-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "253025713fa7cd1f56b01dcecd157da36b5cef05",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-shield-advanced-pass/controls/"
+      ]
+    }
+  }
+}
