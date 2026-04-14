@@ -12,6 +12,7 @@ import (
 // FromFinding projects a single remediation.Finding into a FindingDTO.
 func FromFinding(f remediation.Finding) FindingDTO {
 	dto := FindingDTO{
+		FindingID:          f.FindingID,
 		ControlID:          f.ControlID,
 		ControlName:        f.ControlName,
 		ControlDescription: f.ControlDescription,

@@ -47,6 +47,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:63ffeb3e4c23b910",
       "control_id": "CTL.KMS.ISOLATION.001",
       "control_name": "PHI/CDE Encryption Key Must Not Be Shared Across Sensitivity Domains",
       "control_description": "KMS keys protecting PHI or CDE data must not be shared with resources at a lower sensitivity classification. Shared keys collapse the cryptographic boundary between trust domains. A compromised developer account with access to a shared key can decrypt production PHI data even if all other access controls are correctly configured. Encryption is only as strong as the isolation of its keys.\n",
@@ -96,6 +97,7 @@
       }
     },
     {
+      "finding_id": "sha256:8d467a11536ceaa1",
       "control_id": "CTL.KMS.ISOLATION.001",
       "control_name": "PHI/CDE Encryption Key Must Not Be Shared Across Sensitivity Domains",
       "control_description": "KMS keys protecting PHI or CDE data must not be shared with resources at a lower sensitivity classification. Shared keys collapse the cryptographic boundary between trust domains. A compromised developer account with access to a shared key can decrypt production PHI data even if all other access controls are correctly configured. Encryption is only as strong as the isolation of its keys.\n",
@@ -184,7 +186,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

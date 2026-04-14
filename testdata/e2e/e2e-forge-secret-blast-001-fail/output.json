@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:b9ecefadcddd99e0",
       "control_id": "CTL.SECRET.BLAST.001",
       "control_name": "Secret with Multiple Readers Must Not Target Sensitive Resource",
       "control_description": "Secrets in Secrets Manager that provide credentials to sensitive resources (PHI, PII, confidential) must have a minimal set of readers. A secret readable by more than 3 principals is a high-value target — compromising any one of those principals provides a direct path to the sensitive data, bypassing IAM least privilege on the data resource itself. The extractor maps which principals have secretsmanager:GetSecretValue and which resource the secret unlocks.\n",
@@ -120,7 +121,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

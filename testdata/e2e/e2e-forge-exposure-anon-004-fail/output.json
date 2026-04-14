@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:5fad798df05abcff",
       "control_id": "CTL.EXPOSURE.ANON.004",
       "control_name": "Unauthenticated Access Path Should Have Inspection Boundary",
       "control_description": "Any resource reachable from anonymous principals should have at least one inspection boundary in the access path — a point where requests are filtered for malicious content (WAF with managed rule groups, API Gateway request validation). An authentication boundary verifies identity; an inspection boundary verifies request safety. Both are needed for defense-in-depth. This control flags paths where no request inspection exists.\n",
@@ -192,7 +193,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

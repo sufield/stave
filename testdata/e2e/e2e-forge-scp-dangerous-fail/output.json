@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:e82abf82e538b128",
       "control_id": "CTL.IAM.SCP.DANGEROUS.ALLOWS.001",
       "control_name": "SCPs Must Not Explicitly Allow Dangerous Administrative Actions",
       "control_description": "SCPs must not contain Allow statements for actions that undermine the organization's security posture: audit evasion (DeleteTrail, StopLogging, DeleteDetector), data destruction (DeleteBucket, ScheduleKeyDeletion), boundary removal (DeletePolicy, DetachPolicy), or privilege escalation (CreatePolicyVersion, AttachRolePolicy). An Allow for these actions signals that someone has deliberately removed the organizational-level protection. To determine when the Allow was introduced, run stave bisect with this control against the snapshot archive.\n",
@@ -104,7 +105,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:146d5fdb3e007341",
       "control_id": "CTL.S3.CLASSIFY.COVERAGE.001",
       "control_name": "All S3 Buckets Must Have a Data Classification Tag",
       "control_description": "Every S3 bucket must have a data-classification tag with a value from the recognized taxonomy (phi, pii, confidential, internal, public, non-sensitive). The data-classification tag is the gating condition for the majority of Stave's sensitive data controls — PHI encryption, Object Lock, Macie scanning, lifecycle retention, and access scoping are all conditional on this tag. A bucket without the tag silently passes all tag-conditional controls regardless of its actual contents. CIS 2.1.3 requires that all S3 data is discovered, classified, and secured. This control establishes the classification baseline — it does not verify what classification was applied, only that every bucket has been explicitly classified so downstream controls can evaluate it.\n",
@@ -113,7 +114,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

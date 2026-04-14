@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:2713b0b8424d8a33",
       "control_id": "CTL.EXPOSURE.EXFIL.001",
       "control_name": "Sensitive Data Must Not Be Readable by Compute with Internet Egress",
       "control_description": "Resources containing sensitive data (PHI, PII, confidential) are readable by a compute instance that has an unmonitored path to the internet. The extractor traces from the sensitive resource to compute instances that can read it, then checks if those instances have outbound internet connectivity (NAT gateway, internet gateway, VPC peering to public subnet). This is the reverse of the unauthenticated reachability check — instead of \"who can get in?\" it answers \"how can data get out?\"\n",
@@ -195,7 +196,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

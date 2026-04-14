@@ -10,6 +10,7 @@ import (
 
 // FindingDTO mirrors remediation.Finding for JSON output.
 type FindingDTO struct {
+	FindingID          string              `json:"finding_id"`
 	ControlID          kernel.ControlID    `json:"control_id"`
 	ControlName        string              `json:"control_name"`
 	ControlDescription string              `json:"control_description"`

@@ -47,6 +47,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:2e48317513355283",
       "control_id": "CTL.S3.PUBLIC.001",
       "control_name": "No Public Read via Bucket Policy",
       "control_description": "S3 bucket policies must not grant public read access (Principal=*) to PHI data.",
@@ -114,6 +115,7 @@
       }
     },
     {
+      "finding_id": "sha256:011146815d21ed0b",
       "control_id": "CTL.S3.PUBLIC.004",
       "control_name": "No Public Read via ACL",
       "control_description": "S3 bucket ACLs must not grant read access to AllUsers or AuthenticatedUsers for PHI data.",
@@ -265,7 +267,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

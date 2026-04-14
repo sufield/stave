@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:e9753c78a52f611d",
       "control_id": "CTL.IAM.ZT.PERIMETER.001",
       "control_name": "Sensitive Resources Must Use Identity-Based Access Not Network Perimeter",
       "control_description": "Access to sensitive resources must be governed by identity-based controls (IAM policies, conditions, session tags) rather than relying solely on network perimeter (VPC, security groups, NACLs). Network-only access control fails when the perimeter is bypassed — via VPN compromise, lateral movement, or insider threat. Zero Trust requires every access decision to verify identity, device, and context.\n",
@@ -109,7 +110,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:9321f2b756aa4024",
       "control_id": "CTL.LAMBDA.TRACE.001",
       "control_name": "Lambda Functions Must Have Active X-Ray Tracing Enabled",
       "control_description": "Detects assets where mode_active is eq false.\n",
@@ -97,7 +98,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

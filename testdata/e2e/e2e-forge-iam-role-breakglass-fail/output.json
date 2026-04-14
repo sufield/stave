@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:e923f2aca2930b6f",
       "control_id": "CTL.IAM.ROLE.BREAKGLASS.001",
       "control_name": "Break-Glass Elevated Roles Must Not Persist",
       "control_description": "IAM roles granted elevated permissions for incident response (break-glass access) must be revoked within 7 days. Elevated roles that persist beyond the incident become permanent backdoors — they carry admin-level permissions with no active justification. Debug rules, elevated roles, and emergency access must have mandatory time-bounding.\n",
@@ -103,7 +104,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

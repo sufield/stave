@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:d1659912ae8d6344",
       "control_id": "CTL.IAM.ROOT.MFA.001",
       "control_name": "Root Account Must Have MFA Enabled",
       "control_description": "The AWS root account must have multi-factor authentication enabled. Root has unrestricted access to all resources. Compromise without MFA is the highest-severity identity risk.\n",
@@ -110,7 +111,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

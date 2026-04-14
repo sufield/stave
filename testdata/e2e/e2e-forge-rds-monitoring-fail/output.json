@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:2395b82783762d2a",
       "control_id": "CTL.RDS.MONITORING.001",
       "control_name": "RDS Enhanced Monitoring Must Be Enabled",
       "control_description": "RDS instances must have Enhanced Monitoring enabled. Enhanced Monitoring provides real-time OS-level metrics (CPU, memory, disk I/O, network) that standard CloudWatch metrics do not capture. Without it, performance degradation and resource exhaustion attacks are harder to detect and investigate.\n",
@@ -110,7 +111,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

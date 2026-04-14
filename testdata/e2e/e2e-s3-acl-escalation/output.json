@@ -47,6 +47,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:35b88bd6b6ef8743",
       "control_id": "CTL.S3.ACL.ESCALATION.001",
       "control_name": "No Public ACL Modification",
       "control_description": "S3 bucket ACLs must not be writable by AllUsers or AuthenticatedUsers. WRITE_ACP permission enables attackers to modify the ACL itself, granting themselves FULL_CONTROL and escalating to read, write, and delete all objects.\n",
@@ -88,6 +89,7 @@
       }
     },
     {
+      "finding_id": "sha256:73aa40948c106572",
       "control_id": "CTL.S3.ACL.ESCALATION.001",
       "control_name": "No Public ACL Modification",
       "control_description": "S3 bucket ACLs must not be writable by AllUsers or AuthenticatedUsers. WRITE_ACP permission enables attackers to modify the ACL itself, granting themselves FULL_CONTROL and escalating to read, write, and delete all objects.\n",
@@ -168,7 +170,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

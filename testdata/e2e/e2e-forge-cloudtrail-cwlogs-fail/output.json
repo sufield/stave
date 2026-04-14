@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:3bc5dd3023552df3",
       "control_id": "CTL.CLOUDTRAIL.CWLOGS.001",
       "control_name": "CloudTrail Trails Must Be Integrated with CloudWatch Logs",
       "control_description": "CloudTrail trails must be configured to deliver events to a CloudWatch Logs log group with active delivery. CloudTrail delivers events to S3 by default. CloudWatch Logs integration is a separate configuration that enables real-time metric filtering and alerting. Without it, all 17 CIS-required CloudWatch metric filter controls (CTL.CLOUDWATCH.MONITOR.*) evaluate an empty event stream — the filters exist, the alarms are configured, but nothing fires. This is a silent gap: all monitoring controls appear to pass individually while the event pipeline is broken. CTL.CLOUDTRAIL.ENABLED.001 verifies the trail is active. This control verifies the trail is delivering to CloudWatch Logs — the prerequisite for real-time monitoring.\n",
@@ -112,7 +113,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

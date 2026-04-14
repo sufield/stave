@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:b85fcf67a97ee76f",
       "control_id": "CTL.EC2.AMI.CURRENCY.001",
       "control_name": "EC2 Instances Must Not Run Deprecated or End-of-Life AMIs",
       "control_description": "EC2 instances must not run on AMIs that are deprecated by AWS or the AMI owner, or that exceed the maximum AMI age threshold (default 180 days). Deprecated AMIs represent an OS-level version currency gap — the underlying operating system, kernel, and pre-installed packages are not receiving security patches. Unlike Lambda runtimes and RDS engine versions where AWS manages the execution environment, EC2 AMIs are operator-selected and operator-maintained. SSM Patch Manager patches running instances but does not update the underlying AMI — when instances are replaced through auto-scaling or redeployment, they launch from the same aged AMI with accumulated patches missing. The 180-day default threshold represents two quarterly patching cycles with buffer. Organizations can override per-instance via a stave/ami-max-age-days tag.\n",
@@ -110,7 +111,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

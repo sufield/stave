@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:b4dfa1cff30be4de",
       "control_id": "CTL.CLOUDFRONT.HEADERS.001",
       "control_name": "CloudFront Distributions Must Enforce Security Response Headers",
       "control_description": "CloudFront distributions must have a response headers policy attached that includes Strict-Transport-Security (HSTS) with max-age \u003e= 31536000, X-Frame-Options set to DENY or SAMEORIGIN, X-Content-Type-Options set to nosniff, and Referrer-Policy set to a restrictive value. Without these headers, browsers do not enforce transport security, framing protection, MIME type enforcement, or referrer leakage prevention. Content-Security-Policy (CSP) is not required — it requires application-specific source definitions outside Stave's scope. This pairs with CTL.CLOUDFRONT.TLS.001: TLS enforces encrypted transport, response headers enforce browser-layer security.\n",
@@ -110,7 +111,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

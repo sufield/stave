@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:ab32efe879615121",
       "control_id": "CTL.OPENSEARCH.VPC.001",
       "control_name": "Domain Must Be Deployed in VPC",
       "control_description": "OpenSearch domains must be deployed within a VPC, not on public endpoints. A domain outside a VPC is directly reachable from the internet, bypassing all network-level controls. Even with authentication enabled, a public endpoint exposes the cluster to brute-force, credential stuffing, and zero-day exploits. VPC deployment restricts access to authorized networks only.\n",
@@ -111,7 +112,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:31c5a9caa3a10cd5",
       "control_id": "CTL.IAM.ANALYZER.MONITOR.001",
       "control_name": "IAM Access Analyzer Must Be Configured for Continuous Monitoring",
       "control_description": "IAM Access Analyzer must be in ACTIVE status and findings must be reviewed within 30 days. CIS 1.21 requires not just enablement (covered by CTL.IAM.ANALYZER.001) but active monitoring and finding review. An analyzer with unreviewed findings has detected external access paths — S3 buckets, IAM roles, KMS keys, Lambda functions accessible outside the account — that have not been evaluated for legitimacy. Active findings are confirmed external access paths waiting to be investigated, not theoretical risks. For PHI environments, any unreviewed external access path is a potential breach path.\n",
@@ -111,7 +112,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

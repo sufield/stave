@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:fac8041e459f4111",
       "control_id": "CTL.EFS.ENCRYPT.TRANSIT.001",
       "control_name": "EFS File System Must Enforce Encryption in Transit",
       "control_description": "EFS file systems must enforce encryption in transit via a file system policy that denies unencrypted connections. Without this policy, NFS clients can mount the file system without TLS, exposing data to network-level interception.\n",
@@ -112,7 +113,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:1132fbe76ce7f8c0",
       "control_id": "CTL.IAM.TRUST.EXTERNALID.001",
       "control_name": "Cross-Account Trust Must Require External ID",
       "control_description": "IAM roles with cross-account trust policies must include an sts:ExternalId condition. Without an external ID, any principal in the trusted account can assume the role — including compromised service accounts, OAuth applications, or test tenants. The Microsoft Midnight Blizzard 2024 breach exploited a legacy test OAuth app to assume a role with full_access_as_app permissions, pivoting from a test tenant to production Exchange mailboxes.\n",
@@ -105,7 +106,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

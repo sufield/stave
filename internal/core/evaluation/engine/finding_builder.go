@@ -31,6 +31,7 @@ func NewFinding(
 func newBaseFinding(ctl *policy.ControlDefinition, t *asset.ExposureLifecycle) *evaluation.Finding {
 	a := t.Asset()
 	f := evaluation.NewFindingFromMetadata(ctl.Metadata())
+	f.FindingID = evaluation.StableFindingID(ctl.ID, t.ID)
 	f.AssetID = t.ID
 	f.AssetType = a.Type
 	f.AssetVendor = a.Vendor

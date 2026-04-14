@@ -97,6 +97,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:447b517eb02e207e",
       "control_id": "CTL.S3.ACCESS.001",
       "control_name": "No Unauthorized Cross-Account Access",
       "control_description": "S3 bucket policies must not grant access to external AWS accounts. In MVP 1.0, any cross-account access is flagged — org-boundary allowlist filtering (allowed_accounts) is not yet implemented.\n",
@@ -137,6 +138,7 @@
       }
     },
     {
+      "finding_id": "sha256:39aa8d4a21c81d37",
       "control_id": "CTL.S3.ACCESS.002",
       "control_name": "No Wildcard Action Policies",
       "control_description": "S3 bucket policies must not use wildcard actions (s3:* or *). Wildcard policies grant more permissions than intended and violate the principle of least privilege.\n",
@@ -177,6 +179,7 @@
       }
     },
     {
+      "finding_id": "sha256:57cd3c51cb7f4bf1",
       "control_id": "CTL.S3.ENCRYPT.001",
       "control_name": "Encryption at Rest Required",
       "control_description": "S3 buckets must have server-side encryption enabled. Unencrypted storage is the top audit finding in regulated industries.\n",
@@ -217,6 +220,7 @@
       }
     },
     {
+      "finding_id": "sha256:18b53853355a91aa",
       "control_id": "CTL.S3.ENCRYPT.002",
       "control_name": "Transport Encryption Required",
       "control_description": "S3 buckets must enforce HTTPS via a deny policy on aws:SecureTransport=false. Without this, data transfers occur in plaintext.\n",
@@ -257,6 +261,7 @@
       }
     },
     {
+      "finding_id": "sha256:68d3599e7b239cd6",
       "control_id": "CTL.S3.LOG.001",
       "control_name": "Access Logging Required",
       "control_description": "S3 buckets must have server access logging enabled for audit trail and visibility into data access patterns.\n",
@@ -297,6 +302,7 @@
       }
     },
     {
+      "finding_id": "sha256:67a0c2180e432109",
       "control_id": "CTL.S3.PUBLIC.003",
       "control_name": "No Public Write Access",
       "control_description": "S3 buckets must not allow public write or delete access. Public write enables data injection, ransomware, and policy takeover.\n",
@@ -365,6 +371,7 @@
       }
     },
     {
+      "finding_id": "sha256:56aadad096a67670",
       "control_id": "CTL.S3.VERSION.001",
       "control_name": "Versioning Required",
       "control_description": "S3 buckets must have versioning enabled to protect against accidental deletion and enable recovery from negligent operations.\n",
@@ -558,7 +565,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

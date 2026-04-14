@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:cd6f84c5bf4e0cfb",
       "control_id": "CTL.VPC.SG.EGRESS.001",
       "control_name": "Security Groups Must Not Allow Unrestricted Egress",
       "control_description": "Security groups must not allow all outbound traffic to 0.0.0.0/0 on all ports. Unrestricted egress enables data exfiltration, command-and-control communication, and lateral movement to external attacker infrastructure. While most organizations currently allow all egress by default, restricting outbound traffic to required ports and destinations is a critical APT hardening measure.\n",
@@ -109,7 +110,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

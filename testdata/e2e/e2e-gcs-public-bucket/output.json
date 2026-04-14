@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:35117df1ab0a73d3",
       "control_id": "CTL.GCS.PUBLIC.001",
       "control_name": "No Public GCS Bucket Read",
       "control_description": "GCS buckets must not allow public read access. Detects buckets where IAM bindings include allUsers or allAuthenticatedUsers with read permissions, or where uniform bucket-level access is disabled and object ACLs may grant public access.\n",
@@ -185,7 +186,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

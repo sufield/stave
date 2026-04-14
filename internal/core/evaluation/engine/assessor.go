@@ -34,9 +34,10 @@ type Assessor struct {
 	Tracer ports.Tracer
 
 	// Governance — the policy-set and override configurations.
-	Controls   []policy.ControlDefinition
-	Exemptions *policy.ExemptionConfig
-	Exceptions *policy.ExceptionConfig
+	Controls        []policy.ControlDefinition
+	Exemptions      *policy.ExemptionConfig
+	Exceptions      *policy.ExceptionConfig
+	Acknowledgments *policy.AcknowledgmentConfig
 
 	// Risk Thresholds — global parameters for SLA and data continuity.
 	SLAThreshold    time.Duration
@@ -272,6 +273,14 @@ func (s *assessmentSession) compileReport() evaluation.ComplianceReport {
 		s.auditTime,
 	)
 
+	// Apply acknowledgments.
+	activeFindings, acknowledgedFindings := applyAcknowledgments(
+		activeFindings,
+		s.assessor.Acknowledgments,
+		s.collector.findings,
+		s.auditTime,
+	)
+
 	// Calculate environmental risk based on pending violations.
 	riskSignals := risk.ComputeItems(risk.ThresholdRequest{
 		Controls:                s.assessor.Controls,
@@ -299,13 +308,14 @@ func (s *assessmentSession) compileReport() evaluation.ComplianceReport {
 			ExposedResources: len(s.collector.nonCompliantAssets),
 			Violations:       len(activeFindings),
 		},
-		SecurityState:    posture,
-		RiskSignals:      riskSignals,
-		Findings:         activeFindings,
-		ExceptedFindings: exceptedFindings,
-		SkippedControls:  s.collector.skippedControls,
-		ExemptedAssets:   s.collector.exemptedAssets,
-		Checks:           s.collector.checks,
+		SecurityState:        posture,
+		RiskSignals:          riskSignals,
+		Findings:             activeFindings,
+		ExceptedFindings:     exceptedFindings,
+		AcknowledgedFindings: acknowledgedFindings,
+		SkippedControls:      s.collector.skippedControls,
+		ExemptedAssets:       s.collector.exemptedAssets,
+		Checks:               s.collector.checks,
 	}
 
 	if s.opts.GenerateEvidence && len(s.snapshots) > 0 {
@@ -344,6 +354,86 @@ func partitionFindings(
 		}
 	}
 	return active, excepted
+}
+
+// applyAcknowledgments separates acknowledged findings from active findings.
+// Returns remaining active findings and a slice of acknowledged finding records.
+func applyAcknowledgments(
+	findings []evaluation.Finding,
+	acks *policy.AcknowledgmentConfig,
+	allFindings []evaluation.Finding,
+	now time.Time,
+) ([]evaluation.Finding, []policy.AcknowledgedFinding) {
+	if acks == nil {
+		return findings, nil
+	}
+
+	// Build set of failing control IDs for compensating control validation.
+	failingControls := make(map[kernel.ControlID]bool)
+	for i := range allFindings {
+		failingControls[allFindings[i].ControlID] = true
+	}
+
+	var active []evaluation.Finding
+	var acknowledged []policy.AcknowledgedFinding
+
+	for i := range findings {
+		f := &findings[i]
+		rule := acks.FindRule(f.ControlID, f.AssetID)
+		if rule == nil {
+			active = append(active, *f)
+			continue
+		}
+
+		af := policy.AcknowledgedFinding{
+			FindingID:        f.FindingID,
+			ControlID:        f.ControlID,
+			AssetID:          f.AssetID,
+			Rationale:        rule.Rationale,
+			AcknowledgedBy:   rule.AcknowledgedBy,
+			AcknowledgedDate: rule.AcknowledgedDate,
+			ExpiryDate:       rule.ExpiryDate,
+		}
+
+		// Check expiry.
+		if rule.IsExpired(now) {
+			af.Verdict = "fail"
+			af.Valid = false
+			af.InvalidReason = "expired"
+			acknowledged = append(acknowledged, af)
+			active = append(active, *f) // revert to active
+			continue
+		}
+
+		// Check compensating controls.
+		allCompPassing := true
+		for _, cc := range rule.CompensatingControls {
+			status := "pass"
+			if failingControls[cc] {
+				status = "fail"
+				allCompPassing = false
+			}
+			af.CompensatingControls = append(af.CompensatingControls,
+				policy.CompensatingControlStatus{ControlID: cc, Status: status})
+		}
+
+		if !allCompPassing {
+			af.Verdict = "fail"
+			af.Valid = false
+			af.InvalidReason = "compensating_controls_failing"
+			acknowledged = append(acknowledged, af)
+			active = append(active, *f) // revert to active
+			continue
+		}
+
+		// Valid acknowledgment.
+		af.Verdict = "acknowledged"
+		af.Valid = true
+		acknowledged = append(acknowledged, af)
+		// Finding is NOT added to active — it's acknowledged.
+	}
+
+	return active, acknowledged
 }
 
 // FingerprintPolicy returns a deterministic hash of the active control-set.

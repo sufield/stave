@@ -47,6 +47,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:45dd92bec84c8108",
       "control_id": "CTL.S3.ACL.WRITE.001",
       "control_name": "No Public Write via ACL",
       "control_description": "S3 bucket ACLs must not grant write access to AllUsers or AuthenticatedUsers. ACL-based write access enables attackers to upload malicious objects or overwrite existing content.\n",
@@ -115,6 +116,7 @@
       }
     },
     {
+      "finding_id": "sha256:a01a06a82cb5f0fe",
       "control_id": "CTL.S3.AUTH.READ.001",
       "control_name": "No Authenticated-Users Read Access",
       "control_description": "S3 buckets must not grant read access to all authenticated AWS users. AuthenticatedUsers scope means any AWS account can read objects, which is nearly as dangerous as fully public access.\n",
@@ -232,7 +234,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

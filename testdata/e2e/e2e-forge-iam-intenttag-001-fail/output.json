@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:978959921d475bb9",
       "control_id": "CTL.IAM.ROLE.INTENTTAG.001",
       "control_name": "Roles Must Have a Declared Purpose Tag",
       "control_description": "All IAM roles must have a role-type tag with a value from the defined taxonomy (application, data-pipeline, readonly, admin, security, ci-cd, break-glass, service-account). Without a declared purpose, access reviews cannot systematically verify whether a role's permissions match its intent. A missing tag means no one has formally declared what this role is supposed to do. The role-type tag is the machine-readable anchor for intent-versus-permissions checking.\n",
@@ -108,7 +109,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

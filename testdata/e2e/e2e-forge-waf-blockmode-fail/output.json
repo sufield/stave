@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:04e558cc93d0cb4e",
       "control_id": "CTL.WAF.RULES.BLOCKMODE.001",
       "control_name": "WAF Rules Must Be in BLOCK Mode, Not COUNT Mode",
       "control_description": "All WAF rules and rule groups must have their effective action set to BLOCK. A rule in COUNT mode observes and logs attacks but does not block them. AWS WAF defaults newly added rules to COUNT mode during tuning. This becomes a permanent misconfiguration when teams never transition to BLOCK. The WAF appears active in every compliance report while blocking nothing. COUNT mode may be intentional during tuning — the stave/waf-count-mode-justified tag documents this exception.\n",
@@ -116,7 +117,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

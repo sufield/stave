@@ -47,6 +47,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:253091218eb6daa8",
       "control_id": "CTL.S3.ENCRYPT.003",
       "control_name": "PHI Buckets Must Use SSE-KMS with Customer-Managed Key",
       "control_description": "S3 buckets tagged with data-classification=phi must use SSE-KMS encryption with a customer-managed key (CMK), not the default AWS-managed key or SSE-S3. This ensures the organization controls key rotation, access policies, and audit logging for PHI data at rest.\n",
@@ -93,6 +94,7 @@
       }
     },
     {
+      "finding_id": "sha256:fcc6bceefefac3c7",
       "control_id": "CTL.S3.ENCRYPT.003",
       "control_name": "PHI Buckets Must Use SSE-KMS with Customer-Managed Key",
       "control_description": "S3 buckets tagged with data-classification=phi must use SSE-KMS encryption with a customer-managed key (CMK), not the default AWS-managed key or SSE-S3. This ensures the organization controls key rotation, access policies, and audit logging for PHI data at rest.\n",
@@ -178,7 +180,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

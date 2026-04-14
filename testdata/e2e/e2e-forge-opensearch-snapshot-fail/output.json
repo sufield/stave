@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:e1baee9bd7fc80f3",
       "control_id": "CTL.OPENSEARCH.SNAPSHOT.001",
       "control_name": "Snapshots Must Be Encrypted",
       "control_description": "OpenSearch domain snapshots must be stored in encrypted repositories. Unencrypted snapshots expose the same data as the live cluster but are often stored with weaker access controls. Snapshot repositories in S3 must use server-side encryption.\n",
@@ -110,7 +111,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

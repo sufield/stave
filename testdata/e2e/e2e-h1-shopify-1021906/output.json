@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:bbfc9e7492db8e5e",
       "control_id": "CTL.S3.PUBLIC.001",
       "control_name": "No Public S3 Buckets",
       "control_description": "S3 buckets must not allow public read or list access. Detects buckets with public access via bucket policies, ACLs, or missing public access block settings.\n",
@@ -180,7 +181,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

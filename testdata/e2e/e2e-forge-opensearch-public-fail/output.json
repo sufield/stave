@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:a5cc2283c5346d74",
       "control_id": "CTL.OPENSEARCH.PUBLIC.001",
       "control_name": "OpenSearch Domain Must Not Be Publicly Accessible",
       "control_description": "OpenSearch domains must not have public endpoints accessible from the internet. A publicly accessible domain allows anyone to query, index, or enumerate data without network-level restrictions. The Darkbeam breach (2023) exposed 3.8 billion records from an Elasticsearch instance left unprotected on the public internet. Domains must be deployed within a VPC.\n",
@@ -189,7 +190,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

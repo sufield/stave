@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:d9f4360761868c8c",
       "control_id": "CTL.KMS.CONCENTRATION.002",
       "control_name": "High-Density KMS Key Must Have Deletion Protection",
       "control_description": "KMS keys encrypting more than 50 resources must have deletion protection enabled. Without deletion protection, an accidental or malicious ScheduleKeyDeletion call can render hundreds of resources permanently unrecoverable within the 7-day minimum waiting period.\n",
@@ -115,7 +116,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:44b7a621cbe6e384",
       "control_id": "CTL.IAM.PASSWORD.ROTATION.001",
       "control_name": "User Passwords Must Be Rotated Within Policy Period",
       "control_description": "IAM user console passwords must be rotated per organizational policy (typically 90 days). The credential report tracks password_last_changed; passwords older than the policy period have accumulated exposure risk and may have been shared, phished, or brute-forced. This complements access key rotation (CTL.IAM.CRED.ROTATION.001) to cover the full credential lifecycle.\n",
@@ -112,7 +113,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:0894ae2203df49de",
       "control_id": "CTL.EXPOSURE.ANON.002",
       "control_name": "Unauthenticated Access Path Must Not Exceed Depth Threshold",
       "control_description": "Unauthenticated access paths to any resource must not exceed 3 hops. Deep chains (anonymous → API Gateway → Lambda → Role A → Role B → S3) indicate unintended transitive access. Each hop is an access grant — IAM policy, resource policy, role assumption, or network rule. Shorter paths are more likely intentional and auditable. Deep paths signal accidental composition where intermediate services were granted broader permissions than their design requires.\n",
@@ -193,7 +194,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

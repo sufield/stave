@@ -47,6 +47,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:3f681faeae812358",
       "control_id": "CTL.S3.NETWORK.001",
       "control_name": "Public-Principal Policies Must Have Network Conditions",
       "control_description": "S3 bucket policies that grant access to Principal * (any AWS principal) must include network-scoping conditions such as aws:SourceIp, aws:sourceVpce, aws:SourceVpc, or aws:PrincipalOrgID. Without these conditions, the bucket is accessible to anyone on the internet. This control detects policies where wildcard principals are used without network restrictions.\n",
@@ -81,6 +82,7 @@
       }
     },
     {
+      "finding_id": "sha256:a23f10a9461112c1",
       "control_id": "CTL.S3.NETWORK.001",
       "control_name": "Public-Principal Policies Must Have Network Conditions",
       "control_description": "S3 bucket policies that grant access to Principal * (any AWS principal) must include network-scoping conditions such as aws:SourceIp, aws:sourceVpce, aws:SourceVpc, or aws:PrincipalOrgID. Without these conditions, the bucket is accessible to anyone on the internet. This control detects policies where wildcard principals are used without network restrictions.\n",
@@ -154,7 +156,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

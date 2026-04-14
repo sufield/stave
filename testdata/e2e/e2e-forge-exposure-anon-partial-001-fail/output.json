@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:e074c0e28c87e176",
       "control_id": "CTL.EXPOSURE.ANON.PARTIAL.001",
       "control_name": "Reachability Path Must Be Fully Resolved",
       "control_description": "When the extractor finds a path from anonymous to a resource but cannot fully resolve all intermediate nodes (e.g., access denied on an IAM policy lookup, missing Lambda configuration), the path is marked as partially resolved. Safety cannot be proven because the unresolved segment may contain additional access grants that widen the blast radius. This is the \"unknown\" state — worse than a confirmed safe path, potentially better than a confirmed unsafe path.\n",
@@ -188,7 +189,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:191810c66f70e3ed",
       "control_id": "CTL.LAMBDA.CODESIGN.ENFORCE.001",
       "control_name": "Lambda Code Signing Must Be Enabled and in Enforce Mode",
       "control_description": "Lambda functions must have a code signing configuration attached with the policy mode set to Enforce. Lambda code signing uses AWS Signer to cryptographically verify that deployment packages were signed by a trusted publisher before the function accepts them. Without a code signing configuration, any package from any source is deployed without integrity verification. In Warn mode, unsigned packages generate a finding but are deployed successfully — this provides observability without protection, the same failure mode as WAF COUNT mode and ECR image signing in audit mode. Only Enforce mode prevents unsigned or invalidly signed packages from being deployed. A supply chain attack that replaces a legitimate package executes immediately with the function's full IAM execution role permissions.\n",
@@ -111,7 +112,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

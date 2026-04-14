@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:d42dea692fd5361f",
       "control_id": "CTL.ECR.SCAN.001",
       "control_name": "Image Scanning Must Be Enabled",
       "control_description": "ECR repositories must have image scanning enabled (basic or enhanced). Without scanning, container images with known vulnerabilities are deployed to production undetected.\n",
@@ -109,7 +110,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

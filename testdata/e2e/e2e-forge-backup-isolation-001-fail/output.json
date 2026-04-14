@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:892dc7dae8a16e70",
       "control_id": "CTL.BACKUP.RECOVERY.ISOLATION.001",
       "control_name": "Backup KMS Key Must Be in Different Account Than Source Data",
       "control_description": "The KMS key used to encrypt backups must reside in a different AWS account than the source data. If both the data and the decryption key are in the same account, a single account compromise destroys both — the attacker can delete the data AND schedule the KMS key for deletion, rendering backups permanently unrecoverable.\n",
@@ -109,7 +110,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

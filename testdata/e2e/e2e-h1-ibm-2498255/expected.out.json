@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:fcb9a57f38726853",
       "control_id": "CTL.S3.BUCKET.TAKEOVER.001",
       "control_name": "Referenced S3 Buckets Must Exist And Be Owned",
       "control_description": "Any externally referenced S3 bucket must exist and be owned. Dangling references (missing or unowned buckets) enable bucket takeover and attacker-controlled content delivery.\n",
@@ -180,7 +181,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

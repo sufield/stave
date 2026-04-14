@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:6567686c2602250f",
       "control_id": "CTL.EFS.ENCRYPT.001",
       "control_name": "EFS File System Must Be Encrypted at Rest",
       "control_description": "EFS file systems must have encryption at rest enabled. Data stored on unencrypted file systems is readable if the underlying storage is compromised. EFS encryption uses AWS KMS and must be enabled at creation time — it cannot be enabled on existing file systems.\n",
@@ -113,7 +114,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

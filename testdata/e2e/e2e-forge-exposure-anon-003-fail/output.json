@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:954b97ee0a44eb11",
       "control_id": "CTL.EXPOSURE.ANON.003",
       "control_name": "Unauthenticated Access Path Must Have Authentication Boundary",
       "control_description": "Any resource reachable from anonymous principals must have at least one authentication boundary in the access path — a point where identity is verified (Cognito authorizer, Lambda authorizer, IAM authorization, mTLS). An inspection boundary (WAF, API Gateway threat protection) provides defense-in-depth but does NOT establish identity — a path with only WAF is still unauthenticated. This control flags paths where no identity verification exists between the public internet and the target resource.\n",
@@ -194,7 +195,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

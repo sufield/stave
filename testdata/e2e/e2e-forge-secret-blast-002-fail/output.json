@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:bdb23ffc074c6a13",
       "control_id": "CTL.SECRET.BLAST.002",
       "control_name": "Cross-Account Secret Access Must Not Target Sensitive Resource",
       "control_description": "Secrets that provide credentials to sensitive resources must have access restricted to the owning account. Cross-account access to a secret that unlocks PHI or PII data doubles the blast radius — the secret is reachable from a wider set of principals across account boundaries.\n",
@@ -119,7 +120,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

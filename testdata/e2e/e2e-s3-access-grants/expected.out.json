@@ -47,6 +47,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:06806d8c6fea7531",
       "control_id": "CTL.S3.ACCESS.GRANTS.001",
       "control_name": "S3 Access Grants Must Not Grant Broad Permissions",
       "control_description": "S3 Access Grants provide temporary credentials scoped to a bucket or prefix. An Access Grant with READWRITE permission on a broad scope (entire bucket or wildcard prefix) bypasses bucket policy restrictions.\n",
@@ -102,6 +103,7 @@
       }
     },
     {
+      "finding_id": "sha256:548b689caded6b8d",
       "control_id": "CTL.S3.ACCESS.GRANTS.002",
       "control_name": "S3 Access Grants Identity Center Must Be Attached",
       "control_description": "When S3 Access Grants are enabled, IAM Identity Center should be attached to the Access Grants instance. Without Identity Center, grants can only target IAM principals — losing the benefit of centralized identity governance and SSO-based access control.\n",
@@ -189,7 +191,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

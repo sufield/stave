@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:a8fe95e3afbb892a",
       "control_id": "CTL.S3.BREACH.DETECT.001",
       "control_name": "PHI Buckets Must Have Complete Detection Infrastructure",
       "control_description": "S3 buckets tagged with data-classification=phi must have all four detection components active: server access logging, CloudTrail object-level logging, GuardDuty S3 protection, and AWS Config recording. Missing any one component creates a gap in breach detection and incident investigation capability. HIPAA §§164.400-414 requires the ability to detect and investigate unauthorized access to PHI.\n",
@@ -116,7 +117,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

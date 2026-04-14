@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:36e5a9caca267173",
       "control_id": "CTL.DYNAMODB.PITR.001",
       "control_name": "Point-in-Time Recovery Must Be Enabled",
       "control_description": "DynamoDB tables must have point-in-time recovery (PITR) enabled. Without PITR, accidental deletes, application bugs, or ransomware that corrupts table data cannot be recovered. PITR provides continuous backups with per-second granularity for the last 35 days.\n",
@@ -104,7 +105,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

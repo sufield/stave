@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:d24caae4f3f720ea",
       "control_id": "CTL.LAMBDA.ROLE.LEASTPRIV.001",
       "control_name": "Lambda Execution Role Must Follow Least Privilege",
       "control_description": "Lambda function execution roles must not have overly broad permissions. An over-privileged execution role grants the function — and any attacker who compromises or invokes it — access to AWS resources beyond what the function requires. Common violations include admin policies, wildcard resource ARNs on sensitive actions, or managed policies like AmazonS3FullAccess attached to functions that only need read access to a single bucket. When combined with a public function URL or a compromised dependency, an over-privileged role converts a single function compromise into account-wide lateral movement.\n",
@@ -111,7 +112,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

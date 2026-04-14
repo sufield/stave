@@ -47,6 +47,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:d9330865200aa495",
       "control_id": "CTL.S3.CONTROLS.001",
       "control_name": "Public Access Block Must Be Enabled",
       "control_description": "S3 buckets must have the public access block fully enabled. When disabled, the bucket has no safety net against accidental public exposure from policy or ACL changes. This detects the enabling condition for public access, not the exposure itself.\n",
@@ -87,6 +88,7 @@
       }
     },
     {
+      "finding_id": "sha256:c08ea6c508e37025",
       "control_id": "CTL.S3.PUBLIC.001",
       "control_name": "No Public S3 Buckets",
       "control_description": "S3 buckets must not allow public read or list access. Detects buckets with public access via bucket policies, ACLs, or missing public access block settings.\n",
@@ -244,7 +246,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

@@ -47,6 +47,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:2a489a7678baa433",
       "control_id": "CTL.S3.ACL.FULLCONTROL.001",
       "control_name": "No FULL_CONTROL ACL Grants to Public",
       "control_description": "S3 bucket ACLs must not grant FULL_CONTROL to AllUsers or AuthenticatedUsers. FULL_CONTROL is the worst-case ACL misconfiguration — the grantee can read, write, and delete objects and modify the ACL itself.\n",
@@ -88,6 +89,7 @@
       }
     },
     {
+      "finding_id": "sha256:e1ee3d00f05f9f46",
       "control_id": "CTL.S3.ACL.FULLCONTROL.001",
       "control_name": "No FULL_CONTROL ACL Grants to Public",
       "control_description": "S3 bucket ACLs must not grant FULL_CONTROL to AllUsers or AuthenticatedUsers. FULL_CONTROL is the worst-case ACL misconfiguration — the grantee can read, write, and delete objects and modify the ACL itself.\n",
@@ -168,7 +170,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

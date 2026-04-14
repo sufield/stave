@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:de6af3600cd19c11",
       "control_id": "CTL.ELASTICACHE.AUTH.001",
       "control_name": "Redis AUTH Token Must Be Set",
       "control_description": "ElastiCache Redis clusters must have an AUTH token configured. Without AUTH, any client with network access can read and write data. Combined with a missing VPC or open security group, this creates an unauthenticated database exposure — the same pattern as the Darkbeam Elasticsearch breach.\n",
@@ -104,7 +105,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

@@ -30,6 +30,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:3db4f35a105643f4",
       "control_id": "CTL.S3.OWNERSHIP.001",
       "control_name": "S3 Object Ownership Must Be Bucket Owner Enforced",
       "control_description": "S3 buckets must have Object Ownership set to BucketOwnerEnforced, which disables ACLs entirely. When ACLs are disabled, the bucket owner automatically owns every object regardless of who uploaded it, and access is controlled exclusively through IAM and bucket policies. This eliminates the entire class of ACL-based exposure: public grants, privilege escalation via WRITE_ACP, and object-level ACL overrides. Since April 2023 new buckets default to BucketOwnerEnforced, but buckets created before this date may still have ACLs enabled.\n",
@@ -78,6 +79,7 @@
       }
     },
     {
+      "finding_id": "sha256:f7c61bb76d54d7f0",
       "control_id": "CTL.S3.PUBLIC.PREFIX.001",
       "control_name": "Protected Prefixes Must Not Be Publicly Readable",
       "control_description": "S3 bucket prefixes marked as protected must not be publicly readable. Evaluates bucket policies, ACL grants, and public access block settings to determine effective public read access for each protected prefix. Customize the prefix lists below to match your bucket layout.\n",
@@ -151,6 +153,7 @@
       }
     },
     {
+      "finding_id": "sha256:f7c61bb76d54d7f0",
       "control_id": "CTL.S3.PUBLIC.PREFIX.001",
       "control_name": "Protected Prefixes Must Not Be Publicly Readable",
       "control_description": "S3 bucket prefixes marked as protected must not be publicly readable. Evaluates bucket policies, ACL grants, and public access block settings to determine effective public read access for each protected prefix. Customize the prefix lists below to match your bucket layout.\n",
@@ -224,6 +227,7 @@
       }
     },
     {
+      "finding_id": "sha256:f7c61bb76d54d7f0",
       "control_id": "CTL.S3.PUBLIC.PREFIX.001",
       "control_name": "Protected Prefixes Must Not Be Publicly Readable",
       "control_description": "S3 bucket prefixes marked as protected must not be publicly readable. Evaluates bucket policies, ACL grants, and public access block settings to determine effective public read access for each protected prefix. Customize the prefix lists below to match your bucket layout.\n",
@@ -297,6 +301,7 @@
       }
     },
     {
+      "finding_id": "sha256:f7c61bb76d54d7f0",
       "control_id": "CTL.S3.PUBLIC.PREFIX.001",
       "control_name": "Protected Prefixes Must Not Be Publicly Readable",
       "control_description": "S3 bucket prefixes marked as protected must not be publicly readable. Evaluates bucket policies, ACL grants, and public access block settings to determine effective public read access for each protected prefix. Customize the prefix lists below to match your bucket layout.\n",

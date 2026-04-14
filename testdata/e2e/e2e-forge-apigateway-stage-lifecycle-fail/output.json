@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:98b37b5d46af93be",
       "control_id": "CTL.APIGATEWAY.STAGE.LIFECYCLE.001",
       "control_name": "API Gateway Stages Must Not Have Orphaned or Deprecated Versions Accessible",
       "control_description": "API Gateway REST APIs must not have orphaned stages accessible with weaker security controls than the production stage. Orphaned stages from previous deployments, testing, and migrations accumulate without security controls applied to the current stage — no WAF association, no throttling, potentially no authorization. OWASP API9:2023 (Improper Inventory Management) identifies this as a primary API security gap. Older stages may retain endpoints that were fixed or removed in current versions. The security delta between orphaned and production stages defines the attack surface an attacker gains by discovering the old endpoint. A stage with no invocations in 30 days and missing controls present on the production stage is considered orphaned.\n",
@@ -111,7 +112,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

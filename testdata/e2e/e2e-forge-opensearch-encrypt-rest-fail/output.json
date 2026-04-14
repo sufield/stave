@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:0f2be9da590b93d0",
       "control_id": "CTL.OPENSEARCH.ENCRYPT.001",
       "control_name": "Encryption at Rest Must Be Enabled",
       "control_description": "OpenSearch domains must have encryption at rest enabled using AWS KMS. Unencrypted data at rest is exposed if the underlying storage is compromised or if snapshots are shared.\n",
@@ -111,7 +112,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

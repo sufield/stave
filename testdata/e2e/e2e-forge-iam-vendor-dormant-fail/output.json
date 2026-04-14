@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:652c1d42ada502da",
       "control_id": "CTL.IAM.VENDOR.DORMANT.001",
       "control_name": "Vendor Cross-Account Role Must Not Be Dormant",
       "control_description": "Cross-account roles granted to external vendors (SaaS providers, auditors, consultants) must be actively used or decommissioned. A vendor role unused for more than 90 days is \"ghost access\" — the vendor may no longer need it, the contract may have ended, but the access persists. Each dormant vendor role is an unmonitored ingress path that can be exploited if the vendor is compromised.\n",
@@ -114,7 +115,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

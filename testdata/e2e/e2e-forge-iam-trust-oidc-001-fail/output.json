@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:af6706346e209705",
       "control_id": "CTL.IAM.TRUST.OIDC.001",
       "control_name": "OIDC Federation Trust Must Be Scoped to Specific Repository",
       "control_description": "IAM roles that trust OIDC identity providers (GitHub Actions, GitLab CI, Bitbucket Pipelines) must restrict the subject claim to a specific repository and branch. A trust policy that accepts any repository from the provider allows any project in the provider's namespace to assume the role — a compromised or malicious repository becomes a production ingress path.\n",
@@ -110,7 +111,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

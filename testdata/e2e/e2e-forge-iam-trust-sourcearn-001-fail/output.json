@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:71e42a39d0f16612",
       "control_id": "CTL.IAM.TRUST.SOURCEARN.001",
       "control_name": "AWS Service Principal Trust Must Have SourceArn or SourceAccount Condition",
       "control_description": "IAM roles trusted by AWS service principals (*.amazonaws.com) must include aws:SourceArn or aws:SourceAccount conditions. Without these conditions, the service can assume the role when acting on behalf of any resource in any account — including attacker-controlled resources. AWS Lambda execution roles without aws:SourceArn allow any Lambda function in any account to assume the role. SNS/S3 notification roles without SourceArn allow any bucket or topic in any account to trigger the role assumption.\n",
@@ -110,7 +111,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

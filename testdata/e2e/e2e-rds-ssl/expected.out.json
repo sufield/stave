@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:2fb1907cd3250569",
       "control_id": "CTL.RDS.SSL.001",
       "control_name": "RDS Must Require SSL Connections",
       "control_description": "RDS instances must enforce SSL/TLS for all client connections. Without require_ssl, database traffic travels unencrypted over the network, exposing query data and credentials to interception.\n",
@@ -108,7 +109,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

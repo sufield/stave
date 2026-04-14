@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:2254b84c7ac24df3",
       "control_id": "CTL.CLOUDFORMATION.STATE.001",
       "control_name": "Terraform State Must Be Versioned",
       "control_description": "Terraform state files must be stored in a versioned backend (S3 with versioning, Terraform Cloud, or equivalent). Unversioned state means a corrupted or accidentally deleted state file cannot be recovered, leaving infrastructure in an unmanaged state with no rollback path.\n",
@@ -109,7 +110,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

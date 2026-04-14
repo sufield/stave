@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:22a02ecb33d9f671",
       "control_id": "CTL.LAMBDA.URL.AUTH.001",
       "control_name": "Lambda Function URLs Must Require Authentication",
       "control_description": "Lambda function URLs must not be configured with AuthType NONE. A function URL with no authentication creates a publicly invocable HTTPS endpoint — no API Gateway, no Cognito, no IAM signature, no network boundary. Any person on the internet can invoke the function with no credentials. The function executes with its full IAM execution role permissions and generates costs for every invocation including attacker-driven invocations. Function URLs bypass every network perimeter control — VPC, security groups, NACLs — that would otherwise restrict access to Lambda invocation. This is distinct from public invocation via the Lambda resource-based policy: a function with a restrictive resource policy can still be publicly invocable if it has a function URL with AuthType NONE. The Denial of Wallet risk is significant — Lambda pricing is per invocation and an unauthenticated endpoint allows unlimited invocations with no cost ceiling.\n",
@@ -111,7 +112,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

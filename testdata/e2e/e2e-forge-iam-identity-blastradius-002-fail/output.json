@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:71377f9b179fd500",
       "control_id": "CTL.IAM.IDENTITY.BLASTRADIUS.002",
       "control_name": "Cross-Account Role Must Require External ID",
       "control_description": "IAM roles with cross-account blast radius (can reach resources in other AWS accounts) must require an external ID condition on the trust policy. Without an external ID, any principal in the trusted account can assume the role — including compromised service accounts and test tenants. Combined with cross-account reach, this is the maximum blast radius configuration.\n",
@@ -116,7 +117,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

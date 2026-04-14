@@ -2,6 +2,8 @@ package evaluation
 
 import (
 	"cmp"
+	"crypto/sha256"
+	"encoding/hex"
 	"slices"
 
 	"github.com/sufield/stave/internal/core/asset"
@@ -12,6 +14,7 @@ import (
 // Finding represents a detected control violation.
 // A Finding is purely factual: evidence + classification, no advice.
 type Finding struct {
+	FindingID          string                   `json:"finding_id"`
 	ControlID          kernel.ControlID         `json:"control_id"`
 	ControlName        string                   `json:"control_name"`
 	ControlDescription string                   `json:"control_description"`
@@ -38,6 +41,17 @@ func SortFindings(fs []Finding) {
 			cmp.Compare(a.AssetType, b.AssetType),
 		)
 	})
+}
+
+// StableFindingID computes a deterministic fingerprint for a (control, asset) pair.
+// Same inputs always produce the same ID, enabling cross-run finding correlation.
+func StableFindingID(ctlID kernel.ControlID, astID asset.ID) string {
+	h := sha256.New()
+	h.Write([]byte("finding:"))
+	h.Write([]byte(ctlID))
+	h.Write([]byte(":"))
+	h.Write([]byte(astID))
+	return "sha256:" + hex.EncodeToString(h.Sum(nil))[:16]
 }
 
 // NewFindingFromMetadata creates a Finding pre-populated with control metadata.

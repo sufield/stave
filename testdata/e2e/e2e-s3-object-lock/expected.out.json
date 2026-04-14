@@ -57,6 +57,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:b6d05ff1963bda95",
       "control_id": "CTL.S3.LOCK.001",
       "control_name": "Compliance-Tagged Buckets Must Have Object Lock Enabled",
       "control_description": "S3 buckets tagged with compliance=true must have S3 Object Lock enabled.\n",
@@ -97,6 +98,7 @@
       }
     },
     {
+      "finding_id": "sha256:48c4da7865eb8989",
       "control_id": "CTL.S3.LOCK.002",
       "control_name": "PHI Buckets Must Use COMPLIANCE Mode Object Lock",
       "control_description": "S3 buckets tagged with data-classification=phi that have Object Lock enabled must use COMPLIANCE mode, not GOVERNANCE mode.\n",
@@ -143,6 +145,7 @@
       }
     },
     {
+      "finding_id": "sha256:72a8a7272fee0dad",
       "control_id": "CTL.S3.LOCK.003",
       "control_name": "PHI Object Lock Retention Must Meet Minimum Period",
       "control_description": "S3 buckets tagged with data-classification=phi that have Object Lock enabled must have a default retention period of at least 2190 days (6 years).\n",
@@ -242,7 +245,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

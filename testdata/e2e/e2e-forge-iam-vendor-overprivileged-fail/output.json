@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:9e27c98f65d0f6d9",
       "control_id": "CTL.IAM.VENDOR.OVERPRIVILEGED.001",
       "control_name": "Vendor Role Must Not Reach Excessive Sensitive Resources",
       "control_description": "External vendor roles must have scoped access to sensitive resources. A vendor that can reach more than 10 sensitive resources (PHI, PII, confidential) has a disproportionate blast radius — if the vendor is compromised, the attacker gains broad access to your most sensitive data through a third-party trust relationship.\n",
@@ -115,7 +116,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

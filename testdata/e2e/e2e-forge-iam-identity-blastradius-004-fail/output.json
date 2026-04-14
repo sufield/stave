@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:8849d274eefeea23",
       "control_id": "CTL.IAM.IDENTITY.BLASTRADIUS.004",
       "control_name": "Role Must Not Reach Excessive Sensitive Resources",
       "control_description": "IAM roles must have access to fewer than 20 resources classified as sensitive (PHI, PII, confidential). A role that can reach 85 sensitive resources is a qualitatively different risk than one that reaches 5 — credential compromise exposes a proportionally larger data surface. The extractor counts unique sensitive resources reachable through the role's attached and inline policies.\n",
@@ -111,7 +112,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

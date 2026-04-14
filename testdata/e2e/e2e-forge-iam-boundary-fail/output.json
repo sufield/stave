@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:14137595db51c488",
       "control_id": "CTL.IAM.BOUNDARY.001",
       "control_name": "IAM Roles Must Have Permissions Boundary",
       "control_description": "IAM roles must have a permissions boundary attached. A permissions boundary sets a ceiling on the effective permissions of a role, regardless of what identity policies are attached. Without a boundary, a developer who can create or modify roles has no ceiling preventing the provisioned role from granting full admin access.\n",
@@ -104,7 +105,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:4c9abdd8e9f30115",
       "control_id": "CTL.CLOUDWATCH.MONITOR.MFADEVICE.001",
       "control_name": "MFA Device Changes Must Be Monitored",
       "control_description": "A CloudWatch metric filter and alarm must monitor MFA device enrollment and deactivation events. MFA device changes (CreateVirtualMFADevice, EnableMFADevice, DeactivateMFADevice, DeleteVirtualMFADevice) are a persistence mechanism — an attacker who gains temporary access can enroll their own MFA device to maintain access after the victim resets their password.\n",
@@ -103,7 +104,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

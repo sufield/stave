@@ -127,6 +127,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:583ae8ba1a6a68ff",
       "control_id": "CTL.S3.CONTROLS.001",
       "control_name": "Public Access Block Must Be Enabled",
       "control_description": "S3 buckets must have the public access block fully enabled. When disabled, the bucket has no safety net against accidental public exposure from policy or ACL changes. This detects the enabling condition for public access, not the exposure itself.\n",
@@ -174,6 +175,7 @@
       }
     },
     {
+      "finding_id": "sha256:43ab6c2fa0c5cc92",
       "control_id": "CTL.S3.ENCRYPT.003",
       "control_name": "PHI Buckets Must Use SSE-KMS with Customer-Managed Key",
       "control_description": "S3 buckets tagged with data-classification=phi must use SSE-KMS encryption with a customer-managed key (CMK), not the default AWS-managed key or SSE-S3. This ensures the organization controls key rotation, access policies, and audit logging for PHI data at rest.\n",
@@ -222,6 +224,7 @@
       }
     },
     {
+      "finding_id": "sha256:83f15999648c5a1f",
       "control_id": "CTL.S3.ENCRYPT.004",
       "control_name": "Sensitive Data Requires KMS Encryption",
       "control_description": "S3 buckets with any non-public data classification must use SSE-KMS encryption with a customer-managed key, not SSE-S3 (AES256). AES256 uses AWS-managed keys with no customer control over key rotation, access policies, or audit trails. This fires on all classified data except explicitly public or non-sensitive buckets.\n",
@@ -282,6 +285,7 @@
       }
     },
     {
+      "finding_id": "sha256:04376e057daa240f",
       "control_id": "CTL.S3.GOVERNANCE.001",
       "control_name": "Data Classification Tag Required",
       "control_description": "S3 buckets must have a data-classification tag. Without this tag, tag-conditional controls for PHI, PII, confidential data, backup integrity, and compliance retention cannot evaluate — the bucket silently passes all sensitivity-gated checks regardless of actual content.\n",
@@ -324,6 +328,7 @@
       }
     },
     {
+      "finding_id": "sha256:4213b4640ec19233",
       "control_id": "CTL.S3.PUBLIC.001",
       "control_name": "No Public S3 Bucket Read",
       "control_description": "S3 buckets must not allow public read access. Detects buckets with anonymous read exposure via policy or ACL.\n",
@@ -403,6 +408,7 @@
       }
     },
     {
+      "finding_id": "sha256:a8db07ec8df71531",
       "control_id": "CTL.S3.PUBLIC.002",
       "control_name": "No Public S3 Buckets With Sensitive Data",
       "control_description": "S3 buckets tagged with sensitive data classifications (PHI, PII, confidential) must not allow any public access.\n",
@@ -501,6 +507,7 @@
       }
     },
     {
+      "finding_id": "sha256:5ce777d4af066e45",
       "control_id": "CTL.S3.PUBLIC.007",
       "control_name": "No Public Read via Policy",
       "control_description": "S3 bucket policies must not grant public read access.\n",
@@ -575,6 +582,7 @@
       }
     },
     {
+      "finding_id": "sha256:5d1205a18974cf1c",
       "control_id": "CTL.S3.PUBLIC.008",
       "control_name": "No Public List via Policy",
       "control_description": "S3 bucket policies must not grant anonymous object listing.\n",
@@ -649,6 +657,7 @@
       }
     },
     {
+      "finding_id": "sha256:2d804935b823b211",
       "control_id": "CTL.S3.PUBLIC.LIST.001",
       "control_name": "No Public S3 Bucket Listing",
       "control_description": "S3 buckets must not allow anonymous listing of objects. Public listing exposes object keys, enabling targeted data exfiltration.\n",
@@ -723,6 +732,7 @@
       }
     },
     {
+      "finding_id": "sha256:3e039dfc23916f37",
       "control_id": "CTL.S3.PUBLIC.LIST.002",
       "control_name": "Anonymous S3 Listing Must Be Explicitly Intended",
       "control_description": "Anonymous bucket listing increases exposure surface even when objects are public by design. Listing must be explicitly intended via tag.\n",
@@ -815,6 +825,7 @@
       }
     },
     {
+      "finding_id": "sha256:cfc8d5e23f723d4e",
       "control_id": "CTL.S3.PUBLIC.PREFIX.001",
       "control_name": "Protected Prefixes Must Not Be Publicly Readable",
       "control_description": "S3 bucket prefixes marked as protected must not be publicly readable. Evaluates bucket policies, ACL grants, and public access block settings to determine effective public read access for each protected prefix. Customize the prefix lists below to match your bucket layout.\n",
@@ -888,6 +899,7 @@
       }
     },
     {
+      "finding_id": "sha256:cfc8d5e23f723d4e",
       "control_id": "CTL.S3.PUBLIC.PREFIX.001",
       "control_name": "Protected Prefixes Must Not Be Publicly Readable",
       "control_description": "S3 bucket prefixes marked as protected must not be publicly readable. Evaluates bucket policies, ACL grants, and public access block settings to determine effective public read access for each protected prefix. Customize the prefix lists below to match your bucket layout.\n",
@@ -961,6 +973,7 @@
       }
     },
     {
+      "finding_id": "sha256:cfc8d5e23f723d4e",
       "control_id": "CTL.S3.PUBLIC.PREFIX.001",
       "control_name": "Protected Prefixes Must Not Be Publicly Readable",
       "control_description": "S3 bucket prefixes marked as protected must not be publicly readable. Evaluates bucket policies, ACL grants, and public access block settings to determine effective public read access for each protected prefix. Customize the prefix lists below to match your bucket layout.\n",
@@ -1034,6 +1047,7 @@
       }
     },
     {
+      "finding_id": "sha256:cfc8d5e23f723d4e",
       "control_id": "CTL.S3.PUBLIC.PREFIX.001",
       "control_name": "Protected Prefixes Must Not Be Publicly Readable",
       "control_description": "S3 bucket prefixes marked as protected must not be publicly readable. Evaluates bucket policies, ACL grants, and public access block settings to determine effective public read access for each protected prefix. Customize the prefix lists below to match your bucket layout.\n",
@@ -1107,6 +1121,7 @@
       }
     },
     {
+      "finding_id": "sha256:d94d878f0d5908e3",
       "control_id": "CTL.S3.PUBLIC.PREFIX.001",
       "control_name": "Protected Prefixes Must Not Be Publicly Readable",
       "control_description": "S3 bucket prefixes marked as protected must not be publicly readable. Evaluates bucket policies, ACL grants, and public access block settings to determine effective public read access for each protected prefix. Customize the prefix lists below to match your bucket layout.\n",
@@ -1180,6 +1195,7 @@
       }
     },
     {
+      "finding_id": "sha256:d94d878f0d5908e3",
       "control_id": "CTL.S3.PUBLIC.PREFIX.001",
       "control_name": "Protected Prefixes Must Not Be Publicly Readable",
       "control_description": "S3 bucket prefixes marked as protected must not be publicly readable. Evaluates bucket policies, ACL grants, and public access block settings to determine effective public read access for each protected prefix. Customize the prefix lists below to match your bucket layout.\n",
@@ -1253,6 +1269,7 @@
       }
     },
     {
+      "finding_id": "sha256:d94d878f0d5908e3",
       "control_id": "CTL.S3.PUBLIC.PREFIX.001",
       "control_name": "Protected Prefixes Must Not Be Publicly Readable",
       "control_description": "S3 bucket prefixes marked as protected must not be publicly readable. Evaluates bucket policies, ACL grants, and public access block settings to determine effective public read access for each protected prefix. Customize the prefix lists below to match your bucket layout.\n",
@@ -1326,6 +1343,7 @@
       }
     },
     {
+      "finding_id": "sha256:d94d878f0d5908e3",
       "control_id": "CTL.S3.PUBLIC.PREFIX.001",
       "control_name": "Protected Prefixes Must Not Be Publicly Readable",
       "control_description": "S3 bucket prefixes marked as protected must not be publicly readable. Evaluates bucket policies, ACL grants, and public access block settings to determine effective public read access for each protected prefix. Customize the prefix lists below to match your bucket layout.\n",
@@ -1754,7 +1772,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:4adfff8fd21ec546",
       "control_id": "CTL.IAM.POLICY.MFA.001",
       "control_name": "Destructive Actions Must Require MFA",
       "control_description": "IAM policies governing destructive operations (s3:DeleteBucket, iam:CreateUser, ec2:TerminateInstances, etc.) must include an aws:MultiFactorAuthPresent condition. Without policy-level MFA enforcement, a compromised access key alone is sufficient to execute destructive actions — the credential becomes the only barrier between an attacker and data loss.\n",
@@ -112,7 +113,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

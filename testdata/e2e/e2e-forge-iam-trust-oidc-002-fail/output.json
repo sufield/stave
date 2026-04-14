@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:61a7e70f6d120ba9",
       "control_id": "CTL.IAM.TRUST.OIDC.002",
       "control_name": "OIDC Federation Must Not Use Wildcard Subject Claim",
       "control_description": "IAM roles with OIDC federation must use exact or prefix-scoped subject claims. A wildcard sub condition (\"*\") defeats the purpose of OIDC federation — it accepts any identity from the provider, including pull request workflows from forks, ephemeral runners, and compromised pipelines. This is the supply chain equivalent of s3:* on Resource \"*\".\n",
@@ -109,7 +110,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

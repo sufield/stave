@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:ff0a4449a224f5ba",
       "control_id": "CTL.IAM.POLICY.SHADOW.002",
       "control_name": "Negative Logic Must Not Permit IAM Write Actions",
       "control_description": "IAM policies using NotAction that allow IAM write actions (iam:PutRolePolicy, iam:CreateUser, iam:AttachRolePolicy) through the negative logic gap are a critical privilege escalation vector. The extractor resolves the effective permissions of NotAction policies and flags when dangerous IAM write actions fall through.\n",
@@ -109,7 +110,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

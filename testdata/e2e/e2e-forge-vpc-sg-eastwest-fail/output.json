@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:d2a58e99639e8c04",
       "control_id": "CTL.VPC.SG.EASTWEST.001",
       "control_name": "Security Groups Must Not Allow Unrestricted Access Between Internal Services",
       "control_description": "Security groups on private resources must not allow inbound traffic on application ports from broad internal CIDR ranges or all-port rules from internal sources. East-west over-permissiveness enables lateral movement — a compromised service in the source range inherits access to every destination that grants broad internal access. This is distinct from CTL.VPC.SG.UNRESTRICTED.001 which detects north-south exposure (0.0.0.0/0). Specific conditions: inbound rules from CIDRs broader than /28 (16 addresses), rules referencing the entire VPC CIDR range, or all-port rules from any internal source. The /28 threshold accommodates small dedicated subnets while flagging rules that effectively open access to large internal populations. NSA/CISA advisory AA23-278A identifies flat internal networks as one of the ten most exploited misconfigurations — attackers consistently use over-permissive east-west rules for lateral movement from low-privilege footholds to high-value targets.\n",
@@ -111,7 +112,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

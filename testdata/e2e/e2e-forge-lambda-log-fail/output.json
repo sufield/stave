@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:709f33ce5eb6271f",
       "control_id": "CTL.LAMBDA.LOG.001",
       "control_name": "Lambda Functions Must Have CloudWatch Logging Enabled",
       "control_description": "Lambda functions must have CloudWatch Logs enabled. Without logging, function invocations — including unauthorized or malicious invocations — produce no observable output. Error conditions, security events, and application behavior are invisible. For functions with public function URLs, missing logging means a Denial of Wallet attack generates AWS costs with no audit trail. Lambda logging requires the execution role to have logs:CreateLogGroup, logs:CreateLogStream, and logs:PutLogEvents permissions — a missing log group or insufficient permissions silently disables logging without failing the function invocation.\n",
@@ -111,7 +112,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:93f9597058b0e045",
       "control_id": "CTL.IAM.TRUST.OIDC.003",
       "control_name": "OIDC Federation Role Must Have Scoped Permissions",
       "control_description": "IAM roles assumed via OIDC federation (CI/CD pipelines) must have scoped permissions appropriate for their deployment task. A CI/CD role with AdministratorAccess or broad wildcard actions creates a supply chain blast radius — any compromise of the CI/CD pipeline grants full account access. The extractor checks if the role's effective permissions exceed a deployment-appropriate scope.\n",
@@ -108,7 +109,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

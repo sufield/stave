@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:38be4308e3d00b07",
       "control_id": "CTL.IAM.CROSSCLOUD.MFA.001",
       "control_name": "MFA Must Be Enforced Across All Cloud Providers",
       "control_description": "All privileged accounts across all cloud providers must have MFA enforced. This control extends AWS MFA controls to Azure AD (Conditional Access requiring MFA) and GCP (2-Step Verification enforcement). A single cloud account without MFA is a breach vector regardless of how well other clouds are protected.\n",
@@ -108,7 +109,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

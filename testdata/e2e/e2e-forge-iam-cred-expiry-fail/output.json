@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:2447a21d6d5cc504",
       "control_id": "CTL.IAM.CRED.EXPIRY.001",
       "control_name": "Credentials Must Have Defined Expiry",
       "control_description": "IAM credentials must have a defined maximum lifetime. Credentials without expiry — access keys created for QA, debugging, or temporary integrations — persist indefinitely and become permanent attack surfaces. Time transforms temporary mistakes into permanent breaches. Every credential must have a TTL enforced at creation time or through automated lifecycle policies.\n",
@@ -105,7 +106,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

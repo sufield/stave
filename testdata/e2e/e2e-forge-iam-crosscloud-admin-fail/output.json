@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:bb76072ffb1f592e",
       "control_id": "CTL.IAM.CROSSCLOUD.ADMIN.001",
       "control_name": "No Full Admin Policies Across Any Cloud Provider",
       "control_description": "No IAM policy on any cloud provider should grant unrestricted administrative access (Action: *, Resource: * or equivalent). This control extends CTL.IAM.POLICY.ADMIN.001 beyond AWS to Azure (Contributor/Owner at subscription scope) and GCP (roles/owner, roles/editor at project scope). The same least-privilege principle applies regardless of cloud provider.\n",
@@ -108,7 +109,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:ea4dd87d19575bc8",
       "control_id": "CTL.VPC.ENV.ISOLATION.001",
       "control_name": "Production VPC Must Be Isolated from Non-Production",
       "control_description": "Production VPCs must not share network boundaries with non-production environments. When production and dev/staging workloads share a VPC, a misconfiguration or compromise in a lower environment can reach production resources through security group rules, VPC peering, or shared subnets. Environment isolation requires separate VPCs with explicit, auditable cross-VPC connections.\n",
@@ -111,7 +112,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:b7e8a90782afe1c5",
       "control_id": "CTL.WAF.ORIGIN.LOCKDOWN.001",
       "control_name": "WAF Origin Must Not Accept Direct Internet Traffic",
       "control_description": "When a WAF Web ACL is associated with an origin server (ALB, API Gateway, EC2 instance), the origin's network ingress controls must not permit inbound connections on application ports from the public internet. A WAF that sits in front of an origin provides zero protection if the origin also accepts direct connections from 0.0.0.0/0 or ::/0 — an attacker who discovers the origin IP address through Censys, Shodan, certificate transparency logs, historical DNS records, or timing analysis can send traffic directly to the origin, bypassing every WAF rule, DDoS protection, and rate limit. This is the architectural prerequisite for all other WAF controls — without origin lockdown, the entire WAF safety envelope is irrelevant regardless of how well the WAF rules are configured. HackerOne report (Linode) documents this exact pattern: an origin behind Cloudflare was discoverable via Censys, allowing direct unfiltered payload delivery and denial-of-service against the unprotected origin.\n",
@@ -111,7 +112,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:9e2d9d913490c20a",
       "control_id": "CTL.EXPOSURE.SOVEREIGNTY.001",
       "control_name": "Sensitive Data Must Not Be Accessible from Outside Its Jurisdiction",
       "control_description": "Resources containing sensitive data (PHI, PII, confidential) in a specific jurisdiction must have access restricted to principals in the same jurisdiction. A bucket in eu-west-1 accessible by a US-based principal is a structural jurisdictional violation — the data is physically in the EU but logically reachable from outside the EU, defeating data residency controls.\n",
@@ -197,7 +198,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:6b0ae1c578952727",
       "control_id": "CTL.OPENSEARCH.ACCESS.POLICY.001",
       "control_name": "Access Policy Must Not Allow Wildcard Principals",
       "control_description": "OpenSearch domain access policies must not grant access to wildcard principals (Principal: *). A wildcard principal in the resource-based policy allows any AWS account or unauthenticated user to access the cluster, depending on whether the domain is public or VPC-only. Combined with a public endpoint, this enables completely anonymous access.\n",
@@ -109,7 +110,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

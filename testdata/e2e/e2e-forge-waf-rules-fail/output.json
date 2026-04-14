@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:647c8f12e2b2becf",
       "control_id": "CTL.WAF.RULES.001",
       "control_name": "WAF Must Have Managed Rule Groups Enabled",
       "control_description": "WAF web ACLs must include AWS managed rule groups for common attack patterns (SQLi, XSS, known bad inputs). Without managed rules, the WAF provides no baseline protection against OWASP Top 10 attacks.\n",
@@ -110,7 +111,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

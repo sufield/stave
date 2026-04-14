@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:8c7a5164e8b72491",
       "control_id": "CTL.EXPOSURE.ANON.001",
       "control_name": "Sensitive Resources Must Not Be Reachable from Anonymous",
       "control_description": "Resources tagged with sensitive data classifications (PHI, PII, confidential) must not be reachable from anonymous or unauthenticated principals through any composition of access grants. The extractor traces paths from anonymous through API Gateway routes, Lambda integrations, IAM role assumptions, bucket policies, VPC endpoint policies, and security group rules. This catches the API Gateway → Lambda → IAM Role → S3 Bucket pattern where every resource passes individual inspection but the composition creates an unauthenticated path to sensitive data.\n",
@@ -200,7 +201,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:ba9d5d280299c6b3",
       "control_id": "CTL.BACKUP.RECOVERY.ISOLATION.002",
       "control_name": "Data Admin Must Not Have KMS Key Deletion Permission",
       "control_description": "The principal that administers the source data must have separate permissions from the principal that manages the backup encryption key. If the same admin can delete both the data and schedule the KMS key for deletion, a compromised credential enables complete and irreversible data destruction — the ransomware path.\n",
@@ -109,7 +110,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

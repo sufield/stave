@@ -16,6 +16,7 @@ type Event struct {
 	ResourceID         string    `json:"resource_id"`
 	ResourceType       string    `json:"resource_type"`
 	Verdict            string    `json:"verdict"`
+	FindingID          string    `json:"finding_id"`
 	PolicyFingerprint  string    `json:"policy_fingerprint"`
 	ControlFingerprint string    `json:"control_fingerprint,omitempty"`
 	EnvironmentalScore *float64  `json:"environmental_score,omitempty"`

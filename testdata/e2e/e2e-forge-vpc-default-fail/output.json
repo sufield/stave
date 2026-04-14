@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:0ad8d2bdb5a5ef38",
       "control_id": "CTL.VPC.DEFAULT.001",
       "control_name": "Default VPC Must Not Be Used",
       "control_description": "Workloads must not run in the default VPC. The default VPC is created automatically in every region with permissive settings: a public subnet in each AZ, an internet gateway, and a default security group that allows all internal traffic. These defaults create implicit public exposure that custom VPCs avoid. Production and sensitive workloads must use purpose-built VPCs with explicit network design.\n",
@@ -104,7 +105,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

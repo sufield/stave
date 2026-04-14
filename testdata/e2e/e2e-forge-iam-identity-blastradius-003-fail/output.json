@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:4fba0deac0dff59c",
       "control_id": "CTL.IAM.IDENTITY.BLASTRADIUS.003",
       "control_name": "Role Assume Chain Must Not Exceed Depth Threshold",
       "control_description": "IAM role assumption chains must not exceed 2 hops. Deep chains (Role A assumes Role B which assumes Role C) create hidden transitive access that is difficult to audit and often exceeds the intended permissions of the originating principal. Each hop in the chain potentially widens the blast radius.\n",
@@ -108,7 +109,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:4d3da02344bdaebd",
       "control_id": "CTL.CODECOMMIT.APPROVAL.001",
       "control_name": "CodeCommit Repositories Must Have Branch Protection and Approval Rules",
       "control_description": "CodeCommit repositories must have approval rule templates configured on protected branches requiring at least one reviewer. Without branch protection, any principal with push permissions can commit directly to the main branch — bypassing code review, inserting malicious code into the deployment pipeline, and establishing persistence through the CI/CD chain. This is a supply chain persistence technique: the attacker uses the legitimate deployment pipeline to deliver their payload. Lambda code signing and ECR image signing enforce integrity at the artifact level; this control enforces integrity at the source level before the artifact is built.\n",
@@ -112,7 +113,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

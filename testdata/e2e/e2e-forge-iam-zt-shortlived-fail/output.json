@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:a73e0c7b6ec1453b",
       "control_id": "CTL.IAM.ZT.SHORTLIVED.001",
       "control_name": "Service Access Must Use Short-Lived Credentials",
       "control_description": "Service-to-service access must use short-lived credentials (STS temporary tokens, IAM Roles Anywhere certificates, OIDC federation) rather than long-lived access keys. Short-lived credentials limit the blast radius of compromise — a stolen token expires automatically. This is a core Zero Trust principle: never trust a credential longer than necessary.\n",
@@ -109,7 +110,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

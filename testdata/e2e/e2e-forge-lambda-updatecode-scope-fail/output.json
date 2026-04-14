@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:c4d28ab47c71aa6b",
       "control_id": "CTL.LAMBDA.UPDATECODE.SCOPE.001",
       "control_name": "lambda:UpdateFunctionCode Must Not Be Broadly Granted",
       "control_description": "Detects assets where broadly_granted is eq true.\n",
@@ -97,7 +98,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

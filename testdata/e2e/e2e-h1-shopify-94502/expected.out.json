@@ -157,6 +157,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:d81c1dac4e7e312a",
       "control_id": "CTL.S3.CONTROLS.001",
       "control_name": "Public Access Block Must Be Enabled",
       "control_description": "S3 buckets must have the public access block fully enabled. When disabled, the bucket has no safety net against accidental public exposure from policy or ACL changes. This detects the enabling condition for public access, not the exposure itself.\n",
@@ -197,6 +198,7 @@
       }
     },
     {
+      "finding_id": "sha256:748776a78c800b08",
       "control_id": "CTL.S3.CONTROLS.001",
       "control_name": "Public Access Block Must Be Enabled",
       "control_description": "S3 buckets must have the public access block fully enabled. When disabled, the bucket has no safety net against accidental public exposure from policy or ACL changes. This detects the enabling condition for public access, not the exposure itself.\n",
@@ -237,6 +239,7 @@
       }
     },
     {
+      "finding_id": "sha256:d14260350514a42e",
       "control_id": "CTL.S3.CONTROLS.001",
       "control_name": "Public Access Block Must Be Enabled",
       "control_description": "S3 buckets must have the public access block fully enabled. When disabled, the bucket has no safety net against accidental public exposure from policy or ACL changes. This detects the enabling condition for public access, not the exposure itself.\n",
@@ -277,6 +280,7 @@
       }
     },
     {
+      "finding_id": "sha256:85b25efe79473e4b",
       "control_id": "CTL.S3.ENCRYPT.004",
       "control_name": "Sensitive Data Requires KMS Encryption",
       "control_description": "S3 buckets with any non-public data classification must use SSE-KMS encryption with a customer-managed key, not SSE-S3 (AES256). AES256 uses AWS-managed keys with no customer control over key rotation, access policies, or audit trails. This fires on all classified data except explicitly public or non-sensitive buckets.\n",
@@ -335,6 +339,7 @@
       }
     },
     {
+      "finding_id": "sha256:d6768aae03c059be",
       "control_id": "CTL.S3.ENCRYPT.004",
       "control_name": "Sensitive Data Requires KMS Encryption",
       "control_description": "S3 buckets with any non-public data classification must use SSE-KMS encryption with a customer-managed key, not SSE-S3 (AES256). AES256 uses AWS-managed keys with no customer control over key rotation, access policies, or audit trails. This fires on all classified data except explicitly public or non-sensitive buckets.\n",
@@ -393,6 +398,7 @@
       }
     },
     {
+      "finding_id": "sha256:a7ac33d3a9f8b48e",
       "control_id": "CTL.S3.ENCRYPT.004",
       "control_name": "Sensitive Data Requires KMS Encryption",
       "control_description": "S3 buckets with any non-public data classification must use SSE-KMS encryption with a customer-managed key, not SSE-S3 (AES256). AES256 uses AWS-managed keys with no customer control over key rotation, access policies, or audit trails. This fires on all classified data except explicitly public or non-sensitive buckets.\n",
@@ -451,6 +457,7 @@
       }
     },
     {
+      "finding_id": "sha256:5414a7d05efd5406",
       "control_id": "CTL.S3.PUBLIC.001",
       "control_name": "No Public S3 Buckets",
       "control_description": "S3 buckets must not allow public read or list access. Detects buckets with public access via bucket policies, ACLs, or missing public access block settings.\n",
@@ -525,6 +532,7 @@
       }
     },
     {
+      "finding_id": "sha256:482a1ac6937bd145",
       "control_id": "CTL.S3.PUBLIC.001",
       "control_name": "No Public S3 Buckets",
       "control_description": "S3 buckets must not allow public read or list access. Detects buckets with public access via bucket policies, ACLs, or missing public access block settings.\n",
@@ -599,6 +607,7 @@
       }
     },
     {
+      "finding_id": "sha256:0b92ba3d2504b8d5",
       "control_id": "CTL.S3.PUBLIC.001",
       "control_name": "No Public S3 Buckets",
       "control_description": "S3 buckets must not allow public read or list access. Detects buckets with public access via bucket policies, ACLs, or missing public access block settings.\n",
@@ -673,6 +682,7 @@
       }
     },
     {
+      "finding_id": "sha256:afd4d52b25be3baa",
       "control_id": "CTL.S3.PUBLIC.003",
       "control_name": "No Public Write Access",
       "control_description": "S3 buckets must not allow public write or delete access. Public write enables data injection, ransomware, and policy takeover.\n",
@@ -741,6 +751,7 @@
       }
     },
     {
+      "finding_id": "sha256:9885b41f3e8e5b79",
       "control_id": "CTL.S3.PUBLIC.004",
       "control_name": "No Public Read via ACL",
       "control_description": "S3 bucket ACLs must not grant read access to AllUsers or AuthenticatedUsers for PHI data.",
@@ -808,6 +819,7 @@
       }
     },
     {
+      "finding_id": "sha256:e9b8512b9fed396b",
       "control_id": "CTL.S3.PUBLIC.004",
       "control_name": "No Public Read via ACL",
       "control_description": "S3 bucket ACLs must not grant read access to AllUsers or AuthenticatedUsers for PHI data.",
@@ -875,6 +887,7 @@
       }
     },
     {
+      "finding_id": "sha256:94fd30ba678b6000",
       "control_id": "CTL.S3.PUBLIC.004",
       "control_name": "No Public Read via ACL",
       "control_description": "S3 bucket ACLs must not grant read access to AllUsers or AuthenticatedUsers for PHI data.",
@@ -1267,7 +1280,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

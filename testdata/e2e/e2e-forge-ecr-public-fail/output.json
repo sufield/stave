@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:4ebe7d0c042826ef",
       "control_id": "CTL.ECR.PUBLIC.001",
       "control_name": "ECR Repository Must Not Be Public",
       "control_description": "ECR repositories must not be publicly accessible. A public ECR repository allows anyone to pull container images, potentially exposing proprietary code, embedded credentials, internal architecture details, and software supply chain artifacts. Public repositories should use ECR Public Gallery only for intentionally open-source images.\n",
@@ -187,7 +188,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

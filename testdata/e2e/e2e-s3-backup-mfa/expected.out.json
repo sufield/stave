@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:868297706ac7ad78",
       "control_id": "CTL.S3.VERSION.002",
       "control_name": "Backup Buckets Must Have MFA Delete Enabled",
       "control_description": "S3 buckets tagged with backup=true must have MFA delete enabled. MFA delete requires multi-factor authentication to permanently delete object versions, protecting against ransomware attacks and accidental mass deletion of backup data. Without MFA delete, any principal with s3:DeleteObject permission can permanently destroy backup versions.\n",
@@ -102,7 +103,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

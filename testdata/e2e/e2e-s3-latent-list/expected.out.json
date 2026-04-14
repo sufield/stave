@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:6a2dc24c7add828f",
       "control_id": "CTL.S3.PUBLIC.006",
       "control_name": "No Latent Public Bucket Listing",
       "control_description": "S3 bucket has a policy or ACL that would allow public listing if the public access block were removed. The public access block is currently the only control preventing directory enumeration. This is a latent vulnerability — one configuration change away from exposing all object keys.\n",
@@ -180,7 +181,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

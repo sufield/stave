@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:c7d0b7cc11e3d304",
       "control_id": "CTL.EXPOSURE.EXFIL.002",
       "control_name": "Compute with Internet Egress Must Not Have Wildcard Write",
       "control_description": "Compute instances with internet egress paths must have scoped write permissions. An instance with s3:PutObject on Resource \"*\" combined with outbound internet access can write data to any S3 bucket — including attacker-controlled external buckets. The extractor checks if the instance role grants wildcard write permissions to storage services.\n",
@@ -193,7 +194,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

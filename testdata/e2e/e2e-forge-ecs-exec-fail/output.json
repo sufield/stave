@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:06e4417923825cd3",
       "control_id": "CTL.ECS.EXEC.001",
       "control_name": "ECS Exec Must Be Disabled on Production Services",
       "control_description": "Detects assets where enabled_in_production is eq true.\n",
@@ -97,7 +98,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:a144e15e55bcab77",
       "control_id": "CTL.OPENSEARCH.ENCRYPT.002",
       "control_name": "Node-to-Node Encryption Must Be Enabled",
       "control_description": "OpenSearch domains must have node-to-node encryption enabled. Without it, data transmitted between nodes within the cluster travels unencrypted, exposing it to interception on the internal network. Node-to-node encryption is a prerequisite for fine-grained access control.\n",
@@ -110,7 +111,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

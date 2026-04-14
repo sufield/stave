@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:c8c9efa78a0e0cdb",
       "control_id": "CTL.IAM.SCP.CREATEACCOUNT.001",
       "control_name": "SCPs Must Restrict Unauthorized IAM User and Account Creation",
       "control_description": "AWS Organizations must have an SCP restricting who can create IAM users (iam:CreateUser) and new AWS accounts (organizations:CreateAccount). Without this restriction, any principal with these permissions can create persistent identities that survive credential rotation and incident response. MITRE ATT\u0026CK T1136/T1136.003 documents account creation as a primary persistence technique after initial compromise. An attacker-created IAM user has separate credentials unknown to the incident response team. An attacker-created AWS account starts with no monitoring infrastructure deployed — a fresh environment inside the organization's trust boundary but outside its detection field.\n",
@@ -106,7 +107,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:7c8eec65335883d8",
       "control_id": "CTL.S3.PUBLIC.LIST.002",
       "control_name": "Anonymous S3 Listing Must Be Explicitly Intended",
       "control_description": "Anonymous bucket listing increases exposure surface even when objects are public by design. Listing must be explicitly intended via tag.\n",
@@ -192,7 +193,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

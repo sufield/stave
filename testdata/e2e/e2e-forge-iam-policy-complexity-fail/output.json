@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:dadbb92bc2dea553",
       "control_id": "CTL.IAM.POLICY.COMPLEXITY.001",
       "control_name": "IAM Policy Complexity Must Be Bounded",
       "control_description": "IAM policies with more than 25 statements indicate excessive complexity that increases misconfiguration risk. Complex policies are harder to audit, more likely to contain shadowed statements or contradictory rules, and resist review. Policy complexity is itself a risk factor — it obscures the effective permissions and makes least-privilege verification impractical.\n",
@@ -103,7 +104,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

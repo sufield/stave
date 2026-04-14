@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:6d50d034ee65e6ff",
       "control_id": "CTL.CODECOMMIT.ACCESS.001",
       "control_name": "CodeCommit Repositories Must Have Restrictive Resource Policies",
       "control_description": "CodeCommit repositories must not allow overly broad access through wildcard principal resource policies or unrestricted IAM read permissions. Repositories contain source code, configuration files, infrastructure definitions, and frequently embedded secrets. MITRE ATT\u0026CK T1213.003 documents code repository access as a collection technique — attackers use repository access to gather credentials and understand internal architecture before moving to higher-value targets. A compromised IAM role with broad CodeCommit read permissions can exfiltrate the entire codebase including hardcoded credentials, IaC files, and CI/CD pipeline configurations.\n",
@@ -112,7 +113,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

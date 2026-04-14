@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:cfb925e8ef922608",
       "control_id": "CTL.IAM.POLICY.ASSUMEROLE.001",
       "control_name": "AssumeRole Must Be Scoped to Specific Roles",
       "control_description": "sts:AssumeRole permissions must be scoped to specific role ARNs, not wildcard Resource *. With unrestricted AssumeRole, a compromised identity can assume any role in the account — including admin roles, cross-account trust roles, and service roles with elevated permissions. This is a direct privilege escalation path.\n",
@@ -104,7 +105,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

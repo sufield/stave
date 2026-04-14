@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:7ddc23cd142ae468",
       "control_id": "CTL.IAM.POLICY.SHADOW.001",
       "control_name": "IAM Policy Must Not Use NotAction Construct",
       "control_description": "IAM policies using NotAction or NotResource create negative logic that is prone to bypass. A NotAction policy says \"allow everything EXCEPT these actions\" — but the list of excepted actions rarely covers all dangerous permissions. New AWS services and actions are automatically allowed by the implicit \"everything else\" grant. Attackers exploit this shadow effect to find actions like iam:PutRolePolicy that fall through the negative logic gap.\n",
@@ -109,7 +110,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

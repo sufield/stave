@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:3225c1e933d7e9c3",
       "control_id": "CTL.GUARDDUTY.SUPPRESSION.001",
       "control_name": "GuardDuty Must Not Have Broad Suppression Rules",
       "control_description": "Safety mechanism integrity control. Checks that security guardrails are actively enforcing, not just present.\n",
@@ -103,7 +104,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

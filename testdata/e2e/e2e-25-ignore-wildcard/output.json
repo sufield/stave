@@ -57,6 +57,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:75ab2c3520481d18",
       "control_id": "CTL.ID.KUBE.001",
       "control_name": "Cluster-Admin Binding Detected",
       "control_description": "Detects ClusterRoleBindings that bind to the cluster-admin ClusterRole.\nApplies to: k8s.clusterrolebinding resources\n",
@@ -129,7 +130,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

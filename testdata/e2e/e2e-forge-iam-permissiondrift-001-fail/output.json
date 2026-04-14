@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:344c4f1ebcef329b",
       "control_id": "CTL.IAM.ROLE.PERMISSIONDRIFT.001",
       "control_name": "Roles Must Not Accumulate Unused Permissions",
       "control_description": "IAM roles must not retain access to services that have never been used or were last used more than 90 days ago, when the role itself has been active for more than 90 days. A role with 30 accessible services where 25 are never used has accumulated permissions far beyond its operational scope. An attacker who compromises this role has access to 30 services but the legitimate owner only uses 5. The unused 25 are the hidden blast radius. Access Advisor data from AWS provides exact timestamps of last permission use — this is an operational fact, not a security assertion.\n",
@@ -118,7 +119,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

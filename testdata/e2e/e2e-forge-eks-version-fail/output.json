@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:2d967b8e9dd0a5ee",
       "control_id": "CTL.EKS.VERSION.001",
       "control_name": "EKS Clusters Must Not Run Deprecated Kubernetes Versions",
       "control_description": "EKS clusters must not run Kubernetes versions that have reached end-of-support. AWS publishes a Kubernetes version support lifecycle for EKS — each minor version is supported for approximately 14 months after release. After end-of-support, the cluster no longer receives security patches for the Kubernetes control plane or EKS-managed components. Kubernetes has a high rate of critical CVEs affecting the API server, kubelet, and container runtime. An EKS cluster on a deprecated version is running an unpatched control plane against which known exploits exist. EKS version upgrades require a defined upgrade path and may involve breaking API changes, causing clusters to accumulate version debt due to upgrade friction rather than deliberate choice. For organizations that have invested in Kubernetes network policies, RBAC, and secrets encryption, running a deprecated control plane version undermines every other security control in the cluster.\n",
@@ -111,7 +112,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

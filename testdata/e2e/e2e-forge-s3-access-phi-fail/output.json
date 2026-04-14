@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:82959383dbd41f1e",
       "control_id": "CTL.S3.ACCESS.PHI.001",
       "control_name": "PHI Bucket Access Must Be Scoped to Specific Principals",
       "control_description": "S3 buckets tagged with data-classification=phi must have access restricted to explicitly named principals and prefixes. Broad bucket-level access (wildcard principals, unrestricted actions) on PHI data violates the HIPAA minimum necessary standard (§164.502(b)). Access must be narrowed to the exact IAM roles, account IDs, and object prefixes required for each authorized workflow.\n",
@@ -117,7 +118,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

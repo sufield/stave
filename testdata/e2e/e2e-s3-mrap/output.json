@@ -47,6 +47,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:99e24f781f3cd3ad",
       "control_id": "CTL.S3.MRAP.PAB.001",
       "control_name": "Multi-Region Access Point Must Have Block Public Access Enabled",
       "control_description": "MRAPs have their own PAB settings independent of bucket PAB. A bucket can have PAB enabled while the MRAP has PAB disabled.\n",
@@ -96,6 +97,7 @@
       }
     },
     {
+      "finding_id": "sha256:4dc192f371721197",
       "control_id": "CTL.S3.MRAP.POLICY.001",
       "control_name": "Multi-Region Access Point Policy Must Not Be Public",
       "control_description": "MRAPs can have their own resource policy evaluated independently of the bucket policy. A public MRAP policy creates a public access path.\n",
@@ -181,7 +183,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

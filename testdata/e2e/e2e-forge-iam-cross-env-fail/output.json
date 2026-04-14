@@ -37,6 +37,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:411e218c159e3f4f",
       "control_id": "CTL.IAM.CROSS.ENV.001",
       "control_name": "Non-Production Must Not Access Production Resources",
       "control_description": "IAM roles in non-production environments (test, staging, QA) must not have access to production resources. Cross-environment access collapses security boundaries — a compromised test account becomes a path to production data. The Microsoft breach (2024) demonstrated this exact failure: a test tenant with production-scope grants enabled a nation-state actor to pivot from test to production.\n",
@@ -105,7 +106,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

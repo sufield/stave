@@ -47,6 +47,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:c05742c8ab061c1f",
       "control_id": "CTL.S3.LIFECYCLE.001",
       "control_name": "Retention-Tagged Buckets Must Have Lifecycle Rules",
       "control_description": "S3 buckets tagged with data-retention must have at least one enabled lifecycle rule configured.\n",
@@ -87,6 +88,7 @@
       }
     },
     {
+      "finding_id": "sha256:b12eb488d6b1fc1f",
       "control_id": "CTL.S3.LIFECYCLE.002",
       "control_name": "PHI Buckets Must Not Expire Data Before Minimum Retention",
       "control_description": "S3 buckets tagged with data-classification=phi must not have lifecycle expiration rules that delete data before the minimum HIPAA retention period of 2190 days.\n",
@@ -172,7 +174,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87e854a5745680ff68c6bd9a6f5844e0fe539538",
+      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
       "dirty": false
     }
   }

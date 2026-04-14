@@ -370,6 +370,7 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:81b8ce81c12cc518",
       "control_id": "CTL.APIGATEWAY.TLS.001",
       "control_name": "API Gateway Must Enforce TLS 1.2",
       "control_description": "API Gateway stages must enforce TLS 1.2 or higher. Allowing older TLS versions exposes API traffic to known cryptographic attacks (BEAST, POODLE, etc).\n",
@@ -419,6 +420,7 @@
       }
     },
     {
+      "finding_id": "sha256:a52edc7322ea1dde",
       "control_id": "CTL.BACKUP.EXISTS.001",
       "control_name": "Critical Resources Must Have Backups",
       "control_description": "Resources tagged as critical or containing PHI must have at least one backup configured. Without backups, data loss from accidental deletion, corruption, or ransomware is permanent and unrecoverable.\n",
@@ -464,6 +466,7 @@
       }
     },
     {
+      "finding_id": "sha256:99ff439877cf27fd",
       "control_id": "CTL.BACKUP.MULTIAZ.001",
       "control_name": "Critical Resources Must Be Multi-AZ",
       "control_description": "Resources tagged as critical must be deployed across multiple Availability Zones. Single-AZ deployment has a single point of failure that causes unavailability during AZ outages.\n",
@@ -509,6 +512,7 @@
       }
     },
     {
+      "finding_id": "sha256:826ab06811b86f5a",
       "control_id": "CTL.BACKUP.REPLICATION.001",
       "control_name": "Critical Data Must Have Cross-Region Replication",
       "control_description": "Data classified as critical or PHI must have cross-region replication configured for disaster recovery. Single-region data is vulnerable to regional outages and cannot meet recovery time objectives (RTO) for multi-region failover.\n",
@@ -554,6 +558,7 @@
       }
     },
     {
+      "finding_id": "sha256:4b8c49734af61142",
       "control_id": "CTL.CLOUDTRAIL.ENABLED.001",
       "control_name": "CloudTrail Must Be Enabled in All Regions",
       "control_description": "CloudTrail must be configured as a multi-region trail. A single-region trail misses API activity in other regions, leaving gaps in the audit record that prevent forensic investigation of unauthorized access.\n",
@@ -608,6 +613,7 @@
       }
     },
     {
+      "finding_id": "sha256:f237d540e872de4d",
       "control_id": "CTL.CLOUDTRAIL.ENCRYPT.001",
       "control_name": "CloudTrail Logs Must Be Encrypted with KMS",
       "control_description": "CloudTrail logs must be encrypted at rest using a KMS customer-managed key. Default S3 encryption (SSE-S3) does not provide key revocation capability needed for breach response.\n",
@@ -658,6 +664,7 @@
       }
     },
     {
+      "finding_id": "sha256:1bb3180bd93c6975",
       "control_id": "CTL.CLOUDTRAIL.VALIDATION.001",
       "control_name": "CloudTrail Log File Validation Must Be Enabled",
       "control_description": "CloudTrail must have log file integrity validation enabled. Without validation, an attacker who gains access to the log bucket can modify or delete log entries to cover their tracks.\n",
@@ -711,6 +718,7 @@
       }
     },
     {
+      "finding_id": "sha256:801f9bd87a66bd5f",
       "control_id": "CTL.CLOUDWATCH.RETENTION.001",
       "control_name": "CloudWatch Log Groups Must Have Retention Policy",
       "control_description": "CloudWatch Logs log groups must have a retention policy configured. Without a retention policy, logs are kept indefinitely (incurring cost) or may be deleted manually without audit trail.\n",
@@ -756,6 +764,7 @@
       }
     },
     {
+      "finding_id": "sha256:a73625cd410ebe3c",
       "control_id": "CTL.COGNITO.MFA.001",
       "control_name": "Cognito User Pool Must Enforce MFA",
       "control_description": "Cognito user pools handling PHI must enforce multi-factor authentication. Without MFA, a compromised password grants full access to the application and any PHI it serves.\n",
@@ -804,6 +813,7 @@
       }
     },
     {
+      "finding_id": "sha256:aa66250e8a1dc01c",
       "control_id": "CTL.CONFIG.ENABLED.001",
       "control_name": "AWS Config Must Be Recording All Resource Types",
       "control_description": "AWS Config must be enabled and recording all supported resource types. Without Config, configuration changes are not tracked and drift from the desired security baseline cannot be detected.\n",
@@ -858,6 +868,7 @@
       }
     },
     {
+      "finding_id": "sha256:c2ed914d02c8ae20",
       "control_id": "CTL.CONFIG.RULES.001",
       "control_name": "AWS Config Must Have Active Rules",
       "control_description": "AWS Config must have active Config Rules to evaluate resource compliance. Recording without rules provides change history but no automated drift detection.\n",
@@ -906,6 +917,7 @@
       }
     },
     {
+      "finding_id": "sha256:57cf047d8c46d33b",
       "control_id": "CTL.DYNAMODB.ENCRYPT.001",
       "control_name": "DynamoDB Must Use Customer-Managed KMS Encryption",
       "control_description": "DynamoDB tables must use a customer-managed KMS key for encryption at rest. The default AWS-owned key does not support key revocation, audit of key usage, or cross-account key policies.\n",
@@ -955,6 +967,7 @@
       }
     },
     {
+      "finding_id": "sha256:6ecde267626a20de",
       "control_id": "CTL.EC2.EBS.ENCRYPT.001",
       "control_name": "EBS Volumes Must Be Encrypted",
       "control_description": "EBS volumes attached to EC2 instances must have encryption enabled. Unencrypted volumes storing PHI or sensitive data violate encryption at rest requirements.\n",
@@ -1009,6 +1022,7 @@
       }
     },
     {
+      "finding_id": "sha256:3a1554c5a78a5816",
       "control_id": "CTL.EC2.PUBLIC.001",
       "control_name": "EC2 Instances Must Not Have Public IP Addresses",
       "control_description": "EC2 instances should not have public IP addresses unless explicitly required. Public IP assignment exposes the instance to direct internet access, bypassing network perimeter controls.\n",
@@ -1093,6 +1107,7 @@
       }
     },
     {
+      "finding_id": "sha256:9ba0b33d2248da3a",
       "control_id": "CTL.ELASTICACHE.TRANSIT.001",
       "control_name": "ElastiCache Must Have In-Transit Encryption Enabled",
       "control_description": "ElastiCache clusters must have in-transit encryption enabled. Without TLS, cache traffic travels in plaintext between the application and the cache nodes, exposing cached PHI data.\n",
@@ -1142,6 +1157,7 @@
       }
     },
     {
+      "finding_id": "sha256:0eea80a827ddcfa6",
       "control_id": "CTL.ELB.CROSSZONE.001",
       "control_name": "Load Balancer Must Have Cross-Zone Load Balancing Enabled",
       "control_description": "Load balancers must distribute traffic across all registered targets in all enabled Availability Zones. Without cross-zone balancing, uneven distribution can cause availability issues during AZ failures.\n",
@@ -1182,6 +1198,7 @@
       }
     },
     {
+      "finding_id": "sha256:571de1d96c48afd6",
       "control_id": "CTL.ELB.HTTPS.001",
       "control_name": "Load Balancer Must Redirect HTTP to HTTPS",
       "control_description": "Load balancers serving PHI must redirect all HTTP traffic to HTTPS. Allowing plaintext HTTP exposes data in transit to interception.\n",
@@ -1225,6 +1242,7 @@
       }
     },
     {
+      "finding_id": "sha256:be85087768aeabce",
       "control_id": "CTL.ELB.LOG.001",
       "control_name": "Load Balancer Access Logging Must Be Enabled",
       "control_description": "Load balancer access logging must be enabled for audit and forensic analysis. Without access logs, request patterns and potential unauthorized access cannot be investigated after an incident.\n",
@@ -1264,6 +1282,7 @@
       }
     },
     {
+      "finding_id": "sha256:45813734adb9d32e",
       "control_id": "CTL.ELB.TLS.001",
       "control_name": "Load Balancer Must Use TLS 1.2 or Higher",
       "control_description": "Application and Network Load Balancers must use TLS 1.2 or higher for HTTPS listeners. Older TLS versions have known vulnerabilities.\n",
@@ -1308,6 +1327,7 @@
       }
     },
     {
+      "finding_id": "sha256:686a676fcb4f9731",
       "control_id": "CTL.IAM.ROOT.ACCESSKEY.001",
       "control_name": "Root Account Must Not Have Access Keys",
       "control_description": "The AWS root account must not have active access keys. Root access keys provide unrestricted programmatic access. Use IAM users or roles for programmatic access instead.\n",
@@ -1359,6 +1379,7 @@
       }
     },
     {
+      "finding_id": "sha256:d1659912ae8d6344",
       "control_id": "CTL.IAM.ROOT.MFA.001",
       "control_name": "Root Account Must Have MFA Enabled",
       "control_description": "The AWS root account must have multi-factor authentication enabled. Root has unrestricted access to all resources. Compromise without MFA is the highest-severity identity risk.\n",
@@ -1414,6 +1435,7 @@
       }
     },
     {
+      "finding_id": "sha256:bbca133641c43a7a",
       "control_id": "CTL.K8S.AUDIT.001",
       "control_name": "Kubernetes Audit Logging Must Be Enabled",
       "control_description": "The Kubernetes API server must have audit logging enabled. Without audit logs, API calls (including unauthorized access attempts) are not recorded for forensic analysis.\n",
@@ -1460,6 +1482,7 @@
       }
     },
     {
+      "finding_id": "sha256:7c67ba18d7b21008",
       "control_id": "CTL.K8S.NETPOL.001",
       "control_name": "Namespaces Must Have Network Policies",
       "control_description": "Kubernetes namespaces containing workloads must have at least one NetworkPolicy defined. Without network policies, all pod-to-pod traffic is allowed by default, enabling lateral movement.\n",
@@ -1505,6 +1528,7 @@
       }
     },
     {
+      "finding_id": "sha256:e7b4be29bae02714",
       "control_id": "CTL.K8S.SECRETS.ENCRYPT.001",
       "control_name": "Kubernetes Secrets Must Be Encrypted at Rest in etcd",
       "control_description": "Kubernetes Secrets stored in etcd must be encrypted at rest. By default, Secrets are stored as base64-encoded plaintext in etcd, readable by anyone with etcd access or etcd backup access.\n",
@@ -1551,6 +1575,7 @@
       }
     },
     {
+      "finding_id": "sha256:1e9883ff6455c056",
       "control_id": "CTL.KMS.POLICY.001",
       "control_name": "KMS Key Policy Must Restrict Access to Specific Roles",
       "control_description": "KMS key policies must not grant wildcard principal access. A key policy with Principal \"*\" allows any IAM entity in the account (or any account if conditions are missing) to use the key, defeating the purpose of customer-managed encryption.\n",
@@ -1603,6 +1628,7 @@
       }
     },
     {
+      "finding_id": "sha256:d3c473c720840e6d",
       "control_id": "CTL.RDS.BACKUP.001",
       "control_name": "RDS Automated Backups Must Be Enabled",
       "control_description": "RDS instances must have automated backups enabled with a retention period of at least 7 days. Without backups, data loss from accidental deletion, corruption, or ransomware is permanent.\n",
@@ -1648,6 +1674,7 @@
       }
     },
     {
+      "finding_id": "sha256:9ac53f47bd4f1f1b",
       "control_id": "CTL.RDS.ENCRYPT.001",
       "control_name": "RDS Storage Encryption Must Be Enabled",
       "control_description": "RDS instances must have storage encryption enabled. Unencrypted database storage exposes data at rest to unauthorized access if the underlying storage is compromised.\n",
@@ -1702,6 +1729,7 @@
       }
     },
     {
+      "finding_id": "sha256:2653bff61b751ad6",
       "control_id": "CTL.RDS.LOG.001",
       "control_name": "RDS Audit Logging Must Be Enabled",
       "control_description": "RDS instances must export audit logs to CloudWatch. Without audit logging, database access patterns cannot be monitored and unauthorized queries are undetectable.\n",
@@ -1747,6 +1775,7 @@
       }
     },
     {
+      "finding_id": "sha256:c215d91c260588c6",
       "control_id": "CTL.RDS.MULTIAZ.001",
       "control_name": "RDS Instances Must Use Multi-AZ Deployment",
       "control_description": "Production RDS instances must use Multi-AZ deployment for high availability. Single-AZ instances have a single point of failure that can cause data unavailability during AZ outages.\n",
@@ -1792,6 +1821,7 @@
       }
     },
     {
+      "finding_id": "sha256:6d6e5d5f2078bd42",
       "control_id": "CTL.RDS.PUBLIC.001",
       "control_name": "RDS Instances Must Not Be Publicly Accessible",
       "control_description": "RDS instances must not have public accessibility enabled. A publicly accessible database is reachable from the internet, exposing it to brute force attacks, SQL injection, and unauthorized data access.\n",
@@ -1879,6 +1909,7 @@
       }
     },
     {
+      "finding_id": "sha256:7ea0b9680c5e0447",
       "control_id": "CTL.SECRETSMANAGER.ACCESS.001",
       "control_name": "Secrets Must Have Rotation Enabled",
       "control_description": "Secrets Manager secrets must have automatic rotation enabled. Long-lived secrets that are never rotated increase the blast radius of credential leaks and prevent timely revocation.\n",
@@ -1924,6 +1955,7 @@
       }
     },
     {
+      "finding_id": "sha256:4faec0c040d11d18",
       "control_id": "CTL.SECRETSMANAGER.ENCRYPT.001",
       "control_name": "Secrets Must Be Encrypted with Customer-Managed KMS Key",
       "control_description": "Secrets Manager secrets must be encrypted with a customer-managed KMS key. The default AWS-managed key does not support key revocation or cross-account key policies needed for breach response.\n",
@@ -1973,6 +2005,7 @@
       }
     },
     {
+      "finding_id": "sha256:284126ed74a244f3",
       "control_id": "CTL.SNS.ENCRYPT.001",
       "control_name": "SNS Topics Must Be Encrypted with KMS",
       "control_description": "SNS topics must use server-side encryption with a KMS key. Unencrypted topics expose message payloads at rest, which may contain PHI or other sensitive notification data.\n",
@@ -2018,6 +2051,7 @@
       }
     },
     {
+      "finding_id": "sha256:63bc7609a3b16aa7",
       "control_id": "CTL.SQS.ENCRYPT.001",
       "control_name": "SQS Queues Must Be Encrypted with KMS",
       "control_description": "SQS queues must use server-side encryption with a KMS key. Unencrypted queues expose message payloads at rest, which may contain PHI or other sensitive data.\n",
@@ -2063,6 +2097,7 @@
       }
     },
     {
+      "finding_id": "sha256:81f43f35236b5e56",
       "control_id": "CTL.VPC.FLOWLOG.001",
       "control_name": "VPC Flow Logging Must Be Enabled",
       "control_description": "VPC flow logs capture information about IP traffic going to and from network interfaces. Without flow logs, network-level access patterns cannot be audited and unauthorized traffic goes undetected.\n",
