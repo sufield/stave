@@ -33,6 +33,7 @@ import (
 	initalias "github.com/sufield/stave/cmd/initcmd/alias"
 	initconfig "github.com/sufield/stave/cmd/initcmd/config"
 	"github.com/sufield/stave/cmd/inspect"
+	stavenep "github.com/sufield/stave/cmd/nep"
 	"github.com/sufield/stave/cmd/prune"
 	staverank "github.com/sufield/stave/cmd/rank"
 	"github.com/sufield/stave/cmd/securityaudit"
@@ -150,6 +151,9 @@ func WireCommands(app *App) {
 
 	// Compliance evaluation
 	root.AddCommand(evaluate.NewCmd())
+
+	// Net Effective Permissions (CIEM)
+	root.AddCommand(stavenep.NewCmd())
 
 	// Drift detection
 	root.AddCommand(stavedrift.NewCmd())
