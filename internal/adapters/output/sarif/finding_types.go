@@ -27,6 +27,8 @@ type sarifRule struct {
 	ID               kernel.ControlID `json:"id"`
 	Name             string           `json:"name"`
 	ShortDescription sarifMessage     `json:"shortDescription"`
+	Help             *sarifMessage    `json:"help,omitempty"`
+	Properties       map[string]any   `json:"properties,omitempty"`
 }
 
 type sarifResult struct {
@@ -37,6 +39,7 @@ type sarifResult struct {
 	Locations []sarifLocation  `json:"locations"`
 	// Suggestions are rendered using SARIF's "fixes" field for compatibility.
 	Suggestions []sarifSuggestion `json:"fixes,omitempty"`
+	Properties  map[string]any    `json:"properties,omitempty"`
 }
 
 type sarifLocation struct {

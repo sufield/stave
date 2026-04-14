@@ -2,6 +2,7 @@ package sarif
 
 import (
 	"encoding/json"
+	"strings"
 	"testing"
 	"time"
 
@@ -242,6 +243,95 @@ func TestWriteFindings_RuleDeduplication(t *testing.T) {
 	r2 := results[2].(map[string]any)
 	if r2["ruleIndex"] != float64(1) {
 		t.Errorf("expected ruleIndex 1 for third result, got %v", r2["ruleIndex"])
+	}
+}
+
+func TestWriteFindings_ChainMemberProperties(t *testing.T) {
+	w := NewFindingWriter()
+	enricher := remediation.NewPlanner()
+
+	result := evaluation.ComplianceReport{
+		Run: evaluation.RunInfo{
+			StaveVersion:      "0.1.0",
+			Now:               time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+			MaxUnsafeDuration: kernel.Duration(12 * time.Hour),
+			Snapshots:         2,
+			EvaluatedState:    "deployed",
+		},
+		Findings: []evaluation.Finding{
+			{
+				FindingID:          "sha256:abc123",
+				ControlID:          "CTL.S3.PUBLIC.001",
+				ControlName:        "S3 Bucket Public Access",
+				ControlDescription: "S3 bucket has public access enabled",
+				AssetID:            "arn:aws:s3:::phi-bucket",
+				AssetType:          "aws_s3_bucket",
+				AssetVendor:        "aws",
+				ControlSeverity:    policy.SeverityHigh,
+				ChainMembership: []evaluation.ChainMembershipEntry{
+					{
+						ChainID:       "data_exfiltration_path",
+						ChainSeverity: "critical",
+						StageSpan:     []string{"initial_access", "exfiltration"},
+						Narrative:     "Public S3 bucket enables data exfiltration",
+					},
+				},
+			},
+			{
+				ControlID:          "CTL.IAM.PASSWORD.001",
+				ControlName:        "IAM Password Policy",
+				ControlDescription: "Password policy too weak",
+				AssetID:            "arn:aws:iam::123:account",
+				AssetType:          "aws_iam_account",
+				AssetVendor:        "aws",
+			},
+		},
+	}
+
+	enriched, err := appeval.Enrich(enricher, nil, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+	data, err := w.MarshalFindings(&enriched)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	var sarifDoc map[string]any
+	if err := json.Unmarshal(data, &sarifDoc); err != nil {
+		t.Fatalf("invalid JSON: %v", err)
+	}
+
+	runs := sarifDoc["runs"].([]any)
+	run := runs[0].(map[string]any)
+	results := run["results"].([]any)
+
+	// First result (chain member) should have properties.
+	r0 := results[0].(map[string]any)
+	props, ok := r0["properties"].(map[string]any)
+	if !ok {
+		t.Fatal("chain member result should have properties")
+	}
+	if props["chain_id"] != "data_exfiltration_path" {
+		t.Errorf("chain_id = %v, want data_exfiltration_path", props["chain_id"])
+	}
+	if props["chain_severity"] != "critical" {
+		t.Errorf("chain_severity = %v, want critical", props["chain_severity"])
+	}
+	if props["finding_id"] != "sha256:abc123" {
+		t.Errorf("finding_id = %v, want sha256:abc123", props["finding_id"])
+	}
+
+	// Message should have ATTACK PATH prefix.
+	msg := r0["message"].(map[string]any)["text"].(string)
+	if !strings.Contains(msg, "[ATTACK PATH: data_exfiltration_path]") {
+		t.Errorf("message should contain ATTACK PATH prefix, got: %s", msg)
+	}
+
+	// Second result (isolated) should NOT have properties.
+	r1 := results[1].(map[string]any)
+	if _, hasProps := r1["properties"]; hasProps {
+		t.Error("isolated finding should not have chain properties")
 	}
 }
 

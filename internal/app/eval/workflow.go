@@ -155,6 +155,7 @@ func (w *AuditWorkflow) enrichWithRiskReasoning(
 	// Detect chain-based compound findings.
 	if len(chainDefs) > 0 {
 		report.ChainFindings = risk.DetectChains(failingIDs, chainDefs, controlLookup)
+		annotateChainMembership(report)
 	}
 
 	// Build attack stage summary.
@@ -173,6 +174,46 @@ func (w *AuditWorkflow) enrichWithRiskReasoning(
 		}
 	}
 	report.TopExposures = risk.RankExposures(rankInputs, controlLookup, 0)
+}
+
+// annotateChainMembership cross-references fired chains with individual
+// findings and populates ChainMembership on each contributing finding.
+func annotateChainMembership(report *evaluation.ComplianceReport) {
+	if len(report.ChainFindings) == 0 {
+		return
+	}
+
+	// Build a lookup: controlID → list of chain membership entries.
+	type entry struct {
+		controlIDs map[kernel.ControlID]bool
+		membership evaluation.ChainMembershipEntry
+	}
+	chainEntries := make([]entry, 0, len(report.ChainFindings))
+	for i := range report.ChainFindings {
+		cf := &report.ChainFindings[i]
+		cidSet := make(map[kernel.ControlID]bool, len(cf.ControlsFailing))
+		for _, cid := range cf.ControlsFailing {
+			cidSet[cid] = true
+		}
+		chainEntries = append(chainEntries, entry{
+			controlIDs: cidSet,
+			membership: evaluation.ChainMembershipEntry{
+				ChainID:       cf.ChainID,
+				ChainSeverity: cf.Severity.String(),
+				StageSpan:     risk.SortStagesByKillChain(cf.AttackStages),
+				Narrative:     cf.Description,
+			},
+		})
+	}
+
+	for i := range report.Findings {
+		f := &report.Findings[i]
+		for _, ce := range chainEntries {
+			if ce.controlIDs[f.ControlID] {
+				f.ChainMembership = append(f.ChainMembership, ce.membership)
+			}
+		}
+	}
 }
 
 // EnrichReport applies risk reasoning (chains, attack stages, exposure

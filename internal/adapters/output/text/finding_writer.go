@@ -78,6 +78,7 @@ func (w *FindingWriter) writeNoViolationsSummary(d *drawer) {
 }
 
 // writeViolationsFromEnriched renders violation output from pre-enriched findings.
+// Chain-member findings are promoted to the top with [ATTACK PATH] prefix.
 func (w *FindingWriter) writeViolationsFromEnriched(d *drawer, result *evaluation.ComplianceReport, enriched []remediation.Finding) {
 	d.ln("Violations")
 	d.ln("----------")
@@ -87,9 +88,31 @@ func (w *FindingWriter) writeViolationsFromEnriched(d *drawer, result *evaluatio
 		return
 	}
 
+	// Partition into chain-member and isolated findings.
+	var chainFindings, isolatedFindings []remediation.Finding
 	for i := range enriched {
-		f := &enriched[i]
-		w.writeFinding(d, i+1, *f)
+		if len(enriched[i].ChainMembership) > 0 {
+			chainFindings = append(chainFindings, enriched[i])
+		} else {
+			isolatedFindings = append(isolatedFindings, enriched[i])
+		}
+	}
+
+	num := 1
+	if len(chainFindings) > 0 {
+		for i := range chainFindings {
+			f := &chainFindings[i]
+			w.writeChainMemberFinding(d, num, *f)
+			num++
+		}
+		if len(isolatedFindings) > 0 {
+			d.f("\n%s\n", strings.Repeat("\u2500", 60))
+		}
+	}
+	for i := range isolatedFindings {
+		f := &isolatedFindings[i]
+		w.writeIsolatedFinding(d, num, *f)
+		num++
 	}
 }
 
@@ -176,8 +199,22 @@ func joinControls(ids []kernel.ControlID) string {
 	return strings.Join(parts, ", ")
 }
 
-// writeFinding writes a single finding in text format.
-func (w *FindingWriter) writeFinding(d *drawer, num int, f remediation.Finding) {
+// writeChainMemberFinding writes a finding that is part of an active attack chain.
+func (w *FindingWriter) writeChainMemberFinding(d *drawer, num int, f remediation.Finding) {
+	cm := f.ChainMembership[0]
+	d.f("\n%d. [ATTACK PATH] %s  %s\n", num, cm.ChainID, cm.ChainSeverity)
+	d.f("   %s  %s\n", f.ControlID, f.AssetID)
+	if f.Evidence.TemporalRisk != "" {
+		d.f("   %s\n", f.Evidence.TemporalRisk)
+	}
+	narrative := strings.TrimSpace(cm.Narrative)
+	if narrative != "" {
+		d.f("   Chain: %s\n", narrative)
+	}
+}
+
+// writeIsolatedFinding writes a finding not part of any active attack chain.
+func (w *FindingWriter) writeIsolatedFinding(d *drawer, num int, f remediation.Finding) {
 	writeFindingHeader(d, num, f)
 	writeFindingSource(d, f)
 	writeFindingEvidence(d, f)

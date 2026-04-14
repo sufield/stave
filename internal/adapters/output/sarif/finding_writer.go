@@ -78,13 +78,21 @@ func buildRules(findings []remediation.Finding) ([]sarifRule, map[kernel.Control
 			continue
 		}
 		ruleIndex[f.ControlID] = len(rules)
-		rules = append(rules, sarifRule{
+		rule := sarifRule{
 			ID:   f.ControlID,
 			Name: f.ControlName,
 			ShortDescription: sarifMessage{
 				Text: f.ControlDescription,
 			},
-		})
+		}
+		if f.RemediationSpec.Action != "" {
+			rule.Help = &sarifMessage{Text: f.RemediationSpec.Action}
+		}
+		tags := buildRuleTags(*f)
+		if len(tags) > 0 {
+			rule.Properties = map[string]any{"tags": tags}
+		}
+		rules = append(rules, rule)
 	}
 
 	return rules, ruleIndex
@@ -118,7 +126,7 @@ func buildResults(findings []remediation.Finding, ruleIndex map[kernel.ControlID
 			Locations: buildLocations(*f),
 		}
 
-		// Add fix suggestion from remediation
+		// Add fix suggestion from remediation.
 		if f.RemediationSpec.Action != "" {
 			result.Suggestions = []sarifSuggestion{
 				{
@@ -126,6 +134,17 @@ func buildResults(findings []remediation.Finding, ruleIndex map[kernel.ControlID
 						Text: f.RemediationSpec.Action,
 					},
 				},
+			}
+		}
+
+		// Add chain context to properties bag.
+		if len(f.ChainMembership) > 0 {
+			cm := f.ChainMembership[0]
+			result.Properties = map[string]any{
+				"chain_id":       cm.ChainID,
+				"chain_severity": cm.ChainSeverity,
+				"stage_span":     cm.StageSpan,
+				"finding_id":     f.FindingID,
 			}
 		}
 
@@ -165,13 +184,34 @@ func buildLocations(f remediation.Finding) []sarifLocation {
 }
 
 // buildMessage creates a human-readable message for a SARIF result.
+// Chain-member findings get an [ATTACK PATH] prefix.
 func buildMessage(f remediation.Finding) string {
-	msg := fmt.Sprintf("%s: %s on %s (%s)",
-		f.ControlID, f.ControlName, f.AssetID, f.AssetType)
+	var prefix string
+	var suffix string
+	if len(f.ChainMembership) > 0 {
+		cm := f.ChainMembership[0]
+		prefix = fmt.Sprintf("[ATTACK PATH: %s] ", cm.ChainID)
+		suffix = ". This finding is part of a live attack path — chain severity: " + cm.ChainSeverity
+	}
+	msg := fmt.Sprintf("%s%s: %s on %s (%s)",
+		prefix, f.ControlID, f.ControlName, f.AssetID, f.AssetType)
 	if f.Evidence.TemporalRisk != "" {
 		msg += ". " + f.Evidence.TemporalRisk
 	}
+	msg += suffix
 	return msg
+}
+
+// buildRuleTags creates the tags array for a SARIF rule's properties.
+func buildRuleTags(f remediation.Finding) []string {
+	var tags []string
+	if f.ControlSeverity.String() != "" {
+		tags = append(tags, "severity:"+f.ControlSeverity.String())
+	}
+	if f.Exposure != nil {
+		tags = append(tags, "domain:"+string(f.Exposure.Type))
+	}
+	return tags
 }
 
 // toRemediationFindings converts port-boundary enriched findings to

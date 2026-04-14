@@ -74,6 +74,39 @@ func AttackStagesFromFindings(findings []CompoundFinding) []string {
 	return stages
 }
 
+// killChainOrder defines the MITRE ATT&CK-aligned kill chain
+// ordering. Lower index = earlier in the chain. Unrecognized stages
+// sort after all known stages.
+var killChainOrder = map[string]int{
+	"initial_access":       0,
+	"credential_access":    1,
+	"persistence":          2,
+	"privilege_escalation": 3,
+	"lateral_movement":     4,
+	"exfiltration":         5,
+	"detection_evasion":    6,
+	"resilience":           7,
+}
+
+// SortStagesByKillChain returns a copy of stages sorted by kill chain
+// order (earliest stage first).
+func SortStagesByKillChain(stages []string) []string {
+	out := make([]string, len(stages))
+	copy(out, stages)
+	sort.Slice(out, func(i, j int) bool {
+		oi, oki := killChainOrder[out[i]]
+		oj, okj := killChainOrder[out[j]]
+		if !oki {
+			oi = 999
+		}
+		if !okj {
+			oj = 999
+		}
+		return oi < oj
+	})
+	return out
+}
+
 func severityLabel(s policy.Severity) string {
 	switch s {
 	case policy.SeverityCritical:

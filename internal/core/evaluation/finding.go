@@ -28,6 +28,26 @@ type Finding struct {
 	Exposure           *policy.Exposure         `json:"exposure,omitempty"`
 	PostureDrift       *PostureDrift            `json:"posture_drift,omitempty"`
 	ControlRemediation *policy.RemediationSpec  `json:"-"`
+
+	// ChainMembership is non-empty when this finding is a member
+	// of one or more chains that are currently firing.
+	ChainMembership []ChainMembershipEntry `json:"chain_membership,omitempty"`
+}
+
+// ChainMembershipEntry records that a finding contributed to a fired chain.
+type ChainMembershipEntry struct {
+	// ChainID is the chain definition ID (e.g. "data_exfiltration_path").
+	ChainID string `json:"chain_id"`
+
+	// ChainSeverity is the compound severity of the chain.
+	ChainSeverity string `json:"chain_severity"`
+
+	// StageSpan is the attack stage progression of the chain,
+	// sorted by kill chain order.
+	StageSpan []string `json:"stage_span"`
+
+	// Narrative is the chain's human-readable description.
+	Narrative string `json:"narrative"`
 }
 
 // SortFindings sorts findings deterministically.

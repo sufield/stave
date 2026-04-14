@@ -30,6 +30,9 @@ type PriorityEntry struct {
 	FixAction     string                  `json:"fix_action,omitempty"`
 	Changes       []policy.PropertyChange `json:"changes"`
 	Confidence    float64                 `json:"confidence"`
+	IsChainMember bool                    `json:"is_chain_member"`
+	ChainSeverity string                  `json:"chain_severity,omitempty"`
+	ChainID       string                  `json:"chain_id,omitempty"`
 }
 
 // RemediationBundle groups findings by a shared fix action.
@@ -126,7 +129,7 @@ func BuildRoadmap(findings []remediation.Finding, topExposures []risk.ExposureRa
 		changes := policy.DeriveChanges(f.Evidence.Misconfigurations)
 		confidence := deriveEntryConfidence(changes)
 
-		entries = append(entries, PriorityEntry{
+		entry := PriorityEntry{
 			ControlID:     f.ControlID,
 			ControlName:   f.ControlName,
 			AssetID:       f.AssetID,
@@ -138,10 +141,20 @@ func BuildRoadmap(findings []remediation.Finding, topExposures []risk.ExposureRa
 			Narrative:     priorityNarrative(f, breakdown, silentKiller, isOverdue),
 			Changes:       changes,
 			Confidence:    confidence,
-		})
+		}
+		if len(f.ChainMembership) > 0 {
+			entry.IsChainMember = true
+			entry.ChainSeverity = f.ChainMembership[0].ChainSeverity
+			entry.ChainID = f.ChainMembership[0].ChainID
+		}
+		entries = append(entries, entry)
 	}
 
 	sort.Slice(entries, func(i, j int) bool {
+		// Chain-member findings sort before isolated findings.
+		if entries[i].IsChainMember != entries[j].IsChainMember {
+			return entries[i].IsChainMember
+		}
 		if entries[i].PriorityScore != entries[j].PriorityScore {
 			return entries[i].PriorityScore > entries[j].PriorityScore
 		}

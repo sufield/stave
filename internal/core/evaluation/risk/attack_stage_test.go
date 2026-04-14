@@ -65,6 +65,40 @@ func TestBuildAttackStageSummary_Empty(t *testing.T) {
 	}
 }
 
+func TestSortStagesByKillChain(t *testing.T) {
+	t.Run("sorts by kill chain order", func(t *testing.T) {
+		input := []string{"exfiltration", "initial_access", "persistence"}
+		got := SortStagesByKillChain(input)
+		want := []string{"initial_access", "persistence", "exfiltration"}
+		if len(got) != 3 || got[0] != want[0] || got[1] != want[1] || got[2] != want[2] {
+			t.Errorf("got %v, want %v", got, want)
+		}
+	})
+
+	t.Run("does not mutate input", func(t *testing.T) {
+		input := []string{"exfiltration", "initial_access"}
+		SortStagesByKillChain(input)
+		if input[0] != "exfiltration" {
+			t.Error("input was mutated")
+		}
+	})
+
+	t.Run("empty input", func(t *testing.T) {
+		got := SortStagesByKillChain(nil)
+		if len(got) != 0 {
+			t.Errorf("expected empty, got %v", got)
+		}
+	})
+
+	t.Run("unknown stages sort last", func(t *testing.T) {
+		input := []string{"unknown_stage", "initial_access"}
+		got := SortStagesByKillChain(input)
+		if got[0] != "initial_access" || got[1] != "unknown_stage" {
+			t.Errorf("got %v, want [initial_access, unknown_stage]", got)
+		}
+	})
+}
+
 func TestAttackStagesFromFindings(t *testing.T) {
 	findings := []CompoundFinding{
 		{AttackStages: []string{"exfiltration", "initial_access"}},

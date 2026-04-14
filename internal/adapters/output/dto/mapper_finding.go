@@ -44,6 +44,9 @@ func FromFinding(f remediation.Finding) FindingDTO {
 		plan := fromRemediationPlan(*f.RemediationPlan)
 		dto.RemediationPlan = &plan
 	}
+	if len(f.ChainMembership) > 0 {
+		dto.ChainMembership = mapSlice(f.ChainMembership, fromChainMembershipEntry)
+	}
 
 	// Normalize empty severity to match omitempty behavior.
 	if dto.ControlSeverity == "" {
@@ -133,6 +136,15 @@ func fromRemediationAction(a evaluation.RemediationAction) RemediationActionDTO 
 		ActionType: a.ActionType,
 		Path:       a.Path.String(),
 		Value:      a.Value,
+	}
+}
+
+func fromChainMembershipEntry(e evaluation.ChainMembershipEntry) ChainMembershipEntryDTO {
+	return ChainMembershipEntryDTO{
+		ChainID:       e.ChainID,
+		ChainSeverity: e.ChainSeverity,
+		StageSpan:     e.StageSpan,
+		Narrative:     e.Narrative,
 	}
 }
 

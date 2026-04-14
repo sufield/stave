@@ -154,7 +154,11 @@ func writeTextRoadmap(w io.Writer, rm apprank.Roadmap) {
 		}
 
 		fmt.Fprintf(w, "\n[#%d]  PRIORITY: %.1f (%s)\n", e.Rank, e.PriorityScore, severity)
-		fmt.Fprintf(w, "      %s on %s\n", e.ControlID, e.AssetID)
+		if e.IsChainMember {
+			fmt.Fprintf(w, "      [ATTACK PATH: %s]  %s on %s\n", e.ChainID, e.ControlID, e.AssetID)
+		} else {
+			fmt.Fprintf(w, "      %s on %s\n", e.ControlID, e.AssetID)
+		}
 		if e.Narrative != "" {
 			fmt.Fprintf(w, "      %s\n", e.Narrative)
 		}

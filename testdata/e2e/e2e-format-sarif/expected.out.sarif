@@ -6,13 +6,16 @@
       "tool": {
         "driver": {
           "name": "stave",
-          "version": "0.0.3",
+          "version": "edge",
           "rules": [
             {
               "id": "CTL.EXP.DURATION.001",
               "name": "Unsafe Exposure Duration Bound",
               "shortDescription": {
                 "text": "An asset must not remain unsafe beyond the configured time window."
+              },
+              "help": {
+                "text": "Review the misconfigured properties and revert to compliant values."
               }
             }
           ]

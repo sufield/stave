@@ -10,21 +10,30 @@ import (
 
 // FindingDTO mirrors remediation.Finding for JSON output.
 type FindingDTO struct {
-	FindingID          string              `json:"finding_id"`
-	ControlID          kernel.ControlID    `json:"control_id"`
-	ControlName        string              `json:"control_name"`
-	ControlDescription string              `json:"control_description"`
-	AssetID            asset.ID            `json:"asset_id"`
-	AssetType          kernel.AssetType    `json:"asset_type"`
-	AssetVendor        kernel.Vendor       `json:"asset_vendor"`
-	Source             *SourceRefDTO       `json:"source,omitempty"`
-	Evidence           EvidenceDTO         `json:"evidence"`
-	ControlSeverity    string              `json:"control_severity,omitempty"`
-	ControlCompliance  map[string]string   `json:"control_compliance,omitempty"`
-	Exposure           *ExposureDTO        `json:"exposure,omitempty"`
-	PostureDrift       *PostureDriftDTO    `json:"posture_drift,omitempty"`
-	Remediation        RemediationSpecDTO  `json:"remediation"`
-	RemediationPlan    *RemediationPlanDTO `json:"fix_plan,omitempty"`
+	FindingID          string                    `json:"finding_id"`
+	ControlID          kernel.ControlID          `json:"control_id"`
+	ControlName        string                    `json:"control_name"`
+	ControlDescription string                    `json:"control_description"`
+	AssetID            asset.ID                  `json:"asset_id"`
+	AssetType          kernel.AssetType          `json:"asset_type"`
+	AssetVendor        kernel.Vendor             `json:"asset_vendor"`
+	Source             *SourceRefDTO             `json:"source,omitempty"`
+	Evidence           EvidenceDTO               `json:"evidence"`
+	ControlSeverity    string                    `json:"control_severity,omitempty"`
+	ControlCompliance  map[string]string         `json:"control_compliance,omitempty"`
+	Exposure           *ExposureDTO              `json:"exposure,omitempty"`
+	PostureDrift       *PostureDriftDTO          `json:"posture_drift,omitempty"`
+	Remediation        RemediationSpecDTO        `json:"remediation"`
+	RemediationPlan    *RemediationPlanDTO       `json:"fix_plan,omitempty"`
+	ChainMembership    []ChainMembershipEntryDTO `json:"chain_membership,omitempty"`
+}
+
+// ChainMembershipEntryDTO mirrors evaluation.ChainMembershipEntry.
+type ChainMembershipEntryDTO struct {
+	ChainID       string   `json:"chain_id"`
+	ChainSeverity string   `json:"chain_severity"`
+	StageSpan     []string `json:"stage_span"`
+	Narrative     string   `json:"narrative"`
 }
 
 // SourceRefDTO mirrors asset.SourceRef.
