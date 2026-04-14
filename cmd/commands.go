@@ -29,6 +29,7 @@ import (
 	"github.com/sufield/stave/cmd/enforce/gate"
 	"github.com/sufield/stave/cmd/evaluate"
 	staveexport "github.com/sufield/stave/cmd/export"
+	staveforge "github.com/sufield/stave/cmd/forge"
 	"github.com/sufield/stave/cmd/initcmd"
 	initalias "github.com/sufield/stave/cmd/initcmd/alias"
 	initconfig "github.com/sufield/stave/cmd/initcmd/config"
@@ -166,6 +167,9 @@ func WireCommands(app *App) {
 
 	// Evidence bundling
 	root.AddCommand(stavebundle.NewCmd())
+
+	// Control authoring
+	root.AddCommand(staveforge.NewCmd())
 
 	// Remediation ranking
 	root.AddCommand(staverank.NewCmd())
