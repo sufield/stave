@@ -30,6 +30,14 @@ type ResolvedPermissions struct {
 	BoundaryEffective bool // true if boundary meaningfully constrains
 	Incomplete        bool
 	IncompleteReasons []string
+
+	// Iteration 2: resource-based policy grants
+	ResourcePolicyGrants []ResourcePolicyGrant
+
+	// Iteration 3: transitive role chain resolution
+	RoleChains         []RoleChain
+	MaxChainDepthVal   int
+	HasTransitiveAdmin bool
 }
 
 // ResolutionInput holds the policy data for a single principal.

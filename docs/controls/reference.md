@@ -3,14 +3,14 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 360
-**Pack hash:** `9c464c85cdd5531c20293cf2de8cf37d24f43f6e43de891aedf007f6ad8346fe`
+**Total controls:** 362
+**Pack hash:** `8e75b698b60ae757f4fa6af6e880f74deb20c48cbe1813b0691e64367d06fc3a`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 67 |
+| critical | 69 |
 | high | 153 |
 | info | 16 |
 | low | 25 |
@@ -20,7 +20,7 @@
 |--------|-------|
 | exposure | 265 |
 | governance | 7 |
-| identity | 80 |
+| identity | 82 |
 | storage | 8 |
 
 ## Controls
@@ -2246,6 +2246,36 @@ After resolving all policy layers (SCPs, permission boundaries, identity-based p
 A principal with a permission boundary must have a boundary that meaningfully constrains its effective permissions. A boundary that allows iam:* or *:* on Resource: * is not a meaningful constraint. A boundary that is broader than the identity-based policy constrains nothing. Both conditions create a false sense of security — the boundary exists but provides no actual restriction.
 
 **Remediation:** Review the permission boundary policy. Narrow it to exclude iam:* and *:* on Resource: *. Ensure the boundary is stricter than the identity-based policies — a boundary that is broader than the identity policy constrains nothing.
+
+---
+
+### CTL.IAM.NEP.ESCALATION.001
+
+**No Principal May Have Net Effective Permissions to Escalate Privileges**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: AC-6; hipaa: 164.312(a)(1); nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+After resolving all policy layers including transitive role assumption chains, no non-administrative principal may have effective permissions to escalate beyond their intended privilege scope. Escalation is detected in two forms: direct escalation primitives (iam:CreatePolicyVersion, iam:AttachRolePolicy, etc.) in the resolved effective allow set, and transitive escalation through role chains that reach higher privilege levels than the principal's direct permissions. A developer role that can assume a pipeline role that can assume an admin role has effective admin access — neither individual role appears dangerous, but the chain is the finding.
+
+**Remediation:** For direct primitives: remove or scope the escalation action to specific resource ARNs. For transitive chains: remove the sts:AssumeRole grant that enables the chain, or scope it to specific non-admin role ARNs.
+
+---
+
+### CTL.IAM.NEP.PHI.001
+
+**Only Designated Principals May Have Net Effective Access to PHI Resources**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-3; gdpr: Art.32; hipaa: 164.312(a)(1); nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+For each resource tagged data-classification: phi, the complete set of principals with resolved effective access — via identity-based policies AND resource-based policies — must be limited to principals designated as PHI-authorized. A non-designated principal with effective read access to PHI data is a breach path regardless of how it was granted. This control resolves the complete multi-layer access picture including identity policies, SCPs, permission boundaries, and resource policies simultaneously. Cross-account resource policy grants on PHI are the highest-severity variant.
+
+**Remediation:** Review the access path. For identity-based grants: restrict the principal's policies or add an SCP denying PHI resource access for non-designated principals. For resource policy grants: update the resource policy to restrict the Principal list to designated role ARNs. For public policies: remove the Principal: * statement.
 
 ---
 

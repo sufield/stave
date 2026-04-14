@@ -1,0 +1,44 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.NEP.PHI.001
+name: Only Designated Principals May Have Net Effective Access to PHI Resources
+description: >
+  For each resource tagged data-classification: phi, the complete set
+  of principals with resolved effective access — via identity-based
+  policies AND resource-based policies — must be limited to principals
+  designated as PHI-authorized. A non-designated principal with effective
+  read access to PHI data is a breach path regardless of how it was
+  granted. This control resolves the complete multi-layer access picture
+  including identity policies, SCPs, permission boundaries, and resource
+  policies simultaneously. Cross-account resource policy grants on PHI
+  are the highest-severity variant.
+domain: identity
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-3"
+  fedramp_moderate: "AC-3"
+  hipaa: "164.312(a)(1)"
+  pci_dss_v4.0: "7.2.1"
+  soc2: "CC6.1"
+  gdpr: "Art.32"
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    A non-designated principal has resolved effective read access to a
+    PHI resource. Access was granted via identity-based policy, resource
+    policy, or both.
+  action: >
+    Review the access path. For identity-based grants: restrict the
+    principal's policies or add an SCP denying PHI resource access for
+    non-designated principals. For resource policy grants: update the
+    resource policy to restrict the Principal list to designated role
+    ARNs. For public policies: remove the Principal: * statement.
+unsafe_predicate:
+  all:
+    - field: properties.resource.nep.has_non_designated_phi_access
+      op: eq
+      value: true

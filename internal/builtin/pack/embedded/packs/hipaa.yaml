@@ -43,6 +43,7 @@ controls:
     - CTL.SECRET.BLAST.001
     - CTL.IAM.SCP.CREATEACCOUNT.001
     - CTL.CODECOMMIT.ACCESS.001
+    - CTL.IAM.NEP.PHI.001
     # §164.312(a)(2)(i) — Unique User Identification
     - CTL.IAM.CRED.ROTATION.001
     - CTL.IAM.CRED.UNUSED.001
