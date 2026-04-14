@@ -142,7 +142,42 @@ Reusable multi-command workflows. Each recipe shows the exact commands, expected
 
 ---
 
-## 5. Filter Findings with jq
+## 5. Chain Visualization
+
+**When to use:** You want to see which compound attack paths are currently active — which controls are co-failing within each chain, and what attacker capability each active chain produces.
+
+`stave graph chains` reads `chain_findings` from `stave apply` output and produces DOT text showing active chains.
+
+1. **Generate chain graph** — from assessment output:
+
+   ```bash
+   stave graph chains --output ./output.json | dot -Tpng > chains.png
+   ```
+
+2. **Pipe from stave apply** — single pipeline:
+
+   ```bash
+   stave apply --controls controls/ --observations obs/ \
+     | stave graph chains --output - | dot -Tsvg > chains.svg
+   ```
+
+3. **Include inactive chains** — show all defined chains for context:
+
+   ```bash
+   stave graph chains --output ./output.json --all | dot -Tpng > all-chains.png
+   ```
+
+**Reading the output:**
+- **Clusters** are chains. Active chains have dashed borders colored by severity.
+- **Nodes** inside clusters are co-failing controls.
+- **Diamond terminus nodes** represent the attacker capability the chain produces, with the compound risk score.
+- **Dotted clusters** (with `--all`) are inactive chains — defined but not currently triggered.
+
+**Difference from coverage:** `stave graph coverage` shows which controls match which assets (a static coverage map). `stave graph chains` shows which compound threats are active right now (a dynamic risk view).
+
+---
+
+## 6. Filter Findings with jq
 
 **When to use:** You want to extract specific fields from Stave's JSON output for reporting or alerting.
 
@@ -181,7 +216,7 @@ stave apply \
 
 ---
 
-## 6. Generate Report and Filter with Unix Tools
+## 7. Generate Report and Filter with Unix Tools
 
 **When to use:** You want a human-readable report from evaluation output, or need to extract specific findings using unix text-processing tools.
 
@@ -217,7 +252,7 @@ stave apply \
 
 ---
 
-## 7. Custom Output with --template
+## 8. Custom Output with --template
 
 **When to use:** You want to extract specific fields from diagnose or validate output without jq.
 
@@ -241,7 +276,7 @@ stave diagnose \
 
 ---
 
-## 8. Command Aliases for Repeated Workflows
+## 9. Command Aliases for Repeated Workflows
 
 **When to use:** You run the same stave commands frequently and want shortcuts.
 
@@ -265,7 +300,7 @@ stave alias delete ev
 
 ---
 
-## 9. Pipeline Composition (stdin chaining)
+## 10. Pipeline Composition (stdin chaining)
 
 **When to use:** You want to chain Stave commands together using Unix pipes, or feed output into downstream tools without intermediate files.
 
@@ -333,7 +368,7 @@ stave alias delete ev
    | dot -Tpng > coverage.png
    ```
 
-## 11. Logic Audit Trace — Proof of Pass
+## 12. Logic Audit Trace — Proof of Pass
 
 **When to use:** You need to demonstrate to an auditor *why* every resource was marked compliant or non-compliant, with a verifiable reasoning chain.
 

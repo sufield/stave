@@ -15,11 +15,12 @@ func NewCmd(newCtlRepo compose.CtlRepoFactory, loadSnapshots compose.SnapshotLoa
 	graphCmd := &cobra.Command{
 		Use:   "graph",
 		Short: "Visualize control and asset relationships",
-		Long:  "Grouped graph commands: coverage." + metadata.OfflineHelpSuffix,
+		Long:  "Grouped graph commands: coverage, chains." + metadata.OfflineHelpSuffix,
 		Args:  cobra.NoArgs,
 	}
 
 	graphCmd.AddCommand(newCoverageCmd(newCtlRepo, loadSnapshots))
+	graphCmd.AddCommand(newChainsCmd())
 	return graphCmd
 }
 
