@@ -15,6 +15,7 @@ import (
 	stavebisect "github.com/sufield/stave/cmd/bisect"
 	stavebundle "github.com/sufield/stave/cmd/bundle"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
+	stavecollect "github.com/sufield/stave/cmd/collect"
 	staveconsolidate "github.com/sufield/stave/cmd/consolidate"
 	"github.com/sufield/stave/cmd/diagnose"
 	"github.com/sufield/stave/cmd/diagnose/artifacts"
@@ -178,6 +179,9 @@ func WireCommands(app *App) {
 
 	// Risk acceptance management
 	root.AddCommand(staveexempt.NewCmd())
+
+	// Automated evidence collection
+	root.AddCommand(stavecollect.NewCmd())
 
 	// Telemetry bridge
 	root.AddCommand(stavetelemetry.NewCmd())

@@ -4,6 +4,7 @@ import (
 	"embed"
 	"fmt"
 	"io/fs"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -72,6 +73,15 @@ func LoadProfile(id string) (*coreevidence.FrameworkProfile, error) {
 		}
 	}
 	return nil, fmt.Errorf("profile %q not found", id)
+}
+
+// LoadProfileFromFile loads a custom framework profile from a YAML file.
+func LoadProfileFromFile(path string) (*coreevidence.FrameworkProfile, error) {
+	data, err := os.ReadFile(path) //nolint:gosec // user-specified path
+	if err != nil {
+		return nil, fmt.Errorf("read profile %s: %w", path, err)
+	}
+	return parseProfile(data, filepath.Base(path))
 }
 
 func parseProfile(data []byte, filename string) (*coreevidence.FrameworkProfile, error) {

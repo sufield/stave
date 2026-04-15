@@ -29,23 +29,39 @@ func runCompliance(
 	newCtlRepo compose.CtlRepoFactory,
 	newCELEvaluator compose.CELEvaluatorFactory,
 ) error {
-	// Parse profile IDs (comma-separated for composite mode).
-	profileIDs := strings.Split(opts.Profile, ",")
-	for i := range profileIDs {
-		profileIDs[i] = strings.TrimSpace(profileIDs[i])
+	// Load built-in profiles (comma-separated).
+	var profiles []*evidence.FrameworkProfile
+	if opts.Profile != "" {
+		profileIDs := strings.Split(opts.Profile, ",")
+		for i := range profileIDs {
+			profileIDs[i] = strings.TrimSpace(profileIDs[i])
+		}
+		for _, pid := range profileIDs {
+			if pid == "" {
+				continue
+			}
+			profile, loadErr := evidenceadapter.LoadProfile(pid)
+			if loadErr != nil {
+				return &ui.UserError{Err: fmt.Errorf("invalid --profile %q: %w", pid, loadErr)}
+			}
+			profiles = append(profiles, profile)
+		}
 	}
 
-	compositeMode := opts.Composite || len(profileIDs) > 1
-
-	// Load all requested profiles.
-	var profiles []*evidence.FrameworkProfile
-	for _, pid := range profileIDs {
-		profile, loadErr := evidenceadapter.LoadProfile(pid)
+	// Load custom profile files.
+	for _, path := range opts.ProfileFiles {
+		profile, loadErr := evidenceadapter.LoadProfileFromFile(path)
 		if loadErr != nil {
-			return &ui.UserError{Err: fmt.Errorf("invalid --profile %q: %w", pid, loadErr)}
+			return &ui.UserError{Err: fmt.Errorf("load profile file %q: %w", path, loadErr)}
 		}
 		profiles = append(profiles, profile)
 	}
+
+	if len(profiles) == 0 {
+		return &ui.UserError{Err: errors.New("at least one of --profile or --profile-file is required")}
+	}
+
+	compositeMode := opts.Composite || len(profiles) > 1
 
 	// Load snapshot.
 	snapshots, err := observations.LoadBundle(opts.Snapshot)

@@ -18,6 +18,7 @@ type options struct {
 	SystemUUID     string
 	Assessor       string
 	AssessmentUUID string
+	ProfileFiles   []string
 }
 
 // NewCmd creates the compliance evidence export subcommand.
@@ -80,9 +81,10 @@ Examples:
 	cmd.Flags().StringVar(&opts.SystemUUID, "system-uuid", "", "UUID of the System Security Plan (for eMASS/OSCAL)")
 	cmd.Flags().StringVar(&opts.Assessor, "assessor", "Stave automated assessment", "assessor name (for OSCAL)")
 	cmd.Flags().StringVar(&opts.AssessmentUUID, "assessment-uuid", "", "UUID for this assessment result (for OSCAL)")
+	cmd.Flags().StringSliceVar(&opts.ProfileFiles, "profile-file", nil, "path to custom profile YAML (can be repeated)")
 
 	_ = cmd.MarkFlagRequired("snapshot")
-	_ = cmd.MarkFlagRequired("profile")
+	// --profile is not required when --profile-file is specified.
 
 	return cmd
 }

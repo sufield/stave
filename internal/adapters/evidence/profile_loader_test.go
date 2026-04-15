@@ -1,6 +1,8 @@
 package evidence
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
 	coreevidence "github.com/sufield/stave/internal/core/evidence"
@@ -112,6 +114,48 @@ func TestLoadEmbeddedProfiles_AllFivePresent(t *testing.T) {
 		if p.FrameworkKey == "" {
 			t.Errorf("%s: empty FrameworkKey", p.ID)
 		}
+	}
+}
+
+func TestLoadProfileFromFile(t *testing.T) {
+	yaml := `
+id: custom_dora
+name: "DORA ICT Risk Management"
+version: "2025-01"
+framework_key: custom_dora
+requirements:
+  - id: "ART5.1"
+    description: "ICT risk management framework"
+    section: "Article 5"
+    controls:
+      - CTL.CLOUDTRAIL.ENABLED.001
+      - CTL.CONFIG.RECORDER.001
+    pass_threshold: all
+`
+	path := filepath.Join(t.TempDir(), "dora.yaml")
+	if err := os.WriteFile(path, []byte(yaml), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	profile, err := LoadProfileFromFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if profile.ID != "custom_dora" {
+		t.Errorf("ID = %q, want custom_dora", profile.ID)
+	}
+	if len(profile.Requirements) != 1 {
+		t.Fatalf("requirements = %d, want 1", len(profile.Requirements))
+	}
+	if len(profile.Requirements[0].ControlIDs) != 2 {
+		t.Errorf("controls = %d, want 2", len(profile.Requirements[0].ControlIDs))
+	}
+}
+
+func TestLoadProfileFromFile_NotFound(t *testing.T) {
+	_, err := LoadProfileFromFile("/nonexistent/profile.yaml")
+	if err == nil {
+		t.Error("expected error for missing file")
 	}
 }
 
