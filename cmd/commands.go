@@ -15,6 +15,7 @@ import (
 	stavebisect "github.com/sufield/stave/cmd/bisect"
 	stavebundle "github.com/sufield/stave/cmd/bundle"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
+	staveconsolidate "github.com/sufield/stave/cmd/consolidate"
 	"github.com/sufield/stave/cmd/diagnose"
 	"github.com/sufield/stave/cmd/diagnose/artifacts"
 	diagreport "github.com/sufield/stave/cmd/diagnose/report"
@@ -170,6 +171,9 @@ func WireCommands(app *App) {
 
 	// Remediation ranking
 	root.AddCommand(staverank.NewCmd())
+
+	// Multi-account consolidation
+	root.AddCommand(staveconsolidate.NewCmd())
 
 	// Telemetry bridge
 	root.AddCommand(stavetelemetry.NewCmd())
