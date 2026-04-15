@@ -112,3 +112,29 @@ func TestAnnotateChainMembership_NoChains(t *testing.T) {
 		t.Errorf("expected no chain membership, got %d", len(report.Findings[0].ChainMembership))
 	}
 }
+
+// TestAnnotateChainMembership_BelowThreshold confirms that findings
+// whose controls belong to a chain definition receive no annotation
+// when the chain did not fire (below escalation threshold → not in
+// ChainFindings). Only fired chains appear in ChainFindings; the
+// annotation logic processes only that list.
+func TestAnnotateChainMembership_BelowThreshold(t *testing.T) {
+	report := &evaluation.ComplianceReport{
+		Findings: []evaluation.Finding{
+			{ControlID: "CTL.A"},
+			{ControlID: "CTL.B"},
+		},
+		// ChainFindings is empty — the chain engine determined
+		// that the escalation threshold was not met.
+		ChainFindings: nil,
+	}
+
+	annotateChainMembership(report)
+
+	for i, f := range report.Findings {
+		if len(f.ChainMembership) != 0 {
+			t.Errorf("Finding[%d] (%s): expected 0 chain membership when chain below threshold, got %d",
+				i, f.ControlID, len(f.ChainMembership))
+		}
+	}
+}

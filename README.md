@@ -45,7 +45,7 @@ Every score is a **deterministic, traceable reasoning chain**. Compound scores s
 
 ## Features
 
-- **409 built-in controls** across 44 domains (S3, IAM, VPC, EC2, RDS, ELB, K8s, CloudTrail, CloudWatch, KMS, and [34 more](docs/controls/reference.md))
+- **417 built-in controls** across 44 domains (S3, IAM, VPC, EC2, RDS, ELB, K8s, CloudTrail, CloudWatch, KMS, and [34 more](docs/controls/reference.md))
 - **10 compliance profiles** — HIPAA, CIS AWS v3.0, SOC 2, PCI-DSS v4.0, NIST 800-53, FedRAMP, GDPR, FFIEC, ISO 27001, NIST CSF 2.0
 - **Risk reasoning engine** — compound risk scoring across co-failing controls, MITRE-aligned attack stage summary, blast radius multipliers
 - **Safety chains** — 15 built-in chain definitions detect compound failures across data protection, identity, detection, recovery, sovereignty, supply chain, and cryptographic concentration
@@ -146,9 +146,9 @@ New observation properties are additive and backward-compatible. Existing contro
 
 ## Built-in controls
 
-409 controls across 44 domains:
+417 controls across 44 domains:
 
-### AWS S3 (70 controls)
+### AWS S3 (78 controls)
 
 | Category | Count | What they detect |
 |----------|:---:|-----------------|
@@ -159,9 +159,9 @@ New observation properties are additive and backward-compatible. Existing contro
 | `network` | 5 | VPC/IP conditions, VPC endpoint policy, Multi-Region Access Point PAB |
 | `versioning` | 3 | Disabled versioning, missing MFA delete |
 | `lock` | 3 | Object lock mode, retention period |
-| `logging` | 4 | Access logging, CloudTrail object-level audit |
+| `logging` | 10 | Access logging, CloudTrail object-level audit |
 | `lifecycle` | 2 | Lifecycle rules, PHI retention |
-| `governance` | 2 | Data classification tags |
+| `governance` | 4 | Data classification tags |
 | `write_scope` | 2 | Upload scope, content type restriction |
 | `tenant` | 1 | Prefix-based tenant isolation |
 | `takeover` | 2 | Dangling bucket references, CDN origins |

@@ -109,9 +109,10 @@ func (w *FindingWriter) writeViolationsFromEnriched(d *drawer, result *evaluatio
 			d.f("\n%s\n", strings.Repeat("\u2500", 60))
 		}
 	}
+	showIsolatedLabel := len(chainFindings) > 0
 	for i := range isolatedFindings {
 		f := &isolatedFindings[i]
-		w.writeIsolatedFinding(d, num, f)
+		w.writeIsolatedFinding(d, num, f, showIsolatedLabel)
 		num++
 	}
 }
@@ -214,8 +215,13 @@ func (w *FindingWriter) writeChainMemberFinding(d *drawer, num int, f *remediati
 }
 
 // writeIsolatedFinding writes a finding not part of any active attack chain.
-func (w *FindingWriter) writeIsolatedFinding(d *drawer, num int, f *remediation.Finding) {
+// When showLabel is true, appends an isolation label to distinguish from
+// chain-member findings listed above.
+func (w *FindingWriter) writeIsolatedFinding(d *drawer, num int, f *remediation.Finding, showLabel bool) {
 	writeFindingHeader(d, num, f)
+	if showLabel {
+		d.f("   (isolated finding \u2014 not part of any active attack path)\n")
+	}
 	writeFindingSource(d, f)
 	writeFindingEvidence(d, f)
 	writeFindingRemediation(d, f)
