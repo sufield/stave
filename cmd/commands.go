@@ -30,6 +30,7 @@ import (
 	"github.com/sufield/stave/cmd/evaluate"
 	staveexempt "github.com/sufield/stave/cmd/exempt"
 	staveexport "github.com/sufield/stave/cmd/export"
+	staveforensics "github.com/sufield/stave/cmd/forensics"
 	staveforge "github.com/sufield/stave/cmd/forge"
 	"github.com/sufield/stave/cmd/initcmd"
 	initalias "github.com/sufield/stave/cmd/initcmd/alias"
@@ -182,6 +183,9 @@ func WireCommands(app *App) {
 
 	// Automated evidence collection
 	root.AddCommand(stavecollect.NewCmd())
+
+	// Forensic timeline reconstruction
+	root.AddCommand(staveforensics.NewCmd())
 
 	// Telemetry bridge
 	root.AddCommand(stavetelemetry.NewCmd())
