@@ -194,6 +194,14 @@ func (a *Archive) Verify() ([]string, []string) {
 		return errs, warnings
 	}
 
+	// An empty runs list is invalid — a legitimate manifest always
+	// contains at least one run entry. An empty list indicates
+	// tampering or corruption.
+	if len(m.Runs) == 0 {
+		errs = append(errs, "manifest integrity failure: runs list is empty — manifest may have been tampered with")
+		return errs, warnings
+	}
+
 	for _, run := range m.Runs {
 		runDir := filepath.Join(a.Path, "runs", run.RunID)
 		if _, statErr := os.Stat(runDir); statErr != nil {

@@ -105,7 +105,7 @@ func TestPrefixExposureStrategy_Evaluate_ConfigIssue(t *testing.T) {
 	now := time.Date(2026, 1, 1, 1, 0, 0, 0, time.UTC)
 
 	s := &prefixExposureStrategy{ctl: ctl}
-	row, findings := s.Evaluate(tl, now, nil)
+	row, findings := s.Evaluate(tl, now, IdentityIndex{})
 
 	if row.Verdict != evaluation.VerdictViolation {
 		t.Fatalf("expected Violation for config issue, got %v", row.Verdict)

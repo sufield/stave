@@ -238,7 +238,7 @@ func TestUnsupportedStrategy(t *testing.T) {
 	tl := asset.NewExposureLifecycle(a)
 
 	s := &unsupportedStrategy{ctl: ctl}
-	row, findings := s.Evaluate(tl, time.Now(), nil)
+	row, findings := s.Evaluate(tl, time.Now(), IdentityIndex{})
 	if row.Verdict != evaluation.VerdictSkipped {
 		t.Fatalf("Verdict = %v", row.Verdict)
 	}
@@ -305,10 +305,10 @@ func TestAssessorSortSnapshots(t *testing.T) {
 
 func TestIdentityIndexAt(t *testing.T) {
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
-	idx := IdentityIndex{
-		base:                    {{ID: "id-1"}},
-		base.Add(2 * time.Hour): {{ID: "id-2"}},
-	}
+	idx := BuildIdentityIndex([]asset.Snapshot{
+		{CapturedAt: base, Identities: []asset.CloudIdentity{{ID: "id-1"}}},
+		{CapturedAt: base.Add(2 * time.Hour), Identities: []asset.CloudIdentity{{ID: "id-2"}}},
+	})
 
 	// Exact match
 	ids := idx.At(base)
@@ -336,8 +336,8 @@ func TestBuildIdentityIndex(t *testing.T) {
 		{CapturedAt: base.Add(time.Hour), Identities: []asset.CloudIdentity{{ID: "id-2"}}},
 	}
 	idx := BuildIdentityIndex(snapshots)
-	if len(idx) != 2 {
-		t.Fatalf("expected 2 entries, got %d", len(idx))
+	if len(idx.sortedKeys) != 2 {
+		t.Fatalf("expected 2 entries, got %d", len(idx.sortedKeys))
 	}
 	ids := idx.At(base)
 	if len(ids) != 1 || ids[0].ID != "id-1" {

@@ -342,28 +342,70 @@ func WriteFileAtomic(path string, data []byte, perm os.FileMode) error {
 	}
 	tmpPath := tmpFile.Name()
 
+	committed := false
 	closed := false
 	defer func() {
 		if !closed {
 			_ = tmpFile.Close()
 		}
-		_ = os.Remove(tmpPath)
+		if !committed {
+			_ = os.Remove(tmpPath)
+		}
 	}()
 
-	if err := tmpFile.Chmod(perm); err != nil {
+	err = tmpFile.Chmod(perm)
+	if err != nil {
 		return fmt.Errorf("set permissions on temp file: %w", err)
 	}
-	if _, err := tmpFile.Write(data); err != nil {
+	_, err = tmpFile.Write(data)
+	if err != nil {
 		return fmt.Errorf("write data to temp file: %w", err)
 	}
-	if err := tmpFile.Sync(); err != nil {
+	err = tmpFile.Sync()
+	if err != nil {
 		return fmt.Errorf("sync temp file: %w", err)
 	}
-	closed = true // prevent deferred double-close regardless of Close outcome
-	if err := tmpFile.Close(); err != nil {
+	closed = true
+	err = tmpFile.Close()
+	if err != nil {
 		return fmt.Errorf("close temp file: %w", err)
 	}
 
-	// #nosec G703 -- destination path is a local CLI output path; symlink safety checked above.
-	return os.Rename(tmpPath, path)
+	// Attempt atomic rename — works when src and dst are on the same fs.
+	if renameErr := os.Rename(tmpPath, path); renameErr == nil {
+		committed = true
+		return nil
+	}
+
+	// Fallback: copy-then-delete for cross-filesystem case.
+	if cpErr := crossFSCopy(tmpPath, path, perm); cpErr != nil {
+		return fmt.Errorf("cross-filesystem fallback: %w", cpErr)
+	}
+	committed = true
+	_ = os.Remove(tmpPath)
+	return nil
+}
+
+// crossFSCopy copies a file when os.Rename fails across filesystems.
+func crossFSCopy(src, dst string, perm os.FileMode) error {
+	in, err := os.Open(src) //nolint:gosec // temp file we just created
+	if err != nil {
+		return err
+	}
+	defer in.Close()
+
+	out, err := os.OpenFile(dst, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, perm) //nolint:gosec // caller checked path
+	if err != nil {
+		return err
+	}
+
+	if _, err = io.Copy(out, in); err != nil {
+		_ = out.Close()
+		return err
+	}
+	if err = out.Sync(); err != nil {
+		_ = out.Close()
+		return err
+	}
+	return out.Close()
 }

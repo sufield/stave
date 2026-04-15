@@ -46,23 +46,36 @@ func (h ExposureHistory) RecurringViolationCount(w kernel.TimeWindow) int {
 	return count
 }
 
-// WindowSummary returns count and bounds for windows started in the time range.
+// WindowSummary returns count and bounds for windows that overlap the time range.
+// A window overlaps if it started before the period ended AND it ended after
+// the period started (or is still open). This correctly counts windows that
+// started before the analysis period but were still active during it.
 func (h ExposureHistory) WindowSummary(w kernel.TimeWindow) (count int, first, last time.Time) {
 	for _, window := range h.windows {
 		start := window.OpenedAt()
-		if !start.After(w.Start) {
-			continue
-		}
+
+		// Window must have started before the period ends.
 		if !start.Before(w.End) {
-			break
+			break // windows are sorted — no further matches
+		}
+
+		// Window must still be active at or after the period start.
+		end := window.ResolvedAt()
+		if !end.IsZero() && !end.After(w.Start) {
+			continue // window ended before period started
 		}
 
 		count++
-		if first.IsZero() {
+		if first.IsZero() || start.Before(first) {
 			first = start
 		}
-		if endAt := window.ResolvedAt(); last.IsZero() || endAt.After(last) {
-			last = endAt
+		if end.IsZero() {
+			// Still-open window — use period end as the effective last time.
+			if last.IsZero() || w.End.After(last) {
+				last = w.End
+			}
+		} else if last.IsZero() || end.After(last) {
+			last = end
 		}
 	}
 	return count, first, last
