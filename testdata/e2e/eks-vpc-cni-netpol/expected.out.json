@@ -1,0 +1,66 @@
+{
+  "extensions": {
+    "context_name": "stave",
+    "git": {
+      "dirty": true,
+      "head_commit": "c42cd1c102802ba08a851b5b44c67b2ccb3496c3",
+      "modified_paths": [
+        "stave/testdata/e2e/eks-vpc-cni-netpol/controls/"
+      ],
+      "repo_root": "/home/zepho/work/bizacademy"
+    },
+    "resolved_paths": {
+      "controls": "testdata/e2e/eks-vpc-cni-netpol/controls",
+      "observations": "testdata/e2e/eks-vpc-cni-netpol/observations"
+    },
+    "selected_controls_source": "dir"
+  },
+  "findings": [],
+  "kind": "ASSESSMENT",
+  "risk_signals": [
+    {
+      "asset_id": "arn:aws:eks:us-east-1:123:cluster/staging",
+      "asset_type": "eks_cluster",
+      "control_id": "CTL.EKS.VPC.CNI.NETPOL.TTL.001",
+      "due_at": "2026-01-17T00:00:00Z",
+      "first_unsafe_at": "2026-01-10T00:00:00Z",
+      "remaining_hours": 144,
+      "status": "UPCOMING",
+      "threshold_hours": 168
+    },
+    {
+      "asset_id": "arn:aws:eks:us-east-1:123:cluster/staging",
+      "asset_type": "eks_cluster",
+      "control_id": "CTL.K8S.JOB.TTL.001",
+      "due_at": "2026-01-17T00:00:00Z",
+      "first_unsafe_at": "2026-01-10T00:00:00Z",
+      "remaining_hours": 144,
+      "status": "UPCOMING",
+      "threshold_hours": 168
+    }
+  ],
+  "run": {
+    "evaluated_state": "deployed",
+    "input_hashes": {
+      "files": {
+        "fail.json": "0597d681d9bb274b54659224050747b19bc10ba6b2c1713fb7f2c26361b3d8ca",
+        "no-netpol.json": "2f3da2c31d809bb8c110a87971ca92125f7c5985302843ec18033b7b55fab2aa",
+        "pass.json": "4d2c7c19b36c91df372e1d2174bb4fff385eaca9d617838344d4e0d5f65c9cb9"
+      },
+      "overall": "bd49ea33d36e888fe31897260f974b68308fbe3b51a7c73b38e6995e2d8a7000"
+    },
+    "now": "2026-01-11T00:00:00Z",
+    "offline": true,
+    "policy_fingerprint": "75e0a3060d530d7e17b7cb331a35137d94a878756c5251b19923140f91bf52c8",
+    "sla_threshold": "7d",
+    "snapshots": 3,
+    "tool_version": "edge"
+  },
+  "schema_version": "out.v0.1",
+  "status": "AT_RISK",
+  "summary": {
+    "exposed_resources": 1,
+    "total_assets": 3,
+    "violations": 0
+  }
+}

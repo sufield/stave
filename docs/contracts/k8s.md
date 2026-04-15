@@ -101,4 +101,11 @@ properties:
     kind: string                  # "cluster"
     has_aws_iam_authenticator: bool
     aws_access_key_mapping: bool
+
+  # Job workload lifecycle (flat booleans for predicate evaluation)
+  jobs:
+    has_job_without_ttl_in_netpol_ns: bool  # Job with no TTL in a NetworkPolicy namespace
+
+  controllers:
+    ttl_after_finished_enabled: bool        # TTLAfterFinished controller active
 ```

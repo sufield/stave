@@ -2,6 +2,7 @@ package engine
 
 import (
 	"maps"
+	"strings"
 
 	"github.com/sufield/stave/internal/core/asset"
 )
@@ -52,24 +53,17 @@ func (e KeyUsageEntry) IsExclusive() bool {
 // that use it across the snapshot.
 type KeyUsageIndex map[string]*KeyUsageEntry
 
-// BuildKeyUsageIndex scans all assets in the latest snapshot and builds
-// a mapping from KMS key ARN to the set of sensitivity domains using it.
-// Only assets with a non-empty cryptography.kms_key_id are indexed.
-func BuildKeyUsageIndex(snapshots []asset.Snapshot) KeyUsageIndex {
-	if len(snapshots) == 0 {
-		return nil
-	}
-	// Use the latest snapshot — it represents the current state.
-	latest := snapshots[len(snapshots)-1]
-
+// buildKeyUsageIndexForSnapshot scans all assets in a single snapshot and
+// builds a mapping from KMS key ARN to the set of sensitivity domains.
+func buildKeyUsageIndexForSnapshot(snap asset.Snapshot) KeyUsageIndex {
 	idx := make(KeyUsageIndex)
-	for _, a := range latest.Assets {
+	for _, a := range snap.Assets {
 		keyID := extractKMSKeyID(a)
 		if keyID == "" {
 			continue
 		}
 		classification := extractClassification(a)
-		level := ParseSensitivity(classification)
+		level := ParseSensitivity(strings.ToLower(strings.TrimSpace(classification)))
 
 		entry, exists := idx[keyID]
 		if !exists {
@@ -91,16 +85,26 @@ func BuildKeyUsageIndex(snapshots []asset.Snapshot) KeyUsageIndex {
 	return idx
 }
 
-// EnrichKeyIsolation injects derived key isolation properties into each
-// asset's properties map. This is a non-destructive copy — original
-// snapshot data is not mutated.
-func EnrichKeyIsolation(snapshots []asset.Snapshot, idx KeyUsageIndex) []asset.Snapshot {
-	if idx == nil {
-		return snapshots
+// BuildKeyUsageIndex builds a key usage index from the latest snapshot.
+// Exported for backward compatibility with tests.
+func BuildKeyUsageIndex(snapshots []asset.Snapshot) KeyUsageIndex {
+	if len(snapshots) == 0 {
+		return nil
 	}
+	return buildKeyUsageIndexForSnapshot(snapshots[len(snapshots)-1])
+}
+
+// EnrichKeyIsolation injects derived key isolation properties into each
+// asset's properties map. Each snapshot uses its OWN key sharing state
+// to avoid retroactively applying future key sharing to historical data.
+func EnrichKeyIsolation(snapshots []asset.Snapshot, _ KeyUsageIndex) []asset.Snapshot {
 	enriched := make([]asset.Snapshot, len(snapshots))
 	for i, snap := range snapshots {
+		idx := buildKeyUsageIndexForSnapshot(snap)
 		enriched[i] = snap
+		if len(idx) == 0 {
+			continue
+		}
 		assets := make([]asset.Asset, len(snap.Assets))
 		for j, a := range snap.Assets {
 			assets[j] = enrichAssetIsolation(a, idx)
@@ -159,8 +163,11 @@ func extractClassification(a asset.Asset) string {
 	if tags == nil {
 		return "unclassified"
 	}
-	if dc, ok := tags["data-classification"].(string); ok && dc != "" {
-		return dc
+	// Check multiple common tag key variants.
+	for _, key := range []string{"data-classification", "data_classification", "DataClassification"} {
+		if dc, ok := tags[key].(string); ok && dc != "" {
+			return strings.ToLower(strings.TrimSpace(dc))
+		}
 	}
 	return "unclassified"
 }

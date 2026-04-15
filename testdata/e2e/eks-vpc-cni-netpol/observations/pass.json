@@ -1,0 +1,28 @@
+{
+  "schema_version": "obs.v0.1",
+  "source": "deployed",
+  "generated_by": {"source_type": "eks-config-snapshot", "tool": "stave-extractor"},
+  "captured_at": "2026-01-10T00:00:00Z",
+  "assets": [
+    {
+      "id": "arn:aws:eks:us-east-1:123:cluster/prod",
+      "type": "eks_cluster",
+      "vendor": "aws",
+      "properties": {
+        "addons": {
+          "vpc_cni": {
+            "version": "v1.20.1-eksbuild.3",
+            "enable_network_policy": true,
+            "pod_completion_firewall_flush": false
+          }
+        },
+        "feature_gates": {
+          "ttl_after_finished_controller": true
+        },
+        "jobs": {
+          "has_job_without_ttl_in_netpol_ns": false
+        }
+      }
+    }
+  ]
+}

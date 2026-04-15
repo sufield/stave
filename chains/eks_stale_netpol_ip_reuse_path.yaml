@@ -1,0 +1,13 @@
+id: eks_stale_netpol_ip_reuse_path
+description: >
+  VPC CNI NetworkPolicy enforcement is active but completed pod
+  firewall rules are not flushed, AND Jobs in NetworkPolicy
+  namespaces have no TTL configured. Completed pods accumulate
+  with stale firewall rules. Their IPs are recycled and new pods
+  silently inherit the original pod's network access — a reliable
+  lateral movement path.
+controls:
+  - CTL.EKS.VPC.CNI.NETPOL.TTL.001
+  - CTL.K8S.JOB.TTL.001
+escalation_threshold: 2
+compound_severity: high

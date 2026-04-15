@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 538
-**Pack hash:** `f6aaee5f4ce0b6d6c04e40f0c7db631529b034e9ab4eb20498b74201556baec4`
+**Total controls:** 539
+**Pack hash:** `dbdd1361fc784d1b89020674eb9b2d38d35749b77699560003d63787429fb530`
 
 ## Summary
 
@@ -14,11 +14,11 @@
 | high | 241 |
 | info | 16 |
 | low | 40 |
-| medium | 146 |
+| medium | 147 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 397 |
+| exposure | 398 |
 | governance | 7 |
 | identity | 126 |
 | storage | 8 |
@@ -4674,6 +4674,21 @@ etcd must be configured with a peer key file for mutual TLS between etcd cluster
 Kubernetes cluster safety cannot be assessed when audit logging status is missing from the snapshot. The extractor must populate audit.audit_logging_enabled.
 
 **Remediation:** Re-run the extractor with Kubernetes API access to describe cluster configuration, RBAC, network policies, and secrets.
+
+---
+
+### CTL.K8S.JOB.TTL.001
+
+**Jobs in NetworkPolicy Namespaces Must Configure ttlSecondsAfterFinished**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** mitre_attack: TA0008; nist_800_53_r5: AC-4;
+
+Kubernetes Jobs in namespaces with active NetworkPolicy must set ttlSecondsAfterFinished to limit completed pod residency. The VPC CNI controller does not flush NetworkPolicy firewall rules when a pod reaches Completed state. Without TTL, completed pod IPs are recycled with stale firewall rules attached, silently granting new pods the original pod's network access.
+
+**Remediation:** Add ttlSecondsAfterFinished (60-300 seconds) to all Job specs in namespaces with NetworkPolicy. For cluster-wide enforcement, use a policy engine (OPA/Kyverno) to require this field.
 
 ---
 

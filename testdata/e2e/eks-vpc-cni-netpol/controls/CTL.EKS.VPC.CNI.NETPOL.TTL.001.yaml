@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.VPC.CNI.NETPOL.TTL.001
+name: EKS VPC CNI NetworkPolicy Must Have Completed Pod Firewall Cleanup
+description: >
+  EKS clusters with VPC CNI NetworkPolicy enforcement must have
+  completed pod firewall rule cleanup configured. VPC CNI creates
+  per-IP firewall rules on nodes. Pod completion does not trigger
+  rule removal — only pod deletion does. Without TTL controller or
+  explicit flush, completed pod IPs are recycled with stale rules.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-4"
+  mitre_attack: "TA0008"
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: >
+    VPC CNI NetworkPolicy is enabled but no firewall rule cleanup
+    mechanism is configured for completed pods.
+  action: >
+    Option 1: Enable the TTLAfterFinished feature gate at cluster level.
+    Option 2: Set ttlSecondsAfterFinished on all Job specs.
+    Option 3: Update VPC CNI to a version with pod completion handling.
+    Verify VPC CNI version:
+      kubectl describe daemonset aws-node -n kube-system | grep Image
+unsafe_predicate:
+  all:
+    - field: properties.addons.vpc_cni.enable_network_policy
+      op: eq
+      value: true
+    - field: properties.addons.vpc_cni.pod_completion_firewall_flush
+      op: eq
+      value: false
+    - field: properties.feature_gates.ttl_after_finished_controller
+      op: eq
+      value: false

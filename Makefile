@@ -1,4 +1,4 @@
-.PHONY: all build build-dev test test-coverage test-compliance cover-report clean-cover lint lint-fix fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls gofixer imports imports-check sync-public fuzz bench docker-demo demo-check readme readme-check
+.PHONY: all build build-dev test test-coverage test-compliance cover-report clean-cover lint lint-fix fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls gofixer imports imports-check sync-public fuzz bench docker-demo demo-check readme readme-check check-coverage check-coverage-report check-coverage-file check-coverage-summary
 
 # Binary name
 BINARY=stave
@@ -383,3 +383,43 @@ ifdef MSG
 	cd $(PUBLIC_DEST) && git add -A && git commit -m "$(MSG)"
 	@echo "Committed: $(MSG)"
 endif
+
+# ─────────────────────────────────────────────────────────────
+# CATALOG COVERAGE CHECK
+# ─────────────────────────────────────────────────────────────
+CONTROLS_DIR ?= ./controls
+CHAINS_DIR   ?= ./chains
+SCRIPTS_DIR  ?= ./scripts
+
+## check-coverage: Search catalog for coverage of an attack pattern
+check-coverage:
+	@if [ -z "$(QUERY)" ]; then \
+		echo "Usage: make check-coverage QUERY=\"subdomain takeover s3\""; \
+		exit 1; \
+	fi
+	@$(SCRIPTS_DIR)/check-coverage.sh "$(QUERY)" "$(CONTROLS_DIR)" "$(CHAINS_DIR)"
+
+## check-coverage-report: Search by HackerOne report ID
+check-coverage-report:
+	@if [ -z "$(ID)" ]; then \
+		echo "Usage: make check-coverage-report ID=2256740"; \
+		exit 1; \
+	fi
+	@if [ ! -f "./reports/h1-$(ID).txt" ]; then \
+		echo "Report file not found: ./reports/h1-$(ID).txt"; \
+		echo "Save the report text to that file and retry."; \
+		exit 1; \
+	fi
+	@$(SCRIPTS_DIR)/check-coverage-file.sh "./reports/h1-$(ID).txt" "$(CONTROLS_DIR)" "$(CHAINS_DIR)"
+
+## check-coverage-file: Search from a saved report file
+check-coverage-file:
+	@if [ -z "$(FILE)" ]; then \
+		echo "Usage: make check-coverage-file FILE=./reports/h1-2256740.txt"; \
+		exit 1; \
+	fi
+	@$(SCRIPTS_DIR)/check-coverage-file.sh "$(FILE)" "$(CONTROLS_DIR)" "$(CHAINS_DIR)"
+
+## check-coverage-summary: List all attack categories covered by the catalog
+check-coverage-summary:
+	@$(SCRIPTS_DIR)/coverage-summary.sh "$(CONTROLS_DIR)" "$(CHAINS_DIR)"

@@ -12,8 +12,12 @@ var AllAttackStages = []string{
 	"initial_access",
 	"credential_access",
 	"persistence",
+	"privilege_escalation",
+	"lateral_movement",
+	"discovery",
 	"exfiltration",
 	"detection_evasion",
+	"impact",
 	"resilience",
 }
 
@@ -82,10 +86,12 @@ var killChainOrder = map[string]int{
 	"credential_access":    1,
 	"persistence":          2,
 	"privilege_escalation": 3,
-	"lateral_movement":     4,
-	"exfiltration":         5,
-	"detection_evasion":    6,
-	"resilience":           7,
+	"discovery":            4,
+	"lateral_movement":     5,
+	"exfiltration":         6,
+	"detection_evasion":    7,
+	"impact":               8,
+	"resilience":           9,
 }
 
 // SortStagesByKillChain returns a copy of stages sorted by kill chain
