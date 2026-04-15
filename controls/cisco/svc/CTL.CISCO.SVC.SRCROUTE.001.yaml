@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.CISCO.SVC.SRCROUTE.001
+name: IP Source Routing Must Be Disabled
+description: >
+  Cisco IOS devices must have IP source routing disabled. Source
+  routing allows a packet sender to specify the route the packet
+  takes through the network, bypassing normal routing decisions. An
+  attacker can use source routing to direct traffic through specific
+  hosts for eavesdropping, bypass firewall rules by routing around
+  security devices, or reach internal hosts that would otherwise be
+  unreachable from the attacker's network position.
+domain: exposure
+severity: high
+compliance:
+  cis_cisco_ios_17: "2.1.5"
+  nist_800_53_r5: "SC-7"
+scope_tags:
+  - cisco
+  - ios
+type: unsafe_state
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: >
+    IP source routing is enabled. Packets can specify their own route
+    through the network, bypassing normal routing decisions and
+    potentially circumventing firewall rules.
+  action: >
+    Disable IP source routing. Run:
+    no ip source-route
+    Verify with: show running-config | include ip source-route
+  example: |
+    {
+      "management": {
+        "ip_source_route_enabled": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.management.ip_source_route_enabled
+      op: eq
+      value: true

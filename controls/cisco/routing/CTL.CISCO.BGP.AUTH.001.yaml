@@ -1,0 +1,43 @@
+dsl_version: ctrl.v1
+id: CTL.CISCO.BGP.AUTH.001
+name: BGP Neighbors Must Use Authentication
+description: >
+  All BGP neighbor sessions on Cisco IOS devices must be configured
+  with MD5 authentication. Without authentication, an attacker who
+  can reach the BGP TCP port (179) can establish a peer session and
+  inject arbitrary routes. This enables traffic hijacking, black-hole
+  attacks, and man-in-the-middle interception of traffic destined for
+  any prefix the attacker advertises. BGP route injection can redirect
+  traffic at internet scale.
+domain: exposure
+severity: critical
+compliance:
+  cis_cisco_ios_17: "3.1.1"
+  nist_800_53_r5: "SC-8"
+scope_tags:
+  - cisco
+  - ios
+type: unsafe_state
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    One or more BGP neighbors are configured without MD5
+    authentication. An attacker who can reach TCP port 179 can
+    establish a peer session and inject arbitrary routes.
+  action: >
+    Configure MD5 authentication for all BGP neighbors. Run:
+    router bgp <asn>
+    neighbor <ip> password <secret>
+    Verify with: show ip bgp neighbors | include password
+  example: |
+    {
+      "routing": {
+        "has_unauthenticated_bgp": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.routing.has_unauthenticated_bgp
+      op: eq
+      value: true

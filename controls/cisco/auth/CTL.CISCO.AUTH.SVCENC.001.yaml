@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.CISCO.AUTH.SVCENC.001
+name: Service Password-Encryption Must Be Enabled
+description: >
+  Cisco IOS devices must have service password-encryption enabled.
+  Without this service, passwords in the running and startup
+  configuration are stored in cleartext. Anyone with read access to
+  the configuration file — through SNMP, TFTP backup, or shoulder
+  surfing — can immediately read all passwords including line
+  passwords and username passwords.
+domain: identity
+severity: high
+compliance:
+  cis_cisco_ios_17: "1.1.2"
+  nist_800_53_r5: "IA-5"
+scope_tags:
+  - cisco
+  - ios
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Service password-encryption is not enabled. Passwords in the
+    device configuration are stored in cleartext and visible to
+    anyone who can read the configuration.
+  action: >
+    Enable service password-encryption. Run:
+    service password-encryption
+    Verify with: show running-config | include service password
+  example: |
+    {
+      "authentication": {
+        "service_password_encryption": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.authentication.service_password_encryption
+      op: eq
+      value: false

@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.CISCO.SVC.TCPSMALL.001
+name: TCP Small Servers Must Be Disabled
+description: >
+  Cisco IOS devices must have TCP small servers disabled. TCP small
+  servers include echo, chargen, discard, and daytime services that
+  provide no operational value on network infrastructure. These
+  services can be used for amplification attacks and denial of
+  service. The chargen service in particular is commonly exploited
+  for reflected DDoS attacks by spoofing the source address.
+domain: exposure
+severity: medium
+compliance:
+  cis_cisco_ios_17: "2.1.1"
+  nist_800_53_r5: "CM-7"
+scope_tags:
+  - cisco
+  - ios
+type: unsafe_state
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    TCP small servers are enabled. The device is running unnecessary
+    services (echo, chargen, discard, daytime) that can be exploited
+    for amplification and denial of service attacks.
+  action: >
+    Disable TCP small servers. Run:
+    no service tcp-small-servers
+    Verify with: show running-config | include tcp-small-servers
+  example: |
+    {
+      "management": {
+        "tcp_small_servers_enabled": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.management.tcp_small_servers_enabled
+      op: eq
+      value: true

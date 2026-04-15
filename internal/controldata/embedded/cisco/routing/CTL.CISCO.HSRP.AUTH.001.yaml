@@ -1,0 +1,43 @@
+dsl_version: ctrl.v1
+id: CTL.CISCO.HSRP.AUTH.001
+name: HSRP Must Use Authentication
+description: >
+  All HSRP groups on Cisco IOS devices must be configured with
+  authentication. Without HSRP authentication, an attacker on the
+  local network segment can send crafted HSRP hello packets with a
+  higher priority to become the active gateway. This redirects all
+  default gateway traffic through the attacker's machine, enabling
+  man-in-the-middle interception of all traffic leaving the subnet
+  including credentials, session tokens, and sensitive data.
+domain: exposure
+severity: high
+compliance:
+  cis_cisco_ios_17: "3.3.1"
+  nist_800_53_r5: "SC-8"
+scope_tags:
+  - cisco
+  - ios
+type: unsafe_state
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: >
+    One or more HSRP groups are configured without authentication.
+    An attacker on the local segment can take over the default
+    gateway role and intercept all traffic.
+  action: >
+    Configure HSRP authentication for all groups. Run:
+    interface <interface>
+    standby <group> authentication md5 key-string <secret>
+    Verify with: show standby | include authentication
+  example: |
+    {
+      "routing": {
+        "has_unauthenticated_hsrp": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.routing.has_unauthenticated_hsrp
+      op: eq
+      value: true

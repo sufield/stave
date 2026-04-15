@@ -7,56 +7,41 @@ vendor: "cisco"
 type: "cisco_ios_device"
 ```
 
-## Properties Schema
-
-### device
+## Properties
 
 | Property | Type | Description |
 |---|---|---|
-| `device.ios_version` | string | IOS version string |
-| `device.hostname` | string | Device hostname |
-
-### authentication
-
-| Property | Type | Description |
-|---|---|---|
-| `authentication.enable_secret_configured` | bool | Enable secret (not enable password) |
-| `authentication.aaa_new_model_enabled` | bool | AAA new-model enabled |
-| `authentication.service_password_encryption` | bool | service password-encryption |
-
-### management
-
-| Property | Type | Description |
-|---|---|---|
-| `management.telnet_enabled` | bool | Telnet VTY access (must be false) |
-| `management.ssh_version` | int | SSH version (must be 2) |
-| `management.http_server_enabled` | bool | HTTP server (must be false) |
-| `management.access_class_applied` | bool | Management ACL on VTY lines |
-| `management.snmp_version` | int | SNMP version (must be 3) |
-| `management.has_default_community` | bool | Default SNMP community strings |
-
-### logging
-
-| Property | Type | Description |
-|---|---|---|
-| `logging.logging_configured` | bool | Syslog target configured |
+| `device.ios_version` | string | IOS version |
+| `device.hostname` | string | Hostname |
+| `authentication.enable_secret_configured` | bool | Enable secret |
+| `authentication.aaa_new_model_enabled` | bool | AAA new-model |
+| `authentication.aaa_authentication_login` | string | Login method |
+| `authentication.aaa_accounting_exec` | string | Exec accounting |
+| `authentication.service_password_encryption` | bool | Password encryption |
+| `management.telnet_enabled` | bool | Telnet enabled |
+| `management.ssh_version` | int | SSH version |
+| `management.http_server_enabled` | bool | HTTP server |
+| `management.access_class_applied` | bool | VTY ACL |
+| `management.snmp_version` | int | SNMP version |
+| `management.has_default_community` | bool | Default SNMP community |
+| `management.cdp_enabled` | bool | CDP globally enabled |
+| `management.tcp_small_servers_enabled` | bool | TCP small servers |
+| `management.udp_small_servers_enabled` | bool | UDP small servers |
+| `management.finger_enabled` | bool | Finger service |
+| `management.ip_source_route_enabled` | bool | IP source routing |
+| `management.gratuitous_arps_enabled` | bool | Gratuitous ARPs |
+| `management.ntp_configured` | bool | NTP servers configured |
+| `management.ntp_authentication_enabled` | bool | NTP authenticated |
+| `logging.logging_configured` | bool | Syslog configured |
 | `logging.timestamps_enabled` | bool | Log timestamps |
-| `logging.source_interface` | string | Logging source interface |
-
-### interfaces
-
-| Property | Type | Description |
-|---|---|---|
-| `interfaces.has_proxy_arp` | bool | Any interface with ip proxy-arp |
-| `interfaces.has_ip_redirects` | bool | Any interface with ip redirects |
-| `interfaces.unused_ports_shutdown` | bool | Unused ports administratively down |
-
-## Sample Extractor
-
-A Cisco IOS extractor parses `show running-config` output:
-- Enable secret: presence of `enable secret` vs `enable password`
-- SSH version: `ip ssh version 2`
-- SNMP: `snmp-server community` entries
-- Interfaces: per-interface `no ip proxy-arp` checks
-
-Output: obs.v0.1 JSON with `vendor: "cisco"`.
+| `interfaces.has_proxy_arp` | bool | Proxy ARP on any interface |
+| `interfaces.has_ip_redirects` | bool | IP redirects on any interface |
+| `interfaces.has_directed_broadcast` | bool | Directed broadcast |
+| `interfaces.unused_ports_shutdown` | bool | Unused ports down |
+| `acl.vty_acl_applied` | bool | VTY ACL applied |
+| `acl.has_missing_egress` | bool | Interface without egress ACL |
+| `routing.has_unauthenticated_bgp` | bool | BGP peer without auth |
+| `routing.has_unfiltered_bgp_in` | bool | BGP without inbound filter |
+| `routing.has_unfiltered_bgp_out` | bool | BGP without outbound filter |
+| `routing.has_unauthenticated_ospf` | bool | OSPF without auth |
+| `routing.has_unauthenticated_hsrp` | bool | HSRP without MD5 |

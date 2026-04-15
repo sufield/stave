@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.VSPHERE.ISCSI.CHAP.001
+name: iSCSI Storage Must Require CHAP Authentication
+description: >
+  iSCSI datastores must require CHAP authentication. Without CHAP,
+  any host on the storage network can connect to the iSCSI target
+  and access virtual machine disk data. This enables data exfiltration
+  and tampering from a compromised host.
+domain: exposure
+severity: high
+compliance:
+  cis_vmware_esxi_7: "6.2"
+  nist_800_53_r5: "IA-2"
+scope_tags:
+  - vmware
+  - esxi
+type: unsafe_state
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    An iSCSI datastore is mounted without CHAP authentication. Any
+    host on the storage network can connect to the target.
+  action: >
+    Configure mutual CHAP authentication on iSCSI adapters:
+    Navigate to Host > Configure > Storage Adapters > iSCSI Adapter
+    > Authentication > Use bidirectional CHAP.
+unsafe_predicate:
+  all:
+    - field: properties.storage.has_unauthenticated_iscsi
+      op: eq
+      value: true

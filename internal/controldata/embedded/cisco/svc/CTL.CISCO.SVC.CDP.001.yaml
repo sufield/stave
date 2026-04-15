@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.CISCO.SVC.CDP.001
+name: CDP Must Be Disabled Globally
+description: >
+  Cisco Discovery Protocol must be disabled on Cisco IOS devices.
+  CDP broadcasts device information including hostname, IOS version,
+  platform, IP addresses, and VLAN information in cleartext to all
+  directly connected devices. An attacker with layer 2 access can
+  passively collect this information to map the network topology
+  and identify vulnerable software versions without generating any
+  traffic that would trigger detection.
+domain: exposure
+severity: medium
+compliance:
+  cis_cisco_ios_17: "2.1.3"
+  nist_800_53_r5: "CM-7"
+scope_tags:
+  - cisco
+  - ios
+type: unsafe_state
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    CDP is enabled globally. The device is broadcasting its hostname,
+    IOS version, platform, and IP address information to all directly
+    connected devices in cleartext.
+  action: >
+    Disable CDP globally. Run:
+    no cdp run
+    Verify with: show cdp
+  example: |
+    {
+      "management": {
+        "cdp_enabled": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.management.cdp_enabled
+      op: eq
+      value: true

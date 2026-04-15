@@ -1,0 +1,40 @@
+dsl_version: ctrl.v1
+id: CTL.CISCO.AUTH.ACCOUNTING.001
+name: AAA Accounting Exec Must Be Configured
+description: >
+  Cisco IOS devices must have AAA accounting for exec sessions
+  configured. Without exec accounting, there is no record of who
+  accessed the device, when sessions started and stopped, or what
+  privilege level was used. An attacker can access the device and
+  perform reconnaissance or configuration changes with no audit
+  trail for incident response or forensic analysis.
+domain: exposure
+severity: high
+compliance:
+  cis_cisco_ios_17: "1.2.5"
+  nist_800_53_r5: "AU-2"
+scope_tags:
+  - cisco
+  - ios
+type: unsafe_state
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    AAA accounting exec is not configured. Exec sessions are not
+    logged, leaving no audit trail for device access events.
+  action: >
+    Configure AAA accounting for exec sessions. Run:
+    aaa accounting exec default start-stop group tacacs+
+    Verify with: show running-config | include aaa accounting exec
+  example: |
+    {
+      "authentication": {
+        "aaa_accounting_exec": "default start-stop group tacacs+"
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.authentication.aaa_accounting_exec
+      op: eq
+      value: ""

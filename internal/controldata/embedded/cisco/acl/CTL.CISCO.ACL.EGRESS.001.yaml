@@ -1,0 +1,44 @@
+dsl_version: ctrl.v1
+id: CTL.CISCO.ACL.EGRESS.001
+name: Egress Filtering Must Be Applied
+description: >
+  Cisco IOS devices must have egress filtering applied on external
+  interfaces. Without egress filtering, the device forwards traffic
+  with any source address including spoofed and RFC 1918 addresses.
+  An attacker on the internal network can send packets with forged
+  source addresses to participate in reflected DDoS attacks, evade
+  source-based logging and tracing, or exfiltrate data in a way
+  that cannot be traced back to the originating host.
+domain: exposure
+severity: high
+compliance:
+  cis_cisco_ios_17: "4.2.1"
+  nist_800_53_r5: "SC-7"
+scope_tags:
+  - cisco
+  - ios
+type: unsafe_state
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    One or more external interfaces have no egress filter. Traffic
+    with spoofed source addresses can leave the network, enabling
+    reflected attacks and untraceable exfiltration.
+  action: >
+    Apply egress ACLs to external interfaces permitting only
+    legitimate source address ranges. Run:
+    interface <external-interface>
+    ip access-group <egress-acl> out
+    Verify with: show ip access-lists
+  example: |
+    {
+      "acl": {
+        "has_missing_egress": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.acl.has_missing_egress
+      op: eq
+      value: true

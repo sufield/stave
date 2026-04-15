@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.VSPHERE.ESX.NTP.001
+name: ESXi Host Must Have NTP Configured
+description: >
+  ESXi hosts must have NTP configured for accurate time synchronization.
+  Without NTP, log timestamps drift and make forensic correlation
+  unreliable. Attackers exploit time skew to hide activity across
+  distributed systems.
+domain: exposure
+severity: medium
+compliance:
+  cis_vmware_esxi_7: "1.4"
+  nist_800_53_r5: "AU-8"
+scope_tags:
+  - vmware
+  - esxi
+type: unsafe_state
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    ESXi host does not have NTP configured. Log timestamps may
+    drift and forensic correlation becomes unreliable.
+  action: >
+    Configure NTP on the ESXi host using esxcli:
+    esxcli system ntp set --server=<ntp-server>
+    esxcli system ntp set --enabled=true
+unsafe_predicate:
+  all:
+    - field: properties.esxi.ntp_configured
+      op: eq
+      value: false

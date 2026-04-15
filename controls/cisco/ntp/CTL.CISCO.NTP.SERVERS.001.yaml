@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.CISCO.NTP.SERVERS.001
+name: NTP Must Be Configured
+description: >
+  Cisco IOS devices must have NTP configured with at least one time
+  source. Without NTP, device clocks drift and log timestamps become
+  unreliable. Inaccurate timestamps make incident response and
+  forensic analysis extremely difficult because events cannot be
+  correlated across devices. An attacker benefits from unreliable
+  timestamps because their activity cannot be precisely timed or
+  correlated with other network events.
+domain: exposure
+severity: medium
+compliance:
+  cis_cisco_ios_17: "2.2.1"
+  nist_800_53_r5: "AU-8"
+scope_tags:
+  - cisco
+  - ios
+type: unsafe_state
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    NTP is not configured. Device clock is free-running and log
+    timestamps cannot be correlated with other network devices for
+    incident response.
+  action: >
+    Configure NTP with a trusted time source. Run:
+    ntp server <ntp-server-ip>
+    Verify with: show ntp status
+  example: |
+    {
+      "management": {
+        "ntp_configured": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.management.ntp_configured
+      op: eq
+      value: false

@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.VSPHERE.VM.HGFS.001
+name: VM HGFS File Transfer Must Be Disabled
+description: >
+  Virtual machines must have the Host Guest File System (HGFS)
+  transfer capability disabled. HGFS allows file transfers between
+  the ESXi host and the guest VM, providing a covert channel for
+  data exfiltration that bypasses network-based monitoring.
+domain: exposure
+severity: medium
+compliance:
+  cis_vmware_esxi_7: "8.3.2"
+  nist_800_53_r5: "CM-7"
+scope_tags:
+  - vmware
+  - vm
+type: unsafe_state
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    A virtual machine has HGFS enabled. Files can be transferred
+    between the host and guest through a channel that bypasses
+    network monitoring.
+  action: >
+    Disable HGFS on the VM:
+    Edit VM Settings > Advanced > Configuration Parameters >
+    Set isolation.tools.hgfsServerSet.disable to TRUE.
+unsafe_predicate:
+  all:
+    - field: properties.vm.hgfs_enabled
+      op: eq
+      value: true

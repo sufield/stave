@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.VSPHERE.VDS.MACCHG.001
+name: Distributed Switch Must Not Allow MAC Address Changes
+description: >
+  vSphere Distributed Switch port groups must not allow MAC address
+  changes. When enabled, a VM can change its effective MAC address
+  and impersonate other machines on the network, enabling lateral
+  movement and man-in-the-middle attacks.
+domain: exposure
+severity: high
+compliance:
+  cis_vmware_esxi_7: "4.2"
+  nist_800_53_r5: "SC-7"
+scope_tags:
+  - vmware
+  - esxi
+type: unsafe_state
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: >
+    A distributed switch port group allows MAC address changes.
+    VMs can impersonate other machines on the network segment.
+  action: >
+    Disable MAC address changes on the distributed port group in vCenter:
+    Navigate to Networking > Distributed Switch > Port Group > Edit Settings
+    > Security > MAC Address Changes > Reject.
+unsafe_predicate:
+  all:
+    - field: properties.distributed_switch.has_mac_changes
+      op: eq
+      value: true

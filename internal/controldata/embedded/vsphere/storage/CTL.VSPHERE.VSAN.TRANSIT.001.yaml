@@ -1,0 +1,35 @@
+dsl_version: ctrl.v1
+id: CTL.VSPHERE.VSAN.TRANSIT.001
+name: vSAN Must Have Data-in-Transit Encryption Enabled
+description: >
+  vSAN clusters must encrypt data in transit between hosts. Without
+  transit encryption, inter-host vSAN traffic traverses the network
+  in cleartext, allowing an attacker with network access to intercept
+  VM data and credentials.
+domain: exposure
+severity: high
+compliance:
+  cis_vmware_esxi_7: "5.2"
+  nist_800_53_r5: "SC-8"
+scope_tags:
+  - vmware
+  - esxi
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    vSAN is enabled but data-in-transit encryption is not. Inter-host
+    vSAN traffic can be intercepted on the network.
+  action: >
+    Enable vSAN data-in-transit encryption in vCenter:
+    Navigate to Cluster > Configure > vSAN > Services > Encryption >
+    Enable data-in-transit encryption.
+unsafe_predicate:
+  all:
+    - field: properties.vsan.enabled
+      op: eq
+      value: true
+    - field: properties.vsan.data_in_transit_encrypted
+      op: eq
+      value: false

@@ -1,0 +1,34 @@
+dsl_version: ctrl.v1
+id: CTL.VSPHERE.ESX.SLP.001
+name: ESXi SLP Service Must Be Disabled
+description: >
+  The Service Location Protocol (SLP) service on ESXi hosts must be
+  disabled. SLP has been exploited in critical remote code execution
+  attacks (CVE-2021-21974) and provides no value in environments using
+  vCenter for management. Leaving it enabled exposes a high-risk
+  network service.
+domain: exposure
+severity: high
+compliance:
+  cis_vmware_esxi_7: "2.2"
+  nist_800_53_r5: "CM-7"
+scope_tags:
+  - vmware
+  - esxi
+type: unsafe_state
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    The SLP service is enabled on this ESXi host. SLP has been
+    exploited for remote code execution (CVE-2021-21974).
+  action: >
+    Disable the SLP service:
+    /etc/init.d/slpd stop
+    esxcli network firewall ruleset set --ruleset-id=CIMSLP --enabled=false
+    chkconfig slpd off
+unsafe_predicate:
+  all:
+    - field: properties.esxi.slpd_enabled
+      op: eq
+      value: true

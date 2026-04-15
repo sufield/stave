@@ -1,0 +1,44 @@
+dsl_version: ctrl.v1
+id: CTL.CISCO.BGP.FILTEROUT.001
+name: BGP Outbound Route Filtering Must Be Applied
+description: >
+  All BGP neighbors on Cisco IOS devices must have outbound route
+  filtering configured. Without outbound filters, the device may
+  advertise routes for prefixes it should not announce, including
+  internal network prefixes, default routes, or prefixes learned
+  from other peers. This can cause route leaks that redirect traffic
+  through unintended paths, expose internal network topology, or
+  create routing loops that cause denial of service.
+domain: exposure
+severity: high
+compliance:
+  cis_cisco_ios_17: "3.1.3"
+  nist_800_53_r5: "SC-7"
+scope_tags:
+  - cisco
+  - ios
+type: unsafe_state
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    One or more BGP neighbors have no outbound route filter. The
+    device may advertise internal prefixes or learned routes to
+    external peers.
+  action: >
+    Apply outbound prefix-list or route-map filters to all BGP
+    neighbors. Run:
+    router bgp <asn>
+    neighbor <ip> prefix-list <name> out
+    Verify with: show ip bgp neighbors | include filter
+  example: |
+    {
+      "routing": {
+        "has_unfiltered_bgp_out": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.routing.has_unfiltered_bgp_out
+      op: eq
+      value: true

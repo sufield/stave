@@ -1,0 +1,35 @@
+dsl_version: ctrl.v1
+id: CTL.VSPHERE.VSAN.ENCRYPT.001
+name: vSAN Must Have Data-at-Rest Encryption Enabled
+description: >
+  vSAN clusters with encryption disabled expose virtual machine data
+  to physical media theft and unauthorized access. When vSAN is
+  enabled but encryption is not, all VM data on the cluster is stored
+  in cleartext on the underlying disks.
+domain: exposure
+severity: high
+compliance:
+  cis_vmware_esxi_7: "5.1"
+  nist_800_53_r5: "SC-28"
+scope_tags:
+  - vmware
+  - esxi
+type: unsafe_state
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    vSAN is enabled but data-at-rest encryption is not. VM data is
+    stored unencrypted on the vSAN datastore.
+  action: >
+    Enable vSAN encryption in vCenter:
+    Navigate to Cluster > Configure > vSAN > Services > Encryption > Enable.
+    A KMS server must be configured before enabling encryption.
+unsafe_predicate:
+  all:
+    - field: properties.vsan.enabled
+      op: eq
+      value: true
+    - field: properties.vsan.encryption_enabled
+      op: eq
+      value: false

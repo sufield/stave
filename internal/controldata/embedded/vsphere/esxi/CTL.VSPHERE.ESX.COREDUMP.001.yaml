@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.VSPHERE.ESX.COREDUMP.001
+name: ESXi Host Must Have Core Dump Configured
+description: >
+  ESXi hosts must have a core dump target configured for crash
+  analysis. Without a configured dump target, diagnostic information
+  is lost after a host failure, preventing root cause analysis of
+  potential security incidents.
+domain: exposure
+severity: low
+compliance:
+  cis_vmware_esxi_7: "1.7"
+  nist_800_53_r5: "SI-11"
+scope_tags:
+  - vmware
+  - esxi
+type: unsafe_state
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    ESXi host does not have a core dump target configured. Crash
+    diagnostics will be lost after a host failure.
+  action: >
+    Configure a network core dump target:
+    esxcli system coredump network set --interface-name=vmk0
+    --server-ipv4=<dump-server> --server-port=6500
+    esxcli system coredump network set --enable=true
+unsafe_predicate:
+  all:
+    - field: properties.esxi.coredump_configured
+      op: eq
+      value: false

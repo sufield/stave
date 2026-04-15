@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.VSPHERE.VM.INDEP.001
+name: VM Must Not Use Independent Non-Persistent Disks
+description: >
+  Virtual machines must not use independent non-persistent disks.
+  Changes to non-persistent disks are discarded on power-off or
+  reset, which means security patches, agent updates, and forensic
+  artifacts are lost. An attacker can reboot the VM to erase
+  evidence of compromise.
+domain: exposure
+severity: high
+compliance:
+  cis_vmware_esxi_7: "8.6"
+  nist_800_53_r5: "AU-9"
+scope_tags:
+  - vmware
+  - vm
+type: unsafe_state
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    A virtual machine uses independent non-persistent disks. Disk
+    changes are discarded on reboot, erasing patches and evidence.
+  action: >
+    Change the disk mode to persistent or dependent:
+    Edit VM Settings > Hard Disk > Disk Mode > Persistent.
+    Ensure backups and snapshots capture the correct disk state.
+unsafe_predicate:
+  all:
+    - field: properties.vm.independent_non_persistent
+      op: eq
+      value: true

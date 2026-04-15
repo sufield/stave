@@ -1,0 +1,44 @@
+dsl_version: ctrl.v1
+id: CTL.CISCO.BGP.FILTERIN.001
+name: BGP Inbound Route Filtering Must Be Applied
+description: >
+  All BGP neighbors on Cisco IOS devices must have inbound route
+  filtering configured. Without inbound filters, the device accepts
+  any route advertised by a peer including routes for prefixes the
+  peer has no authority to announce. An attacker who compromises a
+  peer or establishes an unauthorized session can inject routes for
+  any prefix, redirecting traffic through attacker-controlled
+  infrastructure for interception or denial of service.
+domain: exposure
+severity: critical
+compliance:
+  cis_cisco_ios_17: "3.1.2"
+  nist_800_53_r5: "SC-7"
+scope_tags:
+  - cisco
+  - ios
+type: unsafe_state
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    One or more BGP neighbors have no inbound route filter. The
+    device accepts any route advertised by the peer without
+    validation.
+  action: >
+    Apply inbound prefix-list or route-map filters to all BGP
+    neighbors. Run:
+    router bgp <asn>
+    neighbor <ip> prefix-list <name> in
+    Verify with: show ip bgp neighbors | include filter
+  example: |
+    {
+      "routing": {
+        "has_unfiltered_bgp_in": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.routing.has_unfiltered_bgp_in
+      op: eq
+      value: true

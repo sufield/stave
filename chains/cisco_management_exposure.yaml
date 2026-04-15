@@ -1,0 +1,11 @@
+id: cisco_management_exposure
+description: >
+  Management plane exposed without VTY ACL, AAA, or encrypted
+  transport. Any host with network access can attempt cleartext
+  credential attacks against device management.
+controls:
+  - CTL.CISCO.ACL.VTY.001
+  - CTL.CISCO.AUTH.AAA.001
+  - CTL.CISCO.MGMT.TELNET.001
+escalation_threshold: 2
+compound_severity: critical

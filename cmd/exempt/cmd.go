@@ -42,6 +42,7 @@ Subcommands:
 	cmd.AddCommand(newRemoveCmd())
 	cmd.AddCommand(newUpcomingCmd())
 	cmd.AddCommand(newValidateCmd())
+	cmd.AddCommand(newExportCmd())
 
 	return cmd
 }

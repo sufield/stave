@@ -1,0 +1,11 @@
+id: cisco_bgp_route_injection
+description: >
+  BGP peering without authentication, inbound filtering, or outbound
+  filtering allows a compromised or rogue BGP peer to inject arbitrary
+  routes, intercept traffic, or cause network-wide outages.
+controls:
+  - CTL.CISCO.BGP.AUTH.001
+  - CTL.CISCO.BGP.FILTERIN.001
+  - CTL.CISCO.BGP.FILTEROUT.001
+escalation_threshold: 2
+compound_severity: critical

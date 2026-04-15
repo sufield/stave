@@ -1,0 +1,43 @@
+dsl_version: ctrl.v1
+id: CTL.CISCO.OSPF.AUTH.001
+name: OSPF Areas Must Use Authentication
+description: >
+  All OSPF areas on Cisco IOS devices must be configured with
+  authentication. Without OSPF authentication, an attacker connected
+  to an OSPF-enabled network segment can inject false routing
+  information by sending crafted OSPF hello and LSA packets. This
+  enables traffic redirection through attacker-controlled hosts,
+  black-hole attacks that drop traffic silently, and network topology
+  manipulation that can isolate network segments.
+domain: exposure
+severity: high
+compliance:
+  cis_cisco_ios_17: "3.2.1"
+  nist_800_53_r5: "SC-8"
+scope_tags:
+  - cisco
+  - ios
+type: unsafe_state
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: >
+    One or more OSPF areas are configured without authentication.
+    An attacker on the network segment can inject false routes into
+    the OSPF domain.
+  action: >
+    Enable OSPF authentication for all areas. Run:
+    router ospf <process-id>
+    area <area-id> authentication message-digest
+    Verify with: show ip ospf | include authentication
+  example: |
+    {
+      "routing": {
+        "has_unauthenticated_ospf": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.routing.has_unauthenticated_ospf
+      op: eq
+      value: true

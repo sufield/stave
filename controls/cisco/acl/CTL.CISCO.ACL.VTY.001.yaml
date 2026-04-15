@@ -1,0 +1,43 @@
+dsl_version: ctrl.v1
+id: CTL.CISCO.ACL.VTY.001
+name: VTY Lines Must Have ACL Applied
+description: >
+  All VTY lines on Cisco IOS devices must have an access-class ACL
+  applied to restrict remote management access. Without an ACL on
+  VTY lines, any IP address that can reach the device can attempt
+  SSH or Telnet connections. An attacker from any network position
+  can attempt credential brute-force attacks against the management
+  interface. VTY access should be restricted to authorized management
+  networks only.
+domain: exposure
+severity: critical
+compliance:
+  cis_cisco_ios_17: "4.1.1"
+  nist_800_53_r5: "AC-3"
+scope_tags:
+  - cisco
+  - ios
+type: unsafe_state
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    VTY lines do not have an access-class ACL applied. Remote
+    management access is unrestricted and any IP address can
+    attempt connections.
+  action: >
+    Apply an access-class ACL to all VTY lines. Run:
+    line vty 0 15
+    access-class <acl-name> in
+    Verify with: show running-config | section line vty
+  example: |
+    {
+      "acl": {
+        "vty_acl_applied": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.acl.vty_acl_applied
+      op: eq
+      value: false

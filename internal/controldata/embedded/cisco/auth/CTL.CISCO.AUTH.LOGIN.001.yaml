@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.CISCO.AUTH.LOGIN.001
+name: AAA Authentication Login Must Be Configured
+description: >
+  Cisco IOS devices must have AAA authentication login configured.
+  Without an explicit authentication login method list, the device
+  uses default line authentication which typically accepts a single
+  shared password. This prevents per-user accountability and allows
+  any user with the shared password to access the device without
+  individual identification.
+domain: identity
+severity: critical
+compliance:
+  cis_cisco_ios_17: "1.2.2"
+  nist_800_53_r5: "IA-2"
+scope_tags:
+  - cisco
+  - ios
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    AAA authentication login is not configured. The device has no
+    centralized authentication method list, falling back to shared
+    line passwords with no per-user accountability.
+  action: >
+    Configure AAA authentication login. Run:
+    aaa authentication login default group tacacs+ local
+    Verify with: show running-config | include aaa authentication login
+  example: |
+    {
+      "authentication": {
+        "aaa_authentication_login": "default group tacacs+ local"
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.authentication.aaa_authentication_login
+      op: eq
+      value: ""

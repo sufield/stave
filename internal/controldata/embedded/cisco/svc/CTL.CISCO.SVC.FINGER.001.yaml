@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.CISCO.SVC.FINGER.001
+name: Finger Service Must Be Disabled
+description: >
+  Cisco IOS devices must have the finger service disabled. The finger
+  service exposes user session information including which users are
+  logged in, their terminal lines, idle times, and connection sources.
+  An attacker can use this information to enumerate active management
+  sessions, identify administrator activity patterns, and time attacks
+  for periods of low monitoring activity.
+domain: exposure
+severity: low
+compliance:
+  cis_cisco_ios_17: "2.1.4"
+  nist_800_53_r5: "CM-7"
+scope_tags:
+  - cisco
+  - ios
+type: unsafe_state
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    Finger service is enabled. The device exposes user session
+    information that can be used to enumerate active management
+    sessions and administrator activity patterns.
+  action: >
+    Disable the finger service. Run:
+    no ip finger
+    no service finger
+    Verify with: show running-config | include finger
+  example: |
+    {
+      "management": {
+        "finger_enabled": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.management.finger_enabled
+      op: eq
+      value: true

@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.CISCO.SVC.UDPSMALL.001
+name: UDP Small Servers Must Be Disabled
+description: >
+  Cisco IOS devices must have UDP small servers disabled. UDP small
+  servers include echo, chargen, and discard services that provide
+  no operational value on network infrastructure. These services are
+  particularly dangerous because UDP is connectionless and source
+  addresses are easily spoofed, making them ideal for reflected
+  amplification attacks that can overwhelm target networks.
+domain: exposure
+severity: medium
+compliance:
+  cis_cisco_ios_17: "2.1.2"
+  nist_800_53_r5: "CM-7"
+scope_tags:
+  - cisco
+  - ios
+type: unsafe_state
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    UDP small servers are enabled. The device is running unnecessary
+    UDP services that can be exploited for reflected amplification
+    attacks due to the connectionless nature of UDP.
+  action: >
+    Disable UDP small servers. Run:
+    no service udp-small-servers
+    Verify with: show running-config | include udp-small-servers
+  example: |
+    {
+      "management": {
+        "udp_small_servers_enabled": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.management.udp_small_servers_enabled
+      op: eq
+      value: true

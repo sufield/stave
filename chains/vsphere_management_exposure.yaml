@@ -1,0 +1,11 @@
+id: vsphere_management_exposure
+description: >
+  Remote display enabled on VMs combined with promiscuous mode on
+  the distributed switch and no host firewall creates a path from
+  VM compromise to full hypervisor and inter-VM traffic visibility.
+controls:
+  - CTL.VSPHERE.VM.REMOTEDISP.001
+  - CTL.VSPHERE.VDS.PROMISC.001
+  - CTL.VSPHERE.FIREWALL.ENABLED.001
+escalation_threshold: 2
+compound_severity: critical

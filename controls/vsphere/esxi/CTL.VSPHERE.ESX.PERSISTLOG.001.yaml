@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.VSPHERE.ESX.PERSISTLOG.001
+name: ESXi Host Must Have Persistent Logging Configured
+description: >
+  ESXi hosts must store logs on a persistent datastore. By default
+  logs are written to a ramdisk scratch partition and are lost on
+  reboot. An attacker can force a reboot to erase forensic evidence.
+domain: exposure
+severity: medium
+compliance:
+  cis_vmware_esxi_7: "1.8"
+  nist_800_53_r5: "AU-9"
+scope_tags:
+  - vmware
+  - esxi
+type: unsafe_state
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    ESXi host does not have persistent logging configured. Logs are
+    stored on a ramdisk and lost on reboot.
+  action: >
+    Configure a persistent log location on a VMFS datastore:
+    esxcli system syslog config set --logdir=/vmfs/volumes/<datastore>/logs
+    esxcli system syslog reload
+unsafe_predicate:
+  all:
+    - field: properties.esxi.persistent_log_configured
+      op: eq
+      value: false

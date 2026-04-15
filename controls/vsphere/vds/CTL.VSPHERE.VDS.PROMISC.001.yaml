@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.VSPHERE.VDS.PROMISC.001
+name: Distributed Switch Must Not Allow Promiscuous Mode
+description: >
+  vSphere Distributed Switch port groups must not allow promiscuous
+  mode. When enabled, a VM can observe all network traffic on the
+  switch, enabling credential sniffing and reconnaissance across the
+  virtual network segment.
+domain: exposure
+severity: high
+compliance:
+  cis_vmware_esxi_7: "4.1"
+  nist_800_53_r5: "SC-7"
+scope_tags:
+  - vmware
+  - esxi
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    A distributed switch port group has promiscuous mode enabled.
+    VMs on this port group can observe all network traffic.
+  action: >
+    Disable promiscuous mode on the distributed port group in vCenter:
+    Navigate to Networking > Distributed Switch > Port Group > Edit Settings
+    > Security > Promiscuous Mode > Reject.
+unsafe_predicate:
+  all:
+    - field: properties.distributed_switch.has_promiscuous
+      op: eq
+      value: true

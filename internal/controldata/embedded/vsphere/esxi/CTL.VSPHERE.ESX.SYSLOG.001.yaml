@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.VSPHERE.ESX.SYSLOG.001
+name: ESXi Host Must Have Syslog Configured
+description: >
+  ESXi hosts must forward logs to a remote syslog server. Without
+  centralized logging, an attacker who compromises the host can
+  destroy local logs and erase evidence of the intrusion.
+domain: exposure
+severity: high
+compliance:
+  cis_vmware_esxi_7: "1.5"
+  nist_800_53_r5: "AU-4"
+scope_tags:
+  - vmware
+  - esxi
+type: unsafe_state
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    ESXi host does not have syslog configured. Logs are only stored
+    locally and can be destroyed by an attacker.
+  action: >
+    Configure remote syslog on the ESXi host using esxcli:
+    esxcli system syslog config set --loghost=<protocol>://<host>:<port>
+    esxcli system syslog reload
+unsafe_predicate:
+  all:
+    - field: properties.esxi.syslog_configured
+      op: eq
+      value: false

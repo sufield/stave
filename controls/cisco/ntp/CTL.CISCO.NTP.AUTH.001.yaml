@@ -1,0 +1,43 @@
+dsl_version: ctrl.v1
+id: CTL.CISCO.NTP.AUTH.001
+name: NTP Authentication Must Be Enabled
+description: >
+  Cisco IOS devices must have NTP authentication enabled. Without
+  NTP authentication, the device accepts time updates from any source
+  claiming to be an NTP server. An attacker can inject false time
+  data to manipulate log timestamps, cause certificate validation
+  failures, invalidate time-based access controls, or create gaps
+  in audit records by shifting the device clock forward or backward.
+domain: exposure
+severity: high
+compliance:
+  cis_cisco_ios_17: "2.2.2"
+  nist_800_53_r5: "AU-8"
+scope_tags:
+  - cisco
+  - ios
+type: unsafe_state
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    NTP authentication is not enabled. The device accepts time
+    updates from any source without verification, allowing an
+    attacker to manipulate the device clock.
+  action: >
+    Enable NTP authentication. Run:
+    ntp authenticate
+    ntp authentication-key 1 md5 <key>
+    ntp trusted-key 1
+    Verify with: show ntp status
+  example: |
+    {
+      "management": {
+        "ntp_authentication_enabled": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.management.ntp_authentication_enabled
+      op: eq
+      value: false

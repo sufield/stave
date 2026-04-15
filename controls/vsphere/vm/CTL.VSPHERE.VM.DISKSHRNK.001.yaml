@@ -1,0 +1,34 @@
+dsl_version: ctrl.v1
+id: CTL.VSPHERE.VM.DISKSHRNK.001
+name: VM Disk Shrinking Must Be Disabled
+description: >
+  Virtual machines must not allow disk shrinking operations. Disk
+  shrinking can be triggered from within the guest OS and causes
+  repeated grow-shrink cycles that lead to denial of service on
+  the underlying datastore. An attacker inside the VM can exhaust
+  datastore capacity.
+domain: exposure
+severity: medium
+compliance:
+  cis_vmware_esxi_7: "8.5"
+  nist_800_53_r5: "SC-6"
+scope_tags:
+  - vmware
+  - vm
+type: unsafe_state
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    A virtual machine allows disk shrinking from the guest OS. This
+    can cause datastore denial of service.
+  action: >
+    Disable disk shrinking on the VM:
+    Edit VM Settings > Advanced > Configuration Parameters >
+    Set isolation.tools.diskShrink.disable to TRUE and
+    isolation.tools.diskWiper.disable to TRUE.
+unsafe_predicate:
+  all:
+    - field: properties.vm.disk_shrinking_enabled
+      op: eq
+      value: true

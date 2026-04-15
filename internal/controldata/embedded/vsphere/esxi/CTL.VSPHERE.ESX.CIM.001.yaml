@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.VSPHERE.ESX.CIM.001
+name: ESXi CIM (SFCBD) Service Must Be Disabled
+description: >
+  The CIM (Small Footprint CIM Broker Daemon) service on ESXi hosts
+  must be disabled when not required. SFCBD exposes a network-accessible
+  management interface that has been the target of multiple CVEs. If
+  hardware monitoring is not needed, this service increases the attack
+  surface unnecessarily.
+domain: exposure
+severity: medium
+compliance:
+  cis_vmware_esxi_7: "2.1"
+  nist_800_53_r5: "CM-7"
+scope_tags:
+  - vmware
+  - esxi
+type: unsafe_state
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    The SFCBD (CIM) service is enabled on this ESXi host. It exposes
+    a network-accessible management interface that increases the
+    attack surface.
+  action: >
+    Disable the SFCBD service if hardware CIM monitoring is not required:
+    esxcli system wbem set --enable=false
+unsafe_predicate:
+  all:
+    - field: properties.esxi.sfcbd_enabled
+      op: eq
+      value: true

@@ -1,0 +1,43 @@
+dsl_version: ctrl.v1
+id: CTL.CISCO.INTF.DIRBROADCAST.001
+name: Directed Broadcast Must Be Disabled on Interfaces
+description: >
+  Cisco IOS devices must have IP directed broadcast disabled on all
+  interfaces. Directed broadcasts allow a remote host to send a
+  packet to the broadcast address of a subnet, which the router then
+  converts to a layer 2 broadcast. This is the basis of the Smurf
+  attack where an attacker sends ICMP echo requests to a directed
+  broadcast address with a spoofed source, causing all hosts on the
+  subnet to respond to the victim, creating massive amplification.
+domain: exposure
+severity: medium
+compliance:
+  cis_cisco_ios_17: "4.3.1"
+  nist_800_53_r5: "SC-7"
+scope_tags:
+  - cisco
+  - ios
+type: unsafe_state
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    One or more interfaces have IP directed broadcast enabled. The
+    device can be used as an amplifier in Smurf-style denial of
+    service attacks.
+  action: >
+    Disable directed broadcast on all interfaces. Run:
+    interface <interface>
+    no ip directed-broadcast
+    Verify with: show running-config | include directed-broadcast
+  example: |
+    {
+      "interfaces": {
+        "has_directed_broadcast": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.interfaces.has_directed_broadcast
+      op: eq
+      value: true

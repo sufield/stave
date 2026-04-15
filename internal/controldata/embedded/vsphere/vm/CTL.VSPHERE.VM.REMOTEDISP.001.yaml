@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.VSPHERE.VM.REMOTEDISP.001
+name: VM Remote Display Must Be Disabled
+description: >
+  Virtual machines must not have the remote display (VNC) feature
+  enabled. The remote display exposes an unauthenticated VNC
+  connection to the VM console, allowing any network-adjacent
+  attacker to view and interact with the VM.
+domain: exposure
+severity: high
+compliance:
+  cis_vmware_esxi_7: "8.1"
+  nist_800_53_r5: "CM-7"
+scope_tags:
+  - vmware
+  - vm
+type: unsafe_state
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    A virtual machine has the remote display (VNC) feature enabled.
+    An unauthenticated VNC connection is exposed to the network.
+  action: >
+    Disable the remote display on the VM:
+    Edit VM Settings > Advanced > Configuration Parameters >
+    Set RemoteDisplay.vnc.enabled to FALSE.
+unsafe_predicate:
+  all:
+    - field: properties.vm.remote_display_enabled
+      op: eq
+      value: true

@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.VSPHERE.VDS.FORGED.001
+name: Distributed Switch Must Not Allow Forged Transmits
+description: >
+  vSphere Distributed Switch port groups must not allow forged
+  transmits. When enabled, a VM can send frames with a source MAC
+  address different from its own, enabling network spoofing and
+  lateral movement between virtual machines.
+domain: exposure
+severity: high
+compliance:
+  cis_vmware_esxi_7: "4.3"
+  nist_800_53_r5: "SC-7"
+scope_tags:
+  - vmware
+  - esxi
+type: unsafe_state
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: >
+    A distributed switch port group allows forged transmits.
+    VMs can spoof source MAC addresses in outbound frames.
+  action: >
+    Disable forged transmits on the distributed port group in vCenter:
+    Navigate to Networking > Distributed Switch > Port Group > Edit Settings
+    > Security > Forged Transmits > Reject.
+unsafe_predicate:
+  all:
+    - field: properties.distributed_switch.has_forged_transmits
+      op: eq
+      value: true

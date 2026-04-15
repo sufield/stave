@@ -36,9 +36,11 @@ import (
 	initalias "github.com/sufield/stave/cmd/initcmd/alias"
 	initconfig "github.com/sufield/stave/cmd/initcmd/config"
 	"github.com/sufield/stave/cmd/inspect"
+	stavemap "github.com/sufield/stave/cmd/map"
 	stavenep "github.com/sufield/stave/cmd/nep"
 	"github.com/sufield/stave/cmd/prune"
 	staverank "github.com/sufield/stave/cmd/rank"
+	stavescore "github.com/sufield/stave/cmd/score"
 	stavetelemetry "github.com/sufield/stave/cmd/telemetry"
 	stavetrend "github.com/sufield/stave/cmd/trend"
 	stavewatch "github.com/sufield/stave/cmd/watch"
@@ -186,6 +188,12 @@ func WireCommands(app *App) {
 
 	// Forensic timeline reconstruction
 	root.AddCommand(staveforensics.NewCmd())
+
+	// ATT&CK coverage map
+	root.AddCommand(stavemap.NewCmd())
+
+	// Posture score
+	root.AddCommand(stavescore.NewCmd())
 
 	// Telemetry bridge
 	root.AddCommand(stavetelemetry.NewCmd())

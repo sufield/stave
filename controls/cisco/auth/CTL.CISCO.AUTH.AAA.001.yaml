@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.CISCO.AUTH.AAA.001
+name: AAA New-Model Must Be Enabled
+description: >
+  Cisco IOS devices must have AAA new-model enabled. Without AAA
+  new-model, the device falls back to line-based authentication which
+  cannot enforce centralized authentication, authorization, or
+  accounting policies. An attacker who compromises a local line
+  password gains full access with no audit trail and no ability to
+  enforce per-user access controls.
+domain: identity
+severity: critical
+compliance:
+  cis_cisco_ios_17: "1.2.1"
+  nist_800_53_r5: "IA-2"
+scope_tags:
+  - cisco
+  - ios
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    AAA new-model is not enabled. The device uses line-based
+    authentication which cannot enforce centralized access control
+    or produce audit logs for authentication events.
+  action: >
+    Enable AAA new-model. Run:
+    aaa new-model
+    Verify with: show running-config | include aaa new-model
+  example: |
+    {
+      "authentication": {
+        "aaa_new_model_enabled": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.authentication.aaa_new_model_enabled
+      op: eq
+      value: false

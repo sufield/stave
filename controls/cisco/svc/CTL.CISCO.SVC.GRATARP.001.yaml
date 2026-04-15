@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.CISCO.SVC.GRATARP.001
+name: Gratuitous ARP Must Be Disabled
+description: >
+  Cisco IOS devices must have gratuitous ARP disabled. Gratuitous
+  ARP allows a device to announce its IP-to-MAC mapping without being
+  asked. An attacker can send forged gratuitous ARP packets to poison
+  the ARP cache of other devices on the network segment, redirecting
+  traffic through the attacker's machine for man-in-the-middle attacks.
+  This enables credential interception, session hijacking, and data
+  exfiltration on the local network segment.
+domain: exposure
+severity: medium
+compliance:
+  cis_cisco_ios_17: "2.1.6"
+  nist_800_53_r5: "SC-7"
+scope_tags:
+  - cisco
+  - ios
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Gratuitous ARP is enabled. The device processes unsolicited ARP
+    announcements which can be exploited for ARP cache poisoning and
+    man-in-the-middle attacks on the local network segment.
+  action: >
+    Disable gratuitous ARP on interfaces. Run:
+    no ip gratuitous-arps
+    Verify with: show running-config | include gratuitous
+  example: |
+    {
+      "management": {
+        "gratuitous_arps_enabled": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.management.gratuitous_arps_enabled
+      op: eq
+      value: true

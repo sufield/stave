@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.VSPHERE.FIREWALL.ENABLED.001
+name: ESXi Host Firewall Must Be Enabled
+description: >
+  The ESXi host firewall must be enabled to restrict network access
+  to management services. With the firewall disabled, all ESXi
+  services are reachable from any network, dramatically increasing
+  the attack surface for remote exploitation.
+domain: exposure
+severity: critical
+compliance:
+  cis_vmware_esxi_7: "3.1"
+  nist_800_53_r5: "SC-7"
+scope_tags:
+  - vmware
+  - esxi
+type: unsafe_state
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    The ESXi host firewall is disabled. All management services are
+    exposed to the network without restriction.
+  action: >
+    Enable the ESXi host firewall:
+    esxcli network firewall set --enabled=true
+    Review and restrict firewall rulesets to only required services.
+unsafe_predicate:
+  all:
+    - field: properties.host_firewall.enabled
+      op: eq
+      value: false

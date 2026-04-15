@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.VSPHERE.ESX.ACCEPTANCE.001
+name: ESXi Host Must Not Use CommunitySupported Acceptance Level
+description: >
+  ESXi hosts must not accept CommunitySupported VIBs. Community
+  packages bypass VMware's signing and quality assurance process,
+  allowing unsigned code to run in the hypervisor kernel. An attacker
+  can exploit this to install persistent rootkits.
+domain: exposure
+severity: high
+compliance:
+  cis_vmware_esxi_7: "1.6"
+  nist_800_53_r5: "CM-5"
+scope_tags:
+  - vmware
+  - esxi
+type: unsafe_state
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    ESXi host acceptance level is set to CommunitySupported. Unsigned
+    VIBs can be installed, enabling persistent hypervisor compromise.
+  action: >
+    Raise the acceptance level to at least PartnerSupported:
+    esxcli software acceptance set --level=PartnerSupported
+unsafe_predicate:
+  all:
+    - field: properties.esxi.acceptance_level
+      op: eq
+      value: CommunitySupported

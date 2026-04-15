@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.VSPHERE.NFS.AUTH.001
+name: NFS Storage Must Require Authentication
+description: >
+  NFS datastores must require authentication (Kerberos). Unauthenticated
+  NFS mounts rely solely on IP-based access control, which is trivially
+  bypassed through IP spoofing or compromised hosts on the same network
+  segment.
+domain: exposure
+severity: high
+compliance:
+  cis_vmware_esxi_7: "6.1"
+  nist_800_53_r5: "IA-2"
+scope_tags:
+  - vmware
+  - esxi
+type: unsafe_state
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    An NFS datastore is mounted without authentication. Access is
+    controlled only by IP address, which is easily spoofed.
+  action: >
+    Configure NFS datastores to use Kerberos authentication (NFS 4.1
+    with SEC_KRB5). Migrate from NFS 3 to NFS 4.1 if necessary
+    to support authenticated mounts.
+unsafe_predicate:
+  all:
+    - field: properties.storage.has_unauthenticated_nfs
+      op: eq
+      value: true
