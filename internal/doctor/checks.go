@@ -118,8 +118,8 @@ func checkGraphviz(ctx *SystemEnvironment) Diagnostic {
 	return checkBinary(ctx, BinaryRequest{
 		Binary:      "dot",
 		Name:        CheckGraphviz,
-		WarnMessage: "dot (graphviz) not found; cannot render DOT files to images",
-		Remediation: "install graphviz (https://graphviz.org/download/)",
+		WarnMessage: "dot (graphviz) not found; stave graph coverage DOT output requires graphviz for rendering",
+		Remediation: "install graphviz (https://graphviz.org/download/) or use stave graph export --format graph-json with docs/integrations/ adapters",
 	})
 }
 

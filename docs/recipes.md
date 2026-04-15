@@ -142,38 +142,43 @@ Reusable multi-command workflows. Each recipe shows the exact commands, expected
 
 ---
 
-## 5. Chain Visualization
+## 5. Security Graph Export
 
-**When to use:** You want to see which compound attack paths are currently active — which controls are co-failing within each chain, and what attacker capability each active chain produces.
+**When to use:** You want to visualize attack paths, load the security
+graph into a graph database, or analyze compound threats.
 
-`stave graph chains` reads `chain_findings` from `stave apply` output and produces DOT text showing active chains.
+`stave graph export` reads assessment output and produces a
+standards-based graph-json document mapping to OCSF, STIX 2.1,
+ATT&CK, and OSCAL.
 
-1. **Generate chain graph** — from assessment output:
-
-   ```bash
-   stave graph chains --output ./output.json | dot -Tpng > chains.png
-   ```
-
-2. **Pipe from stave apply** — single pipeline:
+1. **Export graph-json** — from assessment output:
 
    ```bash
-   stave apply --controls controls/ --observations obs/ \
-     | stave graph chains --output - | dot -Tsvg > chains.svg
+   stave graph export --output ./output.json > stave-graph.json
    ```
 
-3. **Include inactive chains** — show all defined chains for context:
+2. **Visualize in browser** — open the Cytoscape.js viewer:
 
    ```bash
-   stave graph chains --output ./output.json --all | dot -Tpng > all-chains.png
+   open docs/integrations/cytoscape/viewer.html
+   # Drop stave-graph.json onto the viewer
    ```
 
-**Reading the output:**
-- **Clusters** are chains. Active chains have dashed borders colored by severity.
-- **Nodes** inside clusters are co-failing controls.
-- **Diamond terminus nodes** represent the attacker capability the chain produces, with the compound risk score.
-- **Dotted clusters** (with `--all`) are inactive chains — defined but not currently triggered.
+3. **Load into Neo4j** — for Cypher queries:
 
-**Difference from coverage:** `stave graph coverage` shows which controls match which assets (a static coverage map). `stave graph chains` shows which compound threats are active right now (a dynamic risk view).
+   ```bash
+   python3 docs/integrations/neo4j/loader.py --input stave-graph.json
+   ```
+
+4. **Convert to GraphML** — for Gephi or yEd:
+
+   ```bash
+   python3 docs/integrations/graphml/to-graphml.py < stave-graph.json > graph.graphml
+   ```
+
+See `docs/integrations/` for Neo4j, Neptune, GraphML, and Cytoscape adapters.
+
+**Difference from coverage:** `stave graph coverage` shows which controls match which assets (a static coverage map). `stave graph export` produces the full security graph with findings, chains, compliance requirements, and ATT&CK tactic mapping.
 
 ---
 
