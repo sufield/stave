@@ -2,7 +2,7 @@
   "schema_version": "out.v0.1",
   "kind": "ASSESSMENT",
   "run": {
-    "tool_version": "dev",
+    "tool_version": "edge",
     "offline": true,
     "now": "2026-01-15T00:00:00Z",
     "sla_threshold": "0h",
@@ -829,5 +829,8 @@
       },
       "silent_killer": false
     }
-  ]
+  ],
+  "posture_score": 55,
+  "posture_score_rubric": "at_risk",
+  "posture_score_partial": true
 }

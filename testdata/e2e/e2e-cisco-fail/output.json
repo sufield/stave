@@ -1,0 +1,373 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "ca470647fdf114aeea6e108200992735f55e61af6c213655cce5c479043a9269",
+        "2026-01-11T000000Z.json": "1bac39a38669f93a5792caa110435307d4c679671cb1ad5d20c74f03a9add9da"
+      },
+      "overall": "ea3c844692e8b2addedb50d7ef0200e1e4ae95ea7d092162759ff08eb7225f06"
+    },
+    "policy_fingerprint": "8a3ff68718c9b445d590056005c69000fef4e17ee5e2fe737575b8bd62b9a4c9",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 5
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.CISCO.AUTH.ENABLE.001",
+      "asset_id": "core-switch-01.acme.local",
+      "asset_type": "cisco_ios_device",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.CISCO.MGMT.SNMP.001",
+      "asset_id": "core-switch-01.acme.local",
+      "asset_type": "cisco_ios_device",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.CISCO.MGMT.SNMPCOMM.001",
+      "asset_id": "core-switch-01.acme.local",
+      "asset_type": "cisco_ios_device",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.CISCO.MGMT.SSH.001",
+      "asset_id": "core-switch-01.acme.local",
+      "asset_type": "cisco_ios_device",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.CISCO.MGMT.TELNET.001",
+      "asset_id": "core-switch-01.acme.local",
+      "asset_type": "cisco_ios_device",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:247cbf444e029071",
+      "control_id": "CTL.CISCO.AUTH.ENABLE.001",
+      "control_name": "Enable Secret Must Be Configured",
+      "control_description": "Cisco IOS devices must use enable secret instead of enable password. The enable password command stores the password using a weak reversible cipher (Type 7) that is trivially decoded. Enable secret uses a one-way hash (MD5 or scrypt) that cannot be reversed. An attacker with read access to the running configuration can decode Type 7 passwords instantly using publicly available tools.\n",
+      "asset_id": "core-switch-01.acme.local",
+      "asset_type": "cisco_ios_device",
+      "asset_vendor": "cisco",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "authentication.enable_secret_configured",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance": {
+        "cis_cisco_ios_17": "1.1.1",
+        "nist_800_53_r5": "IA-5"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Enable secret is not configured. The device uses enable password with a weak reversible cipher that can be trivially decoded from the running configuration.",
+        "action": "Configure enable secret and remove enable password. Run: enable secret \u003cstrong-password\u003e no enable password Verify with: show running-config | include enable",
+        "example": "{\n  \"authentication\": {\n    \"enable_secret_configured\": true\n  }\n}\n"
+      }
+    },
+    {
+      "finding_id": "sha256:2a69c7bd87c8e756",
+      "control_id": "CTL.CISCO.MGMT.SNMP.001",
+      "control_name": "SNMP Version Must Be 3",
+      "control_description": "Cisco IOS devices must use SNMP version 3. SNMP v1 and v2c transmit community strings in cleartext and provide no authentication or encryption. An attacker with network access can capture community strings and gain read or read-write access to the device MIB. SNMP v3 provides authentication (AuthNoPriv) and encryption (AuthPriv) protecting both credentials and management data in transit.\n",
+      "asset_id": "core-switch-01.acme.local",
+      "asset_type": "cisco_ios_device",
+      "asset_vendor": "cisco",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "management.snmp_version",
+            "actual_value": "[SANITIZED]",
+            "operator": "lt",
+            "unsafe_value": 3
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_cisco_ios_17": "2.2.1",
+        "nist_800_53_r5": "SC-8"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "SNMP version is below 3. Community strings are transmitted in cleartext and can be captured to gain unauthorized device access.",
+        "action": "Configure SNMP v3 with authentication and privacy. Run: snmp-server group \u003cgroup\u003e v3 priv snmp-server user \u003cuser\u003e \u003cgroup\u003e v3 auth sha \u003cauth-pass\u003e priv aes 256 \u003cpriv-pass\u003e Remove SNMP v1/v2c community strings: no snmp-server community \u003cstring\u003e",
+        "example": "{\n  \"management\": {\n    \"snmp_version\": 3\n  }\n}\n"
+      }
+    },
+    {
+      "finding_id": "sha256:2cdeb54d386408c4",
+      "control_id": "CTL.CISCO.MGMT.SNMPCOMM.001",
+      "control_name": "No Default SNMP Community Strings",
+      "control_description": "Cisco IOS devices must not use default SNMP community strings. Default community strings such as \"public\" and \"private\" are universally known and are the first values attempted in any SNMP enumeration scan. A device with default community strings allows unauthenticated read or read-write access to its entire MIB, exposing configuration details, routing tables, interface statistics, and enabling configuration changes.\n",
+      "asset_id": "core-switch-01.acme.local",
+      "asset_type": "cisco_ios_device",
+      "asset_vendor": "cisco",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "management.has_default_community",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance": {
+        "cis_cisco_ios_17": "2.2.2",
+        "nist_800_53_r5": "IA-5"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Default SNMP community strings are configured on the device. Attackers can use well-known strings to enumerate or modify the device configuration.",
+        "action": "Remove default SNMP community strings and replace with unique values or migrate to SNMP v3. Run: no snmp-server community public no snmp-server community private Verify with: show snmp community",
+        "example": "{\n  \"management\": {\n    \"has_default_community\": false\n  }\n}\n"
+      }
+    },
+    {
+      "finding_id": "sha256:55d12204b262886e",
+      "control_id": "CTL.CISCO.MGMT.SSH.001",
+      "control_name": "SSH Version Must Be 2",
+      "control_description": "Cisco IOS devices must use SSH version 2. SSH version 1 has known cryptographic weaknesses including vulnerability to man-in-the-middle attacks and session hijacking. SSH v1 uses CRC-32 for integrity checking which is not cryptographically secure. An attacker on the network path can exploit these weaknesses to intercept or modify management sessions.\n",
+      "asset_id": "core-switch-01.acme.local",
+      "asset_type": "cisco_ios_device",
+      "asset_vendor": "cisco",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "management.ssh_version",
+            "actual_value": "[SANITIZED]",
+            "operator": "lt",
+            "unsafe_value": 2
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_cisco_ios_17": "2.1.2",
+        "nist_800_53_r5": "SC-8"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "SSH version is not 2. The device may accept SSH v1 connections which have known cryptographic weaknesses exploitable by man-in-the-middle attacks.",
+        "action": "Configure SSH version 2 explicitly. Run: ip ssh version 2 Verify with: show ip ssh",
+        "example": "{\n  \"management\": {\n    \"ssh_version\": 2\n  }\n}\n"
+      }
+    },
+    {
+      "finding_id": "sha256:0342d0cf40d9bc5c",
+      "control_id": "CTL.CISCO.MGMT.TELNET.001",
+      "control_name": "Telnet Must Be Disabled",
+      "control_description": "Telnet must be disabled on Cisco IOS devices. Telnet transmits all data including credentials in cleartext. An attacker with network access can capture management session traffic and extract authentication credentials using passive packet capture. All management access must use SSH which provides encrypted transport.\n",
+      "asset_id": "core-switch-01.acme.local",
+      "asset_type": "cisco_ios_device",
+      "asset_vendor": "cisco",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "management.telnet_enabled",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance": {
+        "cis_cisco_ios_17": "2.1.1",
+        "nist_800_53_r5": "SC-8"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Telnet is enabled on the device. Management credentials are transmitted in cleartext and can be captured by any observer on the network path.",
+        "action": "Disable Telnet on all VTY lines and require SSH. Run: line vty 0 15 transport input ssh Verify with: show line vty 0 15 | include input",
+        "example": "{\n  \"management\": {\n    \"telnet_enabled\": false\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.CISCO.AUTH.ENABLE.001",
+      "asset_id": "core-switch-01.acme.local",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 2,
+      "control_id": "CTL.CISCO.MGMT.SNMPCOMM.001",
+      "asset_id": "core-switch-01.acme.local",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 4,
+      "control_id": "CTL.CISCO.MGMT.TELNET.001",
+      "asset_id": "core-switch-01.acme.local",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 1,
+      "control_id": "CTL.CISCO.MGMT.SNMP.001",
+      "asset_id": "core-switch-01.acme.local",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 3,
+      "control_id": "CTL.CISCO.MGMT.SSH.001",
+      "asset_id": "core-switch-01.acme.local",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-cisco-fail/controls",
+      "observations": "testdata/e2e/e2e-cisco-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/runner/work/stave/stave",
+      "head_commit": "af04570421101cf7318bd2309b1c5693e2bf8ec4",
+      "dirty": false
+    }
+  },
+  "posture_score": 55,
+  "posture_score_rubric": "at_risk",
+  "posture_score_partial": true
+}

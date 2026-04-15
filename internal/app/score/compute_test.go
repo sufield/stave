@@ -5,7 +5,6 @@ import (
 
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
-	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/evaluation/risk"
 )
 
@@ -23,11 +22,9 @@ func TestCompute_AllPassing(t *testing.T) {
 }
 
 func TestCompute_AllCriticalFailing(t *testing.T) {
-	findings := make([]remediation.Finding, 10)
+	findings := make([]evaluation.Finding, 10)
 	for i := range findings {
-		findings[i] = remediation.Finding{
-			Finding: evaluation.Finding{ControlSeverity: policy.SeverityCritical},
-		}
+		findings[i] = evaluation.Finding{ControlSeverity: policy.SeverityCritical}
 	}
 
 	r := Compute(Input{
@@ -46,17 +43,13 @@ func TestCompute_AllCriticalFailing(t *testing.T) {
 
 func TestCompute_MoreFindingsLowerScore(t *testing.T) {
 	// More failing findings → lower score (more severity exposure).
-	findings5 := make([]remediation.Finding, 5)
+	findings5 := make([]evaluation.Finding, 5)
 	for i := range findings5 {
-		findings5[i] = remediation.Finding{
-			Finding: evaluation.Finding{ControlSeverity: policy.SeverityHigh},
-		}
+		findings5[i] = evaluation.Finding{ControlSeverity: policy.SeverityHigh}
 	}
-	findings10 := make([]remediation.Finding, 10)
+	findings10 := make([]evaluation.Finding, 10)
 	for i := range findings10 {
-		findings10[i] = remediation.Finding{
-			Finding: evaluation.Finding{ControlSeverity: policy.SeverityHigh},
-		}
+		findings10[i] = evaluation.Finding{ControlSeverity: policy.SeverityHigh}
 	}
 
 	score5 := Compute(Input{Findings: findings5, Weights: DefaultWeights()})
@@ -128,5 +121,85 @@ func TestRubricBands(t *testing.T) {
 		if band != tt.band {
 			t.Errorf("rubric(%.0f) = %q, want %q", tt.score, band, tt.band)
 		}
+	}
+}
+
+// TestCompute_MonotoneProperty verifies that fixing a failing finding always
+// increases the posture score (or keeps it equal at the boundary).
+func TestCompute_MonotoneProperty(t *testing.T) {
+	// Start with 5 high-severity findings, all failing, out of 100 total controls.
+	findings := make([]evaluation.Finding, 5)
+	for i := range findings {
+		findings[i] = evaluation.Finding{ControlSeverity: policy.SeverityHigh}
+	}
+
+	scoreAll := Compute(Input{Findings: findings, TotalControls: 100, Weights: DefaultWeights()})
+
+	// Fix one finding (go from 5 to 4 violations). Score must increase.
+	scoreFewer := Compute(Input{Findings: findings[:4], TotalControls: 100, Weights: DefaultWeights()})
+
+	if scoreFewer.Score <= scoreAll.Score {
+		t.Errorf("fixing a finding did not increase score: %.1f → %.1f", scoreAll.Score, scoreFewer.Score)
+	}
+
+	// Verify the severity sub-score is monotone too.
+	if scoreFewer.Severity.SubScore <= scoreAll.Severity.SubScore {
+		t.Errorf("severity sub-score did not increase: %v → %v",
+			scoreAll.Severity.SubScore, scoreFewer.Severity.SubScore)
+	}
+}
+
+// TestCompute_CatalogExpansion verifies that adding controls that all PASS
+// does not decrease the posture score (catalog growth without new problems).
+func TestCompute_CatalogExpansion(t *testing.T) {
+	// Scenario: 5 violations out of 100 controls.
+	failing := make([]evaluation.Finding, 5)
+	for i := range failing {
+		failing[i] = evaluation.Finding{ControlSeverity: policy.SeverityHigh}
+	}
+
+	scoreBefore := Compute(Input{Findings: failing, TotalControls: 100, Weights: DefaultWeights()})
+
+	// Add 30 new controls that all PASS (no new violations, TotalControls grows).
+	// Score should stay stable or improve.
+	scoreAfterPassingExpansion := Compute(Input{Findings: failing, TotalControls: 130, Weights: DefaultWeights()})
+
+	if scoreAfterPassingExpansion.Score < scoreBefore.Score {
+		t.Errorf("adding passing controls decreased score: before=%.1f, after=%.1f",
+			scoreBefore.Score, scoreAfterPassingExpansion.Score)
+	}
+
+	// Add 30 new failing controls. Score should decrease — correctly reflecting worse posture.
+	allFailing := make([]evaluation.Finding, len(failing)+30)
+	copy(allFailing, failing)
+	for i := len(failing); i < len(allFailing); i++ {
+		allFailing[i] = evaluation.Finding{ControlSeverity: policy.SeverityLow}
+	}
+	scoreNewBad := Compute(Input{Findings: allFailing, TotalControls: 130, Weights: DefaultWeights()})
+
+	if scoreNewBad.Score >= scoreBefore.Score {
+		t.Errorf("adding failing controls should decrease score: before=%.1f, after=%.1f",
+			scoreBefore.Score, scoreNewBad.Score)
+	}
+
+	// Verify: the score stays the same with same findings (deterministic).
+	scoreSame := Compute(Input{Findings: failing, TotalControls: 100, Weights: DefaultWeights()})
+	if scoreSame.Score != scoreBefore.Score {
+		t.Errorf("score is not deterministic: %v != %v", scoreSame.Score, scoreBefore.Score)
+	}
+}
+
+// TestCompute_WeightsOverride verifies that custom weights produce the correct
+// weighted sum.
+func TestCompute_WeightsOverride(t *testing.T) {
+	// Weight everything to SLA only; no SLA config → SLA score = 1.0 → score = 100.
+	w := Weights{Severity: 0, SLA: 1.0, Chain: 0, Coverage: 0}
+	r := Compute(Input{Weights: w})
+
+	if r.Score < 99 {
+		t.Errorf("sla-only weight with no SLA config: score = %.1f, want ~100", r.Score)
+	}
+	if r.SLA.SubScore != 1.0 {
+		t.Errorf("SLA sub_score = %v, want 1.0 (no SLA profile configured)", r.SLA.SubScore)
 	}
 }
