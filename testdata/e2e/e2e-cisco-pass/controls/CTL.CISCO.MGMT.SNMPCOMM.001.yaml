@@ -1,0 +1,44 @@
+dsl_version: ctrl.v1
+id: CTL.CISCO.MGMT.SNMPCOMM.001
+name: No Default SNMP Community Strings
+description: >
+  Cisco IOS devices must not use default SNMP community strings.
+  Default community strings such as "public" and "private" are
+  universally known and are the first values attempted in any SNMP
+  enumeration scan. A device with default community strings allows
+  unauthenticated read or read-write access to its entire MIB,
+  exposing configuration details, routing tables, interface
+  statistics, and enabling configuration changes.
+domain: exposure
+severity: critical
+compliance:
+  cis_cisco_ios_17: "2.2.2"
+  nist_800_53_r5: "IA-5"
+scope_tags:
+  - cisco
+  - ios
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Default SNMP community strings are configured on the device.
+    Attackers can use well-known strings to enumerate or modify
+    the device configuration.
+  action: >
+    Remove default SNMP community strings and replace with unique
+    values or migrate to SNMP v3. Run:
+    no snmp-server community public
+    no snmp-server community private
+    Verify with: show snmp community
+  example: |
+    {
+      "management": {
+        "has_default_community": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.management.has_default_community
+      op: eq
+      value: true

@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.CISCO.MGMT.SSH.001
+name: SSH Version Must Be 2
+description: >
+  Cisco IOS devices must use SSH version 2. SSH version 1 has known
+  cryptographic weaknesses including vulnerability to man-in-the-middle
+  attacks and session hijacking. SSH v1 uses CRC-32 for integrity
+  checking which is not cryptographically secure. An attacker on the
+  network path can exploit these weaknesses to intercept or modify
+  management sessions.
+domain: exposure
+severity: high
+compliance:
+  cis_cisco_ios_17: "2.1.2"
+  nist_800_53_r5: "SC-8"
+scope_tags:
+  - cisco
+  - ios
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    SSH version is not 2. The device may accept SSH v1 connections
+    which have known cryptographic weaknesses exploitable by
+    man-in-the-middle attacks.
+  action: >
+    Configure SSH version 2 explicitly. Run:
+    ip ssh version 2
+    Verify with: show ip ssh
+  example: |
+    {
+      "management": {
+        "ssh_version": 2
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.management.ssh_version
+      op: lt
+      value: 2

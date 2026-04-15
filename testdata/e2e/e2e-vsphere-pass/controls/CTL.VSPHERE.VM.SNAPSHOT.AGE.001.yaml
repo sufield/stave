@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.VSPHERE.VM.SNAPSHOT.AGE.001
+name: No VM Snapshot Older Than 30 Days
+description: >
+  VM snapshots must not be older than 30 days. Stale snapshots
+  consume datastore space, degrade VM performance due to increased
+  I/O chain depth, and create operational risk during consolidation.
+  Long-lived snapshots also represent a data exposure risk — they
+  preserve the VM state at a point in time that may contain
+  credentials or sensitive data that has since been rotated.
+domain: exposure
+severity: medium
+compliance:
+  cis_vmware_esxi_7: "8.4.1"
+scope_tags:
+  - vmware
+  - vm
+type: unsafe_state
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    VM has a snapshot older than 30 days. Stale snapshots degrade
+    performance, consume storage, and may preserve sensitive data
+    from the time of capture.
+  action: >
+    Delete or consolidate stale snapshots. In the vSphere Client,
+    right-click the VM > Snapshots > Manage Snapshots and delete
+    snapshots older than 30 days. Establish a policy to review
+    and clean up snapshots on a regular schedule.
+  example: |
+    {
+      "vm": {
+        "oldest_snapshot_days": 7
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.vm.oldest_snapshot_days
+      op: gt
+      value: 30

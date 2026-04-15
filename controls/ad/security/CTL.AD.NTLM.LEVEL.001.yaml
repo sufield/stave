@@ -1,0 +1,43 @@
+dsl_version: ctrl.v1
+id: CTL.AD.NTLM.LEVEL.001
+name: NTLM Authentication Must Be Restricted to NTLMv2
+description: >
+  The domain must enforce NTLMv2 authentication by setting the LAN
+  Manager authentication level to 3 or higher (Send NTLMv2 response
+  only / refuse LM & NTLM). NTLMv1 and LM responses use weak
+  cryptography that can be cracked in seconds. NTLM relay and pass-
+  the-hash attacks are significantly harder when NTLMv2 is enforced
+  and legacy protocols are refused.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "IA-2"
+  cis_ad: "2.3.11.7"
+scope_tags:
+  - active_directory
+type: unsafe_state
+params:
+  base_impact: 7
+  attack_stage: credential_access
+remediation:
+  description: >
+    NTLM restriction level is below 3, allowing NTLMv1 or LM
+    authentication. These legacy protocols use weak cryptography
+    vulnerable to offline cracking and relay attacks.
+  action: >
+    Set the LAN Manager authentication level to 3 or higher via
+    Group Policy: Computer Configuration > Windows Settings >
+    Security Settings > Local Policies > Security Options >
+    "Network security: LAN Manager authentication level" to
+    "Send NTLMv2 response only. Refuse LM & NTLM."
+  example: |
+    {
+      "security_settings": {
+        "ntlm_restriction_level": 3
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.security_settings.ntlm_restriction_level
+      op: lt
+      value: 3

@@ -27,6 +27,7 @@ import (
 	"github.com/sufield/stave/cmd/enforce/fix"
 	"github.com/sufield/stave/cmd/enforce/gate"
 	"github.com/sufield/stave/cmd/evaluate"
+	staveexempt "github.com/sufield/stave/cmd/exempt"
 	staveexport "github.com/sufield/stave/cmd/export"
 	staveforge "github.com/sufield/stave/cmd/forge"
 	"github.com/sufield/stave/cmd/initcmd"
@@ -174,6 +175,9 @@ func WireCommands(app *App) {
 
 	// Multi-account consolidation
 	root.AddCommand(staveconsolidate.NewCmd())
+
+	// Risk acceptance management
+	root.AddCommand(staveexempt.NewCmd())
 
 	// Telemetry bridge
 	root.AddCommand(stavetelemetry.NewCmd())

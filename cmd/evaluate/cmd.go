@@ -11,6 +11,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -225,10 +226,14 @@ func extractBucketName(snap asset.Snapshot) string {
 	return "unknown"
 }
 
-func extractAccountID(_ asset.Snapshot) string {
-	// Try to extract from ARN: arn:aws:s3:::bucket → no account.
-	// For now return a placeholder; real extraction depends on extractor.
-	return "000000000000"
+func extractAccountID(snap asset.Snapshot) string {
+	for i := range snap.Assets {
+		parts := strings.Split(string(snap.Assets[i].ID), ":")
+		if len(parts) >= 5 && parts[4] != "" {
+			return parts[4]
+		}
+	}
+	return ""
 }
 
 func resolveOutput(path string, stdout io.Writer) (io.Writer, func(), error) {

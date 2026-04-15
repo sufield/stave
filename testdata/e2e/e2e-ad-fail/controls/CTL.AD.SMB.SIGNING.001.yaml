@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.AD.SMB.SIGNING.001
+name: SMB Signing Must Be Required
+description: >
+  SMB signing must be required on all domain controllers and member
+  servers. Without mandatory signing, SMB traffic can be intercepted
+  and modified via man-in-the-middle attacks. Attackers use SMB relay
+  to forward captured NTLM authentication to other hosts, gaining
+  unauthorized access without cracking passwords.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "SC-8"
+  cis_ad: "2.3.8.1"
+scope_tags:
+  - active_directory
+type: unsafe_state
+params:
+  base_impact: 7
+  attack_stage: lateral_movement
+remediation:
+  description: >
+    SMB signing is not required. Network traffic between hosts can be
+    intercepted and relayed, enabling lateral movement without credential
+    cracking.
+  action: >
+    Enable mandatory SMB signing via Group Policy: Computer Configuration >
+    Windows Settings > Security Settings > Local Policies > Security
+    Options > "Microsoft network server: Digitally sign communications
+    (always)" set to Enabled. Apply to all domain controllers and
+    member servers.
+  example: |
+    {
+      "security_settings": {
+        "smb_signing_required": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.security_settings.smb_signing_required
+      op: eq
+      value: false

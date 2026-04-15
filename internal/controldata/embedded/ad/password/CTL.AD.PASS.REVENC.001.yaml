@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.AD.PASS.REVENC.001
+name: Reversible Encryption Must Be Disabled
+description: >
+  Active Directory must not store passwords using reversible encryption.
+  When enabled, password hashes can be decrypted back to plaintext,
+  effectively storing passwords in cleartext. An attacker who gains
+  access to the AD database (ntds.dit) can recover every user password
+  without cracking. This setting is required only by legacy protocols
+  such as CHAP and digest authentication, which should be eliminated.
+domain: identity
+severity: critical
+compliance:
+  nist_800_53_r5: "IA-5"
+  cis_ad: "1.1.6"
+scope_tags:
+  - active_directory
+type: unsafe_state
+params:
+  base_impact: 9
+  attack_stage: credential_access
+remediation:
+  description: >
+    Reversible encryption is enabled in the domain password policy.
+    Passwords are effectively stored in cleartext and can be recovered
+    from the AD database.
+  action: >
+    Disable reversible encryption in the Default Domain Policy GPO.
+    Run: Set-ADDefaultDomainPasswordPolicy -ReversibleEncryptionEnabled $false
+    Then force all users to change their passwords so new hashes are
+    stored without reversible encryption.
+  example: |
+    {
+      "password_policy": {
+        "reversible_encryption": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.password_policy.reversible_encryption
+      op: eq
+      value: true

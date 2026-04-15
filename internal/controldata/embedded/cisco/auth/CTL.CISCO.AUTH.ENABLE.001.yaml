@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.CISCO.AUTH.ENABLE.001
+name: Enable Secret Must Be Configured
+description: >
+  Cisco IOS devices must use enable secret instead of enable password.
+  The enable password command stores the password using a weak
+  reversible cipher (Type 7) that is trivially decoded. Enable secret
+  uses a one-way hash (MD5 or scrypt) that cannot be reversed. An
+  attacker with read access to the running configuration can decode
+  Type 7 passwords instantly using publicly available tools.
+domain: identity
+severity: critical
+compliance:
+  cis_cisco_ios_17: "1.1.1"
+  nist_800_53_r5: "IA-5"
+scope_tags:
+  - cisco
+  - ios
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Enable secret is not configured. The device uses enable password
+    with a weak reversible cipher that can be trivially decoded from
+    the running configuration.
+  action: >
+    Configure enable secret and remove enable password. Run:
+    enable secret <strong-password>
+    no enable password
+    Verify with: show running-config | include enable
+  example: |
+    {
+      "authentication": {
+        "enable_secret_configured": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.authentication.enable_secret_configured
+      op: eq
+      value: false

@@ -1,0 +1,8 @@
+id: vsphere
+description: VMware vSphere ESXi and VM security controls
+controls:
+    - CTL.VSPHERE.ESX.SSH.001
+    - CTL.VSPHERE.ESX.LOCKDOWN.001
+    - CTL.VSPHERE.VM.ENCRYPT.001
+    - CTL.VSPHERE.VM.SNAPSHOT.AGE.001
+    - CTL.VSPHERE.VM.COPYPASTE.001

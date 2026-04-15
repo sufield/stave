@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.CISCO.MGMT.TELNET.001
+name: Telnet Must Be Disabled
+description: >
+  Telnet must be disabled on Cisco IOS devices. Telnet transmits all
+  data including credentials in cleartext. An attacker with network
+  access can capture management session traffic and extract
+  authentication credentials using passive packet capture. All
+  management access must use SSH which provides encrypted transport.
+domain: exposure
+severity: critical
+compliance:
+  cis_cisco_ios_17: "2.1.1"
+  nist_800_53_r5: "SC-8"
+scope_tags:
+  - cisco
+  - ios
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Telnet is enabled on the device. Management credentials are
+    transmitted in cleartext and can be captured by any observer
+    on the network path.
+  action: >
+    Disable Telnet on all VTY lines and require SSH. Run:
+    line vty 0 15
+    transport input ssh
+    Verify with: show line vty 0 15 | include input
+  example: |
+    {
+      "management": {
+        "telnet_enabled": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.management.telnet_enabled
+      op: eq
+      value: true

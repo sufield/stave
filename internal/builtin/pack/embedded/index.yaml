@@ -94,3 +94,9 @@ packs:
     path: packs/codecommit.yaml
   - id: ssm
     path: packs/ssm.yaml
+  - id: ad
+    path: packs/ad.yaml
+  - id: vsphere
+    path: packs/vsphere.yaml
+  - id: cisco
+    path: packs/cisco.yaml

@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.VSPHERE.VM.COPYPASTE.001
+name: Copy-Paste Between VM and Host Must Be Disabled
+description: >
+  Copy and paste operations between the guest VM and the host must
+  be disabled. When enabled, the shared clipboard allows data to
+  move between the VM and the host or client system without network
+  controls or logging. An attacker with access to a compromised VM
+  can exfiltrate data through the clipboard channel, bypassing
+  network-based DLP and monitoring controls.
+domain: exposure
+severity: medium
+compliance:
+  cis_vmware_esxi_7: "8.3.1"
+  nist_800_53_r5: "SC-7"
+scope_tags:
+  - vmware
+  - vm
+type: unsafe_state
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    Copy and paste is enabled between the VM and host. Data can be
+    exfiltrated through the clipboard channel without network
+    monitoring or DLP controls.
+  action: >
+    Disable copy and paste by setting the VM advanced configuration
+    parameters isolation.tools.copy.disable and
+    isolation.tools.paste.disable to TRUE. Apply this via VM >
+    Configure > Advanced Parameters in the vSphere Client.
+  example: |
+    {
+      "vm": {
+        "copy_paste_enabled": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.vm.copy_paste_enabled
+      op: eq
+      value: true

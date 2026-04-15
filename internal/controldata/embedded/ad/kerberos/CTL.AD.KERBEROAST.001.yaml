@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.AD.KERBEROAST.001
+name: Privileged Accounts Must Not Have Kerberoastable SPNs
+description: >
+  Service accounts that are members of privileged groups (Domain Admins,
+  Enterprise Admins, etc.) must not have Service Principal Names (SPNs)
+  registered. Any domain user can request a Kerberos service ticket for
+  an SPN and crack the ticket offline to recover the service account
+  password. When the account is privileged, a successful Kerberoasting
+  attack grants immediate domain-level access.
+domain: identity
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-6"
+  cis_ad: "5.3"
+scope_tags:
+  - active_directory
+type: unsafe_state
+params:
+  base_impact: 9
+  attack_stage: credential_access
+remediation:
+  description: >
+    A privileged group member has a registered SPN, making it vulnerable
+    to Kerberoasting. An attacker can request the service ticket and
+    crack the password offline.
+  action: >
+    Remove SPNs from privileged accounts or move the service to a
+    Group Managed Service Account (gMSA) with automatic password
+    rotation. Run: setspn -D <spn> <account> or migrate to gMSA.
+  example: |
+    {
+      "privileged_groups": {
+        "has_kerberoastable_spn": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.privileged_groups.has_kerberoastable_spn
+      op: eq
+      value: true

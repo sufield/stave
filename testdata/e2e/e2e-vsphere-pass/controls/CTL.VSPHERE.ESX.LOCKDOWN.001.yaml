@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.VSPHERE.ESX.LOCKDOWN.001
+name: Lockdown Mode Must Be Enabled on ESXi Hosts
+description: >
+  Lockdown mode must be enabled on ESXi hosts. When lockdown mode is
+  disabled, the host can be managed directly via local clients and
+  APIs, bypassing vCenter role-based access controls. Enabling
+  lockdown mode forces all management through vCenter, ensuring
+  centralized authentication, authorization, and audit logging.
+domain: exposure
+severity: high
+compliance:
+  cis_vmware_esxi_7: "1.2"
+  nist_800_53_r5: "CM-7"
+scope_tags:
+  - vmware
+  - esxi
+type: unsafe_state
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    Lockdown mode is disabled on the ESXi host. The host can be
+    managed directly, bypassing vCenter access controls and audit
+    logging.
+  action: >
+    Enable lockdown mode on the ESXi host. In the vSphere Client,
+    navigate to Host > Configure > System > Security Profile >
+    Lockdown Mode and select Normal or Strict. Normal lockdown
+    allows DCUI access for emergency troubleshooting; Strict
+    lockdown disables DCUI as well.
+  example: |
+    {
+      "esxi": {
+        "lockdown_mode": "normal"
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.esxi.lockdown_mode
+      op: eq
+      value: "disabled"

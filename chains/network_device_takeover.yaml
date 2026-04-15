@@ -1,0 +1,13 @@
+id: network_device_takeover
+description: >
+  Network device with telnet enabled and default SNMP community
+  strings. An attacker on the management network can read the
+  full device configuration via SNMP public community, extract
+  credentials, and authenticate via telnet — full device control
+  with no encryption on either channel.
+controls:
+  - CTL.CISCO.MGMT.TELNET.001
+  - CTL.CISCO.MGMT.SNMPCOMM.001
+  - CTL.CISCO.AUTH.ENABLE.001
+escalation_threshold: 2
+compound_severity: critical

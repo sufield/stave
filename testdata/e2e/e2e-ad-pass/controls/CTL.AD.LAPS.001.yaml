@@ -1,0 +1,40 @@
+dsl_version: ctrl.v1
+id: CTL.AD.LAPS.001
+name: Local Administrator Password Solution Must Be Enabled
+description: >
+  LAPS (Local Administrator Password Solution) must be deployed to
+  manage local administrator passwords on domain-joined machines. Without
+  LAPS, local admin passwords are often identical across all workstations,
+  allowing an attacker who compromises one machine to move laterally to
+  every machine in the domain using the same credential.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6"
+scope_tags:
+  - active_directory
+type: unsafe_state
+params:
+  base_impact: 7
+  attack_stage: lateral_movement
+remediation:
+  description: >
+    LAPS is not enabled. Local administrator passwords are likely
+    shared across machines, enabling lateral movement after a single
+    host compromise.
+  action: >
+    Deploy Windows LAPS or legacy Microsoft LAPS. Install the LAPS
+    CSE on all domain-joined machines, extend the AD schema, configure
+    the GPO, and set password rotation policy. Run:
+    Update-LapsADSchema; Set-LapsADComputerSelfPermission -Identity "OU=Workstations,DC=corp,DC=local"
+  example: |
+    {
+      "security_settings": {
+        "laps_enabled": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.security_settings.laps_enabled
+      op: eq
+      value: false

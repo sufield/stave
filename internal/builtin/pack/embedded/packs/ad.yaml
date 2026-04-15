@@ -1,0 +1,9 @@
+id: ad
+description: Active Directory / LDAP security controls
+controls:
+    - CTL.AD.PASS.MINLEN.001
+    - CTL.AD.PASS.REVENC.001
+    - CTL.AD.KERBEROAST.001
+    - CTL.AD.NTLM.LEVEL.001
+    - CTL.AD.LAPS.001
+    - CTL.AD.SMB.SIGNING.001

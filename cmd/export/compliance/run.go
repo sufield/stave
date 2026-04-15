@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	evidenceadapter "github.com/sufield/stave/internal/adapters/evidence"
@@ -28,13 +29,25 @@ func runCompliance(
 	newCtlRepo compose.CtlRepoFactory,
 	newCELEvaluator compose.CELEvaluatorFactory,
 ) error {
-	// 1. Validate profile ID.
-	profile, err := evidenceadapter.LoadProfile(opts.Profile)
-	if err != nil {
-		return &ui.UserError{Err: fmt.Errorf("invalid --profile: %w", err)}
+	// Parse profile IDs (comma-separated for composite mode).
+	profileIDs := strings.Split(opts.Profile, ",")
+	for i := range profileIDs {
+		profileIDs[i] = strings.TrimSpace(profileIDs[i])
 	}
 
-	// 2. Load snapshot.
+	compositeMode := opts.Composite || len(profileIDs) > 1
+
+	// Load all requested profiles.
+	var profiles []*evidence.FrameworkProfile
+	for _, pid := range profileIDs {
+		profile, loadErr := evidenceadapter.LoadProfile(pid)
+		if loadErr != nil {
+			return &ui.UserError{Err: fmt.Errorf("invalid --profile %q: %w", pid, loadErr)}
+		}
+		profiles = append(profiles, profile)
+	}
+
+	// Load snapshot.
 	snapshots, err := observations.LoadBundle(opts.Snapshot)
 	if err != nil {
 		return &ui.UserError{Err: fmt.Errorf("load snapshot: %w", err)}
@@ -43,7 +56,7 @@ func runCompliance(
 		return &ui.UserError{Err: errors.New("snapshot file contains no observations")}
 	}
 
-	// 3. Load controls filtered to the compliance framework.
+	// Load all controls.
 	repo, err := newCtlRepo()
 	if err != nil {
 		return fmt.Errorf("create control loader: %w", err)
@@ -53,21 +66,28 @@ func runCompliance(
 		return fmt.Errorf("load controls: %w", err)
 	}
 
-	fw := policy.ComplianceFramework(profile.FrameworkKey)
+	// Collect controls matching any requested framework.
+	fwSet := make(map[policy.ComplianceFramework]bool)
+	for _, p := range profiles {
+		fwSet[policy.ComplianceFramework(p.FrameworkKey)] = true
+	}
 	var controls []policy.ControlDefinition
 	for i := range allControls {
-		if allControls[i].HasCompliance(fw) {
-			controls = append(controls, allControls[i])
+		for fw := range fwSet {
+			if allControls[i].HasCompliance(fw) {
+				controls = append(controls, allControls[i])
+				break
+			}
 		}
 	}
 
-	// 4. Initialize CEL evaluator.
+	// Initialize CEL evaluator.
 	celEval, err := newCELEvaluator()
 	if err != nil {
 		return fmt.Errorf("init CEL evaluator: %w", err)
 	}
 
-	// 5. Run assessment with evidence generation.
+	// Run assessment with evidence generation.
 	result, err := appeval.Evaluate(appeval.EvaluateInput{
 		Controls:         controls,
 		Snapshots:        snapshots,
@@ -82,19 +102,18 @@ func runCompliance(
 		return fmt.Errorf("evaluate: %w", err)
 	}
 
-	// 6. Evaluate profile against evidence package.
 	pkg := result.EvidencePackage
 	if pkg == nil {
 		return errors.New("assessment did not produce evidence package")
 	}
 
-	assessment := evidence.EvaluateProfile(pkg, profile)
+	// Evaluate each profile.
+	var assessments []*evidence.ProfileAssessment
+	for _, profile := range profiles {
+		assessments = append(assessments, evidence.EvaluateProfile(pkg, profile))
+	}
 
-	// 7. Build export DTO.
-	snapshotTime := snapshots[len(snapshots)-1].CapturedAt
-	export := buildExport(profile, assessment, pkg, version.String, snapshotTime, opts.IncludePass, opts.MinSeverity)
-
-	// 8. Write output.
+	// Determine output writer.
 	out := w
 	if opts.Out != "" {
 		f, fileErr := os.Create(opts.Out)
@@ -105,35 +124,61 @@ func runCompliance(
 		out = f
 	}
 
-	switch opts.Format {
-	case "json":
-		if err := renderJSON(out, export); err != nil {
-			return err
-		}
-	case "table":
-		if err := renderTable(out, export, opts.Verbose); err != nil {
-			return err
-		}
-	case "markdown":
-		if err := renderMarkdown(out, export); err != nil {
-			return err
-		}
-	default:
-		return &ui.UserError{Err: fmt.Errorf("unsupported format: %q (supported: json, table, markdown)", opts.Format)}
+	snapshotTime := snapshots[len(snapshots)-1].CapturedAt
+
+	if compositeMode {
+		return runComposite(out, opts, profiles, assessments, pkg, snapshotTime)
 	}
 
-	// 9. Determine exit code.
-	return exitError(assessment)
+	// OSCAL format — works for single and composite.
+	if opts.Format == "oscal" {
+		return renderOSCAL(out, opts, profiles, assessments, pkg, snapshotTime)
+	}
+
+	// Single-framework path (unchanged behavior).
+	export := buildExport(profiles[0], assessments[0], pkg, version.String, snapshotTime, opts.IncludePass, opts.MinSeverity)
+	switch opts.Format {
+	case "json":
+		if renderErr := renderJSON(out, export); renderErr != nil {
+			return renderErr
+		}
+	case "table":
+		if renderErr := renderTable(out, export, opts.Verbose); renderErr != nil {
+			return renderErr
+		}
+	case "markdown":
+		if renderErr := renderMarkdown(out, export); renderErr != nil {
+			return renderErr
+		}
+	default:
+		return &ui.UserError{Err: fmt.Errorf("unsupported format: %q", opts.Format)}
+	}
+
+	return exitError(assessments[0])
 }
 
-// exitError returns a sentinel error matching the assessment outcome
-// for correct exit code mapping.
+// exitError returns a sentinel error matching the assessment outcome.
 func exitError(assessment *evidence.ProfileAssessment) error {
 	if assessment.NotMetCount > 0 {
 		return ui.ErrSecurityAuditFindings
 	}
 	if assessment.IncompleteCount > 0 {
 		return ui.ErrViolationsFound
+	}
+	return nil
+}
+
+// exitErrorComposite checks all assessments and returns the worst outcome.
+func exitErrorComposite(assessments []*evidence.ProfileAssessment) error {
+	for _, a := range assessments {
+		if a.NotMetCount > 0 {
+			return ui.ErrSecurityAuditFindings
+		}
+	}
+	for _, a := range assessments {
+		if a.IncompleteCount > 0 {
+			return ui.ErrViolationsFound
+		}
 	}
 	return nil
 }

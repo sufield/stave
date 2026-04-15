@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.CISCO.MGMT.SNMP.001
+name: SNMP Version Must Be 3
+description: >
+  Cisco IOS devices must use SNMP version 3. SNMP v1 and v2c transmit
+  community strings in cleartext and provide no authentication or
+  encryption. An attacker with network access can capture community
+  strings and gain read or read-write access to the device MIB. SNMP
+  v3 provides authentication (AuthNoPriv) and encryption (AuthPriv)
+  protecting both credentials and management data in transit.
+domain: exposure
+severity: high
+compliance:
+  cis_cisco_ios_17: "2.2.1"
+  nist_800_53_r5: "SC-8"
+scope_tags:
+  - cisco
+  - ios
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    SNMP version is below 3. Community strings are transmitted in
+    cleartext and can be captured to gain unauthorized device access.
+  action: >
+    Configure SNMP v3 with authentication and privacy. Run:
+    snmp-server group <group> v3 priv
+    snmp-server user <user> <group> v3 auth sha <auth-pass> priv aes 256 <priv-pass>
+    Remove SNMP v1/v2c community strings:
+    no snmp-server community <string>
+  example: |
+    {
+      "management": {
+        "snmp_version": 3
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.management.snmp_version
+      op: lt
+      value: 3

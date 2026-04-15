@@ -1,0 +1,30 @@
+{
+  "assets": [
+    {
+      "id": "esxi-prod-01.acme.local",
+      "properties": {
+        "esxi": {
+          "ssh_enabled": true,
+          "lockdown_mode": "disabled"
+        }
+      },
+      "type": "vsphere_esxi_host",
+      "vendor": "vmware"
+    },
+    {
+      "id": "vm-patient-db.acme.local",
+      "properties": {
+        "vm": {
+          "encryption_enabled": false,
+          "oldest_snapshot_days": 90,
+          "copy_paste_enabled": true
+        }
+      },
+      "type": "vsphere_vm",
+      "vendor": "vmware"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

@@ -7,13 +7,17 @@ import (
 )
 
 type options struct {
-	Snapshot    string
-	Profile     string
-	Format      string
-	Out         string
-	MinSeverity string
-	IncludePass bool
-	Verbose     bool
+	Snapshot       string
+	Profile        string
+	Format         string
+	Out            string
+	MinSeverity    string
+	IncludePass    bool
+	Verbose        bool
+	Composite      bool
+	SystemUUID     string
+	Assessor       string
+	AssessmentUUID string
 }
 
 // NewCmd creates the compliance evidence export subcommand.
@@ -71,6 +75,11 @@ Examples:
 	cmd.Flags().StringVar(&opts.MinSeverity, "min-severity", "all", "minimum severity filter: critical|high|medium|low|all")
 	cmd.Flags().BoolVar(&opts.IncludePass, "include-pass", false, "include passing evidence records")
 	cmd.Flags().BoolVar(&opts.Verbose, "verbose", false, "include reasoning traces in table output")
+
+	cmd.Flags().BoolVar(&opts.Composite, "composite", false, "force composite report even for single framework")
+	cmd.Flags().StringVar(&opts.SystemUUID, "system-uuid", "", "UUID of the System Security Plan (for eMASS/OSCAL)")
+	cmd.Flags().StringVar(&opts.Assessor, "assessor", "Stave automated assessment", "assessor name (for OSCAL)")
+	cmd.Flags().StringVar(&opts.AssessmentUUID, "assessment-uuid", "", "UUID for this assessment result (for OSCAL)")
 
 	_ = cmd.MarkFlagRequired("snapshot")
 	_ = cmd.MarkFlagRequired("profile")

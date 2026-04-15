@@ -1,0 +1,26 @@
+{
+  "assets": [
+    {
+      "id": "acme-corp.local",
+      "properties": {
+        "password_policy": {
+          "min_length": 16,
+          "reversible_encryption": false
+        },
+        "privileged_groups": {
+          "has_kerberoastable_spn": false
+        },
+        "security_settings": {
+          "ntlm_restriction_level": 5,
+          "laps_enabled": true,
+          "smb_signing_required": true
+        }
+      },
+      "type": "active_directory_domain",
+      "vendor": "microsoft"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

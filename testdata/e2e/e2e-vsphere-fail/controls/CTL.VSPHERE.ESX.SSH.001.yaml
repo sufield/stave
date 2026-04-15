@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.VSPHERE.ESX.SSH.001
+name: SSH Must Be Disabled on ESXi Hosts
+description: >
+  SSH must be disabled on ESXi hosts. An enabled SSH service exposes
+  the ESXi management plane to remote shell access, increasing the
+  attack surface for credential brute-force and lateral movement.
+  ESXi management should use the vSphere Client or Host Client via
+  HTTPS only. SSH should only be enabled temporarily for
+  troubleshooting and disabled immediately after.
+domain: exposure
+severity: high
+compliance:
+  cis_vmware_esxi_7: "1.1"
+  nist_800_53_r5: "CM-7"
+scope_tags:
+  - vmware
+  - esxi
+type: unsafe_state
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    SSH is enabled on the ESXi host. The management plane is exposed
+    to remote shell access, enabling credential brute-force and
+    lateral movement.
+  action: >
+    Disable the SSH service on the ESXi host. In the vSphere Client,
+    navigate to Host > Configure > System > Services, select SSH,
+    and click Stop. Set the startup policy to "Start and stop
+    manually" to prevent automatic re-enablement.
+  example: |
+    {
+      "esxi": {
+        "ssh_enabled": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.esxi.ssh_enabled
+      op: eq
+      value: true

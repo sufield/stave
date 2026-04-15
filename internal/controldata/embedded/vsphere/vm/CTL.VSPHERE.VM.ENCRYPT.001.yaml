@@ -1,0 +1,43 @@
+dsl_version: ctrl.v1
+id: CTL.VSPHERE.VM.ENCRYPT.001
+name: VMs with Sensitive Data Must Be Encrypted
+description: >
+  Virtual machines containing sensitive data must have VM encryption
+  enabled. Without encryption, VM disk files (VMDKs), snapshots, and
+  vMotion traffic are stored and transmitted in cleartext. An attacker
+  with access to the datastore or network can read VM contents
+  directly. VM encryption protects data at rest on the datastore and
+  in transit during vMotion operations.
+domain: exposure
+severity: high
+compliance:
+  cis_vmware_esxi_7: "8.2.1"
+  nist_800_53_r5: "SC-28"
+scope_tags:
+  - vmware
+  - vm
+type: unsafe_state
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    VM encryption is not enabled. VM disk files, snapshots, and
+    vMotion traffic are unencrypted and readable if the datastore
+    or network is compromised.
+  action: >
+    Enable VM encryption using a vSphere Trust Authority or Standard
+    Key Provider. Configure a KMS cluster in vCenter, then apply a
+    VM storage policy with encryption enabled. Encrypt the VM by
+    editing its storage policy assignment. Note that VM encryption
+    requires a compatible key management server.
+  example: |
+    {
+      "vm": {
+        "encryption_enabled": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.vm.encryption_enabled
+      op: eq
+      value: false

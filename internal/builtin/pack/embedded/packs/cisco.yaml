@@ -1,0 +1,8 @@
+id: cisco
+description: Cisco IOS network device security controls
+controls:
+    - CTL.CISCO.AUTH.ENABLE.001
+    - CTL.CISCO.MGMT.TELNET.001
+    - CTL.CISCO.MGMT.SSH.001
+    - CTL.CISCO.MGMT.SNMP.001
+    - CTL.CISCO.MGMT.SNMPCOMM.001

@@ -93,10 +93,20 @@ func TestExtractBucketName_NoAssets(t *testing.T) {
 }
 
 func TestExtractAccountID(t *testing.T) {
+	// Empty snapshot — no assets to derive account from.
 	snap := asset.Snapshot{}
 	got := extractAccountID(snap)
-	if got != "000000000000" {
-		t.Fatalf("got %q, want 000000000000", got)
+	if got != "" {
+		t.Fatalf("got %q, want empty for snapshot with no assets", got)
+	}
+
+	// Snapshot with ARN containing account ID.
+	snap2 := asset.Snapshot{Assets: []asset.Asset{
+		{ID: "arn:aws:s3::123456789012:bucket"},
+	}}
+	got2 := extractAccountID(snap2)
+	if got2 != "123456789012" {
+		t.Fatalf("got %q, want 123456789012", got2)
 	}
 }
 

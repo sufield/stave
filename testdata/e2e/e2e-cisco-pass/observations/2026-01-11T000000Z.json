@@ -1,0 +1,23 @@
+{
+  "assets": [
+    {
+      "id": "core-switch-01.acme.local",
+      "properties": {
+        "authentication": {
+          "enable_secret_configured": true
+        },
+        "management": {
+          "telnet_enabled": false,
+          "ssh_version": 2,
+          "snmp_version": 3,
+          "has_default_community": false
+        }
+      },
+      "type": "cisco_ios_device",
+      "vendor": "cisco"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

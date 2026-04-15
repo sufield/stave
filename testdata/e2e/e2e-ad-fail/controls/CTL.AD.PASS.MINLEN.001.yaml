@@ -1,0 +1,39 @@
+dsl_version: ctrl.v1
+id: CTL.AD.PASS.MINLEN.001
+name: Password Minimum Length Must Be At Least 14 Characters
+description: >
+  Active Directory domain password policy must enforce a minimum length
+  of 14 characters. Shorter passwords are vulnerable to offline brute-force
+  and credential-stuffing attacks. A 14-character minimum aligns with
+  current NIST and CIS guidance and significantly increases the search
+  space an attacker must exhaust.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "IA-5"
+  cis_ad: "1.1.1"
+scope_tags:
+  - active_directory
+type: unsafe_state
+params:
+  base_impact: 7
+  attack_stage: credential_access
+remediation:
+  description: >
+    Domain password policy minimum length is below 14 characters.
+    Short passwords are feasible to brute-force offline.
+  action: >
+    Set the minimum password length to 14 or greater in the Default
+    Domain Policy GPO. Run:
+    Set-ADDefaultDomainPasswordPolicy -MinPasswordLength 14
+  example: |
+    {
+      "password_policy": {
+        "min_length": 14
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.password_policy.min_length
+      op: lt
+      value: 14
