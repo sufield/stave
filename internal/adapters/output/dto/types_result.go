@@ -55,20 +55,20 @@ type GitMetadataDTO struct {
 
 // ResultDTO is the top-level evaluation output envelope content.
 type ResultDTO struct {
-	SchemaVersion        kernel.Schema            `json:"schema_version"`
-	Kind                 string                   `json:"kind"`
-	Run                  RunInfoDTO               `json:"run"`
-	Summary              SummaryDTO               `json:"summary"`
-	SecurityState        evaluation.SecurityState `json:"status"`
-	RiskSignals          []AtRiskItemDTO          `json:"risk_signals,omitempty"`
-	Findings             []FindingDTO             `json:"findings"`
-	ExceptedFindings     []ExceptedFindingDTO     `json:"excepted_findings,omitempty"`
-	RemediationGroups    []RemediationGroupDTO    `json:"remediation_groups,omitempty"`
-	SkippedControls      []SkippedControlDTO      `json:"skipped_controls,omitempty"`
-	ExemptedAssets       []ExemptedAssetDTO       `json:"exempted_assets,omitempty"`
-	TopExposures         []risk.ExposureRank      `json:"top_exposures,omitempty"`
-	Extensions           *ExtensionsDTO           `json:"extensions,omitempty"`
-	PostureScore         *float64                 `json:"posture_score,omitempty"`
-	PostureScoreRubric   string                   `json:"posture_score_rubric,omitempty"`
-	PostureScorePartial  bool                     `json:"posture_score_partial,omitempty"`
+	SchemaVersion       kernel.Schema            `json:"schema_version"`
+	Kind                string                   `json:"kind"`
+	Run                 RunInfoDTO               `json:"run"`
+	Summary             SummaryDTO               `json:"summary"`
+	SecurityState       evaluation.SecurityState `json:"status"`
+	RiskSignals         []AtRiskItemDTO          `json:"risk_signals,omitempty"`
+	Findings            []FindingDTO             `json:"findings"`
+	ExceptedFindings    []ExceptedFindingDTO     `json:"excepted_findings,omitempty"`
+	RemediationGroups   []RemediationGroupDTO    `json:"remediation_groups,omitempty"`
+	SkippedControls     []SkippedControlDTO      `json:"skipped_controls,omitempty"`
+	ExemptedAssets      []ExemptedAssetDTO       `json:"exempted_assets,omitempty"`
+	TopExposures        []risk.ExposureRank      `json:"top_exposures,omitempty"`
+	Extensions          *ExtensionsDTO           `json:"extensions,omitempty"`
+	PostureScore        *float64                 `json:"posture_score,omitempty"`
+	PostureScoreRubric  string                   `json:"posture_score_rubric,omitempty"`
+	PostureScorePartial bool                     `json:"posture_score_partial,omitempty"`
 }

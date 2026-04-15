@@ -4,6 +4,7 @@ package score
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -77,7 +78,7 @@ Exit Codes:
 // runScore dispatches to single-file or history mode.
 func runScore(ctx context.Context, stdout io.Writer, opts *options) error {
 	if opts.OutputFile == "" && opts.HistoryDir == "" {
-		return fmt.Errorf("exactly one of --output or --history is required: --output scores a single assessment file, --history scores a directory of assessment files for trend analysis")
+		return errors.New("exactly one of --output or --history is required: --output scores a single assessment file, --history scores a directory of assessment files for trend analysis")
 	}
 
 	weights, err := parseWeights(opts.Weights)

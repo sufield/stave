@@ -24,17 +24,17 @@ func DefaultWeights() Weights {
 
 // SeverityDetail holds per-dimension detail for the severity component.
 type SeverityDetail struct {
-	FailingFindings int     `json:"failing_findings"`  // number of failing controls (violations)
-	TotalEvaluated  int     `json:"total_evaluated"`   // total controls evaluated (pass + fail); 0 if unknown
+	FailingFindings int     `json:"failing_findings"` // number of failing controls (violations)
+	TotalEvaluated  int     `json:"total_evaluated"`  // total controls evaluated (pass + fail); 0 if unknown
 	MaxRiskExposure float64 `json:"max_risk_exposure"`
 	ActualExposure  float64 `json:"actual_exposure"`
 }
 
 // SLADetail holds per-dimension detail for the SLA component.
 type SLADetail struct {
-	FindingsWithSLA    int     `json:"findings_with_sla"`
-	FindingsBreached   int     `json:"findings_breached"`
-	BreachRatePercent  float64 `json:"breach_rate_percent"`
+	FindingsWithSLA   int     `json:"findings_with_sla"`
+	FindingsBreached  int     `json:"findings_breached"`
+	BreachRatePercent float64 `json:"breach_rate_percent"`
 }
 
 // ChainDetail holds per-dimension detail for the chain component.
@@ -47,10 +47,10 @@ type ChainDetail struct {
 
 // CoverageDetail holds per-dimension detail for the coverage component.
 type CoverageDetail struct {
-	Framework              string  `json:"framework,omitempty"`
-	RequirementsSatisfied  int     `json:"requirements_satisfied"`
-	RequirementsTotal      int     `json:"requirements_total"`
-	CoveragePercent        float64 `json:"coverage_percent"`
+	Framework             string  `json:"framework,omitempty"`
+	RequirementsSatisfied int     `json:"requirements_satisfied"`
+	RequirementsTotal     int     `json:"requirements_total"`
+	CoveragePercent       float64 `json:"coverage_percent"`
 }
 
 // Component holds a single score dimension.
@@ -291,9 +291,4 @@ func rubric(score float64) (string, string) {
 	default:
 		return "critical", "Widespread critical SLA breaches. Immediate remediation required."
 	}
-}
-
-func findingFailing(f *evaluation.Finding) bool {
-	// A finding in the findings array is always failing (violations only).
-	return true
 }
