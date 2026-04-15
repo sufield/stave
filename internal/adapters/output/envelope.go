@@ -16,17 +16,18 @@ func BuildAssessmentFromEnriched(enriched *appcontracts.EnrichedResult) *report.
 	}
 
 	out := report.NewAssessment(report.AssessmentRequest{
-		Run:                enriched.Run,
-		Summary:            enriched.Result.Summary,
-		SecurityState:      enriched.Result.SecurityState,
-		RiskSignals:        enriched.Result.RiskSignals,
-		Findings:           findings,
-		SkippedControls:    enriched.Result.SkippedControls,
-		ExemptedAssets:     enriched.ExemptedAssets,
-		ExceptedFindings:   enriched.Result.ExceptedFindings,
-		ChainFindings:      enriched.Result.ChainFindings,
-		AttackStageSummary: enriched.Result.AttackStageSummary,
-		TopExposures:       enriched.Result.TopExposures,
+		Run:                  enriched.Run,
+		Summary:              enriched.Result.Summary,
+		SecurityState:        enriched.Result.SecurityState,
+		RiskSignals:          enriched.Result.RiskSignals,
+		Findings:             findings,
+		SkippedControls:      enriched.Result.SkippedControls,
+		ExemptedAssets:       enriched.ExemptedAssets,
+		ExceptedFindings:     enriched.Result.ExceptedFindings,
+		AcknowledgedFindings: enriched.Result.AcknowledgedFindings,
+		ChainFindings:        enriched.Result.ChainFindings,
+		AttackStageSummary:   enriched.Result.AttackStageSummary,
+		TopExposures:         enriched.Result.TopExposures,
 	})
 	out.Extensions = enriched.Result.Metadata.ToExtensions()
 	h := crypto.NewHasher()

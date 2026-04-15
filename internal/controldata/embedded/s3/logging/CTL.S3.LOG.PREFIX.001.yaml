@@ -1,0 +1,48 @@
+dsl_version: ctrl.v1
+id: CTL.S3.LOG.PREFIX.001
+name: Log Prefix Required When Logging Enabled
+description: >
+  When server access logging is enabled, a target prefix must be
+  configured to organize log files and enable efficient search and
+  analysis of audit records.
+domain: exposure
+severity: low
+compliance:
+  nist_800_53_r5: "AU-3"
+  hipaa: "164.312(b)"
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Bucket has server access logging enabled but no target prefix is
+    configured. Logs are delivered to the root of the destination
+    bucket, making them difficult to organize and query.
+  action: >
+    Set a target prefix for S3 server access logging to organize log
+    files by source bucket. Use a prefix that identifies the source
+    bucket, such as the bucket name followed by a slash.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "logging": {
+          "enabled": true,
+          "target_prefix": "my-bucket-logs/"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.logging.enabled
+      op: eq
+      value: true
+    - field: properties.storage.logging.target_prefix
+      op: eq
+      value: ""

@@ -72,7 +72,7 @@ func TestRun_WithKind(t *testing.T) {
 	failDir := filepath.Join(dir, "e2e-forge-iam-kind-fail")
 	ctlPath := filepath.Join(failDir, "controls", "CTL.IAM.KIND.001.yaml")
 	assertFileContains(t, ctlPath, "properties.identity.kind")
-	assertFileContains(t, ctlPath, "value: user")
+	assertFileContains(t, ctlPath, `value: "user"`)
 
 	// Verify observation includes kind property.
 	obsPath := filepath.Join(failDir, "observations", "2026-01-01T000000Z.json")
@@ -285,7 +285,103 @@ func TestAssetIDFromType(t *testing.T) {
 	}
 }
 
+func TestValidate_RejectsInvalidDomain(t *testing.T) {
+	cfg := config{
+		ID: "CTL.X.001", Name: "X", Field: "properties.x",
+		Remediation: "Fix.", Domain: "evil\ninjected: true",
+		Severity: "high", Op: "eq",
+	}
+	err := cfg.validate()
+	if err == nil || !strings.Contains(err.Error(), "--domain") {
+		t.Fatalf("expected --domain error, got: %v", err)
+	}
+}
+
+func TestValidate_RejectsInvalidSeverity(t *testing.T) {
+	cfg := config{
+		ID: "CTL.X.001", Name: "X", Field: "properties.x",
+		Remediation: "Fix.", Domain: "exposure",
+		Severity: "evil\ninjected: true", Op: "eq",
+	}
+	err := cfg.validate()
+	if err == nil || !strings.Contains(err.Error(), "--severity") {
+		t.Fatalf("expected --severity error, got: %v", err)
+	}
+}
+
+func TestValidate_RejectsInvalidOp(t *testing.T) {
+	cfg := config{
+		ID: "CTL.X.001", Name: "X", Field: "properties.x",
+		Remediation: "Fix.", Domain: "exposure",
+		Severity: "high", Op: "eq\ninjected: true",
+	}
+	err := cfg.validate()
+	if err == nil || !strings.Contains(err.Error(), "--op") {
+		t.Fatalf("expected --op error, got: %v", err)
+	}
+}
+
+func TestSanitizeScalar(t *testing.T) {
+	tests := []struct{ in, want string }{
+		{"hello", "hello"},
+		{"line1\nline2", "line1 line2"},
+		{"line1\r\nline2", "line1 line2"},
+		{"line1\rline2", "line1 line2"},
+	}
+	for _, tt := range tests {
+		got := sanitizeScalar(tt.in)
+		if got != tt.want {
+			t.Errorf("sanitizeScalar(%q) = %q, want %q", tt.in, got, tt.want)
+		}
+	}
+}
+
+func TestRun_NameIsQuotedInOutput(t *testing.T) {
+	dir := t.TempDir()
+	cfg := config{
+		ID: "CTL.TEST.QUOTE.001", Name: `Name with "quotes"`,
+		Domain: "exposure", Severity: "high", ScopeTags: "aws,s3",
+		AssetType: "aws_s3_bucket", Field: "properties.storage.access.public_read",
+		Op: "eq", Value: "true", Remediation: "Fix it.", OutDir: dir,
+		Stdout: io.Discard,
+	}
+	if err := run(cfg); err != nil {
+		t.Fatalf("run() error: %v", err)
+	}
+	ctlPath := filepath.Join(dir, "e2e-forge-test-quote-fail", "controls", "CTL.TEST.QUOTE.001.yaml")
+	assertFileContains(t, ctlPath, `name: "Name with \"quotes\""`)
+}
+
+func TestRun_NewlineInDescriptionSanitized(t *testing.T) {
+	dir := t.TempDir()
+	cfg := config{
+		ID: "CTL.TEST.NL.001", Name: "NL Test",
+		Domain: "exposure", Severity: "high", ScopeTags: "aws,s3",
+		AssetType: "aws_s3_bucket", Field: "properties.storage.access.public_read",
+		Op: "eq", Value: "true", Remediation: "Fix\ninjected: true",
+		Description: "Desc\ninjected: true", OutDir: dir,
+		Stdout: io.Discard,
+	}
+	if err := run(cfg); err != nil {
+		t.Fatalf("run() error: %v", err)
+	}
+	ctlPath := filepath.Join(dir, "e2e-forge-test-nl-fail", "controls", "CTL.TEST.NL.001.yaml")
+	// Verify newlines were stripped — no YAML injection
+	assertFileNotContains(t, ctlPath, "\ninjected:")
+}
+
 // ── helpers ──────────────────────────────────────────────────
+
+func assertFileNotContains(t *testing.T, path, substr string) {
+	t.Helper()
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("read %s: %v", path, err)
+	}
+	if strings.Contains(string(data), substr) {
+		t.Errorf("file %s should not contain %q\ncontent:\n%s", path, substr, string(data))
+	}
+}
 
 func assertFileExists(t *testing.T, path string) {
 	t.Helper()

@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.S3.ACCEL.001
+name: S3 Transfer Acceleration Must Not Be Unexpectedly Enabled
+description: >
+  S3 Transfer Acceleration creates an additional public endpoint
+  (s3-accelerate.amazonaws.com) that bypasses VPC endpoint restrictions.
+  It must not be enabled unless explicitly required and documented.
+domain: exposure
+severity: low
+compliance:
+  nist_800_53_r5: "CM-7"
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    S3 Transfer Acceleration is enabled on this bucket. This exposes
+    an additional public endpoint that bypasses VPC endpoint controls.
+  action: >
+    Suspend Transfer Acceleration under bucket Properties unless
+    explicitly required. If required, document the business justification
+    and ensure VPC endpoint policies account for the acceleration endpoint.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "transfer_acceleration": {
+          "enabled": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.transfer_acceleration.enabled
+      op: eq
+      value: true

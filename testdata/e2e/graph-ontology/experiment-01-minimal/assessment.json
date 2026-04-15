@@ -1,0 +1,54 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "assessment",
+  "run": {
+    "stave_version": "test",
+    "assessed_at": "2026-01-11T00:00:00Z",
+    "controls_evaluated": 1,
+    "assets_evaluated": 1,
+    "observations_loaded": 1,
+    "input_hashes": {}
+  },
+  "summary": {
+    "total_findings": 1,
+    "by_severity": {"low": 1},
+    "security_state": "NON_COMPLIANT"
+  },
+  "status": "NON_COMPLIANT",
+  "findings": [
+    {
+      "finding_id": "sha256:e01minimal0001",
+      "control_id": "CTL.S3.ACCEL.001",
+      "control_name": "S3 Transfer Acceleration Must Not Be Unexpectedly Enabled",
+      "control_description": "S3 Transfer Acceleration creates an additional public endpoint.",
+      "asset_id": "arn:aws:s3:us-east-1:111111111111:acme-prod-logs",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "field": "properties.storage.transfer_acceleration.enabled",
+            "observed": true,
+            "expected": false,
+            "message": "Transfer Acceleration is enabled"
+          }
+        ],
+        "root_causes": ["transfer_acceleration enabled on bucket"],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours)"
+      },
+      "control_severity": "low",
+      "control_compliance": {
+        "nist_800_53_r5": "CM-7"
+      },
+      "remediation": {
+        "description": "S3 Transfer Acceleration is enabled on this bucket.",
+        "action": "Suspend Transfer Acceleration under bucket Properties.",
+        "example": "{\"storage\":{\"transfer_acceleration\":{\"enabled\":false}}}"
+      }
+    }
+  ]
+}

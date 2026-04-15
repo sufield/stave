@@ -1,0 +1,52 @@
+dsl_version: ctrl.v1
+id: CTL.S3.LOG.BUCKET.PUBLIC.001
+name: Log Destination Bucket Must Not Be Publicly Accessible
+description: >
+  When server access logging is enabled, the log destination bucket
+  must not be publicly accessible. Public log buckets expose audit
+  trail contents to external actors, enabling reconnaissance and
+  detection evasion.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "AU-9"
+  hipaa: "164.312(b)"
+  fedramp_moderate: "AU-9"
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Log destination bucket is publicly accessible. Audit trail contents
+    are exposed to external actors who can enumerate logged operations
+    and plan evasion strategies.
+  action: >
+    Block all public access on the log destination bucket using the S3
+    Block Public Access settings. Enable all four block public access
+    options to prevent any public access configuration.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "logging": {
+          "enabled": true
+        },
+        "logging_destination": {
+          "public_access_blocked": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.logging.enabled
+      op: eq
+      value: true
+    - field: properties.storage.logging_destination.public_access_blocked
+      op: eq
+      value: false

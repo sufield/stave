@@ -84,14 +84,3 @@ func IsDirty(ctx context.Context, repoRoot string, paths []string) (bool, []stri
 	slices.Sort(list)
 	return len(list) > 0, list, nil
 }
-
-// InitRepo initializes a new git repository in dir.
-func InitRepo(ctx context.Context, dir string) error {
-	if !hasGit() {
-		return exec.ErrNotFound
-	}
-	// #nosec G204 -- exec.Command does not invoke a shell; "-C dir" is passed as a literal argument.
-	cmd := exec.CommandContext(ctx, "git", "-C", dir, "init")
-	_, err := cmd.Output()
-	return err
-}

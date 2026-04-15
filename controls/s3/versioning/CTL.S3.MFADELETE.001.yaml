@@ -10,6 +10,7 @@ severity: high
 compliance:
   cis_aws_v3.0: "2.1.2"
   soc2: "CC6.1"
+  nist_800_53_r5: "CP-9"
 scope_tags:
   - aws
   - s3

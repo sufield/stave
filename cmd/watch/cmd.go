@@ -212,8 +212,8 @@ func buildSinks(stdout io.Writer, specs []string) ([]ports.AlertSink, error) {
 			sinks = append(sinks, &alert.FileSink{Path: path})
 		case spec == "syslog" || strings.HasPrefix(spec, "syslog:"):
 			facility := "local0"
-			if strings.HasPrefix(spec, "syslog:") {
-				facility = strings.TrimPrefix(spec, "syslog:")
+			if after, ok := strings.CutPrefix(spec, "syslog:"); ok {
+				facility = after
 			}
 			pri, parseErr := alert.ParseSyslogFacility(facility)
 			if parseErr != nil {

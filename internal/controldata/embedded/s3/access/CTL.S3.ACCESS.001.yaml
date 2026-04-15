@@ -14,6 +14,7 @@ compliance:
   cis_aws_v1.4.0: "1.16"
   pci_dss_v3.2.1: "7.1"
   soc2: "CC6.3"
+  nist_800_53_r5: "AC-3"
 scope_tags:
   - aws
   - s3

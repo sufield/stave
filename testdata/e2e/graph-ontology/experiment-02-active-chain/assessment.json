@@ -1,0 +1,121 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "assessment",
+  "run": {
+    "stave_version": "test",
+    "assessed_at": "2026-01-11T00:00:00Z",
+    "controls_evaluated": 3,
+    "assets_evaluated": 3,
+    "observations_loaded": 1,
+    "input_hashes": {}
+  },
+  "summary": {
+    "total_findings": 3,
+    "by_severity": {"critical": 1, "high": 2},
+    "security_state": "NON_COMPLIANT"
+  },
+  "status": "NON_COMPLIANT",
+  "findings": [
+    {
+      "finding_id": "sha256:e02chain0001",
+      "control_id": "CTL.S3.PUBLIC.001",
+      "control_name": "S3 Buckets Must Not Allow Public Read Access",
+      "control_description": "Detects S3 buckets that allow anonymous read access.",
+      "asset_id": "arn:aws:s3:::acme-phi-records",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {"field": "properties.storage.access.public_read", "observed": true, "expected": false}
+        ],
+        "root_causes": ["public read access enabled"],
+        "temporal_risk": "Asset non-compliant for 240 hours"
+      },
+      "control_severity": "critical",
+      "control_compliance": {"hipaa": "164.312(a)(1)", "nist_800_53_r5": "AC-3"},
+      "chain_membership": [
+        {
+          "chain_id": "data_exfiltration_path",
+          "chain_severity": "critical",
+          "stage_span": ["initial_access", "exfiltration"],
+          "narrative": "Public S3 bucket containing PHI enables direct data exfiltration."
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:e02chain0002",
+      "control_id": "CTL.KMS.ROTATION.001",
+      "control_name": "KMS Keys Must Have Automatic Rotation Enabled",
+      "control_description": "Detects KMS keys without automatic key rotation.",
+      "asset_id": "arn:aws:kms:us-east-1:111111111111:key/acme-phi-key",
+      "asset_type": "aws_kms_key",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {"field": "properties.key.rotation_enabled", "observed": false, "expected": true}
+        ],
+        "root_causes": ["key rotation disabled"],
+        "temporal_risk": "Asset non-compliant for 240 hours"
+      },
+      "control_severity": "high",
+      "control_compliance": {"nist_800_53_r5": "SC-12"},
+      "chain_membership": [
+        {
+          "chain_id": "data_exfiltration_path",
+          "chain_severity": "critical",
+          "stage_span": ["persistence"],
+          "narrative": "Non-rotating KMS key allows persistent decryption access."
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:e02chain0003",
+      "control_id": "CTL.CLOUDTRAIL.ENABLED.001",
+      "control_name": "CloudTrail Must Be Enabled",
+      "control_description": "Detects accounts where CloudTrail logging is disabled.",
+      "asset_id": "arn:aws:cloudtrail:us-east-1:111111111111:trail/acme-main",
+      "asset_type": "aws_cloudtrail_trail",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {"field": "properties.log.enabled", "observed": false, "expected": true}
+        ],
+        "root_causes": ["CloudTrail logging disabled"],
+        "temporal_risk": "Asset non-compliant for 240 hours"
+      },
+      "control_severity": "high",
+      "control_compliance": {"nist_800_53_r5": "AU-2"},
+      "chain_membership": [
+        {
+          "chain_id": "data_exfiltration_path",
+          "chain_severity": "critical",
+          "stage_span": ["detection_evasion"],
+          "narrative": "Disabled CloudTrail enables undetected exfiltration activity."
+        }
+      ]
+    }
+  ],
+  "chain_findings": [
+    {
+      "chain": "data_exfiltration_path",
+      "description": "Public data store with disabled encryption rotation and audit logging creates a complete exfiltration path.",
+      "controls_failing": ["CTL.S3.PUBLIC.001", "CTL.KMS.ROTATION.001", "CTL.CLOUDTRAIL.ENABLED.001"],
+      "compound_score": 0.95,
+      "severity": "critical",
+      "narrative": "Three co-failing controls form an active data exfiltration chain: public S3 bucket with PHI, non-rotating KMS key, and disabled CloudTrail logging.",
+      "attack_stages": ["initial_access", "persistence", "detection_evasion", "exfiltration"]
+    }
+  ]
+}

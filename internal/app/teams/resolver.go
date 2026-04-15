@@ -26,7 +26,7 @@ type Team struct {
 	ResourcePatterns []string `yaml:"resource_patterns" json:"resource_patterns,omitempty"`
 	ControlOwnership []string `yaml:"control_ownership" json:"control_ownership,omitempty"`
 	IsDefault        bool     `yaml:"is_default"      json:"is_default,omitempty"`
-	Routing          Routing  `yaml:"routing"         json:"routing,omitempty"`
+	Routing          Routing  `yaml:"routing"         json:"routing"`
 }
 
 // Routing holds alert destination configuration.
@@ -147,8 +147,8 @@ func globMatch(pattern, value string) bool {
 	if pattern == value {
 		return true
 	}
-	if strings.HasSuffix(pattern, "*") {
-		prefix := strings.TrimSuffix(pattern, "*")
+	if before, ok := strings.CutSuffix(pattern, "*"); ok {
+		prefix := before
 		return strings.HasPrefix(value, prefix)
 	}
 	// filepath.Match for more complex patterns.

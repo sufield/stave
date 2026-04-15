@@ -1,0 +1,140 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "assessment",
+  "run": {
+    "stave_version": "test",
+    "assessed_at": "2026-01-11T00:00:00Z",
+    "controls_evaluated": 10,
+    "assets_evaluated": 10,
+    "observations_loaded": 1,
+    "input_hashes": {}
+  },
+  "summary": {
+    "total_findings": 10,
+    "by_severity": {"critical": 2, "high": 4, "medium": 3, "low": 1},
+    "security_state": "NON_COMPLIANT"
+  },
+  "status": "NON_COMPLIANT",
+  "findings": [
+    {
+      "finding_id": "sha256:e04nochain0001",
+      "control_id": "CTL.S3.PUBLIC.001",
+      "control_name": "S3 Bucket Public Access",
+      "control_description": "Detects public S3 buckets.",
+      "asset_id": "arn:aws:s3:us-east-1:111111111111:acme-backup-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {"first_unsafe_at":"2026-01-01T00:00:00Z","last_seen_unsafe_at":"2026-01-11T00:00:00Z","unsafe_duration_hours":240,"threshold_hours":168,"misconfigurations":[],"root_causes":[],"temporal_risk":""},
+      "control_severity": "critical",
+      "control_compliance": {"nist_800_53_r5": "AC-3"}
+    },
+    {
+      "finding_id": "sha256:e04nochain0002",
+      "control_id": "CTL.RDS.PUBLIC.001",
+      "control_name": "RDS Instance Public Access",
+      "control_description": "Detects publicly accessible RDS instances.",
+      "asset_id": "arn:aws:rds:us-east-1:111111111111:db:acme-legacy-db",
+      "asset_type": "aws_rds_instance",
+      "asset_vendor": "aws",
+      "evidence": {"first_unsafe_at":"2026-01-01T00:00:00Z","last_seen_unsafe_at":"2026-01-11T00:00:00Z","unsafe_duration_hours":240,"threshold_hours":168,"misconfigurations":[],"root_causes":[],"temporal_risk":""},
+      "control_severity": "critical",
+      "control_compliance": {"nist_800_53_r5": "AC-4"}
+    },
+    {
+      "finding_id": "sha256:e04nochain0003",
+      "control_id": "CTL.LAMBDA.ROLE.LEASTPRIV.001",
+      "control_name": "Lambda Execution Role Least Privilege",
+      "control_description": "Detects over-privileged Lambda execution roles.",
+      "asset_id": "arn:aws:lambda:us-east-1:111111111111:function:acme-api",
+      "asset_type": "aws_lambda_function",
+      "asset_vendor": "aws",
+      "evidence": {"first_unsafe_at":"2026-01-01T00:00:00Z","last_seen_unsafe_at":"2026-01-11T00:00:00Z","unsafe_duration_hours":240,"threshold_hours":168,"misconfigurations":[],"root_causes":[],"temporal_risk":""},
+      "control_severity": "high",
+      "control_compliance": {"nist_800_53_r5": "AC-6"}
+    },
+    {
+      "finding_id": "sha256:e04nochain0004",
+      "control_id": "CTL.SG.UNRESTRICTED.001",
+      "control_name": "Security Group Unrestricted Ingress",
+      "control_description": "Detects unrestricted 0.0.0.0/0 ingress.",
+      "asset_id": "arn:aws:ec2:us-east-1:111111111111:security-group/sg-0001",
+      "asset_type": "aws_ec2_security_group",
+      "asset_vendor": "aws",
+      "evidence": {"first_unsafe_at":"2026-01-01T00:00:00Z","last_seen_unsafe_at":"2026-01-11T00:00:00Z","unsafe_duration_hours":240,"threshold_hours":168,"misconfigurations":[],"root_causes":[],"temporal_risk":""},
+      "control_severity": "high",
+      "control_compliance": {"nist_800_53_r5": "SC-7"}
+    },
+    {
+      "finding_id": "sha256:e04nochain0005",
+      "control_id": "CTL.IAM.MFA.001",
+      "control_name": "IAM Users Must Have MFA",
+      "control_description": "Detects IAM users without MFA.",
+      "asset_id": "arn:aws:iam::111111111111:user/legacy-svc",
+      "asset_type": "aws_iam_user",
+      "asset_vendor": "aws",
+      "evidence": {"first_unsafe_at":"2026-01-01T00:00:00Z","last_seen_unsafe_at":"2026-01-11T00:00:00Z","unsafe_duration_hours":240,"threshold_hours":168,"misconfigurations":[],"root_causes":[],"temporal_risk":""},
+      "control_severity": "high",
+      "control_compliance": {"nist_800_53_r5": "IA-2"}
+    },
+    {
+      "finding_id": "sha256:e04nochain0006",
+      "control_id": "CTL.KMS.ROTATION.001",
+      "control_name": "KMS Key Rotation",
+      "control_description": "Detects KMS keys without rotation.",
+      "asset_id": "arn:aws:kms:us-east-1:111111111111:key/acme-backup-key",
+      "asset_type": "aws_kms_key",
+      "asset_vendor": "aws",
+      "evidence": {"first_unsafe_at":"2026-01-01T00:00:00Z","last_seen_unsafe_at":"2026-01-11T00:00:00Z","unsafe_duration_hours":240,"threshold_hours":168,"misconfigurations":[],"root_causes":[],"temporal_risk":""},
+      "control_severity": "medium",
+      "control_compliance": {"nist_800_53_r5": "SC-12"}
+    },
+    {
+      "finding_id": "sha256:e04nochain0007",
+      "control_id": "CTL.CLOUDFRONT.TLS.001",
+      "control_name": "CloudFront TLS Minimum Version",
+      "control_description": "Detects CloudFront distributions with TLS 1.0.",
+      "asset_id": "arn:aws:cloudfront::111111111111:distribution/E1",
+      "asset_type": "aws_cloudfront_distribution",
+      "asset_vendor": "aws",
+      "evidence": {"first_unsafe_at":"2026-01-01T00:00:00Z","last_seen_unsafe_at":"2026-01-11T00:00:00Z","unsafe_duration_hours":240,"threshold_hours":168,"misconfigurations":[],"root_causes":[],"temporal_risk":""},
+      "control_severity": "medium",
+      "control_compliance": {"nist_800_53_r5": "SC-8"}
+    },
+    {
+      "finding_id": "sha256:e04nochain0008",
+      "control_id": "CTL.APIGW.THROTTLE.001",
+      "control_name": "API Gateway Throttle Limit",
+      "control_description": "Detects API Gateways without throttle limits.",
+      "asset_id": "arn:aws:apigateway:us-east-1:111111111111:/restapis/abc123",
+      "asset_type": "aws_apigateway_restapi",
+      "asset_vendor": "aws",
+      "evidence": {"first_unsafe_at":"2026-01-01T00:00:00Z","last_seen_unsafe_at":"2026-01-11T00:00:00Z","unsafe_duration_hours":240,"threshold_hours":168,"misconfigurations":[],"root_causes":[],"temporal_risk":""},
+      "control_severity": "medium",
+      "control_compliance": {"nist_800_53_r5": "SC-5"}
+    },
+    {
+      "finding_id": "sha256:e04nochain0009",
+      "control_id": "CTL.SQS.ENCRYPT.001",
+      "control_name": "SQS Queue Encryption",
+      "control_description": "Detects SQS queues without encryption.",
+      "asset_id": "arn:aws:sqs:us-east-1:111111111111:acme-orders",
+      "asset_type": "aws_sqs_queue",
+      "asset_vendor": "aws",
+      "evidence": {"first_unsafe_at":"2026-01-01T00:00:00Z","last_seen_unsafe_at":"2026-01-11T00:00:00Z","unsafe_duration_hours":240,"threshold_hours":168,"misconfigurations":[],"root_causes":[],"temporal_risk":""},
+      "control_severity": "high",
+      "control_compliance": {"nist_800_53_r5": "SC-28"}
+    },
+    {
+      "finding_id": "sha256:e04nochain0010",
+      "control_id": "CTL.RDS.ENCRYPT.001",
+      "control_name": "RDS Encryption at Rest",
+      "control_description": "Detects RDS instances without encryption at rest.",
+      "asset_id": "arn:aws:rds:us-east-1:111111111111:db:acme-reports-db",
+      "asset_type": "aws_rds_instance",
+      "asset_vendor": "aws",
+      "evidence": {"first_unsafe_at":"2026-01-01T00:00:00Z","last_seen_unsafe_at":"2026-01-11T00:00:00Z","unsafe_duration_hours":240,"threshold_hours":168,"misconfigurations":[],"root_causes":[],"temporal_risk":""},
+      "control_severity": "low",
+      "control_compliance": {"nist_800_53_r5": "SC-28"}
+    }
+  ]
+}

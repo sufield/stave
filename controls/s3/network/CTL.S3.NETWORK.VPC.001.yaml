@@ -11,6 +11,7 @@ domain: exposure
 severity: high
 compliance:
   hipaa: "164.312(e)(1)"
+  nist_800_53_r5: "SC-7"
 scope_tags:
   - aws
   - s3

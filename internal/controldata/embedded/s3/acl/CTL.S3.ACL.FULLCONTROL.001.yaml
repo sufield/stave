@@ -11,6 +11,8 @@ exposure:
   type: acl_full_control
   principal_scope: public
 severity: critical
+compliance:
+  nist_800_53_r5: "AC-3"
 scope_tags: [aws, s3]
 type: unsafe_state
 params:

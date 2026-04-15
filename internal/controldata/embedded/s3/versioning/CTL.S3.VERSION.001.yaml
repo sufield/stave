@@ -10,6 +10,7 @@ compliance:
   hipaa: "164.312(c)(1)"
   cis_aws_v1.4.0: "2.1.3"
   soc2: "CC6.1"
+  nist_800_53_r5: "CP-9"
 scope_tags:
   - aws
   - s3

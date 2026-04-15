@@ -13,6 +13,7 @@ severity: medium
 compliance:
   hipaa: "164.316(b)(2)"
   soc2: "CC6.1"
+  nist_800_53_r5: "AU-9"
 scope_tags:
   - aws
   - s3

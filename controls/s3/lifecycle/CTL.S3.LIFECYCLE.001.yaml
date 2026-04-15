@@ -12,6 +12,7 @@ domain: exposure
 severity: medium
 compliance:
   soc2: "C1.2"
+  nist_800_53_r5: "SI-12"
 scope_tags:
   - aws
   - s3

@@ -11,6 +11,8 @@ description: >
   restrictions.
 domain: exposure
 severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
 scope_tags:
   - aws
   - s3

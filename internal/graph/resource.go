@@ -1,6 +1,9 @@
 package graph
 
-import "strings"
+import (
+	"slices"
+	"strings"
+)
 
 // resourceClassRules maps provider_type tokens to resource_class.
 // Evaluated in order — first match wins. Use a slice (not a map)
@@ -90,10 +93,8 @@ func ToResourceClass(providerType string) string {
 	// substring collisions (e.g. "ecr" inside "secretsmanager").
 	tokens := strings.Split(lower, "_")
 	for _, rule := range resourceClassRules {
-		for _, tok := range tokens {
-			if tok == rule.key {
-				return rule.class
-			}
+		if slices.Contains(tokens, rule.key) {
+			return rule.class
 		}
 	}
 

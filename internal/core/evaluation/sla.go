@@ -54,10 +54,7 @@ func AnnotateFindingSLA(f *Finding, ctl *policy.ControlDefinition, cfg *SLAConfi
 
 	// Escalation: bump severity by one tier per breach period.
 	// 1× overdue = +1 tier, 2× = +2, 3×+ = cap at critical.
-	periodsOverdue := int(overdue / deadlineHours)
-	if periodsOverdue < 1 {
-		periodsOverdue = 1
-	}
+	periodsOverdue := max(int(overdue/deadlineHours), 1)
 	escalated := escalateSeverity(f.ControlSeverity.String(), periodsOverdue)
 	if escalated != f.ControlSeverity.String() {
 		f.SLAEscalatedSeverity = escalated

@@ -1,0 +1,43 @@
+dsl_version: ctrl.v1
+id: CTL.S3.POLICY.EXISTS.001
+name: S3 Bucket Must Have an Explicit Bucket Policy Attached
+description: >
+  S3 buckets must have an explicit resource-based bucket policy. Without
+  a policy, access controls rely entirely on IAM and ACLs — there is no
+  resource-level enforcement of encryption requirements, VPC restrictions,
+  or transport security.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-3"
+  hipaa: "164.312(a)(1)"
+  soc2: "CC6.1"
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    S3 bucket has no bucket policy attached. Resource-level access
+    controls cannot be enforced.
+  action: >
+    Attach an explicit bucket policy. At minimum the policy should deny
+    HTTP requests (aws:SecureTransport false), deny unencrypted PutObject,
+    and restrict access to known principals or VPC endpoints.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "policy_json": "{\"Version\":\"2012-10-17\",\"Statement\":[...]}"
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.policy_json
+      op: eq
+      value: ""

@@ -92,6 +92,12 @@ type config struct {
 	Stdout      io.Writer // diagnostic output; defaults to os.Stdout
 }
 
+var (
+	validDomains    = map[string]bool{"exposure": true, "identity": true, "governance": true}
+	validSeverities = map[string]bool{"critical": true, "high": true, "medium": true, "low": true, "info": true}
+	validOps        = map[string]bool{"eq": true, "ne": true, "lt": true, "gt": true, "missing": true, "present": true}
+)
+
 func (c *config) validate() error {
 	if c.ID == "" {
 		return fmt.Errorf("--id is required")
@@ -107,6 +113,15 @@ func (c *config) validate() error {
 	}
 	if c.Remediation == "" {
 		return fmt.Errorf("--remediation is required (every control must have a remediation path)")
+	}
+	if !validDomains[c.Domain] {
+		return fmt.Errorf("--domain: must be one of exposure, identity, governance")
+	}
+	if !validSeverities[c.Severity] {
+		return fmt.Errorf("--severity: must be one of critical, high, medium, low, info")
+	}
+	if !validOps[c.Op] {
+		return fmt.Errorf("--op: must be one of eq, ne, lt, gt, missing, present")
 	}
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -140,8 +155,8 @@ func run(cfg config) error {
 		Field:       cfg.Field,
 		Op:          cfg.Op,
 		Value:       typedValue(cfg.Value),
-		Description: cfg.Description,
-		Remediation: cfg.Remediation,
+		Description: sanitizeScalar(cfg.Description),
+		Remediation: sanitizeScalar(cfg.Remediation),
 		Compliance:  parseCompliance(cfg.Compliance),
 	}
 
@@ -246,7 +261,7 @@ type templateData struct {
 
 var controlTmpl = `dsl_version: ctrl.v1
 id: {{ .ID }}
-name: {{ .Name }}
+name: {{ quote .Name }}
 description: >
   {{ .Description }}
 domain: {{ .Domain }}
@@ -254,12 +269,12 @@ severity: {{ .Severity }}
 {{- if .Compliance }}
 compliance:
 {{- range $k, $v := .Compliance }}
-  {{ $k }}: "{{ $v }}"
+  {{ $k }}: {{ quote $v }}
 {{- end }}
 {{- end }}
 scope_tags:
 {{- range .ScopeTags }}
-  - {{ . }}
+  - {{ quote . }}
 {{- end }}
 type: unsafe_state
 params: {}
@@ -271,17 +286,21 @@ remediation:
 unsafe_predicate:
   all:
 {{- if .Kind }}
-    - field: {{ .KindField }}
+    - field: {{ quote .KindField }}
       op: eq
-      value: {{ .Kind }}
+      value: {{ quote .Kind }}
 {{- end }}
-    - field: {{ .Field }}
+    - field: {{ quote .Field }}
       op: {{ .Op }}
       value: {{ .Value }}
 `
 
+var tmplFuncs = template.FuncMap{
+	"quote": yamlutil.Quote,
+}
+
 func renderTemplate(tmpl string, data templateData) (string, error) {
-	t, err := template.New("control").Parse(tmpl)
+	t, err := template.New("control").Funcs(tmplFuncs).Parse(tmpl)
 	if err != nil {
 		return "", err
 	}
@@ -395,6 +414,17 @@ func defaultKindField(domain string) string {
 	default:
 		return "properties.storage.kind"
 	}
+}
+
+// sanitizeScalar collapses newlines and carriage returns to spaces.
+// Used for values placed inside YAML folded block scalars (>) where
+// an unindented newline would break out of the scalar and inject
+// arbitrary YAML structure.
+func sanitizeScalar(s string) string {
+	s = strings.ReplaceAll(s, "\r\n", " ")
+	s = strings.ReplaceAll(s, "\n", " ")
+	s = strings.ReplaceAll(s, "\r", " ")
+	return s
 }
 
 func shortField(field string) string {

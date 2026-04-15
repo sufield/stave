@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/adapters/pruner"
 	appconfig "github.com/sufield/stave/internal/app/config"
@@ -90,51 +89,6 @@ type ResolvedRetention struct {
 	RetentionTier string
 	Now           time.Time
 	Format        appcontracts.OutputFormat
-}
-
-// ResolutionFlags indicates which CLI flags were explicitly set by the user.
-type ResolutionFlags struct {
-	OlderThanChanged bool
-	TierChanged      bool
-	FormatChanged    bool
-	IsJSONMode       bool
-}
-
-// ResolveRetention transforms raw CLI flag values into fully resolved retention
-// parameters.
-func ResolveRetention(raw RawRetentionOpts, eval *appconfig.GovernanceResolver, flags ResolutionFlags) (ResolvedRetention, error) {
-	olderThan := raw.OlderThan
-	if !flags.OlderThanChanged {
-		olderThan = eval.SnapshotRetention()
-	}
-	tier := raw.Tier
-	if !flags.TierChanged {
-		tier = eval.RetentionTier()
-	}
-
-	validTier, err := ValidateRetentionTierWith(eval, tier)
-	if err != nil {
-		return ResolvedRetention{}, err
-	}
-	resolvedOlderThan, err := ResolveOlderThanWith(eval, olderThan, flags.OlderThanChanged, validTier)
-	if err != nil {
-		return ResolvedRetention{}, err
-	}
-	now, err := compose.ResolveNow(raw.NowRaw)
-	if err != nil {
-		return ResolvedRetention{}, err
-	}
-	format, err := compose.ResolveFormatValuePure(raw.FormatFlag, flags.FormatChanged, flags.IsJSONMode)
-	if err != nil {
-		return ResolvedRetention{}, err
-	}
-
-	return ResolvedRetention{
-		OlderThan:     resolvedOlderThan,
-		RetentionTier: validTier,
-		Now:           now,
-		Format:        format,
-	}, nil
 }
 
 // ValidateRetentionTierWith normalizes and validates a retention tier name

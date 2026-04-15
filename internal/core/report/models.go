@@ -27,17 +27,18 @@ const (
 
 // AssessmentRequest bundles inputs for constructing a security assessment.
 type AssessmentRequest struct {
-	Run                evaluation.RunInfo
-	Summary            evaluation.ComplianceSummary
-	SecurityState      evaluation.SecurityState
-	RiskSignals        risk.ThresholdItems
-	Findings           []remediation.Finding
-	ChainFindings      []risk.CompoundFinding
-	AttackStageSummary map[string]string
-	TopExposures       []risk.ExposureRank
-	SkippedControls    []evaluation.SkippedControl
-	ExemptedAssets     []asset.ExemptedAsset
-	ExceptedFindings   []evaluation.ExceptedFinding
+	Run                  evaluation.RunInfo
+	Summary              evaluation.ComplianceSummary
+	SecurityState        evaluation.SecurityState
+	RiskSignals          risk.ThresholdItems
+	Findings             []remediation.Finding
+	ChainFindings        []risk.CompoundFinding
+	AttackStageSummary   map[string]string
+	TopExposures         []risk.ExposureRank
+	SkippedControls      []evaluation.SkippedControl
+	ExemptedAssets       []asset.ExemptedAsset
+	ExceptedFindings     []evaluation.ExceptedFinding
+	AcknowledgedFindings []policy.AcknowledgedFinding
 }
 
 // Assessment is the top-level schema for a security evaluation outcome.
@@ -64,19 +65,20 @@ type Assessment struct {
 // (nil → [] for stable JSON output).
 func NewAssessment(req AssessmentRequest) *Assessment {
 	return &Assessment{
-		SchemaVersion:      kernel.SchemaOutput,
-		Kind:               KindAssessment,
-		Run:                req.Run,
-		Summary:            req.Summary,
-		Status:             req.SecurityState,
-		RiskSignals:        req.RiskSignals,
-		Findings:           emptyIfNil(req.Findings),
-		ChainFindings:      req.ChainFindings,
-		AttackStageSummary: req.AttackStageSummary,
-		TopExposures:       req.TopExposures,
-		ExceptedFindings:   emptyIfNil(req.ExceptedFindings),
-		SkippedControls:    emptyIfNil(req.SkippedControls),
-		ExemptedAssets:     emptyIfNil(req.ExemptedAssets),
+		SchemaVersion:        kernel.SchemaOutput,
+		Kind:                 KindAssessment,
+		Run:                  req.Run,
+		Summary:              req.Summary,
+		Status:               req.SecurityState,
+		RiskSignals:          req.RiskSignals,
+		Findings:             emptyIfNil(req.Findings),
+		ChainFindings:        req.ChainFindings,
+		AttackStageSummary:   req.AttackStageSummary,
+		TopExposures:         req.TopExposures,
+		ExceptedFindings:     emptyIfNil(req.ExceptedFindings),
+		AcknowledgedFindings: emptyIfNil(req.AcknowledgedFindings),
+		SkippedControls:      emptyIfNil(req.SkippedControls),
+		ExemptedAssets:       emptyIfNil(req.ExemptedAssets),
 	}
 }
 

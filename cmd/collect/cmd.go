@@ -12,7 +12,16 @@ import (
 
 	"github.com/spf13/cobra"
 
+	builtinctl "github.com/sufield/stave/internal/adapters/controls/builtin"
+	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
+	"github.com/sufield/stave/internal/adapters/observations"
 	appcollect "github.com/sufield/stave/internal/app/collect"
+	appeval "github.com/sufield/stave/internal/app/eval"
+	stavecel "github.com/sufield/stave/internal/cel"
+	"github.com/sufield/stave/internal/controldata"
+	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/ports"
+	"github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/version"
 )
 
@@ -70,7 +79,6 @@ func runCollect(stdout, stderr io.Writer, opts *options) error {
 		return err
 	}
 
-	// Verify mode.
 	if opts.Verify {
 		return runVerify(stdout, archive)
 	}
@@ -80,38 +88,88 @@ func runCollect(stdout, stderr io.Writer, opts *options) error {
 	}
 
 	start := time.Now().UTC()
-	runID := start.Format("2006-01-15T15-04-05Z")
+	runID := start.Format("2006-01-02T15-04-05Z")
 
-	// Build evidence bundle files.
-	// In a full implementation, this calls stave apply + stave export
-	// internally. For now, record the collection with metadata.
 	frameworks := strings.Split(opts.Compliance, ",")
 	for i := range frameworks {
 		frameworks[i] = strings.TrimSpace(frameworks[i])
 	}
 
-	meta := appcollect.RunMetadata{
-		RunID:        runID,
-		CollectedAt:  start.Format(time.RFC3339),
-		StaveVersion: version.String,
-		Frameworks:   frameworks,
+	// Load snapshot.
+	snapshots, err := observations.LoadBundle(opts.Snapshot)
+	if err != nil {
+		return fmt.Errorf("load snapshot: %w", err)
+	}
+	if len(snapshots) == 0 {
+		return errors.New("snapshot contains no observations")
 	}
 
-	// The evidence files would be produced by calling the assessment
-	// and export pipelines. For this iteration, write a placeholder
-	// evidence record that confirms the collection ran.
-	evidenceData, _ := json.MarshalIndent(map[string]any{
-		"collected_at": start.Format(time.RFC3339),
-		"frameworks":   frameworks,
-		"snapshot":     opts.Snapshot,
-	}, "", "  ")
+	// Load controls.
+	store := builtinctl.NewControlStore(controldata.FS, ".")
+	controls, err := store.All()
+	if err != nil {
+		return fmt.Errorf("load controls: %w", err)
+	}
+
+	// Load chains.
+	chains, _ := ctlyaml.LoadChains("chains")
+
+	// CEL evaluator.
+	celEval, err := stavecel.NewPredicateEval()
+	if err != nil {
+		return fmt.Errorf("init CEL: %w", err)
+	}
+
+	// Run assessment.
+	result, evalErr := appeval.EvaluateLoaded(appeval.EvaluationRequest{
+		Controls:        controls,
+		Snapshots:       snapshots,
+		Clock:           ports.RealClock{},
+		Hasher:          crypto.NewHasher(),
+		StaveVersion:    version.String,
+		PredicateParser: ctlyaml.ParsePredicate,
+		CELEvaluator:    celEval,
+	})
+	if evalErr != nil {
+		return fmt.Errorf("assessment: %w", evalErr)
+	}
+
+	// Enrich with chains.
+	appeval.EnrichReport(&result, controls, chains)
+
+	// Serialize assessment output.
+	assessmentData, err := json.MarshalIndent(result, "", "  ")
+	if err != nil {
+		return fmt.Errorf("marshal assessment: %w", err)
+	}
+
+	// Count findings by severity.
+	criticalCount := 0
+	highCount := 0
+	for i := range result.Findings {
+		switch result.Findings[i].ControlSeverity {
+		case policy.SeverityCritical:
+			criticalCount++
+		case policy.SeverityHigh:
+			highCount++
+		}
+	}
 
 	files := map[string][]byte{
-		"evidence.json": evidenceData,
+		"assessment.json": assessmentData,
 	}
 
 	elapsed := time.Since(start)
-	meta.CollectionDurationMs = elapsed.Milliseconds()
+	meta := appcollect.RunMetadata{
+		RunID:                runID,
+		CollectedAt:          start.Format(time.RFC3339),
+		StaveVersion:         version.String,
+		Frameworks:           frameworks,
+		FindingCount:         len(result.Findings),
+		CriticalCount:        criticalCount,
+		HighCount:            highCount,
+		CollectionDurationMs: elapsed.Milliseconds(),
+	}
 
 	if writeErr := archive.WriteRun(runID, files, meta); writeErr != nil {
 		return fmt.Errorf("write run: %w", writeErr)
@@ -130,15 +188,15 @@ func runCollect(stdout, stderr io.Writer, opts *options) error {
 		RunID:        runID,
 		CollectedAt:  start.Format(time.RFC3339),
 		Frameworks:   frameworks,
-		FindingCount: meta.FindingCount,
-		SHA256:       meta.SHA256Sums["evidence.json"],
-	}, 24) // 24h expected interval
+		FindingCount: len(result.Findings),
+		SHA256:       meta.SHA256Sums["assessment.json"],
+	}, 24)
 
 	if saveErr := archive.SaveManifest(manifest); saveErr != nil {
 		return fmt.Errorf("save manifest: %w", saveErr)
 	}
 
-	fmt.Fprintf(stderr, "Collected: run %s (%dms)\n", runID, elapsed.Milliseconds())
+	fmt.Fprintf(stderr, "Collected: run %s (%dms, %d findings)\n", runID, elapsed.Milliseconds(), len(result.Findings))
 	fmt.Fprintf(stderr, "Archive: %s (%d runs)\n", opts.Archive, len(manifest.Runs))
 
 	if len(manifest.Gaps) > 0 {
