@@ -48,7 +48,7 @@ func Run(input Input) (*ConsolidatedReport, []string, error) {
 	var warnings []string
 	now := input.Now
 	if now.IsZero() {
-		return nil, nil, errors.New("Now is required (use ports.Clock or --now)")
+		return nil, nil, errors.New("now is required (use ports.Clock or --now)")
 	}
 
 	report := &ConsolidatedReport{

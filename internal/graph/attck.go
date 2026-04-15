@@ -1,0 +1,70 @@
+// Package graph provides the graph-json export builder.
+package graph
+
+// attackStageToTactic maps Stave attack stage strings to ATT&CK tactic IDs.
+// Source: docs/ontology/attack-stages.json
+var attackStageToTactic = map[string]string{
+	"initial_access":       "TA0001",
+	"execution":            "TA0002",
+	"persistence":          "TA0003",
+	"privilege_escalation": "TA0004",
+	"detection_evasion":    "TA0005",
+	"credential_access":    "TA0006",
+	"discovery":            "TA0007",
+	"lateral_movement":     "TA0008",
+	"collection":           "TA0009",
+	"exfiltration":         "TA0010",
+	"impact":               "TA0040",
+	"resilience":           "x_stave_resilience",
+}
+
+// ToATTCKTacticID translates a Stave attack stage to an ATT&CK tactic ID.
+func ToATTCKTacticID(staveStage string) string {
+	if id, ok := attackStageToTactic[staveStage]; ok {
+		return id
+	}
+	return ""
+}
+
+// TranslateStages converts a slice of Stave stages to ATT&CK tactic IDs.
+func TranslateStages(stages []string) []string {
+	out := make([]string, 0, len(stages))
+	for _, s := range stages {
+		if id := ToATTCKTacticID(s); id != "" {
+			out = append(out, id)
+		}
+	}
+	return out
+}
+
+// ToKillChainPhases produces STIX 2.1 kill_chain_phases from Stave stages.
+func ToKillChainPhases(stages []string) []map[string]string {
+	out := make([]map[string]string, 0, len(stages))
+	for _, s := range stages {
+		phase := staveToKillChainPhase(s)
+		if phase != "" {
+			out = append(out, map[string]string{
+				"kill_chain_name": "mitre-attack",
+				"phase_name":      phase,
+			})
+		}
+	}
+	return out
+}
+
+func staveToKillChainPhase(stage string) string {
+	phases := map[string]string{ //nolint:gosec // G101: not credentials — ATT&CK tactic names
+		"initial_access":       "initial-access",
+		"execution":            "execution",
+		"persistence":          "persistence",
+		"privilege_escalation": "privilege-escalation",
+		"detection_evasion":    "defense-evasion",
+		"credential_access":    "credential-access",
+		"discovery":            "discovery",
+		"lateral_movement":     "lateral-movement",
+		"collection":           "collection",
+		"exfiltration":         "exfiltration",
+		"impact":               "impact",
+	}
+	return phases[stage]
+}

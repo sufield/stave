@@ -1,6 +1,6 @@
 # Stave
 
-Deterministic, traceable, and inspectable risk reasoning engine for cloud infrastructure. Built on System Invariant as Code. Control catalog validated against six major security frameworks. Compound reasoning chains fire on attack paths no per-resource scanner can detect. Evaluates local snapshots — no cloud credentials required.
+A deterministic cloud security intelligence engine. Evaluates invariants against local infrastructure snapshots to produce compound attack path analysis, compliance evidence packages, and identity-centric risk rankings — air-gapped, traceable, no cloud credentials required.
 
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/sufield/stave/badge)](https://securityscorecards.dev/viewer/?uri=github.com/sufield/stave)
 [![Go Report Card](https://goreportcard.com/badge/github.com/sufield/stave?v=1)](https://goreportcard.com/report/github.com/sufield/stave)
@@ -8,13 +8,7 @@ Deterministic, traceable, and inspectable risk reasoning engine for cloud infras
 
 ## What is Stave?
 
-Stave is a **safety envelope evaluator** — a new category that applies formal safety engineering principles to cloud infrastructure.
-
-**Unit of analysis:** Control × Asset → Safety Envelope. Each control defines one layer of protection. Each asset has a safety envelope — the complete set of controls protecting it. Stave evaluates individual layers, then reasons about whether the envelope is intact, degraded, or collapsed.
-
-**Output type:** Reasoning Attestation. A structured, deterministic argument about the integrity of each safety envelope — what failed, what the failures mean in combination, how they compound, and what to fix first to restore the envelope.
-
-This concept comes from safety engineering (IEC 61508, DO-178C) where systems must prove they are safe, not just report what is broken. Stave applies the same discipline to cloud configuration.
+Stave detects compound attack paths in cloud infrastructure by evaluating invariants against local snapshots — no cloud credentials, no live API calls. It produces compliance evidence packages, SLA-tracked remediation guidance, identity blast radius rankings, and a standards-based security graph exportable to Neo4j, SIEM platforms, and GRC tools. The same snapshot that detects misconfigurations produces HIPAA audit evidence, MITRE ATT&CK-annotated findings, and OCSF-compliant graph exports
 
 ## Why this exists
 

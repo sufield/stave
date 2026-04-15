@@ -1,0 +1,20 @@
+{
+  "version": "1",
+  "description": "Stave attack stage to MITRE ATT&CK tactic ID mapping",
+  "source": "https://attack.mitre.org/tactics/enterprise/",
+  "attack_version": "v15",
+  "stages": [
+    { "stave_id": "initial_access",       "attack_tactic_id": "TA0001", "attack_tactic_name": "Initial Access" },
+    { "stave_id": "execution",            "attack_tactic_id": "TA0002", "attack_tactic_name": "Execution" },
+    { "stave_id": "persistence",          "attack_tactic_id": "TA0003", "attack_tactic_name": "Persistence" },
+    { "stave_id": "privilege_escalation",  "attack_tactic_id": "TA0004", "attack_tactic_name": "Privilege Escalation" },
+    { "stave_id": "detection_evasion",     "attack_tactic_id": "TA0005", "attack_tactic_name": "Defense Evasion" },
+    { "stave_id": "credential_access",    "attack_tactic_id": "TA0006", "attack_tactic_name": "Credential Access" },
+    { "stave_id": "discovery",            "attack_tactic_id": "TA0007", "attack_tactic_name": "Discovery" },
+    { "stave_id": "lateral_movement",     "attack_tactic_id": "TA0008", "attack_tactic_name": "Lateral Movement" },
+    { "stave_id": "collection",           "attack_tactic_id": "TA0009", "attack_tactic_name": "Collection" },
+    { "stave_id": "exfiltration",         "attack_tactic_id": "TA0010", "attack_tactic_name": "Exfiltration" },
+    { "stave_id": "impact",              "attack_tactic_id": "TA0040", "attack_tactic_name": "Impact" },
+    { "stave_id": "resilience",           "attack_tactic_id": "x_stave_resilience", "attack_tactic_name": "Resilience (Stave extension)", "note": "No ATT&CK equivalent — covers availability, backup, and recovery controls" }
+  ]
+}

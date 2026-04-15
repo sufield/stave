@@ -1,0 +1,71 @@
+{
+  "class_uid": 2001,
+  "class_name": "Security Finding",
+  "category_uid": 2,
+  "category_name": "Findings",
+  "severity_id": 5,
+  "severity": "Critical",
+  "activity_id": 1,
+  "activity_name": "Create",
+  "status_id": 1,
+  "status": "New",
+  "time": "2025-11-15T14:20:00Z",
+  "message": "S3 bucket phi-patient-records is publicly accessible. Non-compliant for 240 hours (SLA: 168 hours).",
+  "finding_info": {
+    "uid": "sha256:a3f8c2d1e9b4",
+    "title": "No Public S3 Bucket Read",
+    "desc": "S3 bucket must not allow public read access. Public buckets expose data to the internet.",
+    "types": ["Misconfiguration"],
+    "created_time": "2025-11-05T14:20:00Z",
+    "modified_time": "2025-11-15T14:20:00Z",
+    "first_seen_time": "2025-11-05T14:20:00Z",
+    "last_seen_time": "2025-11-15T14:20:00Z",
+    "src_url": "https://stavecli.dev/controls/CTL.S3.PUBLIC.001"
+  },
+  "resources": [
+    {
+      "uid": "arn:aws:s3:::phi-patient-records",
+      "name": "phi-patient-records",
+      "type": "AWS::S3::Bucket",
+      "cloud": {
+        "provider": "AWS",
+        "account": { "uid": "123456789012" },
+        "region": "us-east-1"
+      }
+    }
+  ],
+  "compliance": {
+    "requirements": [
+      { "uid": "164.312(a)(1)", "control": "HIPAA Access Control" },
+      { "uid": "7.2.1", "control": "PCI-DSS v4.0 Access Control" }
+    ]
+  },
+  "remediation": {
+    "desc": "Enable S3 Public Access Block on the bucket.",
+    "references": ["https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-control-block-public-access.html"]
+  },
+  "metadata": {
+    "product": { "name": "stave", "vendor_name": "Sufield", "version": "edge" },
+    "version": "1.3.0"
+  },
+  "x_stave_invariant": {
+    "control_id": "CTL.S3.PUBLIC.001",
+    "predicate": "properties.storage.public_access_block.block_public_acls == false",
+    "type": "unsafe_state",
+    "attack_stage": "TA0001",
+    "blast_radius": "account"
+  },
+  "x_stave_blast_radius": {
+    "scope": "account",
+    "reachable_resource_count": 14,
+    "risk_reduction_percent": 68.3
+  },
+  "x_stave_chain_membership": [
+    {
+      "chain_id": "data_exfiltration_path",
+      "chain_severity": "critical",
+      "stage_span": ["TA0001", "TA0006", "TA0010"],
+      "narrative": "Public bucket + unencrypted KMS key + no CloudTrail = data exfiltration path"
+    }
+  ]
+}

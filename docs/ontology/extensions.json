@@ -1,0 +1,65 @@
+{
+  "version": "1",
+  "description": "Stave extension definitions for concepts with no existing standard",
+  "extensions": {
+    "x_stave_invariant": {
+      "host_standard": "OCSF",
+      "host_type": "Security Finding (2001)",
+      "description": "Control predicate metadata — the declarative rule that produced this finding",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "control_id": { "type": "string", "description": "Stave control identifier", "example": "CTL.S3.PUBLIC.001" },
+          "predicate": { "type": "string", "description": "Human-readable predicate expression" },
+          "type": { "type": "string", "enum": ["unsafe_state", "unsafe_duration", "unsafe_recurrence", "prefix_exposure"] },
+          "attack_stage": { "type": "string", "description": "ATT&CK tactic ID or x_stave_resilience" },
+          "blast_radius": { "type": "string", "enum": ["account", "network", "resource"] }
+        },
+        "required": ["control_id", "type"]
+      }
+    },
+    "x_stave_blast_radius": {
+      "host_standard": "OCSF",
+      "host_type": "Security Finding (2001)",
+      "description": "Risk amplifier — scope and transitive reach of a finding's blast radius",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "scope": { "type": "string", "enum": ["account", "network", "resource"] },
+          "reachable_resource_count": { "type": "integer", "minimum": 0 },
+          "risk_reduction_percent": { "type": "number", "minimum": 0, "maximum": 100 }
+        },
+        "required": ["scope"]
+      }
+    },
+    "x_stave_chain_membership": {
+      "host_standard": "OCSF",
+      "host_type": "Security Finding (2001)",
+      "description": "Chain attribution — which threat chains this finding contributes to",
+      "schema": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "chain_id": { "type": "string", "description": "Chain definition ID" },
+            "chain_severity": { "type": "string", "enum": ["critical", "high", "medium", "low"] },
+            "stage_span": { "type": "array", "items": { "type": "string" }, "description": "ATT&CK tactic IDs in kill chain order" },
+            "narrative": { "type": "string", "description": "Human-readable chain description" }
+          },
+          "required": ["chain_id", "chain_severity"]
+        }
+      }
+    },
+    "x_stave_tactic": {
+      "host_standard": "MITRE ATT&CK",
+      "host_type": "Tactic",
+      "description": "Stave-specific tactic for controls with no ATT&CK equivalent",
+      "values": {
+        "x_stave_resilience": {
+          "name": "Resilience",
+          "description": "Controls that protect availability, backup integrity, and disaster recovery capability"
+        }
+      }
+    }
+  }
+}

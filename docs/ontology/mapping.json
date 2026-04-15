@@ -1,0 +1,32 @@
+{
+  "version": "1",
+  "description": "Stave concept to standard mapping",
+  "nodes": {
+    "TenantScope": { "standard": "OCSF", "type": "cloud.account", "ocsf_version": "1.3" },
+    "StorageResource": { "standard": "OCSF", "type": "Infrastructure/storage", "ocsf_version": "1.3" },
+    "ComputeResource": { "standard": "OCSF", "type": "Infrastructure/server", "ocsf_version": "1.3" },
+    "NetworkResource": { "standard": "OCSF", "type": "Infrastructure/network", "ocsf_version": "1.3" },
+    "DataResource": { "standard": "OCSF", "type": "Infrastructure/database", "ocsf_version": "1.3" },
+    "SecretResource": { "standard": "OCSF", "type": "Infrastructure/service", "ocsf_version": "1.3" },
+    "Identity": { "standard": "OCSF", "type": "User|ServiceAccount", "ocsf_version": "1.3" },
+    "AccessPolicy": { "standard": "OCSF", "type": "Policy", "ocsf_version": "1.3", "note": "extension object" },
+    "Control": { "standard": "OSCAL", "type": "control", "oscal_version": "1.1.2" },
+    "Finding": { "standard": "OCSF", "type": "SecurityFinding", "ocsf_class": 2001, "ocsf_version": "1.3" },
+    "ThreatChain": { "standard": "STIX", "type": "attack-pattern", "stix_version": "2.1" },
+    "ChainFinding": { "standard": "STIX", "type": "indicator", "stix_version": "2.1" },
+    "ComplianceRequirement": { "standard": "OSCAL", "type": "control", "oscal_version": "1.1.2" },
+    "AttackerCapability": { "standard": "STIX", "type": "attack-pattern", "stix_version": "2.1" },
+    "RemediationAction": { "standard": "OCSF", "type": "RemediationActivity", "ocsf_class": 9001, "ocsf_version": "1.3" }
+  },
+  "edges": {
+    "CAN_IMPERSONATE": { "standard": "STIX", "relationship": "uses", "stix_version": "2.1" },
+    "HAS_EFFECTIVE_ACCESS": { "standard": "OCSF", "relationship": "actor.resource", "ocsf_version": "1.3" },
+    "GOVERNED_BY": { "standard": "OCSF", "relationship": "policy.resource", "ocsf_version": "1.3" },
+    "TARGETS": { "standard": "OCSF", "relationship": "finding.resources", "ocsf_version": "1.3" },
+    "MEMBER_OF": { "standard": "STIX", "relationship": "indicates", "stix_version": "2.1" },
+    "MAPS_TO": { "standard": "OSCAL", "relationship": "control.reference", "oscal_version": "1.1.2" },
+    "BELONGS_TO_SCOPE": { "standard": "OCSF", "relationship": "cloud.account", "ocsf_version": "1.3" },
+    "PRODUCES": { "standard": "STIX", "relationship": "kill_chain_phases", "stix_version": "2.1" },
+    "VIOLATES": { "standard": "OCSF", "relationship": "compliance", "ocsf_version": "1.3" }
+  }
+}

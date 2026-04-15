@@ -1,0 +1,35 @@
+{
+  "type": "attack-pattern",
+  "spec_version": "2.1",
+  "id": "attack-pattern--data-exfiltration-path",
+  "created": "2025-11-15T14:20:00.000Z",
+  "modified": "2025-11-15T14:20:00.000Z",
+  "name": "Data Exfiltration Path",
+  "description": "Sensitive data readable by compute with internet egress and weak monitoring. The combination of data access, outbound connectivity, and missing audit trail creates an exfiltration path where a compromised instance can copy sensitive data to an external destination with minimal detection risk.",
+  "kill_chain_phases": [
+    { "kill_chain_name": "mitre-attack", "phase_name": "initial-access" },
+    { "kill_chain_name": "mitre-attack", "phase_name": "credential-access" },
+    { "kill_chain_name": "mitre-attack", "phase_name": "exfiltration" }
+  ],
+  "external_references": [
+    { "source_name": "mitre-attack", "external_id": "TA0001" },
+    { "source_name": "mitre-attack", "external_id": "TA0006" },
+    { "source_name": "mitre-attack", "external_id": "TA0010" },
+    { "source_name": "stave", "external_id": "data_exfiltration_path", "url": "https://stavecli.dev/chains/data_exfiltration_path" }
+  ],
+  "x_stave_chain": {
+    "escalation_threshold": 2,
+    "compound_severity": "critical",
+    "member_controls": [
+      "CTL.EXPOSURE.EXFIL.001",
+      "CTL.EXPOSURE.EXFIL.002",
+      "CTL.VPC.FLOWLOG.001",
+      "CTL.CLOUDTRAIL.DATAREAD.001"
+    ],
+    "controls_failing": [
+      "CTL.EXPOSURE.EXFIL.001",
+      "CTL.VPC.FLOWLOG.001"
+    ],
+    "compound_score": 45.0
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "assessment-results": {
+    "uuid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "metadata": {
+      "title": "Stave Security Assessment",
+      "last-modified": "2025-11-15T14:20:00Z",
+      "version": "1.0",
+      "oscal-version": "1.1.2",
+      "roles": [
+        { "id": "assessor", "title": "Stave CLI" }
+      ],
+      "parties": [
+        { "uuid": "11111111-2222-3333-4444-555555555555", "type": "tool", "name": "stave" }
+      ]
+    },
+    "import-ap": {
+      "href": "#stave-assessment-plan"
+    },
+    "results": [
+      {
+        "uuid": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+        "title": "HIPAA Security Rule Assessment",
+        "start": "2025-11-15T14:20:00Z",
+        "end": "2025-11-15T14:20:01Z",
+        "findings": [
+          {
+            "uuid": "c3d4e5f6-a7b8-9012-cdef-123456789012",
+            "title": "CTL.S3.PUBLIC.001 — No Public S3 Bucket Read",
+            "description": "S3 bucket phi-patient-records is publicly accessible.",
+            "target": {
+              "type": "component",
+              "target-id": "arn:aws:s3:::phi-patient-records",
+              "status": { "state": "not-satisfied" }
+            },
+            "related-observations": [
+              { "observation-uuid": "d4e5f6a7-b8c9-0123-defa-234567890123" }
+            ]
+          }
+        ],
+        "observations": [
+          {
+            "uuid": "d4e5f6a7-b8c9-0123-defa-234567890123",
+            "description": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2025-11-05T14:20:00Z.",
+            "methods": ["EXAMINE"],
+            "types": ["finding"],
+            "collected": "2025-11-15T14:20:00Z",
+            "relevant-evidence": [
+              {
+                "description": "Stave finding sha256:a3f8c2d1e9b4",
+                "links": [
+                  { "href": "#sha256:a3f8c2d1e9b4", "rel": "evidence" }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

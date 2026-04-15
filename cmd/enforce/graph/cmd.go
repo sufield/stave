@@ -21,6 +21,7 @@ func NewCmd(newCtlRepo compose.CtlRepoFactory, loadSnapshots compose.SnapshotLoa
 
 	graphCmd.AddCommand(newCoverageCmd(newCtlRepo, loadSnapshots))
 	graphCmd.AddCommand(newChainsCmd())
+	graphCmd.AddCommand(newExportCmd())
 	return graphCmd
 }
 

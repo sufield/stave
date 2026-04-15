@@ -1,0 +1,20 @@
+{
+  "version": "1",
+  "description": "Provider-agnostic resource class taxonomy",
+  "classes": [
+    { "id": "storage",   "description": "Object and blob storage",   "aws": ["S3"],                    "azure": ["Blob Storage"],         "gcp": ["Cloud Storage"] },
+    { "id": "database",  "description": "Managed databases",         "aws": ["RDS", "DynamoDB"],       "azure": ["Cosmos DB", "SQL"],      "gcp": ["Cloud SQL", "Spanner"] },
+    { "id": "compute",   "description": "Serverless functions",      "aws": ["Lambda"],                "azure": ["Functions"],             "gcp": ["Cloud Functions"] },
+    { "id": "instance",  "description": "Virtual machines",          "aws": ["EC2"],                   "azure": ["Virtual Machines"],      "gcp": ["Compute Engine"] },
+    { "id": "container", "description": "Container workloads",       "aws": ["ECS", "EKS"],            "azure": ["AKS", "ACI"],            "gcp": ["GKE"] },
+    { "id": "network",   "description": "Network controls",          "aws": ["VPC", "SG", "NACL"],     "azure": ["VNet", "NSG"],           "gcp": ["VPC", "Firewall"] },
+    { "id": "identity",  "description": "IAM entities",              "aws": ["IAM Role", "IAM User"],  "azure": ["Azure AD SP"],           "gcp": ["Service Account"] },
+    { "id": "key",       "description": "Encryption keys",           "aws": ["KMS"],                   "azure": ["Key Vault"],             "gcp": ["Cloud KMS"] },
+    { "id": "secret",    "description": "Secrets storage",           "aws": ["Secrets Manager"],       "azure": ["Key Vault Secrets"],     "gcp": ["Secret Manager"] },
+    { "id": "cdn",       "description": "Content delivery",          "aws": ["CloudFront"],            "azure": ["Front Door"],            "gcp": ["Cloud CDN"] },
+    { "id": "dns",       "description": "DNS services",              "aws": ["Route53"],               "azure": ["DNS"],                   "gcp": ["Cloud DNS"] },
+    { "id": "registry",  "description": "Container registries",      "aws": ["ECR"],                   "azure": ["ACR"],                   "gcp": ["Artifact Registry"] },
+    { "id": "queue",     "description": "Message queues",            "aws": ["SQS", "SNS"],            "azure": ["Service Bus"],           "gcp": ["Pub/Sub"] },
+    { "id": "log",       "description": "Logging services",          "aws": ["CloudTrail", "CloudWatch Logs"], "azure": ["Monitor"],       "gcp": ["Cloud Logging"] }
+  ]
+}
