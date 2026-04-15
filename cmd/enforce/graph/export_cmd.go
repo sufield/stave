@@ -18,29 +18,30 @@ import (
 type exportOptions struct {
 	OutputFile string
 	OutPath    string
+	Format     string
 }
 
 func newExportCmd() *cobra.Command {
-	opts := &exportOptions{}
+	opts := &exportOptions{Format: "graph-json"}
 
 	cmd := &cobra.Command{
 		Use:   "export",
-		Short: "Export assessment as graph-json for graph database import",
+		Short: "Export assessment as graph-json, STIX 2.1, or Neo4j Cypher",
 		Long: `Export reads assessment JSON (from stave apply) and produces a
-standards-based graph-json document. Every node and edge maps to
+standards-based graph document. Every node and edge maps to
 OCSF, STIX 2.1, ATT&CK, or OSCAL per docs/ontology/README.md.
 
-Inputs:
-  --output PATH     Path to out.v0.1 assessment JSON (required)
-
-Outputs:
-  stdout or --out   Graph-json document
+Formats:
+  graph-json     Stave graph-json (default)
+  stix           STIX 2.1 Bundle JSON
+  neo4j-cypher   Neo4j Cypher MERGE statements
 
 Exit Codes:
   0   Export complete
   2   Input error`,
 		Example: `  stave graph export --output assessment.json
-  stave graph export --output assessment.json --out graph.json`,
+  stave graph export --output assessment.json --format stix
+  stave graph export --output assessment.json --format neo4j-cypher | cypher-shell`,
 		Args:          cobra.NoArgs,
 		SilenceUsage:  true,
 		SilenceErrors: true,
@@ -50,7 +51,8 @@ Exit Codes:
 	}
 
 	cmd.Flags().StringVar(&opts.OutputFile, "output", "", "Path to out.v0.1 assessment JSON")
-	cmd.Flags().StringVar(&opts.OutPath, "out", "", "Write graph-json to file instead of stdout")
+	cmd.Flags().StringVar(&opts.OutPath, "out", "", "Write output to file instead of stdout")
+	cmd.Flags().StringVarP(&opts.Format, "format", "f", "graph-json", "Output format: graph-json | stix | neo4j-cypher")
 	_ = cmd.MarkFlagRequired("output")
 
 	return cmd
@@ -84,7 +86,14 @@ func runExport(stdout io.Writer, opts *exportOptions) error {
 		out = f
 	}
 
-	enc := json.NewEncoder(out)
-	enc.SetIndent("", "  ")
-	return enc.Encode(g)
+	switch opts.Format {
+	case "stix":
+		return graphpkg.MarshalSTIX(out, g)
+	case "neo4j-cypher":
+		return graphpkg.MarshalCypher(out, g)
+	default:
+		enc := json.NewEncoder(out)
+		enc.SetIndent("", "  ")
+		return enc.Encode(g)
+	}
 }
