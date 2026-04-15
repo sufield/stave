@@ -1,0 +1,12 @@
+id: efs_tenant_isolation_failure
+description: >
+  EFS access points without POSIX user enforcement or root
+  directory isolation combined with no deny-root policy means
+  any application can access any other application's data on
+  the shared file system.
+controls:
+  - CTL.EFS.AP.POSIX.001
+  - CTL.EFS.AP.ROOT.001
+  - CTL.EFS.POLICY.DENYROOT.001
+escalation_threshold: 2
+compound_severity: critical

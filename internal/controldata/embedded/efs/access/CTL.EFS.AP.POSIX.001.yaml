@@ -1,0 +1,44 @@
+dsl_version: ctrl.v1
+id: CTL.EFS.AP.POSIX.001
+name: EFS Access Points Must Enforce POSIX Identity
+description: >
+  EFS access points without a POSIX user identity allow clients to connect
+  with any UID/GID, enabling privilege escalation across tenants sharing the
+  file system. Every access point must enforce a fixed POSIX user to
+  constrain file ownership and permissions.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6"
+scope_tags:
+  - aws
+  - efs
+type: unsafe_state
+params:
+  base_impact: 7
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    EFS access point is missing a POSIX user identity. Clients can connect
+    with any UID/GID.
+  action: >
+    Update the access point to enforce a POSIX user. Run:
+    aws efs create-access-point --file-system-id fs-xxx
+    --posix-user Uid=1000,Gid=1000
+  example: |
+    {
+      "filesystem": {
+        "kind": "efs",
+        "access_points": {
+          "has_missing_posix": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.filesystem.kind
+      op: eq
+      value: efs
+    - field: properties.filesystem.access_points.has_missing_posix
+      op: eq
+      value: true

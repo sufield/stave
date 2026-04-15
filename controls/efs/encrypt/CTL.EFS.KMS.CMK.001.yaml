@@ -1,0 +1,47 @@
+dsl_version: ctrl.v1
+id: CTL.EFS.KMS.CMK.001
+name: EFS File System Must Use Customer-Managed KMS Key
+description: >
+  EFS file systems encrypted with the AWS-managed key (aws/elasticfilesystem)
+  cannot enforce key policies, rotation schedules, or cross-account access
+  restrictions. A customer-managed KMS key is required for full control over
+  the encryption lifecycle and to meet compliance frameworks that mandate
+  key management separation.
+domain: exposure
+severity: high
+compliance:
+  hipaa: "164.312(a)(2)(iv)"
+  pci_dss_v4.0: "3.6.1"
+  nist_800_53_r5: "SC-28"
+scope_tags:
+  - aws
+  - efs
+type: unsafe_state
+params:
+  base_impact: 7
+  attack_stage: exfiltration
+remediation:
+  description: >
+    EFS file system is encrypted with the AWS-managed key. Key policies,
+    rotation, and cross-account restrictions cannot be enforced.
+  action: >
+    Create a new EFS file system with a customer-managed KMS key and
+    migrate data. The KMS key type cannot be changed after creation. Run:
+    aws efs create-file-system --encrypted --kms-key-id arn:aws:kms:REGION:ACCOUNT:key/KEY-ID
+  example: |
+    {
+      "filesystem": {
+        "kind": "efs",
+        "encryption": {
+          "kms_key_type": "customer_managed"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.filesystem.kind
+      op: eq
+      value: efs
+    - field: properties.filesystem.encryption.kms_key_type
+      op: eq
+      value: aws_managed

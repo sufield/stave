@@ -1,0 +1,47 @@
+dsl_version: ctrl.v1
+id: CTL.EFS.POLICY.TRANSIT.001
+name: EFS File System Policy Must Enforce In-Transit Encryption
+description: >
+  EFS file system policies must enforce encryption in transit by denying
+  connections that do not use TLS. Without this policy, NFS clients can
+  mount the file system over plaintext, exposing data to network-level
+  interception and credential sniffing.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-8"
+  hipaa: "164.312(e)(1)"
+scope_tags:
+  - aws
+  - efs
+type: unsafe_state
+params:
+  base_impact: 7
+  attack_stage: credential_access
+remediation:
+  description: >
+    EFS file system policy does not enforce in-transit encryption. NFS
+    clients can mount without TLS.
+  action: >
+    Apply a file system policy that enforces in-transit encryption. Run:
+    aws efs put-file-system-policy --file-system-id fs-xxx --policy
+    '{"Statement":[{"Effect":"Deny","Principal":{"AWS":"*"},
+    "Action":"*","Condition":{"Bool":{"aws:SecureTransport":"false"}},
+    "Resource":"*"}]}'
+  example: |
+    {
+      "filesystem": {
+        "kind": "efs",
+        "file_system_policy": {
+          "enforce_in_transit": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.filesystem.kind
+      op: eq
+      value: efs
+    - field: properties.filesystem.file_system_policy.enforce_in_transit
+      op: eq
+      value: false

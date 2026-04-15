@@ -1,0 +1,13 @@
+id: efs_phi_exposure_path
+description: >
+  EFS file system using AWS-managed key (no customer control),
+  permitting root access, and with no backup policy creates a
+  compound risk: PHI data can be exfiltrated by a compromised
+  root-capable principal with no key revocation capability and
+  no recovery path.
+controls:
+  - CTL.EFS.KMS.CMK.001
+  - CTL.EFS.POLICY.DENYROOT.001
+  - CTL.EFS.BACKUP.001
+escalation_threshold: 2
+compound_severity: critical

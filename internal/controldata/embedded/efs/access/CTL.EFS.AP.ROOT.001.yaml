@@ -1,0 +1,44 @@
+dsl_version: ctrl.v1
+id: CTL.EFS.AP.ROOT.001
+name: EFS Access Points Must Not Expose Root Directory
+description: >
+  EFS access points with a root directory grant clients visibility into the
+  entire file system tree. Each access point should scope access to a
+  specific subdirectory to enforce least-privilege and prevent data
+  exfiltration across application boundaries.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6"
+scope_tags:
+  - aws
+  - efs
+type: unsafe_state
+params:
+  base_impact: 7
+  attack_stage: exfiltration
+remediation:
+  description: >
+    EFS access point exposes the root directory. Clients can read and write
+    the entire file system.
+  action: >
+    Recreate the access point with a scoped root directory path. Run:
+    aws efs create-access-point --file-system-id fs-xxx
+    --root-directory Path=/app/data,CreationInfo={OwnerUid=1000,OwnerGid=1000,Permissions=755}
+  example: |
+    {
+      "filesystem": {
+        "kind": "efs",
+        "access_points": {
+          "has_root_directory": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.filesystem.kind
+      op: eq
+      value: efs
+    - field: properties.filesystem.access_points.has_root_directory
+      op: eq
+      value: true

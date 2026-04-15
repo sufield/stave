@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.EFS.LIFECYCLE.001
+name: EFS File System Should Have Lifecycle Policy Configured
+description: >
+  EFS file systems should have a lifecycle policy that transitions
+  infrequently accessed files to the Infrequent Access (IA) storage class.
+  Without a lifecycle policy, all files remain in the Standard storage
+  class regardless of access patterns, increasing storage costs and
+  reducing operational resilience through budget inefficiency.
+domain: exposure
+severity: low
+compliance:
+  nist_800_53_r5: "CP-9"
+scope_tags:
+  - aws
+  - efs
+type: unsafe_state
+params:
+  base_impact: 3
+  attack_stage: resilience
+remediation:
+  description: >
+    EFS file system has no lifecycle policy. All files remain in Standard
+    storage regardless of access frequency.
+  action: >
+    Configure a lifecycle policy to transition infrequently accessed files.
+    Run:
+    aws efs put-lifecycle-configuration --file-system-id fs-xxx
+    --lifecycle-policies TransitionToIA=AFTER_30_DAYS
+  example: |
+    {
+      "filesystem": {
+        "kind": "efs",
+        "lifecycle_policy": {
+          "transition_to_ia_days": 30
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.filesystem.kind
+      op: eq
+      value: efs
+    - field: properties.filesystem.lifecycle_policy.transition_to_ia_days
+      op: eq
+      value: 0

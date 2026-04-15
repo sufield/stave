@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.EFS.MT.SG.001
+name: EFS Mount Targets Must Have Security Groups Attached
+description: >
+  EFS mount targets must have security groups attached to control network
+  access. Mount targets without security groups accept connections from
+  any source within the VPC, enabling unauthorized NFS access from
+  compromised workloads.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+scope_tags:
+  - aws
+  - efs
+type: unsafe_state
+params:
+  base_impact: 7
+  attack_stage: initial_access
+remediation:
+  description: >
+    EFS mount target is missing a security group. NFS connections are
+    unrestricted within the VPC.
+  action: >
+    Attach a security group to the mount target that restricts NFS
+    (port 2049) to authorized sources. Run:
+    aws efs modify-mount-target-security-groups
+    --mount-target-id fsmt-xxx --security-groups sg-xxx
+  example: |
+    {
+      "filesystem": {
+        "kind": "efs",
+        "mount_targets": {
+          "has_missing_sg": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.filesystem.kind
+      op: eq
+      value: efs
+    - field: properties.filesystem.mount_targets.has_missing_sg
+      op: eq
+      value: true

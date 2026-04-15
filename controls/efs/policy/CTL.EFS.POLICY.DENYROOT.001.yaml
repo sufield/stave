@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.EFS.POLICY.DENYROOT.001
+name: EFS File System Policy Must Deny Root Access
+description: >
+  EFS file system policies must include a statement denying root access.
+  Without this policy, NFS clients mounting the file system can operate
+  as root (UID 0), bypassing POSIX permission boundaries and enabling
+  full read/write access to all files.
+domain: exposure
+severity: critical
+compliance:
+  hipaa: "164.312(a)(1)"
+  nist_800_53_r5: "AC-6"
+scope_tags:
+  - aws
+  - efs
+type: unsafe_state
+params:
+  base_impact: 9
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    EFS file system policy does not deny root access. NFS clients can
+    operate as root.
+  action: >
+    Apply a file system policy that denies root access. Run:
+    aws efs put-file-system-policy --file-system-id fs-xxx --policy
+    '{"Statement":[{"Effect":"Deny","Principal":{"AWS":"*"},
+    "Action":"elasticfilesystem:ClientRootAccess","Resource":"*"}]}'
+  example: |
+    {
+      "filesystem": {
+        "kind": "efs",
+        "file_system_policy": {
+          "deny_root_access": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.filesystem.kind
+      op: eq
+      value: efs
+    - field: properties.filesystem.file_system_policy.deny_root_access
+      op: eq
+      value: false

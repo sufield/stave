@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.EFS.BACKUP.001
+name: EFS File System Must Have Backup Policy Enabled
+description: >
+  EFS file systems must have automatic backups enabled via AWS Backup.
+  Without a backup policy, data loss from accidental deletion, ransomware,
+  or corruption cannot be recovered, violating disaster recovery and
+  business continuity requirements.
+domain: exposure
+severity: medium
+compliance:
+  hipaa: "164.308(a)(7)(ii)(A)"
+  nist_800_53_r5: "CP-9"
+scope_tags:
+  - aws
+  - efs
+type: unsafe_state
+params:
+  base_impact: 5
+  attack_stage: resilience
+remediation:
+  description: >
+    EFS file system does not have a backup policy enabled. Data cannot be
+    recovered from accidental deletion or corruption.
+  action: >
+    Enable automatic backups for the EFS file system. Run:
+    aws efs put-backup-policy --file-system-id fs-xxx
+    --backup-policy Status=ENABLED
+  example: |
+    {
+      "filesystem": {
+        "kind": "efs",
+        "backup": {
+          "policy": "ENABLED"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.filesystem.kind
+      op: eq
+      value: efs
+    - field: properties.filesystem.backup.policy
+      op: ne
+      value: ENABLED

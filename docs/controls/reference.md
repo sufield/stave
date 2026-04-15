@@ -3,24 +3,24 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 364
-**Pack hash:** `059bb83cb36d4870f6f1e13056c48eb379cc552e7f859ae96ec6b2dbc7c6a85d`
+**Total controls:** 428
+**Pack hash:** `b048783003520394ffd06a3ae5a3046633bfeb224b664d7ca04bd6832bc1642d`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 69 |
-| high | 155 |
+| critical | 82 |
+| high | 189 |
 | info | 16 |
-| low | 25 |
-| medium | 99 |
+| low | 28 |
+| medium | 113 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 267 |
+| exposure | 321 |
 | governance | 7 |
-| identity | 82 |
+| identity | 92 |
 | storage | 8 |
 
 ## Controls
@@ -37,6 +37,96 @@
 SSL/TLS certificates imported into ACM must not be within 30 days of expiry or already expired. ACM automatically renews certificates it provisions (AMAZON_ISSUED) but does not renew imported certificates. Imported certificates expire silently on their expiry date with no enforcement mechanism — services continue serving traffic on an expired certificate until clients reject it. An expired certificate on a production load balancer or CloudFront distribution causes TLS negotiation failures for all clients that enforce certificate validity. For HIPAA and PCI-DSS environments, serving traffic on an expired certificate is a direct compliance violation. This control evaluates only IMPORTED certificates — AMAZON_ISSUED certificates are auto-renewed and out of scope.
 
 **Remediation:** Renew or replace the imported certificate. Import the new certificate into ACM via aws acm import-certificate. If the certificate was originally from a private CA, re-issue from the CA and re-import. Consider migrating to an ACM-managed certificate (AMAZON_ISSUED) for automatic renewal — ACM provisions free public certificates for domains validated via DNS or email. After importing the new certificate, verify the associated services (load balancers, CloudFront distributions, API Gateway domains) are serving the updated certificate.
+
+---
+
+### CTL.AD.KERBEROAST.001
+
+**Privileged Accounts Must Not Have Kerberoastable SPNs**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_ad: 5.3; nist_800_53_r5: AC-6;
+
+Service accounts that are members of privileged groups (Domain Admins, Enterprise Admins, etc.) must not have Service Principal Names (SPNs) registered. Any domain user can request a Kerberos service ticket for an SPN and crack the ticket offline to recover the service account password. When the account is privileged, a successful Kerberoasting attack grants immediate domain-level access.
+
+**Remediation:** Remove SPNs from privileged accounts or move the service to a Group Managed Service Account (gMSA) with automatic password rotation. Run: setspn -D <spn> <account> or migrate to gMSA.
+
+---
+
+### CTL.AD.LAPS.001
+
+**Local Administrator Password Solution Must Be Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6;
+
+LAPS (Local Administrator Password Solution) must be deployed to manage local administrator passwords on domain-joined machines. Without LAPS, local admin passwords are often identical across all workstations, allowing an attacker who compromises one machine to move laterally to every machine in the domain using the same credential.
+
+**Remediation:** Deploy Windows LAPS or legacy Microsoft LAPS. Install the LAPS CSE on all domain-joined machines, extend the AD schema, configure the GPO, and set password rotation policy. Run: Update-LapsADSchema; Set-LapsADComputerSelfPermission -Identity "OU=Workstations,DC=corp,DC=local"
+
+---
+
+### CTL.AD.NTLM.LEVEL.001
+
+**NTLM Authentication Must Be Restricted to NTLMv2**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_ad: 2.3.11.7; nist_800_53_r5: IA-2;
+
+The domain must enforce NTLMv2 authentication by setting the LAN Manager authentication level to 3 or higher (Send NTLMv2 response only / refuse LM & NTLM). NTLMv1 and LM responses use weak cryptography that can be cracked in seconds. NTLM relay and pass- the-hash attacks are significantly harder when NTLMv2 is enforced and legacy protocols are refused.
+
+**Remediation:** Set the LAN Manager authentication level to 3 or higher via Group Policy: Computer Configuration > Windows Settings > Security Settings > Local Policies > Security Options > "Network security: LAN Manager authentication level" to "Send NTLMv2 response only. Refuse LM & NTLM."
+
+---
+
+### CTL.AD.PASS.MINLEN.001
+
+**Password Minimum Length Must Be At Least 14 Characters**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_ad: 1.1.1; nist_800_53_r5: IA-5;
+
+Active Directory domain password policy must enforce a minimum length of 14 characters. Shorter passwords are vulnerable to offline brute-force and credential-stuffing attacks. A 14-character minimum aligns with current NIST and CIS guidance and significantly increases the search space an attacker must exhaust.
+
+**Remediation:** Set the minimum password length to 14 or greater in the Default Domain Policy GPO. Run: Set-ADDefaultDomainPasswordPolicy -MinPasswordLength 14
+
+---
+
+### CTL.AD.PASS.REVENC.001
+
+**Reversible Encryption Must Be Disabled**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_ad: 1.1.6; nist_800_53_r5: IA-5;
+
+Active Directory must not store passwords using reversible encryption. When enabled, password hashes can be decrypted back to plaintext, effectively storing passwords in cleartext. An attacker who gains access to the AD database (ntds.dit) can recover every user password without cracking. This setting is required only by legacy protocols such as CHAP and digest authentication, which should be eliminated.
+
+**Remediation:** Disable reversible encryption in the Default Domain Policy GPO. Run: Set-ADDefaultDomainPasswordPolicy -ReversibleEncryptionEnabled $false Then force all users to change their passwords so new hashes are stored without reversible encryption.
+
+---
+
+### CTL.AD.SMB.SIGNING.001
+
+**SMB Signing Must Be Required**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_ad: 2.3.8.1; nist_800_53_r5: SC-8;
+
+SMB signing must be required on all domain controllers and member servers. Without mandatory signing, SMB traffic can be intercepted and modified via man-in-the-middle attacks. Attackers use SMB relay to forward captured NTLM authentication to other hosts, gaining unauthorized access without cracking passwords.
+
+**Remediation:** Enable mandatory SMB signing via Group Policy: Computer Configuration > Windows Settings > Security Settings > Local Policies > Security Options > "Microsoft network server: Digitally sign communications (always)" set to Enabled. Apply to all domain controllers and member servers.
 
 ---
 
@@ -289,6 +379,381 @@ Data classified as critical or PHI must have cross-region replication configured
 CloudFormation template parameters that are likely to contain sensitive values must have NoEcho set to true. Without NoEcho, parameter values are visible in stack events, stack details, and change set descriptions. Any IAM principal with cloudformation:DescribeStacks can read them in plaintext. This control checks the NoEcho property — not the parameter value or default.
 
 **Remediation:** Add NoEcho: true to the parameter definition in the CloudFormation template. Redeploy the stack. Note that existing stack events may still contain the plaintext value — rotate the credential after enabling NoEcho.
+
+---
+
+### CTL.CISCO.ACL.EGRESS.001
+
+**Egress Filtering Must Be Applied**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_cisco_ios_17: 4.2.1; nist_800_53_r5: SC-7;
+
+Cisco IOS devices must have egress filtering applied on external interfaces. Without egress filtering, the device forwards traffic with any source address including spoofed and RFC 1918 addresses. An attacker on the internal network can send packets with forged source addresses to participate in reflected DDoS attacks, evade source-based logging and tracing, or exfiltrate data in a way that cannot be traced back to the originating host.
+
+**Remediation:** Apply egress ACLs to external interfaces permitting only legitimate source address ranges. Run: interface <external-interface> ip access-group <egress-acl> out Verify with: show ip access-lists
+
+---
+
+### CTL.CISCO.ACL.VTY.001
+
+**VTY Lines Must Have ACL Applied**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_cisco_ios_17: 4.1.1; nist_800_53_r5: AC-3;
+
+All VTY lines on Cisco IOS devices must have an access-class ACL applied to restrict remote management access. Without an ACL on VTY lines, any IP address that can reach the device can attempt SSH or Telnet connections. An attacker from any network position can attempt credential brute-force attacks against the management interface. VTY access should be restricted to authorized management networks only.
+
+**Remediation:** Apply an access-class ACL to all VTY lines. Run: line vty 0 15 access-class <acl-name> in Verify with: show running-config | section line vty
+
+---
+
+### CTL.CISCO.AUTH.AAA.001
+
+**AAA New-Model Must Be Enabled**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_cisco_ios_17: 1.2.1; nist_800_53_r5: IA-2;
+
+Cisco IOS devices must have AAA new-model enabled. Without AAA new-model, the device falls back to line-based authentication which cannot enforce centralized authentication, authorization, or accounting policies. An attacker who compromises a local line password gains full access with no audit trail and no ability to enforce per-user access controls.
+
+**Remediation:** Enable AAA new-model. Run: aaa new-model Verify with: show running-config | include aaa new-model
+
+---
+
+### CTL.CISCO.AUTH.ACCOUNTING.001
+
+**AAA Accounting Exec Must Be Configured**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_cisco_ios_17: 1.2.5; nist_800_53_r5: AU-2;
+
+Cisco IOS devices must have AAA accounting for exec sessions configured. Without exec accounting, there is no record of who accessed the device, when sessions started and stopped, or what privilege level was used. An attacker can access the device and perform reconnaissance or configuration changes with no audit trail for incident response or forensic analysis.
+
+**Remediation:** Configure AAA accounting for exec sessions. Run: aaa accounting exec default start-stop group tacacs+ Verify with: show running-config | include aaa accounting exec
+
+---
+
+### CTL.CISCO.AUTH.ENABLE.001
+
+**Enable Secret Must Be Configured**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_cisco_ios_17: 1.1.1; nist_800_53_r5: IA-5;
+
+Cisco IOS devices must use enable secret instead of enable password. The enable password command stores the password using a weak reversible cipher (Type 7) that is trivially decoded. Enable secret uses a one-way hash (MD5 or scrypt) that cannot be reversed. An attacker with read access to the running configuration can decode Type 7 passwords instantly using publicly available tools.
+
+**Remediation:** Configure enable secret and remove enable password. Run: enable secret <strong-password> no enable password Verify with: show running-config | include enable
+
+---
+
+### CTL.CISCO.AUTH.LOGIN.001
+
+**AAA Authentication Login Must Be Configured**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_cisco_ios_17: 1.2.2; nist_800_53_r5: IA-2;
+
+Cisco IOS devices must have AAA authentication login configured. Without an explicit authentication login method list, the device uses default line authentication which typically accepts a single shared password. This prevents per-user accountability and allows any user with the shared password to access the device without individual identification.
+
+**Remediation:** Configure AAA authentication login. Run: aaa authentication login default group tacacs+ local Verify with: show running-config | include aaa authentication login
+
+---
+
+### CTL.CISCO.AUTH.SVCENC.001
+
+**Service Password-Encryption Must Be Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_cisco_ios_17: 1.1.2; nist_800_53_r5: IA-5;
+
+Cisco IOS devices must have service password-encryption enabled. Without this service, passwords in the running and startup configuration are stored in cleartext. Anyone with read access to the configuration file — through SNMP, TFTP backup, or shoulder surfing — can immediately read all passwords including line passwords and username passwords.
+
+**Remediation:** Enable service password-encryption. Run: service password-encryption Verify with: show running-config | include service password
+
+---
+
+### CTL.CISCO.BGP.AUTH.001
+
+**BGP Neighbors Must Use Authentication**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_cisco_ios_17: 3.1.1; nist_800_53_r5: SC-8;
+
+All BGP neighbor sessions on Cisco IOS devices must be configured with MD5 authentication. Without authentication, an attacker who can reach the BGP TCP port (179) can establish a peer session and inject arbitrary routes. This enables traffic hijacking, black-hole attacks, and man-in-the-middle interception of traffic destined for any prefix the attacker advertises. BGP route injection can redirect traffic at internet scale.
+
+**Remediation:** Configure MD5 authentication for all BGP neighbors. Run: router bgp <asn> neighbor <ip> password <secret> Verify with: show ip bgp neighbors | include password
+
+---
+
+### CTL.CISCO.BGP.FILTERIN.001
+
+**BGP Inbound Route Filtering Must Be Applied**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_cisco_ios_17: 3.1.2; nist_800_53_r5: SC-7;
+
+All BGP neighbors on Cisco IOS devices must have inbound route filtering configured. Without inbound filters, the device accepts any route advertised by a peer including routes for prefixes the peer has no authority to announce. An attacker who compromises a peer or establishes an unauthorized session can inject routes for any prefix, redirecting traffic through attacker-controlled infrastructure for interception or denial of service.
+
+**Remediation:** Apply inbound prefix-list or route-map filters to all BGP neighbors. Run: router bgp <asn> neighbor <ip> prefix-list <name> in Verify with: show ip bgp neighbors | include filter
+
+---
+
+### CTL.CISCO.BGP.FILTEROUT.001
+
+**BGP Outbound Route Filtering Must Be Applied**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_cisco_ios_17: 3.1.3; nist_800_53_r5: SC-7;
+
+All BGP neighbors on Cisco IOS devices must have outbound route filtering configured. Without outbound filters, the device may advertise routes for prefixes it should not announce, including internal network prefixes, default routes, or prefixes learned from other peers. This can cause route leaks that redirect traffic through unintended paths, expose internal network topology, or create routing loops that cause denial of service.
+
+**Remediation:** Apply outbound prefix-list or route-map filters to all BGP neighbors. Run: router bgp <asn> neighbor <ip> prefix-list <name> out Verify with: show ip bgp neighbors | include filter
+
+---
+
+### CTL.CISCO.HSRP.AUTH.001
+
+**HSRP Must Use Authentication**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_cisco_ios_17: 3.3.1; nist_800_53_r5: SC-8;
+
+All HSRP groups on Cisco IOS devices must be configured with authentication. Without HSRP authentication, an attacker on the local network segment can send crafted HSRP hello packets with a higher priority to become the active gateway. This redirects all default gateway traffic through the attacker's machine, enabling man-in-the-middle interception of all traffic leaving the subnet including credentials, session tokens, and sensitive data.
+
+**Remediation:** Configure HSRP authentication for all groups. Run: interface <interface> standby <group> authentication md5 key-string <secret> Verify with: show standby | include authentication
+
+---
+
+### CTL.CISCO.INTF.DIRBROADCAST.001
+
+**Directed Broadcast Must Be Disabled on Interfaces**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_cisco_ios_17: 4.3.1; nist_800_53_r5: SC-7;
+
+Cisco IOS devices must have IP directed broadcast disabled on all interfaces. Directed broadcasts allow a remote host to send a packet to the broadcast address of a subnet, which the router then converts to a layer 2 broadcast. This is the basis of the Smurf attack where an attacker sends ICMP echo requests to a directed broadcast address with a spoofed source, causing all hosts on the subnet to respond to the victim, creating massive amplification.
+
+**Remediation:** Disable directed broadcast on all interfaces. Run: interface <interface> no ip directed-broadcast Verify with: show running-config | include directed-broadcast
+
+---
+
+### CTL.CISCO.MGMT.SNMP.001
+
+**SNMP Version Must Be 3**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_cisco_ios_17: 2.2.1; nist_800_53_r5: SC-8;
+
+Cisco IOS devices must use SNMP version 3. SNMP v1 and v2c transmit community strings in cleartext and provide no authentication or encryption. An attacker with network access can capture community strings and gain read or read-write access to the device MIB. SNMP v3 provides authentication (AuthNoPriv) and encryption (AuthPriv) protecting both credentials and management data in transit.
+
+**Remediation:** Configure SNMP v3 with authentication and privacy. Run: snmp-server group <group> v3 priv snmp-server user <user> <group> v3 auth sha <auth-pass> priv aes 256 <priv-pass> Remove SNMP v1/v2c community strings: no snmp-server community <string>
+
+---
+
+### CTL.CISCO.MGMT.SNMPCOMM.001
+
+**No Default SNMP Community Strings**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_cisco_ios_17: 2.2.2; nist_800_53_r5: IA-5;
+
+Cisco IOS devices must not use default SNMP community strings. Default community strings such as "public" and "private" are universally known and are the first values attempted in any SNMP enumeration scan. A device with default community strings allows unauthenticated read or read-write access to its entire MIB, exposing configuration details, routing tables, interface statistics, and enabling configuration changes.
+
+**Remediation:** Remove default SNMP community strings and replace with unique values or migrate to SNMP v3. Run: no snmp-server community public no snmp-server community private Verify with: show snmp community
+
+---
+
+### CTL.CISCO.MGMT.SSH.001
+
+**SSH Version Must Be 2**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_cisco_ios_17: 2.1.2; nist_800_53_r5: SC-8;
+
+Cisco IOS devices must use SSH version 2. SSH version 1 has known cryptographic weaknesses including vulnerability to man-in-the-middle attacks and session hijacking. SSH v1 uses CRC-32 for integrity checking which is not cryptographically secure. An attacker on the network path can exploit these weaknesses to intercept or modify management sessions.
+
+**Remediation:** Configure SSH version 2 explicitly. Run: ip ssh version 2 Verify with: show ip ssh
+
+---
+
+### CTL.CISCO.MGMT.TELNET.001
+
+**Telnet Must Be Disabled**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_cisco_ios_17: 2.1.1; nist_800_53_r5: SC-8;
+
+Telnet must be disabled on Cisco IOS devices. Telnet transmits all data including credentials in cleartext. An attacker with network access can capture management session traffic and extract authentication credentials using passive packet capture. All management access must use SSH which provides encrypted transport.
+
+**Remediation:** Disable Telnet on all VTY lines and require SSH. Run: line vty 0 15 transport input ssh Verify with: show line vty 0 15 | include input
+
+---
+
+### CTL.CISCO.NTP.AUTH.001
+
+**NTP Authentication Must Be Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_cisco_ios_17: 2.2.2; nist_800_53_r5: AU-8;
+
+Cisco IOS devices must have NTP authentication enabled. Without NTP authentication, the device accepts time updates from any source claiming to be an NTP server. An attacker can inject false time data to manipulate log timestamps, cause certificate validation failures, invalidate time-based access controls, or create gaps in audit records by shifting the device clock forward or backward.
+
+**Remediation:** Enable NTP authentication. Run: ntp authenticate ntp authentication-key 1 md5 <key> ntp trusted-key 1 Verify with: show ntp status
+
+---
+
+### CTL.CISCO.NTP.SERVERS.001
+
+**NTP Must Be Configured**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_cisco_ios_17: 2.2.1; nist_800_53_r5: AU-8;
+
+Cisco IOS devices must have NTP configured with at least one time source. Without NTP, device clocks drift and log timestamps become unreliable. Inaccurate timestamps make incident response and forensic analysis extremely difficult because events cannot be correlated across devices. An attacker benefits from unreliable timestamps because their activity cannot be precisely timed or correlated with other network events.
+
+**Remediation:** Configure NTP with a trusted time source. Run: ntp server <ntp-server-ip> Verify with: show ntp status
+
+---
+
+### CTL.CISCO.OSPF.AUTH.001
+
+**OSPF Areas Must Use Authentication**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_cisco_ios_17: 3.2.1; nist_800_53_r5: SC-8;
+
+All OSPF areas on Cisco IOS devices must be configured with authentication. Without OSPF authentication, an attacker connected to an OSPF-enabled network segment can inject false routing information by sending crafted OSPF hello and LSA packets. This enables traffic redirection through attacker-controlled hosts, black-hole attacks that drop traffic silently, and network topology manipulation that can isolate network segments.
+
+**Remediation:** Enable OSPF authentication for all areas. Run: router ospf <process-id> area <area-id> authentication message-digest Verify with: show ip ospf | include authentication
+
+---
+
+### CTL.CISCO.SVC.CDP.001
+
+**CDP Must Be Disabled Globally**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_cisco_ios_17: 2.1.3; nist_800_53_r5: CM-7;
+
+Cisco Discovery Protocol must be disabled on Cisco IOS devices. CDP broadcasts device information including hostname, IOS version, platform, IP addresses, and VLAN information in cleartext to all directly connected devices. An attacker with layer 2 access can passively collect this information to map the network topology and identify vulnerable software versions without generating any traffic that would trigger detection.
+
+**Remediation:** Disable CDP globally. Run: no cdp run Verify with: show cdp
+
+---
+
+### CTL.CISCO.SVC.FINGER.001
+
+**Finger Service Must Be Disabled**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_cisco_ios_17: 2.1.4; nist_800_53_r5: CM-7;
+
+Cisco IOS devices must have the finger service disabled. The finger service exposes user session information including which users are logged in, their terminal lines, idle times, and connection sources. An attacker can use this information to enumerate active management sessions, identify administrator activity patterns, and time attacks for periods of low monitoring activity.
+
+**Remediation:** Disable the finger service. Run: no ip finger no service finger Verify with: show running-config | include finger
+
+---
+
+### CTL.CISCO.SVC.GRATARP.001
+
+**Gratuitous ARP Must Be Disabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_cisco_ios_17: 2.1.6; nist_800_53_r5: SC-7;
+
+Cisco IOS devices must have gratuitous ARP disabled. Gratuitous ARP allows a device to announce its IP-to-MAC mapping without being asked. An attacker can send forged gratuitous ARP packets to poison the ARP cache of other devices on the network segment, redirecting traffic through the attacker's machine for man-in-the-middle attacks. This enables credential interception, session hijacking, and data exfiltration on the local network segment.
+
+**Remediation:** Disable gratuitous ARP on interfaces. Run: no ip gratuitous-arps Verify with: show running-config | include gratuitous
+
+---
+
+### CTL.CISCO.SVC.SRCROUTE.001
+
+**IP Source Routing Must Be Disabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_cisco_ios_17: 2.1.5; nist_800_53_r5: SC-7;
+
+Cisco IOS devices must have IP source routing disabled. Source routing allows a packet sender to specify the route the packet takes through the network, bypassing normal routing decisions. An attacker can use source routing to direct traffic through specific hosts for eavesdropping, bypass firewall rules by routing around security devices, or reach internal hosts that would otherwise be unreachable from the attacker's network position.
+
+**Remediation:** Disable IP source routing. Run: no ip source-route Verify with: show running-config | include ip source-route
+
+---
+
+### CTL.CISCO.SVC.TCPSMALL.001
+
+**TCP Small Servers Must Be Disabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_cisco_ios_17: 2.1.1; nist_800_53_r5: CM-7;
+
+Cisco IOS devices must have TCP small servers disabled. TCP small servers include echo, chargen, discard, and daytime services that provide no operational value on network infrastructure. These services can be used for amplification attacks and denial of service. The chargen service in particular is commonly exploited for reflected DDoS attacks by spoofing the source address.
+
+**Remediation:** Disable TCP small servers. Run: no service tcp-small-servers Verify with: show running-config | include tcp-small-servers
+
+---
+
+### CTL.CISCO.SVC.UDPSMALL.001
+
+**UDP Small Servers Must Be Disabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_cisco_ios_17: 2.1.2; nist_800_53_r5: CM-7;
+
+Cisco IOS devices must have UDP small servers disabled. UDP small servers include echo, chargen, and discard services that provide no operational value on network infrastructure. These services are particularly dangerous because UDP is connectionless and source addresses are easily spoofed, making them ideal for reflected amplification attacks that can overwhelm target networks.
+
+**Remediation:** Disable UDP small servers. Run: no service udp-small-servers Verify with: show running-config | include udp-small-servers
 
 ---
 
@@ -1360,6 +1825,51 @@ ECS task definitions tagged with data-classification phi or pii must have task r
 
 ---
 
+### CTL.EFS.AP.POSIX.001
+
+**EFS Access Points Must Enforce POSIX Identity**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-6;
+
+EFS access points without a POSIX user identity allow clients to connect with any UID/GID, enabling privilege escalation across tenants sharing the file system. Every access point must enforce a fixed POSIX user to constrain file ownership and permissions.
+
+**Remediation:** Update the access point to enforce a POSIX user. Run: aws efs create-access-point --file-system-id fs-xxx --posix-user Uid=1000,Gid=1000
+
+---
+
+### CTL.EFS.AP.ROOT.001
+
+**EFS Access Points Must Not Expose Root Directory**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-6;
+
+EFS access points with a root directory grant clients visibility into the entire file system tree. Each access point should scope access to a specific subdirectory to enforce least-privilege and prevent data exfiltration across application boundaries.
+
+**Remediation:** Recreate the access point with a scoped root directory path. Run: aws efs create-access-point --file-system-id fs-xxx --root-directory Path=/app/data,CreationInfo={OwnerUid=1000,OwnerGid=1000,Permissions=755}
+
+---
+
+### CTL.EFS.BACKUP.001
+
+**EFS File System Must Have Backup Policy Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.308(a)(7)(ii)(A); nist_800_53_r5: CP-9;
+
+EFS file systems must have automatic backups enabled via AWS Backup. Without a backup policy, data loss from accidental deletion, ransomware, or corruption cannot be recovered, violating disaster recovery and business continuity requirements.
+
+**Remediation:** Enable automatic backups for the EFS file system. Run: aws efs put-backup-policy --file-system-id fs-xxx --backup-policy Status=ENABLED
+
+---
+
 ### CTL.EFS.ENCRYPT.001
 
 **EFS File System Must Be Encrypted at Rest**
@@ -1401,6 +1911,96 @@ EFS file systems must enforce encryption in transit via a file system policy tha
 EFS file system safety cannot be assessed when encryption status is missing from the snapshot. The extractor must populate filesystem.encryption.at_rest_enabled.
 
 **Remediation:** Re-run the extractor with EFS permissions: elasticfilesystem:DescribeFileSystems, elasticfilesystem:DescribeFileSystemPolicy.
+
+---
+
+### CTL.EFS.KMS.CMK.001
+
+**EFS File System Must Use Customer-Managed KMS Key**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-28; pci_dss_v4.0: 3.6.1;
+
+EFS file systems encrypted with the AWS-managed key (aws/elasticfilesystem) cannot enforce key policies, rotation schedules, or cross-account access restrictions. A customer-managed KMS key is required for full control over the encryption lifecycle and to meet compliance frameworks that mandate key management separation.
+
+**Remediation:** Create a new EFS file system with a customer-managed KMS key and migrate data. The KMS key type cannot be changed after creation. Run: aws efs create-file-system --encrypted --kms-key-id arn:aws:kms:REGION:ACCOUNT:key/KEY-ID
+
+---
+
+### CTL.EFS.LIFECYCLE.001
+
+**EFS File System Should Have Lifecycle Policy Configured**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CP-9;
+
+EFS file systems should have a lifecycle policy that transitions infrequently accessed files to the Infrequent Access (IA) storage class. Without a lifecycle policy, all files remain in the Standard storage class regardless of access patterns, increasing storage costs and reducing operational resilience through budget inefficiency.
+
+**Remediation:** Configure a lifecycle policy to transition infrequently accessed files. Run: aws efs put-lifecycle-configuration --file-system-id fs-xxx --lifecycle-policies TransitionToIA=AFTER_30_DAYS
+
+---
+
+### CTL.EFS.MT.SG.001
+
+**EFS Mount Targets Must Have Security Groups Attached**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7;
+
+EFS mount targets must have security groups attached to control network access. Mount targets without security groups accept connections from any source within the VPC, enabling unauthorized NFS access from compromised workloads.
+
+**Remediation:** Attach a security group to the mount target that restricts NFS (port 2049) to authorized sources. Run: aws efs modify-mount-target-security-groups --mount-target-id fsmt-xxx --security-groups sg-xxx
+
+---
+
+### CTL.EFS.POLICY.ANONYMOUS.001
+
+**EFS File System Policy Must Prevent Anonymous Access**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3;
+
+EFS file system policies must prevent anonymous (unauthenticated) access. Without this policy, any principal that can reach the mount target can access the file system without IAM authentication, enabling unauthorized data access from within the VPC.
+
+**Remediation:** Apply a file system policy that prevents anonymous access. Run: aws efs put-file-system-policy --file-system-id fs-xxx --policy '{"Statement":[{"Effect":"Deny","Principal":{"AWS":"*"}, "Action":"*","Condition":{"Bool":{"elasticfilesystem:AccessedViaMountTarget":"true"}}, "Resource":"*"}]}'
+
+---
+
+### CTL.EFS.POLICY.DENYROOT.001
+
+**EFS File System Policy Must Deny Root Access**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(1); nist_800_53_r5: AC-6;
+
+EFS file system policies must include a statement denying root access. Without this policy, NFS clients mounting the file system can operate as root (UID 0), bypassing POSIX permission boundaries and enabling full read/write access to all files.
+
+**Remediation:** Apply a file system policy that denies root access. Run: aws efs put-file-system-policy --file-system-id fs-xxx --policy '{"Statement":[{"Effect":"Deny","Principal":{"AWS":"*"}, "Action":"elasticfilesystem:ClientRootAccess","Resource":"*"}]}'
+
+---
+
+### CTL.EFS.POLICY.TRANSIT.001
+
+**EFS File System Policy Must Enforce In-Transit Encryption**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(e)(1); nist_800_53_r5: SC-8;
+
+EFS file system policies must enforce encryption in transit by denying connections that do not use TLS. Without this policy, NFS clients can mount the file system over plaintext, exposing data to network-level interception and credential sniffing.
+
+**Remediation:** Apply a file system policy that enforces in-transit encryption. Run: aws efs put-file-system-policy --file-system-id fs-xxx --policy '{"Statement":[{"Effect":"Deny","Principal":{"AWS":"*"}, "Action":"*","Condition":{"Bool":{"aws:SecureTransport":"false"}}, "Resource":"*"}]}'
 
 ---
 
@@ -5297,6 +5897,366 @@ Security group has had unrestricted ingress (0.0.0.0/0 or ::/0) added, removed, 
 Security group rules must not allow ingress from 0.0.0.0/0 on sensitive ports (SSH, RDP, database). Unrestricted ingress exposes services to the entire internet.
 
 **Remediation:** Restrict ingress rules to specific CIDR blocks or security group references. Remove 0.0.0.0/0 and ::/0 from ingress rules on ports 22 (SSH), 3389 (RDP), 3306 (MySQL), 5432 (PostgreSQL).
+
+---
+
+### CTL.VSPHERE.ESX.ACCEPTANCE.001
+
+**ESXi Host Must Not Use CommunitySupported Acceptance Level**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_vmware_esxi_7: 1.6; nist_800_53_r5: CM-5;
+
+ESXi hosts must not accept CommunitySupported VIBs. Community packages bypass VMware's signing and quality assurance process, allowing unsigned code to run in the hypervisor kernel. An attacker can exploit this to install persistent rootkits.
+
+**Remediation:** Raise the acceptance level to at least PartnerSupported: esxcli software acceptance set --level=PartnerSupported
+
+---
+
+### CTL.VSPHERE.ESX.CIM.001
+
+**ESXi CIM (SFCBD) Service Must Be Disabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_vmware_esxi_7: 2.1; nist_800_53_r5: CM-7;
+
+The CIM (Small Footprint CIM Broker Daemon) service on ESXi hosts must be disabled when not required. SFCBD exposes a network-accessible management interface that has been the target of multiple CVEs. If hardware monitoring is not needed, this service increases the attack surface unnecessarily.
+
+**Remediation:** Disable the SFCBD service if hardware CIM monitoring is not required: esxcli system wbem set --enable=false
+
+---
+
+### CTL.VSPHERE.ESX.COREDUMP.001
+
+**ESXi Host Must Have Core Dump Configured**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_vmware_esxi_7: 1.7; nist_800_53_r5: SI-11;
+
+ESXi hosts must have a core dump target configured for crash analysis. Without a configured dump target, diagnostic information is lost after a host failure, preventing root cause analysis of potential security incidents.
+
+**Remediation:** Configure a network core dump target: esxcli system coredump network set --interface-name=vmk0 --server-ipv4=<dump-server> --server-port=6500 esxcli system coredump network set --enable=true
+
+---
+
+### CTL.VSPHERE.ESX.LOCKDOWN.001
+
+**Lockdown Mode Must Be Enabled on ESXi Hosts**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_vmware_esxi_7: 1.2; nist_800_53_r5: CM-7;
+
+Lockdown mode must be enabled on ESXi hosts. When lockdown mode is disabled, the host can be managed directly via local clients and APIs, bypassing vCenter role-based access controls. Enabling lockdown mode forces all management through vCenter, ensuring centralized authentication, authorization, and audit logging.
+
+**Remediation:** Enable lockdown mode on the ESXi host. In the vSphere Client, navigate to Host > Configure > System > Security Profile > Lockdown Mode and select Normal or Strict. Normal lockdown allows DCUI access for emergency troubleshooting; Strict lockdown disables DCUI as well.
+
+---
+
+### CTL.VSPHERE.ESX.NTP.001
+
+**ESXi Host Must Have NTP Configured**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_vmware_esxi_7: 1.4; nist_800_53_r5: AU-8;
+
+ESXi hosts must have NTP configured for accurate time synchronization. Without NTP, log timestamps drift and make forensic correlation unreliable. Attackers exploit time skew to hide activity across distributed systems.
+
+**Remediation:** Configure NTP on the ESXi host using esxcli: esxcli system ntp set --server=<ntp-server> esxcli system ntp set --enabled=true
+
+---
+
+### CTL.VSPHERE.ESX.PERSISTLOG.001
+
+**ESXi Host Must Have Persistent Logging Configured**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_vmware_esxi_7: 1.8; nist_800_53_r5: AU-9;
+
+ESXi hosts must store logs on a persistent datastore. By default logs are written to a ramdisk scratch partition and are lost on reboot. An attacker can force a reboot to erase forensic evidence.
+
+**Remediation:** Configure a persistent log location on a VMFS datastore: esxcli system syslog config set --logdir=/vmfs/volumes/<datastore>/logs esxcli system syslog reload
+
+---
+
+### CTL.VSPHERE.ESX.SLP.001
+
+**ESXi SLP Service Must Be Disabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_vmware_esxi_7: 2.2; nist_800_53_r5: CM-7;
+
+The Service Location Protocol (SLP) service on ESXi hosts must be disabled. SLP has been exploited in critical remote code execution attacks (CVE-2021-21974) and provides no value in environments using vCenter for management. Leaving it enabled exposes a high-risk network service.
+
+**Remediation:** Disable the SLP service: /etc/init.d/slpd stop esxcli network firewall ruleset set --ruleset-id=CIMSLP --enabled=false chkconfig slpd off
+
+---
+
+### CTL.VSPHERE.ESX.SSH.001
+
+**SSH Must Be Disabled on ESXi Hosts**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_vmware_esxi_7: 1.1; nist_800_53_r5: CM-7;
+
+SSH must be disabled on ESXi hosts. An enabled SSH service exposes the ESXi management plane to remote shell access, increasing the attack surface for credential brute-force and lateral movement. ESXi management should use the vSphere Client or Host Client via HTTPS only. SSH should only be enabled temporarily for troubleshooting and disabled immediately after.
+
+**Remediation:** Disable the SSH service on the ESXi host. In the vSphere Client, navigate to Host > Configure > System > Services, select SSH, and click Stop. Set the startup policy to "Start and stop manually" to prevent automatic re-enablement.
+
+---
+
+### CTL.VSPHERE.ESX.SYSLOG.001
+
+**ESXi Host Must Have Syslog Configured**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_vmware_esxi_7: 1.5; nist_800_53_r5: AU-4;
+
+ESXi hosts must forward logs to a remote syslog server. Without centralized logging, an attacker who compromises the host can destroy local logs and erase evidence of the intrusion.
+
+**Remediation:** Configure remote syslog on the ESXi host using esxcli: esxcli system syslog config set --loghost=<protocol>://<host>:<port> esxcli system syslog reload
+
+---
+
+### CTL.VSPHERE.FIREWALL.ENABLED.001
+
+**ESXi Host Firewall Must Be Enabled**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_vmware_esxi_7: 3.1; nist_800_53_r5: SC-7;
+
+The ESXi host firewall must be enabled to restrict network access to management services. With the firewall disabled, all ESXi services are reachable from any network, dramatically increasing the attack surface for remote exploitation.
+
+**Remediation:** Enable the ESXi host firewall: esxcli network firewall set --enabled=true Review and restrict firewall rulesets to only required services.
+
+---
+
+### CTL.VSPHERE.ISCSI.CHAP.001
+
+**iSCSI Storage Must Require CHAP Authentication**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_vmware_esxi_7: 6.2; nist_800_53_r5: IA-2;
+
+iSCSI datastores must require CHAP authentication. Without CHAP, any host on the storage network can connect to the iSCSI target and access virtual machine disk data. This enables data exfiltration and tampering from a compromised host.
+
+**Remediation:** Configure mutual CHAP authentication on iSCSI adapters: Navigate to Host > Configure > Storage Adapters > iSCSI Adapter > Authentication > Use bidirectional CHAP.
+
+---
+
+### CTL.VSPHERE.NFS.AUTH.001
+
+**NFS Storage Must Require Authentication**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_vmware_esxi_7: 6.1; nist_800_53_r5: IA-2;
+
+NFS datastores must require authentication (Kerberos). Unauthenticated NFS mounts rely solely on IP-based access control, which is trivially bypassed through IP spoofing or compromised hosts on the same network segment.
+
+**Remediation:** Configure NFS datastores to use Kerberos authentication (NFS 4.1 with SEC_KRB5). Migrate from NFS 3 to NFS 4.1 if necessary to support authenticated mounts.
+
+---
+
+### CTL.VSPHERE.VDS.FORGED.001
+
+**Distributed Switch Must Not Allow Forged Transmits**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_vmware_esxi_7: 4.3; nist_800_53_r5: SC-7;
+
+vSphere Distributed Switch port groups must not allow forged transmits. When enabled, a VM can send frames with a source MAC address different from its own, enabling network spoofing and lateral movement between virtual machines.
+
+**Remediation:** Disable forged transmits on the distributed port group in vCenter: Navigate to Networking > Distributed Switch > Port Group > Edit Settings > Security > Forged Transmits > Reject.
+
+---
+
+### CTL.VSPHERE.VDS.MACCHG.001
+
+**Distributed Switch Must Not Allow MAC Address Changes**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_vmware_esxi_7: 4.2; nist_800_53_r5: SC-7;
+
+vSphere Distributed Switch port groups must not allow MAC address changes. When enabled, a VM can change its effective MAC address and impersonate other machines on the network, enabling lateral movement and man-in-the-middle attacks.
+
+**Remediation:** Disable MAC address changes on the distributed port group in vCenter: Navigate to Networking > Distributed Switch > Port Group > Edit Settings > Security > MAC Address Changes > Reject.
+
+---
+
+### CTL.VSPHERE.VDS.PROMISC.001
+
+**Distributed Switch Must Not Allow Promiscuous Mode**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_vmware_esxi_7: 4.1; nist_800_53_r5: SC-7;
+
+vSphere Distributed Switch port groups must not allow promiscuous mode. When enabled, a VM can observe all network traffic on the switch, enabling credential sniffing and reconnaissance across the virtual network segment.
+
+**Remediation:** Disable promiscuous mode on the distributed port group in vCenter: Navigate to Networking > Distributed Switch > Port Group > Edit Settings > Security > Promiscuous Mode > Reject.
+
+---
+
+### CTL.VSPHERE.VM.COPYPASTE.001
+
+**Copy-Paste Between VM and Host Must Be Disabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_vmware_esxi_7: 8.3.1; nist_800_53_r5: SC-7;
+
+Copy and paste operations between the guest VM and the host must be disabled. When enabled, the shared clipboard allows data to move between the VM and the host or client system without network controls or logging. An attacker with access to a compromised VM can exfiltrate data through the clipboard channel, bypassing network-based DLP and monitoring controls.
+
+**Remediation:** Disable copy and paste by setting the VM advanced configuration parameters isolation.tools.copy.disable and isolation.tools.paste.disable to TRUE. Apply this via VM > Configure > Advanced Parameters in the vSphere Client.
+
+---
+
+### CTL.VSPHERE.VM.DISKSHRNK.001
+
+**VM Disk Shrinking Must Be Disabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_vmware_esxi_7: 8.5; nist_800_53_r5: SC-6;
+
+Virtual machines must not allow disk shrinking operations. Disk shrinking can be triggered from within the guest OS and causes repeated grow-shrink cycles that lead to denial of service on the underlying datastore. An attacker inside the VM can exhaust datastore capacity.
+
+**Remediation:** Disable disk shrinking on the VM: Edit VM Settings > Advanced > Configuration Parameters > Set isolation.tools.diskShrink.disable to TRUE and isolation.tools.diskWiper.disable to TRUE.
+
+---
+
+### CTL.VSPHERE.VM.ENCRYPT.001
+
+**VMs with Sensitive Data Must Be Encrypted**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_vmware_esxi_7: 8.2.1; nist_800_53_r5: SC-28;
+
+Virtual machines containing sensitive data must have VM encryption enabled. Without encryption, VM disk files (VMDKs), snapshots, and vMotion traffic are stored and transmitted in cleartext. An attacker with access to the datastore or network can read VM contents directly. VM encryption protects data at rest on the datastore and in transit during vMotion operations.
+
+**Remediation:** Enable VM encryption using a vSphere Trust Authority or Standard Key Provider. Configure a KMS cluster in vCenter, then apply a VM storage policy with encryption enabled. Encrypt the VM by editing its storage policy assignment. Note that VM encryption requires a compatible key management server.
+
+---
+
+### CTL.VSPHERE.VM.HGFS.001
+
+**VM HGFS File Transfer Must Be Disabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_vmware_esxi_7: 8.3.2; nist_800_53_r5: CM-7;
+
+Virtual machines must have the Host Guest File System (HGFS) transfer capability disabled. HGFS allows file transfers between the ESXi host and the guest VM, providing a covert channel for data exfiltration that bypasses network-based monitoring.
+
+**Remediation:** Disable HGFS on the VM: Edit VM Settings > Advanced > Configuration Parameters > Set isolation.tools.hgfsServerSet.disable to TRUE.
+
+---
+
+### CTL.VSPHERE.VM.INDEP.001
+
+**VM Must Not Use Independent Non-Persistent Disks**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_vmware_esxi_7: 8.6; nist_800_53_r5: AU-9;
+
+Virtual machines must not use independent non-persistent disks. Changes to non-persistent disks are discarded on power-off or reset, which means security patches, agent updates, and forensic artifacts are lost. An attacker can reboot the VM to erase evidence of compromise.
+
+**Remediation:** Change the disk mode to persistent or dependent: Edit VM Settings > Hard Disk > Disk Mode > Persistent. Ensure backups and snapshots capture the correct disk state.
+
+---
+
+### CTL.VSPHERE.VM.REMOTEDISP.001
+
+**VM Remote Display Must Be Disabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_vmware_esxi_7: 8.1; nist_800_53_r5: CM-7;
+
+Virtual machines must not have the remote display (VNC) feature enabled. The remote display exposes an unauthenticated VNC connection to the VM console, allowing any network-adjacent attacker to view and interact with the VM.
+
+**Remediation:** Disable the remote display on the VM: Edit VM Settings > Advanced > Configuration Parameters > Set RemoteDisplay.vnc.enabled to FALSE.
+
+---
+
+### CTL.VSPHERE.VM.SNAPSHOT.AGE.001
+
+**No VM Snapshot Older Than 30 Days**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_vmware_esxi_7: 8.4.1;
+
+VM snapshots must not be older than 30 days. Stale snapshots consume datastore space, degrade VM performance due to increased I/O chain depth, and create operational risk during consolidation. Long-lived snapshots also represent a data exposure risk — they preserve the VM state at a point in time that may contain credentials or sensitive data that has since been rotated.
+
+**Remediation:** Delete or consolidate stale snapshots. In the vSphere Client, right-click the VM > Snapshots > Manage Snapshots and delete snapshots older than 30 days. Establish a policy to review and clean up snapshots on a regular schedule.
+
+---
+
+### CTL.VSPHERE.VSAN.ENCRYPT.001
+
+**vSAN Must Have Data-at-Rest Encryption Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_vmware_esxi_7: 5.1; nist_800_53_r5: SC-28;
+
+vSAN clusters with encryption disabled expose virtual machine data to physical media theft and unauthorized access. When vSAN is enabled but encryption is not, all VM data on the cluster is stored in cleartext on the underlying disks.
+
+**Remediation:** Enable vSAN encryption in vCenter: Navigate to Cluster > Configure > vSAN > Services > Encryption > Enable. A KMS server must be configured before enabling encryption.
+
+---
+
+### CTL.VSPHERE.VSAN.TRANSIT.001
+
+**vSAN Must Have Data-in-Transit Encryption Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_vmware_esxi_7: 5.2; nist_800_53_r5: SC-8;
+
+vSAN clusters must encrypt data in transit between hosts. Without transit encryption, inter-host vSAN traffic traverses the network in cleartext, allowing an attacker with network access to intercept VM data and credentials.
+
+**Remediation:** Enable vSAN data-in-transit encryption in vCenter: Navigate to Cluster > Configure > vSAN > Services > Encryption > Enable data-in-transit encryption.
 
 ---
 

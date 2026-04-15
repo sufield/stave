@@ -100,3 +100,5 @@ packs:
     path: packs/vsphere.yaml
   - id: cisco
     path: packs/cisco.yaml
+  - id: efs
+    path: packs/efs.yaml
