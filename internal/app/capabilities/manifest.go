@@ -77,6 +77,10 @@ func newFeatureManifest() *featureManifest {
 		{Type: "aws-waf-snapshot", Description: "AWS WAF Web ACL Configuration"},
 		{Type: "gcp-gcs-snapshot", Description: "GCP Cloud Storage Bucket Configuration"},
 		{Type: "dns-record-snapshot", Description: "DNS Record Configuration (vendor-agnostic)"},
+		{Type: "kubernetes.rbac", Description: "Kubernetes RBAC Configuration"},
+		{Type: "microsoft.ad", Description: "Active Directory / LDAP Configuration"},
+		{Type: "vmware.vsphere", Description: "VMware vSphere ESXi and VM Configuration"},
+		{Type: "cisco.ios", Description: "Cisco IOS Network Device Configuration"},
 	}
 
 	connectorIndex := make(map[kernel.ObservationSourceType]struct{}, len(connectors))
@@ -99,7 +103,7 @@ func newFeatureManifest() *featureManifest {
 
 	complianceFeatures := ComplianceSupport{
 		Enabled:            true,
-		ReportFormats:      []string{"text", "json", "sarif", "markdown"},
+		ReportFormats:      []string{"text", "json", "sarif", "markdown", "oscal", "graph-json", "stix", "neo4j-cypher", "openmetrics"},
 		SLAThresholds:      []string{"critical", "high", "medium", "low", "none"},
 		SecurityFrameworks: compliance.FrameworkStrings(compliance.SupportedFrameworks()),
 	}
