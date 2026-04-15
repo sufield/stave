@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.SCHEDULER.PROFILING.001
+name: Scheduler Profiling Must Be Disabled
+description: >
+  The scheduler profiling endpoint must be disabled. Profiling exposes
+  system and program details useful for attackers to identify
+  vulnerabilities and plan privilege escalation.
+domain: exposure
+severity: low
+compliance:
+  cis_k8s_v1.9: "1.4.1"
+scope_tags:
+  - kubernetes
+  - scheduler
+type: unsafe_state
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    Scheduler profiling is enabled, exposing system internals.
+  action: >
+    Set --profiling=false on the scheduler.
+unsafe_predicate:
+  all:
+    - field: type
+      op: eq
+      value: k8s_scheduler
+    - field: properties.scheduler.profiling_enabled
+      op: eq
+      value: true

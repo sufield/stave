@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.APISERVER.ANON.001
+name: API Server Anonymous Authentication Must Be Disabled
+description: >
+  The Kubernetes API server must not allow anonymous authentication.
+  Anonymous auth permits unauthenticated requests to the API, enabling
+  reconnaissance and potential cluster compromise.
+domain: exposure
+severity: critical
+compliance:
+  cis_k8s_v1.9: "1.2.1"
+scope_tags:
+  - kubernetes
+  - apiserver
+type: unsafe_state
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    API server anonymous authentication is enabled. Unauthenticated
+    requests are accepted.
+  action: >
+    Set --anonymous-auth=false on the API server. For managed clusters,
+    verify the provider disables anonymous auth by default.
+unsafe_predicate:
+  all:
+    - field: type
+      op: eq
+      value: k8s_apiserver
+    - field: properties.apiserver.anonymous_auth_enabled
+      op: eq
+      value: true

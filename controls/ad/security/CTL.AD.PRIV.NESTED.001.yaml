@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.AD.PRIV.NESTED.001
+name: Privileged Groups Must Not Contain Nested Groups
+description: >
+  Privileged groups such as Domain Admins, Enterprise Admins, and
+  Schema Admins must not contain nested groups. Nested group
+  membership obscures who actually has privileged access, makes
+  access reviews unreliable, and can create unintended privilege
+  escalation paths when users are added to seemingly unprivileged
+  groups that are nested into admin groups.
+domain: identity
+severity: medium
+compliance:
+  cis_ad: "5.2"
+scope_tags:
+  - active_directory
+type: unsafe_state
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    Privileged groups contain nested groups. Actual privileged
+    membership is obscured and difficult to audit.
+  action: >
+    Remove nested groups from Domain Admins, Enterprise Admins,
+    and Schema Admins. Add individual accounts directly instead.
+    Use: Get-ADGroupMember "Domain Admins" | Where-Object
+    {$_.objectClass -eq "group"} to find nested groups.
+unsafe_predicate:
+  all:
+    - field: properties.privileged_groups.has_nested_groups
+      op: eq
+      value: true

@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.POD.HOSTPID.001
+name: Pods Must Not Share the Host PID Namespace
+description: >
+  Pods must not share the host PID namespace. Sharing the host PID
+  namespace allows containers to see and signal all processes on the
+  host, enabling process inspection, injection, and denial of service.
+domain: exposure
+severity: high
+compliance:
+  cis_k8s_v1.9: "5.2.2"
+scope_tags:
+  - kubernetes
+  - pod_security
+type: unsafe_state
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    Pod shares the host PID namespace. Containers can see and interact
+    with all host processes.
+  action: >
+    Set hostPID=false in the pod spec. Remove hostPID sharing unless
+    there is a documented operational requirement.
+unsafe_predicate:
+  all:
+    - field: type
+      op: eq
+      value: k8s_pod
+    - field: properties.pod.host_pid
+      op: eq
+      value: true

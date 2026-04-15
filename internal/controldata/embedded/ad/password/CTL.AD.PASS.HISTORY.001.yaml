@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.AD.PASS.HISTORY.001
+name: Password History Must Enforce At Least 24 Remembered Passwords
+description: >
+  Active Directory domain password policy must remember at least
+  24 previous passwords. A short history count allows users to
+  cycle through a small set of passwords and reuse compromised
+  credentials. Enforcing 24 remembered passwords ensures that
+  even with regular rotation, previously compromised passwords
+  cannot be reused for approximately two years.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "IA-5"
+  cis_ad: "1.1.2"
+scope_tags:
+  - active_directory
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Password history is below 24. Users can reuse recently
+    compromised passwords.
+  action: >
+    Set password history to 24 or greater in the Default Domain
+    Policy GPO. Run:
+    Set-ADDefaultDomainPasswordPolicy -PasswordHistoryCount 24
+unsafe_predicate:
+  all:
+    - field: properties.password_policy.history_count
+      op: lt
+      value: 24

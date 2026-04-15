@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.CISCO.MGMT.HTTP.001
+name: HTTP Server Must Be Disabled
+description: >
+  The HTTP server must be disabled on Cisco IOS devices. The IOS
+  HTTP server provides a web-based management interface that
+  transmits credentials and configuration data in cleartext. An
+  attacker on the network path can intercept administrator
+  credentials, session tokens, and device configuration. The HTTP
+  server has also been the target of multiple IOS vulnerabilities
+  including remote code execution. If web-based management is
+  required, HTTPS must be used instead.
+domain: exposure
+severity: high
+compliance:
+  cis_cisco_ios_17: "1.2.1"
+  nist_800_53_r5: "CM-7"
+scope_tags:
+  - cisco
+  - ios
+type: unsafe_state
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    The HTTP server is enabled on the device. Management credentials
+    and configuration data are transmitted in cleartext, and the
+    HTTP service exposes the device to known IOS vulnerabilities.
+  action: >
+    Disable the HTTP server on the device. Run:
+    no ip http server
+    Verify with: show ip http server status
+    If web management is required, enable HTTPS instead with
+    ip http secure-server.
+  example: |
+    {
+      "management": {
+        "http_server_enabled": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.management.http_server_enabled
+      op: eq
+      value: true

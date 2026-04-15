@@ -16,9 +16,11 @@ const (
 
 // EvaluateResult provides structured execution outcomes and CLI guidance.
 type EvaluateResult struct {
-	SecurityState   evaluation.SecurityState
-	DiagnoseCommand string   // full CLI command for copy-paste
-	NextSteps       []string // nil when safe
+	SecurityState        evaluation.SecurityState
+	DiagnoseCommand      string   // full CLI command for copy-paste
+	NextSteps            []string // nil when safe
+	HasSLABreach         bool     // at least one finding has SLABreached=true
+	HasCriticalSLABreach bool     // at least one critical/escalated-critical finding breached SLA
 }
 
 // BuildEvaluateResult maps a domain safety status into actionable CLI guidance.

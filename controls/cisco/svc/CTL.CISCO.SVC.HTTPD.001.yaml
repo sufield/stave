@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.CISCO.SVC.HTTPD.001
+name: HTTPS Must Be Used Instead of HTTP for Management
+description: >
+  HTTPS must be enabled for web-based management of Cisco IOS
+  devices. Without HTTPS, any web management traffic falls back
+  to cleartext HTTP, exposing administrator credentials, session
+  tokens, and configuration data to network interception. TLS
+  encryption provided by HTTPS protects the confidentiality and
+  integrity of management sessions. Even when the HTTP server is
+  disabled, HTTPS should be explicitly enabled to ensure that any
+  future web management configuration defaults to encrypted
+  transport.
+domain: exposure
+severity: high
+compliance:
+  cis_cisco_ios_17: "1.2.2"
+  nist_800_53_r5: "SC-8"
+scope_tags:
+  - cisco
+  - ios
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    HTTPS is not enabled for management. Web-based management
+    sessions are not encrypted, exposing credentials and
+    configuration data to network interception.
+  action: >
+    Enable the HTTPS server on the device. Run:
+    ip http secure-server
+    Verify with: show ip http server status
+    Ensure the HTTP server is disabled with: no ip http server
+  example: |
+    {
+      "management": {
+        "https_enabled": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.management.https_enabled
+      op: eq
+      value: false

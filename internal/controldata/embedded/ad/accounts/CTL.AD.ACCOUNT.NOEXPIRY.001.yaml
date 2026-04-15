@@ -1,0 +1,27 @@
+dsl_version: ctrl.v1
+id: CTL.AD.ACCOUNT.NOEXPIRY.001
+name: Admin Accounts Must Not Have Non-Expiring Passwords
+description: >
+  Privileged accounts must not have the password-never-expires flag
+  set. Non-expiring passwords on admin accounts create persistent
+  credential risks.
+domain: identity
+severity: high
+compliance:
+  cis_ad: "5.4"
+scope_tags:
+  - active_directory
+type: unsafe_state
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Admin accounts have non-expiring passwords.
+  action: >
+    Remove the password-never-expires flag from admin accounts.
+    Use Fine-Grained Password Policies if different expiry is needed.
+unsafe_predicate:
+  all:
+    - field: properties.accounts.admin_with_no_expiry
+      op: eq
+      value: true

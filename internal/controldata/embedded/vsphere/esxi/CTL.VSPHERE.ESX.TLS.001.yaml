@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.VSPHERE.ESX.TLS.001
+name: ESXi Must Use TLS 1.2 or Higher
+description: >
+  ESXi hosts must use TLS 1.2 or higher for all management
+  connections. TLS 1.0 and 1.1 have known cryptographic weaknesses
+  including vulnerability to BEAST, POODLE, and other protocol
+  downgrade attacks. Management traffic to ESXi hosts carries
+  authentication credentials, virtual machine data, and
+  configuration changes. An attacker on the network path can
+  exploit TLS 1.0/1.1 weaknesses to decrypt or modify this
+  traffic.
+domain: exposure
+severity: high
+compliance:
+  cis_vmware_esxi_7: "1.6"
+  nist_800_53_r5: "SC-8"
+scope_tags:
+  - vmware
+  - esxi
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    The ESXi host accepts TLS versions below 1.2. Management
+    connections may be vulnerable to protocol downgrade attacks
+    that expose credentials and configuration data.
+  action: >
+    Configure the ESXi host to require TLS 1.2 or higher. In the
+    vSphere Client, navigate to Host > Configure > System >
+    Advanced System Settings. Set UserVars.ESXiVPsDisabledProtocols
+    to "sslv3,tlsv1,tlsv1.1" to disable all protocols below
+    TLS 1.2. Restart management agents after the change.
+  example: |
+    {
+      "esxi": {
+        "tls_version_below_12": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.esxi.tls_version_below_12
+      op: eq
+      value: true

@@ -3,6 +3,7 @@ package exempt
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -143,6 +144,35 @@ func TestLoadSave_RoundTrip(t *testing.T) {
 	}
 }
 
+func TestLoadSave_YAMLFieldCompatibility(t *testing.T) {
+	// Verify that the YAML field names match what --acknowledgment-file expects
+	// (rationale, acknowledged_by — not reason, approver).
+	dir := t.TempDir()
+	path := filepath.Join(dir, "test.yaml")
+
+	f := &AcceptanceFile{SchemaVersion: "1"}
+	_ = f.AddAcknowledgment(AcknowledgmentEntry{
+		ControlID: "CTL.A", AssetID: "arn:a", Reason: "my rationale", Approver: "alice@co", ExpiryDate: "2026-09-01",
+	}, "2025-11-15T14:00:00Z")
+	_ = Save(path, f, "test", "2025-11-15T14:00:00Z")
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("read: %v", err)
+	}
+	yaml := string(data)
+	if !strings.Contains(yaml, "rationale: my rationale") {
+		t.Errorf("YAML should use 'rationale' key, got:\n%s", yaml)
+	}
+	if !strings.Contains(yaml, "acknowledged_by: alice@co") {
+		t.Errorf("YAML should use 'acknowledged_by' key, got:\n%s", yaml)
+	}
+	// Verify it does NOT use old field names.
+	if strings.Contains(yaml, "reason: my rationale") {
+		t.Error("YAML should NOT use 'reason' key — incompatible with --acknowledgment-file")
+	}
+}
+
 func TestLoad_MissingFile(t *testing.T) {
 	f, err := Load("/nonexistent/path.yaml")
 	if err != nil {
@@ -154,21 +184,138 @@ func TestLoad_MissingFile(t *testing.T) {
 }
 
 func TestUpcoming(t *testing.T) {
-	f := &AcceptanceFile{SchemaVersion: "1"}
-	_ = f.AddAcknowledgment(AcknowledgmentEntry{
-		ControlID: "CTL.A", AssetID: "arn:a", Reason: "test", Approver: "alice",
-		ExpiryDate: "2020-01-01", // already expired
-	}, "2025-11-15T14:00:00Z")
-	_ = f.AddAcknowledgment(AcknowledgmentEntry{
-		ControlID: "CTL.B", AssetID: "arn:b", Reason: "test2", Approver: "bob",
-		ExpiryDate: "2099-12-31", // far future
-	}, "2025-11-15T14:00:00Z")
+	// Build file with entries directly to test Upcoming() logic
+	// (one expiring soon, one far future).
+	f := &AcceptanceFile{
+		SchemaVersion: "1",
+		Acknowledgments: []AcknowledgmentEntry{
+			{
+				ID: "CTL.A@arn:a", ControlID: "CTL.A", AssetID: "arn:a",
+				Reason: "test", Approver: "alice", ExpiryDate: "2025-12-01",
+				Status: "active",
+			},
+			{
+				ID: "CTL.B@arn:b", ControlID: "CTL.B", AssetID: "arn:b",
+				Reason: "test2", Approver: "bob", ExpiryDate: "2099-12-31",
+				Status: "active",
+			},
+		},
+	}
 
-	// 30-day window — expired entry should show (it's before cutoff),
-	// far future entry should not.
+	// 30-day window from 2025-11-15 — CTL.A expires 2025-12-01 (within 30 days),
+	// CTL.B far future (not within window).
 	upcoming := f.Upcoming(30, time.Date(2025, 11, 15, 0, 0, 0, 0, time.UTC))
 	if len(upcoming) != 1 {
-		t.Errorf("upcoming = %d, want 1 (the expired one is before cutoff)", len(upcoming))
+		t.Errorf("upcoming = %d, want 1 (CTL.A within 30 days)", len(upcoming))
+	}
+}
+
+func TestAddAcknowledgment_PastExpiryRejected(t *testing.T) {
+	f := &AcceptanceFile{SchemaVersion: "1"}
+
+	err := f.AddAcknowledgment(AcknowledgmentEntry{
+		ControlID:  "CTL.A",
+		AssetID:    "arn:a",
+		Reason:     "test",
+		Approver:   "alice",
+		ExpiryDate: "2020-01-01", // past date
+	}, "2025-11-15T14:00:00Z")
+	if err == nil {
+		t.Error("expected error for past expiry date")
+	}
+}
+
+func TestAddAcknowledgment_InvalidDateFormat(t *testing.T) {
+	f := &AcceptanceFile{SchemaVersion: "1"}
+
+	err := f.AddAcknowledgment(AcknowledgmentEntry{
+		ControlID:  "CTL.A",
+		AssetID:    "arn:a",
+		Reason:     "test",
+		Approver:   "alice",
+		ExpiryDate: "not-a-date",
+	}, "2025-11-15T14:00:00Z")
+	if err == nil {
+		t.Error("expected error for invalid date format")
+	}
+}
+
+func TestValidateWithCatalog_UnknownCompensating(t *testing.T) {
+	f := &AcceptanceFile{
+		SchemaVersion: "1",
+		Acknowledgments: []AcknowledgmentEntry{
+			{
+				ControlID:            "CTL.A",
+				AssetID:              "arn:a",
+				Reason:               "test",
+				Approver:             "alice",
+				ExpiryDate:           "2026-09-01",
+				CompensatingControls: []string{"CTL.KNOWN.001", "CTL.FAKE.999"},
+			},
+		},
+	}
+
+	knownIDs := map[string]bool{"CTL.KNOWN.001": true}
+	errs := f.ValidateWithCatalog(knownIDs)
+
+	found := false
+	for _, e := range errs {
+		if strings.Contains(e, "CTL.FAKE.999") && strings.Contains(e, "not found") {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("expected error about CTL.FAKE.999 not in catalog, got: %v", errs)
+	}
+}
+
+func TestValidateWithCatalog_AllKnown(t *testing.T) {
+	f := &AcceptanceFile{
+		SchemaVersion: "1",
+		Acknowledgments: []AcknowledgmentEntry{
+			{
+				ControlID:            "CTL.A",
+				AssetID:              "arn:a",
+				Reason:               "test",
+				Approver:             "alice",
+				ExpiryDate:           "2026-09-01",
+				CompensatingControls: []string{"CTL.B"},
+			},
+		},
+	}
+
+	knownIDs := map[string]bool{"CTL.B": true}
+	errs := f.ValidateWithCatalog(knownIDs)
+	if len(errs) != 0 {
+		t.Errorf("expected no errors, got: %v", errs)
+	}
+}
+
+func TestHistory_IncludesAllEntries(t *testing.T) {
+	f := &AcceptanceFile{SchemaVersion: "1"}
+	_ = f.AddAcknowledgment(AcknowledgmentEntry{
+		ControlID: "CTL.A", AssetID: "arn:a", Reason: "active one", Approver: "alice", ExpiryDate: "2026-01-01",
+	}, "2025-11-15T14:00:00Z")
+	_ = f.AddAcknowledgment(AcknowledgmentEntry{
+		ControlID: "CTL.B", AssetID: "arn:b", Reason: "will revoke", Approver: "bob", ExpiryDate: "2026-01-01",
+	}, "2025-11-15T14:00:00Z")
+	_ = f.Remove("CTL.B@arn:b", "2025-11-15T15:00:00Z")
+
+	history := f.History()
+	if len(history) != 2 {
+		t.Errorf("history = %d entries, want 2 (active + revoked)", len(history))
+	}
+
+	// Check revoked entry has 2 audit events.
+	for _, h := range history {
+		if h.ID == "CTL.B@arn:b" {
+			if h.Status != "revoked" {
+				t.Errorf("status = %q, want revoked", h.Status)
+			}
+			if len(h.AuditTrail) != 2 {
+				t.Errorf("audit trail = %d, want 2", len(h.AuditTrail))
+			}
+		}
 	}
 }
 

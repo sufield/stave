@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.KUBELET.TLS.001
+name: Kubelet TLS Certificate Must Be Configured
+description: >
+  The kubelet must be configured with a TLS serving certificate.
+  Without TLS, kubelet API traffic is transmitted in cleartext.
+domain: exposure
+severity: high
+compliance:
+  cis_k8s_v1.9: "4.2.10"
+scope_tags:
+  - kubernetes
+  - kubelet
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Kubelet TLS certificate file is not configured.
+  action: >
+    Set tlsCertFile and tlsPrivateKeyFile in the kubelet config.
+unsafe_predicate:
+  all:
+    - field: type
+      op: eq
+      value: k8s_kubelet
+    - field: properties.kubelet.tls_cert_file
+      op: missing
+      value: true

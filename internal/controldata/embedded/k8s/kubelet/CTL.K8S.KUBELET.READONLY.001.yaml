@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.KUBELET.READONLY.001
+name: Kubelet Read-Only Port Must Be Disabled
+description: >
+  The kubelet read-only port (default 10255) must be disabled by
+  setting it to 0. The read-only port exposes node and pod metrics
+  without authentication.
+domain: exposure
+severity: high
+compliance:
+  cis_k8s_v1.9: "4.2.4"
+scope_tags:
+  - kubernetes
+  - kubelet
+type: unsafe_state
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    Kubelet read-only port is enabled, exposing unauthenticated metrics.
+  action: >
+    Set readOnlyPort=0 in the kubelet config or pass
+    --read-only-port=0.
+unsafe_predicate:
+  all:
+    - field: type
+      op: eq
+      value: k8s_kubelet
+    - field: properties.kubelet.read_only_port
+      op: gt
+      value: 0

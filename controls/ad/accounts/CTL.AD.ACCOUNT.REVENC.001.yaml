@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.AD.ACCOUNT.REVENC.001
+name: No Accounts Must Have Reversible Encryption Enabled
+description: >
+  No accounts should have the "Store password using reversible
+  encryption" flag set. Reversible encryption stores passwords in
+  a form equivalent to plaintext. An attacker who gains access to
+  the AD database can recover these passwords directly without
+  cracking, compromising every affected account instantly.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "IA-5"
+  cis_ad: "1.1.5"
+scope_tags:
+  - active_directory
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    One or more accounts have reversible encryption enabled.
+    Passwords for these accounts are stored in a recoverable form.
+  action: >
+    Remove the reversible encryption flag from all accounts. Run:
+    Get-ADUser -Filter {AllowReversiblePasswordEncryption -eq $true} |
+    Set-ADUser -AllowReversiblePasswordEncryption $false
+    Users must change their passwords after this change.
+unsafe_predicate:
+  all:
+    - field: properties.accounts.reversible_encryption_count
+      op: gt
+      value: 0

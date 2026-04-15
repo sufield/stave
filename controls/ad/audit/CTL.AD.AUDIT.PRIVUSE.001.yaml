@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.AD.AUDIT.PRIVUSE.001
+name: Privilege Use Auditing Must Be Enabled
+description: >
+  Active Directory must audit privilege use events. Without this
+  auditing, escalation of privileges and sensitive privilege
+  invocations go unlogged, making it impossible to detect abuse
+  of administrative rights or identify accounts performing
+  privileged operations they should not.
+domain: identity
+severity: medium
+compliance:
+  cis_ad: "17.8.1"
+scope_tags:
+  - active_directory
+type: unsafe_state
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Privilege use auditing is not enabled. Escalation and misuse of
+    administrative rights cannot be detected.
+  action: >
+    Enable privilege use auditing via Group Policy: Computer Configuration >
+    Windows Settings > Security Settings > Advanced Audit Policy
+    Configuration > Privilege Use > Audit Sensitive Privilege Use.
+    Set to Success and Failure.
+unsafe_predicate:
+  all:
+    - field: properties.security_settings.audit_privilege_use
+      op: eq
+      value: false

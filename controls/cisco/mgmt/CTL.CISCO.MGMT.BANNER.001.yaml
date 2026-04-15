@@ -1,0 +1,44 @@
+dsl_version: ctrl.v1
+id: CTL.CISCO.MGMT.BANNER.001
+name: Login Banner Must Be Configured
+description: >
+  A login banner must be configured on Cisco IOS devices. A login
+  banner provides legal notice to anyone attempting to access the
+  device. Without a banner, unauthorized access attempts may not
+  be prosecutable in some jurisdictions because the attacker can
+  claim there was no indication the system was private or that
+  access was restricted. The banner should warn that unauthorized
+  access is prohibited and that activity may be monitored.
+domain: exposure
+severity: low
+compliance:
+  cis_cisco_ios_17: "1.1.1"
+  nist_800_53_r5: "AC-8"
+scope_tags:
+  - cisco
+  - ios
+type: unsafe_state
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    No login banner is configured on the device. Unauthorized
+    access attempts may not be prosecutable due to the absence
+    of a legal notice.
+  action: >
+    Configure a login banner on the device. Run:
+    banner login ^
+    Unauthorized access is prohibited. All activity is monitored.
+    ^
+    Verify with: show banner login
+  example: |
+    {
+      "management": {
+        "login_banner_configured": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.management.login_banner_configured
+      op: eq
+      value: false

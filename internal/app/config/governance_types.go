@@ -96,6 +96,11 @@ type WorkspacePolicy struct {
 	MaxSnapshotFiles         int                       `yaml:"max_snapshot_files"`
 	BlockedCommands          []string                  `yaml:"blocked_commands"`
 	MaxValidationErrors      int                       `yaml:"max_validation_errors"`
+	TeamManifest             string                    `yaml:"team_manifest"`
+	OwnerTagKey              string                    `yaml:"owner_tag_key"`
+	BudgetPeriod             string                    `yaml:"budget_period"`
+	BudgetFailBurnRate       float64                   `yaml:"budget_fail_on_burn_rate"`
+	BudgetFailSeverity       []string                  `yaml:"budget_fail_severity"`
 }
 
 // PolicyException allows a specific resource to bypass a security control.

@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.KUBELET.ANON.001
+name: Kubelet Anonymous Authentication Must Be Disabled
+description: >
+  The kubelet must not allow anonymous authentication. Anonymous auth
+  permits unauthenticated requests to the kubelet API, enabling pod
+  listing, log access, and command execution on the node.
+domain: exposure
+severity: critical
+compliance:
+  cis_k8s_v1.9: "4.2.1"
+scope_tags:
+  - kubernetes
+  - kubelet
+type: unsafe_state
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    Kubelet anonymous authentication is enabled.
+  action: >
+    Set authentication.anonymous.enabled=false in the kubelet config
+    or pass --anonymous-auth=false.
+unsafe_predicate:
+  all:
+    - field: type
+      op: eq
+      value: k8s_kubelet
+    - field: properties.kubelet.anonymous_auth_enabled
+      op: eq
+      value: true

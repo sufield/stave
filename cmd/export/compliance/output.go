@@ -4,6 +4,8 @@ package compliance
 import (
 	"time"
 
+	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evidence"
 )
 
@@ -38,12 +40,23 @@ type ScoreExport struct {
 
 // RequirementExport is a single requirement in the JSON output.
 type RequirementExport struct {
-	ID          string           `json:"id"`
-	Description string           `json:"description"`
-	Section     string           `json:"section"`
-	Status      string           `json:"status"`
-	Controls    []ControlSummary `json:"controls"`
-	Gaps        []GapExport      `json:"gaps,omitempty"`
+	ID            string           `json:"id"`
+	Description   string           `json:"description"`
+	Section       string           `json:"section"`
+	Status        string           `json:"status"`
+	Controls      []ControlSummary `json:"controls"`
+	Gaps          []GapExport      `json:"gaps,omitempty"`
+	SLACompliance *SLACompliance   `json:"sla_compliance,omitempty"`
+}
+
+// SLACompliance holds per-requirement SLA metrics. Present only when
+// an SLA profile was active during assessment.
+type SLACompliance struct {
+	FindingsDetected    int     `json:"findings_detected"`
+	FindingsWithinSLA   int     `json:"findings_within_sla"`
+	FindingsBreachedSLA int     `json:"findings_breached_sla"`
+	CompliancePercent   float64 `json:"compliance_rate_percent"`
+	LongestOverdueHours float64 `json:"longest_overdue_hours"`
 }
 
 // ControlSummary shows pass/fail/incomplete counts per control.
@@ -95,6 +108,8 @@ type ObservationExp struct {
 }
 
 // buildExport converts domain types to the serialisable EvidenceExport.
+// findings may be nil — when present, SLA compliance data is computed
+// per requirement from the finding-level SLA annotations.
 func buildExport(
 	profile *evidence.FrameworkProfile,
 	assessment *evidence.ProfileAssessment,
@@ -103,6 +118,7 @@ func buildExport(
 	snapshotTakenAt time.Time,
 	includePasses bool,
 	minSeverity string,
+	findings []evaluation.Finding,
 ) *EvidenceExport {
 	export := &EvidenceExport{
 		ExportedAt:      time.Now().UTC(),
@@ -167,6 +183,11 @@ func buildExport(
 			}
 		}
 
+		// Compute SLA compliance for this requirement from findings.
+		if sla := computeRequirementSLA(ra, findings, profile.FrameworkKey); sla != nil {
+			re.SLACompliance = sla
+		}
+
 		export.Requirements = append(export.Requirements, re)
 	}
 
@@ -208,6 +229,65 @@ func buildExport(
 	}
 
 	return export
+}
+
+// computeRequirementSLA builds SLA compliance data for a requirement from
+// the assessment findings. Returns nil when no findings have SLA data.
+func computeRequirementSLA(ra *evidence.RequirementAssessment, findings []evaluation.Finding, framework string) *SLACompliance {
+	if len(findings) == 0 {
+		return nil
+	}
+
+	// Build set of control IDs mapped to this requirement via evidence records.
+	reqControlIDs := make(map[string]bool)
+	for _, rec := range ra.Evidence {
+		reqControlIDs[rec.ControlID] = true
+	}
+
+	var detected, withinSLA, breached int
+	var longestOverdue float64
+	hasSLA := false
+
+	for i := range findings {
+		f := &findings[i]
+		if !reqControlIDs[string(f.ControlID)] {
+			continue
+		}
+		// Only count findings that have compliance mapping for this framework.
+		if _, ok := f.ControlCompliance[policy.ComplianceFramework(framework)]; !ok {
+			continue
+		}
+		if f.SLADeadlineHours == nil {
+			continue
+		}
+		hasSLA = true
+		detected++
+		if f.SLABreached {
+			breached++
+			if f.SLAOverdueHours != nil && *f.SLAOverdueHours > longestOverdue {
+				longestOverdue = *f.SLAOverdueHours
+			}
+		} else {
+			withinSLA++
+		}
+	}
+
+	if !hasSLA {
+		return nil
+	}
+
+	var pct float64
+	if detected > 0 {
+		pct = float64(withinSLA) / float64(detected) * 100
+	}
+
+	return &SLACompliance{
+		FindingsDetected:    detected,
+		FindingsWithinSLA:   withinSLA,
+		FindingsBreachedSLA: breached,
+		CompliancePercent:   pct,
+		LongestOverdueHours: longestOverdue,
+	}
 }
 
 // severityRank returns a numeric rank for severity comparison.

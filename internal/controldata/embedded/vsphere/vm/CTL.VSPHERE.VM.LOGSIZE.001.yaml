@@ -1,0 +1,27 @@
+dsl_version: ctrl.v1
+id: CTL.VSPHERE.VM.LOGSIZE.001
+name: VM Log Size Must Be Limited
+description: >
+  VM diagnostic log size must be limited to prevent a compromised
+  VM from filling the datastore via excessive logging, causing
+  denial of service to other VMs on the same datastore.
+domain: exposure
+severity: medium
+compliance:
+  cis_vmware_esxi_7: "8.4.4"
+scope_tags:
+  - vmware
+  - vm
+type: unsafe_state
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    VM log size limit is not configured.
+  action: >
+    Set log.rotateSize and log.keepOld in the VM advanced settings.
+unsafe_predicate:
+  all:
+    - field: properties.vm.log_size_limit_enabled
+      op: eq
+      value: false

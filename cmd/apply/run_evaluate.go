@@ -59,6 +59,9 @@ func executeEvaluation(ctx context.Context, ec evalContext) (EvaluateResult, err
 		}
 	}
 
+	// Owner annotation — resolve team ownership for each finding.
+	annotateOwners(&result, ec.Opts)
+
 	pipeline := &appeval.OutputPipeline{
 		Marshaler: deps.Runner.ReportPublisher,
 		Enricher:  deps.Runner.ContextEnricher,
@@ -68,7 +71,21 @@ func executeEvaluation(ctx context.Context, ec evalContext) (EvaluateResult, err
 		return EvaluateResult{}, fmt.Errorf("run output pipeline: %w", err)
 	}
 
-	return BuildEvaluateResult(status, deps.Config.PolicySource, deps.Config.ObservationSource), nil
+	evalResult := BuildEvaluateResult(status, deps.Config.PolicySource, deps.Config.ObservationSource)
+
+	// Scan findings for SLA breaches.
+	for i := range result.Findings {
+		f := &result.Findings[i]
+		if f.SLABreached {
+			evalResult.HasSLABreach = true
+			if f.ControlSeverity.String() == "critical" || f.SLAEscalatedSeverity == "critical" {
+				evalResult.HasCriticalSLABreach = true
+				break // both flags set, no need to scan further
+			}
+		}
+	}
+
+	return evalResult, nil
 }
 
 // runStrictIntegrityCheck ensures internal pack integrity when --strict is set.

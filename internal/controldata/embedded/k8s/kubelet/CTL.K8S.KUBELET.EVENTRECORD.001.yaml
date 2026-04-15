@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.KUBELET.EVENTRECORD.001
+name: Kubelet Event Record QPS Must Be Greater Than Zero
+description: >
+  The kubelet event record QPS must be greater than zero. Setting this
+  to zero disables event creation, hiding node-level events from the
+  API server and preventing detection of security-relevant activities.
+domain: exposure
+severity: low
+compliance:
+  cis_k8s_v1.9: "4.2.9"
+scope_tags:
+  - kubernetes
+  - kubelet
+type: unsafe_state
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Kubelet event recording is disabled. Node-level events are not
+    reported to the API server.
+  action: >
+    Set eventRecordQPS to a value greater than 0 (default is 5) in
+    the kubelet config.
+unsafe_predicate:
+  all:
+    - field: type
+      op: eq
+      value: k8s_kubelet
+    - field: properties.kubelet.event_record_qps
+      op: eq
+      value: 0

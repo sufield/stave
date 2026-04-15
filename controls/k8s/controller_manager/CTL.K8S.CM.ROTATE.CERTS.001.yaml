@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.CM.ROTATE.CERTS.001
+name: Controller Manager Must Enable RotateKubeletServerCertificate
+description: >
+  The controller manager must enable the RotateKubeletServerCertificate
+  feature gate. This allows the kubelet to request and rotate its
+  serving certificate automatically, preventing certificate expiry
+  and ensuring continued TLS for kubelet endpoints.
+domain: exposure
+severity: medium
+compliance:
+  cis_k8s_v1.9: "1.3.6"
+scope_tags:
+  - kubernetes
+  - controller_manager
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    RotateKubeletServerCertificate feature gate is not enabled. Kubelet
+    serving certificates may expire without renewal.
+  action: >
+    Set --feature-gates=RotateKubeletServerCertificate=true on the
+    controller manager.
+unsafe_predicate:
+  all:
+    - field: type
+      op: eq
+      value: k8s_controller_manager
+    - field: properties.controller_manager.rotate_kubelet_server_certificate
+      op: eq
+      value: false

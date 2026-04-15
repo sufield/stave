@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.AD.AUDIT.OBJACCESS.001
+name: Object Access Auditing Must Be Enabled
+description: >
+  Active Directory must audit object access events. Without this
+  auditing, access to sensitive AD objects such as GPOs, OUs, and
+  critical containers goes unrecorded. Attackers modifying Group
+  Policy or sensitive directory objects will leave no trace.
+domain: identity
+severity: medium
+compliance:
+  cis_ad: "17.6.1"
+scope_tags:
+  - active_directory
+type: unsafe_state
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Object access auditing is not enabled. Access to sensitive AD
+    objects is not being recorded.
+  action: >
+    Enable object access auditing via Group Policy: Computer
+    Configuration > Windows Settings > Security Settings > Advanced
+    Audit Policy Configuration > Object Access > Audit Other Object
+    Access Events. Set to Success and Failure.
+unsafe_predicate:
+  all:
+    - field: properties.security_settings.audit_object_access
+      op: eq
+      value: false

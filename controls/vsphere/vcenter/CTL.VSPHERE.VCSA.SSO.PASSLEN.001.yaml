@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.VSPHERE.VCSA.SSO.PASSLEN.001
+name: vCenter SSO Password Length Must Be 15+
+description: >
+  vCenter SSO must enforce a minimum password length of 15
+  characters. Short passwords are vulnerable to brute-force and
+  dictionary attacks. The SSO password policy applies to all
+  accounts in the vsphere.local identity source including the
+  administrator@vsphere.local account. A weak password on this
+  account grants an attacker full administrative control over the
+  entire vSphere environment. NIST SP 800-63B recommends a minimum
+  of 15 characters for privileged accounts.
+domain: exposure
+severity: high
+compliance:
+  cis_vmware_esxi_7: "2.2"
+  nist_800_53_r5: "IA-5"
+scope_tags:
+  - vmware
+  - vcenter
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    The SSO minimum password length is below 15 characters. Accounts
+    in the vsphere.local identity source may use passwords that are
+    vulnerable to brute-force attacks.
+  action: >
+    Configure SSO password policy in the vSphere Client. Navigate
+    to Administration > Single Sign-On > Configuration > Accounts.
+    Set Minimum length to 15 characters. Existing accounts with
+    shorter passwords will be required to change their password at
+    next login.
+  example: |
+    {
+      "vcenter": {
+        "sso_min_password_length": 15
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.vcenter.sso_min_password_length
+      op: lt
+      value: 15

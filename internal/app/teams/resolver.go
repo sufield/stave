@@ -142,6 +142,46 @@ func (m *Manifest) TeamByID(id string) *Team {
 	return nil
 }
 
+// AnnotateFindings resolves owner for each finding and sets the owner fields.
+// tags is a function that returns resource tags for a given asset ID.
+// If tags is nil, tag-based resolution is skipped (ARN/control patterns still work).
+func (m *Manifest) AnnotateFindings(findings []FindingRef, tags func(assetID string) map[string]string) {
+	for i := range findings {
+		f := &findings[i]
+		var t map[string]string
+		if tags != nil {
+			t = tags(f.AssetID)
+		}
+		result := m.ResolveOwner(t, f.AssetID, f.ControlID)
+		f.OwnerTeamID = result.TeamID
+		f.OwnerTeamName = result.TeamName
+		f.OwnerContact = result.Contact
+		f.OwnerResolution = result.ResolutionPath
+	}
+}
+
+// FindingRef is the minimal interface for owner annotation.
+// Callers build a slice of these referencing their actual finding structs.
+type FindingRef struct {
+	AssetID         string
+	ControlID       string
+	OwnerTeamID     string
+	OwnerTeamName   string
+	OwnerContact    string
+	OwnerResolution string
+}
+
+// FilterByTeams returns indices of findings whose OwnerTeamID is in the allowed set.
+func FilterByTeams(findings []FindingRef, allowedTeams map[string]bool) []int {
+	var indices []int
+	for i := range findings {
+		if allowedTeams[findings[i].OwnerTeamID] {
+			indices = append(indices, i)
+		}
+	}
+	return indices
+}
+
 // globMatch checks if a value matches a simple glob pattern (supports * suffix).
 func globMatch(pattern, value string) bool {
 	if pattern == value {

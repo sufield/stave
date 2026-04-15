@@ -46,7 +46,7 @@ func TestBuildExport_BasicStructure(t *testing.T) {
 	}
 	assessment := evidence.EvaluateProfile(pkg, profile)
 
-	export := buildExport(profile, assessment, pkg, "dev", testTime, false, "all")
+	export := buildExport(profile, assessment, pkg, "dev", testTime, false, "all", nil)
 
 	if export.Profile.ID != "test" {
 		t.Errorf("Profile.ID = %q", export.Profile.ID)
@@ -75,7 +75,7 @@ func TestBuildExport_IncludePassFalse(t *testing.T) {
 	}
 	assessment := evidence.EvaluateProfile(pkg, profile)
 
-	export := buildExport(profile, assessment, pkg, "dev", testTime, false, "all")
+	export := buildExport(profile, assessment, pkg, "dev", testTime, false, "all", nil)
 
 	// Only fail records included (pass excluded)
 	if len(export.Evidence) != 1 {
@@ -96,7 +96,7 @@ func TestBuildExport_IncludePassTrue(t *testing.T) {
 	}
 	assessment := evidence.EvaluateProfile(pkg, profile)
 
-	export := buildExport(profile, assessment, pkg, "dev", testTime, true, "all")
+	export := buildExport(profile, assessment, pkg, "dev", testTime, true, "all", nil)
 
 	if len(export.Evidence) != 2 {
 		t.Fatalf("len(Evidence) = %d, want 2 (pass included)", len(export.Evidence))
@@ -114,7 +114,7 @@ func TestBuildExport_MinSeverityFilter(t *testing.T) {
 	}
 	assessment := evidence.EvaluateProfile(pkg, profile)
 
-	export := buildExport(profile, assessment, pkg, "dev", testTime, false, "high")
+	export := buildExport(profile, assessment, pkg, "dev", testTime, false, "high", nil)
 
 	// Only critical and high (not low)
 	if len(export.Evidence) != 2 {
@@ -137,7 +137,7 @@ func TestBuildExport_GapsPopulated(t *testing.T) {
 	}
 	assessment := evidence.EvaluateProfile(pkg, profile)
 
-	export := buildExport(profile, assessment, pkg, "dev", testTime, false, "all")
+	export := buildExport(profile, assessment, pkg, "dev", testTime, false, "all", nil)
 
 	if len(export.Requirements[0].Gaps) != 1 {
 		t.Fatalf("len(Gaps) = %d, want 1", len(export.Requirements[0].Gaps))

@@ -1,0 +1,10 @@
+id: k8s_anonymous_access_path
+description: >
+  Both API server and kubelet accept anonymous requests with no
+  audit logging. Full cluster compromise with no evidence trail.
+controls:
+  - CTL.K8S.APISERVER.ANON.001
+  - CTL.K8S.KUBELET.ANON.001
+  - CTL.K8S.APISERVER.AUDIT.001
+escalation_threshold: 2
+compound_severity: critical

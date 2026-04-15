@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.AD.ADMINSDHOLDER.001
+name: AdminSDHolder ACL Must Be Clean
+description: >
+  The AdminSDHolder object ACL must contain only default entries.
+  AdminSDHolder permissions are stamped onto all protected accounts
+  and groups every 60 minutes by the SDProp process. If an attacker
+  adds a custom ACE to AdminSDHolder, that ACE propagates to every
+  privileged account, creating a persistent backdoor that survives
+  individual permission resets.
+domain: identity
+severity: critical
+compliance:
+  cis_ad: "5.3"
+scope_tags:
+  - active_directory
+type: unsafe_state
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    AdminSDHolder object contains non-default ACL entries. Custom
+    permissions will propagate to all protected accounts and groups.
+  action: >
+    Review the AdminSDHolder object ACL and remove any non-default
+    entries. Use: Get-ACL "AD:\CN=AdminSDHolder,CN=System,DC=domain,DC=com"
+    to audit. Compare against a known-good baseline.
+unsafe_predicate:
+  all:
+    - field: properties.security_settings.admin_sd_holder_clean
+      op: eq
+      value: false

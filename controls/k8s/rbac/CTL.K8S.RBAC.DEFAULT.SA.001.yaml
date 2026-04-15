@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.RBAC.DEFAULT.SA.001
+name: Default Service Account Automount Must Be Disabled
+description: >
+  The default service account in each namespace must have
+  automountServiceAccountToken set to false. The default service
+  account is shared by all pods that do not specify one, and its
+  token grants unnecessary API access to workloads.
+domain: exposure
+severity: medium
+compliance:
+  cis_k8s_v1.9: "5.1.5"
+scope_tags:
+  - kubernetes
+  - rbac
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Default service account automount is not disabled. Pods without
+    an explicit service account receive a token with API access.
+  action: >
+    Set automountServiceAccountToken=false on the default
+    ServiceAccount in each namespace.
+unsafe_predicate:
+  all:
+    - field: type
+      op: eq
+      value: k8s_cluster
+    - field: properties.rbac.default_sa_automount_disabled
+      op: eq
+      value: false

@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.KUBELET.CLIENT.CA.001
+name: Kubelet Client CA Must Be Configured
+description: >
+  The kubelet must be configured with a client CA file to verify
+  client certificates for x509 authentication.
+domain: exposure
+severity: high
+compliance:
+  cis_k8s_v1.9: "4.2.3"
+scope_tags:
+  - kubernetes
+  - kubelet
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Kubelet client CA file is not configured.
+  action: >
+    Set authentication.x509.clientCAFile in the kubelet config.
+unsafe_predicate:
+  all:
+    - field: type
+      op: eq
+      value: k8s_kubelet
+    - field: properties.kubelet.client_ca_file
+      op: missing
+      value: true

@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.AD.ACCOUNT.GUEST.001
+name: Guest Account Must Be Disabled
+description: >
+  The built-in Guest account must be disabled in Active Directory.
+  An enabled Guest account allows unauthenticated or weakly
+  authenticated users to access domain resources. Attackers use
+  the Guest account as an initial access vector to enumerate
+  domain objects and escalate privileges.
+domain: identity
+severity: medium
+compliance:
+  cis_ad: "1.1.1"
+scope_tags:
+  - active_directory
+type: unsafe_state
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    The Guest account is enabled. Unauthenticated users may gain
+    access to domain resources.
+  action: >
+    Disable the Guest account. Run:
+    Disable-ADAccount -Identity Guest
+unsafe_predicate:
+  all:
+    - field: properties.accounts.guest_enabled
+      op: eq
+      value: true

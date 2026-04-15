@@ -69,5 +69,10 @@ func runStandardApply(ctx context.Context, logger *slog.Logger, deps Deps, opts 
 	}
 
 	rep := &Reporter{Stdout: sio.Stdout, Stderr: sio.Stderr, Runtime: rt, Quiet: sio.Quiet}
-	return rep.ReportApply(results, evaluation.EnforcementPolicy{})
+	if err := rep.ReportApply(results, evaluation.EnforcementPolicy{}); err != nil {
+		return err
+	}
+
+	// SLA policy exit code: check after normal evaluation reporting.
+	return checkSLAPolicy(sio.Stderr, opts.SLAPolicy, results, sio.Quiet)
 }

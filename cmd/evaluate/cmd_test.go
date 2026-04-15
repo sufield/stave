@@ -135,12 +135,10 @@ func TestEvaluate_WithException(t *testing.T) {
 		"--format", "text",
 	})
 
-	// Place the stave.yaml next to the snapshot.
-	// It's already at testdata/snapshots/exception_stave.yaml — we need it as stave.yaml.
-	origStave := "testdata/snapshots/stave.yaml"
+	// Place stave.yaml in the working directory (project root resolution).
 	data, _ := os.ReadFile("testdata/snapshots/exception_stave.yaml")
-	_ = os.WriteFile(origStave, data, 0o644)
-	defer os.Remove(origStave)
+	_ = os.WriteFile("stave.yaml", data, 0o644)
+	defer os.Remove("stave.yaml")
 
 	err := cmd.Execute()
 	// Still expect exit code 1 due to other CRITICAL failures.

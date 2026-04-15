@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -102,8 +101,8 @@ func run(w io.Writer, opts *options) error {
 		return fmt.Errorf("evaluate: %w", err)
 	}
 
-	// Load and apply exceptions.
-	staveYAML := filepath.Join(filepath.Dir(opts.SnapshotPath), "stave.yaml")
+	// Load and apply exceptions from project root stave.yaml.
+	staveYAML := "stave.yaml"
 	excs, excErr := exception.LoadExceptions(staveYAML)
 	if excErr != nil {
 		return fmt.Errorf("load exceptions: %w", excErr)

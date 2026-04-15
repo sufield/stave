@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.APISERVER.ADM.CTRL.004
+name: API Server Must Enable NodeRestriction Admission Controller
+description: >
+  The API server must enable the NodeRestriction admission controller
+  to limit what a kubelet can modify, preventing compromised nodes
+  from escalating privileges.
+domain: exposure
+severity: high
+compliance:
+  cis_k8s_v1.9: "1.2.16"
+scope_tags:
+  - kubernetes
+  - apiserver
+type: unsafe_state
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    NodeRestriction admission controller is not enabled.
+  action: >
+    Add NodeRestriction to --enable-admission-plugins on the API server.
+unsafe_predicate:
+  all:
+    - field: type
+      op: eq
+      value: k8s_apiserver
+    - field: properties.apiserver.admission_node_restriction
+      op: eq
+      value: false

@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.POD.RUNASROOT.001
+name: Containers Must Not Run as Root
+description: >
+  Containers must not run as the root user. Running as root inside a
+  container increases the impact of container breakout vulnerabilities
+  and grants unnecessary privileges for filesystem and process
+  operations.
+domain: exposure
+severity: high
+compliance:
+  cis_k8s_v1.9: "5.2.6"
+scope_tags:
+  - kubernetes
+  - pod_security
+type: unsafe_state
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    Container is configured to run as root. A container breakout would
+    grant root access on the host.
+  action: >
+    Set securityContext.runAsNonRoot=true and specify a non-root
+    runAsUser in the pod or container security context.
+unsafe_predicate:
+  all:
+    - field: type
+      op: eq
+      value: k8s_pod
+    - field: properties.pod.run_as_root
+      op: eq
+      value: true

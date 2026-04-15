@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.AD.LDAP.SIGNING.001
+name: LDAP Signing Must Be Required
+description: >
+  LDAP signing must be required on all domain controllers. Without
+  mandatory LDAP signing, LDAP traffic can be intercepted and modified
+  via man-in-the-middle attacks. Attackers can capture and replay LDAP
+  bind credentials or modify directory queries in transit.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "SC-8"
+  cis_ad: "2.3.11.8"
+scope_tags:
+  - active_directory
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    LDAP signing is not required. LDAP traffic can be intercepted and
+    modified, enabling credential theft and directory manipulation.
+  action: >
+    Enable mandatory LDAP signing via Group Policy: Computer Configuration >
+    Windows Settings > Security Settings > Local Policies > Security
+    Options > "Domain controller: LDAP server signing requirements"
+    set to "Require signing".
+unsafe_predicate:
+  all:
+    - field: properties.security_settings.ldap_signing_required
+      op: eq
+      value: false

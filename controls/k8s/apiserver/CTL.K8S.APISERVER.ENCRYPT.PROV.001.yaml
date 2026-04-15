@@ -1,0 +1,34 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.APISERVER.ENCRYPT.PROV.001
+name: API Server Encryption Provider Must Be Configured
+description: >
+  The API server must have an encryption provider configuration set
+  via --encryption-provider-config. Without this, Kubernetes secrets
+  are stored unencrypted in etcd, exposing sensitive data to anyone
+  with etcd access.
+domain: exposure
+severity: high
+compliance:
+  cis_k8s_v1.9: "1.2.30"
+scope_tags:
+  - kubernetes
+  - apiserver
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    API server encryption provider config is not set. Secrets are
+    stored unencrypted in etcd.
+  action: >
+    Set --encryption-provider-config on the API server pointing to an
+    EncryptionConfiguration resource that uses aescbc, secretbox, or
+    a KMS provider.
+unsafe_predicate:
+  all:
+    - field: type
+      op: eq
+      value: k8s_apiserver
+    - field: properties.apiserver.encryption_provider_config
+      op: missing
+      value: true

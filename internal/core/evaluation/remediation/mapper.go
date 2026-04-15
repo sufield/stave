@@ -20,7 +20,7 @@ type Finding struct {
 // resolveSpec returns remediation guidance for a finding.
 // Prioritizes YAML-defined remediation from control metadata,
 // falling back to class-based defaults from the control definition layer.
-func resolveSpec(f evaluation.Finding) policy.RemediationSpec {
+func resolveSpec(f *evaluation.Finding) policy.RemediationSpec {
 	if f.ControlRemediation != nil {
 		return *f.ControlRemediation
 	}

@@ -132,7 +132,8 @@ func (l *ExposureLifecycle) handleSecure(at time.Time) {
 	resolved := l.activeWindow.Resolve(l.resolveTimestamp(at))
 	l.history.Record(resolved)
 	l.activeWindow = nil
-	l.lastObservedAt = time.Time{}
+	// Do not clear lastObservedAt — it records when asset was last seen
+	// and is needed by RecordCheck() if the asset is re-exposed later.
 }
 
 func (l *ExposureLifecycle) resolveTimestamp(at time.Time) time.Time {

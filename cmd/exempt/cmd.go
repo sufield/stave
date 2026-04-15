@@ -12,7 +12,9 @@ import (
 
 	"github.com/spf13/cobra"
 
+	builtinctl "github.com/sufield/stave/internal/adapters/controls/builtin"
 	appexempt "github.com/sufield/stave/internal/app/exempt"
+	"github.com/sufield/stave/internal/controldata"
 )
 
 const defaultFile = "./stave-acknowledgments.yaml"
@@ -42,6 +44,7 @@ Subcommands:
 	cmd.AddCommand(newRemoveCmd())
 	cmd.AddCommand(newUpcomingCmd())
 	cmd.AddCommand(newValidateCmd())
+	cmd.AddCommand(newHistoryCmd())
 	cmd.AddCommand(newExportCmd())
 
 	return cmd
@@ -314,6 +317,73 @@ Exit Codes:
 	return cmd
 }
 
+func newHistoryCmd() *cobra.Command {
+	var file, format string
+
+	cmd := &cobra.Command{
+		Use:   "history",
+		Short: "Show full audit trail including expired entries",
+		Long: `Show the complete audit trail for all acknowledgments, including
+expired and revoked entries. Each entry shows its full lifecycle.
+
+Exit Codes:
+  0   History produced
+  2   Invalid input
+  4   Internal error`,
+		Example:       "  stave exempt history\n  stave exempt history --format json",
+		SilenceUsage:  true,
+		SilenceErrors: true,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			f, err := appexempt.Load(file)
+			if err != nil {
+				return err
+			}
+			history := f.History()
+			if len(history) == 0 {
+				fmt.Fprintln(cmd.OutOrStdout(), "No acknowledgment history.")
+				return nil
+			}
+			if format == "json" {
+				enc := json.NewEncoder(cmd.OutOrStdout())
+				enc.SetIndent("", "  ")
+				return enc.Encode(history)
+			}
+			writeHistory(cmd.OutOrStdout(), history)
+			return nil
+		},
+	}
+
+	cmd.Flags().StringVar(&file, "file", defaultFile, "path to acceptance file")
+	cmd.Flags().StringVarP(&format, "format", "f", "table", "output format: table | json")
+
+	return cmd
+}
+
+func writeHistory(w io.Writer, entries []appexempt.AcknowledgmentEntry) {
+	fmt.Fprintln(w, "ACKNOWLEDGMENT AUDIT TRAIL")
+	fmt.Fprintln(w, strings.Repeat("-", 70))
+	for i := range entries {
+		a := &entries[i]
+		fmt.Fprintf(w, "\n  %s  [%s]\n", a.ID, strings.ToUpper(a.Status))
+		fmt.Fprintf(w, "    Control:   %s\n", a.ControlID)
+		fmt.Fprintf(w, "    Asset:     %s\n", a.AssetID)
+		fmt.Fprintf(w, "    Approver:  %s\n", a.Approver)
+		fmt.Fprintf(w, "    Expires:   %s\n", a.ExpiryDate)
+		fmt.Fprintf(w, "    Rationale: %s\n", a.Reason)
+		if len(a.AuditTrail) > 0 {
+			fmt.Fprintln(w, "    Events:")
+			for j := range a.AuditTrail {
+				e := &a.AuditTrail[j]
+				fmt.Fprintf(w, "      %s  %s  %s", e.Timestamp, e.Event, e.Actor)
+				if e.Note != "" {
+					fmt.Fprintf(w, "  (%s)", e.Note)
+				}
+				fmt.Fprintln(w)
+			}
+		}
+	}
+}
+
 func newValidateCmd() *cobra.Command {
 	var file string
 
@@ -334,7 +404,17 @@ Exit Codes:
 			if err != nil {
 				return err
 			}
-			errs := f.Validate()
+
+			// Load catalog for compensating control validation.
+			knownIDs := make(map[string]bool)
+			store := builtinctl.NewControlStore(controldata.FS, ".")
+			if controls, loadErr := store.All(); loadErr == nil {
+				for i := range controls {
+					knownIDs[string(controls[i].ID)] = true
+				}
+			}
+
+			errs := f.ValidateWithCatalog(knownIDs)
 			if len(errs) == 0 {
 				fmt.Fprintln(cmd.OutOrStdout(), "Acceptance file is valid.")
 				return nil

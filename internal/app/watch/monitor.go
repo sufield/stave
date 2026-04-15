@@ -21,6 +21,11 @@ import (
 // each new snapshot or interval tick.
 type AssessFunc func(ctx context.Context) (state string, violations int, slaBreaches int, maxDwellHours float64, violationIDs []string, err error)
 
+// OwnerResolver resolves the owning team for a violation ID (control:asset).
+type OwnerResolver interface {
+	ResolveViolation(violationID string) (teamID, teamName, contact, slack, jira string)
+}
+
 // Config holds the monitor configuration.
 type Config struct {
 	ObservationsDir string
@@ -29,6 +34,7 @@ type Config struct {
 	Assess          AssessFunc
 	Logger          *slog.Logger
 	Clock           ports.Clock
+	OwnerResolver   OwnerResolver
 }
 
 // Monitor runs the continuous assessment loop.
@@ -148,6 +154,16 @@ func (m *Monitor) runCycle(ctx context.Context) {
 		Regressions:       regressions,
 		ActiveSLABreaches: slaBreaches,
 		MaxDwellTimeHours: maxDwell,
+	}
+
+	// Annotate owner from the first regression (if team manifest loaded).
+	if m.cfg.OwnerResolver != nil && len(regressions) > 0 {
+		tid, tname, contact, slack, jira := m.cfg.OwnerResolver.ResolveViolation(regressions[0])
+		alert.OwnerTeamID = tid
+		alert.OwnerTeamName = tname
+		alert.OwnerContact = contact
+		alert.OwnerSlackChannel = slack
+		alert.OwnerJiraProject = jira
 	}
 
 	m.emit(ctx, alert)

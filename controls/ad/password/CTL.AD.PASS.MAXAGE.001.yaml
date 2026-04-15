@@ -1,0 +1,25 @@
+dsl_version: ctrl.v1
+id: CTL.AD.PASS.MAXAGE.001
+name: Password Maximum Age Must Be 90 Days or Less
+description: >
+  Password maximum age must not exceed 90 days to limit the window
+  of exposure for compromised credentials.
+domain: identity
+severity: medium
+compliance:
+  cis_ad: "1.1.3"
+scope_tags:
+  - active_directory
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Password maximum age exceeds 90 days.
+  action: >
+    Set maximum password age to 90 days or less in Default Domain Policy.
+unsafe_predicate:
+  all:
+    - field: properties.password_policy.max_age_days
+      op: gt
+      value: 90

@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.AD.AUDIT.ACCTMGMT.001
+name: Account Management Auditing Must Be Enabled
+description: >
+  Active Directory must audit account management events. Without
+  this auditing, creation, deletion, and modification of user and
+  group accounts go unrecorded. Attackers who create backdoor
+  accounts or add themselves to privileged groups will leave no
+  audit trail.
+domain: identity
+severity: high
+compliance:
+  cis_ad: "17.1.1"
+scope_tags:
+  - active_directory
+type: unsafe_state
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Account management auditing is not enabled. Changes to user and
+    group accounts are not being recorded.
+  action: >
+    Enable account management auditing via Group Policy: Computer
+    Configuration > Windows Settings > Security Settings > Advanced
+    Audit Policy Configuration > Account Management > Audit User
+    Account Management. Set to Success and Failure.
+unsafe_predicate:
+  all:
+    - field: properties.security_settings.audit_account_management
+      op: eq
+      value: false

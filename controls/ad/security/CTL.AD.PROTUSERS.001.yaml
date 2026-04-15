@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.AD.PROTUSERS.001
+name: Protected Users Group Must Be Populated
+description: >
+  The Protected Users security group must contain privileged accounts.
+  Members of this group receive hardened credential protections
+  including no NTLM authentication, no DES or RC4 in Kerberos
+  pre-authentication, no delegation, and no credential caching.
+  Leaving it empty means privileged accounts lack these defenses.
+domain: identity
+severity: high
+compliance:
+  cis_ad: "5.5"
+scope_tags:
+  - active_directory
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Protected Users group is empty. Privileged accounts are not
+    receiving hardened credential protections.
+  action: >
+    Add all privileged accounts (Domain Admins, Enterprise Admins,
+    Schema Admins) to the Protected Users group. Test application
+    compatibility before adding service accounts.
+unsafe_predicate:
+  all:
+    - field: properties.security_settings.protected_users_populated
+      op: eq
+      value: false

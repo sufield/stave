@@ -1,0 +1,26 @@
+dsl_version: ctrl.v1
+id: CTL.AD.BUILTIN.LIMIT.001
+name: Built-in Administrator Account Must Be Disabled
+description: >
+  The built-in Administrator account (RID 500) must be disabled or
+  renamed. It is a well-known target for brute-force attacks.
+domain: identity
+severity: high
+compliance:
+  cis_ad: "2.1"
+scope_tags:
+  - active_directory
+type: unsafe_state
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    Built-in Administrator account is enabled.
+  action: >
+    Disable or rename the built-in Administrator account. Use
+    dedicated named admin accounts with audit trails.
+unsafe_predicate:
+  all:
+    - field: properties.privileged_groups.builtin_admin_enabled
+      op: eq
+      value: true

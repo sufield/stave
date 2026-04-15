@@ -2,7 +2,7 @@
   "schema_version": "out.v0.1",
   "kind": "ASSESSMENT",
   "run": {
-    "tool_version": "dev",
+    "tool_version": "edge",
     "offline": true,
     "now": "2026-01-15T00:00:00Z",
     "sla_threshold": "0h",
@@ -12,8 +12,8 @@
   },
   "summary": {
     "total_assets": 20,
-    "exposed_resources": 19,
-    "violations": 35
+    "exposed_resources": 17,
+    "violations": 32
   },
   "status": "NON_COMPLIANT",
   "risk_signals": [
@@ -1475,146 +1475,6 @@
       ]
     },
     {
-      "finding_id": "sha256:bbca133641c43a7a",
-      "control_id": "CTL.K8S.AUDIT.001",
-      "control_name": "Kubernetes Audit Logging Must Be Enabled",
-      "control_description": "The Kubernetes API server must have audit logging enabled. Without audit logs, API calls (including unauthorized access attempts) are not recorded for forensic analysis.\n",
-      "asset_id": "eks-prod-cluster",
-      "asset_type": "k8s_cluster",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2026-01-10T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
-        "unsafe_duration_hours": 120,
-        "misconfigurations": [
-          {
-            "property": "audit.audit_logging_enabled",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": false
-          },
-          {
-            "property": "audit.kind",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": "cluster"
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
-      },
-      "control_severity": "high",
-      "control_compliance": {
-        "cis_k8s_v1.8.0": "3.2.1",
-        "hipaa": "164.312(b)",
-        "soc2": "CC7.1"
-      },
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "Kubernetes API server does not have audit logging enabled. API access is not recorded.",
-        "action": "Configure the API server with --audit-policy-file and --audit-log-path. For managed clusters (EKS, GKE), enable control plane logging via the cloud provider console.",
-        "example": "{\n  \"audit\": {\n    \"kind\": \"cluster\",\n    \"audit_logging_enabled\": true\n  }\n}\n"
-      }
-    },
-    {
-      "finding_id": "sha256:7c67ba18d7b21008",
-      "control_id": "CTL.K8S.NETPOL.001",
-      "control_name": "Namespaces Must Have Network Policies",
-      "control_description": "Kubernetes namespaces containing workloads must have at least one NetworkPolicy defined. Without network policies, all pod-to-pod traffic is allowed by default, enabling lateral movement.\n",
-      "asset_id": "ns-phi-workloads",
-      "asset_type": "k8s_namespace",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2026-01-10T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
-        "unsafe_duration_hours": 120,
-        "misconfigurations": [
-          {
-            "property": "network_policy.has_network_policies",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": false
-          },
-          {
-            "property": "network_policy.kind",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": "namespace"
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
-      },
-      "control_severity": "high",
-      "control_compliance": {
-        "cis_k8s_v1.8.0": "5.3.2",
-        "hipaa": "164.312(e)(1)"
-      },
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "Namespace has no NetworkPolicy. All pods can communicate with all other pods in the cluster without restriction.",
-        "action": "Create a default-deny NetworkPolicy for the namespace, then add explicit allow rules for required traffic flows.",
-        "example": "{\n  \"network_policy\": {\n    \"kind\": \"namespace\",\n    \"has_network_policies\": true,\n    \"has_default_deny\": true\n  }\n}\n"
-      }
-    },
-    {
-      "finding_id": "sha256:e7b4be29bae02714",
-      "control_id": "CTL.K8S.SECRETS.ENCRYPT.001",
-      "control_name": "Kubernetes Secrets Must Be Encrypted at Rest in etcd",
-      "control_description": "Kubernetes Secrets stored in etcd must be encrypted at rest. By default, Secrets are stored as base64-encoded plaintext in etcd, readable by anyone with etcd access or etcd backup access.\n",
-      "asset_id": "eks-prod-cluster",
-      "asset_type": "k8s_cluster",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2026-01-10T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
-        "unsafe_duration_hours": 120,
-        "misconfigurations": [
-          {
-            "property": "secrets.etcd_encryption_enabled",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": false
-          },
-          {
-            "property": "secrets.kind",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": "cluster"
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
-      },
-      "control_severity": "critical",
-      "control_compliance": {
-        "cis_k8s_v1.8.0": "1.2.29",
-        "hipaa": "164.312(a)(2)(iv)",
-        "soc2": "CC6.7"
-      },
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "Kubernetes Secrets are not encrypted at rest in etcd. Anyone with etcd access can read all Secrets in plaintext.",
-        "action": "Configure the API server with --encryption-provider-config pointing to an EncryptionConfiguration that uses aescbc, aesgcm, or kms provider. For EKS, enable envelope encryption with a KMS key.",
-        "example": "{\n  \"secrets\": {\n    \"kind\": \"cluster\",\n    \"etcd_encryption_enabled\": true\n  }\n}\n"
-      }
-    },
-    {
       "finding_id": "sha256:1e9883ff6455c056",
       "control_id": "CTL.KMS.POLICY.001",
       "control_name": "KMS Key Policy Must Restrict Access to Specific Roles",
@@ -2336,7 +2196,7 @@
       "silent_killer": false
     },
     {
-      "finding_index": 34,
+      "finding_index": 31,
       "control_id": "CTL.VPC.FLOWLOG.001",
       "asset_id": "vpc-prod-001",
       "exposure_score": 150,
@@ -2378,21 +2238,7 @@
       "silent_killer": false
     },
     {
-      "finding_index": 23,
-      "control_id": "CTL.K8S.SECRETS.ENCRYPT.001",
-      "asset_id": "eks-prod-cluster",
-      "exposure_score": 100,
-      "breakdown": {
-        "base_score": 100,
-        "duration_factor": 1,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 1,
-        "days_blind": 5
-      },
-      "silent_killer": false
-    },
-    {
-      "finding_index": 29,
+      "finding_index": 26,
       "control_id": "CTL.RDS.PUBLIC.001",
       "asset_id": "phi-database",
       "exposure_score": 100,
@@ -2575,34 +2421,6 @@
     },
     {
       "finding_index": 21,
-      "control_id": "CTL.K8S.AUDIT.001",
-      "asset_id": "eks-prod-cluster",
-      "exposure_score": 75,
-      "breakdown": {
-        "base_score": 75,
-        "duration_factor": 1,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 1,
-        "days_blind": 5
-      },
-      "silent_killer": false
-    },
-    {
-      "finding_index": 22,
-      "control_id": "CTL.K8S.NETPOL.001",
-      "asset_id": "ns-phi-workloads",
-      "exposure_score": 75,
-      "breakdown": {
-        "base_score": 75,
-        "duration_factor": 1,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 1,
-        "days_blind": 5
-      },
-      "silent_killer": false
-    },
-    {
-      "finding_index": 24,
       "control_id": "CTL.KMS.POLICY.001",
       "asset_id": "phi-cmk",
       "exposure_score": 75,
@@ -2616,7 +2434,7 @@
       "silent_killer": false
     },
     {
-      "finding_index": 25,
+      "finding_index": 22,
       "control_id": "CTL.RDS.BACKUP.001",
       "asset_id": "phi-database",
       "exposure_score": 75,
@@ -2630,7 +2448,7 @@
       "silent_killer": false
     },
     {
-      "finding_index": 26,
+      "finding_index": 23,
       "control_id": "CTL.RDS.ENCRYPT.001",
       "asset_id": "phi-database",
       "exposure_score": 75,
@@ -2644,7 +2462,7 @@
       "silent_killer": false
     },
     {
-      "finding_index": 31,
+      "finding_index": 28,
       "control_id": "CTL.SECRETSMANAGER.ENCRYPT.001",
       "asset_id": "db-credentials",
       "exposure_score": 75,
@@ -2658,7 +2476,7 @@
       "silent_killer": false
     },
     {
-      "finding_index": 32,
+      "finding_index": 29,
       "control_id": "CTL.SNS.ENCRYPT.001",
       "asset_id": "phi-alerts",
       "exposure_score": 75,
@@ -2672,7 +2490,7 @@
       "silent_killer": false
     },
     {
-      "finding_index": 33,
+      "finding_index": 30,
       "control_id": "CTL.SQS.ENCRYPT.001",
       "asset_id": "phi-notifications",
       "exposure_score": 75,
@@ -2756,7 +2574,7 @@
       "silent_killer": false
     },
     {
-      "finding_index": 27,
+      "finding_index": 24,
       "control_id": "CTL.RDS.LOG.001",
       "asset_id": "phi-database",
       "exposure_score": 50,
@@ -2770,7 +2588,7 @@
       "silent_killer": false
     },
     {
-      "finding_index": 28,
+      "finding_index": 25,
       "control_id": "CTL.RDS.MULTIAZ.001",
       "asset_id": "phi-database",
       "exposure_score": 50,
@@ -2784,7 +2602,7 @@
       "silent_killer": false
     },
     {
-      "finding_index": 30,
+      "finding_index": 27,
       "control_id": "CTL.SECRETSMANAGER.ACCESS.001",
       "asset_id": "db-credentials",
       "exposure_score": 50,

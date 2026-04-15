@@ -8,8 +8,8 @@ cp stdout evaluation.json
 exec stave report --in evaluation.json
 stdout 'CTL.S3.PUBLIC.001'
 
-# Prompt from finding
-exec stave prompt from-finding --evaluation-file evaluation.json --asset-id public-bucket --controls controls --observations observations
+# Prompt from finding (subcommand of diagnose)
+exec stave diagnose prompt from-finding --evaluation-file evaluation.json --asset-id public-bucket --controls controls --observations observations
 stdout 'public-bucket'
 
 -- controls/CTL.S3.PUBLIC.001.yaml --

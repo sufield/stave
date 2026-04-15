@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.AD.LDAP.CHANNELBIND.001
+name: LDAP Channel Binding Must Be Enabled
+description: >
+  LDAP channel binding must be enabled on domain controllers. Without
+  channel binding, LDAP connections are vulnerable to relay attacks
+  where an attacker forwards authentication tokens from one session
+  to another. Channel binding ties the LDAP session to the underlying
+  TLS channel, preventing token relay.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "SC-8"
+  cis_ad: "2.3.11.9"
+scope_tags:
+  - active_directory
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    LDAP channel binding is not enabled. LDAP connections are vulnerable
+    to relay attacks.
+  action: >
+    Enable LDAP channel binding via registry: Set
+    HKLM\SYSTEM\CurrentControlSet\Services\NTDS\Parameters\LdapEnforceChannelBinding
+    to 2 (Always) on all domain controllers.
+unsafe_predicate:
+  all:
+    - field: properties.security_settings.ldap_channel_binding
+      op: eq
+      value: false

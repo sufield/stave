@@ -1,0 +1,27 @@
+dsl_version: ctrl.v1
+id: CTL.VSPHERE.ESX.SHELL.001
+name: ESXi Shell Must Be Disabled
+description: >
+  The ESXi shell must be disabled. An enabled shell provides local
+  console access to the hypervisor, bypassing remote management
+  audit controls.
+domain: exposure
+severity: high
+compliance:
+  cis_vmware_esxi_7: "1.2"
+scope_tags:
+  - vmware
+  - esxi
+type: unsafe_state
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    ESXi shell is enabled on the host.
+  action: >
+    Disable the ESXi Shell service. Set startup policy to manual.
+unsafe_predicate:
+  all:
+    - field: properties.esxi.shell_enabled
+      op: eq
+      value: true

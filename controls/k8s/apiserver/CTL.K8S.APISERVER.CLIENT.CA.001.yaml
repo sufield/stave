@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.APISERVER.CLIENT.CA.001
+name: API Server Client CA Must Be Configured
+description: >
+  The API server must be configured with a client certificate authority
+  file to verify client certificates for mutual TLS authentication.
+domain: exposure
+severity: high
+compliance:
+  cis_k8s_v1.9: "1.2.29"
+scope_tags:
+  - kubernetes
+  - apiserver
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    API server client CA file is not configured. Client certificate
+    authentication is not enforced.
+  action: >
+    Set --client-ca-file on the API server pointing to the cluster CA.
+unsafe_predicate:
+  all:
+    - field: type
+      op: eq
+      value: k8s_apiserver
+    - field: properties.apiserver.client_ca_file
+      op: missing
+      value: true

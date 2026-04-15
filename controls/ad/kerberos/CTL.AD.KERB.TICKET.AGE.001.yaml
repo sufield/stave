@@ -1,0 +1,25 @@
+dsl_version: ctrl.v1
+id: CTL.AD.KERB.TICKET.AGE.001
+name: Kerberos TGT Lifetime Must Not Exceed 10 Hours
+description: >
+  Maximum Kerberos ticket-granting ticket lifetime must not exceed
+  10 hours. Longer lifetimes extend the window for stolen ticket reuse.
+domain: identity
+severity: medium
+compliance:
+  cis_ad: "1.3.1"
+scope_tags:
+  - active_directory
+type: unsafe_state
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: >
+    Kerberos TGT lifetime exceeds 10 hours.
+  action: >
+    Set maximum ticket age to 10 hours in the Kerberos Policy GPO.
+unsafe_predicate:
+  all:
+    - field: properties.kerberos_policy.max_ticket_age_hours
+      op: gt
+      value: 10

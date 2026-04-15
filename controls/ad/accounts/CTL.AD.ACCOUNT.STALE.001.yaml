@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.AD.ACCOUNT.STALE.001
+name: No Inactive Admin Accounts Must Exist
+description: >
+  There must be no inactive admin accounts in Active Directory.
+  Admin accounts that have not logged in for an extended period
+  are dormant backdoors. Attackers target stale privileged accounts
+  because they are less likely to be monitored and their compromise
+  may go unnoticed indefinitely.
+domain: identity
+severity: high
+compliance:
+  cis_ad: "5.1"
+scope_tags:
+  - active_directory
+type: unsafe_state
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Inactive admin accounts exist. These are dormant backdoors that
+    attackers can exploit undetected.
+  action: >
+    Review and disable or remove inactive admin accounts. Run:
+    Search-ADAccount -AccountInactive -UsersOnly -TimeSpan 90.00:00:00 |
+    Where-Object {$_.MemberOf -match "Domain Admins"}
+unsafe_predicate:
+  all:
+    - field: properties.accounts.inactive_admin_count
+      op: gt
+      value: 0

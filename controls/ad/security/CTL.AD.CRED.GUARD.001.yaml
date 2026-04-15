@@ -1,0 +1,27 @@
+dsl_version: ctrl.v1
+id: CTL.AD.CRED.GUARD.001
+name: Credential Guard Must Be Enabled
+description: >
+  Windows Credential Guard must be enabled to protect LSASS from
+  memory dumping attacks (Mimikatz). Without it, domain credentials
+  cached in memory can be extracted by any local administrator.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6"
+scope_tags:
+  - active_directory
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Credential Guard is not enabled. LSASS memory is unprotected.
+  action: >
+    Enable Credential Guard via GPO or Intune. Requires UEFI Secure
+    Boot and virtualization-based security.
+unsafe_predicate:
+  all:
+    - field: properties.security_settings.credential_guard_enabled
+      op: eq
+      value: false

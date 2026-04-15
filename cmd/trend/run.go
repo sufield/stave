@@ -12,6 +12,8 @@ import (
 	"time"
 
 	artifact "github.com/sufield/stave/internal/adapters/artifacts"
+	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
+	appscore "github.com/sufield/stave/internal/app/score"
 	"github.com/sufield/stave/internal/core/report"
 )
 
@@ -62,6 +64,18 @@ func runTrend(ctx context.Context, w io.Writer, opts *trendOptions) error {
 	// Compute framework trends.
 	frameworkTrends := computeFrameworkTrends(assessments, opts.Compliance)
 
+	// Compute SLA compliance trend.
+	slaTrend := computeSLATrend(assessments)
+
+	// Load chain definitions for accurate chain weight.
+	chains, _ := ctlyaml.LoadChains("chains")
+	chainDefs := len(chains)
+	maxChainWeight := appscore.ChainMaxWeight(chains)
+
+	// Compute posture score from latest assessment.
+	latestAssessment := assessments[len(assessments)-1]
+	scoreResult := computePostureScore(latestAssessment, slaTrend, chainDefs, maxChainWeight)
+
 	// Build report.
 	trendReport := TrendReport{
 		GeneratedAt: time.Now().UTC(),
@@ -79,6 +93,9 @@ func runTrend(ctx context.Context, w io.Writer, opts *trendOptions) error {
 		FrameworkTrends: frameworkTrends,
 		Velocity:        velocity,
 		Projection:      projection,
+		SLATrend:        slaTrend,
+		PostureScore:    &scoreResult.Score,
+		PostureRubric:   scoreResult.RubricBand,
 	}
 
 	// Compute summary direction.
@@ -108,6 +125,42 @@ func runTrend(ctx context.Context, w io.Writer, opts *trendOptions) error {
 	default:
 		return renderTrendTable(out, &trendReport)
 	}
+}
+
+func computePostureScore(a *report.Assessment, slaTrend []SLATrendMetric, chainDefs int, maxChainWeight float64) appscore.Result {
+	slaTotal := 0
+	slaBreached := 0
+	hasSLA := false
+	for i := range a.Findings {
+		if a.Findings[i].SLADeadlineHours != nil {
+			hasSLA = true
+			slaTotal++
+			if a.Findings[i].SLABreached {
+				slaBreached++
+			}
+		}
+	}
+	// Use SLA trend data if no per-finding SLA.
+	if !hasSLA && len(slaTrend) > 0 {
+		latest := slaTrend[len(slaTrend)-1]
+		if latest.TotalWithSLA > 0 {
+			hasSLA = true
+			slaTotal = latest.TotalWithSLA
+			slaBreached = latest.BreachedCount
+		}
+	}
+
+	return appscore.Compute(appscore.Input{
+		Findings:       a.Findings,
+		ChainFindings:  a.ChainFindings,
+		ChainDefs:      chainDefs,
+		MaxChainWeight: maxChainWeight,
+		SLABreached:    slaBreached,
+		SLATotal:       slaTotal,
+		HasSLA:         hasSLA,
+		Weights:        appscore.DefaultWeights(),
+		GeneratedAt:    a.Run.Now,
+	})
 }
 
 func loadAssessments(ctx context.Context, opts *trendOptions) ([]*report.Assessment, error) {

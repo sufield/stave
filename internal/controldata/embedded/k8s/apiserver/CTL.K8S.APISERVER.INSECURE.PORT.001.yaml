@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.APISERVER.INSECURE.PORT.001
+name: API Server Insecure Port Must Be Disabled
+description: >
+  The API server insecure port must be set to 0 (disabled). The insecure
+  port serves requests without authentication or authorization, allowing
+  unrestricted access to the Kubernetes API.
+domain: exposure
+severity: high
+compliance:
+  cis_k8s_v1.9: "1.2.19"
+scope_tags:
+  - kubernetes
+  - apiserver
+type: unsafe_state
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    API server insecure port is not disabled. Unauthenticated and
+    unauthorized requests are accepted on this port.
+  action: >
+    Set --insecure-port=0 on the API server. This flag is deprecated
+    in recent Kubernetes versions and will be removed.
+unsafe_predicate:
+  all:
+    - field: type
+      op: eq
+      value: k8s_apiserver
+    - field: properties.apiserver.insecure_port
+      op: ne
+      value: 0

@@ -25,6 +25,8 @@ type RunMetadata struct {
 	FindingCount         int               `json:"finding_count"`
 	CriticalCount        int               `json:"critical_count"`
 	HighCount            int               `json:"high_count"`
+	PostureScore         *float64          `json:"posture_score,omitempty"`
+	PostureScoreRubric   string            `json:"posture_score_rubric,omitempty"`
 	CollectionDurationMs int64             `json:"collection_duration_ms"`
 	SHA256Sums           map[string]string `json:"sha256sums"`
 }

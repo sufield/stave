@@ -22,8 +22,8 @@ func TestBaselineEntriesFromFindings_DedupesAndSorts(t *testing.T) {
 	}
 
 	byKey := make(map[BaselineEntryKey]BaselineEntry, len(findings))
-	for _, f := range findings {
-		entry := BaselineEntryFromFinding(f)
+	for i := range findings {
+		entry := BaselineEntryFromFinding(&findings[i])
 		byKey[entry.Key()] = entry
 	}
 	entries := make([]BaselineEntry, 0, len(byKey))

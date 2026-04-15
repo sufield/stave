@@ -1,0 +1,27 @@
+dsl_version: ctrl.v1
+id: CTL.AD.ACCOUNT.NOPASSWD.001
+name: No Accounts May Have Password-Not-Required Flag
+description: >
+  No account should have the PASSWD_NOTREQD flag set. Accounts
+  with this flag can authenticate with an empty password.
+domain: identity
+severity: critical
+compliance:
+  cis_ad: "5.5"
+scope_tags:
+  - active_directory
+type: unsafe_state
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    Accounts exist with the password-not-required flag set.
+  action: >
+    Clear the PASSWD_NOTREQD flag on all accounts.
+    Get-ADUser -Filter {PasswordNotRequired -eq $true} |
+    Set-ADUser -PasswordNotRequired $false
+unsafe_predicate:
+  all:
+    - field: properties.accounts.password_not_required_count
+      op: gt
+      value: 0

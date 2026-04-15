@@ -40,4 +40,11 @@ type WatchAlert struct {
 
 	// Error context for DATA_INTEGRITY_FAILURE.
 	ErrorMessage string `json:"error_message,omitempty"`
+
+	// Owner routing fields — populated when a team manifest is loaded.
+	OwnerTeamID       string `json:"owner_team_id,omitempty"`
+	OwnerTeamName     string `json:"owner_team_name,omitempty"`
+	OwnerContact      string `json:"owner_contact,omitempty"`
+	OwnerSlackChannel string `json:"owner_slack_channel,omitempty"`
+	OwnerJiraProject  string `json:"owner_jira_project,omitempty"`
 }

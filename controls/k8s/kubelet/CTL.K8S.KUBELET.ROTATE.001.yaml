@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.KUBELET.ROTATE.001
+name: Kubelet Certificate Rotation Must Be Enabled
+description: >
+  The kubelet must have certificate rotation enabled to automatically
+  renew its client and serving certificates before expiry.
+domain: exposure
+severity: medium
+compliance:
+  cis_k8s_v1.9: "4.2.11"
+scope_tags:
+  - kubernetes
+  - kubelet
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Kubelet certificate rotation is not enabled. Certificates may
+    expire without renewal.
+  action: >
+    Set rotateCertificates=true in the kubelet config.
+unsafe_predicate:
+  all:
+    - field: type
+      op: eq
+      value: k8s_kubelet
+    - field: properties.kubelet.rotate_certificates
+      op: eq
+      value: false

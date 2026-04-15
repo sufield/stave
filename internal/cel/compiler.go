@@ -163,7 +163,8 @@ func ruleToExpr(r *policy.PredicateRule, scopeVar string) (string, error) {
 	case predicate.OpEq:
 		return fmt.Sprintf("(%s && %s == %s)", hf, fa, resolveValueExpr(val)), nil
 	case predicate.OpNe:
-		return fmt.Sprintf("(!(%s) || %s != %s)", hf, fa, resolveValueExpr(val)), nil
+		// Field must exist for inequality to be meaningful — missing field is not a violation.
+		return fmt.Sprintf("(%s && %s != %s)", hf, fa, resolveValueExpr(val)), nil
 	case predicate.OpGt:
 		return fmt.Sprintf("(%s && %s > %s)", hf, fa, resolveValueExpr(val)), nil
 	case predicate.OpLt:

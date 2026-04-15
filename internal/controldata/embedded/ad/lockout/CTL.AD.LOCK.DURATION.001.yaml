@@ -1,0 +1,25 @@
+dsl_version: ctrl.v1
+id: CTL.AD.LOCK.DURATION.001
+name: Account Lockout Duration Must Be At Least 15 Minutes
+description: >
+  Account lockout duration must be at least 15 minutes to slow
+  brute-force attacks and give defenders time to respond.
+domain: identity
+severity: medium
+compliance:
+  cis_ad: "1.2.2"
+scope_tags:
+  - active_directory
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Account lockout duration is less than 15 minutes.
+  action: >
+    Set lockout duration to 15 minutes or more in Default Domain Policy.
+unsafe_predicate:
+  all:
+    - field: properties.password_policy.lockout_duration_minutes
+      op: lt
+      value: 15

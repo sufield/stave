@@ -79,6 +79,8 @@ type Options struct {
 	SLAProfile         string
 	SLAProfileFile     string
 	SLAPolicy          string
+	TeamManifest       string
+	OwnerFilter        string
 }
 
 // normalize cleans all user-supplied paths in one pass.
@@ -86,6 +88,7 @@ func (o *Options) normalize() {
 	o.SharedOptions.normalize()
 	o.ExemptionFile = fsutil.CleanUserPath(o.ExemptionFile)
 	o.AcknowledgmentFile = fsutil.CleanUserPath(o.AcknowledgmentFile)
+	o.TeamManifest = fsutil.CleanUserPath(o.TeamManifest)
 	o.IntegrityManifest = fsutil.CleanUserPath(o.IntegrityManifest)
 	o.IntegrityPublicKey = fsutil.CleanUserPath(o.IntegrityPublicKey)
 	o.InputFile = fsutil.CleanUserPath(o.InputFile)
@@ -185,6 +188,8 @@ func (o *Options) bindApplySpecific(cmd *cobra.Command) {
 	f.StringVar(&o.SLAProfile, "sla-profile", "", "SLA policy profile (pci_dss_v4, hipaa, soc2, fedramp_moderate, default)")
 	f.StringVar(&o.SLAProfileFile, "sla-profile-file", "", "path to custom SLA policy YAML file")
 	f.StringVar(&o.SLAPolicy, "sla-policy", "warn", "SLA breach exit code behavior: warn, strict, critical-only")
+	f.StringVar(&o.TeamManifest, "team-manifest", "", "Path to stave-teams.yaml for owner routing")
+	f.StringVar(&o.OwnerFilter, "owner-filter", "", "Comma-separated team IDs to filter findings")
 }
 
 func (o *Options) validate() error {

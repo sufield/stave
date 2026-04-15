@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.POD.CAPABILITIES.001
+name: Containers Must Drop NET_RAW Capability
+description: >
+  Containers must drop the NET_RAW capability. NET_RAW allows crafting
+  raw network packets, enabling ARP spoofing, DNS poisoning, and other
+  network-level attacks from within the container.
+domain: exposure
+severity: medium
+compliance:
+  cis_k8s_v1.9: "5.2.7"
+scope_tags:
+  - kubernetes
+  - pod_security
+type: unsafe_state
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: >
+    Container has not dropped the NET_RAW capability. Raw packet
+    crafting is permitted.
+  action: >
+    Add NET_RAW to securityContext.capabilities.drop in the container
+    spec. Prefer dropping ALL capabilities and adding back only those
+    required.
+unsafe_predicate:
+  all:
+    - field: type
+      op: eq
+      value: k8s_pod
+    - field: properties.pod.capabilities_net_raw
+      op: eq
+      value: true

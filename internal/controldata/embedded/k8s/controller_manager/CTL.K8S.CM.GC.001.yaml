@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.CM.GC.001
+name: Controller Manager Terminated Pod GC Threshold Must Be Set
+description: >
+  The controller manager must have a positive terminated pod garbage
+  collection threshold to prevent resource exhaustion from accumulated
+  terminated pods.
+domain: exposure
+severity: low
+compliance:
+  cis_k8s_v1.9: "1.3.1"
+scope_tags:
+  - kubernetes
+  - controller_manager
+type: unsafe_state
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    Terminated pod GC threshold is not set or is zero.
+  action: >
+    Set --terminated-pod-gc-threshold to a positive value (e.g. 12500).
+unsafe_predicate:
+  all:
+    - field: type
+      op: eq
+      value: k8s_controller_manager
+    - field: properties.controller_manager.terminated_pod_gc_threshold
+      op: lte
+      value: 0

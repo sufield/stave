@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.APISERVER.ADM.CTRL.001
+name: API Server Must Enable AlwaysPullImages Admission Controller
+description: >
+  The API server must enable the AlwaysPullImages admission controller.
+  This ensures every new pod always pulls the image, preventing nodes
+  from using cached images that may have been tampered with.
+domain: exposure
+severity: medium
+compliance:
+  cis_k8s_v1.9: "1.2.11"
+scope_tags:
+  - kubernetes
+  - apiserver
+type: unsafe_state
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    AlwaysPullImages admission controller is not enabled.
+  action: >
+    Add AlwaysPullImages to --enable-admission-plugins on the API server.
+unsafe_predicate:
+  all:
+    - field: type
+      op: eq
+      value: k8s_apiserver
+    - field: properties.apiserver.admission_always_pull_images
+      op: eq
+      value: false

@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.APISERVER.AUDIT.MAXBACKUP.001
+name: API Server Audit Log Max Backup Must Be At Least 10
+description: >
+  The API server must retain at least 10 old audit log files before
+  rotation deletes them. Insufficient backup retention limits the
+  availability of historical audit data for incident investigation.
+domain: exposure
+severity: medium
+compliance:
+  cis_k8s_v1.9: "1.2.24"
+scope_tags:
+  - kubernetes
+  - apiserver
+type: unsafe_state
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Audit log max backup is less than 10. Rotated audit logs may be
+    deleted before investigation can begin.
+  action: >
+    Set --audit-log-maxbackup=10 or higher on the API server.
+unsafe_predicate:
+  all:
+    - field: type
+      op: eq
+      value: k8s_apiserver
+    - field: properties.apiserver.audit_log_maxbackup
+      op: lt
+      value: 10

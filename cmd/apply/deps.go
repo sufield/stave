@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"path/filepath"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
@@ -114,9 +113,9 @@ func (b *Builder) Build(ctx context.Context, plan *appeval.EvaluationPlan) (*app
 		return nil, fmt.Errorf("initialize CEL evaluator: %w", err)
 	}
 
-	// Auto-discover chain definitions from chains/ directory.
-	chainsDir := filepath.Join(filepath.Dir(b.Opts.ControlsDir), "chains")
-	chains, _ := ctlyaml.LoadChains(chainsDir)
+	// Auto-discover chain definitions from chains/ directory at project root,
+	// independent of --controls path.
+	chains, _ := ctlyaml.LoadChains("chains")
 
 	// Load SLA policy — file takes precedence over embedded.
 	var slaCfg *evaluation.SLAConfig

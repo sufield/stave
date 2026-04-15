@@ -152,7 +152,7 @@ func runCompliance(
 	}
 
 	// Single-framework path (unchanged behavior).
-	export := buildExport(profiles[0], assessments[0], pkg, version.String, snapshotTime, opts.IncludePass, opts.MinSeverity)
+	export := buildExport(profiles[0], assessments[0], pkg, version.String, snapshotTime, opts.IncludePass, opts.MinSeverity, result.Findings)
 	switch opts.Format {
 	case "json":
 		if renderErr := renderJSON(out, export); renderErr != nil {

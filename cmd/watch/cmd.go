@@ -12,12 +12,14 @@ import (
 	"log/slog"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/internal/adapters/alert"
+	"github.com/sufield/stave/internal/app/teams"
 	"github.com/sufield/stave/internal/app/watch"
 	"github.com/sufield/stave/internal/core/ports"
 )
@@ -29,6 +31,7 @@ type options struct {
 	MaxUnsafe       string
 	Sinks           []string
 	AllowUnknown    bool
+	TeamManifest    string
 }
 
 // NewCmd constructs the top-level watch command.
@@ -81,6 +84,7 @@ Exit Codes:
 	cmd.Flags().StringVar(&opts.MaxUnsafe, "max-unsafe", "168h", "Maximum allowed unsafe duration")
 	cmd.Flags().StringSliceVar(&opts.Sinks, "sink", opts.Sinks, "Alert sinks: stdout, file:<path>")
 	cmd.Flags().BoolVar(&opts.AllowUnknown, "allow-unknown-input", false, "Allow unknown observation source types")
+	cmd.Flags().StringVar(&opts.TeamManifest, "team-manifest", "", "Path to stave-teams.yaml for owner routing on alerts")
 
 	return cmd
 }
@@ -101,9 +105,9 @@ func run(ctx context.Context, stdout, stderr io.Writer, opts *options) error {
 	}
 
 	// Find stave binary for self-invocation.
-	binary, err := os.Executable()
+	binary, err := resolveExecutable()
 	if err != nil {
-		return fmt.Errorf("resolve executable: %w", err)
+		return err
 	}
 
 	logger := slog.New(slog.NewTextHandler(stderr, &slog.HandlerOptions{Level: slog.LevelInfo}))
@@ -111,14 +115,25 @@ func run(ctx context.Context, stdout, stderr io.Writer, opts *options) error {
 
 	assessFn := buildAssessFunc(binary, opts)
 
-	monitor := watch.New(watch.Config{
+	cfg := watch.Config{
 		ObservationsDir: opts.ObservationsDir,
 		Interval:        opts.Interval,
 		Sinks:           sinks,
 		Assess:          assessFn,
 		Logger:          logger,
 		Clock:           ports.RealClock{},
-	})
+	}
+
+	// Load team manifest for owner-annotated alerts.
+	if opts.TeamManifest != "" {
+		manifest, tmErr := teams.LoadManifest(opts.TeamManifest)
+		if tmErr != nil {
+			return fmt.Errorf("load team manifest: %w", tmErr)
+		}
+		cfg.OwnerResolver = &manifestResolver{manifest: manifest}
+	}
+
+	monitor := watch.New(cfg)
 
 	return monitor.Run(ctx)
 }
@@ -141,7 +156,7 @@ func buildAssessFunc(binary string, opts *options) watch.AssessFunc {
 			args = append(args, "--allow-unknown-input")
 		}
 
-		cmd := exec.CommandContext(ctx, binary, args...) //nolint:gosec // binary is os.Executable() (self-invocation)
+		cmd := exec.CommandContext(ctx, binary, args...) //nolint:gosec // validated: absolute path, symlinks resolved, regular file confirmed
 		var stdout, stderr bytes.Buffer
 		cmd.Stdout = &stdout
 		cmd.Stderr = &stderr
@@ -239,4 +254,42 @@ func buildSinks(stdout io.Writer, specs []string) ([]ports.AlertSink, error) {
 		sinks = append(sinks, &alert.StdoutSink{W: stdout})
 	}
 	return sinks, nil
+}
+
+// resolveExecutable returns a validated absolute path to the current
+// binary for safe self-invocation. It resolves symlinks and verifies
+// the result is an absolute path to a regular file.
+func resolveExecutable() (string, error) {
+	execPath, err := os.Executable()
+	if err != nil {
+		return "", fmt.Errorf("cannot determine executable path: %w", err)
+	}
+	execPath, err = filepath.EvalSymlinks(execPath)
+	if err != nil {
+		return "", fmt.Errorf("resolving executable path: %w", err)
+	}
+	if !filepath.IsAbs(execPath) {
+		return "", fmt.Errorf("executable path %q is not absolute — refusing self-invocation", execPath)
+	}
+	info, err := os.Stat(execPath)
+	if err != nil || !info.Mode().IsRegular() {
+		return "", fmt.Errorf("executable path %q is not a regular file — refusing self-invocation", execPath)
+	}
+	return execPath, nil
+}
+
+// manifestResolver implements watch.OwnerResolver using a team manifest.
+type manifestResolver struct {
+	manifest *teams.Manifest
+}
+
+func (r *manifestResolver) ResolveViolation(violationID string) (teamID, teamName, contact, slack, jira string) {
+	// violationID is "controlID:assetID"
+	controlID, assetID, _ := strings.Cut(violationID, ":")
+	owner := r.manifest.ResolveOwner(nil, assetID, controlID)
+	team := r.manifest.TeamByID(owner.TeamID)
+	if team != nil {
+		return owner.TeamID, owner.TeamName, owner.Contact, team.Routing.SlackChannel, team.Routing.JiraProject
+	}
+	return owner.TeamID, owner.TeamName, owner.Contact, "", ""
 }

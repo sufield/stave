@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.VSPHERE.VCSA.SSO.LOCKOUT.001
+name: vCenter SSO Account Lockout Must Be Configured
+description: >
+  vCenter Single Sign-On must have account lockout configured.
+  Without lockout, an attacker can perform unlimited password
+  guessing attempts against the SSO identity source. The vCenter
+  SSO service authenticates all access to the vSphere management
+  plane including the vSphere Client, API, and PowerCLI. A
+  compromised SSO administrator account grants full control over
+  all ESXi hosts, virtual machines, and infrastructure managed
+  by the vCenter instance.
+domain: exposure
+severity: high
+compliance:
+  cis_vmware_esxi_7: "2.1"
+  nist_800_53_r5: "AC-7"
+scope_tags:
+  - vmware
+  - vcenter
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    SSO account lockout is not configured on vCenter. An attacker
+    can perform unlimited password guessing attempts against the
+    SSO identity source without being locked out.
+  action: >
+    Configure SSO account lockout in the vSphere Client. Navigate
+    to Administration > Single Sign-On > Configuration > Accounts.
+    Set Maximum number of failed login attempts to 5 and Time
+    interval between failures to 180 seconds. Set Unlock time to
+    900 seconds.
+  example: |
+    {
+      "vcenter": {
+        "sso_lockout_enabled": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.vcenter.sso_lockout_enabled
+      op: eq
+      value: false

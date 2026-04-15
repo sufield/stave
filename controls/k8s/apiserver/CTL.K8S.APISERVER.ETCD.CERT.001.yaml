@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.APISERVER.ETCD.CERT.001
+name: API Server Must Use TLS for etcd Communication
+description: >
+  The API server must present a client certificate when connecting
+  to etcd. Without mutual TLS, API server to etcd traffic is
+  unauthenticated and unencrypted.
+domain: exposure
+severity: high
+compliance:
+  cis_k8s_v1.9: "1.2.32"
+scope_tags:
+  - kubernetes
+  - apiserver
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    API server etcd client certificate is not configured.
+  action: >
+    Set --etcd-certfile and --etcd-keyfile on the API server.
+unsafe_predicate:
+  all:
+    - field: type
+      op: eq
+      value: k8s_apiserver
+    - field: properties.apiserver.etcd_certfile
+      op: missing
+      value: true

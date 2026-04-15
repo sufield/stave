@@ -1,0 +1,25 @@
+dsl_version: ctrl.v1
+id: CTL.AD.PASS.COMPLEXITY.001
+name: Password Complexity Requirements Must Be Enabled
+description: >
+  Active Directory domain password policy must enforce complexity
+  requirements (uppercase, lowercase, digit, special character).
+domain: identity
+severity: high
+compliance:
+  cis_ad: "1.1.2"
+scope_tags:
+  - active_directory
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Password complexity is not enforced. Simple passwords are permitted.
+  action: >
+    Enable password complexity in Default Domain Policy GPO.
+unsafe_predicate:
+  all:
+    - field: properties.password_policy.complexity_enabled
+      op: eq
+      value: false

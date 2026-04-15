@@ -3,24 +3,24 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 428
-**Pack hash:** `b048783003520394ffd06a3ae5a3046633bfeb224b664d7ca04bd6832bc1642d`
+**Total controls:** 538
+**Pack hash:** `f6aaee5f4ce0b6d6c04e40f0c7db631529b034e9ab4eb20498b74201556baec4`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 82 |
-| high | 189 |
+| critical | 95 |
+| high | 241 |
 | info | 16 |
-| low | 28 |
-| medium | 113 |
+| low | 40 |
+| medium | 146 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 321 |
+| exposure | 397 |
 | governance | 7 |
-| identity | 92 |
+| identity | 126 |
 | storage | 8 |
 
 ## Controls
@@ -40,6 +40,276 @@ SSL/TLS certificates imported into ACM must not be within 30 days of expiry or a
 
 ---
 
+### CTL.AD.ACCOUNT.DELEGATION.001
+
+**No Accounts Must Have Unconstrained Delegation**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_ad: 5.6;
+
+No accounts should be configured with unconstrained Kerberos delegation. Unconstrained delegation allows a service to impersonate any user to any service in the domain. An attacker who compromises a host with unconstrained delegation can harvest TGTs from connecting users, including domain administrators, enabling full domain compromise.
+
+**Remediation:** Replace unconstrained delegation with constrained delegation or resource-based constrained delegation. Run: Get-ADUser -Filter {TrustedForDelegation -eq $true} to find affected accounts, then reconfigure each with specific SPNs.
+
+---
+
+### CTL.AD.ACCOUNT.DESONLY.001
+
+**No Accounts Must Use DES-Only Kerberos Encryption**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_ad: 5.7;
+
+No accounts should have the "Use DES encryption types for this account" flag set. DES is a deprecated and broken encryption algorithm. Kerberos tickets encrypted with DES can be cracked quickly, exposing account credentials. Any account configured for DES-only encryption is trivially compromised.
+
+**Remediation:** Remove the DES-only flag from all accounts. Run: Get-ADUser -Filter {UseDESKeyOnly -eq $true} | Set-ADUser -KerberosEncryptionType AES128,AES256
+
+---
+
+### CTL.AD.ACCOUNT.GUEST.001
+
+**Guest Account Must Be Disabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_ad: 1.1.1;
+
+The built-in Guest account must be disabled in Active Directory. An enabled Guest account allows unauthenticated or weakly authenticated users to access domain resources. Attackers use the Guest account as an initial access vector to enumerate domain objects and escalate privileges.
+
+**Remediation:** Disable the Guest account. Run: Disable-ADAccount -Identity Guest
+
+---
+
+### CTL.AD.ACCOUNT.NOEXPIRY.001
+
+**Admin Accounts Must Not Have Non-Expiring Passwords**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_ad: 5.4;
+
+Privileged accounts must not have the password-never-expires flag set. Non-expiring passwords on admin accounts create persistent credential risks.
+
+**Remediation:** Remove the password-never-expires flag from admin accounts. Use Fine-Grained Password Policies if different expiry is needed.
+
+---
+
+### CTL.AD.ACCOUNT.NOPASSWD.001
+
+**No Accounts May Have Password-Not-Required Flag**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_ad: 5.5;
+
+No account should have the PASSWD_NOTREQD flag set. Accounts with this flag can authenticate with an empty password.
+
+**Remediation:** Clear the PASSWD_NOTREQD flag on all accounts. Get-ADUser -Filter {PasswordNotRequired -eq $true} | Set-ADUser -PasswordNotRequired $false
+
+---
+
+### CTL.AD.ACCOUNT.REVENC.001
+
+**No Accounts Must Have Reversible Encryption Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_ad: 1.1.5; nist_800_53_r5: IA-5;
+
+No accounts should have the "Store password using reversible encryption" flag set. Reversible encryption stores passwords in a form equivalent to plaintext. An attacker who gains access to the AD database can recover these passwords directly without cracking, compromising every affected account instantly.
+
+**Remediation:** Remove the reversible encryption flag from all accounts. Run: Get-ADUser -Filter {AllowReversiblePasswordEncryption -eq $true} | Set-ADUser -AllowReversiblePasswordEncryption $false Users must change their passwords after this change.
+
+---
+
+### CTL.AD.ACCOUNT.STALE.001
+
+**No Inactive Admin Accounts Must Exist**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_ad: 5.1;
+
+There must be no inactive admin accounts in Active Directory. Admin accounts that have not logged in for an extended period are dormant backdoors. Attackers target stale privileged accounts because they are less likely to be monitored and their compromise may go unnoticed indefinitely.
+
+**Remediation:** Review and disable or remove inactive admin accounts. Run: Search-ADAccount -AccountInactive -UsersOnly -TimeSpan 90.00:00:00 | Where-Object {$_.MemberOf -match "Domain Admins"}
+
+---
+
+### CTL.AD.ADMINSDHOLDER.001
+
+**AdminSDHolder ACL Must Be Clean**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_ad: 5.3;
+
+The AdminSDHolder object ACL must contain only default entries. AdminSDHolder permissions are stamped onto all protected accounts and groups every 60 minutes by the SDProp process. If an attacker adds a custom ACE to AdminSDHolder, that ACE propagates to every privileged account, creating a persistent backdoor that survives individual permission resets.
+
+**Remediation:** Review the AdminSDHolder object ACL and remove any non-default entries. Use: Get-ACL "AD:\CN=AdminSDHolder,CN=System,DC=domain,DC=com" to audit. Compare against a known-good baseline.
+
+---
+
+### CTL.AD.AUDIT.ACCTMGMT.001
+
+**Account Management Auditing Must Be Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_ad: 17.1.1;
+
+Active Directory must audit account management events. Without this auditing, creation, deletion, and modification of user and group accounts go unrecorded. Attackers who create backdoor accounts or add themselves to privileged groups will leave no audit trail.
+
+**Remediation:** Enable account management auditing via Group Policy: Computer Configuration > Windows Settings > Security Settings > Advanced Audit Policy Configuration > Account Management > Audit User Account Management. Set to Success and Failure.
+
+---
+
+### CTL.AD.AUDIT.LOGON.001
+
+**Logon Event Auditing Must Be Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_ad: 17.5.1;
+
+Active Directory must audit logon events. Without logon auditing, successful and failed authentication attempts go unrecorded, preventing detection of brute-force attacks, credential stuffing, and unauthorized access. CIS benchmarks require logon event auditing on all domain controllers.
+
+**Remediation:** Enable logon event auditing via Group Policy: Computer Configuration > Windows Settings > Security Settings > Advanced Audit Policy Configuration > Logon/Logoff > Audit Logon. Set to Success and Failure.
+
+---
+
+### CTL.AD.AUDIT.OBJACCESS.001
+
+**Object Access Auditing Must Be Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_ad: 17.6.1;
+
+Active Directory must audit object access events. Without this auditing, access to sensitive AD objects such as GPOs, OUs, and critical containers goes unrecorded. Attackers modifying Group Policy or sensitive directory objects will leave no trace.
+
+**Remediation:** Enable object access auditing via Group Policy: Computer Configuration > Windows Settings > Security Settings > Advanced Audit Policy Configuration > Object Access > Audit Other Object Access Events. Set to Success and Failure.
+
+---
+
+### CTL.AD.AUDIT.PRIVUSE.001
+
+**Privilege Use Auditing Must Be Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_ad: 17.8.1;
+
+Active Directory must audit privilege use events. Without this auditing, escalation of privileges and sensitive privilege invocations go unlogged, making it impossible to detect abuse of administrative rights or identify accounts performing privileged operations they should not.
+
+**Remediation:** Enable privilege use auditing via Group Policy: Computer Configuration > Windows Settings > Security Settings > Advanced Audit Policy Configuration > Privilege Use > Audit Sensitive Privilege Use. Set to Success and Failure.
+
+---
+
+### CTL.AD.BUILTIN.LIMIT.001
+
+**Built-in Administrator Account Must Be Disabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_ad: 2.1;
+
+The built-in Administrator account (RID 500) must be disabled or renamed. It is a well-known target for brute-force attacks.
+
+**Remediation:** Disable or rename the built-in Administrator account. Use dedicated named admin accounts with audit trails.
+
+---
+
+### CTL.AD.CRED.GUARD.001
+
+**Credential Guard Must Be Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6;
+
+Windows Credential Guard must be enabled to protect LSASS from memory dumping attacks (Mimikatz). Without it, domain credentials cached in memory can be extracted by any local administrator.
+
+**Remediation:** Enable Credential Guard via GPO or Intune. Requires UEFI Secure Boot and virtualization-based security.
+
+---
+
+### CTL.AD.DOMAIN.ADMIN.COUNT.001
+
+**Domain Admins Group Must Have 5 or Fewer Members**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_ad: 5.2;
+
+The Domain Admins group should be minimized. Each member is a high-value target for attackers. More than 5 members indicates over-provisioned administrative access.
+
+**Remediation:** Review Domain Admins membership and remove unnecessary members. Use dedicated admin accounts with just-in-time access.
+
+---
+
+### CTL.AD.KERB.CLOCKSKEW.001
+
+**Kerberos Clock Skew Tolerance Must Not Exceed 5 Minutes**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_ad: 1.3.3;
+
+Maximum clock skew tolerance must not exceed 5 minutes. Large skew enables replay attacks on Kerberos tickets.
+
+**Remediation:** Set maximum clock skew to 5 minutes in Kerberos Policy.
+
+---
+
+### CTL.AD.KERB.SERVICE.001
+
+**Kerberos Service Ticket Lifetime Must Not Exceed 600 Minutes**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_ad: 1.3.2;
+
+Maximum Kerberos service ticket lifetime must not exceed 600 minutes (10 hours). Long service ticket lifetimes extend the window for ticket reuse after compromise.
+
+**Remediation:** Set maximum service ticket age to 600 minutes in Kerberos Policy.
+
+---
+
+### CTL.AD.KERB.TICKET.AGE.001
+
+**Kerberos TGT Lifetime Must Not Exceed 10 Hours**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_ad: 1.3.1;
+
+Maximum Kerberos ticket-granting ticket lifetime must not exceed 10 hours. Longer lifetimes extend the window for stolen ticket reuse.
+
+**Remediation:** Set maximum ticket age to 10 hours in the Kerberos Policy GPO.
+
+---
+
 ### CTL.AD.KERBEROAST.001
 
 **Privileged Accounts Must Not Have Kerberoastable SPNs**
@@ -52,6 +322,21 @@ SSL/TLS certificates imported into ACM must not be within 30 days of expiry or a
 Service accounts that are members of privileged groups (Domain Admins, Enterprise Admins, etc.) must not have Service Principal Names (SPNs) registered. Any domain user can request a Kerberos service ticket for an SPN and crack the ticket offline to recover the service account password. When the account is privileged, a successful Kerberoasting attack grants immediate domain-level access.
 
 **Remediation:** Remove SPNs from privileged accounts or move the service to a Group Managed Service Account (gMSA) with automatic password rotation. Run: setspn -D <spn> <account> or migrate to gMSA.
+
+---
+
+### CTL.AD.KRBTGT.ROTATION.001
+
+**KRBTGT Password Must Be Rotated Within 180 Days**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: IA-5;
+
+The KRBTGT account password must be changed at least every 180 days. A stale KRBTGT enables Golden Ticket attacks indefinitely — any attacker who once obtained the KRBTGT hash can forge tickets forever.
+
+**Remediation:** Reset the KRBTGT password twice (with replication between resets) using Reset-KrbtgtAccountPassword or manual reset. Schedule regular rotation every 90-180 days.
 
 ---
 
@@ -70,6 +355,81 @@ LAPS (Local Administrator Password Solution) must be deployed to manage local ad
 
 ---
 
+### CTL.AD.LDAP.CHANNELBIND.001
+
+**LDAP Channel Binding Must Be Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_ad: 2.3.11.9; nist_800_53_r5: SC-8;
+
+LDAP channel binding must be enabled on domain controllers. Without channel binding, LDAP connections are vulnerable to relay attacks where an attacker forwards authentication tokens from one session to another. Channel binding ties the LDAP session to the underlying TLS channel, preventing token relay.
+
+**Remediation:** Enable LDAP channel binding via registry: Set HKLM\SYSTEM\CurrentControlSet\Services\NTDS\Parameters\LdapEnforceChannelBinding to 2 (Always) on all domain controllers.
+
+---
+
+### CTL.AD.LDAP.SIGNING.001
+
+**LDAP Signing Must Be Required**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_ad: 2.3.11.8; nist_800_53_r5: SC-8;
+
+LDAP signing must be required on all domain controllers. Without mandatory LDAP signing, LDAP traffic can be intercepted and modified via man-in-the-middle attacks. Attackers can capture and replay LDAP bind credentials or modify directory queries in transit.
+
+**Remediation:** Enable mandatory LDAP signing via Group Policy: Computer Configuration > Windows Settings > Security Settings > Local Policies > Security Options > "Domain controller: LDAP server signing requirements" set to "Require signing".
+
+---
+
+### CTL.AD.LOCK.DURATION.001
+
+**Account Lockout Duration Must Be At Least 15 Minutes**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_ad: 1.2.2;
+
+Account lockout duration must be at least 15 minutes to slow brute-force attacks and give defenders time to respond.
+
+**Remediation:** Set lockout duration to 15 minutes or more in Default Domain Policy.
+
+---
+
+### CTL.AD.LOCK.THRESHOLD.001
+
+**Account Lockout Threshold Must Be Set**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_ad: 1.2.1;
+
+Account lockout threshold must be configured (1-5 attempts) to prevent unlimited brute-force login attempts.
+
+**Remediation:** Set account lockout threshold to 5 or fewer in Default Domain Policy.
+
+---
+
+### CTL.AD.LOCK.WINDOW.001
+
+**Account Lockout Observation Window Must Be At Least 15 Minutes**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_ad: 1.2.3;
+
+The lockout observation window must be at least 15 minutes. A shorter window allows attackers to spread attempts over time without triggering lockout.
+
+**Remediation:** Set lockout observation window to 15 minutes or more.
+
+---
+
 ### CTL.AD.NTLM.LEVEL.001
 
 **NTLM Authentication Must Be Restricted to NTLMv2**
@@ -82,6 +442,66 @@ LAPS (Local Administrator Password Solution) must be deployed to manage local ad
 The domain must enforce NTLMv2 authentication by setting the LAN Manager authentication level to 3 or higher (Send NTLMv2 response only / refuse LM & NTLM). NTLMv1 and LM responses use weak cryptography that can be cracked in seconds. NTLM relay and pass- the-hash attacks are significantly harder when NTLMv2 is enforced and legacy protocols are refused.
 
 **Remediation:** Set the LAN Manager authentication level to 3 or higher via Group Policy: Computer Configuration > Windows Settings > Security Settings > Local Policies > Security Options > "Network security: LAN Manager authentication level" to "Send NTLMv2 response only. Refuse LM & NTLM."
+
+---
+
+### CTL.AD.PASS.COMPLEXITY.001
+
+**Password Complexity Requirements Must Be Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_ad: 1.1.2;
+
+Active Directory domain password policy must enforce complexity requirements (uppercase, lowercase, digit, special character).
+
+**Remediation:** Enable password complexity in Default Domain Policy GPO.
+
+---
+
+### CTL.AD.PASS.HISTORY.001
+
+**Password History Must Enforce At Least 24 Remembered Passwords**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_ad: 1.1.2; nist_800_53_r5: IA-5;
+
+Active Directory domain password policy must remember at least 24 previous passwords. A short history count allows users to cycle through a small set of passwords and reuse compromised credentials. Enforcing 24 remembered passwords ensures that even with regular rotation, previously compromised passwords cannot be reused for approximately two years.
+
+**Remediation:** Set password history to 24 or greater in the Default Domain Policy GPO. Run: Set-ADDefaultDomainPasswordPolicy -PasswordHistoryCount 24
+
+---
+
+### CTL.AD.PASS.MAXAGE.001
+
+**Password Maximum Age Must Be 90 Days or Less**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_ad: 1.1.3;
+
+Password maximum age must not exceed 90 days to limit the window of exposure for compromised credentials.
+
+**Remediation:** Set maximum password age to 90 days or less in Default Domain Policy.
+
+---
+
+### CTL.AD.PASS.MINAGE.001
+
+**Password Minimum Age Must Be At Least 1 Day**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_ad: 1.1.4;
+
+Minimum password age must be at least 1 day to prevent rapid password cycling that allows users to reuse old passwords by changing through the history depth in one session.
+
+**Remediation:** Set minimum password age to 1 day in Default Domain Policy.
 
 ---
 
@@ -115,6 +535,51 @@ Active Directory must not store passwords using reversible encryption. When enab
 
 ---
 
+### CTL.AD.PRIV.NESTED.001
+
+**Privileged Groups Must Not Contain Nested Groups**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_ad: 5.2;
+
+Privileged groups such as Domain Admins, Enterprise Admins, and Schema Admins must not contain nested groups. Nested group membership obscures who actually has privileged access, makes access reviews unreliable, and can create unintended privilege escalation paths when users are added to seemingly unprivileged groups that are nested into admin groups.
+
+**Remediation:** Remove nested groups from Domain Admins, Enterprise Admins, and Schema Admins. Add individual accounts directly instead. Use: Get-ADGroupMember "Domain Admins" | Where-Object {$_.objectClass -eq "group"} to find nested groups.
+
+---
+
+### CTL.AD.PROTUSERS.001
+
+**Protected Users Group Must Be Populated**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_ad: 5.5;
+
+The Protected Users security group must contain privileged accounts. Members of this group receive hardened credential protections including no NTLM authentication, no DES or RC4 in Kerberos pre-authentication, no delegation, and no credential caching. Leaving it empty means privileged accounts lack these defenses.
+
+**Remediation:** Add all privileged accounts (Domain Admins, Enterprise Admins, Schema Admins) to the Protected Users group. Test application compatibility before adding service accounts.
+
+---
+
+### CTL.AD.RECYCLEBIN.001
+
+**AD Recycle Bin Must Be Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_ad: 7.3;
+
+The Active Directory Recycle Bin feature must be enabled. Without it, deleted objects lose most attributes immediately, making recovery difficult and forensic investigation of malicious deletions nearly impossible. The Recycle Bin preserves all attributes of deleted objects for a configurable tombstone period.
+
+**Remediation:** Enable the AD Recycle Bin feature. This requires forest functional level 2008 R2 or higher. Run: Enable-ADOptionalFeature "Recycle Bin Feature" -Scope ForestOrConfigurationSet -Target "domain.com"
+
+---
+
 ### CTL.AD.SMB.SIGNING.001
 
 **SMB Signing Must Be Required**
@@ -127,6 +592,51 @@ Active Directory must not store passwords using reversible encryption. When enab
 SMB signing must be required on all domain controllers and member servers. Without mandatory signing, SMB traffic can be intercepted and modified via man-in-the-middle attacks. Attackers use SMB relay to forward captured NTLM authentication to other hosts, gaining unauthorized access without cracking passwords.
 
 **Remediation:** Enable mandatory SMB signing via Group Policy: Computer Configuration > Windows Settings > Security Settings > Local Policies > Security Options > "Microsoft network server: Digitally sign communications (always)" set to Enabled. Apply to all domain controllers and member servers.
+
+---
+
+### CTL.AD.STALE.ADMIN.001
+
+**Privileged Groups Must Not Have Stale Members**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_ad: 5.1;
+
+Privileged groups must not contain members with no logon in over 90 days. Stale admin accounts are dormant backdoors.
+
+**Remediation:** Review and remove stale accounts from Domain Admins, Enterprise Admins, and Schema Admins groups.
+
+---
+
+### CTL.AD.TRUST.SELECTIVE.001
+
+**External Trusts Must Use Selective Authentication**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-4;
+
+External trusts must use selective authentication to restrict which users from the trusted domain can authenticate. Without it, all trusted domain users can access resources.
+
+**Remediation:** Configure selective authentication on external trusts via AD Domains and Trusts or PowerShell.
+
+---
+
+### CTL.AD.TRUST.SIDFILTER.001
+
+**External Trusts Must Have SID Filtering Enabled**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-4;
+
+External trusts must have SID filtering enabled to prevent SID history injection attacks from trusted domains.
+
+**Remediation:** Enable SID filtering on all external trusts. netdom trust <TrustingDomain> /domain:<TrustedDomain> /quarantine:yes
 
 ---
 
@@ -562,6 +1072,36 @@ Cisco IOS devices must have IP directed broadcast disabled on all interfaces. Di
 
 ---
 
+### CTL.CISCO.MGMT.BANNER.001
+
+**Login Banner Must Be Configured**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_cisco_ios_17: 1.1.1; nist_800_53_r5: AC-8;
+
+A login banner must be configured on Cisco IOS devices. A login banner provides legal notice to anyone attempting to access the device. Without a banner, unauthorized access attempts may not be prosecutable in some jurisdictions because the attacker can claim there was no indication the system was private or that access was restricted. The banner should warn that unauthorized access is prohibited and that activity may be monitored.
+
+**Remediation:** Configure a login banner on the device. Run: banner login ^ Unauthorized access is prohibited. All activity is monitored. ^ Verify with: show banner login
+
+---
+
+### CTL.CISCO.MGMT.HTTP.001
+
+**HTTP Server Must Be Disabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_cisco_ios_17: 1.2.1; nist_800_53_r5: CM-7;
+
+The HTTP server must be disabled on Cisco IOS devices. The IOS HTTP server provides a web-based management interface that transmits credentials and configuration data in cleartext. An attacker on the network path can intercept administrator credentials, session tokens, and device configuration. The HTTP server has also been the target of multiple IOS vulnerabilities including remote code execution. If web-based management is required, HTTPS must be used instead.
+
+**Remediation:** Disable the HTTP server on the device. Run: no ip http server Verify with: show ip http server status If web management is required, enable HTTPS instead with ip http secure-server.
+
+---
+
 ### CTL.CISCO.MGMT.SNMP.001
 
 **SNMP Version Must Be 3**
@@ -667,6 +1207,21 @@ All OSPF areas on Cisco IOS devices must be configured with authentication. With
 
 ---
 
+### CTL.CISCO.SVC.BOOTP.001
+
+**BOOTP Server Must Be Disabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_cisco_ios_17: 2.1.1; nist_800_53_r5: CM-7;
+
+The BOOTP server must be disabled on Cisco IOS devices. BOOTP is a legacy protocol used to assign IP addresses and boot images to network clients. The IOS BOOTP server listens on UDP port 67 and can serve IOS images to any client that requests them. An attacker can use BOOTP to obtain a copy of the IOS image, which enables offline vulnerability analysis and credential extraction. BOOTP also enables network-based attacks by allowing the attacker to serve malicious boot images to clients.
+
+**Remediation:** Disable the BOOTP server on the device. Run: no ip bootp server Verify with: show ip bootp server
+
+---
+
 ### CTL.CISCO.SVC.CDP.001
 
 **CDP Must Be Disabled Globally**
@@ -712,6 +1267,21 @@ Cisco IOS devices must have gratuitous ARP disabled. Gratuitous ARP allows a dev
 
 ---
 
+### CTL.CISCO.SVC.HTTPD.001
+
+**HTTPS Must Be Used Instead of HTTP for Management**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_cisco_ios_17: 1.2.2; nist_800_53_r5: SC-8;
+
+HTTPS must be enabled for web-based management of Cisco IOS devices. Without HTTPS, any web management traffic falls back to cleartext HTTP, exposing administrator credentials, session tokens, and configuration data to network interception. TLS encryption provided by HTTPS protects the confidentiality and integrity of management sessions. Even when the HTTP server is disabled, HTTPS should be explicitly enabled to ensure that any future web management configuration defaults to encrypted transport.
+
+**Remediation:** Enable the HTTPS server on the device. Run: ip http secure-server Verify with: show ip http server status Ensure the HTTP server is disabled with: no ip http server
+
+---
+
 ### CTL.CISCO.SVC.SRCROUTE.001
 
 **IP Source Routing Must Be Disabled**
@@ -754,6 +1324,21 @@ Cisco IOS devices must have TCP small servers disabled. TCP small servers includ
 Cisco IOS devices must have UDP small servers disabled. UDP small servers include echo, chargen, and discard services that provide no operational value on network infrastructure. These services are particularly dangerous because UDP is connectionless and source addresses are easily spoofed, making them ideal for reflected amplification attacks that can overwhelm target networks.
 
 **Remediation:** Disable UDP small servers. Run: no service udp-small-servers Verify with: show running-config | include udp-small-servers
+
+---
+
+### CTL.CISCO.URPF.001
+
+**Unicast Reverse Path Forwarding Must Be Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_cisco_ios_17: 4.3.1; nist_800_53_r5: SC-7;
+
+Unicast Reverse Path Forwarding must be enabled on Cisco IOS devices. Without uRPF, the device accepts packets with spoofed source IP addresses. IP spoofing enables denial-of-service amplification attacks, TCP session hijacking, and evasion of IP-based access controls. uRPF verifies that the source address of each incoming packet is reachable via the interface it arrived on, dropping packets that fail this check. This is a fundamental anti-spoofing control recommended by BCP 38 (RFC 2827).
+
+**Remediation:** Enable uRPF on all external-facing interfaces. Run: interface <interface> ip verify unicast source reachable-via rx Use "rx" (strict mode) on interfaces with a single path, or "any" (loose mode) on interfaces with asymmetric routing. Verify with: show ip verify unicast source
 
 ---
 
@@ -3568,6 +4153,291 @@ Service-to-service access must use short-lived credentials (STS temporary tokens
 
 ---
 
+### CTL.K8S.APISERVER.ADM.CTRL.001
+
+**API Server Must Enable AlwaysPullImages Admission Controller**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 1.2.11;
+
+The API server must enable the AlwaysPullImages admission controller. This ensures every new pod always pulls the image, preventing nodes from using cached images that may have been tampered with.
+
+**Remediation:** Add AlwaysPullImages to --enable-admission-plugins on the API server.
+
+---
+
+### CTL.K8S.APISERVER.ADM.CTRL.002
+
+**API Server Must Enable Pod Security Admission**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 1.2.12;
+
+The API server must enable PodSecurity or SecurityContextDeny admission controller to enforce pod security standards.
+
+**Remediation:** Add PodSecurity to --enable-admission-plugins on the API server.
+
+---
+
+### CTL.K8S.APISERVER.ADM.CTRL.003
+
+**API Server Must Enable ServiceAccount Admission Controller**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 1.2.13;
+
+The API server must enable the ServiceAccount admission controller to automate service account management for pods.
+
+**Remediation:** Add ServiceAccount to --enable-admission-plugins on the API server.
+
+---
+
+### CTL.K8S.APISERVER.ADM.CTRL.004
+
+**API Server Must Enable NodeRestriction Admission Controller**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 1.2.16;
+
+The API server must enable the NodeRestriction admission controller to limit what a kubelet can modify, preventing compromised nodes from escalating privileges.
+
+**Remediation:** Add NodeRestriction to --enable-admission-plugins on the API server.
+
+---
+
+### CTL.K8S.APISERVER.ANON.001
+
+**API Server Anonymous Authentication Must Be Disabled**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 1.2.1;
+
+The Kubernetes API server must not allow anonymous authentication. Anonymous auth permits unauthenticated requests to the API, enabling reconnaissance and potential cluster compromise.
+
+**Remediation:** Set --anonymous-auth=false on the API server. For managed clusters, verify the provider disables anonymous auth by default.
+
+---
+
+### CTL.K8S.APISERVER.AUDIT.001
+
+**API Server Audit Logging Must Be Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 1.2.22;
+
+The Kubernetes API server must have audit logging enabled. Without audit logs, security-relevant API calls are not recorded.
+
+**Remediation:** Configure --audit-policy-file and --audit-log-path on the API server.
+
+---
+
+### CTL.K8S.APISERVER.AUDIT.MAXAGE.001
+
+**API Server Audit Log Retention Must Be At Least 30 Days**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 1.2.23;
+
+Audit log retention must be at least 30 days to support incident investigation and compliance evidence requirements.
+
+**Remediation:** Set --audit-log-maxage=30 or higher on the API server.
+
+---
+
+### CTL.K8S.APISERVER.AUDIT.MAXBACKUP.001
+
+**API Server Audit Log Max Backup Must Be At Least 10**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 1.2.24;
+
+The API server must retain at least 10 old audit log files before rotation deletes them. Insufficient backup retention limits the availability of historical audit data for incident investigation.
+
+**Remediation:** Set --audit-log-maxbackup=10 or higher on the API server.
+
+---
+
+### CTL.K8S.APISERVER.AUDIT.MAXSIZE.001
+
+**API Server Audit Log Max Size Must Be At Least 100 MB**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 1.2.25;
+
+Each audit log file must be allowed to grow to at least 100 MB before rotation. Smaller limits cause frequent rotation that may result in loss of audit records during high-activity periods.
+
+**Remediation:** Set --audit-log-maxsize=100 or higher on the API server.
+
+---
+
+### CTL.K8S.APISERVER.AUTHZ.001
+
+**API Server Must Use RBAC Authorization**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 1.2.7;
+
+The API server authorization mode must include RBAC and must not include AlwaysAllow. RBAC enforces fine-grained access control; AlwaysAllow permits any authenticated user to perform any action.
+
+**Remediation:** Set --authorization-mode=RBAC,Node on the API server. Remove AlwaysAllow from the mode list.
+
+---
+
+### CTL.K8S.APISERVER.CLIENT.CA.001
+
+**API Server Client CA Must Be Configured**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 1.2.29;
+
+The API server must be configured with a client certificate authority file to verify client certificates for mutual TLS authentication.
+
+**Remediation:** Set --client-ca-file on the API server pointing to the cluster CA.
+
+---
+
+### CTL.K8S.APISERVER.ENCRYPT.PROV.001
+
+**API Server Encryption Provider Must Be Configured**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 1.2.30;
+
+The API server must have an encryption provider configuration set via --encryption-provider-config. Without this, Kubernetes secrets are stored unencrypted in etcd, exposing sensitive data to anyone with etcd access.
+
+**Remediation:** Set --encryption-provider-config on the API server pointing to an EncryptionConfiguration resource that uses aescbc, secretbox, or a KMS provider.
+
+---
+
+### CTL.K8S.APISERVER.ETCD.CERT.001
+
+**API Server Must Use TLS for etcd Communication**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 1.2.32;
+
+The API server must present a client certificate when connecting to etcd. Without mutual TLS, API server to etcd traffic is unauthenticated and unencrypted.
+
+**Remediation:** Set --etcd-certfile and --etcd-keyfile on the API server.
+
+---
+
+### CTL.K8S.APISERVER.INSECURE.PORT.001
+
+**API Server Insecure Port Must Be Disabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 1.2.19;
+
+The API server insecure port must be set to 0 (disabled). The insecure port serves requests without authentication or authorization, allowing unrestricted access to the Kubernetes API.
+
+**Remediation:** Set --insecure-port=0 on the API server. This flag is deprecated in recent Kubernetes versions and will be removed.
+
+---
+
+### CTL.K8S.APISERVER.KUBELET.CERT.001
+
+**API Server Kubelet Certificate Authority Must Be Set**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 1.2.5;
+
+The API server must have --kubelet-certificate-authority configured to verify kubelet serving certificates. Without this, the API server cannot authenticate kubelet endpoints, enabling man-in-the-middle attacks on API-server-to-kubelet communication.
+
+**Remediation:** Set --kubelet-certificate-authority on the API server pointing to the CA bundle used to sign kubelet serving certificates.
+
+---
+
+### CTL.K8S.APISERVER.PROFILING.001
+
+**API Server Profiling Must Be Disabled**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 1.2.18;
+
+The API server profiling endpoint must be disabled. Profiling exposes system and program details useful for attackers to identify vulnerabilities and plan exploitation.
+
+**Remediation:** Set --profiling=false on the API server.
+
+---
+
+### CTL.K8S.APISERVER.SA.KEY.001
+
+**API Server Service Account Key File Must Be Set**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 1.2.28;
+
+The API server must be configured with --service-account-key-file to verify service account tokens with a dedicated key pair.
+
+**Remediation:** Set --service-account-key-file on the API server.
+
+---
+
+### CTL.K8S.APISERVER.TLS.CERT.001
+
+**API Server TLS Certificate Must Be Configured**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 1.2.26;
+
+The API server must be configured with a TLS serving certificate. Without TLS, API traffic is transmitted in cleartext.
+
+**Remediation:** Set --tls-cert-file and --tls-private-key-file on the API server.
+
+---
+
+### CTL.K8S.APISERVER.TOKEN.AUTH.001
+
+**API Server Static Token Authentication Must Be Disabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 1.2.2;
+
+The API server must not use static token authentication via --token-auth-file. Static tokens do not expire, cannot be revoked without restarting the API server, and are stored in cleartext.
+
+**Remediation:** Remove --token-auth-file from the API server configuration. Use OIDC, service account tokens, or certificate-based authentication.
+
+---
+
 ### CTL.K8S.AUDIT.001
 
 **Kubernetes Audit Logging Must Be Enabled**
@@ -3598,6 +4468,201 @@ Kubernetes clusters using AWS IAM Authenticator must not use {{AccessKeyID}} in 
 
 ---
 
+### CTL.K8S.CM.BIND.ADDR.001
+
+**Controller Manager Must Bind to Loopback Address**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 1.3.7;
+
+The controller manager must bind to a loopback address (127.0.0.1 or ::1). Binding to 0.0.0.0 or a routable address exposes the controller manager's unsecured HTTP endpoints to the network.
+
+**Remediation:** Set --bind-address=127.0.0.1 on the controller manager.
+
+---
+
+### CTL.K8S.CM.GC.001
+
+**Controller Manager Terminated Pod GC Threshold Must Be Set**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 1.3.1;
+
+The controller manager must have a positive terminated pod garbage collection threshold to prevent resource exhaustion from accumulated terminated pods.
+
+**Remediation:** Set --terminated-pod-gc-threshold to a positive value (e.g. 12500).
+
+---
+
+### CTL.K8S.CM.PROFILING.001
+
+**Controller Manager Profiling Must Be Disabled**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 1.3.2;
+
+The controller manager profiling endpoint must be disabled. Profiling exposes system and program details useful for attackers to identify vulnerabilities and plan privilege escalation.
+
+**Remediation:** Set --profiling=false on the controller manager.
+
+---
+
+### CTL.K8S.CM.ROOT.CA.001
+
+**Controller Manager Root CA File Must Be Set**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 1.3.5;
+
+The controller manager must have --root-ca-file configured. This CA bundle is injected into each service account token secret, allowing pods to verify the API server's TLS certificate and preventing man-in-the-middle attacks.
+
+**Remediation:** Set --root-ca-file on the controller manager pointing to the cluster CA bundle.
+
+---
+
+### CTL.K8S.CM.ROTATE.CERTS.001
+
+**Controller Manager Must Enable RotateKubeletServerCertificate**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 1.3.6;
+
+The controller manager must enable the RotateKubeletServerCertificate feature gate. This allows the kubelet to request and rotate its serving certificate automatically, preventing certificate expiry and ensuring continued TLS for kubelet endpoints.
+
+**Remediation:** Set --feature-gates=RotateKubeletServerCertificate=true on the controller manager.
+
+---
+
+### CTL.K8S.CM.SA.CREDS.001
+
+**Controller Manager Must Use Individual Service Account Credentials**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 1.3.3;
+
+The controller manager must use individual service account credentials for each controller. Without this, all controllers share the controller manager's credentials, violating least privilege.
+
+**Remediation:** Set --use-service-account-credentials=true on the controller manager.
+
+---
+
+### CTL.K8S.CM.SA.KEY.001
+
+**Controller Manager Service Account Private Key Must Be Set**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 1.3.4;
+
+The controller manager must have a service account private key file configured for signing service account tokens.
+
+**Remediation:** Set --service-account-private-key-file on the controller manager.
+
+---
+
+### CTL.K8S.ETCD.AUTO.TLS.001
+
+**etcd Auto-TLS Must Be Disabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 2.3;
+
+etcd auto-TLS generates self-signed certificates without CA validation, providing encryption without authentication. An attacker can MITM the connection with their own self-signed cert.
+
+**Remediation:** Set --auto-tls=false and configure proper CA-signed certificates.
+
+---
+
+### CTL.K8S.ETCD.CERT.001
+
+**etcd Must Use TLS Certificates**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 2.1;
+
+etcd must be configured with TLS certificate and key files. Without TLS, all cluster state (including Secrets) is transmitted in cleartext.
+
+**Remediation:** Set --cert-file and --key-file on the etcd server.
+
+---
+
+### CTL.K8S.ETCD.CLIENT.AUTH.001
+
+**etcd Client Certificate Authentication Must Be Enabled**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 2.2;
+
+etcd must require client certificate authentication. Without it, any client with network access to etcd can read and write all cluster state.
+
+**Remediation:** Set --client-cert-auth=true on the etcd server.
+
+---
+
+### CTL.K8S.ETCD.PEER.AUTO.TLS.001
+
+**etcd Peer Auto-TLS Must Be Disabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 2.6;
+
+etcd peer auto-TLS uses self-signed certificates for cluster member communication without CA validation. A rogue etcd member can join the cluster and exfiltrate all data.
+
+**Remediation:** Set --peer-auto-tls=false and configure --peer-cert-file, --peer-key-file, and --peer-trusted-ca-file.
+
+---
+
+### CTL.K8S.ETCD.PEER.CERT.001
+
+**etcd Peer Certificate File Must Be Set**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 2.4;
+
+etcd must be configured with a peer certificate file for mutual TLS between etcd cluster members. Without peer TLS, inter-node etcd communication is unencrypted and unauthenticated, allowing cluster state interception or injection.
+
+**Remediation:** Set --peer-cert-file on the etcd server pointing to a valid TLS certificate for peer communication.
+
+---
+
+### CTL.K8S.ETCD.PEER.KEY.001
+
+**etcd Peer Key File Must Be Set**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 2.5;
+
+etcd must be configured with a peer key file for mutual TLS between etcd cluster members. Without the private key, peer TLS cannot be established and inter-node communication is insecure.
+
+**Remediation:** Set --peer-key-file on the etcd server pointing to the private key corresponding to the peer certificate.
+
+---
+
 ### CTL.K8S.INCOMPLETE.001
 
 **Complete Data Required for Kubernetes Assessment**
@@ -3609,6 +4674,171 @@ Kubernetes clusters using AWS IAM Authenticator must not use {{AccessKeyID}} in 
 Kubernetes cluster safety cannot be assessed when audit logging status is missing from the snapshot. The extractor must populate audit.audit_logging_enabled.
 
 **Remediation:** Re-run the extractor with Kubernetes API access to describe cluster configuration, RBAC, network policies, and secrets.
+
+---
+
+### CTL.K8S.KUBELET.ANON.001
+
+**Kubelet Anonymous Authentication Must Be Disabled**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 4.2.1;
+
+The kubelet must not allow anonymous authentication. Anonymous auth permits unauthenticated requests to the kubelet API, enabling pod listing, log access, and command execution on the node.
+
+**Remediation:** Set authentication.anonymous.enabled=false in the kubelet config or pass --anonymous-auth=false.
+
+---
+
+### CTL.K8S.KUBELET.AUTHZ.001
+
+**Kubelet Must Not Use AlwaysAllow Authorization**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 4.2.2;
+
+The kubelet authorization mode must not be set to AlwaysAllow. AlwaysAllow permits any authenticated request without RBAC checks.
+
+**Remediation:** Set authorization.mode=Webhook in the kubelet config or pass --authorization-mode=Webhook.
+
+---
+
+### CTL.K8S.KUBELET.CLIENT.CA.001
+
+**Kubelet Client CA Must Be Configured**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 4.2.3;
+
+The kubelet must be configured with a client CA file to verify client certificates for x509 authentication.
+
+**Remediation:** Set authentication.x509.clientCAFile in the kubelet config.
+
+---
+
+### CTL.K8S.KUBELET.EVENTRECORD.001
+
+**Kubelet Event Record QPS Must Be Greater Than Zero**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 4.2.9;
+
+The kubelet event record QPS must be greater than zero. Setting this to zero disables event creation, hiding node-level events from the API server and preventing detection of security-relevant activities.
+
+**Remediation:** Set eventRecordQPS to a value greater than 0 (default is 5) in the kubelet config.
+
+---
+
+### CTL.K8S.KUBELET.HOSTNAME.001
+
+**Kubelet Hostname Override Should Not Be Set**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 4.2.8;
+
+The kubelet should not have --hostname-override set. Overriding the hostname can interfere with TLS certificate validation and node identity verification, as certificates are typically issued for the actual hostname.
+
+**Remediation:** Remove --hostname-override from the kubelet configuration. If hostname override is required for cloud provider integration, ensure certificates match the overridden name.
+
+---
+
+### CTL.K8S.KUBELET.KERNEL.001
+
+**Kubelet Must Protect Kernel Defaults**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 4.2.6;
+
+The kubelet must set protectKernelDefaults to true. This prevents pods from modifying kernel parameters that could weaken node security or enable privilege escalation.
+
+**Remediation:** Set protectKernelDefaults=true in the kubelet config.
+
+---
+
+### CTL.K8S.KUBELET.READONLY.001
+
+**Kubelet Read-Only Port Must Be Disabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 4.2.4;
+
+The kubelet read-only port (default 10255) must be disabled by setting it to 0. The read-only port exposes node and pod metrics without authentication.
+
+**Remediation:** Set readOnlyPort=0 in the kubelet config or pass --read-only-port=0.
+
+---
+
+### CTL.K8S.KUBELET.ROTATE.001
+
+**Kubelet Certificate Rotation Must Be Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 4.2.11;
+
+The kubelet must have certificate rotation enabled to automatically renew its client and serving certificates before expiry.
+
+**Remediation:** Set rotateCertificates=true in the kubelet config.
+
+---
+
+### CTL.K8S.KUBELET.ROTATE.SERVER.001
+
+**Kubelet Server Certificate Rotation Must Be Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 4.2.12;
+
+The kubelet must have server certificate rotation enabled via serverTLSBootstrap or the RotateKubeletServerCertificate feature gate. Without rotation, kubelet serving certificates may expire, breaking TLS for kubelet endpoints.
+
+**Remediation:** Set serverTLSBootstrap=true or featureGates.RotateKubeletServerCertificate=true in the kubelet config.
+
+---
+
+### CTL.K8S.KUBELET.STREAMING.001
+
+**Kubelet Streaming Connection Idle Timeout Must Not Be Zero**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 4.2.5;
+
+The kubelet streaming connection idle timeout must be greater than zero. A zero timeout disables connection cleanup, allowing idle streaming connections (exec, attach, port-forward) to persist indefinitely, consuming resources and increasing attack surface.
+
+**Remediation:** Set streamingConnectionIdleTimeout to a non-zero duration (e.g., 4h0m0s) in the kubelet config.
+
+---
+
+### CTL.K8S.KUBELET.TLS.001
+
+**Kubelet TLS Certificate Must Be Configured**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 4.2.10;
+
+The kubelet must be configured with a TLS serving certificate. Without TLS, kubelet API traffic is transmitted in cleartext.
+
+**Remediation:** Set tlsCertFile and tlsPrivateKeyFile in the kubelet config.
 
 ---
 
@@ -3642,6 +4872,126 @@ Namespaces with network policies must include a default-deny ingress policy. Wit
 
 ---
 
+### CTL.K8S.NETPOL.EGRESS.001
+
+**Cluster Must Have Egress Network Policies**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 5.3.2;
+
+The cluster must have egress network policies defined. Without egress policies, compromised pods can freely communicate with external command-and-control servers, exfiltrate data, or attack other services outside the cluster.
+
+**Remediation:** Create egress NetworkPolicies to restrict outbound traffic from pods to only approved destinations and ports.
+
+---
+
+### CTL.K8S.POD.CAPABILITIES.001
+
+**Containers Must Drop NET_RAW Capability**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 5.2.7;
+
+Containers must drop the NET_RAW capability. NET_RAW allows crafting raw network packets, enabling ARP spoofing, DNS poisoning, and other network-level attacks from within the container.
+
+**Remediation:** Add NET_RAW to securityContext.capabilities.drop in the container spec. Prefer dropping ALL capabilities and adding back only those required.
+
+---
+
+### CTL.K8S.POD.HOSTNET.001
+
+**Pods Must Not Share the Host Network Namespace**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 5.2.4;
+
+Pods must not share the host network namespace. Sharing the host network gives containers access to all network interfaces and listening services on the node, bypassing network policies and enabling network-level attacks.
+
+**Remediation:** Set hostNetwork=false in the pod spec. Use Kubernetes Services and NetworkPolicies to control network access instead.
+
+---
+
+### CTL.K8S.POD.HOSTPID.001
+
+**Pods Must Not Share the Host PID Namespace**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 5.2.2;
+
+Pods must not share the host PID namespace. Sharing the host PID namespace allows containers to see and signal all processes on the host, enabling process inspection, injection, and denial of service.
+
+**Remediation:** Set hostPID=false in the pod spec. Remove hostPID sharing unless there is a documented operational requirement.
+
+---
+
+### CTL.K8S.POD.PRIVILEGED.001
+
+**Containers Must Not Run in Privileged Mode**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 5.2.1;
+
+Pods must not run privileged containers. Privileged containers have full access to the host's devices, kernel capabilities, and namespaces, effectively granting root-level access to the node.
+
+**Remediation:** Set securityContext.privileged=false on all containers. Use specific capabilities instead of privileged mode.
+
+---
+
+### CTL.K8S.POD.RUNASROOT.001
+
+**Containers Must Not Run as Root**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 5.2.6;
+
+Containers must not run as the root user. Running as root inside a container increases the impact of container breakout vulnerabilities and grants unnecessary privileges for filesystem and process operations.
+
+**Remediation:** Set securityContext.runAsNonRoot=true and specify a non-root runAsUser in the pod or container security context.
+
+---
+
+### CTL.K8S.RBAC.DEFAULT.SA.001
+
+**Default Service Account Automount Must Be Disabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 5.1.5;
+
+The default service account in each namespace must have automountServiceAccountToken set to false. The default service account is shared by all pods that do not specify one, and its token grants unnecessary API access to workloads.
+
+**Remediation:** Set automountServiceAccountToken=false on the default ServiceAccount in each namespace.
+
+---
+
+### CTL.K8S.RBAC.SA.TOKEN.001
+
+**Service Account Token Automount Must Be Opt-In Only**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 5.1.6;
+
+Service account tokens must not be automatically mounted into pods unless explicitly required. Automatic token mounting provides every pod with API credentials, increasing the blast radius of container compromise.
+
+**Remediation:** Set automountServiceAccountToken=false on ServiceAccounts and only enable it on pods that require API access.
+
+---
+
 ### CTL.K8S.RBAC.SERVICEACCOUNT.001
 
 **Default Service Account Must Not Have Active Tokens**
@@ -3669,6 +5019,21 @@ The default service account in each namespace should not have auto-mounted token
 Kubernetes ClusterRoles must not grant wildcard (*) access to resources or verbs. Wildcard grants provide cluster-wide permissions that bypass the principle of least privilege.
 
 **Remediation:** Replace wildcard entries with explicit resource names and verbs. Use Roles (namespace-scoped) instead of ClusterRoles where possible.
+
+---
+
+### CTL.K8S.SCHEDULER.PROFILING.001
+
+**Scheduler Profiling Must Be Disabled**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 1.4.1;
+
+The scheduler profiling endpoint must be disabled. Profiling exposes system and program details useful for attackers to identify vulnerabilities and plan privilege escalation.
+
+**Remediation:** Set --profiling=false on the scheduler.
 
 ---
 
@@ -4448,6 +5813,21 @@ The observation snapshot is missing required Route 53 properties.
 
 ---
 
+### CTL.S3.ACCEL.001
+
+**S3 Transfer Acceleration Must Not Be Unexpectedly Enabled**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-7;
+
+S3 Transfer Acceleration creates an additional public endpoint (s3-accelerate.amazonaws.com) that bypasses VPC endpoint restrictions. It must not be enabled unless explicitly required and documented.
+
+**Remediation:** Suspend Transfer Acceleration under bucket Properties unless explicitly required. If required, document the business justification and ensure VPC endpoint policies account for the acceleration endpoint.
+
+---
+
 ### CTL.S3.ACCESS.001
 
 **No Unauthorized Cross-Account Access**
@@ -4455,7 +5835,7 @@ The observation snapshot is missing required Route 53 properties.
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v1.4.0: 1.16; pci_dss_v3.2.1: 7.1; soc2: CC6.3;
+- **Compliance:** cis_aws_v1.4.0: 1.16; nist_800_53_r5: AC-3; pci_dss_v3.2.1: 7.1; soc2: CC6.3;
 
 S3 bucket policies must not grant access to external AWS accounts. `allowed_accounts` contains trusted external AWS account IDs (12-digit). Access from accounts outside this allowlist is unsafe.
 
@@ -4470,6 +5850,7 @@ S3 bucket policies must not grant access to external AWS accounts. `allowed_acco
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-6;
 
 S3 bucket policies must not use wildcard actions (s3:* or *). Wildcard policies grant more permissions than intended and violate the principle of least privilege.
 
@@ -4571,6 +5952,7 @@ S3 bucket ACLs must not be writable by AllUsers or AuthenticatedUsers. WRITE_ACP
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3;
 
 S3 bucket ACLs must not grant FULL_CONTROL to AllUsers or AuthenticatedUsers. FULL_CONTROL is the worst-case ACL misconfiguration — the grantee can read, write, and delete objects and modify the ACL itself.
 
@@ -4882,6 +6264,7 @@ S3 buckets with any non-public data classification must use SSE-KMS encryption w
 - **Severity:** low
 - **Type:** unsafe_state
 - **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-8;
 
 S3 buckets must have a data-classification tag. Without this tag, tag-conditional controls for PHI, PII, confidential data, backup integrity, and compliance retention cannot evaluate — the bucket silently passes all sensitivity-gated checks regardless of actual content.
 
@@ -4896,6 +6279,7 @@ S3 buckets must have a data-classification tag. Without this tag, tag-conditiona
 - **Severity:** low
 - **Type:** unsafe_duration
 - **Domain:** storage
+- **Compliance:** nist_800_53_r5: SI-12;
 
 S3 bucket safety cannot be proven when policy or ACL data is missing from the snapshot.
 
@@ -4925,7 +6309,7 @@ S3 buckets must have S3 Inventory configured to provide a complete manifest of a
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** soc2: C1.2;
+- **Compliance:** nist_800_53_r5: SI-12; soc2: C1.2;
 
 S3 buckets tagged with data-retention must have at least one enabled lifecycle rule configured. HIPAA requires defined data retention policies for protected health information (PHI), audit logs, and billing records. Without lifecycle rules, data persists indefinitely, increasing exposure surface and violating retention policy requirements.
 
@@ -4940,6 +6324,7 @@ S3 buckets tagged with data-retention must have at least one enabled lifecycle r
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-12;
 
 S3 buckets tagged with data-classification=phi must not have lifecycle expiration rules that delete data before the minimum HIPAA retention period. HIPAA requires medical records to be retained for a minimum of 6 years (2190 days). This control detects PHI buckets with expiration rules set below this threshold, which could result in premature deletion of protected health information.
 
@@ -4954,7 +6339,7 @@ S3 buckets tagged with data-classification=phi must not have lifecycle expiratio
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** hipaa: 164.316(b)(2); soc2: CC6.1;
+- **Compliance:** hipaa: 164.316(b)(2); nist_800_53_r5: AU-9; soc2: CC6.1;
 
 S3 buckets tagged with any compliance framework (soc2, gdpr, hipaa, pci-dss, etc.) must have S3 Object Lock enabled. Object Lock provides WORM (Write Once Read Many) protection, preventing objects from being deleted or overwritten for a specified retention period. Regulatory frameworks require immutable storage for audit logs, compliance records, and protected data.
 
@@ -5005,6 +6390,96 @@ S3 buckets must have server access logging enabled for audit trail and visibilit
 
 ---
 
+### CTL.S3.LOG.BUCKET.LIFECYCLE.001
+
+**Log Destination Bucket Must Have Lifecycle Policy**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(b); nist_800_53_r5: AU-11;
+
+When server access logging is enabled, the log destination bucket must have a lifecycle policy configured. Without lifecycle management, log storage grows unbounded, increasing costs and making audit analysis impractical.
+
+**Remediation:** Configure a lifecycle policy on the log destination bucket to manage log retention. Transition older logs to cheaper storage classes and expire logs after the required retention period.
+
+---
+
+### CTL.S3.LOG.BUCKET.LOCK.001
+
+**Log Destination Bucket Must Have Object Lock Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AU-9; hipaa: 164.312(b); nist_800_53_r5: AU-9;
+
+When server access logging is enabled, the log destination bucket must have Object Lock enabled. Without Object Lock, log files can be deleted by any principal with s3:DeleteObject permission, even with versioning enabled.
+
+**Remediation:** Enable Object Lock on the log destination bucket with a retention policy. Object Lock prevents log file deletion for the retention period, ensuring audit trail immutability. Note that Object Lock must be enabled at bucket creation time.
+
+---
+
+### CTL.S3.LOG.BUCKET.PUBLIC.001
+
+**Log Destination Bucket Must Not Be Publicly Accessible**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AU-9; hipaa: 164.312(b); nist_800_53_r5: AU-9;
+
+When server access logging is enabled, the log destination bucket must not be publicly accessible. Public log buckets expose audit trail contents to external actors, enabling reconnaissance and detection evasion.
+
+**Remediation:** Block all public access on the log destination bucket using the S3 Block Public Access settings. Enable all four block public access options to prevent any public access configuration.
+
+---
+
+### CTL.S3.LOG.BUCKET.VERSIONING.001
+
+**Log Destination Bucket Must Have Versioning Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(b); nist_800_53_r5: AU-9;
+
+When server access logging is enabled, the log destination bucket must have versioning enabled. Without versioning, deleted or overwritten log files cannot be recovered, allowing attackers to destroy audit evidence.
+
+**Remediation:** Enable versioning on the log destination bucket to preserve all versions of log objects. This ensures that even if log files are deleted or overwritten, previous versions remain recoverable.
+
+---
+
+### CTL.S3.LOG.PREFIX.001
+
+**Log Prefix Required When Logging Enabled**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(b); nist_800_53_r5: AU-3;
+
+When server access logging is enabled, a target prefix must be configured to organize log files and enable efficient search and analysis of audit records.
+
+**Remediation:** Set a target prefix for S3 server access logging to organize log files by source bucket. Use a prefix that identifies the source bucket, such as the bucket name followed by a slash.
+
+---
+
+### CTL.S3.LOG.RETENTION.001
+
+**Log Retention Must Be At Least 90 Days**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AU-11; hipaa: 164.530(j); nist_800_53_r5: AU-11;
+
+When server access logging is enabled, the log destination bucket must retain logs for at least 90 days. Short retention periods allow attackers to wait out the retention window, after which evidence of unauthorized access is automatically destroyed.
+
+**Remediation:** Set the lifecycle expiration on the log destination bucket to at least 90 days. Many compliance frameworks require longer retention; consult your compliance team for the appropriate retention period.
+
+---
+
 ### CTL.S3.MALWARE.001
 
 **PHI Buckets Must Have Malware Scanning Enabled**
@@ -5027,7 +6502,7 @@ S3 buckets tagged with data-classification=phi must have malware scanning enable
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 2.1.2; soc2: CC6.1;
+- **Compliance:** cis_aws_v3.0: 2.1.2; nist_800_53_r5: CP-9; soc2: CC6.1;
 
 S3 buckets should have MFA Delete enabled on versioned buckets. MFA Delete requires a second factor to permanently delete object versions, preventing unauthorized or accidental data destruction.
 
@@ -5071,6 +6546,7 @@ MRAPs can have their own resource policy evaluated independently of the bucket p
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3;
 
 S3 bucket policies that grant access to Principal * (any AWS principal) must include network-scoping conditions such as aws:SourceIp, aws:sourceVpce, aws:SourceVpc, or aws:PrincipalOrgID. Without these conditions, the bucket is accessible to anyone on the internet. This control detects policies where wildcard principals are used without network restrictions.
 
@@ -5100,7 +6576,7 @@ VPC endpoint policy must be attached and must not be the default full-access pol
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** hipaa: 164.312(e)(1);
+- **Compliance:** hipaa: 164.312(e)(1); nist_800_53_r5: SC-7;
 
 S3 bucket access must be restricted by a VPC endpoint condition (aws:SourceVpce) or an IP address condition (aws:SourceIp) in the bucket policy. Without network-level restrictions, the bucket is reachable from any network path. This control enforces transmission security for PHI workloads.
 
@@ -5120,6 +6596,21 @@ S3 bucket access must be restricted by a VPC endpoint condition (aws:SourceVpce)
 S3 buckets must have Object Ownership set to BucketOwnerEnforced, which disables ACLs entirely. When ACLs are disabled, the bucket owner automatically owns every object regardless of who uploaded it, and access is controlled exclusively through IAM and bucket policies. This eliminates the entire class of ACL-based exposure: public grants, privilege escalation via WRITE_ACP, and object-level ACL overrides. Since April 2023 new buckets default to BucketOwnerEnforced, but buckets created before this date may still have ACLs enabled.
 
 **Remediation:** Set Object Ownership to BucketOwnerEnforced using aws s3api put-bucket-ownership-controls. This disables all ACLs on the bucket. Before enabling, audit existing ACL grants and migrate any legitimate access to bucket policies or IAM policies. All existing ACL-based access will stop working once BucketOwnerEnforced is set.
+
+---
+
+### CTL.S3.POLICY.EXISTS.001
+
+**S3 Bucket Must Have an Explicit Bucket Policy Attached**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(1); nist_800_53_r5: AC-3; soc2: CC6.1;
+
+S3 buckets must have an explicit resource-based bucket policy. Without a policy, access controls rely entirely on IAM and ACLs — there is no resource-level enforcement of encryption requirements, VPC restrictions, or transport security.
+
+**Remediation:** Attach an explicit bucket policy. At minimum the policy should deny HTTP requests (aws:SecureTransport false), deny unencrypted PutObject, and restrict access to known principals or VPC endpoints.
 
 ---
 
@@ -5407,7 +6898,7 @@ When a shared S3 bucket uses prefix-based tenant isolation, every app-signer ide
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v1.4.0: 2.1.3; hipaa: 164.312(c)(1); soc2: CC6.1;
+- **Compliance:** cis_aws_v1.4.0: 2.1.3; hipaa: 164.312(c)(1); nist_800_53_r5: CP-9; soc2: CC6.1;
 
 S3 buckets must have versioning enabled to protect against accidental deletion and enable recovery from negligent operations.
 
@@ -5436,6 +6927,7 @@ S3 buckets tagged with backup=true must have MFA delete enabled. MFA delete requ
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3;
 
 S3 buckets with static website hosting enabled must not also have public read access. Website hosting combined with public read serves content directly to the internet.
 
@@ -5915,6 +7407,21 @@ ESXi hosts must not accept CommunitySupported VIBs. Community packages bypass VM
 
 ---
 
+### CTL.VSPHERE.ESX.ACCOUNT.LOCKOUT.001
+
+**ESXi Account Lockout Must Be Configured**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_vmware_esxi_7: 1.3; nist_800_53_r5: AC-7;
+
+ESXi hosts must have account lockout configured. Without account lockout, an attacker can perform unlimited password guessing attempts against local ESXi accounts. The DCUI, SSH, and Host Client interfaces all accept local credentials. Brute-force attacks against the root account or service accounts become trivial when there is no lockout threshold to slow or block repeated failures.
+
+**Remediation:** Configure account lockout on the ESXi host. In the vSphere Client, navigate to Host > Configure > System > Advanced System Settings. Set Security.AccountLockFailures to 5 and Security.AccountUnlockTime to 900.
+
+---
+
 ### CTL.VSPHERE.ESX.CIM.001
 
 **ESXi CIM (SFCBD) Service Must Be Disabled**
@@ -5945,6 +7452,21 @@ ESXi hosts must have a core dump target configured for crash analysis. Without a
 
 ---
 
+### CTL.VSPHERE.ESX.DCUI.001
+
+**DCUI Access Must Be Restricted**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_vmware_esxi_7: 1.4; nist_800_53_r5: AC-3;
+
+Direct Console User Interface access must be restricted on ESXi hosts. The DCUI provides physical console access to ESXi management functions including network configuration, password resets, and troubleshooting. Unrestricted DCUI access allows anyone with physical or out-of-band console access to reconfigure the host, reset the root password, or disable security settings without authentication. In environments with IPMI or iLO remote console access, DCUI exposure extends beyond physical proximity.
+
+**Remediation:** Restrict DCUI access on the ESXi host. In the vSphere Client, navigate to Host > Configure > System > Advanced System Settings. Set DCUI.Access to a specific list of authorized users. Consider disabling the DCUI service entirely if not required for operations.
+
+---
+
 ### CTL.VSPHERE.ESX.LOCKDOWN.001
 
 **Lockdown Mode Must Be Enabled on ESXi Hosts**
@@ -5957,6 +7479,21 @@ ESXi hosts must have a core dump target configured for crash analysis. Without a
 Lockdown mode must be enabled on ESXi hosts. When lockdown mode is disabled, the host can be managed directly via local clients and APIs, bypassing vCenter role-based access controls. Enabling lockdown mode forces all management through vCenter, ensuring centralized authentication, authorization, and audit logging.
 
 **Remediation:** Enable lockdown mode on the ESXi host. In the vSphere Client, navigate to Host > Configure > System > Security Profile > Lockdown Mode and select Normal or Strict. Normal lockdown allows DCUI access for emergency troubleshooting; Strict lockdown disables DCUI as well.
+
+---
+
+### CTL.VSPHERE.ESX.MOB.001
+
+**Managed Object Browser Must Be Disabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_vmware_esxi_7: 3.9; nist_800_53_r5: CM-7;
+
+The Managed Object Browser must be disabled on ESXi hosts. The MOB is a web-based interface that provides direct access to the ESXi SDK object model. An authenticated attacker can use the MOB to invoke API methods, modify virtual machine configurations, extract credentials, and manipulate host settings. The MOB bypasses the vSphere Client permission model and exposes low-level SDK operations that are not intended for production use.
+
+**Remediation:** Disable the Managed Object Browser on the ESXi host. In the vSphere Client, navigate to Host > Configure > System > Advanced System Settings. Set Config.HostAgent.plugins.solo.enableMob to false. No service restart is required.
 
 ---
 
@@ -5990,6 +7527,21 @@ ESXi hosts must store logs on a persistent datastore. By default logs are writte
 
 ---
 
+### CTL.VSPHERE.ESX.SHELL.001
+
+**ESXi Shell Must Be Disabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_vmware_esxi_7: 1.2;
+
+The ESXi shell must be disabled. An enabled shell provides local console access to the hypervisor, bypassing remote management audit controls.
+
+**Remediation:** Disable the ESXi Shell service. Set startup policy to manual.
+
+---
+
 ### CTL.VSPHERE.ESX.SLP.001
 
 **ESXi SLP Service Must Be Disabled**
@@ -6002,6 +7554,21 @@ ESXi hosts must store logs on a persistent datastore. By default logs are writte
 The Service Location Protocol (SLP) service on ESXi hosts must be disabled. SLP has been exploited in critical remote code execution attacks (CVE-2021-21974) and provides no value in environments using vCenter for management. Leaving it enabled exposes a high-risk network service.
 
 **Remediation:** Disable the SLP service: /etc/init.d/slpd stop esxcli network firewall ruleset set --ruleset-id=CIMSLP --enabled=false chkconfig slpd off
+
+---
+
+### CTL.VSPHERE.ESX.SNMP.001
+
+**SNMP Must Be Disabled or Configured Securely**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_vmware_esxi_7: 3.8; nist_800_53_r5: CM-7;
+
+SNMP on ESXi hosts must be disabled or configured with SNMPv3 authentication and encryption. SNMPv1 and SNMPv2c transmit community strings in cleartext, allowing any attacker with network access to intercept credentials and query host information. SNMP write access with a known community string enables remote reconfiguration of the host. Even read-only SNMP access exposes detailed hardware, software, and network configuration data useful for reconnaissance.
+
+**Remediation:** Disable SNMP if not required. If SNMP monitoring is needed, configure SNMPv3 with authentication and privacy. Use esxcli system snmp set --enable false to disable SNMP, or configure SNMPv3 with esxcli system snmp set --authentication SHA1 --privacy AES128.
 
 ---
 
@@ -6032,6 +7599,21 @@ SSH must be disabled on ESXi hosts. An enabled SSH service exposes the ESXi mana
 ESXi hosts must forward logs to a remote syslog server. Without centralized logging, an attacker who compromises the host can destroy local logs and erase evidence of the intrusion.
 
 **Remediation:** Configure remote syslog on the ESXi host using esxcli: esxcli system syslog config set --loghost=<protocol>://<host>:<port> esxcli system syslog reload
+
+---
+
+### CTL.VSPHERE.ESX.TLS.001
+
+**ESXi Must Use TLS 1.2 or Higher**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_vmware_esxi_7: 1.6; nist_800_53_r5: SC-8;
+
+ESXi hosts must use TLS 1.2 or higher for all management connections. TLS 1.0 and 1.1 have known cryptographic weaknesses including vulnerability to BEAST, POODLE, and other protocol downgrade attacks. Management traffic to ESXi hosts carries authentication credentials, virtual machine data, and configuration changes. An attacker on the network path can exploit TLS 1.0/1.1 weaknesses to decrypt or modify this traffic.
+
+**Remediation:** Configure the ESXi host to require TLS 1.2 or higher. In the vSphere Client, navigate to Host > Configure > System > Advanced System Settings. Set UserVars.ESXiVPsDisabledProtocols to "sslv3,tlsv1,tlsv1.1" to disable all protocols below TLS 1.2. Restart management agents after the change.
 
 ---
 
@@ -6077,6 +7659,66 @@ iSCSI datastores must require CHAP authentication. Without CHAP, any host on the
 NFS datastores must require authentication (Kerberos). Unauthenticated NFS mounts rely solely on IP-based access control, which is trivially bypassed through IP spoofing or compromised hosts on the same network segment.
 
 **Remediation:** Configure NFS datastores to use Kerberos authentication (NFS 4.1 with SEC_KRB5). Migrate from NFS 3 to NFS 4.1 if necessary to support authenticated mounts.
+
+---
+
+### CTL.VSPHERE.VCSA.CEIP.001
+
+**Customer Experience Improvement Program Must Be Disabled**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_vmware_esxi_7: 2.6; nist_800_53_r5: SC-7;
+
+The VMware Customer Experience Improvement Program must be disabled on vCenter Server. CEIP collects configuration and usage telemetry from the vCenter environment and transmits it to VMware over the internet. This telemetry includes information about host counts, virtual machine configurations, feature usage patterns, and environment topology. In regulated environments, transmitting infrastructure metadata to an external party may violate data sovereignty or confidentiality requirements. The outbound connection also increases the attack surface.
+
+**Remediation:** Disable CEIP in the vSphere Client. Navigate to Administration > Customer Experience Improvement Program and deselect the participation checkbox. Alternatively, use the vCenter Server Management Interface at https://<vcenter>:5480 to disable CEIP under Telemetry.
+
+---
+
+### CTL.VSPHERE.VCSA.PLUGINS.001
+
+**Unauthorized vCenter Plugins Must Be Removed**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_vmware_esxi_7: 2.5; nist_800_53_r5: CM-7;
+
+Unauthorized plugins must be removed from vCenter Server. vCenter plugins execute with the privileges of the vCenter service and have full access to the vSphere API. A malicious or compromised plugin can exfiltrate credentials, modify virtual machine configurations, and persist across vCenter upgrades. Third-party plugins that are no longer maintained may contain unpatched vulnerabilities that an attacker can exploit to gain code execution within the vCenter process.
+
+**Remediation:** Review installed plugins in the vSphere Client. Navigate to Administration > Solutions > Client Plug-Ins. Remove any plugins that are not authorized, no longer maintained, or not required for operations. Verify the publisher and version of all remaining plugins.
+
+---
+
+### CTL.VSPHERE.VCSA.SSO.LOCKOUT.001
+
+**vCenter SSO Account Lockout Must Be Configured**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_vmware_esxi_7: 2.1; nist_800_53_r5: AC-7;
+
+vCenter Single Sign-On must have account lockout configured. Without lockout, an attacker can perform unlimited password guessing attempts against the SSO identity source. The vCenter SSO service authenticates all access to the vSphere management plane including the vSphere Client, API, and PowerCLI. A compromised SSO administrator account grants full control over all ESXi hosts, virtual machines, and infrastructure managed by the vCenter instance.
+
+**Remediation:** Configure SSO account lockout in the vSphere Client. Navigate to Administration > Single Sign-On > Configuration > Accounts. Set Maximum number of failed login attempts to 5 and Time interval between failures to 180 seconds. Set Unlock time to 900 seconds.
+
+---
+
+### CTL.VSPHERE.VCSA.SSO.PASSLEN.001
+
+**vCenter SSO Password Length Must Be 15+**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_vmware_esxi_7: 2.2; nist_800_53_r5: IA-5;
+
+vCenter SSO must enforce a minimum password length of 15 characters. Short passwords are vulnerable to brute-force and dictionary attacks. The SSO password policy applies to all accounts in the vsphere.local identity source including the administrator@vsphere.local account. A weak password on this account grants an attacker full administrative control over the entire vSphere environment. NIST SP 800-63B recommends a minimum of 15 characters for privileged accounts.
+
+**Remediation:** Configure SSO password policy in the vSphere Client. Navigate to Administration > Single Sign-On > Configuration > Accounts. Set Minimum length to 15 characters. Existing accounts with shorter passwords will be required to change their password at next login.
 
 ---
 
@@ -6197,6 +7839,21 @@ Virtual machines must have the Host Guest File System (HGFS) transfer capability
 Virtual machines must not use independent non-persistent disks. Changes to non-persistent disks are discarded on power-off or reset, which means security patches, agent updates, and forensic artifacts are lost. An attacker can reboot the VM to erase evidence of compromise.
 
 **Remediation:** Change the disk mode to persistent or dependent: Edit VM Settings > Hard Disk > Disk Mode > Persistent. Ensure backups and snapshots capture the correct disk state.
+
+---
+
+### CTL.VSPHERE.VM.LOGSIZE.001
+
+**VM Log Size Must Be Limited**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_vmware_esxi_7: 8.4.4;
+
+VM diagnostic log size must be limited to prevent a compromised VM from filling the datastore via excessive logging, causing denial of service to other VMs on the same datastore.
+
+**Remediation:** Set log.rotateSize and log.keepOld in the VM advanced settings.
 
 ---
 

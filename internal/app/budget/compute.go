@@ -1,0 +1,247 @@
+// Package budget computes security SLA burn rates for deployment gating.
+package budget
+
+import (
+	"fmt"
+	"math"
+	"strings"
+	"time"
+
+	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/evaluation/remediation"
+)
+
+func sevString(s policy.Severity) string {
+	return strings.ToLower(s.String())
+}
+
+// Input holds data for burn rate computation.
+type Input struct {
+	Findings []remediation.Finding
+	Period   time.Duration
+	// DeadlineHours maps severity (lowercase) to SLA deadline in hours.
+	DeadlineHours map[string]float64
+	PeriodStart   time.Time
+	PeriodEnd     time.Time
+	ProfileID     string
+}
+
+// SeverityBurnRate holds burn rate for a single severity tier.
+type SeverityBurnRate struct {
+	Severity          string    `json:"severity"`
+	SLADeadlineHours  float64   `json:"sla_deadline_hours"`
+	AllowedHours      float64   `json:"allowed_hours"`
+	ConsumedHours     float64   `json:"consumed_hours"`
+	OverrunHours      float64   `json:"overrun_hours"`
+	RemainingHours    float64   `json:"remaining_hours"`
+	BurnRatePercent   float64   `json:"burn_rate_percent"`
+	Status            string    `json:"status"`
+	FindingCount      int       `json:"finding_count"`
+	WeeklyConsumption []float64 `json:"weekly_consumption"`
+}
+
+// GateResult holds the deployment gate decision.
+type GateResult struct {
+	ThresholdPercent float64  `json:"threshold_percent"`
+	GatedSeverities  []string `json:"gated_severities"`
+	Passed           bool     `json:"passed"`
+	Reason           string   `json:"reason"`
+}
+
+// Report is the complete burn rate output.
+type Report struct {
+	GeneratedAt time.Time          `json:"generated_at"`
+	Period      PeriodInfo         `json:"period"`
+	SLAProfile  string             `json:"sla_profile"`
+	BurnRates   []SeverityBurnRate `json:"burn_rates"`
+	Gate        *GateResult        `json:"gate_result,omitempty"`
+}
+
+// PeriodInfo describes the budget window.
+type PeriodInfo struct {
+	From         time.Time `json:"from"`
+	To           time.Time `json:"to"`
+	DurationDays int       `json:"duration_days"`
+}
+
+// Compute produces a burn rate report from assessment findings.
+func Compute(input Input) Report {
+	periodDays := input.Period.Hours() / 24
+	if periodDays <= 0 {
+		periodDays = 30
+	}
+
+	severities := []string{"critical", "high", "medium", "low"}
+	var rates []SeverityBurnRate
+
+	for _, sev := range severities {
+		deadline, ok := input.DeadlineHours[sev]
+		if !ok || deadline <= 0 {
+			continue
+		}
+
+		allowedHours := periodDays * deadline
+
+		var consumed, overrun float64
+		var count int
+
+		for i := range input.Findings {
+			f := &input.Findings[i]
+			if sevString(f.ControlSeverity) != sev {
+				continue
+			}
+			count++
+
+			dwell := f.Evidence.UnsafeDurationHours
+			if dwell <= 0 {
+				continue
+			}
+
+			// Cap contribution at SLA deadline.
+			capped := math.Min(dwell, deadline)
+			consumed += capped
+
+			// Track overrun separately.
+			if dwell > deadline {
+				overrun += dwell - deadline
+			}
+		}
+
+		remaining := math.Max(allowedHours-consumed, 0)
+		burnPct := 0.0
+		if allowedHours > 0 {
+			burnPct = consumed / allowedHours * 100
+		}
+
+		status := "within_budget"
+		if burnPct >= 100 {
+			status = "budget_exhausted"
+		}
+
+		weekly := computeWeekly(input.Findings, sev, deadline, input.PeriodStart, input.PeriodEnd)
+
+		rates = append(rates, SeverityBurnRate{
+			Severity:          sev,
+			SLADeadlineHours:  deadline,
+			AllowedHours:      round1(allowedHours),
+			ConsumedHours:     round1(consumed),
+			OverrunHours:      round1(overrun),
+			RemainingHours:    round1(remaining),
+			BurnRatePercent:   round1(burnPct),
+			Status:            status,
+			FindingCount:      count,
+			WeeklyConsumption: weekly,
+		})
+	}
+
+	return Report{
+		GeneratedAt: input.PeriodEnd,
+		Period: PeriodInfo{
+			From:         input.PeriodStart,
+			To:           input.PeriodEnd,
+			DurationDays: int(periodDays),
+		},
+		SLAProfile: input.ProfileID,
+		BurnRates:  rates,
+	}
+}
+
+// EvaluateGate checks burn rates against a threshold for specific severities.
+func EvaluateGate(report *Report, threshold float64, severities []string) GateResult {
+	allowed := make(map[string]bool, len(severities))
+	for _, s := range severities {
+		allowed[s] = true
+	}
+
+	gate := GateResult{
+		ThresholdPercent: threshold,
+		GatedSeverities:  severities,
+		Passed:           true,
+	}
+
+	for i := range report.BurnRates {
+		br := &report.BurnRates[i]
+		if !allowed[br.Severity] {
+			continue
+		}
+		if br.BurnRatePercent >= threshold {
+			gate.Passed = false
+			gate.Reason = br.Severity + " burn rate " +
+				formatPct(br.BurnRatePercent) + "% exceeds threshold " +
+				formatPct(threshold) + "%"
+			break
+		}
+	}
+
+	if gate.Passed {
+		for i := range report.BurnRates {
+			br := &report.BurnRates[i]
+			if allowed[br.Severity] {
+				gate.Reason = br.Severity + " burn rate " +
+					formatPct(br.BurnRatePercent) + "% is below threshold " +
+					formatPct(threshold) + "%"
+				break
+			}
+		}
+	}
+
+	report.Gate = &gate
+	return gate
+}
+
+func computeWeekly(findings []remediation.Finding, sev string, deadline float64, start, end time.Time) []float64 {
+	if start.IsZero() || end.IsZero() || !end.After(start) {
+		return nil
+	}
+
+	dur := end.Sub(start)
+	weeks := int(math.Ceil(dur.Hours() / (7 * 24)))
+	if weeks <= 0 {
+		weeks = 1
+	}
+	if weeks > 12 {
+		weeks = 12
+	}
+
+	buckets := make([]float64, weeks)
+	weekDur := dur / time.Duration(weeks)
+
+	for i := range findings {
+		f := &findings[i]
+		if sevString(f.ControlSeverity) != sev {
+			continue
+		}
+		dwell := math.Min(f.Evidence.UnsafeDurationHours, deadline)
+		if dwell <= 0 {
+			continue
+		}
+
+		// Assign to a week bucket based on when the finding started.
+		firstUnsafe := f.Evidence.FirstUnsafeAt
+		if firstUnsafe.IsZero() || firstUnsafe.Before(start) {
+			buckets[0] += dwell
+			continue
+		}
+		weekIdx := int(firstUnsafe.Sub(start) / weekDur)
+		if weekIdx >= weeks {
+			weekIdx = weeks - 1
+		}
+		buckets[weekIdx] += dwell
+	}
+
+	for i := range buckets {
+		buckets[i] = round1(buckets[i])
+	}
+	return buckets
+}
+
+func round1(v float64) float64 {
+	return math.Round(v*10) / 10
+}
+
+func formatPct(v float64) string {
+	if v == float64(int(v)) {
+		return fmt.Sprintf("%.0f", v)
+	}
+	return fmt.Sprintf("%.1f", v)
+}

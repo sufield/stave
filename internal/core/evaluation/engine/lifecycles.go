@@ -13,6 +13,10 @@ import (
 // across all controls. The outer loop iterates snapshots (time), the middle
 // loop iterates assets, and the inner loop evaluates each control's predicate
 // to record whether the asset was unsafe at that point in time.
+//
+// Controls are pre-indexed by vendor scope tag so only relevant controls
+// are evaluated per asset, reducing the inner loop from O(C) to O(c)
+// where c is the number of controls matching the asset's vendor.
 func BuildLifecyclesPerControl(
 	controls []policy.ControlDefinition,
 	snapshots []asset.Snapshot,
@@ -25,15 +29,75 @@ func BuildLifecyclesPerControl(
 		lifecyclesByControl[ctl.ID] = make(map[asset.ID]*asset.ExposureLifecycle)
 	}
 
+	// Pre-index controls by vendor scope tag.
+	ctlIndex := buildControlVendorIndex(controls)
+
 	for _, snap := range snapshots {
 		for _, a := range snap.Assets {
-			if err := recordAssetObservation(a, snap, controls, celEval, lifecyclesByControl); err != nil {
+			relevant := ctlIndex.controlsFor(a.Vendor, controls)
+			if err := recordAssetObservation(a, snap, relevant, celEval, lifecyclesByControl); err != nil {
 				return nil, err
 			}
 		}
 	}
 
 	return lifecyclesByControl, nil
+}
+
+// controlVendorIndex maps vendor strings to the indices of controls
+// whose scope tags include that vendor. Controls with no scope tags
+// are treated as universal (applicable to all vendors).
+type controlVendorIndex struct {
+	byVendor  map[string][]int // vendor string → control indices
+	universal []int            // controls with no scope tags
+}
+
+func buildControlVendorIndex(controls []policy.ControlDefinition) controlVendorIndex {
+	idx := controlVendorIndex{byVendor: make(map[string][]int)}
+	for i := range controls {
+		ctl := &controls[i]
+		if len(ctl.ScopeTags) == 0 {
+			idx.universal = append(idx.universal, i)
+			continue
+		}
+		added := false
+		for _, tag := range ctl.ScopeTags {
+			s := string(tag)
+			// Vendor tags are short identifiers like "aws", "gcp", "azure".
+			if len(s) <= 10 {
+				idx.byVendor[s] = append(idx.byVendor[s], i)
+				added = true
+			}
+		}
+		if !added {
+			idx.universal = append(idx.universal, i)
+		}
+	}
+	return idx
+}
+
+func (idx controlVendorIndex) controlsFor(vendor kernel.Vendor, all []policy.ControlDefinition) []policy.ControlDefinition {
+	vendorStr := string(vendor)
+	indices := idx.byVendor[vendorStr]
+	if len(indices) == 0 && len(idx.universal) == 0 {
+		return all // no index data — fall back to full scan
+	}
+
+	seen := make(map[int]bool, len(indices)+len(idx.universal))
+	result := make([]policy.ControlDefinition, 0, len(indices)+len(idx.universal))
+	for _, i := range indices {
+		if !seen[i] {
+			seen[i] = true
+			result = append(result, all[i])
+		}
+	}
+	for _, i := range idx.universal {
+		if !seen[i] {
+			seen[i] = true
+			result = append(result, all[i])
+		}
+	}
+	return result
 }
 
 // recordAssetObservation evaluates a single asset against all controls at one

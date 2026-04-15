@@ -9,8 +9,8 @@ exec stave explain CTL.S3.PUBLIC.001 --controls controls --format json
 stdout 'CTL.S3.PUBLIC.001'
 stdout '"matched_fields"'
 
-# Trace a predicate evaluation
-exec stave trace --controls controls --observation observations/2026-01-11T000000Z.json --control CTL.S3.PUBLIC.001 --asset-id public-bucket
+# Trace a predicate evaluation (subcommand of diagnose)
+exec stave diagnose trace --controls controls --observation observations/2026-01-11T000000Z.json --control CTL.S3.PUBLIC.001 --asset-id public-bucket
 stdout 'public_read'
 
 -- controls/CTL.S3.PUBLIC.001.yaml --

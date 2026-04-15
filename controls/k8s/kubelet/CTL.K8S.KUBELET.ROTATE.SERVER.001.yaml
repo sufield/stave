@@ -1,0 +1,34 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.KUBELET.ROTATE.SERVER.001
+name: Kubelet Server Certificate Rotation Must Be Enabled
+description: >
+  The kubelet must have server certificate rotation enabled via
+  serverTLSBootstrap or the RotateKubeletServerCertificate feature
+  gate. Without rotation, kubelet serving certificates may expire,
+  breaking TLS for kubelet endpoints.
+domain: exposure
+severity: medium
+compliance:
+  cis_k8s_v1.9: "4.2.12"
+scope_tags:
+  - kubernetes
+  - kubelet
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Kubelet server certificate rotation is not enabled. Serving
+    certificates may expire without renewal.
+  action: >
+    Set serverTLSBootstrap=true or
+    featureGates.RotateKubeletServerCertificate=true in the kubelet
+    config.
+unsafe_predicate:
+  all:
+    - field: type
+      op: eq
+      value: k8s_kubelet
+    - field: properties.kubelet.rotate_server_certificates
+      op: eq
+      value: false

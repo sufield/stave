@@ -8,12 +8,14 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/internal/adapters/observations"
 	apprank "github.com/sufield/stave/internal/app/rank"
+	"github.com/sufield/stave/internal/app/teams"
 	"github.com/sufield/stave/internal/core/report"
 )
 
@@ -24,6 +26,8 @@ type options struct {
 	IncludeAcknowledged bool
 	Identity            bool
 	SnapshotPath        string
+	GroupBy             string
+	TeamManifest        string
 }
 
 // NewCmd constructs the top-level rank command.
@@ -69,6 +73,8 @@ Exit Codes:
 	cmd.Flags().BoolVar(&opts.IncludeAcknowledged, "include-acknowledged", false, "Include acknowledged findings in output")
 	cmd.Flags().BoolVar(&opts.Identity, "identity", false, "Identity-centric blast radius ranking")
 	cmd.Flags().StringVar(&opts.SnapshotPath, "snapshot", "", "Path to observation snapshot (required for --identity)")
+	cmd.Flags().StringVar(&opts.GroupBy, "group-by", "", "Group roadmap by field (owner)")
+	cmd.Flags().StringVar(&opts.TeamManifest, "team-manifest", "", "Path to stave-teams.yaml")
 
 	return cmd
 }
@@ -106,6 +112,11 @@ func run(stdout, _ io.Writer, opts *options) error {
 
 	// Build roadmap.
 	roadmap := apprank.BuildRoadmap(assessment.Findings, assessment.TopExposures, opts.TopN)
+
+	// Group by owner if requested.
+	if opts.GroupBy == "owner" {
+		return runGroupByOwner(stdout, opts, &assessment, roadmap)
+	}
 
 	// Output.
 	switch opts.Format {
@@ -208,6 +219,89 @@ func writeTextRoadmap(w io.Writer, rm apprank.Roadmap) {
 			fmt.Fprintf(w, "     %s\n", action)
 		}
 	}
+}
+
+// TeamRoadmap groups prioritized entries by team.
+type TeamRoadmap struct {
+	TeamID       string                  `json:"team_id"`
+	TeamName     string                  `json:"team_name"`
+	FindingCount int                     `json:"finding_count"`
+	TotalRisk    float64                 `json:"total_risk_score"`
+	SLABreaches  int                     `json:"sla_breaches"`
+	ActiveChains int                     `json:"active_chains"`
+	Entries      []apprank.PriorityEntry `json:"entries"`
+}
+
+func runGroupByOwner(stdout io.Writer, opts *options, _ *report.Assessment, roadmap apprank.Roadmap) error {
+	manifestPath := opts.TeamManifest
+	if manifestPath == "" {
+		manifestPath = "stave-teams.yaml"
+	}
+	manifest, err := teams.LoadManifest(manifestPath)
+	if err != nil {
+		return fmt.Errorf("load team manifest: %w", err)
+	}
+
+	// Group entries by team.
+	teamMap := make(map[string]*TeamRoadmap)
+	for i := range roadmap.Entries {
+		e := &roadmap.Entries[i]
+		owner := manifest.ResolveOwner(nil, string(e.AssetID), string(e.ControlID))
+		tr, ok := teamMap[owner.TeamID]
+		if !ok {
+			tr = &TeamRoadmap{TeamID: owner.TeamID, TeamName: owner.TeamName}
+			teamMap[owner.TeamID] = tr
+		}
+		tr.FindingCount++
+		tr.TotalRisk += e.PriorityScore
+		if e.SLABreached {
+			tr.SLABreaches++
+		}
+		if e.IsChainMember {
+			tr.ActiveChains++
+		}
+		tr.Entries = append(tr.Entries, *e)
+	}
+
+	// Collect teams sorted by total risk (highest first).
+	var teamRoadmaps []TeamRoadmap
+	for _, tr := range teamMap {
+		teamRoadmaps = append(teamRoadmaps, *tr)
+	}
+	slices.SortFunc(teamRoadmaps, func(a, b TeamRoadmap) int {
+		if a.TotalRisk > b.TotalRisk {
+			return -1
+		}
+		if a.TotalRisk < b.TotalRisk {
+			return 1
+		}
+		return strings.Compare(a.TeamID, b.TeamID)
+	})
+
+	switch opts.Format {
+	case "json":
+		output := struct {
+			Roadmap      apprank.Roadmap `json:"roadmap"`
+			TeamRoadmaps []TeamRoadmap   `json:"team_roadmaps"`
+		}{Roadmap: roadmap, TeamRoadmaps: teamRoadmaps}
+		data, marshalErr := json.MarshalIndent(output, "", "  ")
+		if marshalErr != nil {
+			return fmt.Errorf("marshal grouped roadmap: %w", marshalErr)
+		}
+		fmt.Fprintln(stdout, string(data))
+	default:
+		for _, tr := range teamRoadmaps {
+			fmt.Fprintf(stdout, "\nTEAM: %s (%s)\n", tr.TeamName, tr.TeamID)
+			fmt.Fprintf(stdout, "  Findings: %d  |  Risk Score: %.0f  |  SLA Breaches: %d  |  Active Chains: %d\n",
+				tr.FindingCount, tr.TotalRisk, tr.SLABreaches, tr.ActiveChains)
+			fmt.Fprintln(stdout, strings.Repeat("-", 60))
+			for j := range tr.Entries {
+				e := &tr.Entries[j]
+				fmt.Fprintf(stdout, "  [#%d]  %.1f  %s on %s\n", e.Rank, e.PriorityScore, e.ControlID, e.AssetID)
+			}
+		}
+	}
+	return nil
 }
 
 func runIdentity(stdout io.Writer, opts *options, assessment *report.Assessment) error {

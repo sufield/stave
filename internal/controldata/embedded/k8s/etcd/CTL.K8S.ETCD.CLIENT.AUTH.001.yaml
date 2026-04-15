@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.ETCD.CLIENT.AUTH.001
+name: etcd Client Certificate Authentication Must Be Enabled
+description: >
+  etcd must require client certificate authentication. Without it,
+  any client with network access to etcd can read and write all
+  cluster state.
+domain: exposure
+severity: critical
+compliance:
+  cis_k8s_v1.9: "2.2"
+scope_tags:
+  - kubernetes
+  - etcd
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    etcd client certificate authentication is not enabled.
+  action: >
+    Set --client-cert-auth=true on the etcd server.
+unsafe_predicate:
+  all:
+    - field: type
+      op: eq
+      value: k8s_etcd
+    - field: properties.etcd.client_cert_auth
+      op: eq
+      value: false

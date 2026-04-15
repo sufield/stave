@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.AD.ACCOUNT.DESONLY.001
+name: No Accounts Must Use DES-Only Kerberos Encryption
+description: >
+  No accounts should have the "Use DES encryption types for this
+  account" flag set. DES is a deprecated and broken encryption
+  algorithm. Kerberos tickets encrypted with DES can be cracked
+  quickly, exposing account credentials. Any account configured
+  for DES-only encryption is trivially compromised.
+domain: identity
+severity: high
+compliance:
+  cis_ad: "5.7"
+scope_tags:
+  - active_directory
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    One or more accounts are configured for DES-only Kerberos
+    encryption. These accounts are trivially compromised.
+  action: >
+    Remove the DES-only flag from all accounts. Run:
+    Get-ADUser -Filter {UseDESKeyOnly -eq $true} |
+    Set-ADUser -KerberosEncryptionType AES128,AES256
+unsafe_predicate:
+  all:
+    - field: properties.accounts.des_only_count
+      op: gt
+      value: 0

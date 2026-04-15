@@ -60,7 +60,7 @@ func TestBaselineEntryFromFinding(t *testing.T) {
 		AssetID:     "res-1",
 		AssetType:   kernel.AssetType("bucket"),
 	}
-	entry := evaluation.BaselineEntryFromFinding(f)
+	entry := evaluation.BaselineEntryFromFinding(&f)
 	if entry.ControlID != "CTL.A" || entry.AssetID != "res-1" || entry.AssetType != "bucket" {
 		t.Errorf("unexpected entry: %+v", entry)
 	}

@@ -1,0 +1,43 @@
+dsl_version: ctrl.v1
+id: CTL.CISCO.SVC.BOOTP.001
+name: BOOTP Server Must Be Disabled
+description: >
+  The BOOTP server must be disabled on Cisco IOS devices. BOOTP
+  is a legacy protocol used to assign IP addresses and boot images
+  to network clients. The IOS BOOTP server listens on UDP port 67
+  and can serve IOS images to any client that requests them. An
+  attacker can use BOOTP to obtain a copy of the IOS image, which
+  enables offline vulnerability analysis and credential extraction.
+  BOOTP also enables network-based attacks by allowing the attacker
+  to serve malicious boot images to clients.
+domain: exposure
+severity: medium
+compliance:
+  cis_cisco_ios_17: "2.1.1"
+  nist_800_53_r5: "CM-7"
+scope_tags:
+  - cisco
+  - ios
+type: unsafe_state
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    The BOOTP server is enabled on the device. An attacker can
+    obtain IOS images for offline analysis or serve malicious boot
+    images to network clients.
+  action: >
+    Disable the BOOTP server on the device. Run:
+    no ip bootp server
+    Verify with: show ip bootp server
+  example: |
+    {
+      "services": {
+        "bootp_enabled": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.services.bootp_enabled
+      op: eq
+      value: true

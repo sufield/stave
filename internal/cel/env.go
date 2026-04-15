@@ -40,9 +40,13 @@ func NewEnv() (*cel.Env, error) {
 }
 
 // isMissing implements Stave's three-way absence semantics:
-// null, empty string (trimmed), empty list, empty map.
+// null, empty string (trimmed), empty list, empty map, CEL error (no such key).
 func isMissing(val ref.Val) bool {
 	if val == nil || val == types.NullValue {
+		return true
+	}
+	// CEL error (e.g. ErrNoSuchKey) means field does not exist.
+	if types.IsError(val) {
 		return true
 	}
 

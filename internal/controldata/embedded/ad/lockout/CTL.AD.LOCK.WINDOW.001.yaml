@@ -1,0 +1,26 @@
+dsl_version: ctrl.v1
+id: CTL.AD.LOCK.WINDOW.001
+name: Account Lockout Observation Window Must Be At Least 15 Minutes
+description: >
+  The lockout observation window must be at least 15 minutes. A
+  shorter window allows attackers to spread attempts over time
+  without triggering lockout.
+domain: identity
+severity: medium
+compliance:
+  cis_ad: "1.2.3"
+scope_tags:
+  - active_directory
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Lockout observation window is less than 15 minutes.
+  action: >
+    Set lockout observation window to 15 minutes or more.
+unsafe_predicate:
+  all:
+    - field: properties.password_policy.lockout_observation_window
+      op: lt
+      value: 15

@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.AD.AUDIT.LOGON.001
+name: Logon Event Auditing Must Be Enabled
+description: >
+  Active Directory must audit logon events. Without logon auditing,
+  successful and failed authentication attempts go unrecorded,
+  preventing detection of brute-force attacks, credential stuffing,
+  and unauthorized access. CIS benchmarks require logon event
+  auditing on all domain controllers.
+domain: identity
+severity: high
+compliance:
+  cis_ad: "17.5.1"
+scope_tags:
+  - active_directory
+type: unsafe_state
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Logon event auditing is not enabled. Authentication attempts are
+    not being recorded, leaving brute-force and unauthorized access
+    undetected.
+  action: >
+    Enable logon event auditing via Group Policy: Computer Configuration >
+    Windows Settings > Security Settings > Advanced Audit Policy
+    Configuration > Logon/Logoff > Audit Logon. Set to Success and
+    Failure.
+unsafe_predicate:
+  all:
+    - field: properties.security_settings.audit_logon_events
+      op: eq
+      value: false

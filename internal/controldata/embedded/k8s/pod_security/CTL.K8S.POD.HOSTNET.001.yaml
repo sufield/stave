@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.POD.HOSTNET.001
+name: Pods Must Not Share the Host Network Namespace
+description: >
+  Pods must not share the host network namespace. Sharing the host
+  network gives containers access to all network interfaces and
+  listening services on the node, bypassing network policies and
+  enabling network-level attacks.
+domain: exposure
+severity: high
+compliance:
+  cis_k8s_v1.9: "5.2.4"
+scope_tags:
+  - kubernetes
+  - pod_security
+type: unsafe_state
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: >
+    Pod shares the host network namespace. Containers can access all
+    host network interfaces and services.
+  action: >
+    Set hostNetwork=false in the pod spec. Use Kubernetes Services and
+    NetworkPolicies to control network access instead.
+unsafe_predicate:
+  all:
+    - field: type
+      op: eq
+      value: k8s_pod
+    - field: properties.pod.host_network
+      op: eq
+      value: true

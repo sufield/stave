@@ -1,0 +1,27 @@
+dsl_version: ctrl.v1
+id: CTL.AD.PASS.MINAGE.001
+name: Password Minimum Age Must Be At Least 1 Day
+description: >
+  Minimum password age must be at least 1 day to prevent rapid
+  password cycling that allows users to reuse old passwords by
+  changing through the history depth in one session.
+domain: identity
+severity: low
+compliance:
+  cis_ad: "1.1.4"
+scope_tags:
+  - active_directory
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Minimum password age is less than 1 day. Users can cycle passwords
+    to reuse old ones.
+  action: >
+    Set minimum password age to 1 day in Default Domain Policy.
+unsafe_predicate:
+  all:
+    - field: properties.password_policy.min_age_days
+      op: lt
+      value: 1

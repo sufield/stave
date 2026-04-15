@@ -136,7 +136,7 @@ func TestBaselineEntryFromFinding(t *testing.T) {
 		AssetID:     "bucket-1",
 		AssetType:   "s3_bucket",
 	}
-	entry := BaselineEntryFromFinding(f)
+	entry := BaselineEntryFromFinding(&f)
 	if entry.ControlID != f.ControlID {
 		t.Fatalf("ControlID = %v", entry.ControlID)
 	}

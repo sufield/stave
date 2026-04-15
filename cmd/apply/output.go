@@ -130,6 +130,29 @@ func printReadinessIssue(w io.Writer, issue validation.ValidationFinding) error 
 	return nil
 }
 
+// checkSLAPolicy returns an error (exit code 1) when SLA breaches violate
+// the configured policy. Default "warn" never triggers a non-zero exit.
+func checkSLAPolicy(stderr io.Writer, policy string, res EvaluateResult, quiet bool) error {
+	switch policy {
+	case "strict":
+		if res.HasSLABreach {
+			if !quiet {
+				fmt.Fprintln(stderr, "SLA policy: strict — SLA breach detected, failing.")
+			}
+			return ui.ErrSecurityAuditFindings
+		}
+	case "critical-only":
+		if res.HasCriticalSLABreach {
+			if !quiet {
+				fmt.Fprintln(stderr, "SLA policy: critical-only — critical SLA breach detected, failing.")
+			}
+			return ui.ErrSecurityAuditFindings
+		}
+	}
+	// "warn" (default) — no exit code change.
+	return nil
+}
+
 // decorateError maps domain-specific errors to user-facing remediation hints.
 // This is presentation logic — it translates domain errors into CLI guidance
 // using sentinel error matching via errors.Is.

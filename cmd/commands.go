@@ -13,6 +13,7 @@ import (
 	applyvalidate "github.com/sufield/stave/cmd/apply/validate"
 	applyverify "github.com/sufield/stave/cmd/apply/verify"
 	stavebisect "github.com/sufield/stave/cmd/bisect"
+	stavebudget "github.com/sufield/stave/cmd/budget"
 	stavebundle "github.com/sufield/stave/cmd/bundle"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	stavecollect "github.com/sufield/stave/cmd/collect"
@@ -102,10 +103,11 @@ func WireCommands(app *App) {
 		NewCELEvaluator:  f.NewCELEvaluator,
 	}))
 	root.AddCommand(applyverify.NewCmd(f.NewObsRepo, f.NewCtlRepo, f.NewCELEvaluator, ui.DefaultRuntime()))
-	root.AddCommand(diagnose.NewDiagnoseCmd(f.NewObsRepo, f.NewCtlRepo))
+	diagnoseCmd := diagnose.NewDiagnoseCmd(f.NewObsRepo, f.NewCtlRepo)
+	diagnoseCmd.AddCommand(diagnose.NewTraceCmd(f.NewCtlRepo, f.NewSnapshotRepo))
+	diagnoseCmd.AddCommand(diagnose.NewPromptCmd(f.NewCtlRepo, loadSnapshots))
+	root.AddCommand(diagnoseCmd)
 	root.AddCommand(diagnose.NewExplainCmd(f.NewCtlRepo))
-	root.AddCommand(diagnose.NewTraceCmd(f.NewCtlRepo, f.NewSnapshotRepo))
-	root.AddCommand(diagnose.NewPromptCmd(f.NewCtlRepo, loadSnapshots))
 
 	// Workflow & CI
 	root.AddCommand(enforce.NewStatusCmd())
@@ -194,6 +196,9 @@ func WireCommands(app *App) {
 
 	// Posture score
 	root.AddCommand(stavescore.NewCmd())
+
+	// Security budget / burn rate
+	root.AddCommand(stavebudget.NewCmd())
 
 	// Telemetry bridge
 	root.AddCommand(stavetelemetry.NewCmd())

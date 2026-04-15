@@ -1,0 +1,56 @@
+{
+  "schema_version": "obs.v0.1",
+  "source": "deployed",
+  "generated_by": {"source_type": "k8s-config-snapshot", "tool": "stave-extractor"},
+  "captured_at": "2026-01-10T00:00:00Z",
+  "assets": [
+    {
+      "id": "apiserver-staging-01",
+      "type": "k8s_apiserver",
+      "vendor": "kubernetes",
+      "properties": {
+        "apiserver": {
+          "anonymous_auth_enabled": true,
+          "audit_log_enabled": false,
+          "audit_log_maxage": 0,
+          "authorization_mode": "AlwaysAllow",
+          "tls_cert_file": "",
+          "client_ca_file": "",
+          "etcd_certfile": "",
+          "token_auth_file": "/etc/kubernetes/token-auth.csv",
+          "service_account_key_file": ""
+        }
+      }
+    },
+    {
+      "id": "etcd-staging-01",
+      "type": "k8s_etcd",
+      "vendor": "kubernetes",
+      "properties": {
+        "etcd": {
+          "cert_file": "",
+          "key_file": "",
+          "client_cert_auth": false,
+          "auto_tls": true,
+          "peer_auto_tls": true
+        }
+      }
+    },
+    {
+      "id": "kubelet-staging-node-01",
+      "type": "k8s_kubelet",
+      "vendor": "kubernetes",
+      "properties": {
+        "kubelet": {
+          "anonymous_auth_enabled": true,
+          "authorization_mode": "AlwaysAllow",
+          "client_ca_file": "",
+          "read_only_port": 10255,
+          "protect_kernel_defaults": false,
+          "tls_cert_file": "",
+          "rotate_certificates": false
+        }
+      }
+    }
+  ]
+}

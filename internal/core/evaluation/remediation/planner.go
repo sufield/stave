@@ -50,7 +50,7 @@ func (p *Planner) EnrichFindings(result *evaluation.ComplianceReport) []Finding 
 		f := &result.Findings[i]
 		findingWithPlan := Finding{
 			Finding:         *f,
-			RemediationSpec: resolveSpec(*f),
+			RemediationSpec: resolveSpec(f),
 		}
 		findingWithPlan.RemediationPlan = p.PlanFor(findingWithPlan)
 		enriched[i] = findingWithPlan

@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.NETPOL.EGRESS.001
+name: Cluster Must Have Egress Network Policies
+description: >
+  The cluster must have egress network policies defined. Without
+  egress policies, compromised pods can freely communicate with
+  external command-and-control servers, exfiltrate data, or attack
+  other services outside the cluster.
+domain: exposure
+severity: medium
+compliance:
+  cis_k8s_v1.9: "5.3.2"
+scope_tags:
+  - kubernetes
+  - network
+type: unsafe_state
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    No egress network policies exist. Pods can send traffic to any
+    external destination without restriction.
+  action: >
+    Create egress NetworkPolicies to restrict outbound traffic from
+    pods to only approved destinations and ports.
+unsafe_predicate:
+  all:
+    - field: type
+      op: eq
+      value: k8s_cluster
+    - field: properties.network.has_egress_policy
+      op: eq
+      value: false

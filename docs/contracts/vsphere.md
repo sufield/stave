@@ -6,6 +6,7 @@
 vendor: "vmware"
 type: "vsphere_esxi_host"
 type: "vsphere_vm"
+type: "vsphere_vcenter"
 ```
 
 ## ESXi Host Properties
@@ -24,6 +25,11 @@ type: "vsphere_vm"
 | `esxi.persistent_log_configured` | bool | Logs persist across reboot |
 | `esxi.sfcbd_enabled` | bool | CIM server (should be false) |
 | `esxi.slpd_enabled` | bool | SLP daemon (should be false) |
+| `esxi.account_lockout_enabled` | bool | Account lockout configured |
+| `esxi.dcui_access_restricted` | bool | DCUI access restricted |
+| `esxi.snmp_insecure` | bool | SNMP using community strings |
+| `esxi.tls_version_below_12` | bool | TLS version below 1.2 |
+| `esxi.mob_enabled` | bool | Managed Object Browser enabled |
 | `host_firewall.enabled` | bool | ESXi firewall active |
 | `distributed_switch.has_promiscuous` | bool | Promiscuous mode on any portgroup |
 | `distributed_switch.has_mac_changes` | bool | MAC changes allowed |
@@ -48,3 +54,12 @@ type: "vsphere_vm"
 | `vm.remote_display_enabled` | bool | VNC/VMRC enabled |
 | `vm.disk_shrinking_enabled` | bool | Disk shrinking |
 | `vm.independent_non_persistent` | bool | Non-persistent disk |
+
+## vCenter Properties
+
+| Property | Type | Description |
+|---|---|---|
+| `vcenter.sso_lockout_enabled` | bool | SSO account lockout configured |
+| `vcenter.sso_min_password_length` | int | SSO minimum password length |
+| `vcenter.has_unauthorized_plugins` | bool | Unauthorized plugins installed |
+| `vcenter.ceip_enabled` | bool | CEIP telemetry enabled |

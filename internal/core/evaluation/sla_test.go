@@ -181,6 +181,28 @@ func TestSLADurationParsing(t *testing.T) {
 	}
 }
 
+// Acknowledged findings never reach AnnotateFindingSLA because
+// applyAcknowledgments() removes them from the active findings slice
+// before SLA annotation runs. This test documents that calling
+// AnnotateFindingSLA with nil config (the acknowledged path) is a no-op.
+func TestAnnotateFindingSLA_AcknowledgedExclusion(t *testing.T) {
+	f := Finding{
+		ControlSeverity: policy.SeverityCritical,
+		Evidence:        Evidence{UnsafeDurationHours: 9999},
+	}
+	// Acknowledged findings are excluded from the SLA annotation loop
+	// (workflow.go:119-122 iterates only report.Findings, which excludes
+	// acknowledged findings). Calling with nil config simulates this.
+	AnnotateFindingSLA(&f, nil, nil)
+
+	if f.SLABreached {
+		t.Error("acknowledged finding should not have SLA breach annotation")
+	}
+	if f.SLADeadlineHours != nil {
+		t.Error("acknowledged finding should not have SLA deadline")
+	}
+}
+
 // Verify that the SLA field is set on the finding when it's non-zero.
 func TestAnnotateFindingSLA_FieldsPopulated(t *testing.T) {
 	now := time.Now()

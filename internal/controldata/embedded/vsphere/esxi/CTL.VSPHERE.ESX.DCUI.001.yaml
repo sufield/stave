@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.VSPHERE.ESX.DCUI.001
+name: DCUI Access Must Be Restricted
+description: >
+  Direct Console User Interface access must be restricted on ESXi
+  hosts. The DCUI provides physical console access to ESXi
+  management functions including network configuration, password
+  resets, and troubleshooting. Unrestricted DCUI access allows
+  anyone with physical or out-of-band console access to reconfigure
+  the host, reset the root password, or disable security settings
+  without authentication. In environments with IPMI or iLO remote
+  console access, DCUI exposure extends beyond physical proximity.
+domain: exposure
+severity: medium
+compliance:
+  cis_vmware_esxi_7: "1.4"
+  nist_800_53_r5: "AC-3"
+scope_tags:
+  - vmware
+  - esxi
+type: unsafe_state
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    DCUI access is not restricted on the ESXi host. Anyone with
+    physical or remote console access can interact with ESXi
+    management functions without additional controls.
+  action: >
+    Restrict DCUI access on the ESXi host. In the vSphere Client,
+    navigate to Host > Configure > System > Advanced System
+    Settings. Set DCUI.Access to a specific list of authorized
+    users. Consider disabling the DCUI service entirely if not
+    required for operations.
+  example: |
+    {
+      "esxi": {
+        "dcui_access_restricted": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.esxi.dcui_access_restricted
+      op: eq
+      value: false

@@ -1,0 +1,26 @@
+dsl_version: ctrl.v1
+id: CTL.AD.TRUST.SIDFILTER.001
+name: External Trusts Must Have SID Filtering Enabled
+description: >
+  External trusts must have SID filtering enabled to prevent SID
+  history injection attacks from trusted domains.
+domain: identity
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-4"
+scope_tags:
+  - active_directory
+type: unsafe_state
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: >
+    An external trust has SID filtering disabled.
+  action: >
+    Enable SID filtering on all external trusts.
+    netdom trust <TrustingDomain> /domain:<TrustedDomain> /quarantine:yes
+unsafe_predicate:
+  all:
+    - field: properties.trusts.has_unsecured_external_trust
+      op: eq
+      value: true

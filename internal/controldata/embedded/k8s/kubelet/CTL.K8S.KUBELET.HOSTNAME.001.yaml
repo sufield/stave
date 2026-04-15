@@ -1,0 +1,34 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.KUBELET.HOSTNAME.001
+name: Kubelet Hostname Override Should Not Be Set
+description: >
+  The kubelet should not have --hostname-override set. Overriding the
+  hostname can interfere with TLS certificate validation and node
+  identity verification, as certificates are typically issued for the
+  actual hostname.
+domain: exposure
+severity: low
+compliance:
+  cis_k8s_v1.9: "4.2.8"
+scope_tags:
+  - kubernetes
+  - kubelet
+type: unsafe_state
+params:
+  attack_stage: defense_evasion
+remediation:
+  description: >
+    Kubelet hostname override is set, which may cause TLS certificate
+    hostname mismatch.
+  action: >
+    Remove --hostname-override from the kubelet configuration. If
+    hostname override is required for cloud provider integration,
+    ensure certificates match the overridden name.
+unsafe_predicate:
+  all:
+    - field: type
+      op: eq
+      value: k8s_kubelet
+    - field: properties.kubelet.hostname_override
+      op: missing
+      value: false

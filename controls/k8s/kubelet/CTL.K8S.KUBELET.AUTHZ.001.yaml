@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.KUBELET.AUTHZ.001
+name: Kubelet Must Not Use AlwaysAllow Authorization
+description: >
+  The kubelet authorization mode must not be set to AlwaysAllow.
+  AlwaysAllow permits any authenticated request without RBAC checks.
+domain: exposure
+severity: critical
+compliance:
+  cis_k8s_v1.9: "4.2.2"
+scope_tags:
+  - kubernetes
+  - kubelet
+type: unsafe_state
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    Kubelet authorization mode is AlwaysAllow.
+  action: >
+    Set authorization.mode=Webhook in the kubelet config or pass
+    --authorization-mode=Webhook.
+unsafe_predicate:
+  all:
+    - field: type
+      op: eq
+      value: k8s_kubelet
+    - field: properties.kubelet.authorization_mode
+      op: eq
+      value: AlwaysAllow

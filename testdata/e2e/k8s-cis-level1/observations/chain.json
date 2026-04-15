@@ -1,0 +1,56 @@
+{
+  "schema_version": "obs.v0.1",
+  "source": "deployed",
+  "generated_by": {"source_type": "k8s-config-snapshot", "tool": "stave-extractor"},
+  "captured_at": "2026-01-10T00:00:00Z",
+  "assets": [
+    {
+      "id": "apiserver-dev-01",
+      "type": "k8s_apiserver",
+      "vendor": "kubernetes",
+      "properties": {
+        "apiserver": {
+          "anonymous_auth_enabled": true,
+          "audit_log_enabled": false,
+          "audit_log_maxage": 0,
+          "authorization_mode": "RBAC,Node",
+          "tls_cert_file": "/etc/kubernetes/pki/apiserver.crt",
+          "client_ca_file": "/etc/kubernetes/pki/ca.crt",
+          "etcd_certfile": "/etc/kubernetes/pki/apiserver-etcd-client.crt",
+          "token_auth_file": "",
+          "service_account_key_file": "/etc/kubernetes/pki/sa.pub"
+        }
+      }
+    },
+    {
+      "id": "etcd-dev-01",
+      "type": "k8s_etcd",
+      "vendor": "kubernetes",
+      "properties": {
+        "etcd": {
+          "cert_file": "",
+          "key_file": "",
+          "client_cert_auth": false,
+          "auto_tls": true,
+          "peer_auto_tls": true
+        }
+      }
+    },
+    {
+      "id": "kubelet-dev-node-01",
+      "type": "k8s_kubelet",
+      "vendor": "kubernetes",
+      "properties": {
+        "kubelet": {
+          "anonymous_auth_enabled": true,
+          "authorization_mode": "Webhook",
+          "client_ca_file": "/etc/kubernetes/pki/ca.crt",
+          "read_only_port": 0,
+          "protect_kernel_defaults": true,
+          "tls_cert_file": "/var/lib/kubelet/pki/kubelet.crt",
+          "rotate_certificates": true
+        }
+      }
+    }
+  ]
+}

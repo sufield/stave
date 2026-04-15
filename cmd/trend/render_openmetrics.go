@@ -56,6 +56,31 @@ func renderTrendOpenMetrics(w io.Writer, r *TrendReport) error { //nolint:unpara
 	fmt.Fprintln(w, "# TYPE stave_velocity_per_run gauge")
 	fmt.Fprintf(w, "stave_velocity_per_run %g %d\n\n", r.Velocity.AvgNetChange, tsMs)
 
+	// SLA compliance rate (only when SLA data exists)
+	if len(r.SLATrend) > 0 {
+		latestSLA := &r.SLATrend[len(r.SLATrend)-1]
+		slaTs := latestSLA.CapturedAt.UnixMilli()
+
+		fmt.Fprintln(w, "# HELP stave_sla_compliance_rate Fraction of findings remediated within SLA (0-1)")
+		fmt.Fprintln(w, "# TYPE stave_sla_compliance_rate gauge")
+		fmt.Fprintf(w, "stave_sla_compliance_rate %g %d\n\n", latestSLA.CompliancePercent/100, slaTs)
+
+		fmt.Fprintln(w, "# HELP stave_sla_breached_total Current count of SLA-breached findings")
+		fmt.Fprintln(w, "# TYPE stave_sla_breached_total gauge")
+		for _, sev := range []string{"critical", "high", "medium", "low"} {
+			count := latestSLA.BreachedBySev[sev]
+			fmt.Fprintf(w, "stave_sla_breached_total{severity=%q} %d %d\n", sev, count, slaTs)
+		}
+		fmt.Fprintln(w)
+	}
+
+	// Posture score (when available).
+	if r.PostureScore != nil {
+		fmt.Fprintln(w, "# HELP stave_posture_score Security posture score (0-100)")
+		fmt.Fprintln(w, "# TYPE stave_posture_score gauge")
+		fmt.Fprintf(w, "stave_posture_score %.1f %d\n\n", *r.PostureScore, tsMs)
+	}
+
 	fmt.Fprintln(w, "# EOF")
 	return nil
 }

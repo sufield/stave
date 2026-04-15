@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.AD.ACCOUNT.DELEGATION.001
+name: No Accounts Must Have Unconstrained Delegation
+description: >
+  No accounts should be configured with unconstrained Kerberos
+  delegation. Unconstrained delegation allows a service to
+  impersonate any user to any service in the domain. An attacker
+  who compromises a host with unconstrained delegation can harvest
+  TGTs from connecting users, including domain administrators,
+  enabling full domain compromise.
+domain: identity
+severity: critical
+compliance:
+  cis_ad: "5.6"
+scope_tags:
+  - active_directory
+type: unsafe_state
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: >
+    One or more accounts have unconstrained delegation configured.
+    Compromising these accounts enables full domain takeover.
+  action: >
+    Replace unconstrained delegation with constrained delegation or
+    resource-based constrained delegation. Run:
+    Get-ADUser -Filter {TrustedForDelegation -eq $true} to find
+    affected accounts, then reconfigure each with specific SPNs.
+unsafe_predicate:
+  all:
+    - field: properties.accounts.unconstrained_delegation_count
+      op: gt
+      value: 0

@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.APISERVER.ADM.CTRL.003
+name: API Server Must Enable ServiceAccount Admission Controller
+description: >
+  The API server must enable the ServiceAccount admission controller
+  to automate service account management for pods.
+domain: exposure
+severity: medium
+compliance:
+  cis_k8s_v1.9: "1.2.13"
+scope_tags:
+  - kubernetes
+  - apiserver
+type: unsafe_state
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    ServiceAccount admission controller is not enabled.
+  action: >
+    Add ServiceAccount to --enable-admission-plugins on the API server.
+unsafe_predicate:
+  all:
+    - field: type
+      op: eq
+      value: k8s_apiserver
+    - field: properties.apiserver.admission_service_account
+      op: eq
+      value: false

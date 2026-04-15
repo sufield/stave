@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.RBAC.SA.TOKEN.001
+name: Service Account Token Automount Must Be Opt-In Only
+description: >
+  Service account tokens must not be automatically mounted into pods
+  unless explicitly required. Automatic token mounting provides every
+  pod with API credentials, increasing the blast radius of container
+  compromise.
+domain: exposure
+severity: medium
+compliance:
+  cis_k8s_v1.9: "5.1.6"
+scope_tags:
+  - kubernetes
+  - rbac
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Service account token automounting is not restricted to opt-in.
+    Pods receive API credentials by default.
+  action: >
+    Set automountServiceAccountToken=false on ServiceAccounts and
+    only enable it on pods that require API access.
+unsafe_predicate:
+  all:
+    - field: type
+      op: eq
+      value: k8s_cluster
+    - field: properties.rbac.sa_token_automount_opt_in
+      op: eq
+      value: false

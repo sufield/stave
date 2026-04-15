@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.APISERVER.AUDIT.001
+name: API Server Audit Logging Must Be Enabled
+description: >
+  The Kubernetes API server must have audit logging enabled. Without
+  audit logs, security-relevant API calls are not recorded.
+domain: exposure
+severity: high
+compliance:
+  cis_k8s_v1.9: "1.2.22"
+scope_tags:
+  - kubernetes
+  - apiserver
+type: unsafe_state
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    API server audit logging is not enabled. API access is not recorded.
+  action: >
+    Configure --audit-policy-file and --audit-log-path on the API server.
+unsafe_predicate:
+  all:
+    - field: type
+      op: eq
+      value: k8s_apiserver
+    - field: properties.apiserver.audit_log_enabled
+      op: eq
+      value: false

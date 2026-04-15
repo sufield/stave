@@ -77,6 +77,30 @@ func renderTrendTable(w io.Writer, r *TrendReport) error { //nolint:unparam // e
 	fmt.Fprintf(w, "  Net change: %.1f violations/run (last %d runs)\n", r.Velocity.AvgNetChange, r.Velocity.WindowRuns)
 	fmt.Fprintf(w, "  Direction:  %s\n\n", strings.ToUpper(r.Velocity.Direction))
 
+	// SLA compliance rate.
+	if len(r.SLATrend) > 0 {
+		fmt.Fprintf(w, "SLA COMPLIANCE RATE (last %d runs where SLA profile was active)\n", len(r.SLATrend))
+		fmt.Fprintln(w, sep)
+		for i := range r.SLATrend {
+			m := &r.SLATrend[i]
+			barWidth := 20
+			filled := min(int(m.CompliancePercent/100*float64(barWidth)), barWidth)
+			bar := strings.Repeat("#", filled) + strings.Repeat(".", barWidth-filled)
+			fmt.Fprintf(w, "  Run %-3d (%s)  %s  %.0f%%\n",
+				i+1, m.CapturedAt.Format("2006-01-02"), bar, m.CompliancePercent)
+		}
+		first := r.SLATrend[0].CompliancePercent
+		last := r.SLATrend[len(r.SLATrend)-1].CompliancePercent
+		netChange := last - first
+		direction := "STABLE"
+		if netChange > 1 {
+			direction = "IMPROVING"
+		} else if netChange < -1 {
+			direction = "REGRESSING"
+		}
+		fmt.Fprintf(w, "\nNet change: %+.0f%%  Direction: %s\n\n", netChange, direction)
+	}
+
 	// Projection.
 	if r.Projection != nil {
 		fmt.Fprintln(w, "PROJECTION (linear — directional only)")

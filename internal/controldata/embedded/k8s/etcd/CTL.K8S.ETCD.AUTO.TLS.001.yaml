@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.ETCD.AUTO.TLS.001
+name: etcd Auto-TLS Must Be Disabled
+description: >
+  etcd auto-TLS generates self-signed certificates without CA
+  validation, providing encryption without authentication. An
+  attacker can MITM the connection with their own self-signed cert.
+domain: exposure
+severity: high
+compliance:
+  cis_k8s_v1.9: "2.3"
+scope_tags:
+  - kubernetes
+  - etcd
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    etcd auto-TLS is enabled. Self-signed certificates are in use
+    without CA validation.
+  action: >
+    Set --auto-tls=false and configure proper CA-signed certificates.
+unsafe_predicate:
+  all:
+    - field: type
+      op: eq
+      value: k8s_etcd
+    - field: properties.etcd.auto_tls
+      op: eq
+      value: true

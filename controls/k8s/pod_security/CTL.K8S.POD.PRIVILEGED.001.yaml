@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.POD.PRIVILEGED.001
+name: Containers Must Not Run in Privileged Mode
+description: >
+  Pods must not run privileged containers. Privileged containers have
+  full access to the host's devices, kernel capabilities, and
+  namespaces, effectively granting root-level access to the node.
+domain: exposure
+severity: critical
+compliance:
+  cis_k8s_v1.9: "5.2.1"
+scope_tags:
+  - kubernetes
+  - pod_security
+type: unsafe_state
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    Container is running in privileged mode with unrestricted host
+    access.
+  action: >
+    Set securityContext.privileged=false on all containers. Use
+    specific capabilities instead of privileged mode.
+unsafe_predicate:
+  all:
+    - field: type
+      op: eq
+      value: k8s_pod
+    - field: properties.pod.privileged
+      op: eq
+      value: true

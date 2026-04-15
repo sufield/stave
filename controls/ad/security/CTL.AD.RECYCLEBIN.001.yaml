@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.AD.RECYCLEBIN.001
+name: AD Recycle Bin Must Be Enabled
+description: >
+  The Active Directory Recycle Bin feature must be enabled. Without
+  it, deleted objects lose most attributes immediately, making
+  recovery difficult and forensic investigation of malicious
+  deletions nearly impossible. The Recycle Bin preserves all
+  attributes of deleted objects for a configurable tombstone period.
+domain: identity
+severity: medium
+compliance:
+  cis_ad: "7.3"
+scope_tags:
+  - active_directory
+type: unsafe_state
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    AD Recycle Bin is not enabled. Deleted objects cannot be fully
+    recovered.
+  action: >
+    Enable the AD Recycle Bin feature. This requires forest functional
+    level 2008 R2 or higher. Run:
+    Enable-ADOptionalFeature "Recycle Bin Feature"
+    -Scope ForestOrConfigurationSet -Target "domain.com"
+unsafe_predicate:
+  all:
+    - field: properties.security_settings.recycle_bin_enabled
+      op: eq
+      value: false

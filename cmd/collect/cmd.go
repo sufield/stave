@@ -17,9 +17,11 @@ import (
 	"github.com/sufield/stave/internal/adapters/observations"
 	appcollect "github.com/sufield/stave/internal/app/collect"
 	appeval "github.com/sufield/stave/internal/app/eval"
+	appscore "github.com/sufield/stave/internal/app/score"
 	stavecel "github.com/sufield/stave/internal/cel"
 	"github.com/sufield/stave/internal/controldata"
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/ports"
 	"github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/version"
@@ -155,6 +157,33 @@ func runCollect(stdout, stderr io.Writer, opts *options) error {
 		}
 	}
 
+	// Compute posture score.
+	slaTotal := 0
+	slaBreached := 0
+	hasSLA := false
+	remFindings := make([]remediation.Finding, len(result.Findings))
+	for i := range result.Findings {
+		remFindings[i] = remediation.Finding{Finding: result.Findings[i]}
+		if result.Findings[i].SLADeadlineHours != nil {
+			hasSLA = true
+			slaTotal++
+			if result.Findings[i].SLABreached {
+				slaBreached++
+			}
+		}
+	}
+	scoreResult := appscore.Compute(appscore.Input{
+		Findings:       remFindings,
+		ChainFindings:  result.ChainFindings,
+		ChainDefs:      len(chains),
+		MaxChainWeight: appscore.ChainMaxWeight(chains),
+		SLABreached:    slaBreached,
+		SLATotal:       slaTotal,
+		HasSLA:         hasSLA,
+		Weights:        appscore.DefaultWeights(),
+		GeneratedAt:    start,
+	})
+
 	files := map[string][]byte{
 		"assessment.json": assessmentData,
 	}
@@ -168,6 +197,8 @@ func runCollect(stdout, stderr io.Writer, opts *options) error {
 		FindingCount:         len(result.Findings),
 		CriticalCount:        criticalCount,
 		HighCount:            highCount,
+		PostureScore:         &scoreResult.Score,
+		PostureScoreRubric:   scoreResult.RubricBand,
 		CollectionDurationMs: elapsed.Milliseconds(),
 	}
 

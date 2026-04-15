@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.APISERVER.AUDIT.MAXAGE.001
+name: API Server Audit Log Retention Must Be At Least 30 Days
+description: >
+  Audit log retention must be at least 30 days to support incident
+  investigation and compliance evidence requirements.
+domain: exposure
+severity: medium
+compliance:
+  cis_k8s_v1.9: "1.2.23"
+scope_tags:
+  - kubernetes
+  - apiserver
+type: unsafe_state
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Audit log max age is less than 30 days. Logs may be rotated before
+    incident investigation can begin.
+  action: >
+    Set --audit-log-maxage=30 or higher on the API server.
+unsafe_predicate:
+  all:
+    - field: type
+      op: eq
+      value: k8s_apiserver
+    - field: properties.apiserver.audit_log_maxage
+      op: lt
+      value: 30

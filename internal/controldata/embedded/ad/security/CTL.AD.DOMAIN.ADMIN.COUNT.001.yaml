@@ -1,0 +1,27 @@
+dsl_version: ctrl.v1
+id: CTL.AD.DOMAIN.ADMIN.COUNT.001
+name: Domain Admins Group Must Have 5 or Fewer Members
+description: >
+  The Domain Admins group should be minimized. Each member is a
+  high-value target for attackers. More than 5 members indicates
+  over-provisioned administrative access.
+domain: identity
+severity: high
+compliance:
+  cis_ad: "5.2"
+scope_tags:
+  - active_directory
+type: unsafe_state
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    Domain Admins group has more than 5 members.
+  action: >
+    Review Domain Admins membership and remove unnecessary members.
+    Use dedicated admin accounts with just-in-time access.
+unsafe_predicate:
+  all:
+    - field: properties.privileged_groups.domain_admins_count
+      op: gt
+      value: 5

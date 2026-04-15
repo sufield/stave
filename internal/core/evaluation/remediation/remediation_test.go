@@ -36,7 +36,7 @@ func TestResolveSpec_YAMLDefinedRemediation(t *testing.T) {
 	f := evaluation.Finding{
 		ControlRemediation: spec,
 	}
-	got := resolveSpec(f)
+	got := resolveSpec(&f)
 	if got.Description != "custom desc" {
 		t.Fatalf("Description = %q", got.Description)
 	}
@@ -49,7 +49,7 @@ func TestResolveSpec_PublicExposureFallback(t *testing.T) {
 	f := evaluation.Finding{
 		ControlID: "CTL.S3.PUBLIC.001",
 	}
-	got := resolveSpec(f)
+	got := resolveSpec(&f)
 	if got.Description != "Resource is exposed to the public internet." {
 		t.Fatalf("Description = %q", got.Description)
 	}
@@ -59,7 +59,7 @@ func TestResolveSpec_EncryptionFallback(t *testing.T) {
 	f := evaluation.Finding{
 		ControlID: "CTL.S3.ENCRYPT.001",
 	}
-	got := resolveSpec(f)
+	got := resolveSpec(&f)
 	if got.Description != "Resource data is not encrypted at rest." {
 		t.Fatalf("Description = %q", got.Description)
 	}
@@ -70,7 +70,7 @@ func TestResolveSpec_BaselineFallback(t *testing.T) {
 	f := evaluation.Finding{
 		ControlID: "CTL.CUSTOM.001",
 	}
-	got := resolveSpec(f)
+	got := resolveSpec(&f)
 	if got.Description != "Resource configuration deviates from security baseline." {
 		t.Fatalf("Description = %q", got.Description)
 	}
@@ -81,7 +81,7 @@ func TestResolveSpec_DefaultFallback(t *testing.T) {
 	f := evaluation.Finding{
 		ControlID: "NONSTANDARD.001",
 	}
-	got := resolveSpec(f)
+	got := resolveSpec(&f)
 	if got.Description != "Security control violation detected." {
 		t.Fatalf("Description = %q", got.Description)
 	}

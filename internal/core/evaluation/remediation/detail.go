@@ -51,7 +51,7 @@ func BuildFindingDetail(r *evaluation.ComplianceReport, req evaluation.FindingDe
 	}
 
 	// 4. Map and Plan Remediation
-	spec := resolveSpec(*violation)
+	spec := resolveSpec(violation)
 	detail.Remediation = &spec
 
 	enriched := Finding{

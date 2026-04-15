@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.KUBELET.KERNEL.001
+name: Kubelet Must Protect Kernel Defaults
+description: >
+  The kubelet must set protectKernelDefaults to true. This prevents
+  pods from modifying kernel parameters that could weaken node
+  security or enable privilege escalation.
+domain: exposure
+severity: high
+compliance:
+  cis_k8s_v1.9: "4.2.6"
+scope_tags:
+  - kubernetes
+  - kubelet
+type: unsafe_state
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    Kubelet does not protect kernel defaults. Pods can modify kernel
+    parameters.
+  action: >
+    Set protectKernelDefaults=true in the kubelet config.
+unsafe_predicate:
+  all:
+    - field: type
+      op: eq
+      value: k8s_kubelet
+    - field: properties.kubelet.protect_kernel_defaults
+      op: eq
+      value: false

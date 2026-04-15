@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.APISERVER.KUBELET.CERT.001
+name: API Server Kubelet Certificate Authority Must Be Set
+description: >
+  The API server must have --kubelet-certificate-authority configured
+  to verify kubelet serving certificates. Without this, the API server
+  cannot authenticate kubelet endpoints, enabling man-in-the-middle
+  attacks on API-server-to-kubelet communication.
+domain: exposure
+severity: high
+compliance:
+  cis_k8s_v1.9: "1.2.5"
+scope_tags:
+  - kubernetes
+  - apiserver
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    API server kubelet certificate authority is not set. Kubelet
+    serving certificates are not verified.
+  action: >
+    Set --kubelet-certificate-authority on the API server pointing to
+    the CA bundle used to sign kubelet serving certificates.
+unsafe_predicate:
+  all:
+    - field: type
+      op: eq
+      value: k8s_apiserver
+    - field: properties.apiserver.kubelet_certificate_authority
+      op: missing
+      value: true

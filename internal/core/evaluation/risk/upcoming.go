@@ -230,21 +230,23 @@ func computeAssetStates(
 				states[a.ID] = st
 			}
 
-			isUnsafe := false
-			if eval != nil {
-				if result, err := eval(ctl, a, snap.Identities); err == nil {
-					isUnsafe = result
-				}
+			if eval == nil {
+				continue
+			}
+			result, evalErr := eval(ctl, a, snap.Identities)
+			if evalErr != nil {
+				// Inconclusive evaluation — freeze streak, do not reset.
+				continue
 			}
 
-			if isUnsafe {
+			if result {
 				if st.FirstUnsafeAt.IsZero() {
 					st.FirstUnsafeAt = snap.CapturedAt
 				}
 				st.LastSeenUnsafe = snap.CapturedAt
 				st.CurrentlyUnsafe = true
 			} else {
-				// Reset streak
+				// Confirmed safe — reset streak.
 				st.FirstUnsafeAt = time.Time{}
 				st.LastSeenUnsafe = time.Time{}
 				st.CurrentlyUnsafe = false

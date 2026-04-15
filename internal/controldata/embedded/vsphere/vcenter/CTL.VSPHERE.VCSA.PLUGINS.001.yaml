@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.VSPHERE.VCSA.PLUGINS.001
+name: Unauthorized vCenter Plugins Must Be Removed
+description: >
+  Unauthorized plugins must be removed from vCenter Server.
+  vCenter plugins execute with the privileges of the vCenter
+  service and have full access to the vSphere API. A malicious
+  or compromised plugin can exfiltrate credentials, modify virtual
+  machine configurations, and persist across vCenter upgrades.
+  Third-party plugins that are no longer maintained may contain
+  unpatched vulnerabilities that an attacker can exploit to gain
+  code execution within the vCenter process.
+domain: exposure
+severity: medium
+compliance:
+  cis_vmware_esxi_7: "2.5"
+  nist_800_53_r5: "CM-7"
+scope_tags:
+  - vmware
+  - vcenter
+type: unsafe_state
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Unauthorized or unrecognized plugins are installed on vCenter
+    Server. These plugins execute with vCenter service privileges
+    and may contain vulnerabilities or malicious functionality.
+  action: >
+    Review installed plugins in the vSphere Client. Navigate to
+    Administration > Solutions > Client Plug-Ins. Remove any
+    plugins that are not authorized, no longer maintained, or
+    not required for operations. Verify the publisher and version
+    of all remaining plugins.
+  example: |
+    {
+      "vcenter": {
+        "has_unauthorized_plugins": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.vcenter.has_unauthorized_plugins
+      op: eq
+      value: true

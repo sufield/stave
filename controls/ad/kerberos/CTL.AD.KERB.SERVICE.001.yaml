@@ -1,0 +1,26 @@
+dsl_version: ctrl.v1
+id: CTL.AD.KERB.SERVICE.001
+name: Kerberos Service Ticket Lifetime Must Not Exceed 600 Minutes
+description: >
+  Maximum Kerberos service ticket lifetime must not exceed 600 minutes
+  (10 hours). Long service ticket lifetimes extend the window for
+  ticket reuse after compromise.
+domain: identity
+severity: low
+compliance:
+  cis_ad: "1.3.2"
+scope_tags:
+  - active_directory
+type: unsafe_state
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: >
+    Kerberos service ticket lifetime exceeds 600 minutes.
+  action: >
+    Set maximum service ticket age to 600 minutes in Kerberos Policy.
+unsafe_predicate:
+  all:
+    - field: properties.kerberos_policy.max_service_ticket_age_minutes
+      op: gt
+      value: 600

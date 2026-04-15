@@ -36,6 +36,15 @@ type FrameworkTrend struct {
 	Direction string    `json:"direction"`
 }
 
+// SLATrendMetric captures SLA compliance for a single run.
+type SLATrendMetric struct {
+	CapturedAt        time.Time      `json:"captured_at"`
+	TotalWithSLA      int            `json:"total_with_sla"`
+	BreachedCount     int            `json:"breached_count"`
+	CompliancePercent float64        `json:"compliance_rate_percent"`
+	BreachedBySev     map[string]int `json:"breached_by_severity,omitempty"`
+}
+
 // TrendReport is the complete trend analysis output.
 type TrendReport struct {
 	GeneratedAt     time.Time            `json:"generated_at"`
@@ -46,6 +55,9 @@ type TrendReport struct {
 	FrameworkTrends []FrameworkTrend     `json:"framework_trends"`
 	Velocity        VelocityMetrics      `json:"velocity"`
 	Projection      *ProjectionMetrics   `json:"projection,omitempty"`
+	SLATrend        []SLATrendMetric     `json:"sla_trend,omitempty"`
+	PostureScore    *float64             `json:"posture_score,omitempty"`
+	PostureRubric   string               `json:"posture_rubric,omitempty"`
 }
 
 // Period defines the time range of the trend analysis.
@@ -260,4 +272,40 @@ func computeFrameworkTrends(assessments []*report.Assessment, complianceFlag str
 		})
 	}
 	return trends
+}
+
+// computeSLATrend extracts SLA compliance rate per assessment run.
+// Runs where no findings have SLA data are skipped.
+func computeSLATrend(assessments []*report.Assessment) []SLATrendMetric {
+	var metrics []SLATrendMetric
+	for _, a := range assessments {
+		totalWithSLA := 0
+		breachedCount := 0
+		breachedBySev := make(map[string]int)
+		for i := range a.Findings {
+			f := &a.Findings[i]
+			if f.SLADeadlineHours == nil {
+				continue
+			}
+			totalWithSLA++
+			if f.SLABreached {
+				breachedCount++
+				sev := f.ControlSeverity.String()
+				breachedBySev[sev]++
+			}
+		}
+		if totalWithSLA == 0 {
+			continue
+		}
+		withinSLA := totalWithSLA - breachedCount
+		pct := float64(withinSLA) / float64(totalWithSLA) * 100
+		metrics = append(metrics, SLATrendMetric{
+			CapturedAt:        a.Run.Now,
+			TotalWithSLA:      totalWithSLA,
+			BreachedCount:     breachedCount,
+			CompliancePercent: pct,
+			BreachedBySev:     breachedBySev,
+		})
+	}
+	return metrics
 }

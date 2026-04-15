@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.APISERVER.TLS.CERT.001
+name: API Server TLS Certificate Must Be Configured
+description: >
+  The API server must be configured with a TLS serving certificate.
+  Without TLS, API traffic is transmitted in cleartext.
+domain: exposure
+severity: high
+compliance:
+  cis_k8s_v1.9: "1.2.26"
+scope_tags:
+  - kubernetes
+  - apiserver
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    API server TLS certificate file is not configured. API traffic
+    may be unencrypted.
+  action: >
+    Set --tls-cert-file and --tls-private-key-file on the API server.
+unsafe_predicate:
+  all:
+    - field: type
+      op: eq
+      value: k8s_apiserver
+    - field: properties.apiserver.tls_cert_file
+      op: missing
+      value: true

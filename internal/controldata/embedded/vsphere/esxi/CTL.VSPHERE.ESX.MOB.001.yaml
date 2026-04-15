@@ -1,0 +1,43 @@
+dsl_version: ctrl.v1
+id: CTL.VSPHERE.ESX.MOB.001
+name: Managed Object Browser Must Be Disabled
+description: >
+  The Managed Object Browser must be disabled on ESXi hosts. The
+  MOB is a web-based interface that provides direct access to the
+  ESXi SDK object model. An authenticated attacker can use the MOB
+  to invoke API methods, modify virtual machine configurations,
+  extract credentials, and manipulate host settings. The MOB
+  bypasses the vSphere Client permission model and exposes low-level
+  SDK operations that are not intended for production use.
+domain: exposure
+severity: medium
+compliance:
+  cis_vmware_esxi_7: "3.9"
+  nist_800_53_r5: "CM-7"
+scope_tags:
+  - vmware
+  - esxi
+type: unsafe_state
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    The Managed Object Browser is enabled on the ESXi host. An
+    authenticated attacker can use the MOB to invoke SDK methods,
+    extract credentials, and modify host configuration.
+  action: >
+    Disable the Managed Object Browser on the ESXi host. In the
+    vSphere Client, navigate to Host > Configure > System >
+    Advanced System Settings. Set Config.HostAgent.plugins.solo.enableMob
+    to false. No service restart is required.
+  example: |
+    {
+      "esxi": {
+        "mob_enabled": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.esxi.mob_enabled
+      op: eq
+      value: true

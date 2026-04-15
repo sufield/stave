@@ -39,6 +39,12 @@ type Finding struct {
 	SLAOverdueHours      *float64 `json:"sla_overdue_hours,omitempty"`
 	SLAEscalatedSeverity string   `json:"sla_escalated_severity,omitempty"`
 	SLAPolicySource      string   `json:"sla_policy_source,omitempty"`
+
+	// Owner routing — populated when a team manifest is loaded.
+	OwnerTeamID     string `json:"owner_team_id,omitempty"`
+	OwnerTeamName   string `json:"owner_team_name,omitempty"`
+	OwnerContact    string `json:"owner_contact,omitempty"`
+	OwnerResolution string `json:"owner_resolution_path,omitempty"`
 }
 
 // ChainMembershipEntry records that a finding contributed to a fired chain.

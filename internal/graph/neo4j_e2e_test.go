@@ -159,7 +159,7 @@ func loadCypher(t *testing.T, ctx context.Context, driver neo4j.DriverWithContex
 // splitCypherStatements splits Cypher text into individual statements.
 func splitCypherStatements(text string) []string {
 	var stmts []string
-	for _, raw := range strings.Split(text, ";") {
+	for raw := range strings.SplitSeq(text, ";") {
 		stmt := strings.TrimSpace(raw)
 		if stmt == "" {
 			continue

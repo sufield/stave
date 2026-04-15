@@ -1,0 +1,28 @@
+dsl_version: ctrl.v1
+id: CTL.AD.LOCK.THRESHOLD.001
+name: Account Lockout Threshold Must Be Set
+description: >
+  Account lockout threshold must be configured (1-5 attempts) to
+  prevent unlimited brute-force login attempts.
+domain: identity
+severity: high
+compliance:
+  cis_ad: "1.2.1"
+scope_tags:
+  - active_directory
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Account lockout threshold is not set or exceeds 5 attempts.
+  action: >
+    Set account lockout threshold to 5 or fewer in Default Domain Policy.
+unsafe_predicate:
+  any:
+    - field: properties.password_policy.lockout_threshold
+      op: lte
+      value: 0
+    - field: properties.password_policy.lockout_threshold
+      op: gt
+      value: 5

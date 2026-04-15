@@ -1,0 +1,47 @@
+dsl_version: ctrl.v1
+id: CTL.CISCO.URPF.001
+name: Unicast Reverse Path Forwarding Must Be Enabled
+description: >
+  Unicast Reverse Path Forwarding must be enabled on Cisco IOS
+  devices. Without uRPF, the device accepts packets with spoofed
+  source IP addresses. IP spoofing enables denial-of-service
+  amplification attacks, TCP session hijacking, and evasion of
+  IP-based access controls. uRPF verifies that the source address
+  of each incoming packet is reachable via the interface it arrived
+  on, dropping packets that fail this check. This is a fundamental
+  anti-spoofing control recommended by BCP 38 (RFC 2827).
+domain: exposure
+severity: high
+compliance:
+  cis_cisco_ios_17: "4.3.1"
+  nist_800_53_r5: "SC-7"
+scope_tags:
+  - cisco
+  - ios
+type: unsafe_state
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    Unicast Reverse Path Forwarding is not enabled. The device
+    accepts packets with spoofed source IP addresses, enabling
+    denial-of-service amplification and evasion of IP-based
+    access controls.
+  action: >
+    Enable uRPF on all external-facing interfaces. Run:
+    interface <interface>
+    ip verify unicast source reachable-via rx
+    Use "rx" (strict mode) on interfaces with a single path, or
+    "any" (loose mode) on interfaces with asymmetric routing.
+    Verify with: show ip verify unicast source
+  example: |
+    {
+      "routing": {
+        "urpf_enabled": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.routing.urpf_enabled
+      op: eq
+      value: false

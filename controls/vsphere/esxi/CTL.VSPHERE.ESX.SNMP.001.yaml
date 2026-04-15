@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.VSPHERE.ESX.SNMP.001
+name: SNMP Must Be Disabled or Configured Securely
+description: >
+  SNMP on ESXi hosts must be disabled or configured with SNMPv3
+  authentication and encryption. SNMPv1 and SNMPv2c transmit
+  community strings in cleartext, allowing any attacker with
+  network access to intercept credentials and query host
+  information. SNMP write access with a known community string
+  enables remote reconfiguration of the host. Even read-only
+  SNMP access exposes detailed hardware, software, and network
+  configuration data useful for reconnaissance.
+domain: exposure
+severity: medium
+compliance:
+  cis_vmware_esxi_7: "3.8"
+  nist_800_53_r5: "CM-7"
+scope_tags:
+  - vmware
+  - esxi
+type: unsafe_state
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    SNMP is configured insecurely on the ESXi host. The host may
+    be using SNMPv1 or SNMPv2c with cleartext community strings,
+    exposing credentials and host information to network observers.
+  action: >
+    Disable SNMP if not required. If SNMP monitoring is needed,
+    configure SNMPv3 with authentication and privacy. Use
+    esxcli system snmp set --enable false to disable SNMP, or
+    configure SNMPv3 with esxcli system snmp set --authentication
+    SHA1 --privacy AES128.
+  example: |
+    {
+      "esxi": {
+        "snmp_insecure": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.esxi.snmp_insecure
+      op: eq
+      value: true

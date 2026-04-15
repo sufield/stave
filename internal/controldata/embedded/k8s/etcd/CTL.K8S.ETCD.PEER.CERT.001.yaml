@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.ETCD.PEER.CERT.001
+name: etcd Peer Certificate File Must Be Set
+description: >
+  etcd must be configured with a peer certificate file for mutual TLS
+  between etcd cluster members. Without peer TLS, inter-node etcd
+  communication is unencrypted and unauthenticated, allowing cluster
+  state interception or injection.
+domain: exposure
+severity: high
+compliance:
+  cis_k8s_v1.9: "2.4"
+scope_tags:
+  - kubernetes
+  - etcd
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    etcd peer certificate file is not configured. Peer communication
+    is not encrypted.
+  action: >
+    Set --peer-cert-file on the etcd server pointing to a valid TLS
+    certificate for peer communication.
+unsafe_predicate:
+  all:
+    - field: type
+      op: eq
+      value: k8s_etcd
+    - field: properties.etcd.peer_cert_file
+      op: missing
+      value: true

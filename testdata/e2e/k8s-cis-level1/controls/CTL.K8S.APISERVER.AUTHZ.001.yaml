@@ -1,0 +1,36 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.APISERVER.AUTHZ.001
+name: API Server Must Use RBAC Authorization
+description: >
+  The API server authorization mode must include RBAC and must not
+  include AlwaysAllow. RBAC enforces fine-grained access control;
+  AlwaysAllow permits any authenticated user to perform any action.
+domain: exposure
+severity: critical
+compliance:
+  cis_k8s_v1.9: "1.2.7"
+scope_tags:
+  - kubernetes
+  - apiserver
+type: unsafe_state
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    API server authorization mode does not include RBAC or includes
+    AlwaysAllow.
+  action: >
+    Set --authorization-mode=RBAC,Node on the API server. Remove
+    AlwaysAllow from the mode list.
+unsafe_predicate:
+  all:
+    - field: type
+      op: eq
+      value: k8s_apiserver
+    - any:
+        - field: properties.apiserver.authorization_mode
+          op: missing
+          value: true
+        - field: properties.apiserver.authorization_mode
+          op: contains
+          value: "AlwaysAllow"

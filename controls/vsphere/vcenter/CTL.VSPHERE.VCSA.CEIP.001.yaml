@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.VSPHERE.VCSA.CEIP.001
+name: Customer Experience Improvement Program Must Be Disabled
+description: >
+  The VMware Customer Experience Improvement Program must be
+  disabled on vCenter Server. CEIP collects configuration and
+  usage telemetry from the vCenter environment and transmits it
+  to VMware over the internet. This telemetry includes information
+  about host counts, virtual machine configurations, feature usage
+  patterns, and environment topology. In regulated environments,
+  transmitting infrastructure metadata to an external party may
+  violate data sovereignty or confidentiality requirements. The
+  outbound connection also increases the attack surface.
+domain: exposure
+severity: low
+compliance:
+  cis_vmware_esxi_7: "2.6"
+  nist_800_53_r5: "SC-7"
+scope_tags:
+  - vmware
+  - vcenter
+type: unsafe_state
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    CEIP is enabled on vCenter Server. Infrastructure telemetry
+    including host counts, VM configurations, and topology data
+    is being transmitted to VMware.
+  action: >
+    Disable CEIP in the vSphere Client. Navigate to Administration
+    > Customer Experience Improvement Program and deselect the
+    participation checkbox. Alternatively, use the vCenter Server
+    Management Interface at https://<vcenter>:5480 to disable CEIP
+    under Telemetry.
+  example: |
+    {
+      "vcenter": {
+        "ceip_enabled": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.vcenter.ceip_enabled
+      op: eq
+      value: true

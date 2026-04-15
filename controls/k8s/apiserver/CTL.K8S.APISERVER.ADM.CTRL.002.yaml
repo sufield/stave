@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.APISERVER.ADM.CTRL.002
+name: API Server Must Enable Pod Security Admission
+description: >
+  The API server must enable PodSecurity or SecurityContextDeny
+  admission controller to enforce pod security standards.
+domain: exposure
+severity: medium
+compliance:
+  cis_k8s_v1.9: "1.2.12"
+scope_tags:
+  - kubernetes
+  - apiserver
+type: unsafe_state
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    Neither PodSecurity nor SecurityContextDeny admission controller
+    is enabled.
+  action: >
+    Add PodSecurity to --enable-admission-plugins on the API server.
+unsafe_predicate:
+  all:
+    - field: type
+      op: eq
+      value: k8s_apiserver
+    - field: properties.apiserver.admission_pod_security
+      op: eq
+      value: false

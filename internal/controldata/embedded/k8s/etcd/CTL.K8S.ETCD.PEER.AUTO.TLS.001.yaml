@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.ETCD.PEER.AUTO.TLS.001
+name: etcd Peer Auto-TLS Must Be Disabled
+description: >
+  etcd peer auto-TLS uses self-signed certificates for cluster member
+  communication without CA validation. A rogue etcd member can join
+  the cluster and exfiltrate all data.
+domain: exposure
+severity: high
+compliance:
+  cis_k8s_v1.9: "2.6"
+scope_tags:
+  - kubernetes
+  - etcd
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    etcd peer auto-TLS is enabled. Peer communication uses self-signed
+    certificates without CA validation.
+  action: >
+    Set --peer-auto-tls=false and configure --peer-cert-file,
+    --peer-key-file, and --peer-trusted-ca-file.
+unsafe_predicate:
+  all:
+    - field: type
+      op: eq
+      value: k8s_etcd
+    - field: properties.etcd.peer_auto_tls
+      op: eq
+      value: true

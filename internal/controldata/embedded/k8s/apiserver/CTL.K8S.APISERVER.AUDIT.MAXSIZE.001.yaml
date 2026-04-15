@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.APISERVER.AUDIT.MAXSIZE.001
+name: API Server Audit Log Max Size Must Be At Least 100 MB
+description: >
+  Each audit log file must be allowed to grow to at least 100 MB
+  before rotation. Smaller limits cause frequent rotation that may
+  result in loss of audit records during high-activity periods.
+domain: exposure
+severity: medium
+compliance:
+  cis_k8s_v1.9: "1.2.25"
+scope_tags:
+  - kubernetes
+  - apiserver
+type: unsafe_state
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Audit log max size is less than 100 MB. Log files may rotate too
+    frequently under load, losing audit records.
+  action: >
+    Set --audit-log-maxsize=100 or higher on the API server.
+unsafe_predicate:
+  all:
+    - field: type
+      op: eq
+      value: k8s_apiserver
+    - field: properties.apiserver.audit_log_maxsize
+      op: lt
+      value: 100

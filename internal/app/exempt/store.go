@@ -22,12 +22,14 @@ type AcceptanceFile struct {
 }
 
 // AcknowledgmentEntry is a formal risk acceptance.
+// YAML tags match controldef.AcknowledgmentRule so the produced file
+// is consumable by stave apply --acknowledgment-file without modification.
 type AcknowledgmentEntry struct {
 	ID                   string       `yaml:"id"`
 	ControlID            string       `yaml:"control_id"`
 	AssetID              string       `yaml:"asset_id"`
-	Reason               string       `yaml:"reason"`
-	Approver             string       `yaml:"approver"`
+	Reason               string       `yaml:"rationale"`
+	Approver             string       `yaml:"acknowledged_by"`
 	AcknowledgedDate     string       `yaml:"acknowledged_date"`
 	ExpiryDate           string       `yaml:"expiry_date"`
 	CompensatingControls []string     `yaml:"compensating_controls,omitempty"`
@@ -104,6 +106,14 @@ func (f *AcceptanceFile) AddAcknowledgment(entry AcknowledgmentEntry, timestamp 
 	if entry.ExpiryDate == "" {
 		return errors.New("expiry_date is required for acknowledgments")
 	}
+	expiry, err := time.Parse("2006-01-02", entry.ExpiryDate)
+	if err != nil {
+		return fmt.Errorf("invalid expiry_date %q: expected YYYY-MM-DD", entry.ExpiryDate)
+	}
+	ts, _ := time.Parse(time.RFC3339, timestamp)
+	if !ts.IsZero() && expiry.Before(ts.Truncate(24*time.Hour)) {
+		return fmt.Errorf("expiry_date %s is in the past", entry.ExpiryDate)
+	}
 
 	entry.ID = entry.ControlID + "@" + entry.AssetID
 	entry.AcknowledgedDate = timestamp[:10] // YYYY-MM-DD from RFC3339
@@ -165,6 +175,24 @@ func (f *AcceptanceFile) Remove(id, timestamp string) error {
 		}
 	}
 	return fmt.Errorf("acknowledgment %q not found", id)
+}
+
+// ValidateWithCatalog checks all entries including compensating control IDs
+// against the provided set of known control IDs.
+func (f *AcceptanceFile) ValidateWithCatalog(knownIDs map[string]bool) []string {
+	errs := f.Validate()
+	if len(knownIDs) == 0 {
+		return errs
+	}
+	for i := range f.Acknowledgments {
+		a := &f.Acknowledgments[i]
+		for _, cc := range a.CompensatingControls {
+			if !knownIDs[cc] {
+				errs = append(errs, fmt.Sprintf("acknowledgment[%d]: compensating control %q not found in catalog", i, cc))
+			}
+		}
+	}
+	return errs
 }
 
 // Validate checks all entries for required fields and valid dates.
@@ -234,6 +262,14 @@ func (f *AcceptanceFile) ActiveCount() (acks, exceptions, exemptions int) {
 		}
 	}
 	return acks, len(f.Exceptions), len(f.Exemptions)
+}
+
+// History returns all acknowledgments including their full audit trails,
+// regardless of status. This is the complete audit record.
+func (f *AcceptanceFile) History() []AcknowledgmentEntry {
+	result := make([]AcknowledgmentEntry, len(f.Acknowledgments))
+	copy(result, f.Acknowledgments)
+	return result
 }
 
 func currentUser() string {

@@ -64,7 +64,7 @@ type BaselineComparisonResult struct {
 }
 
 // BaselineEntryFromFinding converts a detailed Finding into a simplified BaselineEntry.
-func BaselineEntryFromFinding(f Finding) BaselineEntry {
+func BaselineEntryFromFinding(f *Finding) BaselineEntry {
 	return BaselineEntry{
 		ControlID:   f.ControlID,
 		ControlName: f.ControlName,

@@ -1,0 +1,10 @@
+id: k8s_etcd_exposure_path
+description: >
+  etcd exposed without TLS and without client certificate authentication.
+  Entire cluster state (secrets, configs) readable by any actor with
+  network access to the etcd port.
+controls:
+  - CTL.K8S.ETCD.CERT.001
+  - CTL.K8S.ETCD.CLIENT.AUTH.001
+escalation_threshold: 2
+compound_severity: critical

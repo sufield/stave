@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.KUBELET.STREAMING.001
+name: Kubelet Streaming Connection Idle Timeout Must Not Be Zero
+description: >
+  The kubelet streaming connection idle timeout must be greater than
+  zero. A zero timeout disables connection cleanup, allowing idle
+  streaming connections (exec, attach, port-forward) to persist
+  indefinitely, consuming resources and increasing attack surface.
+domain: exposure
+severity: medium
+compliance:
+  cis_k8s_v1.9: "4.2.5"
+scope_tags:
+  - kubernetes
+  - kubelet
+type: unsafe_state
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Kubelet streaming connection idle timeout is zero. Idle connections
+    are never closed.
+  action: >
+    Set streamingConnectionIdleTimeout to a non-zero duration (e.g.,
+    4h0m0s) in the kubelet config.
+unsafe_predicate:
+  all:
+    - field: type
+      op: eq
+      value: k8s_kubelet
+    - field: properties.kubelet.streaming_connection_idle_timeout
+      op: eq
+      value: "0"

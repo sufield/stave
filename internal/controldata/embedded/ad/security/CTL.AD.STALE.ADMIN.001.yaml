@@ -1,0 +1,26 @@
+dsl_version: ctrl.v1
+id: CTL.AD.STALE.ADMIN.001
+name: Privileged Groups Must Not Have Stale Members
+description: >
+  Privileged groups must not contain members with no logon in over
+  90 days. Stale admin accounts are dormant backdoors.
+domain: identity
+severity: high
+compliance:
+  cis_ad: "5.1"
+scope_tags:
+  - active_directory
+type: unsafe_state
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Privileged group contains members with no logon in over 90 days.
+  action: >
+    Review and remove stale accounts from Domain Admins, Enterprise
+    Admins, and Schema Admins groups.
+unsafe_predicate:
+  all:
+    - field: properties.privileged_groups.has_stale_admins
+      op: eq
+      value: true

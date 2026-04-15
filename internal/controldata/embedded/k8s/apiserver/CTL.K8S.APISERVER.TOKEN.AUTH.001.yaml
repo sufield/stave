@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.APISERVER.TOKEN.AUTH.001
+name: API Server Static Token Authentication Must Be Disabled
+description: >
+  The API server must not use static token authentication via
+  --token-auth-file. Static tokens do not expire, cannot be revoked
+  without restarting the API server, and are stored in cleartext.
+domain: exposure
+severity: high
+compliance:
+  cis_k8s_v1.9: "1.2.2"
+scope_tags:
+  - kubernetes
+  - apiserver
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    API server is using static token file authentication.
+  action: >
+    Remove --token-auth-file from the API server configuration. Use
+    OIDC, service account tokens, or certificate-based authentication.
+unsafe_predicate:
+  all:
+    - field: type
+      op: eq
+      value: k8s_apiserver
+    - field: properties.apiserver.token_auth_file
+      op: missing
+      value: false

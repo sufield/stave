@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.AD.KRBTGT.ROTATION.001
+name: KRBTGT Password Must Be Rotated Within 180 Days
+description: >
+  The KRBTGT account password must be changed at least every 180 days.
+  A stale KRBTGT enables Golden Ticket attacks indefinitely — any
+  attacker who once obtained the KRBTGT hash can forge tickets forever.
+domain: identity
+severity: critical
+compliance:
+  nist_800_53_r5: "IA-5"
+scope_tags:
+  - active_directory
+type: unsafe_state
+params:
+  base_impact: 9
+  attack_stage: persistence
+remediation:
+  description: >
+    KRBTGT password has not been changed in over 180 days.
+  action: >
+    Reset the KRBTGT password twice (with replication between resets)
+    using Reset-KrbtgtAccountPassword or manual reset. Schedule
+    regular rotation every 90-180 days.
+unsafe_predicate:
+  all:
+    - field: properties.accounts.krbtgt_password_age_days
+      op: gt
+      value: 180

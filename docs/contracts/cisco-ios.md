@@ -45,3 +45,7 @@ type: "cisco_ios_device"
 | `routing.has_unfiltered_bgp_out` | bool | BGP without outbound filter |
 | `routing.has_unauthenticated_ospf` | bool | OSPF without auth |
 | `routing.has_unauthenticated_hsrp` | bool | HSRP without MD5 |
+| `routing.urpf_enabled` | bool | uRPF enabled |
+| `management.login_banner_configured` | bool | Login banner set |
+| `management.https_enabled` | bool | HTTPS for management |
+| `services.bootp_enabled` | bool | BOOTP server enabled |

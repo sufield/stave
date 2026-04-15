@@ -1,0 +1,27 @@
+dsl_version: ctrl.v1
+id: CTL.AD.TRUST.SELECTIVE.001
+name: External Trusts Must Use Selective Authentication
+description: >
+  External trusts must use selective authentication to restrict which
+  users from the trusted domain can authenticate. Without it, all
+  trusted domain users can access resources.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-4"
+scope_tags:
+  - active_directory
+type: unsafe_state
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: >
+    An external trust does not use selective authentication.
+  action: >
+    Configure selective authentication on external trusts via AD
+    Domains and Trusts or PowerShell.
+unsafe_predicate:
+  all:
+    - field: properties.trusts.has_unfiltered_selective_auth
+      op: eq
+      value: true

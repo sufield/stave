@@ -2,7 +2,7 @@
   "schema_version": "out.v0.1",
   "kind": "ASSESSMENT",
   "run": {
-    "tool_version": "dev",
+    "tool_version": "edge",
     "offline": true,
     "now": "2026-01-15T00:00:00Z",
     "sla_threshold": "0h",
@@ -13,71 +13,10 @@
   "summary": {
     "total_assets": 1,
     "exposed_resources": 1,
-    "violations": 5
+    "violations": 4
   },
   "status": "NON_COMPLIANT",
-  "risk_signals": [
-    {
-      "control_id": "CTL.S3.OWNERSHIP.001",
-      "asset_id": "private-test-bucket",
-      "asset_type": "aws_s3_bucket",
-      "status": "OVERDUE",
-      "due_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": -120,
-      "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "threshold_hours": 0
-    }
-  ],
   "findings": [
-    {
-      "finding_id": "sha256:3db4f35a105643f4",
-      "control_id": "CTL.S3.OWNERSHIP.001",
-      "control_name": "S3 Object Ownership Must Be Bucket Owner Enforced",
-      "control_description": "S3 buckets must have Object Ownership set to BucketOwnerEnforced, which disables ACLs entirely. When ACLs are disabled, the bucket owner automatically owns every object regardless of who uploaded it, and access is controlled exclusively through IAM and bucket policies. This eliminates the entire class of ACL-based exposure: public grants, privilege escalation via WRITE_ACP, and object-level ACL overrides. Since April 2023 new buckets default to BucketOwnerEnforced, but buckets created before this date may still have ACLs enabled.\n",
-      "asset_id": "private-test-bucket",
-      "asset_type": "aws_s3_bucket",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2026-01-10T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
-        "unsafe_duration_hours": 120,
-        "misconfigurations": [
-          {
-            "property": "storage.kind",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": "bucket"
-          },
-          {
-            "property": "storage.object_ownership.rule",
-            "actual_value": "[SANITIZED]",
-            "operator": "ne",
-            "unsafe_value": "BucketOwnerEnforced"
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
-      },
-      "control_severity": "high",
-      "control_compliance": {
-        "cis_aws_v3.0": "2.1.2",
-        "fedramp_moderate": "AC-3",
-        "iso_27001_2022": "A.8.3",
-        "nist_800_53_r5": "AC-3",
-        "soc2": "CC6.1"
-      },
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "Bucket does not have Object Ownership set to BucketOwnerEnforced. ACLs remain active and can grant public or cross-account access to individual objects, bypassing bucket policies.",
-        "action": "Set Object Ownership to BucketOwnerEnforced using aws s3api put-bucket-ownership-controls. This disables all ACLs on the bucket. Before enabling, audit existing ACL grants and migrate any legitimate access to bucket policies or IAM policies. All existing ACL-based access will stop working once BucketOwnerEnforced is set.",
-        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"object_ownership\": {\n      \"rule\": \"BucketOwnerEnforced\"\n    }\n  }\n}\n"
-      }
-    },
     {
       "finding_id": "sha256:f7c61bb76d54d7f0",
       "control_id": "CTL.S3.PUBLIC.PREFIX.001",
@@ -421,6 +360,20 @@
   ],
   "top_exposures": [
     {
+      "finding_index": 0,
+      "control_id": "CTL.S3.PUBLIC.PREFIX.001",
+      "asset_id": "private-test-bucket",
+      "exposure_score": 150,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "days_blind": 0
+      },
+      "silent_killer": false
+    },
+    {
       "finding_index": 1,
       "control_id": "CTL.S3.PUBLIC.PREFIX.001",
       "asset_id": "private-test-bucket",
@@ -459,34 +412,6 @@
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "days_blind": 0
-      },
-      "silent_killer": false
-    },
-    {
-      "finding_index": 4,
-      "control_id": "CTL.S3.PUBLIC.PREFIX.001",
-      "asset_id": "private-test-bucket",
-      "exposure_score": 150,
-      "breakdown": {
-        "base_score": 75,
-        "duration_factor": 1,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 2,
-        "days_blind": 0
-      },
-      "silent_killer": false
-    },
-    {
-      "finding_index": 0,
-      "control_id": "CTL.S3.OWNERSHIP.001",
-      "asset_id": "private-test-bucket",
-      "exposure_score": 75,
-      "breakdown": {
-        "base_score": 75,
-        "duration_factor": 1,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 1,
-        "days_blind": 5
       },
       "silent_killer": false
     }
