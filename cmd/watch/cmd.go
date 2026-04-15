@@ -210,8 +210,29 @@ func buildSinks(stdout io.Writer, specs []string) ([]ports.AlertSink, error) {
 		case strings.HasPrefix(spec, "file:"):
 			path := strings.TrimPrefix(spec, "file:")
 			sinks = append(sinks, &alert.FileSink{Path: path})
+		case spec == "syslog" || strings.HasPrefix(spec, "syslog:"):
+			facility := "local0"
+			if strings.HasPrefix(spec, "syslog:") {
+				facility = strings.TrimPrefix(spec, "syslog:")
+			}
+			pri, parseErr := alert.ParseSyslogFacility(facility)
+			if parseErr != nil {
+				return nil, parseErr
+			}
+			sink, sysErr := alert.NewSyslogSink(pri, "stave")
+			if sysErr != nil {
+				return nil, sysErr
+			}
+			sinks = append(sinks, sink)
+		case strings.HasPrefix(spec, "cef:"):
+			path := strings.TrimPrefix(spec, "cef:")
+			sink, cefErr := alert.NewCEFFileSink(path)
+			if cefErr != nil {
+				return nil, cefErr
+			}
+			sinks = append(sinks, sink)
 		default:
-			return nil, fmt.Errorf("unknown sink: %q (use stdout or file:<path>)", spec)
+			return nil, fmt.Errorf("unknown sink: %q (use stdout, file:<path>, syslog, syslog:<facility>, or cef:<path>)", spec)
 		}
 	}
 	if len(sinks) == 0 {
