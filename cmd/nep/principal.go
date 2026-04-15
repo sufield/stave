@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/iam"
 )
 
@@ -68,17 +68,56 @@ Examples:
 }
 
 func runPrincipal(w io.Writer, opts *principalOpts) error {
-	if _, err := os.Stat(opts.Snapshot); err != nil {
-		return fmt.Errorf("snapshot file not found: %s", opts.Snapshot)
+	snaps, err := loadSnapshots(opts.Snapshot)
+	if err != nil {
+		return fmt.Errorf("load snapshot: %w", err)
+	}
+	if len(snaps) == 0 {
+		return fmt.Errorf("no snapshots in %s", opts.Snapshot)
+	}
+	snap := &snaps[len(snaps)-1]
+
+	// Find the target principal in snapshot identities.
+	var targetIdentity *identityRef
+	for i := range snap.Identities {
+		if string(snap.Identities[i].ID) == opts.PrincipalARN {
+			targetIdentity = &identityRef{identity: &snap.Identities[i]}
+			break
+		}
 	}
 
-	result := iam.ResolvedPermissions{
-		PrincipalARN:   opts.PrincipalARN,
-		PrivilegeLevel: iam.PrivilegeLevelNone,
-		Incomplete:     true,
-		IncompleteReasons: []string{
-			"NEP resolution requires assessor enrichment pipeline integration",
-		},
+	// Fall back to assets (IAM roles appear in assets too).
+	if targetIdentity == nil {
+		for i := range snap.Assets {
+			if string(snap.Assets[i].ID) == opts.PrincipalARN {
+				targetIdentity = &identityRef{asset: &snap.Assets[i]}
+				break
+			}
+		}
+	}
+
+	if targetIdentity == nil {
+		return fmt.Errorf("principal %s not found in snapshot", opts.PrincipalARN)
+	}
+
+	// Resolve the target principal.
+	input := targetIdentity.toResolutionInput()
+	result := iam.Resolve(input)
+
+	// Resolve all principals for chain analysis.
+	if opts.ShowChains {
+		resolvedIndex, trustPolicies := resolveAllPrincipals(snap)
+		chains := iam.ResolveChains(iam.RoleChainInput{
+			PrincipalARN:  opts.PrincipalARN,
+			ResolvedIndex: resolvedIndex,
+			TrustPolicies: trustPolicies,
+			AccountID:     extractAccountIDFromARN(opts.PrincipalARN),
+		})
+		result.RoleChains = chains
+		result.HasTransitiveAdmin = iam.HasTransitiveAdmin(chains)
+		if len(chains) > 0 {
+			result.MaxChainDepthVal = iam.MaxDepth(chains)
+		}
 	}
 
 	switch opts.Format {
@@ -86,6 +125,24 @@ func runPrincipal(w io.Writer, opts *principalOpts) error {
 		return renderPrincipalJSON(w, result)
 	default:
 		return renderPrincipalTable(w, result, opts)
+	}
+}
+
+// identityRef wraps either a CloudIdentity or Asset for resolution input.
+type identityRef struct {
+	identity *asset.CloudIdentity
+	asset    *asset.Asset
+}
+
+func (r *identityRef) toResolutionInput() iam.ResolutionInput {
+	if r.identity != nil {
+		return buildResolutionInput(r.identity)
+	}
+	// Build from asset properties (IAM roles in assets array).
+	return iam.ResolutionInput{
+		PrincipalARN: string(r.asset.ID),
+		// Assets typically don't carry full policy JSON — resolution
+		// will be incomplete but shows what data is available.
 	}
 }
 

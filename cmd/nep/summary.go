@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
+
+	"github.com/sufield/stave/internal/core/iam"
 )
 
 type summaryOpts struct {
@@ -69,14 +70,63 @@ type nepSummary struct {
 }
 
 func runSummary(w io.Writer, opts *summaryOpts) error {
-	if _, err := os.Stat(opts.Snapshot); err != nil {
-		return fmt.Errorf("snapshot file not found: %s", opts.Snapshot)
+	snaps, err := loadSnapshots(opts.Snapshot)
+	if err != nil {
+		return fmt.Errorf("load snapshot: %w", err)
 	}
+	if len(snaps) == 0 {
+		return fmt.Errorf("no snapshots in %s", opts.Snapshot)
+	}
+	snap := &snaps[len(snaps)-1]
 
-	// Stub: in production, resolves all principals and aggregates.
-	summary := nepSummary{
-		TotalPrincipals:      0,
-		IncompletePrincipals: 0,
+	resolved, trustPolicies := resolveAllPrincipals(snap)
+
+	var summary nepSummary
+	summary.TotalPrincipals = len(resolved)
+
+	for arn, r := range resolved {
+		if r.Incomplete {
+			summary.IncompletePrincipals++
+		}
+		switch r.PrivilegeLevel {
+		case iam.PrivilegeLevelAdmin:
+			summary.AdminCount++
+		case iam.PrivilegeLevelElevated:
+			summary.ElevatedCount++
+		case iam.PrivilegeLevelStandard:
+			summary.StandardCount++
+		case iam.PrivilegeLevelLimited:
+			summary.LimitedCount++
+		default:
+			summary.NoneCount++
+		}
+
+		// Chain analysis.
+		chains := iam.ResolveChains(iam.RoleChainInput{
+			PrincipalARN:  arn,
+			ResolvedIndex: resolved,
+			TrustPolicies: trustPolicies,
+			AccountID:     extractAccountIDFromARN(arn),
+		})
+		if iam.HasTransitiveAdmin(chains) {
+			summary.TransitiveAdmin++
+		}
+		for _, chain := range chains {
+			for _, hop := range chain.Hops {
+				if hop.IsCrossAccount {
+					summary.CrossAccountChains++
+					break
+				}
+			}
+		}
+		depth := iam.MaxDepth(chains)
+		if depth > summary.MaxChainDepth {
+			summary.MaxChainDepth = depth
+		}
+
+		// BoundaryEffective is false when boundary exists but blocks nothing
+		// meaningful — counting these requires tracking whether boundary was
+		// present on input. For now, skip this metric when not available.
 	}
 
 	switch opts.Format {
