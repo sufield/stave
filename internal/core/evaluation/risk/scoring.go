@@ -5,9 +5,16 @@ import "strings"
 // Score quantifies policy risk from 0 (Safe) to 100 (Catastrophic).
 type Score int
 
-// ScoreSafe and related constants.
+// Risk score severity thresholds — scores are in the range [0, 100].
+// These constants define the minimum score for each severity band,
+// not the maximum value of the range.
+//
+//	 0–9:    SAFE       (no risk detected)
+//	10–39:   INFO       (informational observation)
+//	40–89:   WARNING    (policy deviation, non-critical)
+//	90–99:   CRITICAL   (high-impact policy violation)
+//	100:     CATASTROPHIC (compound chain escalation ceiling)
 const (
-	// ScoreSafe constants.
 	ScoreSafe         Score = 0
 	ScoreInfo         Score = 10
 	ScoreWarning      Score = 40

@@ -45,6 +45,18 @@ type Finding struct {
 	OwnerTeamName   string `json:"owner_team_name,omitempty"`
 	OwnerContact    string `json:"owner_contact,omitempty"`
 	OwnerResolution string `json:"owner_resolution_path,omitempty"`
+
+	// Reachability — populated when IAM data is in the snapshot.
+	Reachability *ReachabilityContext `json:"reachability,omitempty"`
+}
+
+// ReachabilityContext carries IAM reachability data for a finding.
+type ReachabilityContext struct {
+	TotalReachablePrincipals   int     `json:"total_reachable_principals"`
+	PrivilegedPrincipalCount   int     `json:"privileged_principal_count"`
+	HighestPrivilegePrincipal  string  `json:"highest_privilege_principal,omitempty"`
+	ExternalPrincipalReachable bool    `json:"external_principal_reachable,omitempty"`
+	BlastRadiusScore           float64 `json:"blast_radius_score"`
 }
 
 // ChainMembershipEntry records that a finding contributed to a fired chain.

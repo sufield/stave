@@ -28,6 +28,7 @@ type options struct {
 	SnapshotPath        string
 	GroupBy             string
 	TeamManifest        string
+	SortBy              string
 }
 
 // NewCmd constructs the top-level rank command.
@@ -75,6 +76,7 @@ Exit Codes:
 	cmd.Flags().StringVar(&opts.SnapshotPath, "snapshot", "", "Path to observation snapshot (required for --identity)")
 	cmd.Flags().StringVar(&opts.GroupBy, "group-by", "", "Group roadmap by field (owner)")
 	cmd.Flags().StringVar(&opts.TeamManifest, "team-manifest", "", "Path to stave-teams.yaml")
+	cmd.Flags().StringVar(&opts.SortBy, "sort-by", "severity", "Sort order: severity | blast-radius | sla")
 
 	return cmd
 }
@@ -113,6 +115,25 @@ func run(stdout, _ io.Writer, opts *options) error {
 	// Build roadmap.
 	roadmap := apprank.BuildRoadmap(assessment.Findings, assessment.TopExposures, opts.TopN)
 
+	// Re-sort by blast radius if requested.
+	if opts.SortBy == "blast-radius" {
+		blastIndex := buildBlastIndex(&assessment)
+		slices.SortFunc(roadmap.Entries, func(a, b apprank.PriorityEntry) int {
+			as := blastIndex[string(a.ControlID)+"@"+string(a.AssetID)]
+			bs := blastIndex[string(b.ControlID)+"@"+string(b.AssetID)]
+			if as > bs {
+				return -1
+			}
+			if as < bs {
+				return 1
+			}
+			return 0
+		})
+		for i := range roadmap.Entries {
+			roadmap.Entries[i].Rank = i + 1
+		}
+	}
+
 	// Group by owner if requested.
 	if opts.GroupBy == "owner" {
 		return runGroupByOwner(stdout, opts, &assessment, roadmap)
@@ -127,7 +148,7 @@ func run(stdout, _ io.Writer, opts *options) error {
 		}
 		fmt.Fprintln(stdout, string(output))
 	default:
-		writeTextRoadmap(stdout, roadmap)
+		writeTextRoadmap(stdout, roadmap, opts.SortBy == "blast-radius", &assessment)
 	}
 
 	// Show acknowledged findings if requested.
@@ -156,7 +177,18 @@ func run(stdout, _ io.Writer, opts *options) error {
 	return nil
 }
 
-func writeTextRoadmap(w io.Writer, rm apprank.Roadmap) {
+func buildBlastIndex(a *report.Assessment) map[string]float64 {
+	idx := make(map[string]float64, len(a.Findings))
+	for i := range a.Findings {
+		f := &a.Findings[i]
+		if f.Reachability != nil {
+			idx[string(f.ControlID)+"@"+string(f.AssetID)] = f.Reachability.BlastRadiusScore
+		}
+	}
+	return idx
+}
+
+func writeTextRoadmap(w io.Writer, rm apprank.Roadmap, showReach bool, assessment *report.Assessment) {
 	if len(rm.Entries) == 0 {
 		fmt.Fprintln(w, "No findings to rank.")
 		return
@@ -179,6 +211,15 @@ func writeTextRoadmap(w io.Writer, rm apprank.Roadmap) {
 			fmt.Fprintf(w, "      [ATTACK PATH: %s]  %s on %s\n", e.ChainID, e.ControlID, e.AssetID)
 		} else {
 			fmt.Fprintf(w, "      %s on %s\n", e.ControlID, e.AssetID)
+		}
+		if showReach && assessment != nil {
+			key := string(e.ControlID) + "@" + string(e.AssetID)
+			blastIdx := buildBlastIndex(assessment)
+			if score, ok := blastIdx[key]; ok {
+				fmt.Fprintf(w, "      Reach: blast_radius=%.0f\n", score)
+			} else {
+				fmt.Fprintf(w, "      Reach: \u2014\n")
+			}
 		}
 		if e.SLABreached {
 			fmt.Fprintf(w, "      SLA: BREACHED  %s overdue\n", e.SLAOverdue)

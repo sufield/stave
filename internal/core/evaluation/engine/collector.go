@@ -1,6 +1,8 @@
 package engine
 
 import (
+	"sync"
+
 	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"
@@ -20,7 +22,9 @@ func (s assetRegistry) register(id asset.ID) bool {
 
 // AssessmentCollector gathers security findings, resource checks, and
 // compliance metadata across multiple evaluation cycles.
+// All methods are safe for concurrent use.
 type AssessmentCollector struct {
+	mu              sync.Mutex
 	findings        []evaluation.Finding
 	checks          []evaluation.ResourceCheck
 	skippedControls []evaluation.SkippedControl
@@ -44,11 +48,15 @@ func NewCollector(assetHint int) *AssessmentCollector {
 // RecordExemption marks an asset as exempt from policy enforcement.
 // It returns true if this is the first time the asset has been exempted in the session.
 func (c *AssessmentCollector) RecordExemption(id asset.ID) bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	return c.exemptAssets.register(id)
 }
 
 // RecordSkippedControl logs a security control that was bypassed during the run.
 func (c *AssessmentCollector) RecordSkippedControl(id kernel.ControlID, name, reason string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	c.skippedControls = append(c.skippedControls, evaluation.SkippedControl{
 		ControlID:   id,
 		ControlName: name,
@@ -58,6 +66,8 @@ func (c *AssessmentCollector) RecordSkippedControl(id kernel.ControlID, name, re
 
 // RecordExemptedAsset appends the detail of an exempted asset to the final report.
 func (c *AssessmentCollector) RecordExemptedAsset(id asset.ID, pattern, reason string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	c.exemptedAssets = append(c.exemptedAssets, asset.ExemptedAsset{
 		ID:      id,
 		Pattern: pattern,
@@ -67,11 +77,15 @@ func (c *AssessmentCollector) RecordExemptedAsset(id asset.ID, pattern, reason s
 
 // RecordCheck appends a granular resource evaluation result.
 func (c *AssessmentCollector) RecordCheck(check evaluation.ResourceCheck) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	c.checks = append(c.checks, check)
 }
 
 // RecordFindings appends a batch of identified security violations.
 func (c *AssessmentCollector) RecordFindings(findings []*evaluation.Finding) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	for _, f := range findings {
 		if f != nil {
 			c.findings = append(c.findings, *f)

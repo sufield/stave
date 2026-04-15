@@ -73,9 +73,13 @@ func DetectChains(
 		slices.Sort(stages)
 
 		escalation := ChainEscalation(len(failing))
-		// Use a base score of 10 (default) × escalation × blast for chains
-		// without per-finding environmental scores.
-		score := Compound(10.0, escalation, maxBlast)
+		// Derive base score from the highest severity among failing
+		// member controls rather than a hardcoded default.
+		base := baseScoreFromMembers(failing, controlLookup)
+		score := Compound(base, escalation, maxBlast)
+		if score > float64(ScoreCatastrophic) {
+			score = float64(ScoreCatastrophic)
+		}
 
 		narrative := buildNarrative(chain, failing)
 
@@ -94,6 +98,32 @@ func DetectChains(
 	return findings
 }
 
+// baseScoreFromMembers derives the chain base score from the highest
+// severity among its failing member controls.
+func baseScoreFromMembers(
+	failing []kernel.ControlID,
+	controlLookup map[kernel.ControlID]*policy.ControlDefinition,
+) float64 {
+	maxSev := policy.SeverityLow
+	for _, cid := range failing {
+		if ctl, ok := controlLookup[cid]; ok {
+			if ctl.Severity > maxSev {
+				maxSev = ctl.Severity
+			}
+		}
+	}
+	switch maxSev {
+	case policy.SeverityCritical:
+		return float64(ScoreCritical) // 90
+	case policy.SeverityHigh:
+		return float64(ScoreWarning) // 40
+	case policy.SeverityMedium:
+		return float64(ScoreInfo) // 10
+	default:
+		return float64(ScoreInfo) // 10 floor for any chain
+	}
+}
+
 // scopeAdjustedBlast computes the effective blast multiplier based on
 // the control's declared scope. Account-scoped controls (CloudTrail)
 // apply their full multiplier because they blind the entire account.
@@ -105,6 +135,25 @@ func DetectChains(
 // This prevents a single disabled S3 access log from inflating scores
 // across unrelated resources — the multiplier is proportional to the
 // blast radius scope.
+//
+// Attenuation model rationale:
+//
+//	account (1.00x): No attenuation — account-scoped controls affect
+//	  every resource. A disabled CloudTrail blinds the entire account.
+//
+//	network (0.75x of excess): Network access controls (VPC, SGs, NACLs)
+//	  provide a partial barrier. A misconfigured resource behind a
+//	  network control is 75% as impactful because the network layer
+//	  adds friction for an attacker.
+//
+//	resource (0.50x of excess): A resource-level control (bucket policy,
+//	  KMS key policy) provides a stronger barrier than network controls.
+//	  Misconfiguration requires both a network path AND a resource
+//	  policy bypass — 50% as impactful as direct exposure.
+//
+// These values are intentional defaults derived from defense-in-depth
+// layering. Organizations with different network posture assumptions
+// can override blast multipliers per control definition.
 func scopeAdjustedBlast(ctl *policy.ControlDefinition) float64 {
 	mult := ctl.BlastMultiplier()
 	if mult <= 1.0 {

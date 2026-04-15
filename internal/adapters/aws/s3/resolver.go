@@ -1,6 +1,8 @@
 package s3
 
 import (
+	"strings"
+
 	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/kernel"
 )
@@ -41,7 +43,9 @@ func NewResolver() *Resolver {
 
 // Resolve returns the Permission for an action using longest-prefix-match.
 // O(L) where L is the length of the action string.
+// AWS action names are case-insensitive — input is normalized to lowercase.
 func (r *Resolver) Resolve(action string) risk.Permission {
+	action = strings.ToLower(action)
 	node := r.root
 	var lastMatch risk.Permission
 	for i := 0; i < len(action); i++ {

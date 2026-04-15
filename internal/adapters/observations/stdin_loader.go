@@ -62,11 +62,27 @@ func NewStdinObservationLoader(loader appcontracts.SnapshotReader, r io.Reader) 
 // The dir parameter is ignored; data is read from the configured reader.
 // Stdin data is hashed so that integrity verification can proceed normally.
 func (s *StdinObservationLoader) LoadSnapshots(ctx context.Context, _ string) (appcontracts.LoadResult, error) {
-	// Read and hash stdin data before parsing so integrity verification
-	// is not silently skipped for piped input.
-	data, err := fsutil.LimitedReadAll(s.reader, "stdin")
-	if err != nil {
-		return appcontracts.LoadResult{}, fmt.Errorf("read from stdin: %w", err)
+	// Read stdin with context cancellation support — if the upstream
+	// process hangs, the context deadline will unblock the caller.
+	type readResult struct {
+		data []byte
+		err  error
+	}
+	ch := make(chan readResult, 1)
+	go func() {
+		data, err := fsutil.LimitedReadAll(s.reader, "stdin")
+		ch <- readResult{data, err}
+	}()
+
+	var data []byte
+	select {
+	case <-ctx.Done():
+		return appcontracts.LoadResult{}, fmt.Errorf("stdin read cancelled: %w", ctx.Err())
+	case res := <-ch:
+		if res.err != nil {
+			return appcontracts.LoadResult{}, fmt.Errorf("read from stdin: %w", res.err)
+		}
+		data = res.data
 	}
 	hash := platformcrypto.HashBytes(data)
 
