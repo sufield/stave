@@ -77,7 +77,7 @@ Exit Codes:
 // runScore dispatches to single-file or history mode.
 func runScore(ctx context.Context, stdout io.Writer, opts *options) error {
 	if opts.OutputFile == "" && opts.HistoryDir == "" {
-		return fmt.Errorf("either --output or --history is required")
+		return fmt.Errorf("exactly one of --output or --history is required: --output scores a single assessment file, --history scores a directory of assessment files for trend analysis")
 	}
 
 	weights, err := parseWeights(opts.Weights)
@@ -198,7 +198,7 @@ func computeFromAssessment(assessment *report.Assessment, weights appscore.Weigh
 	return appscore.Compute(appscore.Input{
 		Findings:      evalFindings,
 		ChainFindings: assessment.ChainFindings,
-		ChainDefs:     50, // approximate — total chain definitions
+		ChainDefs:     appscore.ApproximateTotalChains,
 		SLABreached:   slaBreached,
 		SLATotal:      slaTotal,
 		HasSLA:        hasSLA,

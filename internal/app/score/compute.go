@@ -24,10 +24,10 @@ func DefaultWeights() Weights {
 
 // SeverityDetail holds per-dimension detail for the severity component.
 type SeverityDetail struct {
-	TotalFindings    int     `json:"total_findings"`
-	FailingFindings  int     `json:"failing_findings"`
-	MaxRiskExposure  float64 `json:"max_risk_exposure"`
-	ActualExposure   float64 `json:"actual_exposure"`
+	FailingFindings int     `json:"failing_findings"`  // number of failing controls (violations)
+	TotalEvaluated  int     `json:"total_evaluated"`   // total controls evaluated (pass + fail); 0 if unknown
+	MaxRiskExposure float64 `json:"max_risk_exposure"`
+	ActualExposure  float64 `json:"actual_exposure"`
 }
 
 // SLADetail holds per-dimension detail for the SLA component.
@@ -98,12 +98,17 @@ type Result struct {
 	WeightsUsed Weights           `json:"weights_used"`
 }
 
+// ApproximateTotalChains is the approximate number of chain definitions in the
+// built-in catalog. Used as the denominator for ChainScore when ChainDefs is
+// not explicitly provided.
+const ApproximateTotalChains = 50
+
 // Input holds data for score computation.
 type Input struct {
 	Findings          []evaluation.Finding
 	TotalControls     int // total controls evaluated (pass + fail); 0 means use violations as denominator
 	ChainFindings     []risk.CompoundFinding
-	ChainDefs         int // total chain definitions (for max weight)
+	ChainDefs         int // total threat chain patterns in the YAML catalog (for max weight denominator); use ApproximateTotalChains when count is unknown
 	SLABreached       int
 	SLATotal          int
 	CoveragePct       float64 // 0-100 from compliance profile
@@ -153,9 +158,15 @@ func Compute(input Input) Result {
 	if input.TotalControls > 0 {
 		passingCount := input.TotalControls - len(input.Findings)
 		if passingCount < 0 {
+			// More violations reported than TotalControls — data integrity issue.
+			// Clamp to zero; all controls are treated as failing.
 			passingCount = 0
 		}
-		// Passing controls contribute medium-severity weight to denominator.
+		// Passing controls contribute medium-severity weight (2.0) to the denominator.
+		// Medium is chosen as a neutral baseline: it lies between the extremes of
+		// critical (10.0) and low (1.0), preserving the monotone property (fixing
+		// any violation reduces ActualExposure while MaxExposure stays constant)
+		// without over- or under-weighting the passing catalog.
 		maxExposure = actualExposure + float64(passingCount)*severityWeight[policy.SeverityMedium]
 	} else {
 		// Violation-only mode: MaxRiskExposure = ActualExposure.
@@ -218,8 +229,8 @@ func Compute(input Input) Result {
 		Component: Component{SubScore: sevScore, Weight: w.Severity,
 			Contribution: w.Severity * sevScore * 100, MaxContribution: w.Severity * 100},
 		Detail: SeverityDetail{
-			TotalFindings:   len(input.Findings),
 			FailingFindings: failingCount,
+			TotalEvaluated:  input.TotalControls,
 			MaxRiskExposure: maxExposure,
 			ActualExposure:  actualExposure,
 		},

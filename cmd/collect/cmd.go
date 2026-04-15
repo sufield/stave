@@ -158,7 +158,7 @@ func runCollect(stdout, stderr io.Writer, opts *options) error {
 	scoreResult := appscore.Compute(appscore.Input{
 		Findings:      result.Findings,
 		ChainFindings: result.ChainFindings,
-		ChainDefs:     50, // approximate — total chain definitions
+		ChainDefs:     appscore.ApproximateTotalChains,
 		Weights:       appscore.DefaultWeights(),
 	})
 

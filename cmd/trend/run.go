@@ -92,7 +92,7 @@ func runTrend(ctx context.Context, w io.Writer, opts *trendOptions) error {
 	scoreResult := appscore.Compute(appscore.Input{
 		Findings:      latestEvalFindings,
 		ChainFindings: latestAssessment.ChainFindings,
-		ChainDefs:     50, // approximate — total chain definitions
+		ChainDefs:     appscore.ApproximateTotalChains,
 		Weights:       appscore.DefaultWeights(),
 	})
 	trendReport.PostureScore = scoreResult.Score

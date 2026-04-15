@@ -32,7 +32,7 @@ func Enrich(enricher remediation.FindingEnricher, sanitizer kernel.Sanitizer, re
 	scoreResult := appscore.Compute(appscore.Input{
 		Findings:      result.Findings,
 		ChainFindings: result.ChainFindings,
-		ChainDefs:     50, // approximate — total chain definitions
+		ChainDefs:     appscore.ApproximateTotalChains,
 		Weights:       appscore.DefaultWeights(),
 	})
 
