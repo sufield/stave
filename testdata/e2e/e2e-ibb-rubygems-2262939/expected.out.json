@@ -1,12 +1,21 @@
 {
-  "schema_version": "out.v0.1",
+  "extensions": {
+    "context_name": "stave",
+    "git": {
+      "dirty": false,
+      "head_commit": "19d2659707789ad5ee24bea636595aa7f38da7ae",
+      "repo_root": "/home/zepho/work/bizacademy"
+    },
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-ibb-rubygems-2262939/controls",
+      "observations": "testdata/e2e/e2e-ibb-rubygems-2262939/observations"
+    },
+    "selected_controls_source": "dir"
+  },
+  "findings": [],
   "kind": "ASSESSMENT",
   "run": {
-    "tool_version": "edge",
-    "offline": true,
-    "now": "2026-01-11T00:00:00Z",
-    "sla_threshold": "7d",
-    "snapshots": 2,
+    "evaluated_state": "deployed",
     "input_hashes": {
       "files": {
         "2023-11-24T000000Z.json": "a491eb91501c346d7d8c6c7221a269f7749d111d7a3074a337d23d6220918313",
@@ -14,27 +23,18 @@
       },
       "overall": "a8e2d5913c5b5ba17b6cab4a9e411789dd911daad5a2601ea24f99ecb0b031a8"
     },
-    "policy_fingerprint": "7cef7e4bfcb30561dd4b9fe677f2d69627c02ad5326508c40efe7ca416a75efd",
-    "evaluated_state": "deployed"
+    "now": "2026-01-11T00:00:00Z",
+    "offline": true,
+    "policy_fingerprint": "772d3e4801367e5a83eda2fce23728fb578ea866325e645db3d54c4351e6f872",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "tool_version": "edge"
   },
-  "summary": {
-    "total_assets": 2,
-    "exposed_resources": 0,
-    "violations": 0
-  },
+  "schema_version": "out.v0.1",
   "status": "COMPLIANT",
-  "findings": [],
-  "extensions": {
-    "selected_controls_source": "dir",
-    "context_name": "stave",
-    "resolved_paths": {
-      "controls": "testdata/e2e/e2e-ibb-rubygems-2262939/controls",
-      "observations": "testdata/e2e/e2e-ibb-rubygems-2262939/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
-      "dirty": false
-    }
+  "summary": {
+    "exposed_resources": 0,
+    "total_assets": 2,
+    "violations": 0
   }
 }

@@ -1,12 +1,21 @@
 {
-  "schema_version": "out.v0.1",
+  "extensions": {
+    "context_name": "stave",
+    "git": {
+      "dirty": false,
+      "head_commit": "19d2659707789ad5ee24bea636595aa7f38da7ae",
+      "repo_root": "/home/zepho/work/bizacademy"
+    },
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-cloudtrail-retention/controls",
+      "observations": "testdata/e2e/e2e-cloudtrail-retention/observations"
+    },
+    "selected_controls_source": "dir"
+  },
+  "findings": [],
   "kind": "ASSESSMENT",
   "run": {
-    "tool_version": "edge",
-    "offline": true,
-    "now": "2026-01-11T00:00:00Z",
-    "sla_threshold": "7d",
-    "snapshots": 2,
+    "evaluated_state": "deployed",
     "input_hashes": {
       "files": {
         "2026-01-01T000000Z.json": "408d2bc5940f8d002f66aed8447ea43570a4dad8126da21052ecb03396ccf582",
@@ -14,27 +23,18 @@
       },
       "overall": "4eb07f89eb6142c26154b8614cfe2eb1d5d31cec4820c962fbdae7c65c40f85a"
     },
-    "policy_fingerprint": "53cad94c86c3dc799f46889151eb2d6e33a377e429b47f0c2573fbfdee29841d",
-    "evaluated_state": "deployed"
+    "now": "2026-01-11T00:00:00Z",
+    "offline": true,
+    "policy_fingerprint": "3bc05a2d19ccfff3e7f6c158ce2ef6983c8ef305774ead498283d8cfc002b54a",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "tool_version": "edge"
   },
-  "summary": {
-    "total_assets": 1,
-    "exposed_resources": 0,
-    "violations": 0
-  },
+  "schema_version": "out.v0.1",
   "status": "COMPLIANT",
-  "findings": [],
-  "extensions": {
-    "selected_controls_source": "dir",
-    "context_name": "stave",
-    "resolved_paths": {
-      "controls": "testdata/e2e/e2e-cloudtrail-retention/controls",
-      "observations": "testdata/e2e/e2e-cloudtrail-retention/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
-      "dirty": false
-    }
+  "summary": {
+    "exposed_resources": 0,
+    "total_assets": 1,
+    "violations": 0
   }
 }

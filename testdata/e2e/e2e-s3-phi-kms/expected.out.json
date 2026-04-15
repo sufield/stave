@@ -1,12 +1,138 @@
 {
-  "schema_version": "out.v0.1",
+  "extensions": {
+    "context_name": "stave",
+    "git": {
+      "dirty": false,
+      "head_commit": "19d2659707789ad5ee24bea636595aa7f38da7ae",
+      "repo_root": "/home/zepho/work/bizacademy"
+    },
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-s3-phi-kms/controls",
+      "observations": "testdata/e2e/e2e-s3-phi-kms/observations"
+    },
+    "selected_controls_source": "dir"
+  },
+  "findings": [
+    {
+      "asset_id": "phi-bucket-aes256",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "control_description": "S3 buckets tagged with data-classification=phi must use SSE-KMS encryption with a customer-managed key (CMK), not the default AWS-managed key or SSE-S3. This ensures the organization controls key rotation, access policies, and audit logging for PHI data at rest.\n",
+      "control_id": "CTL.S3.ENCRYPT.003",
+      "control_name": "PHI Buckets Must Use SSE-KMS with Customer-Managed Key",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "misconfigurations": [
+          {
+            "actual_value": "[SANITIZED]",
+            "operator": "ne",
+            "property": "storage.encryption.algorithm",
+            "unsafe_value": "aws:kms"
+          },
+          {
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "property": "storage.encryption.kms_key_id",
+            "unsafe_value": ""
+          },
+          {
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "property": "storage.tags.data-classification",
+            "unsafe_value": "phi"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z.",
+        "threshold_hours": 168,
+        "unsafe_duration_hours": 240
+      },
+      "finding_id": "sha256:253091218eb6daa8",
+      "posture_drift": {
+        "exposure_window_count": 1,
+        "pattern": "persistent"
+      },
+      "remediation": {
+        "action": "Enable server-side encryption using a managed key.",
+        "description": "Resource data is not encrypted at rest."
+      }
+    },
+    {
+      "asset_id": "phi-bucket-no-config",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "control_description": "S3 buckets tagged with data-classification=phi must use SSE-KMS encryption with a customer-managed key (CMK), not the default AWS-managed key or SSE-S3. This ensures the organization controls key rotation, access policies, and audit logging for PHI data at rest.\n",
+      "control_id": "CTL.S3.ENCRYPT.003",
+      "control_name": "PHI Buckets Must Use SSE-KMS with Customer-Managed Key",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "misconfigurations": [
+          {
+            "actual_value": "[SANITIZED]",
+            "operator": "ne",
+            "property": "storage.encryption.algorithm",
+            "unsafe_value": "aws:kms"
+          },
+          {
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "property": "storage.encryption.kms_key_id",
+            "unsafe_value": ""
+          },
+          {
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "property": "storage.tags.data-classification",
+            "unsafe_value": "phi"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z.",
+        "threshold_hours": 168,
+        "unsafe_duration_hours": 240
+      },
+      "finding_id": "sha256:fcc6bceefefac3c7",
+      "posture_drift": {
+        "exposure_window_count": 1,
+        "pattern": "persistent"
+      },
+      "remediation": {
+        "action": "Enable server-side encryption using a managed key.",
+        "description": "Resource data is not encrypted at rest."
+      }
+    }
+  ],
   "kind": "ASSESSMENT",
+  "risk_signals": [
+    {
+      "asset_id": "phi-bucket-aes256",
+      "asset_type": "aws_s3_bucket",
+      "control_id": "CTL.S3.ENCRYPT.003",
+      "due_at": "2026-01-08T00:00:00Z",
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "remaining_hours": -72,
+      "status": "OVERDUE",
+      "threshold_hours": 168
+    },
+    {
+      "asset_id": "phi-bucket-no-config",
+      "asset_type": "aws_s3_bucket",
+      "control_id": "CTL.S3.ENCRYPT.003",
+      "due_at": "2026-01-08T00:00:00Z",
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "remaining_hours": -72,
+      "status": "OVERDUE",
+      "threshold_hours": 168
+    }
+  ],
   "run": {
-    "tool_version": "edge",
-    "offline": true,
-    "now": "2026-01-11T00:00:00Z",
-    "sla_threshold": "7d",
-    "snapshots": 2,
+    "evaluated_state": "deployed",
     "input_hashes": {
       "files": {
         "2026-01-01T000000Z.json": "b39d832e64baa685989cadc72e884ee315e588d86c015d3333b71a47eb3167cd",
@@ -14,174 +140,48 @@
       },
       "overall": "13d92278a937ea1fec85a732dd478886e933d76a258fc092aa9da13c73d3889c"
     },
-    "policy_fingerprint": "5ca827a7244a5b91889376fa165f209215cfbac807ea3fc64f9834533f4b5c7b",
-    "evaluated_state": "deployed"
+    "now": "2026-01-11T00:00:00Z",
+    "offline": true,
+    "policy_fingerprint": "d9b5696a115d634c3e2187e500765e20ec8e209d2c3a3c95218dca4e076c5623",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "tool_version": "edge"
   },
+  "schema_version": "out.v0.1",
+  "status": "NON_COMPLIANT",
   "summary": {
-    "total_assets": 4,
     "exposed_resources": 2,
+    "total_assets": 4,
     "violations": 2
   },
-  "status": "NON_COMPLIANT",
-  "risk_signals": [
-    {
-      "control_id": "CTL.S3.ENCRYPT.003",
-      "asset_id": "phi-bucket-aes256",
-      "asset_type": "aws_s3_bucket",
-      "status": "OVERDUE",
-      "due_at": "2026-01-08T00:00:00Z",
-      "remaining_hours": -72,
-      "first_unsafe_at": "2026-01-01T00:00:00Z",
-      "threshold_hours": 168
-    },
-    {
-      "control_id": "CTL.S3.ENCRYPT.003",
-      "asset_id": "phi-bucket-no-config",
-      "asset_type": "aws_s3_bucket",
-      "status": "OVERDUE",
-      "due_at": "2026-01-08T00:00:00Z",
-      "remaining_hours": -72,
-      "first_unsafe_at": "2026-01-01T00:00:00Z",
-      "threshold_hours": 168
-    }
-  ],
-  "findings": [
-    {
-      "finding_id": "sha256:253091218eb6daa8",
-      "control_id": "CTL.S3.ENCRYPT.003",
-      "control_name": "PHI Buckets Must Use SSE-KMS with Customer-Managed Key",
-      "control_description": "S3 buckets tagged with data-classification=phi must use SSE-KMS encryption with a customer-managed key (CMK), not the default AWS-managed key or SSE-S3. This ensures the organization controls key rotation, access policies, and audit logging for PHI data at rest.\n",
-      "asset_id": "phi-bucket-aes256",
-      "asset_type": "aws_s3_bucket",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2026-01-01T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
-        "unsafe_duration_hours": 240,
-        "threshold_hours": 168,
-        "misconfigurations": [
-          {
-            "property": "storage.encryption.algorithm",
-            "actual_value": "[SANITIZED]",
-            "operator": "ne",
-            "unsafe_value": "aws:kms"
-          },
-          {
-            "property": "storage.encryption.kms_key_id",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": ""
-          },
-          {
-            "property": "storage.tags.data-classification",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": "phi"
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
-      },
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "Resource data is not encrypted at rest.",
-        "action": "Enable server-side encryption using a managed key."
-      }
-    },
-    {
-      "finding_id": "sha256:fcc6bceefefac3c7",
-      "control_id": "CTL.S3.ENCRYPT.003",
-      "control_name": "PHI Buckets Must Use SSE-KMS with Customer-Managed Key",
-      "control_description": "S3 buckets tagged with data-classification=phi must use SSE-KMS encryption with a customer-managed key (CMK), not the default AWS-managed key or SSE-S3. This ensures the organization controls key rotation, access policies, and audit logging for PHI data at rest.\n",
-      "asset_id": "phi-bucket-no-config",
-      "asset_type": "aws_s3_bucket",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2026-01-01T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
-        "unsafe_duration_hours": 240,
-        "threshold_hours": 168,
-        "misconfigurations": [
-          {
-            "property": "storage.encryption.algorithm",
-            "actual_value": "[SANITIZED]",
-            "operator": "ne",
-            "unsafe_value": "aws:kms"
-          },
-          {
-            "property": "storage.encryption.kms_key_id",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": ""
-          },
-          {
-            "property": "storage.tags.data-classification",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": "phi"
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
-      },
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "Resource data is not encrypted at rest.",
-        "action": "Enable server-side encryption using a managed key."
-      }
-    }
-  ],
   "top_exposures": [
     {
-      "finding_index": 0,
-      "control_id": "CTL.S3.ENCRYPT.003",
       "asset_id": "phi-bucket-aes256",
-      "exposure_score": 10,
       "breakdown": {
         "base_score": 10,
-        "duration_factor": 1,
         "blast_multiplier": 1,
-        "exposure_multiplier": 1,
-        "days_blind": 10
+        "days_blind": 10,
+        "duration_factor": 1,
+        "exposure_multiplier": 1
       },
+      "control_id": "CTL.S3.ENCRYPT.003",
+      "exposure_score": 10,
+      "finding_index": 0,
       "silent_killer": false
     },
     {
-      "finding_index": 1,
-      "control_id": "CTL.S3.ENCRYPT.003",
       "asset_id": "phi-bucket-no-config",
-      "exposure_score": 10,
       "breakdown": {
         "base_score": 10,
-        "duration_factor": 1,
         "blast_multiplier": 1,
-        "exposure_multiplier": 1,
-        "days_blind": 10
+        "days_blind": 10,
+        "duration_factor": 1,
+        "exposure_multiplier": 1
       },
+      "control_id": "CTL.S3.ENCRYPT.003",
+      "exposure_score": 10,
+      "finding_index": 1,
       "silent_killer": false
     }
-  ],
-  "extensions": {
-    "selected_controls_source": "dir",
-    "context_name": "stave",
-    "resolved_paths": {
-      "controls": "testdata/e2e/e2e-s3-phi-kms/controls",
-      "observations": "testdata/e2e/e2e-s3-phi-kms/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
-      "dirty": false
-    }
-  }
+  ]
 }

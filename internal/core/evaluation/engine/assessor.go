@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/sufield/stave/internal/core/asset"
@@ -83,10 +84,15 @@ func (a *Assessor) predicateParser() policy.PredicateParser {
 func (a *Assessor) confidenceCalculator() evaluation.ConfidenceCalculator { return a.Confidence }
 
 // sortSnapshots returns a chronological copy of the snapshots.
+// Uses stable sort with source as secondary key for determinism
+// when timestamps are identical.
 func (a *Assessor) sortSnapshots(snapshots []asset.Snapshot) []asset.Snapshot {
 	sorted := slices.Clone(snapshots)
-	slices.SortFunc(sorted, func(i, j asset.Snapshot) int {
-		return i.CapturedAt.Compare(j.CapturedAt)
+	slices.SortStableFunc(sorted, func(i, j asset.Snapshot) int {
+		if cmp := i.CapturedAt.Compare(j.CapturedAt); cmp != 0 {
+			return cmp
+		}
+		return strings.Compare(string(i.Source), string(j.Source))
 	})
 	return sorted
 }
@@ -442,13 +448,15 @@ func (a *Assessor) FingerprintPolicy() kernel.Digest {
 	if len(a.Controls) == 0 || a.Hasher == nil {
 		return ""
 	}
-	ids := make([]string, len(a.Controls))
+	// Hash per-control fingerprints (which include predicate, severity,
+	// type — not just IDs) sorted by ID for determinism.
+	fingerprints := make([]string, len(a.Controls))
 	for i := range a.Controls {
 		ctl := &a.Controls[i]
-		ids[i] = string(ctl.ID)
+		fingerprints[i] = string(ctl.ID) + ":" + string(ctl.Fingerprint(a.Hasher))
 	}
-	slices.Sort(ids)
-	return a.Hasher.Digest(ids, '\n')
+	slices.Sort(fingerprints)
+	return a.Hasher.Digest(fingerprints, '\n')
 }
 
 // DefaultContinuityLimit defines the maximum gap allowed between scans

@@ -1,12 +1,128 @@
 {
-  "schema_version": "out.v0.1",
+  "extensions": {
+    "context_name": "stave",
+    "git": {
+      "dirty": false,
+      "head_commit": "19d2659707789ad5ee24bea636595aa7f38da7ae",
+      "repo_root": "/home/zepho/work/bizacademy"
+    },
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-s3-acl-fullcontrol/controls",
+      "observations": "testdata/e2e/e2e-s3-acl-fullcontrol/observations"
+    },
+    "selected_controls_source": "dir"
+  },
+  "findings": [
+    {
+      "asset_id": "fullcontrol-auth-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "control_description": "S3 bucket ACLs must not grant FULL_CONTROL to AllUsers or AuthenticatedUsers. FULL_CONTROL is the worst-case ACL misconfiguration \u2014 the grantee can read, write, and delete objects and modify the ACL itself.\n",
+      "control_id": "CTL.S3.ACL.FULLCONTROL.001",
+      "control_name": "No FULL_CONTROL ACL Grants to Public",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "misconfigurations": [
+          {
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "property": "storage.access.has_full_control_authenticated",
+            "unsafe_value": true
+          },
+          {
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "property": "storage.access.has_full_control_public",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z.",
+        "threshold_hours": 168,
+        "unsafe_duration_hours": 240
+      },
+      "finding_id": "sha256:2a489a7678baa433",
+      "posture_drift": {
+        "exposure_window_count": 1,
+        "pattern": "persistent"
+      },
+      "remediation": {
+        "action": "Replace the bucket ACL with \"BucketOwnerFullControl\" or remove the FULL_CONTROL grant to public groups. Enable S3 Public Access Block with BlockPublicAcls and IgnorePublicAcls set to true.",
+        "description": "Bucket ACL grants FULL_CONTROL to AllUsers or AuthenticatedUsers. This grants complete control including object read/write/delete and ACL modification.",
+        "example": "{\n  \"storage\": {\n    \"access\": {\n      \"has_full_control_public\": false,\n      \"has_full_control_authenticated\": false\n    }\n  }\n}\n"
+      }
+    },
+    {
+      "asset_id": "fullcontrol-public-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "control_description": "S3 bucket ACLs must not grant FULL_CONTROL to AllUsers or AuthenticatedUsers. FULL_CONTROL is the worst-case ACL misconfiguration \u2014 the grantee can read, write, and delete objects and modify the ACL itself.\n",
+      "control_id": "CTL.S3.ACL.FULLCONTROL.001",
+      "control_name": "No FULL_CONTROL ACL Grants to Public",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "misconfigurations": [
+          {
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "property": "storage.access.has_full_control_authenticated",
+            "unsafe_value": true
+          },
+          {
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "property": "storage.access.has_full_control_public",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z.",
+        "threshold_hours": 168,
+        "unsafe_duration_hours": 240
+      },
+      "finding_id": "sha256:e1ee3d00f05f9f46",
+      "posture_drift": {
+        "exposure_window_count": 1,
+        "pattern": "persistent"
+      },
+      "remediation": {
+        "action": "Replace the bucket ACL with \"BucketOwnerFullControl\" or remove the FULL_CONTROL grant to public groups. Enable S3 Public Access Block with BlockPublicAcls and IgnorePublicAcls set to true.",
+        "description": "Bucket ACL grants FULL_CONTROL to AllUsers or AuthenticatedUsers. This grants complete control including object read/write/delete and ACL modification.",
+        "example": "{\n  \"storage\": {\n    \"access\": {\n      \"has_full_control_public\": false,\n      \"has_full_control_authenticated\": false\n    }\n  }\n}\n"
+      }
+    }
+  ],
   "kind": "ASSESSMENT",
+  "risk_signals": [
+    {
+      "asset_id": "fullcontrol-auth-bucket",
+      "asset_type": "aws_s3_bucket",
+      "control_id": "CTL.S3.ACL.FULLCONTROL.001",
+      "due_at": "2026-01-08T00:00:00Z",
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "remaining_hours": -72,
+      "status": "OVERDUE",
+      "threshold_hours": 168
+    },
+    {
+      "asset_id": "fullcontrol-public-bucket",
+      "asset_type": "aws_s3_bucket",
+      "control_id": "CTL.S3.ACL.FULLCONTROL.001",
+      "due_at": "2026-01-08T00:00:00Z",
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "remaining_hours": -72,
+      "status": "OVERDUE",
+      "threshold_hours": 168
+    }
+  ],
   "run": {
-    "tool_version": "edge",
-    "offline": true,
-    "now": "2026-01-11T00:00:00Z",
-    "sla_threshold": "7d",
-    "snapshots": 2,
+    "evaluated_state": "deployed",
     "input_hashes": {
       "files": {
         "2026-01-01T000000Z.json": "da7ff01e3ef30d19faf2d0b3bcd8e06904a185dfb4b80042fdc79f0b3f68e7d7",
@@ -14,164 +130,48 @@
       },
       "overall": "8ae17da88604bdd06559481696a4ccf58d1ef2c00de5413d1f6d6c11d40db617"
     },
-    "policy_fingerprint": "406c5623be24de2c5cf4e7942ca898186e604ae98ac546f5a5456b72683ba76e",
-    "evaluated_state": "deployed"
+    "now": "2026-01-11T00:00:00Z",
+    "offline": true,
+    "policy_fingerprint": "55731de71ee6f91a4dea8cdb4e087f0ae538bab7478385adabe7ac8998f8b2ce",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "tool_version": "edge"
   },
+  "schema_version": "out.v0.1",
+  "status": "NON_COMPLIANT",
   "summary": {
-    "total_assets": 3,
     "exposed_resources": 2,
+    "total_assets": 3,
     "violations": 2
   },
-  "status": "NON_COMPLIANT",
-  "risk_signals": [
-    {
-      "control_id": "CTL.S3.ACL.FULLCONTROL.001",
-      "asset_id": "fullcontrol-auth-bucket",
-      "asset_type": "aws_s3_bucket",
-      "status": "OVERDUE",
-      "due_at": "2026-01-08T00:00:00Z",
-      "remaining_hours": -72,
-      "first_unsafe_at": "2026-01-01T00:00:00Z",
-      "threshold_hours": 168
-    },
-    {
-      "control_id": "CTL.S3.ACL.FULLCONTROL.001",
-      "asset_id": "fullcontrol-public-bucket",
-      "asset_type": "aws_s3_bucket",
-      "status": "OVERDUE",
-      "due_at": "2026-01-08T00:00:00Z",
-      "remaining_hours": -72,
-      "first_unsafe_at": "2026-01-01T00:00:00Z",
-      "threshold_hours": 168
-    }
-  ],
-  "findings": [
-    {
-      "finding_id": "sha256:2a489a7678baa433",
-      "control_id": "CTL.S3.ACL.FULLCONTROL.001",
-      "control_name": "No FULL_CONTROL ACL Grants to Public",
-      "control_description": "S3 bucket ACLs must not grant FULL_CONTROL to AllUsers or AuthenticatedUsers. FULL_CONTROL is the worst-case ACL misconfiguration — the grantee can read, write, and delete objects and modify the ACL itself.\n",
-      "asset_id": "fullcontrol-auth-bucket",
-      "asset_type": "aws_s3_bucket",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2026-01-01T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
-        "unsafe_duration_hours": 240,
-        "threshold_hours": 168,
-        "misconfigurations": [
-          {
-            "property": "storage.access.has_full_control_authenticated",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": true
-          },
-          {
-            "property": "storage.access.has_full_control_public",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": true
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
-      },
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "Bucket ACL grants FULL_CONTROL to AllUsers or AuthenticatedUsers. This grants complete control including object read/write/delete and ACL modification.",
-        "action": "Replace the bucket ACL with \"BucketOwnerFullControl\" or remove the FULL_CONTROL grant to public groups. Enable S3 Public Access Block with BlockPublicAcls and IgnorePublicAcls set to true.",
-        "example": "{\n  \"storage\": {\n    \"access\": {\n      \"has_full_control_public\": false,\n      \"has_full_control_authenticated\": false\n    }\n  }\n}\n"
-      }
-    },
-    {
-      "finding_id": "sha256:e1ee3d00f05f9f46",
-      "control_id": "CTL.S3.ACL.FULLCONTROL.001",
-      "control_name": "No FULL_CONTROL ACL Grants to Public",
-      "control_description": "S3 bucket ACLs must not grant FULL_CONTROL to AllUsers or AuthenticatedUsers. FULL_CONTROL is the worst-case ACL misconfiguration — the grantee can read, write, and delete objects and modify the ACL itself.\n",
-      "asset_id": "fullcontrol-public-bucket",
-      "asset_type": "aws_s3_bucket",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2026-01-01T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
-        "unsafe_duration_hours": 240,
-        "threshold_hours": 168,
-        "misconfigurations": [
-          {
-            "property": "storage.access.has_full_control_authenticated",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": true
-          },
-          {
-            "property": "storage.access.has_full_control_public",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": true
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
-      },
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "Bucket ACL grants FULL_CONTROL to AllUsers or AuthenticatedUsers. This grants complete control including object read/write/delete and ACL modification.",
-        "action": "Replace the bucket ACL with \"BucketOwnerFullControl\" or remove the FULL_CONTROL grant to public groups. Enable S3 Public Access Block with BlockPublicAcls and IgnorePublicAcls set to true.",
-        "example": "{\n  \"storage\": {\n    \"access\": {\n      \"has_full_control_public\": false,\n      \"has_full_control_authenticated\": false\n    }\n  }\n}\n"
-      }
-    }
-  ],
   "top_exposures": [
     {
-      "finding_index": 0,
-      "control_id": "CTL.S3.ACL.FULLCONTROL.001",
       "asset_id": "fullcontrol-auth-bucket",
-      "exposure_score": 10,
       "breakdown": {
         "base_score": 10,
-        "duration_factor": 1,
         "blast_multiplier": 1,
-        "exposure_multiplier": 1,
-        "days_blind": 10
+        "days_blind": 10,
+        "duration_factor": 1,
+        "exposure_multiplier": 1
       },
+      "control_id": "CTL.S3.ACL.FULLCONTROL.001",
+      "exposure_score": 10,
+      "finding_index": 0,
       "silent_killer": false
     },
     {
-      "finding_index": 1,
-      "control_id": "CTL.S3.ACL.FULLCONTROL.001",
       "asset_id": "fullcontrol-public-bucket",
-      "exposure_score": 10,
       "breakdown": {
         "base_score": 10,
-        "duration_factor": 1,
         "blast_multiplier": 1,
-        "exposure_multiplier": 1,
-        "days_blind": 10
+        "days_blind": 10,
+        "duration_factor": 1,
+        "exposure_multiplier": 1
       },
+      "control_id": "CTL.S3.ACL.FULLCONTROL.001",
+      "exposure_score": 10,
+      "finding_index": 1,
       "silent_killer": false
     }
-  ],
-  "extensions": {
-    "selected_controls_source": "dir",
-    "context_name": "stave",
-    "resolved_paths": {
-      "controls": "testdata/e2e/e2e-s3-acl-fullcontrol/controls",
-      "observations": "testdata/e2e/e2e-s3-acl-fullcontrol/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
-      "dirty": false
-    }
-  }
+  ]
 }

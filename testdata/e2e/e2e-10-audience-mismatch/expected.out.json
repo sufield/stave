@@ -1,12 +1,21 @@
 {
-  "schema_version": "out.v0.1",
+  "extensions": {
+    "context_name": "stave",
+    "git": {
+      "dirty": false,
+      "head_commit": "19d2659707789ad5ee24bea636595aa7f38da7ae",
+      "repo_root": "/home/zepho/work/bizacademy"
+    },
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-10-audience-mismatch/controls",
+      "observations": "testdata/e2e/e2e-10-audience-mismatch/observations"
+    },
+    "selected_controls_source": "dir"
+  },
+  "findings": [],
   "kind": "ASSESSMENT",
   "run": {
-    "tool_version": "edge",
-    "offline": true,
-    "now": "2026-01-11T00:00:00Z",
-    "sla_threshold": "7d",
-    "snapshots": 2,
+    "evaluated_state": "deployed",
     "input_hashes": {
       "files": {
         "2026-01-01T000000Z.json": "1f157968dfd49557ff47755d8c2f807b40fb2de6ae85728b27db8618a3e2f07a",
@@ -14,16 +23,14 @@
       },
       "overall": "9ac8a911744a76358b671c2e64e1f19536826fd94795c30b8477c994baedec58"
     },
-    "policy_fingerprint": "d35f1f4104337cec0597a5b8e3754d4da764d8dfb89525de9cff277d9e7d9eff",
-    "evaluated_state": "deployed"
+    "now": "2026-01-11T00:00:00Z",
+    "offline": true,
+    "policy_fingerprint": "fc1e573702a7b8d31763ba7d1d1d31414840ff20a44e3e909b76b7e481115d86",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "tool_version": "edge"
   },
-  "summary": {
-    "total_assets": 0,
-    "exposed_resources": 0,
-    "violations": 0
-  },
-  "status": "COMPLIANT",
-  "findings": [],
+  "schema_version": "out.v0.1",
   "skipped_controls": [
     {
       "control_id": "CTL.PROC.MAIL.001",
@@ -31,17 +38,10 @@
       "reason": "control type cannot be evaluated: audience_boundary"
     }
   ],
-  "extensions": {
-    "selected_controls_source": "dir",
-    "context_name": "stave",
-    "resolved_paths": {
-      "controls": "testdata/e2e/e2e-10-audience-mismatch/controls",
-      "observations": "testdata/e2e/e2e-10-audience-mismatch/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
-      "dirty": false
-    }
+  "status": "COMPLIANT",
+  "summary": {
+    "exposed_resources": 0,
+    "total_assets": 0,
+    "violations": 0
   }
 }

@@ -387,25 +387,38 @@ func WriteFileAtomic(path string, data []byte, perm os.FileMode) error {
 }
 
 // crossFSCopy copies a file when os.Rename fails across filesystems.
+// Uses temp-then-rename in the destination directory to prevent
+// truncation of the destination on a mid-copy crash.
 func crossFSCopy(src, dst string, perm os.FileMode) error {
-	in, err := os.Open(src) //nolint:gosec // temp file we just created
-	if err != nil {
-		return err
-	}
-	defer in.Close()
-
-	out, err := os.OpenFile(dst, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, perm) //nolint:gosec // caller checked path
+	data, err := os.ReadFile(src) //nolint:gosec // temp file we just created
 	if err != nil {
 		return err
 	}
 
-	if _, err = io.Copy(out, in); err != nil {
-		_ = out.Close()
+	dir := filepath.Dir(dst)
+	tmp, err := os.CreateTemp(dir, ".stave-xfscopy-*")
+	if err != nil {
 		return err
 	}
-	if err = out.Sync(); err != nil {
-		_ = out.Close()
+	tmpName := tmp.Name()
+	defer os.Remove(tmpName) // cleanup on any failure
+
+	_, err = tmp.Write(data)
+	if err != nil {
+		_ = tmp.Close()
 		return err
 	}
-	return out.Close()
+	err = tmp.Chmod(perm)
+	if err != nil {
+		_ = tmp.Close()
+		return err
+	}
+	err = tmp.Sync()
+	if err != nil {
+		_ = tmp.Close()
+		return err
+	}
+	_ = tmp.Close()
+
+	return os.Rename(tmpName, dst)
 }

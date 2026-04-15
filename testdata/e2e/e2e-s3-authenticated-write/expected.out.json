@@ -1,12 +1,70 @@
 {
-  "schema_version": "out.v0.1",
+  "extensions": {
+    "context_name": "stave",
+    "git": {
+      "dirty": false,
+      "head_commit": "19d2659707789ad5ee24bea636595aa7f38da7ae",
+      "repo_root": "/home/zepho/work/bizacademy"
+    },
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-s3-authenticated-write/controls",
+      "observations": "testdata/e2e/e2e-s3-authenticated-write/observations"
+    },
+    "selected_controls_source": "dir"
+  },
+  "findings": [
+    {
+      "asset_id": "auth-write-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "control_description": "S3 buckets must not grant write or delete access to all authenticated AWS users. AuthenticatedUsers scope means any AWS account holder worldwide can upload, overwrite, or delete objects \u2014 enabling data injection, ransomware, and supply chain poisoning.\n",
+      "control_id": "CTL.S3.AUTH.WRITE.001",
+      "control_name": "No Authenticated-Users Write Access",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "misconfigurations": [
+          {
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "property": "storage.access.authenticated_write",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z.",
+        "threshold_hours": 168,
+        "unsafe_duration_hours": 240
+      },
+      "finding_id": "sha256:41db1ea55da728c1",
+      "posture_drift": {
+        "exposure_window_count": 1,
+        "pattern": "persistent"
+      },
+      "remediation": {
+        "action": "Remove the ACL grant or policy statement granting write access to AuthenticatedUsers. Replace with specific IAM principals or use bucket policy with explicit account IDs. Enable S3 Public Access Block with BlockPublicAcls and IgnorePublicAcls set to true.",
+        "description": "Bucket grants write access to the AuthenticatedUsers group. Any AWS account holder worldwide can upload or overwrite objects.",
+        "example": "{\n  \"storage\": {\n    \"access\": {\n      \"authenticated_write\": false\n    }\n  }\n}\n"
+      }
+    }
+  ],
   "kind": "ASSESSMENT",
+  "risk_signals": [
+    {
+      "asset_id": "auth-write-bucket",
+      "asset_type": "aws_s3_bucket",
+      "control_id": "CTL.S3.AUTH.WRITE.001",
+      "due_at": "2026-01-08T00:00:00Z",
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "remaining_hours": -72,
+      "status": "OVERDUE",
+      "threshold_hours": 168
+    }
+  ],
   "run": {
-    "tool_version": "edge",
-    "offline": true,
-    "now": "2026-01-11T00:00:00Z",
-    "sla_threshold": "7d",
-    "snapshots": 2,
+    "evaluated_state": "deployed",
     "input_hashes": {
       "files": {
         "2026-01-01T000000Z.json": "f68b6bf40f2c9b22b6ec0e323dd8bfbd5d7e486d6807ce56bc70ff9d12e86287",
@@ -14,92 +72,34 @@
       },
       "overall": "bf3575b87d98e18ddb5d579c6b2df1e8524eaf4b66c9a60e1a292f95063f86be"
     },
-    "policy_fingerprint": "17414bae5932af88e63416916bca2242600d0e92802c4e165dbd7687591de427",
-    "evaluated_state": "deployed"
+    "now": "2026-01-11T00:00:00Z",
+    "offline": true,
+    "policy_fingerprint": "a24990287dea6fd807c08d2353a31eec167b56055d735a6ae5f9bee51f78ad3e",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "tool_version": "edge"
   },
+  "schema_version": "out.v0.1",
+  "status": "NON_COMPLIANT",
   "summary": {
-    "total_assets": 2,
     "exposed_resources": 1,
+    "total_assets": 2,
     "violations": 1
   },
-  "status": "NON_COMPLIANT",
-  "risk_signals": [
-    {
-      "control_id": "CTL.S3.AUTH.WRITE.001",
-      "asset_id": "auth-write-bucket",
-      "asset_type": "aws_s3_bucket",
-      "status": "OVERDUE",
-      "due_at": "2026-01-08T00:00:00Z",
-      "remaining_hours": -72,
-      "first_unsafe_at": "2026-01-01T00:00:00Z",
-      "threshold_hours": 168
-    }
-  ],
-  "findings": [
-    {
-      "finding_id": "sha256:41db1ea55da728c1",
-      "control_id": "CTL.S3.AUTH.WRITE.001",
-      "control_name": "No Authenticated-Users Write Access",
-      "control_description": "S3 buckets must not grant write or delete access to all authenticated AWS users. AuthenticatedUsers scope means any AWS account holder worldwide can upload, overwrite, or delete objects — enabling data injection, ransomware, and supply chain poisoning.\n",
-      "asset_id": "auth-write-bucket",
-      "asset_type": "aws_s3_bucket",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2026-01-01T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
-        "unsafe_duration_hours": 240,
-        "threshold_hours": 168,
-        "misconfigurations": [
-          {
-            "property": "storage.access.authenticated_write",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": true
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
-      },
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "Bucket grants write access to the AuthenticatedUsers group. Any AWS account holder worldwide can upload or overwrite objects.",
-        "action": "Remove the ACL grant or policy statement granting write access to AuthenticatedUsers. Replace with specific IAM principals or use bucket policy with explicit account IDs. Enable S3 Public Access Block with BlockPublicAcls and IgnorePublicAcls set to true.",
-        "example": "{\n  \"storage\": {\n    \"access\": {\n      \"authenticated_write\": false\n    }\n  }\n}\n"
-      }
-    }
-  ],
   "top_exposures": [
     {
-      "finding_index": 0,
-      "control_id": "CTL.S3.AUTH.WRITE.001",
       "asset_id": "auth-write-bucket",
-      "exposure_score": 10,
       "breakdown": {
         "base_score": 10,
-        "duration_factor": 1,
         "blast_multiplier": 1,
-        "exposure_multiplier": 1,
-        "days_blind": 10
+        "days_blind": 10,
+        "duration_factor": 1,
+        "exposure_multiplier": 1
       },
+      "control_id": "CTL.S3.AUTH.WRITE.001",
+      "exposure_score": 10,
+      "finding_index": 0,
       "silent_killer": false
     }
-  ],
-  "extensions": {
-    "selected_controls_source": "dir",
-    "context_name": "stave",
-    "resolved_paths": {
-      "controls": "testdata/e2e/e2e-s3-authenticated-write/controls",
-      "observations": "testdata/e2e/e2e-s3-authenticated-write/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
-      "dirty": false
-    }
-  }
+  ]
 }

@@ -1,7 +1,6 @@
 package observations
 
 import (
-	"strconv"
 	"strings"
 )
 
@@ -41,17 +40,20 @@ func normalizeValue(v any) any {
 	}
 }
 
-// coerceString converts string-encoded booleans and numbers to native types.
-// Only unambiguous conversions are performed:
+// coerceString converts string-encoded booleans to native types.
+// Numeric strings are intentionally preserved as strings — a property
+// value of "123" may be a port number, version string, or ID that
+// downstream CEL predicates use with string operations (contains,
+// matches, startsWith). Coercing to float64 breaks those predicates.
+//
+// Only unambiguous boolean conversions are performed:
 //   - "true"/"false" (after trim+lower) → bool
-//   - Pure numeric strings (not hex, not empty) → float64
 func coerceString(s string) any {
 	trimmed := strings.TrimSpace(s)
 	if trimmed == "" {
-		return s // preserve empty/whitespace strings as-is
+		return s
 	}
 
-	// Boolean coercion (case-insensitive)
 	switch strings.ToLower(trimmed) {
 	case "true":
 		return true
@@ -59,34 +61,5 @@ func coerceString(s string) any {
 		return false
 	}
 
-	// Numeric coercion — only pure decimal numbers, no hex/octal
-	if isNumericCandidate(trimmed) {
-		if f, err := strconv.ParseFloat(trimmed, 64); err == nil {
-			return f
-		}
-	}
-
 	return s
-}
-
-// isNumericCandidate checks if a string looks like a decimal number.
-// Rejects hex (0x), octal (0o), binary (0b), and strings starting with
-// letters to avoid false positives on identifiers like "s3://bucket".
-func isNumericCandidate(s string) bool {
-	if s == "" {
-		return false
-	}
-	first := s[0]
-	// Must start with digit, minus, or dot
-	if first != '-' && first != '.' && (first < '0' || first > '9') {
-		return false
-	}
-	// Reject 0x, 0o, 0b prefixes
-	if len(s) > 1 && first == '0' {
-		second := s[1]
-		if second == 'x' || second == 'X' || second == 'o' || second == 'O' || second == 'b' || second == 'B' {
-			return false
-		}
-	}
-	return true
 }

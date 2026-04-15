@@ -1,12 +1,56 @@
 {
-  "schema_version": "out.v0.1",
+  "extensions": {
+    "context_name": "stave",
+    "git": {
+      "dirty": false,
+      "head_commit": "19d2659707789ad5ee24bea636595aa7f38da7ae",
+      "repo_root": "/home/zepho/work/bizacademy"
+    },
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-30-prefix-unsafe-bucket-wide/controls",
+      "observations": "testdata/e2e/e2e-30-prefix-unsafe-bucket-wide/observations"
+    },
+    "selected_controls_source": "dir"
+  },
+  "findings": [
+    {
+      "asset_id": "res:aws:s3:bucket:example-bucket",
+      "asset_type": "storage_bucket",
+      "asset_vendor": "aws",
+      "control_description": "Public read access must be limited to explicitly approved prefixes. All other prefixes are private by default.\n",
+      "control_id": "CTL.EXP.VISIBILITY.003",
+      "control_name": "Public Read Allowed Only for Approved Prefixes",
+      "evidence": {
+        "misconfigurations": [
+          {
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "property": "exposure_source",
+            "unsafe_value": "missing_evidence"
+          },
+          {
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "property": "protected_prefix",
+            "unsafe_value": "invoices/"
+          }
+        ],
+        "temporal_risk": "Protected prefix \"invoices/\" is publicly readable via missing_evidence."
+      },
+      "finding_id": "sha256:99a082153b1d6e3b",
+      "posture_drift": {
+        "exposure_window_count": 1,
+        "pattern": "persistent"
+      },
+      "remediation": {
+        "action": "Review the misconfigured properties and revert to compliant values.",
+        "description": "Resource configuration deviates from security baseline."
+      }
+    }
+  ],
   "kind": "ASSESSMENT",
   "run": {
-    "tool_version": "edge",
-    "offline": true,
-    "now": "2026-01-11T00:00:00Z",
-    "sla_threshold": "7d",
-    "snapshots": 2,
+    "evaluated_state": "deployed",
     "input_hashes": {
       "files": {
         "2026-01-10T000000Z.json": "db5d9769711840da028fc9a2abec7bb0668ebe0c93969aa5b186b050942c2eb1",
@@ -14,78 +58,34 @@
       },
       "overall": "56831c983028769ea34202886a170757b38805bf57261813b1d6344b892dc9d3"
     },
-    "policy_fingerprint": "3e4adb4aed85eb64d5f3b59514f45ff9f82f3cd39fc81e38a7c04a9032062038",
-    "evaluated_state": "deployed"
+    "now": "2026-01-11T00:00:00Z",
+    "offline": true,
+    "policy_fingerprint": "3d3729b151e479aa50380da56bde1917e6e7b388565ccc87f9d4207d9784307c",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "tool_version": "edge"
   },
+  "schema_version": "out.v0.1",
+  "status": "NON_COMPLIANT",
   "summary": {
-    "total_assets": 1,
     "exposed_resources": 1,
+    "total_assets": 1,
     "violations": 1
   },
-  "status": "NON_COMPLIANT",
-  "findings": [
-    {
-      "finding_id": "sha256:99a082153b1d6e3b",
-      "control_id": "CTL.EXP.VISIBILITY.003",
-      "control_name": "Public Read Allowed Only for Approved Prefixes",
-      "control_description": "Public read access must be limited to explicitly approved prefixes. All other prefixes are private by default.\n",
-      "asset_id": "res:aws:s3:bucket:example-bucket",
-      "asset_type": "storage_bucket",
-      "asset_vendor": "aws",
-      "evidence": {
-        "misconfigurations": [
-          {
-            "property": "exposure_source",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": "missing_evidence"
-          },
-          {
-            "property": "protected_prefix",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": "invoices/"
-          }
-        ],
-        "temporal_risk": "Protected prefix \"invoices/\" is publicly readable via missing_evidence."
-      },
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "Resource configuration deviates from security baseline.",
-        "action": "Review the misconfigured properties and revert to compliant values."
-      }
-    }
-  ],
   "top_exposures": [
     {
-      "finding_index": 0,
-      "control_id": "CTL.EXP.VISIBILITY.003",
       "asset_id": "res:aws:s3:bucket:example-bucket",
-      "exposure_score": 10,
       "breakdown": {
         "base_score": 10,
-        "duration_factor": 1,
         "blast_multiplier": 1,
-        "exposure_multiplier": 1,
-        "days_blind": 0
+        "days_blind": 0,
+        "duration_factor": 1,
+        "exposure_multiplier": 1
       },
+      "control_id": "CTL.EXP.VISIBILITY.003",
+      "exposure_score": 10,
+      "finding_index": 0,
       "silent_killer": false
     }
-  ],
-  "extensions": {
-    "selected_controls_source": "dir",
-    "context_name": "stave",
-    "resolved_paths": {
-      "controls": "testdata/e2e/e2e-30-prefix-unsafe-bucket-wide/controls",
-      "observations": "testdata/e2e/e2e-30-prefix-unsafe-bucket-wide/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
-      "dirty": false
-    }
-  }
+  ]
 }

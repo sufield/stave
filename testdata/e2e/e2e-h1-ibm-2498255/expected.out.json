@@ -1,12 +1,153 @@
 {
-  "schema_version": "out.v0.1",
+  "extensions": {
+    "context_name": "stave",
+    "git": {
+      "dirty": false,
+      "head_commit": "19d2659707789ad5ee24bea636595aa7f38da7ae",
+      "repo_root": "/home/zepho/work/bizacademy"
+    },
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-h1-ibm-2498255/controls",
+      "observations": "testdata/e2e/e2e-h1-ibm-2498255/observations"
+    },
+    "selected_controls_source": "dir"
+  },
+  "findings": [
+    {
+      "asset_id": "apptio-endpoint-ref-1",
+      "asset_type": "s3_bucket_reference",
+      "asset_vendor": "aws",
+      "control_description": "Any externally referenced S3 bucket must exist and be owned. Dangling references (missing or unowned buckets) enable bucket takeover and attacker-controlled content delivery.\n",
+      "control_id": "CTL.S3.BUCKET.TAKEOVER.001",
+      "control_name": "Referenced S3 Buckets Must Exist And Be Owned",
+      "evidence": {
+        "first_unsafe_at": "2024-05-09T00:00:00Z",
+        "last_seen_unsafe_at": "2024-05-17T00:00:00Z",
+        "misconfigurations": [
+          {
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "property": "s3_ref.bucket_exists",
+            "unsafe_value": false
+          },
+          {
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "property": "s3_ref.bucket_owned",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 14688 hours (SLA: 168 hours). Exposed since 2024-05-09T00:00:00Z.",
+        "threshold_hours": 168,
+        "unsafe_duration_hours": 14688
+      },
+      "finding_id": "sha256:fcb9a57f38726853",
+      "fix_plan": {
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "id": "fix-3932afc25f00e042",
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "target": {
+          "asset_id": "apptio-endpoint-ref-1",
+          "asset_type": "s3_bucket_reference"
+        }
+      },
+      "posture_drift": {
+        "exposure_window_count": 1,
+        "pattern": "persistent"
+      },
+      "remediation": {
+        "action": "Restrict access to authorized principals only.",
+        "description": "Resource is exposed to the public internet."
+      }
+    }
+  ],
   "kind": "ASSESSMENT",
+  "remediation_groups": [
+    {
+      "asset_id": "apptio-endpoint-ref-1",
+      "asset_type": "s3_bucket_reference",
+      "contributing_controls": [
+        "CTL.S3.BUCKET.TAKEOVER.001"
+      ],
+      "finding_count": 1,
+      "fix_plan": {
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "id": "fix-3932afc25f00e042",
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "target": {
+          "asset_id": "apptio-endpoint-ref-1",
+          "asset_type": "s3_bucket_reference"
+        }
+      }
+    }
+  ],
+  "risk_signals": [
+    {
+      "asset_id": "apptio-endpoint-ref-1",
+      "asset_type": "s3_bucket_reference",
+      "control_id": "CTL.S3.BUCKET.TAKEOVER.001",
+      "due_at": "2024-05-16T00:00:00Z",
+      "first_unsafe_at": "2024-05-09T00:00:00Z",
+      "remaining_hours": -14520,
+      "status": "OVERDUE",
+      "threshold_hours": 168
+    }
+  ],
   "run": {
-    "tool_version": "edge",
-    "offline": true,
-    "now": "2026-01-11T00:00:00Z",
-    "sla_threshold": "7d",
-    "snapshots": 2,
+    "evaluated_state": "deployed",
     "input_hashes": {
       "files": {
         "2024-05-09T000000Z.json": "a147839d236d9816d5fbd48944eaf14964ecf4f369bb35ddf138b312557e141e",
@@ -14,175 +155,34 @@
       },
       "overall": "80897e5d5ab5bc08f26037829b136d7e9b40f48c716fe85a74147e6a6fb6edac"
     },
-    "policy_fingerprint": "7bf215c30ede67f208b873df06900343273f618007838d0d4b09d4937c11162e",
-    "evaluated_state": "deployed"
+    "now": "2026-01-11T00:00:00Z",
+    "offline": true,
+    "policy_fingerprint": "228c8ed4f1f2fe2abc1736f843e0db0e2be8415b5a32a4def74682bafa7ab441",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "tool_version": "edge"
   },
+  "schema_version": "out.v0.1",
+  "status": "NON_COMPLIANT",
   "summary": {
-    "total_assets": 1,
     "exposed_resources": 1,
+    "total_assets": 1,
     "violations": 1
   },
-  "status": "NON_COMPLIANT",
-  "risk_signals": [
-    {
-      "control_id": "CTL.S3.BUCKET.TAKEOVER.001",
-      "asset_id": "apptio-endpoint-ref-1",
-      "asset_type": "s3_bucket_reference",
-      "status": "OVERDUE",
-      "due_at": "2024-05-16T00:00:00Z",
-      "remaining_hours": -14520,
-      "first_unsafe_at": "2024-05-09T00:00:00Z",
-      "threshold_hours": 168
-    }
-  ],
-  "findings": [
-    {
-      "finding_id": "sha256:fcb9a57f38726853",
-      "control_id": "CTL.S3.BUCKET.TAKEOVER.001",
-      "control_name": "Referenced S3 Buckets Must Exist And Be Owned",
-      "control_description": "Any externally referenced S3 bucket must exist and be owned. Dangling references (missing or unowned buckets) enable bucket takeover and attacker-controlled content delivery.\n",
-      "asset_id": "apptio-endpoint-ref-1",
-      "asset_type": "s3_bucket_reference",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2024-05-09T00:00:00Z",
-        "last_seen_unsafe_at": "2024-05-17T00:00:00Z",
-        "unsafe_duration_hours": 14688,
-        "threshold_hours": 168,
-        "misconfigurations": [
-          {
-            "property": "s3_ref.bucket_exists",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": false
-          },
-          {
-            "property": "s3_ref.bucket_owned",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": false
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 14688 hours (SLA: 168 hours). Exposed since 2024-05-09T00:00:00Z."
-      },
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "Resource is exposed to the public internet.",
-        "action": "Restrict access to authorized principals only."
-      },
-      "fix_plan": {
-        "id": "fix-3932afc25f00e042",
-        "target": {
-          "asset_id": "apptio-endpoint-ref-1",
-          "asset_type": "s3_bucket_reference"
-        },
-        "preconditions": [
-          "Confirm resource ownership and internal change window approval.",
-          "Ensure public access is not explicitly required for this specific resource's function."
-        ],
-        "actions": [
-          {
-            "action_type": "set",
-            "path": "security_posture.block_identity_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_metadata_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
-            "value": true
-          }
-        ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
-      }
-    }
-  ],
-  "remediation_groups": [
-    {
-      "asset_id": "apptio-endpoint-ref-1",
-      "asset_type": "s3_bucket_reference",
-      "fix_plan": {
-        "id": "fix-3932afc25f00e042",
-        "target": {
-          "asset_id": "apptio-endpoint-ref-1",
-          "asset_type": "s3_bucket_reference"
-        },
-        "preconditions": [
-          "Confirm resource ownership and internal change window approval.",
-          "Ensure public access is not explicitly required for this specific resource's function."
-        ],
-        "actions": [
-          {
-            "action_type": "set",
-            "path": "security_posture.block_identity_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_metadata_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
-            "value": true
-          }
-        ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
-      },
-      "contributing_controls": [
-        "CTL.S3.BUCKET.TAKEOVER.001"
-      ],
-      "finding_count": 1
-    }
-  ],
   "top_exposures": [
     {
-      "finding_index": 0,
-      "control_id": "CTL.S3.BUCKET.TAKEOVER.001",
       "asset_id": "apptio-endpoint-ref-1",
-      "exposure_score": 30,
       "breakdown": {
         "base_score": 10,
-        "duration_factor": 3,
         "blast_multiplier": 1,
-        "exposure_multiplier": 1,
-        "days_blind": 612
+        "days_blind": 612,
+        "duration_factor": 3,
+        "exposure_multiplier": 1
       },
+      "control_id": "CTL.S3.BUCKET.TAKEOVER.001",
+      "exposure_score": 30,
+      "finding_index": 0,
       "silent_killer": true
     }
-  ],
-  "extensions": {
-    "selected_controls_source": "dir",
-    "context_name": "stave",
-    "resolved_paths": {
-      "controls": "testdata/e2e/e2e-h1-ibm-2498255/controls",
-      "observations": "testdata/e2e/e2e-h1-ibm-2498255/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
-      "dirty": false
-    }
-  }
+  ]
 }

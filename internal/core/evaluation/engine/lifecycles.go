@@ -48,12 +48,16 @@ func BuildLifecyclesPerControl(
 // whose scope tags include that vendor. Controls with no scope tags
 // are treated as universal (applicable to all vendors).
 type controlVendorIndex struct {
-	byVendor  map[string][]int // vendor string → control indices
-	universal []int            // controls with no scope tags
+	byVendor  map[string][]int                      // vendor string → control indices
+	universal []int                                 // controls with no scope tags
+	cache     map[string][]policy.ControlDefinition // vendor → cached result
 }
 
 func buildControlVendorIndex(controls []policy.ControlDefinition) controlVendorIndex {
-	idx := controlVendorIndex{byVendor: make(map[string][]int)}
+	idx := controlVendorIndex{
+		byVendor: make(map[string][]int),
+		cache:    make(map[string][]policy.ControlDefinition),
+	}
 	for i := range controls {
 		ctl := &controls[i]
 		if len(ctl.ScopeTags) == 0 {
@@ -78,6 +82,12 @@ func buildControlVendorIndex(controls []policy.ControlDefinition) controlVendorI
 
 func (idx controlVendorIndex) controlsFor(vendor kernel.Vendor, all []policy.ControlDefinition) []policy.ControlDefinition {
 	vendorStr := string(vendor)
+
+	// Return cached result if available — avoids per-asset allocation.
+	if cached, ok := idx.cache[vendorStr]; ok {
+		return cached
+	}
+
 	indices := idx.byVendor[vendorStr]
 	if len(indices) == 0 && len(idx.universal) == 0 {
 		return all // no index data — fall back to full scan
@@ -96,6 +106,11 @@ func (idx controlVendorIndex) controlsFor(vendor kernel.Vendor, all []policy.Con
 			seen[i] = true
 			result = append(result, all[i])
 		}
+	}
+
+	// Cache for future calls with the same vendor.
+	if idx.cache != nil {
+		idx.cache[vendorStr] = result
 	}
 	return result
 }

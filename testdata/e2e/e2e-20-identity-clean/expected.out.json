@@ -1,12 +1,21 @@
 {
-  "schema_version": "out.v0.1",
+  "extensions": {
+    "context_name": "stave",
+    "git": {
+      "dirty": false,
+      "head_commit": "19d2659707789ad5ee24bea636595aa7f38da7ae",
+      "repo_root": "/home/zepho/work/bizacademy"
+    },
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-20-identity-clean/controls",
+      "observations": "testdata/e2e/e2e-20-identity-clean/observations"
+    },
+    "selected_controls_source": "dir"
+  },
+  "findings": [],
   "kind": "ASSESSMENT",
   "run": {
-    "tool_version": "edge",
-    "offline": true,
-    "now": "2026-01-11T00:00:00Z",
-    "sla_threshold": "7d",
-    "snapshots": 2,
+    "evaluated_state": "deployed",
     "input_hashes": {
       "files": {
         "2026-01-01T000000Z.json": "27f2d1b7f0e69bb3881c734253d927c76332b3b989a4d45e50ba3a6329bd2262",
@@ -14,27 +23,18 @@
       },
       "overall": "94938e3942adc01cd5e586963db2903241af7df7a4077fb418239dff0b5fe247"
     },
-    "policy_fingerprint": "5569c0ea77304ab6bb5c1e932ad299b037790563f57a4cf579136136d930d1a8",
-    "evaluated_state": "deployed"
+    "now": "2026-01-11T00:00:00Z",
+    "offline": true,
+    "policy_fingerprint": "2b880fea89c17581e6ff64a7f483fef00f17bebcaed6dc65739da981408f64b8",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "tool_version": "edge"
   },
-  "summary": {
-    "total_assets": 2,
-    "exposed_resources": 0,
-    "violations": 0
-  },
+  "schema_version": "out.v0.1",
   "status": "COMPLIANT",
-  "findings": [],
-  "extensions": {
-    "selected_controls_source": "dir",
-    "context_name": "stave",
-    "resolved_paths": {
-      "controls": "testdata/e2e/e2e-20-identity-clean/controls",
-      "observations": "testdata/e2e/e2e-20-identity-clean/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
-      "dirty": false
-    }
+  "summary": {
+    "exposed_resources": 0,
+    "total_assets": 2,
+    "violations": 0
   }
 }

@@ -1,12 +1,138 @@
 {
-  "schema_version": "out.v0.1",
+  "extensions": {
+    "context_name": "stave",
+    "git": {
+      "dirty": false,
+      "head_commit": "19d2659707789ad5ee24bea636595aa7f38da7ae",
+      "repo_root": "/home/zepho/work/bizacademy"
+    },
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-h1-unikrn-254200/controls",
+      "observations": "testdata/e2e/e2e-h1-unikrn-254200/observations"
+    },
+    "selected_controls_source": "dir"
+  },
+  "findings": [
+    {
+      "asset_id": "unikrn-files",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "control_description": "When a shared S3 bucket uses prefix-based tenant isolation, every app-signer identity that produces presigned URLs must enforce the tenant prefix.  An identity that allows path traversal (../) or disables prefix enforcement lets one tenant read or overwrite another tenant's objects.\n",
+      "control_id": "CTL.S3.TENANT.ISOLATION.001",
+      "control_name": "Shared-Bucket Tenant Isolation Must Enforce Prefix",
+      "evidence": {
+        "first_unsafe_at": "2017-07-25T00:00:00Z",
+        "last_seen_unsafe_at": "2017-08-02T00:00:00Z",
+        "misconfigurations": [
+          {
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "property": "storage.kind",
+            "unsafe_value": "bucket"
+          },
+          {
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "property": "storage.tags.tenant_mode",
+            "unsafe_value": "shared"
+          },
+          {
+            "actual_value": "[SANITIZED]",
+            "operator": "missing",
+            "property": "storage.tags.tenant_prefix",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 74208 hours (SLA: 168 hours). Exposed since 2017-07-25T00:00:00Z.",
+        "threshold_hours": 168,
+        "unsafe_duration_hours": 74208
+      },
+      "finding_id": "sha256:30cb3aa1f0378f75",
+      "posture_drift": {
+        "exposure_window_count": 1,
+        "pattern": "persistent"
+      },
+      "remediation": {
+        "action": "Review the misconfigured properties and revert to compliant values.",
+        "description": "Resource configuration deviates from security baseline."
+      }
+    },
+    {
+      "asset_id": "upload-api-unikrn-files",
+      "asset_type": "s3_upload_policy",
+      "asset_vendor": "aws",
+      "control_description": "Signed upload policies must restrict write permission to a single exact object key. Prefix-wide permissions (e.g., starts-with $key files/) enable arbitrary overwrite and cross-tenant tampering.\n",
+      "control_id": "CTL.S3.WRITE.SCOPE.001",
+      "control_name": "S3 Signed Upload Must Bind To Exact Object Key",
+      "evidence": {
+        "first_unsafe_at": "2017-07-25T00:00:00Z",
+        "last_seen_unsafe_at": "2017-08-02T00:00:00Z",
+        "misconfigurations": [
+          {
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "property": "s3_upload.allowed_key_mode",
+            "unsafe_value": "prefix"
+          },
+          {
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "property": "s3_upload.operation",
+            "unsafe_value": "write"
+          },
+          {
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "property": "type",
+            "unsafe_value": "s3_upload_policy"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 74208 hours (SLA: 168 hours). Exposed since 2017-07-25T00:00:00Z.",
+        "threshold_hours": 168,
+        "unsafe_duration_hours": 74208
+      },
+      "finding_id": "sha256:0a7ad2a7c249ba40",
+      "posture_drift": {
+        "exposure_window_count": 1,
+        "pattern": "persistent"
+      },
+      "remediation": {
+        "action": "Review the misconfigured properties and revert to compliant values.",
+        "description": "Resource configuration deviates from security baseline."
+      }
+    }
+  ],
   "kind": "ASSESSMENT",
+  "risk_signals": [
+    {
+      "asset_id": "unikrn-files",
+      "asset_type": "aws_s3_bucket",
+      "control_id": "CTL.S3.TENANT.ISOLATION.001",
+      "due_at": "2017-08-01T00:00:00Z",
+      "first_unsafe_at": "2017-07-25T00:00:00Z",
+      "remaining_hours": -74040,
+      "status": "OVERDUE",
+      "threshold_hours": 168
+    },
+    {
+      "asset_id": "upload-api-unikrn-files",
+      "asset_type": "s3_upload_policy",
+      "control_id": "CTL.S3.WRITE.SCOPE.001",
+      "due_at": "2017-08-01T00:00:00Z",
+      "first_unsafe_at": "2017-07-25T00:00:00Z",
+      "remaining_hours": -74040,
+      "status": "OVERDUE",
+      "threshold_hours": 168
+    }
+  ],
   "run": {
-    "tool_version": "edge",
-    "offline": true,
-    "now": "2026-01-11T00:00:00Z",
-    "sla_threshold": "7d",
-    "snapshots": 2,
+    "evaluated_state": "deployed",
     "input_hashes": {
       "files": {
         "2017-07-25T000000Z.json": "0eb60b38cf23ad6b4f70747f51a418de3625e00e2464f1636a20854346f6358b",
@@ -14,174 +140,48 @@
       },
       "overall": "193223b3fa42411fcdfe0e80e738f794584f4844b089a22f7a86a01481c00caf"
     },
-    "policy_fingerprint": "def6400c2f0b9c2afbed859ea0b67a5cf78186d7702c4006ff479e66d91bd864",
-    "evaluated_state": "deployed"
+    "now": "2026-01-11T00:00:00Z",
+    "offline": true,
+    "policy_fingerprint": "a32160da741c700f7d109293d79b0890c6551cd23479c48e8b6b294aff333e40",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "tool_version": "edge"
   },
+  "schema_version": "out.v0.1",
+  "status": "NON_COMPLIANT",
   "summary": {
-    "total_assets": 2,
     "exposed_resources": 2,
+    "total_assets": 2,
     "violations": 2
   },
-  "status": "NON_COMPLIANT",
-  "risk_signals": [
-    {
-      "control_id": "CTL.S3.TENANT.ISOLATION.001",
-      "asset_id": "unikrn-files",
-      "asset_type": "aws_s3_bucket",
-      "status": "OVERDUE",
-      "due_at": "2017-08-01T00:00:00Z",
-      "remaining_hours": -74040,
-      "first_unsafe_at": "2017-07-25T00:00:00Z",
-      "threshold_hours": 168
-    },
-    {
-      "control_id": "CTL.S3.WRITE.SCOPE.001",
-      "asset_id": "upload-api-unikrn-files",
-      "asset_type": "s3_upload_policy",
-      "status": "OVERDUE",
-      "due_at": "2017-08-01T00:00:00Z",
-      "remaining_hours": -74040,
-      "first_unsafe_at": "2017-07-25T00:00:00Z",
-      "threshold_hours": 168
-    }
-  ],
-  "findings": [
-    {
-      "finding_id": "sha256:30cb3aa1f0378f75",
-      "control_id": "CTL.S3.TENANT.ISOLATION.001",
-      "control_name": "Shared-Bucket Tenant Isolation Must Enforce Prefix",
-      "control_description": "When a shared S3 bucket uses prefix-based tenant isolation, every app-signer identity that produces presigned URLs must enforce the tenant prefix.  An identity that allows path traversal (../) or disables prefix enforcement lets one tenant read or overwrite another tenant's objects.\n",
-      "asset_id": "unikrn-files",
-      "asset_type": "aws_s3_bucket",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2017-07-25T00:00:00Z",
-        "last_seen_unsafe_at": "2017-08-02T00:00:00Z",
-        "unsafe_duration_hours": 74208,
-        "threshold_hours": 168,
-        "misconfigurations": [
-          {
-            "property": "storage.kind",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": "bucket"
-          },
-          {
-            "property": "storage.tags.tenant_mode",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": "shared"
-          },
-          {
-            "property": "storage.tags.tenant_prefix",
-            "actual_value": "[SANITIZED]",
-            "operator": "missing",
-            "unsafe_value": false
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 74208 hours (SLA: 168 hours). Exposed since 2017-07-25T00:00:00Z."
-      },
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "Resource configuration deviates from security baseline.",
-        "action": "Review the misconfigured properties and revert to compliant values."
-      }
-    },
-    {
-      "finding_id": "sha256:0a7ad2a7c249ba40",
-      "control_id": "CTL.S3.WRITE.SCOPE.001",
-      "control_name": "S3 Signed Upload Must Bind To Exact Object Key",
-      "control_description": "Signed upload policies must restrict write permission to a single exact object key. Prefix-wide permissions (e.g., starts-with $key files/) enable arbitrary overwrite and cross-tenant tampering.\n",
-      "asset_id": "upload-api-unikrn-files",
-      "asset_type": "s3_upload_policy",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2017-07-25T00:00:00Z",
-        "last_seen_unsafe_at": "2017-08-02T00:00:00Z",
-        "unsafe_duration_hours": 74208,
-        "threshold_hours": 168,
-        "misconfigurations": [
-          {
-            "property": "s3_upload.allowed_key_mode",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": "prefix"
-          },
-          {
-            "property": "s3_upload.operation",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": "write"
-          },
-          {
-            "property": "type",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": "s3_upload_policy"
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 74208 hours (SLA: 168 hours). Exposed since 2017-07-25T00:00:00Z."
-      },
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "Resource configuration deviates from security baseline.",
-        "action": "Review the misconfigured properties and revert to compliant values."
-      }
-    }
-  ],
   "top_exposures": [
     {
-      "finding_index": 0,
-      "control_id": "CTL.S3.TENANT.ISOLATION.001",
       "asset_id": "unikrn-files",
-      "exposure_score": 50,
       "breakdown": {
         "base_score": 10,
-        "duration_factor": 5,
         "blast_multiplier": 1,
-        "exposure_multiplier": 1,
-        "days_blind": 3092
+        "days_blind": 3092,
+        "duration_factor": 5,
+        "exposure_multiplier": 1
       },
+      "control_id": "CTL.S3.TENANT.ISOLATION.001",
+      "exposure_score": 50,
+      "finding_index": 0,
       "silent_killer": true
     },
     {
-      "finding_index": 1,
-      "control_id": "CTL.S3.WRITE.SCOPE.001",
       "asset_id": "upload-api-unikrn-files",
-      "exposure_score": 50,
       "breakdown": {
         "base_score": 10,
-        "duration_factor": 5,
         "blast_multiplier": 1,
-        "exposure_multiplier": 1,
-        "days_blind": 3092
+        "days_blind": 3092,
+        "duration_factor": 5,
+        "exposure_multiplier": 1
       },
+      "control_id": "CTL.S3.WRITE.SCOPE.001",
+      "exposure_score": 50,
+      "finding_index": 1,
       "silent_killer": true
     }
-  ],
-  "extensions": {
-    "selected_controls_source": "dir",
-    "context_name": "stave",
-    "resolved_paths": {
-      "controls": "testdata/e2e/e2e-h1-unikrn-254200/controls",
-      "observations": "testdata/e2e/e2e-h1-unikrn-254200/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
-      "dirty": false
-    }
-  }
+  ]
 }

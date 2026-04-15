@@ -1,12 +1,21 @@
 {
-  "schema_version": "out.v0.1",
+  "extensions": {
+    "context_name": "stave",
+    "git": {
+      "dirty": false,
+      "head_commit": "19d2659707789ad5ee24bea636595aa7f38da7ae",
+      "repo_root": "/home/zepho/work/bizacademy"
+    },
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-iam-scp-fullaccess/controls",
+      "observations": "testdata/e2e/e2e-iam-scp-fullaccess/observations"
+    },
+    "selected_controls_source": "dir"
+  },
+  "findings": [],
   "kind": "ASSESSMENT",
   "run": {
-    "tool_version": "edge",
-    "offline": true,
-    "now": "2026-01-11T00:00:00Z",
-    "sla_threshold": "7d",
-    "snapshots": 2,
+    "evaluated_state": "deployed",
     "input_hashes": {
       "files": {
         "2026-01-01T000000Z.json": "f88a2800186028c587b4ad88447f3b42f7fc2d135c5a61b3fac531ec6cdcc957",
@@ -14,27 +23,18 @@
       },
       "overall": "9315c5b83b5a745e5ca574272c9d06b2ae27e6a6146517f537571828e5c66f14"
     },
-    "policy_fingerprint": "5e0f793505fcb32b66861258eec1fa3b06b1c815dc74988035806883313fd0db",
-    "evaluated_state": "deployed"
+    "now": "2026-01-11T00:00:00Z",
+    "offline": true,
+    "policy_fingerprint": "444947e334f5e69796bf196861a61c76fe7df8b90d26f313ded1faa89581585e",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "tool_version": "edge"
   },
-  "summary": {
-    "total_assets": 1,
-    "exposed_resources": 0,
-    "violations": 0
-  },
+  "schema_version": "out.v0.1",
   "status": "COMPLIANT",
-  "findings": [],
-  "extensions": {
-    "selected_controls_source": "dir",
-    "context_name": "stave",
-    "resolved_paths": {
-      "controls": "testdata/e2e/e2e-iam-scp-fullaccess/controls",
-      "observations": "testdata/e2e/e2e-iam-scp-fullaccess/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
-      "dirty": false
-    }
+  "summary": {
+    "exposed_resources": 0,
+    "total_assets": 1,
+    "violations": 0
   }
 }

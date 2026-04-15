@@ -1,12 +1,21 @@
 {
-  "schema_version": "out.v0.1",
+  "extensions": {
+    "context_name": "stave",
+    "git": {
+      "dirty": false,
+      "head_commit": "19d2659707789ad5ee24bea636595aa7f38da7ae",
+      "repo_root": "/home/zepho/work/bizacademy"
+    },
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-11-least-privilege/controls",
+      "observations": "testdata/e2e/e2e-11-least-privilege/observations"
+    },
+    "selected_controls_source": "dir"
+  },
+  "findings": [],
   "kind": "ASSESSMENT",
   "run": {
-    "tool_version": "edge",
-    "offline": true,
-    "now": "2026-01-11T00:00:00Z",
-    "sla_threshold": "7d",
-    "snapshots": 2,
+    "evaluated_state": "deployed",
     "input_hashes": {
       "files": {
         "2026-01-01T000000Z.json": "2264adc29f1ac816084c8daf3b9dfcce25a20c4501b428c2bee0c18da8fe7c7f",
@@ -14,16 +23,14 @@
       },
       "overall": "d7a60f95540ed02dfd8cdd1c2459182ba583ed0cff3f7780685256f2b978596b"
     },
-    "policy_fingerprint": "f56d344fac2d14182415baeb96c212e5f5c9b4dff1f5a15b07327f846acb8a3d",
-    "evaluated_state": "deployed"
+    "now": "2026-01-11T00:00:00Z",
+    "offline": true,
+    "policy_fingerprint": "1cbcce853a2e023dadb3fc5993ea2c606244330e8028e83781be56f29cc856b4",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "tool_version": "edge"
   },
-  "summary": {
-    "total_assets": 0,
-    "exposed_resources": 0,
-    "violations": 0
-  },
-  "status": "COMPLIANT",
-  "findings": [],
+  "schema_version": "out.v0.1",
   "skipped_controls": [
     {
       "control_id": "CTL.ID.AUTHZ.001",
@@ -31,17 +38,10 @@
       "reason": "control type cannot be evaluated: authorization_boundary"
     }
   ],
-  "extensions": {
-    "selected_controls_source": "dir",
-    "context_name": "stave",
-    "resolved_paths": {
-      "controls": "testdata/e2e/e2e-11-least-privilege/controls",
-      "observations": "testdata/e2e/e2e-11-least-privilege/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
-      "dirty": false
-    }
+  "status": "COMPLIANT",
+  "summary": {
+    "exposed_resources": 0,
+    "total_assets": 0,
+    "violations": 0
   }
 }

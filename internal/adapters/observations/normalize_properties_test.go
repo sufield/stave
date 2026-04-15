@@ -47,19 +47,15 @@ func TestNormalizeProperties_NumericStrings(t *testing.T) {
 
 	for _, tc := range []struct {
 		key  string
-		want float64
+		want any
 	}{
-		{"count", 42},
-		{"fraction", 3.14},
-		{"negative", -1},
-		{"zero", 0},
-		{"padded", 100},
+		{"count", "42"},
+		{"fraction", "3.14"},
+		{"negative", "-1"},
+		{"zero", "0"},
+		{"padded", "  100  "},
 	} {
-		got, ok := m[tc.key].(float64)
-		if !ok {
-			t.Errorf("%s: expected float64, got %T (%v)", tc.key, m[tc.key], m[tc.key])
-			continue
-		}
+		got := m[tc.key]
 		if got != tc.want {
 			t.Errorf("%s: got %v, want %v", tc.key, got, tc.want)
 		}
@@ -137,8 +133,8 @@ func TestNormalizeProperties_Slices(t *testing.T) {
 	if tags[2] != "hello" {
 		t.Errorf("slice[2]: expected 'hello', got %v", tags[2])
 	}
-	if tags[3] != float64(42) {
-		t.Errorf("slice[3]: expected 42.0, got %v (%T)", tags[3], tags[3])
+	if tags[3] != "42" {
+		t.Errorf("slice[3]: expected string 42, got %v (%T)", tags[3], tags[3])
 	}
 }
 
@@ -193,7 +189,7 @@ func TestNormalizeProperties_Idempotent(t *testing.T) {
 	if m["enabled"] != true {
 		t.Errorf("enabled: %v (%T)", m["enabled"], m["enabled"])
 	}
-	if m["count"] != float64(42) {
+	if m["count"] != "42" {
 		t.Errorf("count: %v (%T)", m["count"], m["count"])
 	}
 	if m["name"] != "test" {
@@ -229,22 +225,22 @@ func TestNormalizeValue_TableDriven(t *testing.T) {
 		{"true trailing space", "true ", true},
 
 		// Numbers — standard
-		{"integer", "42", float64(42)},
-		{"negative integer", "-1", float64(-1)},
-		{"zero", "0", float64(0)},
-		{"decimal", "3.14", float64(3.14)},
-		{"negative decimal", "-0.5", float64(-0.5)},
-		{"padded number", "  100  ", float64(100)},
+		{"integer", "42", "42"},
+		{"negative integer", "-1", "-1"},
+		{"zero", "0", "0"},
+		{"decimal", "3.14", "3.14"},
+		{"negative decimal", "-0.5", "-0.5"},
+		{"padded number", "  100  ", "  100  "},
 
 		// Numbers — scientific notation
-		{"scientific 1e10", "1e10", float64(1e10)},
-		{"scientific 2.5E3", "2.5E3", float64(2.5e3)},
-		{"scientific negative", "-1.5e-3", float64(-1.5e-3)},
+		{"scientific 1e10", "1e10", "1e10"},
+		{"scientific 2.5E3", "2.5E3", "2.5E3"},
+		{"scientific negative", "-1.5e-3", "-1.5e-3"},
 
 		// Numbers — leading zero (JSON-style, not octal)
-		{"leading zero 08", "08", float64(8)},
-		{"leading zero 007", "007", float64(7)},
-		{"dot prefix", ".5", float64(0.5)},
+		{"leading zero 08", "08", "08"},
+		{"leading zero 007", "007", "007"},
+		{"dot prefix", ".5", ".5"},
 
 		// Strings preserved — not numeric
 		{"s3 uri", "s3://my-bucket", "s3://my-bucket"},
@@ -299,8 +295,8 @@ func TestNormalizeValue_DeepNesting(t *testing.T) {
 	if deep["flag"] != true {
 		t.Errorf("deep flag: got %v (%T), want true", deep["flag"], deep["flag"])
 	}
-	if deep["count"] != float64(99) {
-		t.Errorf("deep count: got %v (%T), want 99", deep["count"], deep["count"])
+	if deep["count"] != "99" {
+		t.Errorf("deep count: got %v (%T), want string 99", deep["count"], deep["count"])
 	}
 	if deep["name"] != "deep" {
 		t.Errorf("deep name: got %v, want 'deep'", deep["name"])
@@ -321,7 +317,7 @@ func TestNormalizeValue_SliceOfMaps(t *testing.T) {
 	if first["enabled"] != true {
 		t.Errorf("items[0].enabled: got %v (%T)", first["enabled"], first["enabled"])
 	}
-	if first["count"] != float64(5) {
+	if first["count"] != "5" {
 		t.Errorf("items[0].count: got %v (%T)", first["count"], first["count"])
 	}
 	second := items[1].(map[string]any)
@@ -330,35 +326,25 @@ func TestNormalizeValue_SliceOfMaps(t *testing.T) {
 	}
 }
 
-func TestIsNumericCandidate_EdgeCases(t *testing.T) {
+func TestCoerceString_NumericStringPreserved(t *testing.T) {
+	// Numeric strings must be preserved as strings, not coerced to float64.
 	tests := []struct {
 		input string
-		want  bool
+		want  any
 	}{
-		{"", false},
-		{"0", true},
-		{"-1", true},
-		{".5", true},
-		{"0xFF", false},
-		{"0o777", false},
-		{"0b1010", false},
-		{"0X1A", false},
-		{"0O755", false},
-		{"0B1111", false},
-		{"42", true},
-		{"3.14", true},
-		{"-0.5", true},
-		{"1e10", true},
-		{"abc", false},
-		{"s3://bucket", false},
-		{"us-east-1", false},
+		{"123", "123"},
+		{"3.14", "3.14"},
+		{"-1", "-1"},
+		{"0", "0"},
+		{"true", true},
+		{"false", false},
+		{"hello", "hello"},
 	}
-
 	for _, tc := range tests {
 		t.Run(tc.input, func(t *testing.T) {
-			got := isNumericCandidate(tc.input)
+			got := coerceString(tc.input)
 			if got != tc.want {
-				t.Errorf("isNumericCandidate(%q) = %v, want %v", tc.input, got, tc.want)
+				t.Errorf("coerceString(%q) = %v (%T), want %v (%T)", tc.input, got, got, tc.want, tc.want)
 			}
 		})
 	}
