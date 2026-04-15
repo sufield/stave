@@ -25,6 +25,9 @@ Subcommands:
 	cmd.AddCommand(newPathsCmd())
 	cmd.AddCommand(newPreviewCmd())
 	cmd.AddCommand(newNewCmd())
+	cmd.AddCommand(newTestCmd())
+	cmd.AddCommand(newLintCmd())
+	cmd.AddCommand(newScaffoldCmd())
 
 	return cmd
 }
