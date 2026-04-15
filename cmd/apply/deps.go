@@ -118,22 +118,32 @@ func (b *Builder) Build(ctx context.Context, plan *appeval.EvaluationPlan) (*app
 	chainsDir := filepath.Join(filepath.Dir(b.Opts.ControlsDir), "chains")
 	chains, _ := ctlyaml.LoadChains(chainsDir)
 
-	// Load SLA policy if specified.
+	// Load SLA policy — file takes precedence over embedded.
 	var slaCfg *evaluation.SLAConfig
-	if b.Opts.SLAProfile != "" {
+	var slaPol *sla.Policy
+	if b.Opts.SLAProfileFile != "" {
+		pol, slaErr := sla.LoadFromFile(b.Opts.SLAProfileFile)
+		if slaErr != nil {
+			return nil, fmt.Errorf("load sla profile file: %w", slaErr)
+		}
+		slaPol = pol
+	} else if b.Opts.SLAProfile != "" {
 		pol, slaErr := sla.LoadEmbedded(b.Opts.SLAProfile)
 		if slaErr != nil {
 			return nil, fmt.Errorf("load sla profile: %w", slaErr)
 		}
+		slaPol = pol
+	}
+	if slaPol != nil {
 		slaCfg = &evaluation.SLAConfig{
-			ProfileID: pol.ID,
+			ProfileID: slaPol.ID,
 			DeadlineBySeverity: map[string]float64{
-				"critical": pol.DeadlineHoursFor("critical"),
-				"high":     pol.DeadlineHoursFor("high"),
-				"medium":   pol.DeadlineHoursFor("medium"),
-				"low":      pol.DeadlineHoursFor("low"),
+				"critical": slaPol.DeadlineHoursFor("critical"),
+				"high":     slaPol.DeadlineHoursFor("high"),
+				"medium":   slaPol.DeadlineHoursFor("medium"),
+				"low":      slaPol.DeadlineHoursFor("low"),
 			},
-			EscalationFactor: pol.EscalationFactor,
+			EscalationFactor: slaPol.EscalationFactor,
 		}
 	}
 

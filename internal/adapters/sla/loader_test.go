@@ -1,6 +1,8 @@
 package sla
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -50,6 +52,90 @@ func TestLoadEmbedded_NotFound(t *testing.T) {
 	_, err := LoadEmbedded("nonexistent")
 	if err == nil {
 		t.Error("expected error for nonexistent profile")
+	}
+}
+
+func TestLoadFromFile_Valid(t *testing.T) {
+	yaml := `
+id: custom_test
+name: "Custom Test SLA"
+deadlines:
+  critical: 4h
+  high: 24h
+  medium: 168h
+  low: 720h
+escalation_factor: 2.0
+`
+	path := filepath.Join(t.TempDir(), "custom-sla.yaml")
+	if err := os.WriteFile(path, []byte(yaml), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	p, err := LoadFromFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if p.ID != "custom_test" {
+		t.Errorf("ID = %q, want custom_test", p.ID)
+	}
+	if p.DeadlineHoursFor("critical") != 4 {
+		t.Errorf("critical = %f, want 4", p.DeadlineHoursFor("critical"))
+	}
+	if p.EscalationFactor != 2.0 {
+		t.Errorf("escalation = %f, want 2.0", p.EscalationFactor)
+	}
+}
+
+func TestLoadFromFile_InvalidDuration(t *testing.T) {
+	yaml := `
+id: bad
+deadlines:
+  critical: "2 hours"
+  high: 24h
+  medium: 168h
+  low: 720h
+escalation_factor: 1.5
+`
+	path := filepath.Join(t.TempDir(), "bad-sla.yaml")
+	if err := os.WriteFile(path, []byte(yaml), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	_, err := LoadFromFile(path)
+	if err == nil {
+		t.Error("expected error for invalid duration")
+	}
+}
+
+func TestLoadFromFile_MissingSeverity(t *testing.T) {
+	yaml := `
+id: incomplete
+deadlines:
+  critical: 4h
+escalation_factor: 1.5
+`
+	path := filepath.Join(t.TempDir(), "incomplete-sla.yaml")
+	if err := os.WriteFile(path, []byte(yaml), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	_, err := LoadFromFile(path)
+	if err == nil {
+		t.Error("expected error for missing severity tiers")
+	}
+}
+
+func TestLoadFromFile_NotFound(t *testing.T) {
+	_, err := LoadFromFile("/nonexistent/sla.yaml")
+	if err == nil {
+		t.Error("expected error for missing file")
+	}
+}
+
+func TestValidate_EscalationOutOfRange(t *testing.T) {
+	p := &Policy{
+		Deadlines:        DeadlineTiers{Critical: "4h", High: "24h", Medium: "168h", Low: "720h"},
+		EscalationFactor: 5.0,
+	}
+	if err := p.Validate(); err == nil {
+		t.Error("expected error for escalation_factor > 3.0")
 	}
 }
 

@@ -27,14 +27,15 @@ import (
 )
 
 type options struct {
-	SnapshotsDir string
-	ManifestFile string
-	OrgName      string
-	Format       string
-	SLAProfile   string
-	OutPath      string
-	FocusAccount string
-	Now          string
+	SnapshotsDir   string
+	ManifestFile   string
+	OrgName        string
+	Format         string
+	SLAProfile     string
+	SLAProfileFile string
+	OutPath        string
+	FocusAccount   string
+	Now            string
 }
 
 // NewCmd constructs the consolidate command.
@@ -73,6 +74,7 @@ Exit Codes:
 	cmd.Flags().StringVar(&opts.OrgName, "org-name", "", "Organization name for output labeling")
 	cmd.Flags().StringVarP(&opts.Format, "format", "f", opts.Format, "Output format: table or json")
 	cmd.Flags().StringVar(&opts.SLAProfile, "sla-profile", "", "SLA policy profile")
+	cmd.Flags().StringVar(&opts.SLAProfileFile, "sla-profile-file", "", "path to custom SLA policy YAML file")
 	cmd.Flags().StringVar(&opts.OutPath, "out", "", "Write output to file instead of stdout")
 	cmd.Flags().StringVar(&opts.FocusAccount, "focus-account", "", "Show detail for a specific account")
 	cmd.Flags().StringVar(&opts.Now, "now", "", "Override current time (RFC3339)")
@@ -103,22 +105,32 @@ func run(stdout, stderr io.Writer, opts *options) error {
 	chainsDir := "chains"
 	chains, _ := ctlyaml.LoadChains(chainsDir)
 
-	// Load SLA config.
+	// Load SLA config — file takes precedence.
 	var slaCfg *evaluation.SLAConfig
-	if opts.SLAProfile != "" {
+	var slaPol *sla.Policy
+	if opts.SLAProfileFile != "" {
+		pol, slaErr := sla.LoadFromFile(opts.SLAProfileFile)
+		if slaErr != nil {
+			return fmt.Errorf("load sla profile file: %w", slaErr)
+		}
+		slaPol = pol
+	} else if opts.SLAProfile != "" {
 		pol, slaErr := sla.LoadEmbedded(opts.SLAProfile)
 		if slaErr != nil {
 			return fmt.Errorf("load sla profile: %w", slaErr)
 		}
+		slaPol = pol
+	}
+	if slaPol != nil {
 		slaCfg = &evaluation.SLAConfig{
-			ProfileID: pol.ID,
+			ProfileID: slaPol.ID,
 			DeadlineBySeverity: map[string]float64{
-				"critical": pol.DeadlineHoursFor("critical"),
-				"high":     pol.DeadlineHoursFor("high"),
-				"medium":   pol.DeadlineHoursFor("medium"),
-				"low":      pol.DeadlineHoursFor("low"),
+				"critical": slaPol.DeadlineHoursFor("critical"),
+				"high":     slaPol.DeadlineHoursFor("high"),
+				"medium":   slaPol.DeadlineHoursFor("medium"),
+				"low":      slaPol.DeadlineHoursFor("low"),
 			},
-			EscalationFactor: pol.EscalationFactor,
+			EscalationFactor: slaPol.EscalationFactor,
 		}
 	}
 

@@ -5,6 +5,7 @@ import (
 	"embed"
 	"fmt"
 	"io/fs"
+	"os"
 	"strings"
 
 	"github.com/sufield/stave/internal/core/kernel"
@@ -55,6 +56,54 @@ func (p *Policy) DeadlineHoursFor(severity string) float64 {
 		return 0
 	}
 	return d.Hours()
+}
+
+// LoadFromFile reads an SLA policy from a local YAML file.
+func LoadFromFile(path string) (*Policy, error) {
+	data, err := os.ReadFile(path) //nolint:gosec // user-specified path
+	if err != nil {
+		return nil, fmt.Errorf("read sla policy %q: %w", path, err)
+	}
+	var p Policy
+	if err := yaml.Unmarshal(data, &p); err != nil {
+		return nil, fmt.Errorf("parse sla policy %q: %w", path, err)
+	}
+	if valErr := p.Validate(); valErr != nil {
+		return nil, fmt.Errorf("invalid sla policy %q: %w", path, valErr)
+	}
+	return &p, nil
+}
+
+// Validate checks that all required fields are present and valid.
+func (p *Policy) Validate() error {
+	var errs []string
+	if p.Deadlines.Critical == "" {
+		errs = append(errs, "deadlines.critical is required")
+	} else if _, err := kernel.ParseDuration(p.Deadlines.Critical); err != nil {
+		errs = append(errs, "deadlines.critical: "+err.Error())
+	}
+	if p.Deadlines.High == "" {
+		errs = append(errs, "deadlines.high is required")
+	} else if _, err := kernel.ParseDuration(p.Deadlines.High); err != nil {
+		errs = append(errs, "deadlines.high: "+err.Error())
+	}
+	if p.Deadlines.Medium == "" {
+		errs = append(errs, "deadlines.medium is required")
+	} else if _, err := kernel.ParseDuration(p.Deadlines.Medium); err != nil {
+		errs = append(errs, "deadlines.medium: "+err.Error())
+	}
+	if p.Deadlines.Low == "" {
+		errs = append(errs, "deadlines.low is required")
+	} else if _, err := kernel.ParseDuration(p.Deadlines.Low); err != nil {
+		errs = append(errs, "deadlines.low: "+err.Error())
+	}
+	if p.EscalationFactor < 1.0 || p.EscalationFactor > 3.0 {
+		errs = append(errs, fmt.Sprintf("escalation_factor %.1f must be between 1.0 and 3.0", p.EscalationFactor))
+	}
+	if len(errs) > 0 {
+		return fmt.Errorf("%s", strings.Join(errs, "; "))
+	}
+	return nil
 }
 
 // LoadEmbedded loads an SLA policy by ID from embedded files.
