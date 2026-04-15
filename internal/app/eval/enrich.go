@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	appscore "github.com/sufield/stave/internal/app/score"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
@@ -26,11 +27,22 @@ func Enrich(enricher remediation.FindingEnricher, sanitizer kernel.Sanitizer, re
 		skippedAssets = SanitizeExemptedAssets(sanitizer, skippedAssets)
 		run.InputHashes = SanitizeInputHashKeys(sanitizer, run.InputHashes)
 	}
+
+	// Compute partial posture score (severity + chain components only).
+	scoreResult := appscore.Compute(appscore.Input{
+		Findings:      result.Findings,
+		ChainFindings: result.ChainFindings,
+		ChainDefs:     50, // approximate — total chain definitions
+		Weights:       appscore.DefaultWeights(),
+	})
+
 	return appcontracts.EnrichedResult{
-		Result:         *result,
-		Findings:       findings,
-		ExemptedAssets: skippedAssets,
-		Run:            run,
+		Result:             *result,
+		Findings:           findings,
+		ExemptedAssets:     skippedAssets,
+		Run:                run,
+		PostureScore:       scoreResult.Score,
+		PostureScoreRubric: scoreResult.RubricBand,
 	}, nil
 }
 

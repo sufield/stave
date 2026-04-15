@@ -32,9 +32,12 @@
       "observations": "testdata/e2e/e2e-forge-exposure-anon-001-pass/observations"
     },
     "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
+      "repo_root": "/home/runner/work/stave/stave",
+      "head_commit": "af04570421101cf7318bd2309b1c5693e2bf8ec4",
       "dirty": false
     }
-  }
+  },
+  "posture_score": 100,
+  "posture_score_rubric": "strong",
+  "posture_score_partial": true
 }

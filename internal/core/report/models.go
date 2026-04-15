@@ -59,6 +59,9 @@ type Assessment struct {
 	SkippedControls      []evaluation.SkippedControl  `json:"skipped_controls,omitempty"`
 	ExemptedAssets       []asset.ExemptedAsset        `json:"exempted_assets,omitempty"`
 	Extensions           *evaluation.Extensions       `json:"extensions,omitempty"`
+	PostureScore         *float64                     `json:"posture_score,omitempty"`
+	PostureScoreRubric   string                       `json:"posture_score_rubric,omitempty"`
+	PostureScorePartial  bool                         `json:"posture_score_partial,omitempty"`
 }
 
 // NewAssessment constructs an Assessment with normalized slices

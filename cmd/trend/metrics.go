@@ -38,14 +38,16 @@ type FrameworkTrend struct {
 
 // TrendReport is the complete trend analysis output.
 type TrendReport struct {
-	GeneratedAt     time.Time            `json:"generated_at"`
-	Period          Period               `json:"period"`
-	Summary         TrendSummary         `json:"summary"`
-	Runs            []RunMetrics         `json:"runs"`
-	MTTR            map[string]MTTREntry `json:"mttr,omitempty"`
-	FrameworkTrends []FrameworkTrend     `json:"framework_trends"`
-	Velocity        VelocityMetrics      `json:"velocity"`
-	Projection      *ProjectionMetrics   `json:"projection,omitempty"`
+	GeneratedAt        time.Time            `json:"generated_at"`
+	Period             Period               `json:"period"`
+	Summary            TrendSummary         `json:"summary"`
+	Runs               []RunMetrics         `json:"runs"`
+	MTTR               map[string]MTTREntry `json:"mttr,omitempty"`
+	FrameworkTrends    []FrameworkTrend     `json:"framework_trends"`
+	Velocity           VelocityMetrics      `json:"velocity"`
+	Projection         *ProjectionMetrics   `json:"projection,omitempty"`
+	PostureScore       float64              `json:"posture_score,omitempty"`
+	PostureScoreRubric string               `json:"posture_score_rubric,omitempty"`
 }
 
 // Period defines the time range of the trend analysis.

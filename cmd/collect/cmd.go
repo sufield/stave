@@ -17,6 +17,7 @@ import (
 	"github.com/sufield/stave/internal/adapters/observations"
 	appcollect "github.com/sufield/stave/internal/app/collect"
 	appeval "github.com/sufield/stave/internal/app/eval"
+	appscore "github.com/sufield/stave/internal/app/score"
 	stavecel "github.com/sufield/stave/internal/cel"
 	"github.com/sufield/stave/internal/controldata"
 	policy "github.com/sufield/stave/internal/core/controldef"
@@ -143,7 +144,7 @@ func runCollect(stdout, stderr io.Writer, opts *options) error {
 		return fmt.Errorf("marshal assessment: %w", err)
 	}
 
-	// Count findings by severity.
+	// Count findings by severity and compute posture score.
 	criticalCount := 0
 	highCount := 0
 	for i := range result.Findings {
@@ -154,6 +155,12 @@ func runCollect(stdout, stderr io.Writer, opts *options) error {
 			highCount++
 		}
 	}
+	scoreResult := appscore.Compute(appscore.Input{
+		Findings:      result.Findings,
+		ChainFindings: result.ChainFindings,
+		ChainDefs:     50, // approximate — total chain definitions
+		Weights:       appscore.DefaultWeights(),
+	})
 
 	files := map[string][]byte{
 		"assessment.json": assessmentData,
@@ -168,6 +175,8 @@ func runCollect(stdout, stderr io.Writer, opts *options) error {
 		FindingCount:         len(result.Findings),
 		CriticalCount:        criticalCount,
 		HighCount:            highCount,
+		PostureScore:         scoreResult.Score,
+		PostureScoreRubric:   scoreResult.RubricBand,
 		CollectionDurationMs: elapsed.Milliseconds(),
 	}
 

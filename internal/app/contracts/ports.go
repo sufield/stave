@@ -71,10 +71,12 @@ type EnrichedFinding struct {
 // "marshal" pipeline steps. Marshalers should read ExemptedAssets and Run
 // from this struct (not from Result) because they are pre-sanitized.
 type EnrichedResult struct {
-	Result         evaluation.ComplianceReport
-	Findings       []EnrichedFinding
-	ExemptedAssets []asset.ExemptedAsset
-	Run            evaluation.RunInfo
+	Result             evaluation.ComplianceReport
+	Findings           []EnrichedFinding
+	ExemptedAssets     []asset.ExemptedAsset
+	Run                evaluation.RunInfo
+	PostureScore       float64 // partial score (severity + chain components only)
+	PostureScoreRubric string
 }
 
 // FindingMarshaler transforms enriched findings into format-specific bytes

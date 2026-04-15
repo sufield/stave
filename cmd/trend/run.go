@@ -12,6 +12,8 @@ import (
 	"time"
 
 	artifact "github.com/sufield/stave/internal/adapters/artifacts"
+	appscore "github.com/sufield/stave/internal/app/score"
+	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/report"
 )
 
@@ -80,6 +82,21 @@ func runTrend(ctx context.Context, w io.Writer, opts *trendOptions) error {
 		Velocity:        velocity,
 		Projection:      projection,
 	}
+
+	// Compute posture score from the latest assessment.
+	latestAssessment := assessments[len(assessments)-1]
+	latestEvalFindings := make([]evaluation.Finding, len(latestAssessment.Findings))
+	for i := range latestAssessment.Findings {
+		latestEvalFindings[i] = latestAssessment.Findings[i].Finding
+	}
+	scoreResult := appscore.Compute(appscore.Input{
+		Findings:      latestEvalFindings,
+		ChainFindings: latestAssessment.ChainFindings,
+		ChainDefs:     50, // approximate — total chain definitions
+		Weights:       appscore.DefaultWeights(),
+	})
+	trendReport.PostureScore = scoreResult.Score
+	trendReport.PostureScoreRubric = scoreResult.RubricBand
 
 	// Compute summary direction.
 	if trendReport.Summary.FirstViolationRate > 0 {

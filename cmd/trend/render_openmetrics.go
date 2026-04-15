@@ -56,6 +56,13 @@ func renderTrendOpenMetrics(w io.Writer, r *TrendReport) error { //nolint:unpara
 	fmt.Fprintln(w, "# TYPE stave_velocity_per_run gauge")
 	fmt.Fprintf(w, "stave_velocity_per_run %g %d\n\n", r.Velocity.AvgNetChange, tsMs)
 
+	// posture_score (from severity component; partial without SLA/coverage config)
+	if r.PostureScore > 0 {
+		fmt.Fprintln(w, "# HELP stave_posture_score Security posture score (0-100)")
+		fmt.Fprintln(w, "# TYPE stave_posture_score gauge")
+		fmt.Fprintf(w, "stave_posture_score %.1f %d\n\n", r.PostureScore, tsMs)
+	}
+
 	fmt.Fprintln(w, "# EOF")
 	return nil
 }

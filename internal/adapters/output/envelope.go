@@ -33,6 +33,15 @@ func BuildAssessmentFromEnriched(enriched *appcontracts.EnrichedResult) *report.
 	h := crypto.NewHasher()
 	remediation.PrepareForGrouping(h, h, findings)
 	out.RemediationGroups = remediation.BuildGroups(findings)
+
+	// Propagate partial posture score computed during enrichment.
+	if enriched.PostureScore > 0 {
+		s := enriched.PostureScore
+		out.PostureScore = &s
+		out.PostureScoreRubric = enriched.PostureScoreRubric
+		out.PostureScorePartial = true // SLA and coverage require external profile config
+	}
+
 	return out
 }
 

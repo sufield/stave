@@ -1,2 +1,0 @@
-warning: snapshot[0] has unsupported source_type "kubernetes.rbac", proceeding anyway
-warning: snapshot[1] has unsupported source_type "kubernetes.rbac", proceeding anyway
