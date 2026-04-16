@@ -49,7 +49,7 @@ func TestFingerprintPolicy_NonDeterministic(t *testing.T) {
 	}
 
 	first := a.FingerprintPolicy()
-	for i := 0; i < 1000; i++ {
+	for i := range 1000 {
 		next := a.FingerprintPolicy()
 		if next != first {
 			t.Errorf("FingerprintPolicy is non-deterministic at iteration %d: %q vs %q", i, first, next)

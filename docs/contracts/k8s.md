@@ -102,6 +102,10 @@ properties:
     has_aws_iam_authenticator: bool
     aws_access_key_mapping: bool
 
+  # IMDS protection
+  network_policies:
+    blocks_imds_egress: bool        # NetworkPolicy blocking 169.254.169.254/32 egress
+
   # Job workload lifecycle (flat booleans for predicate evaluation)
   jobs:
     has_job_without_ttl_in_netpol_ns: bool  # Job with no TTL in a NetworkPolicy namespace

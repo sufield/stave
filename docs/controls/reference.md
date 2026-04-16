@@ -3,22 +3,22 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 539
-**Pack hash:** `dbdd1361fc784d1b89020674eb9b2d38d35749b77699560003d63787429fb530`
+**Total controls:** 541
+**Pack hash:** `9b405220b6afde994a9a136e0207cd0804d3b48280f80775ee18cde3e126638b`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 95 |
-| high | 241 |
+| high | 243 |
 | info | 16 |
 | low | 40 |
 | medium | 147 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 398 |
+| exposure | 400 |
 | governance | 7 |
 | identity | 126 |
 | storage | 8 |
@@ -2604,6 +2604,22 @@ EKS clusters must not run Kubernetes versions that have reached end-of-support. 
 
 ---
 
+### CTL.EKS.VPC.CNI.NETPOL.TTL.001
+
+**EKS VPC CNI NetworkPolicy Must Have Completed Pod Firewall Cleanup**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** mitre_attack: TA0008; nist_800_53_r5: AC-4;
+
+EKS clusters with VPC CNI NetworkPolicy enforcement must have completed pod firewall rule cleanup configured. VPC CNI creates per-IP firewall rules on nodes. Pod completion does not trigger rule removal — only pod deletion does. Without TTL controller or explicit flush, completed pod IPs are recycled with stale rules.
+
+**Remediation:** Option 1: Enable the TTLAfterFinished feature gate at cluster level. Option 2: Set ttlSecondsAfterFinished on all Job specs. Option 3: Update VPC CNI to a version with pod completion handling. Verify VPC CNI version:
+  kubectl describe daemonset aws-node -n kube-system | grep Image
+
+---
+
 ### CTL.ELASTICACHE.AUTH.001
 
 **Redis AUTH Token Must Be Set**
@@ -4660,6 +4676,21 @@ etcd must be configured with a peer certificate file for mutual TLS between etcd
 etcd must be configured with a peer key file for mutual TLS between etcd cluster members. Without the private key, peer TLS cannot be established and inter-node communication is insecure.
 
 **Remediation:** Set --peer-key-file on the etcd server pointing to the private key corresponding to the peer certificate.
+
+---
+
+### CTL.K8S.IMDS.BLOCK.001
+
+**Cluster Must Have NetworkPolicy Blocking Pod Egress to IMDS**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** mitre_attack: TA0006; nist_800_53_r5: AC-4;
+
+Kubernetes clusters must have a NetworkPolicy blocking pod egress to the cloud instance metadata service at 169.254.169.254. A pod with hostNetwork=true and CAP_NET_RAW can intercept IMDS traffic and inject crafted responses containing attacker-controlled SSH keys, gaining root access to the node. A NetworkPolicy blocking 169.254.169.254/32 egress prevents this escalation even when pod security controls fail.
+
+**Remediation:** Apply a NetworkPolicy in every namespace blocking egress to 169.254.169.254/32. For AWS, also enforce IMDSv2 with hop limit 1 on all node groups.
 
 ---
 
