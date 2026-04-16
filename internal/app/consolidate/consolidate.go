@@ -14,6 +14,7 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/iam"
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/util/props"
 
 	appeval "github.com/sufield/stave/internal/app/eval"
 )
@@ -269,7 +270,7 @@ func detectCrossAccountFindings(accounts []AccountInput) ([]CrossAccountFinding,
 	// Check execution role links across accounts.
 	for _, info := range allAssets {
 		a := info.asset
-		roleARN := resolveProperty(a.Properties, []string{"compute", "execution_role", "role_arn"})
+		roleARN := props.GetString(a.Properties, []string{"compute", "execution_role", "role_arn"})
 		if roleARN == "" {
 			continue
 		}
@@ -313,7 +314,7 @@ func buildResourceAccessIndex(snap *asset.Snapshot) *iam.ResourceAccessIndex {
 		a := &snap.Assets[i]
 		accountID := extractAccountID(string(a.ID))
 		for _, path := range resourcePolicyPaths {
-			policyJSON := resolveProperty(a.Properties, path)
+			policyJSON := props.GetString(a.Properties, path)
 			if policyJSON == "" {
 				continue
 			}
@@ -322,25 +323,6 @@ func buildResourceAccessIndex(snap *asset.Snapshot) *iam.ResourceAccessIndex {
 		}
 	}
 	return idx
-}
-
-func resolveProperty(props map[string]any, path []string) string {
-	var current any = props
-	for _, key := range path {
-		m, ok := current.(map[string]any)
-		if !ok {
-			return ""
-		}
-		current, ok = m[key]
-		if !ok {
-			return ""
-		}
-	}
-	s, ok := current.(string)
-	if !ok {
-		return ""
-	}
-	return s
 }
 
 func extractAccountID(arn string) string {

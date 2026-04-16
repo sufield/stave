@@ -11,6 +11,7 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/iam"
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/util/props"
 )
 
 // IdentityRiskEntry represents a single identity and its transitive risk.
@@ -317,7 +318,7 @@ func buildReachabilityMap(snapshots []asset.Snapshot, findings []remediation.Fin
 		// 2. Execution role links: Lambda/compute → IAM role.
 		for ai := range snap.Assets {
 			a := &snap.Assets[ai]
-			roleARN := resolveProperty(a.Properties, []string{"compute", "execution_role", "role_arn"})
+			roleARN := props.GetString(a.Properties, []string{"compute", "execution_role", "role_arn"})
 			if roleARN == "" {
 				continue
 			}
@@ -374,7 +375,7 @@ func buildResourceAccessIndex(snap *asset.Snapshot) *iam.ResourceAccessIndex {
 		a := &snap.Assets[i]
 		accountID := extractAccountID(string(a.ID))
 		for _, path := range resourcePolicyPaths {
-			policyJSON := resolveProperty(a.Properties, path)
+			policyJSON := props.GetString(a.Properties, path)
 			if policyJSON == "" {
 				continue
 			}
@@ -393,56 +394,19 @@ var resourcePolicyPaths = [][]string{
 	{"secret", "resource_policy_json"},
 }
 
-// resolveProperty navigates nested map[string]any properties.
-func resolveProperty(props map[string]any, path []string) string {
-	var current any = props
-	for _, key := range path {
-		m, ok := current.(map[string]any)
-		if !ok {
-			return ""
-		}
-		current, ok = m[key]
-		if !ok {
-			return ""
-		}
-	}
-	s, ok := current.(string)
-	if !ok {
-		return ""
-	}
-	return s
-}
-
 // resolvePrivilegeLevel extracts the privilege level from identity properties.
-func resolvePrivilegeLevel(props map[string]any) string {
-	level := resolveProperty(props, []string{"identity", "nep", "privilege_level"})
+func resolvePrivilegeLevel(p map[string]any) string {
+	level := props.GetString(p, []string{"identity", "nep", "privilege_level"})
 	if level != "" {
 		return level
 	}
-	// Check for admin indicator.
-	if resolveBool(props, []string{"identity", "nep", "is_admin"}) {
+	if props.GetBool(p, []string{"identity", "nep", "is_admin"}) {
 		return "admin"
 	}
-	if resolveBool(props, []string{"identity", "nep", "has_escalation_path"}) {
+	if props.GetBool(p, []string{"identity", "nep", "has_escalation_path"}) {
 		return "elevated"
 	}
 	return "standard"
-}
-
-func resolveBool(props map[string]any, path []string) bool {
-	var current any = props
-	for _, key := range path {
-		m, ok := current.(map[string]any)
-		if !ok {
-			return false
-		}
-		current, ok = m[key]
-		if !ok {
-			return false
-		}
-	}
-	b, ok := current.(bool)
-	return ok && b
 }
 
 func extractAccountID(arn string) string {

@@ -10,6 +10,7 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/iam"
+	"github.com/sufield/stave/internal/util/props"
 )
 
 // AnnotateFindings enriches violation findings with reachability context.
@@ -125,7 +126,7 @@ func BuildIndexFromSnapshot(snap *asset.Snapshot) *iam.ResourceAccessIndex {
 		a := &snap.Assets[i]
 		accountID := extractAccountID(string(a.ID))
 		for _, path := range resourcePolicyPaths {
-			policyJSON := resolveStringProperty(a.Properties, path)
+			policyJSON := props.GetString(a.Properties, path)
 			if policyJSON == "" {
 				continue
 			}
@@ -148,17 +149,4 @@ func extractAccountID(arn string) string {
 		return parts[4]
 	}
 	return ""
-}
-
-func resolveStringProperty(props map[string]any, path []string) string {
-	var current any = props
-	for _, key := range path {
-		m, ok := current.(map[string]any)
-		if !ok {
-			return ""
-		}
-		current = m[key]
-	}
-	s, _ := current.(string)
-	return s
 }
