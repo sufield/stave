@@ -202,6 +202,11 @@ func SafeWriteFile(path string, data []byte, opts WriteOptions) error {
 // SafeMkdirAll creates a directory tree, checking every path component for
 // symlinks during creation (unless AllowSymlink). This prevents TOCTOU races
 // that could occur between a pre-check and os.MkdirAll.
+// testHookAfterLstat is called between the Lstat check and Mkdir call
+// in SafeMkdirAll. Nil in production. Set in tests to inject TOCTOU
+// race conditions for symlink swap testing.
+var testHookAfterLstat func(component string)
+
 func SafeMkdirAll(path string, opts WriteOptions) error {
 	if opts.AllowSymlink {
 		return os.MkdirAll(path, opts.Perm)
@@ -234,8 +239,21 @@ func SafeMkdirAll(path string, opts WriteOptions) error {
 		if !os.IsNotExist(err) {
 			return fmt.Errorf("security check failed for %q: %w", current, err)
 		}
+		if testHookAfterLstat != nil {
+			testHookAfterLstat(current)
+		}
 		if mkErr := os.Mkdir(current, opts.Perm); mkErr != nil && !os.IsExist(mkErr) {
 			return mkErr
+		}
+		// Post-creation verification: resolve the real path and confirm
+		// no symlink was injected in any ancestor component. This closes
+		// the TOCTOU window between the Lstat check and the Mkdir call.
+		realPath, evalErr := filepath.EvalSymlinks(current)
+		if evalErr == nil && realPath != current {
+			// A symlink was injected — the real path differs from expected.
+			_ = os.Remove(current) // attempt cleanup
+			return fmt.Errorf("%w: %s resolved to %s (symlink injected during creation)",
+				ErrSymlinkForbidden, current, realPath)
 		}
 	}
 	return nil
