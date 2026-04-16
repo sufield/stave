@@ -116,6 +116,14 @@ func runTrend(ctx context.Context, w io.Writer, opts *trendOptions) error {
 		teamTrends, teamSummary := computeTeamTrends(assessments, manifest, opts.Team, opts.RegressionOnly)
 		trendReport.TeamTrends = teamTrends
 		trendReport.TeamSummary = teamSummary
+
+		if opts.Rollup != "" {
+			group := manifest.HierarchyByID(opts.Rollup)
+			if group == nil {
+				return fmt.Errorf("hierarchy group %q not found in manifest", opts.Rollup)
+			}
+			trendReport.Rollup = computeRollup(teamTrends, group)
+		}
 	}
 
 	// Write output.
@@ -134,6 +142,8 @@ func runTrend(ctx context.Context, w io.Writer, opts *trendOptions) error {
 		return renderTrendJSON(out, &trendReport)
 	case "openmetrics":
 		return renderTrendOpenMetrics(out, &trendReport)
+	case "executive-summary":
+		return renderExecutiveSummary(out, &trendReport)
 	default:
 		return renderTrendTable(out, &trendReport)
 	}

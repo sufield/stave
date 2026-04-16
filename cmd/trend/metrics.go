@@ -60,6 +60,18 @@ type TrendReport struct {
 	PostureRubric   string               `json:"posture_rubric,omitempty"`
 	TeamSummary     *TeamTrendSummary    `json:"team_summary,omitempty"`
 	TeamTrends      []TeamTrend          `json:"team_trends,omitempty"`
+	Rollup          *RollupResult        `json:"rollup,omitempty"`
+}
+
+// RollupResult holds aggregated metrics for a hierarchy group.
+type RollupResult struct {
+	GroupID      string  `json:"group_id"`
+	GroupName    string  `json:"group_name"`
+	PostureScore float64 `json:"posture_score"`
+	MTTRHours    float64 `json:"mttr_hours"`
+	SLACompPct   float64 `json:"sla_compliance_pct"`
+	OpenFindings int     `json:"open_findings"`
+	CriticalOpen int     `json:"critical_open"`
 }
 
 // Period defines the time range of the trend analysis.

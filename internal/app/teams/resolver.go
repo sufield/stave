@@ -12,10 +12,28 @@ import (
 
 // Manifest is the on-disk format for stave-teams.yaml.
 type Manifest struct {
-	SchemaVersion  string `yaml:"schema_version"`
-	OwnerTagKey    string `yaml:"owner_tag_key"`
-	FallbackTagKey string `yaml:"fallback_tag_key"`
-	Teams          []Team `yaml:"teams"`
+	SchemaVersion  string           `yaml:"schema_version"`
+	OwnerTagKey    string           `yaml:"owner_tag_key"`
+	FallbackTagKey string           `yaml:"fallback_tag_key"`
+	Teams          []Team           `yaml:"teams"`
+	Hierarchy      []HierarchyGroup `yaml:"hierarchy,omitempty"`
+}
+
+// HierarchyGroup defines a named group of teams for rollup reporting.
+type HierarchyGroup struct {
+	Name  string   `yaml:"name"  json:"name"`
+	ID    string   `yaml:"id"    json:"id"`
+	Teams []string `yaml:"teams" json:"teams"`
+}
+
+// HierarchyByID returns the hierarchy group with the given ID, or nil.
+func (m *Manifest) HierarchyByID(id string) *HierarchyGroup {
+	for i := range m.Hierarchy {
+		if m.Hierarchy[i].ID == id {
+			return &m.Hierarchy[i]
+		}
+	}
+	return nil
 }
 
 // Team defines a team identity and its resource ownership.

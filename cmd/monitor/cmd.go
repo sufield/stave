@@ -13,11 +13,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/cobra"
 
 	artifact "github.com/sufield/stave/internal/adapters/artifacts"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	infraSLA "github.com/sufield/stave/internal/adapters/sla"
+	appcoverage "github.com/sufield/stave/internal/app/coverage"
 	appmon "github.com/sufield/stave/internal/app/monitor"
 	appscore "github.com/sufield/stave/internal/app/score"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -90,6 +92,9 @@ Exit Codes:
 }
 
 func runMonitor(ctx context.Context, stdout, _ io.Writer, opts *options) error {
+	// Load ATT&CK coverage once (static, does not change per refresh).
+	attckTactics := loadATTCKTactics()
+
 	loadState := func() (*appmon.State, error) {
 		assessments, err := loadAssessments(ctx, opts.HistoryDir)
 		if err != nil {
@@ -110,13 +115,15 @@ func runMonitor(ctx context.Context, stdout, _ io.Writer, opts *options) error {
 				}
 			}
 		}
-		return appmon.Build(appmon.BuildInput{
+		state := appmon.Build(appmon.BuildInput{
 			GeneratedAt:    time.Now().UTC().Format("2006-01-02 15:04:05"),
 			Assessments:    assessments,
 			ChainDefs:      len(chains),
 			MaxChainWeight: appscore.ChainMaxWeight(chains),
 			SLADeadlines:   slaDeadlines,
-		}), nil
+		})
+		state.ATTCKTactics = attckTactics
+		return state, nil
 	}
 
 	switch opts.Format {
@@ -146,13 +153,28 @@ func runMonitor(ctx context.Context, stdout, _ io.Writer, opts *options) error {
 }
 
 func runLiveLoop(ctx context.Context, stdout io.Writer, opts *options, loadState func() (*appmon.State, error)) error {
-	// Handle signals for clean exit.
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, os.Interrupt)
 	defer signal.Stop(sigCh)
 
 	ticker := time.NewTicker(time.Duration(opts.Refresh) * time.Second)
 	defer ticker.Stop()
+
+	// fsnotify: watch history directory for new files.
+	var fsCh <-chan fsnotify.Event
+	watcher, watchErr := fsnotify.NewWatcher()
+	if watchErr == nil {
+		defer func() { _ = watcher.Close() }()
+		_ = watcher.Add(opts.HistoryDir)
+		fsCh = watcher.Events
+	}
+	// If fsnotify unavailable, fsCh is nil — select ignores nil channels.
+
+	// Keyboard: read single bytes from stdin in a goroutine.
+	keyCh := make(chan byte, 1)
+	if isTerminalFd(os.Stdin.Fd()) {
+		go readKeys(keyCh)
+	}
 
 	// Initial render.
 	if err := renderOnce(ctx, stdout, opts, loadState); err != nil {
@@ -165,13 +187,58 @@ func runLiveLoop(ctx context.Context, stdout io.Writer, opts *options, loadState
 			return nil
 		case <-sigCh:
 			return nil
+		case ev, ok := <-fsCh:
+			if ok && ev.Op&fsnotify.Create != 0 && strings.HasSuffix(ev.Name, ".json") {
+				// Small delay to let file finish writing.
+				time.Sleep(200 * time.Millisecond)
+				_ = renderOnce(ctx, stdout, opts, loadState)
+			}
+		case key := <-keyCh:
+			switch key {
+			case 'q', 'Q', 3: // q, Q, or Ctrl+C
+				return nil
+			case 'r', 'R':
+				_ = renderOnce(ctx, stdout, opts, loadState)
+			}
 		case <-ticker.C:
 			if err := renderOnce(ctx, stdout, opts, loadState); err != nil {
-				// Log error but keep running.
 				fmt.Fprintf(stdout, "\nRefresh error: %v\n", err)
 			}
 		}
 	}
+}
+
+func readKeys(ch chan<- byte) {
+	buf := make([]byte, 1)
+	for {
+		n, err := os.Stdin.Read(buf)
+		if err != nil || n == 0 {
+			return
+		}
+		ch <- buf[0]
+	}
+}
+
+func isTerminalFd(_ uintptr) bool {
+	fi, err := os.Stdin.Stat()
+	if err != nil {
+		return false
+	}
+	return fi.Mode()&os.ModeCharDevice != 0
+}
+
+func loadATTCKTactics() []appmon.TacticRow {
+	var tactics []appmon.TacticRow
+	for _, td := range appcoverage.AllTactics {
+		tactics = append(tactics, appmon.TacticRow{
+			ID:   td.ID,
+			Name: td.Name,
+		})
+	}
+	// Control counts are loaded from catalog — approximate from AllTactics.
+	// A full count requires loading all controls, which is expensive.
+	// For the monitor, we show tactic names without counts.
+	return tactics
 }
 
 func renderOnce(_ context.Context, stdout io.Writer, opts *options, loadState func() (*appmon.State, error)) error {

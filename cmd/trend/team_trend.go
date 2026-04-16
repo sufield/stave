@@ -4,6 +4,9 @@ import (
 	"sort"
 	"strings"
 
+	"fmt"
+	"io"
+
 	"github.com/sufield/stave/internal/app/teams"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/report"
@@ -179,4 +182,121 @@ func computeTeamTrends(
 	}
 
 	return trends, summary
+}
+
+// computeRollup aggregates team trends for a hierarchy group.
+func computeRollup(trends []TeamTrend, group *teams.HierarchyGroup) *RollupResult {
+	if group == nil {
+		return nil
+	}
+	memberSet := make(map[string]bool, len(group.Teams))
+	for _, tid := range group.Teams {
+		memberSet[tid] = true
+	}
+
+	var totalScore, totalMTTR float64
+	var totalSLAWithin, totalSLAAll int
+	var openFindings, criticalOpen, count int
+	for i := range trends {
+		t := &trends[i]
+		if !memberSet[t.ID] {
+			continue
+		}
+		count++
+		totalScore += t.PostureScore
+		totalMTTR += t.MTTRHours
+		openFindings += t.OpenFindings
+		criticalOpen += t.CriticalOpen
+		// Approximate SLA: convert percentage back to counts.
+		if t.OpenFindings > 0 {
+			within := int(t.SLACompPct / 100 * float64(t.OpenFindings))
+			totalSLAWithin += within
+			totalSLAAll += t.OpenFindings
+		}
+	}
+	if count == 0 {
+		return nil
+	}
+
+	slaPct := 100.0
+	if totalSLAAll > 0 {
+		slaPct = float64(totalSLAWithin) / float64(totalSLAAll) * 100
+	}
+
+	return &RollupResult{
+		GroupID:      group.ID,
+		GroupName:    group.Name,
+		PostureScore: totalScore / float64(count),
+		MTTRHours:    totalMTTR / float64(count),
+		SLACompPct:   slaPct,
+		OpenFindings: openFindings,
+		CriticalOpen: criticalOpen,
+	}
+}
+
+// renderExecutiveSummary writes a plain-text paragraph for board reporting.
+func renderExecutiveSummary(w io.Writer, r *TrendReport) error { //nolint:unparam // error return for format-dispatch consistency
+	score := 0.0
+	if r.PostureScore != nil {
+		score = *r.PostureScore
+	}
+	delta := r.Summary.NetChangePercent
+	date := r.Period.End.Format("2006-01-02")
+
+	direction := "remained stable"
+	if delta > 0 {
+		direction = fmt.Sprintf("improved %.1f points", delta)
+	} else if delta < 0 {
+		direction = fmt.Sprintf("declined %.1f points", -delta)
+	}
+
+	fmt.Fprintf(w, "EXECUTIVE SECURITY SUMMARY — %s\n\n", date)
+	fmt.Fprintf(w, "Account posture %s to %.1f.", direction, score)
+
+	if r.TeamSummary != nil {
+		ts := r.TeamSummary
+		fmt.Fprintf(w, " %d of %d teams are improving, %d are stable, %d require attention.\n",
+			ts.TeamsImproving, ts.TeamsTracked, ts.TeamsStable, ts.TeamsRegressing)
+
+		// Attention required: regressing teams.
+		for i := range r.TeamTrends {
+			t := &r.TeamTrends[i]
+			if t.Trajectory != trajectoryRegressing {
+				continue
+			}
+			name := t.Name
+			if name == "" {
+				name = t.ID
+			}
+			fmt.Fprintf(w, "\nATTENTION REQUIRED: %s (score %.1f, %+.1f). %d critical findings open.",
+				name, t.PostureScore, t.ScoreDelta, t.CriticalOpen)
+			if t.Contact != "" {
+				fmt.Fprintf(w, " Contact: %s.", t.Contact)
+			}
+			fmt.Fprintln(w)
+		}
+
+		// Top performer: best improving team.
+		var best *TeamTrend
+		for i := range r.TeamTrends {
+			t := &r.TeamTrends[i]
+			if t.Trajectory == trajectoryImproving {
+				if best == nil || t.ScoreDelta > best.ScoreDelta {
+					best = t
+				}
+			}
+		}
+		if best != nil {
+			name := best.Name
+			if name == "" {
+				name = best.ID
+			}
+			fmt.Fprintf(w, "\nTop performer: %s (score %.1f, %+.1f, MTTR %.1fh, %.0f%% SLA compliance).\n",
+				name, best.PostureScore, best.ScoreDelta, best.MTTRHours, best.SLACompPct)
+		}
+	} else {
+		fmt.Fprintln(w)
+	}
+
+	return nil
 }

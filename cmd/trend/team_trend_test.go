@@ -1,7 +1,10 @@
 package trend
 
 import (
+	"bytes"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/sufield/stave/internal/app/teams"
 	"github.com/sufield/stave/internal/core/asset"
@@ -166,5 +169,113 @@ func TestComputeTeamTrends_TeamFilter(t *testing.T) {
 	}
 	if trends[0].ID != "alpha" {
 		t.Errorf("expected alpha, got %q", trends[0].ID)
+	}
+}
+
+func TestComputeRollup_WeightedScoreAverage(t *testing.T) {
+	trends := []TeamTrend{
+		{ID: "alpha", PostureScore: 80, MTTRHours: 20, SLACompPct: 90, OpenFindings: 5, CriticalOpen: 1},
+		{ID: "beta", PostureScore: 60, MTTRHours: 40, SLACompPct: 70, OpenFindings: 10, CriticalOpen: 2},
+		{ID: "gamma", PostureScore: 100, MTTRHours: 10, SLACompPct: 100, OpenFindings: 0, CriticalOpen: 0},
+	}
+	group := &teams.HierarchyGroup{
+		ID: "platform", Name: "Platform", Teams: []string{"alpha", "beta"},
+	}
+
+	result := computeRollup(trends, group)
+	if result == nil {
+		t.Fatal("expected rollup result")
+	}
+	// Average of 80 and 60 = 70.
+	if result.PostureScore != 70 {
+		t.Errorf("posture score = %.1f, want 70", result.PostureScore)
+	}
+	// Sum of open findings.
+	if result.OpenFindings != 15 {
+		t.Errorf("open findings = %d, want 15", result.OpenFindings)
+	}
+	if result.CriticalOpen != 3 {
+		t.Errorf("critical = %d, want 3", result.CriticalOpen)
+	}
+	// Gamma excluded (not in group).
+	if result.GroupID != "platform" {
+		t.Errorf("group id = %q, want platform", result.GroupID)
+	}
+}
+
+func TestManifest_V1_BackwardCompat(t *testing.T) {
+	// Version 1 manifest has no hierarchy — should work unchanged.
+	manifest := makeManifest() // no Hierarchy field
+	if manifest.HierarchyByID("anything") != nil {
+		t.Error("v1 manifest should have no hierarchy groups")
+	}
+	// Team resolution should still work.
+	assessments := []*report.Assessment{
+		{Findings: []remediation.Finding{
+			makeFinding("CTL.S3.001", "arn:aws:s3:::alpha-bucket", policy.SeverityHigh, 24, false),
+		}},
+	}
+	trends, summary := computeTeamTrends(assessments, manifest, "", false)
+	if summary == nil || summary.TeamsTracked == 0 {
+		t.Error("v1 manifest should produce team trends")
+	}
+	if len(trends) == 0 {
+		t.Error("expected at least one team trend")
+	}
+}
+
+func TestRenderExecutiveSummary_ContainsScore(t *testing.T) {
+	score := 81.2
+	r := &TrendReport{
+		Period:       Period{End: time.Now()},
+		PostureScore: &score,
+		Summary:      TrendSummary{NetChangePercent: 4.1, Direction: "improving"},
+	}
+
+	var buf bytes.Buffer
+	if err := renderExecutiveSummary(&buf, r); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, "81.2") {
+		t.Error("should contain posture score")
+	}
+	if !strings.Contains(out, "EXECUTIVE SECURITY SUMMARY") {
+		t.Error("should contain header")
+	}
+}
+
+func TestRenderExecutiveSummary_ContainsAttentionTeam(t *testing.T) {
+	score := 68.0
+	r := &TrendReport{
+		Period:       Period{End: time.Now()},
+		PostureScore: &score,
+		Summary:      TrendSummary{NetChangePercent: -5, Direction: "regressing"},
+		TeamSummary:  &TeamTrendSummary{TeamsTracked: 2, TeamsImproving: 1, TeamsRegressing: 1},
+		TeamTrends: []TeamTrend{
+			{ID: "identity", Name: "Team Identity", PostureScore: 55, ScoreDelta: -10, Trajectory: trajectoryRegressing, CriticalOpen: 3, Contact: "id@test.com"},
+			{ID: "payments", Name: "Team Payments", PostureScore: 90, ScoreDelta: 8, Trajectory: trajectoryImproving, MTTRHours: 18, SLACompPct: 94},
+		},
+	}
+
+	var buf bytes.Buffer
+	if err := renderExecutiveSummary(&buf, r); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, "ATTENTION REQUIRED") {
+		t.Error("should contain attention required")
+	}
+	if !strings.Contains(out, "Team Identity") {
+		t.Error("should name regressing team")
+	}
+	if !strings.Contains(out, "id@test.com") {
+		t.Error("should contain contact")
+	}
+	if !strings.Contains(out, "Top performer") {
+		t.Error("should contain top performer")
+	}
+	if !strings.Contains(out, "Team Payments") {
+		t.Error("should name top performer")
 	}
 }

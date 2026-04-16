@@ -51,6 +51,7 @@ Examples:
 	cmd.Flags().StringVar(&opts.TeamManifest, "team-manifest", "", "path to team manifest YAML for per-team metrics")
 	cmd.Flags().StringVar(&opts.Team, "team", "", "filter to specific team ID")
 	cmd.Flags().BoolVar(&opts.RegressionOnly, "regression-only", false, "show only regressing teams")
+	cmd.Flags().StringVar(&opts.Rollup, "rollup", "", "aggregate to hierarchy group ID")
 
 	return cmd
 }
@@ -66,4 +67,5 @@ type trendOptions struct {
 	TeamManifest   string
 	Team           string
 	RegressionOnly bool
+	Rollup         string
 }
