@@ -1,0 +1,10 @@
+id: strict
+name: Strict Remediation SLA Policy
+
+deadlines:
+  critical: 24h
+  high:     72h
+  medium:   168h
+  low:      720h
+
+escalation_factor: 2.0

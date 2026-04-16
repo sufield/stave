@@ -29,6 +29,7 @@ func controlDefinitionToDomain(y yamlControlDefinition) policy.ControlDefinition
 		Remediation:          remediationToDomain(y.Remediation),
 		Exposure:             exposureToDomain(y.Exposure),
 		ObservationFields:    y.ObservationFields,
+		Tests:                y.Tests,
 	}
 }
 

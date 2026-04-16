@@ -14,6 +14,12 @@ func resolveScopeFilter(cfg Config) *asset.AuditScope {
 	if len(cfg.BucketAllowlist) > 0 {
 		return asset.NewAuditScopeFromAllowlist(cfg.BucketAllowlist)
 	}
+	// Domain-scoped profiles (non-S3) already scope by control directory;
+	// applying the PHI tag filter would exclude all assets that lack
+	// DataDomain=health tags. Use GlobalScope for these profiles.
+	if profileControlDomain(cfg.Profile) != "" && cfg.Profile != ProfileAWSS3 {
+		return asset.GlobalScope
+	}
 	return asset.PHIBoundary()
 }
 

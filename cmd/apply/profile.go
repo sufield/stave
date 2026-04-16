@@ -52,15 +52,17 @@ const (
 	ProfileISO27001 Profile = "iso-27001"
 	// ProfileNISTCSF selects the NIST CSF 2.0 profile.
 	ProfileNISTCSF Profile = "nist-csf-2.0"
+	// ProfileAWSEFS selects the AWS Elastic File System profile.
+	ProfileAWSEFS Profile = "aws-efs"
 )
 
 // ParseProfile validates and returns a Profile value.
 func ParseProfile(s string) (Profile, error) {
 	switch Profile(s) {
-	case ProfileAWSS3, ProfileAWSIAM, ProfileGCPGCS, ProfileHIPAA, ProfileCISv3, ProfileSOC2, ProfilePCIDSSv4, ProfileNIST, ProfileFedRAMP, ProfileGDPR, ProfileFFIEC, ProfileISO27001, ProfileNISTCSF:
+	case ProfileAWSS3, ProfileAWSIAM, ProfileAWSEFS, ProfileGCPGCS, ProfileHIPAA, ProfileCISv3, ProfileSOC2, ProfilePCIDSSv4, ProfileNIST, ProfileFedRAMP, ProfileGDPR, ProfileFFIEC, ProfileISO27001, ProfileNISTCSF:
 		return Profile(s), nil
 	default:
-		return "", fmt.Errorf("unsupported --profile %q (supported: aws-s3, aws-iam, gcp-gcs, hipaa, cis-aws-v3.0, soc2, pci-dss-v4.0, nist-800-53, fedramp, gdpr, ffiec, iso-27001, nist-csf-2.0)", s)
+		return "", fmt.Errorf("unsupported --profile %q (supported: aws-s3, aws-iam, aws-efs, gcp-gcs, hipaa, cis-aws-v3.0, soc2, pci-dss-v4.0, nist-800-53, fedramp, gdpr, ffiec, iso-27001, nist-csf-2.0)", s)
 	}
 }
 
@@ -260,6 +262,8 @@ func profileControlDomain(prof Profile) string {
 	switch prof {
 	case ProfileAWSIAM:
 		return "iam"
+	case ProfileAWSEFS:
+		return "efs"
 	case ProfileGCPGCS:
 		return "gcs"
 	case ProfileHIPAA, ProfileCISv3, ProfileSOC2, ProfilePCIDSSv4, ProfileNIST, ProfileFedRAMP, ProfileGDPR, ProfileFFIEC, ProfileISO27001, ProfileNISTCSF:

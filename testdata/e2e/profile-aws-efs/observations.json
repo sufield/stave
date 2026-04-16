@@ -1,0 +1,97 @@
+{
+  "schema_version": "obs.v0.1",
+  "snapshots": [
+    {
+      "schema_version": "obs.v0.1",
+      "generated_by": {
+        "source_type": "aws-efs-snapshot",
+        "tool": "stave",
+        "tool_version": "0.1.0"
+      },
+      "source": "deployed",
+      "captured_at": "2026-01-10T00:00:00Z",
+      "assets": [
+        {
+          "id": "fs-abc123",
+          "type": "aws_efs_filesystem",
+          "vendor": "aws",
+          "properties": {
+            "filesystem": {
+              "kind": "efs",
+              "encryption": {
+                "at_rest_enabled": false,
+                "in_transit_enforced": false,
+                "kms_key_type": "none"
+              },
+              "backup": {
+                "policy": "DISABLED"
+              },
+              "access_points": {
+                "has_access_points": false,
+                "has_root_directory": true,
+                "has_missing_posix": true
+              },
+              "file_system_policy": {
+                "enforce_in_transit": false,
+                "deny_root_access": false,
+                "prevent_anonymous_access": false
+              },
+              "lifecycle_policy": {
+                "transition_to_ia_days": 0
+              },
+              "mount_targets": {
+                "has_missing_sg": true
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "schema_version": "obs.v0.1",
+      "generated_by": {
+        "source_type": "aws-efs-snapshot",
+        "tool": "stave",
+        "tool_version": "0.1.0"
+      },
+      "source": "deployed",
+      "captured_at": "2026-01-15T00:00:00Z",
+      "assets": [
+        {
+          "id": "fs-abc123",
+          "type": "aws_efs_filesystem",
+          "vendor": "aws",
+          "properties": {
+            "filesystem": {
+              "kind": "efs",
+              "encryption": {
+                "at_rest_enabled": false,
+                "in_transit_enforced": false,
+                "kms_key_type": "none"
+              },
+              "backup": {
+                "policy": "DISABLED"
+              },
+              "access_points": {
+                "has_access_points": false,
+                "has_root_directory": true,
+                "has_missing_posix": true
+              },
+              "file_system_policy": {
+                "enforce_in_transit": false,
+                "deny_root_access": false,
+                "prevent_anonymous_access": false
+              },
+              "lifecycle_policy": {
+                "transition_to_ia_days": 0
+              },
+              "mount_targets": {
+                "has_missing_sg": true
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

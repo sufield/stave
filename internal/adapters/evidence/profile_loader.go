@@ -16,13 +16,20 @@ import (
 var profilesFS embed.FS
 
 // yamlProfile is the wire-format representation of a framework profile.
+// Supports both the original requirements-based format and the sections-based
+// format used by custom compliance framework files.
 type yamlProfile struct {
-	ID           string            `yaml:"id"`
-	Name         string            `yaml:"name"`
-	Version      string            `yaml:"version"`
-	Description  string            `yaml:"description"`
-	FrameworkKey string            `yaml:"framework_key"`
-	Requirements []yamlRequirement `yaml:"requirements"`
+	SchemaVersion string            `yaml:"schema_version"`
+	ID            string            `yaml:"id"`
+	Name          string            `yaml:"name"`
+	Version       string            `yaml:"version"`
+	Description   string            `yaml:"description"`
+	FrameworkKey  string            `yaml:"framework_key"`
+	Extends       string            `yaml:"extends"`
+	Requirements  []yamlRequirement `yaml:"requirements"`
+	Sections      []yamlSection     `yaml:"sections"`
+	SLADeadlines  *yamlSLADeadlines `yaml:"sla_deadlines"`
+	EvidenceMeta  *yamlEvidenceMeta `yaml:"evidence_metadata"`
 }
 
 type yamlRequirement struct {
@@ -31,6 +38,34 @@ type yamlRequirement struct {
 	Section       string   `yaml:"section"`
 	Controls      []string `yaml:"controls"`
 	PassThreshold string   `yaml:"pass_threshold"`
+}
+
+// yamlSection is the enhanced section-based format for custom profiles.
+type yamlSection struct {
+	ID               string                `yaml:"id"`
+	Title            string                `yaml:"title"`
+	Description      string                `yaml:"description"`
+	Priority         string                `yaml:"priority"`
+	RequiredControls []yamlRequiredControl `yaml:"required_controls"`
+}
+
+type yamlRequiredControl struct {
+	ControlID string `yaml:"control_id"`
+	Rationale string `yaml:"rationale"`
+}
+
+type yamlSLADeadlines struct {
+	Critical string `yaml:"critical"`
+	High     string `yaml:"high"`
+	Medium   string `yaml:"medium"`
+	Low      string `yaml:"low"`
+}
+
+type yamlEvidenceMeta struct {
+	Regulation    string `yaml:"regulation"`
+	EffectiveDate string `yaml:"effective_date"`
+	Jurisdiction  string `yaml:"jurisdiction"`
+	Contact       string `yaml:"contact"`
 }
 
 // LoadEmbeddedProfiles loads all framework profiles from the embedded FS.
@@ -93,19 +128,58 @@ func parseProfile(data []byte, filename string) (*coreevidence.FrameworkProfile,
 		return nil, fmt.Errorf("%s: missing required field 'id'", filename)
 	}
 
-	reqs := make([]coreevidence.Requirement, len(dto.Requirements))
-	for i, r := range dto.Requirements {
+	// Convert requirements from either format.
+	var reqs []coreevidence.Requirement
+
+	// Original format: requirements[]
+	for _, r := range dto.Requirements {
 		threshold, err := coreevidence.ParsePassThreshold(r.PassThreshold)
 		if err != nil {
 			return nil, fmt.Errorf("%s: requirement %q: %w", filename, r.ID, err)
 		}
-		reqs[i] = coreevidence.Requirement{
+		reqs = append(reqs, coreevidence.Requirement{
 			ID:            r.ID,
 			Description:   r.Description,
 			Section:       r.Section,
 			ControlIDs:    r.Controls,
 			PassThreshold: threshold,
+		})
+	}
+
+	// Enhanced format: sections[] with required_controls[]
+	for _, s := range dto.Sections {
+		var controlIDs []string
+		for _, rc := range s.RequiredControls {
+			controlIDs = append(controlIDs, rc.ControlID)
 		}
+		reqs = append(reqs, coreevidence.Requirement{
+			ID:            s.ID,
+			Description:   s.Title,
+			Section:       s.ID,
+			ControlIDs:    controlIDs,
+			PassThreshold: coreevidence.PassThreshold{Mode: coreevidence.ThresholdAll},
+		})
+	}
+
+	// Handle extends: inherit parent requirements.
+	if dto.Extends != "" {
+		parent, parentErr := LoadProfile(dto.Extends)
+		if parentErr != nil {
+			return nil, fmt.Errorf("%s: extends %q: %w", filename, dto.Extends, parentErr)
+		}
+		// Merge: parent requirements first, child overrides by ID.
+		childIDs := make(map[string]bool, len(reqs))
+		for _, r := range reqs {
+			childIDs[r.ID] = true
+		}
+		var merged []coreevidence.Requirement
+		for _, pr := range parent.Requirements {
+			if !childIDs[pr.ID] {
+				merged = append(merged, pr)
+			}
+		}
+		merged = append(merged, reqs...)
+		reqs = merged
 	}
 
 	return &coreevidence.FrameworkProfile{

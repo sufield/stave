@@ -11,3 +11,7 @@ controls:
   - CTL.IAM.TRUST.EXTERNALID.001
 escalation_threshold: 2
 compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - iam_credential_theft

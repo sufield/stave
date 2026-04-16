@@ -10,3 +10,7 @@ controls:
   - CTL.EKS.VERSION.001
 escalation_threshold: 2
 compound_severity: high
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - ec2_code_execution

@@ -11,3 +11,7 @@ controls:
   - CTL.WAF.RULES.BLOCKMODE.001
 escalation_threshold: 3
 compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - audit_trail_destroyed

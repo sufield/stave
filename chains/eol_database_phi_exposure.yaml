@@ -11,3 +11,7 @@ controls:
   - CTL.RDS.PUBLIC.001
 escalation_threshold: 2
 compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - rds_data_access

@@ -14,6 +14,7 @@ import (
 	artifact "github.com/sufield/stave/internal/adapters/artifacts"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	appscore "github.com/sufield/stave/internal/app/score"
+	"github.com/sufield/stave/internal/app/teams"
 	"github.com/sufield/stave/internal/core/report"
 )
 
@@ -105,6 +106,17 @@ func runTrend(ctx context.Context, w io.Writer, opts *trendOptions) error {
 		trendReport.Summary.NetChangePercent = change
 	}
 	trendReport.Summary.Direction = velocity.Direction
+
+	// Per-team trends if manifest provided.
+	if opts.TeamManifest != "" {
+		manifest, manifestErr := teams.LoadManifest(opts.TeamManifest)
+		if manifestErr != nil {
+			return fmt.Errorf("load team manifest: %w", manifestErr)
+		}
+		teamTrends, teamSummary := computeTeamTrends(assessments, manifest, opts.Team, opts.RegressionOnly)
+		trendReport.TeamTrends = teamTrends
+		trendReport.TeamSummary = teamSummary
+	}
 
 	// Write output.
 	out := w

@@ -58,6 +58,8 @@ type TrendReport struct {
 	SLATrend        []SLATrendMetric     `json:"sla_trend,omitempty"`
 	PostureScore    *float64             `json:"posture_score,omitempty"`
 	PostureRubric   string               `json:"posture_rubric,omitempty"`
+	TeamSummary     *TeamTrendSummary    `json:"team_summary,omitempty"`
+	TeamTrends      []TeamTrend          `json:"team_trends,omitempty"`
 }
 
 // Period defines the time range of the trend analysis.
@@ -80,6 +82,29 @@ type VelocityMetrics struct {
 	WindowRuns   int     `json:"window_runs"`
 	AvgNetChange float64 `json:"avg_net_change_per_run"`
 	Direction    string  `json:"direction"`
+}
+
+// TeamTrend holds per-team trend metrics.
+type TeamTrend struct {
+	ID           string    `json:"id"`
+	Name         string    `json:"name"`
+	Contact      string    `json:"contact,omitempty"`
+	PostureScore float64   `json:"posture_score"`
+	ScoreDelta   float64   `json:"posture_score_delta"`
+	Trajectory   string    `json:"trajectory"`
+	MTTRHours    float64   `json:"mttr_hours"`
+	SLACompPct   float64   `json:"sla_compliance_pct"`
+	OpenFindings int       `json:"open_findings"`
+	CriticalOpen int       `json:"critical_open"`
+	ScoreHistory []float64 `json:"score_history,omitempty"`
+}
+
+// TeamTrendSummary holds aggregate team statistics.
+type TeamTrendSummary struct {
+	TeamsTracked    int `json:"teams_tracked"`
+	TeamsImproving  int `json:"teams_improving"`
+	TeamsStable     int `json:"teams_stable"`
+	TeamsRegressing int `json:"teams_regressing"`
 }
 
 // ProjectionMetrics provides a linear extrapolation.

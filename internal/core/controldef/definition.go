@@ -44,7 +44,8 @@ type ControlDefinition struct {
 	UnsafePredicateAlias string
 	Remediation          *RemediationSpec
 	Exposure             *Exposure
-	ObservationFields    []string // property paths for compliance evidence extraction
+	ObservationFields    []string      // property paths for compliance evidence extraction
+	Tests                []ControlTest `yaml:"tests,omitempty" json:"-"`
 
 	// Prepared holds pre-calculated values to optimize the evaluation hot path.
 	Prepared PreparedParams `json:"-"`

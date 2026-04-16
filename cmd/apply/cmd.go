@@ -81,6 +81,7 @@ type Options struct {
 	SLAPolicy          string
 	TeamManifest       string
 	OwnerFilter        string
+	ProfileFiles       []string
 }
 
 // normalize cleans all user-supplied paths in one pass.
@@ -185,6 +186,7 @@ func (o *Options) bindApplySpecific(cmd *cobra.Command) {
 	f.StringSliceVar(&o.BucketAllowlist, "bucket-allowlist", nil, "Bucket names/ARNs to include")
 	f.BoolVar(&o.IncludeAll, "include-all", false, "Disable health scope filtering")
 	f.StringVar(&o.TracePath, "trace", "", "Write logic audit trace to file (e.g. audit_trace.json)")
+	f.StringSliceVar(&o.ProfileFiles, "profile-file", nil, "custom compliance profile YAML (can be repeated)")
 	f.StringVar(&o.SLAProfile, "sla-profile", "", "SLA policy profile (pci_dss_v4, hipaa, soc2, fedramp_moderate, default)")
 	f.StringVar(&o.SLAProfileFile, "sla-profile-file", "", "path to custom SLA policy YAML file")
 	f.StringVar(&o.SLAPolicy, "sla-policy", "warn", "SLA breach exit code behavior: warn, strict, critical-only")

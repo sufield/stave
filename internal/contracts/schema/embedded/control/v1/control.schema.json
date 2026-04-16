@@ -273,6 +273,38 @@
               "description": "Optional example showing the remediation action applied to a real asset."
             }
           }
+        },
+        "tests": {
+          "type": "array",
+          "title": "Embedded Test Cases",
+          "description": "Inline test cases for verifying predicate behavior. Run with stave test.",
+          "items": {
+            "type": "object",
+            "required": ["name", "verdict", "asset"],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Human-readable test case name."
+              },
+              "verdict": {
+                "type": "string",
+                "enum": ["PASS", "VIOLATION", "INCONCLUSIVE"],
+                "description": "Expected evaluation verdict."
+              },
+              "asset": {
+                "type": "object",
+                "required": ["asset_id", "properties"],
+                "properties": {
+                  "asset_id": { "type": "string" },
+                  "asset_type": { "type": "string" },
+                  "vendor": { "type": "string" },
+                  "properties": { "type": "object" }
+                }
+              }
+            }
+          }
         }
       }
     }

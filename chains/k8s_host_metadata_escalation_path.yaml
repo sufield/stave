@@ -13,3 +13,7 @@ controls:
   - CTL.K8S.IMDS.BLOCK.001
 escalation_threshold: 3
 compound_severity: critical
+preconditions:
+  - k8s_service_account_token
+postconditions:
+  - iam_credential_theft

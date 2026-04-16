@@ -11,3 +11,7 @@ controls:
   - CTL.VSPHERE.VM.ENCRYPT.001
 escalation_threshold: 2
 compound_severity: critical
+preconditions:
+  - network_access_vpc
+postconditions:
+  - ec2_code_execution

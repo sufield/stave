@@ -10,3 +10,7 @@ controls:
   - CTL.S3.REGION.001
 escalation_threshold: 2
 compound_severity: high
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - s3_data_access

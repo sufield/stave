@@ -12,3 +12,7 @@ controls:
   - CTL.IAM.POLICY.SOD.001
 escalation_threshold: 2
 compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - aws_root_access

@@ -12,3 +12,7 @@ controls:
   - CTL.BACKUP.ENCRYPT.001
 escalation_threshold: 2
 compound_severity: high
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - data_destruction

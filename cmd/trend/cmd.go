@@ -48,16 +48,22 @@ Examples:
 	cmd.Flags().IntVar(&opts.Window, "window", 0, "limit to most recent N assessments (0 = all)")
 	cmd.Flags().IntVar(&opts.MinRuns, "min-runs", 2, "minimum assessment files required")
 	cmd.Flags().StringVar(&opts.Compliance, "compliance", "", "comma-separated framework profiles for trajectory (hipaa,soc2,...)")
+	cmd.Flags().StringVar(&opts.TeamManifest, "team-manifest", "", "path to team manifest YAML for per-team metrics")
+	cmd.Flags().StringVar(&opts.Team, "team", "", "filter to specific team ID")
+	cmd.Flags().BoolVar(&opts.RegressionOnly, "regression-only", false, "show only regressing teams")
 
 	return cmd
 }
 
 type trendOptions struct {
-	HistoryDir string
-	Files      string
-	Compliance string
-	Format     string
-	Out        string
-	Window     int
-	MinRuns    int
+	HistoryDir     string
+	Files          string
+	Compliance     string
+	Format         string
+	Out            string
+	Window         int
+	MinRuns        int
+	TeamManifest   string
+	Team           string
+	RegressionOnly bool
 }

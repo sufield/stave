@@ -111,5 +111,49 @@ func renderTrendTable(w io.Writer, r *TrendReport) error { //nolint:unparam // e
 		fmt.Fprintf(w, "  Note: %s\n", r.Projection.Caveat)
 	}
 
+	// Per-team trends.
+	if len(r.TeamTrends) > 0 && r.TeamSummary != nil {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "PER-TEAM POSTURE TREND")
+		fmt.Fprintln(w, sep)
+		ts := r.TeamSummary
+		fmt.Fprintf(w, "  Teams tracked: %d  (improving: %d, stable: %d, regressing: %d)\n\n",
+			ts.TeamsTracked, ts.TeamsImproving, ts.TeamsStable, ts.TeamsRegressing)
+
+		fmt.Fprintf(w, "  %-16s %5s %6s  %-12s %7s %5s %4s %4s\n",
+			"Team", "Score", "Delta", "Trajectory", "MTTR", "SLA%", "Open", "Crit")
+		fmt.Fprintf(w, "  %-16s %5s %6s  %-12s %7s %5s %4s %4s\n",
+			strings.Repeat("-", 16), "-----", "------", strings.Repeat("-", 12),
+			"-------", "-----", "----", "----")
+		for i := range r.TeamTrends {
+			t := &r.TeamTrends[i]
+			arrow := arrowFor(t.Trajectory)
+			name := t.Name
+			if name == "" {
+				name = t.ID
+			}
+			if len(name) > 16 {
+				name = name[:16]
+			}
+			fmt.Fprintf(w, "  %-16s %5.1f %+6.1f  %-12s %6.1fh %4.0f%% %4d %4d",
+				name, t.PostureScore, t.ScoreDelta, t.Trajectory+" "+arrow, t.MTTRHours, t.SLACompPct, t.OpenFindings, t.CriticalOpen)
+			if t.Trajectory == trajectoryRegressing {
+				_, _ = fmt.Fprint(w, "  !!")
+			}
+			fmt.Fprintln(w)
+		}
+	}
+
 	return nil
+}
+
+func arrowFor(trajectory string) string {
+	switch trajectory {
+	case trajectoryImproving:
+		return "^"
+	case trajectoryRegressing:
+		return "v"
+	default:
+		return "-"
+	}
 }

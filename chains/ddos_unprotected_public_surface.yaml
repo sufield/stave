@@ -10,3 +10,7 @@ controls:
   - CTL.WAF.ORIGIN.LOCKDOWN.001
 escalation_threshold: 2
 compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - network_access_vpc

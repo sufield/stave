@@ -11,3 +11,7 @@ controls:
   - CTL.IAM.ROOT.HWMFA.001
 escalation_threshold: 2
 compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - aws_root_access

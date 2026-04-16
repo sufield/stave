@@ -45,3 +45,35 @@ unsafe_predicate:
     - field: properties.compute.network.imdsv2_required
       op: eq
       value: false
+tests:
+  - name: "instance with IMDSv2 required passes"
+    verdict: PASS
+    asset:
+      asset_id: "i-test001"
+      asset_type: ec2_instance
+      vendor: aws
+      properties:
+        compute:
+          kind: instance
+          network:
+            imdsv2_required: true
+  - name: "instance with IMDSv2 not required fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "i-test002"
+      asset_type: ec2_instance
+      vendor: aws
+      properties:
+        compute:
+          kind: instance
+          network:
+            imdsv2_required: false
+  - name: "non-instance asset passes"
+    verdict: PASS
+    asset:
+      asset_id: "sg-test001"
+      asset_type: ec2_security_group
+      vendor: aws
+      properties:
+        compute:
+          kind: security_group

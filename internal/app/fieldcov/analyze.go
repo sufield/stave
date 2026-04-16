@@ -1,0 +1,386 @@
+// Package fieldcov analyzes observation field coverage against control
+// predicates. It detects controls that cannot evaluate because required
+// fields are missing from snapshots, and identifies silent-risk controls
+// where missing fields could produce false PASS verdicts.
+package fieldcov
+
+import (
+	"sort"
+	"strings"
+
+	"github.com/sufield/stave/internal/core/asset"
+	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/predicate"
+)
+
+// Classification describes a control's evaluability status.
+type Classification string
+
+const (
+	// Evaluable means all referenced fields are present.
+	Evaluable Classification = "EVALUABLE"
+	// Incomplete means some fields are missing — INCOMPLETE verdict expected.
+	Incomplete Classification = "INCOMPLETE"
+	// SilentRisk means missing fields could produce a false PASS.
+	SilentRisk Classification = "SILENT_RISK"
+	// NoAssets means no assets of the required type exist in the snapshot.
+	NoAssets Classification = "NO_ASSETS"
+)
+
+// ControlResult holds the coverage analysis for a single control.
+type ControlResult struct {
+	ControlID      string         `json:"control_id"`
+	Severity       string         `json:"severity"`
+	Classification Classification `json:"classification"`
+	MissingFields  []string       `json:"missing_fields,omitempty"`
+	AssetType      string         `json:"asset_type,omitempty"`
+	Frameworks     []string       `json:"compliance_frameworks,omitempty"`
+	Risk           string         `json:"risk,omitempty"`
+}
+
+// ShoppingItem is a missing field grouped by asset type.
+type ShoppingItem struct {
+	Field       string   `json:"field"`
+	RequiredBy  []string `json:"required_by"`
+	MaxSeverity string   `json:"max_severity"`
+}
+
+// FrameworkCoverage holds coverage stats for a compliance framework.
+type FrameworkCoverage struct {
+	Evaluable   int     `json:"evaluable"`
+	Total       int     `json:"total"`
+	Incomplete  int     `json:"incomplete"`
+	SilentRisk  int     `json:"silent_risk"`
+	CoveragePct float64 `json:"coverage_pct"`
+}
+
+// Report is the full coverage analysis output.
+type Report struct {
+	Snapshot          string                        `json:"snapshot"`
+	GeneratedAt       string                        `json:"generated_at"`
+	Summary           Summary                       `json:"summary"`
+	SilentRisk        []ControlResult               `json:"silent_risk"`
+	IncompleteResults []ControlResult               `json:"incomplete"`
+	ShoppingList      map[string][]ShoppingItem     `json:"extractor_shopping_list"`
+	FrameworkCoverage map[string]*FrameworkCoverage `json:"framework_coverage"`
+}
+
+// Summary holds aggregate counts.
+type Summary struct {
+	Total      int `json:"total"`
+	Evaluable  int `json:"evaluable"`
+	Incomplete int `json:"incomplete"`
+	SilentRisk int `json:"silent_risk"`
+	NoAssets   int `json:"no_assets"`
+}
+
+// AnalyzeInput holds the data needed for coverage analysis.
+type AnalyzeInput struct {
+	SnapshotPath string
+	GeneratedAt  string
+	Controls     []policy.ControlDefinition
+	Snapshots    []asset.Snapshot
+}
+
+// Analyze performs coverage analysis of controls against snapshot fields.
+func Analyze(input AnalyzeInput) *Report {
+	// Build a set of all property paths present across all assets.
+	presentFields := collectPresentFields(input.Snapshots)
+
+	var results []ControlResult
+	for i := range input.Controls {
+		ctl := &input.Controls[i]
+		result := classifyControl(ctl, presentFields)
+		results = append(results, result)
+	}
+
+	return buildReport(input, results)
+}
+
+// collectPresentFields walks all assets in all snapshots and returns
+// the set of property field paths that exist.
+func collectPresentFields(snapshots []asset.Snapshot) map[string]bool {
+	fields := make(map[string]bool)
+	for _, snap := range snapshots {
+		for _, a := range snap.Assets {
+			walkProperties("properties", a.Properties, fields)
+		}
+	}
+	return fields
+}
+
+// walkProperties recursively walks a nested map and collects all leaf paths.
+func walkProperties(prefix string, m map[string]any, out map[string]bool) {
+	for k, v := range m {
+		path := prefix + "." + k
+		out[path] = true
+		if nested, ok := v.(map[string]any); ok {
+			walkProperties(path, nested, out)
+		}
+	}
+}
+
+// classifyControl determines coverage classification for a single control.
+func classifyControl(ctl *policy.ControlDefinition, presentFields map[string]bool) ControlResult {
+	result := ControlResult{
+		ControlID:  string(ctl.ID),
+		Severity:   ctl.Severity.String(),
+		Frameworks: extractFrameworks(ctl),
+	}
+
+	pred := &ctl.UnsafePredicate
+	if len(pred.Any) == 0 && len(pred.All) == 0 {
+		result.Classification = Evaluable
+		return result
+	}
+
+	// Extract all field references from the predicate.
+	refs := extractFieldRefs(pred)
+	if len(refs) == 0 {
+		result.Classification = Evaluable
+		return result
+	}
+
+	// Check which fields are missing.
+	var missing []string
+	var silentRiskFields []string
+	for _, ref := range refs {
+		if !fieldPresent(ref.path, presentFields) {
+			missing = append(missing, ref.path)
+			if ref.silentRisk {
+				silentRiskFields = append(silentRiskFields, ref.path)
+			}
+		}
+	}
+
+	if len(missing) == 0 {
+		result.Classification = Evaluable
+		return result
+	}
+
+	result.MissingFields = missing
+	if len(silentRiskFields) > 0 {
+		result.Classification = SilentRisk
+		result.Risk = "predicate checks absent field without has() guard — may produce false PASS"
+	} else {
+		result.Classification = Incomplete
+	}
+
+	return result
+}
+
+// fieldRef is a field reference extracted from a predicate.
+type fieldRef struct {
+	path       string
+	silentRisk bool // true if missing field could cause false PASS
+}
+
+// extractFieldRefs walks a predicate tree and returns all field references.
+func extractFieldRefs(pred *policy.UnsafePredicate) []fieldRef {
+	var refs []fieldRef
+	for i := range pred.Any {
+		refs = collectRuleRefs(&pred.Any[i], refs)
+	}
+	for i := range pred.All {
+		refs = collectRuleRefs(&pred.All[i], refs)
+	}
+
+	// Deduplicate by path.
+	seen := make(map[string]bool)
+	var deduped []fieldRef
+	for _, r := range refs {
+		if !seen[r.path] {
+			seen[r.path] = true
+			deduped = append(deduped, r)
+		}
+	}
+	return deduped
+}
+
+func collectRuleRefs(rule *policy.PredicateRule, refs []fieldRef) []fieldRef {
+	for i := range rule.Any {
+		refs = collectRuleRefs(&rule.Any[i], refs)
+	}
+	for i := range rule.All {
+		refs = collectRuleRefs(&rule.All[i], refs)
+	}
+
+	if rule.Field.IsZero() {
+		return refs
+	}
+
+	path := rule.Field.String()
+	// A field is silent-risk if the operator is eq/ne/gt/lt/etc.
+	// (value comparison on potentially absent field).
+	// The "missing" and "present" operators are explicit checks
+	// — they handle absence correctly and are not silent-risk.
+	silentRisk := rule.Op != predicate.OpMissing && rule.Op != predicate.OpPresent
+
+	return append(refs, fieldRef{path: path, silentRisk: silentRisk})
+}
+
+// fieldPresent checks if a field path exists in the collected fields.
+// Supports prefix matching: "properties.storage.kind" matches if
+// "properties.storage.kind" is in the set.
+func fieldPresent(path string, fields map[string]bool) bool {
+	if fields[path] {
+		return true
+	}
+	// Check if any collected field is a prefix of this path
+	// (handles nested structure where parent exists).
+	for f := range fields {
+		if strings.HasPrefix(path, f+".") {
+			return true
+		}
+	}
+	return false
+}
+
+// extractFrameworks returns compliance framework names from a control.
+func extractFrameworks(ctl *policy.ControlDefinition) []string {
+	if len(ctl.Compliance) == 0 {
+		return nil
+	}
+	var fws []string
+	for fw := range ctl.Compliance {
+		fws = append(fws, string(fw))
+	}
+	sort.Strings(fws)
+	return fws
+}
+
+func buildReport(input AnalyzeInput, results []ControlResult) *Report {
+	report := &Report{
+		Snapshot:          input.SnapshotPath,
+		GeneratedAt:       input.GeneratedAt,
+		ShoppingList:      make(map[string][]ShoppingItem),
+		FrameworkCoverage: make(map[string]*FrameworkCoverage),
+	}
+
+	var silentRisk, incomplete []ControlResult
+	for i := range results {
+		r := &results[i]
+		switch r.Classification {
+		case Evaluable:
+			report.Summary.Evaluable++
+		case Incomplete:
+			report.Summary.Incomplete++
+			incomplete = append(incomplete, *r)
+		case SilentRisk:
+			report.Summary.SilentRisk++
+			silentRisk = append(silentRisk, *r)
+		case NoAssets:
+			report.Summary.NoAssets++
+		}
+		report.Summary.Total++
+
+		// Framework coverage.
+		for _, fw := range r.Frameworks {
+			fc, ok := report.FrameworkCoverage[fw]
+			if !ok {
+				fc = &FrameworkCoverage{}
+				report.FrameworkCoverage[fw] = fc
+			}
+			fc.Total++
+			switch r.Classification {
+			case Evaluable:
+				fc.Evaluable++
+			case Incomplete:
+				fc.Incomplete++
+			case SilentRisk:
+				fc.SilentRisk++
+			}
+		}
+	}
+
+	// Compute coverage percentages.
+	for _, fc := range report.FrameworkCoverage {
+		if fc.Total > 0 {
+			fc.CoveragePct = float64(fc.Evaluable) / float64(fc.Total) * 100
+		}
+	}
+
+	// Sort by severity (critical first).
+	sevOrder := map[string]int{"critical": 0, "high": 1, "medium": 2, "low": 3, "info": 4}
+	sort.Slice(silentRisk, func(i, j int) bool {
+		return sevOrder[silentRisk[i].Severity] < sevOrder[silentRisk[j].Severity]
+	})
+	sort.Slice(incomplete, func(i, j int) bool {
+		return sevOrder[incomplete[i].Severity] < sevOrder[incomplete[j].Severity]
+	})
+
+	report.SilentRisk = silentRisk
+	report.IncompleteResults = incomplete
+
+	// Build shopping list grouped by asset type — use first field prefix.
+	fieldToControls := make(map[string][]string)
+	fieldToSeverity := make(map[string]string)
+	combined := make([]ControlResult, 0, len(silentRisk)+len(incomplete))
+	combined = append(combined, silentRisk...)
+	combined = append(combined, incomplete...)
+	for i := range combined {
+		r := &combined[i]
+		for _, f := range r.MissingFields {
+			fieldToControls[f] = append(fieldToControls[f], r.ControlID)
+			if sevOrder[r.Severity] < sevOrder[fieldToSeverity[f]] || fieldToSeverity[f] == "" {
+				fieldToSeverity[f] = r.Severity
+			}
+		}
+	}
+
+	for field, ctls := range fieldToControls {
+		// Derive asset type from field path: properties.storage.* → s3_bucket (approximate).
+		assetType := deriveAssetType(field)
+		report.ShoppingList[assetType] = append(report.ShoppingList[assetType], ShoppingItem{
+			Field:       field,
+			RequiredBy:  ctls,
+			MaxSeverity: fieldToSeverity[field],
+		})
+	}
+
+	// Sort shopping list items by severity.
+	for at := range report.ShoppingList {
+		sort.Slice(report.ShoppingList[at], func(i, j int) bool {
+			return sevOrder[report.ShoppingList[at][i].MaxSeverity] < sevOrder[report.ShoppingList[at][j].MaxSeverity]
+		})
+	}
+
+	return report
+}
+
+// deriveAssetType guesses asset type from field path prefix.
+func deriveAssetType(field string) string {
+	parts := strings.SplitN(field, ".", 3)
+	if len(parts) < 2 {
+		return "unknown"
+	}
+	// properties.storage → s3, properties.database → rds, etc.
+	switch parts[1] {
+	case "storage":
+		return "s3_bucket"
+	case "database":
+		return "rds_instance"
+	case "compute":
+		return "ec2_instance"
+	case "filesystem":
+		return "efs_filesystem"
+	case "cdn":
+		return "cloudfront_distribution"
+	case "container":
+		return "ecs_service"
+	case "identity":
+		return "iam_or_cognito"
+	case "network":
+		return "vpc"
+	case "threat_detection":
+		return "guardduty"
+	case "monitoring":
+		return "cloudwatch"
+	case "trail":
+		return "cloudtrail"
+	case "k8s", "logging", "addons", "encryption", "endpoint", "nodegroup":
+		return "eks_cluster"
+	default:
+		return parts[1]
+	}
+}

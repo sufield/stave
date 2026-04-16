@@ -11,3 +11,7 @@ controls:
   - CTL.CONFIG.RULE.STATUS.001
 escalation_threshold: 2
 compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - audit_trail_destroyed

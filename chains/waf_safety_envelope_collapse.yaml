@@ -11,3 +11,7 @@ controls:
   - CTL.WAF.RULES.OWASP.001
 escalation_threshold: 2
 compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - network_access_vpc

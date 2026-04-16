@@ -18,6 +18,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	stavecollect "github.com/sufield/stave/cmd/collect"
 	staveconsolidate "github.com/sufield/stave/cmd/consolidate"
+	stavecoverage "github.com/sufield/stave/cmd/coverage"
 	"github.com/sufield/stave/cmd/diagnose"
 	"github.com/sufield/stave/cmd/diagnose/artifacts"
 	diagreport "github.com/sufield/stave/cmd/diagnose/report"
@@ -38,12 +39,15 @@ import (
 	initconfig "github.com/sufield/stave/cmd/initcmd/config"
 	"github.com/sufield/stave/cmd/inspect"
 	stavemap "github.com/sufield/stave/cmd/map"
+	stavemonitor "github.com/sufield/stave/cmd/monitor"
 	stavenep "github.com/sufield/stave/cmd/nep"
 	stavepath "github.com/sufield/stave/cmd/path"
 	"github.com/sufield/stave/cmd/prune"
 	staverank "github.com/sufield/stave/cmd/rank"
 	stavescore "github.com/sufield/stave/cmd/score"
+	stavesla "github.com/sufield/stave/cmd/sla"
 	stavetelemetry "github.com/sufield/stave/cmd/telemetry"
+	stavetest "github.com/sufield/stave/cmd/test"
 	stavetrend "github.com/sufield/stave/cmd/trend"
 	stavewatch "github.com/sufield/stave/cmd/watch"
 	artifact "github.com/sufield/stave/internal/adapters/artifacts"
@@ -198,6 +202,18 @@ func WireCommands(app *App) {
 
 	// Attack path graph export
 	root.AddCommand(stavepath.NewCmd())
+
+	// Field coverage analysis
+	root.AddCommand(stavecoverage.NewCmd(f.NewCtlRepo))
+
+	// Control test runner
+	root.AddCommand(stavetest.NewCmd(f.NewCtlRepo))
+
+	// Terminal posture monitor
+	root.AddCommand(stavemonitor.NewCmd())
+
+	// SLA policy management
+	root.AddCommand(stavesla.NewCmd())
 
 	// Posture score
 	root.AddCommand(stavescore.NewCmd())

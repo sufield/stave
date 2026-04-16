@@ -81,6 +81,56 @@ func renderTrendOpenMetrics(w io.Writer, r *TrendReport) error { //nolint:unpara
 		fmt.Fprintf(w, "stave_posture_score %.1f %d\n\n", *r.PostureScore, tsMs)
 	}
 
+	// Per-team metrics.
+	if len(r.TeamTrends) > 0 {
+		fmt.Fprintln(w, "# HELP stave_team_posture_score Current posture score per team")
+		fmt.Fprintln(w, "# TYPE stave_team_posture_score gauge")
+		for i := range r.TeamTrends {
+			t := &r.TeamTrends[i]
+			fmt.Fprintf(w, "stave_team_posture_score{team=%q} %.1f %d\n", t.ID, t.PostureScore, tsMs)
+		}
+		fmt.Fprintln(w)
+
+		fmt.Fprintln(w, "# HELP stave_team_posture_delta Posture score change over window")
+		fmt.Fprintln(w, "# TYPE stave_team_posture_delta gauge")
+		for i := range r.TeamTrends {
+			t := &r.TeamTrends[i]
+			fmt.Fprintf(w, "stave_team_posture_delta{team=%q} %.1f %d\n", t.ID, t.ScoreDelta, tsMs)
+		}
+		fmt.Fprintln(w)
+
+		fmt.Fprintln(w, "# HELP stave_team_mttr_hours Mean time to remediate per team")
+		fmt.Fprintln(w, "# TYPE stave_team_mttr_hours gauge")
+		for i := range r.TeamTrends {
+			t := &r.TeamTrends[i]
+			fmt.Fprintf(w, "stave_team_mttr_hours{team=%q} %.1f %d\n", t.ID, t.MTTRHours, tsMs)
+		}
+		fmt.Fprintln(w)
+
+		fmt.Fprintln(w, "# HELP stave_team_sla_compliance_pct SLA compliance percentage per team")
+		fmt.Fprintln(w, "# TYPE stave_team_sla_compliance_pct gauge")
+		for i := range r.TeamTrends {
+			t := &r.TeamTrends[i]
+			fmt.Fprintf(w, "stave_team_sla_compliance_pct{team=%q} %.1f %d\n", t.ID, t.SLACompPct, tsMs)
+		}
+		fmt.Fprintln(w)
+
+		fmt.Fprintln(w, "# HELP stave_team_trajectory Team posture trajectory (-1=regressing,0=stable,1=improving)")
+		fmt.Fprintln(w, "# TYPE stave_team_trajectory gauge")
+		for i := range r.TeamTrends {
+			t := &r.TeamTrends[i]
+			val := 0
+			switch t.Trajectory {
+			case trajectoryImproving:
+				val = 1
+			case trajectoryRegressing:
+				val = -1
+			}
+			fmt.Fprintf(w, "stave_team_trajectory{team=%q} %d %d\n", t.ID, val, tsMs)
+		}
+		fmt.Fprintln(w)
+	}
+
 	fmt.Fprintln(w, "# EOF")
 	return nil
 }

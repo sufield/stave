@@ -8,3 +8,7 @@ controls:
   - CTL.ECS.SECRETS.001
 escalation_threshold: 2
 compound_severity: critical
+preconditions:
+  - container_code_execution
+postconditions:
+  - secret_store_access
