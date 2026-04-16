@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.CLUSTER.VERSION.001
+name: EKS Cluster Kubernetes Version Must Be Within Support Window
+description: >
+  AWS supports each EKS Kubernetes minor version for approximately
+  14 months. Clusters on end-of-life versions receive no security
+  patches — known CVEs in the Kubernetes control plane remain
+  unpatched indefinitely. Kubernetes releases security patches only
+  for the current and two previous minor versions. A cluster more
+  than 2 minor versions behind cannot receive patches for newly
+  disclosed CVEs. EKS auto-upgrades unsupported versions — often
+  causing unexpected breaking changes.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "SI-2"
+  aws_security_hub: "EKS.6"
+  mitre_attack: "TA0003"
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    EKS cluster Kubernetes version is deprecated or approaching
+    end of support. Security patches are no longer available.
+  action: >
+    Check current version: aws eks describe-cluster --name <cluster>
+    --query 'cluster.version'. Upgrade:
+    aws eks update-cluster-version --name <cluster>
+    --kubernetes-version <target>. Then upgrade node groups.
+  example: |
+    {
+      "k8s": {
+        "cluster": {
+          "version_deprecated": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.cluster.version_deprecated
+      op: eq
+      value: true

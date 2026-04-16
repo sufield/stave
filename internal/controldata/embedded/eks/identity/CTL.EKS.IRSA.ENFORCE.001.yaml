@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.IRSA.ENFORCE.001
+name: EKS Clusters Must Have OIDC Provider for IRSA
+description: >
+  Without IRSA (IAM Roles for Service Accounts), pods needing AWS API
+  access must use the node's EC2 instance profile — granting all pods
+  on the node the same IAM permissions. A compromised pod can use the
+  node's credentials to access any AWS service the node role permits.
+  IRSA binds IAM roles to Kubernetes service accounts via OIDC
+  federation. Each pod gets only the permissions its service account
+  requires. IRSA requires the EKS OIDC provider to be configured.
+  This control verifies the OIDC provider exists.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6"
+  aws_security_hub: "EKS.9"
+  mitre_attack: "TA0006"
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    EKS cluster does not have an OIDC provider configured. Pods
+    cannot use IRSA and must share the node's IAM role.
+  action: >
+    Associate an OIDC provider:
+    eksctl utils associate-iam-oidc-provider --cluster <cluster>
+    --approve. Then create service account-specific IAM roles.
+  example: |
+    {
+      "k8s": {
+        "cluster": {
+          "oidc_provider_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.cluster.oidc_provider_configured
+      op: eq
+      value: false

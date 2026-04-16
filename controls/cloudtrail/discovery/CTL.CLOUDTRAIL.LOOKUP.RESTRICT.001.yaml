@@ -1,0 +1,36 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.LOOKUP.RESTRICT.001
+name: CloudTrail LookupEvents Must Be Restricted
+description: >
+  CloudTrail LookupEvents access must be restricted to security and
+  administrative roles. Unrestricted LookupEvents access exposes 90
+  days of API activity patterns including which principals performed
+  which actions, resource names, source IP addresses, and timestamps.
+  Attackers use this to identify active service accounts, map API
+  usage patterns, and time their actions to blend with normal activity.
+domain: exposure
+severity: low
+compliance:
+  nist_800_53_r5: "AU-9"
+  mitre_attack: "T1526"
+scope_tags:
+  - aws
+  - cloudtrail
+type: unsafe_state
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    IAM policy grants broad cloudtrail:LookupEvents permissions.
+    90 days of API activity patterns including principals, actions,
+    and source IPs are exposed for reconnaissance.
+  action: >
+    Restrict cloudtrail:LookupEvents to security and administrative
+    roles only. Apply conditions such as aws:PrincipalTag to limit
+    access. Consider using CloudTrail Lake with fine-grained query
+    permissions instead of LookupEvents for audit workflows.
+unsafe_predicate:
+  all:
+    - field: properties.iam.has_broad_cloudtrail_lookup
+      op: eq
+      value: true

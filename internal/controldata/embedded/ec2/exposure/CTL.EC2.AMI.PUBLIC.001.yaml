@@ -1,0 +1,49 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.AMI.PUBLIC.001
+name: Custom AMIs Must Not Be Publicly Shared
+description: >
+  A publicly shared AMI exposes the complete disk contents of the
+  base image — including installed software, configuration files,
+  hard-coded credentials, and application code. Custom AMIs
+  frequently contain SSH authorized_keys, internal PKI certificates,
+  application source code, and secrets. Unlike EBS snapshots, public
+  AMIs appear in AWS Marketplace searches and are trivially
+  discoverable.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  mitre_attack: "T1525"
+  aws_security_hub: "EC2.25"
+scope_tags:
+  - aws
+  - ec2
+type: unsafe_state
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    Custom AMI is publicly shared. Complete disk contents including
+    credentials and application code are exposed.
+  action: >
+    Remove public sharing from the AMI:
+    aws ec2 modify-image-attribute --image-id <ami-id>
+    --launch-permission '{"Remove":[{"Group":"all"}]}'.
+    Audit all custom AMIs:
+    aws ec2 describe-images --owners self
+    --filters Name=is-public,Values=true
+  example: |
+    {
+      "compute": {
+        "kind": "ami",
+        "is_public": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: ami
+    - field: properties.compute.is_public
+      op: eq
+      value: true

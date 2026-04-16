@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.RBAC.AUDIT.001
+name: EKS Cluster Must Not Grant cluster-admin to Service Accounts
+description: >
+  EKS clusters must not bind the cluster-admin ClusterRole to service
+  accounts. The cluster-admin role grants unrestricted access to every
+  resource in every namespace. When a service account holds this binding,
+  any pod running under that service account inherits full cluster
+  control. An attacker who compromises a single workload can escalate to
+  cluster-admin privileges by reading the mounted service account token.
+  Legitimate automation rarely needs cluster-wide admin access — most
+  controllers operate within a bounded set of API groups. A
+  cluster-admin binding to a service account turns a container escape
+  into a full cluster compromise with no additional exploit required.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6"
+  cis_k8s_v1.9: "5.1.1"
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    A service account in the EKS cluster has a ClusterRoleBinding or
+    RoleBinding that grants cluster-admin privileges. Any workload using
+    this service account has unrestricted access to all cluster resources.
+  action: >
+    Remove the cluster-admin binding from the service account. Create a
+    scoped ClusterRole or Role with only the API groups and verbs the
+    workload actually needs. Bind that scoped role to the service account
+    instead. Audit all ClusterRoleBindings with
+    kubectl get clusterrolebindings -o json and filter for subjects of
+    kind ServiceAccount bound to cluster-admin.
+unsafe_predicate:
+  all:
+    - field: properties.rbac.has_cluster_admin_sa_binding
+      op: eq
+      value: true

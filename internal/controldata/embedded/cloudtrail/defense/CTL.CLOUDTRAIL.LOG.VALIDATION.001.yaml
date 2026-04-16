@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.LOG.VALIDATION.001
+name: CloudTrail Log File Validation Must Be Enabled
+description: >
+  CloudTrail log file validation must be enabled to detect
+  whether log files have been modified or deleted after
+  delivery to S3. Without validation, forensic investigators
+  cannot determine if logs were tampered with.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AU-9"
+  cis_aws: "3.2"
+  mitre_attack: "T1562.008"
+scope_tags:
+  - aws
+  - cloudtrail
+type: unsafe_state
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    CloudTrail log file validation is not enabled.
+  action: >
+    aws cloudtrail update-trail --name <trail-name>
+    --enable-log-file-validation
+unsafe_predicate:
+  all:
+    - field: properties.trail.log_file_validation_enabled
+      op: eq
+      value: false

@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.ECR.LIFECYCLE.001
+name: ECR Repositories Must Have a Lifecycle Policy
+description: >
+  ECR repositories must have a lifecycle policy to expire
+  untagged and old images. Without it, images with known CVEs
+  remain pullable and deployable indefinitely.
+domain: exposure
+severity: low
+compliance:
+  nist_800_53_r5: "CM-7"
+scope_tags:
+  - aws
+  - ecr
+type: unsafe_state
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    ECR repository has no lifecycle policy configured.
+  action: >
+    aws ecr put-lifecycle-policy --repository-name <name>
+    --lifecycle-policy-text '<policy JSON>'
+unsafe_predicate:
+  all:
+    - field: properties.container_registry.kind
+      op: eq
+      value: repository
+    - field: properties.container_registry.has_lifecycle_policy
+      op: eq
+      value: false

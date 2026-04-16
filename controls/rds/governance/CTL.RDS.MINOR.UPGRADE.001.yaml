@@ -1,0 +1,44 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.MINOR.UPGRADE.001
+name: RDS Instances Must Enable Automatic Minor Version Upgrades
+description: >
+  Minor version upgrades contain security patches for the database
+  engine. Disabling automatic minor upgrades means security patches
+  require manual intervention — patches are commonly delayed or
+  forgotten, leaving the database engine vulnerable to known CVEs.
+  Minor upgrades are backwards-compatible by design and the
+  maintenance window controls when they apply.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-2"
+  aws_security_hub: "RDS.13"
+  mitre_attack: "TA0003"
+scope_tags:
+  - aws
+  - rds
+type: unsafe_state
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    RDS instance has automatic minor version upgrades disabled.
+    Security patches require manual intervention.
+  action: >
+    aws rds modify-db-instance --db-instance-identifier <id>
+    --auto-minor-version-upgrade --apply-immediately
+  example: |
+    {
+      "database": {
+        "kind": "rds_instance",
+        "auto_minor_version_upgrade": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_instance
+    - field: properties.database.auto_minor_version_upgrade
+      op: eq
+      value: false

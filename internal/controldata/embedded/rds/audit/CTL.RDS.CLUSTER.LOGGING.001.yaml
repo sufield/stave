@@ -1,0 +1,47 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.CLUSTER.LOGGING.001
+name: RDS Aurora Clusters Must Export Logs to CloudWatch
+description: >
+  RDS Aurora log export to CloudWatch Logs enables centralized log
+  management, alerting on database errors, and retention beyond the
+  default 7-day on-instance period. Without CloudWatch export, database
+  audit logs, error logs, and slow query logs are only available via
+  the RDS console for a limited period — making forensic investigation
+  difficult after an incident.
+domain: audit
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-12"
+  aws_security_hub: "RDS.36"
+  mitre_attack: "TA0005"
+scope_tags:
+  - aws
+  - rds
+type: unsafe_state
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    RDS Aurora cluster does not export logs to CloudWatch. Database
+    logs are only available on-instance for a limited period.
+  action: >
+    aws rds modify-db-cluster --db-cluster-identifier <id>
+    --cloudwatch-logs-export-configuration
+    EnableLogTypes=audit,error,slowquery --apply-immediately
+  example: |
+    {
+      "database": {
+        "kind": "rds_cluster",
+        "cloudwatch_logs_export": {
+          "enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_cluster
+    - field: properties.database.cloudwatch_logs_export.enabled
+      op: eq
+      value: false

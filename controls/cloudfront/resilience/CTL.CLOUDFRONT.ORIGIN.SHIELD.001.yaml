@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.ORIGIN.SHIELD.001
+name: High-Traffic CloudFront Distributions Should Have Origin Shield Enabled
+description: >
+  Origin Shield adds an additional caching layer between CloudFront
+  edge locations and the origin, reducing the number of requests that
+  reach the origin server. Without it, high-traffic distributions can
+  overwhelm origins with cache-miss requests — a potential vector for
+  cache-busting DoS attacks where attackers force cache misses by
+  varying request parameters.
+domain: resilience
+severity: low
+compliance:
+  nist_800_53_r5: "SC-5"
+  mitre_attack: "TA0040"
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    CloudFront distribution does not have Origin Shield enabled.
+    Origins may be overwhelmed by cache-miss traffic.
+  action: >
+    Enable Origin Shield in each origin configuration, selecting
+    the region closest to the origin.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "origin_shield": {
+          "enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.origin_shield.enabled
+      op: eq
+      value: false

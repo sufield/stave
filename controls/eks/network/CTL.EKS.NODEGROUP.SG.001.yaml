@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.NODEGROUP.SG.001
+name: EKS Node Groups Must Not Use the Cluster Default Security Group
+description: >
+  EKS clusters create a default cluster security group that allows all
+  traffic between nodes and the control plane. Node groups without
+  dedicated security groups rely on this permissive default — all nodes
+  can communicate with all other nodes on all ports. Dedicated node
+  group security groups with minimal required rules reduce the blast
+  radius of a compromised node.
+domain: network
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7"
+  mitre_attack: "TA0008"
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: >
+    EKS node group uses the cluster default security group. All
+    nodes can communicate on all ports.
+  action: >
+    Create a dedicated security group for each node group with only
+    required rules: port 10250 (kubelet) from control plane SG,
+    port 443 to control plane SG, and application-specific ports.
+    Assign via launch template.
+  example: |
+    {
+      "nodegroup": {
+        "uses_default_sg": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.nodegroup.uses_default_sg
+      op: eq
+      value: true

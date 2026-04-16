@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.SSM.RUNCOMMAND.APPROVE.001
+name: SSM Run Command Must Require Change Manager Approval for Production
+description: >
+  AWS Systems Manager Run Command allows executing arbitrary shell
+  commands on any managed EC2 instance. An attacker with ssm:SendCommand
+  permission can run commands on all production instances simultaneously
+  — installing backdoors, exfiltrating data, or destroying files. Change
+  Manager adds an approval workflow to SSM automation and Run Command.
+  Without approval workflows, a single compromised IAM principal with
+  ssm:SendCommand can achieve arbitrary code execution on every managed
+  instance in the account.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "CM-3"
+  mitre_attack: "T1059.004"
+scope_tags:
+  - aws
+  - ssm
+type: unsafe_state
+params:
+  attack_stage: execution
+remediation:
+  description: >
+    SSM Run Command does not require Change Manager approval. Any
+    principal with ssm:SendCommand can execute arbitrary commands on
+    production instances.
+  action: >
+    Enable Systems Manager Change Manager and configure approval
+    templates requiring two or more approvers for production targets.
+    Restrict ssm:SendCommand directly to Change Manager service role
+    via IAM policy condition.
+  example: |
+    {
+      "ssm": {
+        "run_command": {
+          "require_approval": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ssm.run_command.require_approval
+      op: eq
+      value: false

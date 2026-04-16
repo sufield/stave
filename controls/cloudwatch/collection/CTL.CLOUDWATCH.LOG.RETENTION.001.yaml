@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.LOG.RETENTION.001
+name: CloudWatch Log Groups Must Have Retention Policies Set
+description: >
+  CloudWatch log groups without retention policies retain logs
+  indefinitely — creating an ever-growing collection of potentially
+  sensitive data (application logs, access patterns, error messages
+  containing credentials). An attacker with logs:GetLogEvents access
+  can search through years of accumulated logs to harvest credentials,
+  API keys, and internal system details. Retention policies limit
+  the data collection window.
+domain: audit
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-11"
+  mitre_attack: "T1530"
+scope_tags:
+  - aws
+  - cloudwatch
+type: unsafe_state
+params:
+  attack_stage: collection
+remediation:
+  description: >
+    CloudWatch log group has no retention policy. Logs accumulate
+    indefinitely, expanding the data collection surface.
+  action: >
+    Set a retention policy appropriate for the log type:
+    aws logs put-retention-policy --log-group-name <name>
+    --retention-in-days 90
+  example: |
+    {
+      "monitoring": {
+        "kind": "log_group",
+        "retention_days": 90
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.kind
+      op: eq
+      value: log_group
+    - field: properties.monitoring.retention_days
+      op: eq
+      value: 0

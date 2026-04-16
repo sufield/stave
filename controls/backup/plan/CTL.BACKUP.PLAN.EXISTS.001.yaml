@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.BACKUP.PLAN.EXISTS.001
+name: AWS Backup Plan Must Exist and Cover Critical Resources
+description: >
+  An AWS Backup plan must exist and protect critical resources.
+  Without centralized backup, ransomware or accidental deletion
+  can permanently destroy production data across EC2, RDS, EFS,
+  DynamoDB, and S3.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "CP-9"
+  hipaa: "164.308(a)(7)(ii)(A)"
+  mitre_attack: "T1490"
+scope_tags:
+  - aws
+  - backup
+type: unsafe_state
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    No AWS Backup plan exists or no resources are protected.
+  action: >
+    Create an AWS Backup plan covering all critical resources
+    with daily backups and 35-day retention. Enable vault lock
+    for write-once-read-many protection.
+unsafe_predicate:
+  all:
+    - field: properties.backup.plans_count
+      op: lte
+      value: 0

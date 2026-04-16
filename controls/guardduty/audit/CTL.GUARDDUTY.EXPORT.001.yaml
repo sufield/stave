@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.GUARDDUTY.EXPORT.001
+name: GuardDuty Findings Must Be Exported to S3 for Long-Term Retention
+description: >
+  GuardDuty retains findings for 90 days by default. Without export to
+  S3, findings older than 90 days are permanently deleted — making it
+  impossible to review historical threat activity during long-running
+  investigations or compliance audits. Exporting to S3 with Object Lock
+  provides an immutable, long-term record of all GuardDuty findings.
+domain: audit
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-11"
+  aws_security_hub: "GuardDuty.3"
+  mitre_attack: "TA0005"
+scope_tags:
+  - aws
+  - guardduty
+type: unsafe_state
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    GuardDuty findings are not exported to S3. Findings older than
+    90 days will be permanently lost.
+  action: >
+    aws guardduty create-publishing-destination --detector-id <id>
+    --destination-type S3 --destination-properties
+    DestinationArn=arn:aws:s3:::<bucket>,KmsKeyArn=<key-arn>
+  example: |
+    {
+      "threat_detection": {
+        "kind": "detector",
+        "findings_export": {
+          "enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.threat_detection.kind
+      op: eq
+      value: detector
+    - field: properties.threat_detection.findings_export.enabled
+      op: eq
+      value: false

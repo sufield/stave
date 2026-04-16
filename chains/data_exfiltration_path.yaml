@@ -12,3 +12,7 @@ controls:
   - CTL.CLOUDTRAIL.DATAREAD.001
 escalation_threshold: 2
 compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - s3_data_access

@@ -1,0 +1,38 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.LIST.RESTRICT.001
+name: IAM Policies Must Not Grant Broad iam:List* Without Scope
+description: >
+  IAM policies must not grant broad iam:List* permissions without
+  resource scope constraints. Unrestricted iam:List* access allows
+  enumeration of all IAM users, roles, groups, and policies in the
+  account. Attackers use this to map the identity surface and identify
+  over-privileged roles or misconfigured trust policies for privilege
+  escalation targeting.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-6"
+  mitre_attack: "T1069.003"
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    IAM policy grants broad iam:List* permissions without resource
+    scope. All IAM users, roles, groups, and policies in the account
+    are enumerable, exposing the full identity surface for escalation
+    targeting.
+  action: >
+    Scope iam:List* actions to specific resource ARNs. Replace
+    wildcard iam:List* with the specific list actions required by the
+    workload (e.g., iam:ListRolePolicies on a single role ARN).
+    Apply conditions such as aws:ResourceTag to limit enumeration
+    scope.
+unsafe_predicate:
+  all:
+    - field: properties.iam.has_broad_list_permissions
+      op: eq
+      value: true

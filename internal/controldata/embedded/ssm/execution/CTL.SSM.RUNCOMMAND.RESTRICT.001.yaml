@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.SSM.RUNCOMMAND.RESTRICT.001
+name: SSM Run Command Must Be Restricted to Approved Documents
+description: >
+  SSM Run Command allows executing arbitrary commands on managed EC2
+  instances. Without restricting which command documents can be used,
+  any principal with ssm:SendCommand can execute AWS-RunShellScript or
+  AWS-RunPowerShellScript on any managed instance — providing remote
+  code execution equivalent to SSH/RDP access without requiring key
+  management or network-level access. This is MITRE ATT&CK T1059.009
+  (Cloud Administration Command). Restrict to approved documents only.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6"
+  mitre_attack: "T1059.009"
+  cis_aws_v3.0: "2.2.1"
+scope_tags:
+  - aws
+  - ssm
+type: unsafe_state
+params:
+  attack_stage: execution
+remediation:
+  description: >
+    SSM Run Command is not restricted to approved documents. Any
+    IAM principal with ssm:SendCommand can execute arbitrary shell
+    commands on managed instances.
+  action: >
+    Use IAM policy conditions to restrict ssm:SendCommand to specific
+    document names. Deny AWS-RunShellScript and AWS-RunPowerShellScript
+    for non-admin roles. Use Session Manager for interactive access
+    instead of Run Command for shell access.
+  example: |
+    {
+      "ssm": {
+        "run_command": {
+          "unrestricted_documents": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ssm.run_command.unrestricted_documents
+      op: eq
+      value: true

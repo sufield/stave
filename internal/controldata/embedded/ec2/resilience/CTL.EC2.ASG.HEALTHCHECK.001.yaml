@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.ASG.HEALTHCHECK.001
+name: EC2 Auto Scaling Groups Must Use ELB Health Checks
+description: >
+  Auto Scaling Groups with EC2 health checks only replace instances
+  when the underlying EC2 instance fails — they do not detect unhealthy
+  application state. ELB health checks detect when an instance is
+  running but serving errors, allowing ASG to replace unhealthy
+  instances automatically. Without ELB health checks, a compromised
+  or malfunctioning instance can remain in the ASG.
+domain: resilience
+severity: medium
+compliance:
+  nist_800_53_r5: "CP-7"
+  aws_security_hub: "AutoScaling.1"
+  mitre_attack: "TA0040"
+scope_tags:
+  - aws
+  - ec2
+type: unsafe_state
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    Auto Scaling Group uses EC2 health checks only. Unhealthy
+    application instances are not detected or replaced.
+  action: >
+    aws autoscaling update-auto-scaling-group
+    --auto-scaling-group-name <n> --health-check-type ELB
+    --health-check-grace-period 300
+  example: |
+    {
+      "compute": {
+        "kind": "autoscaling_group",
+        "health_check_type": "ELB"
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: autoscaling_group
+    - field: properties.compute.health_check_type
+      op: eq
+      value: EC2

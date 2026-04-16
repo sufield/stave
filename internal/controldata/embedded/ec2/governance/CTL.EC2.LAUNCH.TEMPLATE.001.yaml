@@ -1,0 +1,48 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.LAUNCH.TEMPLATE.001
+name: EC2 Auto Scaling Groups Must Use Launch Templates
+description: >
+  Launch configurations are a legacy mechanism superseded by launch
+  templates. Launch templates support IMDSv2 enforcement, instance
+  metadata tags, Nitro Enclave support, EBS volume encryption by
+  default, and multiple instance types per ASG. AWS has deprecated
+  launch configurations. New ASG features and security improvements
+  are only available via launch templates.
+domain: governance
+severity: low
+compliance:
+  nist_800_53_r5: "CM-6"
+  aws_security_hub: "AutoScaling.9"
+  mitre_attack: "TA0003"
+scope_tags:
+  - aws
+  - ec2
+type: unsafe_state
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Auto Scaling Group uses a launch configuration instead of a
+    launch template. Security features like IMDSv2 enforcement
+    are not available.
+  action: >
+    Create a launch template from the existing launch configuration,
+    then update the ASG:
+    aws autoscaling update-auto-scaling-group
+    --auto-scaling-group-name <n> --launch-template
+    LaunchTemplateId=<id>,Version='$Latest'
+  example: |
+    {
+      "compute": {
+        "kind": "autoscaling_group",
+        "uses_launch_template": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: autoscaling_group
+    - field: properties.compute.uses_launch_template
+      op: eq
+      value: false

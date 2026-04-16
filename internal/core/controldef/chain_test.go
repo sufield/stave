@@ -42,6 +42,44 @@ func TestChainDefinition_Validate(t *testing.T) {
 	}
 }
 
+func TestChainDefinition_Validate_ValidCapabilities(t *testing.T) {
+	c := ChainDefinition{
+		ID:                  "test_chain",
+		ControlIDs:          []kernel.ControlID{"CTL.A.001", "CTL.A.002"},
+		EscalationThreshold: 2,
+		CompoundSeverity:    SeverityHigh,
+		Preconditions:       []string{"internet_access"},
+		Postconditions:      []string{"iam_credential_theft", "network_access_ec2"},
+	}
+	if err := c.Validate(); err != nil {
+		t.Errorf("valid chain should pass: %v", err)
+	}
+}
+
+func TestChainDefinition_Validate_InvalidCapability(t *testing.T) {
+	c := ChainDefinition{
+		ID:                  "test_chain",
+		ControlIDs:          []kernel.ControlID{"CTL.A.001", "CTL.A.002"},
+		EscalationThreshold: 2,
+		CompoundSeverity:    SeverityHigh,
+		Preconditions:       []string{"totally_fake_capability"},
+	}
+	if err := c.Validate(); err == nil {
+		t.Fatal("expected error for invalid precondition capability")
+	}
+
+	c2 := ChainDefinition{
+		ID:                  "test_chain",
+		ControlIDs:          []kernel.ControlID{"CTL.A.001", "CTL.A.002"},
+		EscalationThreshold: 2,
+		CompoundSeverity:    SeverityHigh,
+		Postconditions:      []string{"nonexistent_cap"},
+	}
+	if err := c2.Validate(); err == nil {
+		t.Fatal("expected error for invalid postcondition capability")
+	}
+}
+
 func containsStr(s, substr string) bool {
 	return len(s) >= len(substr) && (s == substr || s != "" && containsSubstring(s, substr))
 }

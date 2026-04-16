@@ -1,0 +1,44 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.CLUSTER.DELETION.PROTECT.001
+name: RDS Aurora Clusters Must Have Deletion Protection Enabled
+description: >
+  Aurora clusters without deletion protection can be permanently
+  deleted via API or console without additional confirmation.
+  Ransomware actors who gain IAM access with rds:DeleteDBCluster can
+  destroy entire Aurora clusters including all instances and cluster
+  storage. Deletion protection requires explicitly disabling the
+  protection before deletion — breaking automated ransomware scripts.
+domain: resilience
+severity: high
+compliance:
+  nist_800_53_r5: "CP-9"
+  aws_security_hub: "RDS.34"
+  mitre_attack: "TA0040"
+scope_tags:
+  - aws
+  - rds
+type: unsafe_state
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    RDS Aurora cluster does not have deletion protection enabled.
+    The cluster can be permanently deleted via API.
+  action: >
+    aws rds modify-db-cluster --db-cluster-identifier <id>
+    --deletion-protection --apply-immediately
+  example: |
+    {
+      "database": {
+        "kind": "rds_cluster",
+        "deletion_protection": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_cluster
+    - field: properties.database.deletion_protection
+      op: eq
+      value: false

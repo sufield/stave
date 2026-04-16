@@ -1,0 +1,47 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.ORIGIN.FAILOVER.001
+name: CloudFront Distributions Must Have Origin Failover Configured
+description: >
+  CloudFront origin failover automatically routes requests to a
+  secondary origin when the primary returns specific HTTP error codes
+  (502, 503, 504). Without failover, a primary origin outage causes
+  all requests to fail — a DoS condition on the distribution. A
+  secondary origin (cross-region S3 bucket, secondary ALB, or backup
+  API endpoint) ensures availability during primary origin failures.
+domain: resilience
+severity: low
+compliance:
+  nist_800_53_r5: "CP-7"
+  aws_security_hub: "CloudFront.4"
+  mitre_attack: "TA0040"
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    CloudFront distribution does not have origin failover configured.
+    Primary origin failure will cause complete distribution outage.
+  action: >
+    Configure an origin group with primary and secondary origins.
+    Specify failover criteria (HTTP status codes that trigger
+    failover to the secondary origin).
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "origin_failover": {
+          "configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.origin_failover.configured
+      op: eq
+      value: false

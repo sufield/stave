@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.ADVANCED.SECURITY.001
+name: Cognito User Pools Must Have Advanced Security Features Enabled
+description: >
+  Cognito Advanced Security Features detects and responds to
+  compromised credentials, account takeover attempts, and unusual
+  sign-in activity using adaptive authentication. It detects sign-ins
+  from new devices, blocks credentials found in breach databases,
+  and generates risk scores for authentication events. Without ASF,
+  Cognito cannot detect credential stuffing using breached passwords.
+domain: detection
+severity: high
+compliance:
+  nist_800_53_r5: "SI-4"
+  aws_security_hub: "Cognito.2"
+  mitre_attack: "TA0006"
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Cognito user pool does not have advanced security features enabled.
+    Compromised credentials and unusual sign-in activity are not detected.
+  action: >
+    aws cognito-idp update-user-pool --user-pool-id <id>
+    --user-pool-add-ons AdvancedSecurityMode=ENFORCED
+  example: |
+    {
+      "identity": {
+        "kind": "user_pool",
+        "advanced_security": {
+          "enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user_pool
+    - field: properties.identity.advanced_security.enabled
+      op: eq
+      value: false

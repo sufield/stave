@@ -3,24 +3,29 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 544
-**Pack hash:** `e67488a9c13460d83afffe3bca9b18e56c14a8b8b3aa2d04518abc6539a21c19`
+**Total controls:** 630
+**Pack hash:** `2df0121b9f3661b8b95ef1b98de26cf113812f07af8e3cbda59aab5908427733`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 95 |
-| high | 246 |
+| critical | 102 |
+| high | 279 |
 | info | 16 |
-| low | 40 |
-| medium | 147 |
+| low | 52 |
+| medium | 181 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 403 |
-| governance | 7 |
-| identity | 126 |
+| audit | 10 |
+| detection | 2 |
+| encryption | 9 |
+| exposure | 439 |
+| governance | 17 |
+| identity | 134 |
+| network | 7 |
+| resilience | 4 |
 | storage | 8 |
 
 ## Controls
@@ -655,6 +660,21 @@ API Gateway routes and methods must have an authorizer configured (Cognito, Lamb
 
 ---
 
+### CTL.APIGATEWAY.DOMAIN.TLS.001
+
+**API Gateway Custom Domains Must Enforce TLS 1.2+**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-8;
+
+API Gateway custom domain names must enforce a minimum TLS version of 1.2. TLS 1.0 and 1.1 have known protocol-level vulnerabilities including BEAST, POODLE, and weak cipher suites that enable man-in-the-middle attacks. When a custom domain allows TLS below 1.2, an attacker on the network path can downgrade the connection and intercept API credentials, session tokens, or request payloads in transit. AWS API Gateway supports TLS 1.2 as the minimum security policy. Custom domains configured with older TLS versions expose every API behind that domain to protocol downgrade attacks regardless of the application-layer security controls in place.
+
+**Remediation:** Update the custom domain security policy to TLS_1_2. In the API Gateway console or via the AWS CLI, set the security policy on the domain name to TLS_1_2. Verify that all API clients support TLS 1.2 before applying the change. Monitor CloudWatch access logs for connection failures after the update to identify clients that need upgrading.
+
+---
+
 ### CTL.APIGATEWAY.INCOMPLETE.001
 
 **Complete Data Required for API Gateway Assessment**
@@ -814,6 +834,21 @@ Backup safety cannot be assessed when backup status is missing from the snapshot
 Resources tagged as critical must be deployed across multiple Availability Zones. Single-AZ deployment has a single point of failure that causes unavailability during AZ outages.
 
 **Remediation:** Enable Multi-AZ deployment or configure cross-AZ replication depending on the resource type (RDS Multi-AZ, S3 cross-region replication, ELB multi-AZ targets).
+
+---
+
+### CTL.BACKUP.PLAN.EXISTS.001
+
+**AWS Backup Plan Must Exist and Cover Critical Resources**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.308(a)(7)(ii)(A); mitre_attack: T1490; nist_800_53_r5: CP-9;
+
+An AWS Backup plan must exist and protect critical resources. Without centralized backup, ransomware or accidental deletion can permanently destroy production data across EC2, RDS, EFS, DynamoDB, and S3.
+
+**Remediation:** Create an AWS Backup plan covering all critical resources with daily backups and 35-day retention. Enable vault lock for write-once-read-many protection.
 
 ---
 
@@ -1386,6 +1421,21 @@ CloudFormation stacks must not have DisableRollback set to true. With rollback d
 
 ---
 
+### CTL.CLOUDFORMATION.STACKSETS.RESTRICT.001
+
+**CloudFormation StackSets Must Require Administrator Approval**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** mitre_attack: T1578; nist_800_53_r5: CM-3;
+
+CloudFormation StackSets deploy infrastructure across multiple AWS accounts and regions simultaneously. An attacker with cloudformation:CreateStackSet and cloudformation:CreateStackInstances can execute arbitrary CloudFormation templates across an entire AWS Organization — creating IAM roles, modifying security groups, or deploying compute resources in hundreds of accounts. StackSet operations should require explicit approval and be restricted to trusted automation accounts or principals.
+
+**Remediation:** Restrict cloudformation:CreateStackInstances to designated automation principals via SCP. Deny unless aws:PrincipalArn matches approved automation roles.
+
+---
+
 ### CTL.CLOUDFORMATION.STATE.001
 
 **Terraform State Must Be Versioned**
@@ -1398,6 +1448,21 @@ CloudFormation stacks must not have DisableRollback set to true. With rollback d
 Terraform state files must be stored in a versioned backend (S3 with versioning, Terraform Cloud, or equivalent). Unversioned state means a corrupted or accidentally deleted state file cannot be recovered, leaving infrastructure in an unmanaged state with no rollback path.
 
 **Remediation:** Configure an S3 backend with versioning enabled and DynamoDB state locking. Alternatively, use Terraform Cloud or an equivalent managed backend with built-in versioning.
+
+---
+
+### CTL.CLOUDFRONT.GEO.001
+
+**CloudFront Distributions Requiring Geo Restriction Must Configure It**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3;
+
+CloudFront distributions that are required to enforce geographic restrictions must have geo restriction configured. Geo restriction limits content delivery to approved countries and blocks requests from sanctioned or high-risk regions. When geo restriction is required by compliance policy but not configured on the distribution, content is served globally without geographic controls. This creates regulatory exposure for organizations subject to export controls, data sovereignty requirements, or sanctions compliance. CloudFront geo restriction operates at the edge location level and is the primary mechanism for enforcing geographic access boundaries on CDN-delivered content.
+
+**Remediation:** Configure geo restriction on the CloudFront distribution. Use either an allow list to restrict delivery to approved countries or a deny list to block specific regions. Set the restriction type and country codes in the distribution configuration. Verify the geo restriction configuration aligns with the organization's compliance requirements for geographic content delivery boundaries.
 
 ---
 
@@ -1416,6 +1481,66 @@ CloudFront distributions must have a response headers policy attached that inclu
 
 ---
 
+### CTL.CLOUDFRONT.HTTPS.ONLY.001
+
+**CloudFront Distributions Must Enforce HTTPS-Only Viewer Protocol**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** aws_security_hub: CloudFront.3; mitre_attack: TA0006; nist_800_53_r5: SC-8;
+
+CloudFront distributions that allow HTTP (allow-all viewer protocol policy) serve content over plaintext connections. Session cookies, authentication tokens, and sensitive data transmitted over HTTP are visible to network-level attackers. Both the default cache behavior and all custom cache behaviors must enforce HTTPS. A single HTTP-permitting behavior is sufficient for session hijacking.
+
+**Remediation:** Update viewer protocol policy to redirect-to-https or https-only for all cache behaviors (default and custom) in the distribution configuration.
+
+---
+
+### CTL.CLOUDFRONT.LOGGING.001
+
+**CloudFront Distributions Must Have Access Logging Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** aws_security_hub: CloudFront.5; mitre_attack: TA0005; nist_800_53_r5: AU-12;
+
+CloudFront access logs record every request served by the distribution — viewer IP, request URI, response code, bytes transferred, and cache hit/miss status. Without access logs, there is no record of attempted exploitation, data exfiltration via large response payloads, reconnaissance scanning, or suspicious geographic access patterns. A distribution without logging is a blind spot in the organization's visibility.
+
+**Remediation:** Enable access logging in the distribution configuration, specifying an S3 bucket as destination. The S3 bucket must grant CloudFront write access via bucket ACL or bucket policy.
+
+---
+
+### CTL.CLOUDFRONT.ORIGIN.FAILOVER.001
+
+**CloudFront Distributions Must Have Origin Failover Configured**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** resilience
+- **Compliance:** aws_security_hub: CloudFront.4; mitre_attack: TA0040; nist_800_53_r5: CP-7;
+
+CloudFront origin failover automatically routes requests to a secondary origin when the primary returns specific HTTP error codes (502, 503, 504). Without failover, a primary origin outage causes all requests to fail — a DoS condition on the distribution. A secondary origin (cross-region S3 bucket, secondary ALB, or backup API endpoint) ensures availability during primary origin failures.
+
+**Remediation:** Configure an origin group with primary and secondary origins. Specify failover criteria (HTTP status codes that trigger failover to the secondary origin).
+
+---
+
+### CTL.CLOUDFRONT.ORIGIN.SHIELD.001
+
+**High-Traffic CloudFront Distributions Should Have Origin Shield Enabled**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** resilience
+- **Compliance:** mitre_attack: TA0040; nist_800_53_r5: SC-5;
+
+Origin Shield adds an additional caching layer between CloudFront edge locations and the origin, reducing the number of requests that reach the origin server. Without it, high-traffic distributions can overwhelm origins with cache-miss requests — a potential vector for cache-busting DoS attacks where attackers force cache misses by varying request parameters.
+
+**Remediation:** Enable Origin Shield in each origin configuration, selecting the region closest to the origin.
+
+---
+
 ### CTL.CLOUDFRONT.TLS.001
 
 **CloudFront Distributions Must Enforce TLS 1.2 or Higher**
@@ -1428,6 +1553,36 @@ CloudFront distributions must have a response headers policy attached that inclu
 CloudFront distributions must use a security policy that enforces TLS 1.2 or higher for all viewer connections. TLS 1.0 and TLS 1.1 have known cryptographic weaknesses (BEAST, POODLE, SWEET32) that are structural properties of the protocol, not implementation bugs. The default CloudFront security policy permits TLS 1.0 for backwards compatibility with older clients. Organizations that accept this default are unknowingly accepting protocol-downgrade attacks. TLS 1.2 enforcement exists for ALB (CTL.ELB.TLS.001), API Gateway (CTL.APIGATEWAY.TLS.001), RDS (CTL.RDS.SSL.001), and OpenSearch (CTL.OPENSEARCH.HTTPS.001) — this control closes the CloudFront gap. PCI-DSS explicitly prohibits TLS 1.0 for cardholder data. NIST SP 800-52r2 requires TLS 1.2 minimum for federal systems. Acceptable policies: TLSv1.2_2021, TLSv1.2_2019, TLSv1.2_2018.
 
 **Remediation:** Update the CloudFront distribution viewer certificate configuration to use TLSv1.2_2021 security policy. This requires a custom SSL certificate (not the default CloudFront certificate). Use ACM to provision a certificate in us-east-1, attach it to the distribution, and select TLSv1.2_2021 as the minimum protocol version. All modern browsers and clients released after 2015 support TLS 1.2.
+
+---
+
+### CTL.CLOUDFRONT.TLS.MINIMUM.001
+
+**CloudFront Distributions Must Enforce TLS 1.2 Minimum Security Policy**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** aws_security_hub: CloudFront.10; hipaa: 164.312(e)(2)(ii); mitre_attack: TA0006; nist_800_53_r5: SC-8;
+
+CloudFront distributions using TLSv1 or TLSv1.1 security policies accept connections over deprecated TLS versions vulnerable to BEAST, POODLE, and other protocol attacks. The security policy controls the minimum TLS version and cipher suites accepted from viewers. TLSv1.2_2021 or TLSv1.3_2022 are recommended — they exclude all vulnerable cipher suites and protocol versions.
+
+**Remediation:** Update the distribution viewer certificate configuration to use TLSv1.2_2021 or TLSv1.3_2022 as the minimum protocol version. Requires a custom SSL certificate from ACM in us-east-1.
+
+---
+
+### CTL.CLOUDFRONT.WAF.001
+
+**CloudFront Distributions Must Have a WAF Web ACL Associated**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SI-3; hipaa: 164.312(e)(1); nist_800_53_r5: SC-7;
+
+CloudFront distributions must have an AWS WAF Web ACL associated for layer-7 protection against web application attacks. Without WAF, requests reach the origin without inspection for SQL injection, XSS, known exploit signatures, rate limiting, or IP reputation blocking.
+
+**Remediation:** Create a WAF Web ACL in us-east-1 (required for CloudFront) with AWSManagedRulesCommonRuleSet and associate it with the distribution via UpdateDistribution API.
 
 ---
 
@@ -1535,6 +1690,36 @@ The observation snapshot is missing required CloudTrail properties. A safety ass
 
 ---
 
+### CTL.CLOUDTRAIL.LOG.VALIDATION.001
+
+**CloudTrail Log File Validation Must Be Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws: 3.2; mitre_attack: T1562.008; nist_800_53_r5: AU-9;
+
+CloudTrail log file validation must be enabled to detect whether log files have been modified or deleted after delivery to S3. Without validation, forensic investigators cannot determine if logs were tampered with.
+
+**Remediation:** aws cloudtrail update-trail --name <trail-name> --enable-log-file-validation
+
+---
+
+### CTL.CLOUDTRAIL.LOOKUP.RESTRICT.001
+
+**CloudTrail LookupEvents Must Be Restricted**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** mitre_attack: T1526; nist_800_53_r5: AU-9;
+
+CloudTrail LookupEvents access must be restricted to security and administrative roles. Unrestricted LookupEvents access exposes 90 days of API activity patterns including which principals performed which actions, resource names, source IP addresses, and timestamps. Attackers use this to identify active service accounts, map API usage patterns, and time their actions to blend with normal activity.
+
+**Remediation:** Restrict cloudtrail:LookupEvents to security and administrative roles only. Apply conditions such as aws:PrincipalTag to limit access. Consider using CloudTrail Lake with fine-grained query permissions instead of LookupEvents for audit workflows.
+
+---
+
 ### CTL.CLOUDTRAIL.RETENTION.001
 
 **CloudTrail Logs Must Be Retained Beyond 90 Days**
@@ -1565,6 +1750,21 @@ The S3 bucket receiving CloudTrail logs must have server access logging enabled.
 
 ---
 
+### CTL.CLOUDTRAIL.STOP.DETECT.001
+
+**CloudTrail Trails Must Be Actively Logging in All Regions**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(b); mitre_attack: T1562.008; nist_800_53_r5: AU-12;
+
+CloudTrail must be actively logging and configured as a multi-region trail. Stopping CloudTrail is the first action attackers take after gaining access — it eliminates the audit trail of subsequent actions.
+
+**Remediation:** aws cloudtrail start-logging --name <trail-name> aws cloudtrail update-trail --name <trail-name> --is-multi-region-trail
+
+---
+
 ### CTL.CLOUDTRAIL.VALIDATION.001
 
 **CloudTrail Log File Validation Must Be Enabled**
@@ -1591,6 +1791,36 @@ CloudTrail must have log file integrity validation enabled. Without validation, 
 The observation snapshot is missing required CloudWatch log group properties.
 
 **Remediation:** Ensure the extractor calls aws logs describe-log-groups and maps the retentionInDays to the log_group observation properties.
+
+---
+
+### CTL.CLOUDWATCH.LOG.EXPORT.001
+
+**CloudWatch Log Group Exports Must Be Restricted to Authorized Buckets**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** mitre_attack: T1530; nist_800_53_r5: AU-9;
+
+CloudWatch log group export tasks copy all log data to an S3 bucket. An attacker with logs:CreateExportTask permission can export CloudTrail logs, application logs, and security tool outputs to an attacker-controlled bucket. This is particularly dangerous for CloudTrail log groups — exporting them gives the attacker a complete copy of all API activity before they cover their tracks.
+
+**Remediation:** Restrict logs:CreateExportTask to approved S3 destinations via IAM resource conditions. Monitor for export tasks to unexpected destinations via CloudTrail alerting.
+
+---
+
+### CTL.CLOUDWATCH.LOG.RETENTION.001
+
+**CloudWatch Log Groups Must Have Retention Policies Set**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** mitre_attack: T1530; nist_800_53_r5: AU-11;
+
+CloudWatch log groups without retention policies retain logs indefinitely — creating an ever-growing collection of potentially sensitive data (application logs, access patterns, error messages containing credentials). An attacker with logs:GetLogEvents access can search through years of accumulated logs to harvest credentials, API keys, and internal system details. Retention policies limit the data collection window.
+
+**Remediation:** Set a retention policy appropriate for the log type: aws logs put-retention-policy --log-group-name <name> --retention-in-days 90
 
 ---
 
@@ -1894,6 +2124,21 @@ CodeCommit repositories must have approval rule templates configured on protecte
 
 ---
 
+### CTL.COGNITO.ADVANCED.SECURITY.001
+
+**Cognito User Pools Must Have Advanced Security Features Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** aws_security_hub: Cognito.2; mitre_attack: TA0006; nist_800_53_r5: SI-4;
+
+Cognito Advanced Security Features detects and responds to compromised credentials, account takeover attempts, and unusual sign-in activity using adaptive authentication. It detects sign-ins from new devices, blocks credentials found in breach databases, and generates risk scores for authentication events. Without ASF, Cognito cannot detect credential stuffing using breached passwords.
+
+**Remediation:** aws cognito-idp update-user-pool --user-pool-id <id> --user-pool-add-ons AdvancedSecurityMode=ENFORCED
+
+---
+
 ### CTL.COGNITO.INCOMPLETE.001
 
 **Complete Data Required for Cognito Assessment**
@@ -1923,6 +2168,21 @@ Cognito user pools handling PHI must enforce multi-factor authentication. Withou
 
 ---
 
+### CTL.COGNITO.MFA.ENFORCE.001
+
+**Cognito User Pools Must Enforce MFA for All Users**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** aws_security_hub: Cognito.1; hipaa: 164.312(d); mitre_attack: TA0006; nist_800_53_r5: IA-2;
+
+Cognito user pools without MFA enforcement are vulnerable to credential stuffing and brute force attacks. A user pool managing authentication for a customer-facing application without MFA means a single leaked password leads to full account compromise. MFA configuration ON requires all users to set up MFA.
+
+**Remediation:** aws cognito-idp set-user-pool-mfa-config --user-pool-id <id> --software-token-mfa-configuration Enabled=true --mfa-configuration ON
+
+---
+
 ### CTL.COGNITO.PASSWORD.001
 
 **Cognito User Pools Must Enforce a Strong Password Policy**
@@ -1935,6 +2195,21 @@ Cognito user pools handling PHI must enforce multi-factor authentication. Withou
 Cognito user pools must enforce a minimum password length of 12 characters and require at least three of four character classes (uppercase, lowercase, numbers, special characters). Cognito password policy is independent of the IAM account password policy — a strong IAM policy does not protect application users authenticated through Cognito. A user pool with weak defaults allows end users to set trivially guessable passwords. Temporary password validity must not exceed 7 days — temporary passwords issued during account creation or password reset that remain valid for extended periods are a credential exposure risk if the invitation email is intercepted. For user pools handling PHI (patient portals, healthcare applications), weak application passwords are a direct credential compromise risk that IAM password controls cannot address.
 
 **Remediation:** Update the user pool password policy via the Cognito console or UpdateUserPool API. Set minimum password length to 12 or higher. Require at least three of: uppercase, lowercase, numbers, special characters. Set temporary password validity to 7 days or less. Consider enabling Cognito advanced security features for compromised credential detection as a complementary control.
+
+---
+
+### CTL.COGNITO.PASSWORD.POLICY.001
+
+**Cognito User Pools Must Enforce a Strong Password Policy**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** aws_security_hub: Cognito.3; mitre_attack: TA0006; nist_800_53_r5: IA-5;
+
+Weak Cognito password policies enable brute force and dictionary attacks against user accounts. A minimum length of 12 characters with complexity requirements significantly increases the effort required for credential attacks. Temporary passwords with long validity windows allow attackers to reuse intercepted temporary passwords for extended periods.
+
+**Remediation:** aws cognito-idp update-user-pool --user-pool-id <id> --policies PasswordPolicy='{MinimumLength=12, RequireUppercase=true,RequireLowercase=true, RequireNumbers=true,RequireSymbols=true, TemporaryPasswordValidityDays=3}'
 
 ---
 
@@ -2113,6 +2388,81 @@ EC2 instances must not run on AMIs that are deprecated by AWS or the AMI owner, 
 
 ---
 
+### CTL.EC2.AMI.PUBLIC.001
+
+**Custom AMIs Must Not Be Publicly Shared**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** aws_security_hub: EC2.25; mitre_attack: T1525; nist_800_53_r5: AC-3;
+
+A publicly shared AMI exposes the complete disk contents of the base image — including installed software, configuration files, hard-coded credentials, and application code. Custom AMIs frequently contain SSH authorized_keys, internal PKI certificates, application source code, and secrets. Unlike EBS snapshots, public AMIs appear in AWS Marketplace searches and are trivially discoverable.
+
+**Remediation:** Remove public sharing from the AMI: aws ec2 modify-image-attribute --image-id <ami-id> --launch-permission '{"Remove":[{"Group":"all"}]}'. Audit all custom AMIs: aws ec2 describe-images --owners self --filters Name=is-public,Values=true
+
+---
+
+### CTL.EC2.ASG.HEALTHCHECK.001
+
+**EC2 Auto Scaling Groups Must Use ELB Health Checks**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** resilience
+- **Compliance:** aws_security_hub: AutoScaling.1; mitre_attack: TA0040; nist_800_53_r5: CP-7;
+
+Auto Scaling Groups with EC2 health checks only replace instances when the underlying EC2 instance fails — they do not detect unhealthy application state. ELB health checks detect when an instance is running but serving errors, allowing ASG to replace unhealthy instances automatically. Without ELB health checks, a compromised or malfunctioning instance can remain in the ASG.
+
+**Remediation:** aws autoscaling update-auto-scaling-group --auto-scaling-group-name <n> --health-check-type ELB --health-check-grace-period 300
+
+---
+
+### CTL.EC2.DEFAULT.VPC.001
+
+**EC2 Instances Must Not Run in the Default VPC**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws: 4.9; nist_800_53_r5: SC-7;
+
+EC2 instances must not be deployed in the default VPC. The default VPC has a flat network topology with no segmentation, making lateral movement trivial after a single instance compromise.
+
+**Remediation:** Migrate the instance to a purpose-built VPC with proper subnet segmentation. Delete the default VPC from regions where it is not needed.
+
+---
+
+### CTL.EC2.DETAILED.MONITORING.001
+
+**Production EC2 Instances Must Have Detailed Monitoring Enabled**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** aws_security_hub: EC2.7; nist_800_53_r5: AU-12;
+
+Basic EC2 monitoring provides metrics at 5-minute intervals. Detailed monitoring provides 1-minute intervals — critical for detecting short-duration attacks (CPU spike from crypto-mining, burst network traffic during exfiltration). Without detailed monitoring, an attacker can exfiltrate data in a short burst that is averaged away in 5-minute metrics.
+
+**Remediation:** Enable detailed monitoring: aws ec2 monitor-instances --instance-ids <id>
+
+---
+
+### CTL.EC2.EBS.DEFAULT.001
+
+**EBS Default Encryption Must Be Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws: 2.2.1; nist_800_53_r5: SC-28;
+
+EBS default encryption must be enabled at the account level to ensure all new EBS volumes are automatically encrypted. Without it, volumes created by auto-scaling or manual launches may be unencrypted.
+
+**Remediation:** aws ec2 enable-ebs-encryption-by-default --region <region> Enable in all regions where EC2 workloads run.
+
+---
+
 ### CTL.EC2.EBS.ENCRYPT.001
 
 **EBS Volumes Must Be Encrypted**
@@ -2125,6 +2475,21 @@ EC2 instances must not run on AMIs that are deprecated by AWS or the AMI owner, 
 EBS volumes attached to EC2 instances must have encryption enabled. Unencrypted volumes storing PHI or sensitive data violate encryption at rest requirements.
 
 **Remediation:** Enable EBS encryption by default for the account. For existing volumes, create an encrypted snapshot and restore to a new encrypted volume. Run: aws ec2 enable-ebs-encryption-by-default
+
+---
+
+### CTL.EC2.EBS.SNAPSHOT.ENCRYPT.001
+
+**EBS Snapshots Must Be Encrypted**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** aws_security_hub: EC2.32; mitre_attack: TA0010; nist_800_53_r5: SC-28;
+
+Unencrypted EBS snapshots expose full disk contents if shared or made public. Even in a private state, unencrypted snapshots can be copied to another account. Encrypted EBS snapshots require access to the KMS key to restore — snapshots shared across accounts cannot be used without the source account sharing the KMS key.
+
+**Remediation:** Copy the snapshot with encryption enabled: aws ec2 copy-snapshot --source-snapshot-id <id> --source-region <region> --encrypted --kms-key-id <key-arn>. Enable encryption by default: aws ec2 enable-ebs-encryption-by-default
 
 ---
 
@@ -2172,6 +2537,51 @@ EC2 instance safety cannot be assessed when encryption status is missing from th
 
 ---
 
+### CTL.EC2.INSTANCE.PROFILE.001
+
+**EC2 Instances Must Use Instance Profiles Instead of Access Keys**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** aws_security_hub: EC2.29; cis_aws_v3.0: 1.18; nist_800_53_r5: IA-5;
+
+EC2 instances that need AWS API access should use IAM instance profiles (role-based, temporary, automatically rotated credentials) rather than embedding long-term access keys. Long-term access keys stored on EC2 instances are frequently discovered via metadata SSRF, file system access after compromise, or accidental git commits. Instance profile credentials auto-rotate every hour via the metadata service.
+
+**Remediation:** Attach an IAM instance profile with minimum required permissions: aws ec2 associate-iam-instance-profile --instance-id <id> --iam-instance-profile Name=<profile-name>. Remove any hard-coded access keys from the instance.
+
+---
+
+### CTL.EC2.LAUNCH.TEMPLATE.001
+
+**EC2 Auto Scaling Groups Must Use Launch Templates**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** aws_security_hub: AutoScaling.9; mitre_attack: TA0003; nist_800_53_r5: CM-6;
+
+Launch configurations are a legacy mechanism superseded by launch templates. Launch templates support IMDSv2 enforcement, instance metadata tags, Nitro Enclave support, EBS volume encryption by default, and multiple instance types per ASG. AWS has deprecated launch configurations. New ASG features and security improvements are only available via launch templates.
+
+**Remediation:** Create a launch template from the existing launch configuration, then update the ASG: aws autoscaling update-auto-scaling-group --auto-scaling-group-name <n> --launch-template LaunchTemplateId=<id>,Version='$Latest'
+
+---
+
+### CTL.EC2.NITRO.ENCLAVE.001
+
+**Sensitive Workloads Must Use Nitro Enclaves for Cryptographic Isolation**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** mitre_attack: TA0006; nist_800_53_r5: SC-28;
+
+Nitro Enclaves provide an isolated execution environment with no persistent storage, no interactive access, and no external networking. Cryptographic operations performed inside an enclave are protected even if the parent instance is compromised. Applies only to instances tagged requires-enclave=true.
+
+**Remediation:** aws ec2 modify-instance-attribute --instance-id <id> --enclave-options Enabled=true. Requires an enclave-capable instance type (m5, c5, r5 or newer).
+
+---
+
 ### CTL.EC2.PUBLIC.001
 
 **EC2 Instances Must Not Have Public IP Addresses**
@@ -2184,6 +2594,66 @@ EC2 instance safety cannot be assessed when encryption status is missing from th
 EC2 instances should not have public IP addresses unless explicitly required. Public IP assignment exposes the instance to direct internet access, bypassing network perimeter controls.
 
 **Remediation:** Launch instances in private subnets without public IP assignment. Use NAT Gateway or VPC endpoints for outbound internet access. Use ALB or NLB for inbound traffic that requires internet access.
+
+---
+
+### CTL.EC2.SG.DEFAULT.RESTRICT.001
+
+**Default Security Group Must Restrict All Inbound and Outbound Traffic**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** aws_security_hub: EC2.2; cis_aws_v3.0: 4.4; nist_800_53_r5: SC-7;
+
+The default security group in every VPC allows all inbound traffic from other members of the same security group and all outbound traffic. Any EC2 instance launched without an explicit security group uses the default — inheriting this permissive posture. Restricting the default to no rules means accidental use results in a non-functional but safe instance.
+
+**Remediation:** Remove all inbound and outbound rules from the default SG in every VPC. Get the default SG ID: aws ec2 describe-security-groups --filters Name=group-name,Values=default Name=vpc-id,Values=<vpc-id>. Revoke all ingress and egress rules.
+
+---
+
+### CTL.EC2.SG.DESCRIBE.RESTRICT.001
+
+**ec2:Describe* Must Be Restricted to Administrative Roles**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** mitre_attack: T1580; nist_800_53_r5: AC-6;
+
+ec2:Describe* permissions must be restricted to administrative roles. Unrestricted ec2:Describe* access exposes the full network topology including VPCs, subnets, security groups, route tables, and network interfaces. Attackers use this information to map the network architecture, identify reachable instances, and plan lateral movement paths.
+
+**Remediation:** Restrict ec2:Describe* to administrative roles only. Replace wildcard ec2:Describe* with the specific describe actions needed by the workload. Apply resource-level conditions or tag-based access control to limit enumeration scope.
+
+---
+
+### CTL.EC2.SG.INGRESS.CIDR.001
+
+**Security Group Inbound Rules Must Not Use Overly Broad CIDR Ranges**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** aws_security_hub: EC2.19; mitre_attack: TA0001; nist_800_53_r5: SC-7;
+
+Security groups with 0.0.0.0/0 inbound rules on ports other than 80/443 expose internal services to the internet. This includes common misconfigurations like opening port 8080, 8443, or custom application ports. HTTP (80) and HTTPS (443) are excluded as legitimate internet-facing ports. All other ports exposed to 0.0.0.0/0 should use specific CIDR ranges.
+
+**Remediation:** Replace 0.0.0.0/0 rules on non-HTTP/S ports with specific corporate IP ranges, security group references, or VPN gateway IPs.
+
+---
+
+### CTL.EC2.SG.RESTRICTED.PORTS.001
+
+**Security Groups Must Not Allow Unrestricted Access on High-Risk Ports**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** aws_security_hub: EC2.14; cis_aws_v3.0: 4.1; mitre_attack: TA0001; nist_800_53_r5: SC-7;
+
+Security groups must not allow unrestricted inbound access on high-risk ports: RDP (3389), Telnet (23), FTP (20/21), VNC (5900), database ports (3306/5432/1433/27017), Redis (6379), and Memcached (11211). Each of these has been the source of high-profile breaches when accidentally exposed to 0.0.0.0/0.
+
+**Remediation:** Remove or restrict rules opening these ports to the internet. Replace 0.0.0.0/0 with specific CIDR ranges (VPN exit IPs, bastion host SG references, or corporate NAT IPs). For database ports, use security group references. For RDP/VNC, use Systems Manager Session Manager instead of direct port exposure.
 
 ---
 
@@ -2202,6 +2672,126 @@ EBS snapshots must be encrypted. Unencrypted snapshots can be shared across acco
 
 ---
 
+### CTL.EC2.SNAPSHOT.PUBLIC.001
+
+**EBS Snapshots Must Not Be Publicly Restorable**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** aws_security_hub: EC2.32; mitre_attack: T1537; nist_800_53_r5: AC-3;
+
+A public EBS snapshot can be copied to any AWS account and mounted as a volume — exposing all data on the volume including OS files, application data, database files, and credentials stored on disk. Unlike S3, public snapshots do not require knowing a URL or bucket name — they appear in public snapshot searches.
+
+**Remediation:** Remove public access from the snapshot: aws ec2 modify-snapshot-attribute --snapshot-id <id> --attribute createVolumePermission --operation-type remove --group-names all. Use an SCP to prevent future public snapshots.
+
+---
+
+### CTL.EC2.SSM.MANAGED.001
+
+**EC2 Instances Must Be Managed by AWS Systems Manager**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-7;
+
+EC2 instances must be managed by SSM to enable patching, session management, and compliance checking without SSH. Unmanaged instances require bastion hosts or open SSH ports.
+
+**Remediation:** Attach AmazonSSMManagedInstanceCore IAM policy to the instance profile and ensure the SSM agent is installed.
+
+---
+
+### CTL.EC2.SSM.SESSION.LOGGING.001
+
+**SSM Session Manager Must Log All Sessions to S3 or CloudWatch**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** mitre_attack: T1059.009; nist_800_53_r5: AU-12;
+
+SSM Session Manager provides interactive shell access to EC2 instances without SSH keys or open inbound ports. Without session logging, all commands executed through Session Manager leave no audit trail. An attacker who gains ssm:StartSession access can execute arbitrary commands on managed instances without any record of the session content — only the session start/stop is logged in CloudTrail.
+
+**Remediation:** Configure Session Manager preferences to log sessions to S3 or CloudWatch Logs. Enable encryption for session logs. aws ssm update-document --name SSM-SessionManagerRunShell --content file://session-prefs.json --document-version '$LATEST'
+
+---
+
+### CTL.EC2.SUBNET.PUBLIC.IP.001
+
+**Subnets Must Not Automatically Assign Public IP Addresses**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** aws_security_hub: EC2.15; mitre_attack: TA0001; nist_800_53_r5: SC-7;
+
+Subnets configured to automatically assign public IP addresses make every instance launched into them directly internet-reachable. An operator who launches an instance without specifying a private IP gets an unexpected public IP — creating unintended internet exposure. Private subnets require explicit intent to assign a public IP.
+
+**Remediation:** aws ec2 modify-subnet-attribute --subnet-id <id> --no-map-public-ip-on-launch
+
+---
+
+### CTL.EC2.TERMINATION.PROTECT.001
+
+**Production EC2 Instances Must Have Termination Protection**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** mitre_attack: T1490; nist_800_53_r5: CP-10;
+
+Production EC2 instances must have termination protection enabled to prevent accidental or malicious instance termination via API, console, or CLI.
+
+**Remediation:** aws ec2 modify-instance-attribute --instance-id <id> --disable-api-termination
+
+---
+
+### CTL.EC2.USERDATA.CREDS.001
+
+**EC2 Launch Configurations Must Not Embed Credentials in User Data**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** mitre_attack: T1552.005; nist_800_53_r5: IA-5;
+
+EC2 user data scripts are executed at instance launch with root privileges. User data is stored in plaintext and is accessible via the metadata service to any process on the instance — including attacker code via SSRF. Credentials embedded in user data (AWS access keys, passwords, API tokens) are trivially extracted from the metadata service at /latest/user-data, CloudFormation template parameters, and EC2 instance configuration APIs. This pattern has been the root cause of multiple credential exposure incidents.
+
+**Remediation:** Remove all credentials from user data scripts. Use IAM instance profiles for AWS API access. Use Secrets Manager or Parameter Store for other secrets, retrieved at runtime by the application.
+
+---
+
+### CTL.EC2.USERDATA.SECRETS.001
+
+**EC2 User Data Must Not Contain Secrets or Credentials**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** mitre_attack: T1059.009; nist_800_53_r5: IA-5;
+
+EC2 instance user data is stored in plaintext in the instance metadata and is visible to any process on the instance via the metadata endpoint. Secrets embedded in user data (API keys, database passwords, tokens) are exposed to any compromised process and persist in the instance metadata after launch. User data is also visible in the EC2 console and via ec2:DescribeInstanceAttribute API calls.
+
+**Remediation:** Move secrets to AWS Secrets Manager or SSM Parameter Store (SecureString type). Retrieve secrets at runtime via IAM role credentials rather than embedding in user data scripts.
+
+---
+
+### CTL.EC2.VPC.ENDPOINT.ACCESS.001
+
+**VPC Interface Endpoints Must Have Restrictive Endpoint Policies**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** mitre_attack: TA0010; nist_800_53_r5: AC-4;
+
+VPC interface endpoints without custom policies use the default full-access policy — any principal in the VPC can use the endpoint to reach any resource in the target service. A custom endpoint policy restricts which principals and resources are accessible. For S3 endpoints, restricting access to specific buckets prevents data exfiltration to attacker-controlled buckets via the endpoint.
+
+**Remediation:** Apply a restrictive endpoint policy: aws ec2 modify-vpc-endpoint --vpc-endpoint-id <id> --policy-document file://endpoint-policy.json
+
+---
+
 ### CTL.ECR.INCOMPLETE.001
 
 **Complete Data Required for ECR Assessment**
@@ -2213,6 +2803,21 @@ EBS snapshots must be encrypted. Unencrypted snapshots can be shared across acco
 ECR repository safety cannot be proven when access control data is missing from the snapshot. The extractor must populate container_registry.access.public to evaluate exposure controls.
 
 **Remediation:** Re-run the extractor with ECR permissions: ecr:DescribeRepositories, ecr:GetRepositoryPolicy.
+
+---
+
+### CTL.ECR.LIFECYCLE.001
+
+**ECR Repositories Must Have a Lifecycle Policy**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-7;
+
+ECR repositories must have a lifecycle policy to expire untagged and old images. Without it, images with known CVEs remain pullable and deployable indefinitely.
+
+**Remediation:** aws ecr put-lifecycle-policy --repository-name <name> --lifecycle-policy-text '<policy JSON>'
 
 ---
 
@@ -2261,6 +2866,21 @@ ECR repositories must have container image signing verification configured in en
 
 ---
 
+### CTL.ECR.TAG.IMMUTABLE.001
+
+**ECR Repositories Must Enforce Image Tag Immutability**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws: 5.4; nist_800_53_r5: SI-7;
+
+ECR repositories must enforce image tag immutability to prevent supply chain attacks where a compromised pipeline overwrites a trusted image tag with malicious content.
+
+**Remediation:** aws ecr put-image-tag-mutability --repository-name <name> --image-tag-mutability IMMUTABLE
+
+---
+
 ### CTL.ECS.EXEC.001
 
 **ECS Exec Must Be Disabled on Production Services**
@@ -2273,6 +2893,36 @@ ECR repositories must have container image signing verification configured in en
 ECS services in production environments must not have enableExecuteCommand: true. ECS Exec provides interactive shell access to running containers — an always-available persistence and lateral movement primitive for any IAM principal with ecs:ExecuteCommand permission. Intended for debugging, it creates a direct access path to production container runtime, filesystem, secrets, and execution role credentials.
 
 **Remediation:** Disable ECS Exec on production services via aws ecs update-service --enable-execute-command false.
+
+---
+
+### CTL.ECS.EXEC.RESTRICT.001
+
+**ECS Exec Must Be Disabled on Production Services**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** mitre_attack: T1059; nist_800_53_r5: AC-3;
+
+ECS Exec allows running interactive shell commands in running ECS containers via aws ecs execute-command. When enabled, any principal with ecs:ExecuteCommand permission can run arbitrary commands in production containers — equivalent to SSH access. ECS Exec has legitimate debugging use in development, but in production it represents an unnecessary execution vector. Attackers with IAM access can use it to establish persistence, exfiltrate data, or pivot to other services accessible from the container's network.
+
+**Remediation:** Disable ECS Exec on production services: aws ecs update-service --cluster <cluster> --service <service> --no-enable-execute-command --force-new-deployment. Restrict ecs:ExecuteCommand via IAM policy to break-glass roles with MFA enforcement.
+
+---
+
+### CTL.ECS.FARGATE.VERSION.001
+
+**ECS Fargate Tasks Must Use Latest Platform Version**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-2;
+
+ECS Fargate tasks must use the latest platform version. Fargate platform versions determine the runtime environment including the kernel version, container runtime, and networking stack. Older platform versions do not receive security patches — AWS applies fixes only to the latest platform version. A task pinned to an older platform version runs on an environment with known unpatched kernel and runtime vulnerabilities. Unlike EC2 where operators can patch independently, Fargate platform versions are AWS-managed and the only remediation is upgrading to the latest version. Tasks using LATEST resolve to the current platform version automatically but tasks pinned to specific versions accumulate security debt silently.
+
+**Remediation:** Update the task definition to use the latest Fargate platform version. Set the platform version to LATEST in the ECS service or task definition. For services, update the service to force a new deployment with the latest platform version. Verify workload compatibility with the new platform version in a staging environment before updating production services.
 
 ---
 
@@ -2377,6 +3027,21 @@ ECS containers must set the user field to a non-root UID. An empty user field me
 ECS container definitions must not pass credentials as plaintext environment variables. Plaintext env vars are stored in the task definition, visible in the ECS console, logged in CloudTrail, and accessible to any process in the container. Use Secrets Manager or SSM Parameter Store references via the secrets field instead.
 
 **Remediation:** Move secrets to Secrets Manager or SSM Parameter Store. Reference them via the secrets field in the container definition.
+
+---
+
+### CTL.ECS.TASK.NOEXEC.001
+
+**ECS Task Definitions Must Not Use Privileged Mode with Host Network**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** mitre_attack: T1610; nist_800_53_r5: AC-6;
+
+ECS task definitions with both privileged mode and host networking allow container escape to the host instance with full network access. A compromised container with these settings can access the instance metadata service, other containers' network traffic, and the host filesystem — providing arbitrary code execution on the host. This combination is equivalent to running untrusted code directly on the EC2 instance.
+
+**Remediation:** Remove privileged mode from the container definition. Use awsvpc network mode instead of host mode. If root capabilities are required, use specific Linux capabilities instead of full privileged mode.
 
 ---
 
@@ -2589,6 +3254,66 @@ EFS file system policies must enforce encryption in transit by denying connectio
 
 ---
 
+### CTL.EKS.ADDON.VERSION.001
+
+**EKS Managed Addons Must Use the Latest Compatible Version**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** aws_security_hub: EKS.7; mitre_attack: TA0003; nist_800_53_r5: SI-2;
+
+EKS managed addons (VPC CNI, CoreDNS, kube-proxy, EBS CSI driver) contain the container runtime components that handle pod networking, DNS, and storage. Outdated addon versions may contain known CVEs exploitable for container escape or privilege escalation. The EKS VPC CNI stale NetworkPolicy IP reuse vulnerability demonstrates that addon bugs can silently bypass security controls. Staying current on addon versions is the only mitigation for addon-layer vulnerabilities.
+
+**Remediation:** List available updates: aws eks describe-addon-versions --kubernetes-version <version>. Update each addon: aws eks update-addon --cluster-name <cluster> --addon-name <addon> --addon-version <latest> --resolve-conflicts OVERWRITE
+
+---
+
+### CTL.EKS.CLUSTER.VERSION.001
+
+**EKS Cluster Kubernetes Version Must Be Within Support Window**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** aws_security_hub: EKS.6; mitre_attack: TA0003; nist_800_53_r5: SI-2;
+
+AWS supports each EKS Kubernetes minor version for approximately 14 months. Clusters on end-of-life versions receive no security patches — known CVEs in the Kubernetes control plane remain unpatched indefinitely. Kubernetes releases security patches only for the current and two previous minor versions. A cluster more than 2 minor versions behind cannot receive patches for newly disclosed CVEs. EKS auto-upgrades unsupported versions — often causing unexpected breaking changes.
+
+**Remediation:** Check current version: aws eks describe-cluster --name <cluster> --query 'cluster.version'. Upgrade: aws eks update-cluster-version --name <cluster> --kubernetes-version <target>. Then upgrade node groups.
+
+---
+
+### CTL.EKS.CONTROL.PLANE.AUDIT.001
+
+**EKS Cluster Must Have Audit Logs Enabled and Delivered to CloudWatch**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** cis_eks: 2.1; mitre_attack: TA0005; nist_800_53_r5: AU-2;
+
+EKS audit logs record all Kubernetes API server requests — who called which API, with what arguments, and the result. Without audit logs delivered to CloudWatch, there is no record of kubectl exec sessions, Secret reads and writes, RBAC policy modifications, or ServiceAccount token creations. This control verifies audit log delivery to CloudWatch — logs enabled but not delivered are useless for incident response.
+
+**Remediation:** Enable audit logging: aws eks update-cluster-config --name <cluster> --logging '{"clusterLogging":[{"types":["audit"],"enabled":true}]}'. Verify the log group exists in CloudWatch.
+
+---
+
+### CTL.EKS.IRSA.ENFORCE.001
+
+**EKS Clusters Must Have OIDC Provider for IRSA**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** aws_security_hub: EKS.9; mitre_attack: TA0006; nist_800_53_r5: AC-6;
+
+Without IRSA (IAM Roles for Service Accounts), pods needing AWS API access must use the node's EC2 instance profile — granting all pods on the node the same IAM permissions. A compromised pod can use the node's credentials to access any AWS service the node role permits. IRSA binds IAM roles to Kubernetes service accounts via OIDC federation. Each pod gets only the permissions its service account requires. IRSA requires the EKS OIDC provider to be configured. This control verifies the OIDC provider exists.
+
+**Remediation:** Associate an OIDC provider: eksctl utils associate-iam-oidc-provider --cluster <cluster> --approve. Then create service account-specific IAM roles.
+
+---
+
 ### CTL.EKS.LOGGING.001
 
 **EKS Control Plane Logging Must Be Enabled for All Log Types**
@@ -2601,6 +3326,51 @@ EFS file system policies must enforce encryption in transit by denying connectio
 EKS clusters must have all five control plane log types enabled (api, audit, authenticator, controllerManager, scheduler). Without full logging, an attacker who compromises the cluster can escalate privileges and exfiltrate data without any audit trail.
 
 **Remediation:** Enable all five control plane log types via AWS CLI: aws eks update-cluster-config --name <cluster> --logging '{"clusterLogging":[{"types":["api","audit","authenticator", "controllerManager","scheduler"],"enabled":true}]}'
+
+---
+
+### CTL.EKS.NETPOL.ENFORCE.001
+
+**EKS Clusters Must Have Network Policy Enforcement Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** mitre_attack: TA0008; nist_800_53_r5: AC-4;
+
+Without network policy enforcement, all pods in an EKS cluster can communicate freely regardless of namespace or label. A compromised pod can reach any other pod, service, or node in the cluster on any port. NetworkPolicy objects exist but have no effect unless a network policy controller enforces them. The VPC CNI network policy controller (enableNetworkPolicy) enforces Kubernetes NetworkPolicy objects using eBPF rules.
+
+**Remediation:** Enable network policy enforcement via VPC CNI: aws eks update-addon --cluster-name <cluster> --addon-name vpc-cni --configuration-values '{"enableNetworkPolicy": "true"}'. Then apply default-deny NetworkPolicy in each namespace.
+
+---
+
+### CTL.EKS.NODEGROUP.AMI.001
+
+**EKS Node Groups Must Use Current AMIs**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-2;
+
+EKS managed node groups must use current Amazon Machine Images. AWS publishes updated EKS-optimized AMIs that include kernel patches, container runtime updates, and kubelet security fixes. Node groups running outdated AMIs are missing security patches for the underlying operating system and Kubernetes node components. Unlike the EKS control plane which AWS manages, node group AMIs must be updated by the operator. Outdated node AMIs create a persistent attack surface at the node level — container escapes, kernel exploits, and privilege escalation vulnerabilities in the kubelet or containerd remain exploitable until the AMI is updated. The gap between the current AMI and the running AMI directly correlates with the number of unpatched CVEs on every node in the group.
+
+**Remediation:** Update the node group to use the latest EKS-optimized AMI. For managed node groups, trigger an AMI update through the EKS console or AWS CLI using update-nodegroup-version. Use the rolling update strategy to replace nodes without downtime. Verify pod disruption budgets are configured to protect workload availability during the node rotation.
+
+---
+
+### CTL.EKS.NODEGROUP.SG.001
+
+**EKS Node Groups Must Not Use the Cluster Default Security Group**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** mitre_attack: TA0008; nist_800_53_r5: SC-7;
+
+EKS clusters create a default cluster security group that allows all traffic between nodes and the control plane. Node groups without dedicated security groups rely on this permissive default — all nodes can communicate with all other nodes on all ports. Dedicated node group security groups with minimal required rules reduce the blast radius of a compromised node.
+
+**Remediation:** Create a dedicated security group for each node group with only required rules: port 10250 (kubelet) from control plane SG, port 443 to control plane SG, and application-specific ports. Assign via launch template.
 
 ---
 
@@ -2619,6 +3389,21 @@ EKS clusters with public API endpoints must restrict access to specific CIDR ran
 
 ---
 
+### CTL.EKS.RBAC.AUDIT.001
+
+**EKS Cluster Must Not Grant cluster-admin to Service Accounts**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_k8s_v1.9: 5.1.1; nist_800_53_r5: AC-6;
+
+EKS clusters must not bind the cluster-admin ClusterRole to service accounts. The cluster-admin role grants unrestricted access to every resource in every namespace. When a service account holds this binding, any pod running under that service account inherits full cluster control. An attacker who compromises a single workload can escalate to cluster-admin privileges by reading the mounted service account token. Legitimate automation rarely needs cluster-wide admin access — most controllers operate within a bounded set of API groups. A cluster-admin binding to a service account turns a container escape into a full cluster compromise with no additional exploit required.
+
+**Remediation:** Remove the cluster-admin binding from the service account. Create a scoped ClusterRole or Role with only the API groups and verbs the workload actually needs. Bind that scoped role to the service account instead. Audit all ClusterRoleBindings with kubectl get clusterrolebindings -o json and filter for subjects of kind ServiceAccount bound to cluster-admin.
+
+---
+
 ### CTL.EKS.SECRETS.ENCRYPT.001
 
 **EKS Kubernetes Secrets Must Be Encrypted with KMS CMK**
@@ -2631,6 +3416,21 @@ EKS clusters with public API endpoints must restrict access to specific CIDR ran
 EKS clusters must encrypt Kubernetes secrets at rest using a customer-managed KMS key. Without envelope encryption, anyone with access to the etcd backup or underlying EBS volume can read all cluster secrets (API tokens, database passwords, TLS certificates) in plaintext.
 
 **Remediation:** Enable secrets encryption: aws eks associate-encryption-config --cluster-name <cluster> --encryption-config '[{"resources":["secrets"],"provider": {"keyArn":"arn:aws:kms:<region>:<account>:key/<key-id>"}}]'
+
+---
+
+### CTL.EKS.SECRETS.ROTATION.001
+
+**KMS Key for EKS Secrets Encryption Must Have Rotation Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** mitre_attack: TA0006; nist_800_53_r5: SC-12;
+
+EKS envelope encryption uses a KMS CMK to encrypt the data encryption key protecting Kubernetes secrets. A compromised KMS key grants permanent access to all secrets encrypted with it — without rotation, a leaked or compromised key remains valid indefinitely. Annual KMS key rotation limits the window of exposure. Each rotation generates a new key version — previous versions remain available for decryption but new encryptions use the current version.
+
+**Remediation:** Enable automatic rotation on the KMS key: aws kms enable-key-rotation --key-id <key-id>
 
 ---
 
@@ -3063,6 +3863,21 @@ GuardDuty must be enabled to provide continuous threat detection. It analyzes Cl
 
 ---
 
+### CTL.GUARDDUTY.EXPORT.001
+
+**GuardDuty Findings Must Be Exported to S3 for Long-Term Retention**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** aws_security_hub: GuardDuty.3; mitre_attack: TA0005; nist_800_53_r5: AU-11;
+
+GuardDuty retains findings for 90 days by default. Without export to S3, findings older than 90 days are permanently deleted — making it impossible to review historical threat activity during long-running investigations or compliance audits. Exporting to S3 with Object Lock provides an immutable, long-term record of all GuardDuty findings.
+
+**Remediation:** aws guardduty create-publishing-destination --detector-id <id> --destination-type S3 --destination-properties DestinationArn=arn:aws:s3:::<bucket>,KmsKeyArn=<key-arn>
+
+---
+
 ### CTL.GUARDDUTY.INCOMPLETE.001
 
 **Complete Data Required for GuardDuty Assessment**
@@ -3074,6 +3889,21 @@ GuardDuty must be enabled to provide continuous threat detection. It analyzes Cl
 The observation snapshot is missing required GuardDuty properties.
 
 **Remediation:** Ensure the extractor calls aws guardduty list-detectors and get-detector.
+
+---
+
+### CTL.GUARDDUTY.MALWARE.PROTECT.001
+
+**GuardDuty Malware Protection Must Be Enabled for EC2**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** mitre_attack: TA0002; nist_800_53_r5: SI-3;
+
+GuardDuty Malware Protection scans EBS volumes attached to EC2 instances and ECS containers when GuardDuty detects suspicious activity. It identifies crypto-mining malware, ransomware, spyware, and rootkits. Without Malware Protection, GuardDuty detects network-level and API-level threats but cannot detect malicious files already present on instance volumes.
+
+**Remediation:** aws guardduty update-malware-scan-settings --detector-id <id> --scan-resource-criteria Include={ResourceTypes=[EC2]}
 
 ---
 
@@ -3391,6 +4221,21 @@ IAM principals must have no multi-step permission chain that leads to administra
 
 ---
 
+### CTL.IAM.FEDERATION.001
+
+**IAM Console Users Should Use Identity Federation**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws: 1.21; nist_800_53_r5: IA-2;
+
+IAM users with console access should authenticate through identity federation rather than IAM-native passwords. Federated authentication centralizes identity management in the organization's identity provider and enforces consistent MFA, password policies, and session controls. IAM-native console users maintain a separate credential that bypasses the organization's identity governance — password resets, MFA enrollment, and access reviews must be managed independently in each AWS account. When console users authenticate directly through IAM, credential lifecycle management fragments across accounts and centralized access revocation requires visiting every account individually. Identity federation eliminates the IAM password as an attack surface and ensures that disabling a user in the identity provider immediately revokes AWS console access.
+
+**Remediation:** Configure identity federation using AWS IAM Identity Center or a direct SAML/OIDC integration with the organization's identity provider. Migrate console users to federated access by creating corresponding identities in the identity provider. After verifying federated access works, remove the IAM console passwords from the migrated users. Retain IAM-native access only for break-glass emergency accounts.
+
+---
+
 ### CTL.IAM.IDENTITY.BLASTRADIUS.001
 
 **Role Blast Radius Must Not Exceed Resource Threshold**
@@ -3462,6 +4307,21 @@ IAM roles must have access to fewer than 20 resources classified as sensitive (P
 IAM account safety cannot be proven when root account MFA status or access key data is missing from the snapshot. The extractor must populate identity.root.mfa_enabled and identity.root.has_access_keys.
 
 **Remediation:** Re-run the extractor with IAM permissions: iam:GetAccountSummary, iam:GenerateCredentialReport, iam:ListMFADevices.
+
+---
+
+### CTL.IAM.LIST.RESTRICT.001
+
+**IAM Policies Must Not Grant Broad iam:List* Without Scope**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** mitre_attack: T1069.003; nist_800_53_r5: AC-6;
+
+IAM policies must not grant broad iam:List* permissions without resource scope constraints. Unrestricted iam:List* access allows enumeration of all IAM users, roles, groups, and policies in the account. Attackers use this to map the identity surface and identify over-privileged roles or misconfigured trust policies for privilege escalation targeting.
+
+**Remediation:** Scope iam:List* actions to specific resource ARNs. Replace wildcard iam:List* with the specific list actions required by the workload (e.g., iam:ListRolePolicies on a single role ARN). Apply conditions such as aws:ResourceTag to limit enumeration scope.
 
 ---
 
@@ -4724,6 +5584,21 @@ etcd must be configured with a peer key file for mutual TLS between etcd cluster
 
 ---
 
+### CTL.K8S.EXEC.RESTRICT.001
+
+**kubectl exec Must Be Restricted via RBAC to Authorized Roles**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_k8s_v1.9: 5.1.3; mitre_attack: T1609; nist_800_53_r5: AC-3;
+
+kubectl exec (pods/exec) allows executing commands in running pods. Granting this to service accounts or broad principals enables arbitrary code execution in any pod the principal can target. An attacker who compromises a principal with pods/exec access can run commands in privileged pods, access secrets mounted in other pods, and pivot to the host if any pod runs with elevated privileges.
+
+**Remediation:** Audit all ClusterRoles and Roles granting pods/exec. Restrict pods/exec to named developer roles with namespace scope, not cluster-wide roles. Remove pods/exec from service account bindings.
+
+---
+
 ### CTL.K8S.IMDS.BLOCK.001
 
 **Cluster Must Have NetworkPolicy Blocking Pod Egress to IMDS**
@@ -5262,6 +6137,21 @@ Customer-created symmetric KMS keys must have automatic key rotation enabled. Ke
 
 ---
 
+### CTL.LAMBDA.CODESIGN.001
+
+**Lambda Functions Must Enforce Code Signing**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** aws_security_hub: Lambda.5; mitre_attack: T1059; nist_800_53_r5: SI-7;
+
+Lambda code signing ensures only code signed by an approved entity can be deployed. Without code signing, an attacker with lambda:UpdateFunctionCode permission can replace function code with malicious payloads — exfiltrating environment variables, reading /tmp, or establishing outbound connections. Code signing uses AWS Signer to create cryptographic signatures. Lambda verifies signatures on deployment and rejects unsigned or invalidly-signed packages. This prevents supply chain attacks where a compromised CI/CD pipeline pushes malicious Lambda code to production.
+
+**Remediation:** Create an AWS Signer signing profile, create a code signing config referencing the profile, and attach it to the function: aws lambda put-function-code-signing-config --function-name <n> --code-signing-config-arn <config-arn>
+
+---
+
 ### CTL.LAMBDA.CODESIGN.ENFORCE.001
 
 **Lambda Code Signing Must Be Enabled and in Enforce Mode**
@@ -5337,6 +6227,21 @@ Lambda function environment variables must not contain plaintext secrets such as
 
 ---
 
+### CTL.LAMBDA.INVOKE.PUBLIC.001
+
+**Lambda Functions Must Not Have Public Invoke Permissions**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** aws_security_hub: Lambda.1; mitre_attack: T1648; nist_800_53_r5: AC-3;
+
+Lambda resource-based policies must not grant lambda:InvokeFunction to "*" (all principals). A publicly invokable Lambda function allows any AWS account or unauthenticated caller to trigger execution — the function runs with its full IAM execution role, providing code execution and credential access to any internet user. This is MITRE ATT&CK T1648 (Serverless Execution).
+
+**Remediation:** Remove the public invoke permission from the function policy: aws lambda remove-permission --function-name <name> --statement-id <sid>
+
+---
+
 ### CTL.LAMBDA.LAYER.ORIGIN.001
 
 **Lambda Layers Must Originate from Trusted Accounts**
@@ -5349,6 +6254,21 @@ Lambda function environment variables must not contain plaintext secrets such as
 All Lambda layers referenced by a function must have ARNs whose account IDs are in the organization's trusted account list. Lambda layers execute in the function runtime with the function's execution role permissions. A layer from an untrusted account is unaudited code executing with full function permissions — a supply chain risk independent of the function's own code.
 
 **Remediation:** Replace external layers with organization-owned layers. If third-party layers are required, vendor them into an organization-owned account and reference the vendored copy.
+
+---
+
+### CTL.LAMBDA.LIST.RESTRICT.001
+
+**Lambda Function List Permissions Must Be Restricted**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** mitre_attack: T1526; nist_800_53_r5: AC-6;
+
+Lambda function list permissions must be restricted to administrative roles. Unrestricted lambda:ListFunctions access reveals the entire serverless architecture including function names, runtimes, memory allocations, environment variable keys, and VPC configurations. Attackers use this to identify functions with overprivileged roles, outdated runtimes, or exposed environment variables for targeting.
+
+**Remediation:** Restrict lambda:ListFunctions and lambda:GetFunction to administrative roles only. Apply tag-based access control to limit function enumeration scope. Use AWS Organizations SCPs to enforce lambda list restrictions across accounts.
 
 ---
 
@@ -5424,6 +6344,21 @@ Each Lambda function must use a unique execution role not shared with other func
 Lambda functions must not run on runtimes that AWS has deprecated. Deprecated runtimes no longer receive security patches from AWS. Unlike EC2 where the operator controls patching, Lambda runtimes are AWS-managed — the only remediation is upgrading the runtime version. AWS publishes deprecation dates months in advance. A function on a deprecated runtime is running on an unpatched execution environment for every invocation. The operator has no mechanism to patch the underlying runtime independently — the runtime version is the patch level. AWS does not forcibly block invocations on deprecated runtimes immediately; functions continue working in a vulnerable state until AWS removes the runtime entirely, at which point the function breaks rather than degrading gracefully. This control detects the compliance gap during the window between deprecation and forced removal.
 
 **Remediation:** Upgrade the Lambda function runtime to a supported version. Check the AWS Lambda runtimes documentation for the current supported runtime list and deprecation schedule. Test the function with the new runtime in a non-production environment before updating production. For Python, Node.js, and Java runtimes, review breaking changes in the language version upgrade guide.
+
+---
+
+### CTL.LAMBDA.RUNTIME.EOL.001
+
+**Lambda Functions Must Not Use End-of-Life Runtimes**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** aws_security_hub: Lambda.2; mitre_attack: T1203; nist_800_53_r5: SI-2;
+
+Lambda functions using end-of-life runtimes do not receive security patches from AWS. Known vulnerabilities in the runtime environment can be exploited to achieve code execution, escape the function sandbox, or access credentials. AWS deprecates runtimes on a published schedule — functions on deprecated runtimes cannot be updated but continue to run, creating a growing attack surface.
+
+**Remediation:** Migrate the function to a supported runtime version. Check the AWS Lambda runtimes page for current supported versions. Test the function with the new runtime in a non-production environment before updating production.
 
 ---
 
@@ -5529,6 +6464,21 @@ Lambda functions configured to run in a VPC must use private subnets with no dir
 OpenSearch domain access policies must not grant access to wildcard principals (Principal: *). A wildcard principal in the resource-based policy allows any AWS account or unauthenticated user to access the cluster, depending on whether the domain is public or VPC-only. Combined with a public endpoint, this enables completely anonymous access.
 
 **Remediation:** Replace wildcard principals with specific IAM role ARNs or account IDs. Use condition keys (aws:SourceIp, aws:SourceVpc) to further restrict access.
+
+---
+
+### CTL.OPENSEARCH.AUDIT.LOG.001
+
+**OpenSearch Domains Must Have Audit Logging Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** aws_security_hub: Opensearch.6; mitre_attack: T1213; nist_800_53_r5: AU-12;
+
+OpenSearch audit logs record all requests to the domain including queries, index operations, and authentication events. Without audit logging, an attacker who accesses the domain can search, read, and export data without any record of what was accessed. OpenSearch domains often contain aggregated application logs, business data, and user activity — making them high-value collection targets.
+
+**Remediation:** Enable audit logs on the domain. Audit logs require fine-grained access control to be enabled first. Update the domain configuration to publish audit logs to CloudWatch Logs.
 
 ---
 
@@ -5741,6 +6691,51 @@ RDS instances must have automated backups enabled with a retention period of at 
 
 ---
 
+### CTL.RDS.CLUSTER.DELETION.PROTECT.001
+
+**RDS Aurora Clusters Must Have Deletion Protection Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** resilience
+- **Compliance:** aws_security_hub: RDS.34; mitre_attack: TA0040; nist_800_53_r5: CP-9;
+
+Aurora clusters without deletion protection can be permanently deleted via API or console without additional confirmation. Ransomware actors who gain IAM access with rds:DeleteDBCluster can destroy entire Aurora clusters including all instances and cluster storage. Deletion protection requires explicitly disabling the protection before deletion — breaking automated ransomware scripts.
+
+**Remediation:** aws rds modify-db-cluster --db-cluster-identifier <id> --deletion-protection --apply-immediately
+
+---
+
+### CTL.RDS.CLUSTER.LOGGING.001
+
+**RDS Aurora Clusters Must Export Logs to CloudWatch**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** aws_security_hub: RDS.36; mitre_attack: TA0005; nist_800_53_r5: AU-12;
+
+RDS Aurora log export to CloudWatch Logs enables centralized log management, alerting on database errors, and retention beyond the default 7-day on-instance period. Without CloudWatch export, database audit logs, error logs, and slow query logs are only available via the RDS console for a limited period — making forensic investigation difficult after an incident.
+
+**Remediation:** aws rds modify-db-cluster --db-cluster-identifier <id> --cloudwatch-logs-export-configuration EnableLogTypes=audit,error,slowquery --apply-immediately
+
+---
+
+### CTL.RDS.DELETEPROT.001
+
+**RDS Instances Must Have Deletion Protection Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws: 2.3.3; nist_800_53_r5: CP-9;
+
+RDS instances must have deletion protection enabled to prevent accidental or malicious database destruction. Without it, ransomware actors or misconfigured automation can permanently destroy production databases with a single API call.
+
+**Remediation:** aws rds modify-db-instance --db-instance-identifier <id> --deletion-protection --apply-immediately
+
+---
+
 ### CTL.RDS.ENCRYPT.001
 
 **RDS Storage Encryption Must Be Enabled**
@@ -5768,6 +6763,21 @@ RDS instances must have storage encryption enabled. Unencrypted database storage
 RDS instances must not run major database engine versions that have reached end-of-life (EOL) and no longer receive security patches from the engine vendor. This is distinct from CTL.RDS.AUTOUPGRADE.001 which covers automatic minor version upgrades within a supported major version. Auto minor upgrade does not upgrade between major versions — an EOL major version receives no further patches regardless of the auto-upgrade setting. PostgreSQL 11 (EOL November 2023), MySQL 5.7 (EOL October 2023), and MariaDB 10.4 (EOL June 2024) are examples of major versions that continue running on RDS but receive no security patches from the upstream vendor. The engine version is permanently unpatched against any vulnerability disclosed after EOL. For PHI and cardholder data environments, running an EOL engine is a direct compliance finding — HIPAA requires maintained software and PCI-DSS 6.3.3 requires protection from known vulnerabilities through patching.
 
 **Remediation:** Upgrade the RDS instance to a supported major engine version. For PostgreSQL, upgrade to PostgreSQL 14 or later. For MySQL, upgrade to MySQL 8.0. For MariaDB, upgrade to MariaDB 10.6 or later. Use a blue-green deployment or read replica promotion to minimize downtime. Test the application against the new major version in a staging environment before upgrading production — major version upgrades may include breaking changes in SQL behavior, function signatures, or default settings.
+
+---
+
+### CTL.RDS.EVENTS.001
+
+**RDS Must Have Event Subscriptions for Critical Events**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AU-12;
+
+RDS instances must have event subscriptions configured for critical event categories. RDS event subscriptions notify operators of configuration changes, failovers, security group modifications, and parameter group changes. Without event subscriptions, critical changes to database instances go undetected — an attacker who modifies security groups, disables encryption, or changes authentication settings generates no alert. RDS events are the primary detection mechanism for unauthorized database configuration changes. Event subscriptions are not enabled by default and must be explicitly created for each event category. The absence of event subscriptions creates a detection gap where database-level security changes occur without any notification to the security team.
+
+**Remediation:** Create RDS event subscriptions for critical event categories including configuration change, failover, failure, maintenance, and security group. Subscribe to an SNS topic that routes to the security monitoring pipeline. At minimum, create subscriptions for the db-instance source type with the configuration change and security categories enabled.
 
 ---
 
@@ -5815,6 +6825,21 @@ RDS instances must export audit logs to CloudWatch. Without audit logging, datab
 
 ---
 
+### CTL.RDS.MINOR.UPGRADE.001
+
+**RDS Instances Must Enable Automatic Minor Version Upgrades**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** aws_security_hub: RDS.13; mitre_attack: TA0003; nist_800_53_r5: SI-2;
+
+Minor version upgrades contain security patches for the database engine. Disabling automatic minor upgrades means security patches require manual intervention — patches are commonly delayed or forgotten, leaving the database engine vulnerable to known CVEs. Minor upgrades are backwards-compatible by design and the maintenance window controls when they apply.
+
+**Remediation:** aws rds modify-db-instance --db-instance-identifier <id> --auto-minor-version-upgrade --apply-immediately
+
+---
+
 ### CTL.RDS.MONITORING.001
 
 **RDS Enhanced Monitoring Must Be Enabled**
@@ -5845,6 +6870,36 @@ Production RDS instances must use Multi-AZ deployment for high availability. Sin
 
 ---
 
+### CTL.RDS.PARAM.GROUP.001
+
+**RDS Instances Must Not Use the Default Parameter Group**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** aws_security_hub: RDS.19; mitre_attack: TA0005; nist_800_53_r5: CM-6;
+
+The default RDS parameter group uses AWS-managed settings that cannot be audited for security-relevant configuration. A custom parameter group enables enforcing SSL/TLS enforcement, audit logging parameters, and password validation plugins. Without a custom parameter group, these security settings cannot be verified or enforced via configuration snapshots.
+
+**Remediation:** Create a custom parameter group and attach it to the instance. Then set security parameters such as require_secure_transport=ON for MySQL or rds.force_ssl=1 for PostgreSQL.
+
+---
+
+### CTL.RDS.PERFORMANCE.INSIGHTS.001
+
+**RDS Instances Must Have Performance Insights Enabled with KMS Encryption**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** aws_security_hub: RDS.17; mitre_attack: TA0005; nist_800_53_r5: AU-12;
+
+Performance Insights captures database query patterns and wait events. When encrypted with a customer-managed KMS key, this data is protected and provides an additional audit source for database activity. Without Performance Insights, slow or anomalous queries such as bulk data extraction may not be visible in standard database logs.
+
+**Remediation:** aws rds modify-db-instance --db-instance-identifier <id> --enable-performance-insights --performance-insights-kms-key-id <key-arn> --performance-insights-retention-period 731 --apply-immediately
+
+---
+
 ### CTL.RDS.PUBLIC.001
 
 **RDS Instances Must Not Be Publicly Accessible**
@@ -5860,6 +6915,51 @@ RDS instances must not have public accessibility enabled. A publicly accessible 
 
 ---
 
+### CTL.RDS.SNAPSHOT.ENCRYPT.001
+
+**RDS Automated Snapshots Must Be Encrypted**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** aws_security_hub: RDS.4; hipaa: 164.312(a)(2)(iv); mitre_attack: TA0010; nist_800_53_r5: SC-28;
+
+Unencrypted RDS snapshots can be copied to any AWS account and restored without requiring access to a KMS key. Snapshot encryption ensures that even if a snapshot is shared, it cannot be restored without the KMS key. RDS snapshot encryption follows the source instance's encryption setting — instances must be encrypted at creation.
+
+**Remediation:** Create an encrypted copy of the snapshot, then restore a new instance from the encrypted snapshot. Migrate the application to the new encrypted instance.
+
+---
+
+### CTL.RDS.SNAPSHOT.EXPORT.001
+
+**RDS Snapshot Export to S3 Must Be Restricted to Authorized Roles**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** mitre_attack: T1005; nist_800_53_r5: AC-3;
+
+RDS snapshot export converts a database snapshot to Apache Parquet format and stores it in S3 — making the entire database contents accessible as files. An attacker with rds:StartExportTask permission can export any RDS snapshot to an attacker-controlled S3 bucket in any account. This is a complete database exfiltration primitive: no need to query row by row — export the snapshot and read all data as Parquet files.
+
+**Remediation:** Restrict rds:StartExportTask via IAM policy to approved roles. Use a resource condition to limit S3 destination to approved buckets. Monitor for export tasks via CloudTrail alerting.
+
+---
+
+### CTL.RDS.SNAPSHOT.PUBLIC.001
+
+**RDS Snapshots Must Not Be Publicly Accessible**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** mitre_attack: T1537; nist_800_53_r5: AC-3;
+
+RDS snapshots must not be publicly accessible. A public snapshot can be copied to any AWS account and restored as a full database, granting complete read access to all data.
+
+**Remediation:** aws rds modify-db-snapshot-attribute --db-snapshot-identifier <id> --attribute-name restore --values-to-remove all
+
+---
+
 ### CTL.RDS.SSL.001
 
 **RDS Must Require SSL Connections**
@@ -5872,6 +6972,21 @@ RDS instances must not have public accessibility enabled. A publicly accessible 
 RDS instances must enforce SSL/TLS for all client connections. Without require_ssl, database traffic travels unencrypted over the network, exposing query data and credentials to interception.
 
 **Remediation:** Set the rds.force_ssl parameter to 1 in the parameter group (PostgreSQL) or require_secure_transport to ON (MySQL). For Aurora, use the cluster parameter group.
+
+---
+
+### CTL.RDS.SSL.ENFORCE.001
+
+**RDS Instances Must Enforce SSL/TLS for All Connections**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** aws_security_hub: RDS.25; hipaa: 164.312(e)(2)(ii); mitre_attack: TA0006; nist_800_53_r5: SC-8;
+
+RDS connections without SSL/TLS transmit database credentials and query results in plaintext over the network. In a VPC, any compromised instance with network access can capture database passwords and sensitive data via passive network monitoring. SSL enforcement is configured via parameter group (require_secure_transport for MySQL, rds.force_ssl for PostgreSQL/SQL Server).
+
+**Remediation:** Set the appropriate SSL parameter in the parameter group: MySQL: require_secure_transport=ON. PostgreSQL: rds.force_ssl=1. SQL Server: rds.force_ssl=1.
 
 ---
 
@@ -6230,6 +7345,21 @@ Every S3 bucket must have a data-classification tag with a value from the recogn
 
 ---
 
+### CTL.S3.CLOUDTRAIL.PUBLIC.001
+
+**S3 Bucket Storing CloudTrail Logs Must Not Be Public**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws: 3.3; mitre_attack: T1562.008; nist_800_53_r5: AU-9;
+
+The S3 bucket storing CloudTrail logs must not be publicly accessible. A public CloudTrail bucket exposes the complete API activity log and allows log tampering.
+
+**Remediation:** aws s3api put-public-access-block --bucket <cloudtrail-bucket> --public-access-block-configuration "BlockPublicAcls=true,IgnorePublicAcls=true, BlockPublicPolicy=true,RestrictPublicBuckets=true"
+
+---
+
 ### CTL.S3.CONTROLS.001
 
 **Public Access Block Must Be Enabled**
@@ -6378,6 +7508,21 @@ S3 bucket safety cannot be proven when policy or ACL data is missing from the sn
 
 ---
 
+### CTL.S3.INTELLIGENT.TIERING.EXPOSURE.001
+
+**S3 Batch Operations Must Not Copy Objects to External Accounts**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** mitre_attack: T1074; nist_800_53_r5: AC-3;
+
+S3 Batch Operations can copy millions of objects across buckets in a single job. An attacker with s3:CreateJob permission can initiate a batch copy of all objects in a bucket to an external account — staging data for exfiltration without triggering per-object API calls. Batch operations generate a single CloudTrail event rather than millions of GetObject events — making large-scale data collection harder to detect via API call volume monitoring.
+
+**Remediation:** Restrict s3:CreateJob to approved IAM roles. Add bucket policy conditions preventing cross-account batch operations. Deny s3:CreateJob when the destination account does not match the source account.
+
+---
+
 ### CTL.S3.INVENTORY.001
 
 **S3 Inventory Must Be Enabled for Visibility**
@@ -6420,6 +7565,21 @@ S3 buckets tagged with data-retention must have at least one enabled lifecycle r
 S3 buckets tagged with data-classification=phi must not have lifecycle expiration rules that delete data before the minimum HIPAA retention period. HIPAA requires medical records to be retained for a minimum of 6 years (2190 days). This control detects PHI buckets with expiration rules set below this threshold, which could result in premature deletion of protected health information.
 
 **Remediation:** Increase the lifecycle expiration period to at least the configured min_retention_days value. If the current rule is for storage class transition, ensure the expiration rule is separate and meets the minimum retention period.
+
+---
+
+### CTL.S3.LIST.RESTRICT.001
+
+**S3 Buckets Must Not Allow Unauthenticated Bucket Listing**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** mitre_attack: T1619; nist_800_53_r5: AC-3;
+
+S3 buckets must not allow anonymous s3:ListBucket access. Anonymous bucket listing exposes all object keys to unauthenticated users, enabling reconnaissance of stored data. Attackers use object key enumeration to identify sensitive files, backup archives, and configuration artifacts before attempting data exfiltration.
+
+**Remediation:** Enable S3 Public Access Block with BlockPublicPolicy and RestrictPublicBuckets set to true. Remove any bucket policy statements granting s3:ListBucket to Principal "*". Remove any ACL grants to the AllUsers group.
 
 ---
 
@@ -7098,6 +8258,21 @@ Secret blast radius assessment requires the target_sensitivity field. The extrac
 
 ---
 
+### CTL.SECRETS.ROTATION.001
+
+**Secrets Manager Secrets Must Have Automatic Rotation Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** aws_security_hub: SecretsManager.1; mitre_attack: T1528; nist_800_53_r5: IA-5;
+
+Secrets without automatic rotation retain the same credential value indefinitely. An attacker who obtains a secret value through any means (log harvesting, memory dump, API call) has permanent access unless the secret is manually rotated. Automatic rotation limits the window of compromise — a stolen credential becomes invalid after the rotation interval.
+
+**Remediation:** Configure automatic rotation with a Lambda rotation function: aws secretsmanager rotate-secret --secret-id <id> --rotation-lambda-arn <arn> --rotation-rules AutomaticallyAfterDays=30
+
+---
+
 ### CTL.SECRETSMANAGER.ACCESS.001
 
 **Secrets Must Have Rotation Enabled**
@@ -7216,6 +8391,21 @@ SNS topics must use server-side encryption with a KMS key. Unencrypted topics ex
 
 ---
 
+### CTL.SNS.ENCRYPTION.001
+
+**SNS Topics Must Use Server-Side Encryption**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** aws_security_hub: SNS.1; mitre_attack: T1530; nist_800_53_r5: SC-28;
+
+SNS topics without server-side encryption transmit and store messages in plaintext. An attacker with sns:Subscribe access can create a subscription to harvest all messages flowing through the topic. Messages often contain application events, alerts, and inter-service data that may include sensitive information. SSE-KMS encryption ensures messages are encrypted at rest and requires kms:Decrypt permission to read.
+
+**Remediation:** Enable SSE-KMS on the topic: aws sns set-topic-attributes --topic-arn <arn> --attribute-name KmsMasterKeyId --attribute-value alias/aws/sns
+
+---
+
 ### CTL.SNS.INCOMPLETE.001
 
 **Complete Data Required for SNS Assessment**
@@ -7260,6 +8450,21 @@ SQS queues must use server-side encryption with a KMS key. Unencrypted queues ex
 
 ---
 
+### CTL.SQS.ENCRYPTION.001
+
+**SQS Queues Must Use Server-Side Encryption**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** aws_security_hub: SQS.1; mitre_attack: T1530; nist_800_53_r5: SC-28;
+
+SQS queues without server-side encryption store messages in plaintext. An attacker with sqs:ReceiveMessage access can read message contents directly — messages often contain application data, event payloads, and inter-service communication that may include sensitive information. SSE-KMS encryption ensures messages are encrypted at rest and requires kms:Decrypt permission to read.
+
+**Remediation:** Enable SSE-KMS on the queue: aws sqs set-queue-attributes --queue-url <url> --attributes KmsMasterKeyId=alias/aws/sqs
+
+---
+
 ### CTL.SQS.INCOMPLETE.001
 
 **Complete Data Required for SQS Assessment**
@@ -7271,6 +8476,66 @@ SQS queues must use server-side encryption with a KMS key. Unencrypted queues ex
 The observation snapshot is missing required SQS queue properties.
 
 **Remediation:** Ensure the extractor calls aws sqs get-queue-attributes and maps the KmsMasterKeyId to the messaging.encryption observation properties.
+
+---
+
+### CTL.SSM.INVENTORY.RESTRICT.001
+
+**SSM Inventory Access Must Be Restricted**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** mitre_attack: T1592; nist_800_53_r5: AC-3;
+
+SSM inventory data must not be publicly shared or broadly accessible. SSM inventory contains detailed information about managed instances including installed software, running services, network configuration, and Windows registry data. Attackers use this information to identify vulnerable software versions, exposed services, and network paths for exploitation planning.
+
+**Remediation:** Remove public sharing from SSM inventory resource data syncs. Restrict ssm:GetInventory and ssm:GetInventorySummary to administrative roles only. Review and scope down any resource data sync configurations that share inventory across accounts.
+
+---
+
+### CTL.SSM.PARAMETER.COLLECT.001
+
+**SSM Parameter Store Must Restrict Bulk Parameter Listing**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** mitre_attack: T1552; nist_800_53_r5: AC-6;
+
+SSM Parameter Store holds database passwords, API keys, certificates, and other secrets. ssm:GetParametersByPath allows bulk retrieval of all parameters under a path prefix in a single API call — collecting all secrets at once. ssm:DescribeParameters lists all parameter names and metadata — enabling an attacker to map all stored secrets before extracting them. These permissions should be scoped to specific parameter paths needed by each application, not granted broadly.
+
+**Remediation:** Replace ssm:GetParametersByPath with resource-scoped ssm:GetParameter grants on specific parameter ARNs. Restrict ssm:DescribeParameters to administrative roles.
+
+---
+
+### CTL.SSM.RUNCOMMAND.APPROVE.001
+
+**SSM Run Command Must Require Change Manager Approval for Production**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** mitre_attack: T1059.004; nist_800_53_r5: CM-3;
+
+AWS Systems Manager Run Command allows executing arbitrary shell commands on any managed EC2 instance. An attacker with ssm:SendCommand permission can run commands on all production instances simultaneously — installing backdoors, exfiltrating data, or destroying files. Change Manager adds an approval workflow to SSM automation and Run Command. Without approval workflows, a single compromised IAM principal with ssm:SendCommand can achieve arbitrary code execution on every managed instance in the account.
+
+**Remediation:** Enable Systems Manager Change Manager and configure approval templates requiring two or more approvers for production targets. Restrict ssm:SendCommand directly to Change Manager service role via IAM policy condition.
+
+---
+
+### CTL.SSM.RUNCOMMAND.RESTRICT.001
+
+**SSM Run Command Must Be Restricted to Approved Documents**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 2.2.1; mitre_attack: T1059.009; nist_800_53_r5: AC-6;
+
+SSM Run Command allows executing arbitrary commands on managed EC2 instances. Without restricting which command documents can be used, any principal with ssm:SendCommand can execute AWS-RunShellScript or AWS-RunPowerShellScript on any managed instance — providing remote code execution equivalent to SSH/RDP access without requiring key management or network-level access. This is MITRE ATT&CK T1059.009 (Cloud Administration Command). Restrict to approved documents only.
+
+**Remediation:** Use IAM policy conditions to restrict ssm:SendCommand to specific document names. Deny AWS-RunShellScript and AWS-RunPowerShellScript for non-admin roles. Use Session Manager for interactive access instead of Run Command for shell access.
 
 ---
 
@@ -7301,6 +8566,36 @@ AWS Systems Manager Parameter Store parameters that store values in String or St
 Workloads must not run in the default VPC. The default VPC is created automatically in every region with permissive settings: a public subnet in each AZ, an internet gateway, and a default security group that allows all internal traffic. These defaults create implicit public exposure that custom VPCs avoid. Production and sensitive workloads must use purpose-built VPCs with explicit network design.
 
 **Remediation:** Create a custom VPC with private subnets, explicit route tables, and restrictive security groups. Migrate workloads from the default VPC. Consider deleting the default VPC in production accounts if no workloads require it.
+
+---
+
+### CTL.VPC.DEFAULT.IGW.001
+
+**Default VPC Must Not Have Internet Gateway Route**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws: 4.7; nist_800_53_r5: SC-7;
+
+The default VPC must not have an internet gateway route in its route tables. AWS creates a default VPC in every region with a route table that sends all internet-bound traffic through an attached internet gateway. Resources launched into the default VPC without explicit network configuration receive a public IP and are directly reachable from the internet. The default VPC is frequently used for ad-hoc testing and forgotten resources — any instance, Lambda VPC attachment, or RDS instance placed in the default VPC inherits internet exposure by default. Removing the internet gateway route from the default VPC eliminates this accidental exposure path without affecting production workloads which should be in purpose-built VPCs.
+
+**Remediation:** Remove the internet gateway route from the default VPC route table. Detach and delete the internet gateway from the default VPC if no resources require it. Alternatively, delete the default VPC entirely if it is not in use. Verify no active resources depend on the default VPC internet connectivity before removing the route.
+
+---
+
+### CTL.VPC.ENDPOINT.S3.001
+
+**VPCs Must Have an S3 Gateway Endpoint**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws: 4.13; nist_800_53_r5: SC-7;
+
+VPCs must have an S3 VPC gateway endpoint to route S3 traffic privately through the AWS network. Without it, S3 access traverses the public internet, enabling monitoring and interception of data transfers.
+
+**Remediation:** aws ec2 create-vpc-endpoint --vpc-id <vpc-id> --service-name com.amazonaws.<region>.s3 --route-table-ids <route-table-id>
 
 ---
 

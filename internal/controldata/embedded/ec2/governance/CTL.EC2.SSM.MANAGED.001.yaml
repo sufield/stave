@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.SSM.MANAGED.001
+name: EC2 Instances Must Be Managed by AWS Systems Manager
+description: >
+  EC2 instances must be managed by SSM to enable patching,
+  session management, and compliance checking without SSH.
+  Unmanaged instances require bastion hosts or open SSH ports.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-7"
+scope_tags:
+  - aws
+  - ec2
+type: unsafe_state
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    EC2 instance is not managed by AWS Systems Manager.
+  action: >
+    Attach AmazonSSMManagedInstanceCore IAM policy to the
+    instance profile and ensure the SSM agent is installed.
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: instance
+    - field: properties.compute.ssm_managed
+      op: eq
+      value: false

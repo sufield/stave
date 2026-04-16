@@ -1,0 +1,47 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.ADDON.VERSION.001
+name: EKS Managed Addons Must Use the Latest Compatible Version
+description: >
+  EKS managed addons (VPC CNI, CoreDNS, kube-proxy, EBS CSI driver)
+  contain the container runtime components that handle pod networking,
+  DNS, and storage. Outdated addon versions may contain known CVEs
+  exploitable for container escape or privilege escalation. The EKS
+  VPC CNI stale NetworkPolicy IP reuse vulnerability demonstrates
+  that addon bugs can silently bypass security controls. Staying
+  current on addon versions is the only mitigation for addon-layer
+  vulnerabilities.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-2"
+  aws_security_hub: "EKS.7"
+  mitre_attack: "TA0003"
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    EKS managed addons are not running the latest compatible version.
+    Known vulnerabilities may be present in addon components.
+  action: >
+    List available updates:
+    aws eks describe-addon-versions --kubernetes-version <version>.
+    Update each addon:
+    aws eks update-addon --cluster-name <cluster> --addon-name <addon>
+    --addon-version <latest> --resolve-conflicts OVERWRITE
+  example: |
+    {
+      "addons": {
+        "vpc_cni": {
+          "version_current": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.addons.has_outdated
+      op: eq
+      value: true

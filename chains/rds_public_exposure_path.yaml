@@ -1,0 +1,17 @@
+id: rds_public_exposure_path
+description: >
+  RDS instance is publicly accessible, unencrypted at rest, and
+  has no deletion protection. An attacker who discovers the
+  endpoint can authenticate, read plaintext data, and destroy
+  the database with no protection. This is the configuration
+  pattern behind multiple healthcare and financial data breaches.
+controls:
+  - CTL.RDS.PUBLIC.001
+  - CTL.RDS.ENCRYPT.001
+  - CTL.RDS.DELETEPROT.001
+escalation_threshold: 3
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - rds_data_access

@@ -12,3 +12,9 @@ controls:
   - CTL.EKS.SECRETS.ENCRYPT.001
 escalation_threshold: 3
 compound_severity: critical
+preconditions:
+  - internet_access
+  - iam_credential_theft
+postconditions:
+  - k8s_cluster_admin
+  - k8s_service_account_token

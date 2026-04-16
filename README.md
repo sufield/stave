@@ -45,7 +45,7 @@ Every score is a **deterministic, traceable reasoning chain**. Compound scores s
 
 ## Features
 
-- **525 built-in controls** across 44 domains (S3, IAM, VPC, EC2, RDS, ELB, K8s, CloudTrail, CloudWatch, KMS, and [34 more](docs/controls/reference.md))
+- **611 built-in controls** across 44 domains (S3, IAM, VPC, EC2, RDS, ELB, K8s, CloudTrail, CloudWatch, KMS, and [34 more](docs/controls/reference.md))
 - **10 compliance profiles** — HIPAA, CIS AWS v3.0, SOC 2, PCI-DSS v4.0, NIST 800-53, FedRAMP, GDPR, FFIEC, ISO 27001, NIST CSF 2.0
 - **Risk reasoning engine** — compound risk scoring across co-failing controls, MITRE-aligned attack stage summary, blast radius multipliers
 - **Safety chains** — 15 built-in chain definitions detect compound failures across data protection, identity, detection, recovery, sovereignty, supply chain, and cryptographic concentration
@@ -146,9 +146,9 @@ New observation properties are additive and backward-compatible. Existing contro
 
 ## Built-in controls
 
-525 controls across 44 domains:
+611 controls across 44 domains:
 
-### AWS S3 (78 controls)
+### AWS S3 (81 controls)
 
 | Category | Count | What they detect |
 |----------|:---:|-----------------|
@@ -168,11 +168,11 @@ New observation properties are additive and backward-compatible. Existing contro
 | `artifacts` | 1 | VCS artifacts on public buckets |
 | `misc` | 4 | Incomplete data, completeness checks |
 
-### AWS IAM (68 controls)
+### AWS IAM (70 controls)
 
 Root account MFA and access keys, console user MFA, credential rotation, password policy, privilege escalation (self-modify, PassRole, AssumeRole), permissions boundaries, break-glass persistence, cross-environment access, inactive accounts. CIS AWS Benchmark aligned.
 
-### AWS OpenSearch (12 controls)
+### AWS OpenSearch (13 controls)
 
 Authentication enforcement, VPC deployment, fine-grained access control, encryption at rest and node-to-node, HTTPS, Kibana exposure, access policy wildcards, audit logging, snapshot encryption. Prevents the Darkbeam (3.8B records), Wyze, and Microsoft Elasticsearch breach patterns.
 

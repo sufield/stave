@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.DELETEPROT.001
+name: RDS Instances Must Have Deletion Protection Enabled
+description: >
+  RDS instances must have deletion protection enabled to prevent
+  accidental or malicious database destruction. Without it,
+  ransomware actors or misconfigured automation can permanently
+  destroy production databases with a single API call.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "CP-9"
+  cis_aws: "2.3.3"
+scope_tags:
+  - aws
+  - rds
+type: unsafe_state
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    RDS instance deletion protection is not enabled.
+  action: >
+    aws rds modify-db-instance --db-instance-identifier <id>
+    --deletion-protection --apply-immediately
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: instance
+    - field: properties.database.deletion_protection
+      op: eq
+      value: false

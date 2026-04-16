@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.FARGATE.VERSION.001
+name: ECS Fargate Tasks Must Use Latest Platform Version
+description: >
+  ECS Fargate tasks must use the latest platform version. Fargate
+  platform versions determine the runtime environment including the
+  kernel version, container runtime, and networking stack. Older platform
+  versions do not receive security patches — AWS applies fixes only to
+  the latest platform version. A task pinned to an older platform version
+  runs on an environment with known unpatched kernel and runtime
+  vulnerabilities. Unlike EC2 where operators can patch independently,
+  Fargate platform versions are AWS-managed and the only remediation is
+  upgrading to the latest version. Tasks using LATEST resolve to the
+  current platform version automatically but tasks pinned to specific
+  versions accumulate security debt silently.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-2"
+scope_tags:
+  - aws
+  - ecs
+type: unsafe_state
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    An ECS Fargate task is running on an outdated platform version that
+    no longer receives security patches from AWS. The underlying runtime
+    environment has known unpatched vulnerabilities.
+  action: >
+    Update the task definition to use the latest Fargate platform
+    version. Set the platform version to LATEST in the ECS service or
+    task definition. For services, update the service to force a new
+    deployment with the latest platform version. Verify workload
+    compatibility with the new platform version in a staging environment
+    before updating production services.
+unsafe_predicate:
+  all:
+    - field: properties.ecs.fargate_platform_outdated
+      op: eq
+      value: true

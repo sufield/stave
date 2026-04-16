@@ -1,0 +1,36 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.SG.DESCRIBE.RESTRICT.001
+name: ec2:Describe* Must Be Restricted to Administrative Roles
+description: >
+  ec2:Describe* permissions must be restricted to administrative roles.
+  Unrestricted ec2:Describe* access exposes the full network topology
+  including VPCs, subnets, security groups, route tables, and network
+  interfaces. Attackers use this information to map the network
+  architecture, identify reachable instances, and plan lateral movement
+  paths.
+domain: exposure
+severity: low
+compliance:
+  nist_800_53_r5: "AC-6"
+  mitre_attack: "T1580"
+scope_tags:
+  - aws
+  - ec2
+type: unsafe_state
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    IAM policy grants broad ec2:Describe* permissions. The full
+    network topology including VPCs, subnets, security groups, and
+    route tables is exposed for reconnaissance.
+  action: >
+    Restrict ec2:Describe* to administrative roles only. Replace
+    wildcard ec2:Describe* with the specific describe actions needed
+    by the workload. Apply resource-level conditions or tag-based
+    access control to limit enumeration scope.
+unsafe_predicate:
+  all:
+    - field: properties.iam.has_broad_ec2_describe
+      op: eq
+      value: true

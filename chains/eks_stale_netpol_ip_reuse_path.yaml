@@ -11,3 +11,7 @@ controls:
   - CTL.K8S.JOB.TTL.001
 escalation_threshold: 2
 compound_severity: high
+preconditions:
+  - k8s_service_account_token
+postconditions:
+  - network_access_ec2

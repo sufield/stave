@@ -10,11 +10,13 @@ import (
 // AllAttackStages lists the MITRE ATT&CK-aligned stages that Stave recognizes.
 var AllAttackStages = []string{
 	"initial_access",
+	"execution",
 	"credential_access",
 	"persistence",
 	"privilege_escalation",
 	"lateral_movement",
 	"discovery",
+	"collection",
 	"exfiltration",
 	"detection_evasion",
 	"impact",
@@ -83,15 +85,17 @@ func AttackStagesFromFindings(findings []CompoundFinding) []string {
 // sort after all known stages.
 var killChainOrder = map[string]int{
 	"initial_access":       0,
-	"credential_access":    1,
-	"persistence":          2,
-	"privilege_escalation": 3,
-	"discovery":            4,
-	"lateral_movement":     5,
-	"exfiltration":         6,
-	"detection_evasion":    7,
-	"impact":               8,
-	"resilience":           9,
+	"execution":            1,
+	"credential_access":    2,
+	"persistence":          3,
+	"privilege_escalation": 4,
+	"discovery":            5,
+	"lateral_movement":     6,
+	"collection":           7,
+	"exfiltration":         8,
+	"detection_evasion":    9,
+	"impact":               10,
+	"resilience":           11,
 }
 
 // SortStagesByKillChain returns a copy of stages sorted by kill chain

@@ -1,0 +1,43 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.EVENTS.001
+name: RDS Must Have Event Subscriptions for Critical Events
+description: >
+  RDS instances must have event subscriptions configured for critical
+  event categories. RDS event subscriptions notify operators of
+  configuration changes, failovers, security group modifications, and
+  parameter group changes. Without event subscriptions, critical changes
+  to database instances go undetected — an attacker who modifies security
+  groups, disables encryption, or changes authentication settings
+  generates no alert. RDS events are the primary detection mechanism for
+  unauthorized database configuration changes. Event subscriptions are
+  not enabled by default and must be explicitly created for each event
+  category. The absence of event subscriptions creates a detection gap
+  where database-level security changes occur without any notification to
+  the security team.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-12"
+scope_tags:
+  - aws
+  - rds
+type: unsafe_state
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    An RDS instance does not have event subscriptions configured for
+    critical event categories. Configuration changes, security group
+    modifications, and failover events are not generating alerts.
+  action: >
+    Create RDS event subscriptions for critical event categories
+    including configuration change, failover, failure, maintenance, and
+    security group. Subscribe to an SNS topic that routes to the security
+    monitoring pipeline. At minimum, create subscriptions for the
+    db-instance source type with the configuration change and security
+    categories enabled.
+unsafe_predicate:
+  all:
+    - field: properties.database.has_critical_event_subscription
+      op: eq
+      value: false

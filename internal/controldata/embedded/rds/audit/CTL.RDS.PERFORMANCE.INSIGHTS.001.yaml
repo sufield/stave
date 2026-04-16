@@ -1,0 +1,52 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.PERFORMANCE.INSIGHTS.001
+name: RDS Instances Must Have Performance Insights Enabled with KMS Encryption
+description: >
+  Performance Insights captures database query patterns and wait events.
+  When encrypted with a customer-managed KMS key, this data is protected
+  and provides an additional audit source for database activity. Without
+  Performance Insights, slow or anomalous queries such as bulk data
+  extraction may not be visible in standard database logs.
+domain: audit
+severity: low
+compliance:
+  nist_800_53_r5: "AU-12"
+  aws_security_hub: "RDS.17"
+  mitre_attack: "TA0005"
+scope_tags:
+  - aws
+  - rds
+type: unsafe_state
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    RDS instance does not have Performance Insights enabled or is
+    not using a customer-managed KMS key for encryption.
+  action: >
+    aws rds modify-db-instance --db-instance-identifier <id>
+    --enable-performance-insights
+    --performance-insights-kms-key-id <key-arn>
+    --performance-insights-retention-period 731 --apply-immediately
+  example: |
+    {
+      "database": {
+        "kind": "rds_instance",
+        "performance_insights": {
+          "enabled": true,
+          "kms_encrypted": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_instance
+    - any:
+        - field: properties.database.performance_insights.enabled
+          op: eq
+          value: false
+        - field: properties.database.performance_insights.kms_encrypted
+          op: eq
+          value: false

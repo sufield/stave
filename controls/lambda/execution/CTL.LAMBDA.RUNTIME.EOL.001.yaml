@@ -1,0 +1,48 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.RUNTIME.EOL.001
+name: Lambda Functions Must Not Use End-of-Life Runtimes
+description: >
+  Lambda functions using end-of-life runtimes do not receive security
+  patches from AWS. Known vulnerabilities in the runtime environment
+  can be exploited to achieve code execution, escape the function
+  sandbox, or access credentials. AWS deprecates runtimes on a
+  published schedule — functions on deprecated runtimes cannot be
+  updated but continue to run, creating a growing attack surface.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SI-2"
+  mitre_attack: "T1203"
+  aws_security_hub: "Lambda.2"
+scope_tags:
+  - aws
+  - lambda
+type: unsafe_state
+params:
+  attack_stage: execution
+remediation:
+  description: >
+    Lambda function uses an end-of-life runtime that no longer
+    receives security patches from AWS.
+  action: >
+    Migrate the function to a supported runtime version. Check the
+    AWS Lambda runtimes page for current supported versions. Test
+    the function with the new runtime in a non-production environment
+    before updating production.
+  example: |
+    {
+      "compute": {
+        "kind": "function",
+        "runtime": {
+          "eol": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
+    - field: properties.compute.runtime.eol
+      op: eq
+      value: true

@@ -1,0 +1,34 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.ENDPOINT.S3.001
+name: VPCs Must Have an S3 Gateway Endpoint
+description: >
+  VPCs must have an S3 VPC gateway endpoint to route S3 traffic
+  privately through the AWS network. Without it, S3 access
+  traverses the public internet, enabling monitoring and
+  interception of data transfers.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7"
+  cis_aws: "4.13"
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    VPC does not have an S3 gateway endpoint configured.
+  action: >
+    aws ec2 create-vpc-endpoint --vpc-id <vpc-id>
+    --service-name com.amazonaws.<region>.s3
+    --route-table-ids <route-table-id>
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: vpc
+    - field: properties.network.has_s3_endpoint
+      op: eq
+      value: false

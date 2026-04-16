@@ -11,3 +11,8 @@ controls:
   - CTL.VPC.ENV.ISOLATION.001
 escalation_threshold: 2
 compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - network_access_ec2
+  - network_access_vpc

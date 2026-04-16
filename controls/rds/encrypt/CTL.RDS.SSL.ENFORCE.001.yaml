@@ -1,0 +1,47 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.SSL.ENFORCE.001
+name: RDS Instances Must Enforce SSL/TLS for All Connections
+description: >
+  RDS connections without SSL/TLS transmit database credentials and
+  query results in plaintext over the network. In a VPC, any compromised
+  instance with network access can capture database passwords and
+  sensitive data via passive network monitoring. SSL enforcement is
+  configured via parameter group (require_secure_transport for MySQL,
+  rds.force_ssl for PostgreSQL/SQL Server).
+domain: encryption
+severity: high
+compliance:
+  nist_800_53_r5: "SC-8"
+  hipaa: "164.312(e)(2)(ii)"
+  aws_security_hub: "RDS.25"
+  mitre_attack: "TA0006"
+scope_tags:
+  - aws
+  - rds
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    RDS instance does not enforce SSL/TLS. Database credentials and
+    query results may be transmitted in plaintext.
+  action: >
+    Set the appropriate SSL parameter in the parameter group:
+    MySQL: require_secure_transport=ON.
+    PostgreSQL: rds.force_ssl=1.
+    SQL Server: rds.force_ssl=1.
+  example: |
+    {
+      "database": {
+        "kind": "rds_instance",
+        "ssl_enforcement_enabled": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_instance
+    - field: properties.database.ssl_enforcement_enabled
+      op: eq
+      value: false

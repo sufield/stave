@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.DETAILED.MONITORING.001
+name: Production EC2 Instances Must Have Detailed Monitoring Enabled
+description: >
+  Basic EC2 monitoring provides metrics at 5-minute intervals.
+  Detailed monitoring provides 1-minute intervals — critical for
+  detecting short-duration attacks (CPU spike from crypto-mining,
+  burst network traffic during exfiltration). Without detailed
+  monitoring, an attacker can exfiltrate data in a short burst
+  that is averaged away in 5-minute metrics.
+domain: audit
+severity: low
+compliance:
+  nist_800_53_r5: "AU-12"
+  aws_security_hub: "EC2.7"
+scope_tags:
+  - aws
+  - ec2
+type: unsafe_state
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    EC2 instance does not have detailed monitoring enabled. Metrics
+    are reported at 5-minute intervals, insufficient for detecting
+    short-duration attacks.
+  action: >
+    Enable detailed monitoring:
+    aws ec2 monitor-instances --instance-ids <id>
+  example: |
+    {
+      "compute": {
+        "kind": "instance",
+        "monitoring": {
+          "detailed_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: instance
+    - field: properties.compute.monitoring.detailed_enabled
+      op: eq
+      value: false

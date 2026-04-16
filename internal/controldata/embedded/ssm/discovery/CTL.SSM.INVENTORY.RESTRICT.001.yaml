@@ -1,0 +1,36 @@
+dsl_version: ctrl.v1
+id: CTL.SSM.INVENTORY.RESTRICT.001
+name: SSM Inventory Access Must Be Restricted
+description: >
+  SSM inventory data must not be publicly shared or broadly accessible.
+  SSM inventory contains detailed information about managed instances
+  including installed software, running services, network configuration,
+  and Windows registry data. Attackers use this information to identify
+  vulnerable software versions, exposed services, and network paths for
+  exploitation planning.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-3"
+  mitre_attack: "T1592"
+scope_tags:
+  - aws
+  - ssm
+type: unsafe_state
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    SSM inventory data is publicly shared or broadly accessible.
+    Installed software, running services, and network configuration
+    details are exposed for reconnaissance targeting.
+  action: >
+    Remove public sharing from SSM inventory resource data syncs.
+    Restrict ssm:GetInventory and ssm:GetInventorySummary to
+    administrative roles only. Review and scope down any resource
+    data sync configurations that share inventory across accounts.
+unsafe_predicate:
+  all:
+    - field: properties.ssm.inventory_publicly_shared
+      op: eq
+      value: true

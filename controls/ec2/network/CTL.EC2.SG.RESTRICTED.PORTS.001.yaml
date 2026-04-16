@@ -1,0 +1,49 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.SG.RESTRICTED.PORTS.001
+name: Security Groups Must Not Allow Unrestricted Access on High-Risk Ports
+description: >
+  Security groups must not allow unrestricted inbound access on
+  high-risk ports: RDP (3389), Telnet (23), FTP (20/21), VNC (5900),
+  database ports (3306/5432/1433/27017), Redis (6379), and
+  Memcached (11211). Each of these has been the source of high-profile
+  breaches when accidentally exposed to 0.0.0.0/0.
+domain: network
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  cis_aws_v3.0: "4.1"
+  mitre_attack: "TA0001"
+  aws_security_hub: "EC2.14"
+scope_tags:
+  - aws
+  - ec2
+type: unsafe_state
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    Security group allows unrestricted inbound access on high-risk
+    ports from 0.0.0.0/0.
+  action: >
+    Remove or restrict rules opening these ports to the internet.
+    Replace 0.0.0.0/0 with specific CIDR ranges (VPN exit IPs,
+    bastion host SG references, or corporate NAT IPs). For database
+    ports, use security group references. For RDP/VNC, use Systems
+    Manager Session Manager instead of direct port exposure.
+  example: |
+    {
+      "compute": {
+        "kind": "security_group",
+        "inbound_rules": {
+          "high_risk_ports_unrestricted": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: security_group
+    - field: properties.compute.inbound_rules.high_risk_ports_unrestricted
+      op: eq
+      value: true

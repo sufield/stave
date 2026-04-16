@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.S3.CLOUDTRAIL.PUBLIC.001
+name: S3 Bucket Storing CloudTrail Logs Must Not Be Public
+description: >
+  The S3 bucket storing CloudTrail logs must not be publicly
+  accessible. A public CloudTrail bucket exposes the complete
+  API activity log and allows log tampering.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "AU-9"
+  cis_aws: "3.3"
+  mitre_attack: "T1562.008"
+scope_tags:
+  - aws
+  - s3
+  - cloudtrail
+type: unsafe_state
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    CloudTrail S3 bucket is publicly accessible.
+  action: >
+    aws s3api put-public-access-block --bucket <cloudtrail-bucket>
+    --public-access-block-configuration
+    "BlockPublicAcls=true,IgnorePublicAcls=true,
+    BlockPublicPolicy=true,RestrictPublicBuckets=true"
+unsafe_predicate:
+  all:
+    - field: properties.trail.s3_bucket_public
+      op: eq
+      value: true

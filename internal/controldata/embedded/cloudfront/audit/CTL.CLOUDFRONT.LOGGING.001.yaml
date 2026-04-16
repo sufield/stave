@@ -1,0 +1,48 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.LOGGING.001
+name: CloudFront Distributions Must Have Access Logging Enabled
+description: >
+  CloudFront access logs record every request served by the
+  distribution — viewer IP, request URI, response code, bytes
+  transferred, and cache hit/miss status. Without access logs, there
+  is no record of attempted exploitation, data exfiltration via large
+  response payloads, reconnaissance scanning, or suspicious geographic
+  access patterns. A distribution without logging is a blind spot in
+  the organization's visibility.
+domain: audit
+severity: high
+compliance:
+  nist_800_53_r5: "AU-12"
+  aws_security_hub: "CloudFront.5"
+  mitre_attack: "TA0005"
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    CloudFront distribution does not have access logging enabled.
+    Requests are not recorded.
+  action: >
+    Enable access logging in the distribution configuration,
+    specifying an S3 bucket as destination. The S3 bucket must
+    grant CloudFront write access via bucket ACL or bucket policy.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "logging": {
+          "enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.logging.enabled
+      op: eq
+      value: false

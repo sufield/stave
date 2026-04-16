@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.SNAPSHOT.ENCRYPT.001
+name: RDS Automated Snapshots Must Be Encrypted
+description: >
+  Unencrypted RDS snapshots can be copied to any AWS account and
+  restored without requiring access to a KMS key. Snapshot encryption
+  ensures that even if a snapshot is shared, it cannot be restored
+  without the KMS key. RDS snapshot encryption follows the source
+  instance's encryption setting — instances must be encrypted at
+  creation.
+domain: encryption
+severity: high
+compliance:
+  nist_800_53_r5: "SC-28"
+  hipaa: "164.312(a)(2)(iv)"
+  aws_security_hub: "RDS.4"
+  mitre_attack: "TA0010"
+scope_tags:
+  - aws
+  - rds
+type: unsafe_state
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    RDS snapshot is not encrypted. The snapshot can be copied and
+    restored by any account without a KMS key.
+  action: >
+    Create an encrypted copy of the snapshot, then restore a new
+    instance from the encrypted snapshot. Migrate the application
+    to the new encrypted instance.
+  example: |
+    {
+      "database": {
+        "kind": "rds_snapshot",
+        "encrypted": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_snapshot
+    - field: properties.database.encrypted
+      op: eq
+      value: false

@@ -10,3 +10,8 @@ controls:
   - CTL.KMS.ROTATION.001
 escalation_threshold: 2
 compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - rds_data_access
+  - s3_data_access

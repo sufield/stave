@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.SSM.PARAMETER.COLLECT.001
+name: SSM Parameter Store Must Restrict Bulk Parameter Listing
+description: >
+  SSM Parameter Store holds database passwords, API keys,
+  certificates, and other secrets. ssm:GetParametersByPath allows bulk
+  retrieval of all parameters under a path prefix in a single API call
+  — collecting all secrets at once. ssm:DescribeParameters lists all
+  parameter names and metadata — enabling an attacker to map all stored
+  secrets before extracting them. These permissions should be scoped to
+  specific parameter paths needed by each application, not granted
+  broadly.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-6"
+  mitre_attack: "T1552"
+scope_tags:
+  - aws
+  - ssm
+type: unsafe_state
+params:
+  attack_stage: collection
+remediation:
+  description: >
+    IAM policy grants broad ssm:GetParametersByPath or
+    ssm:DescribeParameters on all parameters. Bulk secret collection
+    is possible.
+  action: >
+    Replace ssm:GetParametersByPath with resource-scoped
+    ssm:GetParameter grants on specific parameter ARNs. Restrict
+    ssm:DescribeParameters to administrative roles.
+  example: |
+    {
+      "ssm": {
+        "parameter": {
+          "bulk_listing_restricted": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ssm.parameter.bulk_listing_restricted
+      op: eq
+      value: false

@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.SNAPSHOT.PUBLIC.001
+name: EBS Snapshots Must Not Be Publicly Restorable
+description: >
+  A public EBS snapshot can be copied to any AWS account and mounted
+  as a volume — exposing all data on the volume including OS files,
+  application data, database files, and credentials stored on disk.
+  Unlike S3, public snapshots do not require knowing a URL or bucket
+  name — they appear in public snapshot searches.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-3"
+  mitre_attack: "T1537"
+  aws_security_hub: "EC2.32"
+scope_tags:
+  - aws
+  - ec2
+type: unsafe_state
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    EBS snapshot is publicly restorable. Any AWS account can copy
+    and mount the snapshot to access all data.
+  action: >
+    Remove public access from the snapshot:
+    aws ec2 modify-snapshot-attribute --snapshot-id <id>
+    --attribute createVolumePermission --operation-type remove
+    --group-names all.
+    Use an SCP to prevent future public snapshots.
+  example: |
+    {
+      "compute": {
+        "kind": "ebs_snapshot",
+        "is_public": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: ebs_snapshot
+    - field: properties.compute.is_public
+      op: eq
+      value: true

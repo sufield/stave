@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.FEDERATION.001
+name: IAM Console Users Should Use Identity Federation
+description: >
+  IAM users with console access should authenticate through identity
+  federation rather than IAM-native passwords. Federated authentication
+  centralizes identity management in the organization's identity provider
+  and enforces consistent MFA, password policies, and session controls.
+  IAM-native console users maintain a separate credential that bypasses
+  the organization's identity governance — password resets, MFA
+  enrollment, and access reviews must be managed independently in each
+  AWS account. When console users authenticate directly through IAM,
+  credential lifecycle management fragments across accounts and
+  centralized access revocation requires visiting every account
+  individually. Identity federation eliminates the IAM password as an
+  attack surface and ensures that disabling a user in the identity
+  provider immediately revokes AWS console access.
+domain: exposure
+severity: low
+compliance:
+  nist_800_53_r5: "IA-2"
+  cis_aws: "1.21"
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    IAM users have console access with IAM-native passwords instead of
+    authenticating through identity federation. Credential management is
+    fragmented and centralized access revocation is not possible.
+  action: >
+    Configure identity federation using AWS IAM Identity Center or a
+    direct SAML/OIDC integration with the organization's identity
+    provider. Migrate console users to federated access by creating
+    corresponding identities in the identity provider. After verifying
+    federated access works, remove the IAM console passwords from the
+    migrated users. Retain IAM-native access only for break-glass
+    emergency accounts.
+unsafe_predicate:
+  all:
+    - field: properties.iam.federation_recommended_but_missing
+      op: eq
+      value: true

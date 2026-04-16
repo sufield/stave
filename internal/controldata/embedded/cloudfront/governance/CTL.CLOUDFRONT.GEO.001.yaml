@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.GEO.001
+name: CloudFront Distributions Requiring Geo Restriction Must Configure It
+description: >
+  CloudFront distributions that are required to enforce geographic
+  restrictions must have geo restriction configured. Geo restriction
+  limits content delivery to approved countries and blocks requests from
+  sanctioned or high-risk regions. When geo restriction is required by
+  compliance policy but not configured on the distribution, content is
+  served globally without geographic controls. This creates regulatory
+  exposure for organizations subject to export controls, data
+  sovereignty requirements, or sanctions compliance. CloudFront geo
+  restriction operates at the edge location level and is the primary
+  mechanism for enforcing geographic access boundaries on CDN-delivered
+  content.
+domain: exposure
+severity: low
+compliance:
+  nist_800_53_r5: "AC-3"
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    A CloudFront distribution requires geo restriction but does not have
+    it configured. Content is being served globally without geographic
+    access controls.
+  action: >
+    Configure geo restriction on the CloudFront distribution. Use either
+    an allow list to restrict delivery to approved countries or a deny
+    list to block specific regions. Set the restriction type and country
+    codes in the distribution configuration. Verify the geo restriction
+    configuration aligns with the organization's compliance requirements
+    for geographic content delivery boundaries.
+unsafe_predicate:
+  all:
+    - field: properties.cdn.geo_restriction_required_but_missing
+      op: eq
+      value: true

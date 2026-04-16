@@ -1,0 +1,37 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.WAF.001
+name: CloudFront Distributions Must Have a WAF Web ACL Associated
+description: >
+  CloudFront distributions must have an AWS WAF Web ACL associated
+  for layer-7 protection against web application attacks. Without
+  WAF, requests reach the origin without inspection for SQL
+  injection, XSS, known exploit signatures, rate limiting, or
+  IP reputation blocking.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  hipaa: "164.312(e)(1)"
+  fedramp_moderate: "SI-3"
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    CloudFront distribution has no WAF Web ACL associated.
+    Requests reach the origin without layer-7 inspection.
+  action: >
+    Create a WAF Web ACL in us-east-1 (required for CloudFront)
+    with AWSManagedRulesCommonRuleSet and associate it with the
+    distribution via UpdateDistribution API.
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.waf_web_acl_id
+      op: missing
+      value: true

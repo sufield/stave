@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.EBS.DEFAULT.001
+name: EBS Default Encryption Must Be Enabled
+description: >
+  EBS default encryption must be enabled at the account level
+  to ensure all new EBS volumes are automatically encrypted.
+  Without it, volumes created by auto-scaling or manual
+  launches may be unencrypted.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-28"
+  cis_aws: "2.2.1"
+scope_tags:
+  - aws
+  - ec2
+type: unsafe_state
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    EBS default encryption is not enabled for this account/region.
+  action: >
+    aws ec2 enable-ebs-encryption-by-default --region <region>
+    Enable in all regions where EC2 workloads run.
+unsafe_predicate:
+  all:
+    - field: properties.compute.ebs_encryption_by_default
+      op: eq
+      value: false

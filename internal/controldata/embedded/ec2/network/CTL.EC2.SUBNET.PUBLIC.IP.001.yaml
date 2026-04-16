@@ -1,0 +1,43 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.SUBNET.PUBLIC.IP.001
+name: Subnets Must Not Automatically Assign Public IP Addresses
+description: >
+  Subnets configured to automatically assign public IP addresses make
+  every instance launched into them directly internet-reachable. An
+  operator who launches an instance without specifying a private IP
+  gets an unexpected public IP — creating unintended internet exposure.
+  Private subnets require explicit intent to assign a public IP.
+domain: network
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7"
+  aws_security_hub: "EC2.15"
+  mitre_attack: "TA0001"
+scope_tags:
+  - aws
+  - ec2
+type: unsafe_state
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    Subnet automatically assigns public IP addresses. Instances
+    launched here are internet-reachable by default.
+  action: >
+    aws ec2 modify-subnet-attribute --subnet-id <id>
+    --no-map-public-ip-on-launch
+  example: |
+    {
+      "network": {
+        "kind": "subnet",
+        "map_public_ip_on_launch": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: subnet
+    - field: properties.network.map_public_ip_on_launch
+      op: eq
+      value: true

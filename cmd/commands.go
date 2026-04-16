@@ -39,6 +39,7 @@ import (
 	"github.com/sufield/stave/cmd/inspect"
 	stavemap "github.com/sufield/stave/cmd/map"
 	stavenep "github.com/sufield/stave/cmd/nep"
+	stavepath "github.com/sufield/stave/cmd/path"
 	"github.com/sufield/stave/cmd/prune"
 	staverank "github.com/sufield/stave/cmd/rank"
 	stavescore "github.com/sufield/stave/cmd/score"
@@ -194,6 +195,9 @@ func WireCommands(app *App) {
 
 	// ATT&CK coverage map
 	root.AddCommand(stavemap.NewCmd())
+
+	// Attack path graph export
+	root.AddCommand(stavepath.NewCmd())
 
 	// Posture score
 	root.AddCommand(stavescore.NewCmd())

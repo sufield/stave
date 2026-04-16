@@ -1,0 +1,47 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.INVOKE.PUBLIC.001
+name: Lambda Functions Must Not Have Public Invoke Permissions
+description: >
+  Lambda resource-based policies must not grant lambda:InvokeFunction
+  to "*" (all principals). A publicly invokable Lambda function allows
+  any AWS account or unauthenticated caller to trigger execution —
+  the function runs with its full IAM execution role, providing code
+  execution and credential access to any internet user. This is
+  MITRE ATT&CK T1648 (Serverless Execution).
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-3"
+  mitre_attack: "T1648"
+  aws_security_hub: "Lambda.1"
+scope_tags:
+  - aws
+  - lambda
+type: unsafe_state
+params:
+  attack_stage: execution
+remediation:
+  description: >
+    Lambda function has a resource-based policy granting invoke
+    permission to all principals. Any caller can trigger execution.
+  action: >
+    Remove the public invoke permission from the function policy:
+    aws lambda remove-permission --function-name <name>
+    --statement-id <sid>
+  example: |
+    {
+      "compute": {
+        "kind": "function",
+        "policy": {
+          "public_invoke": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
+    - field: properties.compute.policy.public_invoke
+      op: eq
+      value: true

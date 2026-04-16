@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.SSM.SESSION.LOGGING.001
+name: SSM Session Manager Must Log All Sessions to S3 or CloudWatch
+description: >
+  SSM Session Manager provides interactive shell access to EC2
+  instances without SSH keys or open inbound ports. Without session
+  logging, all commands executed through Session Manager leave no
+  audit trail. An attacker who gains ssm:StartSession access can
+  execute arbitrary commands on managed instances without any record
+  of the session content — only the session start/stop is logged
+  in CloudTrail.
+domain: audit
+severity: high
+compliance:
+  nist_800_53_r5: "AU-12"
+  mitre_attack: "T1059.009"
+scope_tags:
+  - aws
+  - ec2
+  - ssm
+type: unsafe_state
+params:
+  attack_stage: execution
+remediation:
+  description: >
+    SSM Session Manager does not log session content. Commands
+    executed via Session Manager are not recorded.
+  action: >
+    Configure Session Manager preferences to log sessions to S3
+    or CloudWatch Logs. Enable encryption for session logs.
+    aws ssm update-document --name SSM-SessionManagerRunShell
+    --content file://session-prefs.json --document-version '$LATEST'
+  example: |
+    {
+      "ssm": {
+        "session_manager": {
+          "logging_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ssm.session_manager.logging_enabled
+      op: eq
+      value: false

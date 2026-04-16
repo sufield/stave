@@ -1,0 +1,44 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.LOG.EXPORT.001
+name: CloudWatch Log Group Exports Must Be Restricted to Authorized Buckets
+description: >
+  CloudWatch log group export tasks copy all log data to an S3 bucket.
+  An attacker with logs:CreateExportTask permission can export
+  CloudTrail logs, application logs, and security tool outputs to an
+  attacker-controlled bucket. This is particularly dangerous for
+  CloudTrail log groups — exporting them gives the attacker a complete
+  copy of all API activity before they cover their tracks.
+domain: audit
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-9"
+  mitre_attack: "T1530"
+scope_tags:
+  - aws
+  - cloudwatch
+type: unsafe_state
+params:
+  attack_stage: collection
+remediation:
+  description: >
+    CloudWatch log group export is not restricted. Logs can be exported
+    to any S3 bucket including cross-account destinations.
+  action: >
+    Restrict logs:CreateExportTask to approved S3 destinations via IAM
+    resource conditions. Monitor for export tasks to unexpected
+    destinations via CloudTrail alerting.
+  example: |
+    {
+      "monitoring": {
+        "kind": "log_group",
+        "export_restricted": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.kind
+      op: eq
+      value: log_group
+    - field: properties.monitoring.export_restricted
+      op: eq
+      value: false

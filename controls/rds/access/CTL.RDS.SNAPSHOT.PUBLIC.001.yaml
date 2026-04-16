@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.SNAPSHOT.PUBLIC.001
+name: RDS Snapshots Must Not Be Publicly Accessible
+description: >
+  RDS snapshots must not be publicly accessible. A public
+  snapshot can be copied to any AWS account and restored as
+  a full database, granting complete read access to all data.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-3"
+  mitre_attack: "T1537"
+scope_tags:
+  - aws
+  - rds
+type: unsafe_state
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    RDS snapshot is publicly accessible.
+  action: >
+    aws rds modify-db-snapshot-attribute --db-snapshot-identifier <id>
+    --attribute-name restore --values-to-remove all
+unsafe_predicate:
+  all:
+    - field: properties.database.snapshot.is_public
+      op: eq
+      value: true

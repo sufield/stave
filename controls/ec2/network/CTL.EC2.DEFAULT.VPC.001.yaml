@@ -1,0 +1,34 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.DEFAULT.VPC.001
+name: EC2 Instances Must Not Run in the Default VPC
+description: >
+  EC2 instances must not be deployed in the default VPC. The
+  default VPC has a flat network topology with no segmentation,
+  making lateral movement trivial after a single instance
+  compromise.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7"
+  cis_aws: "4.9"
+scope_tags:
+  - aws
+  - ec2
+type: unsafe_state
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: >
+    EC2 instance is running in the default VPC.
+  action: >
+    Migrate the instance to a purpose-built VPC with proper
+    subnet segmentation. Delete the default VPC from regions
+    where it is not needed.
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: instance
+    - field: properties.compute.network.is_default_vpc
+      op: eq
+      value: true

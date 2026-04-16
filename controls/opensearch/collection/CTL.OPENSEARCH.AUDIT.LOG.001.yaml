@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.AUDIT.LOG.001
+name: OpenSearch Domains Must Have Audit Logging Enabled
+description: >
+  OpenSearch audit logs record all requests to the domain including
+  queries, index operations, and authentication events. Without
+  audit logging, an attacker who accesses the domain can search,
+  read, and export data without any record of what was accessed.
+  OpenSearch domains often contain aggregated application logs,
+  business data, and user activity — making them high-value
+  collection targets.
+domain: audit
+severity: high
+compliance:
+  nist_800_53_r5: "AU-12"
+  mitre_attack: "T1213"
+  aws_security_hub: "Opensearch.6"
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+params:
+  attack_stage: collection
+remediation:
+  description: >
+    OpenSearch domain does not have audit logging enabled. Data
+    access and queries are not recorded.
+  action: >
+    Enable audit logs on the domain. Audit logs require fine-grained
+    access control to be enabled first. Update the domain configuration
+    to publish audit logs to CloudWatch Logs.
+  example: |
+    {
+      "search": {
+        "kind": "domain",
+        "audit_log_enabled": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search.kind
+      op: eq
+      value: domain
+    - field: properties.search.audit_log_enabled
+      op: eq
+      value: false

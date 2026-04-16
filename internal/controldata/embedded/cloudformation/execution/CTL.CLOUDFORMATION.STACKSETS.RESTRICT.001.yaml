@@ -1,0 +1,44 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFORMATION.STACKSETS.RESTRICT.001
+name: CloudFormation StackSets Must Require Administrator Approval
+description: >
+  CloudFormation StackSets deploy infrastructure across multiple AWS
+  accounts and regions simultaneously. An attacker with
+  cloudformation:CreateStackSet and cloudformation:CreateStackInstances
+  can execute arbitrary CloudFormation templates across an entire AWS
+  Organization — creating IAM roles, modifying security groups, or
+  deploying compute resources in hundreds of accounts. StackSet
+  operations should require explicit approval and be restricted to
+  trusted automation accounts or principals.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-3"
+  mitre_attack: "T1578"
+scope_tags:
+  - aws
+  - cloudformation
+type: unsafe_state
+params:
+  attack_stage: execution
+remediation:
+  description: >
+    CloudFormation StackSets do not require approval. Unrestricted
+    cross-account infrastructure deployment is possible.
+  action: >
+    Restrict cloudformation:CreateStackInstances to designated
+    automation principals via SCP. Deny unless aws:PrincipalArn
+    matches approved automation roles.
+  example: |
+    {
+      "cloudformation": {
+        "stacksets": {
+          "require_approval": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cloudformation.stacksets.require_approval
+      op: eq
+      value: false

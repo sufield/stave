@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.S3.INTELLIGENT.TIERING.EXPOSURE.001
+name: S3 Batch Operations Must Not Copy Objects to External Accounts
+description: >
+  S3 Batch Operations can copy millions of objects across buckets in a
+  single job. An attacker with s3:CreateJob permission can initiate a
+  batch copy of all objects in a bucket to an external account — staging
+  data for exfiltration without triggering per-object API calls. Batch
+  operations generate a single CloudTrail event rather than millions of
+  GetObject events — making large-scale data collection harder to detect
+  via API call volume monitoring.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  mitre_attack: "T1074"
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params:
+  attack_stage: collection
+remediation:
+  description: >
+    S3 batch operations are not restricted to same-account destinations.
+    Bulk cross-account object copy is possible.
+  action: >
+    Restrict s3:CreateJob to approved IAM roles. Add bucket policy
+    conditions preventing cross-account batch operations. Deny
+    s3:CreateJob when the destination account does not match the
+    source account.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "batch_ops_restricted": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.batch_ops_restricted
+      op: eq
+      value: false

@@ -1,0 +1,47 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.PARAM.GROUP.001
+name: RDS Instances Must Not Use the Default Parameter Group
+description: >
+  The default RDS parameter group uses AWS-managed settings that cannot
+  be audited for security-relevant configuration. A custom parameter
+  group enables enforcing SSL/TLS enforcement, audit logging parameters,
+  and password validation plugins. Without a custom parameter group,
+  these security settings cannot be verified or enforced via
+  configuration snapshots.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-6"
+  aws_security_hub: "RDS.19"
+  mitre_attack: "TA0005"
+scope_tags:
+  - aws
+  - rds
+type: unsafe_state
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    RDS instance uses the default parameter group. Security-relevant
+    database parameters cannot be audited or enforced.
+  action: >
+    Create a custom parameter group and attach it to the instance.
+    Then set security parameters such as require_secure_transport=ON
+    for MySQL or rds.force_ssl=1 for PostgreSQL.
+  example: |
+    {
+      "database": {
+        "kind": "rds_instance",
+        "parameter_group": {
+          "is_default": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_instance
+    - field: properties.database.parameter_group.is_default
+      op: eq
+      value: true

@@ -1,0 +1,49 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.INSTANCE.PROFILE.001
+name: EC2 Instances Must Use Instance Profiles Instead of Access Keys
+description: >
+  EC2 instances that need AWS API access should use IAM instance
+  profiles (role-based, temporary, automatically rotated credentials)
+  rather than embedding long-term access keys. Long-term access keys
+  stored on EC2 instances are frequently discovered via metadata
+  SSRF, file system access after compromise, or accidental git
+  commits. Instance profile credentials auto-rotate every hour via
+  the metadata service.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "IA-5"
+  cis_aws_v3.0: "1.18"
+  aws_security_hub: "EC2.29"
+scope_tags:
+  - aws
+  - ec2
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    EC2 instance does not have an IAM instance profile attached.
+    AWS API access may rely on long-term access keys.
+  action: >
+    Attach an IAM instance profile with minimum required permissions:
+    aws ec2 associate-iam-instance-profile --instance-id <id>
+    --iam-instance-profile Name=<profile-name>.
+    Remove any hard-coded access keys from the instance.
+  example: |
+    {
+      "compute": {
+        "kind": "instance",
+        "iam_instance_profile": {
+          "attached": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: instance
+    - field: properties.compute.iam_instance_profile.attached
+      op: eq
+      value: false

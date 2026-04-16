@@ -1,0 +1,18 @@
+id: defense_evasion_then_impact
+description: >
+  CloudTrail logging is stopped, GuardDuty threat detection is
+  disabled, and no AWS Backup plan protects critical resources.
+  An attacker can disable audit logging, operate undetected,
+  and destroy data knowing there are no backups to recover from.
+  This is the pre-ransomware configuration state.
+controls:
+  - CTL.CLOUDTRAIL.STOP.DETECT.001
+  - CTL.GUARDDUTY.ENABLED.001
+  - CTL.BACKUP.PLAN.EXISTS.001
+escalation_threshold: 3
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - audit_trail_destroyed
+  - data_destruction

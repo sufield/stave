@@ -41,6 +41,19 @@ Scope tags: `aws`, `eks`, `k8s`
 | `endpoint.private_access` | bool | Private API endpoint enabled |
 | `endpoint.public_unrestricted` | bool | public_access_cidrs includes 0.0.0.0/0 |
 
+### rbac
+
+| Property | Type | Description |
+|---|---|---|
+| `rbac.has_cluster_admin_sa_binding` | bool | ClusterRoleBinding grants cluster-admin to ServiceAccount or default |
+
+### nodegroup
+
+| Property | Type | Description |
+|---|---|---|
+| `nodegroup.ami_outdated` | bool | Node group AMI is not the latest release version |
+| `nodegroup.ami_type` | string | AMI type (AL2_x86_64, BOTTLEROCKET_x86_64, etc.) |
+
 ### addons
 
 | Property | Type | Description |

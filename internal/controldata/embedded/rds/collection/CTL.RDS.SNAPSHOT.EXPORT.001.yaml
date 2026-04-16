@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.SNAPSHOT.EXPORT.001
+name: RDS Snapshot Export to S3 Must Be Restricted to Authorized Roles
+description: >
+  RDS snapshot export converts a database snapshot to Apache Parquet
+  format and stores it in S3 — making the entire database contents
+  accessible as files. An attacker with rds:StartExportTask permission
+  can export any RDS snapshot to an attacker-controlled S3 bucket in
+  any account. This is a complete database exfiltration primitive: no
+  need to query row by row — export the snapshot and read all data as
+  Parquet files.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  mitre_attack: "T1005"
+scope_tags:
+  - aws
+  - rds
+type: unsafe_state
+params:
+  attack_stage: collection
+remediation:
+  description: >
+    RDS snapshot export is not restricted to authorized roles.
+    Snapshots can be exported to any S3 bucket.
+  action: >
+    Restrict rds:StartExportTask via IAM policy to approved roles.
+    Use a resource condition to limit S3 destination to approved
+    buckets. Monitor for export tasks via CloudTrail alerting.
+  example: |
+    {
+      "database": {
+        "kind": "rds_instance",
+        "export_restricted": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_instance
+    - field: properties.database.export_restricted
+      op: eq
+      value: false

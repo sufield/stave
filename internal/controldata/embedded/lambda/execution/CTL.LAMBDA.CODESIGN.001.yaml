@@ -1,0 +1,51 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.CODESIGN.001
+name: Lambda Functions Must Enforce Code Signing
+description: >
+  Lambda code signing ensures only code signed by an approved entity
+  can be deployed. Without code signing, an attacker with
+  lambda:UpdateFunctionCode permission can replace function code with
+  malicious payloads — exfiltrating environment variables, reading /tmp,
+  or establishing outbound connections. Code signing uses AWS Signer to
+  create cryptographic signatures. Lambda verifies signatures on
+  deployment and rejects unsigned or invalidly-signed packages. This
+  prevents supply chain attacks where a compromised CI/CD pipeline
+  pushes malicious Lambda code to production.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "SI-7"
+  mitre_attack: "T1059"
+  aws_security_hub: "Lambda.5"
+scope_tags:
+  - aws
+  - lambda
+type: unsafe_state
+params:
+  attack_stage: execution
+remediation:
+  description: >
+    Lambda function does not have a code signing configuration
+    attached. Unsigned code can be deployed and executed.
+  action: >
+    Create an AWS Signer signing profile, create a code signing config
+    referencing the profile, and attach it to the function:
+    aws lambda put-function-code-signing-config --function-name <n>
+    --code-signing-config-arn <config-arn>
+  example: |
+    {
+      "compute": {
+        "kind": "function",
+        "code_signing": {
+          "config_arn_set": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
+    - field: properties.compute.code_signing.config_arn_set
+      op: eq
+      value: false

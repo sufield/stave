@@ -1,0 +1,48 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.NITRO.ENCLAVE.001
+name: Sensitive Workloads Must Use Nitro Enclaves for Cryptographic Isolation
+description: >
+  Nitro Enclaves provide an isolated execution environment with no
+  persistent storage, no interactive access, and no external networking.
+  Cryptographic operations performed inside an enclave are protected
+  even if the parent instance is compromised. Applies only to instances
+  tagged requires-enclave=true.
+domain: encryption
+severity: low
+compliance:
+  nist_800_53_r5: "SC-28"
+  mitre_attack: "TA0006"
+scope_tags:
+  - aws
+  - ec2
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Instance tagged as requiring Nitro Enclave does not have enclave
+    support enabled. Cryptographic operations are not isolated.
+  action: >
+    aws ec2 modify-instance-attribute --instance-id <id>
+    --enclave-options Enabled=true.
+    Requires an enclave-capable instance type (m5, c5, r5 or newer).
+  example: |
+    {
+      "compute": {
+        "kind": "instance",
+        "enclave_options": {
+          "enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: instance
+    - field: properties.compute.tags.requires-enclave
+      op: eq
+      value: "true"
+    - field: properties.compute.enclave_options.enabled
+      op: eq
+      value: false

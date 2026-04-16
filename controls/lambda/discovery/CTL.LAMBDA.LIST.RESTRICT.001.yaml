@@ -1,0 +1,36 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.LIST.RESTRICT.001
+name: Lambda Function List Permissions Must Be Restricted
+description: >
+  Lambda function list permissions must be restricted to administrative
+  roles. Unrestricted lambda:ListFunctions access reveals the entire
+  serverless architecture including function names, runtimes, memory
+  allocations, environment variable keys, and VPC configurations.
+  Attackers use this to identify functions with overprivileged roles,
+  outdated runtimes, or exposed environment variables for targeting.
+domain: exposure
+severity: low
+compliance:
+  nist_800_53_r5: "AC-6"
+  mitre_attack: "T1526"
+scope_tags:
+  - aws
+  - lambda
+type: unsafe_state
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    IAM policy grants broad lambda:ListFunctions permissions. The
+    entire serverless architecture including function names, runtimes,
+    and configurations is exposed for reconnaissance.
+  action: >
+    Restrict lambda:ListFunctions and lambda:GetFunction to
+    administrative roles only. Apply tag-based access control to
+    limit function enumeration scope. Use AWS Organizations SCPs
+    to enforce lambda list restrictions across accounts.
+unsafe_predicate:
+  all:
+    - field: properties.iam.has_broad_lambda_list
+      op: eq
+      value: true

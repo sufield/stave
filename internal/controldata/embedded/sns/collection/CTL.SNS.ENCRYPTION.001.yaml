@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.SNS.ENCRYPTION.001
+name: SNS Topics Must Use Server-Side Encryption
+description: >
+  SNS topics without server-side encryption transmit and store
+  messages in plaintext. An attacker with sns:Subscribe access can
+  create a subscription to harvest all messages flowing through
+  the topic. Messages often contain application events, alerts,
+  and inter-service data that may include sensitive information.
+  SSE-KMS encryption ensures messages are encrypted at rest and
+  requires kms:Decrypt permission to read.
+domain: encryption
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-28"
+  mitre_attack: "T1530"
+  aws_security_hub: "SNS.1"
+scope_tags:
+  - aws
+  - sns
+type: unsafe_state
+params:
+  attack_stage: collection
+remediation:
+  description: >
+    SNS topic does not use server-side encryption. Messages are
+    stored and transmitted in plaintext.
+  action: >
+    Enable SSE-KMS on the topic:
+    aws sns set-topic-attributes --topic-arn <arn>
+    --attribute-name KmsMasterKeyId --attribute-value alias/aws/sns
+  example: |
+    {
+      "messaging": {
+        "kind": "sns_topic",
+        "encryption_enabled": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: sns_topic
+    - field: properties.messaging.encryption_enabled
+      op: eq
+      value: false

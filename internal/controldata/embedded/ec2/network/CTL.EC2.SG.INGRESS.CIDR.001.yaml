@@ -1,0 +1,47 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.SG.INGRESS.CIDR.001
+name: Security Group Inbound Rules Must Not Use Overly Broad CIDR Ranges
+description: >
+  Security groups with 0.0.0.0/0 inbound rules on ports other than
+  80/443 expose internal services to the internet. This includes
+  common misconfigurations like opening port 8080, 8443, or custom
+  application ports. HTTP (80) and HTTPS (443) are excluded as
+  legitimate internet-facing ports. All other ports exposed to
+  0.0.0.0/0 should use specific CIDR ranges.
+domain: network
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7"
+  aws_security_hub: "EC2.19"
+  mitre_attack: "TA0001"
+scope_tags:
+  - aws
+  - ec2
+type: unsafe_state
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    Security group allows 0.0.0.0/0 inbound on non-HTTP/S ports.
+    Internal services are exposed to the internet.
+  action: >
+    Replace 0.0.0.0/0 rules on non-HTTP/S ports with specific
+    corporate IP ranges, security group references, or VPN
+    gateway IPs.
+  example: |
+    {
+      "compute": {
+        "kind": "security_group",
+        "inbound_rules": {
+          "broad_cidr_non_http": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: security_group
+    - field: properties.compute.inbound_rules.broad_cidr_non_http
+      op: eq
+      value: true

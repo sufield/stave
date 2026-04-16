@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.SQS.ENCRYPTION.001
+name: SQS Queues Must Use Server-Side Encryption
+description: >
+  SQS queues without server-side encryption store messages in
+  plaintext. An attacker with sqs:ReceiveMessage access can read
+  message contents directly — messages often contain application
+  data, event payloads, and inter-service communication that may
+  include sensitive information. SSE-KMS encryption ensures messages
+  are encrypted at rest and requires kms:Decrypt permission to read.
+domain: encryption
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-28"
+  mitre_attack: "T1530"
+  aws_security_hub: "SQS.1"
+scope_tags:
+  - aws
+  - sqs
+type: unsafe_state
+params:
+  attack_stage: collection
+remediation:
+  description: >
+    SQS queue does not use server-side encryption. Messages are
+    stored in plaintext.
+  action: >
+    Enable SSE-KMS on the queue:
+    aws sqs set-queue-attributes --queue-url <url>
+    --attributes KmsMasterKeyId=alias/aws/sqs
+  example: |
+    {
+      "messaging": {
+        "kind": "sqs_queue",
+        "encryption_enabled": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: sqs_queue
+    - field: properties.messaging.encryption_enabled
+      op: eq
+      value: false

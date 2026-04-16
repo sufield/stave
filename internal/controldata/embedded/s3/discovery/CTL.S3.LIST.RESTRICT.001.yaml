@@ -1,0 +1,35 @@
+dsl_version: ctrl.v1
+id: CTL.S3.LIST.RESTRICT.001
+name: S3 Buckets Must Not Allow Unauthenticated Bucket Listing
+description: >
+  S3 buckets must not allow anonymous s3:ListBucket access.
+  Anonymous bucket listing exposes all object keys to unauthenticated
+  users, enabling reconnaissance of stored data. Attackers use object
+  key enumeration to identify sensitive files, backup archives, and
+  configuration artifacts before attempting data exfiltration.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  mitre_attack: "T1619"
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    Bucket allows anonymous s3:ListBucket access. Unauthenticated users
+    can enumerate all object keys, revealing the structure and contents
+    of the bucket for reconnaissance targeting.
+  action: >
+    Enable S3 Public Access Block with BlockPublicPolicy and
+    RestrictPublicBuckets set to true. Remove any bucket policy
+    statements granting s3:ListBucket to Principal "*". Remove any
+    ACL grants to the AllUsers group.
+unsafe_predicate:
+  all:
+    - field: properties.storage.access.allows_anonymous_list
+      op: eq
+      value: true

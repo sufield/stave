@@ -1,0 +1,34 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.STOP.DETECT.001
+name: CloudTrail Trails Must Be Actively Logging in All Regions
+description: >
+  CloudTrail must be actively logging and configured as a
+  multi-region trail. Stopping CloudTrail is the first action
+  attackers take after gaining access — it eliminates the audit
+  trail of subsequent actions.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "AU-12"
+  hipaa: "164.312(b)"
+  mitre_attack: "T1562.008"
+scope_tags:
+  - aws
+  - cloudtrail
+type: unsafe_state
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    CloudTrail is not actively logging or is not multi-region.
+  action: >
+    aws cloudtrail start-logging --name <trail-name>
+    aws cloudtrail update-trail --name <trail-name> --is-multi-region-trail
+unsafe_predicate:
+  any:
+    - field: properties.trail.is_logging
+      op: eq
+      value: false
+    - field: properties.trail.is_multi_region_trail
+      op: eq
+      value: false

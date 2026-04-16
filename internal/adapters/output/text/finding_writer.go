@@ -325,8 +325,8 @@ func (w *FindingWriter) writeAttackStageSummary(d *drawer, result *evaluation.Co
 	d.f("\nAttack Stage Summary")
 	d.f("\n--------------------\n")
 	for _, stage := range []string{
-		"initial_access", "credential_access", "persistence",
-		"exfiltration", "detection_evasion", "resilience",
+		"initial_access", "execution", "credential_access", "persistence",
+		"collection", "exfiltration", "detection_evasion", "resilience",
 	} {
 		status, ok := result.AttackStageSummary[stage]
 		if !ok {

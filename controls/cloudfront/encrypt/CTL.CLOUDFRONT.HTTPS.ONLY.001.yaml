@@ -1,0 +1,48 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.HTTPS.ONLY.001
+name: CloudFront Distributions Must Enforce HTTPS-Only Viewer Protocol
+description: >
+  CloudFront distributions that allow HTTP (allow-all viewer protocol
+  policy) serve content over plaintext connections. Session cookies,
+  authentication tokens, and sensitive data transmitted over HTTP are
+  visible to network-level attackers. Both the default cache behavior
+  and all custom cache behaviors must enforce HTTPS. A single
+  HTTP-permitting behavior is sufficient for session hijacking.
+domain: encryption
+severity: high
+compliance:
+  nist_800_53_r5: "SC-8"
+  aws_security_hub: "CloudFront.3"
+  mitre_attack: "TA0006"
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    CloudFront distribution allows HTTP viewer connections. Content
+    is served over plaintext — session tokens and sensitive data
+    are visible to network attackers.
+  action: >
+    Update viewer protocol policy to redirect-to-https or https-only
+    for all cache behaviors (default and custom) in the distribution
+    configuration.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "viewer_protocol": {
+          "allows_http": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.viewer_protocol.allows_http
+      op: eq
+      value: true

@@ -15,7 +15,7 @@ scope_tags:
   - kubelet
 type: unsafe_state
 params:
-  attack_stage: defense_evasion
+  attack_stage: detection_evasion
 remediation:
   description: >
     Kubelet hostname override is set, which may cause TLS certificate

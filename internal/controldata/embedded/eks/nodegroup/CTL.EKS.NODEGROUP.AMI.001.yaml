@@ -1,0 +1,43 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.NODEGROUP.AMI.001
+name: EKS Node Groups Must Use Current AMIs
+description: >
+  EKS managed node groups must use current Amazon Machine Images. AWS
+  publishes updated EKS-optimized AMIs that include kernel patches,
+  container runtime updates, and kubelet security fixes. Node groups
+  running outdated AMIs are missing security patches for the underlying
+  operating system and Kubernetes node components. Unlike the EKS control
+  plane which AWS manages, node group AMIs must be updated by the
+  operator. Outdated node AMIs create a persistent attack surface at the
+  node level — container escapes, kernel exploits, and privilege
+  escalation vulnerabilities in the kubelet or containerd remain
+  exploitable until the AMI is updated. The gap between the current AMI
+  and the running AMI directly correlates with the number of unpatched
+  CVEs on every node in the group.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-2"
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    An EKS managed node group is running an outdated AMI that is missing
+    security patches for the operating system, container runtime, or
+    kubelet.
+  action: >
+    Update the node group to use the latest EKS-optimized AMI. For
+    managed node groups, trigger an AMI update through the EKS console
+    or AWS CLI using update-nodegroup-version. Use the rolling update
+    strategy to replace nodes without downtime. Verify pod disruption
+    budgets are configured to protect workload availability during the
+    node rotation.
+unsafe_predicate:
+  all:
+    - field: properties.nodegroup.ami_outdated
+      op: eq
+      value: true

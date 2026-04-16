@@ -1,0 +1,44 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.NETPOL.ENFORCE.001
+name: EKS Clusters Must Have Network Policy Enforcement Enabled
+description: >
+  Without network policy enforcement, all pods in an EKS cluster can
+  communicate freely regardless of namespace or label. A compromised
+  pod can reach any other pod, service, or node in the cluster on any
+  port. NetworkPolicy objects exist but have no effect unless a network
+  policy controller enforces them. The VPC CNI network policy controller
+  (enableNetworkPolicy) enforces Kubernetes NetworkPolicy objects using
+  eBPF rules.
+domain: network
+severity: high
+compliance:
+  nist_800_53_r5: "AC-4"
+  mitre_attack: "TA0008"
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: >
+    EKS cluster does not enforce NetworkPolicy. All pod-to-pod
+    communication is unrestricted.
+  action: >
+    Enable network policy enforcement via VPC CNI:
+    aws eks update-addon --cluster-name <cluster> --addon-name vpc-cni
+    --configuration-values '{"enableNetworkPolicy": "true"}'.
+    Then apply default-deny NetworkPolicy in each namespace.
+  example: |
+    {
+      "addons": {
+        "vpc_cni": {
+          "enable_network_policy": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.addons.vpc_cni.enable_network_policy
+      op: eq
+      value: false

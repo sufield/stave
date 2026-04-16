@@ -1,0 +1,48 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.TLS.MINIMUM.001
+name: CloudFront Distributions Must Enforce TLS 1.2 Minimum Security Policy
+description: >
+  CloudFront distributions using TLSv1 or TLSv1.1 security policies
+  accept connections over deprecated TLS versions vulnerable to BEAST,
+  POODLE, and other protocol attacks. The security policy controls the
+  minimum TLS version and cipher suites accepted from viewers.
+  TLSv1.2_2021 or TLSv1.3_2022 are recommended — they exclude all
+  vulnerable cipher suites and protocol versions.
+domain: encryption
+severity: high
+compliance:
+  nist_800_53_r5: "SC-8"
+  aws_security_hub: "CloudFront.10"
+  hipaa: "164.312(e)(2)(ii)"
+  mitre_attack: "TA0006"
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    CloudFront distribution security policy permits TLS versions below
+    1.2. Vulnerable cipher suites are accepted from viewers.
+  action: >
+    Update the distribution viewer certificate configuration to use
+    TLSv1.2_2021 or TLSv1.3_2022 as the minimum protocol version.
+    Requires a custom SSL certificate from ACM in us-east-1.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "tls": {
+          "minimum_version_below_1_2": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.tls.minimum_version_below_1_2
+      op: eq
+      value: true

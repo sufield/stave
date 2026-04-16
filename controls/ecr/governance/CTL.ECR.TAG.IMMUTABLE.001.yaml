@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.ECR.TAG.IMMUTABLE.001
+name: ECR Repositories Must Enforce Image Tag Immutability
+description: >
+  ECR repositories must enforce image tag immutability to prevent
+  supply chain attacks where a compromised pipeline overwrites
+  a trusted image tag with malicious content.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-7"
+  cis_aws: "5.4"
+scope_tags:
+  - aws
+  - ecr
+type: unsafe_state
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    ECR repository allows mutable image tags.
+  action: >
+    aws ecr put-image-tag-mutability --repository-name <name>
+    --image-tag-mutability IMMUTABLE
+unsafe_predicate:
+  all:
+    - field: properties.container_registry.kind
+      op: eq
+      value: repository
+    - field: properties.container_registry.image_tag_mutability
+      op: ne
+      value: IMMUTABLE

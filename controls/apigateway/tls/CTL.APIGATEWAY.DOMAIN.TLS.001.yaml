@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.DOMAIN.TLS.001
+name: API Gateway Custom Domains Must Enforce TLS 1.2+
+description: >
+  API Gateway custom domain names must enforce a minimum TLS version of
+  1.2. TLS 1.0 and 1.1 have known protocol-level vulnerabilities
+  including BEAST, POODLE, and weak cipher suites that enable
+  man-in-the-middle attacks. When a custom domain allows TLS below 1.2,
+  an attacker on the network path can downgrade the connection and
+  intercept API credentials, session tokens, or request payloads in
+  transit. AWS API Gateway supports TLS 1.2 as the minimum security
+  policy. Custom domains configured with older TLS versions expose every
+  API behind that domain to protocol downgrade attacks regardless of the
+  application-layer security controls in place.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-8"
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    An API Gateway custom domain is configured to accept TLS connections
+    below version 1.2. Clients connecting with older TLS versions are
+    vulnerable to protocol downgrade and cipher suite attacks.
+  action: >
+    Update the custom domain security policy to TLS_1_2. In the API
+    Gateway console or via the AWS CLI, set the security policy on the
+    domain name to TLS_1_2. Verify that all API clients support TLS 1.2
+    before applying the change. Monitor CloudWatch access logs for
+    connection failures after the update to identify clients that need
+    upgrading.
+unsafe_predicate:
+  all:
+    - field: properties.apigateway.custom_domain_tls_below_12
+      op: eq
+      value: true

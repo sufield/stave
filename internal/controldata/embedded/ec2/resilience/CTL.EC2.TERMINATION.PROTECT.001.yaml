@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.TERMINATION.PROTECT.001
+name: Production EC2 Instances Must Have Termination Protection
+description: >
+  Production EC2 instances must have termination protection
+  enabled to prevent accidental or malicious instance
+  termination via API, console, or CLI.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "CP-10"
+  mitre_attack: "T1490"
+scope_tags:
+  - aws
+  - ec2
+type: unsafe_state
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    Production EC2 instance lacks termination protection.
+  action: >
+    aws ec2 modify-instance-attribute --instance-id <id>
+    --disable-api-termination
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: instance
+    - field: properties.compute.disable_api_termination
+      op: eq
+      value: false

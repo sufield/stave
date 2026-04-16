@@ -1,0 +1,51 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.SG.DEFAULT.RESTRICT.001
+name: Default Security Group Must Restrict All Inbound and Outbound Traffic
+description: >
+  The default security group in every VPC allows all inbound traffic
+  from other members of the same security group and all outbound
+  traffic. Any EC2 instance launched without an explicit security
+  group uses the default — inheriting this permissive posture.
+  Restricting the default to no rules means accidental use results
+  in a non-functional but safe instance.
+domain: network
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7"
+  cis_aws_v3.0: "4.4"
+  aws_security_hub: "EC2.2"
+scope_tags:
+  - aws
+  - ec2
+type: unsafe_state
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    Default security group has inbound or outbound rules. Instances
+    launched without an explicit SG inherit permissive access.
+  action: >
+    Remove all inbound and outbound rules from the default SG in
+    every VPC. Get the default SG ID:
+    aws ec2 describe-security-groups --filters
+    Name=group-name,Values=default Name=vpc-id,Values=<vpc-id>.
+    Revoke all ingress and egress rules.
+  example: |
+    {
+      "compute": {
+        "kind": "security_group",
+        "is_default": true,
+        "rules_empty": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: security_group
+    - field: properties.compute.is_default
+      op: eq
+      value: true
+    - field: properties.compute.rules_empty
+      op: eq
+      value: false

@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.DEFAULT.IGW.001
+name: Default VPC Must Not Have Internet Gateway Route
+description: >
+  The default VPC must not have an internet gateway route in its route
+  tables. AWS creates a default VPC in every region with a route table
+  that sends all internet-bound traffic through an attached internet
+  gateway. Resources launched into the default VPC without explicit
+  network configuration receive a public IP and are directly reachable
+  from the internet. The default VPC is frequently used for ad-hoc
+  testing and forgotten resources — any instance, Lambda VPC attachment,
+  or RDS instance placed in the default VPC inherits internet exposure
+  by default. Removing the internet gateway route from the default VPC
+  eliminates this accidental exposure path without affecting production
+  workloads which should be in purpose-built VPCs.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7"
+  cis_aws: "4.7"
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    The default VPC has a route table entry that routes traffic through
+    an internet gateway. Any resource launched into the default VPC is
+    potentially internet-accessible.
+  action: >
+    Remove the internet gateway route from the default VPC route table.
+    Detach and delete the internet gateway from the default VPC if no
+    resources require it. Alternatively, delete the default VPC entirely
+    if it is not in use. Verify no active resources depend on the default
+    VPC internet connectivity before removing the route.
+unsafe_predicate:
+  all:
+    - field: properties.network.is_default_vpc
+      op: eq
+      value: true
+    - field: properties.network.has_igw_route
+      op: eq
+      value: true

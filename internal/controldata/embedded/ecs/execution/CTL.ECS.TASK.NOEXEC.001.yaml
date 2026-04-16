@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.TASK.NOEXEC.001
+name: ECS Task Definitions Must Not Use Privileged Mode with Host Network
+description: >
+  ECS task definitions with both privileged mode and host networking
+  allow container escape to the host instance with full network access.
+  A compromised container with these settings can access the instance
+  metadata service, other containers' network traffic, and the host
+  filesystem — providing arbitrary code execution on the host. This
+  combination is equivalent to running untrusted code directly on
+  the EC2 instance.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-6"
+  mitre_attack: "T1610"
+scope_tags:
+  - aws
+  - ecs
+type: unsafe_state
+params:
+  attack_stage: execution
+remediation:
+  description: >
+    ECS task uses privileged mode with host networking. Container
+    has full access to the host instance.
+  action: >
+    Remove privileged mode from the container definition. Use
+    awsvpc network mode instead of host mode. If root capabilities
+    are required, use specific Linux capabilities instead of full
+    privileged mode.
+  example: |
+    {
+      "container": {
+        "kind": "ecs_task",
+        "privileged_host_network": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: ecs_task
+    - field: properties.container.privileged_host_network
+      op: eq
+      value: true

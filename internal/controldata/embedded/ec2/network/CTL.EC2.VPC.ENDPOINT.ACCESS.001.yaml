@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.VPC.ENDPOINT.ACCESS.001
+name: VPC Interface Endpoints Must Have Restrictive Endpoint Policies
+description: >
+  VPC interface endpoints without custom policies use the default
+  full-access policy — any principal in the VPC can use the endpoint
+  to reach any resource in the target service. A custom endpoint policy
+  restricts which principals and resources are accessible. For S3
+  endpoints, restricting access to specific buckets prevents data
+  exfiltration to attacker-controlled buckets via the endpoint.
+domain: network
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-4"
+  mitre_attack: "TA0010"
+scope_tags:
+  - aws
+  - ec2
+  - vpc
+type: unsafe_state
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    VPC interface endpoint uses the default full-access policy.
+    Any principal in the VPC can access any resource via the endpoint.
+  action: >
+    Apply a restrictive endpoint policy:
+    aws ec2 modify-vpc-endpoint --vpc-endpoint-id <id>
+    --policy-document file://endpoint-policy.json
+  example: |
+    {
+      "network": {
+        "kind": "vpc_endpoint",
+        "has_restrictive_policy": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: vpc_endpoint
+    - field: properties.network.has_restrictive_policy
+      op: eq
+      value: false

@@ -1,0 +1,47 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.CONTROL.PLANE.AUDIT.001
+name: EKS Cluster Must Have Audit Logs Enabled and Delivered to CloudWatch
+description: >
+  EKS audit logs record all Kubernetes API server requests — who called
+  which API, with what arguments, and the result. Without audit logs
+  delivered to CloudWatch, there is no record of kubectl exec sessions,
+  Secret reads and writes, RBAC policy modifications, or ServiceAccount
+  token creations. This control verifies audit log delivery to
+  CloudWatch — logs enabled but not delivered are useless for incident
+  response.
+domain: audit
+severity: high
+compliance:
+  nist_800_53_r5: "AU-2"
+  cis_eks: "2.1"
+  mitre_attack: "TA0005"
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    EKS audit logging is not enabled or not delivering to CloudWatch.
+    Kubernetes API activity is not recorded.
+  action: >
+    Enable audit logging:
+    aws eks update-cluster-config --name <cluster> --logging
+    '{"clusterLogging":[{"types":["audit"],"enabled":true}]}'.
+    Verify the log group exists in CloudWatch.
+  example: |
+    {
+      "logging": {
+        "audit_enabled": true,
+        "audit_delivering": true
+      }
+    }
+unsafe_predicate:
+  any:
+    - field: properties.logging.audit_enabled
+      op: eq
+      value: false
+    - field: properties.logging.audit_delivering
+      op: eq
+      value: false

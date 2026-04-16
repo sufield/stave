@@ -1,0 +1,48 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.USERDATA.CREDS.001
+name: EC2 Launch Configurations Must Not Embed Credentials in User Data
+description: >
+  EC2 user data scripts are executed at instance launch with root
+  privileges. User data is stored in plaintext and is accessible via
+  the metadata service to any process on the instance — including
+  attacker code via SSRF. Credentials embedded in user data (AWS
+  access keys, passwords, API tokens) are trivially extracted from
+  the metadata service at /latest/user-data, CloudFormation template
+  parameters, and EC2 instance configuration APIs. This pattern has
+  been the root cause of multiple credential exposure incidents.
+domain: identity
+severity: critical
+compliance:
+  nist_800_53_r5: "IA-5"
+  mitre_attack: "T1552.005"
+scope_tags:
+  - aws
+  - ec2
+type: unsafe_state
+params:
+  attack_stage: execution
+remediation:
+  description: >
+    EC2 launch template embeds credentials in user data. Secrets are
+    accessible via the instance metadata service.
+  action: >
+    Remove all credentials from user data scripts. Use IAM instance
+    profiles for AWS API access. Use Secrets Manager or Parameter Store
+    for other secrets, retrieved at runtime by the application.
+  example: |
+    {
+      "compute": {
+        "kind": "launch_template",
+        "user_data": {
+          "has_embedded_credentials": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: launch_template
+    - field: properties.compute.user_data.has_embedded_credentials
+      op: eq
+      value: true
