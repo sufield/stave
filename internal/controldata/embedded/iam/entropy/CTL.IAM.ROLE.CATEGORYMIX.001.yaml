@@ -57,3 +57,24 @@ unsafe_predicate:
     - field: properties.identity.has_incompatible_categories
       op: eq
       value: true
+tests:
+  - name: "role with clean categories passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::123:role/clean"
+      asset_type: iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          has_incompatible_categories: false
+  - name: "role with mixed categories fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::123:role/mixed"
+      asset_type: iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          has_incompatible_categories: true

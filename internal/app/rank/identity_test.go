@@ -83,7 +83,7 @@ func TestBuildIdentityRanking_ReachableResources(t *testing.T) {
 		},
 	}
 
-	ranking := BuildIdentityRanking(findings, nil, snapshots, 0)
+	ranking := BuildIdentityRanking(IdentityRankingConfig{Findings: findings, Snapshots: snapshots})
 
 	if ranking.IdentitiesEvaluated != 1 {
 		t.Fatalf("expected 1 identity, got %d", ranking.IdentitiesEvaluated)
@@ -134,7 +134,7 @@ func TestBuildIdentityRanking_DirectFindingsOnly(t *testing.T) {
 		},
 	}
 
-	ranking := BuildIdentityRanking(findings, nil, nil, 0)
+	ranking := BuildIdentityRanking(IdentityRankingConfig{Findings: findings})
 
 	if len(ranking.Entries) != 1 {
 		t.Fatalf("expected 1 entry, got %d", len(ranking.Entries))
@@ -186,7 +186,7 @@ func TestBuildIdentityRanking_SortOrder(t *testing.T) {
 		},
 	}
 
-	ranking := BuildIdentityRanking(findings, nil, nil, 0)
+	ranking := BuildIdentityRanking(IdentityRankingConfig{Findings: findings})
 
 	if len(ranking.Entries) != 2 {
 		t.Fatalf("expected 2 entries, got %d", len(ranking.Entries))
@@ -238,7 +238,7 @@ func TestBuildIdentityRanking_TopN(t *testing.T) {
 		},
 	}
 
-	ranking := BuildIdentityRanking(findings, nil, nil, 2)
+	ranking := BuildIdentityRanking(IdentityRankingConfig{Findings: findings, TopN: 2})
 
 	if len(ranking.Entries) != 2 {
 		t.Fatalf("expected 2 entries (topN=2), got %d", len(ranking.Entries))
@@ -246,7 +246,7 @@ func TestBuildIdentityRanking_TopN(t *testing.T) {
 }
 
 func TestBuildIdentityRanking_EmptyFindings(t *testing.T) {
-	ranking := BuildIdentityRanking(nil, nil, nil, 0)
+	ranking := BuildIdentityRanking(IdentityRankingConfig{})
 	if len(ranking.Entries) != 0 {
 		t.Errorf("expected 0 entries, got %d", len(ranking.Entries))
 	}
@@ -266,7 +266,7 @@ func TestBuildIdentityRanking_NonIdentityFindingsExcluded(t *testing.T) {
 		},
 	}
 
-	ranking := BuildIdentityRanking(findings, nil, nil, 0)
+	ranking := BuildIdentityRanking(IdentityRankingConfig{Findings: findings})
 
 	// S3 bucket is not an identity — should produce no entries.
 	if len(ranking.Entries) != 0 {

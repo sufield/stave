@@ -60,3 +60,26 @@ unsafe_predicate:
     - field: properties.identity.unused_service_ratio
       op: gt
       value: 0.20
+tests:
+  - name: "role with low drift passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::123:role/clean-role"
+      asset_type: iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          role_active_days: 180
+          unused_service_ratio: 0.10
+  - name: "role with high drift fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::123:role/drifted-role"
+      asset_type: iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          role_active_days: 365
+          unused_service_ratio: 0.45

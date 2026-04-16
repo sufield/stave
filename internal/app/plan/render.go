@@ -1,6 +1,7 @@
 package plan
 
 import (
+	"encoding/csv"
 	"fmt"
 	"io"
 	"sort"
@@ -182,4 +183,49 @@ func truncate(s string, n int) string {
 		return s
 	}
 	return s[:n-1] + "…"
+}
+
+// WriteCSV writes the plan as CSV — one row per finding, suitable for
+// bulk import into Jira, ServiceNow, GitHub Issues, or Linear.
+func WriteCSV(w io.Writer, p *Plan) error {
+	cw := csv.NewWriter(w)
+	header := []string{
+		"team", "control_id", "control_name", "severity", "asset_id",
+		"dwell_hours", "sla_deadline_hours", "sla_status",
+		"remediation_command", "assignee_contact",
+	}
+	if err := cw.Write(header); err != nil {
+		return err
+	}
+	for i := range p.Teams {
+		tp := &p.Teams[i]
+		for j := range tp.Findings {
+			f := &tp.Findings[j]
+			slaStatus := "within_sla"
+			if f.SLABreached {
+				slaStatus = "breached"
+			}
+			dlh := ""
+			if f.SLADeadlineHours != nil {
+				dlh = fmt.Sprintf("%.0f", *f.SLADeadlineHours)
+			}
+			row := []string{
+				tp.TeamName,
+				f.ControlID,
+				f.ControlName,
+				strings.ToUpper(f.Severity),
+				f.AssetID,
+				fmt.Sprintf("%.0f", f.DwellHours),
+				dlh,
+				slaStatus,
+				strings.TrimSpace(f.RemediationAction),
+				tp.Contact,
+			}
+			if err := cw.Write(row); err != nil {
+				return err
+			}
+		}
+	}
+	cw.Flush()
+	return cw.Error()
 }

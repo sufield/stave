@@ -62,43 +62,42 @@ var identityAssetTypes = map[kernel.AssetType]string{
 // assessment findings and snapshot data. Each identity is ranked by its
 // risk reduction potential — the fraction of total portfolio risk that
 // would be addressed by remediating this identity.
-func BuildIdentityRanking(
-	findings []remediation.Finding,
-	topExposures []risk.ExposureRank,
-	snapshots []asset.Snapshot,
-	topN int,
-) IdentityRanking {
-	if len(findings) == 0 {
+// IdentityRankingConfig holds parameters for BuildIdentityRanking.
+type IdentityRankingConfig struct {
+	Findings     []remediation.Finding
+	TopExposures []risk.ExposureRank
+	Snapshots    []asset.Snapshot
+	TopN         int
+}
+
+// BuildIdentityRanking orchestrates identity risk ranking in three phases:
+// index construction, entry building with transitive risk, and final ranking.
+func BuildIdentityRanking(cfg IdentityRankingConfig) IdentityRanking {
+	if len(cfg.Findings) == 0 {
 		return IdentityRanking{}
 	}
 
-	// Compute per-finding risk scores using the same formula as BuildRoadmap.
-	findingScores := computeFindingScores(findings, topExposures)
-	totalRisk := 0.0
-	for _, s := range findingScores {
-		totalRisk += s
-	}
+	findingScores := computeFindingScores(cfg.Findings, cfg.TopExposures)
+	index := buildIdentityIndex(cfg.Findings, cfg.Snapshots)
+	entries, totalRisk := buildIdentityEntries(cfg.Findings, findingScores, index, cfg.Snapshots)
+	return rankIdentities(entries, totalRisk, len(index), cfg.TopN)
+}
 
-	// Build finding lookup by asset ID.
-	findingsByAsset := make(map[string][]int) // asset_id → finding indices
-	for i := range findings {
-		aid := string(findings[i].AssetID)
-		findingsByAsset[aid] = append(findingsByAsset[aid], i)
-	}
+// identityInfo holds identity metadata during index construction.
+type identityInfo struct {
+	arn            string
+	assetType      string
+	identityType   string
+	privilegeLevel string
+}
 
-	// Build identity → reachable resources from snapshots.
-	reachMap := buildReachabilityMap(snapshots, findings)
-
-	// Identify all identities: from findings and from snapshots.
-	type identityInfo struct {
-		arn            string
-		assetType      string
-		identityType   string
-		privilegeLevel string
-	}
+// buildIdentityIndex collects all identities from findings and snapshots.
+func buildIdentityIndex(
+	findings []remediation.Finding,
+	snapshots []asset.Snapshot,
+) map[string]*identityInfo {
 	identities := make(map[string]*identityInfo)
 
-	// Identities from findings (IAM-type assets).
 	for i := range findings {
 		f := &findings[i]
 		if itype, ok := identityAssetTypes[f.AssetType]; ok {
@@ -113,7 +112,6 @@ func BuildIdentityRanking(
 		}
 	}
 
-	// Identities from snapshots.
 	for si := range snapshots {
 		snap := &snapshots[si]
 		for ai := range snap.Assets {
@@ -132,7 +130,30 @@ func BuildIdentityRanking(
 		}
 	}
 
-	// Build entries.
+	return identities
+}
+
+// buildIdentityEntries constructs risk entries for each identity,
+// including direct and transitive risk from reachable resources.
+func buildIdentityEntries(
+	findings []remediation.Finding,
+	findingScores []float64,
+	identities map[string]*identityInfo,
+	snapshots []asset.Snapshot,
+) ([]IdentityRiskEntry, float64) {
+	totalRisk := 0.0
+	for _, s := range findingScores {
+		totalRisk += s
+	}
+
+	findingsByAsset := make(map[string][]int)
+	for i := range findings {
+		aid := string(findings[i].AssetID)
+		findingsByAsset[aid] = append(findingsByAsset[aid], i)
+	}
+
+	reachMap := buildReachabilityMap(snapshots, findings)
+
 	entries := make([]IdentityRiskEntry, 0, len(identities))
 	for arn, info := range identities {
 		entry := IdentityRiskEntry{
@@ -141,7 +162,6 @@ func BuildIdentityRanking(
 			PrivilegeLevel: info.privilegeLevel,
 		}
 
-		// Direct findings on this identity.
 		var directScore float64
 		var directMaxSev policy.Severity
 		for _, idx := range findingsByAsset[arn] {
@@ -156,7 +176,6 @@ func BuildIdentityRanking(
 		}
 		entry.DirectSeverity = directMaxSev.String()
 
-		// Reachable resources and transitive findings.
 		var transitiveScore float64
 		var transitiveMaxSev policy.Severity
 		seenTransitive := make(map[string]bool)
@@ -194,7 +213,6 @@ func BuildIdentityRanking(
 			entry.RiskReductionPercent = (entry.RiskReductionScore / totalRisk) * 100
 		}
 
-		// Skip identities with zero risk contribution.
 		if entry.RiskReductionScore == 0 && len(entry.DirectFindingIDs) == 0 {
 			continue
 		}
@@ -202,7 +220,11 @@ func BuildIdentityRanking(
 		entries = append(entries, entry)
 	}
 
-	// Sort by risk reduction (descending).
+	return entries, totalRisk
+}
+
+// rankIdentities sorts entries by risk reduction and applies topN limit.
+func rankIdentities(entries []IdentityRiskEntry, totalRisk float64, identitiesEvaluated, topN int) IdentityRanking {
 	sort.Slice(entries, func(i, j int) bool {
 		if entries[i].RiskReductionScore != entries[j].RiskReductionScore {
 			return entries[i].RiskReductionScore > entries[j].RiskReductionScore
@@ -220,7 +242,7 @@ func BuildIdentityRanking(
 
 	return IdentityRanking{
 		TotalPortfolioRisk:  totalRisk,
-		IdentitiesEvaluated: len(identities),
+		IdentitiesEvaluated: identitiesEvaluated,
 		Entries:             entries,
 	}
 }

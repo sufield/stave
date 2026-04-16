@@ -355,12 +355,12 @@ func runIdentity(stdout io.Writer, opts *options, assessment *report.Assessment)
 		return fmt.Errorf("load snapshot: %w", err)
 	}
 
-	ranking := apprank.BuildIdentityRanking(
-		assessment.Findings,
-		assessment.TopExposures,
-		snapshots,
-		opts.TopN,
-	)
+	ranking := apprank.BuildIdentityRanking(apprank.IdentityRankingConfig{
+		Findings:     assessment.Findings,
+		TopExposures: assessment.TopExposures,
+		Snapshots:    snapshots,
+		TopN:         opts.TopN,
+	})
 
 	switch opts.Format {
 	case "json":

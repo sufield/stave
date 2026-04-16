@@ -153,6 +153,8 @@ func writeFormat(w io.Writer, p *plan.Plan, format string) error {
 	case "text":
 		plan.WriteText(w, p)
 		return nil
+	case "csv":
+		return plan.WriteCSV(w, p)
 	default:
 		plan.WriteMarkdown(w, p)
 		return nil

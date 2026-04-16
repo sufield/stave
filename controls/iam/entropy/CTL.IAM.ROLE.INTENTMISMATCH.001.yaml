@@ -59,3 +59,28 @@ unsafe_predicate:
     - field: properties.identity.intent_mismatch
       op: eq
       value: true
+tests:
+  - name: "role matching intent passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::123:role/correct"
+      asset_type: iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          intent_mismatch: false
+          tags:
+            role-type: data-reader
+  - name: "role with intent mismatch fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::123:role/mismatched"
+      asset_type: iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          intent_mismatch: true
+          tags:
+            role-type: read-only

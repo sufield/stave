@@ -18,7 +18,7 @@ func LookPathInEnv(file string) (string, error) {
 // lookPath is the testable core that searches for file across pathEnv directories.
 func lookPath(file, pathEnv, pathExt, goos string) (string, error) {
 	if pathEnv == "" {
-		return "", errors.New("PATH is empty")
+		return "", errors.New("path is empty")
 	}
 
 	candidates := candidateExecutableNames(file, goos, pathExt)

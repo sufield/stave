@@ -163,7 +163,10 @@ func (m *Manifest) AppendRun(run ManifestRun, expectedIntervalH float64) error {
 			return fmt.Errorf("parse CollectedAt for run %q: %w", run.RunID, thisErr)
 		}
 		gap := thisTime.Sub(lastTime).Hours()
-		threshold := expectedIntervalH * 1.5
+		// Gaps must exceed 150% of the expected interval to account for
+		// clock drift and minor scheduling delays in cron/systemd timers.
+		const gapThresholdMultiplier = 1.5
+		threshold := expectedIntervalH * gapThresholdMultiplier
 		if gap > threshold {
 			m.Gaps = append(m.Gaps, Gap{
 				ExpectedAfter:     lastRun.RunID,

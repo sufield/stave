@@ -23,7 +23,7 @@ func (l *FindingLoader) LoadFindingWithPlan(_ context.Context, inputPath, findin
 	path := filepath.Clean(inputPath)
 	readFn := l.ReadFile
 	if readFn == nil {
-		return nil, errors.New("ReadFile not configured on FindingLoader")
+		return nil, errors.New("readFile not configured on FindingLoader")
 	}
 	data, err := readFn(path)
 	if err != nil {

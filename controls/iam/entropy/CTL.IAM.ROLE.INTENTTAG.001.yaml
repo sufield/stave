@@ -47,3 +47,25 @@ unsafe_predicate:
       value: role
     - field: properties.identity.tags.role-type
       op: missing
+tests:
+  - name: "role with intent tag passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::123:role/tagged"
+      asset_type: iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          tags:
+            role-type: data-reader
+  - name: "role without intent tag fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::123:role/untagged"
+      asset_type: iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          tags: {}

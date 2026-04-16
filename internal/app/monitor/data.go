@@ -90,8 +90,11 @@ func Build(input BuildInput) *State {
 		trend = "REGRESSING"
 	}
 
+	// scoreSparklinePoints controls how many data points appear in the
+	// trend sparkline. 8 points gives weekly granularity in a 2-month window.
+	const scoreSparklinePoints = 8
 	var scoreHist []float64
-	step := max(1, len(assessments)/8)
+	step := max(1, len(assessments)/scoreSparklinePoints)
 	for i := 0; i < len(assessments); i += step {
 		s := computeScore(assessments[i], input.ChainDefs, input.MaxChainWeight)
 		scoreHist = append(scoreHist, s.Score)
