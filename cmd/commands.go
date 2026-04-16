@@ -39,6 +39,7 @@ import (
 	initalias "github.com/sufield/stave/cmd/initcmd/alias"
 	initconfig "github.com/sufield/stave/cmd/initcmd/config"
 	"github.com/sufield/stave/cmd/inspect"
+	staveinventory "github.com/sufield/stave/cmd/inventory"
 	stavemap "github.com/sufield/stave/cmd/map"
 	stavemonitor "github.com/sufield/stave/cmd/monitor"
 	stavenep "github.com/sufield/stave/cmd/nep"
@@ -48,6 +49,7 @@ import (
 	staverank "github.com/sufield/stave/cmd/rank"
 	stavereport "github.com/sufield/stave/cmd/report"
 	stavescore "github.com/sufield/stave/cmd/score"
+	stavesimulate "github.com/sufield/stave/cmd/simulate"
 	stavesla "github.com/sufield/stave/cmd/sla"
 	stavetelemetry "github.com/sufield/stave/cmd/telemetry"
 	stavetest "github.com/sufield/stave/cmd/test"
@@ -215,6 +217,12 @@ func WireCommands(app *App) {
 
 	// Terminal posture monitor
 	root.AddCommand(stavemonitor.NewCmd())
+
+	// Version inventory for CVE correlation
+	root.AddCommand(staveinventory.NewCmd())
+
+	// Remediation simulation
+	root.AddCommand(stavesimulate.NewCmd())
 
 	// Compliance gap analysis
 	root.AddCommand(stavecompare.NewCmd())

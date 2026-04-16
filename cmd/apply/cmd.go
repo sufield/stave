@@ -84,6 +84,7 @@ type Options struct {
 	ProfileFiles       []string
 	OverlayPath        string
 	ShowSuppressed     bool
+	AssetsManifest     string
 }
 
 // normalize cleans all user-supplied paths in one pass.
@@ -191,6 +192,7 @@ func (o *Options) bindApplySpecific(cmd *cobra.Command) {
 	f.StringSliceVar(&o.ProfileFiles, "profile-file", nil, "custom compliance profile YAML (can be repeated)")
 	f.StringVar(&o.OverlayPath, "overlay", "", "environment-specific severity overlay YAML")
 	f.BoolVar(&o.ShowSuppressed, "show-suppressed", false, "include overlay-suppressed controls in output")
+	f.StringVar(&o.AssetsManifest, "assets", "", "asset sensitivity classification manifest YAML")
 	f.StringVar(&o.SLAProfile, "sla-profile", "", "SLA policy profile (pci_dss_v4, hipaa, soc2, fedramp_moderate, default)")
 	f.StringVar(&o.SLAProfileFile, "sla-profile-file", "", "path to custom SLA policy YAML file")
 	f.StringVar(&o.SLAPolicy, "sla-policy", "warn", "SLA breach exit code behavior: warn, strict, critical-only")

@@ -28,6 +28,7 @@ Subcommands:
 	cmd.AddCommand(newTestCmd())
 	cmd.AddCommand(newLintCmd())
 	cmd.AddCommand(newScaffoldCmd())
+	cmd.AddCommand(newChainCmd())
 
 	return cmd
 }
