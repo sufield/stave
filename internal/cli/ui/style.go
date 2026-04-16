@@ -18,7 +18,9 @@ var (
 		"reset":   "\x1b[0m",
 	}
 
-	// map[uintptr]bool, keyed by *os.File pointer address.
+	// ttyCache uses sync.Map: keys (terminal file descriptors) are written
+	// once on first access and read frequently thereafter — the ideal
+	// sync.Map pattern for high read concurrency with stable key sets.
 	ttyCache sync.Map
 
 	detectTTY = func(f *os.File) bool {

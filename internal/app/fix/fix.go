@@ -61,7 +61,7 @@ func (s *Service) Fix(ctx context.Context, req Request) error {
 	path := filepath.Clean(req.InputPath)
 	readFn := s.ReadFile
 	if readFn == nil {
-		return errors.New("ReadFile not configured on fix.Service")
+		return errors.New("readFile not configured on fix.Service")
 	}
 	data, err := readFn(path)
 	if err != nil {

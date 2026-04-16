@@ -130,6 +130,8 @@ func extractPrincipalARNs(principal any) []string {
 		if awsEntry, ok := p[principalAWS]; ok {
 			target = awsEntry
 		}
+	default:
+		// Unrecognized principal type — target stays nil.
 	}
 	if target == nil {
 		return nil

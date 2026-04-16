@@ -26,7 +26,7 @@ type DaemonOpts struct {
 // RunDaemon runs the collection loop until SIGTERM or context cancellation.
 func RunDaemon(ctx context.Context, opts DaemonOpts) error {
 	if opts.RunOnce == nil {
-		return errors.New("RunOnce function is required")
+		return errors.New("runOnce function is required")
 	}
 
 	// Write PID file.

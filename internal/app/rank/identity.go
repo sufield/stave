@@ -356,6 +356,7 @@ func buildResourceAccessIndex(snap *asset.Snapshot) *iam.ResourceAccessIndex {
 			if policyJSON == "" {
 				continue
 			}
+			// Non-fatal: malformed policy JSON skips annotation.
 			_ = idx.AddResourcePolicy(string(a.ID), policyJSON, accountID)
 		}
 	}

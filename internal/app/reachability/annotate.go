@@ -130,6 +130,8 @@ func BuildIndexFromSnapshot(snap *asset.Snapshot) *iam.ResourceAccessIndex {
 				continue
 			}
 			found = true
+			// AddResourcePolicy errors are non-fatal: malformed policy JSON
+			// skips the annotation but the asset observation remains valid.
 			_ = idx.AddResourcePolicy(string(a.ID), policyJSON, accountID)
 		}
 	}
