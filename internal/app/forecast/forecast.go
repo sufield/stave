@@ -1,0 +1,136 @@
+// Package forecast provides linear trend extrapolation for posture
+// score and SLA projections.
+package forecast
+
+import "fmt"
+
+// Result holds forecast output.
+type Result struct {
+	Current   CurrentState    `json:"current"`
+	Projected ProjectedState  `json:"projected"`
+	SLAProj   []SLAProjection `json:"sla_projections,omitempty"`
+	ModelNote string          `json:"model_note"`
+}
+
+// CurrentState holds current metrics.
+type CurrentState struct {
+	PostureScore float64 `json:"posture_score"`
+	OpenFindings int     `json:"open_findings"`
+	MTTRCritical float64 `json:"mttr_critical_hours"`
+	MTTRHigh     float64 `json:"mttr_high_hours"`
+}
+
+// ProjectedState holds projected metrics.
+type ProjectedState struct {
+	HorizonDays  int     `json:"horizon_days"`
+	PostureScore float64 `json:"posture_score"`
+	ScoreSlope   float64 `json:"score_slope_per_day"`
+}
+
+// SLAProjection holds SLA forecast per severity.
+type SLAProjection struct {
+	Severity      string  `json:"severity"`
+	CurrentMTTR   float64 `json:"current_mttr_hours"`
+	ProjectedMTTR float64 `json:"projected_mttr_hours"`
+	Deadline      float64 `json:"sla_deadline_hours"`
+	Status        string  `json:"status"` // ON_TRACK | AT_RISK | BREACHING
+}
+
+// Input holds data for forecasting.
+type Input struct {
+	ScoreHistory []float64 // one per day
+	HorizonDays  int
+	SLADeadlines map[string]float64   // severity → hours
+	MTTRHistory  map[string][]float64 // severity → MTTR per day
+}
+
+// Compute produces a linear forecast.
+func Compute(input Input) (*Result, error) {
+	if len(input.ScoreHistory) < 7 {
+		return nil, fmt.Errorf("insufficient history: %d days (minimum 7 required)", len(input.ScoreHistory))
+	}
+
+	// Linear regression on score history.
+	n := len(input.ScoreHistory)
+	slope, intercept := linearFit(input.ScoreHistory)
+	currentScore := input.ScoreHistory[n-1]
+	projectedScore := intercept + slope*float64(n+input.HorizonDays-1)
+
+	// Clamp to 0-100.
+	if projectedScore > 100 {
+		projectedScore = 100
+	}
+	if projectedScore < 0 {
+		projectedScore = 0
+	}
+
+	result := &Result{
+		Current: CurrentState{
+			PostureScore: currentScore,
+		},
+		Projected: ProjectedState{
+			HorizonDays:  input.HorizonDays,
+			PostureScore: projectedScore,
+			ScoreSlope:   slope,
+		},
+		ModelNote: fmt.Sprintf("Linear projection from %d days of history. Accuracy decreases beyond 30-day horizon. Rerun weekly for updated projections.", n),
+	}
+
+	// SLA projections per severity.
+	for _, sev := range []string{"critical", "high", "medium", "low"} {
+		history := input.MTTRHistory[sev]
+		deadline := input.SLADeadlines[sev]
+		if len(history) < 3 || deadline <= 0 {
+			continue
+		}
+		mttrSlope, mttrIntercept := linearFit(history)
+		currentMTTR := history[len(history)-1]
+		projectedMTTR := mttrIntercept + mttrSlope*float64(len(history)+input.HorizonDays-1)
+		if projectedMTTR < 0 {
+			projectedMTTR = 0
+		}
+
+		status := "ON_TRACK"
+		if projectedMTTR > deadline {
+			status = "BREACHING"
+		} else if projectedMTTR > deadline*0.8 {
+			status = "AT_RISK"
+		}
+
+		result.SLAProj = append(result.SLAProj, SLAProjection{
+			Severity:      sev,
+			CurrentMTTR:   currentMTTR,
+			ProjectedMTTR: projectedMTTR,
+			Deadline:      deadline,
+			Status:        status,
+		})
+	}
+
+	return result, nil
+}
+
+// linearFit computes y = a + b*t using least squares.
+func linearFit(ys []float64) (slope, intercept float64) {
+	n := float64(len(ys))
+	if n <= 1 {
+		if len(ys) == 1 {
+			return 0, ys[0]
+		}
+		return 0, 0
+	}
+	var sumX, sumY, sumXY, sumX2 float64
+	for i, y := range ys {
+		x := float64(i)
+		sumX += x
+		sumY += y
+		sumXY += x * y
+		sumX2 += x * x
+	}
+	denom := n*sumX2 - sumX*sumX
+	if denom == 0 {
+		return 0, sumY / n
+	}
+	slope = (n*sumXY - sumX*sumY) / denom
+	intercept = (sumY - slope*sumX) / n
+	return slope, intercept
+}

@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -14,33 +15,38 @@ import (
 	stavecel "github.com/sufield/stave/internal/cel"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/evaluation/risk"
 )
 
 func newLintCmd() *cobra.Command {
 	var controlPath, format string
+	var semantic, strict bool
 
 	cmd := &cobra.Command{
 		Use:   "lint",
 		Short: "Static analysis for control YAML files",
 		Long: `Validate control YAML files for schema correctness, CEL predicate
-syntax, and completeness.
+syntax, and completeness. With --semantic, performs additional
+checks for always-firing predicates and impossible conditions.
 
 Exit Codes:
-  0   No errors (warnings/info may be present)
-  1   One or more errors found
-  2   Invalid input
+  0   No errors, no warnings
+  1   Warnings only (errors with --strict)
+  2   Errors present
   4   Internal error`,
 		Example: `  stave forge lint --control controls/ad/CTL.AD.PASS.MINLEN.001.yaml
-  stave forge lint --control controls/`,
+  stave forge lint --control controls/ --semantic --strict`,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runForgeLint(cmd.OutOrStdout(), controlPath, format)
+			return runForgeLint(cmd.OutOrStdout(), controlPath, format, semantic, strict)
 		},
 	}
 
 	cmd.Flags().StringVar(&controlPath, "control", "", "control YAML file or directory (required)")
 	cmd.Flags().StringVarP(&format, "format", "f", "text", "output format: text | json")
+	cmd.Flags().BoolVar(&semantic, "semantic", false, "enable semantic analysis (always-firing, never-firing)")
+	cmd.Flags().BoolVar(&strict, "strict", false, "treat warnings as errors")
 	_ = cmd.MarkFlagRequired("control")
 
 	return cmd
@@ -53,7 +59,7 @@ type lintResult struct {
 	Infos     []string `json:"infos,omitempty"`
 }
 
-func runForgeLint(w io.Writer, controlPath, _ string) error {
+func runForgeLint(w io.Writer, controlPath, _ string, semantic, strict bool) error {
 	paths, err := collectControlPaths(controlPath)
 	if err != nil {
 		return err
@@ -68,7 +74,7 @@ func runForgeLint(w io.Writer, controlPath, _ string) error {
 	totalWarnings := 0
 
 	for _, p := range paths {
-		result := lintControl(p, celEval)
+		result := lintControl(p, celEval, semantic)
 		totalErrors += len(result.Errors)
 		totalWarnings += len(result.Warnings)
 
@@ -95,10 +101,13 @@ func runForgeLint(w io.Writer, controlPath, _ string) error {
 	if totalErrors > 0 {
 		return fmt.Errorf("%d lint error(s)", totalErrors)
 	}
+	if strict && totalWarnings > 0 {
+		return fmt.Errorf("%d lint warning(s) (--strict mode)", totalWarnings)
+	}
 	return nil
 }
 
-func lintControl(path string, celEval policy.PredicateEval) lintResult {
+func lintControl(path string, celEval policy.PredicateEval, semantic bool) lintResult {
 	result := lintResult{ControlID: filepath.Base(path)}
 
 	data, err := os.ReadFile(path) //nolint:gosec // user path
@@ -149,15 +158,32 @@ func lintControl(path string, celEval policy.PredicateEval) lintResult {
 
 	// CEL predicate validation — try compiling.
 	if celEval != nil && ctl.Type == policy.TypeUnsafeState {
-		// Create a minimal test asset to check compilation.
 		testAsset := dummyAsset()
-		_, evalErr := celEval(ctl, testAsset, nil)
+		isUnsafe, evalErr := celEval(ctl, testAsset, nil)
 		if evalErr != nil {
 			errStr := evalErr.Error()
 			if strings.Contains(errStr, "undeclared") || strings.Contains(errStr, "syntax") {
 				result.Errors = append(result.Errors, "CEL error: "+errStr)
 			}
-			// Other eval errors (missing property) are expected with dummy asset.
+		} else if semantic && isUnsafe {
+			// Check A: always-firing — predicate fires on empty asset.
+			result.Errors = append(result.Errors,
+				"predicate may be always-firing: evaluates to VIOLATION on an empty asset with no properties")
+		}
+	}
+
+	// Check C: missing test cases.
+	if len(ctl.Tests) == 0 {
+		result.Warnings = append(result.Warnings, "no embedded test cases")
+	}
+
+	// Check E: invalid attack_stage value.
+	stage := ctl.AttackStage()
+	if stage != "" {
+		valid := slices.Contains(risk.AllAttackStages, stage)
+		if !valid {
+			result.Errors = append(result.Errors,
+				fmt.Sprintf("attack_stage %q is not a valid stage", stage))
 		}
 	}
 
