@@ -30,13 +30,14 @@ func EvaluateRecurrenceForControl(
 	w := p.Window(now)
 	count, first, last := t.History().WindowSummary(w)
 
-	// Include the currently active window if it started within the
-	// recurrence time range. ExposureHistory only stores resolved
-	// windows, so the active window must be counted separately to
-	// avoid false negatives when the asset is currently exposed.
+	// Include the currently active window if it overlaps the
+	// recurrence time range. Uses the same overlap logic as
+	// WindowSummary: started before period ended AND still active
+	// (active windows have no end time, so they always overlap
+	// if they started before the period ended).
 	if t.HasActiveWindow() {
 		start := t.FirstExposedAt()
-		if start.After(w.Start) && start.Before(w.End) {
+		if start.Before(w.End) {
 			count++
 			if first.IsZero() || start.Before(first) {
 				first = start

@@ -75,6 +75,24 @@ func (l *ExposureLifecycle) RecordCheck(t time.Time, isExposed bool) error {
 	return nil
 }
 
+// RecordInconclusive records that a scan was attempted but the result
+// was inconclusive (e.g., CEL evaluation error). Updates lastObservedAt
+// so the lifecycle knows the asset was observed, but does NOT modify
+// the exposure state — UnsafeSince and activeWindow are preserved.
+// This prevents an inconclusive check from resetting the SLA clock.
+func (l *ExposureLifecycle) RecordInconclusive(t time.Time) error {
+	if t.IsZero() {
+		return ErrZeroTimestamp
+	}
+	if err := l.stats.RecordObservation(t); err != nil {
+		return err
+	}
+	if t.After(l.lastObservedAt) || l.lastObservedAt.IsZero() {
+		l.lastObservedAt = t
+	}
+	return nil
+}
+
 // IsSecure reports whether the asset is currently in a compliant state.
 func (l *ExposureLifecycle) IsSecure() bool {
 	return l.activeWindow == nil

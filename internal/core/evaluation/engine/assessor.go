@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	stavecel "github.com/sufield/stave/internal/cel"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
@@ -448,12 +449,14 @@ func (a *Assessor) FingerprintPolicy() kernel.Digest {
 	if len(a.Controls) == 0 || a.Hasher == nil {
 		return ""
 	}
+	// Include evaluator identity — prevents silent evaluator swap.
 	// Hash per-control fingerprints (which include predicate, severity,
 	// type — not just IDs) sorted by ID for determinism.
-	fingerprints := make([]string, len(a.Controls))
+	fingerprints := make([]string, 0, len(a.Controls)+1)
+	fingerprints = append(fingerprints, "eval_version:"+stavecel.EvalVersion)
 	for i := range a.Controls {
 		ctl := &a.Controls[i]
-		fingerprints[i] = string(ctl.ID) + ":" + string(ctl.Fingerprint(a.Hasher))
+		fingerprints = append(fingerprints, string(ctl.ID)+":"+string(ctl.Fingerprint(a.Hasher)))
 	}
 	slices.Sort(fingerprints)
 	return a.Hasher.Digest(fingerprints, '\n')

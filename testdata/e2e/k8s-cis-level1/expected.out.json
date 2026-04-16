@@ -3,7 +3,7 @@
     "context_name": "stave",
     "git": {
       "dirty": false,
-      "head_commit": "19d2659707789ad5ee24bea636595aa7f38da7ae",
+      "head_commit": "23e8d39cdce1f114627b5eb473daceca93c7fddc",
       "repo_root": "/home/zepho/work/bizacademy"
     },
     "resolved_paths": {
@@ -158,7 +158,7 @@
     },
     "now": "2026-01-11T00:00:00Z",
     "offline": true,
-    "policy_fingerprint": "b14a61e2017c8dfe1549351b2f7202a515efd1d3f7d3e4b6fe69109453d367bd",
+    "policy_fingerprint": "d0b3f132ddac641536b77acbadcf9be6f325791defaac5c93d912a478aab47a3",
     "sla_threshold": "7d",
     "snapshots": 3,
     "tool_version": "edge"

@@ -336,8 +336,8 @@ func TestBuildIdentityIndex(t *testing.T) {
 		{CapturedAt: base.Add(time.Hour), Identities: []asset.CloudIdentity{{ID: "id-2"}}},
 	}
 	idx := BuildIdentityIndex(snapshots)
-	if len(idx.sortedKeys) != 2 {
-		t.Fatalf("expected 2 entries, got %d", len(idx.sortedKeys))
+	if len(idx.entries) != 2 {
+		t.Fatalf("expected 2 entries, got %d", len(idx.entries))
 	}
 	ids := idx.At(base)
 	if len(ids) != 1 || ids[0].ID != "id-1" {

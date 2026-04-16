@@ -137,8 +137,10 @@ func recordAssetObservation(
 
 		isUnsafe, evalErr := checkUnsafe(*ctl, a, snap, celEval)
 		if evalErr != nil {
-			slog.Warn("skipping inconclusive check", "control", ctl.ID, "asset", a.ID, "error", evalErr)
-			continue // Do not record — check is inconclusive
+			slog.Warn("inconclusive check", "control", ctl.ID, "asset", a.ID, "error", evalErr)
+			// Record inconclusive — preserves SLA clock without changing exposure state.
+			_ = t.RecordInconclusive(snap.CapturedAt)
+			continue
 		}
 		if err := t.RecordCheck(snap.CapturedAt, isUnsafe); err != nil {
 			return fmt.Errorf("record observation for control %s, asset %s: %w", ctl.ID, a.ID, err)

@@ -2,11 +2,8 @@
   "extensions": {
     "context_name": "stave",
     "git": {
-      "dirty": true,
-      "head_commit": "c42cd1c102802ba08a851b5b44c67b2ccb3496c3",
-      "modified_paths": [
-        "stave/testdata/e2e/eks-vpc-cni-netpol/controls/"
-      ],
+      "dirty": false,
+      "head_commit": "23e8d39cdce1f114627b5eb473daceca93c7fddc",
       "repo_root": "/home/zepho/work/bizacademy"
     },
     "resolved_paths": {
@@ -51,7 +48,7 @@
     },
     "now": "2026-01-11T00:00:00Z",
     "offline": true,
-    "policy_fingerprint": "75e0a3060d530d7e17b7cb331a35137d94a878756c5251b19923140f91bf52c8",
+    "policy_fingerprint": "699fa6400d0fb58028e488592cf8e1e88b2f2a4b6a399f85c06ab36f87e2d99c",
     "sla_threshold": "7d",
     "snapshots": 3,
     "tool_version": "edge"
