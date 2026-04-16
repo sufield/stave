@@ -68,6 +68,11 @@ func runStandardApply(ctx context.Context, logger *slog.Logger, deps Deps, opts 
 		return decorateError(err)
 	}
 
+	// Signal-filtered output: --new-only or --new-since.
+	if opts.NewOnly || opts.NewSince != "" {
+		return runNewOnlyOutput(ctx, sio.Stdout, sio.Stderr, opts, results)
+	}
+
 	rep := &Reporter{Stdout: sio.Stdout, Stderr: sio.Stderr, Runtime: rt, Quiet: sio.Quiet}
 	if err := rep.ReportApply(results, evaluation.EnforcementPolicy{}); err != nil {
 		return err

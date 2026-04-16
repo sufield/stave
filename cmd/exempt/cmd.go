@@ -33,7 +33,8 @@ Subcommands:
   list          List all active entries
   remove        Mark an acknowledgment as revoked
   upcoming      Show entries approaching expiry
-  validate      Validate the acceptance file`,
+  validate      Validate the acceptance file
+  suggest       Suggest exemptions for chronic/oscillating findings`,
 		Args: cobra.NoArgs,
 	}
 
@@ -46,6 +47,7 @@ Subcommands:
 	cmd.AddCommand(newValidateCmd())
 	cmd.AddCommand(newHistoryCmd())
 	cmd.AddCommand(newExportCmd())
+	cmd.AddCommand(newSuggestCmd())
 
 	return cmd
 }

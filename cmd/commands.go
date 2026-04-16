@@ -24,6 +24,7 @@ import (
 	"github.com/sufield/stave/cmd/diagnose/artifacts"
 	diagreport "github.com/sufield/stave/cmd/diagnose/report"
 	stavediffcatalog "github.com/sufield/stave/cmd/diff"
+	staveenrich "github.com/sufield/stave/cmd/enrich"
 	"github.com/sufield/stave/cmd/doctor"
 	stavedrift "github.com/sufield/stave/cmd/drift"
 	"github.com/sufield/stave/cmd/enforce"
@@ -42,6 +43,7 @@ import (
 	"github.com/sufield/stave/cmd/inspect"
 	staveinventory "github.com/sufield/stave/cmd/inventory"
 	stavemap "github.com/sufield/stave/cmd/map"
+	stavemetrics "github.com/sufield/stave/cmd/metrics"
 	stavemonitor "github.com/sufield/stave/cmd/monitor"
 	stavenep "github.com/sufield/stave/cmd/nep"
 	stavepath "github.com/sufield/stave/cmd/path"
@@ -52,7 +54,9 @@ import (
 	stavereport "github.com/sufield/stave/cmd/report"
 	stavescore "github.com/sufield/stave/cmd/score"
 	stavescorecard "github.com/sufield/stave/cmd/scorecard"
+	stavesanitize "github.com/sufield/stave/cmd/sanitize"
 	stavesimulate "github.com/sufield/stave/cmd/simulate"
+	stavesnapshotdiff "github.com/sufield/stave/cmd/snapshotdiff"
 	stavesla "github.com/sufield/stave/cmd/sla"
 	stavetelemetry "github.com/sufield/stave/cmd/telemetry"
 	stavetest "github.com/sufield/stave/cmd/test"
@@ -226,6 +230,18 @@ func WireCommands(app *App) {
 
 	// Catalog diff
 	root.AddCommand(stavediffcatalog.NewCmd(f.NewCtlRepo))
+
+	// Snapshot diff
+	root.AddCommand(stavesnapshotdiff.NewCmd())
+
+	// Standalone sanitization
+	root.AddCommand(stavesanitize.NewCmd())
+
+	// Prometheus metrics export
+	root.AddCommand(stavemetrics.NewCmd())
+
+	// CVE/NVD enrichment
+	root.AddCommand(staveenrich.NewCmd())
 
 	// Profile management
 	root.AddCommand(staveprofile.NewCmd())

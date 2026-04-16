@@ -3,12 +3,14 @@
 package rank
 
 import (
+	"encoding/csv"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"os"
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -147,6 +149,8 @@ func run(stdout, _ io.Writer, opts *options) error {
 			return fmt.Errorf("marshal roadmap: %w", marshalErr)
 		}
 		fmt.Fprintln(stdout, string(output))
+	case "csv":
+		writeCSVRoadmap(stdout, roadmap, &assessment)
 	default:
 		writeTextRoadmap(stdout, roadmap, opts.SortBy == "blast-radius", &assessment)
 	}
@@ -373,6 +377,86 @@ func runIdentity(stdout io.Writer, opts *options, assessment *report.Assessment)
 		writeTextIdentityRanking(stdout, ranking)
 	}
 	return nil
+}
+
+func writeCSVRoadmap(w io.Writer, rm apprank.Roadmap, assessment *report.Assessment) {
+	// Build a finding index for enrichment.
+	type findingMeta struct {
+		severity  string
+		assetType string
+		chainIDs  []string
+		slaHours  string
+		slaStatus string
+		owner     string
+	}
+	findingIdx := make(map[string]*findingMeta)
+	for i := range assessment.Findings {
+		f := &assessment.Findings[i]
+		key := string(f.ControlID) + "@" + string(f.AssetID)
+		m := &findingMeta{
+			severity:  f.ControlSeverity.String(),
+			assetType: string(f.AssetType),
+			owner:     f.OwnerTeamID,
+		}
+		if f.SLADeadlineHours != nil {
+			m.slaHours = fmt.Sprintf("%.0f", *f.SLADeadlineHours)
+		}
+		if f.SLABreached {
+			m.slaStatus = "BREACHED"
+		} else if f.SLADeadlineHours != nil {
+			m.slaStatus = "OK"
+		}
+		for j := range f.ChainMembership {
+			m.chainIDs = append(m.chainIDs, f.ChainMembership[j].ChainID)
+		}
+		findingIdx[key] = m
+	}
+
+	cw := csv.NewWriter(w)
+	defer cw.Flush()
+
+	// Header.
+	_ = cw.Write([]string{
+		"rank", "control_id", "control_name", "severity", "asset_id",
+		"asset_type", "team", "risk_score", "sla_deadline_hours",
+		"sla_status", "chain_membership", "remediation_action",
+	})
+
+	for i := range rm.Entries {
+		e := &rm.Entries[i]
+		key := string(e.ControlID) + "@" + string(e.AssetID)
+		m := findingIdx[key]
+
+		severity := ""
+		assetType := ""
+		owner := ""
+		slaHours := ""
+		slaStatus := ""
+		chainMembership := ""
+		if m != nil {
+			severity = m.severity
+			assetType = m.assetType
+			owner = m.owner
+			slaHours = m.slaHours
+			slaStatus = m.slaStatus
+			chainMembership = strings.Join(m.chainIDs, ",")
+		}
+
+		_ = cw.Write([]string{
+			strconv.Itoa(e.Rank),
+			string(e.ControlID),
+			e.ControlName,
+			severity,
+			string(e.AssetID),
+			assetType,
+			owner,
+			fmt.Sprintf("%.1f", e.PriorityScore),
+			slaHours,
+			slaStatus,
+			chainMembership,
+			e.FixAction,
+		})
+	}
 }
 
 func writeTextIdentityRanking(w io.Writer, ranking apprank.IdentityRanking) {

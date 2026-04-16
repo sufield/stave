@@ -85,6 +85,9 @@ type Options struct {
 	OverlayPath        string
 	ShowSuppressed     bool
 	AssetsManifest     string
+	HistoryDir         string
+	NewOnly            bool
+	NewSince           string
 }
 
 // normalize cleans all user-supplied paths in one pass.
@@ -96,6 +99,7 @@ func (o *Options) normalize() {
 	o.IntegrityManifest = fsutil.CleanUserPath(o.IntegrityManifest)
 	o.IntegrityPublicKey = fsutil.CleanUserPath(o.IntegrityPublicKey)
 	o.InputFile = fsutil.CleanUserPath(o.InputFile)
+	o.HistoryDir = fsutil.CleanUserPath(o.HistoryDir)
 }
 
 // NewApplyCmd constructs the apply command.
@@ -198,11 +202,17 @@ func (o *Options) bindApplySpecific(cmd *cobra.Command) {
 	f.StringVar(&o.SLAPolicy, "sla-policy", "warn", "SLA breach exit code behavior: warn, strict, critical-only")
 	f.StringVar(&o.TeamManifest, "team-manifest", "", "Path to stave-teams.yaml for owner routing")
 	f.StringVar(&o.OwnerFilter, "owner-filter", "", "Comma-separated team IDs to filter findings")
+	f.StringVar(&o.HistoryDir, "history", "", "Directory of historical assessment JSON files (for --new-only)")
+	f.BoolVar(&o.NewOnly, "new-only", false, "Show only findings not present in previous assessment")
+	f.StringVar(&o.NewSince, "new-since", "", "Show only findings not present in assessments within this window (e.g. 7d)")
 }
 
 func (o *Options) validate() error {
 	if o.Profile != "" && o.InputFile == "" {
 		return &ui.UserError{Err: errors.New("flag --input is required when using --profile")}
+	}
+	if (o.NewOnly || o.NewSince != "") && o.HistoryDir == "" {
+		return &ui.UserError{Err: errors.New("--history is required when using --new-only or --new-since")}
 	}
 	return nil
 }

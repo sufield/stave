@@ -75,6 +75,7 @@ func executeEvaluation(ctx context.Context, ec evalContext) (EvaluateResult, err
 	}
 
 	evalResult := BuildEvaluateResult(status, deps.Config.PolicySource, deps.Config.ObservationSource)
+	evalResult.RawFindings = result.Findings
 
 	// Scan findings for SLA breaches.
 	for i := range result.Findings {

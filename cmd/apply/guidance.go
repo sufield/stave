@@ -21,6 +21,9 @@ type EvaluateResult struct {
 	NextSteps            []string // nil when safe
 	HasSLABreach         bool     // at least one finding has SLABreached=true
 	HasCriticalSLABreach bool     // at least one critical/escalated-critical finding breached SLA
+	// RawFindings holds the raw evaluation findings for post-processing
+	// (e.g. --new-only filtering). Nil when not needed.
+	RawFindings []evaluation.Finding
 }
 
 // BuildEvaluateResult maps a domain safety status into actionable CLI guidance.

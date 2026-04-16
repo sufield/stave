@@ -1,0 +1,139 @@
+package sanitize
+
+import (
+	"testing"
+	"time"
+
+	"github.com/sufield/stave/internal/core/asset"
+)
+
+func TestSanitize_HashDeterministic(t *testing.T) {
+	s1 := []asset.Snapshot{{
+		CapturedAt: time.Now(),
+		Assets: []asset.Asset{
+			{ID: "arn:aws:s3:::my-bucket", Properties: map[string]any{}},
+		},
+	}}
+	s2 := []asset.Snapshot{{
+		CapturedAt: time.Now(),
+		Assets: []asset.Asset{
+			{ID: "arn:aws:s3:::my-bucket", Properties: map[string]any{}},
+		},
+	}}
+
+	cfg := DefaultConfig()
+	Sanitize(s1, cfg)
+	Sanitize(s2, cfg)
+
+	if s1[0].Assets[0].ID != s2[0].Assets[0].ID {
+		t.Errorf("hash not deterministic: %s != %s", s1[0].Assets[0].ID, s2[0].Assets[0].ID)
+	}
+	if s1[0].Assets[0].ID == "arn:aws:s3:::my-bucket" {
+		t.Error("asset ID was not sanitized")
+	}
+}
+
+func TestSanitize_StillEvaluable(t *testing.T) {
+	snaps := []asset.Snapshot{{
+		CapturedAt: time.Now(),
+		Assets: []asset.Asset{
+			{
+				ID:   "arn:aws:s3:::test-bucket",
+				Type: "s3_bucket",
+				Properties: map[string]any{
+					"versioning": true,
+					"region":     "us-east-1",
+				},
+			},
+		},
+	}}
+
+	Sanitize(snaps, DefaultConfig())
+
+	// Properties should still be present (evaluable).
+	a := snaps[0].Assets[0]
+	if a.Properties["versioning"] != true {
+		t.Error("versioning property was removed")
+	}
+	if a.Properties["region"] == nil {
+		t.Error("region property was removed")
+	}
+}
+
+func TestSanitize_PlaceholderMethod(t *testing.T) {
+	snaps := []asset.Snapshot{{
+		Assets: []asset.Asset{
+			{
+				ID: "test",
+				Properties: map[string]any{
+					"tags": map[string]any{
+						"Name": "production-server",
+					},
+				},
+			},
+		},
+	}}
+
+	cfg := Config{
+		Rules: []Rule{
+			{Field: "tags.Name", Method: MethodPlaceholder, Placeholder: "[REDACTED]"},
+		},
+	}
+	Sanitize(snaps, cfg)
+
+	tags := snaps[0].Assets[0].Properties["tags"].(map[string]any)
+	if tags["Name"] != "[REDACTED]" {
+		t.Errorf("Name = %v, want [REDACTED]", tags["Name"])
+	}
+}
+
+func TestSanitize_RemoveMethod(t *testing.T) {
+	snaps := []asset.Snapshot{{
+		Assets: []asset.Asset{
+			{
+				ID: "test",
+				Properties: map[string]any{
+					"tags": map[string]any{
+						"CostCenter": "CC-1234",
+						"Name":       "keep-this",
+					},
+				},
+			},
+		},
+	}}
+
+	cfg := Config{
+		Rules: []Rule{
+			{Field: "tags.CostCenter", Method: MethodRemove},
+		},
+	}
+	Sanitize(snaps, cfg)
+
+	tags := snaps[0].Assets[0].Properties["tags"].(map[string]any)
+	if _, exists := tags["CostCenter"]; exists {
+		t.Error("CostCenter should be removed")
+	}
+	if tags["Name"] != "keep-this" {
+		t.Error("Name should be preserved")
+	}
+}
+
+func TestSanitize_AccountIDsHashed(t *testing.T) {
+	snaps := []asset.Snapshot{{
+		Assets: []asset.Asset{
+			{
+				ID: "test",
+				Properties: map[string]any{
+					"arn": "arn:aws:s3:::bucket-123456789012",
+				},
+			},
+		},
+	}}
+
+	Sanitize(snaps, DefaultConfig())
+
+	arn := snaps[0].Assets[0].Properties["arn"].(string)
+	if arn == "arn:aws:s3:::bucket-123456789012" {
+		t.Error("account ID was not sanitized from ARN property")
+	}
+}

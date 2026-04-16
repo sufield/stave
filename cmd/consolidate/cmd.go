@@ -36,6 +36,8 @@ type options struct {
 	OutPath        string
 	FocusAccount   string
 	Now            string
+	HistoryDir     string
+	Window         string
 }
 
 // NewCmd constructs the consolidate command.
@@ -78,13 +80,20 @@ Exit Codes:
 	cmd.Flags().StringVar(&opts.OutPath, "out", "", "Write output to file instead of stdout")
 	cmd.Flags().StringVar(&opts.FocusAccount, "focus-account", "", "Show detail for a specific account")
 	cmd.Flags().StringVar(&opts.Now, "now", "", "Override current time (RFC3339)")
+	cmd.Flags().StringVar(&opts.HistoryDir, "history", "", "Directory of per-account assessment history for org trending")
+	cmd.Flags().StringVar(&opts.Window, "window", "90d", "Lookback window for trend calculation (e.g. 90d)")
 
 	return cmd
 }
 
 func run(stdout, stderr io.Writer, opts *options) error {
+	// History mode: org-level trending across multiple accounts.
+	if opts.HistoryDir != "" {
+		return runHistory(stdout, opts)
+	}
+
 	if opts.SnapshotsDir == "" && opts.ManifestFile == "" {
-		return errors.New("one of --snapshots or --manifest is required")
+		return errors.New("one of --snapshots, --manifest, or --history is required")
 	}
 
 	// Load accounts.
