@@ -7,6 +7,7 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/util/sets"
 )
 
 // GraphData is the top-level graph-json output.
@@ -71,10 +72,10 @@ func Build(input BuildInput) *GraphData {
 		},
 	}
 
-	seenNodes := make(map[string]bool)
-	seenControls := make(map[kernel.ControlID]bool)
-	seenRequirements := make(map[string]bool)
-	seenAccounts := make(map[string]bool)
+	seenNodes := sets.New[string]()
+	seenControls := sets.New[kernel.ControlID]()
+	seenRequirements := sets.New[string]()
+	seenAccounts := sets.New[string]()
 
 	// Findings → Finding nodes, Resource nodes, Control nodes,
 	// ComplianceRequirement nodes, TenantScope nodes, and edges.
@@ -83,8 +84,8 @@ func Build(input BuildInput) *GraphData {
 
 		// Finding node.
 		findingID := f.FindingID
-		if !seenNodes[findingID] {
-			seenNodes[findingID] = true
+		if !seenNodes.Contains(findingID) {
+			seenNodes.Add(findingID)
 			props := map[string]any{
 				"finding_id":   f.FindingID,
 				"control_id":   string(f.ControlID),
@@ -117,8 +118,8 @@ func Build(input BuildInput) *GraphData {
 
 		// Resource node.
 		resourceID := string(f.AssetID)
-		if !seenNodes[resourceID] {
-			seenNodes[resourceID] = true
+		if !seenNodes.Contains(resourceID) {
+			seenNodes.Add(resourceID)
 			providerType := string(f.AssetType)
 			g.Nodes = append(g.Nodes, Node{
 				ID: resourceID, Type: "Resource",
@@ -139,8 +140,8 @@ func Build(input BuildInput) *GraphData {
 		})
 
 		// Control node.
-		if !seenControls[f.ControlID] {
-			seenControls[f.ControlID] = true
+		if !seenControls.Contains(f.ControlID) {
+			seenControls.Add(f.ControlID)
 			g.Nodes = append(g.Nodes, Node{
 				ID: string(f.ControlID), Type: "Control",
 				Standard: "oscal", StandardType: "control",
@@ -155,8 +156,8 @@ func Build(input BuildInput) *GraphData {
 		// ComplianceRequirement nodes + MAPS_TO + VIOLATES edges.
 		for framework, reqID := range f.ControlCompliance {
 			reqNodeID := string(framework) + ":" + reqID
-			if !seenRequirements[reqNodeID] {
-				seenRequirements[reqNodeID] = true
+			if !seenRequirements.Contains(reqNodeID) {
+				seenRequirements.Add(reqNodeID)
 				g.Nodes = append(g.Nodes, Node{
 					ID: reqNodeID, Type: "ComplianceRequirement",
 					Standard: "oscal", StandardType: "control",
@@ -179,8 +180,8 @@ func Build(input BuildInput) *GraphData {
 		acctID := extractAccountID(resourceID)
 		if acctID != "" {
 			scopeID := "account:" + acctID
-			if !seenAccounts[acctID] {
-				seenAccounts[acctID] = true
+			if !seenAccounts.Contains(acctID) {
+				seenAccounts.Add(acctID)
 				g.Nodes = append(g.Nodes, Node{
 					ID: scopeID, Type: "TenantScope",
 					Standard: "ocsf", StandardType: "cloud.account",
@@ -198,8 +199,8 @@ func Build(input BuildInput) *GraphData {
 		// RemediationAction node.
 		if f.RemediationSpec.Action != "" {
 			remID := "remediation_" + findingID
-			if !seenNodes[remID] {
-				seenNodes[remID] = true
+			if !seenNodes.Contains(remID) {
+				seenNodes.Add(remID)
 				g.Nodes = append(g.Nodes, Node{
 					ID: remID, Type: "RemediationAction",
 					Standard: "ocsf", StandardType: "Remediation Activity (9001)",
@@ -217,8 +218,8 @@ func Build(input BuildInput) *GraphData {
 		cf := &input.ChainFindings[i]
 		chainID := cf.ChainID
 
-		if !seenNodes[chainID] {
-			seenNodes[chainID] = true
+		if !seenNodes.Contains(chainID) {
+			seenNodes.Add(chainID)
 
 			memberControls := make([]string, len(cf.ControlsFailing))
 			for j, cid := range cf.ControlsFailing {
@@ -243,8 +244,8 @@ func Build(input BuildInput) *GraphData {
 
 		// AttackerCapability node.
 		capID := "capability_" + chainID
-		if !seenNodes[capID] {
-			seenNodes[capID] = true
+		if !seenNodes.Contains(capID) {
+			seenNodes.Add(capID)
 			g.Nodes = append(g.Nodes, Node{
 				ID: capID, Type: "AttackerCapability",
 				Standard: "stix", StandardType: "Attack Pattern",
@@ -288,14 +289,14 @@ func Build(input BuildInput) *GraphData {
 }
 
 func deduplicateEdges(edges []Edge) []Edge {
-	seen := make(map[string]bool, len(edges))
+	seen := sets.New[string]()
 	out := make([]Edge, 0, len(edges))
 	for _, e := range edges {
 		key := e.From + "|" + e.To + "|" + e.Type
-		if seen[key] {
+		if seen.Contains(key) {
 			continue
 		}
-		seen[key] = true
+		seen.Add(key)
 		out = append(out, e)
 	}
 	return out

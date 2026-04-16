@@ -8,6 +8,7 @@ import (
 
 	appscore "github.com/sufield/stave/internal/app/score"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
+	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/report"
 )
 
@@ -190,7 +191,7 @@ func rankFindings(findings []remediation.Finding, n int) []TopFinding {
 		idx   int
 		score float64
 	}
-	sevWeight := map[string]float64{"critical": 4, "high": 3, "medium": 2, "low": 1}
+	sevWeight := kernel.SeverityWeight
 	var items []ranked
 	for i := range findings {
 		f := &findings[i]

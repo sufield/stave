@@ -5,6 +5,46 @@
 // Layer 3: Resource — MAX(all compound scores) with breach probability annotation
 package risk
 
+const (
+	// chainEscalation2 is the multiplier when 2 controls co-fail.
+	// Two co-failing controls (e.g. public + unencrypted) are worse
+	// than either alone, but not double — the attacker still needs
+	// the same entry point.
+	chainEscalation2 = 1.8
+
+	// chainEscalationMax caps the multiplier for 3+ co-failing controls.
+	// Bounded to reflect that stacking failures is catastrophic but
+	// not infinitely multiplicative.
+	chainEscalationMax = 2.5
+
+	// crossAccountMultiplier increases risk score for cross-account
+	// exposure — blast radius spans multiple AWS accounts, making
+	// containment harder and detection more fragmented.
+	crossAccountMultiplier = 1.5
+
+	// publicInternetMultiplier increases risk when an asset is
+	// directly reachable from the internet — any attacker can reach it.
+	publicInternetMultiplier = 2.0
+
+	// noNetworkMultiplier reduces risk for assets with no network
+	// exposure — exploitation requires pre-existing access.
+	noNetworkMultiplier = 0.5
+
+	// phiSensitivity is the multiplier for Protected Health Information.
+	// HIPAA breach penalties drive the highest sensitivity classification.
+	phiSensitivity = 3.0
+
+	// cdeSensitivity is the multiplier for Cardholder Data Environment.
+	// PCI DSS breach penalties match PHI severity.
+	cdeSensitivity = 3.0
+
+	// productionSensitivity is the multiplier for production workloads.
+	productionSensitivity = 2.0
+
+	// devSensitivity reduces risk for development environments.
+	devSensitivity = 0.5
+)
+
 // Environmental computes the per-finding environmental risk score.
 // baseImpact is 0-100 from the control definition.
 // sensitivity is the asset classification multiplier (phi=3.0, production=2.0, etc).
@@ -34,28 +74,28 @@ func ChainEscalation(failingCount int) float64 {
 	case failingCount <= 1:
 		return 1.0
 	case failingCount == 2:
-		return 1.8
+		return chainEscalation2
 	default:
-		return 2.5
+		return chainEscalationMax
 	}
 }
 
 // AssetSensitivity maps data classification tags to multipliers.
 var AssetSensitivity = map[string]float64{
-	"phi":        3.0,
-	"cde":        3.0,
-	"production": 2.0,
+	"phi":        phiSensitivity,
+	"cde":        cdeSensitivity,
+	"production": productionSensitivity,
 	"internal":   1.0,
-	"dev":        0.5,
-	"sandbox":    0.5,
+	"dev":        devSensitivity,
+	"sandbox":    devSensitivity,
 }
 
 // ExposureVector maps network reachability to multipliers.
 var ExposureVector = map[string]float64{
-	"public_internet": 2.0,
-	"cross_account":   1.5,
+	"public_internet": publicInternetMultiplier,
+	"cross_account":   crossAccountMultiplier,
 	"vpc_internal":    1.0,
-	"no_network":      0.5,
+	"no_network":      noNetworkMultiplier,
 }
 
 // LookupSensitivity returns the sensitivity multiplier for a classification.

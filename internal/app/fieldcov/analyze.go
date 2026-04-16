@@ -10,7 +10,9 @@ import (
 
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/predicate"
+	"github.com/sufield/stave/internal/util/sets"
 )
 
 // Classification describes a control's evaluability status.
@@ -186,11 +188,11 @@ func extractFieldRefs(pred *policy.UnsafePredicate) []fieldRef {
 	}
 
 	// Deduplicate by path.
-	seen := make(map[string]bool)
+	seen := sets.New[string]()
 	var deduped []fieldRef
 	for _, r := range refs {
-		if !seen[r.path] {
-			seen[r.path] = true
+		if !seen.Contains(r.path) {
+			seen.Add(r.path)
 			deduped = append(deduped, r)
 		}
 	}
@@ -301,7 +303,7 @@ func buildReport(input AnalyzeInput, results []ControlResult) *Report {
 	}
 
 	// Sort by severity (critical first).
-	sevOrder := map[string]int{"critical": 0, "high": 1, "medium": 2, "low": 3, "info": 4}
+	sevOrder := kernel.SeverityOrder
 	sort.Slice(silentRisk, func(i, j int) bool {
 		return sevOrder[silentRisk[i].Severity] < sevOrder[silentRisk[j].Severity]
 	})

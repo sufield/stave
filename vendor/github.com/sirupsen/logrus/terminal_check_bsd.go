@@ -1,4 +1,3 @@
-//go:build (darwin || dragonfly || freebsd || netbsd || openbsd || hurd) && !js
 // +build darwin dragonfly freebsd netbsd openbsd hurd
 // +build !js
 

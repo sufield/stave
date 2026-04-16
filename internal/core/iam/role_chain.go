@@ -1,5 +1,7 @@
 package iam
 
+import "github.com/sufield/stave/internal/util/sets"
+
 // MaxChainDepth is the maximum number of role assumption hops before
 // the resolver terminates the chain.
 const MaxChainDepth = 5
@@ -55,7 +57,7 @@ type RoleChainInput struct {
 // at a role whose resolved permissions represent the transitive access
 // gained through that path.
 func ResolveChains(input RoleChainInput) []RoleChain {
-	visited := make(map[string]bool)
+	visited := sets.New[string]()
 	var chains []RoleChain
 	resolveChainRecursive(input, input.PrincipalARN, visited, 0, nil, &chains)
 	return chains
@@ -64,7 +66,7 @@ func ResolveChains(input RoleChainInput) []RoleChain {
 func resolveChainRecursive(
 	input RoleChainInput,
 	currentARN string,
-	visited map[string]bool,
+	visited sets.Set[string],
 	depth int,
 	currentHops []RoleHop,
 	chains *[]RoleChain,
@@ -82,7 +84,7 @@ func resolveChainRecursive(
 		return
 	}
 
-	if visited[currentARN] {
+	if visited.Contains(currentARN) {
 		*chains = append(*chains, RoleChain{
 			Hops:              cloneHops(currentHops),
 			FinalRoleARN:      currentARN,
@@ -91,7 +93,7 @@ func resolveChainRecursive(
 		return
 	}
 
-	visited[currentARN] = true
+	visited.Add(currentARN)
 	defer func() { delete(visited, currentARN) }()
 
 	// Get resolved permissions for this principal.

@@ -71,7 +71,7 @@ func AnalyzeParity(input ParityInput) *ParityResult {
 	var consistentFail, prodRegression, envHardening, mixed []ParityItem
 	consistentPassCount := 0
 
-	sevOrder := map[string]int{"critical": 0, "high": 1, "medium": 2, "low": 3}
+	sevOrder := kernel.SeverityOrder
 
 	for cid, sev := range allControls {
 		perEnv := make(map[string]string)

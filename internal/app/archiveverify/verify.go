@@ -184,11 +184,8 @@ func Verify(input VerifyInput) (*Attestation, error) {
 	// Check between consecutive runs.
 	for i := 1; i < len(inPeriod); i++ {
 		gap := inPeriod[i].time.Sub(inPeriod[i-1].time).Hours()
-		if gap > input.MaxGapHours || (input.Strict && gap > 0) {
-			exceeds := gap > input.MaxGapHours
-			if input.Strict {
-				exceeds = true
-			}
+		if exceedsGapThreshold(gap, input.MaxGapHours, input.Strict) {
+			exceeds := gap > input.MaxGapHours || input.Strict
 			gaps = append(gaps, GapResult{
 				GapStart:      inPeriod[i-1].time,
 				GapEnd:        inPeriod[i].time,
@@ -369,4 +366,11 @@ func ParsePeriod(s string) (start, end time.Time, label string, err error) {
 	}
 
 	return time.Time{}, time.Time{}, "", fmt.Errorf("unrecognized period format: %q (expected: 2026-Q1, 2026-01, 2026-01-01, or 2026-01-01:2026-03-31)", s)
+}
+
+// exceedsGapThreshold returns true when a collection gap should be
+// flagged. In strict mode, any gap (> 0 hours) is a violation.
+// Otherwise, only gaps exceeding the configured maximum are flagged.
+func exceedsGapThreshold(gap, maxGapHours float64, strict bool) bool {
+	return gap > maxGapHours || (strict && gap > 0)
 }

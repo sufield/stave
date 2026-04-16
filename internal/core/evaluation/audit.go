@@ -6,6 +6,7 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/evidence"
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/util/sets"
 )
 
 // ConfidenceLevel quantifies the certainty of an evaluation result.
@@ -116,9 +117,9 @@ func (r *ComplianceReport) CalculateReadiness(frameworks []string, allControlIDs
 		return
 	}
 
-	failingIDs := make(map[kernel.ControlID]bool, len(r.Findings))
+	failingIDs := sets.New[kernel.ControlID]()
 	for i := range r.Findings {
-		failingIDs[r.Findings[i].ControlID] = true
+		failingIDs.Add(r.Findings[i].ControlID)
 	}
 
 	var totalCitations int
@@ -137,7 +138,7 @@ func (r *ComplianceReport) CalculateReadiness(frameworks []string, allControlIDs
 			}
 			total++
 			totalCitations++
-			if !failingIDs[ctlID] {
+			if !failingIDs.Contains(ctlID) {
 				passing++
 			}
 		}
@@ -160,18 +161,12 @@ func (r *ComplianceReport) CalculateReadiness(frameworks []string, allControlIDs
 	r.Summary.SuperFix = computeSuperFix(failingIDs, controlCompliance, frameworks)
 
 	// Nearby frameworks: check all frameworks for near-readiness.
-	requestedSet := make(map[string]bool, len(frameworks))
-	for _, fw := range frameworks {
-		requestedSet[fw] = true
-	}
+	requestedSet := sets.New[string](frameworks...)
 	r.Summary.NearbyFrameworks = computeNearbyFrameworks(failingIDs, allControlIDs, controlCompliance, requestedSet)
 }
 
-func computeSuperFix(failingIDs map[kernel.ControlID]bool, controlCompliance map[kernel.ControlID]map[string]string, frameworks []string) *SuperFix {
-	fwSet := make(map[string]bool, len(frameworks))
-	for _, fw := range frameworks {
-		fwSet[fw] = true
-	}
+func computeSuperFix(failingIDs sets.Set[kernel.ControlID], controlCompliance map[kernel.ControlID]map[string]string, frameworks []string) *SuperFix {
+	fwSet := sets.New[string](frameworks...)
 
 	var best *SuperFix
 	for ctlID := range failingIDs {
@@ -181,7 +176,7 @@ func computeSuperFix(failingIDs map[kernel.ControlID]bool, controlCompliance map
 		}
 		var fws []string
 		for fw := range cc {
-			if fwSet[fw] {
+			if fwSet.Contains(fw) {
 				fws = append(fws, fw)
 			}
 		}
@@ -197,13 +192,13 @@ func computeSuperFix(failingIDs map[kernel.ControlID]bool, controlCompliance map
 	return best
 }
 
-func computeNearbyFrameworks(failingIDs map[kernel.ControlID]bool, allControlIDs []kernel.ControlID, controlCompliance map[kernel.ControlID]map[string]string, requestedSet map[string]bool) []NearbyFramework {
+func computeNearbyFrameworks(failingIDs sets.Set[kernel.ControlID], allControlIDs []kernel.ControlID, controlCompliance map[kernel.ControlID]map[string]string, requestedSet sets.Set[string]) []NearbyFramework {
 	// Discover all frameworks across all controls.
-	allFWs := make(map[string]bool)
+	allFWs := sets.New[string]()
 	for _, cc := range controlCompliance {
 		for fw := range cc {
-			if !requestedSet[fw] {
-				allFWs[fw] = true
+			if !requestedSet.Contains(fw) {
+				allFWs.Add(fw)
 			}
 		}
 	}
@@ -221,7 +216,7 @@ func computeNearbyFrameworks(failingIDs map[kernel.ControlID]bool, allControlIDs
 				continue
 			}
 			total++
-			if !failingIDs[ctlID] {
+			if !failingIDs.Contains(ctlID) {
 				passing++
 			}
 		}

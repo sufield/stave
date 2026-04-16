@@ -188,13 +188,10 @@ func Suggest(in Input) *Result {
 	}
 
 	// Sort by severity (critical first) then by dwell time (longest first).
-	severityOrder := map[string]int{
-		"critical": 0, "high": 1, "medium": 2, "low": 3, "info": 4,
-	}
 	sortCandidates := func(s []Candidate) {
 		slices.SortFunc(s, func(a, b Candidate) int {
-			oa := severityOrder[a.Severity]
-			ob := severityOrder[b.Severity]
+			oa := kernel.SeverityOrder[a.Severity]
+			ob := kernel.SeverityOrder[b.Severity]
 			if oa != ob {
 				return oa - ob
 			}

@@ -13,6 +13,7 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/ports"
+	"github.com/sufield/stave/internal/util/sets"
 )
 
 // ObservationConfig holds the sources for security policies and cloud resource states.
@@ -198,16 +199,13 @@ func annotateChainMembership(report *evaluation.ComplianceReport) {
 
 	// Build a lookup: controlID → list of chain membership entries.
 	type entry struct {
-		controlIDs map[kernel.ControlID]bool
+		controlIDs sets.Set[kernel.ControlID]
 		membership evaluation.ChainMembershipEntry
 	}
 	chainEntries := make([]entry, 0, len(report.ChainFindings))
 	for i := range report.ChainFindings {
 		cf := &report.ChainFindings[i]
-		cidSet := make(map[kernel.ControlID]bool, len(cf.ControlsFailing))
-		for _, cid := range cf.ControlsFailing {
-			cidSet[cid] = true
-		}
+		cidSet := sets.New[kernel.ControlID](cf.ControlsFailing...)
 		chainEntries = append(chainEntries, entry{
 			controlIDs: cidSet,
 			membership: evaluation.ChainMembershipEntry{
@@ -222,7 +220,7 @@ func annotateChainMembership(report *evaluation.ComplianceReport) {
 	for i := range report.Findings {
 		f := &report.Findings[i]
 		for _, ce := range chainEntries {
-			if ce.controlIDs[f.ControlID] {
+			if ce.controlIDs.Contains(f.ControlID) {
 				f.ChainMembership = append(f.ChainMembership, ce.membership)
 			}
 		}

@@ -9,6 +9,7 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/util/sets"
 )
 
 // Result holds the simulation output.
@@ -39,15 +40,12 @@ type Input struct {
 
 // Run performs the counterfactual simulation.
 func Run(input Input) *Result {
-	fixSet := make(map[string]bool, len(input.FixControls))
-	for _, cid := range input.FixControls {
-		fixSet[cid] = true
-	}
+	fixSet := sets.New[string](input.FixControls...)
 
 	// Count findings that would be removed.
 	removed := 0
 	for i := range input.Findings {
-		if fixSet[string(input.Findings[i].ControlID)] {
+		if fixSet.Contains(string(input.Findings[i].ControlID)) {
 			removed++
 		}
 	}
@@ -61,7 +59,7 @@ func Run(input Input) *Result {
 		// Count remaining failing members.
 		remainingFailing := 0
 		for _, cid := range cf.ControlsFailing {
-			if !fixSet[string(cid)] {
+			if !fixSet.Contains(string(cid)) {
 				remainingFailing++
 			}
 		}
@@ -108,12 +106,12 @@ func Run(input Input) *Result {
 // CollectTeamControls returns all control IDs with findings on a team's assets.
 func CollectTeamControls(findings []remediation.Finding, teamAssets map[kernel.ControlID]bool) []string {
 	var controls []string
-	seen := make(map[string]bool)
+	seen := sets.New[string]()
 	for i := range findings {
 		cid := string(findings[i].ControlID)
-		if !seen[cid] {
+		if !seen.Contains(cid) {
 			controls = append(controls, cid)
-			seen[cid] = true
+			seen.Add(cid)
 		}
 	}
 	return controls
