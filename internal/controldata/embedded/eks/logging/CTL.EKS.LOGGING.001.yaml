@@ -1,0 +1,36 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.LOGGING.001
+name: EKS Control Plane Logging Must Be Enabled for All Log Types
+description: >
+  EKS clusters must have all five control plane log types enabled
+  (api, audit, authenticator, controllerManager, scheduler).
+  Without full logging, an attacker who compromises the cluster
+  can escalate privileges and exfiltrate data without any audit
+  trail.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AU-2"
+  hipaa: "164.312(b)"
+  fedramp_moderate: "AU-12"
+  cis_eks: "2.1"
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    EKS control plane logging is not fully enabled. API requests,
+    authentication events, and controller actions are not recorded.
+  action: >
+    Enable all five control plane log types via AWS CLI:
+    aws eks update-cluster-config --name <cluster> --logging
+    '{"clusterLogging":[{"types":["api","audit","authenticator",
+    "controllerManager","scheduler"],"enabled":true}]}'
+unsafe_predicate:
+  all:
+    - field: properties.logging.all_types_enabled
+      op: eq
+      value: false

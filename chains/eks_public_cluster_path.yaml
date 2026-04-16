@@ -1,0 +1,14 @@
+id: eks_public_cluster_path
+description: >
+  EKS API server is publicly accessible without CIDR restrictions,
+  control plane logging is disabled, and Kubernetes secrets are
+  not envelope-encrypted. An attacker with stolen AWS credentials
+  can reach the API from any IP, execute kubectl commands with no
+  audit trail, and read all secrets in plaintext. Remediating any
+  single control degrades the attack.
+controls:
+  - CTL.EKS.PUBLIC.ENDPOINT.001
+  - CTL.EKS.LOGGING.001
+  - CTL.EKS.SECRETS.ENCRYPT.001
+escalation_threshold: 3
+compound_severity: critical

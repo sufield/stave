@@ -3,22 +3,22 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 541
-**Pack hash:** `9b405220b6afde994a9a136e0207cd0804d3b48280f80775ee18cde3e126638b`
+**Total controls:** 544
+**Pack hash:** `e67488a9c13460d83afffe3bca9b18e56c14a8b8b3aa2d04518abc6539a21c19`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 95 |
-| high | 243 |
+| high | 246 |
 | info | 16 |
 | low | 40 |
 | medium | 147 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 400 |
+| exposure | 403 |
 | governance | 7 |
 | identity | 126 |
 | storage | 8 |
@@ -2586,6 +2586,51 @@ EFS file system policies must include a statement denying root access. Without t
 EFS file system policies must enforce encryption in transit by denying connections that do not use TLS. Without this policy, NFS clients can mount the file system over plaintext, exposing data to network-level interception and credential sniffing.
 
 **Remediation:** Apply a file system policy that enforces in-transit encryption. Run: aws efs put-file-system-policy --file-system-id fs-xxx --policy '{"Statement":[{"Effect":"Deny","Principal":{"AWS":"*"}, "Action":"*","Condition":{"Bool":{"aws:SecureTransport":"false"}}, "Resource":"*"}]}'
+
+---
+
+### CTL.EKS.LOGGING.001
+
+**EKS Control Plane Logging Must Be Enabled for All Log Types**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_eks: 2.1; fedramp_moderate: AU-12; hipaa: 164.312(b); nist_800_53_r5: AU-2;
+
+EKS clusters must have all five control plane log types enabled (api, audit, authenticator, controllerManager, scheduler). Without full logging, an attacker who compromises the cluster can escalate privileges and exfiltrate data without any audit trail.
+
+**Remediation:** Enable all five control plane log types via AWS CLI: aws eks update-cluster-config --name <cluster> --logging '{"clusterLogging":[{"types":["api","audit","authenticator", "controllerManager","scheduler"],"enabled":true}]}'
+
+---
+
+### CTL.EKS.PUBLIC.ENDPOINT.001
+
+**EKS Public API Endpoint Must Restrict Access with CIDR Allowlists**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_eks: 2.2; fedramp_moderate: SC-7; nist_800_53_r5: AC-17;
+
+EKS clusters with public API endpoints must restrict access to specific CIDR ranges. An unrestricted public endpoint (0.0.0.0/0) allows any internet IP to reach the API server, enabling credential-based attacks from anywhere.
+
+**Remediation:** Option 1 (preferred): Disable public endpoint entirely. Option 2: Restrict to specific CIDRs (corporate NAT, VPN, CI/CD). aws eks update-cluster-config --name <cluster> --resources-vpc-config endpointPublicAccess=true, publicAccessCidrs="10.0.0.0/8,203.0.113.0/24"
+
+---
+
+### CTL.EKS.SECRETS.ENCRYPT.001
+
+**EKS Kubernetes Secrets Must Be Encrypted with KMS CMK**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_eks: 2.3; fedramp_moderate: SC-28; hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-28;
+
+EKS clusters must encrypt Kubernetes secrets at rest using a customer-managed KMS key. Without envelope encryption, anyone with access to the etcd backup or underlying EBS volume can read all cluster secrets (API tokens, database passwords, TLS certificates) in plaintext.
+
+**Remediation:** Enable secrets encryption: aws eks associate-encryption-config --cluster-name <cluster> --encryption-config '[{"resources":["secrets"],"provider": {"keyArn":"arn:aws:kms:<region>:<account>:key/<key-id>"}}]'
 
 ---
 

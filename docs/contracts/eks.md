@@ -19,6 +19,28 @@ Scope tags: `aws`, `eks`, `k8s`
 | `k8s.cluster.version` | string | Kubernetes version (e.g. "1.33") |
 | `k8s.cluster.version_deprecated` | bool | Version has reached end-of-support |
 
+### logging
+
+| Property | Type | Description |
+|---|---|---|
+| `logging.all_types_enabled` | bool | All 5 control plane log types enabled |
+| `logging.enabled_types` | []string | Enabled types: api, audit, authenticator, controllerManager, scheduler |
+
+### encryption
+
+| Property | Type | Description |
+|---|---|---|
+| `encryption.secrets_encrypted` | bool | Kubernetes secrets envelope-encrypted with KMS CMK |
+| `encryption.key_arn` | string | KMS key ARN used for encryption |
+
+### endpoint
+
+| Property | Type | Description |
+|---|---|---|
+| `endpoint.public_access` | bool | Public API endpoint enabled |
+| `endpoint.private_access` | bool | Private API endpoint enabled |
+| `endpoint.public_unrestricted` | bool | public_access_cidrs includes 0.0.0.0/0 |
+
 ### addons
 
 | Property | Type | Description |
@@ -43,7 +65,7 @@ Scope tags: `aws`, `eks`, `k8s`
 ## Sample Extractor
 
 An EKS extractor queries the cluster via AWS API + kubectl:
-- Cluster version: `aws eks describe-cluster`
+- Cluster config: `aws eks describe-cluster`
 - VPC CNI addon: `aws eks describe-addon --addon-name vpc-cni`
 - Feature gates: `kubectl get nodes -o json`
 - Jobs: `kubectl get jobs -A -o json`
