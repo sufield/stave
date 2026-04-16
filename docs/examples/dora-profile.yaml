@@ -1,0 +1,56 @@
+# DORA ICT Risk Management Profile
+# Use with: stave apply --profile-file dora-profile.yaml --input obs.json
+# Use with: stave export compliance --profile-file dora-profile.yaml --snapshot obs.json
+
+schema_version: "1"
+
+id: dora_ict_risk
+name: "DORA ICT Risk Management Framework"
+version: "2025-01"
+description: >
+  Digital Operational Resilience Act mapping for ICT risk
+  management requirements (Articles 5-16).
+
+sections:
+  - id: "dora.art5.risk_framework"
+    title: "Article 5 — ICT Risk Management Framework"
+    priority: critical
+    required_controls:
+      - control_id: CTL.CLOUDTRAIL.ENABLED.001
+        rationale: "ICT risk monitoring requires audit logging"
+      - control_id: CTL.CONFIG.ENABLED.001
+        rationale: "Configuration change tracking for risk management"
+      - control_id: CTL.GUARDDUTY.ENABLED.001
+        rationale: "Threat detection component of ICT risk framework"
+
+  - id: "dora.art9.data_protection"
+    title: "Article 9 — Data Protection"
+    priority: critical
+    required_controls:
+      - control_id: CTL.S3.ENCRYPT.001
+        rationale: "Data at rest encryption"
+      - control_id: CTL.KMS.ROTATION.001
+        rationale: "Cryptographic key management"
+      - control_id: CTL.RDS.ENCRYPT.001
+        rationale: "Database encryption"
+
+  - id: "dora.art12.backup"
+    title: "Article 12 — Backup Policies and Restoration"
+    priority: high
+    required_controls:
+      - control_id: CTL.RDS.BACKUP.001
+        rationale: "Database backup retention"
+      - control_id: CTL.S3.VERSIONING.001
+        rationale: "Object versioning for data restoration"
+
+sla_deadlines:
+  critical: 24h
+  high: 168h
+  medium: 720h
+  low: 2160h
+
+evidence_metadata:
+  regulation: "EU 2022/2554 (DORA)"
+  effective_date: "2025-01-17"
+  jurisdiction: "European Union"
+  contact: "compliance@example.com"
