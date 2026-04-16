@@ -32,7 +32,7 @@ func NewCmd() *cobra.Command {
 	}
 
 	cmd := &cobra.Command{
-		Use:   "verify",
+		Use:   "evidence",
 		Short: "Verify evidence archive integrity and continuity",
 		Long: `Verify that an evidence archive produced by stave collect is
 complete and uninterrupted across a time period.

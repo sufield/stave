@@ -75,14 +75,18 @@ func TestWriteRunAndManifest(t *testing.T) {
 func TestGapDetection(t *testing.T) {
 	manifest := &Manifest{SchemaVersion: "1"}
 
-	manifest.AppendRun(ManifestRun{
+	if err := manifest.AppendRun(ManifestRun{
 		RunID: "run-001", CollectedAt: "2025-11-15T02:00:00Z",
-	}, 24)
+	}, 24); err != nil {
+		t.Fatal(err)
+	}
 
 	// 48h gap — should trigger gap detection (> 24h * 1.5 = 36h).
-	manifest.AppendRun(ManifestRun{
+	if err := manifest.AppendRun(ManifestRun{
 		RunID: "run-002", CollectedAt: "2025-11-17T02:00:00Z",
-	}, 24)
+	}, 24); err != nil {
+		t.Fatal(err)
+	}
 
 	if len(manifest.Gaps) != 1 {
 		t.Fatalf("gaps = %d, want 1", len(manifest.Gaps))
@@ -95,15 +99,49 @@ func TestGapDetection(t *testing.T) {
 func TestGapDetection_NoGap(t *testing.T) {
 	manifest := &Manifest{SchemaVersion: "1"}
 
-	manifest.AppendRun(ManifestRun{
+	if err := manifest.AppendRun(ManifestRun{
 		RunID: "run-001", CollectedAt: "2025-11-15T02:00:00Z",
-	}, 24)
-	manifest.AppendRun(ManifestRun{
+	}, 24); err != nil {
+		t.Fatal(err)
+	}
+	if err := manifest.AppendRun(ManifestRun{
 		RunID: "run-002", CollectedAt: "2025-11-16T02:00:00Z",
-	}, 24)
+	}, 24); err != nil {
+		t.Fatal(err)
+	}
 
 	if len(manifest.Gaps) != 0 {
 		t.Errorf("gaps = %d, want 0 (24h interval within 1.5x threshold)", len(manifest.Gaps))
+	}
+}
+
+func TestGapDetection_MalformedTimestamp(t *testing.T) {
+	manifest := &Manifest{SchemaVersion: "1"}
+	if err := manifest.AppendRun(ManifestRun{
+		RunID: "run-001", CollectedAt: "2025-11-15T02:00:00Z",
+	}, 24); err != nil {
+		t.Fatal(err)
+	}
+	err := manifest.AppendRun(ManifestRun{
+		RunID: "run-002", CollectedAt: "not-a-date",
+	}, 24)
+	if err == nil {
+		t.Fatal("expected error for malformed timestamp")
+	}
+}
+
+func TestGapDetection_EmptyTimestamp(t *testing.T) {
+	manifest := &Manifest{SchemaVersion: "1"}
+	if err := manifest.AppendRun(ManifestRun{
+		RunID: "run-001", CollectedAt: "2025-11-15T02:00:00Z",
+	}, 24); err != nil {
+		t.Fatal(err)
+	}
+	err := manifest.AppendRun(ManifestRun{
+		RunID: "run-002", CollectedAt: "",
+	}, 24)
+	if err == nil {
+		t.Fatal("expected error for empty timestamp")
 	}
 }
 

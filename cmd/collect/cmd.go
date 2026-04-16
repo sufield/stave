@@ -215,13 +215,15 @@ func runCollect(stdout, stderr io.Writer, opts *options) error {
 		manifest.ArchiveID = strings.Join(frameworks, "-") + "-archive"
 	}
 
-	manifest.AppendRun(appcollect.ManifestRun{
+	if appendErr := manifest.AppendRun(appcollect.ManifestRun{
 		RunID:        runID,
 		CollectedAt:  start.Format(time.RFC3339),
 		Frameworks:   frameworks,
 		FindingCount: len(result.Findings),
 		SHA256:       meta.SHA256Sums["assessment.json"],
-	}, 24)
+	}, 24); appendErr != nil {
+		return fmt.Errorf("append run to manifest: %w", appendErr)
+	}
 
 	if saveErr := archive.SaveManifest(manifest); saveErr != nil {
 		return fmt.Errorf("save manifest: %w", saveErr)

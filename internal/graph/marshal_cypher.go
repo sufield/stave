@@ -104,7 +104,7 @@ func cypherMatchNode(g *GraphData, nodeID string) (string, string) {
 func cypherValue(v any) string {
 	switch val := v.(type) {
 	case string:
-		return "'" + strings.ReplaceAll(val, "'", "\\'") + "'"
+		return "'" + strings.ReplaceAll(val, "'", "''") + "'"
 	case bool:
 		if val {
 			return "true"
@@ -128,7 +128,7 @@ func cypherValue(v any) string {
 		return "[" + strings.Join(parts, ", ") + "]"
 	default:
 		data, _ := json.Marshal(v)
-		return "'" + strings.ReplaceAll(string(data), "'", "\\'") + "'"
+		return "'" + strings.ReplaceAll(string(data), "'", "''") + "'"
 	}
 }
 

@@ -336,3 +336,46 @@ func TestActiveCount(t *testing.T) {
 
 	_ = os.Remove("") // satisfy unused import
 }
+
+func TestAddAcknowledgment_EmptyTimestamp_NoPanic(t *testing.T) {
+	f := &AcceptanceFile{SchemaVersion: "1"}
+	err := f.AddAcknowledgment(AcknowledgmentEntry{
+		ControlID:  "CTL.A.001",
+		AssetID:    "asset-1",
+		Reason:     "test",
+		ExpiryDate: "2027-01-01",
+	}, "")
+	if err == nil {
+		t.Fatal("expected error for empty timestamp")
+	}
+}
+
+func TestAddAcknowledgment_ShortTimestamp_NoPanic(t *testing.T) {
+	f := &AcceptanceFile{SchemaVersion: "1"}
+	err := f.AddAcknowledgment(AcknowledgmentEntry{
+		ControlID:  "CTL.A.001",
+		AssetID:    "asset-1",
+		Reason:     "test",
+		ExpiryDate: "2027-01-01",
+	}, "2026-01")
+	if err == nil {
+		t.Fatal("expected error for short timestamp")
+	}
+}
+
+func TestAddAcknowledgment_ValidTimestamp(t *testing.T) {
+	f := &AcceptanceFile{SchemaVersion: "1"}
+	err := f.AddAcknowledgment(AcknowledgmentEntry{
+		ControlID:  "CTL.A.001",
+		AssetID:    "asset-1",
+		Reason:     "test",
+		Approver:   "test-user",
+		ExpiryDate: "2027-01-01",
+	}, "2026-04-15T12:00:00Z")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if f.Acknowledgments[0].AcknowledgedDate != "2026-04-15" {
+		t.Errorf("date = %q, want 2026-04-15", f.Acknowledgments[0].AcknowledgedDate)
+	}
+}

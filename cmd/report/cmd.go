@@ -50,7 +50,7 @@ func NewCmd() *cobra.Command {
 	}
 
 	cmd := &cobra.Command{
-		Use:   "report",
+		Use:   "posture-report",
 		Short: "Generate executive security posture report",
 		Long: `Aggregate all assessment dimensions into a single structured
 report document: posture score, findings summary, SLA compliance,

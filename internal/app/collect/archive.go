@@ -144,7 +144,7 @@ func (a *Archive) SaveManifest(m *Manifest) error {
 }
 
 // AppendRun adds a run to the manifest and detects gaps.
-func (m *Manifest) AppendRun(run ManifestRun, expectedIntervalH float64) {
+func (m *Manifest) AppendRun(run ManifestRun, expectedIntervalH float64) error {
 	now := run.CollectedAt
 	if m.CreatedAt == "" {
 		m.CreatedAt = now
@@ -154,8 +154,14 @@ func (m *Manifest) AppendRun(run ManifestRun, expectedIntervalH float64) {
 	// Gap detection.
 	if len(m.Runs) > 0 && expectedIntervalH > 0 {
 		lastRun := m.Runs[len(m.Runs)-1]
-		lastTime, _ := time.Parse(time.RFC3339, lastRun.CollectedAt)
-		thisTime, _ := time.Parse(time.RFC3339, run.CollectedAt)
+		lastTime, lastErr := time.Parse(time.RFC3339, lastRun.CollectedAt)
+		if lastErr != nil {
+			return fmt.Errorf("parse CollectedAt for run %q: %w", lastRun.RunID, lastErr)
+		}
+		thisTime, thisErr := time.Parse(time.RFC3339, run.CollectedAt)
+		if thisErr != nil {
+			return fmt.Errorf("parse CollectedAt for run %q: %w", run.RunID, thisErr)
+		}
 		gap := thisTime.Sub(lastTime).Hours()
 		threshold := expectedIntervalH * 1.5
 		if gap > threshold {
@@ -169,6 +175,7 @@ func (m *Manifest) AppendRun(run ManifestRun, expectedIntervalH float64) {
 	}
 
 	m.Runs = append(m.Runs, run)
+	return nil
 }
 
 // Verify checks archive integrity — manifest hash and per-run checksums.

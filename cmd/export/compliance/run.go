@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
@@ -77,7 +78,8 @@ func runCompliance(
 	if err != nil {
 		return fmt.Errorf("create control loader: %w", err)
 	}
-	allControls, err := repo.LoadControls(ctx, "")
+	ctlDir := resolveControlsDir()
+	allControls, err := repo.LoadControls(ctx, ctlDir)
 	if err != nil {
 		return fmt.Errorf("load controls: %w", err)
 	}
@@ -197,4 +199,17 @@ func exitErrorComposite(assessments []*evidence.ProfileAssessment) error {
 		}
 	}
 	return nil
+}
+
+// resolveControlsDir returns the controls directory, using the same
+// fallback logic as stave apply: try <binary-dir>/controls first,
+// then fall back to ./controls relative to cwd.
+func resolveControlsDir() string {
+	if exe, err := os.Executable(); err == nil {
+		dir := filepath.Join(filepath.Dir(exe), "controls")
+		if fi, statErr := os.Stat(dir); statErr == nil && fi.IsDir() {
+			return dir
+		}
+	}
+	return "controls"
 }

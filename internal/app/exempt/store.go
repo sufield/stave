@@ -116,6 +116,9 @@ func (f *AcceptanceFile) AddAcknowledgment(entry AcknowledgmentEntry, timestamp 
 	}
 
 	entry.ID = entry.ControlID + "@" + entry.AssetID
+	if len(timestamp) < 10 {
+		return fmt.Errorf("timestamp too short or empty: %q (expected RFC3339)", timestamp)
+	}
 	entry.AcknowledgedDate = timestamp[:10] // YYYY-MM-DD from RFC3339
 	entry.Status = "active"
 	entry.AuditTrail = []AuditEvent{
