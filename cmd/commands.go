@@ -17,6 +17,7 @@ import (
 	stavebundle "github.com/sufield/stave/cmd/bundle"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	stavecollect "github.com/sufield/stave/cmd/collect"
+	stavecompare "github.com/sufield/stave/cmd/compare"
 	staveconsolidate "github.com/sufield/stave/cmd/consolidate"
 	stavecoverage "github.com/sufield/stave/cmd/coverage"
 	"github.com/sufield/stave/cmd/diagnose"
@@ -214,6 +215,9 @@ func WireCommands(app *App) {
 
 	// Terminal posture monitor
 	root.AddCommand(stavemonitor.NewCmd())
+
+	// Compliance gap analysis
+	root.AddCommand(stavecompare.NewCmd())
 
 	// Team remediation plans
 	root.AddCommand(staveplan.NewCmd())
