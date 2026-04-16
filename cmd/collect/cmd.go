@@ -3,6 +3,7 @@
 package collect
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -33,6 +34,10 @@ type options struct {
 	Compliance string
 	Verify     bool
 	Format     string
+	Daemon     bool
+	Period     time.Duration
+	PIDFile    string
+	AuditLabel string
 }
 
 // NewCmd constructs the collect command.
@@ -60,6 +65,9 @@ Exit Codes:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			if opts.Daemon {
+				return runDaemon(cmd.Context(), cmd.ErrOrStderr(), opts)
+			}
 			return runCollect(cmd.OutOrStdout(), cmd.ErrOrStderr(), opts)
 		},
 	}
@@ -69,10 +77,62 @@ Exit Codes:
 	cmd.Flags().StringVar(&opts.Compliance, "compliance", "", "comma-separated framework profiles")
 	cmd.Flags().BoolVar(&opts.Verify, "verify", false, "verify archive integrity")
 	cmd.Flags().StringVar(&opts.Format, "format", "", "include format in bundle (oscal)")
+	cmd.Flags().BoolVar(&opts.Daemon, "daemon", false, "run as long-lived daemon collecting on --period interval")
+	cmd.Flags().DurationVar(&opts.Period, "period", 24*time.Hour, "collection interval for daemon mode")
+	cmd.Flags().StringVar(&opts.PIDFile, "pid-file", "", "path to PID file (daemon mode)")
+	cmd.Flags().StringVar(&opts.AuditLabel, "audit-label", "", "label embedded in bundle metadata")
 
 	_ = cmd.MarkFlagRequired("archive")
 
+	// Status subcommand.
+	statusOpts := &statusOptions{}
+	statusCmd := &cobra.Command{
+		Use:   "status",
+		Short: "Show daemon status and evidence archive coverage",
+		Long: `Show whether the collect daemon is running, the last collection
+time, and evidence archive coverage with gap detection.
+
+Exit Codes:
+  0   Status reported
+  2   Invalid input
+  4   Internal error`,
+		Example:       `  stave collect status --evidence-dir ./evidence/ --pid-file /var/run/stave.pid`,
+		SilenceUsage:  true,
+		SilenceErrors: true,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			out := appcollect.RunStatus(appcollect.StatusOpts{
+				EvidenceDir: statusOpts.EvidenceDir,
+				PIDFile:     statusOpts.PIDFile,
+			})
+			_, err := fmt.Fprint(cmd.OutOrStdout(), out)
+			return err
+		},
+	}
+	statusCmd.Flags().StringVar(&statusOpts.EvidenceDir, "evidence-dir", "", "evidence archive directory")
+	statusCmd.Flags().StringVar(&statusOpts.PIDFile, "pid-file", "", "PID file path")
+	cmd.AddCommand(statusCmd)
+
 	return cmd
+}
+
+type statusOptions struct {
+	EvidenceDir string
+	PIDFile     string
+}
+
+func runDaemon(ctx context.Context, stderr io.Writer, opts *options) error {
+	if opts.Snapshot == "" {
+		return errors.New("--snapshot is required for daemon mode")
+	}
+
+	return appcollect.RunDaemon(ctx, appcollect.DaemonOpts{
+		Period:     opts.Period,
+		PIDFile:    opts.PIDFile,
+		AuditLabel: opts.AuditLabel,
+		RunOnce: func(innerCtx context.Context) error {
+			return runCollect(io.Discard, stderr, opts)
+		},
+	})
 }
 
 func runCollect(stdout, stderr io.Writer, opts *options) error {
