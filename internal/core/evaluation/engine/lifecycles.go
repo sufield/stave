@@ -3,6 +3,7 @@ package engine
 import (
 	"fmt"
 	"log/slog"
+	"strings"
 
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
@@ -137,9 +138,18 @@ func recordAssetObservation(
 
 		isUnsafe, evalErr := checkUnsafe(*ctl, a, snap, celEval)
 		if evalErr != nil {
-			slog.Warn("inconclusive check", "control", ctl.ID, "asset", a.ID, "error", evalErr)
-			// Record inconclusive — preserves SLA clock without changing exposure state.
-			_ = t.RecordInconclusive(snap.CapturedAt)
+			errStr := evalErr.Error()
+			if strings.Contains(errStr, "compile") || strings.Contains(errStr, "parse") || strings.Contains(errStr, "undeclared") {
+				slog.Error("control predicate compilation failed",
+					"control", ctl.ID, "asset", a.ID, "error", evalErr)
+			} else {
+				slog.Warn("inconclusive check",
+					"control", ctl.ID, "asset", a.ID, "error", evalErr)
+			}
+			if recErr := t.RecordInconclusive(snap.CapturedAt); recErr != nil {
+				slog.Error("failed to record inconclusive verdict",
+					"control", ctl.ID, "asset", a.ID, "error", recErr)
+			}
 			continue
 		}
 		if err := t.RecordCheck(snap.CapturedAt, isUnsafe); err != nil {

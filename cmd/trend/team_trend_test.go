@@ -203,13 +203,11 @@ func TestComputeRollup_WeightedScoreAverage(t *testing.T) {
 	}
 }
 
-func TestManifest_V1_BackwardCompat(t *testing.T) {
-	// Version 1 manifest has no hierarchy — should work unchanged.
-	manifest := makeManifest() // no Hierarchy field
+func TestManifest_NoHierarchy(t *testing.T) {
+	manifest := makeManifest()
 	if manifest.HierarchyByID("anything") != nil {
-		t.Error("v1 manifest should have no hierarchy groups")
+		t.Error("manifest without hierarchy should return nil")
 	}
-	// Team resolution should still work.
 	assessments := []*report.Assessment{
 		{Findings: []remediation.Finding{
 			makeFinding("CTL.S3.001", "arn:aws:s3:::alpha-bucket", policy.SeverityHigh, 24, false),
@@ -217,7 +215,7 @@ func TestManifest_V1_BackwardCompat(t *testing.T) {
 	}
 	trends, summary := computeTeamTrends(assessments, manifest, "", false)
 	if summary == nil || summary.TeamsTracked == 0 {
-		t.Error("v1 manifest should produce team trends")
+		t.Error("manifest without hierarchy should still produce team trends")
 	}
 	if len(trends) == 0 {
 		t.Error("expected at least one team trend")

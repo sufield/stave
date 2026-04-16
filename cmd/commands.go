@@ -42,13 +42,16 @@ import (
 	stavemonitor "github.com/sufield/stave/cmd/monitor"
 	stavenep "github.com/sufield/stave/cmd/nep"
 	stavepath "github.com/sufield/stave/cmd/path"
+	staveplan "github.com/sufield/stave/cmd/plan"
 	"github.com/sufield/stave/cmd/prune"
 	staverank "github.com/sufield/stave/cmd/rank"
+	stavereport "github.com/sufield/stave/cmd/report"
 	stavescore "github.com/sufield/stave/cmd/score"
 	stavesla "github.com/sufield/stave/cmd/sla"
 	stavetelemetry "github.com/sufield/stave/cmd/telemetry"
 	stavetest "github.com/sufield/stave/cmd/test"
 	stavetrend "github.com/sufield/stave/cmd/trend"
+	staveverify "github.com/sufield/stave/cmd/verify"
 	stavewatch "github.com/sufield/stave/cmd/watch"
 	artifact "github.com/sufield/stave/internal/adapters/artifacts"
 	infrabaseline "github.com/sufield/stave/internal/adapters/baseline"
@@ -211,6 +214,15 @@ func WireCommands(app *App) {
 
 	// Terminal posture monitor
 	root.AddCommand(stavemonitor.NewCmd())
+
+	// Team remediation plans
+	root.AddCommand(staveplan.NewCmd())
+
+	// Executive report
+	root.AddCommand(stavereport.NewCmd())
+
+	// Evidence archive verification
+	root.AddCommand(staveverify.NewCmd())
 
 	// SLA policy management
 	root.AddCommand(stavesla.NewCmd())
