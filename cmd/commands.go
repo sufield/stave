@@ -23,6 +23,7 @@ import (
 	"github.com/sufield/stave/cmd/diagnose"
 	"github.com/sufield/stave/cmd/diagnose/artifacts"
 	diagreport "github.com/sufield/stave/cmd/diagnose/report"
+	stavediffcatalog "github.com/sufield/stave/cmd/diff"
 	"github.com/sufield/stave/cmd/doctor"
 	stavedrift "github.com/sufield/stave/cmd/drift"
 	"github.com/sufield/stave/cmd/enforce"
@@ -45,10 +46,12 @@ import (
 	stavenep "github.com/sufield/stave/cmd/nep"
 	stavepath "github.com/sufield/stave/cmd/path"
 	staveplan "github.com/sufield/stave/cmd/plan"
+	staveprofile "github.com/sufield/stave/cmd/profile"
 	"github.com/sufield/stave/cmd/prune"
 	staverank "github.com/sufield/stave/cmd/rank"
 	stavereport "github.com/sufield/stave/cmd/report"
 	stavescore "github.com/sufield/stave/cmd/score"
+	stavescorecard "github.com/sufield/stave/cmd/scorecard"
 	stavesimulate "github.com/sufield/stave/cmd/simulate"
 	stavesla "github.com/sufield/stave/cmd/sla"
 	stavetelemetry "github.com/sufield/stave/cmd/telemetry"
@@ -217,6 +220,15 @@ func WireCommands(app *App) {
 
 	// Terminal posture monitor
 	root.AddCommand(stavemonitor.NewCmd())
+
+	// Multi-framework scorecard
+	root.AddCommand(stavescorecard.NewCmd())
+
+	// Catalog diff
+	root.AddCommand(stavediffcatalog.NewCmd(f.NewCtlRepo))
+
+	// Profile management
+	root.AddCommand(staveprofile.NewCmd())
 
 	// Version inventory for CVE correlation
 	root.AddCommand(staveinventory.NewCmd())

@@ -25,6 +25,7 @@ Subcommands:
 	cmd.AddCommand(newRegoCmd(newCtlRepo))
 	cmd.AddCommand(compliance.NewCmd(newCtlRepo, newCELEvaluator))
 	cmd.AddCommand(newOCSFCmd())
+	cmd.AddCommand(newOSCALCmd())
 
 	return cmd
 }
