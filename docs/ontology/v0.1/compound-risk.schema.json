@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stave.dev/ontology/v0.1/compound-risk",
+  "title": "CompoundRisk",
+  "description": "A named risk pattern that fires when N controls co-fail on related assets. Called 'chain' in the CLI.",
+  "type": "object",
+  "required": ["id", "name", "member_controls", "compound_severity"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "examples": ["data_exfiltration_path", "ec2_exposed_instance_path"]
+    },
+    "name": { "type": "string" },
+    "member_controls": {
+      "type": "array",
+      "minItems": 2,
+      "items": { "type": "string" },
+      "description": "Control IDs that must ALL be in VIOLATION state."
+    },
+    "compound_severity": {
+      "type": "string",
+      "enum": ["critical", "high", "medium", "low"]
+    },
+    "blast_radius_multiplier": {
+      "type": "number",
+      "minimum": 1.0
+    },
+    "narrative": {
+      "type": "string",
+      "description": "Attack story: how an attacker exploits this combination."
+    },
+    "preconditions": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Capabilities an attacker needs before this chain is exploitable."
+    },
+    "postconditions": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Capabilities an attacker gains if this chain is present."
+    },
+    "attack_stages": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

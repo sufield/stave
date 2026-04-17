@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stave.dev/ontology/v0.1/control",
+  "title": "Control",
+  "description": "A named, versioned, executable safety property that must always hold true across the entire system. Unlike a prescriptive policy control (a requirement statement), a Stave control contains an executable CEL predicate that deterministically evaluates whether the property holds against any asset that composes the system. Maps to oscal:Control for compliance reporting.",
+  "type": "object",
+  "required": ["id", "version", "name", "asset_type", "predicate", "severity"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^CTL\\.[A-Z0-9]+\\.[A-Z0-9.]+\\.[0-9]{3}$",
+      "description": "Stable identifier. Never changes after publication.",
+      "examples": ["CTL.S3.PUBLIC.001", "CTL.EC2.IMDSV2.001"]
+    },
+    "version": {
+      "type": "string",
+      "description": "Semantic version of this control definition."
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable name."
+    },
+    "asset_type": {
+      "type": "string",
+      "description": "The asset type this control evaluates. Must match Asset.type."
+    },
+    "predicate": {
+      "type": "string",
+      "description": "CEL expression evaluated against asset.properties. True = PASS, False = VIOLATION."
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["critical", "high", "medium", "low"]
+    },
+    "domain": {
+      "type": "string",
+      "description": "Control domain.",
+      "examples": ["s3", "ec2", "iam", "vsphere", "cisco", "ad"]
+    },
+    "attack_stage": {
+      "type": "string",
+      "enum": [
+        "initial_access", "execution", "persistence", "privilege_escalation",
+        "defense_evasion", "credential_access", "discovery", "lateral_movement",
+        "collection", "exfiltration", "impact", "command_and_control"
+      ]
+    },
+    "rationale": {
+      "type": "string",
+      "description": "Why this control exists."
+    },
+    "remediation": {
+      "type": "object",
+      "properties": {
+        "action": { "type": "string" },
+        "changes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["property_path", "required_value"],
+            "properties": {
+              "property_path": { "type": "string" },
+              "current_value": {},
+              "required_value": {},
+              "has_safe_default": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    },
+    "compliance": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": { "type": "string" }
+      }
+    },
+    "tests": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "asset", "expect"],
+        "properties": {
+          "name": { "type": "string" },
+          "asset": { "type": "object" },
+          "expect": { "type": "string", "enum": ["VIOLATION", "PASS", "INCOMPLETE"] }
+        }
+      }
+    }
+  }
+}

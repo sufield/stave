@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stave.dev/ontology/v0.1/posture-finding",
+  "title": "PostureFinding",
+  "description": "The result of evaluating a Control against an Asset. Base: OCSF Compliance Finding (class_uid 2003). Extended with temporal posture tracking, compound risk membership, and sensitivity context.",
+  "type": "object",
+  "required": ["finding_id", "control_id", "asset_id", "verdict", "severity", "first_seen", "last_seen", "assessment_id"],
+  "properties": {
+    "finding_id": {
+      "type": "string",
+      "description": "Stable SHA-256 of control_id + asset_id. Same finding produces same ID across assessments."
+    },
+    "control_id": { "type": "string", "description": "References Control.id." },
+    "asset_id": { "type": "string", "description": "References Asset.id." },
+    "assessment_id": { "type": "string", "description": "References Assessment.id." },
+    "verdict": {
+      "type": "string",
+      "enum": ["VIOLATION", "PASS", "INCOMPLETE", "EXEMPTION_LAPSED", "COLLECTION_STALENESS"]
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["critical", "high", "medium", "low"],
+      "description": "Effective severity after sensitivity amplification."
+    },
+    "sensitivity": {
+      "type": "string",
+      "enum": ["phi", "pci", "pii", "confidential", "internal", "public", "unknown"]
+    },
+    "sensitivity_multiplier": { "type": "number" },
+    "first_seen": { "type": "string", "format": "date-time" },
+    "last_seen": { "type": "string", "format": "date-time" },
+    "dwell_days": { "type": "integer", "minimum": 0 },
+    "chain_findings": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "IDs of CompoundRisk patterns this finding participates in."
+    },
+    "blast_radius": { "type": "number" },
+    "evidence": {
+      "type": "object",
+      "description": "Properties from the snapshot that caused the violation."
+    },
+    "remediation": {
+      "type": "object",
+      "properties": {
+        "action": { "type": "string" },
+        "changes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "property_path": { "type": "string" },
+              "current_value": {},
+              "required_value": {},
+              "has_safe_default": { "type": "boolean" },
+              "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+            }
+          }
+        }
+      }
+    },
+    "compliance": {
+      "type": "object",
+      "additionalProperties": { "type": "array", "items": { "type": "string" } }
+    },
+    "team": { "type": "string" },
+    "exemption": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "expired", "pending"] },
+        "expires_at": { "type": "string", "format": "date-time" },
+        "approver": { "type": "string" },
+        "compensating_control": { "type": "string" },
+        "rationale": { "type": "string" }
+      }
+    },
+    "ocsf_class_uid": { "type": "integer", "const": 2003 }
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stave.dev/ontology/v0.1/asset",
+  "title": "Asset",
+  "description": "A cloud infrastructure resource with observed configuration properties at a point in time.",
+  "type": "object",
+  "required": ["id", "type", "vendor", "captured_at", "properties"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Stable, globally unique identifier. For AWS: full ARN. For on-prem: vendor-defined URN.",
+      "examples": ["arn:aws:s3:::prod-bucket", "vsphere://vcenter.corp/vm/prod-web-01"]
+    },
+    "type": {
+      "type": "string",
+      "description": "Asset type in snake_case. Defines which controls can evaluate this asset.",
+      "examples": ["aws_s3_bucket", "aws_ec2_instance", "vsphere_vm", "cisco_ios_device"]
+    },
+    "vendor": {
+      "type": "string",
+      "enum": ["aws", "vsphere", "cisco", "ad", "gcp", "azure", "custom"],
+      "description": "Infrastructure vendor. Determines which extractor produced this asset."
+    },
+    "captured_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when this asset state was observed. Immutable after capture."
+    },
+    "region": {
+      "type": "string",
+      "description": "Geographic or logical region. AWS region, vSphere datacenter, etc."
+    },
+    "account_id": {
+      "type": "string",
+      "description": "Account or organization unit that owns this asset."
+    },
+    "tags": {
+      "type": "object",
+      "additionalProperties": { "type": "string" },
+      "description": "Key-value metadata tags as set on the asset in the source system."
+    },
+    "sensitivity": {
+      "type": "string",
+      "enum": ["phi", "pci", "pii", "confidential", "internal", "public", "unknown"],
+      "description": "Data sensitivity classification. Amplifies risk scores on findings."
+    },
+    "properties": {
+      "type": "object",
+      "description": "Configuration properties specific to this asset type. CEL predicates in controls reference fields within properties."
+    }
+  }
+}

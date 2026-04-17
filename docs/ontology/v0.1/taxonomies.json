@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stave.dev/ontology/v0.1/taxonomies",
+  "title": "Stave Ontology Taxonomies",
+  "description": "Closed enumerations for the Stave ontology primitives.",
+  "definitions": {
+    "severity": {
+      "type": "string",
+      "enum": ["critical", "high", "medium", "low"],
+      "descriptions": {
+        "critical": "Active exploitation likely. Immediate action.",
+        "high": "Exploitation possible. Fix within SLA window.",
+        "medium": "Exploitation requires conditions. Scheduled remediation.",
+        "low": "Theoretical risk. Annual review cycle."
+      }
+    },
+    "verdict": {
+      "type": "string",
+      "enum": ["VIOLATION", "PASS", "INCOMPLETE", "EXEMPTION_LAPSED", "COLLECTION_STALENESS"],
+      "descriptions": {
+        "VIOLATION": "Predicate evaluated false. Finding is active.",
+        "PASS": "Predicate evaluated true. Control satisfied.",
+        "INCOMPLETE": "Required property absent from snapshot. Cannot determine compliance state.",
+        "EXEMPTION_LAPSED": "Exemption expired without review. Severity bumped.",
+        "COLLECTION_STALENESS": "No snapshot newer than configured threshold. Monitoring pipeline failure."
+      }
+    },
+    "sensitivity_tier": {
+      "type": "string",
+      "enum": ["phi", "pci", "pii", "confidential", "internal", "public", "unknown"],
+      "default_multipliers": {
+        "phi": 3.0,
+        "pci": 2.5,
+        "pii": 2.0,
+        "confidential": 1.5,
+        "internal": 1.0,
+        "public": 1.0,
+        "unknown": 1.0
+      }
+    },
+    "attack_stage": {
+      "type": "string",
+      "enum": [
+        "initial_access", "execution", "persistence", "privilege_escalation",
+        "defense_evasion", "credential_access", "discovery", "lateral_movement",
+        "collection", "exfiltration", "impact", "command_and_control"
+      ],
+      "mitre_mapping": {
+        "initial_access": "TA0001",
+        "execution": "TA0002",
+        "persistence": "TA0003",
+        "privilege_escalation": "TA0004",
+        "defense_evasion": "TA0005",
+        "credential_access": "TA0006",
+        "discovery": "TA0007",
+        "lateral_movement": "TA0008",
+        "collection": "TA0009",
+        "exfiltration": "TA0010",
+        "impact": "TA0040",
+        "command_and_control": "TA0011"
+      }
+    },
+    "capability": {
+      "type": "string",
+      "enum": [
+        "internet_access", "network_access_vpc", "network_access_ec2",
+        "network_access_rds", "network_access_eks",
+        "iam_credential_theft", "aws_root_access",
+        "k8s_cluster_admin", "k8s_service_account_token",
+        "db_credential_theft", "secret_store_access",
+        "ec2_code_execution", "container_code_execution",
+        "s3_data_access", "rds_data_access", "cloudtrail_data_access",
+        "data_destruction", "audit_trail_destroyed"
+      ],
+      "descriptions": {
+        "internet_access": "Attacker reachable from public internet",
+        "network_access_vpc": "Attacker inside VPC",
+        "network_access_ec2": "Attacker can reach EC2 instances",
+        "network_access_rds": "Attacker can reach database ports",
+        "network_access_eks": "Attacker can reach EKS API server",
+        "iam_credential_theft": "Valid AWS IAM credentials obtained",
+        "aws_root_access": "Root account credentials",
+        "k8s_cluster_admin": "kubectl cluster-admin access",
+        "k8s_service_account_token": "Kubernetes service account token",
+        "db_credential_theft": "Database credentials",
+        "secret_store_access": "Secrets Manager / SSM contents",
+        "ec2_code_execution": "Code execution on EC2 host",
+        "container_code_execution": "Code execution in container",
+        "s3_data_access": "Read S3 objects",
+        "rds_data_access": "Query RDS database contents",
+        "cloudtrail_data_access": "Read audit logs",
+        "data_destruction": "Delete or encrypt data",
+        "audit_trail_destroyed": "Logs deleted or stopped"
+      }
+    }
+  }
+}

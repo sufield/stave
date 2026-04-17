@@ -1,111 +1,155 @@
-# Stave Security Graph Ontology
+# Stave Ontology
 
-Standards-based ontology mapping for Stave's security graph.
-Every concept maps to an existing standard where one exists.
-Stave extensions use the host standard's `x_` prefix convention.
+**Version:** 0.1.0
+**Status:** Draft — battle-tested by CLI commands, not yet frozen
 
-## Standards Adopted
+This document defines the semantic foundation for the Stave platform. It is the developer contract for Stave Apps.
 
-| Standard | Version | Use in Stave | License |
-|---|---|---|---|
-| [OCSF](https://schema.ocsf.io) | v1.3+ | Findings, resources, identities, remediation | Apache 2.0 / Linux Foundation |
-| [STIX 2.1](https://oasis-open.github.io/cti-documentation/stix/intro) | 2.1 | Chains, attack patterns, threat indicators | OASIS Open / Apache 2.0 |
-| [MITRE ATT&CK](https://attack.mitre.org) | v15+ | Attack stage taxonomy (tactic IDs) | Apache 2.0 |
-| [OSCAL](https://pages.nist.gov/OSCAL/) | 1.1.2 | Controls, compliance profiles, assessment results | NIST / Public Domain |
+## Design Principle
 
-## Node Types
+Reuse existing ontologies where they fit. Extend only where they do not. Never replace what already has community adoption.
 
-| Stave Concept | Standard | Standard Type | Notes |
-|---|---|---|---|
-| TenantScope (account) | OCSF | `cloud.account` object | Provider-agnostic account boundary |
-| StorageResource | OCSF | `Infrastructure / storage` | S3, Azure Blob, GCS |
-| ComputeResource | OCSF | `Infrastructure / server` | Lambda, EC2, Azure Function |
-| NetworkResource | OCSF | `Infrastructure / network` | VPC, subnet, security group |
-| DataResource | OCSF | `Infrastructure / database` | RDS, DynamoDB, Cosmos DB |
-| SecretResource | OCSF | `Infrastructure / service` | KMS, Secrets Manager |
-| Identity | OCSF | `User` or `Service Account` | IAM role/user, Azure AD SP, GCP SA |
-| AccessPolicy | OCSF | `Policy` object (extension) | IAM policy document |
-| Control | OSCAL | `control` | Invariant definition |
-| Finding | OCSF | `Security Finding` (class 2001) | Control evaluation result |
-| ThreatChain | STIX 2.1 | `Attack Pattern` SDO | Compound threat definition |
-| ChainFinding | STIX 2.1 | `Indicator` SDO | Fired chain instance |
-| ComplianceRequirement | OSCAL | `control` reference | Regulatory requirement |
-| AttackerCapability | STIX 2.1 | `Attack Pattern` + `x_mitre_tactic_type` | Chain terminus |
-| RemediationAction | OCSF | `Remediation Activity` (class 9001) | Structured remediation spec |
+## Foundation Layers (reused without modification)
 
-## Edge Types
+### Layer 1: OSCAL (NIST) — Control and Compliance
 
-| Stave Concept | Standard | Standard Relationship | Notes |
-|---|---|---|---|
-| CAN_IMPERSONATE | STIX 2.1 | `uses` relationship | Identity can assume another identity |
-| HAS_EFFECTIVE_ACCESS | OCSF | `actor` to `resource` in Finding | Resolved NEP access |
-| GOVERNED_BY | OCSF | `Policy` to resource | Access policy covers resource |
-| TARGETS | OCSF | Finding `resources` array | Finding targets a resource |
-| MEMBER_OF | STIX 2.1 | Indicator `indicates` AttackPattern | Finding contributes to chain |
-| MAPS_TO | OSCAL | Control `reference` | Control maps to requirement |
-| BELONGS_TO_SCOPE | OCSF | `cloud.account` | Resource belongs to account |
-| PRODUCES | STIX 2.1 | AttackPattern `kill_chain_phases` | Chain produces attacker capability |
-| VIOLATES | OCSF | Finding `compliance` array | Finding violates requirement |
+Stave uses [OSCAL](https://pages.nist.gov/OSCAL/) for:
 
-## Attack Stage to ATT&CK Tactic Mapping
+- Control catalog (catalog.json)
+- Compliance profiles (profile.json)
+- Assessment results (assessment-results.json)
+- Plan of Action and Milestones (poam.json)
 
-| Stave attack_stage | ATT&CK Tactic ID | ATT&CK Tactic Name |
-|---|---|---|
-| initial_access | TA0001 | Initial Access |
-| execution | TA0002 | Execution |
-| persistence | TA0003 | Persistence |
-| privilege_escalation | TA0004 | Privilege Escalation |
-| detection_evasion | TA0005 | Defense Evasion |
-| credential_access | TA0006 | Credential Access |
-| discovery | TA0007 | Discovery |
-| lateral_movement | TA0008 | Lateral Movement |
-| collection | TA0009 | Collection |
-| exfiltration | TA0010 | Exfiltration |
-| impact | TA0040 | Impact |
-| resilience | x_stave_resilience | Stave extension (no ATT&CK equivalent) |
+Stave controls map to OSCAL controls by control-id. Stave compliance citations map to OSCAL control references. `stave export oscal` produces OSCAL 1.1.2 conformant documents.
 
-## Resource Class Taxonomy
+| OSCAL Concept | Stave Equivalent |
+|---|---|
+| oscal:Control | Control (1:1 mapping) |
+| oscal:Profile | ComplianceProfile |
+| oscal:Finding | PostureFinding (for export) |
+| oscal:AssessmentResult | Assessment (for export) |
 
-Provider-agnostic resource classification. Each resource has a
-`resource_class` from this taxonomy and a provider-specific `provider_type`.
+### Layer 2: OCSF (Linux Foundation) — Finding Output
 
-| resource_class | Description | AWS | Azure | GCP |
-|---|---|---|---|---|
-| `storage` | Object/blob storage | S3 | Blob Storage | Cloud Storage |
-| `database` | Managed databases | RDS, DynamoDB | Cosmos DB, SQL | Cloud SQL, Spanner |
-| `compute` | Serverless functions | Lambda | Functions | Cloud Functions |
-| `instance` | Virtual machines | EC2 | Virtual Machines | Compute Engine |
-| `container` | Container workloads | ECS, EKS | AKS, ACI | GKE |
-| `network` | Network controls | VPC, SG, NACL | VNet, NSG | VPC, FW |
-| `identity` | IAM entities | IAM role/user | Azure AD SP | Service Account |
-| `key` | Encryption keys | KMS | Key Vault | Cloud KMS |
-| `secret` | Secrets storage | Secrets Manager | Key Vault secrets | Secret Manager |
-| `cdn` | Content delivery | CloudFront | Front Door | Cloud CDN |
-| `dns` | DNS services | Route53 | DNS | Cloud DNS |
-| `registry` | Container registries | ECR | ACR | Artifact Registry |
-| `queue` | Message queues | SQS, SNS | Service Bus | Pub/Sub |
-| `log` | Logging services | CloudTrail, CWL | Monitor | Cloud Logging |
+Stave uses [OCSF](https://schema.ocsf.io/) Compliance Finding (class_uid: 2003) for SIEM-consumable finding output. `stave export ocsf` maps Stave findings to OCSF Compliance Finding events.
 
-## Stave Extensions
+| OCSF Concept | Stave Equivalent |
+|---|---|
+| ocsf:ComplianceFinding | PostureFinding (for export) |
+| ocsf:severity_id | Severity (mapped) |
+| ocsf:status_id | Verdict (mapped) |
+| ocsf:resource | Asset reference |
 
-Concepts with no existing standard use the `x_stave_` prefix.
-See `extensions.json` for JSON Schema definitions.
+### Layer 3: STIX 2.1 (OASIS) — Threat Intelligence Context
 
-| Extension | Host Standard | Purpose |
-|---|---|---|
-| `x_stave_invariant` | OCSF Security Finding | Control predicate metadata |
-| `x_stave_blast_radius` | OCSF Security Finding | Risk amplifier scope and reach |
-| `x_stave_chain_membership` | OCSF Security Finding | Chain attribution per finding |
-| `x_stave_tactic` | MITRE ATT&CK | Resilience tactic (no ATT&CK equivalent) |
+Stave uses [STIX](https://oasis-open.github.io/cti-documentation/) vocabulary for attack pattern taxonomy.
+
+| STIX Concept | Stave Equivalent |
+|---|---|
+| stix:AttackPattern | AttackStage (MITRE ATT&CK) |
+| stix:CourseOfAction | RemediationAction |
+| stix:Vulnerability | CVE reference (via inventory) |
+| stix:KillChainPhase | attack_stage taxonomy |
+
+### Layer 4: MITRE ATT&CK — Tactic/Technique Taxonomy
+
+Stave maps every control to an [ATT&CK](https://attack.mitre.org/) tactic. The `attack_stage` field in every control and finding uses ATT&CK tactic IDs (TA0001-TA0043).
+
+## Stave Extension Layer
+
+The four primitives that no existing ontology covers. These are the novel concepts that define Stave's domain.
+
+### Primitive 1: Asset Observation
+
+The configuration state of a cloud resource at a point in time. This is what `obs.v0.1.json` captures. No existing ontology models infrastructure configuration properties as typed, versioned, snapshot-able state.
+
+Schema: [`v0.1/asset.schema.json`](v0.1/asset.schema.json)
+
+### Primitive 2: Control
+
+A named, versioned, executable safety property that must always hold true across the entire system. Unlike a prescriptive policy control (a requirement statement), a Stave control contains an executable CEL predicate that deterministically evaluates whether the property holds against any asset that composes the system. Maps to oscal:Control for compliance reporting.
+
+Schema: [`v0.1/control.schema.json`](v0.1/control.schema.json)
+
+### Primitive 3: Compound Risk (Chain)
+
+N controls co-failing on related assets produces a compound finding with elevated severity and blast radius multiplier. Called "chain" in the CLI. Closest STIX concept is AttackPattern but chains model co-failing configuration controls, not adversary behavior descriptions.
+
+Schema: [`v0.1/compound-risk.schema.json`](v0.1/compound-risk.schema.json)
+
+### Primitive 4: Posture Finding
+
+The result of evaluating a Control against an Asset. Extends OCSF Compliance Finding (class_uid 2003) with Stave-specific temporal and contextual properties.
+
+Schema: [`v0.1/posture-finding.schema.json`](v0.1/posture-finding.schema.json)
+
+## Relationships
+
+```
+Asset --evaluated by--> Control --produces--> PostureFinding
+  |                                                    |
+  +--sensitivity--> SensitivityTier --amplifies--> severity
+                                                       |
+PostureFinding --participates in--> CompoundRisk --fires--> ChainFinding
+                                                       |
+PostureFinding --suppressed by--> Exemption            |
+                                                       |
+PostureFinding --cited by--> ComplianceProfile (OSCAL) |
+                                                       |
+PostureFinding --maps to--> OCSF ComplianceFinding (2003)
+                                                       |
+CompoundRisk --maps to--> STIX AttackPattern           |
+                                                       |
+Control.remediation --maps to--> STIX CourseOfAction   |
+                                                       |
+Control.attack_stage --maps to--> MITRE ATT&CK Tactic
+```
+
+## Contract Stability Guarantee
+
+| Version | Guarantee |
+|---|---|
+| 0.1.x | Draft, may have additive changes |
+| 1.0.x | Stable, additive-only within major version |
+| 2.0.x | Breaking change, migration path required |
+
+**Additive changes** (allowed within major version): new properties on existing types, new enum values on open enumerations, new optional fields.
+
+**Breaking changes** (require major version bump): removing or renaming required fields, changing a field's type, changing enum values on closed enumerations, changing the finding_id hash algorithm.
+
+JSON consumers that ignore unknown fields will not break on additive changes.
+
+## Developer Notes
+
+A Stave App developer needs to read:
+
+1. **This ontology** — understand concepts, relationships, taxonomies
+2. **obs.v0.1.json** — understand what extractors produce
+3. **out.v0.1.json** — understand what `stave apply` produces
+
+No SDK. No API. No runtime dependency on Stave. An app reads `out.v0.1.json` and reasons about it using the concepts defined here. The ontology is the integration layer. The JSON files are the data. Stave is the engine that produces the data. Apps consume the data.
+
+The ontology guarantees that `finding_id`, `dwell_days`, `verdict`, `severity`, and `remediation.changes` will always be present, always mean the same thing, and will not be renamed or removed in a minor version.
 
 ## Machine-Readable Files
 
 | File | Contents |
 |---|---|
+| [`v0.1/asset.schema.json`](v0.1/asset.schema.json) | Asset Observation JSON Schema |
+| [`v0.1/control.schema.json`](v0.1/control.schema.json) | Control JSON Schema |
+| [`v0.1/compound-risk.schema.json`](v0.1/compound-risk.schema.json) | Compound Risk JSON Schema |
+| [`v0.1/posture-finding.schema.json`](v0.1/posture-finding.schema.json) | Posture Finding JSON Schema |
+| [`v0.1/taxonomies.json`](v0.1/taxonomies.json) | Severity, Verdict, Sensitivity, AttackStage, Capability enums |
 | `mapping.json` | Concept-to-standard mapping table |
-| `extensions.json` | JSON Schema for all Stave extensions |
+| `extensions.json` | JSON Schema for Stave extensions |
 | `attack-stages.json` | ATT&CK tactic ID mapping |
 | `resource-classes.json` | Resource class taxonomy |
-| `examples/finding.ocsf.json` | OCSF Security Finding with extensions |
-| `examples/chain.stix.json` | STIX Attack Pattern for a chain |
-| `examples/assessment.oscal.json` | OSCAL assessment results fragment |
+
+## References
+
+| Ontology | Version | URL |
+|---|---|---|
+| OSCAL | 1.1.2 | https://pages.nist.gov/OSCAL/ |
+| OCSF | 1.5.0 | https://schema.ocsf.io/ |
+| STIX | 2.1 | https://oasis-open.github.io/cti-documentation/ |
+| ATT&CK | v15 | https://attack.mitre.org/ |
