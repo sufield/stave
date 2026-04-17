@@ -28,16 +28,17 @@ import (
 )
 
 type options struct {
-	HistoryDir   string
-	SnapshotPath string
-	ControlsDir  string
-	ChainsDir    string
-	SLAFile      string
-	TeamManifest string
-	Format       string
-	OutFile      string
-	Title        string
-	Period       string
+	HistoryDir    string
+	SnapshotPath  string
+	ControlsDir   string
+	ChainsDir     string
+	SLAFile       string
+	TeamManifest  string
+	Format        string
+	OutFile       string
+	Title         string
+	Period        string
+	TeamBreakdown bool
 }
 
 // NewCmd constructs the report command.
@@ -95,6 +96,7 @@ Exit Codes:
 	cmd.Flags().StringVar(&opts.OutFile, "out", "", "write to file")
 	cmd.Flags().StringVar(&opts.Title, "title", "Security Posture Report", "report title")
 	cmd.Flags().StringVar(&opts.Period, "period", "", "reporting period label")
+	cmd.Flags().BoolVar(&opts.TeamBreakdown, "team-breakdown", false, "Include per-team findings breakdown in report")
 
 	_ = cmd.MarkFlagRequired("history")
 	_ = cmd.MarkFlagRequired("snapshot")

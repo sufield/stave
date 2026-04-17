@@ -3,13 +3,19 @@ package gate
 import (
 	"github.com/spf13/cobra"
 
+	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	appconfig "github.com/sufield/stave/internal/app/config"
+	"github.com/sufield/stave/internal/app/teamgate"
+	"github.com/sufield/stave/internal/app/teams"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/usecase"
 	"github.com/sufield/stave/internal/metadata"
+	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/util/jsonutil"
 )
 
@@ -81,6 +87,36 @@ Exit Codes:
 			resp, err := usecase.Gate(cmd.Context(), req, deps.UseCaseDeps)
 			if err != nil {
 				return err
+			}
+
+			// Per-team gate: filter findings to one team and evaluate thresholds.
+			if opts.Team != "" {
+				if opts.TeamManifest == "" {
+					return &ui.UserError{Err: errors.New("--team-manifest is required when using --team")}
+				}
+				manifest, manifestErr := teams.LoadManifest(opts.TeamManifest)
+				if manifestErr != nil {
+					return &ui.UserError{Err: fmt.Errorf("load team manifest: %w", manifestErr)}
+				}
+				evalData, readErr := fsutil.ReadFileLimited(cfg.InPath)
+				if readErr != nil {
+					return &ui.UserError{Err: fmt.Errorf("read evaluation for team gate: %w", readErr)}
+				}
+				var evalDoc struct {
+					Findings []remediation.Finding `json:"findings"`
+				}
+				if unmarshalErr := json.Unmarshal(evalData, &evalDoc); unmarshalErr != nil {
+					return &ui.UserError{Err: fmt.Errorf("parse evaluation for team gate: %w", unmarshalErr)}
+				}
+				teamResult := teamgate.Evaluate(teamgate.Input{
+					Findings: evalDoc.Findings,
+					Manifest: manifest,
+					TeamID:   opts.Team,
+				})
+				resp.Passed = teamResult.Passed
+				if !teamResult.Passed {
+					resp.Reason = fmt.Sprintf("team %s: %s", teamResult.TeamID, teamResult.Reason)
+				}
 			}
 
 			if cfg.Format.IsJSON() {

@@ -88,6 +88,7 @@ type Options struct {
 	HistoryDir         string
 	NewOnly            bool
 	NewSince           string
+	SARIFBaseline      string
 }
 
 // normalize cleans all user-supplied paths in one pass.
@@ -100,6 +101,7 @@ func (o *Options) normalize() {
 	o.IntegrityPublicKey = fsutil.CleanUserPath(o.IntegrityPublicKey)
 	o.InputFile = fsutil.CleanUserPath(o.InputFile)
 	o.HistoryDir = fsutil.CleanUserPath(o.HistoryDir)
+	o.SARIFBaseline = fsutil.CleanUserPath(o.SARIFBaseline)
 }
 
 // NewApplyCmd constructs the apply command.
@@ -205,6 +207,7 @@ func (o *Options) bindApplySpecific(cmd *cobra.Command) {
 	f.StringVar(&o.HistoryDir, "history", "", "Directory of historical assessment JSON files (for --new-only)")
 	f.BoolVar(&o.NewOnly, "new-only", false, "Show only findings not present in previous assessment")
 	f.StringVar(&o.NewSince, "new-since", "", "Show only findings not present in assessments within this window (e.g. 7d)")
+	f.StringVar(&o.SARIFBaseline, "baseline", "", "SARIF baseline file for baseline state comparison")
 }
 
 func (o *Options) validate() error {

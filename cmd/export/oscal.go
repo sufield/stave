@@ -2,6 +2,7 @@ package export
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -10,13 +11,14 @@ import (
 	"github.com/spf13/cobra"
 
 	apposcal "github.com/sufield/stave/internal/app/oscal"
+	"github.com/sufield/stave/internal/app/oscalpoam"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 func newOSCALCmd() *cobra.Command {
-	var assessmentPath, outputPath string
+	var assessmentPath, outputPath, docType, systemUUID string
 
 	cmd := &cobra.Command{
 		Use:   "oscal",
@@ -26,25 +28,33 @@ for FedRAMP, FISMA, and DoD automated toolchain ingestion.
 
 UUIDs are deterministic (derived from control_id + asset_id).
 
+Document types:
+  assessment-results   Standard assessment results (default)
+  poam                 Plan of Action and Milestones
+  ssp                  System Security Plan (stub)
+
 Exit Codes:
   0   Export complete
   2   Invalid input`,
-		Example:       `  stave export oscal --assessment findings.json --out oscal-results.json`,
+		Example: `  stave export oscal --assessment findings.json --out oscal-results.json
+  stave export oscal --assessment findings.json --type poam --system-uuid abc-123`,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runOSCAL(cmd.OutOrStdout(), assessmentPath, outputPath)
+			return runOSCAL(cmd.OutOrStdout(), assessmentPath, outputPath, docType, systemUUID)
 		},
 	}
 
 	cmd.Flags().StringVar(&assessmentPath, "assessment", "", "stave apply JSON output (required)")
 	cmd.Flags().StringVar(&outputPath, "out", "", "write to file")
+	cmd.Flags().StringVar(&docType, "type", "assessment-results", "OSCAL document type: assessment-results, poam, ssp")
+	cmd.Flags().StringVar(&systemUUID, "system-uuid", "", "system UUID for POA&M generation")
 	_ = cmd.MarkFlagRequired("assessment")
 
 	return cmd
 }
 
-func runOSCAL(stdout io.Writer, assessmentPath, outputPath string) error {
+func runOSCAL(stdout io.Writer, assessmentPath, outputPath, docType, systemUUID string) error {
 	data, err := fsutil.ReadFileLimited(assessmentPath)
 	if err != nil {
 		return &ui.UserError{Err: fmt.Errorf("read assessment: %w", err)}
@@ -56,7 +66,21 @@ func runOSCAL(stdout io.Writer, assessmentPath, outputPath string) error {
 		return &ui.UserError{Err: fmt.Errorf("parse assessment: %w", unmarshalErr)}
 	}
 
-	result := apposcal.Export(assessment.Findings, time.Now().UTC())
+	now := time.Now().UTC()
+
+	var result any
+	switch docType {
+	case "poam":
+		result = oscalpoam.Generate(oscalpoam.Input{
+			Findings:   assessment.Findings,
+			SystemUUID: systemUUID,
+			Now:        now,
+		})
+	case "ssp":
+		return &ui.UserError{Err: errors.New("OSCAL SSP export is not yet implemented")}
+	default:
+		result = apposcal.Export(assessment.Findings, now)
+	}
 
 	w := stdout
 	if outputPath != "" {

@@ -24,6 +24,8 @@ type Options struct {
 	MaxUnsafeDuration string
 	Now               string
 	Format            string
+	Team              string
+	TeamManifest      string
 	formatChanged     bool // set by Prepare from cmd.Flags().Changed
 }
 
@@ -67,6 +69,8 @@ func (o *Options) BindFlags(cmd *cobra.Command) {
 	f.StringVar(&o.MaxUnsafeDuration, "max-unsafe", "", cliflags.WithDynamicDefaultHelp("Maximum allowed unsafe duration (used by fail_on_overdue_upcoming)"))
 	f.StringVar(&o.Now, "now", "", "Reference time (RFC3339). If omitted, uses wall clock")
 	f.StringVarP(&o.Format, "format", "f", o.Format, "Output format: text or json")
+	f.StringVar(&o.Team, "team", "", "Filter gate to findings owned by this team")
+	f.StringVar(&o.TeamManifest, "team-manifest", "", "Team manifest YAML for ownership routing")
 }
 
 // toConfig converts raw CLI options into a validated Config.

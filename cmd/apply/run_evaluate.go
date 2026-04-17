@@ -6,10 +6,12 @@ import (
 	"io"
 	"log/slog"
 	"os"
+	"time"
 
 	ctlbuiltin "github.com/sufield/stave/internal/adapters/controls/builtin"
 	"github.com/sufield/stave/internal/adapters/telemetry"
 	appeval "github.com/sufield/stave/internal/app/eval"
+	"github.com/sufield/stave/internal/app/exemptlapse"
 	packs "github.com/sufield/stave/internal/builtin/pack"
 	"github.com/sufield/stave/internal/cli/ui"
 )
@@ -76,6 +78,12 @@ func executeEvaluation(ctx context.Context, ec evalContext) (EvaluateResult, err
 
 	evalResult := BuildEvaluateResult(status, deps.Config.PolicySource, deps.Config.ObservationSource)
 	evalResult.RawFindings = result.Findings
+
+	// Detect lapsed exemptions.
+	evalResult.LapsedExemptions = exemptlapse.Detect(exemptlapse.Input{
+		AcknowledgedFindings: result.AcknowledgedFindings,
+		Now:                  time.Now().UTC(),
+	})
 
 	// Scan findings for SLA breaches.
 	for i := range result.Findings {

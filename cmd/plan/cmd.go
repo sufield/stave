@@ -13,6 +13,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/internal/app/compliancepath"
 	"github.com/sufield/stave/internal/app/plan"
 	"github.com/sufield/stave/internal/app/teams"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -21,14 +22,16 @@ import (
 )
 
 type options struct {
-	Assessment   string
-	TeamManifest string
-	SLAFile      string
-	Format       string
-	OutPath      string
-	Severity     string
-	Team         string
-	Title        string
+	Assessment        string
+	TeamManifest      string
+	SLAFile           string
+	Format            string
+	OutPath           string
+	Severity          string
+	Team              string
+	Title             string
+	Threshold         float64
+	ComplianceProfile string
 }
 
 // NewCmd constructs the plan command.
@@ -86,6 +89,8 @@ Exit Codes:
 	cmd.Flags().StringVar(&opts.Severity, "severity", "medium", "minimum severity to include")
 	cmd.Flags().StringVar(&opts.Team, "team", "", "specific team only")
 	cmd.Flags().StringVar(&opts.Title, "title", "Remediation Plan", "document title prefix")
+	cmd.Flags().Float64Var(&opts.Threshold, "threshold", 0, "Target readiness percentage for compliance path calculation")
+	cmd.Flags().StringVar(&opts.ComplianceProfile, "compliance-profile", "", "Compliance profile for path calculation")
 
 	_ = cmd.MarkFlagRequired("assessment")
 	_ = cmd.MarkFlagRequired("team-manifest")
@@ -104,6 +109,30 @@ func runPlan(stdout io.Writer, opts *options) error {
 	}
 	if unmarshalErr := json.Unmarshal(data, &assessment); unmarshalErr != nil {
 		return &ui.UserError{Err: fmt.Errorf("parse assessment: %w", unmarshalErr)}
+	}
+
+	// Compliance path mode: compute minimum-effort path to target readiness.
+	if opts.Threshold > 0 && opts.ComplianceProfile != "" {
+		result := compliancepath.Compute(compliancepath.Input{
+			Findings:        assessment.Findings,
+			TargetFramework: opts.ComplianceProfile,
+			TargetReadiness: opts.Threshold,
+			TotalControls:   max(len(assessment.Findings), 1),
+		})
+
+		w := stdout
+		if opts.OutPath != "" {
+			f, fErr := os.Create(opts.OutPath)
+			if fErr != nil {
+				return fmt.Errorf("create output: %w", fErr)
+			}
+			defer f.Close()
+			w = f
+		}
+
+		enc := json.NewEncoder(w)
+		enc.SetIndent("", "  ")
+		return enc.Encode(result)
 	}
 
 	// Load manifest.

@@ -3,7 +3,9 @@
 package compare
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -11,7 +13,9 @@ import (
 
 	"github.com/spf13/cobra"
 
+	artifact "github.com/sufield/stave/internal/adapters/artifacts"
 	appcompare "github.com/sufield/stave/internal/app/compare"
+	"github.com/sufield/stave/internal/app/remediationimpact"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -23,6 +27,10 @@ type options struct {
 	Assessment string
 	Format     string
 	OutFile    string
+	Mode       string
+	Before     string
+	After      string
+	Simulated  string
 }
 
 // NewCmd constructs the compare command.
@@ -69,15 +77,20 @@ Exit Codes:
 	cmd.Flags().StringVar(&opts.Assessment, "assessment", "", "stave apply JSON output (required)")
 	cmd.Flags().StringVarP(&opts.Format, "format", "f", "table", "output format: table | json | markdown")
 	cmd.Flags().StringVar(&opts.OutFile, "out", "", "write to file")
-
-	_ = cmd.MarkFlagRequired("from")
-	_ = cmd.MarkFlagRequired("to")
-	_ = cmd.MarkFlagRequired("assessment")
+	cmd.Flags().StringVar(&opts.Mode, "mode", "", "Comparison mode: remediation")
+	cmd.Flags().StringVar(&opts.Before, "before", "", "Before assessment path (--mode remediation)")
+	cmd.Flags().StringVar(&opts.After, "after", "", "After assessment path (--mode remediation)")
+	cmd.Flags().StringVar(&opts.Simulated, "simulated", "", "Simulated output for efficiency comparison")
 
 	return cmd
 }
 
 func runCompare(stdout io.Writer, opts *options) error {
+	// Remediation impact mode.
+	if opts.Mode == "remediation" {
+		return runRemediationImpact(stdout, opts)
+	}
+
 	data, err := fsutil.ReadFileLimited(opts.Assessment)
 	if err != nil {
 		return &ui.UserError{Err: fmt.Errorf("read assessment: %w", err)}
@@ -119,4 +132,41 @@ func runCompare(stdout io.Writer, opts *options) error {
 		appcompare.WriteTable(w, result)
 	}
 	return nil
+}
+
+func runRemediationImpact(stdout io.Writer, opts *options) error {
+	if opts.Before == "" || opts.After == "" {
+		return &ui.UserError{Err: errors.New("--before and --after are required for remediation mode")}
+	}
+
+	loader := artifact.NewLoader()
+
+	before, err := loader.Evaluation(context.Background(), opts.Before)
+	if err != nil {
+		return &ui.UserError{Err: fmt.Errorf("load before assessment: %w", err)}
+	}
+
+	after, err := loader.Evaluation(context.Background(), opts.After)
+	if err != nil {
+		return &ui.UserError{Err: fmt.Errorf("load after assessment: %w", err)}
+	}
+
+	result := remediationimpact.Analyze(remediationimpact.Input{
+		Before: before,
+		After:  after,
+	})
+
+	w := stdout
+	if opts.OutFile != "" {
+		f, fErr := os.Create(opts.OutFile)
+		if fErr != nil {
+			return fmt.Errorf("create output: %w", fErr)
+		}
+		defer f.Close()
+		w = f
+	}
+
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "  ")
+	return enc.Encode(result)
 }

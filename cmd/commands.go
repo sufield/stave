@@ -12,6 +12,7 @@ import (
 	"github.com/sufield/stave/cmd/apply"
 	applyvalidate "github.com/sufield/stave/cmd/apply/validate"
 	applyverify "github.com/sufield/stave/cmd/apply/verify"
+	staveattest "github.com/sufield/stave/cmd/attest"
 	stavebisect "github.com/sufield/stave/cmd/bisect"
 	stavebudget "github.com/sufield/stave/cmd/budget"
 	stavebundle "github.com/sufield/stave/cmd/bundle"
@@ -179,6 +180,9 @@ func WireCommands(app *App) {
 
 	// Evidence bundling
 	root.AddCommand(stavebundle.NewCmd())
+
+	// Snapshot attestation
+	root.AddCommand(staveattest.NewCmd())
 
 	// Control authoring
 	root.AddCommand(staveforge.NewCmd())

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/sufield/stave/internal/app/exemptlapse"
 	"github.com/sufield/stave/internal/core/evaluation"
 )
 
@@ -24,6 +25,9 @@ type EvaluateResult struct {
 	// RawFindings holds the raw evaluation findings for post-processing
 	// (e.g. --new-only filtering). Nil when not needed.
 	RawFindings []evaluation.Finding
+	// LapsedExemptions holds exemptions that have expired, detected
+	// post-evaluation from acknowledged findings.
+	LapsedExemptions []exemptlapse.LapsedFinding
 }
 
 // BuildEvaluateResult maps a domain safety status into actionable CLI guidance.
