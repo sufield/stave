@@ -38,6 +38,8 @@ type options struct {
 	Now            string
 	HistoryDir     string
 	Window         string
+	DiffControl    string
+	Top            int
 }
 
 // NewCmd constructs the consolidate command.
@@ -82,11 +84,18 @@ Exit Codes:
 	cmd.Flags().StringVar(&opts.Now, "now", "", "Override current time (RFC3339)")
 	cmd.Flags().StringVar(&opts.HistoryDir, "history", "", "Directory of per-account assessment history for org trending")
 	cmd.Flags().StringVar(&opts.Window, "window", "90d", "Lookback window for trend calculation (e.g. 90d)")
+	cmd.Flags().StringVar(&opts.DiffControl, "diff-control", "", "Run outlier analysis for a specific control (requires --history)")
+	cmd.Flags().IntVar(&opts.Top, "top", 0, "Limit failing account output to N entries")
 
 	return cmd
 }
 
 func run(stdout, stderr io.Writer, opts *options) error {
+	// Diff mode: cross-account outlier analysis for a specific control.
+	if opts.DiffControl != "" {
+		return runDiff(stdout, opts)
+	}
+
 	// History mode: org-level trending across multiple accounts.
 	if opts.HistoryDir != "" {
 		return runHistory(stdout, opts)
