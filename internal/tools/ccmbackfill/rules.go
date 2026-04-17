@@ -22,8 +22,12 @@ import (
 // control ID (e.g., "CTL.IAM.POLICY.ADMIN.001"). Returns nil when no
 // confident inference can be made.
 //
-// At most 5 CCMs are returned per control. Results are sorted and
-// deduplicated.
+// At most 5 CCMs are returned per control. Results are sorted by
+// rule-layer specificity (service-specific first, then generic
+// subcategory, then generic ID-token), and alphabetically within a
+// tier. Truncation drops the least-specific CCMs first — an
+// alphabetical sort would evict canonical CCMs like CCC-04 in favour
+// of broad LOG-* tags when rule layers stack.
 func Infer(dir, id string) []string {
 	dir = strings.ToLower(strings.Trim(dir, "/"))
 	idU := strings.ToUpper(id)
@@ -37,33 +41,61 @@ func Infer(dir, id string) []string {
 		sub = parts[1]
 	}
 
-	set := map[string]struct{}{}
-	add := func(ccms ...string) {
-		for _, c := range ccms {
-			if c != "" {
-				set[c] = struct{}{}
+	const (
+		prioService = 1
+		prioSubcat  = 2
+		prioIDToken = 3
+	)
+
+	// For each CCM, remember the lowest (most specific) priority at
+	// which it was added. A CCM added by both the service layer and
+	// the generic subcategory layer keeps the service-layer priority.
+	seen := map[string]int{}
+	addAt := func(prio int) func(...string) {
+		return func(ccms ...string) {
+			for _, c := range ccms {
+				if c == "" {
+					continue
+				}
+				if existing, ok := seen[c]; ok && existing <= prio {
+					continue
+				}
+				seen[c] = prio
 			}
 		}
 	}
 
-	// Apply service-specific rules first (highest precision), then
-	// subcategory rules, then ID-token rules. A single control may
-	// match multiple layers; their CCMs union together.
-	applyServiceRules(service, sub, idU, add)
-	applySubcategoryRules(service, sub, idU, add)
-	applyIDTokenRules(service, idU, add)
+	applyServiceRules(service, sub, idU, addAt(prioService))
+	applySubcategoryRules(service, sub, idU, addAt(prioSubcat))
+	applyIDTokenRules(service, idU, addAt(prioIDToken))
 
-	if len(set) == 0 {
+	if len(seen) == 0 {
 		return nil
 	}
-	out := make([]string, 0, len(set))
-	for c := range set {
-		out = append(out, c)
+	type entry struct {
+		id   string
+		prio int
 	}
+	entries := make([]entry, 0, len(seen))
+	for c, p := range seen {
+		entries = append(entries, entry{c, p})
+	}
+	sort.Slice(entries, func(i, j int) bool {
+		if entries[i].prio != entries[j].prio {
+			return entries[i].prio < entries[j].prio
+		}
+		return entries[i].id < entries[j].id
+	})
+	if len(entries) > 5 {
+		entries = entries[:5]
+	}
+	out := make([]string, 0, len(entries))
+	for _, e := range entries {
+		out = append(out, e.id)
+	}
+	// Final output is sorted alphabetically for stable YAML emission;
+	// the priority ordering only affects which CCMs survive truncation.
 	sort.Strings(out)
-	if len(out) > 5 {
-		out = out[:5]
-	}
 	return out
 }
 
@@ -763,7 +795,12 @@ func applyECRService(sub, id string, add func(...string)) {
 }
 
 func applyCognitoService(sub, id string, add func(...string)) {
-	add("AIS-01")
+	// AIS-01 ("Application and Interface Security Policy and Procedures")
+	// applies to controls that configure an application interface's
+	// security posture (API Gateway, CloudFront, ALB, App Runner).
+	// Cognito is an identity provider: its controls map to IAM-14 /
+	// IAM-15 / IAM-16, not to application-interface policy. AIS-01 is
+	// intentionally absent here.
 	if strings.Contains(id, "MFA") {
 		add("IAM-14")
 	}
@@ -862,7 +899,21 @@ func applySubcategoryRules(service, sub, id string, add func(...string)) {
 	case "monitoring", "detection", "detect":
 		add("LOG-03")
 	case "audit":
-		if service != "s3" && service != "cloudtrail" {
+		// "audit/" has two distinct meanings across services: log
+		// producers use it for audit logs (AD audit policies, K8s
+		// API server audit, OpenSearch audit), while config-
+		// evaluation services use it for compliance auditing (AWS
+		// Config Rules, Guardrail checks, SecurityHub, CloudFormation
+		// drift). Config-evaluators aren't audit logs — tagging them
+		// LOG-05/LOG-12 is wrong and makes "who logs access?" queries
+		// return them as false positives.
+		configEvaluators := map[string]bool{
+			"config":         true,
+			"guardrail":      true,
+			"securityhub":    true,
+			"cloudformation": true,
+		}
+		if !configEvaluators[service] {
 			add("LOG-05", "LOG-12")
 		}
 	case "logging":

@@ -7,7 +7,7 @@ description: >
 domain: identity
 severity: info
 compliance:
-  ccm_v4: ["AIS-01", "DCS-06"]
+  ccm_v4: ["DCS-06"]
 scope_tags:
   - aws
   - cognito

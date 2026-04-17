@@ -848,7 +848,6 @@
         "soc2": "CC6.1"
       },
       "control_compliance_ccm_v4": [
-        "AIS-01",
         "IAM-14",
         "IAM-16"
       ],
@@ -910,9 +909,7 @@
       "control_compliance_ccm_v4": [
         "CCC-04",
         "CCC-07",
-        "LOG-03",
-        "LOG-05",
-        "LOG-12"
+        "LOG-03"
       ],
       "posture_drift": {
         "pattern": "persistent",
@@ -976,9 +973,7 @@
       "control_compliance_ccm_v4": [
         "CCC-04",
         "CCC-07",
-        "LOG-03",
-        "LOG-05",
-        "LOG-12"
+        "LOG-03"
       ],
       "posture_drift": {
         "pattern": "persistent",

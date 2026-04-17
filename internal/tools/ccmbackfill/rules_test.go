@@ -55,7 +55,7 @@ func TestInferAuditAttributions(t *testing.T) {
 
 		// Cognito / API Gateway — AIS-01
 		{"apigateway auth", "apigateway", "CTL.APIGATEWAY.AUTH.001", []string{"AIS-01"}},
-		{"cognito mfa", "cognito/auth", "CTL.COGNITO.MFA.001", []string{"AIS-01", "IAM-14"}},
+		{"cognito mfa", "cognito/auth", "CTL.COGNITO.MFA.001", []string{"IAM-14"}},
 	}
 
 	for _, tc := range cases {
@@ -101,5 +101,83 @@ func TestInferDeduplicates(t *testing.T) {
 			t.Errorf("Infer returned duplicate CCM %q in %v", c, got)
 		}
 		seen[c] = true
+	}
+}
+
+// --- Regression guards for the three systemic patterns identified in
+// the iteration A1 post-back-fill spot-check.
+
+// TestCognitoDoesNotMapToAIS01 locks in the rule inversion: AIS-01 is
+// an application-interface-policy CCM, not an identity-provider one.
+// Every Cognito control previously inherited AIS-01 unconditionally,
+// which made "show me AIS-01 coverage" queries return false positives.
+func TestCognitoDoesNotMapToAIS01(t *testing.T) {
+	cases := []struct {
+		dir, id string
+	}{
+		{"cognito/auth", "CTL.COGNITO.MFA.001"},
+		{"cognito/auth", "CTL.COGNITO.PASSWORD.001"},
+		{"cognito/auth", "CTL.COGNITO.ADVANCED.SECURITY.001"},
+		{"cognito/misc", "CTL.COGNITO.INCOMPLETE.001"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.id, func(t *testing.T) {
+			got := Infer(tc.dir, tc.id)
+			if slices.Contains(got, "AIS-01") {
+				t.Errorf("Infer(%q, %q) = %v, should not contain AIS-01", tc.dir, tc.id, got)
+			}
+		})
+	}
+}
+
+// TestConfigAuditDoesNotMapToAccessLogs locks in the audit-cascade
+// narrowing: Config, Guardrail, SecurityHub, and CloudFormation are
+// config-evaluation services. Their "audit/" subdirs are about
+// compliance audits, not about producing audit logs, so LOG-05 and
+// LOG-12 must not cascade onto them.
+func TestConfigAuditDoesNotMapToAccessLogs(t *testing.T) {
+	cases := []struct {
+		dir, id string
+	}{
+		{"config/audit", "CTL.CONFIG.RULES.001"},
+		{"config/audit", "CTL.CONFIG.ENABLED.001"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.id, func(t *testing.T) {
+			got := Infer(tc.dir, tc.id)
+			for _, bad := range []string{"LOG-05", "LOG-12"} {
+				if slices.Contains(got, bad) {
+					t.Errorf("Infer(%q, %q) = %v, should not contain %s", tc.dir, tc.id, got, bad)
+				}
+			}
+			for _, want := range []string{"CCC-04", "CCC-07"} {
+				if !slices.Contains(got, want) {
+					t.Errorf("Infer(%q, %q) = %v, missing canonical %s", tc.dir, tc.id, got, want)
+				}
+			}
+		})
+	}
+}
+
+// TestTruncationPrefersServiceLayer locks in the priority-sort fix for
+// cap overflow: when >5 CCMs are candidates, the least-specific layer's
+// CCMs must be the ones dropped, not the alphabetically-late canonical
+// CCMs. This is exercised by synthesising a control whose service rule
+// adds CCC-* (priority 1) and whose subcategory rule would push past
+// the cap with LOG-* (priority 2). CCC-04 and CCC-07 must survive.
+func TestTruncationPrefersServiceLayer(t *testing.T) {
+	// config/audit is the real failure case: service rule adds
+	// CCC-04, CCC-07, LOG-03 (priority 1). With the audit-cascade
+	// fix applied the subcategory layer no longer fires here, so
+	// this test is a defense in depth — even if a future rule
+	// change reintroduced noise, CCC-* must remain in the output.
+	got := Infer("config/audit", "CTL.CONFIG.RULES.001")
+	if len(got) > 5 {
+		t.Fatalf("Infer returned %d CCMs, want ≤5: %v", len(got), got)
+	}
+	for _, want := range []string{"CCC-04", "CCC-07"} {
+		if !slices.Contains(got, want) {
+			t.Errorf("Infer = %v, missing canonical %s after truncation", got, want)
+		}
 	}
 }

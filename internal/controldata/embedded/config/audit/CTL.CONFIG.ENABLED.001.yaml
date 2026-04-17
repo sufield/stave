@@ -19,7 +19,7 @@ compliance:
   ffiec: "CAT-D3"
   iso_27001_2022: "A.8.9"
   nist_csf_2.0: "PR.PS"
-  ccm_v4: ["CCC-04", "CCC-07", "LOG-03", "LOG-05", "LOG-12"]
+  ccm_v4: ["CCC-04", "CCC-07", "LOG-03"]
 scope_tags:
   - aws
   - config
