@@ -9,8 +9,8 @@ import (
 // NewCmd constructs the top-level sla command with subcommands.
 func NewCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "sla",
-		Short: "Manage SLA policy files for remediation deadlines",
+		Use:   "deadline",
+		Short: "Manage remediation deadline policies",
 		Long: `Manage SLA policy files that define remediation deadlines per severity.
 
 SLA policies are consumed by:

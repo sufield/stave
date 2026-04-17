@@ -184,6 +184,7 @@ func IsDirectoryWritable(dir string) error {
 		return err
 	}
 	path := f.Name()
+	// Best-effort close before removal; writability was already proven.
 	_ = f.Close()
 	_ = os.Remove(path) // Cleanup: if temp file is already gone, writability check passed.
 	return nil

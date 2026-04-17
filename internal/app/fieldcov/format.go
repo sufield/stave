@@ -3,7 +3,7 @@ package fieldcov
 import (
 	"fmt"
 	"io"
-	"sort"
+	"slices"
 	"strings"
 )
 
@@ -63,7 +63,7 @@ func WriteTable(w io.Writer, r *Report) {
 		for at := range r.ShoppingList {
 			assetTypes = append(assetTypes, at)
 		}
-		sort.Strings(assetTypes)
+		slices.Sort(assetTypes)
 		for _, at := range assetTypes {
 			fmt.Fprintf(w, "\n  Asset type: %s\n", at)
 			for _, item := range r.ShoppingList[at] {
@@ -86,7 +86,7 @@ func WriteTable(w io.Writer, r *Report) {
 		for fw := range r.FrameworkCoverage {
 			fws = append(fws, fw)
 		}
-		sort.Strings(fws)
+		slices.Sort(fws)
 		for _, fw := range fws {
 			fc := r.FrameworkCoverage[fw]
 			fmt.Fprintf(w, "  %-12s %-12s %-12d %-12d %.1f%%\n",

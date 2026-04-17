@@ -24,7 +24,7 @@ func NewCmd(newObsRepo compose.ObsRepoFactory, newCtlRepo compose.CtlRepoFactory
 	opts := newOptions()
 
 	cmd := &cobra.Command{
-		Use:   "verify",
+		Use:   "check",
 		Short: "Compare before/after evaluations to check remediation",
 		Long: `Compare before/after evaluations to check whether remediation resolved findings.
 

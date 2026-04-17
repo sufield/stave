@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io"
 	"strings"
+
+	"github.com/sufield/stave/internal/util/strutil"
 )
 
 // WriteMarkdown writes the report as a markdown document.
@@ -41,7 +43,7 @@ func WriteMarkdown(w io.Writer, r *Report) {
 		for _, sev := range []string{"critical", "high", "medium", "low"} {
 			if s, ok := r.SLA.BySeverity[sev]; ok {
 				fmt.Fprintf(w, "| %s | %d/%d | %d | %.1f%% |\n",
-					strings.Title(sev), s.Within, s.Total, s.Breached, s.Pct) //nolint:staticcheck // strings.Title is fine here
+					strutil.TitleCase(sev), s.Within, s.Total, s.Breached, s.Pct)
 			}
 		}
 		fmt.Fprintln(w)

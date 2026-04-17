@@ -1,10 +1,10 @@
 package asset
 
 import (
+	"cmp"
 	"maps"
 	"reflect"
 	"slices"
-	"sort"
 	"strings"
 )
 
@@ -57,7 +57,7 @@ func DiffAssets(prev, curr Asset) []ConfigurationDrift {
 	}
 	changes = append(changes, diffDeep("properties", prev.Properties, curr.Properties)...)
 	// POSTCONDITION: Output is deterministically sorted by Path to ensure stable diffs.
-	sort.Slice(changes, func(i, j int) bool { return changes[i].Attribute < changes[j].Attribute })
+	slices.SortFunc(changes, func(a, b ConfigurationDrift) int { return cmp.Compare(a.Attribute, b.Attribute) })
 	return changes
 }
 

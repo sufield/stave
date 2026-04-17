@@ -23,16 +23,13 @@ import (
 	"github.com/sufield/stave/cmd/diagnose"
 	"github.com/sufield/stave/cmd/diagnose/artifacts"
 	diagreport "github.com/sufield/stave/cmd/diagnose/report"
-	stavediffcatalog "github.com/sufield/stave/cmd/diff"
 	"github.com/sufield/stave/cmd/doctor"
-	stavedrift "github.com/sufield/stave/cmd/drift"
 	"github.com/sufield/stave/cmd/enforce"
 	"github.com/sufield/stave/cmd/enforce/baseline"
 	"github.com/sufield/stave/cmd/enforce/cidiff"
 	"github.com/sufield/stave/cmd/enforce/fix"
 	"github.com/sufield/stave/cmd/enforce/gate"
 	staveenrich "github.com/sufield/stave/cmd/enrich"
-	"github.com/sufield/stave/cmd/evaluate"
 	staveexempt "github.com/sufield/stave/cmd/exempt"
 	staveexport "github.com/sufield/stave/cmd/export"
 	staveforensics "github.com/sufield/stave/cmd/forensics"
@@ -171,14 +168,8 @@ func WireCommands(app *App) {
 	// Introspection
 	root.AddCommand(inspect.NewInspectCmd())
 
-	// Compliance evaluation
-	root.AddCommand(evaluate.NewCmd())
-
 	// Net Effective Permissions (CIEM)
 	root.AddCommand(stavenep.NewCmd())
-
-	// Drift detection
-	root.AddCommand(stavedrift.NewCmd())
 
 	// Security chronology
 	root.AddCommand(stavebisect.NewCmd())
@@ -228,11 +219,8 @@ func WireCommands(app *App) {
 	// Multi-framework scorecard
 	root.AddCommand(stavescorecard.NewCmd())
 
-	// Catalog diff
-	root.AddCommand(stavediffcatalog.NewCmd(f.NewCtlRepo))
-
 	// Snapshot diff
-	root.AddCommand(stavesnapshotdiff.NewCmd())
+	root.AddCommand(stavesnapshotdiff.NewCmd(f.NewCtlRepo))
 
 	// Standalone sanitization
 	root.AddCommand(stavesanitize.NewCmd())

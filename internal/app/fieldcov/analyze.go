@@ -5,7 +5,8 @@
 package fieldcov
 
 import (
-	"sort"
+	"cmp"
+	"slices"
 	"strings"
 
 	"github.com/sufield/stave/internal/core/asset"
@@ -247,7 +248,7 @@ func extractFrameworks(ctl *policy.ControlDefinition) []string {
 	for fw := range ctl.Compliance {
 		fws = append(fws, string(fw))
 	}
-	sort.Strings(fws)
+	slices.Sort(fws)
 	return fws
 }
 
@@ -304,11 +305,11 @@ func buildReport(input AnalyzeInput, results []ControlResult) *Report {
 
 	// Sort by severity (critical first).
 	sevOrder := kernel.SeverityOrder
-	sort.Slice(silentRisk, func(i, j int) bool {
-		return sevOrder[silentRisk[i].Severity] < sevOrder[silentRisk[j].Severity]
+	slices.SortFunc(silentRisk, func(a, b ControlResult) int {
+		return cmp.Compare(sevOrder[a.Severity], sevOrder[b.Severity])
 	})
-	sort.Slice(incomplete, func(i, j int) bool {
-		return sevOrder[incomplete[i].Severity] < sevOrder[incomplete[j].Severity]
+	slices.SortFunc(incomplete, func(a, b ControlResult) int {
+		return cmp.Compare(sevOrder[a.Severity], sevOrder[b.Severity])
 	})
 
 	report.SilentRisk = silentRisk
@@ -342,9 +343,11 @@ func buildReport(input AnalyzeInput, results []ControlResult) *Report {
 
 	// Sort shopping list items by severity.
 	for at := range report.ShoppingList {
-		sort.Slice(report.ShoppingList[at], func(i, j int) bool {
-			return sevOrder[report.ShoppingList[at][i].MaxSeverity] < sevOrder[report.ShoppingList[at][j].MaxSeverity]
+		items := report.ShoppingList[at]
+		slices.SortFunc(items, func(a, b ShoppingItem) int {
+			return cmp.Compare(sevOrder[a.MaxSeverity], sevOrder[b.MaxSeverity])
 		})
+		report.ShoppingList[at] = items
 	}
 
 	return report

@@ -4,7 +4,6 @@ package budget
 import (
 	"fmt"
 	"math"
-	"strings"
 	"time"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
@@ -12,7 +11,7 @@ import (
 )
 
 func sevString(s policy.Severity) string {
-	return strings.ToLower(s.String())
+	return s.String()
 }
 
 // Input holds data for burn rate computation.

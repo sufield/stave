@@ -30,7 +30,7 @@ func TestVerifyOutputByteIdentical(t *testing.T) {
 	ctlDir := filepath.Join(fixtureDir, "controls")
 
 	args := []string{
-		"verify",
+		"check",
 		"--before", beforeDir,
 		"--after", afterDir,
 		"--controls", ctlDir,

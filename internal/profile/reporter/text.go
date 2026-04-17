@@ -135,6 +135,7 @@ func filterBySeverity(results []profile.Result, sev policy.Severity) []profile.R
 // String returns the full text report as a string.
 func (t TextReporter) String(report profile.Report, meta ReportMeta) string {
 	var b strings.Builder
+	// Write to strings.Builder never returns an error.
 	_ = t.Write(&b, report, meta)
 	return b.String()
 }

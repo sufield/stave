@@ -175,6 +175,7 @@ func SafeCreateFile(path string, opts WriteOptions) (*os.File, error) {
 
 	if !opts.AllowSymlink {
 		if err := verifyHandle(f, path); err != nil {
+			// Best-effort close; returning the security error takes priority.
 			_ = f.Close()
 			return nil, err
 		}
@@ -276,6 +277,7 @@ func SafeOpenAppend(path string, opts WriteOptions) (*os.File, error) {
 
 	if !opts.AllowSymlink {
 		if err := verifyHandle(f, path); err != nil {
+			// Best-effort close; returning the security error takes priority.
 			_ = f.Close()
 			return nil, err
 		}
@@ -364,9 +366,11 @@ func WriteFileAtomic(path string, data []byte, perm os.FileMode) error {
 	closed := false
 	defer func() {
 		if !closed {
+			// Best-effort close in cleanup path.
 			_ = tmpFile.Close()
 		}
 		if !committed {
+			// Best-effort removal of incomplete temp file.
 			_ = os.Remove(tmpPath)
 		}
 	}()
@@ -400,6 +404,7 @@ func WriteFileAtomic(path string, data []byte, perm os.FileMode) error {
 		return fmt.Errorf("cross-filesystem fallback: %w", cpErr)
 	}
 	committed = true
+	// Best-effort cleanup; data is already at dst via cross-fs copy.
 	_ = os.Remove(tmpPath)
 	return nil
 }
@@ -423,19 +428,23 @@ func crossFSCopy(src, dst string, perm os.FileMode) error {
 
 	_, err = tmp.Write(data)
 	if err != nil {
+		// Best-effort close; defer handles temp file removal.
 		_ = tmp.Close()
 		return err
 	}
 	err = tmp.Chmod(perm)
 	if err != nil {
+		// Best-effort close; defer handles temp file removal.
 		_ = tmp.Close()
 		return err
 	}
 	err = tmp.Sync()
 	if err != nil {
+		// Best-effort close; defer handles temp file removal.
 		_ = tmp.Close()
 		return err
 	}
+	// Close before rename; error is non-fatal since data was already synced.
 	_ = tmp.Close()
 
 	return os.Rename(tmpName, dst)

@@ -11,7 +11,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"sort"
+	"slices"
 	"time"
 
 	"github.com/sufield/stave/internal/core/asset"
@@ -173,7 +173,7 @@ func buildManifest(files map[string][]byte, now string) bundleManifest {
 	for k := range files {
 		keys = append(keys, k)
 	}
-	sort.Strings(keys)
+	slices.Sort(keys)
 
 	for _, name := range keys {
 		data := files[name]
@@ -229,7 +229,7 @@ func writeTarGz(files map[string][]byte) ([]byte, error) {
 	for k := range files {
 		keys = append(keys, k)
 	}
-	sort.Strings(keys)
+	slices.Sort(keys)
 
 	for _, name := range keys {
 		data := files[name]

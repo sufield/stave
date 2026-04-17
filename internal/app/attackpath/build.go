@@ -4,7 +4,8 @@
 package attackpath
 
 import (
-	"sort"
+	"cmp"
+	"slices"
 	"strings"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
@@ -159,11 +160,11 @@ func Build(input BuildInput) *Graph {
 		}
 	}
 
-	sort.Slice(edges, func(i, j int) bool {
-		if edges[i].FromChain != edges[j].FromChain {
-			return edges[i].FromChain < edges[j].FromChain
-		}
-		return edges[i].ToChain < edges[j].ToChain
+	slices.SortFunc(edges, func(a, b Edge) int {
+		return cmp.Or(
+			cmp.Compare(a.FromChain, b.FromChain),
+			cmp.Compare(a.ToChain, b.ToChain),
+		)
 	})
 
 	// Build capability list from referenced capabilities.
@@ -175,7 +176,7 @@ func Build(input BuildInput) *Graph {
 			Description: capDescription(cap),
 		})
 	}
-	sort.Slice(caps, func(i, j int) bool { return caps[i].ID < caps[j].ID })
+	slices.SortFunc(caps, func(a, b Capability) int { return cmp.Compare(a.ID, b.ID) })
 
 	return &Graph{
 		GeneratedAt:  input.GeneratedAt,

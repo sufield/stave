@@ -11,7 +11,7 @@ import (
 )
 
 func (l *ObservationLoader) verifyConfiguredIntegrity(hashes *evaluation.InputHashes) error {
-	if strings.TrimSpace(l.integrityManifestPath) == "" {
+	if l.integrityManifestPath == "" {
 		return nil
 	}
 

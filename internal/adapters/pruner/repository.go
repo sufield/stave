@@ -20,6 +20,7 @@ func loadSnapshotCapturedAt(ctx context.Context, loader appcontracts.SnapshotRea
 		return time.Time{}, fmt.Errorf("open %s: %w", path, err)
 	}
 	snapshot, loadErr := loader.LoadSnapshotFromReader(ctx, f, name)
+	// Best-effort close; file was opened read-only and load error takes priority.
 	_ = f.Close()
 	if loadErr != nil {
 		return time.Time{}, fmt.Errorf("failed to load snapshot %s: %w", path, loadErr)

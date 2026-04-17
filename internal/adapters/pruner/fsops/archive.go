@@ -119,6 +119,7 @@ func tryAtomicMove(src, dst string, opts MoveOptions) (bool, error) {
 	if err := os.Link(src, dst); err == nil {
 		if removeErr := os.Remove(src); removeErr != nil {
 			// Link succeeded but source removal failed — roll back.
+			// Best-effort rollback; leaving dst is acceptable if remove fails.
 			_ = os.Remove(dst)
 			return false, fmt.Errorf("remove source after link: %w", removeErr)
 		}
@@ -154,10 +155,12 @@ func openVerifiedSource(src string, allowSymlink bool) (*os.File, os.FileInfo, e
 	if !allowSymlink {
 		handleInfo, statErr := in.Stat()
 		if statErr != nil {
+			// Best-effort close; returning the stat error takes priority.
 			_ = in.Close()
 			return nil, nil, fmt.Errorf("source security check failed: %w", statErr)
 		}
 		if !os.SameFile(handleInfo, srcInfo) {
+			// Best-effort close; returning the symlink error takes priority.
 			_ = in.Close()
 			return nil, nil, fmt.Errorf("source: %w: %s (changed between check and open)",
 				fsutil.ErrSymlinkForbidden, src)
@@ -189,6 +192,7 @@ func crossDeviceMove(src, dst string, opts MoveOptions) error {
 	committed := false
 	defer func() {
 		if !committed {
+			// Best-effort cleanup; tmp may already be closed or removed.
 			_ = tmp.Close()
 			_ = os.Remove(tmpPath)
 		}
@@ -224,6 +228,7 @@ func crossDeviceMove(src, dst string, opts MoveOptions) error {
 			}
 			return fmt.Errorf("finalize move: %w", err)
 		}
+		// Best-effort removal; link already placed the file at dst.
 		_ = os.Remove(tmpPath)
 	} else {
 		if err := os.Rename(tmpPath, dst); err != nil {

@@ -2,7 +2,8 @@
 package scorecard
 
 import (
-	"sort"
+	"cmp"
+	"slices"
 	"strings"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
@@ -84,8 +85,8 @@ func Compute(findings []remediation.Finding, frameworks []string) *Report {
 	}
 
 	// Sort by readiness ascending (worst first).
-	sort.Slice(report.Frameworks, func(i, j int) bool {
-		return report.Frameworks[i].ReadinessPct < report.Frameworks[j].ReadinessPct
+	slices.SortFunc(report.Frameworks, func(a, b FrameworkScore) int {
+		return cmp.Compare(a.ReadinessPct, b.ReadinessPct)
 	})
 
 	return report

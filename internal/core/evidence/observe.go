@@ -1,8 +1,9 @@
 package evidence
 
 import (
+	"cmp"
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 )
 
@@ -44,8 +45,8 @@ func ExtractObservationProperties(
 		})
 	}
 
-	sort.Slice(out, func(i, j int) bool {
-		return out[i].Field < out[j].Field
+	slices.SortFunc(out, func(a, b ObservationProperty) int {
+		return cmp.Compare(a.Field, b.Field)
 	})
 	return out
 }

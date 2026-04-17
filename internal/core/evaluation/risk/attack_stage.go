@@ -1,7 +1,8 @@
 package risk
 
 import (
-	"sort"
+	"cmp"
+	"slices"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
@@ -76,7 +77,7 @@ func AttackStagesFromFindings(findings []CompoundFinding) []string {
 	for s := range seen {
 		stages = append(stages, s)
 	}
-	sort.Strings(stages)
+	slices.Sort(stages)
 	return stages
 }
 
@@ -103,16 +104,16 @@ var killChainOrder = map[string]int{
 func SortStagesByKillChain(stages []string) []string {
 	out := make([]string, len(stages))
 	copy(out, stages)
-	sort.Slice(out, func(i, j int) bool {
-		oi, oki := killChainOrder[out[i]]
-		oj, okj := killChainOrder[out[j]]
-		if !oki {
-			oi = 999
+	slices.SortFunc(out, func(a, b string) int {
+		oa, oka := killChainOrder[a]
+		ob, okb := killChainOrder[b]
+		if !oka {
+			oa = 999
 		}
-		if !okj {
-			oj = 999
+		if !okb {
+			ob = 999
 		}
-		return oi < oj
+		return cmp.Compare(oa, ob)
 	})
 	return out
 }

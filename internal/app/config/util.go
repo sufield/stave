@@ -3,7 +3,7 @@ package config
 import (
 	"log/slog"
 	"path/filepath"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/sufield/stave/internal/core/retention"
@@ -20,7 +20,7 @@ func SortedTierNames(tiers map[string]retention.Tier) []string {
 	for name := range tiers {
 		names = append(names, name)
 	}
-	sort.Strings(names)
+	slices.Sort(names)
 	return names
 }
 

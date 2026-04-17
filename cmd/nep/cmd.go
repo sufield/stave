@@ -12,7 +12,7 @@ import (
 // summary subcommands.
 func NewCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "nep",
+		Use:   "permissions",
 		Short: "Query net effective permissions from a snapshot",
 		Long: `Resolve and display net effective permissions (NEP) by evaluating all
 six AWS IAM policy layers: explicit denies, SCPs, permission boundaries,

@@ -3,7 +3,7 @@ package coverage
 
 import (
 	"fmt"
-	"sort"
+	"slices"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
@@ -194,7 +194,7 @@ func Build(input BuildInput) *CoverageReport {
 		weightedPct = float64(totalPassing) / float64(totalControls) * 100
 	}
 
-	sort.Strings(unannotated)
+	slices.Sort(unannotated)
 
 	return &CoverageReport{
 		Framework:           "mitre-attack",

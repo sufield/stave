@@ -82,7 +82,7 @@ func Group(input GroupInput) *Plan {
 	var items []attributed
 	for i := range input.Findings {
 		f := &input.Findings[i]
-		sev := kernel.SeverityOrder[strings.ToLower(f.ControlSeverity.String())]
+		sev := kernel.SeverityOrder[f.ControlSeverity.String()]
 		if sev > minSev {
 			continue
 		}
@@ -100,8 +100,8 @@ func Group(input GroupInput) *Plan {
 
 	// Sort by severity DESC, dwell DESC.
 	sort.Slice(items, func(i, j int) bool {
-		si := kernel.SeverityOrder[strings.ToLower(items[i].finding.ControlSeverity.String())]
-		sj := kernel.SeverityOrder[strings.ToLower(items[j].finding.ControlSeverity.String())]
+		si := kernel.SeverityOrder[items[i].finding.ControlSeverity.String()]
+		sj := kernel.SeverityOrder[items[j].finding.ControlSeverity.String()]
 		if si != sj {
 			return si < sj
 		}

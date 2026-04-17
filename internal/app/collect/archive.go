@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 	"strings"
 	"time"
 )
@@ -106,7 +106,7 @@ func (a *Archive) WriteRun(runID string, files map[string][]byte, meta RunMetada
 	sumLines = append(sumLines, fmt.Sprintf("sha256:%s  run-metadata.json", metaHash))
 
 	// Write sha256sums.
-	sort.Strings(sumLines)
+	slices.Sort(sumLines)
 	sumPath := filepath.Join(runDir, "sha256sums.txt")
 	return os.WriteFile(sumPath, []byte(strings.Join(sumLines, "\n")+"\n"), 0o644) //nolint:gosec // checksum file
 }

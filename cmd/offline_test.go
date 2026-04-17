@@ -29,7 +29,7 @@ func TestOfflineHelpSuffix_ProdCommands(t *testing.T) {
 		{"explain"},
 		{"validate"},
 		{"diagnose"},
-		{"verify"},
+		{"check"},
 	}
 
 	for _, path := range required {

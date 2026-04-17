@@ -2,7 +2,7 @@ package evidence
 
 import (
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 )
 
@@ -85,7 +85,7 @@ func (idx *CitationIndex) Frameworks() []string {
 	for f := range seen {
 		out = append(out, f)
 	}
-	sort.Strings(out)
+	slices.Sort(out)
 	return out
 }
 
@@ -98,7 +98,7 @@ func (idx *CitationIndex) RequirementsFor(framework string) []string {
 			reqs = append(reqs, after)
 		}
 	}
-	sort.Strings(reqs)
+	slices.Sort(reqs)
 	return reqs
 }
 

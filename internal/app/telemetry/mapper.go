@@ -1,8 +1,6 @@
 package telemetry
 
 import (
-	"strings"
-
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/kernel"
@@ -65,7 +63,7 @@ func MapAssessmentWithWindows(a *report.Assessment, filter Filter, controlFPs Co
 
 func matchesFilter(f *remediation.Finding, filter Filter) bool {
 	if len(filter.Severities) > 0 {
-		if !filter.Severities[strings.ToLower(f.ControlSeverity.String())] {
+		if !filter.Severities[f.ControlSeverity.String()] {
 			return false
 		}
 	}

@@ -32,7 +32,7 @@ func (v Node) GetMap(key string) Node {
 
 // GetPath reads nested keys from dot notation, for example "a.b.c".
 func (v Node) GetPath(path string) Node {
-	if strings.TrimSpace(path) == "" {
+	if path == "" {
 		return Node{}
 	}
 

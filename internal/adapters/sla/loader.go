@@ -122,6 +122,7 @@ func LoadEmbedded(id string) (*Policy, error) {
 // AvailableProfiles returns the IDs of all embedded SLA policies.
 func AvailableProfiles() []string {
 	var ids []string
+	// Embedded FS walk cannot fail; the callback never returns an error.
 	_ = fs.WalkDir(policiesFS, "embedded", func(_ string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err

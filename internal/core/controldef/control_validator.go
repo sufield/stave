@@ -73,13 +73,13 @@ func (ctl *ControlDefinition) validateIdentity() []diag.Finding {
 
 func (ctl *ControlDefinition) validateDocumentation() []diag.Finding {
 	var issues []diag.Finding
-	if strings.TrimSpace(ctl.Name) == "" {
+	if ctl.Name == "" {
 		issues = append(issues, ctl.newIssue(diag.RuleControlMissingName, nil).
 			Error().
 			Remediation("Assign a descriptive 'name' to the control for reporting").
 			Build())
 	}
-	if strings.TrimSpace(ctl.Description) == "" {
+	if ctl.Description == "" {
 		issues = append(issues, ctl.newIssue(diag.RuleControlMissingDesc, nil).
 			Error().
 			Remediation("Provide a 'description' explaining the security impact of this control").

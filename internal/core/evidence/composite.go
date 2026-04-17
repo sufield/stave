@@ -1,7 +1,8 @@
 package evidence
 
 import (
-	"sort"
+	"cmp"
+	"slices"
 )
 
 // CompositeAssessment holds per-framework results and cross-framework
@@ -153,19 +154,19 @@ func BuildCompositeGaps(assessments []*ProfileAssessment, pkg *EvidencePackage) 
 	}
 
 	// Sort shared by obligations_closed descending.
-	sort.Slice(shared, func(i, j int) bool {
-		if shared[i].ObligationsClosed != shared[j].ObligationsClosed {
-			return shared[i].ObligationsClosed > shared[j].ObligationsClosed
-		}
-		return shared[i].ControlID < shared[j].ControlID
+	slices.SortFunc(shared, func(a, b SharedGap) int {
+		return cmp.Or(
+			cmp.Compare(b.ObligationsClosed, a.ObligationsClosed),
+			cmp.Compare(a.ControlID, b.ControlID),
+		)
 	})
 
 	// Sort unique by framework then control.
-	sort.Slice(unique, func(i, j int) bool {
-		if unique[i].Framework != unique[j].Framework {
-			return unique[i].Framework < unique[j].Framework
-		}
-		return unique[i].ControlID < unique[j].ControlID
+	slices.SortFunc(unique, func(a, b UniqueGap) int {
+		return cmp.Or(
+			cmp.Compare(a.Framework, b.Framework),
+			cmp.Compare(a.ControlID, b.ControlID),
+		)
 	})
 
 	// Compute total obligations.

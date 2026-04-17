@@ -4,8 +4,9 @@
 package rank
 
 import (
+	"cmp"
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/sufield/stave/internal/core/asset"
@@ -156,22 +157,16 @@ func BuildRoadmap(findings []remediation.Finding, topExposures []risk.ExposureRa
 		entries = append(entries, entry)
 	}
 
-	sort.Slice(entries, func(i, j int) bool {
+	slices.SortFunc(entries, func(a, b PriorityEntry) int {
 		// Chain-member findings sort before isolated findings.
-		if entries[i].IsChainMember != entries[j].IsChainMember {
-			return entries[i].IsChainMember
-		}
-		// SLA-breached findings sort before non-breached at same priority.
-		if entries[i].SLABreached != entries[j].SLABreached {
-			return entries[i].SLABreached
-		}
-		if entries[i].PriorityScore != entries[j].PriorityScore {
-			return entries[i].PriorityScore > entries[j].PriorityScore
-		}
-		if entries[i].Confidence != entries[j].Confidence {
-			return entries[i].Confidence > entries[j].Confidence
-		}
-		return entries[i].ControlID < entries[j].ControlID
+		// true sorts before false (boolToInt: true=0, false=1).
+		return cmp.Or(
+			cmp.Compare(boolToInt(!a.IsChainMember), boolToInt(!b.IsChainMember)),
+			cmp.Compare(boolToInt(!a.SLABreached), boolToInt(!b.SLABreached)),
+			cmp.Compare(b.PriorityScore, a.PriorityScore),
+			cmp.Compare(b.Confidence, a.Confidence),
+			cmp.Compare(a.ControlID, b.ControlID),
+		)
 	})
 
 	if totalRisk > 0 {
@@ -249,8 +244,8 @@ func buildBundles(findings []remediation.Finding, exposureByKey map[string]risk.
 		})
 	}
 
-	sort.Slice(bundles, func(i, j int) bool {
-		return bundles[i].TotalRiskReduced > bundles[j].TotalRiskReduced
+	slices.SortFunc(bundles, func(a, b RemediationBundle) int {
+		return cmp.Compare(b.TotalRiskReduced, a.TotalRiskReduced)
 	})
 
 	if len(bundles) > 5 {
@@ -279,6 +274,13 @@ func formatOverdue(hours float64) string {
 		return fmt.Sprintf("+%.0fd", hours/24)
 	}
 	return fmt.Sprintf("+%.0fh", hours)
+}
+
+func boolToInt(b bool) int {
+	if b {
+		return 1
+	}
+	return 0
 }
 
 // deriveEntryConfidence returns confidence based on whether all changes

@@ -8,7 +8,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/sufield/stave/internal/env"
@@ -53,7 +53,7 @@ func Unique(base, name string, maxDepth int) (string, []string, error) {
 	if err != nil {
 		return "", nil, err
 	}
-	sort.Strings(candidates)
+	slices.Sort(candidates)
 	return resolveCandidates(resolutionRequest{
 		Base:       base,
 		Name:       name,

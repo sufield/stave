@@ -14,7 +14,7 @@ type Filter struct {
 
 // IsEmpty returns true if no filtering criteria have been provided.
 func (f Filter) IsEmpty() bool {
-	return len(f.Cases) == 0 && strings.TrimSpace(f.SignalContains) == ""
+	return len(f.Cases) == 0 && f.SignalContains == ""
 }
 
 // Apply applies the filter criteria to a diagnostic report and returns

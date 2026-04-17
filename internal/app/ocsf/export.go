@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
+	"github.com/sufield/stave/internal/util/strutil"
 )
 
 // ComplianceFinding is an OCSF 1.1 Compliance Finding (class_uid: 2003).
@@ -52,7 +53,7 @@ func Export(findings []remediation.Finding) []ComplianceFinding {
 			ClassName:  "Compliance Finding",
 			ActivityID: 1,
 			SeverityID: sevID(f.ControlSeverity.String()),
-			Severity:   strings.Title(f.ControlSeverity.String()), //nolint:staticcheck
+			Severity:   strutil.TitleCase(f.ControlSeverity.String()),
 			StatusID:   2,
 			Status:     "New",
 			Finding: OCSFFinding{

@@ -3,6 +3,7 @@
 package catalogdiff
 
 import (
+	"slices"
 	"sort"
 	"strings"
 
@@ -67,8 +68,8 @@ func Compute(before, after []policy.ControlDefinition) *Delta {
 		}
 	}
 
-	sort.Strings(newControls)
-	sort.Strings(removedControls)
+	slices.Sort(newControls)
+	slices.Sort(removedControls)
 	sort.Slice(sevChanges, func(i, j int) bool {
 		return sevChanges[i].ControlID < sevChanges[j].ControlID
 	})

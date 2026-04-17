@@ -34,7 +34,6 @@ func TestFlatLifecycleAndCICommandsAreNotTopLevel(t *testing.T) {
 
 	flatTopLevel := [][]string{
 		{"upcoming"},
-		{"diff"},
 		{"prune"},
 		{"baseline"},
 		{"gate"},

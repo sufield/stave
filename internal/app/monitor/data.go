@@ -3,8 +3,8 @@
 package monitor
 
 import (
-	"sort"
-	"strings"
+	"cmp"
+	"slices"
 
 	appscore "github.com/sufield/stave/internal/app/score"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
@@ -71,8 +71,8 @@ type BuildInput struct {
 // Build aggregates monitor state from pre-loaded assessments.
 func Build(input BuildInput) *State {
 	assessments := input.Assessments
-	sort.Slice(assessments, func(i, j int) bool {
-		return assessments[i].Run.Now.Before(assessments[j].Run.Now)
+	slices.SortFunc(assessments, func(a, b *report.Assessment) int {
+		return a.Run.Now.Compare(b.Run.Now)
 	})
 
 	latest := assessments[len(assessments)-1]
@@ -151,7 +151,7 @@ func countFindings(findings []remediation.Finding) FindingSummary {
 	var fs FindingSummary
 	fs.Total = len(findings)
 	for i := range findings {
-		switch strings.ToLower(findings[i].ControlSeverity.String()) {
+		switch findings[i].ControlSeverity.String() {
 		case "critical":
 			fs.Critical++
 		case "high":
@@ -170,7 +170,7 @@ func computeSLABurnFromDeadlines(findings []remediation.Finding, deadlines map[s
 	counts := map[string]int{}
 	for i := range findings {
 		f := &findings[i]
-		sev := strings.ToLower(f.ControlSeverity.String())
+		sev := f.ControlSeverity.String()
 		deadline := deadlines[sev]
 		if deadline <= 0 {
 			continue
@@ -195,14 +195,14 @@ func rankFindings(findings []remediation.Finding, n int) []TopFinding {
 	var items []ranked
 	for i := range findings {
 		f := &findings[i]
-		w := sevWeight[strings.ToLower(f.ControlSeverity.String())]
+		w := sevWeight[f.ControlSeverity.String()]
 		burnRate := 0.0
 		if f.SLADeadlineHours != nil && *f.SLADeadlineHours > 0 {
 			burnRate = f.Evidence.UnsafeDurationHours / *f.SLADeadlineHours
 		}
 		items = append(items, ranked{idx: i, score: w*100 + burnRate*50})
 	}
-	sort.Slice(items, func(i, j int) bool { return items[i].score > items[j].score })
+	slices.SortFunc(items, func(a, b ranked) int { return cmp.Compare(b.score, a.score) })
 	if len(items) > n {
 		items = items[:n]
 	}

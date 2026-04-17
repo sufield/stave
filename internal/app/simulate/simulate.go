@@ -3,8 +3,6 @@
 package simulate
 
 import (
-	"strings"
-
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/evaluation/risk"
@@ -69,7 +67,7 @@ func Run(input Input) *Result {
 			if ch.ID == cf.ChainID && remainingFailing < ch.EscalationThreshold {
 				deactivated = append(deactivated, ChainChange{
 					ChainID:  ch.ID,
-					Severity: strings.ToLower(ch.CompoundSeverity.String()),
+					Severity: ch.CompoundSeverity.String(),
 					Status:   "DEACTIVATED",
 				})
 				break

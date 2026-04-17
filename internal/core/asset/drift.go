@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"slices"
-	"sort"
 	"time"
 
 	"github.com/sufield/stave/internal/core/kernel"
@@ -133,11 +132,8 @@ func GetStateTransition(snapshots []Snapshot) (prev Snapshot, curr Snapshot, err
 	}
 
 	sorted := slices.Clone(snapshots)
-	sort.Slice(sorted, func(i, j int) bool {
-		if sorted[i].CapturedAt.Equal(sorted[j].CapturedAt) {
-			return i < j
-		}
-		return sorted[i].CapturedAt.Before(sorted[j].CapturedAt)
+	slices.SortFunc(sorted, func(a, b Snapshot) int {
+		return a.CapturedAt.Compare(b.CapturedAt)
 	})
 
 	prev = sorted[len(sorted)-2]

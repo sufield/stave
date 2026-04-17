@@ -3,6 +3,7 @@
 package snapshotdiff
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,7 +11,11 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"errors"
+
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/adapters/observations"
+	appdiff "github.com/sufield/stave/internal/app/catalogdiff"
 	"github.com/sufield/stave/internal/app/snapshotdiff"
 	"github.com/sufield/stave/internal/cli/ui"
 )
@@ -19,56 +24,96 @@ type options struct {
 	SnapshotBefore string
 	SnapshotAfter  string
 	Format         string
+	Catalogs       bool
+	CatalogBefore  string
+	CatalogAfter   string
 }
 
-// NewCmd constructs the snapshot-diff command.
-func NewCmd() *cobra.Command {
+// NewCmd constructs the diff command.
+func NewCmd(newCtlRepo compose.CtlRepoFactory) *cobra.Command {
 	opts := &options{Format: "text"}
 
 	cmd := &cobra.Command{
-		Use:   "snapshot-diff",
-		Short: "Structured diff between two observation snapshots",
-		Long: `Compare two observation snapshots and produce a structured diff
-showing property changes, new assets, and removed assets.
+		Use:   "diff",
+		Short: "Compare two observation snapshots or control catalogs",
+		Long: `Compare two observation snapshots or two control catalog versions.
 
-Unlike git diff on raw JSON, snapshot-diff filters to meaningful
-property changes and presents them asset-by-asset.
+Snapshot mode (default):
+  Shows property changes, new/removed assets between two snapshots.
+
+Catalog mode (--catalogs):
+  Shows new/removed controls and severity changes between catalog versions.
 
 Inputs:
-  --snapshot-before PATH   Path to the earlier snapshot JSON (required)
-  --snapshot-after PATH    Path to the later snapshot JSON (required)
-
-Outputs:
-  stdout    Structured diff (text or JSON)
+  --snapshot-before PATH   Earlier snapshot JSON
+  --snapshot-after PATH    Later snapshot JSON
+  --catalogs               Compare control catalogs instead of snapshots
+  --catalog-before PATH    Earlier catalog directory (with --catalogs)
+  --catalog-after PATH     Later catalog directory (with --catalogs)
 
 Exit Codes:
   0   Diff produced
   2   Invalid input`,
-		Example: `  stave snapshot-diff \
-    --snapshot-before snapshots/2026-02-13.json \
-    --snapshot-after  snapshots/2026-02-14.json
-
-  stave snapshot-diff \
-    --snapshot-before snap1.json \
-    --snapshot-after snap2.json \
-    --format json`,
+		Example: `  stave diff --snapshot-before snap1.json --snapshot-after snap2.json
+  stave diff --catalogs --catalog-before ./controls-v1/ --catalog-after ./controls-v2/`,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return run(cmd.OutOrStdout(), opts)
+			if opts.Catalogs {
+				return runCatalogDiff(cmd.Context(), cmd.OutOrStdout(), opts, newCtlRepo)
+			}
+			return runSnapshotDiff(cmd.OutOrStdout(), opts)
 		},
 	}
 
-	cmd.Flags().StringVar(&opts.SnapshotBefore, "snapshot-before", "", "path to before snapshot JSON (required)")
-	cmd.Flags().StringVar(&opts.SnapshotAfter, "snapshot-after", "", "path to after snapshot JSON (required)")
+	cmd.Flags().StringVar(&opts.SnapshotBefore, "snapshot-before", "", "path to before snapshot JSON")
+	cmd.Flags().StringVar(&opts.SnapshotAfter, "snapshot-after", "", "path to after snapshot JSON")
+	cmd.Flags().BoolVar(&opts.Catalogs, "catalogs", false, "compare control catalogs instead of snapshots")
+	cmd.Flags().StringVar(&opts.CatalogBefore, "catalog-before", "", "path to before catalog (with --catalogs)")
+	cmd.Flags().StringVar(&opts.CatalogAfter, "catalog-after", "", "path to after catalog (with --catalogs)")
 	cmd.Flags().StringVarP(&opts.Format, "format", "f", "text", "output format: text | json")
-	_ = cmd.MarkFlagRequired("snapshot-before")
-	_ = cmd.MarkFlagRequired("snapshot-after")
 
 	return cmd
 }
 
-func run(stdout io.Writer, opts *options) error {
+func runCatalogDiff(ctx context.Context, stdout io.Writer, opts *options, newCtlRepo compose.CtlRepoFactory) error {
+	if opts.CatalogBefore == "" || opts.CatalogAfter == "" {
+		return &ui.UserError{Err: errors.New("--catalog-before and --catalog-after are required with --catalogs")}
+	}
+
+	repo, err := newCtlRepo()
+	if err != nil {
+		return fmt.Errorf("create control loader: %w", err)
+	}
+
+	before, err := repo.LoadControls(ctx, opts.CatalogBefore)
+	if err != nil {
+		return &ui.UserError{Err: fmt.Errorf("load before catalog: %w", err)}
+	}
+
+	after, loadErr := repo.LoadControls(ctx, opts.CatalogAfter)
+	if loadErr != nil {
+		return &ui.UserError{Err: fmt.Errorf("load after catalog: %w", loadErr)}
+	}
+
+	delta := appdiff.Compute(before, after)
+
+	switch opts.Format {
+	case "json":
+		enc := json.NewEncoder(stdout)
+		enc.SetIndent("", "  ")
+		return enc.Encode(delta)
+	default:
+		_, _ = fmt.Fprint(stdout, appdiff.FormatTable(delta))
+		return nil
+	}
+}
+
+func runSnapshotDiff(stdout io.Writer, opts *options) error {
+	if opts.SnapshotBefore == "" || opts.SnapshotAfter == "" {
+		return &ui.UserError{Err: errors.New("--snapshot-before and --snapshot-after are required")}
+	}
+
 	beforeSnaps, err := observations.LoadBundle(opts.SnapshotBefore)
 	if err != nil {
 		return &ui.UserError{Err: fmt.Errorf("load before snapshot: %w", err)}

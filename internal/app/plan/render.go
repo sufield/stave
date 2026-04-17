@@ -4,8 +4,10 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
-	"sort"
+	"slices"
 	"strings"
+
+	"github.com/sufield/stave/internal/util/strutil"
 )
 
 // WriteMarkdown writes the plan as a markdown document.
@@ -84,7 +86,7 @@ func writeTeamMarkdown(w io.Writer, tp *TeamPlan, p *Plan) {
 			for fw, cite := range f.Compliance {
 				fws = append(fws, fw+": "+cite)
 			}
-			sort.Strings(fws)
+			slices.Sort(fws)
 			fmt.Fprintf(w, "| %s | %s |\n", f.ControlID, strings.Join(fws, ", "))
 		}
 		fmt.Fprintln(w)
@@ -165,7 +167,7 @@ func sevHeading(sev string) string {
 	case "low":
 		return "Low Findings"
 	default:
-		return strings.Title(sev) + " Findings" //nolint:staticcheck
+		return strutil.TitleCase(sev) + " Findings"
 	}
 }
 
