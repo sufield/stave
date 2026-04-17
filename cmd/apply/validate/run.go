@@ -2,10 +2,12 @@ package validate
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/internal/app/staleness"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/diag"
 
@@ -87,6 +89,26 @@ func runValidateProject(cmd *cobra.Command, deps validateDeps, rt *ui.Runtime, r
 	// Write Output
 	if err := rep.Write(result, opts.hintCtx()); err != nil {
 		return err
+	}
+
+	// Staleness check: --assert-recent.
+	if opts.AssertRecent != "" {
+		threshold, parseErr := time.ParseDuration(opts.AssertRecent)
+		if parseErr != nil {
+			return &ui.UserError{Err: fmt.Errorf("parse --assert-recent: %w", parseErr)}
+		}
+		now := time.Now().UTC()
+		if params.nowTime != (time.Time{}) {
+			now = params.nowTime
+		}
+		snapshots, snapErr := compose.LoadSnapshotsFrom(compose.CommandContext(cmd), deps.NewObsRepo, opts.Observations)
+		if snapErr != nil {
+			return fmt.Errorf("load snapshots for staleness check: %w", snapErr)
+		}
+		sr := staleness.Check(snapshots, threshold, now)
+		if sr.Stale {
+			return &ui.UserError{Err: fmt.Errorf("%s", sr.Message)}
+		}
 	}
 
 	// Print a helpful hint for the next step on success (if not quiet)

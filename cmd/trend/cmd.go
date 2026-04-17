@@ -53,6 +53,8 @@ Examples:
 	cmd.Flags().BoolVar(&opts.RegressionOnly, "regression-only", false, "show only regressing teams")
 	cmd.Flags().StringVar(&opts.Rollup, "rollup", "", "aggregate to hierarchy group ID")
 
+	cmd.AddCommand(newPredictCmd())
+
 	return cmd
 }
 

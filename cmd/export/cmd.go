@@ -8,7 +8,7 @@ import (
 	"github.com/sufield/stave/cmd/export/compliance"
 )
 
-// NewCmd creates the export parent command with rego and compliance subcommands.
+// NewCmd creates the export parent command with compliance and standards subcommands.
 func NewCmd(newCtlRepo compose.CtlRepoFactory, newCELEvaluator compose.CELEvaluatorFactory) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "export",
@@ -16,16 +16,18 @@ func NewCmd(newCtlRepo compose.CtlRepoFactory, newCELEvaluator compose.CELEvalua
 		Long: `Export Stave data to external formats.
 
 Subcommands:
-  rego         Export controls to OPA Rego policy rules
-  compliance   Export compliance evidence package as JSON`,
+  compliance   Export compliance evidence package as JSON
+  ocsf         Export findings as OCSF 1.1 events
+  oscal        Export findings as OSCAL 1.1.2 documents
+  changes      Export remediation property changes for external tooling`,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
 
-	cmd.AddCommand(newRegoCmd(newCtlRepo))
 	cmd.AddCommand(compliance.NewCmd(newCtlRepo, newCELEvaluator))
 	cmd.AddCommand(newOCSFCmd())
 	cmd.AddCommand(newOSCALCmd())
+	cmd.AddCommand(newChangesCmd())
 
 	return cmd
 }

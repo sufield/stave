@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"time"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/runid"
 	appconfig "github.com/sufield/stave/internal/app/config"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
+	"github.com/sufield/stave/internal/app/staleness"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/evaluation"
 )
@@ -66,6 +68,23 @@ func runStandardApply(ctx context.Context, logger *slog.Logger, deps Deps, opts 
 	results, err := executeEvaluation(ctx, ec)
 	if err != nil {
 		return decorateError(err)
+	}
+
+	// Staleness check: --assert-recent.
+	if opts.AssertRecent != "" {
+		threshold, parseErr := time.ParseDuration(opts.AssertRecent)
+		if parseErr != nil {
+			return &ui.UserError{Err: fmt.Errorf("parse --assert-recent: %w", parseErr)}
+		}
+		now := params.clock.Now()
+		snapshots, snapErr := compose.LoadSnapshotsFrom(ctx, deps.NewObsRepo, cfg.ObservationsDir)
+		if snapErr != nil {
+			return fmt.Errorf("load snapshots for staleness check: %w", snapErr)
+		}
+		result := staleness.Check(snapshots, threshold, now)
+		if result.Stale {
+			return &ui.UserError{Err: fmt.Errorf("%s", result.Message)}
+		}
 	}
 
 	// Signal-filtered output: --new-only or --new-since.

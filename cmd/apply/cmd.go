@@ -89,6 +89,7 @@ type Options struct {
 	NewOnly            bool
 	NewSince           string
 	SARIFBaseline      string
+	AssertRecent       string
 }
 
 // normalize cleans all user-supplied paths in one pass.
@@ -208,6 +209,7 @@ func (o *Options) bindApplySpecific(cmd *cobra.Command) {
 	f.BoolVar(&o.NewOnly, "new-only", false, "Show only findings not present in previous assessment")
 	f.StringVar(&o.NewSince, "new-since", "", "Show only findings not present in assessments within this window (e.g. 7d)")
 	f.StringVar(&o.SARIFBaseline, "baseline", "", "SARIF baseline file for baseline state comparison")
+	f.StringVar(&o.AssertRecent, "assert-recent", "", "Fail if no snapshot newer than this duration (e.g. 48h)")
 }
 
 func (o *Options) validate() error {

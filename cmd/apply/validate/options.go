@@ -46,6 +46,9 @@ type options struct {
 	Format   string
 	Template string
 	FixHints bool
+
+	// Staleness
+	AssertRecent string
 }
 
 func (o *options) hintCtx() hintContext {
@@ -75,6 +78,7 @@ func (o *options) BindFlags(cmd *cobra.Command) {
 	f.StringVar(&o.SchemaVersion, "schema-version", "", "Contract schema version override")
 	f.StringVar(&o.Kind, "kind", "", "Contract kind: control|observation|finding")
 	f.StringVar(&o.Template, "template", "", "Custom output template")
+	f.StringVar(&o.AssertRecent, "assert-recent", "", "Fail if no snapshot newer than this duration (e.g. 48h)")
 }
 
 // Prepare resolves config defaults, normalizes paths, and validates flag

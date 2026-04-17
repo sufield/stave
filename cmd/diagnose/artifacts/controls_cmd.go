@@ -13,6 +13,7 @@ import (
 	"github.com/sufield/stave/internal/adapters/controls/builtin"
 	appartifacts "github.com/sufield/stave/internal/app/artifacts"
 	"github.com/sufield/stave/internal/app/catalog"
+	"github.com/sufield/stave/internal/app/catalogsearch"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	packs "github.com/sufield/stave/internal/builtin/pack"
 	predicates "github.com/sufield/stave/internal/builtin/predicate"
@@ -38,6 +39,7 @@ definitions used by Stave.` + metadata.OfflineHelpSuffix,
 	cmd.AddCommand(newControlsExplainCmd(newCtlRepo))
 	cmd.AddCommand(newControlsAliasesCmd())
 	cmd.AddCommand(newControlsAliasExplainCmd())
+	cmd.AddCommand(newControlsSearchCmd())
 
 	return cmd
 }
@@ -217,6 +219,67 @@ Exit Codes:
 			})
 		},
 	}
+}
+
+func newControlsSearchCmd() *cobra.Command {
+	var query, domain, severity, attackStage, format string
+
+	cmd := &cobra.Command{
+		Use:   "search",
+		Short: "Search the built-in control catalog",
+		Long: `Search controls by keyword, domain, severity, or attack stage.
+
+Exit Codes:
+  0    Success
+  4    Internal error` + metadata.OfflineHelpSuffix,
+		Example: `  stave controls search --query encryption
+  stave controls search --domain s3 --severity critical
+  stave controls search --query bucket --format json`,
+		Args:          cobra.NoArgs,
+		SilenceUsage:  true,
+		SilenceErrors: true,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			store := builtin.NewControlStore(
+				builtin.EmbeddedFS(), "embedded",
+				builtin.WithAliasResolver(predicates.ResolverFunc()),
+			)
+			controls, err := store.All()
+			if err != nil {
+				return fmt.Errorf("load built-in controls: %w", err)
+			}
+
+			results := catalogsearch.Search(controls, catalogsearch.Filter{
+				Query:       query,
+				Domain:      domain,
+				Severity:    severity,
+				AttackStage: attackStage,
+			})
+
+			stdout := cmd.OutOrStdout()
+			if format == "json" {
+				return jsonutil.WriteIndented(stdout, results)
+			}
+
+			if len(results) == 0 {
+				_, err := fmt.Fprintln(stdout, "No matching controls found.")
+				return err
+			}
+			for _, r := range results {
+				if _, err := fmt.Fprintf(stdout, "%-30s %-8s %s\n", r.ControlID, r.Severity, r.Name); err != nil {
+					return err
+				}
+			}
+			return nil
+		},
+	}
+
+	cmd.Flags().StringVar(&query, "query", "", "Search keywords (matches ID, name, description)")
+	cmd.Flags().StringVar(&domain, "domain", "", "Filter by domain (e.g. s3, iam)")
+	cmd.Flags().StringVar(&severity, "severity", "", "Filter by severity (critical, high, medium, low)")
+	cmd.Flags().StringVar(&attackStage, "attack-stage", "", "Filter by ATT&CK stage")
+	cmd.Flags().StringVarP(&format, "format", "f", "text", "Output format: text or json")
+
+	return cmd
 }
 
 // buildPolicySource constructs the right ControlProvider based on config.
