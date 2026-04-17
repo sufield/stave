@@ -1,6 +1,6 @@
 # Stave Ontology
 
-**Version:** 0.1.4 (draft — ConflictReport schema with analysis_gaps + low_coverage; detection implementation in progress)
+**Version:** 0.1.2
 **Status:** Draft — battle-tested by CLI commands, not yet frozen
 
 This document defines the semantic foundation for the Stave platform. It is the developer contract for Stave Apps.
@@ -166,39 +166,6 @@ CompoundRisk --maps to--> STIX AttackPattern        |
 Control.remediation --maps to--> STIX CourseOfAction|
 Control.attack_stage --maps to--> MITRE ATT&CK Tactic
 ```
-
-## Derived Artifacts
-
-Derived artifacts are data structures produced by operating on the five primitives — not primitives themselves. A downstream app developer reading this ontology should understand the primitives deeply (they are the domain vocabulary) and consume derived artifacts opportunistically (they are the outputs of specific commands). Derived artifacts live in their own schema files and evolve independently of primitive schemas.
-
-### Conflict Report
-
-A ConflictReport is the output of catalog conflict detection. It describes relationships between Controls in the catalog — not the state of any Asset and not the result of any evaluation against an Asset. It is how catalog authors and downstream apps ask: *"are the controls in this catalog internally coherent?"*
-
-Schema: [`v0.1/conflict-report.schema.json`](v0.1/conflict-report.schema.json)
-
-ConflictReport is explicitly not a primitive. The five primitives (Asset, Control, CompoundRisk, PostureFinding, Exemption) define the domain; a ConflictReport reports on one of them (Control) in aggregate. No existing ontology (OSCAL, OCSF, STIX) describes relationships between controls as a first-class data structure — OSCAL profiles compose controls but do not detect semantic conflict between them. The data shape is a Stave extension; the category of artifact (a report about the catalog) is where this differs from the primitives above.
-
-#### The four categories
-
-- **CONTRADICTION** — shared dependencies, opposing verdicts on the same observation. Correctness defect. Two subcategories: `LOGIC_BUG` (one predicate is genuinely wrong) and `MISSING_ASSET_CLASS_GUARD` (both predicates encode valid but different interpretations; the fix is adding a guard, not repairing logic).
-- **REDUNDANCY** — identical behavior across every overlap dimension: dependencies, verdicts on every fixture, compliance mappings, attack_stage, and remediation. Hygiene issue. Agreement on any single dimension is insufficient — the full set is required to avoid false positives against intentionally separated controls.
-- **EMPIRICAL_SUBSUMPTION** — one control's dependency set is a strict subset of the other's, and its VIOLATIONs imply the broader control's VIOLATIONs across the current corpus. Informational, empirical only. Not a proof of subsumption in general — the name makes the limitation explicit.
-- **DIVERGENCE** — overlapping dependencies with verdict agreement below 100%. Informational, opt-in (not surfaced by default — it is the normal state for layered controls at different severities). Each divergence carries up to 5 witness fixtures and the differing property values so catalog authors can see the boundary.
-
-#### Shape: common superstructure
-
-Every pair is an element of a single `pairs[]` array, discriminated by `category`. Category-specific fields live in `payload`. This shape was chosen over per-category arrays because it keeps cross-category queries (*"all conflicts involving CTL.X"*) to a single filter and because adding a future category extends an enum rather than silently breaking downstream iterators that hard-coded the known array names.
-
-#### Corpus coverage, made explicit
-
-Every pair carries `corpus_coverage` with `fixtures_evaluated`, `fixtures_matched`, and `corpus_version` (the git SHA of the fixture tree). The quality of conflict detection depends directly on corpus coverage; the report surfaces that dependency rather than hiding it. A REDUNDANCY pair with `fixtures_matched: 0` is vacuous and should be treated with caution.
-
-Authors adding a new control are expected to add at least one fixture that exercises it against each existing control with overlapping dependencies. This contract sits between the catalog and the fixture corpus and is part of the ontology, not a CLI convention.
-
-#### Exit codes are not in the schema
-
-The ConflictReport schema describes the data. Exit-code policy — which categories block CI — belongs to the producing CLI command (`stave verify catalog`), documented separately. This lets library consumers of the schema (Python apps, custom CI) apply their own policy rather than inheriting the CLI's.
 
 ## Freeze Criteria
 
