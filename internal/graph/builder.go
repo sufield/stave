@@ -1,11 +1,11 @@
 package graph
 
 import (
-	"strings"
 	"time"
 
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/evaluation/risk"
+	"github.com/sufield/stave/internal/core/iam"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/util/sets"
 )
@@ -320,9 +320,5 @@ func computeMetadata(nodes []Node, edges []Edge) GraphMetadata {
 }
 
 func extractAccountID(arn string) string {
-	parts := strings.Split(arn, ":")
-	if len(parts) >= 5 {
-		return parts[4]
-	}
-	return ""
+	return iam.ExtractAccountID(arn)
 }

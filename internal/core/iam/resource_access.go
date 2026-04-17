@@ -138,10 +138,9 @@ func principalInAccount(principalARN, accountID string) bool {
 	if accountID == "" {
 		return true // can't determine, assume same account
 	}
-	// ARN format: arn:aws:iam::<account_id>:...
-	parts := strings.Split(principalARN, ":")
-	if len(parts) >= 5 {
-		return parts[4] == accountID
+	parsed := ExtractAccountID(principalARN)
+	if parsed == "" {
+		return true // can't parse, assume same account
 	}
-	return true // can't parse, assume same account
+	return parsed == accountID
 }

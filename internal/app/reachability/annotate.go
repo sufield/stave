@@ -144,9 +144,5 @@ func BuildIndexFromSnapshot(snap *asset.Snapshot) *iam.ResourceAccessIndex {
 }
 
 func extractAccountID(arn string) string {
-	parts := strings.Split(arn, ":")
-	if len(parts) >= 5 {
-		return parts[4]
-	}
-	return ""
+	return iam.ExtractAccountID(arn)
 }
