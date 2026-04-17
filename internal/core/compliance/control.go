@@ -4,6 +4,9 @@
 package compliance
 
 import (
+	"maps"
+	"slices"
+
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
@@ -134,10 +137,10 @@ func (d Definition) Description() string { return d.description }
 func (d Definition) Severity() policy.Severity { return d.severity }
 
 // ComplianceProfiles returns the applicable compliance frameworks.
-func (d Definition) ComplianceProfiles() []string { return d.complianceProfiles }
+func (d Definition) ComplianceProfiles() []string { return slices.Clone(d.complianceProfiles) }
 
-// ComplianceRefs returns the compliance citation map.
-func (d Definition) ComplianceRefs() map[string]string { return d.complianceRefs }
+// ComplianceRefs returns a defensive copy of the compliance citation map.
+func (d Definition) ComplianceRefs() map[string]string { return maps.Clone(d.complianceRefs) }
 
 // ProfileRationale returns the rationale for inclusion in the named profile.
 func (d Definition) ProfileRationale(profile string) string {
