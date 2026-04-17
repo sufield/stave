@@ -28,6 +28,7 @@ Subcommands:
 	cmd.AddCommand(newOCSFCmd())
 	cmd.AddCommand(newOSCALCmd())
 	cmd.AddCommand(newChangesCmd())
+	cmd.AddCommand(newTicketsCmd())
 
 	return cmd
 }

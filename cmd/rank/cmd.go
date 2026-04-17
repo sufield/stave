@@ -14,9 +14,11 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
 
 	"github.com/sufield/stave/internal/adapters/observations"
 	apprank "github.com/sufield/stave/internal/app/rank"
+	"github.com/sufield/stave/internal/app/sprintplanner"
 	"github.com/sufield/stave/internal/app/teams"
 	"github.com/sufield/stave/internal/core/report"
 )
@@ -31,6 +33,8 @@ type options struct {
 	GroupBy             string
 	TeamManifest        string
 	SortBy              string
+	Capacity            string
+	EffortModel         string
 }
 
 // NewCmd constructs the top-level rank command.
@@ -79,6 +83,8 @@ Exit Codes:
 	cmd.Flags().StringVar(&opts.GroupBy, "group-by", "", "Group roadmap by field (owner)")
 	cmd.Flags().StringVar(&opts.TeamManifest, "team-manifest", "", "Path to stave-teams.yaml")
 	cmd.Flags().StringVar(&opts.SortBy, "sort-by", "severity", "Sort order: severity | blast-radius | sla")
+	cmd.Flags().StringVar(&opts.Capacity, "capacity", "", "Engineer-hour budget for sprint planning (e.g. 40h, 5d)")
+	cmd.Flags().StringVar(&opts.EffortModel, "effort-model", "", "Path to effort model YAML (control_id -> hours)")
 
 	return cmd
 }
@@ -112,6 +118,11 @@ func run(stdout, _ io.Writer, opts *options) error {
 	// Identity-centric ranking.
 	if opts.Identity {
 		return runIdentity(stdout, opts, &assessment)
+	}
+
+	// Sprint planning mode.
+	if opts.Capacity != "" {
+		return runSprint(stdout, opts, &assessment)
 	}
 
 	// Build roadmap.
@@ -456,6 +467,113 @@ func writeCSVRoadmap(w io.Writer, rm apprank.Roadmap, assessment *report.Assessm
 			chainMembership,
 			e.FixAction,
 		})
+	}
+}
+
+func runSprint(stdout io.Writer, opts *options, assessment *report.Assessment) error {
+	capacityHours, err := parseCapacity(opts.Capacity)
+	if err != nil {
+		return fmt.Errorf("invalid --capacity %q: %w", opts.Capacity, err)
+	}
+
+	var controlHours map[string]float64
+	if opts.EffortModel != "" {
+		data, readErr := os.ReadFile(opts.EffortModel) //nolint:gosec // user-specified path
+		if readErr != nil {
+			return fmt.Errorf("read effort model: %w", readErr)
+		}
+		controlHours = make(map[string]float64)
+		if yamlErr := yaml.Unmarshal(data, &controlHours); yamlErr != nil {
+			return fmt.Errorf("parse effort model: %w", yamlErr)
+		}
+	}
+
+	result := sprintplanner.Plan(sprintplanner.Input{
+		Findings:      assessment.Findings,
+		CapacityHours: capacityHours,
+		DefaultHours:  4,
+		ControlHours:  controlHours,
+	})
+
+	switch opts.Format {
+	case "json":
+		output, marshalErr := json.MarshalIndent(result, "", "  ")
+		if marshalErr != nil {
+			return fmt.Errorf("marshal sprint result: %w", marshalErr)
+		}
+		fmt.Fprintln(stdout, string(output))
+	default:
+		writeTextSprint(stdout, result)
+	}
+	return nil
+}
+
+func parseCapacity(s string) (float64, error) {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return 0, errors.New("empty capacity")
+	}
+
+	if before, ok := strings.CutSuffix(s, "d"); ok {
+		val, err := strconv.ParseFloat(before, 64)
+		if err != nil {
+			return 0, err
+		}
+		return val * 8, nil
+	}
+
+	if before, ok := strings.CutSuffix(s, "h"); ok {
+		val, err := strconv.ParseFloat(before, 64)
+		if err != nil {
+			return 0, err
+		}
+		return val, nil
+	}
+
+	// Try bare number as hours.
+	val, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		return 0, errors.New("use format: 40h or 5d")
+	}
+	return val, nil
+}
+
+func writeTextSprint(w io.Writer, r sprintplanner.SprintResult) {
+	fmt.Fprintf(w, "SPRINT PLAN (%.0fh capacity)\n", r.Capacity)
+	fmt.Fprintln(w, strings.Repeat("=", 60))
+
+	if len(r.Items) == 0 {
+		fmt.Fprintln(w, "No items fit within the capacity budget.")
+		return
+	}
+
+	fmt.Fprintf(w, "\nINCLUDED (%d items, %.1fh total, %.1f risk reduction)\n",
+		len(r.Items), r.TotalHours, r.RiskReduction)
+	fmt.Fprintln(w, strings.Repeat("-", 60))
+	fmt.Fprintf(w, "  %-8s %-30s %-15s %6s %6s\n", "Severity", "Control", "Asset", "Hours", "ROI")
+
+	for i := range r.Items {
+		item := &r.Items[i]
+		ctl := item.ControlID
+		if len(ctl) > 30 {
+			ctl = ctl[:27] + "..."
+		}
+		ast := item.AssetID
+		if len(ast) > 15 {
+			ast = ast[:12] + "..."
+		}
+		fmt.Fprintf(w, "  %-8s %-30s %-15s %6.1f %6.1f\n",
+			strings.ToUpper(item.Severity), ctl, ast, item.EffortHours, item.ROI)
+	}
+
+	if len(r.LeftOut) > 0 {
+		fmt.Fprintf(w, "\nLEFT OUT (%d items)\n", len(r.LeftOut))
+		fmt.Fprintln(w, strings.Repeat("-", 60))
+		for i := range r.LeftOut {
+			item := &r.LeftOut[i]
+			fmt.Fprintf(w, "  %-8s %s on %s (%.1fh)\n",
+				strings.ToUpper(item.Severity), item.ControlID, item.AssetID, item.EffortHours)
+		}
 	}
 }
 

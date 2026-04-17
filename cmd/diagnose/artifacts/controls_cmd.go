@@ -40,6 +40,7 @@ definitions used by Stave.` + metadata.OfflineHelpSuffix,
 	cmd.AddCommand(newControlsAliasesCmd())
 	cmd.AddCommand(newControlsAliasExplainCmd())
 	cmd.AddCommand(newControlsSearchCmd())
+	cmd.AddCommand(newControlsQualityCmd(newCtlRepo))
 
 	return cmd
 }

@@ -30,7 +30,7 @@ func mkFinding(ctlID string, astID string) remediation.Finding {
 func TestClassify_ChronicAtHighFailureRate(t *testing.T) {
 	// 9 out of 10 assessments have the finding -> >80% failure rate -> chronic
 	var assessments []report.Assessment
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		if i == 5 {
 			// One assessment without the finding.
 			assessments = append(assessments, assessmentWith())

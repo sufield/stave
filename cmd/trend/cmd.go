@@ -54,6 +54,8 @@ Examples:
 	cmd.Flags().StringVar(&opts.Rollup, "rollup", "", "aggregate to hierarchy group ID")
 
 	cmd.AddCommand(newPredictCmd())
+	cmd.AddCommand(newForecastCmd())
+	cmd.AddCommand(newOscillationCmd())
 
 	return cmd
 }

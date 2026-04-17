@@ -82,6 +82,8 @@ Exit Codes:
 	cmd.Flags().BoolVar(&opts.IncludeASFF, "include-asff", false, "Include ASFF-formatted findings")
 	cmd.Flags().BoolVar(&opts.AllowUnknown, "allow-unknown-input", false, "Allow unknown observation source types")
 
+	cmd.AddCommand(newAuditCmd())
+
 	return cmd
 }
 
