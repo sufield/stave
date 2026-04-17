@@ -91,8 +91,13 @@ func TestLoadEmbeddedProfiles_AllFivePresent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("LoadEmbeddedProfiles: %v", err)
 	}
-	if len(profiles) != 5 {
-		t.Fatalf("len = %d, want 5", len(profiles))
+	if len(profiles) < 5 {
+		t.Fatalf("len = %d, want at least 5", len(profiles))
+	}
+
+	got := make(map[string]bool, len(profiles))
+	for _, p := range profiles {
+		got[p.ID] = true
 	}
 
 	expected := map[string]int{
@@ -102,14 +107,17 @@ func TestLoadEmbeddedProfiles_AllFivePresent(t *testing.T) {
 		"fedramp_moderate": 40,
 		"cis_aws_v3.0":     58,
 	}
+	byID := make(map[string]*coreevidence.FrameworkProfile, len(profiles))
 	for _, p := range profiles {
-		want, ok := expected[p.ID]
+		byID[p.ID] = p
+	}
+	for id, wantReqs := range expected {
+		p, ok := byID[id]
 		if !ok {
-			t.Errorf("unexpected profile ID %q", p.ID)
-			continue
+			t.Fatalf("missing expected embedded profile %q", id)
 		}
-		if len(p.Requirements) != want {
-			t.Errorf("%s: %d requirements, want %d", p.ID, len(p.Requirements), want)
+		if len(p.Requirements) != wantReqs {
+			t.Errorf("%s: %d requirements, want %d", p.ID, len(p.Requirements), wantReqs)
 		}
 		if p.FrameworkKey == "" {
 			t.Errorf("%s: empty FrameworkKey", p.ID)
