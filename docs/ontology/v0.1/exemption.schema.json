@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stave.dev/ontology/v0.1/exemption",
+  "title": "Exemption",
+  "description": "A time-bounded decision to suppress a specific finding or class of findings. An Exemption is not a Control (it does not evaluate a property) and not a PostureFinding (it does not represent an evaluation result). It is a governance decision that alters the lifecycle status of one or more PostureFindings from ACTIVE to SUPPRESSED, with an audit trail of who approved it, why, and when it expires.",
+  "type": "object",
+  "required": ["exemption_id", "scope", "granted_by", "granted_at", "justification"],
+  "properties": {
+    "exemption_id": {
+      "type": "string",
+      "description": "Stable identifier. SHA-256 of scope fields. Same scope always produces the same ID."
+    },
+    "scope": {
+      "type": "object",
+      "description": "What this exemption suppresses.",
+      "required": ["control_id", "asset_selector", "match_kind"],
+      "properties": {
+        "control_id": {
+          "type": "string",
+          "description": "Control ID to suppress. Exact match or glob pattern depending on match_kind."
+        },
+        "asset_selector": {
+          "type": "string",
+          "description": "Asset ID, glob pattern, or tag selector depending on match_kind."
+        },
+        "match_kind": {
+          "type": "string",
+          "enum": ["EXACT", "ASSET_GLOB", "CONTROL_GLOB", "TAG_SELECTOR"],
+          "description": "How scope fields are matched against findings."
+        }
+      }
+    },
+    "granted_by": {
+      "type": "string",
+      "description": "Identity of the approver. Email, username, or service account."
+    },
+    "granted_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the exemption was approved. Immutable after creation."
+    },
+    "expires_at": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "When the exemption expires. Null means permanent (requires periodic review). After expiry, affected PostureFindings transition SUPPRESSED → ACTIVE."
+    },
+    "justification": {
+      "type": "string",
+      "description": "Why this exemption was granted. Must be substantive — 'accepted risk' is insufficient for audit."
+    },
+    "approval_record": {
+      "type": "string",
+      "description": "Opaque reference to the approval artifact. Ticket ID, change request number, or document URL."
+    },
+    "compensating_controls": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Control IDs that must be PASS for this exemption to remain valid. If any fails, the exemption is invalidated and the finding reverts to ACTIVE."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "expired", "revoked"],
+      "description": "Current lifecycle state. Computed from expires_at and revocation events."
+    }
+  }
+}

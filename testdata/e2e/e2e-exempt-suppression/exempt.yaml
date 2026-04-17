@@ -1,0 +1,4 @@
+version: ignore.v0.1
+assets:
+  - pattern: "res:aws:s3:bucket:public-bucket"
+    reason: "Approved public bucket for static assets — ticket SEC-1234"

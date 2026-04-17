@@ -16,13 +16,29 @@
     },
     "verdict": {
       "type": "string",
-      "enum": ["VIOLATION", "PASS", "INCOMPLETE", "EXEMPTION_LAPSED", "COLLECTION_STALENESS"],
+      "enum": ["VIOLATION", "PASS", "INCOMPLETE"],
       "descriptions": {
-        "VIOLATION": "Predicate evaluated false. Finding is active.",
-        "PASS": "Predicate evaluated true. Control satisfied.",
-        "INCOMPLETE": "Required property absent from snapshot. Cannot determine compliance state.",
-        "EXEMPTION_LAPSED": "Exemption expired without review. Severity bumped.",
-        "COLLECTION_STALENESS": "No snapshot newer than configured threshold. Monitoring pipeline failure."
+        "VIOLATION": "CEL predicate evaluated false against observed asset state.",
+        "PASS": "CEL predicate evaluated true. Control property holds.",
+        "INCOMPLETE": "Evaluation could not produce a binary determination. See incomplete_reason."
+      }
+    },
+    "incomplete_reason": {
+      "type": "string",
+      "enum": ["MISSING_PROPERTY", "PREDICATE_ERROR", "STALE_OBSERVATION"],
+      "descriptions": {
+        "MISSING_PROPERTY": "A required field was absent from the snapshot.",
+        "PREDICATE_ERROR": "CEL compilation or runtime error prevented evaluation.",
+        "STALE_OBSERVATION": "No snapshot newer than the configured freshness threshold."
+      }
+    },
+    "finding_status": {
+      "type": "string",
+      "enum": ["ACTIVE", "SUPPRESSED", "RESOLVED"],
+      "descriptions": {
+        "ACTIVE": "Finding requires action. No exemption covers it.",
+        "SUPPRESSED": "Finding covered by an active Exemption. Verdict is still evaluated.",
+        "RESOLVED": "Finding no longer detected. Control now passes on this asset."
       }
     },
     "sensitivity_tier": {

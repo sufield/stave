@@ -1,0 +1,334 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stave.dev/ontology/v0.1/conflict-report",
+  "title": "ConflictReport",
+  "description": "The output of catalog conflict detection. A ConflictReport pairs controls whose predicates stand in one of four relationships against a fixture corpus: CONTRADICTION (opposing verdicts on the same observation — correctness defect), REDUNDANCY (identical behavior across every overlap dimension — hygiene issue), EMPIRICAL_SUBSUMPTION (one control's dependencies are a strict subset of another's and its VIOLATIONs imply the broader control's VIOLATIONs against the current corpus — informational, empirical only), DIVERGENCE (overlapping dependencies with verdict agreement below 100% — informational, opt-in). The report is a data artifact; CLI exit codes are a separate contract documented on the producing command. Fixture corpus for evaluation is the existing Stave test fixtures (stave/ goldens plus aws-lab/, gcp-lab/, dns-lab/) as of catalog evaluation time.",
+  "type": "object",
+  "required": [
+    "report_id",
+    "catalog_version",
+    "fixture_corpus_version",
+    "generated_at",
+    "stave_version",
+    "pairs",
+    "analysis_gaps"
+  ],
+  "properties": {
+    "report_id": {
+      "type": "string",
+      "description": "Stable identifier. SHA-256 of (catalog_version, fixture_corpus_version). Same inputs always produce the same report_id; re-running against the same catalog and corpus yields a byte-identical report. Prefix 'sha256:', 16 hex characters after the prefix."
+    },
+    "catalog_version": {
+      "type": "string",
+      "description": "Git commit SHA of the controls tree (stave/controls/) at evaluation time. Short-hash permitted (7-40 hex chars)."
+    },
+    "fixture_corpus_version": {
+      "type": "string",
+      "description": "Git commit SHA of the fixture tree at evaluation time. Pinning this to the repo commit makes corpus coverage inspectable and reproducible."
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "RFC3339 timestamp. Informational — not an input to report_id, so clock skew does not affect reproducibility."
+    },
+    "stave_version": {
+      "type": "string",
+      "description": "Stave binary version that produced the report. Informational — not an input to report_id."
+    },
+    "pairs": {
+      "type": "array",
+      "description": "Every detected conflict pair. Sorted lexicographically by (category, control_a, control_b) for deterministic output. A given unordered pair of controls appears at most once per category (control_a is always lexicographically less than or equal to control_b).",
+      "items": { "$ref": "#/$defs/ConflictPair" }
+    },
+    "analysis_gaps": {
+      "type": "array",
+      "description": "Coverage gaps the analyzer encountered — controls or pairs that were not classified for structural reasons. Present on every report (possibly empty). Surfacing gaps at the report level rather than hiding them preserves corpus honesty: a missing conflict is not a proved-absent conflict, and downstream apps must be able to tell the difference. Sorted lexicographically by (reason, first control id) for determinism.",
+      "items": { "$ref": "#/$defs/AnalysisGap" }
+    }
+  },
+  "additionalProperties": false,
+
+  "$defs": {
+    "ConflictPair": {
+      "type": "object",
+      "required": ["category", "control_a", "control_b", "corpus_coverage", "payload"],
+      "properties": {
+        "category": {
+          "type": "string",
+          "enum": ["CONTRADICTION", "REDUNDANCY", "EMPIRICAL_SUBSUMPTION", "DIVERGENCE"],
+          "description": "The taxonomy category. Closed enum. Adding a new category is a minor-version bump and breaks exhaustive downstream switches by design — consumers should filter rather than exhaustively match."
+        },
+        "control_a": {
+          "type": "string",
+          "description": "First control ID in the pair. Always lexicographically less than or equal to control_b so each unordered pair has one canonical representation."
+        },
+        "control_b": {
+          "type": "string",
+          "description": "Second control ID in the pair."
+        },
+        "corpus_coverage": { "$ref": "#/$defs/CorpusCoverage" },
+        "payload": {
+          "type": "object",
+          "description": "Category-specific payload. Shape is determined by category (see if/then schemas below)."
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": { "category": { "const": "CONTRADICTION" } },
+            "required": ["category"]
+          },
+          "then": {
+            "properties": { "payload": { "$ref": "#/$defs/ContradictionPayload" } }
+          }
+        },
+        {
+          "if": {
+            "properties": { "category": { "const": "REDUNDANCY" } },
+            "required": ["category"]
+          },
+          "then": {
+            "properties": { "payload": { "$ref": "#/$defs/RedundancyPayload" } }
+          }
+        },
+        {
+          "if": {
+            "properties": { "category": { "const": "EMPIRICAL_SUBSUMPTION" } },
+            "required": ["category"]
+          },
+          "then": {
+            "properties": { "payload": { "$ref": "#/$defs/EmpiricalSubsumptionPayload" } }
+          }
+        },
+        {
+          "if": {
+            "properties": { "category": { "const": "DIVERGENCE" } },
+            "required": ["category"]
+          },
+          "then": {
+            "properties": { "payload": { "$ref": "#/$defs/DivergencePayload" } }
+          }
+        }
+      ]
+    },
+
+    "CorpusCoverage": {
+      "type": "object",
+      "description": "How much of the fixture corpus exercised this pair. Surfaces confidence honestly. A pair evaluated against 2 fixtures carries less evidentiary weight than one evaluated against 200. Downstream consumers read this to judge whether to act.",
+      "required": ["fixtures_evaluated", "fixtures_matched", "corpus_version", "low_coverage"],
+      "properties": {
+        "fixtures_evaluated": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total number of observation fixtures the pair was evaluated against."
+        },
+        "fixtures_matched": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of fixtures where at least one of the two controls produced a VIOLATION verdict (i.e., the pair was active). May be zero, in which case REDUNDANCY and EMPIRICAL_SUBSUMPTION findings are vacuous and should be treated with caution — indicates corpus gap."
+        },
+        "corpus_version": {
+          "type": "string",
+          "description": "Git commit SHA of the fixture tree. Duplicates report.fixture_corpus_version; present per-pair so per-pair artifacts remain self-contained when extracted."
+        },
+        "low_coverage": {
+          "type": "boolean",
+          "description": "Derived flag: true when fixtures_evaluated is below the low-coverage threshold (currently 5). Surfaces honesty as a first-class field so downstream apps do not have to know or re-derive the threshold. A low_coverage: true pair's category classification rests on thin evidence and should be treated as a hypothesis, not a conclusion. The threshold is a Stave policy decision; downstream apps that want different cutoffs apply their own on fixtures_evaluated."
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "AnalysisGap": {
+      "type": "object",
+      "description": "A single coverage gap identified during analysis. Downstream apps use the enum `reason` to filter gaps by structural type; `controls` lists the control IDs the gap concerns (one or two, depending on whether the gap is control-level or pair-level); `detail` is a human-readable explanation.",
+      "required": ["reason", "controls", "detail"],
+      "properties": {
+        "reason": {
+          "type": "string",
+          "enum": [
+            "ALIASED_PREDICATE",
+            "NO_FIXTURE_COVERAGE",
+            "EXTRACTION_FAILED"
+          ],
+          "description": "Structural reason the analysis could not classify. ALIASED_PREDICATE: the control uses unsafe_predicate_alias, which the static dependency extractor does not yet expand — the control is excluded from pair enumeration and any conflicts involving it will not be detected in this run (control-level gap, `controls` has one entry). NO_FIXTURE_COVERAGE: the pair had zero fixtures where both controls' dependencies could be resolved, so no evaluation occurred (pair-level gap, `controls` has two entries). EXTRACTION_FAILED: static dependency extraction raised an unexpected error — always a bug to investigate (control-level gap, `controls` has one entry)."
+        },
+        "controls": {
+          "type": "array",
+          "description": "Control IDs the gap concerns. One entry for control-level gaps (ALIASED_PREDICATE, EXTRACTION_FAILED), two entries for pair-level gaps (NO_FIXTURE_COVERAGE). Sorted lexicographically.",
+          "items": { "type": "string" },
+          "minItems": 1,
+          "maxItems": 2
+        },
+        "detail": {
+          "type": "string",
+          "description": "Human-readable explanation. For ALIASED_PREDICATE: the alias name that could not be expanded. For NO_FIXTURE_COVERAGE: the shared dependency paths that went unresolved. For EXTRACTION_FAILED: the underlying error message."
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "Witness": {
+      "type": "object",
+      "description": "A single fixture observation demonstrating a conflict. Used by CONTRADICTION (disagreement witnesses) and DIVERGENCE (minimal disagreement fixtures). Selection rule when more than 5 witnesses exist: lexicographic by (fixture_path, asset_id), truncated at 5, witnesses_truncated flag set on the containing payload. Lexicographic selection is deterministic and cheap; diversity heuristics are deferred to later iterations.",
+      "required": ["fixture_path", "asset_id", "verdict_a", "verdict_b"],
+      "properties": {
+        "fixture_path": {
+          "type": "string",
+          "description": "Repo-relative path to the fixture file, e.g., 'aws-lab/fixtures/s3-static-site.json'."
+        },
+        "asset_id": {
+          "type": "string",
+          "description": "The asset within the fixture that produced the disagreement."
+        },
+        "verdict_a": {
+          "type": "string",
+          "enum": ["VIOLATION", "PASS", "INCOMPLETE"],
+          "description": "Verdict control_a produced on this asset."
+        },
+        "verdict_b": {
+          "type": "string",
+          "enum": ["VIOLATION", "PASS", "INCOMPLETE"],
+          "description": "Verdict control_b produced on this asset."
+        },
+        "observed_values": {
+          "type": "object",
+          "description": "Values observed at the shared dependency paths when both controls were evaluated on this asset. Populated on CONTRADICTION witnesses, where identical observed values produced different verdicts — the shared-path values are the diagnostic payload that points authors at the predicate-logic or guard gap.",
+          "additionalProperties": true
+        },
+        "differing_values": {
+          "type": "object",
+          "description": "Property paths where the two controls' inputs differ on this asset, with the differing values. Populated on DIVERGENCE witnesses, where the two predicates read partially disjoint dependency sets — the differing paths are the likely boundary that drives verdict disagreement.",
+          "additionalProperties": true
+        },
+        "diagnostic": {
+          "type": "string",
+          "description": "Optional human-readable note explaining the disagreement, e.g., a reference to missing asset-class guards or an edge case."
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "ContradictionPayload": {
+      "type": "object",
+      "description": "Opposing verdicts on overlapping dependency sets. Correctness defect (subcategory LOGIC_BUG) or authoring defect (subcategory MISSING_ASSET_CLASS_GUARD) — the fix is not the same, so the subcategory distinguishes them explicitly.",
+      "required": ["subcategory", "shared_dependencies", "disagreement_witnesses", "witnesses_truncated"],
+      "properties": {
+        "subcategory": {
+          "type": "string",
+          "enum": ["LOGIC_BUG", "MISSING_ASSET_CLASS_GUARD"],
+          "description": "LOGIC_BUG: the two predicates encode genuinely contradictory logic on the same conditions — one of them is wrong. MISSING_ASSET_CLASS_GUARD: the two predicates encode different but valid interpretations for different asset classes, but neither guards on asset class — the fix is adding a guard, not repairing logic."
+        },
+        "shared_dependencies": {
+          "type": "array",
+          "description": "Property paths read by both predicates. Lexicographically sorted. Non-empty by construction — a contradiction requires shared inputs.",
+          "items": { "type": "string" },
+          "minItems": 1
+        },
+        "disagreement_witnesses": {
+          "type": "array",
+          "description": "Up to 5 fixtures where the verdicts diverge. Selection: lexicographic by (fixture_path, asset_id). If more than 5 exist, witnesses_truncated is true.",
+          "items": { "$ref": "#/$defs/Witness" },
+          "maxItems": 5
+        },
+        "witnesses_truncated": {
+          "type": "boolean",
+          "description": "True if more than 5 disagreement witnesses were found. Downstream apps that want the full set re-run conflict detection with increased limits."
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "RedundancyPayload": {
+      "type": "object",
+      "description": "Identical behavior across every overlap dimension the taxonomy checks: dependencies, verdicts on every fixture, compliance mappings, attack_stage, and remediation guidance. Hygiene issue — authors review whether to merge or delete one control. A pair missing agreement on any single dimension is not REDUNDANCY; it may surface under a different category or not at all.",
+      "required": [
+        "shared_dependencies",
+        "shared_compliance_hash",
+        "shared_attack_stage",
+        "shared_remediation_hash"
+      ],
+      "properties": {
+        "shared_dependencies": {
+          "type": "array",
+          "description": "Property paths read by both predicates (identical sets). Lexicographically sorted.",
+          "items": { "type": "string" },
+          "minItems": 1
+        },
+        "shared_compliance_hash": {
+          "type": "string",
+          "description": "SHA-256 of the sorted set of compliance citation tokens common to both controls. Hash rather than inline so the report does not duplicate catalog content that can drift. Downstream apps resolve by reading either control's compliance block in the catalog; by definition of REDUNDANCY they agree."
+        },
+        "shared_attack_stage": {
+          "type": "string",
+          "description": "The attack_stage both controls map to. Inline because it is a single short token; no drift concern."
+        },
+        "shared_remediation_hash": {
+          "type": "string",
+          "description": "SHA-256 of the normalized remediation block (action + example, whitespace-collapsed) common to both controls. Hash rather than inline: remediation guidance changes more often than conflict structure, so inline copies would go stale. Downstream apps resolve against the catalog when they need the text."
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "EmpiricalSubsumptionPayload": {
+      "type": "object",
+      "description": "One control's dependency set is a strict subset of the other's, and its VIOLATIONs imply the broader control's VIOLATIONs across every fixture in the current corpus. Empirical only — not a proof of subsumption in the general case. Renaming to EMPIRICAL_SUBSUMPTION (rather than SUBSUMPTION) makes the limitation honest in the type name. Static predicate subsumption is undecidable in general and out of scope.",
+      "required": ["narrower", "broader", "dependency_delta"],
+      "properties": {
+        "narrower": {
+          "type": "string",
+          "description": "Control ID with the smaller dependency set. Always equal to control_a or control_b."
+        },
+        "broader": {
+          "type": "string",
+          "description": "Control ID with the larger dependency set. Always equal to the other of control_a/control_b."
+        },
+        "dependency_delta": {
+          "type": "array",
+          "description": "Property paths in the broader control's dependency set but not the narrower's. Lexicographically sorted. Non-empty by construction — subsumption requires strict subset.",
+          "items": { "type": "string" },
+          "minItems": 1
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "DivergencePayload": {
+      "type": "object",
+      "description": "Overlapping dependencies with verdict agreement below 100% on the current corpus. Informational — normal state for layered controls at different severities. Opt-in by default (the producing CLI surfaces DIVERGENCE pairs only with --show-divergence), but when present, carries enough detail for catalog authors to tune predicate boundaries.",
+      "required": [
+        "shared_dependencies",
+        "agreement_rate",
+        "minimal_disagreement_fixtures",
+        "witnesses_truncated"
+      ],
+      "properties": {
+        "shared_dependencies": {
+          "type": "array",
+          "description": "Property paths read by both predicates. Lexicographically sorted.",
+          "items": { "type": "string" },
+          "minItems": 1
+        },
+        "agreement_rate": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Fraction of fixtures where both controls produced the same verdict (1.0 means identical; would be REDUNDANCY if all other overlap dimensions also match). Strictly less than 1.0 for DIVERGENCE by definition."
+        },
+        "minimal_disagreement_fixtures": {
+          "type": "array",
+          "description": "Up to 5 witnesses where verdicts diverge. Selection: lexicographic by (fixture_path, asset_id). Each witness includes the differing property values so authors can see what boundary distinguishes the controls.",
+          "items": { "$ref": "#/$defs/Witness" },
+          "maxItems": 5
+        },
+        "witnesses_truncated": {
+          "type": "boolean",
+          "description": "True if more than 5 disagreement fixtures exist."
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

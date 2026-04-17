@@ -2,20 +2,35 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://stave.dev/ontology/v0.1/posture-finding",
   "title": "PostureFinding",
-  "description": "The result of evaluating a Control against an Asset. Base: OCSF Compliance Finding (class_uid 2003). Extended with temporal posture tracking, compound risk membership, and sensitivity context.",
+  "description": "The result of evaluating a Control against an Asset. Base: OCSF Compliance Finding (class_uid 2003). Extended with lifecycle status, temporal posture tracking, compound risk membership, and sensitivity context.",
   "type": "object",
-  "required": ["finding_id", "control_id", "asset_id", "verdict", "severity", "first_seen", "last_seen", "assessment_id"],
+  "required": ["finding_id", "control_id", "asset_id", "verdict", "status", "severity", "first_seen", "last_seen", "assessment_id", "reasoning"],
   "properties": {
     "finding_id": {
       "type": "string",
-      "description": "Stable SHA-256 of control_id + asset_id. Same finding produces same ID across assessments."
+      "description": "Stable SHA-256 of (control_id, asset_id). Same (control, asset) pair always produces the same ID across assessments. Enables cross-run correlation, dwell tracking, and idempotent ticket import. Hash inputs: 'finding:' + control_id + ':' + asset_id, truncated to 16 hex chars. Does not include predicate version or observed values — stable across schema evolution."
     },
     "control_id": { "type": "string", "description": "References Control.id." },
     "asset_id": { "type": "string", "description": "References Asset.id." },
     "assessment_id": { "type": "string", "description": "References Assessment.id." },
     "verdict": {
       "type": "string",
-      "enum": ["VIOLATION", "PASS", "INCOMPLETE", "EXEMPTION_LAPSED", "COLLECTION_STALENESS"]
+      "enum": ["VIOLATION", "PASS", "INCOMPLETE"],
+      "description": "The CEL predicate's evaluation outcome against the observed asset state. VIOLATION: predicate returned false. PASS: predicate returned true. INCOMPLETE: evaluation could not produce a binary determination."
+    },
+    "incomplete_reason": {
+      "type": "string",
+      "enum": ["MISSING_PROPERTY", "PREDICATE_ERROR", "STALE_OBSERVATION"],
+      "description": "Required when verdict is INCOMPLETE. Why the evaluation did not produce PASS or VIOLATION. MISSING_PROPERTY: a required field was absent from the snapshot. PREDICATE_ERROR: CEL compilation or runtime error. STALE_OBSERVATION: no snapshot newer than the configured freshness threshold."
+    },
+    "incomplete_detail": {
+      "type": "string",
+      "description": "Optional human-readable detail for INCOMPLETE verdicts. E.g., the missing field path, the CEL error message, or the staleness gap."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["ACTIVE", "SUPPRESSED", "RESOLVED"],
+      "description": "Lifecycle state independent of verdict. ACTIVE: finding requires action. SUPPRESSED: finding covered by an active Exemption. RESOLVED: finding no longer detected (control now passes). Maps to ocsf:status_id."
     },
     "severity": {
       "type": "string",
@@ -27,9 +42,45 @@
       "enum": ["phi", "pci", "pii", "confidential", "internal", "public", "unknown"]
     },
     "sensitivity_multiplier": { "type": "number" },
-    "first_seen": { "type": "string", "format": "date-time" },
+    "first_seen": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this finding was first detected. Immutable once set. Persists across status transitions including SUPPRESSED periods."
+    },
     "last_seen": { "type": "string", "format": "date-time" },
-    "dwell_days": { "type": "integer", "minimum": 0 },
+    "dwell_days": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Days since first_seen. Continues to accumulate during SUPPRESSED periods because the underlying violation persists."
+    },
+    "suppression": {
+      "type": "object",
+      "description": "Present only when status is SUPPRESSED. References the Exemption that covers this finding.",
+      "properties": {
+        "exemption_id": { "type": "string", "description": "References Exemption.exemption_id." },
+        "granted_by": { "type": "string" },
+        "granted_at": { "type": "string", "format": "date-time" },
+        "expires_at": { "type": ["string", "null"], "format": "date-time" },
+        "rationale": { "type": "string" },
+        "compensating_controls": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "suppression_history": {
+      "type": "array",
+      "description": "Past suppression periods. Populated when an exemption expires or is revoked and the finding transitions SUPPRESSED → ACTIVE. Preserves the audit trail.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "exemption_id": { "type": "string" },
+          "suppressed_at": { "type": "string", "format": "date-time" },
+          "unsuppressed_at": { "type": "string", "format": "date-time" },
+          "reason": { "type": "string", "enum": ["expired", "revoked", "compensating_control_failed"] }
+        }
+      }
+    },
     "chain_findings": {
       "type": "array",
       "items": { "type": "string" },
@@ -64,15 +115,68 @@
       "additionalProperties": { "type": "array", "items": { "type": "string" } }
     },
     "team": { "type": "string" },
-    "exemption": {
+    "reasoning": {
       "type": "object",
+      "description": "Deterministic evaluation context. Contains everything needed to reproduce the verdict given the predicate source and observation. Required on every PostureFinding regardless of verdict.",
+      "required": ["predicate_id", "dependencies"],
       "properties": {
-        "id": { "type": "string" },
-        "status": { "type": "string", "enum": ["active", "expired", "pending"] },
-        "expires_at": { "type": "string", "format": "date-time" },
-        "approver": { "type": "string" },
-        "compensating_control": { "type": "string" },
-        "rationale": { "type": "string" }
+        "predicate_id": {
+          "type": "string",
+          "description": "Stable identifier for the CEL predicate version that produced this finding. Enables correlation across catalog updates."
+        },
+        "dependencies": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Property paths the predicate reads, extracted statically from the control definition. Sorted lexicographically."
+        },
+        "observed_values": {
+          "type": "object",
+          "description": "Map from property path to the value actually observed at evaluation time. Keys are a subset of dependencies — only paths that resolved. Missing paths are recorded in missing_paths instead."
+        },
+        "missing_paths": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Dependency paths that did not resolve against the observation. Sorted. Structural cause of INCOMPLETE verdicts."
+        },
+        "evaluation_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Wall-clock evaluation time in milliseconds for performance debugging."
+        }
+      }
+    },
+    "triggers": {
+      "type": "object",
+      "description": "Optional. Populated only in multi-snapshot contexts (snapshotdiff, forensics, drift). Attributes the finding to specific property changes between snapshots.",
+      "properties": {
+        "prior_snapshot_id": {
+          "type": ["string", "null"],
+          "description": "Snapshot compared against. Null if first in series."
+        },
+        "changed_paths": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Subset of reasoning.dependencies where the value differs between prior and current snapshot. Sorted."
+        },
+        "prior_values": {
+          "type": "object",
+          "description": "Map from changed path to the value in the prior snapshot. Keys match changed_paths exactly."
+        },
+        "prior_verdict": {
+          "type": ["string", "null"],
+          "enum": ["VIOLATION", "PASS", "INCOMPLETE", null],
+          "description": "Verdict in the prior snapshot. Null if the finding did not exist."
+        },
+        "verdict_delta": {
+          "type": "string",
+          "enum": ["UNCHANGED", "NEW", "RESOLVED", "VERDICT_CHANGED"],
+          "description": "How the verdict changed between snapshots. Derivable from verdict + prior_verdict but emitted explicitly."
+        },
+        "anomaly": {
+          "type": "string",
+          "enum": ["PREDICATE_VERSION_CHANGE", "UNEXPLAINED"],
+          "description": "Present only when verdict flipped but no dependency path changed. Signals a catalog update or non-determinism bug."
+        }
       }
     },
     "ocsf_class_uid": { "type": "integer", "const": 2003 }

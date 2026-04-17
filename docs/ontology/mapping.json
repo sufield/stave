@@ -16,7 +16,8 @@
     "ChainFinding": { "standard": "STIX", "type": "indicator", "stix_version": "2.1" },
     "ComplianceRequirement": { "standard": "OSCAL", "type": "control", "oscal_version": "1.1.2" },
     "AttackerCapability": { "standard": "STIX", "type": "attack-pattern", "stix_version": "2.1" },
-    "RemediationAction": { "standard": "OCSF", "type": "RemediationActivity", "ocsf_class": 9001, "ocsf_version": "1.3" }
+    "RemediationAction": { "standard": "OCSF", "type": "RemediationActivity", "ocsf_class": 9001, "ocsf_version": "1.3" },
+    "Exemption": { "standard": "Stave", "type": "x_stave_exemption", "note": "No direct OSCAL/OCSF/STIX equivalent. Stave extension for governance lifecycle." }
   },
   "edges": {
     "CAN_IMPERSONATE": { "standard": "STIX", "relationship": "uses", "stix_version": "2.1" },
