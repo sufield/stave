@@ -194,7 +194,19 @@
         "compliance": {
           "type": "object",
           "title": "Compliance Framework Mappings",
-          "description": "Maps compliance framework names to control IDs (e.g., cis_aws_v1.4.0: \"2.1.1\").",
+          "description": "Maps compliance framework names to control IDs. Most keys take a single string identifier (e.g., cis_aws_v1.4.0: \"2.1.1\"). The 'ccm_v4' key is special: it is a list of CCM v4 control IDs in DOMAIN-NN form (e.g., [\"IAM-05\", \"CCC-07\"]).",
+          "properties": {
+            "ccm_v4": {
+              "type": "array",
+              "title": "CCM v4 Control Mappings",
+              "description": "List of CSA CCM v4 control IDs in DOMAIN-NN format (two-digit zero-padded). Absence of the field means not yet mapped; an empty list means no CCM mapping applicable. Allowed domain prefixes: AIS, A&A, BCR, CCC, CEK, DCS, DSP, GRC, HRS, IAM, IPY, IVS, LOG, SEF, STA, TVM, UEM.",
+              "items": {
+                "type": "string",
+                "pattern": "^(AIS|A&A|BCR|CCC|CEK|DCS|DSP|GRC|HRS|IAM|IPY|IVS|LOG|SEF|STA|TVM|UEM)-[0-9]{2}$"
+              },
+              "uniqueItems": true
+            }
+          },
           "additionalProperties": {
             "type": "string"
           }

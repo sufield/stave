@@ -5,6 +5,8 @@ description: >
   IAM account safety cannot be proven when root account MFA status or
   access key data is missing from the snapshot. The extractor must
   populate identity.root.mfa_enabled and identity.root.has_access_keys.
+compliance:
+  ccm_v4: ["DCS-06"]
 domain: identity
 severity: low
 scope_tags:

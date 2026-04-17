@@ -13,6 +13,7 @@ import (
 // --- YAML DTO → Domain ---
 
 func controlDefinitionToDomain(y yamlControlDefinition) policy.ControlDefinition {
+	mapping, ccmV4 := splitComplianceBlock(y.Compliance)
 	return policy.ControlDefinition{
 		DSLVersion:           y.DSLVersion,
 		ID:                   y.ID,
@@ -21,7 +22,8 @@ func controlDefinitionToDomain(y yamlControlDefinition) policy.ControlDefinition
 		Severity:             y.Severity,
 		Domain:               y.Domain,
 		ScopeTags:            scopeTagsToDomain(y.ScopeTags),
-		Compliance:           y.Compliance,
+		Compliance:           mapping,
+		CCMV4:                ccmV4,
 		Type:                 y.Type,
 		Params:               policy.NewParams(y.Params),
 		UnsafePredicate:      unsafePredicateToDomain(y.UnsafePredicate),
@@ -30,6 +32,57 @@ func controlDefinitionToDomain(y yamlControlDefinition) policy.ControlDefinition
 		Exposure:             exposureToDomain(y.Exposure),
 		ObservationFields:    y.ObservationFields,
 		Tests:                y.Tests,
+	}
+}
+
+// splitComplianceBlock separates the special "ccm_v4" list from the rest of
+// the compliance framework map. Framework keys map to a single string; the
+// "ccm_v4" key is a list of CCM v4 control IDs. The JSON schema validator
+// enforces value types upstream, so this is an unchecked split: non-list
+// values at "ccm_v4" and non-string values at other keys are dropped here
+// and reported as schema failures earlier in the load pipeline.
+func splitComplianceBlock(raw map[string]any) (policy.ComplianceMapping, []string) {
+	if len(raw) == 0 {
+		return nil, nil
+	}
+	var ccm []string
+	if v, ok := raw["ccm_v4"]; ok {
+		ccm = coerceStringList(v)
+		if ccm == nil {
+			ccm = []string{}
+		}
+	}
+	mapping := make(policy.ComplianceMapping, len(raw))
+	for k, v := range raw {
+		if k == "ccm_v4" {
+			continue
+		}
+		if s, ok := v.(string); ok {
+			mapping[policy.ComplianceFramework(k)] = s
+		}
+	}
+	if len(mapping) == 0 {
+		return nil, ccm
+	}
+	return mapping, ccm
+}
+
+func coerceStringList(v any) []string {
+	switch s := v.(type) {
+	case []string:
+		out := make([]string, len(s))
+		copy(out, s)
+		return out
+	case []any:
+		out := make([]string, 0, len(s))
+		for _, item := range s {
+			if str, ok := item.(string); ok {
+				out = append(out, str)
+			}
+		}
+		return out
+	default:
+		return nil
 	}
 }
 

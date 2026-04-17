@@ -14,6 +14,7 @@ compliance:
   nist_800_53_r5: "CP-9"
   aws_security_hub: "RDS.34"
   mitre_attack: "TA0040"
+  ccm_v4: ["BCR-08"]
 scope_tags:
   - aws
   - rds

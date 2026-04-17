@@ -16,6 +16,7 @@ compliance:
   nist_800_53_r5: "SI-2"
   aws_security_hub: "EKS.7"
   mitre_attack: "TA0003"
+  ccm_v4: ["CCC-04", "IVS-04"]
 scope_tags:
   - aws
   - eks

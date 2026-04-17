@@ -11,6 +11,7 @@ severity: medium
 compliance:
   nist_800_53_r5: "SC-7"
   cis_aws: "4.13"
+  ccm_v4: ["DCS-07", "IVS-06"]
 scope_tags:
   - aws
   - vpc

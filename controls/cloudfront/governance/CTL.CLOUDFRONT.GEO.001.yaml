@@ -17,6 +17,7 @@ domain: exposure
 severity: low
 compliance:
   nist_800_53_r5: "AC-3"
+  ccm_v4: ["DCS-06"]
 scope_tags:
   - aws
   - cloudfront

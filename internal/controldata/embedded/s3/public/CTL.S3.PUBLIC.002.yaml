@@ -4,6 +4,8 @@ name: No Public S3 Buckets With Sensitive Data
 description: >
   S3 buckets tagged with sensitive data classifications
   (PHI, PII, confidential) must not allow any public access.
+compliance:
+  ccm_v4: ["DSP-07", "DSP-17"]
 domain: exposure
 exposure:
   type: public_read

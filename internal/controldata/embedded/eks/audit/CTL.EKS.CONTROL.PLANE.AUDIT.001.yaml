@@ -15,6 +15,7 @@ compliance:
   nist_800_53_r5: "AU-2"
   cis_eks: "2.1"
   mitre_attack: "TA0005"
+  ccm_v4: ["LOG-05", "LOG-12"]
 scope_tags:
   - aws
   - eks

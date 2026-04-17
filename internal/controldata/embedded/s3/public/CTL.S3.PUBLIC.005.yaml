@@ -4,6 +4,8 @@ name: No Latent Public Read Exposure
 description: S3 buckets must not have latent public read exposure where a public mechanism
   (policy or ACL) is masked only by Public Access Block. Removing PAB would immediately
   expose the bucket.
+compliance:
+  ccm_v4: ["DSP-07", "DSP-17"]
 domain: storage
 exposure:
   type: latent_public_read

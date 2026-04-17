@@ -9,7 +9,8 @@ exposure:
   type: public_read
   principal_scope: public
 severity: critical
-compliance: {}
+compliance:
+  ccm_v4: ["DCS-07", "IAM-16", "IVS-03"]
 scope_tags:
   - aws
   - s3

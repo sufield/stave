@@ -11,6 +11,7 @@ domain: identity
 severity: high
 compliance:
   nist_800_53_r5: "AC-6"
+  ccm_v4: ["IAM-09", "IVS-04"]
 scope_tags:
   - active_directory
 type: unsafe_state

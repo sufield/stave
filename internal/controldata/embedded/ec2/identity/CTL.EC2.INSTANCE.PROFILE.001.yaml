@@ -15,6 +15,7 @@ compliance:
   nist_800_53_r5: "IA-5"
   cis_aws_v3.0: "1.18"
   aws_security_hub: "EC2.29"
+  ccm_v4: ["IAM-04", "IAM-05"]
 scope_tags:
   - aws
   - ec2

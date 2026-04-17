@@ -15,6 +15,7 @@ severity: high
 compliance:
   nist_800_53_r5: "CM-3"
   mitre_attack: "T1059.004"
+  ccm_v4: ["IAM-05", "LOG-12"]
 scope_tags:
   - aws
   - ssm

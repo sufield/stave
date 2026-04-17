@@ -12,6 +12,7 @@ severity: high
 compliance:
   nist_800_53_r5: "IA-5"
   cis_ad: "1.1.5"
+  ccm_v4: ["IAM-08", "IAM-09"]
 scope_tags:
   - active_directory
 type: unsafe_state

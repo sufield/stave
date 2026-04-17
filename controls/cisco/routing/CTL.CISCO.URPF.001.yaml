@@ -15,6 +15,7 @@ severity: high
 compliance:
   cis_cisco_ios_17: "4.3.1"
   nist_800_53_r5: "SC-7"
+  ccm_v4: ["IVS-03", "IVS-04"]
 scope_tags:
   - cisco
   - ios

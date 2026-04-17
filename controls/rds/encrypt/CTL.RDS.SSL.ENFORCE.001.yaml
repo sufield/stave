@@ -15,6 +15,7 @@ compliance:
   hipaa: "164.312(e)(2)(ii)"
   aws_security_hub: "RDS.25"
   mitre_attack: "TA0006"
+  ccm_v4: ["CEK-03", "DSP-10"]
 scope_tags:
   - aws
   - rds

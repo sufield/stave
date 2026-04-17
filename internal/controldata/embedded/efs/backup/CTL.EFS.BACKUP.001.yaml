@@ -11,6 +11,7 @@ severity: medium
 compliance:
   hipaa: "164.308(a)(7)(ii)(A)"
   nist_800_53_r5: "CP-9"
+  ccm_v4: ["BCR-08"]
 scope_tags:
   - aws
   - efs

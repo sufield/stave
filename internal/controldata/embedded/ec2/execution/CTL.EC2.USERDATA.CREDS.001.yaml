@@ -15,6 +15,7 @@ severity: critical
 compliance:
   nist_800_53_r5: "IA-5"
   mitre_attack: "T1552.005"
+  ccm_v4: ["DSP-17", "IAM-05"]
 scope_tags:
   - aws
   - ec2

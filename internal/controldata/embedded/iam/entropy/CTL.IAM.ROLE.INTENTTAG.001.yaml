@@ -15,6 +15,7 @@ compliance:
   nist_800_53_r5: "CM-8"
   fedramp_moderate: "CM-8"
   soc2: "CC6.3"
+  ccm_v4: ["CCC-07", "IAM-02"]
 scope_tags:
   - aws
   - iam

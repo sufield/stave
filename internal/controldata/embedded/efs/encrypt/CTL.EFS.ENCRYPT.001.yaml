@@ -16,6 +16,7 @@ compliance:
   pci_dss_v4.0: "3.5.1"
   fedramp_moderate: "SC-28"
   gdpr: "Art.32"
+  ccm_v4: ["CEK-03"]
 scope_tags:
   - aws
   - efs

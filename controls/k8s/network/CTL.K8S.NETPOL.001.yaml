@@ -10,6 +10,7 @@ severity: high
 compliance:
   cis_k8s_v1.8.0: "5.3.2"
   hipaa: "164.312(e)(1)"
+  ccm_v4: ["IVS-03", "IVS-06"]
 scope_tags:
   - kubernetes
   - network

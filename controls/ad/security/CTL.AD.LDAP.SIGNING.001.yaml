@@ -11,6 +11,7 @@ severity: high
 compliance:
   nist_800_53_r5: "SC-8"
   cis_ad: "2.3.11.8"
+  ccm_v4: ["CEK-04", "IAM-09", "IVS-04"]
 scope_tags:
   - active_directory
 type: unsafe_state

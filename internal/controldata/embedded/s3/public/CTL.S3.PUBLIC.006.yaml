@@ -7,6 +7,8 @@ description: >
   is currently the only control preventing directory enumeration.
   This is a latent vulnerability — one configuration change away
   from exposing all object keys.
+compliance:
+  ccm_v4: ["DSP-07", "DSP-17"]
 domain: exposure
 exposure:
   type: latent_public_list

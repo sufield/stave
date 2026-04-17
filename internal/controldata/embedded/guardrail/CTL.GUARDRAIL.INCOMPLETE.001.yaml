@@ -5,6 +5,8 @@ domain: governance
 description: >
   Safety mechanism integrity control. Checks that security guardrails
   are actively enforcing, not just present.
+compliance:
+  ccm_v4: ["CCC-04", "DCS-06", "GRC-05"]
 severity: low
 scope_tags:
   - aws

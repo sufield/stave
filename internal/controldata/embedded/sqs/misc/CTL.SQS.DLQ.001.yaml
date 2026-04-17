@@ -7,6 +7,7 @@ domain: exposure
 severity: medium
 compliance:
   soc2: "PI1.1"
+  ccm_v4: ["BCR-08"]
 scope_tags:
   - aws
   - sqs

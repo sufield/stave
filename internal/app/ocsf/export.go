@@ -61,8 +61,9 @@ func Export(findings []remediation.Finding) []ComplianceFinding {
 				Title: f.ControlName,
 			},
 			Compliance: OCSFCompliance{
-				Control: string(f.ControlID),
-				Status:  "FAILED",
+				Requirements: ccmRequirements(f.ControlCCMV4),
+				Control:      string(f.ControlID),
+				Status:       "FAILED",
 			},
 			Resources: []OCSFResource{
 				{UID: string(f.AssetID), Type: string(f.AssetID)},
@@ -70,6 +71,21 @@ func Export(findings []remediation.Finding) []ComplianceFinding {
 		})
 	}
 	return events
+}
+
+// ccmRequirements renders CCM v4 control IDs as OCSF compliance
+// requirement strings in the form "CCM:IAM-05" so consumers can filter
+// by the framework prefix. Returns nil when there are no mappings so
+// the field omits from JSON output.
+func ccmRequirements(ccms []string) []string {
+	if len(ccms) == 0 {
+		return nil
+	}
+	out := make([]string, len(ccms))
+	for i, id := range ccms {
+		out[i] = "CCM:" + id
+	}
+	return out
 }
 
 func sevID(sev string) int {

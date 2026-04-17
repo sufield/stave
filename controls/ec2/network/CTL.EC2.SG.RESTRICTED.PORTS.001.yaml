@@ -14,6 +14,7 @@ compliance:
   cis_aws_v3.0: "4.1"
   mitre_attack: "TA0001"
   aws_security_hub: "EC2.14"
+  ccm_v4: ["IVS-03"]
 scope_tags:
   - aws
   - ec2

@@ -9,6 +9,7 @@ compliance:
   nist_800_53_r5: "AC-6"
   fedramp_moderate: "AC-6"
   soc2: "CC6.1"
+  ccm_v4: ["IAM-04", "IAM-05"]
 scope_tags:
   - aws
   - lambda

@@ -42,6 +42,46 @@ func TestExport_ComplianceFindingSchema(t *testing.T) {
 	}
 }
 
+func TestExport_CCMv4Requirements(t *testing.T) {
+	// Finding carrying two CCM v4 mappings surfaces them in the OCSF
+	// compliance.requirements array, prefixed with "CCM:" so consumers
+	// can filter by framework.
+	findings := []remediation.Finding{
+		{Finding: evaluation.Finding{
+			ControlID:       "CTL.IAM.ROOT.MFA.001",
+			AssetID:         asset.ID("root"),
+			ControlSeverity: policy.SeverityCritical,
+			ControlCCMV4:    []string{"IAM-09", "IAM-14"},
+		}},
+	}
+	events := Export(findings)
+	got := events[0].Compliance.Requirements
+	want := []string{"CCM:IAM-09", "CCM:IAM-14"}
+	if len(got) != len(want) {
+		t.Fatalf("requirements = %v, want %v", got, want)
+	}
+	for i := range got {
+		if got[i] != want[i] {
+			t.Errorf("requirements[%d] = %q, want %q", i, got[i], want[i])
+		}
+	}
+}
+
+func TestExport_CCMv4Absent(t *testing.T) {
+	// Finding without CCM mappings omits the requirements field.
+	findings := []remediation.Finding{
+		{Finding: evaluation.Finding{
+			ControlID:       "CTL.TEST.001",
+			AssetID:         asset.ID("test"),
+			ControlSeverity: policy.SeverityLow,
+		}},
+	}
+	events := Export(findings)
+	if events[0].Compliance.Requirements != nil {
+		t.Errorf("requirements = %v, want nil", events[0].Compliance.Requirements)
+	}
+}
+
 func TestExport_SeverityMapping(t *testing.T) {
 	tests := []struct {
 		severity policy.Severity

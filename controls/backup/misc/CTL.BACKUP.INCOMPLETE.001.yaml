@@ -4,6 +4,8 @@ name: Complete Data Required for Backup Assessment
 description: >
   Backup safety cannot be assessed when backup status is missing
   from the snapshot. The extractor must populate backup.has_backup.
+compliance:
+  ccm_v4: ["BCR-08", "CEK-03", "DCS-06"]
 domain: exposure
 severity: low
 scope_tags:

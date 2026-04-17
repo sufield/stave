@@ -11,6 +11,7 @@ compliance:
   nist_800_53_r5: "AU-9"
   cis_aws: "3.3"
   mitre_attack: "T1562.008"
+  ccm_v4: ["LOG-05", "LOG-12"]
 scope_tags:
   - aws
   - s3

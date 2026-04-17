@@ -3,6 +3,8 @@ id: CTL.S3.PUBLIC.004
 name: No Public Read via ACL
 description: S3 bucket ACLs must not grant read access to AllUsers or AuthenticatedUsers
   for PHI data.
+compliance:
+  ccm_v4: ["DSP-07", "DSP-17"]
 domain: storage
 exposure:
   type: acl_public_read

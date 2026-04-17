@@ -5,6 +5,8 @@ description: >
   S3 bucket ACLs should not be readable by unauthenticated users.
   READ_ACP permission enables attackers to enumerate ACL grants,
   discover which principals have access, and find escalation paths.
+compliance:
+  ccm_v4: ["DSP-17", "IAM-16"]
 domain: exposure
 exposure:
   type: acl_read

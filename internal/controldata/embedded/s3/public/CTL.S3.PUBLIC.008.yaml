@@ -3,6 +3,8 @@ id: CTL.S3.PUBLIC.008
 name: No Public List via Policy
 description: >
   S3 bucket policies must not grant anonymous object listing.
+compliance:
+  ccm_v4: ["DSP-07", "DSP-17"]
 domain: exposure
 exposure:
   type: list_via_identity

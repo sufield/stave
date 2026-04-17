@@ -19,6 +19,7 @@ compliance:
   fedramp_moderate: "RA-5"
   gdpr: "Art.30"
   iso_27001_2022: "A.8.12"
+  ccm_v4: ["DSP-03"]
 scope_tags:
   - aws
   - s3

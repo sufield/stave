@@ -16,6 +16,7 @@ domain: exposure
 severity: medium
 compliance:
   nist_800_53_r5: "SC-8"
+  ccm_v4: ["AIS-01", "CEK-03", "DSP-10"]
 scope_tags:
   - aws
   - apigateway

@@ -7,6 +7,8 @@ description: >
   A dangling DNS record pointing to a deleted or unclaimed resource enables
   subdomain takeover — the attacker claims the resource and serves content
   under the organization's domain.
+compliance:
+  ccm_v4: ["CCC-04"]
 domain: exposure
 exposure:
   type: subdomain_takeover

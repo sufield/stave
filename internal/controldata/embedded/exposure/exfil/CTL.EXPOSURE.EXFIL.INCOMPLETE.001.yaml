@@ -6,6 +6,8 @@ description: >
   discriminator and the path_to_internet_exists field. The extractor
   could not determine whether the compute instance has internet
   egress.
+compliance:
+  ccm_v4: ["DCS-06", "DSP-17", "IVS-03"]
 domain: exposure
 severity: low
 scope_tags:

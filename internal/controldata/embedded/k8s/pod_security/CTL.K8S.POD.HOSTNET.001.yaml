@@ -10,6 +10,7 @@ domain: exposure
 severity: high
 compliance:
   cis_k8s_v1.9: "5.2.4"
+  ccm_v4: ["IVS-04"]
 scope_tags:
   - kubernetes
   - pod_security

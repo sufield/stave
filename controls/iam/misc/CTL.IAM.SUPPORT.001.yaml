@@ -9,6 +9,7 @@ domain: identity
 severity: medium
 compliance:
   cis_aws_v3.0: "1.17"
+  ccm_v4: ["GRC-05"]
 scope_tags:
   - aws
   - iam

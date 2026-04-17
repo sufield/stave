@@ -14,6 +14,7 @@ severity: critical
 compliance:
   cis_cisco_ios_17: "2.2.2"
   nist_800_53_r5: "IA-5"
+  ccm_v4: ["IVS-04"]
 scope_tags:
   - cisco
   - ios

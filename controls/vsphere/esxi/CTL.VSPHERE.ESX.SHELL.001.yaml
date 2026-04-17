@@ -9,6 +9,7 @@ domain: exposure
 severity: high
 compliance:
   cis_vmware_esxi_7: "1.2"
+  ccm_v4: ["IVS-04"]
 scope_tags:
   - vmware
   - esxi

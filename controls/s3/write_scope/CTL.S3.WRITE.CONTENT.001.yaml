@@ -6,6 +6,8 @@ description: >
   Unrestricted content types enable attackers to upload SVGs with
   embedded JavaScript or HTML files, causing stored XSS when served
   from the bucket's domain.
+compliance:
+  ccm_v4: ["DSP-17", "IAM-16"]
 domain: exposure
 exposure:
   type: unrestricted_content_type

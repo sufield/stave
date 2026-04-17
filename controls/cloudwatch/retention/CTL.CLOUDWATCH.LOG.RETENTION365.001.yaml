@@ -12,6 +12,7 @@ compliance:
   nist_800_53_r5: "AU-11"
   fedramp_moderate: "AU-11"
   gdpr: "Art.30"
+  ccm_v4: ["DSP-16", "LOG-03"]
 scope_tags:
   - aws
   - cloudwatch

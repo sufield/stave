@@ -5,6 +5,8 @@ description: >
   Kubernetes cluster safety cannot be assessed when audit logging
   status is missing from the snapshot. The extractor must populate
   audit.audit_logging_enabled.
+compliance:
+  ccm_v4: ["DCS-06"]
 domain: exposure
 severity: low
 scope_tags:

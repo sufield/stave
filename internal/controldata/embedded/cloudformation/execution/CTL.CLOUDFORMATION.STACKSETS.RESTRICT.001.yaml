@@ -15,6 +15,7 @@ severity: medium
 compliance:
   nist_800_53_r5: "CM-3"
   mitre_attack: "T1578"
+  ccm_v4: ["CCC-04", "CCC-07"]
 scope_tags:
   - aws
   - cloudformation

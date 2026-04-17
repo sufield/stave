@@ -11,6 +11,7 @@ compliance:
   fedramp_moderate: "IR-5"
   hipaa: "164.312(e)(1)"
   pci_dss_v4.0: "12.10"
+  ccm_v4: ["CCC-07", "IVS-03"]
 scope_tags:
   - aws
   - vpc

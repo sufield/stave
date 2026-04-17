@@ -20,6 +20,7 @@ compliance:
   ffiec: "CAT-D3"
   iso_27001_2022: "A.8.5"
   nist_csf_2.0: "PR.AA"
+  ccm_v4: ["IAM-09", "IAM-14"]
 scope_tags:
   - aws
   - iam

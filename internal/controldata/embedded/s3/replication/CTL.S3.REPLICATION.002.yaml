@@ -14,6 +14,7 @@ compliance:
   soc2: "A1.2"
   nist_800_53_r5: "CP-6(1)"
   fedramp_moderate: "CP-6(1)"
+  ccm_v4: ["BCR-08", "DSP-05"]
 scope_tags:
   - aws
   - s3

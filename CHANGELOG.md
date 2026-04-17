@@ -8,6 +8,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **CCM v4 mapping metadata on controls** — optional `compliance.ccm_v4`
+  list on `ctrl.v1` accepting CSA CCM v4 control IDs in `DOMAIN-NN`
+  form (e.g., `IAM-05`, `CCC-07`). Absence = not yet mapped; empty list
+  = no CCM mapping applicable. 630 / 630 built-in controls back-filled
+  via directory + function inference (100% coverage). Reference at
+  `docs/reference/ccm-v4-controls.md`.
+- **CCM v4 mappings propagate to evaluation findings** — additive
+  `control_compliance_ccm_v4` field on each finding in `out.v0.1`
+  output; no change to the existing `control_compliance` map or any
+  other framework mappings (SOC 2, PCI, NIST, FedRAMP, ISO, HIPAA, CIS).
+- **CCM v4 mappings carried in OCSF export** — populated into the
+  OCSF 1.1 `compliance.requirements` array as `CCM:<ID>` strings so
+  downstream SIEMs can filter by framework prefix. No change to other
+  OCSF fields. Wire-format `schema_version` stays at `out.v0.1` since
+  the change is additive under the 0.1.x contract.
 - `stave config delete <key>` — remove a project config key, reverting to default
 - Severity levels populated on all 43 S3 controls (10 critical, 20 high, 11 medium, 2 low)
 - Compliance metadata (`compliance` field) on control definitions — maps framework names to control IDs

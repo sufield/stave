@@ -4,6 +4,8 @@ name: Complete Data Required for VPC Assessment
 description: >
   VPC safety cannot be assessed when flow logging status is missing
   from the snapshot. The extractor must populate network.flow_log.enabled.
+compliance:
+  ccm_v4: ["DCS-06"]
 domain: exposure
 severity: low
 scope_tags:

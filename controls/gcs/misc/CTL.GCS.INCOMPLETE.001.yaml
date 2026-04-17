@@ -5,6 +5,8 @@ description: >
   GCS bucket safety cannot be proven when access control data is missing
   from the snapshot. The extractor must populate storage.access.public_read
   to evaluate public exposure controls.
+compliance:
+  ccm_v4: ["DCS-06"]
 domain: storage
 severity: low
 scope_tags:

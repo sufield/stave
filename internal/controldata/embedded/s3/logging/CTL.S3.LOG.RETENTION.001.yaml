@@ -12,6 +12,7 @@ compliance:
   nist_800_53_r5: "AU-11"
   hipaa: "164.530(j)"
   fedramp_moderate: "AU-11"
+  ccm_v4: ["LOG-12"]
 scope_tags:
   - aws
   - s3

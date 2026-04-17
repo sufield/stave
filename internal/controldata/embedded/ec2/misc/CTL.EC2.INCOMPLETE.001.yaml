@@ -5,6 +5,8 @@ description: >
   EC2 instance safety cannot be assessed when encryption status is
   missing from the snapshot. The extractor must populate
   compute.encryption.ebs_encrypted.
+compliance:
+  ccm_v4: ["DCS-06"]
 domain: exposure
 severity: low
 scope_tags:

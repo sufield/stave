@@ -11,6 +11,7 @@ severity: high
 compliance:
   nist_800_53_r5: "AU-9"
   hipaa: "164.312(b)"
+  ccm_v4: ["LOG-12"]
 scope_tags:
   - aws
   - s3

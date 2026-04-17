@@ -11,6 +11,7 @@ domain: exposure
 severity: low
 compliance:
   nist_800_53_r5: "CM-8"
+  ccm_v4: ["DSP-07", "GRC-05"]
 scope_tags:
   - aws
   - s3

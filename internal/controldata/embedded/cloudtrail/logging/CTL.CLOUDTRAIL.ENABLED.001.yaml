@@ -19,6 +19,7 @@ compliance:
   ffiec: "ISH-4"
   iso_27001_2022: "A.8.15"
   nist_csf_2.0: "DE.CM"
+  ccm_v4: ["LOG-05", "LOG-12"]
 scope_tags:
   - aws
   - cloudtrail

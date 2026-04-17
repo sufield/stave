@@ -21,6 +21,7 @@ compliance:
   soc2: "CC6.1"
   hipaa: "164.312(a)(1)"
   cis_aws_v3.0: "1.16"
+  ccm_v4: ["IAM-05"]
 scope_tags:
   - aws
   - iam

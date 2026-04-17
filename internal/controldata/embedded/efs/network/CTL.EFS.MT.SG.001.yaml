@@ -10,6 +10,7 @@ domain: exposure
 severity: high
 compliance:
   nist_800_53_r5: "SC-7"
+  ccm_v4: ["IVS-03"]
 scope_tags:
   - aws
   - efs

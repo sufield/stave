@@ -10,6 +10,7 @@ compliance:
   fedramp_moderate: "CM-7"
   pci_dss_v4.0: "2.2.1"
   soc2: "CC6.6"
+  ccm_v4: ["IVS-06", "LOG-12"]
 scope_tags:
   - aws
   - ecs

@@ -15,6 +15,7 @@ severity: high
 compliance:
   hipaa: "164.312(a)(1)"
   soc2: "CC6.1"
+  ccm_v4: ["CCC-04", "DSP-07", "DSP-17"]
 scope_tags:
   - aws
   - s3

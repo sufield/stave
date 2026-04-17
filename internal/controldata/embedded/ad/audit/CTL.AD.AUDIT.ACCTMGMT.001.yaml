@@ -11,6 +11,7 @@ domain: identity
 severity: high
 compliance:
   cis_ad: "17.1.1"
+  ccm_v4: ["LOG-05", "LOG-12"]
 scope_tags:
   - active_directory
 type: unsafe_state

@@ -15,6 +15,7 @@ compliance:
   fedramp_moderate: "SC-28"
   gdpr: "Art.32"
   ffiec: "BCP"
+  ccm_v4: ["BCR-08", "CCC-04", "CCC-07", "CEK-03"]
 scope_tags:
   - aws
   - backup

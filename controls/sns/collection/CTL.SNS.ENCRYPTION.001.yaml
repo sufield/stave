@@ -15,6 +15,7 @@ compliance:
   nist_800_53_r5: "SC-28"
   mitre_attack: "T1530"
   aws_security_hub: "SNS.1"
+  ccm_v4: ["CEK-03"]
 scope_tags:
   - aws
   - sns

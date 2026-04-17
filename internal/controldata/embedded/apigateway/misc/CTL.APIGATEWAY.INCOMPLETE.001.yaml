@@ -5,7 +5,8 @@ description: >
   The observation snapshot is missing required API Gateway properties.
 domain: exposure
 severity: info
-compliance: {}
+compliance:
+  ccm_v4: ["AIS-01", "DCS-06"]
 scope_tags:
   - aws
   - apigateway

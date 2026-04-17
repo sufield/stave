@@ -100,6 +100,9 @@
         "nist_csf_2.0": "PR.PS",
         "soc2": "CC6.1"
       },
+      "control_compliance_ccm_v4": [
+        "DSP-07"
+      ],
       "posture_drift": {
         "pattern": "persistent",
         "exposure_window_count": 1
@@ -153,6 +156,9 @@
         "nist_800_53_r5": "CP-9",
         "soc2": "CC6.1"
       },
+      "control_compliance_ccm_v4": [
+        "BCR-08"
+      ],
       "posture_drift": {
         "pattern": "persistent",
         "exposure_window_count": 1
@@ -205,6 +211,10 @@
         "hipaa": "164.312(e)(1)",
         "nist_800_53_r5": "SC-7"
       },
+      "control_compliance_ccm_v4": [
+        "DCS-07",
+        "IVS-03"
+      ],
       "posture_drift": {
         "pattern": "persistent",
         "exposure_window_count": 1
@@ -253,6 +263,10 @@
         "pci_dss_v4.0": "7.2.1",
         "soc2": "CC6.1"
       },
+      "control_compliance_ccm_v4": [
+        "DSP-07",
+        "DSP-17"
+      ],
       "exposure": {
         "type": "public_read",
         "principal_scope": "public"
@@ -327,6 +341,10 @@
         "temporal_risk": "Protected prefix \"backups/\" is publicly readable via missing_evidence."
       },
       "control_severity": "high",
+      "control_compliance_ccm_v4": [
+        "DSP-07",
+        "DSP-17"
+      ],
       "exposure": {
         "type": "prefix_exposure",
         "principal_scope": "public"
@@ -401,6 +419,10 @@
         "temporal_risk": "Protected prefix \"internal/\" is publicly readable via missing_evidence."
       },
       "control_severity": "high",
+      "control_compliance_ccm_v4": [
+        "DSP-07",
+        "DSP-17"
+      ],
       "exposure": {
         "type": "prefix_exposure",
         "principal_scope": "public"
@@ -475,6 +497,10 @@
         "temporal_risk": "Protected prefix \"invoices/\" is publicly readable via missing_evidence."
       },
       "control_severity": "high",
+      "control_compliance_ccm_v4": [
+        "DSP-07",
+        "DSP-17"
+      ],
       "exposure": {
         "type": "prefix_exposure",
         "principal_scope": "public"
@@ -549,6 +575,10 @@
         "temporal_risk": "Protected prefix \"secrets/\" is publicly readable via missing_evidence."
       },
       "control_severity": "high",
+      "control_compliance_ccm_v4": [
+        "DSP-07",
+        "DSP-17"
+      ],
       "exposure": {
         "type": "prefix_exposure",
         "principal_scope": "public"

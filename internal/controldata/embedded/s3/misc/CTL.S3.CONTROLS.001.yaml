@@ -20,6 +20,7 @@ compliance:
   ffiec: "ISH-4"
   iso_27001_2022: "A.8.3"
   nist_csf_2.0: "PR.PS"
+  ccm_v4: ["DSP-07", "DSP-17"]
 scope_tags:
   - aws
   - s3

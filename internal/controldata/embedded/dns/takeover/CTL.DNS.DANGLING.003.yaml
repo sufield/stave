@@ -7,6 +7,8 @@ description: >
   to resources owned by the organization. Supply chain takeover through
   dangling distribution references delivers executable code to systems
   that trust the source.
+compliance:
+  ccm_v4: ["CCC-04"]
 domain: exposure
 exposure:
   type: supply_chain_takeover

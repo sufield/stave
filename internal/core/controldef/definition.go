@@ -38,6 +38,7 @@ type ControlDefinition struct {
 	Domain               kernel.AssetDomain
 	ScopeTags            []kernel.ScopeTag
 	Compliance           ComplianceMapping
+	CCMV4                []string
 	Type                 ControlType
 	Params               ControlParams
 	UnsafePredicate      UnsafePredicate
@@ -407,6 +408,7 @@ type ControlMetadata struct {
 	Description string
 	Severity    Severity
 	Compliance  ComplianceMapping
+	CCMV4       []string
 	Remediation *RemediationSpec
 	Exposure    *Exposure
 }
@@ -436,6 +438,7 @@ func (ctl *ControlDefinition) Metadata() ControlMetadata {
 		Description: ctl.Description,
 		Severity:    ctl.Severity,
 		Compliance:  ctl.Compliance,
+		CCMV4:       ctl.CCMV4,
 		Remediation: ctl.Remediation,
 		Exposure:    ctl.Exposure,
 	}

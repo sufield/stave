@@ -15,6 +15,7 @@ compliance:
   hipaa: "164.312(a)(2)(iv)"
   pci_dss_v4.0: "3.4.1"
   soc2: "CC6.1"
+  ccm_v4: ["LOG-12"]
 scope_tags:
   - aws
   - ssm

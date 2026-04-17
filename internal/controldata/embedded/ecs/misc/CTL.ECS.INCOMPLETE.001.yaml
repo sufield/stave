@@ -3,6 +3,8 @@ id: CTL.ECS.INCOMPLETE.001
 name: Complete Data Required for ECS Assessment
 description: >
   ECS task definition or service configuration is missing required properties for security assessment. Re-run the extractor with ecs:DescribeTaskDefinition, ecs:DescribeServices, ecs:ListTaskDefinitions, and ecs:ListServices permissions.
+compliance:
+  ccm_v4: ["DCS-06", "IVS-06", "LOG-12"]
 domain: exposure
 severity: low
 

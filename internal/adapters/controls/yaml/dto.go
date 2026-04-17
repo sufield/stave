@@ -10,22 +10,22 @@ import (
 // It mirrors policy.ControlDefinition with YAML struct tags, keeping the domain layer
 // free of serialization concerns.
 type yamlControlDefinition struct {
-	DSLVersion           string                   `yaml:"dsl_version"`
-	ID                   kernel.ControlID         `yaml:"id"`
-	Name                 string                   `yaml:"name"`
-	Description          string                   `yaml:"description"`
-	Severity             policy.Severity          `yaml:"severity,omitempty"`
-	Domain               kernel.AssetDomain       `yaml:"domain,omitempty"`
-	ScopeTags            []string                 `yaml:"scope_tags,omitempty"`
-	Compliance           policy.ComplianceMapping `yaml:"compliance,omitempty"`
-	Type                 policy.ControlType       `yaml:"type"`
-	Params               map[string]any           `yaml:"params"`
-	UnsafePredicate      yamlUnsafePredicate      `yaml:"unsafe_predicate"`
-	UnsafePredicateAlias string                   `yaml:"unsafe_predicate_alias,omitempty"`
-	Remediation          *yamlRemediationSpec     `yaml:"remediation,omitempty"`
-	Exposure             *yamlExposure            `yaml:"exposure,omitempty"`
-	ObservationFields    []string                 `yaml:"observation_fields,omitempty"`
-	Tests                []policy.ControlTest     `yaml:"tests,omitempty"`
+	DSLVersion           string               `yaml:"dsl_version"`
+	ID                   kernel.ControlID     `yaml:"id"`
+	Name                 string               `yaml:"name"`
+	Description          string               `yaml:"description"`
+	Severity             policy.Severity      `yaml:"severity,omitempty"`
+	Domain               kernel.AssetDomain   `yaml:"domain,omitempty"`
+	ScopeTags            []string             `yaml:"scope_tags,omitempty"`
+	Compliance           map[string]any       `yaml:"compliance,omitempty"`
+	Type                 policy.ControlType   `yaml:"type"`
+	Params               map[string]any       `yaml:"params"`
+	UnsafePredicate      yamlUnsafePredicate  `yaml:"unsafe_predicate"`
+	UnsafePredicateAlias string               `yaml:"unsafe_predicate_alias,omitempty"`
+	Remediation          *yamlRemediationSpec `yaml:"remediation,omitempty"`
+	Exposure             *yamlExposure        `yaml:"exposure,omitempty"`
+	ObservationFields    []string             `yaml:"observation_fields,omitempty"`
+	Tests                []policy.ControlTest `yaml:"tests,omitempty"`
 }
 
 // yamlUnsafePredicate is the YAML wire-format for policy.UnsafePredicate.

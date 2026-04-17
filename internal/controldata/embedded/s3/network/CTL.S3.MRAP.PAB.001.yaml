@@ -12,6 +12,7 @@ severity: critical
 compliance:
   hipaa: "164.312(a)(1)"
   soc2: "CC6.1"
+  ccm_v4: ["DCS-07", "DSP-07", "IAM-16", "IVS-03"]
 scope_tags:
   - aws
   - s3

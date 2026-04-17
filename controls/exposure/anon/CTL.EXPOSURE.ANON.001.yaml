@@ -20,6 +20,7 @@ compliance:
   nist_800_53_r5: "AC-3"
   fedramp_moderate: "AC-3"
   gdpr: "Art.32"
+  ccm_v4: ["DSP-07", "DSP-17", "IVS-03"]
 scope_tags:
   - aws
   - cross-service

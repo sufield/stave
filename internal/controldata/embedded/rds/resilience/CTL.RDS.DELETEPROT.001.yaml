@@ -11,6 +11,7 @@ severity: high
 compliance:
   nist_800_53_r5: "CP-9"
   cis_aws: "2.3.3"
+  ccm_v4: ["BCR-08"]
 scope_tags:
   - aws
   - rds

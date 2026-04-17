@@ -183,6 +183,22 @@
                 "title": "Violation Evidence",
                 "description": "Temporal and causal evidence supporting this finding."
               },
+              "control_compliance": {
+                "type": "object",
+                "title": "Control Compliance Mappings",
+                "description": "Single-string compliance framework mappings attached to the originating control (e.g., hipaa, pci_dss_v4.0, nist_800_53_r5).",
+                "additionalProperties": { "type": "string" }
+              },
+              "control_compliance_ccm_v4": {
+                "type": "array",
+                "title": "CCM v4 Mappings",
+                "description": "CSA CCM v4 control identifiers in DOMAIN-NN form, inherited from the originating control's compliance.ccm_v4 list.",
+                "items": {
+                  "type": "string",
+                  "pattern": "^(AIS|A&A|BCR|CCC|CEK|DCS|DSP|GRC|HRS|IAM|IPY|IVS|LOG|SEF|STA|TVM|UEM)-[0-9]{2}$"
+                },
+                "uniqueItems": true
+              },
               "remediation": {
                 "type": "object",
                 "title": "Remediation Guidance",

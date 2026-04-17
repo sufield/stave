@@ -17,6 +17,7 @@ compliance:
   nist_800_53_r5: "SI-7"
   mitre_attack: "T1059"
   aws_security_hub: "Lambda.5"
+  ccm_v4: ["AIS-06", "CCC-04"]
 scope_tags:
   - aws
   - lambda

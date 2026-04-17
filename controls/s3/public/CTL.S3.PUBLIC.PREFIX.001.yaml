@@ -6,6 +6,8 @@ description: >
   Evaluates bucket policies, ACL grants, and public access block settings
   to determine effective public read access for each protected prefix.
   Customize the prefix lists below to match your bucket layout.
+compliance:
+  ccm_v4: ["DSP-07", "DSP-17"]
 domain: exposure
 exposure:
   type: prefix_exposure

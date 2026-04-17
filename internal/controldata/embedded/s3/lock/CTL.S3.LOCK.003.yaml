@@ -8,6 +8,8 @@ description: >
   Shorter retention periods risk premature expiration of WORM
   protection, allowing deletion or modification of PHI data before
   the regulatory retention period has elapsed.
+compliance:
+  ccm_v4: ["BCR-08", "DSP-16"]
 domain: exposure
 severity: medium
 scope_tags:

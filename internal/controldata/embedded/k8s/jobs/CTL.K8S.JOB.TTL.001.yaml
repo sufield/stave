@@ -13,6 +13,7 @@ severity: medium
 compliance:
   nist_800_53_r5: "AC-4"
   mitre_attack: "TA0008"
+  ccm_v4: ["CCC-04", "IVS-04"]
 scope_tags:
   - kubernetes
   - eks

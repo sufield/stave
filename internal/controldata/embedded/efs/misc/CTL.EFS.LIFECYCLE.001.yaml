@@ -11,6 +11,7 @@ domain: exposure
 severity: low
 compliance:
   nist_800_53_r5: "CP-9"
+  ccm_v4: ["DSP-16"]
 scope_tags:
   - aws
   - efs

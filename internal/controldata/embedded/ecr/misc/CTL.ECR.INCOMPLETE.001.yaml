@@ -5,6 +5,8 @@ description: >
   ECR repository safety cannot be proven when access control data
   is missing from the snapshot. The extractor must populate
   container_registry.access.public to evaluate exposure controls.
+compliance:
+  ccm_v4: ["DCS-06"]
 domain: exposure
 severity: low
 scope_tags:

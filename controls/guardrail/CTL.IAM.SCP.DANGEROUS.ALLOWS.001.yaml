@@ -18,6 +18,7 @@ compliance:
   iso_27001_2022: "A.8.3"
   pci_dss_v4.0: "7.2.1"
   soc2: "CC6.1"
+  ccm_v4: ["CCC-04", "GRC-05"]
 scope_tags:
   - aws
   - scp

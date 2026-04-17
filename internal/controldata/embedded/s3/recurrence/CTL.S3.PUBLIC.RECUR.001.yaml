@@ -11,6 +11,7 @@ compliance:
   fedramp_moderate: "IR-5"
   hipaa: "164.308(a)(1)(ii)(D)"
   pci_dss_v4.0: "12.10"
+  ccm_v4: ["CCC-04", "CCC-07"]
 scope_tags:
   - aws
   - s3

@@ -12,6 +12,7 @@ severity: low
 compliance:
   nist_800_53_r5: "SC-28"
   mitre_attack: "TA0006"
+  ccm_v4: ["CEK-03"]
 scope_tags:
   - aws
   - ec2

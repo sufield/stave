@@ -9,6 +9,7 @@ domain: identity
 severity: medium
 compliance:
   hipaa: "164.312(d)"
+  ccm_v4: ["DSP-17", "IAM-16"]
 scope_tags:
   - aws
   - rds

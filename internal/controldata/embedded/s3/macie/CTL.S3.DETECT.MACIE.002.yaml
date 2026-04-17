@@ -15,6 +15,7 @@ compliance:
   soc2: "CC7.2"
   nist_800_53_r5: "SI-4"
   fedramp_moderate: "SI-4"
+  ccm_v4: ["DSP-03"]
 scope_tags:
   - aws
   - s3

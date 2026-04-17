@@ -1,0 +1,17 @@
+dsl_version: ctrl.v1
+id: CTL.TEST.CCM.001
+name: Golden CCM v4 Mapping Test Control
+description: Minimal valid control carrying CCM v4 mappings alongside existing framework keys.
+type: unsafe_state
+severity: medium
+scope_tags:
+  - test
+compliance:
+  hipaa: "164.312(a)(1)"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05", "DSP-17", "CCC-07"]
+unsafe_predicate:
+  any:
+    - field: properties.is_public
+      op: eq
+      value: true

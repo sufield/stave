@@ -4,6 +4,8 @@ name: Anonymous S3 Listing Must Be Explicitly Intended
 description: >
   Anonymous bucket listing increases exposure surface even when objects are
   public by design. Listing must be explicitly intended via tag.
+compliance:
+  ccm_v4: ["DSP-07", "DSP-17"]
 domain: exposure
 exposure:
   type: public_list

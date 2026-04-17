@@ -22,6 +22,7 @@ compliance:
   pci_dss_v4.0: "4.2.1"
   soc2: "CC6.7"
   hipaa: "164.312(e)(2)(ii)"
+  ccm_v4: ["CEK-03", "CEK-04"]
 scope_tags:
   - aws
   - acm

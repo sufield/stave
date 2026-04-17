@@ -11,6 +11,7 @@ severity: high
 compliance:
   cis_vmware_esxi_7: "1.6"
   nist_800_53_r5: "CM-5"
+  ccm_v4: ["IVS-04"]
 scope_tags:
   - vmware
   - esxi

@@ -5,6 +5,8 @@ description: >
   S3 bucket ACLs must not grant write access to AllUsers or
   AuthenticatedUsers. ACL-based write access enables attackers to
   upload malicious objects or overwrite existing content.
+compliance:
+  ccm_v4: ["DSP-07", "DSP-17"]
 domain: exposure
 exposure:
   type: acl_public_write

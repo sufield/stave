@@ -25,6 +25,7 @@ type Finding struct {
 	Evidence           Evidence                 `json:"evidence"`
 	ControlSeverity    policy.Severity          `json:"control_severity,omitempty"`
 	ControlCompliance  policy.ComplianceMapping `json:"control_compliance,omitempty"`
+	ControlCCMV4       []string                 `json:"control_compliance_ccm_v4,omitempty"`
 	Exposure           *policy.Exposure         `json:"exposure,omitempty"`
 	PostureDrift       *PostureDrift            `json:"posture_drift,omitempty"`
 	ControlRemediation *policy.RemediationSpec  `json:"-"`
@@ -107,6 +108,7 @@ func NewFindingFromMetadata(m policy.ControlMetadata) Finding {
 		ControlDescription: m.Description,
 		ControlSeverity:    m.Severity,
 		ControlCompliance:  m.Compliance,
+		ControlCCMV4:       m.CCMV4,
 		ControlRemediation: m.Remediation,
 		Exposure:           m.Exposure,
 	}

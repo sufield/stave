@@ -12,6 +12,7 @@ domain: exposure
 severity: medium
 compliance:
   cis_vmware_esxi_7: "8.4.1"
+  ccm_v4: ["CEK-03", "IVS-04"]
 scope_tags:
   - vmware
   - vm

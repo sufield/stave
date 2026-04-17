@@ -5,7 +5,8 @@ description: >
   The observation snapshot is missing required Security Hub properties.
 domain: exposure
 severity: info
-compliance: {}
+compliance:
+  ccm_v4: ["DCS-06", "LOG-03"]
 scope_tags:
   - aws
   - securityhub

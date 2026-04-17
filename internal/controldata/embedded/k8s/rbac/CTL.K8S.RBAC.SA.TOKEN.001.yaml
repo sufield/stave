@@ -10,6 +10,7 @@ domain: exposure
 severity: medium
 compliance:
   cis_k8s_v1.9: "5.1.6"
+  ccm_v4: ["IAM-05", "IAM-16"]
 scope_tags:
   - kubernetes
   - rbac

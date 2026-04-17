@@ -21,6 +21,7 @@ compliance:
   pci_dss_v4.0: "7.2.1"
   soc2: "CC6.1"
   gdpr: "Art.32"
+  ccm_v4: ["DCS-07", "IAM-06"]
 scope_tags:
   - aws
   - codecommit

@@ -16,6 +16,7 @@ compliance:
   nist_800_53_r5: "CP-9"
   fedramp_moderate: "CP-9"
   iso_27001_2022: "A.8.13"
+  ccm_v4: ["BCR-08", "DSP-05"]
 scope_tags:
   - aws
   - s3

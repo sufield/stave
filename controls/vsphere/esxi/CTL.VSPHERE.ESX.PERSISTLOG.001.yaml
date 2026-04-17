@@ -10,6 +10,7 @@ severity: medium
 compliance:
   cis_vmware_esxi_7: "1.8"
   nist_800_53_r5: "AU-9"
+  ccm_v4: ["IVS-04", "LOG-12"]
 scope_tags:
   - vmware
   - esxi

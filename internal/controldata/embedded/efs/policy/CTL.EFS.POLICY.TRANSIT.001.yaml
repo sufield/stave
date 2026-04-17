@@ -11,6 +11,7 @@ severity: high
 compliance:
   nist_800_53_r5: "SC-8"
   hipaa: "164.312(e)(1)"
+  ccm_v4: ["DSP-10", "DSP-17", "IAM-16"]
 scope_tags:
   - aws
   - efs

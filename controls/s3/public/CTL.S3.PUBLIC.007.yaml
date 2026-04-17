@@ -3,6 +3,8 @@ id: CTL.S3.PUBLIC.007
 name: No Public Read via Policy
 description: >
   S3 bucket policies must not grant public read access.
+compliance:
+  ccm_v4: ["DSP-07", "DSP-17"]
 domain: exposure
 exposure:
   type: read_via_identity

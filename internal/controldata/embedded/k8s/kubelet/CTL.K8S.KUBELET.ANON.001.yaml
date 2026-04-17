@@ -9,6 +9,7 @@ domain: exposure
 severity: critical
 compliance:
   cis_k8s_v1.9: "4.2.1"
+  ccm_v4: ["IVS-04"]
 scope_tags:
   - kubernetes
   - kubelet

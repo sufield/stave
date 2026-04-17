@@ -10,6 +10,7 @@ domain: exposure
 severity: critical
 compliance:
   cis_gcp_v1.3.0: "5.1"
+  ccm_v4: ["DSP-07", "DSP-17"]
 scope_tags:
   - gcp
   - gcs

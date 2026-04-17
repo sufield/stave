@@ -14,6 +14,7 @@ compliance:
   nist_800_53_r5: "SI-4"
   aws_security_hub: "Cognito.2"
   mitre_attack: "TA0006"
+  ccm_v4: ["AIS-01", "IAM-14", "IVS-09", "LOG-03"]
 scope_tags:
   - aws
   - cognito

@@ -8,6 +8,8 @@ description: >
   and accidental mass deletion of backup data. Without MFA delete,
   any principal with s3:DeleteObject permission can permanently
   destroy backup versions.
+compliance:
+  ccm_v4: ["BCR-08"]
 domain: exposure
 severity: medium
 scope_tags:

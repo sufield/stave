@@ -6,6 +6,8 @@ description: >
   must resolve to buckets that exist and are owned by the organization.
   Storage bucket names are globally unique — a deleted bucket's name can
   be claimed by any account, enabling content injection under a trusted domain.
+compliance:
+  ccm_v4: ["CCC-04"]
 domain: exposure
 exposure:
   type: bucket_takeover

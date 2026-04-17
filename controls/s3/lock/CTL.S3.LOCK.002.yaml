@@ -9,6 +9,8 @@ description: >
   retention period. GOVERNANCE mode allows users with special
   permissions to override retention, which is insufficient for
   HIPAA-regulated PHI data where tamper-proof storage is required.
+compliance:
+  ccm_v4: ["BCR-08", "DSP-16"]
 domain: exposure
 severity: medium
 scope_tags:

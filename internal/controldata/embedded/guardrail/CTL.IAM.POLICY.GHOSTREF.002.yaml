@@ -12,6 +12,7 @@ compliance:
   pci_dss_v4.0: "7.2.1"
   soc2: "CC6.1"
   gdpr: "Art.32"
+  ccm_v4: ["CCC-04", "GRC-05"]
 scope_tags:
   - aws
   - iam

@@ -14,6 +14,7 @@ compliance:
   fedramp_moderate: "SC-8"
   gdpr: "Art.32"
   ffiec: "ISH-4"
+  ccm_v4: ["CEK-03", "DSP-10"]
 scope_tags:
   - aws
   - elb

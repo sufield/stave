@@ -10,6 +10,7 @@ domain: exposure
 severity: high
 compliance:
   gdpr: "Art.44"
+  ccm_v4: ["DSP-17", "DSP-19"]
 scope_tags:
   - aws
   - s3

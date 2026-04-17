@@ -12,6 +12,7 @@ domain: identity
 severity: critical
 compliance:
   cis_ad: "5.6"
+  ccm_v4: ["IAM-08", "IAM-09"]
 scope_tags:
   - active_directory
 type: unsafe_state

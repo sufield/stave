@@ -20,6 +20,7 @@ compliance:
   gdpr: "Art.32"
   ffiec: "ISH-4"
   iso_27001_2022: "A.8.3"
+  ccm_v4: ["DSP-07", "DSP-17"]
 scope_tags:
   - aws
   - s3

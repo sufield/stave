@@ -8,6 +8,8 @@ description: >
   extractor with iam:GenerateServiceLastAccessedDetails,
   iam:GetServiceLastAccessedDetails, iam:ListAttachedRolePolicies,
   iam:ListRolePolicies, and iam:ListRoleTags permissions.
+compliance:
+  ccm_v4: ["DCS-06", "IAM-02"]
 domain: identity
 severity: low
 scope_tags:

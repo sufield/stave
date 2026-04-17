@@ -5,6 +5,8 @@ description: >
   Any externally referenced S3 bucket must exist and be owned. Dangling
   references (missing or unowned buckets) enable bucket takeover and
   attacker-controlled content delivery.
+compliance:
+  ccm_v4: ["CCC-04"]
 domain: exposure
 exposure:
   type: bucket_takeover

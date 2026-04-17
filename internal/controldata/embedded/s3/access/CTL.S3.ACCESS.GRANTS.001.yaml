@@ -12,6 +12,7 @@ exposure:
 severity: high
 compliance:
   hipaa: "164.312(a)(1)"
+  ccm_v4: ["DSP-17", "IAM-16"]
 scope_tags:
   - aws
   - s3

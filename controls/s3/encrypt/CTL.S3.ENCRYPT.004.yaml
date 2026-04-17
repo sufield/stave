@@ -7,6 +7,8 @@ description: >
   uses AWS-managed keys with no customer control over key rotation,
   access policies, or audit trails. This fires on all classified data
   except explicitly public or non-sensitive buckets.
+compliance:
+  ccm_v4: ["CEK-03"]
 domain: exposure
 severity: high
 scope_tags:

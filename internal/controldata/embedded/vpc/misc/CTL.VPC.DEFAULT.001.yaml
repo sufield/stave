@@ -16,6 +16,7 @@ compliance:
   soc2: "CC6.6"
   nist_800_53_r5: "SC-7"
   fedramp_moderate: "SC-7"
+  ccm_v4: ["DSP-07", "IVS-03"]
 scope_tags:
   - aws
   - vpc

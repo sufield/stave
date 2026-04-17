@@ -14,6 +14,7 @@ compliance:
   hipaa: "164.312(d)"
   aws_security_hub: "Cognito.1"
   mitre_attack: "TA0006"
+  ccm_v4: ["AIS-01", "IAM-14"]
 scope_tags:
   - aws
   - cognito

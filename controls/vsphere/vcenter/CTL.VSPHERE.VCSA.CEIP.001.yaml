@@ -16,6 +16,7 @@ severity: low
 compliance:
   cis_vmware_esxi_7: "2.6"
   nist_800_53_r5: "SC-7"
+  ccm_v4: ["IVS-04"]
 scope_tags:
   - vmware
   - vcenter

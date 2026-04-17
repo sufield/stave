@@ -15,6 +15,7 @@ compliance:
   aws_security_hub: "CloudFront.10"
   hipaa: "164.312(e)(2)(ii)"
   mitre_attack: "TA0006"
+  ccm_v4: ["CEK-03", "CEK-04", "DSP-10"]
 scope_tags:
   - aws
   - cloudfront

@@ -14,6 +14,7 @@ compliance:
   gdpr: "Art.44"
   nist_800_53_r5: "AC-4"
   fedramp_moderate: "AC-4"
+  ccm_v4: ["DSP-17", "IVS-03"]
 scope_tags:
   - aws
   - cross-service

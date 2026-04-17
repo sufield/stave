@@ -5,6 +5,8 @@ description: >
   EFS file system safety cannot be assessed when encryption status is
   missing from the snapshot. The extractor must populate
   filesystem.encryption.at_rest_enabled.
+compliance:
+  ccm_v4: ["DCS-06"]
 domain: exposure
 severity: low
 scope_tags:

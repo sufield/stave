@@ -13,6 +13,7 @@ severity: critical
 compliance:
   soc2: "CC6.1"
   nist_800_53_r5: "AC-6"
+  ccm_v4: ["IAM-01", "IAM-05", "IAM-16"]
 scope_tags:
   - multicloud
   - iam

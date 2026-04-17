@@ -21,6 +21,7 @@ type FindingDTO struct {
 	Evidence             EvidenceDTO               `json:"evidence"`
 	ControlSeverity      string                    `json:"control_severity,omitempty"`
 	ControlCompliance    map[string]string         `json:"control_compliance,omitempty"`
+	ControlCCMV4         []string                  `json:"control_compliance_ccm_v4,omitempty"`
 	Exposure             *ExposureDTO              `json:"exposure,omitempty"`
 	PostureDrift         *PostureDriftDTO          `json:"posture_drift,omitempty"`
 	Remediation          RemediationSpecDTO        `json:"remediation"`

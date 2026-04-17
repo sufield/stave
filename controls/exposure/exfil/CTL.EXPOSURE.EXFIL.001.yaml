@@ -18,6 +18,7 @@ compliance:
   pci_dss_v4.0: "3.4.1"
   nist_800_53_r5: "SC-7"
   fedramp_moderate: "SC-7"
+  ccm_v4: ["DSP-17", "IVS-03"]
 scope_tags:
   - aws
   - cross-service

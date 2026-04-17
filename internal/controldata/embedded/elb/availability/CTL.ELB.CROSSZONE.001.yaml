@@ -11,6 +11,7 @@ compliance:
   ffiec: "BCP"
   hipaa: "164.308(a)(7)"
   soc2: "A1.1"
+  ccm_v4: ["BCR-03", "IVS-09"]
 scope_tags:
   - aws
   - elb

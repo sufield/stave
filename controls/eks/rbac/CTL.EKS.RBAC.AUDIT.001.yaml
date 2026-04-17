@@ -17,6 +17,7 @@ severity: high
 compliance:
   nist_800_53_r5: "AC-6"
   cis_k8s_v1.9: "5.1.1"
+  ccm_v4: ["IAM-16"]
 scope_tags:
   - aws
   - eks

@@ -10,6 +10,7 @@ domain: exposure
 severity: high
 compliance:
   fedramp_moderate: "SC-13"
+  ccm_v4: ["CEK-03", "CEK-04"]
 scope_tags:
   - aws
   - kms

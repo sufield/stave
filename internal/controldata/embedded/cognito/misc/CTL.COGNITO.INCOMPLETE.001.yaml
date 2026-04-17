@@ -6,7 +6,8 @@ description: >
   properties.
 domain: identity
 severity: info
-compliance: {}
+compliance:
+  ccm_v4: ["AIS-01", "DCS-06"]
 scope_tags:
   - aws
   - cognito

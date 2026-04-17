@@ -6,7 +6,8 @@ description: >
   A safety assessment cannot be completed without key policy data.
 domain: exposure
 severity: info
-compliance: {}
+compliance:
+  ccm_v4: ["CEK-03", "DCS-06"]
 scope_tags:
   - aws
   - kms

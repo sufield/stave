@@ -5,6 +5,8 @@ description: >
   Sovereignty assessment requires the cross_border_access_detected
   field. The extractor could not determine whether the resource is
   accessible from outside its jurisdiction.
+compliance:
+  ccm_v4: ["DCS-06", "DSP-17", "IVS-03"]
 domain: exposure
 severity: low
 scope_tags:

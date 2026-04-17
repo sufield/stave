@@ -22,6 +22,7 @@ func FromFinding(f *remediation.Finding) FindingDTO {
 		Evidence:           fromEvidence(f.Evidence),
 		ControlSeverity:    f.ControlSeverity.String(),
 		ControlCompliance:  complianceToStrings(f.ControlCompliance),
+		ControlCCMV4:       f.ControlCCMV4,
 		Remediation:        fromRemediationSpec(f.RemediationSpec),
 	}
 

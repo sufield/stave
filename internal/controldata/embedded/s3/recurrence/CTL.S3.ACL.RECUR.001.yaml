@@ -9,6 +9,7 @@ compliance:
   soc2: "CC7.1"
   nist_800_53_r5: "IR-5"
   hipaa: "164.308(a)(1)(ii)(D)"
+  ccm_v4: ["CCC-04", "CCC-07"]
 scope_tags:
   - aws
   - s3

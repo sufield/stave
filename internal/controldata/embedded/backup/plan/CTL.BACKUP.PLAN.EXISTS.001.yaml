@@ -12,6 +12,7 @@ compliance:
   nist_800_53_r5: "CP-9"
   hipaa: "164.308(a)(7)(ii)(A)"
   mitre_attack: "T1490"
+  ccm_v4: ["BCR-08", "CEK-03"]
 scope_tags:
   - aws
   - backup
