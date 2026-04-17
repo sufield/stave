@@ -33,7 +33,7 @@ jobs:
         run: make sync-schemas sync-controls
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@c10b8064de6f491fea524254123dbe5e09572f13 # v4.35.1
+        uses: github/codeql-action/init@ff0a06b28bf36c1653fbd9b28239898c3db81d63 # v4.35.2
         with:
           languages: go
 
@@ -41,6 +41,6 @@ jobs:
         run: go build ./...
 
       - name: Perform CodeQL analysis
-        uses: github/codeql-action/analyze@c10b8064de6f491fea524254123dbe5e09572f13 # v4.35.1
+        uses: github/codeql-action/analyze@ff0a06b28bf36c1653fbd9b28239898c3db81d63 # v4.35.2
         with:
           category: '/language:go'
