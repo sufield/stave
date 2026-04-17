@@ -112,6 +112,15 @@ type AnalysisStats struct {
 	// dependencies (e.g., non-state-based rules). Also excluded from
 	// pair enumeration.
 	SkippedEmptyDeps []string
+
+	// SkippedMetadataOnly is the count of pairs whose dependency
+	// intersection consisted entirely of asset-routing metadata paths
+	// (see metadataOnlyPaths). These pairs are not real overlap — each
+	// control reads the metadata path to gate which asset class it
+	// applies to, not to evaluate the asset's security state. Surfaced
+	// for corpus honesty: a pair filtered here is structurally not a
+	// conflict, distinct from a pair that genuinely had no shared deps.
+	SkippedMetadataOnly int
 }
 
 // CandidateRatio returns the fraction of total pairs that survived the
@@ -181,12 +190,21 @@ func AnalyzeOverlap(controls []policy.ControlDefinition) ([]CandidatePair, Analy
 		for j := i + 1; j < n; j++ {
 			a, b := usable[i], usable[j]
 
-			overlap := intersectSorted(a.deps, b.deps)
+			fullOverlap := intersectSorted(a.deps, b.deps)
+			if len(fullOverlap) == 0 {
+				continue
+			}
+			overlap := stripMetadataPaths(fullOverlap)
 			if len(overlap) == 0 {
+				stats.SkippedMetadataOnly++
 				continue
 			}
 
-			rel := classifyRelation(a.deps, b.deps, overlap)
+			// Relation is computed against the full intersection so an
+			// IDENTICAL dep-set pair is still labeled IDENTICAL even if
+			// some of its shared paths are metadata routers. Overlap (the
+			// substantive subset) is what evaluation/classification reads.
+			rel := classifyRelation(a.deps, b.deps, fullOverlap)
 			pair := CandidatePair{
 				ControlA: a.id,
 				ControlB: b.id,
@@ -216,6 +234,51 @@ func AnalyzeOverlap(controls []policy.ControlDefinition) ([]CandidatePair, Analy
 	})
 
 	return pairs, stats, nil
+}
+
+// metadataOnlyPaths is the closed set of dependency paths that controls
+// read for asset-class routing rather than evaluation. A pair whose
+// overlap consists entirely of these paths is not a semantic conflict
+// candidate — each side reads the path to decide whether the control
+// applies, and CEL absent-value semantics on assets of the wrong class
+// produce verdicts that the classifier would mistake for disagreement.
+//
+// Audited from the 630-control catalog (Iteration 3.6, 2026-04-17):
+// `type` is the only metadata path that actually appears as a shared
+// dependency. `id` exists as a bare extracted path but only inside
+// `identities[]` predicates (substantive identity inspection, not
+// asset routing) so it is not included. `arn`, `region`, `account_id`
+// were considered but do not appear as extracted deps in this catalog.
+//
+// This denylist is the in-overlap workaround for a structural gap:
+// the CEL dependency extractor (internal/cel/deps) does not distinguish
+// reads-for-routing from reads-for-evaluation. The principled fix is
+// an extractor extension (out of scope for 3.6 — see PRECEDENCE.md
+// "conceptual distinctions"). Until then, extending this list when a
+// new routing-only field appears in the catalog is the right move;
+// adding fields speculatively is not.
+var metadataOnlyPaths = map[string]struct{}{
+	"type": {},
+}
+
+// stripMetadataPaths returns paths with metadata-only entries removed.
+// Input is assumed sorted; output remains sorted. Returns the input
+// slice unchanged if no entries were filtered, to avoid allocation in
+// the common case.
+func stripMetadataPaths(paths []string) []string {
+	keep := paths[:0:0] // nil slice with paths' cap=0 — never aliases input
+	dropped := 0
+	for _, p := range paths {
+		if _, isMeta := metadataOnlyPaths[p]; isMeta {
+			dropped++
+			continue
+		}
+		keep = append(keep, p)
+	}
+	if dropped == 0 {
+		return paths
+	}
+	return keep
 }
 
 // intersectSorted returns the sorted intersection of two lexicographically

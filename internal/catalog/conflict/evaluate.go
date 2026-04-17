@@ -95,22 +95,33 @@ type EvaluatedPair struct {
 	EvaluationErrors []EvalError
 }
 
-// AgreementRate returns the fraction of co-evaluations where both
-// controls returned the same verdict. Returns 0 when no co-evaluations
-// were recorded; callers should branch on len(CoEvaluations) before
-// interpreting the rate (a pair with zero co-evaluations is a coverage
-// gap, not perfect disagreement).
+// AgreementRate returns the fraction of *matched* co-evaluations where
+// both controls returned the same verdict. Co-evaluations on assets
+// where the shared overlap path was not present (ReadOverlap=false)
+// are excluded from both the numerator and the denominator — verdicts
+// on those assets are CEL absent-value artifacts, not evidence about
+// the controls' agreement on the territory they cover.
+//
+// Returns 0 when no matched co-evaluations were recorded; callers
+// should treat this the same as the zero-co-evaluation case (a
+// coverage gap, not perfect disagreement). See PRECEDENCE.md
+// → "Matched vs evaluated".
 func (e EvaluatedPair) AgreementRate() float64 {
-	if len(e.CoEvaluations) == 0 {
-		return 0
-	}
+	matched := 0
 	agree := 0
 	for _, ce := range e.CoEvaluations {
+		if !ce.ReadOverlap {
+			continue
+		}
+		matched++
 		if ce.UnsafeA == ce.UnsafeB {
 			agree++
 		}
 	}
-	return float64(agree) / float64(len(e.CoEvaluations))
+	if matched == 0 {
+		return 0
+	}
+	return float64(agree) / float64(matched)
 }
 
 // EvaluatePairs runs each candidate pair against the fixture corpus

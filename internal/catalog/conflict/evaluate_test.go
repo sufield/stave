@@ -236,6 +236,50 @@ func TestAgreementRate_NoCoEvaluationsReturnsZero(t *testing.T) {
 	}
 }
 
+// TestAgreementRate_IgnoresUnresolvedOverlap pins the matched-vs-evaluated
+// distinction for the agreement rate. Vacuous "agreement" on assets
+// where the shared overlap path was not present must not inflate the
+// rate — the verdicts on those assets are CEL absent-value artifacts,
+// not evidence the controls agree on the territory they cover.
+//
+// Without this guard, the DIVERGENCE payload's agreement_rate field
+// reports 1.0 on pairs that have never actually been compared on real
+// shared evidence.
+func TestAgreementRate_IgnoresUnresolvedOverlap(t *testing.T) {
+	ep := EvaluatedPair{
+		FixturesEvaluated: 4,
+		FixturesMatched:   2,
+		CoEvaluations: []CoEvaluation{
+			// Matched: one agree, one disagree → 0.5 on the matched set.
+			{FixturePath: "m1.json", AssetID: "a1", UnsafeA: true, UnsafeB: true, ReadOverlap: true},
+			{FixturePath: "m2.json", AssetID: "a2", UnsafeA: true, UnsafeB: false, ReadOverlap: true},
+			// Unresolved: vacuous "agreements" that must not count.
+			{FixturePath: "u1.json", AssetID: "a3", UnsafeA: false, UnsafeB: false, ReadOverlap: false},
+			{FixturePath: "u2.json", AssetID: "a4", UnsafeA: false, UnsafeB: false, ReadOverlap: false},
+		},
+	}
+	if got := ep.AgreementRate(); got != 0.5 {
+		t.Errorf("AgreementRate = %f, want 0.5 (matched-only denominator)", got)
+	}
+}
+
+// TestAgreementRate_AllUnresolvedReturnsZero: when every co-evaluation
+// is on an unresolved overlap, the rate is 0 (no evidence), not 1
+// (vacuous agreement). Same semantics as zero co-evaluations.
+func TestAgreementRate_AllUnresolvedReturnsZero(t *testing.T) {
+	ep := EvaluatedPair{
+		FixturesEvaluated: 2,
+		FixturesMatched:   0,
+		CoEvaluations: []CoEvaluation{
+			{FixturePath: "u1.json", AssetID: "a1", UnsafeA: false, UnsafeB: false, ReadOverlap: false},
+			{FixturePath: "u2.json", AssetID: "a2", UnsafeA: false, UnsafeB: false, ReadOverlap: false},
+		},
+	}
+	if got := ep.AgreementRate(); got != 0 {
+		t.Errorf("AgreementRate = %f, want 0 (no matched co-evals = no evidence)", got)
+	}
+}
+
 func TestEvaluatePairs_ArrayWildcardPath(t *testing.T) {
 	// Overlap path is "properties.identity.policies.attached[*].arn".
 	// Fixture asset has the array populated; readPaths should resolve

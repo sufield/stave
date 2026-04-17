@@ -184,6 +184,53 @@ func TestAnalyzeOverlap_EmptyDepsControlSkipped(t *testing.T) {
 	}
 }
 
+// TestAnalyzeOverlap_MetadataOnlyOverlapDiscarded pins the routing-vs-evaluation
+// rule (PRECEDENCE.md §5): a pair whose only overlap path is the asset-class
+// router `type` is structurally not a conflict — each control reads `type`
+// to gate which asset class it applies to, not to evaluate the asset's
+// security state. Iteration 3.6 added the metadata denylist after Node 3f
+// surfaced 233 false-positive CONTRADICTIONs, every one of which had
+// `[type]` as its only shared dependency.
+func TestAnalyzeOverlap_MetadataOnlyOverlapDiscarded(t *testing.T) {
+	catalog := []policy.ControlDefinition{
+		buildControl("CTL.APISERVER", "type", "properties.apiserver.anonymous_auth"),
+		buildControl("CTL.ETCD", "type", "properties.etcd.client_tls"),
+	}
+	pairs, stats, err := AnalyzeOverlap(catalog)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(pairs) != 0 {
+		t.Fatalf("expected 0 candidate pairs (metadata-only overlap discarded), got %d: %+v", len(pairs), pairs)
+	}
+	if stats.SkippedMetadataOnly != 1 {
+		t.Errorf("SkippedMetadataOnly = %d, want 1", stats.SkippedMetadataOnly)
+	}
+}
+
+// TestAnalyzeOverlap_MetadataPlusSubstantiveOverlapKept verifies the filter
+// strips metadata paths from Overlap but keeps the pair when at least one
+// substantive path remains. Without this, a `[type, X]` overlap would be
+// indistinguishable from a `[type]`-only overlap and we'd lose the genuine
+// X-overlap signal along with the noise.
+func TestAnalyzeOverlap_MetadataPlusSubstantiveOverlapKept(t *testing.T) {
+	catalog := []policy.ControlDefinition{
+		buildControl("CTL.A", "type", "properties.shared.path"),
+		buildControl("CTL.B", "type", "properties.shared.path"),
+	}
+	pairs, _, err := AnalyzeOverlap(catalog)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(pairs) != 1 {
+		t.Fatalf("expected 1 pair (substantive overlap survives), got %d", len(pairs))
+	}
+	want := []string{"properties.shared.path"}
+	if len(pairs[0].Overlap) != 1 || pairs[0].Overlap[0] != want[0] {
+		t.Errorf("Overlap = %v, want %v (metadata path `type` should be filtered)", pairs[0].Overlap, want)
+	}
+}
+
 func TestAnalyzeOverlap_CandidateRatioDiagnostic(t *testing.T) {
 	// 4 controls all sharing a common path — maximum candidate density.
 	// Expected: C(4,2) = 6 pairs, all candidates, ratio = 1.0.

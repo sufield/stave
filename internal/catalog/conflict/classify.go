@@ -128,18 +128,29 @@ func Classify(
 // ordered to make the disqualifying semantics explicit: each branch
 // either commits to a category and returns, or falls through. There is
 // no later branch that can override an earlier commitment.
+//
+// All classification decisions read from *matched* co-evaluations only
+// — fixtures where ce.ReadOverlap is true. A fixture where the shared
+// dependency path was not present on the asset is structurally outside
+// both controls' scope; the predicates' verdicts on it are CEL
+// absent-value artifacts, not evidence about the controls'
+// relationship. Counting them produces vacuous CONTRADICTIONs and
+// fake-disqualified subsumptions. See PRECEDENCE.md → "Matched vs
+// evaluated" for the conceptual framing and the regression tests in
+// classify_test.go (TestClassify_UnresolvedOverlap_*).
 func classifyOne(ep *EvaluatedPair, mdA, mdB ControlMetadata) (ConflictCategory, ContradictionSubcategory) {
-	if len(ep.CoEvaluations) == 0 {
+	matched := matchedCoEvaluations(ep.CoEvaluations)
+	if len(matched) == 0 {
 		return "", ""
 	}
 
-	disagreements := disagreementWitnesses(ep.CoEvaluations)
+	disagreements := disagreementWitnesses(matched)
 
 	if ep.Relation == RelationSubset {
 		// Direction: ep.Narrower is A_eff, ep.Broader is B_eff.
 		// Subsumption claim: every (A_eff=VIOLATION) implies (B_eff=VIOLATION).
 		// A witness where A_eff=VIOLATION and B_eff=PASS disqualifies it.
-		if !subsumptionViolated(ep) {
+		if !subsumptionViolated(ep, matched) {
 			return CategoryEmpiricalSubsumption, ""
 		}
 		// Subsumption violated → CONTRADICTION; fall through to
@@ -162,20 +173,36 @@ func classifyOne(ep *EvaluatedPair, mdA, mdB ControlMetadata) (ConflictCategory,
 		return CategoryContradiction, SubcategoryLogicBug
 	}
 
-	// 100% agreement. REDUNDANCY only when deps are IDENTICAL and
-	// metadata matches. Anything else (OVERLAPPING with full agreement,
-	// or IDENTICAL deps with mismatched compliance/attack_stage/
-	// remediation) is operational alignment without semantic
-	// equivalence — surface as uncategorized rather than over-claim.
+	// 100% agreement on the matched set. REDUNDANCY only when deps are
+	// IDENTICAL and metadata matches. Anything else (OVERLAPPING with
+	// full agreement, or IDENTICAL deps with mismatched compliance/
+	// attack_stage/remediation) is operational alignment without
+	// semantic equivalence — surface as uncategorized rather than
+	// over-claim.
 	if ep.Relation == RelationIdentical && metadataEquivalent(mdA, mdB) {
 		return CategoryRedundancy, ""
 	}
 	return "", ""
 }
 
+// matchedCoEvaluations returns the subset of co-evaluations where the
+// shared overlap path actually resolved on the asset. Every classifier
+// decision reads from this filtered slice, never from the raw
+// CoEvaluations. See classifyOne for the rationale.
+func matchedCoEvaluations(coevals []CoEvaluation) []CoEvaluation {
+	out := make([]CoEvaluation, 0, len(coevals))
+	for _, ce := range coevals {
+		if ce.ReadOverlap {
+			out = append(out, ce)
+		}
+	}
+	return out
+}
+
 // disagreementWitnesses returns the subset of co-evaluations where the
-// two controls reached different verdicts. Order is preserved (already
-// lexicographic by (FixturePath, AssetID) per EvaluatePairs).
+// two controls reached different verdicts. Caller is responsible for
+// passing only matched co-evaluations (those where the shared overlap
+// path was read); see matchedCoEvaluations.
 func disagreementWitnesses(coevals []CoEvaluation) []CoEvaluation {
 	var out []CoEvaluation
 	for _, ce := range coevals {
@@ -186,18 +213,22 @@ func disagreementWitnesses(coevals []CoEvaluation) []CoEvaluation {
 	return out
 }
 
-// subsumptionViolated returns true if there is any fixture where the
-// narrower control fires VIOLATION but the broader control does not.
-// That single witness disqualifies the broader from subsuming the
-// narrower. The reverse direction (narrower=PASS, broader=VIOLATION)
-// is consistent with subsumption (broader is stricter) and does not
-// disqualify.
+// subsumptionViolated returns true if there is any matched fixture
+// where the narrower control fires VIOLATION but the broader control
+// does not. That single witness disqualifies the broader from
+// subsuming the narrower. The reverse direction (narrower=PASS,
+// broader=VIOLATION) is consistent with subsumption (broader is
+// stricter) and does not disqualify.
+//
+// Caller passes the matched set (ReadOverlap=true), not raw
+// co-evaluations. An unresolved-overlap fixture cannot disqualify a
+// subsumption claim — see classifyOne for the rationale.
 //
 // Precondition: ep.Relation == RelationSubset and ep.Narrower /
 // ep.Broader are populated.
-func subsumptionViolated(ep *EvaluatedPair) bool {
+func subsumptionViolated(ep *EvaluatedPair, matched []CoEvaluation) bool {
 	narrowerIsA := ep.Narrower == ep.ControlA
-	for _, ce := range ep.CoEvaluations {
+	for _, ce := range matched {
 		var unsafeNarrower, unsafeBroader bool
 		if narrowerIsA {
 			unsafeNarrower, unsafeBroader = ce.UnsafeA, ce.UnsafeB

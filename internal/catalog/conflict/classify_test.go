@@ -298,6 +298,114 @@ func TestClassify_OverlappingDepsWithAssetClassDiversityIsContradiction(t *testi
 	}
 }
 
+// mkCoEvalUnresolved builds a CoEvaluation with ReadOverlap=false: the
+// shared dependency path was not present on the asset. Predicates still
+// returned a verdict (CEL absent-value semantics give a default), but
+// the verdict is not evidence about the controls' relationship — the
+// asset is structurally outside both controls' scope.
+//
+// This helper exists to pin the matched-vs-evaluated distinction in the
+// classifier. Without the distinction, the analyzer reports vacuous
+// disagreements as CONTRADICTION/DIVERGENCE — see Iteration 3.5.
+func mkCoEvalUnresolved(path, id string, unsafeA, unsafeB bool, assetType string) CoEvaluation {
+	ce := mkCoEval(path, id, unsafeA, unsafeB, assetType)
+	ce.ReadOverlap = false
+	return ce
+}
+
+// TestClassify_UnresolvedOverlap_DoesNotContradict pins the
+// matched-vs-evaluated distinction for IDENTICAL-deps disagreement: a
+// fixture where the shared overlap path is unresolved must not count
+// toward CONTRADICTION even if the predicates return different
+// verdicts. Reason: with no shared evidence read, the disagreement is
+// a CEL-absent-value artifact, not evidence the controls disagree on
+// the territory they're meant to cover.
+//
+// Without this guard, the Node 3f dry-run produces 836 false-positive
+// CONTRADICTIONs (e.g. an autoscaling control "disagreeing" with
+// another autoscaling control across DNS-record fixtures).
+func TestClassify_UnresolvedOverlap_DoesNotContradict(t *testing.T) {
+	ep := EvaluatedPair{
+		CandidatePair:     CandidatePair{ControlA: "CTL.A", ControlB: "CTL.B", Relation: RelationIdentical},
+		FixturesEvaluated: 1,
+		FixturesMatched:   0,
+		CoEvaluations: []CoEvaluation{
+			mkCoEvalUnresolved("dns-record.json", "cname-1", true, false, "dns_record"),
+		},
+	}
+	out, _ := Classify([]EvaluatedPair{ep}, mkMetadata("CTL.A", "CTL.B"))
+	if out[0].Category != "" {
+		t.Errorf("Category = %s, want empty (unresolved overlap = no evidence)", out[0].Category)
+	}
+}
+
+// TestClassify_UnresolvedOverlap_DoesNotDiverge: same distinction for
+// OVERLAPPING-deps. A disagreement on a fixture where the overlap was
+// not read is not divergence; it's irrelevance.
+func TestClassify_UnresolvedOverlap_DoesNotDiverge(t *testing.T) {
+	ep := EvaluatedPair{
+		CandidatePair:     CandidatePair{ControlA: "CTL.A", ControlB: "CTL.B", Relation: RelationOverlapping},
+		FixturesEvaluated: 1,
+		FixturesMatched:   0,
+		CoEvaluations: []CoEvaluation{
+			mkCoEvalUnresolved("dns-record.json", "cname-1", true, false, ""),
+		},
+	}
+	out, _ := Classify([]EvaluatedPair{ep}, mkMetadata("CTL.A", "CTL.B"))
+	if out[0].Category != "" {
+		t.Errorf("Category = %s, want empty (unresolved overlap = no evidence)", out[0].Category)
+	}
+}
+
+// TestClassify_UnresolvedOverlap_DoesNotConfirmRedundancy: agreement
+// on a fixture where the overlap is unresolved must not count as
+// evidence of REDUNDANCY. Two controls "agreeing" on assets they don't
+// actually inspect is vacuous agreement, not semantic equivalence.
+func TestClassify_UnresolvedOverlap_DoesNotConfirmRedundancy(t *testing.T) {
+	ep := EvaluatedPair{
+		CandidatePair:     CandidatePair{ControlA: "CTL.A", ControlB: "CTL.B", Relation: RelationIdentical},
+		FixturesEvaluated: 2,
+		FixturesMatched:   0,
+		CoEvaluations: []CoEvaluation{
+			mkCoEvalUnresolved("dns-record-1.json", "cname-1", false, false, ""),
+			mkCoEvalUnresolved("dns-record-2.json", "cname-2", false, false, ""),
+		},
+	}
+	out, _ := Classify([]EvaluatedPair{ep}, mkMetadata("CTL.A", "CTL.B"))
+	if out[0].Category != "" {
+		t.Errorf("Category = %s, want empty (vacuous agreement is not REDUNDANCY)", out[0].Category)
+	}
+}
+
+// TestClassify_UnresolvedOverlap_DoesNotDisqualifySubsumption: the
+// (narrower=VIOLATION, broader=PASS) disqualifying witness only counts
+// when the overlap was actually read on the asset. Otherwise an
+// unresolved fixture can fake-disqualify subsumption claims that are
+// genuinely supported by the matched fixtures.
+func TestClassify_UnresolvedOverlap_DoesNotDisqualifySubsumption(t *testing.T) {
+	ep := EvaluatedPair{
+		CandidatePair: CandidatePair{
+			ControlA: "CTL.NARROW", ControlB: "CTL.BROAD",
+			Relation: RelationSubset,
+			Narrower: "CTL.NARROW", Broader: "CTL.BROAD",
+		},
+		FixturesEvaluated: 2,
+		FixturesMatched:   1,
+		CoEvaluations: []CoEvaluation{
+			// Real evidence: narrower flags, broader flags too — consistent.
+			mkCoEval("matched.json", "real", true, true, ""),
+			// Fake disqualifier: would say narrower=VIOLATION, broader=PASS,
+			// but the overlap wasn't read so this is not real evidence.
+			mkCoEvalUnresolved("ghost.json", "ghost", true, false, ""),
+		},
+	}
+	out, _ := Classify([]EvaluatedPair{ep}, mkMetadata("CTL.NARROW", "CTL.BROAD"))
+	if out[0].Category != CategoryEmpiricalSubsumption {
+		t.Errorf("Category = %s, want EMPIRICAL_SUBSUMPTION (unresolved overlap cannot disqualify)",
+			out[0].Category)
+	}
+}
+
 func TestCount_TalliesByCategory(t *testing.T) {
 	pairs := []ClassifiedPair{
 		{Category: CategoryContradiction},
