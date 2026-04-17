@@ -1,0 +1,249 @@
+id: disa_stig_ad
+name: DISA STIG Active Directory Domain Services
+version: "3.3"
+description: >
+  DISA Security Technical Implementation Guide for Active Directory.
+  Covers domain controller hardening, Group Policy settings,
+  account policies, and audit configuration.
+framework_key: disa_stig_ad
+requirements:
+- id: V-243463
+  description: Account lockout threshold
+  section: Account Policies
+  controls:
+  - CTL.AD.LOCK.THRESHOLD.001
+  pass_threshold: all
+- id: V-243464
+  description: Account lockout duration
+  section: Account Policies
+  controls:
+  - CTL.AD.LOCK.DURATION.001
+  pass_threshold: all
+- id: V-243465
+  description: Account lockout observation window
+  section: Account Policies
+  controls:
+  - CTL.AD.LOCK.WINDOW.001
+  pass_threshold: all
+- id: V-243466
+  description: Password complexity
+  section: Password Policy
+  controls:
+  - CTL.AD.PASS.COMPLEXITY.001
+  pass_threshold: all
+- id: V-243467
+  description: Password minimum length
+  section: Password Policy
+  controls:
+  - CTL.AD.PASS.MINLEN.001
+  pass_threshold: all
+- id: V-243468
+  description: Password history
+  section: Password Policy
+  controls:
+  - CTL.AD.PASS.HISTORY.001
+  pass_threshold: all
+- id: V-243469
+  description: Password maximum age
+  section: Password Policy
+  controls:
+  - CTL.AD.PASS.MAXAGE.001
+  pass_threshold: all
+- id: V-243470
+  description: Password minimum age
+  section: Password Policy
+  controls:
+  - CTL.AD.PASS.MINAGE.001
+  pass_threshold: all
+- id: V-243471
+  description: Reversible encryption disabled
+  section: Password Policy
+  controls:
+  - CTL.AD.PASS.REVENC.001
+  pass_threshold: all
+- id: V-243472
+  description: Guest account disabled
+  section: Account Management
+  controls:
+  - CTL.AD.ACCOUNT.GUEST.001
+  pass_threshold: all
+- id: V-243473
+  description: Stale accounts
+  section: Account Management
+  controls:
+  - CTL.AD.ACCOUNT.STALE.001
+  pass_threshold: all
+- id: V-243474
+  description: Accounts with no password required
+  section: Account Management
+  controls:
+  - CTL.AD.ACCOUNT.NOPASSWD.001
+  pass_threshold: all
+- id: V-243475
+  description: Accounts with no password expiry
+  section: Account Management
+  controls:
+  - CTL.AD.ACCOUNT.NOEXPIRY.001
+  pass_threshold: all
+- id: V-243476
+  description: Accounts with reversible encryption
+  section: Account Management
+  controls:
+  - CTL.AD.ACCOUNT.REVENC.001
+  pass_threshold: all
+- id: V-243477
+  description: Accounts with DES-only Kerberos
+  section: Account Management
+  controls:
+  - CTL.AD.ACCOUNT.DESONLY.001
+  pass_threshold: all
+- id: V-243478
+  description: Unconstrained delegation
+  section: Account Management
+  controls:
+  - CTL.AD.ACCOUNT.DELEGATION.001
+  pass_threshold: all
+- id: V-243479
+  description: Domain admin count
+  section: Privileged Access
+  controls:
+  - CTL.AD.DOMAIN.ADMIN.COUNT.001
+  pass_threshold: all
+- id: V-243480
+  description: Stale admin accounts
+  section: Privileged Access
+  controls:
+  - CTL.AD.STALE.ADMIN.001
+  pass_threshold: all
+- id: V-243481
+  description: Nested privileged groups
+  section: Privileged Access
+  controls:
+  - CTL.AD.PRIV.NESTED.001
+  pass_threshold: all
+- id: V-243482
+  description: Built-in group limits
+  section: Privileged Access
+  controls:
+  - CTL.AD.BUILTIN.LIMIT.001
+  pass_threshold: all
+- id: V-243483
+  description: Protected users group
+  section: Privileged Access
+  controls:
+  - CTL.AD.PROTUSERS.001
+  pass_threshold: all
+- id: V-243484
+  description: AdminSDHolder
+  section: Privileged Access
+  controls:
+  - CTL.AD.ADMINSDHOLDER.001
+  pass_threshold: all
+- id: V-243485
+  description: LAPS deployment
+  section: Credential Protection
+  controls:
+  - CTL.AD.LAPS.001
+  pass_threshold: all
+- id: V-243486
+  description: Credential Guard
+  section: Credential Protection
+  controls:
+  - CTL.AD.CRED.GUARD.001
+  pass_threshold: all
+- id: V-243487
+  description: Kerberoasting protection
+  section: Credential Protection
+  controls:
+  - CTL.AD.KERBEROAST.001
+  pass_threshold: all
+- id: V-243488
+  description: KRBTGT rotation
+  section: Kerberos
+  controls:
+  - CTL.AD.KRBTGT.ROTATION.001
+  pass_threshold: all
+- id: V-243489
+  description: Kerberos clock skew
+  section: Kerberos
+  controls:
+  - CTL.AD.KERB.CLOCKSKEW.001
+  pass_threshold: all
+- id: V-243490
+  description: Kerberos ticket age
+  section: Kerberos
+  controls:
+  - CTL.AD.KERB.TICKET.AGE.001
+  pass_threshold: all
+- id: V-243491
+  description: Kerberos service ticket encryption
+  section: Kerberos
+  controls:
+  - CTL.AD.KERB.SERVICE.001
+  pass_threshold: all
+- id: V-243492
+  description: NTLM authentication level
+  section: Authentication Protocols
+  controls:
+  - CTL.AD.NTLM.LEVEL.001
+  pass_threshold: all
+- id: V-243493
+  description: LDAP signing
+  section: Authentication Protocols
+  controls:
+  - CTL.AD.LDAP.SIGNING.001
+  pass_threshold: all
+- id: V-243494
+  description: LDAP channel binding
+  section: Authentication Protocols
+  controls:
+  - CTL.AD.LDAP.CHANNELBIND.001
+  pass_threshold: all
+- id: V-243495
+  description: SMB signing
+  section: Authentication Protocols
+  controls:
+  - CTL.AD.SMB.SIGNING.001
+  pass_threshold: all
+- id: V-243496
+  description: Audit account management
+  section: Audit Policy
+  controls:
+  - CTL.AD.AUDIT.ACCTMGMT.001
+  pass_threshold: all
+- id: V-243497
+  description: Audit logon events
+  section: Audit Policy
+  controls:
+  - CTL.AD.AUDIT.LOGON.001
+  pass_threshold: all
+- id: V-243498
+  description: Audit privilege use
+  section: Audit Policy
+  controls:
+  - CTL.AD.AUDIT.PRIVUSE.001
+  pass_threshold: all
+- id: V-243499
+  description: Audit object access
+  section: Audit Policy
+  controls:
+  - CTL.AD.AUDIT.OBJACCESS.001
+  pass_threshold: all
+- id: V-243500
+  description: AD Recycle Bin
+  section: Domain Services
+  controls:
+  - CTL.AD.RECYCLEBIN.001
+  pass_threshold: all
+- id: V-243501
+  description: Trust SID filtering
+  section: Domain Services
+  controls:
+  - CTL.AD.TRUST.SIDFILTER.001
+  pass_threshold: all
+- id: V-243502
+  description: Selective authentication on trusts
+  section: Domain Services
+  controls:
+  - CTL.AD.TRUST.SELECTIVE.001
+  pass_threshold: all

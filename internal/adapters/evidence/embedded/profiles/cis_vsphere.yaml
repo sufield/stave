@@ -1,0 +1,219 @@
+id: cis_vsphere
+name: CIS VMware vSphere 8.0
+version: "1.0"
+description: >
+  CIS Benchmark controls for VMware vSphere infrastructure.
+  Covers ESXi host hardening, vCenter configuration,
+  virtual machine security, and network controls.
+framework_key: cis_vsphere
+requirements:
+- id: "1.1"
+  description: ESXi host acceptance level
+  section: Host Configuration
+  controls:
+  - CTL.VSPHERE.ESX.ACCEPTANCE.001
+  pass_threshold: all
+- id: "1.2"
+  description: ESXi lockdown mode
+  section: Host Configuration
+  controls:
+  - CTL.VSPHERE.ESX.LOCKDOWN.001
+  pass_threshold: all
+- id: "1.3"
+  description: ESXi SSH service
+  section: Host Configuration
+  controls:
+  - CTL.VSPHERE.ESX.SSH.001
+  pass_threshold: all
+- id: "1.4"
+  description: ESXi shell service
+  section: Host Configuration
+  controls:
+  - CTL.VSPHERE.ESX.SHELL.001
+  pass_threshold: all
+- id: "1.5"
+  description: DCUI access restriction
+  section: Host Configuration
+  controls:
+  - CTL.VSPHERE.ESX.DCUI.001
+  pass_threshold: all
+- id: "1.6"
+  description: CIM monitoring service
+  section: Host Configuration
+  controls:
+  - CTL.VSPHERE.ESX.CIM.001
+  pass_threshold: all
+- id: "1.7"
+  description: SLP service disabled
+  section: Host Configuration
+  controls:
+  - CTL.VSPHERE.ESX.SLP.001
+  pass_threshold: all
+- id: "1.8"
+  description: MOB disabled
+  section: Host Configuration
+  controls:
+  - CTL.VSPHERE.ESX.MOB.001
+  pass_threshold: all
+- id: "2.1"
+  description: NTP configuration
+  section: Time Synchronization
+  controls:
+  - CTL.VSPHERE.ESX.NTP.001
+  pass_threshold: all
+- id: "2.2"
+  description: SNMP configuration
+  section: Monitoring
+  controls:
+  - CTL.VSPHERE.ESX.SNMP.001
+  pass_threshold: all
+- id: "3.1"
+  description: TLS configuration
+  section: Encryption
+  controls:
+  - CTL.VSPHERE.ESX.TLS.001
+  pass_threshold: all
+- id: "3.2"
+  description: vSAN encryption at rest
+  section: Encryption
+  controls:
+  - CTL.VSPHERE.VSAN.ENCRYPT.001
+  pass_threshold: all
+- id: "3.3"
+  description: vSAN encryption in transit
+  section: Encryption
+  controls:
+  - CTL.VSPHERE.VSAN.TRANSIT.001
+  pass_threshold: all
+- id: "3.4"
+  description: VM disk encryption
+  section: Encryption
+  controls:
+  - CTL.VSPHERE.VM.ENCRYPT.001
+  pass_threshold: all
+- id: "4.1"
+  description: Promiscuous mode disabled
+  section: Network Security
+  controls:
+  - CTL.VSPHERE.VDS.PROMISC.001
+  pass_threshold: all
+- id: "4.2"
+  description: MAC address changes rejected
+  section: Network Security
+  controls:
+  - CTL.VSPHERE.VDS.MACCHG.001
+  pass_threshold: all
+- id: "4.3"
+  description: Forged transmits rejected
+  section: Network Security
+  controls:
+  - CTL.VSPHERE.VDS.FORGED.001
+  pass_threshold: all
+- id: "4.4"
+  description: Host firewall enabled
+  section: Network Security
+  controls:
+  - CTL.VSPHERE.FIREWALL.ENABLED.001
+  pass_threshold: all
+- id: "5.1"
+  description: Syslog remote target
+  section: Logging
+  controls:
+  - CTL.VSPHERE.ESX.SYSLOG.001
+  pass_threshold: all
+- id: "5.2"
+  description: Persistent logging
+  section: Logging
+  controls:
+  - CTL.VSPHERE.ESX.PERSISTLOG.001
+  pass_threshold: all
+- id: "5.3"
+  description: Core dump configuration
+  section: Logging
+  controls:
+  - CTL.VSPHERE.ESX.COREDUMP.001
+  pass_threshold: all
+- id: "6.1"
+  description: Account lockout policy
+  section: Access Control
+  controls:
+  - CTL.VSPHERE.ESX.ACCOUNT.LOCKOUT.001
+  pass_threshold: all
+- id: "6.2"
+  description: SSO password length
+  section: Access Control
+  controls:
+  - CTL.VSPHERE.VCSA.SSO.PASSLEN.001
+  pass_threshold: all
+- id: "6.3"
+  description: SSO lockout policy
+  section: Access Control
+  controls:
+  - CTL.VSPHERE.VCSA.SSO.LOCKOUT.001
+  pass_threshold: all
+- id: "7.1"
+  description: VM copy-paste disabled
+  section: Virtual Machine
+  controls:
+  - CTL.VSPHERE.VM.COPYPASTE.001
+  pass_threshold: all
+- id: "7.2"
+  description: VM disk shrink disabled
+  section: Virtual Machine
+  controls:
+  - CTL.VSPHERE.VM.DISKSHRNK.001
+  pass_threshold: all
+- id: "7.3"
+  description: VM HGFS disabled
+  section: Virtual Machine
+  controls:
+  - CTL.VSPHERE.VM.HGFS.001
+  pass_threshold: all
+- id: "7.4"
+  description: VM independent disk mode
+  section: Virtual Machine
+  controls:
+  - CTL.VSPHERE.VM.INDEP.001
+  pass_threshold: all
+- id: "7.5"
+  description: VM log size limit
+  section: Virtual Machine
+  controls:
+  - CTL.VSPHERE.VM.LOGSIZE.001
+  pass_threshold: all
+- id: "7.6"
+  description: VM remote display
+  section: Virtual Machine
+  controls:
+  - CTL.VSPHERE.VM.REMOTEDISP.001
+  pass_threshold: all
+- id: "7.7"
+  description: VM snapshot age
+  section: Virtual Machine
+  controls:
+  - CTL.VSPHERE.VM.SNAPSHOT.AGE.001
+  pass_threshold: all
+- id: "8.1"
+  description: vCenter CEIP
+  section: vCenter Configuration
+  controls:
+  - CTL.VSPHERE.VCSA.CEIP.001
+  pass_threshold: all
+- id: "8.2"
+  description: vCenter plugins
+  section: vCenter Configuration
+  controls:
+  - CTL.VSPHERE.VCSA.PLUGINS.001
+  pass_threshold: all
+- id: "9.1"
+  description: iSCSI CHAP authentication
+  section: Storage
+  controls:
+  - CTL.VSPHERE.ISCSI.CHAP.001
+  pass_threshold: all
+- id: "9.2"
+  description: NFS authentication
+  section: Storage
+  controls:
+  - CTL.VSPHERE.NFS.AUTH.001
+  pass_threshold: all

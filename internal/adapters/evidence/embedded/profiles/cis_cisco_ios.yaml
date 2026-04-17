@@ -1,0 +1,189 @@
+id: cis_cisco_ios
+name: CIS Cisco IOS 15
+version: "1.0"
+description: >
+  CIS Benchmark controls for Cisco IOS network devices.
+  Covers authentication, logging, SNMP, routing protocols,
+  and network access controls.
+framework_key: cis_cisco_ios
+requirements:
+- id: "1.1.1"
+  description: AAA authentication
+  section: Management Plane
+  controls:
+  - CTL.CISCO.AUTH.AAA.001
+  pass_threshold: all
+- id: "1.1.2"
+  description: AAA accounting
+  section: Management Plane
+  controls:
+  - CTL.CISCO.AUTH.ACCOUNTING.001
+  pass_threshold: all
+- id: "1.1.3"
+  description: Enable secret password
+  section: Management Plane
+  controls:
+  - CTL.CISCO.AUTH.ENABLE.001
+  pass_threshold: all
+- id: "1.1.4"
+  description: Login authentication
+  section: Management Plane
+  controls:
+  - CTL.CISCO.AUTH.LOGIN.001
+  pass_threshold: all
+- id: "1.1.5"
+  description: Service password encryption
+  section: Management Plane
+  controls:
+  - CTL.CISCO.AUTH.SVCENC.001
+  pass_threshold: all
+- id: "1.2.1"
+  description: Login banner
+  section: Management Plane
+  controls:
+  - CTL.CISCO.MGMT.BANNER.001
+  pass_threshold: all
+- id: "1.2.2"
+  description: SSH for management
+  section: Management Plane
+  controls:
+  - CTL.CISCO.MGMT.SSH.001
+  pass_threshold: all
+- id: "1.2.3"
+  description: Telnet disabled
+  section: Management Plane
+  controls:
+  - CTL.CISCO.MGMT.TELNET.001
+  pass_threshold: all
+- id: "1.2.4"
+  description: HTTP server disabled
+  section: Management Plane
+  controls:
+  - CTL.CISCO.MGMT.HTTP.001
+  pass_threshold: all
+- id: "1.3.1"
+  description: SNMP community strings
+  section: Management Plane
+  controls:
+  - CTL.CISCO.MGMT.SNMPCOMM.001
+  pass_threshold: all
+- id: "1.3.2"
+  description: SNMP ACL
+  section: Management Plane
+  controls:
+  - CTL.CISCO.MGMT.SNMP.001
+  pass_threshold: all
+- id: "1.4.1"
+  description: NTP authentication
+  section: Management Plane
+  controls:
+  - CTL.CISCO.NTP.AUTH.001
+  pass_threshold: all
+- id: "1.4.2"
+  description: NTP server configuration
+  section: Management Plane
+  controls:
+  - CTL.CISCO.NTP.SERVERS.001
+  pass_threshold: all
+- id: "2.1.1"
+  description: VTY access list
+  section: Control Plane
+  controls:
+  - CTL.CISCO.ACL.VTY.001
+  pass_threshold: all
+- id: "2.2.1"
+  description: OSPF authentication
+  section: Control Plane
+  controls:
+  - CTL.CISCO.OSPF.AUTH.001
+  pass_threshold: all
+- id: "2.2.2"
+  description: BGP authentication
+  section: Control Plane
+  controls:
+  - CTL.CISCO.BGP.AUTH.001
+  pass_threshold: all
+- id: "2.2.3"
+  description: BGP inbound filter
+  section: Control Plane
+  controls:
+  - CTL.CISCO.BGP.FILTERIN.001
+  pass_threshold: all
+- id: "2.2.4"
+  description: BGP outbound filter
+  section: Control Plane
+  controls:
+  - CTL.CISCO.BGP.FILTEROUT.001
+  pass_threshold: all
+- id: "2.3.1"
+  description: HSRP authentication
+  section: Control Plane
+  controls:
+  - CTL.CISCO.HSRP.AUTH.001
+  pass_threshold: all
+- id: "3.1.1"
+  description: Directed broadcast disabled
+  section: Data Plane
+  controls:
+  - CTL.CISCO.INTF.DIRBROADCAST.001
+  pass_threshold: all
+- id: "3.1.2"
+  description: Source routing disabled
+  section: Data Plane
+  controls:
+  - CTL.CISCO.SVC.SRCROUTE.001
+  pass_threshold: all
+- id: "3.1.3"
+  description: uRPF enabled
+  section: Data Plane
+  controls:
+  - CTL.CISCO.URPF.001
+  pass_threshold: all
+- id: "3.1.4"
+  description: Egress ACL
+  section: Data Plane
+  controls:
+  - CTL.CISCO.ACL.EGRESS.001
+  pass_threshold: all
+- id: "3.2.1"
+  description: CDP disabled
+  section: Data Plane
+  controls:
+  - CTL.CISCO.SVC.CDP.001
+  pass_threshold: all
+- id: "3.2.2"
+  description: BOOTP disabled
+  section: Data Plane
+  controls:
+  - CTL.CISCO.SVC.BOOTP.001
+  pass_threshold: all
+- id: "3.2.3"
+  description: Finger disabled
+  section: Data Plane
+  controls:
+  - CTL.CISCO.SVC.FINGER.001
+  pass_threshold: all
+- id: "3.2.4"
+  description: Gratuitous ARP disabled
+  section: Data Plane
+  controls:
+  - CTL.CISCO.SVC.GRATARP.001
+  pass_threshold: all
+- id: "3.2.5"
+  description: HTTP disabled on data plane
+  section: Data Plane
+  controls:
+  - CTL.CISCO.SVC.HTTPD.001
+  pass_threshold: all
+- id: "3.2.6"
+  description: TCP small servers disabled
+  section: Data Plane
+  controls:
+  - CTL.CISCO.SVC.TCPSMALL.001
+  pass_threshold: all
+- id: "3.2.7"
+  description: UDP small servers disabled
+  section: Data Plane
+  controls:
+  - CTL.CISCO.SVC.UDPSMALL.001
+  pass_threshold: all
