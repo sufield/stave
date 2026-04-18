@@ -96,6 +96,8 @@ func loadAccessControls(t *testing.T) []policy.ControlDefinition {
 		"CTL.S3.PRESIGNED.001":     {},
 		"CTL.S3.AUTH.READ.001":     {},
 		"CTL.S3.AUTH.WRITE.001":    {},
+		"CTL.S3.POLICY.SCOPING.001": {},
+		"CTL.S3.ACCESS.004":        {},
 	}
 	var controls []policy.ControlDefinition
 	for _, ctl := range all {
@@ -147,7 +149,7 @@ func TestAccess001_TrueNegative_NoExternalAccounts(t *testing.T) {
 func TestAccess002_TruePositive_WildcardPolicy(t *testing.T) {
 	ev := accessEvaluator(t)
 	bucket := accessBucket("wildcard-bucket", map[string]any{
-		"has_wildcard_policy": true,
+		"has_wildcard_principal": true,
 	})
 
 	result := ev.Evaluate(accessSnapshot(bucket))
@@ -158,7 +160,7 @@ func TestAccess002_TruePositive_WildcardPolicy(t *testing.T) {
 func TestAccess002_TrueNegative_SpecificActions(t *testing.T) {
 	ev := accessEvaluator(t)
 	bucket := accessBucket("scoped-bucket", map[string]any{
-		"has_wildcard_policy": false,
+		"has_wildcard_principal": false,
 	})
 
 	result := ev.Evaluate(accessSnapshot(bucket))
@@ -236,6 +238,106 @@ func TestAuthWrite001_TrueNegative(t *testing.T) {
 	result := ev.Evaluate(accessSnapshot(bucket))
 
 	assertNoAccessFinding(t, &result, "CTL.S3.AUTH.WRITE.001", "safe-bucket")
+}
+
+// --- E2E Tests: CTL.S3.ACCESS.004 (Bucket policy evaluates as effectively public) ---
+
+func TestAccess004_TruePositive_EffectivelyPublic(t *testing.T) {
+	ev := accessEvaluator(t)
+	bucket := accessBucket("effectively-public-bucket", map[string]any{
+		"policy_is_effectively_public": true,
+	})
+
+	result := ev.Evaluate(accessSnapshot(bucket))
+
+	assertHasAccessFinding(t, &result, "CTL.S3.ACCESS.004", "effectively-public-bucket")
+}
+
+func TestAccess004_TruePositive_FiresRegardlessOfPAB(t *testing.T) {
+	ev := accessEvaluator(t)
+	// PAB fully enforcing does not silence the finding — ACCESS.004 is a
+	// policy-in-isolation signal. The RiskEngine is responsible for
+	// compounding severity against the PAB state.
+	bucket := asset.Asset{
+		ID:     asset.ID("latent-public-bucket"),
+		Type:   kernel.NewAssetType("aws_s3_bucket"),
+		Vendor: "aws",
+		Properties: map[string]any{
+			"storage": map[string]any{
+				"kind": "bucket",
+				"access": map[string]any{
+					"policy_is_effectively_public": true,
+				},
+				"controls": map[string]any{
+					"public_access_fully_blocked": true,
+				},
+			},
+		},
+	}
+
+	result := ev.Evaluate(accessSnapshot(bucket))
+
+	assertHasAccessFinding(t, &result, "CTL.S3.ACCESS.004", "latent-public-bucket")
+}
+
+func TestAccess004_TrueNegative_PolicyNotPublic(t *testing.T) {
+	ev := accessEvaluator(t)
+	bucket := accessBucket("scoped-bucket", map[string]any{
+		"policy_is_effectively_public": false,
+	})
+
+	result := ev.Evaluate(accessSnapshot(bucket))
+
+	assertNoAccessFinding(t, &result, "CTL.S3.ACCESS.004", "scoped-bucket")
+}
+
+// --- E2E Tests: CTL.S3.POLICY.SCOPING.001 (Non-narrow principal grants must carry a scoping Condition) ---
+
+func TestPolicyScoping001_TruePositive_NoScopingCondition(t *testing.T) {
+	ev := accessEvaluator(t)
+	bucket := accessBucket("unscoped-bucket", map[string]any{
+		"policy_has_scoping_condition": false,
+	})
+
+	result := ev.Evaluate(accessSnapshot(bucket))
+
+	assertHasAccessFinding(t, &result, "CTL.S3.POLICY.SCOPING.001", "unscoped-bucket")
+}
+
+func TestPolicyScoping001_TrueNegative_ScopingConditionPresent(t *testing.T) {
+	ev := accessEvaluator(t)
+	// Non-narrow principal Allow exists but every such statement carries a
+	// scoping Condition (e.g., Principal:* plus aws:PrincipalOrgID=o-xxxx).
+	bucket := accessBucket("scoped-bucket", map[string]any{
+		"policy_has_scoping_condition": true,
+	})
+
+	result := ev.Evaluate(accessSnapshot(bucket))
+
+	assertNoAccessFinding(t, &result, "CTL.S3.POLICY.SCOPING.001", "scoped-bucket")
+}
+
+func TestPolicyScoping001_TrueNegative_NoPolicy(t *testing.T) {
+	ev := accessEvaluator(t)
+	// Field omitted entirely — bucket has no policy. Nothing to scope.
+	bucket := accessBucket("no-policy-bucket", map[string]any{})
+
+	result := ev.Evaluate(accessSnapshot(bucket))
+
+	assertNoAccessFinding(t, &result, "CTL.S3.POLICY.SCOPING.001", "no-policy-bucket")
+}
+
+func TestPolicyScoping001_TrueNegative_NarrowPrincipalsOnly(t *testing.T) {
+	ev := accessEvaluator(t)
+	// Field is null — bucket has a policy but every Allow names a specific
+	// principal, so there is nothing for the scoping guard to cover.
+	bucket := accessBucket("narrow-only-bucket", map[string]any{
+		"policy_has_scoping_condition": nil,
+	})
+
+	result := ev.Evaluate(accessSnapshot(bucket))
+
+	assertNoAccessFinding(t, &result, "CTL.S3.POLICY.SCOPING.001", "narrow-only-bucket")
 }
 
 // --- E2E Tests: CTL.S3.ACCESS.GRANTS.001 (Broad Write Grants) ---
@@ -349,11 +451,11 @@ func TestPresigned001_TrueNegative_Restricted(t *testing.T) {
 func TestAccess_MultipleViolations_SameBucket(t *testing.T) {
 	ev := accessEvaluator(t)
 	bucket := accessBucket("nightmare-bucket", map[string]any{
-		"external_account_ids": []any{"999888777666"},
-		"has_wildcard_policy":  true,
-		"has_external_write":   true,
-		"authenticated_read":   true,
-		"authenticated_write":  true,
+		"external_account_ids":   []any{"999888777666"},
+		"has_wildcard_principal": true,
+		"has_external_write":     true,
+		"authenticated_read":     true,
+		"authenticated_write":    true,
 	})
 
 	result := ev.Evaluate(accessSnapshot(bucket))
@@ -368,11 +470,11 @@ func TestAccess_MultipleViolations_SameBucket(t *testing.T) {
 func TestAccess_AllSafe(t *testing.T) {
 	ev := accessEvaluator(t)
 	bucket := accessBucket("safe-bucket", map[string]any{
-		"external_account_ids": []any{},
-		"has_wildcard_policy":  false,
-		"has_external_write":   false,
-		"authenticated_read":   false,
-		"authenticated_write":  false,
+		"external_account_ids":   []any{},
+		"has_wildcard_principal": false,
+		"has_external_write":     false,
+		"authenticated_read":     false,
+		"authenticated_write":    false,
 	})
 
 	result := ev.Evaluate(accessSnapshot(bucket))

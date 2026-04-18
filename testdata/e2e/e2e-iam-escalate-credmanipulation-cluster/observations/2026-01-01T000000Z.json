@@ -1,0 +1,125 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:iam::111122223333:user/alice-create-key",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "escalation": {
+            "create_access_key": {
+              "present": true,
+              "target_user_arn": "arn:aws:iam::111122223333:user/admin-victor",
+              "permission_delta": [
+                "iam:*",
+                "s3:*"
+              ],
+              "resource_scope": "target-user",
+              "target_has_max_keys": false
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:user/bob-update-login",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "escalation": {
+            "update_login_profile": {
+              "present": true,
+              "target_user_arn": "arn:aws:iam::111122223333:user/admin-victor",
+              "permission_delta": [
+                "iam:*"
+              ],
+              "resource_scope": "wildcard",
+              "target_has_mfa": false
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:user/carol-create-login",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "escalation": {
+            "create_login_profile": {
+              "present": true,
+              "target_user_arn": "arn:aws:iam::111122223333:user/svc-terraform",
+              "permission_delta": [
+                "iam:*",
+                "ec2:*"
+              ],
+              "resource_scope": "user-set",
+              "target_has_existing_profile": false
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:user/dave-resync-mfa",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "escalation": {
+            "resync_mfa_device": {
+              "present": true,
+              "target_user_arn": "arn:aws:iam::111122223333:user/admin-victor",
+              "permission_delta": [
+                "iam:*"
+              ],
+              "resource_scope": "target-user",
+              "target_has_mfa": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:user/eve-clean",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "escalation": {
+            "create_access_key":    {"present": false},
+            "update_login_profile": {"present": false},
+            "create_login_profile": {"present": false},
+            "resync_mfa_device":    {"present": false}
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:role/some-service-role",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "escalation": {
+            "create_access_key":    {"present": true},
+            "update_login_profile": {"present": true},
+            "create_login_profile": {"present": true},
+            "resync_mfa_device":    {"present": true}
+          }
+        }
+      }
+    }
+  ]
+}

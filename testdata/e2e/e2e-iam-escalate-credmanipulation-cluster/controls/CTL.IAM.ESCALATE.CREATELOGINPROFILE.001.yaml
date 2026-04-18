@@ -1,0 +1,73 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.CREATELOGINPROFILE.001
+name: Principal Must Not Escalate via iam:CreateLoginProfile On Another User
+description: >
+  A principal with `iam:CreateLoginProfile` whose Resource field
+  reaches another IAM user — one whose attached permissions exceed
+  the principal's own AND who currently has no console login
+  profile — can create a console password for that user and log in
+  as them. Programmatic-only service accounts (no password set) are
+  the specific target: the absence of a login profile is the
+  precondition that makes `CreateLoginProfile` succeed. Once a
+  profile exists, future takeover requires `UpdateLoginProfile`
+  (covered by `CTL.IAM.ESCALATE.UPDATELOGINPROFILE.001`). Rhino
+  Security Labs enumerates this as a distinct technique because the
+  victim population — service accounts that "can't be logged into
+  as" — is often overlooked during permission review.
+domain: identity
+severity: critical
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-6(5)"
+  fedramp_moderate: "AC-6(5)"
+  iso_27001_2022: "A.8.3"
+  ccm_v4: ["IAM-02", "IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params:
+  attack_stage: privilege_escalation
+  base_impact: 10
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.5
+observation_fields:
+  - identity.kind
+  - identity.escalation.create_login_profile.present
+  - identity.escalation.create_login_profile.target_user_arn
+  - identity.escalation.create_login_profile.permission_delta
+  - identity.escalation.create_login_profile.resource_scope
+  - identity.escalation.create_login_profile.target_has_existing_profile
+remediation:
+  description: >
+    Principal has `iam:CreateLoginProfile` reaching a programmatic-
+    only IAM user whose permissions exceed its own. Creating a
+    console password turns the target into an interactive account
+    under attacker control. The `target_user_arn` identifies the
+    victim (typically a service user with no prior console access).
+  action: >
+    Scope `iam:CreateLoginProfile` to the principal's own user ARN
+    (or remove it entirely from non-admin principals). As a
+    defensive measure, apply a service-control policy that denies
+    `iam:CreateLoginProfile` for any user tagged `type = service` or
+    similar. Alert on CloudTrail `CreateLoginProfile` events on
+    long-dormant service users.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "escalation": {
+          "create_login_profile": {
+            "present": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.escalation.create_login_profile.present
+      op: eq
+      value: true

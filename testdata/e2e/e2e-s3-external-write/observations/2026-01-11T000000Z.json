@@ -31,7 +31,7 @@
             ],
             "has_external_access": true,
             "has_external_write": true,
-            "has_wildcard_policy": false,
+            "has_wildcard_principal": false,
             "public_read": false,
             "public_list": false,
             "public_write": false,

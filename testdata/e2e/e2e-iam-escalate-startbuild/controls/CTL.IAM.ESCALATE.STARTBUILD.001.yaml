@@ -67,9 +67,6 @@ remediation:
     }
 unsafe_predicate:
   all:
-    - field: properties.identity.kind
-      op: eq
-      value: user
     - field: properties.identity.escalation.startbuild_source_write.present
       op: eq
       value: true

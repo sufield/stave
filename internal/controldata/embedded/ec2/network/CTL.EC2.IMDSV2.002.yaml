@@ -1,0 +1,85 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.IMDSV2.002
+name: EC2 Container Hosts Must Not Permit IMDSv2 Bypass
+description: >
+  EC2 instances running containerized workloads must not expose the
+  instance metadata service to containers. IMDSv2's HttpTokens=required
+  requirement is defeated from inside a container because the container
+  can complete the IMDSv2 PUT-for-token handshake just like the host.
+  AWS provides two closures: HttpPutResponseHopLimit=1 (rejects requests
+  from bridge-networked containers, which add a hop) and avoiding
+  host-network containers (which share the host's network namespace and
+  bypass the hop limit entirely). This control fires when IMDSv2 is
+  enforced on the instance (so CTL.EC2.IMDSV2.001 is silent) but the
+  compound is still bypassable: containers are present AND either the
+  hop limit is > 1 with bridge-networked containers, or any container
+  uses host networking. Pentest practice confirms this as the realistic
+  exposure posture for EKS, ECS, and Docker-on-EC2 workloads — basic
+  IMDSv2 enforcement alone is theater on containerized hosts.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v1.4.0: "5.6"
+  cis_aws_v3.0: "5.6"
+  soc2: "CC6.6"
+  pci_dss_v4.0: "2.2.1"
+  nist_800_53_r5: "CM-6"
+  fedramp_moderate: "CM-6"
+  ccm_v4: ["IVS-03", "IVS-04"]
+scope_tags:
+  - aws
+  - ec2
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Instance enforces IMDSv2 but runs containers that can still reach
+    the metadata service. Host-networked containers bypass the hop
+    limit unconditionally; bridge-networked containers reach IMDS when
+    HttpPutResponseHopLimit exceeds 1.
+  action: >
+    Set HttpPutResponseHopLimit to 1 on the instance metadata options
+    and audit every container workload for host-network usage. Run:
+    aws ec2 modify-instance-metadata-options --instance-id i-xxx
+    --http-put-response-hop-limit 1 --http-tokens required
+    --http-endpoint enabled. For EKS, pin hop limit via the launch
+    template's metadata_options block. For ECS, prefer awsvpc network
+    mode over host. For Docker, move workloads off --network=host.
+  example: |
+    {
+      "compute": {
+        "kind": "instance",
+        "network": {
+          "imdsv2_required": true,
+          "imds_hop_limit": 1
+        },
+        "containers": {
+          "present": true,
+          "has_bridge_network": true,
+          "has_host_network": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: instance
+    - field: properties.compute.network.imdsv2_required
+      op: eq
+      value: true
+    - field: properties.compute.containers.present
+      op: eq
+      value: true
+    - any:
+        - field: properties.compute.containers.has_host_network
+          op: eq
+          value: true
+        - all:
+            - field: properties.compute.containers.has_bridge_network
+              op: eq
+              value: true
+            - field: properties.compute.network.imds_hop_limit
+              op: gt
+              value: 1

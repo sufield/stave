@@ -53,7 +53,7 @@
           "access": {
             "public_read": false,
             "public_write": false,
-            "has_wildcard_policy": false,
+            "has_wildcard_principal": false,
             "has_vpc_condition": true,
             "has_ip_condition": false,
             "effective_network_scope": "vpc"

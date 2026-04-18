@@ -1,0 +1,73 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.PASSROLE.SENDCOMMAND.001
+name: Principal Must Not Escalate via SSM SendCommand On Privileged Instance
+description: >
+  Principals with ssm:SendCommand or ssm:StartSession on an EC2
+  instance whose attached instance profile role R has broader
+  effective permissions than the principal can escalate to R. The
+  command or interactive session executes on the instance under R
+  (the instance-profile role is the caller from the OS's perspective);
+  IMDS reads from that session return R's temporary credentials.
+  Rhino Security Labs' iam__privesc_scan lists this technique; the
+  iam:PassRole check captured upstream corresponds to whether the
+  principal can also attach alternate instance profiles, which widens
+  the target-role set. Distinct from PASSROLE.RUNINSTANCES, which
+  covers creating a fresh instance with an attacker-chosen profile;
+  this covers exploiting an already-running one.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-6(5)"
+  fedramp_moderate: "AC-6(5)"
+  iso_27001_2022: "A.8.3"
+  ccm_v4: ["IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+  - ssm
+type: unsafe_state
+params:
+  attack_stage: privilege_escalation
+  base_impact: 9
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+observation_fields:
+  - identity.kind
+  - identity.escalation.passrole_sendcommand.present
+  - identity.escalation.passrole_sendcommand.target_role
+  - identity.escalation.passrole_sendcommand.permission_delta
+  - identity.escalation.passrole_sendcommand.target_instance
+  - identity.escalation.passrole_sendcommand.invocation_method
+remediation:
+  description: >
+    Principal has an SSM-mediated escalation path. It has ssm:SendCommand
+    or ssm:StartSession on an EC2 instance whose instance-profile role
+    carries permissions exceeding the principal's own. Any command or
+    session on that instance executes under the role.
+  action: >
+    Scope ssm:SendCommand and ssm:StartSession to instances whose
+    instance-profile role does not exceed the principal's permissions.
+    Use resource tags plus a Condition on ssm:resourceTag/<key> to bind
+    the principal to a specific instance population. If the principal
+    also has iam:PassRole reaching this or a broader role, also remove
+    that grant — it enables replacing the instance profile entirely.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "escalation": {
+          "passrole_sendcommand": {
+            "present": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.escalation.passrole_sendcommand.present
+      op: eq
+      value: true

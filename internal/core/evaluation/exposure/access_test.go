@@ -42,7 +42,7 @@ func TestResolveBucketAccess_PassthroughFields(t *testing.T) {
 		ACLFullControl: ACLFullControlAccess{
 			FullControlPublic: true,
 		},
-		HasWildcardPolicy: true,
+		HasWildcardPrincipal: true,
 		Gov: GovernanceOverrides{
 			BlockResourceBoundPublicAccess: true,
 		},
@@ -59,8 +59,8 @@ func TestResolveBucketAccess_PassthroughFields(t *testing.T) {
 	if !access.ACLFullControl.FullControlPublic {
 		t.Error("expected ACLFullControl.FullControlPublic")
 	}
-	if !access.HasWildcardPolicy {
-		t.Error("expected HasWildcardPolicy")
+	if !access.HasWildcardPrincipal {
+		t.Error("expected HasWildcardPrincipal")
 	}
 	if !access.Governance.BlockResourceBoundPublicAccess {
 		t.Error("expected Governance passthrough")

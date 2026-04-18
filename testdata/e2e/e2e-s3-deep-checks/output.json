@@ -152,7 +152,7 @@
         "threshold_hours": 168,
         "misconfigurations": [
           {
-            "property": "storage.access.has_wildcard_policy",
+            "property": "storage.access.has_wildcard_principal",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
@@ -565,7 +565,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "ab04c9b2b1e2141c99455d9307ad73a277712f00",
+      "head_commit": "a103b46539bf2153a77deb92ccf417b762b1f17c",
       "dirty": false
     }
   }

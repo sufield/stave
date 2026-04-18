@@ -39,7 +39,7 @@
           "access": {
             "external_accounts": null,
             "has_external_access": false,
-            "has_wildcard_policy": false,
+            "has_wildcard_principal": false,
             "public_read": false,
             "public_list": false,
             "public_write": true,
@@ -82,7 +82,7 @@
           "access": {
             "external_accounts": null,
             "has_external_access": false,
-            "has_wildcard_policy": false,
+            "has_wildcard_principal": false,
             "public_read": false,
             "public_list": false,
             "public_write": false,
@@ -125,7 +125,7 @@
           "access": {
             "external_accounts": null,
             "has_external_access": false,
-            "has_wildcard_policy": false,
+            "has_wildcard_principal": false,
             "public_read": false,
             "public_list": false,
             "public_write": false,
@@ -168,7 +168,7 @@
           "access": {
             "external_accounts": null,
             "has_external_access": false,
-            "has_wildcard_policy": false,
+            "has_wildcard_principal": false,
             "public_read": false,
             "public_list": false,
             "public_write": false,
@@ -211,7 +211,7 @@
           "access": {
             "external_accounts": null,
             "has_external_access": false,
-            "has_wildcard_policy": false,
+            "has_wildcard_principal": false,
             "public_read": false,
             "public_list": false,
             "public_write": false,
@@ -256,7 +256,7 @@
               "arn:aws:iam::999888777666:root"
             ],
             "has_external_access": true,
-            "has_wildcard_policy": false,
+            "has_wildcard_principal": false,
             "public_read": false,
             "public_list": false,
             "public_write": false,
@@ -299,7 +299,7 @@
           "access": {
             "external_accounts": null,
             "has_external_access": false,
-            "has_wildcard_policy": true,
+            "has_wildcard_principal": true,
             "public_read": false,
             "public_list": false,
             "public_write": false,
@@ -342,7 +342,7 @@
           "access": {
             "external_accounts": null,
             "has_external_access": false,
-            "has_wildcard_policy": false,
+            "has_wildcard_principal": false,
             "public_read": false,
             "public_list": false,
             "public_write": false,

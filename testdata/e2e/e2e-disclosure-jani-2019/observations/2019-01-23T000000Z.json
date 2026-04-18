@@ -1,0 +1,66 @@
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws-s3-snapshot",
+    "tool": "stave-synthetic",
+    "tool_version": "1.0.0"
+  },
+  "captured_at": "2019-01-23T00:00:00Z",
+  "assets": [
+    {
+      "id": "jani-public-rw",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "jani-public-rw",
+          "access": {
+            "public_read": true,
+            "public_list": true,
+            "public_write": true,
+            "write_via_resource": false
+          },
+          "controls": {
+            "public_access_fully_blocked": false,
+            "account_public_access_fully_blocked": false,
+            "public_access_block": {
+              "block_public_acls": false,
+              "ignore_public_acls": false,
+              "block_public_policy": false,
+              "restrict_public_buckets": false
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "jani-hardened",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "jani-hardened",
+          "access": {
+            "public_read": false,
+            "public_list": false,
+            "public_write": false,
+            "write_via_resource": false
+          },
+          "controls": {
+            "public_access_fully_blocked": true,
+            "account_public_access_fully_blocked": true,
+            "public_access_block": {
+              "block_public_acls": true,
+              "ignore_public_acls": true,
+              "block_public_policy": true,
+              "restrict_public_buckets": true
+            }
+          }
+        }
+      }
+    }
+  ],
+  "source": "deployed"
+}

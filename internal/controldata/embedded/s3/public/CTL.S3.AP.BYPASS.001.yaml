@@ -1,0 +1,81 @@
+dsl_version: ctrl.v1
+id: CTL.S3.AP.BYPASS.001
+name: Bucket Must Not Be Publicly Accessible Via An Access Point While Its Own Controls Pass
+description: >
+  An S3 bucket whose own controls all evaluate clean — Public Access
+  Block fully enforcing, bucket policy not effectively public — can
+  still be publicly reachable through a single-region S3 Access Point
+  that names it as the delegate bucket. Access Points carry their own
+  PAB and their own resource policy, evaluated independently of the
+  parent bucket; a public Access Point is a parallel reach path. This
+  control fires on the bucket, not the AP, because the finding is
+  "this bucket is exposed via an AP it may not know about" — the
+  bucket is the asset at risk. Mirrors the shape of
+  CTL.S3.CDN.BYPASS.001 (the CloudFront-fronted-bucket bypass).
+  Firing requires the bucket-side controls to be clean: if the bucket
+  is already publicly accessible on its own, the bucket-level
+  controls already caught it and this finding would be noise.
+  The derived field `storage.exposure.has_public_access_point` comes
+  from the `EnrichBucketAPExposure` derivation — a post-collection
+  join of `aws_s3_access_point` assets onto `aws_s3_bucket` assets
+  within the same snapshot; the trace decomposes back to the raw AP
+  and bucket observations that produced it.
+domain: exposure
+exposure:
+  type: ap_bypass
+  principal_scope: public
+severity: critical
+compliance:
+  hipaa: "164.312(a)(1)"
+  soc2: "CC6.1"
+  ccm_v4: ["DCS-07", "IAM-16", "IVS-03"]
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    A single-region Access Point attached to this bucket exposes it
+    publicly while the bucket's own controls pass. The defender's
+    mental model ("my bucket is locked down") is actively wrong —
+    traffic reaches the same underlying objects through the Access
+    Point endpoint. The companion CTL.S3.AP.PAB.001 / AP.POLICY.001
+    findings identify which Access Point is responsible.
+  action: >
+    1. Identify the offending Access Point from the
+       `storage.exposure.public_access_point_names` field on this
+       finding, or from the co-occurring AP-side findings.
+    2. On the Access Point, enable Block Public Access fully
+       (`put-access-point-public-access-block` with all four flags
+       true) and remove any wildcard-principal Allow from its
+       resource policy — or add a restricting Condition on
+       `aws:SourceVpc`, `aws:SourceVpce`, `aws:PrincipalOrgID`,
+       `aws:PrincipalArn`, or a fixed `aws:SourceIp`.
+    3. Consider whether the Access Point is still needed. Access
+       Points left over from decommissioned services are a common
+       source of this pattern.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "exposure": {
+          "has_public_access_point": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.controls.public_access_fully_blocked
+      op: eq
+      value: true
+    - field: properties.storage.access.policy_is_effectively_public
+      op: eq
+      value: false
+    - field: properties.storage.exposure.has_public_access_point
+      op: eq
+      value: true

@@ -1,0 +1,68 @@
+dsl_version: ctrl.v1
+id: CTL.S3.CDN.BYPASS.001
+name: CloudFront-Fronted Bucket Must Not Allow Direct Public Access
+description: >
+  A bucket that is both fronted by a CloudFront distribution and
+  publicly readable on its direct S3 endpoint gives an attacker a
+  full bypass of the CloudFront layer. CloudFront typically carries
+  the defensive controls — WAF rules, geographic restrictions,
+  request logging, signed URLs, TLS policy — while the raw S3
+  URL (`bucket.s3.<region>.amazonaws.com`) carries none of them.
+  Anyone who learns the bucket name can fetch objects around
+  every CloudFront-layer control.
+domain: exposure
+exposure:
+  type: cdn_bypass
+  principal_scope: public
+severity: high
+compliance:
+  hipaa: "164.312(a)(1)"
+  soc2: "CC6.1"
+  ccm_v4: ["CCC-04", "DSP-07", "DSP-17"]
+scope_tags:
+  - aws
+  - s3
+  - cloudfront
+type: unsafe_state
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    This bucket is referenced as an origin by a CloudFront
+    distribution and is simultaneously readable from the public S3
+    endpoint. Any CloudFront-layer protections (WAF, geo
+    restrictions, access logging, signed URLs) are bypassable by
+    hitting the S3 URL directly.
+  action: >
+    1. Enable Block Public Access on the bucket and remove any
+       Principal "*" grants from the bucket policy so the direct
+       S3 endpoint is no longer publicly reachable.
+    2. Restrict the bucket policy to the specific CloudFront
+       distribution via an Origin Access Control and a condition on
+       `aws:SourceArn = arn:aws:cloudfront::<account>:distribution/<id>`.
+    3. Verify the CloudFront distribution still serves objects
+       after the lockdown (OAC-signed requests survive; direct
+       anonymous requests fail).
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "access": {
+          "public_read": false
+        },
+        "cdn_access": {
+          "is_cloudfront_origin": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.access.public_read
+      op: eq
+      value: true
+    - field: properties.storage.cdn_access.is_cloudfront_origin
+      op: eq
+      value: true

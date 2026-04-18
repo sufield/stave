@@ -14,8 +14,8 @@ func TestClassifyControlID(t *testing.T) {
 			want: ClassPublicExposure,
 		},
 		{
-			name: "ACL write exposure",
-			id:   ControlID("CTL.S3.ACL.WRITE.001"),
+			name: "policy write exposure",
+			id:   ControlID("CTL.S3.POLICY.WRITE.001"),
 			want: ClassPublicExposure,
 		},
 		{

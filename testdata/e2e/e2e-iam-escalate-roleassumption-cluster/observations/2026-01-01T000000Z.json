@@ -1,0 +1,107 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:iam::111122223333:user/alice-assume-role",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "escalation": {
+            "assume_role": {
+              "present": true,
+              "target_role_arn": "arn:aws:iam::111122223333:role/admin-deploy-role",
+              "permission_delta": [
+                "iam:*",
+                "s3:*"
+              ],
+              "trust_pathway": "direct",
+              "has_external_id_requirement": false
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:user/bob-update-trust",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "escalation": {
+            "update_trust_policy": {
+              "present": true,
+              "target_role_arn": "arn:aws:iam::111122223333:role/admin-deploy-role",
+              "permission_delta": [
+                "iam:*",
+                "s3:*"
+              ],
+              "resource_scope": "wildcard"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:user/carol-both-techniques",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "escalation": {
+            "assume_role": {
+              "present": true,
+              "target_role_arn": "arn:aws:iam::111122223333:role/break-glass",
+              "permission_delta": [
+                "iam:*"
+              ],
+              "trust_pathway": "account-root",
+              "has_external_id_requirement": false
+            },
+            "update_trust_policy": {
+              "present": true,
+              "target_role_arn": "arn:aws:iam::111122223333:role/break-glass",
+              "permission_delta": [
+                "iam:*"
+              ],
+              "resource_scope": "target-role"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:user/dana-clean",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "escalation": {
+            "assume_role":         {"present": false},
+            "update_trust_policy": {"present": false}
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:role/some-service-role",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "escalation": {
+            "assume_role":         {"present": true},
+            "update_trust_policy": {"present": true}
+          }
+        }
+      }
+    }
+  ]
+}

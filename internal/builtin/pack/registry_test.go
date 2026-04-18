@@ -41,8 +41,8 @@ func TestResolveEnabledPacks(t *testing.T) {
 	if len(ids) != 3 {
 		t.Fatalf("resolved IDs = %d, want 3", len(ids))
 	}
-	if ids[0] != "CTL.S3.ACL.WRITE.001" {
-		t.Fatalf("first id = %q, want %q", ids[0], "CTL.S3.ACL.WRITE.001")
+	if ids[0] != "CTL.S3.POLICY.WRITE.001" {
+		t.Fatalf("first id = %q, want %q", ids[0], "CTL.S3.POLICY.WRITE.001")
 	}
 }
 

@@ -1,0 +1,181 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:iam::111122223333:user/alice-attach-user-self",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "escalation": {
+            "attach_user_policy_self": {
+              "present": true,
+              "target_user_arn": "arn:aws:iam::111122223333:user/alice-attach-user-self",
+              "resource_scope": "self",
+              "reachable_managed_policies": [
+                "arn:aws:iam::aws:policy/AdministratorAccess"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:user/bob-put-user-self",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "escalation": {
+            "put_user_policy_self": {
+              "present": true,
+              "target_user_arn": "arn:aws:iam::111122223333:user/bob-put-user-self",
+              "resource_scope": "wildcard"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:user/carol-attach-group",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "escalation": {
+            "attach_group_policy": {
+              "present": true,
+              "target_group": "developers",
+              "resource_scope": "belonging-group",
+              "reachable_managed_policies": [
+                "arn:aws:iam::aws:policy/AdministratorAccess",
+                "arn:aws:iam::aws:policy/IAMFullAccess"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:user/dave-put-group",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "escalation": {
+            "put_group_policy": {
+              "present": true,
+              "target_group": "developers",
+              "resource_scope": "belonging-group"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:user/eve-create-policy-version",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "escalation": {
+            "create_policy_version": {
+              "present": true,
+              "target_policy_arn": "arn:aws:iam::111122223333:policy/DevPolicy",
+              "attachment_path": "via-group",
+              "attachment_group": "developers",
+              "has_create_version": true,
+              "has_set_default": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:user/frank-add-to-group",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "escalation": {
+            "add_user_to_group": {
+              "present": true,
+              "target_group": "admins",
+              "permission_delta": [
+                "iam:*",
+                "s3:*"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:user/grace-clean",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "escalation": {
+            "attach_user_policy_self": {"present": false},
+            "put_user_policy_self":    {"present": false},
+            "attach_group_policy":     {"present": false},
+            "put_group_policy":        {"present": false},
+            "create_policy_version":   {"present": false},
+            "add_user_to_group":       {"present": false}
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:role/some-service-role",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "escalation": {
+            "attach_user_policy_self": {"present": true},
+            "put_user_policy_self":    {"present": true},
+            "attach_role_policy": {
+              "present": true,
+              "target_role_arn": "arn:aws:iam::111122223333:role/some-service-role",
+              "resource_scope": "self",
+              "reachable_managed_policies": [
+                "arn:aws:iam::aws:policy/AdministratorAccess"
+              ]
+            },
+            "put_role_policy": {
+              "present": true,
+              "target_role_arn": "arn:aws:iam::111122223333:role/some-service-role",
+              "resource_scope": "wildcard"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:role/heidi-clean-role",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "escalation": {
+            "attach_role_policy": {"present": false},
+            "put_role_policy":    {"present": false}
+          }
+        }
+      }
+    }
+  ]
+}

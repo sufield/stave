@@ -1,0 +1,73 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.ADDUSERTOGROUP.001
+name: Principal Must Not Escalate via iam:AddUserToGroup To A Broader Group
+description: >
+  A principal with `iam:AddUserToGroup` can add itself to any group
+  whose Resource scope includes it. When a candidate target group
+  grants permissions that exceed the principal's current set, joining
+  that group is a single-call privilege escalation. This is Rhino
+  Security Labs privilege-escalation technique #6 ("IAM —
+  AddUserToGroup"). Unlike techniques #3 and #4, the escalating
+  principal does not need to modify the group's policies at all; it
+  only needs the group to exist with broader permissions and for
+  `AddUserToGroup` to be scoped to reach that group.
+
+  Scope: gated on `identity.kind == "user"`. The `iam:AddUserToGroup`
+  AWS action targets users specifically; IAM groups cannot contain
+  roles. No role-side analogue exists.
+domain: identity
+severity: critical
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-6(5)"
+  fedramp_moderate: "AC-6(5)"
+  iso_27001_2022: "A.8.3"
+  ccm_v4: ["IAM-02", "IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params:
+  attack_stage: privilege_escalation
+  base_impact: 10
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.5
+observation_fields:
+  - identity.kind
+  - identity.escalation.add_user_to_group.present
+  - identity.escalation.add_user_to_group.target_group
+  - identity.escalation.add_user_to_group.permission_delta
+remediation:
+  description: >
+    Principal has `iam:AddUserToGroup` scoped to reach a group whose
+    effective permissions exceed its own. Joining that group is a
+    single-call path to those permissions. The `permission_delta` on
+    the finding lists the specific actions gained.
+  action: >
+    Scope `iam:AddUserToGroup` to groups whose permissions do not
+    exceed the principal's, or remove the permission entirely from
+    non-admin principals. If developer self-service group joins are
+    needed, constrain the target group set with a Condition on
+    `iam:ResourceTag` or a specific group-name prefix.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "escalation": {
+          "add_user_to_group": {
+            "present": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user
+    - field: properties.identity.escalation.add_user_to_group.present
+      op: eq
+      value: true

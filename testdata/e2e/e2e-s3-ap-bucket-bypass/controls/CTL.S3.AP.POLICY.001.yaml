@@ -1,0 +1,51 @@
+dsl_version: ctrl.v1
+id: CTL.S3.AP.POLICY.001
+name: S3 Access Point Policy Must Not Be Public
+description: >
+  Single-region S3 Access Points carry their own resource policy
+  that is evaluated independently of the parent bucket policy. A
+  public Access Point policy creates a public access path to the
+  bucket even when the bucket's own policy is scoped correctly.
+  This mirrors the MRAP case (CTL.S3.MRAP.POLICY.001) and is the
+  single-region analogue.
+domain: exposure
+exposure:
+  type: public_read
+  principal_scope: public
+severity: critical
+compliance:
+  ccm_v4: ["DCS-07", "IAM-16", "IVS-03"]
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    A single-region S3 Access Point has a policy that evaluates as
+    public under AWS PolicyStatus.IsPublic semantics — a wildcard
+    principal without a restricting Condition on `aws:SourceVpc`,
+    `aws:SourceVpce`, `aws:PrincipalOrgID`, `aws:PrincipalArn`, or a
+    narrow `aws:SourceIp`.
+  action: >
+    Remove the public grant from the Access Point policy, or add a
+    scoping Condition that binds the caller to a fixed VPC, IP
+    range, organization, or ARN. If public reach is intentional,
+    enforce it through a narrower mechanism such as CloudFront with
+    Origin Access Control and keep the Access Point policy private.
+  example: |
+    {
+      "storage": {
+        "kind": "access_point",
+        "policy_is_public": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: access_point
+    - field: properties.storage.policy_is_public
+      op: eq
+      value: true

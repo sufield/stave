@@ -1,0 +1,74 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.UPDATETRUST.001
+name: Principal Must Not Escalate via iam:UpdateAssumeRolePolicy On A Broader Role
+description: >
+  A principal with `iam:UpdateAssumeRolePolicy` reaching a role whose
+  attached permissions exceed its own can rewrite the role's trust
+  policy to admit itself and then call `sts:AssumeRole` to pick up the
+  broader permissions. The update is a single call and leaves the
+  role's permissions unchanged — only the trust-policy pointer moves —
+  which makes the escalation subtle in post-incident review. This is
+  Rhino Security Labs' two-step role-assumption pattern. Listed as a
+  distinct control from CTL.IAM.ESCALATE.ASSUMEROLE.001 because the
+  remediations are different: this control is fixed by removing
+  `iam:UpdateAssumeRolePolicy` from the principal or narrowing its
+  Resource; ASSUMEROLE is fixed by removing `sts:AssumeRole` or
+  narrowing target trust.
+domain: identity
+severity: critical
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-6(5)"
+  fedramp_moderate: "AC-6(5)"
+  iso_27001_2022: "A.8.3"
+  ccm_v4: ["IAM-02", "IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params:
+  attack_stage: privilege_escalation
+  base_impact: 10
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.5
+observation_fields:
+  - identity.kind
+  - identity.escalation.update_trust_policy.present
+  - identity.escalation.update_trust_policy.target_role_arn
+  - identity.escalation.update_trust_policy.permission_delta
+  - identity.escalation.update_trust_policy.resource_scope
+remediation:
+  description: >
+    Principal has `iam:UpdateAssumeRolePolicy` reaching a role whose
+    permissions exceed its own. A single `UpdateAssumeRolePolicy` call
+    (rewriting the trust to include the principal) plus a single
+    `AssumeRole` call produces session credentials with the target
+    role's full permission set. The permissions of the target role do
+    not change; only the trust-policy pointer moves.
+  action: >
+    Remove `iam:UpdateAssumeRolePolicy` from the principal, or scope
+    its Resource field to roles whose permissions do not exceed the
+    principal's (role-creation bootstrap roles, for example). At the
+    organization level, deny `iam:UpdateAssumeRolePolicy` on privileged
+    roles via SCP, or enforce a permissions boundary that forbids it.
+    CloudTrail alerting on `UpdateAssumeRolePolicy` calls is an
+    effective detective control while the preventive change lands.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "escalation": {
+          "update_trust_policy": {
+            "present": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.escalation.update_trust_policy.present
+      op: eq
+      value: true

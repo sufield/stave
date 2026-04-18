@@ -45,7 +45,7 @@
           "access": {
             "external_accounts": null,
             "has_external_access": false,
-            "has_wildcard_policy": false,
+            "has_wildcard_principal": false,
             "public_read": false,
             "public_list": false,
             "public_write": false,
@@ -94,7 +94,7 @@
           "access": {
             "external_accounts": null,
             "has_external_access": false,
-            "has_wildcard_policy": false,
+            "has_wildcard_principal": false,
             "public_read": false,
             "public_list": false,
             "public_write": false,
@@ -142,7 +142,7 @@
           "access": {
             "external_accounts": null,
             "has_external_access": false,
-            "has_wildcard_policy": false,
+            "has_wildcard_principal": false,
             "public_read": false,
             "public_list": false,
             "public_write": false,

@@ -86,8 +86,9 @@ schema version bump.
 
 ### Storage domain (S3 + GCS)
 
-- `storage.kind` — shared discriminator (`"bucket"`)
+- `storage.kind` — shared discriminator (`"bucket"`, `"access_point"`)
 - `storage.access.*` — access control properties
+- `storage.cdn_access.*` — CloudFront coupling facts (bucket-side view)
 - `storage.controls.*` — safety net settings (PAB, uniform access)
 - `storage.encryption.*` — encryption at rest and in transit
 - `storage.versioning.*` — object versioning
@@ -182,11 +183,22 @@ schema version bump.
 | `storage.access.authenticated_write` | bool | Authenticated-users write |
 | `storage.access.external_account_ids` | array | External AWS account IDs with access |
 | `storage.access.has_external_write` | bool | External accounts have write access |
-| `storage.access.has_wildcard_policy` | bool | Bucket policy contains wildcard principal |
+| `storage.access.has_wildcard_principal` | bool | Any Allow statement's `Principal` is `"*"` or `{"AWS": "*"}`. Conditions do not affect this value. |
+| `storage.access.policy_is_effectively_public` | bool | Bucket policy is public per AWS `PolicyStatus.IsPublic` rules. Restricting Conditions (`aws:PrincipalOrgID`, `aws:SourceVpc`, `aws:SourceIp` with CIDR, `aws:SourceArn`, all with fixed values) make this `false` even when `has_wildcard_principal` is `true`. |
+| `storage.access.policy_has_scoping_condition` | bool/null | `true` when every Allow statement with a non-narrow principal (`Principal: "*"`, `Principal: {"AWS": "*"}`, or an Allow with no `Principal` block) carries at least one scoping Condition with a fixed value — `aws:PrincipalOrgID`, `aws:SourceVpc`, `aws:SourceIp` with a fixed CIDR, or `aws:SourceArn`. `false` when any such Allow statement exists without any scoping Condition. `null` (or omitted) when the bucket has no policy, or the policy has no Allow statement with a non-narrow principal — there is nothing to scope. |
 | `storage.access.exposes_bucket_policy` | bool | Bucket policy grants `s3:GetBucketPolicy` to an anonymous or wildcard principal |
 | `storage.access.latent_public_read` | bool | Read would be public if PAB removed |
 | `storage.access.latent_public_list` | bool | List would be public if PAB removed |
 | `storage.access.effective_network_scope` | string | Network restriction scope |
+
+### CDN access (CloudFront coupling)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `storage.cdn_access.bucket_policy_grants_cloudfront` | bool | Bucket policy grants access to `cloudfront.amazonaws.com` service principal |
+| `storage.cdn_access.cloudfront_oai.enabled` | bool | Legacy Origin Access Identity is attached to a CloudFront distribution fronting this bucket |
+| `storage.cdn_access.cloudfront_oac.enabled` | bool | Origin Access Control is attached to a CloudFront distribution fronting this bucket |
+| `storage.cdn_access.is_cloudfront_origin` | bool | Any CloudFront distribution in the account has this bucket as an origin. Independent of whether the bucket policy also grants the CloudFront service principal. |
 
 ### Controls and settings
 
@@ -303,6 +315,33 @@ API Gateway, CloudFront, and Lambda Function URL equivalents.
 | Field | Type | Description |
 |-------|------|-------------|
 | `safety_provable` | bool | Whether bucket safety can be proven from observation data |
+
+### Single-region S3 Access Point (`aws_s3_access_point`)
+
+Access Points are named endpoints attached to a single bucket. Each Access
+Point carries its own Public Access Block settings and its own resource policy,
+both evaluated independently of the parent bucket's controls. An Access Point
+can therefore expose a bucket that is itself hardened, or delegate a narrower
+slice of a broadly-configured bucket. Single-region Access Points are a
+separate resource kind from Multi-Region Access Points (MRAPs) — MRAP facts
+are attached to the bucket asset as `storage.multi_region_access_points[]`;
+single-region Access Points are top-level `aws_s3_access_point` assets with
+`storage.kind = "access_point"`.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `storage.kind` | string | `"access_point"` — discriminator |
+| `storage.name` | string | Access Point name |
+| `storage.bucket_name` | string | Name of the parent bucket the Access Point delegates to |
+| `storage.network_origin` | string | `"vpc"` or `"internet"` — the reachability surface of the endpoint |
+| `storage.vpc_id` | string/null | VPC identifier when `network_origin = "vpc"`; `null` or omitted for `"internet"` |
+| `storage.alias` | string | Access Point DNS alias (e.g., `my-ap-xxxx.s3-accesspoint.us-east-1.amazonaws.com`) |
+| `storage.public_access_block.block_public_acls` | bool | Access Point PAB: BlockPublicAcls |
+| `storage.public_access_block.ignore_public_acls` | bool | Access Point PAB: IgnorePublicAcls |
+| `storage.public_access_block.block_public_policy` | bool | Access Point PAB: BlockPublicPolicy |
+| `storage.public_access_block.restrict_public_buckets` | bool | Access Point PAB: RestrictPublicBuckets |
+| `storage.public_access_fully_blocked` | bool | Derived: all four `public_access_block.*` flags are `true` |
+| `storage.policy_is_public` | bool | Access Point policy evaluates as public under AWS `PolicyStatus.IsPublic` semantics — a wildcard principal without a restricting Condition on `aws:SourceVpc`, `aws:SourceVpce`, `aws:PrincipalOrgID`, `aws:PrincipalArn`, or a narrow `aws:SourceIp`. Mirrors the MRAP field `storage.mrap_policy_is_public`. |
 
 ---
 
@@ -434,6 +473,10 @@ evaluate `dns.*` properties only — the vendor is for provenance tracking.
 | `compute.encryption.ebs_encrypted` | bool | All attached EBS volumes encrypted |
 | `compute.network.has_public_ip` | bool | Instance has a public IP address |
 | `compute.network.imdsv2_required` | bool | IMDSv2 HttpTokens set to required |
+| `compute.network.imds_hop_limit` | int | `HttpPutResponseHopLimit` (default 2; set to 1 to block container bridge-network bypass) |
+| `compute.containers.present` | bool | Instance runs at least one container workload (Docker, ECS task, EKS pod) |
+| `compute.containers.has_host_network` | bool | Any container uses host network mode (bypasses IMDS hop limit entirely) |
+| `compute.containers.has_bridge_network` | bool | Any container uses bridge network mode (reaches IMDS when hop limit > 1) |
 
 ### EBS Snapshot (`aws_ebs_snapshot`)
 
@@ -837,6 +880,313 @@ chains that lead to administrative access.
 | `identity.escalation.step_count` | int | Number of steps in the chain |
 
 **Controls:** CTL.IAM.ESCALATE.CHAIN.001 (multi-step escalation path).
+
+### Per-technique escalation sub-namespaces
+
+Each sub-namespace under `identity.escalation.<technique>` records whether a
+single, named escalation technique applies to the principal. The extractor (or
+a downstream derivation) computes the technique's preconditions — action-level
+IAM permissions, Resource-ARN scoping, group membership for group-hop
+techniques — and emits `.present: true` when they all hold. Controls stay
+declarative over `<technique>.present`; the permission analysis lives upstream
+in one place.
+
+This is the convention used by `CTL.IAM.ESCALATE.STARTBUILD.001` and
+`CTL.IAM.ESCALATE.PASSROLE.CREATESTACK.001`, now extended by the direct
+self-escalation cluster below.
+
+#### Self policy manipulation (`identity.escalation.attach_user_policy_self`)
+
+Rhino cluster #1 — `iam:AttachUserPolicy` where the Resource includes the
+principal's own user ARN. The principal can attach any managed policy
+(including `arn:aws:iam::aws:policy/AdministratorAccess`) to itself.
+
+| Property | Type | Description |
+|---|---|---|
+| `identity.escalation.attach_user_policy_self.present` | bool | Principal has `iam:AttachUserPolicy` scoped to its own user ARN |
+| `identity.escalation.attach_user_policy_self.target_user_arn` | string | The principal's own ARN (self-target) |
+| `identity.escalation.attach_user_policy_self.resource_scope` | string | `"self"`, `"wildcard"`, or `"user-set"` — how the Resource field resolves |
+| `identity.escalation.attach_user_policy_self.reachable_managed_policies` | string[] | Managed-policy ARNs the principal can attach (empty means "any" when resource_scope is `wildcard`) |
+
+#### Self inline policy (`identity.escalation.put_user_policy_self`)
+
+Rhino cluster #2 — `iam:PutUserPolicy` where the Resource includes the
+principal's own user ARN. The principal can write an arbitrary inline policy
+onto itself.
+
+| Property | Type | Description |
+|---|---|---|
+| `identity.escalation.put_user_policy_self.present` | bool | Principal has `iam:PutUserPolicy` scoped to its own user ARN |
+| `identity.escalation.put_user_policy_self.target_user_arn` | string | The principal's own ARN |
+| `identity.escalation.put_user_policy_self.resource_scope` | string | `"self"`, `"wildcard"`, or `"user-set"` |
+
+#### Group managed policy (`identity.escalation.attach_group_policy`)
+
+Rhino cluster #3 — `iam:AttachGroupPolicy` where the Resource is a group the
+principal belongs to. Attaching a managed policy to the group elevates every
+member including the principal.
+
+| Property | Type | Description |
+|---|---|---|
+| `identity.escalation.attach_group_policy.present` | bool | Principal can attach a managed policy to a group it belongs to |
+| `identity.escalation.attach_group_policy.target_group` | string | Group name or ARN |
+| `identity.escalation.attach_group_policy.resource_scope` | string | `"belonging-group"`, `"wildcard"`, or `"group-set"` |
+| `identity.escalation.attach_group_policy.reachable_managed_policies` | string[] | Managed-policy ARNs the principal can attach |
+
+#### Group inline policy (`identity.escalation.put_group_policy`)
+
+Rhino cluster #4 — `iam:PutGroupPolicy` where the Resource is a group the
+principal belongs to.
+
+| Property | Type | Description |
+|---|---|---|
+| `identity.escalation.put_group_policy.present` | bool | Principal can write an inline policy on a group it belongs to |
+| `identity.escalation.put_group_policy.target_group` | string | Group name or ARN |
+| `identity.escalation.put_group_policy.resource_scope` | string | `"belonging-group"`, `"wildcard"`, or `"group-set"` |
+
+#### Policy version manipulation (`identity.escalation.create_policy_version`)
+
+Rhino cluster #5 — `iam:CreatePolicyVersion` plus `iam:SetDefaultPolicyVersion`
+on a managed policy attached to the principal (directly or via a belonging
+group). Creating a new version with broader permissions and marking it default
+updates the effective policy for every attached principal.
+
+| Property | Type | Description |
+|---|---|---|
+| `identity.escalation.create_policy_version.present` | bool | Principal can create and activate a new version of a managed policy attached to itself or a belonging group |
+| `identity.escalation.create_policy_version.target_policy_arn` | string | ARN of the managed policy |
+| `identity.escalation.create_policy_version.attachment_path` | string | `"direct"` (attached to the user) or `"via-group"` (attached to a group the user belongs to) |
+| `identity.escalation.create_policy_version.attachment_group` | string/null | Group name when `attachment_path` is `"via-group"`; `null` otherwise |
+| `identity.escalation.create_policy_version.has_create_version` | bool | Principal has `iam:CreatePolicyVersion` on the target policy |
+| `identity.escalation.create_policy_version.has_set_default` | bool | Principal has `iam:SetDefaultPolicyVersion` on the target policy |
+
+#### Group membership manipulation (`identity.escalation.add_user_to_group`)
+
+Rhino cluster #6 — `iam:AddUserToGroup` where a candidate target group exists
+whose effective permissions exceed the principal's current ones.
+
+| Property | Type | Description |
+|---|---|---|
+| `identity.escalation.add_user_to_group.present` | bool | Principal can add itself to a group whose permissions exceed its own |
+| `identity.escalation.add_user_to_group.target_group` | string | Group name or ARN |
+| `identity.escalation.add_user_to_group.permission_delta` | string[] | Actions the target group grants beyond the principal's current permissions |
+
+**Controls:** `CTL.IAM.ESCALATE.ATTACHUSERPOLICY.001`,
+`CTL.IAM.ESCALATE.PUTUSERPOLICY.001`,
+`CTL.IAM.ESCALATE.ATTACHGROUPPOLICY.001`,
+`CTL.IAM.ESCALATE.PUTGROUPPOLICY.001`,
+`CTL.IAM.ESCALATE.CREATEPOLICYVERSION.001`,
+`CTL.IAM.ESCALATE.ADDUSERTOGROUP.001`.
+
+#### Role assumption (`identity.escalation.assume_role`)
+
+Rhino role-assumption cluster #1 — `sts:AssumeRole` reaches at least one role
+whose attached permissions exceed the principal's current ones AND whose trust
+policy permits this principal. The principal does not grant itself permissions;
+it pivots into a role that already has them.
+
+| Property | Type | Description |
+|---|---|---|
+| `identity.escalation.assume_role.present` | bool | Principal has `sts:AssumeRole` scoped to a role whose trust permits it and whose permissions exceed the principal's |
+| `identity.escalation.assume_role.target_role_arn` | string | ARN of the broader-permissioned role reachable via `AssumeRole` |
+| `identity.escalation.assume_role.permission_delta` | string[] | Actions the target role grants beyond the principal's current permissions |
+| `identity.escalation.assume_role.trust_pathway` | string | How the trust policy admits the principal: `"direct"` (Principal names the user/role ARN), `"account-root"` (account root trust delegating via IAM permission), `"wildcard-aws"` (`"AWS": "*"` with no restricting Condition), `"oidc"`, `"saml"` |
+| `identity.escalation.assume_role.has_external_id_requirement` | bool | Trust policy requires `sts:ExternalId` — present for accuracy even when it doesn't prevent self-assumption |
+
+#### Trust policy modification (`identity.escalation.update_trust_policy`)
+
+Rhino role-assumption cluster #2 — `iam:UpdateAssumeRolePolicy` on any role
+whose attached permissions exceed the principal's. The principal can rewrite
+the role's trust to admit itself and then assume it in a later call. Listed
+separately from `assume_role` because the remediation is different: remove
+`iam:UpdateAssumeRolePolicy` from the principal (or narrow its Resource),
+rather than remove `sts:AssumeRole`.
+
+| Property | Type | Description |
+|---|---|---|
+| `identity.escalation.update_trust_policy.present` | bool | Principal has `iam:UpdateAssumeRolePolicy` reaching a role whose permissions exceed its own |
+| `identity.escalation.update_trust_policy.target_role_arn` | string | ARN of the target role |
+| `identity.escalation.update_trust_policy.permission_delta` | string[] | Actions the target role grants beyond the principal's current permissions |
+| `identity.escalation.update_trust_policy.resource_scope` | string | `"target-role"` (Resource names the specific role ARN), `"wildcard"` (`"Resource": "*"`), or `"role-set"` (Resource is a list that includes the target) |
+
+**Controls:** `CTL.IAM.ESCALATE.ASSUMEROLE.001`,
+`CTL.IAM.ESCALATE.UPDATETRUST.001`.
+
+#### PassRole pivots (service-mediated escalation)
+
+Each `passrole_<service_action>` sub-namespace records whether a principal
+can pivot into a broader-permissioned role through a specific AWS service
+action. The pattern was established by the already-shipped
+`passrole_createstack`, `passrole_runinstances`, and `startbuild_source_write`
+sub-namespaces; this cluster extends it to Lambda, Glue, SSM, and DataPipeline.
+Multi-step prerequisites (e.g., CreateFunction + InvokeFunction, CreatePipeline
++ ActivatePipeline) are folded into each `.present` boolean upstream; the
+diagnostic sub-fields expose which sub-conditions held so the finding is
+actionable.
+
+##### `identity.escalation.passrole_createfunction`
+
+Lambda: `iam:PassRole` + `lambda:CreateFunction` + an invocation path
+(`lambda:InvokeFunction`, function URL creation, or trigger wiring).
+
+| Property | Type | Description |
+|---|---|---|
+| `identity.escalation.passrole_createfunction.present` | bool | All Lambda escalation preconditions hold |
+| `identity.escalation.passrole_createfunction.target_role` | string | ARN of the broader-permissioned execution role the principal can pass to Lambda |
+| `identity.escalation.passrole_createfunction.permission_delta` | string[] | Actions the target role grants beyond the principal's current permissions |
+| `identity.escalation.passrole_createfunction.invocation_vector` | string | How the function is reachable after creation: `"invoke_function"`, `"function_url"`, `"trigger"`, or `"multiple"` |
+| `identity.escalation.passrole_createfunction.runtime` | string | Runtime of the function (diagnostic only, e.g., `"python3.12"`, `"nodejs20.x"`) |
+
+##### `identity.escalation.passrole_createdevendpoint`
+
+Glue: `iam:PassRole` + `glue:CreateDevEndpoint` on a role with broader
+permissions. Access to the endpoint is via SSH registration on creation.
+
+| Property | Type | Description |
+|---|---|---|
+| `identity.escalation.passrole_createdevendpoint.present` | bool | Glue escalation preconditions hold |
+| `identity.escalation.passrole_createdevendpoint.target_role` | string | ARN of the broader-permissioned role the principal can pass to Glue |
+| `identity.escalation.passrole_createdevendpoint.permission_delta` | string[] | Actions the target role grants beyond the principal's current permissions |
+| `identity.escalation.passrole_createdevendpoint.endpoint_type` | string | Endpoint size class (diagnostic, e.g., `"standard"`, `"G.1X"`, `"G.2X"`) |
+
+##### `identity.escalation.passrole_sendcommand`
+
+SSM: `ssm:SendCommand` or `ssm:StartSession` on an EC2 instance whose
+attached instance-profile role carries broader permissions. Distinct from
+`passrole_runinstances` — that creates a fresh instance with an attacker-
+chosen profile; this exploits an already-running one.
+
+| Property | Type | Description |
+|---|---|---|
+| `identity.escalation.passrole_sendcommand.present` | bool | SSM escalation preconditions hold |
+| `identity.escalation.passrole_sendcommand.target_role` | string | ARN of the instance-profile role attached to the reachable instance |
+| `identity.escalation.passrole_sendcommand.permission_delta` | string[] | Actions the target role grants beyond the principal's current permissions |
+| `identity.escalation.passrole_sendcommand.target_instance` | string | Instance ID or ARN the principal can reach |
+| `identity.escalation.passrole_sendcommand.invocation_method` | string | `"send_command"`, `"start_session"`, or `"both"` |
+
+##### `identity.escalation.passrole_createpipeline`
+
+DataPipeline: `iam:PassRole` + `datapipeline:CreatePipeline` +
+`datapipeline:ActivatePipeline` on a role with broader permissions.
+
+| Property | Type | Description |
+|---|---|---|
+| `identity.escalation.passrole_createpipeline.present` | bool | DataPipeline escalation preconditions hold |
+| `identity.escalation.passrole_createpipeline.target_role` | string | ARN of the broader-permissioned role the principal can pass to DataPipeline |
+| `identity.escalation.passrole_createpipeline.permission_delta` | string[] | Actions the target role grants beyond the principal's current permissions |
+| `identity.escalation.passrole_createpipeline.has_activate_permission` | bool | Principal holds `datapipeline:ActivatePipeline` — required to trigger pipeline execution |
+
+**Controls:** `CTL.IAM.ESCALATE.PASSROLE.CREATEFUNCTION.001`,
+`CTL.IAM.ESCALATE.PASSROLE.CREATEDEVENDPOINT.001`,
+`CTL.IAM.ESCALATE.PASSROLE.SENDCOMMAND.001`,
+`CTL.IAM.ESCALATE.PASSROLE.CREATEPIPELINE.001`.
+
+#### Credential manipulation on another user
+
+Rhino Security Labs' credential-manipulation cluster — four techniques
+where the principal manipulates another IAM user's authentication
+material to impersonate that user. Unlike the Cluster 1 self-policy
+techniques where `target_user_arn` refers to the principal's own ARN,
+in this cluster `target_user_arn` identifies the **victim user** — the
+privileged user whose credentials the principal can forge, reset, or
+disarm. Same field name, different semantic; documented here so the
+reuse doesn't confuse operators reading the finding.
+
+##### `identity.escalation.create_access_key`
+
+`iam:CreateAccessKey` reaching another user with broader permissions.
+
+| Property | Type | Description |
+|---|---|---|
+| `identity.escalation.create_access_key.present` | bool | Principal can create an access key for a user whose permissions exceed its own |
+| `identity.escalation.create_access_key.target_user_arn` | string | **Victim** user ARN (not self) |
+| `identity.escalation.create_access_key.permission_delta` | string[] | Actions the victim holds beyond the principal's current permissions |
+| `identity.escalation.create_access_key.resource_scope` | string | `"target-user"`, `"wildcard"`, or `"user-set"` |
+| `identity.escalation.create_access_key.target_has_max_keys` | bool | Victim already has AWS's two-access-key maximum; attack additionally requires `DeleteAccessKey` |
+
+##### `identity.escalation.update_login_profile`
+
+`iam:UpdateLoginProfile` reaching another user with broader permissions.
+Requires the victim to already have a console login profile.
+
+| Property | Type | Description |
+|---|---|---|
+| `identity.escalation.update_login_profile.present` | bool | Principal can reset the console password of a user whose permissions exceed its own |
+| `identity.escalation.update_login_profile.target_user_arn` | string | Victim user ARN |
+| `identity.escalation.update_login_profile.permission_delta` | string[] | Actions the victim holds beyond the principal's current permissions |
+| `identity.escalation.update_login_profile.resource_scope` | string | `"target-user"`, `"wildcard"`, or `"user-set"` |
+| `identity.escalation.update_login_profile.target_has_mfa` | bool | Victim has an MFA device enrolled; MFA-bypass via `ResyncMFADevice` or `DeactivateMFADevice` may be a prerequisite for a successful console login |
+
+##### `identity.escalation.create_login_profile`
+
+`iam:CreateLoginProfile` reaching a user with broader permissions who
+currently has no console login profile — typically a programmatic-only
+service account.
+
+| Property | Type | Description |
+|---|---|---|
+| `identity.escalation.create_login_profile.present` | bool | Principal can create a console login profile for a user whose permissions exceed its own AND who has no existing profile |
+| `identity.escalation.create_login_profile.target_user_arn` | string | Victim user ARN |
+| `identity.escalation.create_login_profile.permission_delta` | string[] | Actions the victim holds beyond the principal's current permissions |
+| `identity.escalation.create_login_profile.resource_scope` | string | `"target-user"`, `"wildcard"`, or `"user-set"` |
+| `identity.escalation.create_login_profile.target_has_existing_profile` | bool | Victim already has a login profile; `CreateLoginProfile` fails in that case (folded into `.present=false`, retained for observability) |
+
+##### `identity.escalation.resync_mfa_device`
+
+`iam:ResyncMFADevice` reaching another user with broader permissions.
+Standalone MFA bypass; pairs with `update_login_profile` or
+`create_access_key` on the same victim for full takeover.
+
+| Property | Type | Description |
+|---|---|---|
+| `identity.escalation.resync_mfa_device.present` | bool | Principal can resynchronize or manipulate the MFA device of a user whose permissions exceed its own |
+| `identity.escalation.resync_mfa_device.target_user_arn` | string | Victim user ARN |
+| `identity.escalation.resync_mfa_device.permission_delta` | string[] | Actions the victim holds beyond the principal's current permissions |
+| `identity.escalation.resync_mfa_device.resource_scope` | string | `"target-user"`, `"wildcard"`, or `"user-set"` |
+| `identity.escalation.resync_mfa_device.target_has_mfa` | bool | Victim has an MFA device enrolled — precondition for the technique |
+
+**Controls:** `CTL.IAM.ESCALATE.CREATEACCESSKEY.001`,
+`CTL.IAM.ESCALATE.UPDATELOGINPROFILE.001`,
+`CTL.IAM.ESCALATE.CREATELOGINPROFILE.001`,
+`CTL.IAM.ESCALATE.RESYNCMFADEVICE.001`.
+
+#### Role-side self-policy modification
+
+Role-side analogues of the user-side direct self-policy techniques
+(`attach_user_policy_self` and `put_user_policy_self` in Cluster 1). AWS
+provides distinct API actions for role-targeting (`iam:AttachRolePolicy`,
+`iam:PutRolePolicy`) so they warrant distinct per-technique sub-namespaces
+and distinct controls — the kept user-side gate on the Cluster 1 controls
+correctly suppresses role-side signals, and the role-side gate on these
+controls correctly suppresses user-side. No group-attachment analogue
+because IAM groups are user-only.
+
+##### `identity.escalation.attach_role_policy`
+
+Role with `iam:AttachRolePolicy` scoped to its own role ARN (directly, by
+wildcard, or by a role-set that includes it). Attaching any broad managed
+policy to self is a one-call escalation.
+
+| Property | Type | Description |
+|---|---|---|
+| `identity.escalation.attach_role_policy.present` | bool | Role has `iam:AttachRolePolicy` scoped to its own role ARN |
+| `identity.escalation.attach_role_policy.target_role_arn` | string | The role's own ARN (self-target) |
+| `identity.escalation.attach_role_policy.resource_scope` | string | `"self"`, `"wildcard"`, or `"role-set"` — how the Resource field resolves |
+| `identity.escalation.attach_role_policy.reachable_managed_policies` | string[] | Managed-policy ARNs the role can attach (empty means "any" when resource_scope is `wildcard`) |
+
+##### `identity.escalation.put_role_policy`
+
+Role with `iam:PutRolePolicy` scoped to its own role ARN. Writing an
+arbitrary inline policy to self is a one-call escalation.
+
+| Property | Type | Description |
+|---|---|---|
+| `identity.escalation.put_role_policy.present` | bool | Role has `iam:PutRolePolicy` scoped to its own role ARN |
+| `identity.escalation.put_role_policy.target_role_arn` | string | The role's own ARN |
+| `identity.escalation.put_role_policy.resource_scope` | string | `"self"`, `"wildcard"`, or `"role-set"` |
+
+**Controls:** `CTL.IAM.ESCALATE.ATTACHROLEPOLICY.001`,
+`CTL.IAM.ESCALATE.PUTROLEPOLICY.001`.
 
 ---
 

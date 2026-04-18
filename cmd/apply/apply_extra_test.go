@@ -443,7 +443,7 @@ func TestProfileComplianceFramework(t *testing.T) {
 func TestFilterByCompliance(t *testing.T) {
 	controls := []policy.ControlDefinition{
 		{ID: "CTL.S3.PUBLIC.001", Compliance: policy.ComplianceMapping{"hipaa": "164.312(a)(1)"}},
-		{ID: "CTL.S3.ACL.WRITE.001", Compliance: nil},
+		{ID: "CTL.S3.POLICY.WRITE.001", Compliance: nil},
 		{ID: "CTL.RDS.ENCRYPT.001", Compliance: policy.ComplianceMapping{"hipaa": "164.312(a)(2)(iv)"}},
 		{ID: "CTL.EC2.IMDSV2.001", Compliance: policy.ComplianceMapping{"cis_aws_v1.4.0": "5.6"}},
 	}

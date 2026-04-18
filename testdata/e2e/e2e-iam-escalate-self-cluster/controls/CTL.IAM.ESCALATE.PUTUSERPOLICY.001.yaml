@@ -1,0 +1,72 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.PUTUSERPOLICY.001
+name: Principal Must Not Escalate via iam:PutUserPolicy On Self
+description: >
+  A principal with `iam:PutUserPolicy` whose Resource field includes
+  its own user ARN can write an arbitrary inline policy onto itself —
+  including one that grants `"Action": "*"` on `"Resource": "*"`. This
+  is Rhino Security Labs privilege-escalation technique #2 ("IAM — Put
+  inline policy on user") and is covered by Prowler's
+  iam_policy_allows_privilege_escalation and Pacu's iam__privesc_scan.
+  A single PutUserPolicy call produces full admin access without
+  touching any managed policy or group.
+
+  Scope: gated on `identity.kind == "user"`. The `iam:PutUserPolicy`
+  AWS action targets users specifically — roles cannot be the self-
+  target. The role-side analogue is `iam:PutRolePolicy` on self, a
+  separate technique that will require its own
+  `CTL.IAM.ESCALATE.PUTROLEPOLICY.001` control in a future iteration.
+domain: identity
+severity: critical
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-6(5)"
+  fedramp_moderate: "AC-6(5)"
+  iso_27001_2022: "A.8.3"
+  ccm_v4: ["IAM-02", "IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params:
+  attack_stage: privilege_escalation
+  base_impact: 10
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.5
+observation_fields:
+  - identity.kind
+  - identity.escalation.put_user_policy_self.present
+  - identity.escalation.put_user_policy_self.target_user_arn
+  - identity.escalation.put_user_policy_self.resource_scope
+remediation:
+  description: >
+    Principal has `iam:PutUserPolicy` scoped to its own user ARN. It
+    can author an inline policy granting `"Action": "*"` on
+    `"Resource": "*"` and become admin immediately.
+  action: >
+    Remove `iam:PutUserPolicy` from the principal, or scope the
+    Resource field so the principal cannot include itself.
+    Organization SCPs can deny `iam:PutUserPolicy` on
+    `${aws:PrincipalArn}` to close the path at the boundary.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "escalation": {
+          "put_user_policy_self": {
+            "present": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user
+    - field: properties.identity.escalation.put_user_policy_self.present
+      op: eq
+      value: true

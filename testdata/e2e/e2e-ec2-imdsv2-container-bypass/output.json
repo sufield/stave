@@ -1,0 +1,251 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "16cc41bcebd1807b42167b09691525cdf36a40228258fd19922d77342f505687",
+        "2026-01-11T000000Z.json": "e17b54b33905d381d25137d5d92ac0e9cb147e7c0aff0e4509860d1db4e10354"
+      },
+      "overall": "e14678c710560b9cf7826cda518fe2b6a13fbcaba3ca36643489cebdbb497e84"
+    },
+    "policy_fingerprint": "82db8378666310f7401913e8b4b7d2e6dc659744a4e8edc3cda990ceb5bd7ccf",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 5,
+    "exposed_resources": 2,
+    "violations": 2
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.EC2.IMDSV2.002",
+      "asset_id": "i-bridge-hop2",
+      "asset_type": "aws_ec2_instance",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.EC2.IMDSV2.002",
+      "asset_id": "i-host-hop2",
+      "asset_type": "aws_ec2_instance",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:f46916e1a6336b39",
+      "control_id": "CTL.EC2.IMDSV2.002",
+      "control_name": "EC2 Container Hosts Must Not Permit IMDSv2 Bypass",
+      "control_description": "EC2 instances running containerized workloads must not expose the instance metadata service to containers. IMDSv2's HttpTokens=required requirement is defeated from inside a container because the container can complete the IMDSv2 PUT-for-token handshake just like the host. AWS provides two closures: HttpPutResponseHopLimit=1 (rejects requests from bridge-networked containers, which add a hop) and avoiding host-network containers (which share the host's network namespace and bypass the hop limit entirely). This control fires when IMDSv2 is enforced on the instance (so CTL.EC2.IMDSV2.001 is silent) but the compound is still bypassable: containers are present AND either the hop limit is \u003e 1 with bridge-networked containers, or any container uses host networking. Pentest practice confirms this as the realistic exposure posture for EKS, ECS, and Docker-on-EC2 workloads — basic IMDSv2 enforcement alone is theater on containerized hosts.\n",
+      "asset_id": "i-bridge-hop2",
+      "asset_type": "aws_ec2_instance",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "compute.containers.has_bridge_network",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "compute.containers.has_host_network",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "compute.containers.present",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "compute.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "instance"
+          },
+          {
+            "property": "compute.network.imds_hop_limit",
+            "actual_value": "[SANITIZED]",
+            "operator": "gt",
+            "unsafe_value": 1
+          },
+          {
+            "property": "compute.network.imdsv2_required",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_aws_v1.4.0": "5.6",
+        "cis_aws_v3.0": "5.6",
+        "fedramp_moderate": "CM-6",
+        "nist_800_53_r5": "CM-6",
+        "pci_dss_v4.0": "2.2.1",
+        "soc2": "CC6.6"
+      },
+      "control_compliance_ccm_v4": [
+        "IVS-03",
+        "IVS-04"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Instance enforces IMDSv2 but runs containers that can still reach the metadata service. Host-networked containers bypass the hop limit unconditionally; bridge-networked containers reach IMDS when HttpPutResponseHopLimit exceeds 1.",
+        "action": "Set HttpPutResponseHopLimit to 1 on the instance metadata options and audit every container workload for host-network usage. Run: aws ec2 modify-instance-metadata-options --instance-id i-xxx --http-put-response-hop-limit 1 --http-tokens required --http-endpoint enabled. For EKS, pin hop limit via the launch template's metadata_options block. For ECS, prefer awsvpc network mode over host. For Docker, move workloads off --network=host.",
+        "example": "{\n  \"compute\": {\n    \"kind\": \"instance\",\n    \"network\": {\n      \"imdsv2_required\": true,\n      \"imds_hop_limit\": 1\n    },\n    \"containers\": {\n      \"present\": true,\n      \"has_bridge_network\": true,\n      \"has_host_network\": false\n    }\n  }\n}\n"
+      }
+    },
+    {
+      "finding_id": "sha256:345f4ea0cd303dd0",
+      "control_id": "CTL.EC2.IMDSV2.002",
+      "control_name": "EC2 Container Hosts Must Not Permit IMDSv2 Bypass",
+      "control_description": "EC2 instances running containerized workloads must not expose the instance metadata service to containers. IMDSv2's HttpTokens=required requirement is defeated from inside a container because the container can complete the IMDSv2 PUT-for-token handshake just like the host. AWS provides two closures: HttpPutResponseHopLimit=1 (rejects requests from bridge-networked containers, which add a hop) and avoiding host-network containers (which share the host's network namespace and bypass the hop limit entirely). This control fires when IMDSv2 is enforced on the instance (so CTL.EC2.IMDSV2.001 is silent) but the compound is still bypassable: containers are present AND either the hop limit is \u003e 1 with bridge-networked containers, or any container uses host networking. Pentest practice confirms this as the realistic exposure posture for EKS, ECS, and Docker-on-EC2 workloads — basic IMDSv2 enforcement alone is theater on containerized hosts.\n",
+      "asset_id": "i-host-hop2",
+      "asset_type": "aws_ec2_instance",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "compute.containers.has_bridge_network",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "compute.containers.has_host_network",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "compute.containers.present",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "compute.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "instance"
+          },
+          {
+            "property": "compute.network.imds_hop_limit",
+            "actual_value": "[SANITIZED]",
+            "operator": "gt",
+            "unsafe_value": 1
+          },
+          {
+            "property": "compute.network.imdsv2_required",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_aws_v1.4.0": "5.6",
+        "cis_aws_v3.0": "5.6",
+        "fedramp_moderate": "CM-6",
+        "nist_800_53_r5": "CM-6",
+        "pci_dss_v4.0": "2.2.1",
+        "soc2": "CC6.6"
+      },
+      "control_compliance_ccm_v4": [
+        "IVS-03",
+        "IVS-04"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Instance enforces IMDSv2 but runs containers that can still reach the metadata service. Host-networked containers bypass the hop limit unconditionally; bridge-networked containers reach IMDS when HttpPutResponseHopLimit exceeds 1.",
+        "action": "Set HttpPutResponseHopLimit to 1 on the instance metadata options and audit every container workload for host-network usage. Run: aws ec2 modify-instance-metadata-options --instance-id i-xxx --http-put-response-hop-limit 1 --http-tokens required --http-endpoint enabled. For EKS, pin hop limit via the launch template's metadata_options block. For ECS, prefer awsvpc network mode over host. For Docker, move workloads off --network=host.",
+        "example": "{\n  \"compute\": {\n    \"kind\": \"instance\",\n    \"network\": {\n      \"imdsv2_required\": true,\n      \"imds_hop_limit\": 1\n    },\n    \"containers\": {\n      \"present\": true,\n      \"has_bridge_network\": true,\n      \"has_host_network\": false\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.EC2.IMDSV2.002",
+      "asset_id": "i-bridge-hop2",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 1,
+      "control_id": "CTL.EC2.IMDSV2.002",
+      "asset_id": "i-host-hop2",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-ec2-imdsv2-container-bypass/controls",
+      "observations": "testdata/e2e/e2e-ec2-imdsv2-container-bypass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "a103b46539bf2153a77deb92ccf417b762b1f17c",
+      "dirty": false
+    }
+  }
+}

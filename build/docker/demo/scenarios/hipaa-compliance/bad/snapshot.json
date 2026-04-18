@@ -47,7 +47,7 @@
           "access": {
             "public_read": true,
             "public_write": false,
-            "has_wildcard_policy": true,
+            "has_wildcard_principal": true,
             "has_vpc_condition": false,
             "has_ip_condition": false,
             "effective_network_scope": "public"

@@ -1,0 +1,296 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2017-10-15T000000Z.json": "05cb4b683695dd9e80e467fd842a03a47b46d48ac0a00fd23db5551c4fe41990",
+        "2017-10-23T000000Z.json": "b2196e956ccaa4a9efdd4c9a72821620b0a6408ddfacba08e78180d8fb0c17e6"
+      },
+      "overall": "69db0c950a16c46bc2ed36a54e6e94c0f85e362816ee1df1db79e39b218f593b"
+    },
+    "policy_fingerprint": "484df4580e3c9be44bb843b396402b5fa6b010765a8887f404285f711a7bb4a8",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 2,
+    "exposed_resources": 1,
+    "violations": 2
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.S3.PUBLIC.003",
+      "asset_id": "sriram-logo-bucket",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2017-10-22T00:00:00Z",
+      "remaining_hours": -72072,
+      "first_unsafe_at": "2017-10-15T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.PUBLIC.LIST.001",
+      "asset_id": "sriram-logo-bucket",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2017-10-22T00:00:00Z",
+      "remaining_hours": -72072,
+      "first_unsafe_at": "2017-10-15T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:0da3cb63394a30d6",
+      "control_id": "CTL.S3.PUBLIC.003",
+      "control_name": "No Public Write Access",
+      "control_description": "S3 buckets must not allow public write or delete access. Public write enables data injection, ransomware, and policy takeover.\n",
+      "asset_id": "sriram-logo-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2017-10-15T00:00:00Z",
+        "last_seen_unsafe_at": "2017-10-23T00:00:00Z",
+        "unsafe_duration_hours": 72240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "storage.access.public_write",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 72240 hours (SLA: 168 hours). Exposed since 2017-10-15T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance_ccm_v4": [
+        "DSP-07",
+        "DSP-17"
+      ],
+      "exposure": {
+        "type": "public_write",
+        "principal_scope": "public"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Bucket allows public write or delete access. Attackers can inject malicious content, overwrite existing objects, or hold data ransom.",
+        "action": "Remove bucket policy statements that grant s3:PutObject or s3:DeleteObject to Principal \"*\". Remove ACL grants that allow WRITE or FULL_CONTROL to AllUsers or AuthenticatedUsers. Enable S3 Public Access Block.",
+        "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_write\": false\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-ff1f84e75df75544",
+        "target": {
+          "asset_id": "sriram-logo-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+      }
+    },
+    {
+      "finding_id": "sha256:3823248a1ddf6045",
+      "control_id": "CTL.S3.PUBLIC.LIST.001",
+      "control_name": "No Public S3 Bucket Listing",
+      "control_description": "S3 buckets must not allow anonymous listing of objects. Public listing exposes object keys, enabling targeted data exfiltration.\n",
+      "asset_id": "sriram-logo-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2017-10-15T00:00:00Z",
+        "last_seen_unsafe_at": "2017-10-23T00:00:00Z",
+        "unsafe_duration_hours": 72240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "storage.access.public_list",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 72240 hours (SLA: 168 hours). Exposed since 2017-10-15T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance_ccm_v4": [
+        "DSP-07",
+        "DSP-17"
+      ],
+      "exposure": {
+        "type": "public_list",
+        "principal_scope": "public"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Bucket allows anonymous listing of objects. Public listing exposes all object keys, enabling targeted data exfiltration.",
+        "action": "Remove bucket policy statements that grant s3:ListBucket to Principal \"*\". Remove ACL grants that allow READ to AllUsers. Enable S3 Public Access Block.",
+        "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_list\": false\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-ff1f84e75df75544",
+        "target": {
+          "asset_id": "sriram-logo-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+      }
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "sriram-logo-bucket",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-ff1f84e75df75544",
+        "target": {
+          "asset_id": "sriram-logo-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+      },
+      "contributing_controls": [
+        "CTL.S3.PUBLIC.003",
+        "CTL.S3.PUBLIC.LIST.001"
+      ],
+      "finding_count": 2
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.S3.PUBLIC.003",
+      "asset_id": "sriram-logo-bucket",
+      "exposure_score": 1000,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 5,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "days_blind": 3010
+      },
+      "silent_killer": true
+    },
+    {
+      "finding_index": 1,
+      "control_id": "CTL.S3.PUBLIC.LIST.001",
+      "asset_id": "sriram-logo-bucket",
+      "exposure_score": 750,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 5,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "days_blind": 3010
+      },
+      "silent_killer": true
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-disclosure-sriram-2017/controls",
+      "observations": "testdata/e2e/e2e-disclosure-sriram-2017/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "a103b46539bf2153a77deb92ccf417b762b1f17c",
+      "dirty": false
+    }
+  }
+}

@@ -28,7 +28,7 @@ remediation:
       "storage": {
         "kind": "bucket",
         "access": {
-          "has_wildcard_policy": false
+          "has_wildcard_principal": false
         }
       }
     }
@@ -37,6 +37,6 @@ unsafe_predicate:
     - field: properties.storage.kind
       op: eq
       value: bucket
-    - field: properties.storage.access.has_wildcard_policy
+    - field: properties.storage.access.has_wildcard_principal
       op: eq
       value: true

@@ -51,7 +51,7 @@
           "access": {
             "external_accounts": null,
             "has_external_access": false,
-            "has_wildcard_policy": true,
+            "has_wildcard_principal": true,
             "has_external_write": false,
             "public_read": true,
             "public_list": true,

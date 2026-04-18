@@ -1,0 +1,74 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.ATTACHGROUPPOLICY.001
+name: Principal Must Not Escalate via iam:AttachGroupPolicy On A Belonging Group
+description: >
+  A principal with `iam:AttachGroupPolicy` whose Resource field
+  includes a group the principal belongs to can attach any managed
+  policy to that group, elevating every member including itself. This
+  is Rhino Security Labs privilege-escalation technique #3 ("IAM —
+  Attach to group"). The group hop adds one indirection over
+  `AttachUserPolicy` on self but is functionally equivalent: attach
+  `AdministratorAccess` to a belonging group, and the principal is
+  admin.
+
+  Scope: gated on `identity.kind == "user"`. IAM groups are a
+  user-only concept — roles cannot belong to groups. The technique
+  has no role-side analogue; there is no future control waiting in
+  the queue for a role-side version because AWS IAM does not have
+  role groups.
+domain: identity
+severity: critical
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-6(5)"
+  fedramp_moderate: "AC-6(5)"
+  iso_27001_2022: "A.8.3"
+  ccm_v4: ["IAM-02", "IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params:
+  attack_stage: privilege_escalation
+  base_impact: 10
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.5
+observation_fields:
+  - identity.kind
+  - identity.escalation.attach_group_policy.present
+  - identity.escalation.attach_group_policy.target_group
+  - identity.escalation.attach_group_policy.resource_scope
+  - identity.escalation.attach_group_policy.reachable_managed_policies
+remediation:
+  description: >
+    Principal has `iam:AttachGroupPolicy` reaching a group it belongs
+    to. Attaching `AdministratorAccess` (or any other broad policy) to
+    that group elevates every member of the group — including the
+    principal — to the policy's permissions.
+  action: >
+    Scope `iam:AttachGroupPolicy` to groups the principal does not
+    belong to, or remove the permission entirely from non-admin
+    principals. Use an SCP to deny `iam:AttachGroupPolicy` where the
+    target group has the principal in its membership list.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "escalation": {
+          "attach_group_policy": {
+            "present": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user
+    - field: properties.identity.escalation.attach_group_policy.present
+      op: eq
+      value: true

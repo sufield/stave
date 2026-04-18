@@ -1,0 +1,66 @@
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws-s3-snapshot",
+    "tool": "stave-synthetic",
+    "tool_version": "1.0.0"
+  },
+  "captured_at": "2026-01-11T00:00:00Z",
+  "assets": [
+    {
+      "id": "unscoped-wildcard",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "unscoped-wildcard",
+          "access": {
+            "policy_has_scoping_condition": false
+          }
+        }
+      }
+    },
+    {
+      "id": "org-scoped-wildcard",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "org-scoped-wildcard",
+          "access": {
+            "policy_has_scoping_condition": true
+          }
+        }
+      }
+    },
+    {
+      "id": "no-policy",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "no-policy",
+          "access": {}
+        }
+      }
+    },
+    {
+      "id": "narrow-principals-only",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "narrow-principals-only",
+          "access": {
+            "policy_has_scoping_condition": null
+          }
+        }
+      }
+    }
+  ],
+  "source": "deployed"
+}

@@ -3,27 +3,27 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 640
-**Pack hash:** `b809a44727c54753cf108b4620486a2441dfc498b9d5dc7b1e5b8c2a2514265a`
+**Total controls:** 665
+**Pack hash:** `c1267a4b05e924595955ef969bd861b8d524c3b60ee71edb72f14a855547519a`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 103 |
-| high | 287 |
+| critical | 120 |
+| high | 294 |
 | info | 16 |
 | low | 52 |
-| medium | 182 |
+| medium | 183 |
 
 | Domain | Count |
 |--------|-------|
 | audit | 10 |
 | detection | 2 |
 | encryption | 9 |
-| exposure | 444 |
-| governance | 17 |
-| identity | 139 |
+| exposure | 450 |
+| governance | 18 |
+| identity | 157 |
 | network | 7 |
 | resilience | 4 |
 | storage | 8 |
@@ -2553,6 +2553,21 @@ EC2 instances must enforce Instance Metadata Service Version 2 (IMDSv2). IMDSv1 
 
 ---
 
+### CTL.EC2.IMDSV2.002
+
+**EC2 Container Hosts Must Not Permit IMDSv2 Bypass**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v1.4.0: 5.6; cis_aws_v3.0: 5.6; fedramp_moderate: CM-6; nist_800_53_r5: CM-6; pci_dss_v4.0: 2.2.1; soc2: CC6.6;
+
+EC2 instances running containerized workloads must not expose the instance metadata service to containers. IMDSv2's HttpTokens=required requirement is defeated from inside a container because the container can complete the IMDSv2 PUT-for-token handshake just like the host. AWS provides two closures: HttpPutResponseHopLimit=1 (rejects requests from bridge-networked containers, which add a hop) and avoiding host-network containers (which share the host's network namespace and bypass the hop limit entirely). This control fires when IMDSv2 is enforced on the instance (so CTL.EC2.IMDSV2.001 is silent) but the compound is still bypassable: containers are present AND either the hop limit is > 1 with bridge-networked containers, or any container uses host networking. Pentest practice confirms this as the realistic exposure posture for EKS, ECS, and Docker-on-EC2 workloads — basic IMDSv2 enforcement alone is theater on containerized hosts.
+
+**Remediation:** Set HttpPutResponseHopLimit to 1 on the instance metadata options and audit every container workload for host-network usage. Run: aws ec2 modify-instance-metadata-options --instance-id i-xxx --http-put-response-hop-limit 1 --http-tokens required --http-endpoint enabled. For EKS, pin hop limit via the launch template's metadata_options block. For ECS, prefer awsvpc network mode over host. For Docker, move workloads off --network=host.
+
+---
+
 ### CTL.EC2.INCOMPLETE.001
 
 **Complete Data Required for EC2 Assessment**
@@ -4236,6 +4251,84 @@ All privileged accounts across all cloud providers must have MFA enforced. This 
 
 ---
 
+### CTL.IAM.ESCALATE.ADDUSERTOGROUP.001
+
+**Principal Must Not Escalate via iam:AddUserToGroup To A Broader Group**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+A principal with `iam:AddUserToGroup` can add itself to any group whose Resource scope includes it. When a candidate target group grants permissions that exceed the principal's current set, joining that group is a single-call privilege escalation. This is Rhino Security Labs privilege-escalation technique #6 ("IAM — AddUserToGroup"). Unlike techniques #3 and #4, the escalating principal does not need to modify the group's policies at all; it only needs the group to exist with broader permissions and for `AddUserToGroup` to be scoped to reach that group.
+Scope: gated on `identity.kind == "user"`. The `iam:AddUserToGroup` AWS action targets users specifically; IAM groups cannot contain roles. No role-side analogue exists.
+
+**Remediation:** Scope `iam:AddUserToGroup` to groups whose permissions do not exceed the principal's, or remove the permission entirely from non-admin principals. If developer self-service group joins are needed, constrain the target group set with a Condition on `iam:ResourceTag` or a specific group-name prefix.
+
+---
+
+### CTL.IAM.ESCALATE.ASSUMEROLE.001
+
+**Principal Must Not Escalate via sts:AssumeRole To A Broader Role**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+A principal with `sts:AssumeRole` reaching a role whose attached permissions exceed its own — and whose trust policy permits the principal to assume it — has a one-call path to those permissions. The principal does not grant itself anything; it pivots into a role that already carries the broader set. This is Rhino Security Labs' role-assumption escalation pattern, adjacent to the direct-policy cluster (CTL.IAM.ESCALATE.ATTACHUSERPOLICY.001 etc.) but distinct: the escalation vector here is the role's existing trust, not a self-modification of any policy. Remediation also differs — remove `sts:AssumeRole` from the principal or narrow the trust policy on the target role — so the control is separate from CTL.IAM.ESCALATE.UPDATETRUST.001 even though the two can chain.
+
+**Remediation:** Either remove `sts:AssumeRole` from the principal, or narrow the target role's trust policy so the principal is no longer permitted. If cross-service pivots are intentional (CI/CD deploy roles, break-glass admin roles), gate the trust with `sts:ExternalId`, `aws:MultiFactorAuthPresent`, or `aws:PrincipalOrgID` and audit use via CloudTrail. For account-root trusts, add an explicit Condition on the calling principal's ARN or role.
+
+---
+
+### CTL.IAM.ESCALATE.ATTACHGROUPPOLICY.001
+
+**Principal Must Not Escalate via iam:AttachGroupPolicy On A Belonging Group**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+A principal with `iam:AttachGroupPolicy` whose Resource field includes a group the principal belongs to can attach any managed policy to that group, elevating every member including itself. This is Rhino Security Labs privilege-escalation technique #3 ("IAM — Attach to group"). The group hop adds one indirection over `AttachUserPolicy` on self but is functionally equivalent: attach `AdministratorAccess` to a belonging group, and the principal is admin.
+Scope: gated on `identity.kind == "user"`. IAM groups are a user-only concept — roles cannot belong to groups. The technique has no role-side analogue; there is no future control waiting in the queue for a role-side version because AWS IAM does not have role groups.
+
+**Remediation:** Scope `iam:AttachGroupPolicy` to groups the principal does not belong to, or remove the permission entirely from non-admin principals. Use an SCP to deny `iam:AttachGroupPolicy` where the target group has the principal in its membership list.
+
+---
+
+### CTL.IAM.ESCALATE.ATTACHROLEPOLICY.001
+
+**Role Must Not Escalate via iam:AttachRolePolicy On Self**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+A role with `iam:AttachRolePolicy` whose Resource field includes its own role ARN can attach any managed policy — including `arn:aws:iam::aws:policy/AdministratorAccess` — to itself and gain that policy's permissions with a single API call. This is the role-side analogue of `CTL.IAM.ESCALATE.ATTACHUSERPOLICY.001`: distinct AWS action (`iam:AttachRolePolicy` vs `iam:AttachUserPolicy`), distinct principal kind (role vs user), same one-step escalation outcome. Rhino Security Labs' iam__privesc_scan and Prowler's iam_policy_allows_privilege_escalation both enumerate this technique on roles as well as users. The companion Cluster 1 user-side control intentionally stays user-gated because its action is user-scoped; this control mirrors it for the role-action.
+
+**Remediation:** Remove `iam:AttachRolePolicy` from the role, or scope its Resource to role ARNs that do not include the role itself (admin-only role-creation workflows, for example). Enforce at the organization level with an SCP that denies `iam:AttachRolePolicy` on `${aws:PrincipalArn}`. A permissions boundary on the role that prevents the attached policy from taking effect is an additional defensive layer.
+
+---
+
+### CTL.IAM.ESCALATE.ATTACHUSERPOLICY.001
+
+**Principal Must Not Escalate via iam:AttachUserPolicy On Self**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+A principal with `iam:AttachUserPolicy` whose Resource field includes its own user ARN can attach any managed policy — including `arn:aws:iam::aws:policy/AdministratorAccess` — to itself and become admin with a single API call. This is Rhino Security Labs privilege-escalation technique #1 ("IAM — Attach to user") and is covered by Prowler's iam_policy_allows_privilege_escalation and Pacu's iam__privesc_scan. No other permission is required; self-scoped AttachUserPolicy is a one-step path to full admin.
+Scope: gated on `identity.kind == "user"`. The `iam:AttachUserPolicy` AWS action targets users specifically — roles cannot be the self- target. The role-side analogue is `iam:AttachRolePolicy` on self, a separate technique that will require its own `CTL.IAM.ESCALATE.ATTACHROLEPOLICY.001` control in a future iteration.
+
+**Remediation:** Remove `iam:AttachUserPolicy` from the principal, or scope its Resource field to user ARNs that do not include the principal itself (admin-only bootstrap roles, for example). Enforce at the organization level with an SCP that denies `iam:AttachUserPolicy` on `${aws:PrincipalArn}`. Also consider a permissions boundary on the principal that prevents the attached policy from taking effect.
+
+---
+
 ### CTL.IAM.ESCALATE.CHAIN.001
 
 **Principal Must Not Have Multi-Step Path to Admin**
@@ -4248,6 +4341,96 @@ All privileged accounts across all cloud providers must have MFA enforced. This 
 IAM principals must have no multi-step permission chain that leads to administrative access. The extractor analyzes known escalation patterns (iam:PassRole + lambda:CreateFunction, iam:CreatePolicyVersion on self, sts:AssumeRole to admin role, etc.) and traces whether a low-privileged principal can chain permissions to reach admin. Each step is individually authorized but the composition creates a privilege escalation path that policy reviews miss.
 
 **Remediation:** Remove the weakest link in the escalation chain. Common fixes: scope iam:PassRole to specific role ARNs, restrict lambda:CreateFunction to approved execution roles, add permissions boundaries that deny IAM self-modification.
+
+---
+
+### CTL.IAM.ESCALATE.CREATEACCESSKEY.001
+
+**Principal Must Not Escalate via iam:CreateAccessKey On Another User**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+A principal with `iam:CreateAccessKey` whose Resource field reaches another IAM user — one whose attached permissions exceed the principal's own — can create a second access key for that user and authenticate as them immediately. The target user's password, console session, or MFA state is irrelevant; access keys are standalone long-lived credentials. This is Rhino Security Labs' credential-manipulation escalation technique and is covered by Prowler's iam_policy_allows_privilege_escalation and Pacu's iam__privesc_scan. The target user is limited to two access keys by AWS; when the victim already has two keys the attack requires an extra `DeleteAccessKey` call, which the `target_has_max_keys` diagnostic exposes.
+
+**Remediation:** Scope `iam:CreateAccessKey` to the principal's own user ARN (or remove it entirely from non-admin principals). If a break-glass key-rotation workflow is needed, gate the permission through an assumed admin role rather than attaching it directly. Organization-level SCPs denying `iam:CreateAccessKey` on `${aws:PrincipalArn}` inversions are an effective perimeter control. Monitor `CreateAccessKey` calls in CloudTrail with an alert on any call where the subject user is not the caller.
+
+---
+
+### CTL.IAM.ESCALATE.CREATELOGINPROFILE.001
+
+**Principal Must Not Escalate via iam:CreateLoginProfile On Another User**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+A principal with `iam:CreateLoginProfile` whose Resource field reaches another IAM user — one whose attached permissions exceed the principal's own AND who currently has no console login profile — can create a console password for that user and log in as them. Programmatic-only service accounts (no password set) are the specific target: the absence of a login profile is the precondition that makes `CreateLoginProfile` succeed. Once a profile exists, future takeover requires `UpdateLoginProfile` (covered by `CTL.IAM.ESCALATE.UPDATELOGINPROFILE.001`). Rhino Security Labs enumerates this as a distinct technique because the victim population — service accounts that "can't be logged into as" — is often overlooked during permission review.
+
+**Remediation:** Scope `iam:CreateLoginProfile` to the principal's own user ARN (or remove it entirely from non-admin principals). As a defensive measure, apply a service-control policy that denies `iam:CreateLoginProfile` for any user tagged `type = service` or similar. Alert on CloudTrail `CreateLoginProfile` events on long-dormant service users.
+
+---
+
+### CTL.IAM.ESCALATE.CREATEPOLICYVERSION.001
+
+**Principal Must Not Escalate via iam:CreatePolicyVersion + iam:SetDefaultPolicyVersion**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+A principal with both `iam:CreatePolicyVersion` and `iam:SetDefaultPolicyVersion` on a managed policy attached to itself — directly or via a group it belongs to — can create a new version of that policy granting broader permissions and mark the new version default. Every attached principal, including the one that authored the change, picks up the new effective policy immediately. This is Rhino Security Labs privilege-escalation technique #5 ("IAM — CreatePolicyVersion"). The version mechanism makes the escalation subtle: policy ARN and attachments are unchanged; only the default version pointer moves.
+
+**Remediation:** Remove one of the two permissions from the principal — `CreatePolicyVersion` alone cannot activate a new version, and `SetDefaultPolicyVersion` alone cannot author one. Or scope the Resource of both grants to policies that are not attached to the principal or to groups it belongs to. AWS-managed policies (`arn:aws:iam::aws:policy/*`) cannot have versions created by customer principals; this control specifically targets customer-managed policies.
+
+---
+
+### CTL.IAM.ESCALATE.PASSROLE.CREATEDEVENDPOINT.001
+
+**Principal Must Not Escalate via Glue CreateDevEndpoint Role**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+Principals with iam:PassRole on a role R plus glue:CreateDevEndpoint can escalate to R's permissions by creating a Glue development endpoint that runs under R and then connecting to its SSH interface. The principal executes arbitrary code on the endpoint under R's authority. When R's effective permissions exceed the principal's own, this is a privilege escalation path. Rhino Security Labs' iam__privesc_scan and Prowler's iam_policy_allows_privilege_escalation both enumerate this technique. SSH public-key registration on the endpoint is captured in the diagnostic fields so an operator can see how the principal would reach the running environment.
+
+**Remediation:** Scope iam:PassRole to a role whose effective permissions do not exceed the principal's, or remove glue:CreateDevEndpoint. If broader endpoint creation is required, enforce a service allowlist on iam:PassRole (`iam:PassedToService == glue.amazonaws.com` plus narrow Resource ARN set) and disable SSH access to dev endpoints via the `PublicKeys` restriction.
+
+---
+
+### CTL.IAM.ESCALATE.PASSROLE.CREATEFUNCTION.001
+
+**Principal Must Not Escalate via Lambda CreateFunction Execution Role**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+Principals with iam:PassRole on a role R, lambda:CreateFunction, and a path to invoke the function (lambda:InvokeFunction directly, creation of a function URL, or wiring to another trigger) can escalate to R's permissions. The created Lambda executes under R, so any code the principal uploads runs with R's authority. When R's effective permissions exceed the principal's own, this is a privilege escalation path. Rhino Security Labs' iam__privesc_scan and Prowler's iam_policy_allows_privilege_escalation both enumerate this technique. The invocation step is folded into the .present boolean upstream — a CreateFunction grant without any invocation path is not an escalation; the diagnostic fields expose which invocation vector was observed.
+
+**Remediation:** Scope iam:PassRole to a role whose effective permissions do not exceed the principal's, or remove lambda:CreateFunction. If broader function-creation is required for deployment workflows, restrict iam:PassRole with a Condition (`iam:PassedToService == lambda.amazonaws.com` plus a narrowly- scoped Resource ARN set). Alternatively, deny lambda:InvokeFunction and lambda:CreateFunctionUrlConfig on non-admin principals so the created function cannot be triggered.
+
+---
+
+### CTL.IAM.ESCALATE.PASSROLE.CREATEPIPELINE.001
+
+**Principal Must Not Escalate via DataPipeline CreatePipeline Role**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+Principals with iam:PassRole on a role R plus datapipeline:CreatePipeline and datapipeline:ActivatePipeline can escalate to R's permissions by defining pipeline actions that run under R. The activation step is what triggers execution; creation alone is not sufficient. Both permissions folded into the .present boolean upstream; the diagnostic fields expose which sub-conditions held. Rhino Security Labs' iam__privesc_scan and Prowler's iam_policy_allows_privilege_escalation both enumerate this technique.
+
+**Remediation:** Scope iam:PassRole to a role whose effective permissions do not exceed the principal's, or remove datapipeline:CreatePipeline or datapipeline:ActivatePipeline. If the DataPipeline service is not used, deny the entire datapipeline:* namespace at the SCP level; AWS Data Pipeline is in maintenance mode and new workloads are expected to use Step Functions or Glue instead, so a blanket deny is commonly safe.
 
 ---
 
@@ -4281,6 +4464,83 @@ Principals with iam:PassRole on a role R plus ec2:RunInstances can escalate to R
 
 ---
 
+### CTL.IAM.ESCALATE.PASSROLE.SENDCOMMAND.001
+
+**Principal Must Not Escalate via SSM SendCommand On Privileged Instance**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+Principals with ssm:SendCommand or ssm:StartSession on an EC2 instance whose attached instance profile role R has broader effective permissions than the principal can escalate to R. The command or interactive session executes on the instance under R (the instance-profile role is the caller from the OS's perspective); IMDS reads from that session return R's temporary credentials. Rhino Security Labs' iam__privesc_scan lists this technique; the iam:PassRole check captured upstream corresponds to whether the principal can also attach alternate instance profiles, which widens the target-role set. Distinct from PASSROLE.RUNINSTANCES, which covers creating a fresh instance with an attacker-chosen profile; this covers exploiting an already-running one.
+
+**Remediation:** Scope ssm:SendCommand and ssm:StartSession to instances whose instance-profile role does not exceed the principal's permissions. Use resource tags plus a Condition on ssm:resourceTag/<key> to bind the principal to a specific instance population. If the principal also has iam:PassRole reaching this or a broader role, also remove that grant — it enables replacing the instance profile entirely.
+
+---
+
+### CTL.IAM.ESCALATE.PUTGROUPPOLICY.001
+
+**Principal Must Not Escalate via iam:PutGroupPolicy On A Belonging Group**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+A principal with `iam:PutGroupPolicy` whose Resource field includes a group the principal belongs to can write an arbitrary inline policy onto that group. Every member of the group — including the principal — inherits the inline policy immediately. This is Rhino Security Labs privilege-escalation technique #4 ("IAM — Put inline policy on group"). Mirrors PUTUSERPOLICY but via the group hop.
+Scope: gated on `identity.kind == "user"`. IAM groups are a user-only concept — roles cannot belong to groups. No role-side analogue exists because AWS IAM does not have role groups.
+
+**Remediation:** Scope `iam:PutGroupPolicy` to groups the principal does not belong to, or remove the permission from non-admin principals. SCP-level deny on `iam:PutGroupPolicy` where the target group contains the calling principal closes the path.
+
+---
+
+### CTL.IAM.ESCALATE.PUTROLEPOLICY.001
+
+**Role Must Not Escalate via iam:PutRolePolicy On Self**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+A role with `iam:PutRolePolicy` whose Resource field includes its own role ARN can write an arbitrary inline policy onto itself — including one that grants `"Action": "*"` on `"Resource": "*"`. This is the role-side analogue of `CTL.IAM.ESCALATE.PUTUSERPOLICY.001`: distinct AWS action (`iam:PutRolePolicy` vs `iam:PutUserPolicy`), distinct principal kind (role vs user), same one-step escalation outcome. A single `PutRolePolicy` call produces full admin authority without touching any managed policy or other principal. Rhino Security Labs' iam__privesc_scan and Prowler's iam_policy_allows_privilege_escalation both enumerate this technique on roles.
+
+**Remediation:** Remove `iam:PutRolePolicy` from the role, or scope its Resource to role ARNs that do not include the role itself. Organization SCPs denying `iam:PutRolePolicy` on `${aws:PrincipalArn}` close the path at the boundary. A permissions boundary on the role that forbids self-write of inline policies is an additional defensive layer.
+
+---
+
+### CTL.IAM.ESCALATE.PUTUSERPOLICY.001
+
+**Principal Must Not Escalate via iam:PutUserPolicy On Self**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+A principal with `iam:PutUserPolicy` whose Resource field includes its own user ARN can write an arbitrary inline policy onto itself — including one that grants `"Action": "*"` on `"Resource": "*"`. This is Rhino Security Labs privilege-escalation technique #2 ("IAM — Put inline policy on user") and is covered by Prowler's iam_policy_allows_privilege_escalation and Pacu's iam__privesc_scan. A single PutUserPolicy call produces full admin access without touching any managed policy or group.
+Scope: gated on `identity.kind == "user"`. The `iam:PutUserPolicy` AWS action targets users specifically — roles cannot be the self- target. The role-side analogue is `iam:PutRolePolicy` on self, a separate technique that will require its own `CTL.IAM.ESCALATE.PUTROLEPOLICY.001` control in a future iteration.
+
+**Remediation:** Remove `iam:PutUserPolicy` from the principal, or scope the Resource field so the principal cannot include itself. Organization SCPs can deny `iam:PutUserPolicy` on `${aws:PrincipalArn}` to close the path at the boundary.
+
+---
+
+### CTL.IAM.ESCALATE.RESYNCMFADEVICE.001
+
+**Principal Must Not Escalate via iam:ResyncMFADevice On Another User**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+A principal with `iam:ResyncMFADevice` whose Resource field reaches another IAM user — one whose attached permissions exceed the principal's own — can resynchronize or manipulate that user's MFA device. In combination with a password reset (`iam:UpdateLoginProfile`, covered separately) this clears the MFA barrier on console login; on its own it enables temporary MFA bypass by forcing the device into a resync window where a chosen code pair is accepted. This is one of Rhino Security Labs' credential-manipulation techniques and is covered by Prowler's iam_policy_allows_privilege_escalation and Pacu's iam__privesc_scan. The finding fires whenever the permission reaches a privileged user; whether the attack has already been chained with a password reset is a RiskEngine-level compounding concern, not something the single-resource control gates on.
+
+**Remediation:** Scope `iam:ResyncMFADevice` to the principal's own user ARN (or remove it from non-admin principals). MFA-device management is an admin-role operation; direct user grants for it are rarely intentional. Alert on CloudTrail `ResyncMFADevice` events where the subject user differs from the caller.
+
+---
+
 ### CTL.IAM.ESCALATE.STARTBUILD.001
 
 **Principal Must Not Escalate via CodeBuild Source Injection**
@@ -4293,6 +4553,36 @@ Principals with iam:PassRole on a role R plus ec2:RunInstances can escalate to R
 Principals with codebuild:StartBuild on project P, plus write access to P's source repository (CodeCommit push, S3 PutObject on source bucket, or external Git write) or the ability to override P's buildspec on invocation, can escalate to P's service role by injecting a malicious buildspec. The buildspec runs inside CodeBuild under P's service role and can perform any action the role is authorised for. This vector does not require iam:PassRole — the service role is already attached to the project; the attacker only needs to change what it executes.
 
 **Remediation:** Remove the principal's write access to the source that feeds the project, or remove codebuild:StartBuild from the principal, or reduce the project's service role to permissions that do not exceed the principal's. If source-write is intentional (as in developer workflows), scope the project's service role narrowly and rely on source-approval controls (e.g., CodeCommit approval rules) before a build can run.
+
+---
+
+### CTL.IAM.ESCALATE.UPDATELOGINPROFILE.001
+
+**Principal Must Not Escalate via iam:UpdateLoginProfile On Another User**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+A principal with `iam:UpdateLoginProfile` whose Resource field reaches another IAM user — one whose attached permissions exceed the principal's own — can reset that user's console password to a chosen value and log in as them. MFA enrollment on the target user is NOT a barrier: an attacker with `iam:ResyncMFADevice` (covered by `CTL.IAM.ESCALATE.RESYNCMFADEVICE.001`) or `iam:DeactivateMFADevice` on the same user can disarm MFA first. This is Rhino Security Labs' credential-manipulation escalation technique and is covered by Prowler's iam_policy_allows_privilege_escalation and Pacu's iam__privesc_scan. The control requires the target user to already have a console login profile; the `CREATELOGINPROFILE.001` control covers the case where the target has no profile and one must be created.
+
+**Remediation:** Scope `iam:UpdateLoginProfile` to the principal's own user ARN (or remove it entirely from non-admin principals). Enforce MFA on all console logins at the account level so password reset alone does not yield a session. Alert on CloudTrail `UpdateLoginProfile` events where the subject user differs from the caller.
+
+---
+
+### CTL.IAM.ESCALATE.UPDATETRUST.001
+
+**Principal Must Not Escalate via iam:UpdateAssumeRolePolicy On A Broader Role**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+A principal with `iam:UpdateAssumeRolePolicy` reaching a role whose attached permissions exceed its own can rewrite the role's trust policy to admit itself and then call `sts:AssumeRole` to pick up the broader permissions. The update is a single call and leaves the role's permissions unchanged — only the trust-policy pointer moves — which makes the escalation subtle in post-incident review. This is Rhino Security Labs' two-step role-assumption pattern. Listed as a distinct control from CTL.IAM.ESCALATE.ASSUMEROLE.001 because the remediations are different: this control is fixed by removing `iam:UpdateAssumeRolePolicy` from the principal or narrowing its Resource; ASSUMEROLE is fixed by removing `sts:AssumeRole` or narrowing target trust.
+
+**Remediation:** Remove `iam:UpdateAssumeRolePolicy` from the principal, or scope its Resource field to roles whose permissions do not exceed the principal's (role-creation bootstrap roles, for example). At the organization level, deny `iam:UpdateAssumeRolePolicy` on privileged roles via SCP, or enforce a permissions boundary that forbids it. CloudTrail alerting on `UpdateAssumeRolePolicy` calls is an effective detective control while the preventive change lands.
 
 ---
 
@@ -7171,16 +7461,16 @@ S3 bucket policies must not grant access to external AWS accounts. `allowed_acco
 
 ### CTL.S3.ACCESS.002
 
-**No Wildcard Action Policies**
+**No Wildcard Principal Policies**
 
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
 - **Compliance:** nist_800_53_r5: AC-6;
 
-S3 bucket policies must not use wildcard actions (s3:* or *). Wildcard policies grant more permissions than intended and violate the principle of least privilege.
+S3 bucket policies must not grant access to a wildcard principal (Principal "*" or AWS: "*"). A wildcard principal makes every statement in the policy effectively anonymous or cross-account unless a restricting Condition (aws:PrincipalOrgID, aws:SourceVpc, aws:SourceIp with a fixed CIDR, aws:SourceArn, etc.) narrows it. Without such a Condition, the policy is a public-access grant regardless of which specific S3 actions are allowed.
 
-**Remediation:** Replace wildcard actions with specific S3 actions required by the use case (e.g., s3:GetObject, s3:PutObject). Audit which principals use this policy and scope actions to their actual needs.
+**Remediation:** Replace the wildcard principal with the specific AWS account IDs or ARNs that need access, or add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, aws:SourceIp (with a fixed CIDR), or aws:SourceArn. If the bucket genuinely needs to be public (CDN origin, static asset bucket), narrow the Actions to the minimum set and keep Public Access Block enabled where compatible.
 
 ---
 
@@ -7195,6 +7485,31 @@ S3 bucket policies must not use wildcard actions (s3:* or *). Wildcard policies 
 S3 buckets must not grant write or delete permissions to external AWS accounts. Cross-account read access may be acceptable for analytics or auditing, but write access from external accounts creates data integrity and supply chain risks.
 
 **Remediation:** Remove bucket policy statements granting s3:PutObject, s3:DeleteObject, or s3:PutBucketPolicy to external accounts. If cross-account write is required, restrict to specific account IDs with condition keys.
+
+---
+
+### CTL.S3.ACCESS.004
+
+**Bucket Policy Must Not Be Effectively Public**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(1); nist_800_53_r5: AC-3; soc2: CC6.1;
+
+Bucket policy evaluates as effectively public under AWS PolicyStatus.IsPublic semantics — a wildcard principal (`Principal: "*"` or `Principal: {"AWS": "*"}`) without a scoping Condition on `aws:SourceVpc`, `aws:SourceVpce`, `aws:PrincipalOrgID`, `aws:PrincipalArn`, or a narrow `aws:SourceIp`. The control reads the policy in isolation: Public Access Block state does not affect whether it fires — PAB only affects whether the exposure is active right now or latent (one account-level or bucket-level PAB toggle away from active). Paired with the PAB controls, this is the posture signal that says "if every PAB layer were removed tomorrow, this bucket would be public". Distinct from CTL.S3.ACCESS.002, which detects the raw presence of a wildcard principal without reasoning about scoping Conditions: ACCESS.002 answers "is there a wildcard whose Conditions we still need to verify?", ACCESS.004 answers "has the verification already concluded that the policy is public?".
+
+**Remediation:** 1. Identify the Allow statement with the wildcard principal. If it is
+   not intentional, remove it.
+2. If the statement is intentional (CDN origin, cross-organization
+   data distribution), add a Condition that fixes the caller set —
+   `aws:PrincipalOrgID` for same-org access, `aws:SourceVpc` or
+   `aws:SourceVpce` for VPC-bound access, `aws:SourceIp` with a
+   fixed CIDR for known network ranges, or `aws:SourceArn` for a
+   specific invoking service or distribution.
+3. Until the policy is fixed, keep S3 Block Public Access fully
+   enforced at the account and bucket level so the exposure stays
+   latent rather than active.
 
 ---
 
@@ -7330,17 +7645,58 @@ S3 bucket ACL has been set to public-read more than once within 7 days. ACL modi
 
 ---
 
-### CTL.S3.ACL.WRITE.001
+### CTL.S3.AP.BYPASS.001
 
-**No Public Write via ACL**
+**Bucket Must Not Be Publicly Accessible Via An Access Point While Its Own Controls Pass**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(1); soc2: CC6.1;
+
+An S3 bucket whose own controls all evaluate clean — Public Access Block fully enforcing, bucket policy not effectively public — can still be publicly reachable through a single-region S3 Access Point that names it as the delegate bucket. Access Points carry their own PAB and their own resource policy, evaluated independently of the parent bucket; a public Access Point is a parallel reach path. This control fires on the bucket, not the AP, because the finding is "this bucket is exposed via an AP it may not know about" — the bucket is the asset at risk. Mirrors the shape of CTL.S3.CDN.BYPASS.001 (the CloudFront-fronted-bucket bypass). Firing requires the bucket-side controls to be clean: if the bucket is already publicly accessible on its own, the bucket-level controls already caught it and this finding would be noise. The derived field `storage.exposure.has_public_access_point` comes from the `EnrichBucketAPExposure` derivation — a post-collection join of `aws_s3_access_point` assets onto `aws_s3_bucket` assets within the same snapshot; the trace decomposes back to the raw AP and bucket observations that produced it.
+
+**Remediation:** 1. Identify the offending Access Point from the
+   `storage.exposure.public_access_point_names` field on this
+   finding, or from the co-occurring AP-side findings.
+2. On the Access Point, enable Block Public Access fully
+   (`put-access-point-public-access-block` with all four flags
+   true) and remove any wildcard-principal Allow from its
+   resource policy — or add a restricting Condition on
+   `aws:SourceVpc`, `aws:SourceVpce`, `aws:PrincipalOrgID`,
+   `aws:PrincipalArn`, or a fixed `aws:SourceIp`.
+3. Consider whether the Access Point is still needed. Access
+   Points left over from decommissioned services are a common
+   source of this pattern.
+
+---
+
+### CTL.S3.AP.PAB.001
+
+**S3 Access Point Must Have Block Public Access Enabled**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(1); soc2: CC6.1;
+
+Single-region S3 Access Points have their own Public Access Block settings, independent of the parent bucket's PAB. A bucket can be hardened with PAB fully enforcing while one of its Access Points has PAB disabled — the Access Point endpoint remains a public path to the same underlying data. Prowler and ScoutSuite treat Access Points as a distinct resource with their own exposure surface precisely because of this overlay semantics.
+
+**Remediation:** Enable all four PAB flags on the Access Point via `aws s3control put-access-point-public-access-block` with `BlockPublicAcls=true`, `IgnorePublicAcls=true`, `BlockPublicPolicy=true`, `RestrictPublicBuckets=true`. If the Access Point is intentionally public (rare), document the exposure and add a Stave exemption.
+
+---
+
+### CTL.S3.AP.POLICY.001
+
+**S3 Access Point Policy Must Not Be Public**
 
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** exposure
 
-S3 bucket ACLs must not grant write access to AllUsers or AuthenticatedUsers. ACL-based write access enables attackers to upload malicious objects or overwrite existing content.
+Single-region S3 Access Points carry their own resource policy that is evaluated independently of the parent bucket policy. A public Access Point policy creates a public access path to the bucket even when the bucket's own policy is scoped correctly. This mirrors the MRAP case (CTL.S3.MRAP.POLICY.001) and is the single-region analogue.
 
-**Remediation:** Replace the bucket ACL with "BucketOwnerFullControl" or remove the public write grant. Enable S3 Public Access Block with BlockPublicAcls and IgnorePublicAcls set to true.
+**Remediation:** Remove the public grant from the Access Point policy, or add a scoping Condition that binds the caller to a fixed VPC, IP range, organization, or ARN. If public reach is intentional, enforce it through a narrower mechanism such as CloudFront with Origin Access Control and keep the Access Point policy private.
 
 ---
 
@@ -7413,6 +7769,29 @@ S3 buckets tagged with data-classification=phi must have all four detection comp
 Any externally referenced S3 bucket must exist and be owned. Dangling references (missing or unowned buckets) enable bucket takeover and attacker-controlled content delivery.
 
 **Remediation:** Create the S3 bucket in your AWS account, or remove the DNS record, CDN origin, or application reference pointing to the unclaimed bucket.
+
+---
+
+### CTL.S3.CDN.BYPASS.001
+
+**CloudFront-Fronted Bucket Must Not Allow Direct Public Access**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(1); soc2: CC6.1;
+
+A bucket that is both fronted by a CloudFront distribution and publicly readable on its direct S3 endpoint gives an attacker a full bypass of the CloudFront layer. CloudFront typically carries the defensive controls — WAF rules, geographic restrictions, request logging, signed URLs, TLS policy — while the raw S3 URL (`bucket.s3.<region>.amazonaws.com`) carries none of them. Anyone who learns the bucket name can fetch objects around every CloudFront-layer control.
+
+**Remediation:** 1. Enable Block Public Access on the bucket and remove any
+   Principal "*" grants from the bucket policy so the direct
+   S3 endpoint is no longer publicly reachable.
+2. Restrict the bucket policy to the specific CloudFront
+   distribution via an Origin Access Control and a condition on
+   `aws:SourceArn = arn:aws:cloudfront::<account>:distribution/<id>`.
+3. Verify the CloudFront distribution still serves objects
+   after the lockdown (OAC-signed requests survive; direct
+   anonymous requests fail).
 
 ---
 
@@ -8014,6 +8393,35 @@ S3 buckets must have an explicit resource-based bucket policy. Without a policy,
 
 ---
 
+### CTL.S3.POLICY.SCOPING.001
+
+**Non-Narrow Bucket Policy Grants Must Carry a Scoping Condition**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** hipaa: 164.312(a)(1); nist_800_53_r5: AC-3; soc2: CC6.1;
+
+S3 bucket policies with Allow statements whose Principal is non-narrow (`Principal: "*"`, `Principal: {"AWS": "*"}`, or an Allow block with no Principal) should constrain every such statement with at least one scoping Condition: `aws:PrincipalOrgID`, `aws:SourceVpc`, `aws:SourceIp` with a fixed CIDR, or `aws:SourceArn`. Without a scoping Condition, the effective principal set is the full internet (anonymous) or every AWS account on Earth (`AWS: "*"`). Scoping Conditions do not fix the name of the principal but they collapse the reachable principal set to callers routed through a known org, VPC, IP range, or service — a posture hardening step that prevents a future policy edit from silently expanding exposure. This control does not fire on buckets with no policy, nor on buckets whose Allow statements all name specific accounts or role ARNs; both states are captured by `policy_has_scoping_condition` being absent or null.
+
+**Remediation:** For every Allow statement with `Principal: "*"`, `Principal: {"AWS": "*"}`, or no Principal block, add a Condition that binds the request to a fixed value: `aws:PrincipalOrgID` to limit to the organization, `aws:SourceVpc` to limit to a VPC endpoint, `aws:SourceIp` with a CIDR to limit to a known range, or `aws:SourceArn` to limit to a specific caller. If the statement is supposed to be globally reachable (CDN origin, public data distribution), replace the bucket policy grant with a narrower mechanism — Origin Access Control, Access Points, or signed URLs.
+
+---
+
+### CTL.S3.POLICY.WRITE.001
+
+**No Public Write via Bucket Policy**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+
+S3 bucket policies must not grant write access to an anonymous or wildcard principal. Policy-based write access — a Statement with Effect Allow, Principal "*" or AWS: "*", and an Action such as s3:PutObject or s3:DeleteObject without a restricting Condition — enables attackers to upload malicious objects, overwrite existing content, or hold data ransom. This is distinct from CTL.S3.PUBLIC.003, which fires on the composite public_write signal regardless of mechanism; this control narrows to the policy path so the finding points the operator at the bucket policy specifically. For ACL-based public write, see CTL.S3.ACL.FULLCONTROL.001 (FULL_CONTROL grants) and CTL.S3.ACL.ESCALATION.001 (WRITE_ACP grants).
+
+**Remediation:** Remove or constrain the policy statement granting write actions to Principal "*" or AWS: "*". If broad write access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public write.
+
+---
+
 ### CTL.S3.PRESIGNED.001
 
 **Presigned URL Access Must Be Restricted**
@@ -8074,15 +8482,15 @@ S3 buckets must not allow public write or delete access. Public write enables da
 
 ### CTL.S3.PUBLIC.004
 
-**No Public Read via ACL**
+**No Public Read via Bucket Policy**
 
 - **Severity:** medium
 - **Type:** unsafe_duration
 - **Domain:** storage
 
-S3 bucket ACLs must not grant read access to AllUsers or AuthenticatedUsers for PHI data.
+S3 bucket policies must not grant read access to an anonymous or wildcard principal. A Statement with Effect Allow, Principal "*" or AWS: "*", and an Action such as s3:GetObject without a restricting Condition enables any unauthenticated caller to read objects. This is distinct from CTL.S3.PUBLIC.001, which fires on the composite public_read signal regardless of mechanism; this control narrows to the bucket-policy path so the finding points the operator at the policy specifically. For ACL-based public read, see CTL.S3.ACL.FULLCONTROL.001 (FULL_CONTROL grants) and CTL.S3.ACL.ESCALATION.001 (WRITE_ACP grants).
 
-**Remediation:** Replace the bucket ACL with "BucketOwnerFullControl" or remove the public read grant. Enable S3 Public Access Block with IgnorePublicAcls set to true to override ACL-based public access.
+**Remediation:** Remove or constrain the policy statement granting read actions to Principal "*" or AWS: "*". If broad read access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public read.
 
 ---
 
@@ -8116,29 +8524,29 @@ S3 bucket has a policy or ACL that would allow public listing if the public acce
 
 ### CTL.S3.PUBLIC.007
 
-**No Public Read via Policy**
+**No Public Read via Identity Policy**
 
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** exposure
 
-S3 bucket policies must not grant public read access.
+IAM identity-based policies attached to users or roles must not grant broad read access to S3 buckets that is effectively public — for example, a policy attached to a widely-assumed role or to a role trusted by a public federated identity provider. This is distinct from CTL.S3.PUBLIC.004 (resource-based bucket policy granting public read); the identity-policy path is a separate AWS evaluation branch and deserves its own finding so the operator fixes the right artifact.
 
-**Remediation:** Remove or constrain the public policy statement. Use restrictive principals or conditions and keep Public Access Block enabled.
+**Remediation:** Identify the identity-based policy statement granting read access and either remove it, scope it to specific bucket/object ARNs, or add conditions restricting the requesting principal. If a widely-trusted role is the root cause, tighten that role's trust policy first.
 
 ---
 
 ### CTL.S3.PUBLIC.008
 
-**No Public List via Policy**
+**No Public List via Identity Policy**
 
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** exposure
 
-S3 bucket policies must not grant anonymous object listing.
+IAM identity-based policies attached to users or roles must not grant broad list access (s3:ListBucket) that is effectively public. Anonymous-or-near-anonymous listing enables enumeration of the bucket contents, which typically precedes targeted object exfiltration. This is distinct from the ACL-based list exposure covered by CTL.S3.PUBLIC.LIST.001 / .002 and from resource-based list grants; the identity-policy path is its own finding.
 
-**Remediation:** Remove or constrain policy statements allowing s3:ListBucket to anonymous principals.
+**Remediation:** Identify the identity-based policy statement granting s3:ListBucket and remove it, scope it to specific bucket ARNs, or add conditions restricting the requesting principal. If a widely-trusted role is the root cause, tighten that role's trust policy first.
 
 ---
 

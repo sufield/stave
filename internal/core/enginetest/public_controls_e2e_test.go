@@ -17,6 +17,8 @@ package enginetest
 //   - WEBSITE.PUBLIC.001: website.enabled=true AND public_read=true
 //   - CDN.OAC.001: kind=bucket AND cdn_access.cloudfront_oai.enabled=true
 //   - CDN.EXPOSURE.001: kind=bucket AND public_access_fully_blocked=true AND cdn_access.bucket_policy_grants_cloudfront=true
+//   - CDN.BYPASS.001: kind=bucket AND access.public_read=true AND cdn_access.is_cloudfront_origin=true
+//   - AP.BYPASS.001: kind=bucket AND controls.public_access_fully_blocked=true AND access.policy_is_effectively_public=false AND exposure.has_public_access_point=true
 //   - ACL.WRITE.001: write_via_resource=true (any:)
 
 import (
@@ -78,7 +80,9 @@ func loadPublicControls(t *testing.T) []policy.ControlDefinition {
 		"CTL.S3.WEBSITE.PUBLIC.001": {},
 		"CTL.S3.CDN.OAC.001":        {},
 		"CTL.S3.CDN.EXPOSURE.001":   {},
-		"CTL.S3.ACL.WRITE.001":      {},
+		"CTL.S3.CDN.BYPASS.001":     {},
+		"CTL.S3.AP.BYPASS.001":      {},
+		"CTL.S3.POLICY.WRITE.001":   {},
 		// PUBLIC.PREFIX.001 excluded: type=prefix_exposure uses separate evaluation path
 	}
 	var controls []policy.ControlDefinition
@@ -546,27 +550,152 @@ func TestCDNExposure001_TrueNegative_PABDisabledWithCFGrant(t *testing.T) {
 	assertNoPublicFinding(t, &result, "CTL.S3.CDN.EXPOSURE.001", "pab-off-bucket")
 }
 
-// ===== ACL.WRITE.001: No Public Write via ACL =====
+// ===== CDN.BYPASS.001: CloudFront-Fronted Bucket Must Not Allow Direct Public Access =====
+// kind=bucket AND access.public_read=true AND cdn_access.is_cloudfront_origin=true
+
+func TestCDNBypass001_TruePositive_PublicReadWithCloudFrontOrigin(t *testing.T) {
+	ev := publicEvaluator(t)
+	bucket := publicBucket("cdn-bypass-bucket", map[string]any{
+		"kind":   "bucket",
+		"access": map[string]any{"public_read": true},
+		"cdn_access": map[string]any{
+			"is_cloudfront_origin": true,
+		},
+	})
+
+	result := ev.Evaluate(publicSnapshot(bucket))
+
+	assertHasPublicFinding(t, &result, "CTL.S3.CDN.BYPASS.001", "cdn-bypass-bucket")
+}
+
+func TestCDNBypass001_TrueNegative_PublicReadNoCloudFrontOrigin(t *testing.T) {
+	ev := publicEvaluator(t)
+	// Bucket is publicly readable but not fronted by CloudFront — standard public
+	// exposure, no bypass layer to worry about. PUBLIC.001 handles this.
+	bucket := publicBucket("plain-public-bucket", map[string]any{
+		"kind":   "bucket",
+		"access": map[string]any{"public_read": true},
+		"cdn_access": map[string]any{
+			"is_cloudfront_origin": false,
+		},
+	})
+
+	result := ev.Evaluate(publicSnapshot(bucket))
+
+	assertNoPublicFinding(t, &result, "CTL.S3.CDN.BYPASS.001", "plain-public-bucket")
+}
+
+func TestCDNBypass001_TrueNegative_CloudFrontOriginNoPublicRead(t *testing.T) {
+	ev := publicEvaluator(t)
+	// Bucket is correctly fronted by CloudFront and not directly public — intended
+	// OAC/OAI setup, no bypass possible.
+	bucket := publicBucket("cdn-fronted-private-bucket", map[string]any{
+		"kind":   "bucket",
+		"access": map[string]any{"public_read": false},
+		"cdn_access": map[string]any{
+			"is_cloudfront_origin": true,
+		},
+	})
+
+	result := ev.Evaluate(publicSnapshot(bucket))
+
+	assertNoPublicFinding(t, &result, "CTL.S3.CDN.BYPASS.001", "cdn-fronted-private-bucket")
+}
+
+// ===== AP.BYPASS.001: Bucket exposed via a public Access Point while its own controls pass =====
+// kind=bucket AND controls.public_access_fully_blocked=true AND access.policy_is_effectively_public=false
+// AND exposure.has_public_access_point=true
+//
+// The exposure.has_public_access_point field is derived — populated by
+// derive.EnrichBucketAPExposure from aws_s3_access_point observations in
+// the same snapshot. The engine-level test short-circuits that and sets
+// the derived field directly; the derivation layer's own behaviour is
+// covered in internal/core/evaluation/derive/ap_bucket_exposure_test.go.
+
+func TestAPBypass001_TruePositive_CleanBucketPublicAP(t *testing.T) {
+	ev := publicEvaluator(t)
+	bucket := publicBucket("clean-bucket-leaky-ap", map[string]any{
+		"kind": "bucket",
+		"controls": map[string]any{
+			"public_access_fully_blocked": true,
+		},
+		"access": map[string]any{
+			"policy_is_effectively_public": false,
+		},
+		"exposure": map[string]any{
+			"has_public_access_point":   true,
+			"public_access_point_names": []any{"leaky-ap"},
+		},
+	})
+
+	result := ev.Evaluate(publicSnapshot(bucket))
+
+	assertHasPublicFinding(t, &result, "CTL.S3.AP.BYPASS.001", "clean-bucket-leaky-ap")
+}
+
+func TestAPBypass001_TrueNegative_BucketAlreadyPublic(t *testing.T) {
+	ev := publicEvaluator(t)
+	// Bucket is already publicly accessible via its own policy — AP.BYPASS.001
+	// must stay silent, because firing here would duplicate the bucket-level
+	// finding and dilute the signal. The bucket-side controls are responsible
+	// for this asset's exposure finding.
+	bucket := publicBucket("already-public-bucket", map[string]any{
+		"kind": "bucket",
+		"controls": map[string]any{
+			"public_access_fully_blocked": false,
+		},
+		"access": map[string]any{
+			"policy_is_effectively_public": true,
+		},
+		"exposure": map[string]any{
+			"has_public_access_point": true,
+		},
+	})
+
+	result := ev.Evaluate(publicSnapshot(bucket))
+
+	assertNoPublicFinding(t, &result, "CTL.S3.AP.BYPASS.001", "already-public-bucket")
+}
+
+func TestAPBypass001_TrueNegative_CleanBucketCleanAPs(t *testing.T) {
+	ev := publicEvaluator(t)
+	bucket := publicBucket("fully-clean-bucket", map[string]any{
+		"kind": "bucket",
+		"controls": map[string]any{
+			"public_access_fully_blocked": true,
+		},
+		"access": map[string]any{
+			"policy_is_effectively_public": false,
+		},
+		// exposure.has_public_access_point absent — no public APs attached.
+	})
+
+	result := ev.Evaluate(publicSnapshot(bucket))
+
+	assertNoPublicFinding(t, &result, "CTL.S3.AP.BYPASS.001", "fully-clean-bucket")
+}
+
+// ===== POLICY.WRITE.001: No Public Write via Bucket Policy =====
 // any: write_via_resource=true
 
-func TestACLWrite001_TruePositive_WriteViaResource(t *testing.T) {
+func TestPolicyWrite001_TruePositive_WriteViaResource(t *testing.T) {
 	ev := publicEvaluator(t)
-	bucket := publicBucket("acl-write-bucket", map[string]any{
+	bucket := publicBucket("policy-write-bucket", map[string]any{
 		"access": map[string]any{"write_via_resource": true},
 	})
 
 	result := ev.Evaluate(publicSnapshot(bucket))
 
-	assertHasPublicFinding(t, &result, "CTL.S3.ACL.WRITE.001", "acl-write-bucket")
+	assertHasPublicFinding(t, &result, "CTL.S3.POLICY.WRITE.001", "policy-write-bucket")
 }
 
-func TestACLWrite001_TrueNegative_NoWriteViaResource(t *testing.T) {
+func TestPolicyWrite001_TrueNegative_NoWriteViaResource(t *testing.T) {
 	ev := publicEvaluator(t)
-	bucket := publicBucket("no-acl-write-bucket", map[string]any{
+	bucket := publicBucket("no-policy-write-bucket", map[string]any{
 		"access": map[string]any{"write_via_resource": false},
 	})
 
 	result := ev.Evaluate(publicSnapshot(bucket))
 
-	assertNoPublicFinding(t, &result, "CTL.S3.ACL.WRITE.001", "no-acl-write-bucket")
+	assertNoPublicFinding(t, &result, "CTL.S3.POLICY.WRITE.001", "no-policy-write-bucket")
 }

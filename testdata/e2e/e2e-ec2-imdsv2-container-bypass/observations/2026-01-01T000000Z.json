@@ -1,0 +1,107 @@
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "captured_at": "2026-01-01T00:00:00Z",
+  "assets": [
+    {
+      "id": "i-bare-hardened",
+      "type": "aws_ec2_instance",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "instance",
+          "network": {
+            "imdsv2_required": true,
+            "imds_hop_limit": 1
+          },
+          "containers": {
+            "present": false,
+            "has_bridge_network": false,
+            "has_host_network": false
+          }
+        }
+      }
+    },
+    {
+      "id": "i-bridge-hop1",
+      "type": "aws_ec2_instance",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "instance",
+          "network": {
+            "imdsv2_required": true,
+            "imds_hop_limit": 1
+          },
+          "containers": {
+            "present": true,
+            "has_bridge_network": true,
+            "has_host_network": false
+          }
+        }
+      }
+    },
+    {
+      "id": "i-bare-hop2",
+      "type": "aws_ec2_instance",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "instance",
+          "network": {
+            "imdsv2_required": true,
+            "imds_hop_limit": 2
+          },
+          "containers": {
+            "present": false,
+            "has_bridge_network": false,
+            "has_host_network": false
+          }
+        }
+      }
+    },
+    {
+      "id": "i-bridge-hop2",
+      "type": "aws_ec2_instance",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "instance",
+          "network": {
+            "imdsv2_required": true,
+            "imds_hop_limit": 2
+          },
+          "containers": {
+            "present": true,
+            "has_bridge_network": true,
+            "has_host_network": false
+          }
+        }
+      }
+    },
+    {
+      "id": "i-host-hop2",
+      "type": "aws_ec2_instance",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "instance",
+          "network": {
+            "imdsv2_required": true,
+            "imds_hop_limit": 2
+          },
+          "containers": {
+            "present": true,
+            "has_bridge_network": false,
+            "has_host_network": true
+          }
+        }
+      }
+    }
+  ],
+  "source": "deployed"
+}

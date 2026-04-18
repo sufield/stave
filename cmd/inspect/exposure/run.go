@@ -70,7 +70,7 @@ type AccessInput struct {
 	BlockResourcePublic   bool     `json:"block_resource_public"`
 	BlockIdentityPublic   bool     `json:"block_identity_public"`
 	EnforceStrict         bool     `json:"enforce_strict"`
-	HasWildcardPolicy     bool     `json:"has_wildcard_policy"`
+	HasWildcardPrincipal  bool     `json:"has_wildcard_principal"`
 	HasExternalAccess     bool     `json:"has_external_access"`
 	HasExternalWrite      bool     `json:"has_external_write"`
 }
@@ -134,10 +134,10 @@ func run(cmd *cobra.Command, file string) error {
 		output.Visibility = &vis
 
 		bucketAccess := domainexposure.ResolveBucketAccess(domainexposure.BucketAccessInput{
-			Identity:          identity,
-			Resource:          resource,
-			Gov:               gov,
-			HasWildcardPolicy: a.HasWildcardPolicy,
+			Identity:             identity,
+			Resource:             resource,
+			Gov:                  gov,
+			HasWildcardPrincipal: a.HasWildcardPrincipal,
 			CrossAccount: domainexposure.CrossAccountAccess{
 				HasExternalAccess: a.HasExternalAccess,
 				HasExternalWrite:  a.HasExternalWrite,

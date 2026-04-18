@@ -1,0 +1,74 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.CREATEPOLICYVERSION.001
+name: Principal Must Not Escalate via iam:CreatePolicyVersion + iam:SetDefaultPolicyVersion
+description: >
+  A principal with both `iam:CreatePolicyVersion` and
+  `iam:SetDefaultPolicyVersion` on a managed policy attached to itself
+  — directly or via a group it belongs to — can create a new version
+  of that policy granting broader permissions and mark the new version
+  default. Every attached principal, including the one that authored
+  the change, picks up the new effective policy immediately. This is
+  Rhino Security Labs privilege-escalation technique #5 ("IAM —
+  CreatePolicyVersion"). The version mechanism makes the escalation
+  subtle: policy ARN and attachments are unchanged; only the default
+  version pointer moves.
+domain: identity
+severity: critical
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-6(5)"
+  fedramp_moderate: "AC-6(5)"
+  iso_27001_2022: "A.8.3"
+  ccm_v4: ["IAM-02", "IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params:
+  attack_stage: privilege_escalation
+  base_impact: 10
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.5
+observation_fields:
+  - identity.kind
+  - identity.escalation.create_policy_version.present
+  - identity.escalation.create_policy_version.target_policy_arn
+  - identity.escalation.create_policy_version.attachment_path
+  - identity.escalation.create_policy_version.attachment_group
+  - identity.escalation.create_policy_version.has_create_version
+  - identity.escalation.create_policy_version.has_set_default
+remediation:
+  description: >
+    Principal has both `iam:CreatePolicyVersion` and
+    `iam:SetDefaultPolicyVersion` on a managed policy attached to
+    itself (directly or via a belonging group). It can author a new
+    policy version granting `"Action": "*"` on `"Resource": "*"` and
+    activate it as default without detaching or reattaching anything.
+  action: >
+    Remove one of the two permissions from the principal —
+    `CreatePolicyVersion` alone cannot activate a new version, and
+    `SetDefaultPolicyVersion` alone cannot author one. Or scope the
+    Resource of both grants to policies that are not attached to the
+    principal or to groups it belongs to. AWS-managed policies
+    (`arn:aws:iam::aws:policy/*`) cannot have versions created by
+    customer principals; this control specifically targets
+    customer-managed policies.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "escalation": {
+          "create_policy_version": {
+            "present": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.escalation.create_policy_version.present
+      op: eq
+      value: true

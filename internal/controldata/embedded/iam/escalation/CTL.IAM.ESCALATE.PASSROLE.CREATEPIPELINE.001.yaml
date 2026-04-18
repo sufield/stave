@@ -1,0 +1,71 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.PASSROLE.CREATEPIPELINE.001
+name: Principal Must Not Escalate via DataPipeline CreatePipeline Role
+description: >
+  Principals with iam:PassRole on a role R plus
+  datapipeline:CreatePipeline and datapipeline:ActivatePipeline can
+  escalate to R's permissions by defining pipeline actions that run
+  under R. The activation step is what triggers execution; creation
+  alone is not sufficient. Both permissions folded into the .present
+  boolean upstream; the diagnostic fields expose which sub-conditions
+  held. Rhino Security Labs' iam__privesc_scan and Prowler's
+  iam_policy_allows_privilege_escalation both enumerate this
+  technique.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-6(5)"
+  fedramp_moderate: "AC-6(5)"
+  iso_27001_2022: "A.8.3"
+  ccm_v4: ["IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+  - datapipeline
+type: unsafe_state
+params:
+  attack_stage: privilege_escalation
+  base_impact: 9
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+observation_fields:
+  - identity.kind
+  - identity.escalation.passrole_createpipeline.present
+  - identity.escalation.passrole_createpipeline.target_role
+  - identity.escalation.passrole_createpipeline.permission_delta
+  - identity.escalation.passrole_createpipeline.has_activate_permission
+remediation:
+  description: >
+    Principal has a DataPipeline-mediated escalation path. Its
+    iam:PassRole reaches a role whose effective permissions exceed
+    the principal's own, and it holds both datapipeline:CreatePipeline
+    and datapipeline:ActivatePipeline. Pipeline actions submitted by
+    the principal run under the target role.
+  action: >
+    Scope iam:PassRole to a role whose effective permissions do not
+    exceed the principal's, or remove datapipeline:CreatePipeline or
+    datapipeline:ActivatePipeline. If the DataPipeline service is not
+    used, deny the entire datapipeline:* namespace at the SCP level;
+    AWS Data Pipeline is in maintenance mode and new workloads are
+    expected to use Step Functions or Glue instead, so a blanket deny
+    is commonly safe.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "escalation": {
+          "passrole_createpipeline": {
+            "present": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.escalation.passrole_createpipeline.present
+      op: eq
+      value: true

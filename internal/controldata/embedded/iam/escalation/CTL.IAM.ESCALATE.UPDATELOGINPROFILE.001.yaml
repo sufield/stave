@@ -1,0 +1,75 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.UPDATELOGINPROFILE.001
+name: Principal Must Not Escalate via iam:UpdateLoginProfile On Another User
+description: >
+  A principal with `iam:UpdateLoginProfile` whose Resource field
+  reaches another IAM user — one whose attached permissions exceed
+  the principal's own — can reset that user's console password to a
+  chosen value and log in as them. MFA enrollment on the target user
+  is NOT a barrier: an attacker with `iam:ResyncMFADevice` (covered
+  by `CTL.IAM.ESCALATE.RESYNCMFADEVICE.001`) or
+  `iam:DeactivateMFADevice` on the same user can disarm MFA first.
+  This is Rhino Security Labs' credential-manipulation escalation
+  technique and is covered by Prowler's
+  iam_policy_allows_privilege_escalation and Pacu's
+  iam__privesc_scan. The control requires the target user to
+  already have a console login profile; the `CREATELOGINPROFILE.001`
+  control covers the case where the target has no profile and one
+  must be created.
+domain: identity
+severity: critical
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-6(5)"
+  fedramp_moderate: "AC-6(5)"
+  iso_27001_2022: "A.8.3"
+  ccm_v4: ["IAM-02", "IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params:
+  attack_stage: privilege_escalation
+  base_impact: 10
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.5
+observation_fields:
+  - identity.kind
+  - identity.escalation.update_login_profile.present
+  - identity.escalation.update_login_profile.target_user_arn
+  - identity.escalation.update_login_profile.permission_delta
+  - identity.escalation.update_login_profile.resource_scope
+  - identity.escalation.update_login_profile.target_has_mfa
+remediation:
+  description: >
+    Principal has `iam:UpdateLoginProfile` reaching a user whose
+    permissions exceed its own. A single `UpdateLoginProfile` call
+    resets the victim's console password to an attacker-controlled
+    value; the `target_user_arn` identifies the victim and
+    `permission_delta` lists the gained actions.
+  action: >
+    Scope `iam:UpdateLoginProfile` to the principal's own user ARN
+    (or remove it entirely from non-admin principals). Enforce MFA
+    on all console logins at the account level so password reset
+    alone does not yield a session. Alert on CloudTrail
+    `UpdateLoginProfile` events where the subject user differs from
+    the caller.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "escalation": {
+          "update_login_profile": {
+            "present": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.escalation.update_login_profile.present
+      op: eq
+      value: true

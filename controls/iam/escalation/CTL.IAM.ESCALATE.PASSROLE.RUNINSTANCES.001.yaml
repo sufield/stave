@@ -64,9 +64,6 @@ remediation:
     }
 unsafe_predicate:
   all:
-    - field: properties.identity.kind
-      op: eq
-      value: user
     - field: properties.identity.escalation.passrole_runinstances.present
       op: eq
       value: true

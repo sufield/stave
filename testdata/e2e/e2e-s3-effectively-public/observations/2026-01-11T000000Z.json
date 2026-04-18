@@ -1,0 +1,72 @@
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws-s3-snapshot",
+    "tool": "stave-synthetic",
+    "tool_version": "1.0.0"
+  },
+  "captured_at": "2026-01-11T00:00:00Z",
+  "assets": [
+    {
+      "id": "active-public",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "active-public",
+          "access": {
+            "policy_is_effectively_public": true
+          },
+          "controls": {
+            "public_access_fully_blocked": false,
+            "public_access_block": {
+              "block_public_acls": false,
+              "ignore_public_acls": false,
+              "block_public_policy": false,
+              "restrict_public_buckets": false
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "latent-public",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "latent-public",
+          "access": {
+            "policy_is_effectively_public": true
+          },
+          "controls": {
+            "public_access_fully_blocked": true,
+            "public_access_block": {
+              "block_public_acls": true,
+              "ignore_public_acls": true,
+              "block_public_policy": true,
+              "restrict_public_buckets": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "scoped-policy",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "scoped-policy",
+          "access": {
+            "policy_is_effectively_public": false
+          }
+        }
+      }
+    }
+  ],
+  "source": "deployed"
+}

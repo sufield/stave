@@ -1,181 +1,181 @@
 {
-  "extensions": {
-    "context_name": "stave",
-    "git": {
-      "dirty": false,
-      "head_commit": "23e8d39cdce1f114627b5eb473daceca93c7fddc",
-      "repo_root": "/home/zepho/work/bizacademy"
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "e15c4bf144b2c104f91416ac2de3c69f45a98fe5173e0ea368fd09e684430e9b",
+        "2026-01-11T000000Z.json": "e3c021d910e1bfc6b7e072f4eb1861cef62d20772156e22be2ca44b43e26ecb4"
+      },
+      "overall": "801a4ac85e5a20d16af4d0f9ddf5cc226e1f9e7d84ff0172d69b72d68a94ace6"
     },
-    "resolved_paths": {
-      "controls": "testdata/e2e/e2e-s3-lifecycle/controls",
-      "observations": "testdata/e2e/e2e-s3-lifecycle/observations"
-    },
-    "selected_controls_source": "dir"
+    "policy_fingerprint": "a43bddd59d98f2d83cc481c76659c33d2f6be64d3d93235eb10383a54614cf3c",
+    "evaluated_state": "deployed"
   },
+  "summary": {
+    "total_assets": 5,
+    "exposed_resources": 2,
+    "violations": 2
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.S3.LIFECYCLE.001",
+      "asset_id": "retention-no-rules",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.LIFECYCLE.002",
+      "asset_id": "phi-short-expiry",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
   "findings": [
     {
+      "finding_id": "sha256:c05742c8ab061c1f",
+      "control_id": "CTL.S3.LIFECYCLE.001",
+      "control_name": "Retention-Tagged Buckets Must Have Lifecycle Rules",
+      "control_description": "S3 buckets tagged with data-retention must have at least one enabled lifecycle rule configured.\n",
       "asset_id": "retention-no-rules",
       "asset_type": "aws_s3_bucket",
       "asset_vendor": "aws",
-      "control_description": "S3 buckets tagged with data-retention must have at least one enabled lifecycle rule configured.\n",
-      "control_id": "CTL.S3.LIFECYCLE.001",
-      "control_name": "Retention-Tagged Buckets Must Have Lifecycle Rules",
       "evidence": {
         "first_unsafe_at": "2026-01-01T00:00:00Z",
         "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
         "misconfigurations": [
           {
+            "property": "storage.lifecycle.rules_configured",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
-            "property": "storage.lifecycle.rules_configured",
             "unsafe_value": false
           },
           {
+            "property": "storage.tags.data-retention",
             "actual_value": "[SANITIZED]",
             "operator": "present",
-            "property": "storage.tags.data-retention",
             "unsafe_value": true
           }
         ],
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z.",
-        "threshold_hours": 168,
-        "unsafe_duration_hours": 240
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
       },
-      "finding_id": "sha256:c05742c8ab061c1f",
       "posture_drift": {
-        "exposure_window_count": 1,
-        "pattern": "persistent"
+        "pattern": "persistent",
+        "exposure_window_count": 1
       },
       "remediation": {
-        "action": "Review the misconfigured properties and revert to compliant values.",
-        "description": "Resource configuration deviates from security baseline."
+        "description": "Resource configuration deviates from security baseline.",
+        "action": "Review the misconfigured properties and revert to compliant values."
       }
     },
     {
+      "finding_id": "sha256:b12eb488d6b1fc1f",
+      "control_id": "CTL.S3.LIFECYCLE.002",
+      "control_name": "PHI Buckets Must Not Expire Data Before Minimum Retention",
+      "control_description": "S3 buckets tagged with data-classification=phi must not have lifecycle expiration rules that delete data before the minimum HIPAA retention period of 2190 days.\n",
       "asset_id": "phi-short-expiry",
       "asset_type": "aws_s3_bucket",
       "asset_vendor": "aws",
-      "control_description": "S3 buckets tagged with data-classification=phi must not have lifecycle expiration rules that delete data before the minimum HIPAA retention period of 2190 days.\n",
-      "control_id": "CTL.S3.LIFECYCLE.002",
-      "control_name": "PHI Buckets Must Not Expire Data Before Minimum Retention",
       "evidence": {
         "first_unsafe_at": "2026-01-01T00:00:00Z",
         "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
         "misconfigurations": [
           {
+            "property": "storage.lifecycle.has_expiration",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
-            "property": "storage.lifecycle.has_expiration",
             "unsafe_value": true
           },
           {
+            "property": "storage.lifecycle.min_expiration_days",
             "actual_value": "[SANITIZED]",
             "operator": "lt",
-            "property": "storage.lifecycle.min_expiration_days",
             "unsafe_value": 2190
           },
           {
+            "property": "storage.tags.data-classification",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
-            "property": "storage.tags.data-classification",
             "unsafe_value": "phi"
           }
         ],
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z.",
-        "threshold_hours": 168,
-        "unsafe_duration_hours": 240
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
       },
-      "finding_id": "sha256:b12eb488d6b1fc1f",
       "posture_drift": {
-        "exposure_window_count": 1,
-        "pattern": "persistent"
+        "pattern": "persistent",
+        "exposure_window_count": 1
       },
       "remediation": {
-        "action": "Review the misconfigured properties and revert to compliant values.",
-        "description": "Resource configuration deviates from security baseline."
+        "description": "Resource configuration deviates from security baseline.",
+        "action": "Review the misconfigured properties and revert to compliant values."
       }
     }
   ],
-  "kind": "ASSESSMENT",
-  "risk_signals": [
-    {
-      "asset_id": "retention-no-rules",
-      "asset_type": "aws_s3_bucket",
-      "control_id": "CTL.S3.LIFECYCLE.001",
-      "due_at": "2026-01-08T00:00:00Z",
-      "first_unsafe_at": "2026-01-01T00:00:00Z",
-      "remaining_hours": -72,
-      "status": "OVERDUE",
-      "threshold_hours": 168
-    },
-    {
-      "asset_id": "phi-short-expiry",
-      "asset_type": "aws_s3_bucket",
-      "control_id": "CTL.S3.LIFECYCLE.002",
-      "due_at": "2026-01-08T00:00:00Z",
-      "first_unsafe_at": "2026-01-01T00:00:00Z",
-      "remaining_hours": -72,
-      "status": "OVERDUE",
-      "threshold_hours": 168
-    }
-  ],
-  "run": {
-    "evaluated_state": "deployed",
-    "input_hashes": {
-      "files": {
-        "2026-01-01T000000Z.json": "885e009e7b998b1fcec83df654749c64eaa1dfa2de85f7bd509fd9326b5c8d4b",
-        "2026-01-11T000000Z.json": "a1175a983ccbd585305fe426a3cd291c1d365ec66677e328e6662c7ebe302dc6"
-      },
-      "overall": "ac04bbf44541a8e9ed103e5fc559aaf10d15574ced2106506c651c578195c7aa"
-    },
-    "now": "2026-01-11T00:00:00Z",
-    "offline": true,
-    "policy_fingerprint": "a43bddd59d98f2d83cc481c76659c33d2f6be64d3d93235eb10383a54614cf3c",
-    "sla_threshold": "7d",
-    "snapshots": 2,
-    "tool_version": "edge"
-  },
-  "schema_version": "out.v0.1",
-  "status": "NON_COMPLIANT",
-  "summary": {
-    "exposed_resources": 2,
-    "total_assets": 5,
-    "violations": 2
-  },
   "top_exposures": [
     {
+      "finding_index": 0,
+      "control_id": "CTL.S3.LIFECYCLE.001",
       "asset_id": "retention-no-rules",
+      "exposure_score": 10,
       "breakdown": {
         "base_score": 10,
-        "blast_multiplier": 1,
-        "days_blind": 10,
         "duration_factor": 1,
-        "exposure_multiplier": 1
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
       },
-      "control_id": "CTL.S3.LIFECYCLE.001",
-      "exposure_score": 10,
-      "finding_index": 0,
       "silent_killer": false
     },
     {
+      "finding_index": 1,
+      "control_id": "CTL.S3.LIFECYCLE.002",
       "asset_id": "phi-short-expiry",
+      "exposure_score": 10,
       "breakdown": {
         "base_score": 10,
-        "blast_multiplier": 1,
-        "days_blind": 10,
         "duration_factor": 1,
-        "exposure_multiplier": 1
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
       },
-      "control_id": "CTL.S3.LIFECYCLE.002",
-      "exposure_score": 10,
-      "finding_index": 1,
       "silent_killer": false
     }
-  ]
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-s3-lifecycle/controls",
+      "observations": "testdata/e2e/e2e-s3-lifecycle/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "56a3d65ada715daf104d154556464bb782fc991d",
+      "dirty": false
+    }
+  }
 }

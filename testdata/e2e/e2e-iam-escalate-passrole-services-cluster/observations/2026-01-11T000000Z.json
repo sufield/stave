@@ -1,0 +1,124 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:iam::111122223333:user/alice-lambda",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "escalation": {
+            "passrole_createfunction": {
+              "present": true,
+              "target_role": "arn:aws:iam::111122223333:role/lambda-admin-exec",
+              "permission_delta": [
+                "iam:PutUserPolicy",
+                "s3:*"
+              ],
+              "invocation_vector": "invoke_function",
+              "runtime": "python3.12"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:user/bob-glue",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "escalation": {
+            "passrole_createdevendpoint": {
+              "present": true,
+              "target_role": "arn:aws:iam::111122223333:role/glue-admin-role",
+              "permission_delta": [
+                "iam:*"
+              ],
+              "endpoint_type": "standard"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:user/carol-ssm",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "escalation": {
+            "passrole_sendcommand": {
+              "present": true,
+              "target_role": "arn:aws:iam::111122223333:role/ec2-admin-instance-profile",
+              "permission_delta": [
+                "iam:PutUserPolicy",
+                "iam:AttachUserPolicy"
+              ],
+              "target_instance": "arn:aws:ec2:us-east-1:111122223333:instance/i-0deadbeef1234cafe",
+              "invocation_method": "send_command"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:user/dave-datapipeline",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "escalation": {
+            "passrole_createpipeline": {
+              "present": true,
+              "target_role": "arn:aws:iam::111122223333:role/datapipeline-admin-role",
+              "permission_delta": [
+                "iam:*",
+                "s3:*"
+              ],
+              "has_activate_permission": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:user/eve-clean",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "escalation": {
+            "passrole_createfunction":    {"present": false},
+            "passrole_createdevendpoint": {"present": false},
+            "passrole_sendcommand":       {"present": false},
+            "passrole_createpipeline":    {"present": false}
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:role/some-service-role",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "escalation": {
+            "passrole_createfunction":    {"present": true},
+            "passrole_createdevendpoint": {"present": true},
+            "passrole_sendcommand":       {"present": true},
+            "passrole_createpipeline":    {"present": true}
+          }
+        }
+      }
+    }
+  ]
+}

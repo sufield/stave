@@ -6,6 +6,7 @@ import (
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
+	"github.com/sufield/stave/internal/core/evaluation/derive"
 	"github.com/sufield/stave/internal/core/evaluation/engine"
 	"github.com/sufield/stave/internal/core/ports"
 )
@@ -57,7 +58,7 @@ func Evaluate(input EvaluateInput) (evaluation.ComplianceReport, error) {
 	if input.Confidence.HighMultiplier > 0 {
 		runner.Confidence = input.Confidence
 	}
-	result, err := runner.Assess(input.Snapshots, engine.AssessmentOptions{
+	result, err := runner.Assess(derive.Pipeline(input.Snapshots), engine.AssessmentOptions{
 		StaveVersion:     input.StaveVersion,
 		InputHashes:      input.InputHashes,
 		GenerateEvidence: input.GenerateEvidence,

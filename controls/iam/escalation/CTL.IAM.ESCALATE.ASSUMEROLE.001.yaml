@@ -1,0 +1,76 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.ASSUMEROLE.001
+name: Principal Must Not Escalate via sts:AssumeRole To A Broader Role
+description: >
+  A principal with `sts:AssumeRole` reaching a role whose attached
+  permissions exceed its own — and whose trust policy permits the
+  principal to assume it — has a one-call path to those permissions.
+  The principal does not grant itself anything; it pivots into a role
+  that already carries the broader set. This is Rhino Security Labs'
+  role-assumption escalation pattern, adjacent to the direct-policy
+  cluster (CTL.IAM.ESCALATE.ATTACHUSERPOLICY.001 etc.) but distinct:
+  the escalation vector here is the role's existing trust, not a
+  self-modification of any policy. Remediation also differs — remove
+  `sts:AssumeRole` from the principal or narrow the trust policy on
+  the target role — so the control is separate from
+  CTL.IAM.ESCALATE.UPDATETRUST.001 even though the two can chain.
+domain: identity
+severity: critical
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-6(5)"
+  fedramp_moderate: "AC-6(5)"
+  iso_27001_2022: "A.8.3"
+  ccm_v4: ["IAM-02", "IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params:
+  attack_stage: privilege_escalation
+  base_impact: 10
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.5
+observation_fields:
+  - identity.kind
+  - identity.escalation.assume_role.present
+  - identity.escalation.assume_role.target_role_arn
+  - identity.escalation.assume_role.permission_delta
+  - identity.escalation.assume_role.trust_pathway
+  - identity.escalation.assume_role.has_external_id_requirement
+remediation:
+  description: >
+    Principal has `sts:AssumeRole` reaching a role whose permissions
+    exceed its own and whose trust policy admits it. A single
+    `AssumeRole` call produces session credentials with the target
+    role's full permission set. The `permission_delta` on the finding
+    lists the specific actions gained; `trust_pathway` identifies how
+    the trust admits the principal (direct ARN, account-root
+    delegation, wildcard AWS principal, etc.).
+  action: >
+    Either remove `sts:AssumeRole` from the principal, or narrow the
+    target role's trust policy so the principal is no longer permitted.
+    If cross-service pivots are intentional (CI/CD deploy roles,
+    break-glass admin roles), gate the trust with `sts:ExternalId`,
+    `aws:MultiFactorAuthPresent`, or `aws:PrincipalOrgID` and audit
+    use via CloudTrail. For account-root trusts, add an explicit
+    Condition on the calling principal's ARN or role.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "escalation": {
+          "assume_role": {
+            "present": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.escalation.assume_role.present
+      op: eq
+      value: true

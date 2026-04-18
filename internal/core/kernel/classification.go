@@ -37,7 +37,7 @@ func (id ControlID) Classify() ControlClass {
 	s := strings.ToUpper(id.String())
 
 	// Check for Public Exposure keywords
-	if containsAny(s, ".PUBLIC.", ".EXPOSURE.", ".TAKEOVER.", ".ACL.WRITE") {
+	if containsAny(s, ".PUBLIC.", ".EXPOSURE.", ".TAKEOVER.", ".POLICY.WRITE") {
 		return ClassPublicExposure
 	}
 

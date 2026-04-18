@@ -1,0 +1,71 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.PASSROLE.CREATEDEVENDPOINT.001
+name: Principal Must Not Escalate via Glue CreateDevEndpoint Role
+description: >
+  Principals with iam:PassRole on a role R plus glue:CreateDevEndpoint
+  can escalate to R's permissions by creating a Glue development
+  endpoint that runs under R and then connecting to its SSH interface.
+  The principal executes arbitrary code on the endpoint under R's
+  authority. When R's effective permissions exceed the principal's
+  own, this is a privilege escalation path. Rhino Security Labs'
+  iam__privesc_scan and Prowler's iam_policy_allows_privilege_escalation
+  both enumerate this technique. SSH public-key registration on the
+  endpoint is captured in the diagnostic fields so an operator can
+  see how the principal would reach the running environment.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-6(5)"
+  fedramp_moderate: "AC-6(5)"
+  iso_27001_2022: "A.8.3"
+  ccm_v4: ["IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+  - glue
+type: unsafe_state
+params:
+  attack_stage: privilege_escalation
+  base_impact: 9
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+observation_fields:
+  - identity.kind
+  - identity.escalation.passrole_createdevendpoint.present
+  - identity.escalation.passrole_createdevendpoint.target_role
+  - identity.escalation.passrole_createdevendpoint.permission_delta
+  - identity.escalation.passrole_createdevendpoint.endpoint_type
+remediation:
+  description: >
+    Principal has a Glue-mediated escalation path. Its iam:PassRole
+    reaches a role whose effective permissions exceed the principal's
+    own, and its glue:CreateDevEndpoint grant allows it to create an
+    endpoint that runs under that role. SSH access to the endpoint
+    executes code with the target role's authority.
+  action: >
+    Scope iam:PassRole to a role whose effective permissions do not
+    exceed the principal's, or remove glue:CreateDevEndpoint. If
+    broader endpoint creation is required, enforce a service allowlist
+    on iam:PassRole (`iam:PassedToService == glue.amazonaws.com` plus
+    narrow Resource ARN set) and disable SSH access to dev endpoints
+    via the `PublicKeys` restriction.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "escalation": {
+          "passrole_createdevendpoint": {
+            "present": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.escalation.passrole_createdevendpoint.present
+      op: eq
+      value: true

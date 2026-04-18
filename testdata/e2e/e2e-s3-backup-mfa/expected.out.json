@@ -1,110 +1,110 @@
 {
-  "extensions": {
-    "context_name": "stave",
-    "git": {
-      "dirty": false,
-      "head_commit": "23e8d39cdce1f114627b5eb473daceca93c7fddc",
-      "repo_root": "/home/zepho/work/bizacademy"
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "6b3a06ba5d70291d7c9e658c3b1f94732413b7315db783eb01dc83a616894ad6",
+        "2026-01-11T000000Z.json": "f01bfd21c4bc058cf3c73d59cae5e904dc698e677a136cc2743a5a2ded69fbdd"
+      },
+      "overall": "40dbcf072fc9b4887e48b61b992f867deaf7263f0937e4c3b3bd4bfe68fc2293"
     },
-    "resolved_paths": {
-      "controls": "testdata/e2e/e2e-s3-backup-mfa/controls",
-      "observations": "testdata/e2e/e2e-s3-backup-mfa/observations"
-    },
-    "selected_controls_source": "dir"
+    "policy_fingerprint": "3c2c160f39be8cf6c408571f1cb034078b7e43b50e10ab32c040d2d83c0fc0ff",
+    "evaluated_state": "deployed"
   },
+  "summary": {
+    "total_assets": 3,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.S3.VERSION.002",
+      "asset_id": "backup-no-mfa",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
   "findings": [
     {
+      "finding_id": "sha256:868297706ac7ad78",
+      "control_id": "CTL.S3.VERSION.002",
+      "control_name": "Backup Buckets Must Have MFA Delete Enabled",
+      "control_description": "S3 buckets tagged with backup=true must have MFA delete enabled. MFA delete requires multi-factor authentication to permanently delete object versions, protecting against ransomware attacks and accidental mass deletion of backup data. Without MFA delete, any principal with s3:DeleteObject permission can permanently destroy backup versions.\n",
       "asset_id": "backup-no-mfa",
       "asset_type": "aws_s3_bucket",
       "asset_vendor": "aws",
-      "control_description": "S3 buckets tagged with backup=true must have MFA delete enabled. MFA delete requires multi-factor authentication to permanently delete object versions, protecting against ransomware attacks and accidental mass deletion of backup data. Without MFA delete, any principal with s3:DeleteObject permission can permanently destroy backup versions.\n",
-      "control_id": "CTL.S3.VERSION.002",
-      "control_name": "Backup Buckets Must Have MFA Delete Enabled",
       "evidence": {
         "first_unsafe_at": "2026-01-01T00:00:00Z",
         "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
         "misconfigurations": [
           {
+            "property": "storage.tags.backup",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
-            "property": "storage.tags.backup",
             "unsafe_value": "true"
           },
           {
+            "property": "storage.versioning.mfa_delete_enabled",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
-            "property": "storage.versioning.mfa_delete_enabled",
             "unsafe_value": false
           }
         ],
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z.",
-        "threshold_hours": 168,
-        "unsafe_duration_hours": 240
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
       },
-      "finding_id": "sha256:868297706ac7ad78",
       "posture_drift": {
-        "exposure_window_count": 1,
-        "pattern": "persistent"
+        "pattern": "persistent",
+        "exposure_window_count": 1
       },
       "remediation": {
-        "action": "Review the misconfigured properties and revert to compliant values.",
-        "description": "Resource configuration deviates from security baseline."
+        "description": "Resource configuration deviates from security baseline.",
+        "action": "Review the misconfigured properties and revert to compliant values."
       }
     }
   ],
-  "kind": "ASSESSMENT",
-  "risk_signals": [
-    {
-      "asset_id": "backup-no-mfa",
-      "asset_type": "aws_s3_bucket",
-      "control_id": "CTL.S3.VERSION.002",
-      "due_at": "2026-01-08T00:00:00Z",
-      "first_unsafe_at": "2026-01-01T00:00:00Z",
-      "remaining_hours": -72,
-      "status": "OVERDUE",
-      "threshold_hours": 168
-    }
-  ],
-  "run": {
-    "evaluated_state": "deployed",
-    "input_hashes": {
-      "files": {
-        "2026-01-01T000000Z.json": "39ecee6c5d3077cc865b5ac745e8433d5b4eb2a969adb9716a0a9087fb2c34e3",
-        "2026-01-11T000000Z.json": "9d6092564d72987779bdc0c108f3c9a9de2dfbf5452fd392b4d1469c4299e647"
-      },
-      "overall": "6b0a89aef1fd68ab9860d66660b91049f522a2360ce68671437f0788221357f8"
-    },
-    "now": "2026-01-11T00:00:00Z",
-    "offline": true,
-    "policy_fingerprint": "3c2c160f39be8cf6c408571f1cb034078b7e43b50e10ab32c040d2d83c0fc0ff",
-    "sla_threshold": "7d",
-    "snapshots": 2,
-    "tool_version": "edge"
-  },
-  "schema_version": "out.v0.1",
-  "status": "NON_COMPLIANT",
-  "summary": {
-    "exposed_resources": 1,
-    "total_assets": 3,
-    "violations": 1
-  },
   "top_exposures": [
     {
+      "finding_index": 0,
+      "control_id": "CTL.S3.VERSION.002",
       "asset_id": "backup-no-mfa",
+      "exposure_score": 10,
       "breakdown": {
         "base_score": 10,
-        "blast_multiplier": 1,
-        "days_blind": 10,
         "duration_factor": 1,
-        "exposure_multiplier": 1
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
       },
-      "control_id": "CTL.S3.VERSION.002",
-      "exposure_score": 10,
-      "finding_index": 0,
       "silent_killer": false
     }
-  ]
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-s3-backup-mfa/controls",
+      "observations": "testdata/e2e/e2e-s3-backup-mfa/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "56a3d65ada715daf104d154556464bb782fc991d",
+      "dirty": false
+    }
+  }
 }

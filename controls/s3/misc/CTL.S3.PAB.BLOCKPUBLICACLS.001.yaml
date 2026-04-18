@@ -1,0 +1,71 @@
+dsl_version: ctrl.v1
+id: CTL.S3.PAB.BLOCKPUBLICACLS.001
+name: S3 Bucket Block Public ACLs Flag Must Be Enabled
+description: >
+  The `BlockPublicAcls` flag of the bucket's Public Access Block
+  configuration rejects any new ACL grant that would make the bucket
+  or its objects publicly accessible. When this specific flag is
+  `false`, new PUT-ACL calls that grant `READ`, `WRITE`, `READ_ACP`,
+  or `WRITE_ACP` to `http://acs.amazonaws.com/groups/global/AllUsers`
+  or `.../AuthenticatedUsers` succeed rather than being rejected at
+  the API boundary. The umbrella `CTL.S3.CONTROLS.001` fires when any
+  of the four PAB flags is off; this control narrows the finding to
+  the specific flag so remediation is a one-command fix rather than
+  requiring the operator to enumerate which of the four is missing.
+  Prowler and ScoutSuite both report the four flags independently.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v1.4.0: "2.1.5"
+  cis_aws_v3.0: "2.1.4"
+  pci_dss_v3.2.1: "1.3.6"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "2.2.1"
+  nist_800_53_r5: "AC-3"
+  fedramp_moderate: "AC-3"
+  gdpr: "Art.32"
+  ffiec: "ISH-4"
+  iso_27001_2022: "A.8.3"
+  nist_csf_2.0: "PR.PS"
+  ccm_v4: ["DSP-07", "DSP-17"]
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    The bucket's `BlockPublicAcls` PAB flag is disabled. New PUT-ACL
+    calls that grant read or write to AllUsers or AuthenticatedUsers
+    will succeed rather than being blocked at the API boundary.
+  action: >
+    Enable the `BlockPublicAcls` flag on the bucket's Public Access
+    Block configuration. From the CLI:
+
+        aws s3api put-public-access-block \
+          --bucket <name> \
+          --public-access-block-configuration \
+          'BlockPublicAcls=true,IgnorePublicAcls=<current>,BlockPublicPolicy=<current>,RestrictPublicBuckets=<current>'
+
+    Preserve the other three flag values so enabling this one doesn't
+    silently disable the others.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "controls": {
+          "public_access_block": {
+            "block_public_acls": true
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.controls.public_access_block.block_public_acls
+      op: eq
+      value: false

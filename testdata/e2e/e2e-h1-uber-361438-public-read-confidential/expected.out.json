@@ -1,51 +1,101 @@
 {
-  "extensions": {
-    "context_name": "stave",
-    "git": {
-      "dirty": false,
-      "head_commit": "23e8d39cdce1f114627b5eb473daceca93c7fddc",
-      "repo_root": "/home/zepho/work/bizacademy"
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "e24124653b4dbe892908d0712f57d7dd3d44f8c970f2e876eec4b616c89d6aaf",
+        "2026-01-11T000000Z.json": "ed0eb56de4feffaaf0e563cf51534efc156e9b4499f2d2e649a122e454945433"
+      },
+      "overall": "cb047b89cca314e6b7201f86f2e7ea3d9f0097526fc5bc8cb14bf327ad330179"
     },
-    "resolved_paths": {
-      "controls": "testdata/e2e/e2e-h1-uber-361438-public-read-confidential/controls",
-      "observations": "testdata/e2e/e2e-h1-uber-361438-public-read-confidential/observations"
-    },
-    "selected_controls_source": "dir"
+    "policy_fingerprint": "630deb944023331a80291ece7f42f3ac694e4a4f57a86dd9090d83be9f5bcfd9",
+    "evaluated_state": "deployed"
   },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 2
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.S3.PUBLIC.001",
+      "asset_id": "ubergreece",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.PUBLIC.002",
+      "asset_id": "ubergreece",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
   "findings": [
     {
+      "finding_id": "sha256:3f665eca42cfc415",
+      "control_id": "CTL.S3.PUBLIC.001",
+      "control_name": "No Public S3 Buckets",
+      "control_description": "S3 buckets must not allow public read or list access. Detects buckets with public access via bucket policies, ACLs, or missing public access block settings.\n",
       "asset_id": "ubergreece",
       "asset_type": "aws_s3_bucket",
       "asset_vendor": "aws",
-      "control_description": "S3 buckets must not allow public read or list access. Detects buckets with public access via bucket policies, ACLs, or missing public access block settings.\n",
-      "control_id": "CTL.S3.PUBLIC.001",
-      "control_name": "No Public S3 Buckets",
       "evidence": {
         "first_unsafe_at": "2026-01-01T00:00:00Z",
         "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
         "misconfigurations": [
           {
+            "property": "storage.access.public_list",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
-            "property": "storage.access.public_list",
             "unsafe_value": true
           },
           {
+            "property": "storage.access.public_read",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
-            "property": "storage.access.public_read",
             "unsafe_value": true
           }
         ],
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z.",
-        "threshold_hours": 168,
-        "unsafe_duration_hours": 240
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
       },
-      "finding_id": "sha256:3f665eca42cfc415",
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Resource is exposed to the public internet.",
+        "action": "Restrict access to authorized principals only."
+      },
       "fix_plan": {
+        "id": "fix-95dbc091a26df4b5",
+        "target": {
+          "asset_id": "ubergreece",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
         "actions": [
           {
             "action_type": "set",
@@ -68,77 +118,77 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
-        "id": "fix-95dbc091a26df4b5",
-        "preconditions": [
-          "Confirm resource ownership and internal change window approval.",
-          "Ensure public access is not explicitly required for this specific resource's function."
-        ],
-        "target": {
-          "asset_id": "ubergreece",
-          "asset_type": "aws_s3_bucket"
-        }
-      },
-      "posture_drift": {
-        "exposure_window_count": 1,
-        "pattern": "persistent"
-      },
-      "remediation": {
-        "action": "Restrict access to authorized principals only.",
-        "description": "Resource is exposed to the public internet."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
       }
     },
     {
+      "finding_id": "sha256:79defb15a797b64c",
+      "control_id": "CTL.S3.PUBLIC.002",
+      "control_name": "No Public S3 Buckets With Sensitive Data",
+      "control_description": "S3 buckets tagged with sensitive data classifications (PHI, PII, confidential) must not allow any public access.\n",
       "asset_id": "ubergreece",
       "asset_type": "aws_s3_bucket",
       "asset_vendor": "aws",
-      "control_description": "S3 buckets tagged with sensitive data classifications (PHI, PII, confidential) must not allow any public access.\n",
-      "control_id": "CTL.S3.PUBLIC.002",
-      "control_name": "No Public S3 Buckets With Sensitive Data",
       "evidence": {
         "first_unsafe_at": "2026-01-01T00:00:00Z",
         "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
         "misconfigurations": [
           {
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
             "property": "storage.access.public_list",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
             "unsafe_value": true
           },
           {
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
             "property": "storage.access.public_read",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
             "unsafe_value": true
           },
           {
+            "property": "storage.tags.data-classification",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
-            "property": "storage.tags.data-classification",
             "unsafe_value": "confidential"
           },
           {
+            "property": "storage.tags.data-classification",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
-            "property": "storage.tags.data-classification",
             "unsafe_value": "phi"
           },
           {
+            "property": "storage.tags.data-classification",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
-            "property": "storage.tags.data-classification",
             "unsafe_value": "pii"
           }
         ],
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z.",
-        "threshold_hours": 168,
-        "unsafe_duration_hours": 240
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
       },
-      "finding_id": "sha256:79defb15a797b64c",
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Resource is exposed to the public internet.",
+        "action": "Restrict access to authorized principals only."
+      },
       "fix_plan": {
+        "id": "fix-95dbc091a26df4b5",
+        "target": {
+          "asset_id": "ubergreece",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
         "actions": [
           {
             "action_type": "set",
@@ -161,38 +211,24 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
-        "id": "fix-95dbc091a26df4b5",
-        "preconditions": [
-          "Confirm resource ownership and internal change window approval.",
-          "Ensure public access is not explicitly required for this specific resource's function."
-        ],
-        "target": {
-          "asset_id": "ubergreece",
-          "asset_type": "aws_s3_bucket"
-        }
-      },
-      "posture_drift": {
-        "exposure_window_count": 1,
-        "pattern": "persistent"
-      },
-      "remediation": {
-        "action": "Restrict access to authorized principals only.",
-        "description": "Resource is exposed to the public internet."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
       }
     }
   ],
-  "kind": "ASSESSMENT",
   "remediation_groups": [
     {
       "asset_id": "ubergreece",
       "asset_type": "aws_s3_bucket",
-      "contributing_controls": [
-        "CTL.S3.PUBLIC.001",
-        "CTL.S3.PUBLIC.002"
-      ],
-      "finding_count": 2,
       "fix_plan": {
+        "id": "fix-95dbc091a26df4b5",
+        "target": {
+          "asset_id": "ubergreece",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
         "actions": [
           {
             "action_type": "set",
@@ -215,92 +251,56 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
-        "id": "fix-95dbc091a26df4b5",
-        "preconditions": [
-          "Confirm resource ownership and internal change window approval.",
-          "Ensure public access is not explicitly required for this specific resource's function."
-        ],
-        "target": {
-          "asset_id": "ubergreece",
-          "asset_type": "aws_s3_bucket"
-        }
-      }
-    }
-  ],
-  "risk_signals": [
-    {
-      "asset_id": "ubergreece",
-      "asset_type": "aws_s3_bucket",
-      "control_id": "CTL.S3.PUBLIC.001",
-      "due_at": "2026-01-08T00:00:00Z",
-      "first_unsafe_at": "2026-01-01T00:00:00Z",
-      "remaining_hours": -72,
-      "status": "OVERDUE",
-      "threshold_hours": 168
-    },
-    {
-      "asset_id": "ubergreece",
-      "asset_type": "aws_s3_bucket",
-      "control_id": "CTL.S3.PUBLIC.002",
-      "due_at": "2026-01-08T00:00:00Z",
-      "first_unsafe_at": "2026-01-01T00:00:00Z",
-      "remaining_hours": -72,
-      "status": "OVERDUE",
-      "threshold_hours": 168
-    }
-  ],
-  "run": {
-    "evaluated_state": "deployed",
-    "input_hashes": {
-      "files": {
-        "2026-01-01T000000Z.json": "be8b8c70482072e8ed51caa2e4c7ad6930661e68a336095c7717a041deffa5bb",
-        "2026-01-11T000000Z.json": "98174f4cf303897492d141ba1288521d54b0a669312b596d4aed6c9fa49c020a"
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
       },
-      "overall": "2e2d5524c6cbfd77edf4d95df2c01111e1f9b74838f98f24d4cc5a4ca1431c99"
-    },
-    "now": "2026-01-11T00:00:00Z",
-    "offline": true,
-    "policy_fingerprint": "630deb944023331a80291ece7f42f3ac694e4a4f57a86dd9090d83be9f5bcfd9",
-    "sla_threshold": "7d",
-    "snapshots": 2,
-    "tool_version": "edge"
-  },
-  "schema_version": "out.v0.1",
-  "status": "NON_COMPLIANT",
-  "summary": {
-    "exposed_resources": 1,
-    "total_assets": 1,
-    "violations": 2
-  },
+      "contributing_controls": [
+        "CTL.S3.PUBLIC.001",
+        "CTL.S3.PUBLIC.002"
+      ],
+      "finding_count": 2
+    }
+  ],
   "top_exposures": [
     {
+      "finding_index": 0,
+      "control_id": "CTL.S3.PUBLIC.001",
       "asset_id": "ubergreece",
+      "exposure_score": 10,
       "breakdown": {
         "base_score": 10,
-        "blast_multiplier": 1,
-        "days_blind": 10,
         "duration_factor": 1,
-        "exposure_multiplier": 1
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
       },
-      "control_id": "CTL.S3.PUBLIC.001",
-      "exposure_score": 10,
-      "finding_index": 0,
       "silent_killer": false
     },
     {
+      "finding_index": 1,
+      "control_id": "CTL.S3.PUBLIC.002",
       "asset_id": "ubergreece",
+      "exposure_score": 10,
       "breakdown": {
         "base_score": 10,
-        "blast_multiplier": 1,
-        "days_blind": 10,
         "duration_factor": 1,
-        "exposure_multiplier": 1
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
       },
-      "control_id": "CTL.S3.PUBLIC.002",
-      "exposure_score": 10,
-      "finding_index": 1,
       "silent_killer": false
     }
-  ]
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-h1-uber-361438-public-read-confidential/controls",
+      "observations": "testdata/e2e/e2e-h1-uber-361438-public-read-confidential/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "56a3d65ada715daf104d154556464bb782fc991d",
+      "dirty": false
+    }
+  }
 }

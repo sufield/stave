@@ -14,7 +14,7 @@
       },
       "overall": "9bd3ed2f7eeaf671ed42b20b08e373ff36ebcdf3f1048ee487d5a4aa462341a2"
     },
-    "policy_fingerprint": "886536d5bb7ed2e14e04a07fab9d1c0561870af410fffa552c346551b3456510",
+    "policy_fingerprint": "3833a480dffd1c3ab34d16ed57d7541ea0384143d395471668946b603e946c90",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -25,7 +25,7 @@
   "status": "NON_COMPLIANT",
   "risk_signals": [
     {
-      "control_id": "CTL.S3.ACL.WRITE.001",
+      "control_id": "CTL.S3.AUTH.READ.001",
       "asset_id": "shopify-internal-assets",
       "asset_type": "aws_s3_bucket",
       "status": "OVERDUE",
@@ -35,7 +35,7 @@
       "threshold_hours": 168
     },
     {
-      "control_id": "CTL.S3.AUTH.READ.001",
+      "control_id": "CTL.S3.POLICY.WRITE.001",
       "asset_id": "shopify-internal-assets",
       "asset_type": "aws_s3_bucket",
       "status": "OVERDUE",
@@ -47,10 +47,45 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:45dd92bec84c8108",
-      "control_id": "CTL.S3.ACL.WRITE.001",
-      "control_name": "No Public Write via ACL",
-      "control_description": "S3 bucket ACLs must not grant write access to AllUsers or AuthenticatedUsers. ACL-based write access enables attackers to upload malicious objects or overwrite existing content.\n",
+      "finding_id": "sha256:a01a06a82cb5f0fe",
+      "control_id": "CTL.S3.AUTH.READ.001",
+      "control_name": "No Authenticated-Users Read Access",
+      "control_description": "S3 buckets must not grant read access to all authenticated AWS users. AuthenticatedUsers scope means any AWS account can read objects, which is nearly as dangerous as fully public access.\n",
+      "asset_id": "shopify-internal-assets",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2015-11-15T00:00:00Z",
+        "last_seen_unsafe_at": "2015-11-23T00:00:00Z",
+        "unsafe_duration_hours": 89040,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "storage.access.authenticated_read",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 89040 hours (SLA: 168 hours). Exposed since 2015-11-15T00:00:00Z."
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Resource configuration deviates from security baseline.",
+        "action": "Review the misconfigured properties and revert to compliant values."
+      }
+    },
+    {
+      "finding_id": "sha256:f9fdbdcd4b8389a7",
+      "control_id": "CTL.S3.POLICY.WRITE.001",
+      "control_name": "No Public Write via Bucket Policy",
+      "control_description": "S3 bucket policies must not grant write access to an anonymous or wildcard principal. Policy-based write access — a Statement with Effect Allow, Principal \"*\" or AWS: \"*\", and an Action such as s3:PutObject or s3:DeleteObject without a restricting Condition — enables attackers to upload malicious objects, overwrite existing content, or hold data ransom. This is distinct from CTL.S3.PUBLIC.003, which fires on the composite public_write signal regardless of mechanism; this control narrows to the policy path so the finding points the operator at the bucket policy specifically. For ACL-based public write, see CTL.S3.ACL.FULLCONTROL.001 (FULL_CONTROL grants) and CTL.S3.ACL.ESCALATION.001 (WRITE_ACP grants).\n",
       "asset_id": "shopify-internal-assets",
       "asset_type": "aws_s3_bucket",
       "asset_vendor": "aws",
@@ -72,13 +107,23 @@
         ],
         "temporal_risk": "Asset non-compliant for 89040 hours (SLA: 168 hours). Exposed since 2015-11-15T00:00:00Z."
       },
+      "control_severity": "critical",
+      "control_compliance_ccm_v4": [
+        "DSP-07",
+        "DSP-17"
+      ],
+      "exposure": {
+        "type": "policy_public_write",
+        "principal_scope": "public"
+      },
       "posture_drift": {
         "pattern": "persistent",
         "exposure_window_count": 1
       },
       "remediation": {
-        "description": "Resource is exposed to the public internet.",
-        "action": "Restrict access to authorized principals only."
+        "description": "Bucket policy grants s3:PutObject, s3:DeleteObject, or equivalent write action to an anonymous or wildcard principal. Any unauthenticated caller can upload, overwrite, or delete objects.",
+        "action": "Remove or constrain the policy statement granting write actions to Principal \"*\" or AWS: \"*\". If broad write access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public write.",
+        "example": "{\n  \"storage\": {\n    \"access\": {\n      \"write_via_resource\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
         "id": "fix-7e7d91623b0cd9df",
@@ -113,41 +158,6 @@
           }
         ],
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
-      }
-    },
-    {
-      "finding_id": "sha256:a01a06a82cb5f0fe",
-      "control_id": "CTL.S3.AUTH.READ.001",
-      "control_name": "No Authenticated-Users Read Access",
-      "control_description": "S3 buckets must not grant read access to all authenticated AWS users. AuthenticatedUsers scope means any AWS account can read objects, which is nearly as dangerous as fully public access.\n",
-      "asset_id": "shopify-internal-assets",
-      "asset_type": "aws_s3_bucket",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2015-11-15T00:00:00Z",
-        "last_seen_unsafe_at": "2015-11-23T00:00:00Z",
-        "unsafe_duration_hours": 89040,
-        "threshold_hours": 168,
-        "misconfigurations": [
-          {
-            "property": "storage.access.authenticated_read",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": true
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 89040 hours (SLA: 168 hours). Exposed since 2015-11-15T00:00:00Z."
-      },
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "Resource configuration deviates from security baseline.",
-        "action": "Review the misconfigured properties and revert to compliant values."
       }
     }
   ],
@@ -190,28 +200,28 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
       },
       "contributing_controls": [
-        "CTL.S3.ACL.WRITE.001"
+        "CTL.S3.POLICY.WRITE.001"
       ],
       "finding_count": 1
     }
   ],
   "top_exposures": [
     {
-      "finding_index": 0,
-      "control_id": "CTL.S3.ACL.WRITE.001",
+      "finding_index": 1,
+      "control_id": "CTL.S3.POLICY.WRITE.001",
       "asset_id": "shopify-internal-assets",
-      "exposure_score": 50,
+      "exposure_score": 1000,
       "breakdown": {
-        "base_score": 10,
+        "base_score": 100,
         "duration_factor": 5,
         "blast_multiplier": 1,
-        "exposure_multiplier": 1,
+        "exposure_multiplier": 2,
         "days_blind": 3710
       },
       "silent_killer": true
     },
     {
-      "finding_index": 1,
+      "finding_index": 0,
       "control_id": "CTL.S3.AUTH.READ.001",
       "asset_id": "shopify-internal-assets",
       "exposure_score": 50,
@@ -234,7 +244,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "ab04c9b2b1e2141c99455d9307ad73a277712f00",
+      "head_commit": "a103b46539bf2153a77deb92ccf417b762b1f17c",
       "dirty": false
     }
   }

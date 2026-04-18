@@ -16,7 +16,7 @@
           "kind": "bucket",
           "name": "analytics",
           "access": {
-            "has_wildcard_policy": false
+            "has_wildcard_principal": false
           }
         }
       }

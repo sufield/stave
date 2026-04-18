@@ -1,0 +1,53 @@
+dsl_version: ctrl.v1
+id: CTL.S3.AP.PAB.001
+name: S3 Access Point Must Have Block Public Access Enabled
+description: >
+  Single-region S3 Access Points have their own Public Access Block
+  settings, independent of the parent bucket's PAB. A bucket can be
+  hardened with PAB fully enforcing while one of its Access Points
+  has PAB disabled — the Access Point endpoint remains a public path
+  to the same underlying data. Prowler and ScoutSuite treat Access
+  Points as a distinct resource with their own exposure surface
+  precisely because of this overlay semantics.
+domain: exposure
+exposure:
+  type: public_read
+  principal_scope: public
+severity: critical
+compliance:
+  hipaa: "164.312(a)(1)"
+  soc2: "CC6.1"
+  ccm_v4: ["DCS-07", "DSP-07", "IAM-16", "IVS-03"]
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    A single-region S3 Access Point exists with Block Public Access
+    not fully enforcing. The Access Point endpoint is a public reach
+    path even if the parent bucket is hardened.
+  action: >
+    Enable all four PAB flags on the Access Point via
+    `aws s3control put-access-point-public-access-block` with
+    `BlockPublicAcls=true`, `IgnorePublicAcls=true`,
+    `BlockPublicPolicy=true`, `RestrictPublicBuckets=true`. If the
+    Access Point is intentionally public (rare), document the
+    exposure and add a Stave exemption.
+  example: |
+    {
+      "storage": {
+        "kind": "access_point",
+        "public_access_fully_blocked": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: access_point
+    - field: properties.storage.public_access_fully_blocked
+      op: eq
+      value: false

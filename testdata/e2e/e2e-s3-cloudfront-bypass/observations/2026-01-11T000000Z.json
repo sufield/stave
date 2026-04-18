@@ -1,0 +1,63 @@
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws-s3-snapshot",
+    "tool": "stave-synthetic",
+    "tool_version": "1.0.0"
+  },
+  "captured_at": "2026-01-11T00:00:00Z",
+  "assets": [
+    {
+      "id": "bypass-exposed",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "bypass-exposed",
+          "access": {
+            "public_read": true
+          },
+          "cdn_access": {
+            "is_cloudfront_origin": true
+          }
+        }
+      }
+    },
+    {
+      "id": "cdn-fronted-private",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "cdn-fronted-private",
+          "access": {
+            "public_read": false
+          },
+          "cdn_access": {
+            "is_cloudfront_origin": true
+          }
+        }
+      }
+    },
+    {
+      "id": "plain-public",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "plain-public",
+          "access": {
+            "public_read": true
+          },
+          "cdn_access": {
+            "is_cloudfront_origin": false
+          }
+        }
+      }
+    }
+  ],
+  "source": "deployed"
+}

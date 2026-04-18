@@ -6,6 +6,8 @@ package enginetest
 //   - NETWORK.POLICY.001: vpc_endpoint_policy.attached=false OR is_default_full_access=true → violation
 //   - MRAP.PAB.001: kind=bucket AND mrap_public_access_blocked=false → violation
 //   - MRAP.POLICY.001: kind=bucket AND mrap_policy_is_public=true → violation
+//   - AP.PAB.001: kind=access_point AND public_access_fully_blocked=false → violation
+//   - AP.POLICY.001: kind=access_point AND policy_is_public=true → violation
 
 import (
 	"testing"
@@ -53,6 +55,8 @@ func loadNetworkControls(t *testing.T) []policy.ControlDefinition {
 		"CTL.S3.NETWORK.POLICY.001": {},
 		"CTL.S3.MRAP.PAB.001":       {},
 		"CTL.S3.MRAP.POLICY.001":    {},
+		"CTL.S3.AP.PAB.001":         {},
+		"CTL.S3.AP.POLICY.001":      {},
 	}
 	var controls []policy.ControlDefinition
 	for _, ctl := range all {
@@ -275,4 +279,112 @@ func TestMRAPPolicy001_TrueNegative_PrivatePolicy(t *testing.T) {
 	result := ev.Evaluate(networkSnapshot(bucket))
 
 	assertNoNetworkFinding(t, &result, "CTL.S3.MRAP.POLICY.001", "mrap-private-bucket")
+}
+
+// --- AP.PAB.001: Access Point Must Have Block Public Access ---
+// kind=access_point AND public_access_fully_blocked=false
+
+// accessPoint builds an aws_s3_access_point asset. Access Points are their own
+// resource kind distinct from buckets — discriminator is storage.kind="access_point".
+func accessPoint(id string, props map[string]any) asset.Asset {
+	return asset.Asset{
+		ID:     asset.ID(id),
+		Type:   kernel.NewAssetType("aws_s3_access_point"),
+		Vendor: "aws",
+		Properties: map[string]any{
+			"storage": props,
+		},
+	}
+}
+
+func TestAPPAB001_TruePositive_PABDisabled(t *testing.T) {
+	ev := networkEvaluator(t)
+	ap := accessPoint("ap-no-pab", map[string]any{
+		"kind":                        "access_point",
+		"public_access_fully_blocked": false,
+	})
+
+	result := ev.Evaluate(networkSnapshot(ap))
+
+	assertHasNetworkFinding(t, &result, "CTL.S3.AP.PAB.001", "ap-no-pab")
+}
+
+func TestAPPAB001_TrueNegative_PABEnabled(t *testing.T) {
+	ev := networkEvaluator(t)
+	ap := accessPoint("ap-with-pab", map[string]any{
+		"kind":                        "access_point",
+		"public_access_fully_blocked": true,
+	})
+
+	result := ev.Evaluate(networkSnapshot(ap))
+
+	assertNoNetworkFinding(t, &result, "CTL.S3.AP.PAB.001", "ap-with-pab")
+}
+
+func TestAPPAB001_TrueNegative_BucketKindIgnored(t *testing.T) {
+	ev := networkEvaluator(t)
+	// A bucket observation with the same public_access_fully_blocked=false must
+	// not trip AP.PAB.001 — it's gated on kind=access_point.
+	bucket := networkBucket("plain-bucket", map[string]any{
+		"kind":                        "bucket",
+		"public_access_fully_blocked": false,
+	})
+
+	result := ev.Evaluate(networkSnapshot(bucket))
+
+	assertNoNetworkFinding(t, &result, "CTL.S3.AP.PAB.001", "plain-bucket")
+}
+
+// --- AP.POLICY.001: Access Point Policy Must Not Be Public ---
+// kind=access_point AND policy_is_public=true
+
+func TestAPPolicy001_TruePositive_PublicPolicy(t *testing.T) {
+	ev := networkEvaluator(t)
+	ap := accessPoint("ap-public-policy", map[string]any{
+		"kind":             "access_point",
+		"policy_is_public": true,
+	})
+
+	result := ev.Evaluate(networkSnapshot(ap))
+
+	assertHasNetworkFinding(t, &result, "CTL.S3.AP.POLICY.001", "ap-public-policy")
+}
+
+func TestAPPolicy001_TrueNegative_ScopedPolicy(t *testing.T) {
+	ev := networkEvaluator(t)
+	ap := accessPoint("ap-scoped-policy", map[string]any{
+		"kind":             "access_point",
+		"policy_is_public": false,
+	})
+
+	result := ev.Evaluate(networkSnapshot(ap))
+
+	assertNoNetworkFinding(t, &result, "CTL.S3.AP.POLICY.001", "ap-scoped-policy")
+}
+
+func TestAPPolicy001_TrueNegative_VPCOriginNarrowPolicy(t *testing.T) {
+	ev := networkEvaluator(t)
+	// Full AP shape: VPC-bound network origin, PAB fully enforcing, non-public
+	// policy. Silent on both AP.POLICY.001 and AP.PAB.001.
+	ap := accessPoint("ap-vpc-only", map[string]any{
+		"kind":             "access_point",
+		"name":             "internal-ap",
+		"bucket_name":      "data-bucket",
+		"network_origin":   "vpc",
+		"vpc_id":           "vpc-abc123",
+		"alias":            "internal-ap-xxxx.s3-accesspoint.us-east-1.amazonaws.com",
+		"policy_is_public": false,
+		"public_access_fully_blocked": true,
+		"public_access_block": map[string]any{
+			"block_public_acls":       true,
+			"ignore_public_acls":      true,
+			"block_public_policy":     true,
+			"restrict_public_buckets": true,
+		},
+	})
+
+	result := ev.Evaluate(networkSnapshot(ap))
+
+	assertNoNetworkFinding(t, &result, "CTL.S3.AP.POLICY.001", "ap-vpc-only")
+	assertNoNetworkFinding(t, &result, "CTL.S3.AP.PAB.001", "ap-vpc-only")
 }

@@ -1,0 +1,53 @@
+dsl_version: ctrl.v1
+id: CTL.S3.POLICY.WRITE.001
+name: No Public Write via Bucket Policy
+description: >
+  S3 bucket policies must not grant write access to an anonymous or
+  wildcard principal. Policy-based write access — a Statement with
+  Effect Allow, Principal "*" or AWS: "*", and an Action such as
+  s3:PutObject or s3:DeleteObject without a restricting Condition —
+  enables attackers to upload malicious objects, overwrite existing
+  content, or hold data ransom. This is distinct from CTL.S3.PUBLIC.003,
+  which fires on the composite public_write signal regardless of
+  mechanism; this control narrows to the policy path so the finding
+  points the operator at the bucket policy specifically. For ACL-based
+  public write, see CTL.S3.ACL.FULLCONTROL.001 (FULL_CONTROL grants)
+  and CTL.S3.ACL.ESCALATION.001 (WRITE_ACP grants).
+compliance:
+  ccm_v4: ["DSP-07", "DSP-17"]
+domain: exposure
+exposure:
+  type: policy_public_write
+  principal_scope: public
+severity: critical
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    Bucket policy grants s3:PutObject, s3:DeleteObject, or equivalent
+    write action to an anonymous or wildcard principal. Any unauthenticated
+    caller can upload, overwrite, or delete objects.
+  action: >
+    Remove or constrain the policy statement granting write actions to
+    Principal "*" or AWS: "*". If broad write access is genuinely
+    required, add a restricting Condition on aws:PrincipalOrgID,
+    aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public
+    Access Block with BlockPublicPolicy set to true to reject future
+    policies that grant public write.
+  example: |
+    {
+      "storage": {
+        "access": {
+          "write_via_resource": false
+        }
+      }
+    }
+unsafe_predicate:
+  any:
+    - field: properties.storage.access.write_via_resource
+      op: eq
+      value: true

@@ -37,27 +37,27 @@ type PrefixExposureAccess struct {
 // BucketAccess is the domain aggregate that owns all access computation
 // for a single bucket. Both the extractor and snapshot paths converge here.
 type BucketAccess struct {
-	Exposure          ResourceExposure
-	Governance        GovernanceOverrides
-	CrossAccount      CrossAccountAccess
-	NetworkScope      NetworkScopeAccess
-	ACLFullControl    ACLFullControlAccess
-	PrefixExposure    PrefixExposureAccess
-	HasWildcardPolicy bool
-	Scope             kernel.PrincipalScope
-	TrustBoundary     kernel.TrustBoundary
+	Exposure             ResourceExposure
+	Governance           GovernanceOverrides
+	CrossAccount         CrossAccountAccess
+	NetworkScope         NetworkScopeAccess
+	ACLFullControl       ACLFullControlAccess
+	PrefixExposure       PrefixExposureAccess
+	HasWildcardPrincipal bool
+	Scope                kernel.PrincipalScope
+	TrustBoundary        kernel.TrustBoundary
 }
 
 // BucketAccessInput carries the raw signals needed to resolve a BucketAccess.
 type BucketAccessInput struct {
-	Identity          Visibility
-	Resource          Visibility
-	Gov               GovernanceOverrides
-	CrossAccount      CrossAccountAccess
-	NetworkScope      NetworkScopeAccess
-	ACLFullControl    ACLFullControlAccess
-	PrefixExposure    PrefixExposureAccess
-	HasWildcardPolicy bool
+	Identity             Visibility
+	Resource             Visibility
+	Gov                  GovernanceOverrides
+	CrossAccount         CrossAccountAccess
+	NetworkScope         NetworkScopeAccess
+	ACLFullControl       ACLFullControlAccess
+	PrefixExposure       PrefixExposureAccess
+	HasWildcardPrincipal bool
 }
 
 // ResolveBucketAccess computes the full BucketAccess aggregate from raw inputs.
@@ -66,15 +66,15 @@ type BucketAccessInput struct {
 func ResolveBucketAccess(in BucketAccessInput) BucketAccess {
 	resolved := ResolveAccess(in.Identity, in.Resource, in.Gov)
 	return BucketAccess{
-		Exposure:          buildExposureFromResolved(in.Identity, in.Resource, in.Gov, resolved),
-		Governance:        in.Gov,
-		CrossAccount:      in.CrossAccount,
-		NetworkScope:      in.NetworkScope,
-		ACLFullControl:    in.ACLFullControl,
-		PrefixExposure:    in.PrefixExposure,
-		HasWildcardPolicy: in.HasWildcardPolicy,
-		Scope:             resolved.PrincipalScope,
-		TrustBoundary:     resolveTrustBoundary(resolved.PrincipalScope, in.CrossAccount),
+		Exposure:             buildExposureFromResolved(in.Identity, in.Resource, in.Gov, resolved),
+		Governance:           in.Gov,
+		CrossAccount:         in.CrossAccount,
+		NetworkScope:         in.NetworkScope,
+		ACLFullControl:       in.ACLFullControl,
+		PrefixExposure:       in.PrefixExposure,
+		HasWildcardPrincipal: in.HasWildcardPrincipal,
+		Scope:                resolved.PrincipalScope,
+		TrustBoundary:        resolveTrustBoundary(resolved.PrincipalScope, in.CrossAccount),
 	}
 }
 

@@ -154,7 +154,7 @@ controls:
     appropriate conditions. Wildcard principals make bucket contents
     accessible to any AWS account or anonymous users.
   conditions:
-    - storage.access.has_wildcard_policy == false
+    - storage.access.has_wildcard_principal == false
   all_must_pass: true
   severity: critical
   remediation: >

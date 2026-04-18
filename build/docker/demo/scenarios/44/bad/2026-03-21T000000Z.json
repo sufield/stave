@@ -28,7 +28,7 @@
             "public_list": false,
             "read_via_identity": false,
             "list_via_identity": false,
-            "has_wildcard_policy": false,
+            "has_wildcard_principal": false,
             "has_external_write": false,
             "has_vpc_condition": false,
             "has_ip_condition": false,

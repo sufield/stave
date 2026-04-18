@@ -1,0 +1,40 @@
+dsl_version: ctrl.v1
+id: CTL.S3.PUBLIC.LIST.001
+name: No Public S3 Bucket Listing
+description: >
+  S3 buckets must not allow anonymous listing of objects.
+  Public listing exposes object keys, enabling targeted data exfiltration.
+compliance:
+  ccm_v4: ["DSP-07", "DSP-17"]
+domain: exposure
+exposure:
+  type: public_list
+  principal_scope: public
+severity: high
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    Bucket allows anonymous listing of objects. Public listing exposes
+    all object keys, enabling targeted data exfiltration.
+  action: >
+    Remove bucket policy statements that grant s3:ListBucket to
+    Principal "*". Remove ACL grants that allow READ to AllUsers.
+    Enable S3 Public Access Block.
+  example: |
+    {
+      "storage": {
+        "access": {
+          "public_list": false
+        }
+      }
+    }
+unsafe_predicate:
+  any:
+    - field: properties.storage.access.public_list
+      op: eq
+      value: true

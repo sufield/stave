@@ -1,0 +1,78 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.ATTACHROLEPOLICY.001
+name: Role Must Not Escalate via iam:AttachRolePolicy On Self
+description: >
+  A role with `iam:AttachRolePolicy` whose Resource field includes its
+  own role ARN can attach any managed policy — including
+  `arn:aws:iam::aws:policy/AdministratorAccess` — to itself and gain
+  that policy's permissions with a single API call. This is the
+  role-side analogue of `CTL.IAM.ESCALATE.ATTACHUSERPOLICY.001`:
+  distinct AWS action (`iam:AttachRolePolicy` vs
+  `iam:AttachUserPolicy`), distinct principal kind (role vs user),
+  same one-step escalation outcome. Rhino Security Labs'
+  iam__privesc_scan and Prowler's iam_policy_allows_privilege_escalation
+  both enumerate this technique on roles as well as users. The
+  companion Cluster 1 user-side control intentionally stays
+  user-gated because its action is user-scoped; this control mirrors
+  it for the role-action.
+domain: identity
+severity: critical
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-6(5)"
+  fedramp_moderate: "AC-6(5)"
+  iso_27001_2022: "A.8.3"
+  ccm_v4: ["IAM-02", "IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params:
+  attack_stage: privilege_escalation
+  base_impact: 10
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.5
+observation_fields:
+  - identity.kind
+  - identity.escalation.attach_role_policy.present
+  - identity.escalation.attach_role_policy.target_role_arn
+  - identity.escalation.attach_role_policy.resource_scope
+  - identity.escalation.attach_role_policy.reachable_managed_policies
+remediation:
+  description: >
+    Role has `iam:AttachRolePolicy` scoped to its own role ARN
+    (explicitly by ARN, by `"*"`, or by a role-set that includes it).
+    Any workload running under this role — or any principal that has
+    assumed it — can attach `AdministratorAccess` (or any other broad
+    managed policy) to the role and immediately operate with those
+    permissions.
+  action: >
+    Remove `iam:AttachRolePolicy` from the role, or scope its Resource
+    to role ARNs that do not include the role itself (admin-only
+    role-creation workflows, for example). Enforce at the
+    organization level with an SCP that denies
+    `iam:AttachRolePolicy` on `${aws:PrincipalArn}`. A permissions
+    boundary on the role that prevents the attached policy from
+    taking effect is an additional defensive layer.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "escalation": {
+          "attach_role_policy": {
+            "present": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: role
+    - field: properties.identity.escalation.attach_role_policy.present
+      op: eq
+      value: true

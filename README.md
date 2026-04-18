@@ -45,7 +45,7 @@ Every score is a **deterministic, traceable reasoning chain**. Compound scores s
 
 ## Features
 
-- **621 built-in controls** across 44 domains (S3, IAM, VPC, EC2, RDS, ELB, K8s, CloudTrail, CloudWatch, KMS, and [34 more](docs/controls/reference.md))
+- **646 built-in controls** across 44 domains (S3, IAM, VPC, EC2, RDS, ELB, K8s, CloudTrail, CloudWatch, KMS, and [34 more](docs/controls/reference.md))
 - **10 compliance profiles** — HIPAA, CIS AWS v3.0, SOC 2, PCI-DSS v4.0, NIST 800-53, FedRAMP, GDPR, FFIEC, ISO 27001, NIST CSF 2.0
 - **Risk reasoning engine** — compound risk scoring across co-failing controls, MITRE-aligned attack stage summary, blast radius multipliers
 - **Safety chains** — 15 built-in chain definitions detect compound failures across data protection, identity, detection, recovery, sovereignty, supply chain, and cryptographic concentration
@@ -146,17 +146,17 @@ New observation properties are additive and backward-compatible. Existing contro
 
 ## Built-in controls
 
-621 controls across 44 domains:
+646 controls across 44 domains:
 
-### AWS S3 (83 controls)
+### AWS S3 (89 controls)
 
 | Category | Count | What they detect |
 |----------|:---:|-----------------|
-| `public` | 15 | Public read/write/list, website hosting, prefix exposure, CloudFront bypass |
+| `public` | 17 | Public read/write/list, website hosting, prefix exposure, CloudFront bypass |
 | `acl` | 4 | ACL escalation, reconnaissance, FULL_CONTROL grants |
-| `access` | 10 | Cross-account, wildcard actions, presigned URLs, Access Grants, policy disclosure |
+| `access` | 12 | Cross-account, wildcard actions, presigned URLs, Access Grants, policy disclosure |
 | `encrypt` | 4 | Missing encryption at rest/in transit, KMS for PHI |
-| `network` | 5 | VPC/IP conditions, VPC endpoint policy, Multi-Region Access Point PAB |
+| `network` | 7 | VPC/IP conditions, VPC endpoint policy, Multi-Region Access Point PAB |
 | `versioning` | 3 | Disabled versioning, missing MFA delete |
 | `lock` | 3 | Object lock mode, retention period |
 | `logging` | 10 | Access logging, CloudTrail object-level audit |
@@ -169,7 +169,7 @@ New observation properties are additive and backward-compatible. Existing contro
 | `cors` | 1 | Wildcard origin CORS on non-public-by-design buckets |
 | `misc` | 4 | Incomplete data, completeness checks |
 
-### AWS IAM (75 controls)
+### AWS IAM (93 controls)
 
 Root account MFA and access keys, console user MFA, credential rotation, password policy, privilege escalation (self-modify, PassRole, AssumeRole), permissions boundaries, break-glass persistence, cross-environment access, inactive accounts, blast-radius thresholds for roles and users. CIS AWS Benchmark aligned.
 
