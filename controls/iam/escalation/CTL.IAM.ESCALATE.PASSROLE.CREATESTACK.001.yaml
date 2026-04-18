@@ -1,0 +1,116 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.PASSROLE.CREATESTACK.001
+name: Principal Must Not Escalate via CloudFormation CreateStack
+description: >
+  Principals with iam:PassRole on a role R plus cloudformation:CreateStack
+  (without a condition that denies CAPABILITY_IAM / CAPABILITY_NAMED_IAM)
+  can escalate to R's permissions by submitting a template that
+  CloudFormation executes under R. When R's effective permissions exceed
+  the principal's own, this is a privilege escalation path. The attacker
+  submits a template that performs IAM mutations (attach user policy,
+  put user policy, create access key), and CloudFormation executes those
+  mutations under R. The principal never gains R directly — but gains
+  R's authority through CloudFormation's template execution.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-6(5)"
+  fedramp_moderate: "AC-6(5)"
+  iso_27001_2022: "A.8.3"
+  ccm_v4: ["CCC-04", "IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+  - cloudformation
+type: unsafe_state
+params:
+  attack_stage: privilege_escalation
+  base_impact: 9
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+observation_fields:
+  - identity.kind
+  - identity.escalation.passrole_createstack.present
+  - identity.escalation.passrole_createstack.target_role
+  - identity.escalation.passrole_createstack.permission_delta
+  - identity.escalation.passrole_createstack.via_capability_iam
+remediation:
+  description: >
+    Principal has a CloudFormation-mediated escalation path. Its
+    iam:PassRole grant reaches a role whose effective permissions exceed
+    the principal's own, and its cloudformation:CreateStack grant is
+    not conditionally denied for CAPABILITY_IAM / CAPABILITY_NAMED_IAM.
+    Any CloudFormation template the principal submits runs under the
+    passed role, which can create, modify, or attach IAM policies.
+  action: >
+    Scope iam:PassRole to a role whose effective permissions do not
+    exceed the principal's, or restrict cloudformation:CreateStack with
+    a condition that denies CAPABILITY_IAM / CAPABILITY_NAMED_IAM.
+    Alternatively, remove the escalation-enabling permissions from the
+    target role (iam:PutUserPolicy, iam:AttachUserPolicy,
+    iam:CreateAccessKey, iam:UpdateAssumeRolePolicy).
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "escalation": {
+          "passrole_createstack": {
+            "present": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user
+    - field: properties.identity.escalation.passrole_createstack.present
+      op: eq
+      value: true
+tests:
+  - name: user with CloudFormation passrole escalation path fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/bob
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            passrole_createstack:
+              present: true
+              target_role: arn:aws:iam::111122223333:role/cfn-deploy-role
+              permission_delta:
+                - iam:PutUserPolicy
+                - iam:AttachUserPolicy
+              via_capability_iam: true
+  - name: user without the escalation path passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/alice
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            passrole_createstack:
+              present: false
+  - name: role asset not evaluated (scoped to user principals)
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:iam::111122223333:role/cfn-deploy-role
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          escalation:
+            passrole_createstack:
+              present: true

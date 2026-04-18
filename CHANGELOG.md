@@ -8,6 +8,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Three per-service IAM privilege-escalation controls** grounded in
+  three disclosed incidents. Each detects a distinct privesc path
+  where a principal can invoke a service whose role exceeds the
+  principal's effective permissions. Per-service framing was chosen
+  over a generalized predicate so service-specific preconditions
+  (`CAPABILITY_IAM` for CloudFormation, source-repo write for
+  CodeBuild) can gate the finding and suppress the CI/CD-pipeline
+  false-positive class.
+  - `CTL.IAM.ESCALATE.PASSROLE.CREATESTACK.001` — `iam:PassRole`
+    plus `cloudformation:CreateStack` without a `CAPABILITY_IAM`
+    denial. Grounded in the Yani disclosure (Sep 2022).
+    CCM: `CCC-04`, `IAM-05`, `IAM-16`.
+  - `CTL.IAM.ESCALATE.PASSROLE.RUNINSTANCES.001` — `iam:PassRole`
+    plus `ec2:RunInstances` on an instance-profile role whose
+    permissions exceed the principal's. Grounded in the Security
+    Shenanigans disclosure (Oct 2020). CCM: `IAM-05`, `IAM-16`.
+  - `CTL.IAM.ESCALATE.STARTBUILD.001` — `codebuild:StartBuild`
+    plus source-repo write on a project whose service role exceeds
+    the principal's. Non-PassRole variant. Grounded in the HTB
+    Business CTF disclosure (Jun 2025). CCM: `AIS-06`, `IAM-05`,
+    `IAM-16`.
+  Observation contract (consumed by the controls) extends
+  `identity.escalation` with per-vector objects: `passrole_createstack`,
+  `passrole_runinstances`, `startbuild_source_write`. Each carries
+  `present`, `target_role`, `permission_delta`, and vector-specific
+  fields (`via_capability_iam`, `target_project`, `source_type`).
+  Extractor work to populate these fields lives outside this repo;
+  fixtures carry the shape hand-authored.
 - **CCM v4 mapping metadata on controls** — optional `compliance.ccm_v4`
   list on `ctrl.v1` accepting CSA CCM v4 control IDs in `DOMAIN-NN`
   form (e.g., `IAM-05`, `CCC-07`). Absence = not yet mapped; empty list

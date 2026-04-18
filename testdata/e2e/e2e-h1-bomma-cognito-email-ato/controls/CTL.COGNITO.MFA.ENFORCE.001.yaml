@@ -1,0 +1,48 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.MFA.ENFORCE.001
+name: Cognito User Pools Must Enforce MFA for All Users
+description: >
+  Cognito user pools without MFA enforcement are vulnerable to
+  credential stuffing and brute force attacks. A user pool managing
+  authentication for a customer-facing application without MFA means
+  a single leaked password leads to full account compromise. MFA
+  configuration ON requires all users to set up MFA.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "IA-2"
+  hipaa: "164.312(d)"
+  aws_security_hub: "Cognito.1"
+  mitre_attack: "TA0006"
+  ccm_v4: ["IAM-14"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Cognito user pool does not enforce MFA. User accounts are
+    vulnerable to credential stuffing attacks.
+  action: >
+    aws cognito-idp set-user-pool-mfa-config --user-pool-id <id>
+    --software-token-mfa-configuration Enabled=true
+    --mfa-configuration ON
+  example: |
+    {
+      "identity": {
+        "kind": "user_pool",
+        "mfa": {
+          "enforced": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user_pool
+    - field: properties.identity.mfa.enforced
+      op: eq
+      value: false

@@ -1,0 +1,37 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:iam::111122223333:user/devops",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "policies": {
+            "grants_codebuild_startbuild_on": [
+              "arn:aws:codebuild:us-east-1:111122223333:project/deploy-pipeline"
+            ],
+            "grants_source_write_on": [
+              "arn:aws:codecommit:us-east-1:111122223333:deploy-pipeline-src"
+            ]
+          },
+          "escalation": {
+            "startbuild_source_write": {
+              "present": true,
+              "target_project": "arn:aws:codebuild:us-east-1:111122223333:project/deploy-pipeline",
+              "target_role": "arn:aws:iam::111122223333:role/codebuild-deploy-role",
+              "permission_delta": [
+                "iam:PutUserPolicy",
+                "s3:*"
+              ],
+              "source_type": "codecommit"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

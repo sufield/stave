@@ -1,0 +1,101 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.PASSROLE.RUNINSTANCES.001
+name: Principal Must Not Escalate via EC2 RunInstances Instance Profile
+description: >
+  Principals with iam:PassRole on a role R plus ec2:RunInstances can
+  escalate to R's permissions by launching an EC2 instance with R as
+  its instance profile and executing code on the instance via
+  user-data (first-boot) or direct shell access. When R's effective
+  permissions exceed the principal's own, the running instance can
+  call the IMDS for temporary credentials under R and perform actions
+  the original principal lacks — including IAM mutations if R carries
+  them.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-6(5)"
+  fedramp_moderate: "AC-6(5)"
+  iso_27001_2022: "A.8.3"
+  ccm_v4: ["IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+  - ec2
+type: unsafe_state
+params:
+  attack_stage: privilege_escalation
+  base_impact: 9
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+observation_fields:
+  - identity.kind
+  - identity.escalation.passrole_runinstances.present
+  - identity.escalation.passrole_runinstances.target_role
+  - identity.escalation.passrole_runinstances.permission_delta
+remediation:
+  description: >
+    Principal has an EC2-mediated escalation path. Its iam:PassRole
+    grant reaches a role whose effective permissions exceed the
+    principal's own, and its ec2:RunInstances grant allows it to
+    launch an instance with that role as the instance profile. The
+    instance's user-data or shell can read IMDS credentials for the
+    role and perform any action the role is authorised for.
+  action: >
+    Scope iam:PassRole to a role whose effective permissions do not
+    exceed the principal's, or remove ec2:RunInstances. If a broader
+    instance-launch capability is required, enforce an instance-profile
+    allowlist via a Condition on iam:PassRole
+    (Condition.StringEquals: iam:PassedToService == ec2.amazonaws.com
+    together with a narrowly-scoped Resource ARN).
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "escalation": {
+          "passrole_runinstances": {
+            "present": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user
+    - field: properties.identity.escalation.passrole_runinstances.present
+      op: eq
+      value: true
+tests:
+  - name: user with RunInstances passrole escalation path fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/mallory
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            passrole_runinstances:
+              present: true
+              target_role: arn:aws:iam::111122223333:role/ec2-admin-instance-profile
+              permission_delta:
+                - iam:PutUserPolicy
+                - iam:CreateAccessKey
+  - name: user without escalation path passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/bob
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            passrole_runinstances:
+              present: false

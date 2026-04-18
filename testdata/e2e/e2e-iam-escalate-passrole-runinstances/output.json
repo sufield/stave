@@ -1,0 +1,126 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-04-17T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "67356951bb1eedb79be20f1bd36324a071fcc9422551f5ce011e9519cd5de4e8",
+        "2026-01-11T000000Z.json": "8df38fa3dbf46e735723f6ffdcfc74b1d7d89e8825d8968097f00c6fac78f3bf"
+      },
+      "overall": "5cac233ea67cc468eeb34df32af124979c413ca1673de75c656642c5d21e6ecf"
+    },
+    "policy_fingerprint": "26ea8dbee354a5ef81cdc9cd20e8b6f795c9988d3e001b9a4f81b967ca149327",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.IAM.ESCALATE.PASSROLE.RUNINSTANCES.001",
+      "asset_id": "arn:aws:iam::111122223333:user/mallory",
+      "asset_type": "aws_iam_user",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -2376,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:106585d84298f90f",
+      "control_id": "CTL.IAM.ESCALATE.PASSROLE.RUNINSTANCES.001",
+      "control_name": "Principal Must Not Escalate via EC2 RunInstances Instance Profile",
+      "control_description": "Principals with iam:PassRole on a role R plus ec2:RunInstances can escalate to R's permissions by launching an EC2 instance with R as its instance profile and executing code on the instance via user-data (first-boot) or direct shell access. When R's effective permissions exceed the principal's own, the running instance can call the IMDS for temporary credentials under R and perform actions the original principal lacks — including IAM mutations if R carries them.\n",
+      "asset_id": "arn:aws:iam::111122223333:user/mallory",
+      "asset_type": "aws_iam_user",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 2544,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "identity.escalation.passrole_runinstances.present",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "identity.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "user"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 2544 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "fedramp_moderate": "AC-6(5)",
+        "iso_27001_2022": "A.8.3",
+        "nist_800_53_r5": "AC-6(5)",
+        "pci_dss_v4.0": "7.2.1",
+        "soc2": "CC6.1"
+      },
+      "control_compliance_ccm_v4": [
+        "IAM-05",
+        "IAM-16"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Principal has an EC2-mediated escalation path. Its iam:PassRole grant reaches a role whose effective permissions exceed the principal's own, and its ec2:RunInstances grant allows it to launch an instance with that role as the instance profile. The instance's user-data or shell can read IMDS credentials for the role and perform any action the role is authorised for.",
+        "action": "Scope iam:PassRole to a role whose effective permissions do not exceed the principal's, or remove ec2:RunInstances. If a broader instance-launch capability is required, enforce an instance-profile allowlist via a Condition on iam:PassRole (Condition.StringEquals: iam:PassedToService == ec2.amazonaws.com together with a narrowly-scoped Resource ARN).",
+        "example": "{\n  \"identity\": {\n    \"kind\": \"user\",\n    \"escalation\": {\n      \"passrole_runinstances\": {\n        \"present\": false\n      }\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.IAM.ESCALATE.PASSROLE.RUNINSTANCES.001",
+      "asset_id": "arn:aws:iam::111122223333:user/mallory",
+      "exposure_score": 300,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 2,
+        "blast_multiplier": 2,
+        "exposure_multiplier": 1,
+        "days_blind": 106
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-iam-escalate-passrole-runinstances/controls",
+      "observations": "testdata/e2e/e2e-iam-escalate-passrole-runinstances/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "5bba2b4aec0450bda198cb7ac6272f1a8eb79380",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-iam-escalate-passrole-runinstances/controls/"
+      ]
+    }
+  }
+}

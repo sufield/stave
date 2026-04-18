@@ -1,0 +1,43 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-04-17T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "487fcbb300a17ecebf044a43827f7430debd14eb8c2a528690feb64cf4229b24",
+        "2026-01-11T000000Z.json": "c7e49564b00059e0c1bc519fdd4d9aa3839f2e89594549b122f5fdfdb4f4ae95"
+      },
+      "overall": "c9b697841741f87ac96aab37dbd9a6793621ea4e893c6d889a16fe42bdb33258"
+    },
+    "policy_fingerprint": "2c03b2e5414e04c8db32f3cb6bdebec224ead61a2ef4949d23c973ee6e4e9f12",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-h1-bomma-cognito-email-ato/controls",
+      "observations": "testdata/e2e/e2e-h1-bomma-cognito-email-ato/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "feac3b72508a098acaa56abec841b1fcbae15f2b",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-h1-bomma-cognito-email-ato/controls/"
+      ]
+    }
+  }
+}

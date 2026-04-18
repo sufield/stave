@@ -3,15 +3,15 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 630
-**Pack hash:** `2df0121b9f3661b8b95ef1b98de26cf113812f07af8e3cbda59aab5908427733`
+**Total controls:** 633
+**Pack hash:** `3a28acf3e9795ce8629215b03b73c93af294c564d037a739aff9bb1330a89765`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 102 |
-| high | 279 |
+| high | 282 |
 | info | 16 |
 | low | 52 |
 | medium | 181 |
@@ -23,7 +23,7 @@
 | encryption | 9 |
 | exposure | 439 |
 | governance | 17 |
-| identity | 134 |
+| identity | 137 |
 | network | 7 |
 | resilience | 4 |
 | storage | 8 |
@@ -4218,6 +4218,51 @@ All privileged accounts across all cloud providers must have MFA enforced. This 
 IAM principals must have no multi-step permission chain that leads to administrative access. The extractor analyzes known escalation patterns (iam:PassRole + lambda:CreateFunction, iam:CreatePolicyVersion on self, sts:AssumeRole to admin role, etc.) and traces whether a low-privileged principal can chain permissions to reach admin. Each step is individually authorized but the composition creates a privilege escalation path that policy reviews miss.
 
 **Remediation:** Remove the weakest link in the escalation chain. Common fixes: scope iam:PassRole to specific role ARNs, restrict lambda:CreateFunction to approved execution roles, add permissions boundaries that deny IAM self-modification.
+
+---
+
+### CTL.IAM.ESCALATE.PASSROLE.CREATESTACK.001
+
+**Principal Must Not Escalate via CloudFormation CreateStack**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+Principals with iam:PassRole on a role R plus cloudformation:CreateStack (without a condition that denies CAPABILITY_IAM / CAPABILITY_NAMED_IAM) can escalate to R's permissions by submitting a template that CloudFormation executes under R. When R's effective permissions exceed the principal's own, this is a privilege escalation path. The attacker submits a template that performs IAM mutations (attach user policy, put user policy, create access key), and CloudFormation executes those mutations under R. The principal never gains R directly — but gains R's authority through CloudFormation's template execution.
+
+**Remediation:** Scope iam:PassRole to a role whose effective permissions do not exceed the principal's, or restrict cloudformation:CreateStack with a condition that denies CAPABILITY_IAM / CAPABILITY_NAMED_IAM. Alternatively, remove the escalation-enabling permissions from the target role (iam:PutUserPolicy, iam:AttachUserPolicy, iam:CreateAccessKey, iam:UpdateAssumeRolePolicy).
+
+---
+
+### CTL.IAM.ESCALATE.PASSROLE.RUNINSTANCES.001
+
+**Principal Must Not Escalate via EC2 RunInstances Instance Profile**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+Principals with iam:PassRole on a role R plus ec2:RunInstances can escalate to R's permissions by launching an EC2 instance with R as its instance profile and executing code on the instance via user-data (first-boot) or direct shell access. When R's effective permissions exceed the principal's own, the running instance can call the IMDS for temporary credentials under R and perform actions the original principal lacks — including IAM mutations if R carries them.
+
+**Remediation:** Scope iam:PassRole to a role whose effective permissions do not exceed the principal's, or remove ec2:RunInstances. If a broader instance-launch capability is required, enforce an instance-profile allowlist via a Condition on iam:PassRole (Condition.StringEquals: iam:PassedToService == ec2.amazonaws.com together with a narrowly-scoped Resource ARN).
+
+---
+
+### CTL.IAM.ESCALATE.STARTBUILD.001
+
+**Principal Must Not Escalate via CodeBuild Source Injection**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+Principals with codebuild:StartBuild on project P, plus write access to P's source repository (CodeCommit push, S3 PutObject on source bucket, or external Git write) or the ability to override P's buildspec on invocation, can escalate to P's service role by injecting a malicious buildspec. The buildspec runs inside CodeBuild under P's service role and can perform any action the role is authorised for. This vector does not require iam:PassRole — the service role is already attached to the project; the attacker only needs to change what it executes.
+
+**Remediation:** Remove the principal's write access to the source that feeds the project, or remove codebuild:StartBuild from the principal, or reduce the project's service role to permissions that do not exceed the principal's. If source-write is intentional (as in developer workflows), scope the project's service role narrowly and rely on source-approval controls (e.g., CodeCommit approval rules) before a build can run.
 
 ---
 

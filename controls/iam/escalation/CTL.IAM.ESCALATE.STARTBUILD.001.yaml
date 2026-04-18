@@ -1,0 +1,106 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.STARTBUILD.001
+name: Principal Must Not Escalate via CodeBuild Source Injection
+description: >
+  Principals with codebuild:StartBuild on project P, plus write access
+  to P's source repository (CodeCommit push, S3 PutObject on source
+  bucket, or external Git write) or the ability to override P's
+  buildspec on invocation, can escalate to P's service role by
+  injecting a malicious buildspec. The buildspec runs inside
+  CodeBuild under P's service role and can perform any action the
+  role is authorised for. This vector does not require iam:PassRole
+  — the service role is already attached to the project; the attacker
+  only needs to change what it executes.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-6(5)"
+  fedramp_moderate: "AC-6(5)"
+  iso_27001_2022: "A.8.3"
+  ccm_v4: ["AIS-06", "IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+  - codebuild
+type: unsafe_state
+params:
+  attack_stage: privilege_escalation
+  base_impact: 9
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+observation_fields:
+  - identity.kind
+  - identity.escalation.startbuild_source_write.present
+  - identity.escalation.startbuild_source_write.target_project
+  - identity.escalation.startbuild_source_write.target_role
+  - identity.escalation.startbuild_source_write.permission_delta
+  - identity.escalation.startbuild_source_write.source_type
+remediation:
+  description: >
+    Principal has a CodeBuild-mediated escalation path. It can
+    start a build on a project whose service role exceeds the
+    principal's permissions, and it can modify the buildspec the
+    project executes (via source-repo write or buildspec override).
+    The buildspec runs under the project's service role.
+  action: >
+    Remove the principal's write access to the source that feeds the
+    project, or remove codebuild:StartBuild from the principal, or
+    reduce the project's service role to permissions that do not
+    exceed the principal's. If source-write is intentional (as in
+    developer workflows), scope the project's service role narrowly
+    and rely on source-approval controls (e.g., CodeCommit approval
+    rules) before a build can run.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "escalation": {
+          "startbuild_source_write": {
+            "present": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user
+    - field: properties.identity.escalation.startbuild_source_write.present
+      op: eq
+      value: true
+tests:
+  - name: user with CodeBuild source-write escalation path fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/devops
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            startbuild_source_write:
+              present: true
+              target_project: arn:aws:codebuild:us-east-1:111122223333:project/deploy-pipeline
+              target_role: arn:aws:iam::111122223333:role/codebuild-deploy-role
+              permission_delta:
+                - iam:PutUserPolicy
+                - s3:*
+              source_type: codecommit
+  - name: user without escalation path passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/alice
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            startbuild_source_write:
+              present: false

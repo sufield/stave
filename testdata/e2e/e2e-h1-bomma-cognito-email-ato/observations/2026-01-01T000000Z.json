@@ -1,0 +1,39 @@
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws-cognito-snapshot",
+    "tool": "stave-synthetic",
+    "tool_version": "1.0.0"
+  },
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_bommaP001",
+      "type": "aws_cognito_user_pool",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user_pool",
+          "user_pool": {
+            "name": "bomma-pre-patch-pool",
+            "alias_attributes": ["email"],
+            "username_attributes": [],
+            "email_attribute": {
+              "mutable": true,
+              "required": true
+            },
+            "email_is_alias_or_username": true,
+            "email_change_verification_enforced": false
+          },
+          "password_policy": {
+            "is_weak": false
+          },
+          "auth": {
+            "mfa_enforced": true
+          }
+        }
+      }
+    }
+  ]
+}

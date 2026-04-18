@@ -1,0 +1,33 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:iam::111122223333:user/mallory",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "policies": {
+            "grants_passrole_on": [
+              "arn:aws:iam::111122223333:role/ec2-admin-instance-profile"
+            ],
+            "grants_ec2_runinstances": true
+          },
+          "escalation": {
+            "passrole_runinstances": {
+              "present": true,
+              "target_role": "arn:aws:iam::111122223333:role/ec2-admin-instance-profile",
+              "permission_delta": [
+                "iam:PutUserPolicy",
+                "iam:CreateAccessKey"
+              ]
+            }
+          }
+        }
+      }
+    }
+  ]
+}
