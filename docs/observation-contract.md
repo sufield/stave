@@ -330,6 +330,8 @@ For IAM evaluation, these property namespaces are the stability surface.
 | `identity.policies.has_inline_policies` | bool | Inline policies attached to user |
 | `identity.policies.has_direct_policies` | bool | Managed policies attached directly |
 | `identity.policies.has_admin_access` | bool | User has admin-level access |
+| `identity.user.reachable_resources_count` | int | Resources reachable through user's attached and inline policies |
+| `identity.user.sensitive_resource_count` | int | Sensitive resources (PHI/PII/confidential) reachable through user's policies |
 
 ### Password policy (`aws_iam_password_policy`)
 
@@ -847,7 +849,16 @@ Additional properties for the existing `identity.role.*` namespace:
 | `identity.role.sensitive_resource_count` | int | Sensitive resources (PHI/PII/confidential) reachable |
 | `identity.role.can_delete_all_backups` | bool | Role can delete all backup resources |
 
-**Controls:** CTL.IAM.IDENTITY.BLASTRADIUS.004 (sensitive resource count > 20).
+Parallel properties for the `identity.user.*` namespace:
+
+| Property | Type | Description |
+|---|---|---|
+| `identity.user.reachable_resources_count` | int | Resources reachable through user's attached and inline policies |
+| `identity.user.sensitive_resource_count` | int | Sensitive resources (PHI/PII/confidential) reachable |
+
+**Controls:** CTL.IAM.IDENTITY.BLASTRADIUS.004 (role sensitive > 20),
+CTL.IAM.IDENTITY.BLASTRADIUS.005 (user reachable > 50),
+CTL.IAM.IDENTITY.BLASTRADIUS.006 (user sensitive > 20).
 
 ---
 

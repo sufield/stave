@@ -154,7 +154,7 @@ New observation properties are additive and backward-compatible. Existing contro
 |----------|:---:|-----------------|
 | `public` | {{ctrl "public"}} | Public read/write/list, website hosting, prefix exposure, CloudFront bypass |
 | `acl` | {{ctrl "acl"}} | ACL escalation, reconnaissance, FULL_CONTROL grants |
-| `access` | {{ctrl "access"}} | Cross-account, wildcard actions, presigned URLs, Access Grants |
+| `access` | {{ctrl "access"}} | Cross-account, wildcard actions, presigned URLs, Access Grants, policy disclosure |
 | `encrypt` | {{ctrl "encrypt"}} | Missing encryption at rest/in transit, KMS for PHI |
 | `network` | {{ctrl "network"}} | VPC/IP conditions, VPC endpoint policy, Multi-Region Access Point PAB |
 | `versioning` | {{ctrl "versioning"}} | Disabled versioning, missing MFA delete |
@@ -171,7 +171,7 @@ New observation properties are additive and backward-compatible. Existing contro
 
 ### AWS IAM ({{domain "iam"}} controls)
 
-Root account MFA and access keys, console user MFA, credential rotation, password policy, privilege escalation (self-modify, PassRole, AssumeRole), permissions boundaries, break-glass persistence, cross-environment access, inactive accounts. CIS AWS Benchmark aligned.
+Root account MFA and access keys, console user MFA, credential rotation, password policy, privilege escalation (self-modify, PassRole, AssumeRole), permissions boundaries, break-glass persistence, cross-environment access, inactive accounts, blast-radius thresholds for roles and users. CIS AWS Benchmark aligned.
 
 ### AWS OpenSearch ({{domain "opensearch"}} controls)
 

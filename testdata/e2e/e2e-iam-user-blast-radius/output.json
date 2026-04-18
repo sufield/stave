@@ -1,0 +1,278 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "9d22342b48d70adec4fe4de3b7d8f1779a330a38d5397d07a9a075766961ea1a",
+        "2026-01-11T000000Z.json": "4fa9d15f8492ebb4dfb23f9d22956df6edccd3590dae80f1f7b775871ccabd2f"
+      },
+      "overall": "4dd797bad64d962fb91fcdcefef1f9d0d1148d889c3f5f5c72f35f762bc75019"
+    },
+    "policy_fingerprint": "413d9a296d055ccf2fc53a46bed80b543003445fb26707de465fe2c051d48299",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 3,
+    "exposed_resources": 2,
+    "violations": 3
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.IAM.IDENTITY.BLASTRADIUS.005",
+      "asset_id": "arn:aws:iam::123456789012:user/broad-but-not-sensitive",
+      "asset_type": "aws_iam_user",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.IAM.IDENTITY.BLASTRADIUS.005",
+      "asset_id": "arn:aws:iam::123456789012:user/dev-test",
+      "asset_type": "aws_iam_user",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.IAM.IDENTITY.BLASTRADIUS.006",
+      "asset_id": "arn:aws:iam::123456789012:user/dev-test",
+      "asset_type": "aws_iam_user",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:9e488406cbb0b5df",
+      "control_id": "CTL.IAM.IDENTITY.BLASTRADIUS.005",
+      "control_name": "User Blast Radius Must Not Exceed Resource Threshold",
+      "control_description": "IAM users must not be able to reach more than 50 resources through their attached and inline policies. A user with wide blast radius means a single credential compromise — leaked access keys, phishing, stolen browser session — gives an attacker access to a large surface area. Iski's disclosure (April 2025) demonstrated this: an IAM user (dev-test) with long-term access keys and s3:GetObject / s3:ListBucket across multiple production buckets (vpc-logs-production, user-backups-staging, cdn-assets-public) was the precondition that turned a credential leak in a frontend CSS file into a full data breach. The user was not an admin; the leak was out-of-band from AWS configuration; but the breadth of AWS-side permissions made exploitation trivial. This is the user-kind equivalent of CTL.IAM.IDENTITY.BLASTRADIUS.001 for roles.\n",
+      "asset_id": "arn:aws:iam::123456789012:user/broad-but-not-sensitive",
+      "asset_type": "aws_iam_user",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "identity.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "user"
+          },
+          {
+            "property": "identity.user.reachable_resources_count",
+            "actual_value": "[SANITIZED]",
+            "operator": "gt",
+            "unsafe_value": 50
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "fedramp_moderate": "AC-6",
+        "nist_800_53_r5": "AC-6",
+        "soc2": "CC6.1"
+      },
+      "control_compliance_ccm_v4": [
+        "IAM-03",
+        "IAM-05"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "IAM user can reach more than 50 resources through attached and inline policies. Credential compromise has a wide blast radius.",
+        "action": "Reduce the user's permissions to the minimum set of resources required. Split broad permissions into scoped Resource ARNs. Move programmatic workloads off long-term user access keys onto service-linked roles or IAM Roles Anywhere. Use IAM Access Analyzer to identify unused permissions for removal.",
+        "example": "{\n  \"identity\": {\n    \"kind\": \"user\",\n    \"user\": {\n      \"reachable_resources_count\": 10\n    }\n  }\n}\n"
+      }
+    },
+    {
+      "finding_id": "sha256:04fbdcd7e6e8c072",
+      "control_id": "CTL.IAM.IDENTITY.BLASTRADIUS.005",
+      "control_name": "User Blast Radius Must Not Exceed Resource Threshold",
+      "control_description": "IAM users must not be able to reach more than 50 resources through their attached and inline policies. A user with wide blast radius means a single credential compromise — leaked access keys, phishing, stolen browser session — gives an attacker access to a large surface area. Iski's disclosure (April 2025) demonstrated this: an IAM user (dev-test) with long-term access keys and s3:GetObject / s3:ListBucket across multiple production buckets (vpc-logs-production, user-backups-staging, cdn-assets-public) was the precondition that turned a credential leak in a frontend CSS file into a full data breach. The user was not an admin; the leak was out-of-band from AWS configuration; but the breadth of AWS-side permissions made exploitation trivial. This is the user-kind equivalent of CTL.IAM.IDENTITY.BLASTRADIUS.001 for roles.\n",
+      "asset_id": "arn:aws:iam::123456789012:user/dev-test",
+      "asset_type": "aws_iam_user",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "identity.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "user"
+          },
+          {
+            "property": "identity.user.reachable_resources_count",
+            "actual_value": "[SANITIZED]",
+            "operator": "gt",
+            "unsafe_value": 50
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "fedramp_moderate": "AC-6",
+        "nist_800_53_r5": "AC-6",
+        "soc2": "CC6.1"
+      },
+      "control_compliance_ccm_v4": [
+        "IAM-03",
+        "IAM-05"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "IAM user can reach more than 50 resources through attached and inline policies. Credential compromise has a wide blast radius.",
+        "action": "Reduce the user's permissions to the minimum set of resources required. Split broad permissions into scoped Resource ARNs. Move programmatic workloads off long-term user access keys onto service-linked roles or IAM Roles Anywhere. Use IAM Access Analyzer to identify unused permissions for removal.",
+        "example": "{\n  \"identity\": {\n    \"kind\": \"user\",\n    \"user\": {\n      \"reachable_resources_count\": 10\n    }\n  }\n}\n"
+      }
+    },
+    {
+      "finding_id": "sha256:9b4a50889d2ce87b",
+      "control_id": "CTL.IAM.IDENTITY.BLASTRADIUS.006",
+      "control_name": "User Must Not Reach Excessive Sensitive Resources",
+      "control_description": "IAM users must have access to fewer than 20 resources classified as sensitive (PHI, PII, confidential). A user that can reach 85 sensitive resources is a qualitatively different risk than one that reaches 5 — credential compromise exposes a proportionally larger data surface. This is the user-kind equivalent of CTL.IAM.IDENTITY.BLASTRADIUS.004 for roles. Iski's disclosure (April 2025) showed the Iski pattern: a user with read access to user-backups-staging — which held production database backups and user PII — turned a leaked access key into a full PII breach. The extractor counts unique sensitive resources reachable through the user's attached and inline policies.\n",
+      "asset_id": "arn:aws:iam::123456789012:user/dev-test",
+      "asset_type": "aws_iam_user",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "identity.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "user"
+          },
+          {
+            "property": "identity.user.sensitive_resource_count",
+            "actual_value": "[SANITIZED]",
+            "operator": "gt",
+            "unsafe_value": 20
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance": {
+        "fedramp_moderate": "AC-6(5)",
+        "hipaa": "164.312(a)(1)",
+        "nist_800_53_r5": "AC-6(5)",
+        "pci_dss_v4.0": "7.2.2",
+        "soc2": "CC6.1"
+      },
+      "control_compliance_ccm_v4": [
+        "IAM-03",
+        "IAM-05"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "User has access to more than 20 sensitive resources. Credential compromise exposes a disproportionate data surface.",
+        "action": "Split broad user permissions into scoped Resource ARNs. Move programmatic access onto service-linked roles with tightly-scoped trust policies. Use IAM Access Analyzer to identify unused permissions on sensitive resources. Apply permissions boundaries that restrict access to classified data.",
+        "example": "{\n  \"identity\": {\n    \"kind\": \"user\",\n    \"user\": {\n      \"sensitive_resource_count\": 5\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 2,
+      "control_id": "CTL.IAM.IDENTITY.BLASTRADIUS.006",
+      "asset_id": "arn:aws:iam::123456789012:user/dev-test",
+      "exposure_score": 250,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 2.5,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 0,
+      "control_id": "CTL.IAM.IDENTITY.BLASTRADIUS.005",
+      "asset_id": "arn:aws:iam::123456789012:user/broad-but-not-sensitive",
+      "exposure_score": 150,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 2,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 1,
+      "control_id": "CTL.IAM.IDENTITY.BLASTRADIUS.005",
+      "asset_id": "arn:aws:iam::123456789012:user/dev-test",
+      "exposure_score": 150,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 2,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-iam-user-blast-radius/controls",
+      "observations": "testdata/e2e/e2e-iam-user-blast-radius/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "ab04c9b2b1e2141c99455d9307ad73a277712f00",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-iam-user-blast-radius/controls/"
+      ]
+    }
+  }
+}

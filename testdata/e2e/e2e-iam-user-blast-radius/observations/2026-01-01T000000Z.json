@@ -1,0 +1,57 @@
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws-iam-snapshot",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "captured_at": "2026-01-01T00:00:00Z",
+  "assets": [
+    {
+      "id": "arn:aws:iam::123456789012:user/dev-test",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "name": "dev-test",
+          "user": {
+            "reachable_resources_count": 87,
+            "sensitive_resource_count": 34
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::123456789012:user/broad-but-not-sensitive",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "name": "broad-but-not-sensitive",
+          "user": {
+            "reachable_resources_count": 62,
+            "sensitive_resource_count": 4
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::123456789012:user/scoped-user",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "name": "scoped-user",
+          "user": {
+            "reachable_resources_count": 8,
+            "sensitive_resource_count": 0
+          }
+        }
+      }
+    }
+  ],
+  "source": "deployed"
+}

@@ -3,15 +3,15 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 638
-**Pack hash:** `ee62282a16aeb239529bbb15fe456daf8e47761fb61014ebcb1fbde7ac09dc12`
+**Total controls:** 640
+**Pack hash:** `b809a44727c54753cf108b4620486a2441dfc498b9d5dc7b1e5b8c2a2514265a`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 102 |
-| high | 286 |
+| critical | 103 |
+| high | 287 |
 | info | 16 |
 | low | 52 |
 | medium | 182 |
@@ -23,7 +23,7 @@
 | encryption | 9 |
 | exposure | 444 |
 | governance | 17 |
-| identity | 137 |
+| identity | 139 |
 | network | 7 |
 | resilience | 4 |
 | storage | 8 |
@@ -4368,6 +4368,36 @@ IAM role assumption chains must not exceed 2 hops. Deep chains (Role A assumes R
 IAM roles must have access to fewer than 20 resources classified as sensitive (PHI, PII, confidential). A role that can reach 85 sensitive resources is a qualitatively different risk than one that reaches 5 — credential compromise exposes a proportionally larger data surface. The extractor counts unique sensitive resources reachable through the role's attached and inline policies.
 
 **Remediation:** Split broad roles into per-service roles scoped to specific resource ARNs. Use IAM Access Analyzer to identify unused permissions on sensitive resources. Apply permissions boundaries that restrict access to classified data.
+
+---
+
+### CTL.IAM.IDENTITY.BLASTRADIUS.005
+
+**User Blast Radius Must Not Exceed Resource Threshold**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6; nist_800_53_r5: AC-6; soc2: CC6.1;
+
+IAM users must not be able to reach more than 50 resources through their attached and inline policies. A user with wide blast radius means a single credential compromise — leaked access keys, phishing, stolen browser session — gives an attacker access to a large surface area. Iski's disclosure (April 2025) demonstrated this: an IAM user (dev-test) with long-term access keys and s3:GetObject / s3:ListBucket across multiple production buckets (vpc-logs-production, user-backups-staging, cdn-assets-public) was the precondition that turned a credential leak in a frontend CSS file into a full data breach. The user was not an admin; the leak was out-of-band from AWS configuration; but the breadth of AWS-side permissions made exploitation trivial. This is the user-kind equivalent of CTL.IAM.IDENTITY.BLASTRADIUS.001 for roles.
+
+**Remediation:** Reduce the user's permissions to the minimum set of resources required. Split broad permissions into scoped Resource ARNs. Move programmatic workloads off long-term user access keys onto service-linked roles or IAM Roles Anywhere. Use IAM Access Analyzer to identify unused permissions for removal.
+
+---
+
+### CTL.IAM.IDENTITY.BLASTRADIUS.006
+
+**User Must Not Reach Excessive Sensitive Resources**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); hipaa: 164.312(a)(1); nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.2; soc2: CC6.1;
+
+IAM users must have access to fewer than 20 resources classified as sensitive (PHI, PII, confidential). A user that can reach 85 sensitive resources is a qualitatively different risk than one that reaches 5 — credential compromise exposes a proportionally larger data surface. This is the user-kind equivalent of CTL.IAM.IDENTITY.BLASTRADIUS.004 for roles. Iski's disclosure (April 2025) showed the Iski pattern: a user with read access to user-backups-staging — which held production database backups and user PII — turned a leaked access key into a full PII breach. The extractor counts unique sensitive resources reachable through the user's attached and inline policies.
+
+**Remediation:** Split broad user permissions into scoped Resource ARNs. Move programmatic access onto service-linked roles with tightly-scoped trust policies. Use IAM Access Analyzer to identify unused permissions on sensitive resources. Apply permissions boundaries that restrict access to classified data.
 
 ---
 

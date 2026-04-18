@@ -1,0 +1,62 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.IDENTITY.BLASTRADIUS.005
+name: User Blast Radius Must Not Exceed Resource Threshold
+description: >
+  IAM users must not be able to reach more than 50 resources through
+  their attached and inline policies. A user with wide blast radius
+  means a single credential compromise — leaked access keys, phishing,
+  stolen browser session — gives an attacker access to a large surface
+  area. Iski's disclosure (April 2025) demonstrated this: an IAM user
+  (dev-test) with long-term access keys and s3:GetObject / s3:ListBucket
+  across multiple production buckets (vpc-logs-production,
+  user-backups-staging, cdn-assets-public) was the precondition that
+  turned a credential leak in a frontend CSS file into a full data
+  breach. The user was not an admin; the leak was out-of-band from AWS
+  configuration; but the breadth of AWS-side permissions made
+  exploitation trivial. This is the user-kind equivalent of
+  CTL.IAM.IDENTITY.BLASTRADIUS.001 for roles.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-6"
+  fedramp_moderate: "AC-6"
+  ccm_v4: ["IAM-03", "IAM-05"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params:
+  base_impact: 8
+  attack_stage: persistence
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    IAM user can reach more than 50 resources through attached and
+    inline policies. Credential compromise has a wide blast radius.
+  action: >
+    Reduce the user's permissions to the minimum set of resources
+    required. Split broad permissions into scoped Resource ARNs. Move
+    programmatic workloads off long-term user access keys onto
+    service-linked roles or IAM Roles Anywhere. Use IAM Access
+    Analyzer to identify unused permissions for removal.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "user": {
+          "reachable_resources_count": 10
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user
+    - field: properties.identity.user.reachable_resources_count
+      op: gt
+      value: 50
