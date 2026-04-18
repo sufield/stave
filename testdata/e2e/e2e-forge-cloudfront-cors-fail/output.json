@@ -1,0 +1,137 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "4cb33f38226104985d9f87357830b9b7640337bea74deb8ecee6622fbcd2348c",
+        "2026-01-11T000000Z.json": "d025e8726e3c4099fb278cbdeed2be61e029102561cd8cb49841da59d9acde51"
+      },
+      "overall": "e5ce4ea086d6bfe3d933ddf99bea870e2e65deb04cd19b2360e98ce06c205ab6"
+    },
+    "policy_fingerprint": "638d615bec8448765fe092fe828d1a2bede65ab02cfba43206641881902cc757",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.CLOUDFRONT.CORS.001",
+      "asset_id": "5cc3b908-e619-4b99-88e5-2cf7f45965bd",
+      "asset_type": "aws_cloudfront_response_headers_policy",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:213a3f5fac32b767",
+      "control_id": "CTL.CLOUDFRONT.CORS.001",
+      "control_name": "Response Headers Policy Must Not Combine Wildcard Origin With Credentials",
+      "control_description": "CloudFront response headers policies can attach a CorsConfig block whose AccessControlAllowOrigins and AccessControlAllowCredentials values are propagated to every distribution that references the policy. A policy that sets AccessControlAllowOrigins to \"*\" and AccessControlAllowCredentials to true encodes the intent that any origin may make credentialed requests against every distribution using this policy. Browsers refuse wildcard-plus-credentials, but the configuration signals that the origin allowlist and credentials policy have not been reasoned about together. Because response headers policies are shared across distributions, a single misconfigured policy can propagate the misconfiguration to unrelated workloads. Observation fields mirror the CorsConfig block returned by \"aws cloudfront get-response-headers-policy\".\n",
+      "asset_id": "5cc3b908-e619-4b99-88e5-2cf7f45965bd",
+      "asset_type": "aws_cloudfront_response_headers_policy",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "cdn.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "response_headers_policy"
+          },
+          {
+            "property": "cdn.response_headers_policy.cors.allows_wildcard_origin",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "cdn.response_headers_policy.cors.configured",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "cdn.response_headers_policy.cors.credentials_allowed",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "fedramp_moderate": "AC-4",
+        "nist_800_53_r5": "AC-4",
+        "pci_dss_v4.0": "6.4.1",
+        "soc2": "CC6.1"
+      },
+      "control_compliance_ccm_v4": [
+        "AIS-04",
+        "DSP-10"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Response headers policy combines AccessControlAllowOrigins containing \"*\" with AccessControlAllowCredentials set to true. Any distribution referencing this policy propagates the misconfiguration to its cache behaviors.",
+        "action": "Update the policy so AccessControlAllowCredentials is false or the AccessControlAllowOrigins list does not contain \"*\". Use \"aws cloudfront update-response-headers-policy\" with a patched ResponseHeadersPolicyConfig.CorsConfig block. Audit which distributions reference this policy via \"aws cloudfront list-distributions\" — every referencing distribution inherits the change.",
+        "example": "{\n  \"cdn\": {\n    \"kind\": \"response_headers_policy\",\n    \"response_headers_policy\": {\n      \"cors\": {\n        \"configured\": true,\n        \"allows_wildcard_origin\": false,\n        \"credentials_allowed\": true\n      }\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.CLOUDFRONT.CORS.001",
+      "asset_id": "5cc3b908-e619-4b99-88e5-2cf7f45965bd",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-cloudfront-cors-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-cloudfront-cors-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "b0f26994c50379ed94752854bad6cebdc54e829e",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-cloudfront-cors-fail/controls/"
+      ]
+    }
+  }
+}

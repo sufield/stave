@@ -14,13 +14,13 @@
       },
       "overall": "dc22b6fe3206dca1fdda772ee929e95ec8c40c8f8120b2715161ab23a137f093"
     },
-    "policy_fingerprint": "3a43d33d6946a4821fb859b9790af47b5e39df446d519796faf7ed7af579facf",
+    "policy_fingerprint": "53ac68c6097978de1a37173c8483e2bee314ca81849e51efba6c5399c7ccbbaa",
     "evaluated_state": "deployed"
   },
   "summary": {
     "total_assets": 3,
     "exposed_resources": 3,
-    "violations": 13
+    "violations": 10
   },
   "status": "NON_COMPLIANT",
   "risk_signals": [
@@ -76,36 +76,6 @@
     },
     {
       "control_id": "CTL.S3.CONTROLS.001",
-      "asset_id": "shopify-writeable-1",
-      "asset_type": "aws_s3_bucket",
-      "status": "OVERDUE",
-      "due_at": "2015-10-25T00:00:00Z",
-      "remaining_hours": -89544,
-      "first_unsafe_at": "2015-10-18T00:00:00Z",
-      "threshold_hours": 168
-    },
-    {
-      "control_id": "CTL.S3.ENCRYPT.004",
-      "asset_id": "shopify-owned-1",
-      "asset_type": "aws_s3_bucket",
-      "status": "OVERDUE",
-      "due_at": "2015-10-25T00:00:00Z",
-      "remaining_hours": -89544,
-      "first_unsafe_at": "2015-10-18T00:00:00Z",
-      "threshold_hours": 168
-    },
-    {
-      "control_id": "CTL.S3.ENCRYPT.004",
-      "asset_id": "shopify-owned-2",
-      "asset_type": "aws_s3_bucket",
-      "status": "OVERDUE",
-      "due_at": "2015-10-25T00:00:00Z",
-      "remaining_hours": -89544,
-      "first_unsafe_at": "2015-10-18T00:00:00Z",
-      "threshold_hours": 168
-    },
-    {
-      "control_id": "CTL.S3.ENCRYPT.004",
       "asset_id": "shopify-writeable-1",
       "asset_type": "aws_s3_bucket",
       "status": "OVERDUE",
@@ -277,183 +247,6 @@
       "remediation": {
         "description": "Resource configuration deviates from security baseline.",
         "action": "Review the misconfigured properties and revert to compliant values."
-      }
-    },
-    {
-      "finding_id": "sha256:85b25efe79473e4b",
-      "control_id": "CTL.S3.ENCRYPT.004",
-      "control_name": "Sensitive Data Requires KMS Encryption",
-      "control_description": "S3 buckets with any non-public data classification must use SSE-KMS encryption with a customer-managed key, not SSE-S3 (AES256). AES256 uses AWS-managed keys with no customer control over key rotation, access policies, or audit trails. This fires on all classified data except explicitly public or non-sensitive buckets.\n",
-      "asset_id": "shopify-owned-1",
-      "asset_type": "aws_s3_bucket",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2015-10-18T00:00:00Z",
-        "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
-        "unsafe_duration_hours": 89712,
-        "threshold_hours": 168,
-        "misconfigurations": [
-          {
-            "property": "storage.encryption.algorithm",
-            "actual_value": "[SANITIZED]",
-            "operator": "ne",
-            "unsafe_value": "aws:kms"
-          },
-          {
-            "property": "storage.kind",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": "bucket"
-          },
-          {
-            "property": "storage.tags.data-classification",
-            "actual_value": "[SANITIZED]",
-            "operator": "ne",
-            "unsafe_value": "non-sensitive"
-          },
-          {
-            "property": "storage.tags.data-classification",
-            "actual_value": "[SANITIZED]",
-            "operator": "ne",
-            "unsafe_value": "public"
-          },
-          {
-            "property": "storage.tags.data-classification",
-            "actual_value": "[SANITIZED]",
-            "operator": "present",
-            "unsafe_value": true
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 89712 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
-      },
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "Resource data is not encrypted at rest.",
-        "action": "Enable server-side encryption using a managed key."
-      }
-    },
-    {
-      "finding_id": "sha256:d6768aae03c059be",
-      "control_id": "CTL.S3.ENCRYPT.004",
-      "control_name": "Sensitive Data Requires KMS Encryption",
-      "control_description": "S3 buckets with any non-public data classification must use SSE-KMS encryption with a customer-managed key, not SSE-S3 (AES256). AES256 uses AWS-managed keys with no customer control over key rotation, access policies, or audit trails. This fires on all classified data except explicitly public or non-sensitive buckets.\n",
-      "asset_id": "shopify-owned-2",
-      "asset_type": "aws_s3_bucket",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2015-10-18T00:00:00Z",
-        "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
-        "unsafe_duration_hours": 89712,
-        "threshold_hours": 168,
-        "misconfigurations": [
-          {
-            "property": "storage.encryption.algorithm",
-            "actual_value": "[SANITIZED]",
-            "operator": "ne",
-            "unsafe_value": "aws:kms"
-          },
-          {
-            "property": "storage.kind",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": "bucket"
-          },
-          {
-            "property": "storage.tags.data-classification",
-            "actual_value": "[SANITIZED]",
-            "operator": "ne",
-            "unsafe_value": "non-sensitive"
-          },
-          {
-            "property": "storage.tags.data-classification",
-            "actual_value": "[SANITIZED]",
-            "operator": "ne",
-            "unsafe_value": "public"
-          },
-          {
-            "property": "storage.tags.data-classification",
-            "actual_value": "[SANITIZED]",
-            "operator": "present",
-            "unsafe_value": true
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 89712 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
-      },
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "Resource data is not encrypted at rest.",
-        "action": "Enable server-side encryption using a managed key."
-      }
-    },
-    {
-      "finding_id": "sha256:a7ac33d3a9f8b48e",
-      "control_id": "CTL.S3.ENCRYPT.004",
-      "control_name": "Sensitive Data Requires KMS Encryption",
-      "control_description": "S3 buckets with any non-public data classification must use SSE-KMS encryption with a customer-managed key, not SSE-S3 (AES256). AES256 uses AWS-managed keys with no customer control over key rotation, access policies, or audit trails. This fires on all classified data except explicitly public or non-sensitive buckets.\n",
-      "asset_id": "shopify-writeable-1",
-      "asset_type": "aws_s3_bucket",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2015-10-18T00:00:00Z",
-        "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
-        "unsafe_duration_hours": 89712,
-        "threshold_hours": 168,
-        "misconfigurations": [
-          {
-            "property": "storage.encryption.algorithm",
-            "actual_value": "[SANITIZED]",
-            "operator": "ne",
-            "unsafe_value": "aws:kms"
-          },
-          {
-            "property": "storage.kind",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": "bucket"
-          },
-          {
-            "property": "storage.tags.data-classification",
-            "actual_value": "[SANITIZED]",
-            "operator": "ne",
-            "unsafe_value": "non-sensitive"
-          },
-          {
-            "property": "storage.tags.data-classification",
-            "actual_value": "[SANITIZED]",
-            "operator": "ne",
-            "unsafe_value": "public"
-          },
-          {
-            "property": "storage.tags.data-classification",
-            "actual_value": "[SANITIZED]",
-            "operator": "present",
-            "unsafe_value": true
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 89712 hours (SLA: 168 hours). Exposed since 2015-10-18T00:00:00Z."
-      },
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "Resource data is not encrypted at rest.",
-        "action": "Enable server-side encryption using a managed key."
       }
     },
     {
@@ -1132,7 +925,7 @@
     },
     {
       "finding_index": 3,
-      "control_id": "CTL.S3.ENCRYPT.004",
+      "control_id": "CTL.S3.PUBLIC.001",
       "asset_id": "shopify-owned-1",
       "exposure_score": 50,
       "breakdown": {
@@ -1146,7 +939,7 @@
     },
     {
       "finding_index": 4,
-      "control_id": "CTL.S3.ENCRYPT.004",
+      "control_id": "CTL.S3.PUBLIC.001",
       "asset_id": "shopify-owned-2",
       "exposure_score": 50,
       "breakdown": {
@@ -1160,7 +953,7 @@
     },
     {
       "finding_index": 5,
-      "control_id": "CTL.S3.ENCRYPT.004",
+      "control_id": "CTL.S3.PUBLIC.001",
       "asset_id": "shopify-writeable-1",
       "exposure_score": 50,
       "breakdown": {
@@ -1174,48 +967,6 @@
     },
     {
       "finding_index": 6,
-      "control_id": "CTL.S3.PUBLIC.001",
-      "asset_id": "shopify-owned-1",
-      "exposure_score": 50,
-      "breakdown": {
-        "base_score": 10,
-        "duration_factor": 5,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 1,
-        "days_blind": 3738
-      },
-      "silent_killer": true
-    },
-    {
-      "finding_index": 7,
-      "control_id": "CTL.S3.PUBLIC.001",
-      "asset_id": "shopify-owned-2",
-      "exposure_score": 50,
-      "breakdown": {
-        "base_score": 10,
-        "duration_factor": 5,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 1,
-        "days_blind": 3738
-      },
-      "silent_killer": true
-    },
-    {
-      "finding_index": 8,
-      "control_id": "CTL.S3.PUBLIC.001",
-      "asset_id": "shopify-writeable-1",
-      "exposure_score": 50,
-      "breakdown": {
-        "base_score": 10,
-        "duration_factor": 5,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 1,
-        "days_blind": 3738
-      },
-      "silent_killer": true
-    },
-    {
-      "finding_index": 9,
       "control_id": "CTL.S3.PUBLIC.003",
       "asset_id": "shopify-writeable-1",
       "exposure_score": 50,
@@ -1229,7 +980,7 @@
       "silent_killer": true
     },
     {
-      "finding_index": 10,
+      "finding_index": 7,
       "control_id": "CTL.S3.PUBLIC.004",
       "asset_id": "shopify-owned-1",
       "exposure_score": 50,
@@ -1243,7 +994,7 @@
       "silent_killer": true
     },
     {
-      "finding_index": 11,
+      "finding_index": 8,
       "control_id": "CTL.S3.PUBLIC.004",
       "asset_id": "shopify-owned-2",
       "exposure_score": 50,
@@ -1257,7 +1008,7 @@
       "silent_killer": true
     },
     {
-      "finding_index": 12,
+      "finding_index": 9,
       "control_id": "CTL.S3.PUBLIC.004",
       "asset_id": "shopify-writeable-1",
       "exposure_score": 50,
@@ -1280,7 +1031,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
+      "head_commit": "b0f26994c50379ed94752854bad6cebdc54e829e",
       "dirty": false
     }
   }

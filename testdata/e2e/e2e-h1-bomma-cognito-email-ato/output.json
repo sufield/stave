@@ -4,7 +4,7 @@
   "run": {
     "tool_version": "edge",
     "offline": true,
-    "now": "2026-04-17T00:00:00Z",
+    "now": "2026-01-11T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
     "input_hashes": {
@@ -33,11 +33,8 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "feac3b72508a098acaa56abec841b1fcbae15f2b",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-h1-bomma-cognito-email-ato/controls/"
-      ]
+      "head_commit": "b0f26994c50379ed94752854bad6cebdc54e829e",
+      "dirty": false
     }
   }
 }

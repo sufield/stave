@@ -1,0 +1,43 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "273be717ba49e15c1428dece0337e908154bc57c818de4c603a76eeeadf70557",
+        "2026-01-11T000000Z.json": "999f5d79eedc1e0fd9f3a0a2a06228995104766cf922ff174ae197ceccaa4581"
+      },
+      "overall": "63d33332c095ff79ce229bfd76b7fe461986c351845d984fca79b3821376d202"
+    },
+    "policy_fingerprint": "638d615bec8448765fe092fe828d1a2bede65ab02cfba43206641881902cc757",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-cloudfront-cors-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-cloudfront-cors-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "b0f26994c50379ed94752854bad6cebdc54e829e",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-cloudfront-cors-pass/controls/"
+      ]
+    }
+  }
+}

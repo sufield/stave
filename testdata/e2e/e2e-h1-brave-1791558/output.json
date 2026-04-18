@@ -14,7 +14,7 @@
       },
       "overall": "6cff2fcb6706211b7a4454e0b1b54fbb1f13d65e4cc65bc041eef760f03955f1"
     },
-    "policy_fingerprint": "7bf215c30ede67f208b873df06900343273f618007838d0d4b09d4937c11162e",
+    "policy_fingerprint": "3974a542c722c2afbd4b6da8d18b089756733bedb5ea45c4bd260b2fbc56b4b3",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -33,7 +33,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
+      "head_commit": "b0f26994c50379ed94752854bad6cebdc54e829e",
       "dirty": false
     }
   }

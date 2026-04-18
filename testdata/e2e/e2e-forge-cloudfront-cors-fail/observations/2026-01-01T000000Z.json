@@ -1,0 +1,37 @@
+{
+  "assets": [
+    {
+      "id": "5cc3b908-e619-4b99-88e5-2cf7f45965bd",
+      "type": "aws_cloudfront_response_headers_policy",
+      "vendor": "aws",
+      "properties": {
+        "cdn": {
+          "kind": "response_headers_policy",
+          "response_headers_policy": {
+            "name": "tenant-app-headers",
+            "cors": {
+              "configured": true,
+              "allows_wildcard_origin": true,
+              "credentials_allowed": true,
+              "origin_override": true,
+              "max_age_sec": 600,
+              "allow_methods": [
+                "GET",
+                "POST",
+                "PUT",
+                "DELETE"
+              ],
+              "allow_headers": [
+                "*"
+              ],
+              "expose_headers": []
+            }
+          }
+        }
+      }
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

@@ -1,0 +1,40 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "6a33009537b15e282ccb0f0a9950d779a874296948d53e07644c90046dcd5285",
+        "2026-01-11T000000Z.json": "e5cddf4f530e1a7dcbb89df3b2c71c1aebaa9ad947292011164778ecec3540e1"
+      },
+      "overall": "eba9c6ba9dea3ee8908ada20a778f6e15db5eb5b74d3e7fb7437eac6fd119ccb"
+    },
+    "policy_fingerprint": "11bb6f0e8d3c8a5d36782f271bca64ae6acaf762cad06876151ee77d8a1faf5a",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 2,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-vsphere-pass/controls",
+      "observations": "testdata/e2e/e2e-vsphere-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "b0f26994c50379ed94752854bad6cebdc54e829e",
+      "dirty": false
+    }
+  }
+}

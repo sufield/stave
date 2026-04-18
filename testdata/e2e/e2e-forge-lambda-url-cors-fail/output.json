@@ -1,0 +1,143 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "782069eb838b087ffe45e84056f6e0e9ba9c50cde6f609ed563b7e6df8b8be3c",
+        "2026-01-11T000000Z.json": "8e6cd10a8a9e9261c6836355c8bcbf1f0aacd750149da1904e8f073b99b81192"
+      },
+      "overall": "ad9a7bbbf032e1507bfc0ac95043c3f0c25f25149103bb776ad2f732727510d1"
+    },
+    "policy_fingerprint": "d66b89f505ae2ef31a3e97431ab658402339fa50c12552ff9738a7d51945a022",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.LAMBDA.URL.CORS.001",
+      "asset_id": "arn:aws:lambda:us-east-1:123456789012:function:tenant-uploader",
+      "asset_type": "aws_lambda_function",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:09a366efe4e16a11",
+      "control_id": "CTL.LAMBDA.URL.CORS.001",
+      "control_name": "Function URLs Must Not Combine Wildcard Origin With Credentials",
+      "control_description": "Lambda function URLs can attach a Cors block whose AllowOrigins and AllowCredentials values control cross-origin access. A function URL that sets AllowOrigins to \"*\" together with AllowCredentials=true encodes intent that any web origin should be able to make credentialed requests against the function. Browsers refuse the combination, but the configuration reveals misaligned intent about which origins should be permitted. This compounds badly with AuthType=NONE (covered separately by CTL.LAMBDA.URL.AUTH.001): a function URL that is both unauthenticated AND has permissive CORS signals a function URL whose access control has not been thought through at all. The observation shape mirrors the Cors block returned by \"aws lambda get-function-url-config\".\n",
+      "asset_id": "arn:aws:lambda:us-east-1:123456789012:function:tenant-uploader",
+      "asset_type": "aws_lambda_function",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "compute.function_url.configured",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "compute.function_url.cors.allows_wildcard_origin",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "compute.function_url.cors.configured",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "compute.function_url.cors.credentials_allowed",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "compute.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "function"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "fedramp_moderate": "AC-4",
+        "nist_800_53_r5": "AC-4",
+        "pci_dss_v4.0": "6.4.1",
+        "soc2": "CC6.1"
+      },
+      "control_compliance_ccm_v4": [
+        "AIS-04",
+        "DSP-10"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Function URL Cors block combines AllowOrigins containing \"*\" with AllowCredentials set to true. Browsers refuse this combination, and the configuration signals unreasoned cross-origin policy.",
+        "action": "Update the function URL config via \"aws lambda update-function-url-config --function-name \u003cname\u003e --cors '...'\" with either AllowCredentials set to false or an AllowOrigins list that enumerates specific origins. If the function handles sensitive operations, also confirm AuthType is AWS_IAM (see CTL.LAMBDA.URL.AUTH.001).",
+        "example": "{\n  \"compute\": {\n    \"kind\": \"function\",\n    \"function_url\": {\n      \"configured\": true,\n      \"auth_type_none\": false,\n      \"cors\": {\n        \"configured\": true,\n        \"allows_wildcard_origin\": false,\n        \"credentials_allowed\": true\n      }\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.LAMBDA.URL.CORS.001",
+      "asset_id": "arn:aws:lambda:us-east-1:123456789012:function:tenant-uploader",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-lambda-url-cors-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-lambda-url-cors-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "b0f26994c50379ed94752854bad6cebdc54e829e",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-lambda-url-cors-fail/controls/"
+      ]
+    }
+  }
+}

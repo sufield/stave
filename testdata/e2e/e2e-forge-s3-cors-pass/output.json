@@ -1,0 +1,43 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "f8146184982b4c888bd7522e19e24b1eb5da4df51c93edd53850b65934c5254c",
+        "2026-01-11T000000Z.json": "e7f5fdc75e9a89c5a585d145c845f28eae6013994e14e3e3a365eaad634334c2"
+      },
+      "overall": "e135f436bf176aa41ffbca7f14bc251eb5fb864436520a7883e19174a19b4ca8"
+    },
+    "policy_fingerprint": "9dcb02d77d94daba4508df126f52fab2e2041ca8144787bd97e6b6aee339285c",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-s3-cors-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-s3-cors-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "b0f26994c50379ed94752854bad6cebdc54e829e",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-s3-cors-pass/controls/"
+      ]
+    }
+  }
+}

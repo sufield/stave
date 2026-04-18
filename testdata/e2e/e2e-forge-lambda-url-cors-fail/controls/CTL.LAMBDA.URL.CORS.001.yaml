@@ -1,0 +1,74 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.URL.CORS.001
+name: Function URLs Must Not Combine Wildcard Origin With Credentials
+description: >
+  Lambda function URLs can attach a Cors block whose AllowOrigins and
+  AllowCredentials values control cross-origin access. A function URL
+  that sets AllowOrigins to "*" together with AllowCredentials=true
+  encodes intent that any web origin should be able to make
+  credentialed requests against the function. Browsers refuse the
+  combination, but the configuration reveals misaligned intent about
+  which origins should be permitted. This compounds badly with
+  AuthType=NONE (covered separately by CTL.LAMBDA.URL.AUTH.001): a
+  function URL that is both unauthenticated AND has permissive CORS
+  signals a function URL whose access control has not been thought
+  through at all. The observation shape mirrors the Cors block
+  returned by "aws lambda get-function-url-config".
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-4"
+  fedramp_moderate: "AC-4"
+  pci_dss_v4.0: "6.4.1"
+  soc2: "CC6.1"
+  ccm_v4: ["AIS-04", "DSP-10"]
+scope_tags:
+  - aws
+  - lambda
+type: unsafe_state
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    Function URL Cors block combines AllowOrigins containing "*" with
+    AllowCredentials set to true. Browsers refuse this combination,
+    and the configuration signals unreasoned cross-origin policy.
+  action: >
+    Update the function URL config via
+    "aws lambda update-function-url-config --function-name <name>
+    --cors '...'" with either AllowCredentials set to false or an
+    AllowOrigins list that enumerates specific origins. If the
+    function handles sensitive operations, also confirm AuthType is
+    AWS_IAM (see CTL.LAMBDA.URL.AUTH.001).
+  example: |
+    {
+      "compute": {
+        "kind": "function",
+        "function_url": {
+          "configured": true,
+          "auth_type_none": false,
+          "cors": {
+            "configured": true,
+            "allows_wildcard_origin": false,
+            "credentials_allowed": true
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
+    - field: properties.compute.function_url.configured
+      op: eq
+      value: true
+    - field: properties.compute.function_url.cors.configured
+      op: eq
+      value: true
+    - field: properties.compute.function_url.cors.allows_wildcard_origin
+      op: eq
+      value: true
+    - field: properties.compute.function_url.cors.credentials_allowed
+      op: eq
+      value: true

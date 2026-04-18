@@ -1,0 +1,72 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.CORS.001
+name: Response Headers Policy Must Not Combine Wildcard Origin With Credentials
+description: >
+  CloudFront response headers policies can attach a CorsConfig block
+  whose AccessControlAllowOrigins and AccessControlAllowCredentials
+  values are propagated to every distribution that references the
+  policy. A policy that sets AccessControlAllowOrigins to "*" and
+  AccessControlAllowCredentials to true encodes the intent that any
+  origin may make credentialed requests against every distribution
+  using this policy. Browsers refuse wildcard-plus-credentials, but
+  the configuration signals that the origin allowlist and credentials
+  policy have not been reasoned about together. Because response
+  headers policies are shared across distributions, a single
+  misconfigured policy can propagate the misconfiguration to unrelated
+  workloads. Observation fields mirror the CorsConfig block returned
+  by "aws cloudfront get-response-headers-policy".
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-4"
+  fedramp_moderate: "AC-4"
+  pci_dss_v4.0: "6.4.1"
+  soc2: "CC6.1"
+  ccm_v4: ["AIS-04", "DSP-10"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    Response headers policy combines AccessControlAllowOrigins
+    containing "*" with AccessControlAllowCredentials set to true.
+    Any distribution referencing this policy propagates the
+    misconfiguration to its cache behaviors.
+  action: >
+    Update the policy so AccessControlAllowCredentials is false or the
+    AccessControlAllowOrigins list does not contain "*". Use
+    "aws cloudfront update-response-headers-policy" with a patched
+    ResponseHeadersPolicyConfig.CorsConfig block. Audit which
+    distributions reference this policy via
+    "aws cloudfront list-distributions" — every referencing
+    distribution inherits the change.
+  example: |
+    {
+      "cdn": {
+        "kind": "response_headers_policy",
+        "response_headers_policy": {
+          "cors": {
+            "configured": true,
+            "allows_wildcard_origin": false,
+            "credentials_allowed": true
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: response_headers_policy
+    - field: properties.cdn.response_headers_policy.cors.configured
+      op: eq
+      value: true
+    - field: properties.cdn.response_headers_policy.cors.allows_wildcard_origin
+      op: eq
+      value: true
+    - field: properties.cdn.response_headers_policy.cors.credentials_allowed
+      op: eq
+      value: true

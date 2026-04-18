@@ -3,25 +3,25 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 633
-**Pack hash:** `3a28acf3e9795ce8629215b03b73c93af294c564d037a739aff9bb1330a89765`
+**Total controls:** 637
+**Pack hash:** `8fbaf7de1bccd3c9b257835b69fa16088ef97a226a5e534ef19abd4c8d1db75f`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 102 |
-| high | 282 |
+| high | 285 |
 | info | 16 |
 | low | 52 |
-| medium | 181 |
+| medium | 182 |
 
 | Domain | Count |
 |--------|-------|
 | audit | 10 |
 | detection | 2 |
 | encryption | 9 |
-| exposure | 439 |
+| exposure | 443 |
 | governance | 17 |
 | identity | 137 |
 | network | 7 |
@@ -657,6 +657,21 @@ External trusts must have SID filtering enabled to prevent SID history injection
 API Gateway routes and methods must have an authorizer configured (Cognito, Lambda, IAM, or JWT). Routes with authorization set to NONE are publicly accessible without any identity verification. The Trello breach (2024) exposed 15 million accounts through an unauthenticated API endpoint. The Spoutible breach (2024) leaked user data through an API without proper auth checks.
 
 **Remediation:** Configure an authorizer on all non-health-check routes. Use Cognito user pools, Lambda authorizers, IAM authorization, or JWT authorizers depending on the client type.
+
+---
+
+### CTL.APIGATEWAY.CORS.001
+
+**HTTP APIs Must Not Combine Wildcard Origin With Credentials**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-4; nist_800_53_r5: AC-4; pci_dss_v4.0: 6.4.1; soc2: CC6.1;
+
+API Gateway v2 HTTP APIs expose CORS configuration at the API level. Setting AllowOrigins to "*" together with AllowCredentials=true is the canonical CORS misconfiguration: browsers reject the combination at request time, so the configuration never succeeds for real clients, but the intent encoded in the resource is credentialed cross-origin access from any origin. This typically indicates the API owner intended to allow a broad set of web clients to make credentialed calls and did not understand that wildcard-plus-credentials is rejected. Real attackers do not need this misconfiguration to be functional — its presence signals that the origin allowlist and credentials policy have not been reasoned about together. The observation shape mirrors the CorsConfiguration object returned by "aws apigatewayv2 get-api".
+
+**Remediation:** Either set AllowCredentials to false and keep the wildcard (if the API is genuinely open and cookies/auth headers are not required), or replace the wildcard in AllowOrigins with the explicit set of origins that need credentialed access. Update via "aws apigatewayv2 update-api --api-id <id> --cors-configuration ...".
 
 ---
 
@@ -1448,6 +1463,21 @@ CloudFormation StackSets deploy infrastructure across multiple AWS accounts and 
 Terraform state files must be stored in a versioned backend (S3 with versioning, Terraform Cloud, or equivalent). Unversioned state means a corrupted or accidentally deleted state file cannot be recovered, leaving infrastructure in an unmanaged state with no rollback path.
 
 **Remediation:** Configure an S3 backend with versioning enabled and DynamoDB state locking. Alternatively, use Terraform Cloud or an equivalent managed backend with built-in versioning.
+
+---
+
+### CTL.CLOUDFRONT.CORS.001
+
+**Response Headers Policy Must Not Combine Wildcard Origin With Credentials**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-4; nist_800_53_r5: AC-4; pci_dss_v4.0: 6.4.1; soc2: CC6.1;
+
+CloudFront response headers policies can attach a CorsConfig block whose AccessControlAllowOrigins and AccessControlAllowCredentials values are propagated to every distribution that references the policy. A policy that sets AccessControlAllowOrigins to "*" and AccessControlAllowCredentials to true encodes the intent that any origin may make credentialed requests against every distribution using this policy. Browsers refuse wildcard-plus-credentials, but the configuration signals that the origin allowlist and credentials policy have not been reasoned about together. Because response headers policies are shared across distributions, a single misconfigured policy can propagate the misconfiguration to unrelated workloads. Observation fields mirror the CorsConfig block returned by "aws cloudfront get-response-headers-policy".
+
+**Remediation:** Update the policy so AccessControlAllowCredentials is false or the AccessControlAllowOrigins list does not contain "*". Use "aws cloudfront update-response-headers-policy" with a patched ResponseHeadersPolicyConfig.CorsConfig block. Audit which distributions reference this policy via "aws cloudfront list-distributions" — every referencing distribution inherits the change.
 
 ---
 
@@ -6467,6 +6497,21 @@ Lambda function URLs must not be configured with AuthType NONE. A function URL w
 
 ---
 
+### CTL.LAMBDA.URL.CORS.001
+
+**Function URLs Must Not Combine Wildcard Origin With Credentials**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-4; nist_800_53_r5: AC-4; pci_dss_v4.0: 6.4.1; soc2: CC6.1;
+
+Lambda function URLs can attach a Cors block whose AllowOrigins and AllowCredentials values control cross-origin access. A function URL that sets AllowOrigins to "*" together with AllowCredentials=true encodes intent that any web origin should be able to make credentialed requests against the function. Browsers refuse the combination, but the configuration reveals misaligned intent about which origins should be permitted. This compounds badly with AuthType=NONE (covered separately by CTL.LAMBDA.URL.AUTH.001): a function URL that is both unauthenticated AND has permissive CORS signals a function URL whose access control has not been thought through at all. The observation shape mirrors the Cors block returned by "aws lambda get-function-url-config".
+
+**Remediation:** Update the function URL config via "aws lambda update-function-url-config --function-name <name> --cors '...'" with either AllowCredentials set to false or an AllowOrigins list that enumerates specific origins. If the function handles sensitive operations, also confirm AuthType is AWS_IAM (see CTL.LAMBDA.URL.AUTH.001).
+
+---
+
 ### CTL.LAMBDA.VPC.SENSITIVE.001
 
 **Lambda Functions Accessing Sensitive Data Must Be in VPC**
@@ -7417,6 +7462,21 @@ The S3 bucket storing CloudTrail logs must not be publicly accessible. A public 
 S3 buckets must have the public access block fully enabled. When disabled, the bucket has no safety net against accidental public exposure from policy or ACL changes. This detects the enabling condition for public access, not the exposure itself.
 
 **Remediation:** Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets.
+
+---
+
+### CTL.S3.CORS.001
+
+**S3 CORS Wildcard Origin Must Be Explicitly Intended**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** soc2: CC6.6;
+
+S3 bucket CORS configurations that set AllowedOrigins to "*" expose the bucket's CORS-permitted methods to every web origin. For buckets serving genuinely public static assets this may be intentional; for buckets holding tenant data, authenticated user content, or signed URLs it widens the attack surface for cross-origin abuse. S3 does not expose an AllowCredentials field on CORS rules — browsers refuse the wildcard+credentials combination — so the unsafe state for S3 is wildcard origin on a bucket that is not tagged as intentionally public. The observation shape mirrors the raw "aws s3api get-bucket-cors" response.
+
+**Remediation:** Replace "*" in AllowedOrigins with the specific origins that need cross-origin access. If the bucket is a public CDN or static asset origin where wildcard CORS is intentional, add the tag cors_wildcard_intended=true to declare intent. To remove CORS entirely, run "aws s3api delete-bucket-cors --bucket <name>".
 
 ---
 

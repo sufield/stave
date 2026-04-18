@@ -1,0 +1,60 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 3,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "eae53aa203d95e647c02bc7eb482a66c489e5bb6b0f1373ed19273c1dfb34218",
+        "2026-01-10T000000Z.json": "14bcf83b7e485a3e33daa77e6164aa7bc2912faa139931f5a52da36beba9d6cc",
+        "2026-01-11T000000Z.json": "5c25988fcb24464698fc20ff46c97cbead3ffa66468d48349ee5c2465649f886"
+      },
+      "overall": "b96a4282c1b5973ad2d48e94acead3c1ef17ad1ad4f97ddf57acbce52eef29ef"
+    },
+    "policy_fingerprint": "807bc624bc509c82b585db5bb3f4a5511e0b22a7bba9849edec64665aacc9e45",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "AT_RISK",
+  "risk_signals": [
+    {
+      "control_id": "CTL.EXP.DURATION.001",
+      "asset_id": "res:aws:s3:bucket:public-bucket",
+      "asset_type": "storage_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [],
+  "exempted_assets": [
+    {
+      "asset_id": "res:aws:s3:bucket:public-bucket",
+      "matched_pattern": "res:aws:s3:bucket:public-bucket",
+      "reason": "Approved public bucket for static assets — ticket SEC-1234"
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-exempt-suppression/controls",
+      "observations": "testdata/e2e/e2e-exempt-suppression/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "b0f26994c50379ed94752854bad6cebdc54e829e",
+      "dirty": false
+    }
+  }
+}

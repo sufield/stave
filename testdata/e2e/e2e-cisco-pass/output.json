@@ -1,0 +1,40 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "577f887ab4354fa528071ca84e90f0c0bdd9322596a013238b93e6ae37530acb",
+        "2026-01-11T000000Z.json": "4f24550a098fe1c3f2df5a9a125310b88ee68718514e38bae2969b0cf8846742"
+      },
+      "overall": "82b59913ad2cdf63c466061e9972965f070f1da57c51c81afbff78ab5143f8b5"
+    },
+    "policy_fingerprint": "e3cd063abc14f34129ed7fd5e85d2cf79d7cd1623e9e3f7a0009bece0cb89fdd",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 0,
+    "violations": 0
+  },
+  "status": "COMPLIANT",
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-cisco-pass/controls",
+      "observations": "testdata/e2e/e2e-cisco-pass/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "b0f26994c50379ed94752854bad6cebdc54e829e",
+      "dirty": false
+    }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:lambda:us-east-1:123456789012:function:tenant-uploader",
+      "type": "aws_lambda_function",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "function",
+          "function_url": {
+            "configured": true,
+            "auth_type_none": true,
+            "cors": {
+              "configured": true,
+              "allows_wildcard_origin": true,
+              "credentials_allowed": true,
+              "allow_methods": [
+                "*"
+              ],
+              "allow_headers": [
+                "*"
+              ],
+              "expose_headers": [],
+              "max_age": 86400
+            }
+          }
+        }
+      }
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

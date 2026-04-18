@@ -1,0 +1,40 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:s3:::tenant-uploads",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "cors": {
+            "configured": true,
+            "allows_wildcard_origin": true,
+            "allows_wildcard_header": true,
+            "rules": [
+              {
+                "allowed_headers": [
+                  "*"
+                ],
+                "allowed_methods": [
+                  "GET",
+                  "PUT",
+                  "POST"
+                ],
+                "allowed_origins": [
+                  "*"
+                ],
+                "expose_headers": [],
+                "max_age_seconds": 3000
+              }
+            ]
+          },
+          "tags": {}
+        }
+      }
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

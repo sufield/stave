@@ -14,26 +14,16 @@
       },
       "overall": "905a9f4070f7492e0d7bc825ed3690172246b4af37d8a442aeb0841e752d01dd"
     },
-    "policy_fingerprint": "3609d3ccc6d44ae3b90ec49530b51572d239b1394af157d0f0a39a7f024cc025",
+    "policy_fingerprint": "25a0379c245acf12b29d56fa4eb46caaeb4ce3df45872eb0bc732fe308019388",
     "evaluated_state": "deployed"
   },
   "summary": {
     "total_assets": 1,
     "exposed_resources": 1,
-    "violations": 2
+    "violations": 1
   },
   "status": "NON_COMPLIANT",
   "risk_signals": [
-    {
-      "control_id": "CTL.S3.ENCRYPT.004",
-      "asset_id": "shopify-merchant-assets",
-      "asset_type": "aws_s3_bucket",
-      "status": "OVERDUE",
-      "due_at": "2015-10-22T00:00:00Z",
-      "remaining_hours": -89616,
-      "first_unsafe_at": "2015-10-15T00:00:00Z",
-      "threshold_hours": 168
-    },
     {
       "control_id": "CTL.S3.TENANT.ISOLATION.001",
       "asset_id": "shopify-merchant-assets",
@@ -46,65 +36,6 @@
     }
   ],
   "findings": [
-    {
-      "finding_id": "sha256:9207cf5a2d570a93",
-      "control_id": "CTL.S3.ENCRYPT.004",
-      "control_name": "Sensitive Data Requires KMS Encryption",
-      "control_description": "S3 buckets with any non-public data classification must use SSE-KMS encryption with a customer-managed key, not SSE-S3 (AES256). AES256 uses AWS-managed keys with no customer control over key rotation, access policies, or audit trails. This fires on all classified data except explicitly public or non-sensitive buckets.\n",
-      "asset_id": "shopify-merchant-assets",
-      "asset_type": "aws_s3_bucket",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2015-10-15T00:00:00Z",
-        "last_seen_unsafe_at": "2015-10-23T00:00:00Z",
-        "unsafe_duration_hours": 89784,
-        "threshold_hours": 168,
-        "misconfigurations": [
-          {
-            "property": "storage.encryption.algorithm",
-            "actual_value": "[SANITIZED]",
-            "operator": "ne",
-            "unsafe_value": "aws:kms"
-          },
-          {
-            "property": "storage.kind",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": "bucket"
-          },
-          {
-            "property": "storage.tags.data-classification",
-            "actual_value": "[SANITIZED]",
-            "operator": "ne",
-            "unsafe_value": "non-sensitive"
-          },
-          {
-            "property": "storage.tags.data-classification",
-            "actual_value": "[SANITIZED]",
-            "operator": "ne",
-            "unsafe_value": "public"
-          },
-          {
-            "property": "storage.tags.data-classification",
-            "actual_value": "[SANITIZED]",
-            "operator": "present",
-            "unsafe_value": true
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 89784 hours (SLA: 168 hours). Exposed since 2015-10-15T00:00:00Z."
-      },
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "Resource data is not encrypted at rest.",
-        "action": "Enable server-side encryption using a managed key."
-      }
-    },
     {
       "finding_id": "sha256:dadfd5157be0d0b8",
       "control_id": "CTL.S3.TENANT.ISOLATION.001",
@@ -189,20 +120,6 @@
   "top_exposures": [
     {
       "finding_index": 0,
-      "control_id": "CTL.S3.ENCRYPT.004",
-      "asset_id": "shopify-merchant-assets",
-      "exposure_score": 50,
-      "breakdown": {
-        "base_score": 10,
-        "duration_factor": 5,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 1,
-        "days_blind": 3741
-      },
-      "silent_killer": true
-    },
-    {
-      "finding_index": 1,
       "control_id": "CTL.S3.TENANT.ISOLATION.001",
       "asset_id": "shopify-merchant-assets",
       "exposure_score": 50,
@@ -225,7 +142,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e63f84e1d16637837af85b6f7e9c407418f54cb1",
+      "head_commit": "b0f26994c50379ed94752854bad6cebdc54e829e",
       "dirty": false
     }
   }

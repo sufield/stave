@@ -1,0 +1,434 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "2bd1e7d108dacc1df22b7c7a36d7599ca32fbbe98c4f00a611da6fd3f22ca737",
+        "2026-01-11T000000Z.json": "c50caa3985ae054dfd87fcb25ad108498df2566c1ed1adab5bac2d2770f18e13"
+      },
+      "overall": "b406aa0d21821bb2866d76e68ea4389b421c6be5d4f09298b645d28fe76ba767"
+    },
+    "policy_fingerprint": "2da2b21482ae1f38b8aad5f58f05fd04b675ee2ec072a53f5abdb0b5055b1426",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 6
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.AD.KERBEROAST.001",
+      "asset_id": "acme-corp.local",
+      "asset_type": "active_directory_domain",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.AD.LAPS.001",
+      "asset_id": "acme-corp.local",
+      "asset_type": "active_directory_domain",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.AD.NTLM.LEVEL.001",
+      "asset_id": "acme-corp.local",
+      "asset_type": "active_directory_domain",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.AD.PASS.MINLEN.001",
+      "asset_id": "acme-corp.local",
+      "asset_type": "active_directory_domain",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.AD.PASS.REVENC.001",
+      "asset_id": "acme-corp.local",
+      "asset_type": "active_directory_domain",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.AD.SMB.SIGNING.001",
+      "asset_id": "acme-corp.local",
+      "asset_type": "active_directory_domain",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:c83d612e5b0cffff",
+      "control_id": "CTL.AD.KERBEROAST.001",
+      "control_name": "Privileged Accounts Must Not Have Kerberoastable SPNs",
+      "control_description": "Service accounts that are members of privileged groups (Domain Admins, Enterprise Admins, etc.) must not have Service Principal Names (SPNs) registered. Any domain user can request a Kerberos service ticket for an SPN and crack the ticket offline to recover the service account password. When the account is privileged, a successful Kerberoasting attack grants immediate domain-level access.\n",
+      "asset_id": "acme-corp.local",
+      "asset_type": "active_directory_domain",
+      "asset_vendor": "microsoft",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "privileged_groups.has_kerberoastable_spn",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance": {
+        "cis_ad": "5.3",
+        "nist_800_53_r5": "AC-6"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "A privileged group member has a registered SPN, making it vulnerable to Kerberoasting. An attacker can request the service ticket and crack the password offline.",
+        "action": "Remove SPNs from privileged accounts or move the service to a Group Managed Service Account (gMSA) with automatic password rotation. Run: setspn -D \u003cspn\u003e \u003caccount\u003e or migrate to gMSA.",
+        "example": "{\n  \"privileged_groups\": {\n    \"has_kerberoastable_spn\": false\n  }\n}\n"
+      }
+    },
+    {
+      "finding_id": "sha256:1eb39468dc0926ab",
+      "control_id": "CTL.AD.LAPS.001",
+      "control_name": "Local Administrator Password Solution Must Be Enabled",
+      "control_description": "LAPS (Local Administrator Password Solution) must be deployed to manage local administrator passwords on domain-joined machines. Without LAPS, local admin passwords are often identical across all workstations, allowing an attacker who compromises one machine to move laterally to every machine in the domain using the same credential.\n",
+      "asset_id": "acme-corp.local",
+      "asset_type": "active_directory_domain",
+      "asset_vendor": "microsoft",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "security_settings.laps_enabled",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "nist_800_53_r5": "AC-6"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "LAPS is not enabled. Local administrator passwords are likely shared across machines, enabling lateral movement after a single host compromise.",
+        "action": "Deploy Windows LAPS or legacy Microsoft LAPS. Install the LAPS CSE on all domain-joined machines, extend the AD schema, configure the GPO, and set password rotation policy. Run: Update-LapsADSchema; Set-LapsADComputerSelfPermission -Identity \"OU=Workstations,DC=corp,DC=local\"",
+        "example": "{\n  \"security_settings\": {\n    \"laps_enabled\": true\n  }\n}\n"
+      }
+    },
+    {
+      "finding_id": "sha256:cd05e46dbc8e648b",
+      "control_id": "CTL.AD.NTLM.LEVEL.001",
+      "control_name": "NTLM Authentication Must Be Restricted to NTLMv2",
+      "control_description": "The domain must enforce NTLMv2 authentication by setting the LAN Manager authentication level to 3 or higher (Send NTLMv2 response only / refuse LM \u0026 NTLM). NTLMv1 and LM responses use weak cryptography that can be cracked in seconds. NTLM relay and pass- the-hash attacks are significantly harder when NTLMv2 is enforced and legacy protocols are refused.\n",
+      "asset_id": "acme-corp.local",
+      "asset_type": "active_directory_domain",
+      "asset_vendor": "microsoft",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "security_settings.ntlm_restriction_level",
+            "actual_value": "[SANITIZED]",
+            "operator": "lt",
+            "unsafe_value": 3
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_ad": "2.3.11.7",
+        "nist_800_53_r5": "IA-2"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "NTLM restriction level is below 3, allowing NTLMv1 or LM authentication. These legacy protocols use weak cryptography vulnerable to offline cracking and relay attacks.",
+        "action": "Set the LAN Manager authentication level to 3 or higher via Group Policy: Computer Configuration \u003e Windows Settings \u003e Security Settings \u003e Local Policies \u003e Security Options \u003e \"Network security: LAN Manager authentication level\" to \"Send NTLMv2 response only. Refuse LM \u0026 NTLM.\"",
+        "example": "{\n  \"security_settings\": {\n    \"ntlm_restriction_level\": 3\n  }\n}\n"
+      }
+    },
+    {
+      "finding_id": "sha256:f42326714959419f",
+      "control_id": "CTL.AD.PASS.MINLEN.001",
+      "control_name": "Password Minimum Length Must Be At Least 14 Characters",
+      "control_description": "Active Directory domain password policy must enforce a minimum length of 14 characters. Shorter passwords are vulnerable to offline brute-force and credential-stuffing attacks. A 14-character minimum aligns with current NIST and CIS guidance and significantly increases the search space an attacker must exhaust.\n",
+      "asset_id": "acme-corp.local",
+      "asset_type": "active_directory_domain",
+      "asset_vendor": "microsoft",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "password_policy.min_length",
+            "actual_value": "[SANITIZED]",
+            "operator": "lt",
+            "unsafe_value": 14
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_ad": "1.1.1",
+        "nist_800_53_r5": "IA-5"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Domain password policy minimum length is below 14 characters. Short passwords are feasible to brute-force offline.",
+        "action": "Set the minimum password length to 14 or greater in the Default Domain Policy GPO. Run: Set-ADDefaultDomainPasswordPolicy -MinPasswordLength 14",
+        "example": "{\n  \"password_policy\": {\n    \"min_length\": 14\n  }\n}\n"
+      }
+    },
+    {
+      "finding_id": "sha256:851b2450223c51aa",
+      "control_id": "CTL.AD.PASS.REVENC.001",
+      "control_name": "Reversible Encryption Must Be Disabled",
+      "control_description": "Active Directory must not store passwords using reversible encryption. When enabled, password hashes can be decrypted back to plaintext, effectively storing passwords in cleartext. An attacker who gains access to the AD database (ntds.dit) can recover every user password without cracking. This setting is required only by legacy protocols such as CHAP and digest authentication, which should be eliminated.\n",
+      "asset_id": "acme-corp.local",
+      "asset_type": "active_directory_domain",
+      "asset_vendor": "microsoft",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "password_policy.reversible_encryption",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance": {
+        "cis_ad": "1.1.6",
+        "nist_800_53_r5": "IA-5"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Reversible encryption is enabled in the domain password policy. Passwords are effectively stored in cleartext and can be recovered from the AD database.",
+        "action": "Disable reversible encryption in the Default Domain Policy GPO. Run: Set-ADDefaultDomainPasswordPolicy -ReversibleEncryptionEnabled $false Then force all users to change their passwords so new hashes are stored without reversible encryption.",
+        "example": "{\n  \"password_policy\": {\n    \"reversible_encryption\": false\n  }\n}\n"
+      }
+    },
+    {
+      "finding_id": "sha256:7b5db2d310c7c9e1",
+      "control_id": "CTL.AD.SMB.SIGNING.001",
+      "control_name": "SMB Signing Must Be Required",
+      "control_description": "SMB signing must be required on all domain controllers and member servers. Without mandatory signing, SMB traffic can be intercepted and modified via man-in-the-middle attacks. Attackers use SMB relay to forward captured NTLM authentication to other hosts, gaining unauthorized access without cracking passwords.\n",
+      "asset_id": "acme-corp.local",
+      "asset_type": "active_directory_domain",
+      "asset_vendor": "microsoft",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "security_settings.smb_signing_required",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_ad": "2.3.8.1",
+        "nist_800_53_r5": "SC-8"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "SMB signing is not required. Network traffic between hosts can be intercepted and relayed, enabling lateral movement without credential cracking.",
+        "action": "Enable mandatory SMB signing via Group Policy: Computer Configuration \u003e Windows Settings \u003e Security Settings \u003e Local Policies \u003e Security Options \u003e \"Microsoft network server: Digitally sign communications (always)\" set to Enabled. Apply to all domain controllers and member servers.",
+        "example": "{\n  \"security_settings\": {\n    \"smb_signing_required\": true\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.AD.KERBEROAST.001",
+      "asset_id": "acme-corp.local",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 4,
+      "control_id": "CTL.AD.PASS.REVENC.001",
+      "asset_id": "acme-corp.local",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 1,
+      "control_id": "CTL.AD.LAPS.001",
+      "asset_id": "acme-corp.local",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 2,
+      "control_id": "CTL.AD.NTLM.LEVEL.001",
+      "asset_id": "acme-corp.local",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 3,
+      "control_id": "CTL.AD.PASS.MINLEN.001",
+      "asset_id": "acme-corp.local",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 5,
+      "control_id": "CTL.AD.SMB.SIGNING.001",
+      "asset_id": "acme-corp.local",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-ad-fail/controls",
+      "observations": "testdata/e2e/e2e-ad-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "b0f26994c50379ed94752854bad6cebdc54e829e",
+      "dirty": false
+    }
+  }
+}

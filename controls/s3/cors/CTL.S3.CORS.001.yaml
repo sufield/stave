@@ -1,0 +1,63 @@
+dsl_version: ctrl.v1
+id: CTL.S3.CORS.001
+name: S3 CORS Wildcard Origin Must Be Explicitly Intended
+description: >
+  S3 bucket CORS configurations that set AllowedOrigins to "*" expose
+  the bucket's CORS-permitted methods to every web origin. For buckets
+  serving genuinely public static assets this may be intentional; for
+  buckets holding tenant data, authenticated user content, or signed
+  URLs it widens the attack surface for cross-origin abuse. S3 does
+  not expose an AllowCredentials field on CORS rules — browsers refuse
+  the wildcard+credentials combination — so the unsafe state for S3
+  is wildcard origin on a bucket that is not tagged as intentionally
+  public. The observation shape mirrors the raw
+  "aws s3api get-bucket-cors" response.
+domain: exposure
+severity: medium
+compliance:
+  ccm_v4: ["AIS-04", "DSP-07"]
+  soc2: "CC6.6"
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    Bucket CORS configuration contains a rule with AllowedOrigins set
+    to "*" and the bucket is not tagged as cors_wildcard_intended=true.
+  action: >
+    Replace "*" in AllowedOrigins with the specific origins that need
+    cross-origin access. If the bucket is a public CDN or static asset
+    origin where wildcard CORS is intentional, add the tag
+    cors_wildcard_intended=true to declare intent. To remove CORS
+    entirely, run "aws s3api delete-bucket-cors --bucket <name>".
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "cors": {
+          "configured": true,
+          "allows_wildcard_origin": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.cors.configured
+      op: eq
+      value: true
+    - field: properties.storage.cors.allows_wildcard_origin
+      op: eq
+      value: true
+    - any:
+        - field: properties.storage.tags.cors_wildcard_intended
+          op: missing
+          value: true
+        - field: properties.storage.tags.cors_wildcard_intended
+          op: ne
+          value: "true"

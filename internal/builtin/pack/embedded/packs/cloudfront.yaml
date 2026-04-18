@@ -3,3 +3,4 @@ description: AWS CloudFront distribution security controls
 controls:
     - CTL.CLOUDFRONT.TLS.001
     - CTL.CLOUDFRONT.HEADERS.001
+    - CTL.CLOUDFRONT.CORS.001

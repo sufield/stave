@@ -1,0 +1,369 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "508de87a92a2e977bf597b0f886c18c35e080c664aea88d488133f7078f7fe7d",
+        "2026-01-11T000000Z.json": "6c9fcd5ed7d354d8a52883174a8c4c5d2cc1b067d87cb0d13af9aed9dc14495c"
+      },
+      "overall": "1e1f00e125bb24d05db0451d9a4afbd897ea5cd2a6cbdf95236d162ed9d8cf1a"
+    },
+    "policy_fingerprint": "11bb6f0e8d3c8a5d36782f271bca64ae6acaf762cad06876151ee77d8a1faf5a",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 2,
+    "exposed_resources": 2,
+    "violations": 5
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.VSPHERE.ESX.LOCKDOWN.001",
+      "asset_id": "esxi-prod-01.acme.local",
+      "asset_type": "vsphere_esxi_host",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.VSPHERE.ESX.SSH.001",
+      "asset_id": "esxi-prod-01.acme.local",
+      "asset_type": "vsphere_esxi_host",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.VSPHERE.VM.COPYPASTE.001",
+      "asset_id": "vm-patient-db.acme.local",
+      "asset_type": "vsphere_vm",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.VSPHERE.VM.ENCRYPT.001",
+      "asset_id": "vm-patient-db.acme.local",
+      "asset_type": "vsphere_vm",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.VSPHERE.VM.SNAPSHOT.AGE.001",
+      "asset_id": "vm-patient-db.acme.local",
+      "asset_type": "vsphere_vm",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:60b54e39deeffb72",
+      "control_id": "CTL.VSPHERE.ESX.LOCKDOWN.001",
+      "control_name": "Lockdown Mode Must Be Enabled on ESXi Hosts",
+      "control_description": "Lockdown mode must be enabled on ESXi hosts. When lockdown mode is disabled, the host can be managed directly via local clients and APIs, bypassing vCenter role-based access controls. Enabling lockdown mode forces all management through vCenter, ensuring centralized authentication, authorization, and audit logging.\n",
+      "asset_id": "esxi-prod-01.acme.local",
+      "asset_type": "vsphere_esxi_host",
+      "asset_vendor": "vmware",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "esxi.lockdown_mode",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "disabled"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_vmware_esxi_7": "1.2",
+        "nist_800_53_r5": "CM-7"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Lockdown mode is disabled on the ESXi host. The host can be managed directly, bypassing vCenter access controls and audit logging.",
+        "action": "Enable lockdown mode on the ESXi host. In the vSphere Client, navigate to Host \u003e Configure \u003e System \u003e Security Profile \u003e Lockdown Mode and select Normal or Strict. Normal lockdown allows DCUI access for emergency troubleshooting; Strict lockdown disables DCUI as well.",
+        "example": "{\n  \"esxi\": {\n    \"lockdown_mode\": \"normal\"\n  }\n}\n"
+      }
+    },
+    {
+      "finding_id": "sha256:1aa0a3ff30dfe0be",
+      "control_id": "CTL.VSPHERE.ESX.SSH.001",
+      "control_name": "SSH Must Be Disabled on ESXi Hosts",
+      "control_description": "SSH must be disabled on ESXi hosts. An enabled SSH service exposes the ESXi management plane to remote shell access, increasing the attack surface for credential brute-force and lateral movement. ESXi management should use the vSphere Client or Host Client via HTTPS only. SSH should only be enabled temporarily for troubleshooting and disabled immediately after.\n",
+      "asset_id": "esxi-prod-01.acme.local",
+      "asset_type": "vsphere_esxi_host",
+      "asset_vendor": "vmware",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "esxi.ssh_enabled",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_vmware_esxi_7": "1.1",
+        "nist_800_53_r5": "CM-7"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "SSH is enabled on the ESXi host. The management plane is exposed to remote shell access, enabling credential brute-force and lateral movement.",
+        "action": "Disable the SSH service on the ESXi host. In the vSphere Client, navigate to Host \u003e Configure \u003e System \u003e Services, select SSH, and click Stop. Set the startup policy to \"Start and stop manually\" to prevent automatic re-enablement.",
+        "example": "{\n  \"esxi\": {\n    \"ssh_enabled\": false\n  }\n}\n"
+      }
+    },
+    {
+      "finding_id": "sha256:c456e390461b880f",
+      "control_id": "CTL.VSPHERE.VM.COPYPASTE.001",
+      "control_name": "Copy-Paste Between VM and Host Must Be Disabled",
+      "control_description": "Copy and paste operations between the guest VM and the host must be disabled. When enabled, the shared clipboard allows data to move between the VM and the host or client system without network controls or logging. An attacker with access to a compromised VM can exfiltrate data through the clipboard channel, bypassing network-based DLP and monitoring controls.\n",
+      "asset_id": "vm-patient-db.acme.local",
+      "asset_type": "vsphere_vm",
+      "asset_vendor": "vmware",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "vm.copy_paste_enabled",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "cis_vmware_esxi_7": "8.3.1",
+        "nist_800_53_r5": "SC-7"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Copy and paste is enabled between the VM and host. Data can be exfiltrated through the clipboard channel without network monitoring or DLP controls.",
+        "action": "Disable copy and paste by setting the VM advanced configuration parameters isolation.tools.copy.disable and isolation.tools.paste.disable to TRUE. Apply this via VM \u003e Configure \u003e Advanced Parameters in the vSphere Client.",
+        "example": "{\n  \"vm\": {\n    \"copy_paste_enabled\": false\n  }\n}\n"
+      }
+    },
+    {
+      "finding_id": "sha256:0de05c1504f3558b",
+      "control_id": "CTL.VSPHERE.VM.ENCRYPT.001",
+      "control_name": "VMs with Sensitive Data Must Be Encrypted",
+      "control_description": "Virtual machines containing sensitive data must have VM encryption enabled. Without encryption, VM disk files (VMDKs), snapshots, and vMotion traffic are stored and transmitted in cleartext. An attacker with access to the datastore or network can read VM contents directly. VM encryption protects data at rest on the datastore and in transit during vMotion operations.\n",
+      "asset_id": "vm-patient-db.acme.local",
+      "asset_type": "vsphere_vm",
+      "asset_vendor": "vmware",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "vm.encryption_enabled",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_vmware_esxi_7": "8.2.1",
+        "nist_800_53_r5": "SC-28"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "VM encryption is not enabled. VM disk files, snapshots, and vMotion traffic are unencrypted and readable if the datastore or network is compromised.",
+        "action": "Enable VM encryption using a vSphere Trust Authority or Standard Key Provider. Configure a KMS cluster in vCenter, then apply a VM storage policy with encryption enabled. Encrypt the VM by editing its storage policy assignment. Note that VM encryption requires a compatible key management server.",
+        "example": "{\n  \"vm\": {\n    \"encryption_enabled\": true\n  }\n}\n"
+      }
+    },
+    {
+      "finding_id": "sha256:970a997009c1d12e",
+      "control_id": "CTL.VSPHERE.VM.SNAPSHOT.AGE.001",
+      "control_name": "No VM Snapshot Older Than 30 Days",
+      "control_description": "VM snapshots must not be older than 30 days. Stale snapshots consume datastore space, degrade VM performance due to increased I/O chain depth, and create operational risk during consolidation. Long-lived snapshots also represent a data exposure risk — they preserve the VM state at a point in time that may contain credentials or sensitive data that has since been rotated.\n",
+      "asset_id": "vm-patient-db.acme.local",
+      "asset_type": "vsphere_vm",
+      "asset_vendor": "vmware",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "vm.oldest_snapshot_days",
+            "actual_value": "[SANITIZED]",
+            "operator": "gt",
+            "unsafe_value": 30
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "cis_vmware_esxi_7": "8.4.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "VM has a snapshot older than 30 days. Stale snapshots degrade performance, consume storage, and may preserve sensitive data from the time of capture.",
+        "action": "Delete or consolidate stale snapshots. In the vSphere Client, right-click the VM \u003e Snapshots \u003e Manage Snapshots and delete snapshots older than 30 days. Establish a policy to review and clean up snapshots on a regular schedule.",
+        "example": "{\n  \"vm\": {\n    \"oldest_snapshot_days\": 7\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.VSPHERE.ESX.LOCKDOWN.001",
+      "asset_id": "esxi-prod-01.acme.local",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 1,
+      "control_id": "CTL.VSPHERE.ESX.SSH.001",
+      "asset_id": "esxi-prod-01.acme.local",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 3,
+      "control_id": "CTL.VSPHERE.VM.ENCRYPT.001",
+      "asset_id": "vm-patient-db.acme.local",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 2,
+      "control_id": "CTL.VSPHERE.VM.COPYPASTE.001",
+      "asset_id": "vm-patient-db.acme.local",
+      "exposure_score": 50,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 4,
+      "control_id": "CTL.VSPHERE.VM.SNAPSHOT.AGE.001",
+      "asset_id": "vm-patient-db.acme.local",
+      "exposure_score": 50,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-vsphere-fail/controls",
+      "observations": "testdata/e2e/e2e-vsphere-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "b0f26994c50379ed94752854bad6cebdc54e829e",
+      "dirty": false
+    }
+  }
+}

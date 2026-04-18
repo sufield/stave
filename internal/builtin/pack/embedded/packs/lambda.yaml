@@ -3,6 +3,7 @@ description: AWS Lambda serverless function controls
 controls:
     - CTL.LAMBDA.RUNTIME.001
     - CTL.LAMBDA.URL.AUTH.001
+    - CTL.LAMBDA.URL.CORS.001
     - CTL.LAMBDA.ROLE.LEASTPRIV.001
     - CTL.LAMBDA.ENV.SECRETS.001
     - CTL.LAMBDA.LOG.001

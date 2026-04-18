@@ -1,0 +1,140 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "6a83649c2231f20017f8fd9b551171bfa2ddb32e49a12678b7a018a5bc0dc6bf",
+        "2026-01-11T000000Z.json": "7f61ab2bbe4a257c5fce06a284ff081295421d9d0f87866d56961dde2267a083"
+      },
+      "overall": "e7d95fbc2dd65c6c4cf0fc830438ae6a400b03d6a258f62b41935f4a13710f28"
+    },
+    "policy_fingerprint": "9dcb02d77d94daba4508df126f52fab2e2041ca8144787bd97e6b6aee339285c",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.S3.CORS.001",
+      "asset_id": "arn:aws:s3:::tenant-uploads",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:e953715257c86619",
+      "control_id": "CTL.S3.CORS.001",
+      "control_name": "S3 CORS Wildcard Origin Must Be Explicitly Intended",
+      "control_description": "S3 bucket CORS configurations that set AllowedOrigins to \"*\" expose the bucket's CORS-permitted methods to every web origin. For buckets serving genuinely public static assets this may be intentional; for buckets holding tenant data, authenticated user content, or signed URLs it widens the attack surface for cross-origin abuse. S3 does not expose an AllowCredentials field on CORS rules — browsers refuse the wildcard+credentials combination — so the unsafe state for S3 is wildcard origin on a bucket that is not tagged as intentionally public. The observation shape mirrors the raw \"aws s3api get-bucket-cors\" response.\n",
+      "asset_id": "arn:aws:s3:::tenant-uploads",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "storage.cors.allows_wildcard_origin",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "storage.cors.configured",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "storage.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          },
+          {
+            "property": "storage.tags.cors_wildcard_intended",
+            "actual_value": "[SANITIZED]",
+            "operator": "missing",
+            "unsafe_value": true
+          },
+          {
+            "property": "storage.tags.cors_wildcard_intended",
+            "actual_value": "[SANITIZED]",
+            "operator": "ne",
+            "unsafe_value": "true"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "soc2": "CC6.6"
+      },
+      "control_compliance_ccm_v4": [
+        "AIS-04",
+        "DSP-07"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Bucket CORS configuration contains a rule with AllowedOrigins set to \"*\" and the bucket is not tagged as cors_wildcard_intended=true.",
+        "action": "Replace \"*\" in AllowedOrigins with the specific origins that need cross-origin access. If the bucket is a public CDN or static asset origin where wildcard CORS is intentional, add the tag cors_wildcard_intended=true to declare intent. To remove CORS entirely, run \"aws s3api delete-bucket-cors --bucket \u003cname\u003e\".",
+        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"cors\": {\n      \"configured\": true,\n      \"allows_wildcard_origin\": false\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.S3.CORS.001",
+      "asset_id": "arn:aws:s3:::tenant-uploads",
+      "exposure_score": 50,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-s3-cors-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-s3-cors-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "b0f26994c50379ed94752854bad6cebdc54e829e",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-s3-cors-fail/controls/"
+      ]
+    }
+  }
+}
