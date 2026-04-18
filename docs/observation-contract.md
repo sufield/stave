@@ -183,6 +183,7 @@ schema version bump.
 | `storage.access.external_account_ids` | array | External AWS account IDs with access |
 | `storage.access.has_external_write` | bool | External accounts have write access |
 | `storage.access.has_wildcard_policy` | bool | Bucket policy contains wildcard principal |
+| `storage.access.exposes_bucket_policy` | bool | Bucket policy grants `s3:GetBucketPolicy` to an anonymous or wildcard principal |
 | `storage.access.latent_public_read` | bool | Read would be public if PAB removed |
 | `storage.access.latent_public_list` | bool | List would be public if PAB removed |
 | `storage.access.effective_network_scope` | string | Network restriction scope |

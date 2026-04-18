@@ -1,0 +1,123 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "9f65fc99a14f12ed2eda3299b0f3e9796ccf68b31b1ec8fe9936fc6d93c55275",
+        "2026-01-11T000000Z.json": "893ff173962fb1d90357a692008b60af5a984c67e359eec1a9f7a69ebf624f6a"
+      },
+      "overall": "c1d75e842a3ee1a4d018e11b03fbc2a70e5cb0de0ca8b76914dff7c0050849f9"
+    },
+    "policy_fingerprint": "353ac5d7b2b53b0e6b86c4640d884d1826a8b1b3c994b41674ac854beb325f32",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 3,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.S3.POLICY.DISCLOSURE.001",
+      "asset_id": "reju-policy-disclosed-bucket",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:aec0c9bca258daa2",
+      "control_id": "CTL.S3.POLICY.DISCLOSURE.001",
+      "control_name": "No Public Read of Bucket Policy",
+      "control_description": "S3 bucket policies must not grant s3:GetBucketPolicy to an anonymous or wildcard principal. A publicly readable bucket policy is a reconnaissance primitive: anyone can retrieve the policy, enumerate which specific object ARNs are granted public read, and use that map to target the exposed content. Reju Kole's disclosure (January 2026) exploited exactly this: the target bucket granted s3:GetBucketPolicy to Principal \"*\", the researcher read the policy to discover that backup.xlsx was publicly granted, downloaded the file, cracked its Office password offline, and used the recovered credentials for further compromise. This control is distinct from controls that fire on the exposed objects themselves (CTL.S3.PUBLIC.001, .004) — the policy-disclosure primitive is what makes object-scoped public grants discoverable, and closing it removes the reconnaissance step even when other public grants remain.\n",
+      "asset_id": "reju-policy-disclosed-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "storage.access.exposes_bucket_policy",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "storage.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance_ccm_v4": [
+        "DSP-17",
+        "IAM-16"
+      ],
+      "exposure": {
+        "type": "policy_read",
+        "principal_scope": "public"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Bucket policy grants s3:GetBucketPolicy to an anonymous or wildcard principal. An attacker can call GetBucketPolicy to discover which specific object ARNs are publicly granted and which principals have access, enabling targeted exploitation of the exposed content.",
+        "action": "Remove any policy statement granting s3:GetBucketPolicy to Principal \"*\" or to AWS: \"*\". If the policy must remain readable for tooling, restrict the grant with a Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public access to bucket metadata.",
+        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"access\": {\n      \"exposes_bucket_policy\": false\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.S3.POLICY.DISCLOSURE.001",
+      "asset_id": "reju-policy-disclosed-bucket",
+      "exposure_score": 150,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-s3-policy-disclosure/controls",
+      "observations": "testdata/e2e/e2e-s3-policy-disclosure/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "40ff0b1e2aa8cea4cbe0be6668160005e6f09bd7",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-s3-policy-disclosure/controls/"
+      ]
+    }
+  }
+}

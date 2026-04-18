@@ -45,7 +45,7 @@ Every score is a **deterministic, traceable reasoning chain**. Compound scores s
 
 ## Features
 
-- **618 built-in controls** across 44 domains (S3, IAM, VPC, EC2, RDS, ELB, K8s, CloudTrail, CloudWatch, KMS, and [34 more](docs/controls/reference.md))
+- **619 built-in controls** across 44 domains (S3, IAM, VPC, EC2, RDS, ELB, K8s, CloudTrail, CloudWatch, KMS, and [34 more](docs/controls/reference.md))
 - **10 compliance profiles** — HIPAA, CIS AWS v3.0, SOC 2, PCI-DSS v4.0, NIST 800-53, FedRAMP, GDPR, FFIEC, ISO 27001, NIST CSF 2.0
 - **Risk reasoning engine** — compound risk scoring across co-failing controls, MITRE-aligned attack stage summary, blast radius multipliers
 - **Safety chains** — 15 built-in chain definitions detect compound failures across data protection, identity, detection, recovery, sovereignty, supply chain, and cryptographic concentration
@@ -146,15 +146,15 @@ New observation properties are additive and backward-compatible. Existing contro
 
 ## Built-in controls
 
-618 controls across 44 domains:
+619 controls across 44 domains:
 
-### AWS S3 (82 controls)
+### AWS S3 (83 controls)
 
 | Category | Count | What they detect |
 |----------|:---:|-----------------|
 | `public` | 15 | Public read/write/list, website hosting, prefix exposure, CloudFront bypass |
 | `acl` | 4 | ACL escalation, reconnaissance, FULL_CONTROL grants |
-| `access` | 9 | Cross-account, wildcard actions, presigned URLs, Access Grants |
+| `access` | 10 | Cross-account, wildcard actions, presigned URLs, Access Grants |
 | `encrypt` | 4 | Missing encryption at rest/in transit, KMS for PHI |
 | `network` | 5 | VPC/IP conditions, VPC endpoint policy, Multi-Region Access Point PAB |
 | `versioning` | 3 | Disabled versioning, missing MFA delete |

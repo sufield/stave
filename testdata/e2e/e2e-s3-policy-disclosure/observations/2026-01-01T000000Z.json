@@ -1,0 +1,56 @@
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws-s3-snapshot",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "captured_at": "2026-01-01T00:00:00Z",
+  "assets": [
+    {
+      "id": "reju-policy-disclosed-bucket",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "reju-policy-disclosed-bucket",
+          "access": {
+            "exposes_bucket_policy": true
+          },
+          "policy_json": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"PublicObjects\",\"Effect\":\"Allow\",\"Principal\":\"*\",\"Action\":[\"s3:GetObject\",\"s3:GetObjectAcl\"],\"Resource\":[\"arn:aws:s3:::reju-policy-disclosed-bucket/backup.xlsx\",\"arn:aws:s3:::reju-policy-disclosed-bucket/background.png\"]},{\"Sid\":\"ReadPolicy\",\"Effect\":\"Allow\",\"Principal\":\"*\",\"Action\":\"s3:GetBucketPolicy\",\"Resource\":\"arn:aws:s3:::reju-policy-disclosed-bucket\"}]}"
+        }
+      }
+    },
+    {
+      "id": "policy-private-bucket",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "policy-private-bucket",
+          "access": {
+            "exposes_bucket_policy": false
+          },
+          "policy_json": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"PublicAssets\",\"Effect\":\"Allow\",\"Principal\":\"*\",\"Action\":\"s3:GetObject\",\"Resource\":\"arn:aws:s3:::policy-private-bucket/public/*\"}]}"
+        }
+      }
+    },
+    {
+      "id": "no-policy-bucket",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "no-policy-bucket",
+          "access": {
+            "exposes_bucket_policy": false
+          }
+        }
+      }
+    }
+  ],
+  "source": "deployed"
+}

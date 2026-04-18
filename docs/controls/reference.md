@@ -3,15 +3,15 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 637
-**Pack hash:** `8fbaf7de1bccd3c9b257835b69fa16088ef97a226a5e534ef19abd4c8d1db75f`
+**Total controls:** 638
+**Pack hash:** `ee62282a16aeb239529bbb15fe456daf8e47761fb61014ebcb1fbde7ac09dc12`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 102 |
-| high | 285 |
+| high | 286 |
 | info | 16 |
 | low | 52 |
 | medium | 182 |
@@ -21,7 +21,7 @@
 | audit | 10 |
 | detection | 2 |
 | encryption | 9 |
-| exposure | 443 |
+| exposure | 444 |
 | governance | 17 |
 | identity | 137 |
 | network | 7 |
@@ -7952,6 +7952,20 @@ S3 bucket access must be restricted by a VPC endpoint condition (aws:SourceVpce)
 S3 buckets must have Object Ownership set to BucketOwnerEnforced, which disables ACLs entirely. When ACLs are disabled, the bucket owner automatically owns every object regardless of who uploaded it, and access is controlled exclusively through IAM and bucket policies. This eliminates the entire class of ACL-based exposure: public grants, privilege escalation via WRITE_ACP, and object-level ACL overrides. Since April 2023 new buckets default to BucketOwnerEnforced, but buckets created before this date may still have ACLs enabled.
 
 **Remediation:** Set Object Ownership to BucketOwnerEnforced using aws s3api put-bucket-ownership-controls. This disables all ACLs on the bucket. Before enabling, audit existing ACL grants and migrate any legitimate access to bucket policies or IAM policies. All existing ACL-based access will stop working once BucketOwnerEnforced is set.
+
+---
+
+### CTL.S3.POLICY.DISCLOSURE.001
+
+**No Public Read of Bucket Policy**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+
+S3 bucket policies must not grant s3:GetBucketPolicy to an anonymous or wildcard principal. A publicly readable bucket policy is a reconnaissance primitive: anyone can retrieve the policy, enumerate which specific object ARNs are granted public read, and use that map to target the exposed content. Reju Kole's disclosure (January 2026) exploited exactly this: the target bucket granted s3:GetBucketPolicy to Principal "*", the researcher read the policy to discover that backup.xlsx was publicly granted, downloaded the file, cracked its Office password offline, and used the recovered credentials for further compromise. This control is distinct from controls that fire on the exposed objects themselves (CTL.S3.PUBLIC.001, .004) — the policy-disclosure primitive is what makes object-scoped public grants discoverable, and closing it removes the reconnaissance step even when other public grants remain.
+
+**Remediation:** Remove any policy statement granting s3:GetBucketPolicy to Principal "*" or to AWS: "*". If the policy must remain readable for tooling, restrict the grant with a Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public access to bucket metadata.
 
 ---
 

@@ -1,0 +1,61 @@
+dsl_version: ctrl.v1
+id: CTL.S3.POLICY.DISCLOSURE.001
+name: No Public Read of Bucket Policy
+description: >
+  S3 bucket policies must not grant s3:GetBucketPolicy to an anonymous
+  or wildcard principal. A publicly readable bucket policy is a
+  reconnaissance primitive: anyone can retrieve the policy, enumerate
+  which specific object ARNs are granted public read, and use that map
+  to target the exposed content. Reju Kole's disclosure (January 2026)
+  exploited exactly this: the target bucket granted s3:GetBucketPolicy
+  to Principal "*", the researcher read the policy to discover that
+  backup.xlsx was publicly granted, downloaded the file, cracked its
+  Office password offline, and used the recovered credentials for
+  further compromise. This control is distinct from controls that fire
+  on the exposed objects themselves (CTL.S3.PUBLIC.001, .004) — the
+  policy-disclosure primitive is what makes object-scoped public grants
+  discoverable, and closing it removes the reconnaissance step even
+  when other public grants remain.
+compliance:
+  ccm_v4: ["DSP-17", "IAM-16"]
+domain: exposure
+exposure:
+  type: policy_read
+  principal_scope: public
+severity: high
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    Bucket policy grants s3:GetBucketPolicy to an anonymous or wildcard
+    principal. An attacker can call GetBucketPolicy to discover which
+    specific object ARNs are publicly granted and which principals have
+    access, enabling targeted exploitation of the exposed content.
+  action: >
+    Remove any policy statement granting s3:GetBucketPolicy to
+    Principal "*" or to AWS: "*". If the policy must remain readable
+    for tooling, restrict the grant with a Condition on aws:PrincipalOrgID,
+    aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access
+    Block with BlockPublicPolicy set to true to reject future policies
+    that grant public access to bucket metadata.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "access": {
+          "exposes_bucket_policy": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.access.exposes_bucket_policy
+      op: eq
+      value: true
