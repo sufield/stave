@@ -1,5 +1,5 @@
 dsl_version: ctrl.v1
-id: CTL.S3.PAB.BLOCK_PUBLIC_POLICY.001
+id: CTL.S3.PAB.BLOCKPUBLICPOLICY.001
 name: S3 Bucket Block Public Policy Flag Must Be Enabled
 description: >
   The `BlockPublicPolicy` flag of the bucket's Public Access Block

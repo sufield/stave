@@ -1,5 +1,5 @@
 dsl_version: ctrl.v1
-id: CTL.S3.PAB.BLOCK_PUBLIC_ACLS.001
+id: CTL.S3.PAB.BLOCKPUBLICACLS.001
 name: S3 Bucket Block Public ACLs Flag Must Be Enabled
 description: >
   The `BlockPublicAcls` flag of the bucket's Public Access Block

@@ -367,13 +367,13 @@ func TestAPPolicy001_TrueNegative_VPCOriginNarrowPolicy(t *testing.T) {
 	// Full AP shape: VPC-bound network origin, PAB fully enforcing, non-public
 	// policy. Silent on both AP.POLICY.001 and AP.PAB.001.
 	ap := accessPoint("ap-vpc-only", map[string]any{
-		"kind":             "access_point",
-		"name":             "internal-ap",
-		"bucket_name":      "data-bucket",
-		"network_origin":   "vpc",
-		"vpc_id":           "vpc-abc123",
-		"alias":            "internal-ap-xxxx.s3-accesspoint.us-east-1.amazonaws.com",
-		"policy_is_public": false,
+		"kind":                        "access_point",
+		"name":                        "internal-ap",
+		"bucket_name":                 "data-bucket",
+		"network_origin":              "vpc",
+		"vpc_id":                      "vpc-abc123",
+		"alias":                       "internal-ap-xxxx.s3-accesspoint.us-east-1.amazonaws.com",
+		"policy_is_public":            false,
 		"public_access_fully_blocked": true,
 		"public_access_block": map[string]any{
 			"block_public_acls":       true,

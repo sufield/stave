@@ -1,0 +1,86 @@
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws-s3-snapshot",
+    "tool": "stave-synthetic",
+    "tool_version": "1.0.0"
+  },
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "reju-kole-backup-bucket",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "reju-kole-backup-bucket",
+          "access": {
+            "public_read": true,
+            "public_read_scope": "object"
+          }
+        }
+      }
+    },
+    {
+      "id": "mixed-scope-bucket",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "mixed-scope-bucket",
+          "access": {
+            "public_read": true,
+            "public_read_scope": "mixed"
+          }
+        }
+      }
+    },
+    {
+      "id": "bucket-wide-public",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "bucket-wide-public",
+          "access": {
+            "public_read": true,
+            "public_read_scope": "bucket"
+          }
+        }
+      }
+    },
+    {
+      "id": "public-assets-prefix",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "public-assets-prefix",
+          "access": {
+            "public_read": true,
+            "public_read_scope": "prefix"
+          }
+        }
+      }
+    },
+    {
+      "id": "fully-private-bucket",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "fully-private-bucket",
+          "access": {
+            "public_read": false
+          }
+        }
+      }
+    }
+  ]
+}

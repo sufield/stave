@@ -88,16 +88,16 @@ func loadAccessControls(t *testing.T) []policy.ControlDefinition {
 		t.Fatalf("loading built-in controls: %v", err)
 	}
 	ids := map[kernel.ControlID]struct{}{
-		"CTL.S3.ACCESS.001":        {},
-		"CTL.S3.ACCESS.002":        {},
-		"CTL.S3.ACCESS.003":        {},
-		"CTL.S3.ACCESS.GRANTS.001": {},
-		"CTL.S3.ACCESS.GRANTS.002": {},
-		"CTL.S3.PRESIGNED.001":     {},
-		"CTL.S3.AUTH.READ.001":     {},
-		"CTL.S3.AUTH.WRITE.001":    {},
+		"CTL.S3.ACCESS.001":         {},
+		"CTL.S3.ACCESS.002":         {},
+		"CTL.S3.ACCESS.003":         {},
+		"CTL.S3.ACCESS.GRANTS.001":  {},
+		"CTL.S3.ACCESS.GRANTS.002":  {},
+		"CTL.S3.PRESIGNED.001":      {},
+		"CTL.S3.AUTH.READ.001":      {},
+		"CTL.S3.AUTH.WRITE.001":     {},
 		"CTL.S3.POLICY.SCOPING.001": {},
-		"CTL.S3.ACCESS.004":        {},
+		"CTL.S3.ACCESS.004":         {},
 	}
 	var controls []policy.ControlDefinition
 	for _, ctl := range all {

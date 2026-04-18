@@ -45,7 +45,7 @@ Every score is a **deterministic, traceable reasoning chain**. Compound scores s
 
 ## Features
 
-- **646 built-in controls** across 44 domains (S3, IAM, VPC, EC2, RDS, ELB, K8s, CloudTrail, CloudWatch, KMS, and [34 more](docs/controls/reference.md))
+- **651 built-in controls** across 44 domains (S3, IAM, VPC, EC2, RDS, ELB, K8s, CloudTrail, CloudWatch, KMS, and [34 more](docs/controls/reference.md))
 - **10 compliance profiles** — HIPAA, CIS AWS v3.0, SOC 2, PCI-DSS v4.0, NIST 800-53, FedRAMP, GDPR, FFIEC, ISO 27001, NIST CSF 2.0
 - **Risk reasoning engine** — compound risk scoring across co-failing controls, MITRE-aligned attack stage summary, blast radius multipliers
 - **Safety chains** — 15 built-in chain definitions detect compound failures across data protection, identity, detection, recovery, sovereignty, supply chain, and cryptographic concentration
@@ -146,15 +146,15 @@ New observation properties are additive and backward-compatible. Existing contro
 
 ## Built-in controls
 
-646 controls across 44 domains:
+651 controls across 44 domains:
 
-### AWS S3 (89 controls)
+### AWS S3 (94 controls)
 
 | Category | Count | What they detect |
 |----------|:---:|-----------------|
 | `public` | 17 | Public read/write/list, website hosting, prefix exposure, CloudFront bypass |
 | `acl` | 4 | ACL escalation, reconnaissance, FULL_CONTROL grants |
-| `access` | 12 | Cross-account, wildcard actions, presigned URLs, Access Grants, policy disclosure |
+| `access` | 13 | Cross-account, wildcard actions, presigned URLs, Access Grants, policy disclosure |
 | `encrypt` | 4 | Missing encryption at rest/in transit, KMS for PHI |
 | `network` | 7 | VPC/IP conditions, VPC endpoint policy, Multi-Region Access Point PAB |
 | `versioning` | 3 | Disabled versioning, missing MFA delete |
@@ -167,7 +167,7 @@ New observation properties are additive and backward-compatible. Existing contro
 | `takeover` | 2 | Dangling bucket references, CDN origins |
 | `artifacts` | 1 | VCS artifacts on public buckets |
 | `cors` | 1 | Wildcard origin CORS on non-public-by-design buckets |
-| `misc` | 4 | Incomplete data, completeness checks |
+| `misc` | 8 | Incomplete data, completeness checks |
 
 ### AWS IAM (93 controls)
 

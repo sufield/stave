@@ -1,5 +1,5 @@
 dsl_version: ctrl.v1
-id: CTL.S3.PAB.RESTRICT_PUBLIC_BUCKETS.001
+id: CTL.S3.PAB.RESTRICTPUBLICBUCKETS.001
 name: S3 Bucket Restrict Public Buckets Flag Must Be Enabled
 description: >
   The `RestrictPublicBuckets` flag of the bucket's Public Access

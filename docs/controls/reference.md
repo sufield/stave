@@ -3,25 +3,25 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 665
-**Pack hash:** `c1267a4b05e924595955ef969bd861b8d524c3b60ee71edb72f14a855547519a`
+**Total controls:** 670
+**Pack hash:** `c8ccaa5ab12d59b23a02e73a146710418fdc63fc49d37bab88517b8c29f0370c`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 120 |
-| high | 294 |
+| high | 298 |
 | info | 16 |
 | low | 52 |
-| medium | 183 |
+| medium | 184 |
 
 | Domain | Count |
 |--------|-------|
 | audit | 10 |
 | detection | 2 |
 | encryption | 9 |
-| exposure | 450 |
+| exposure | 455 |
 | governance | 18 |
 | identity | 157 |
 | network | 7 |
@@ -8364,6 +8364,73 @@ S3 buckets must have Object Ownership set to BucketOwnerEnforced, which disables
 
 ---
 
+### CTL.S3.PAB.BLOCKPUBLICACLS.001
+
+**S3 Bucket Block Public ACLs Flag Must Be Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v1.4.0: 2.1.5; cis_aws_v3.0: 2.1.4; fedramp_moderate: AC-3; ffiec: ISH-4; gdpr: Art.32; iso_27001_2022: A.8.3; nist_800_53_r5: AC-3; nist_csf_2.0: PR.PS; pci_dss_v3.2.1: 1.3.6; pci_dss_v4.0: 2.2.1; soc2: CC6.1;
+
+The `BlockPublicAcls` flag of the bucket's Public Access Block configuration rejects any new ACL grant that would make the bucket or its objects publicly accessible. When this specific flag is `false`, new PUT-ACL calls that grant `READ`, `WRITE`, `READ_ACP`, or `WRITE_ACP` to `http://acs.amazonaws.com/groups/global/AllUsers` or `.../AuthenticatedUsers` succeed rather than being rejected at the API boundary. The umbrella `CTL.S3.CONTROLS.001` fires when any of the four PAB flags is off; this control narrows the finding to the specific flag so remediation is a one-command fix rather than requiring the operator to enumerate which of the four is missing. Prowler and ScoutSuite both report the four flags independently.
+
+**Remediation:** Enable the `BlockPublicAcls` flag on the bucket's Public Access Block configuration. From the CLI:
+
+    aws s3api put-public-access-block \
+      --bucket <name> \
+      --public-access-block-configuration \
+      'BlockPublicAcls=true,IgnorePublicAcls=<current>,BlockPublicPolicy=<current>,RestrictPublicBuckets=<current>'
+
+Preserve the other three flag values so enabling this one doesn't silently disable the others.
+
+---
+
+### CTL.S3.PAB.BLOCKPUBLICPOLICY.001
+
+**S3 Bucket Block Public Policy Flag Must Be Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v1.4.0: 2.1.5; cis_aws_v3.0: 2.1.4; fedramp_moderate: AC-3; ffiec: ISH-4; gdpr: Art.32; iso_27001_2022: A.8.3; nist_800_53_r5: AC-3; nist_csf_2.0: PR.PS; pci_dss_v3.2.1: 1.3.6; pci_dss_v4.0: 2.2.1; soc2: CC6.1;
+
+The `BlockPublicPolicy` flag of the bucket's Public Access Block configuration rejects any new bucket-policy update that would evaluate as public under AWS `PolicyStatus.IsPublic`. When this specific flag is `false`, a `PutBucketPolicy` call with `Principal: "*"` and no restricting Condition succeeds rather than being rejected at the API boundary. The umbrella `CTL.S3.CONTROLS.001` fires when any of the four PAB flags is off; this control narrows the finding to the specific flag so remediation targets the policy-write path rather than the full PAB tuple. Prowler and ScoutSuite both report the four flags independently.
+
+**Remediation:** Enable the `BlockPublicPolicy` flag on the bucket's Public Access Block configuration. Preserve the other three flag values so enabling this one doesn't silently disable the others.
+
+---
+
+### CTL.S3.PAB.IGNOREPUBLICACLS.001
+
+**S3 Bucket Ignore Public ACLs Flag Must Be Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v1.4.0: 2.1.5; cis_aws_v3.0: 2.1.4; fedramp_moderate: AC-3; ffiec: ISH-4; gdpr: Art.32; iso_27001_2022: A.8.3; nist_800_53_r5: AC-3; nist_csf_2.0: PR.PS; pci_dss_v3.2.1: 1.3.6; pci_dss_v4.0: 2.2.1; soc2: CC6.1;
+
+The `IgnorePublicAcls` flag of the bucket's Public Access Block configuration causes S3 to disregard any existing ACL grant that would make the bucket or its objects publicly accessible, even if the grant is already in place. When this specific flag is `false`, historical ACL grants to `AllUsers` or `AuthenticatedUsers` stay effective — enabling `BlockPublicAcls` alone does not neutralize grants that were made before the flag was enabled. The umbrella `CTL.S3.CONTROLS.001` fires when any of the four PAB flags is off; this control narrows the finding to the specific flag so the operator knows that the fix is not "block new ACLs" but "ignore the ones already there." Prowler and ScoutSuite both report the four flags independently.
+
+**Remediation:** Enable the `IgnorePublicAcls` flag on the bucket's Public Access Block configuration. Pair it with `BlockPublicAcls` for full ACL-path coverage — the pair prevents new public ACL grants and neutralizes existing ones.
+
+---
+
+### CTL.S3.PAB.RESTRICTPUBLICBUCKETS.001
+
+**S3 Bucket Restrict Public Buckets Flag Must Be Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v1.4.0: 2.1.5; cis_aws_v3.0: 2.1.4; fedramp_moderate: AC-3; ffiec: ISH-4; gdpr: Art.32; iso_27001_2022: A.8.3; nist_800_53_r5: AC-3; nist_csf_2.0: PR.PS; pci_dss_v3.2.1: 1.3.6; pci_dss_v4.0: 2.2.1; soc2: CC6.1;
+
+The `RestrictPublicBuckets` flag of the bucket's Public Access Block configuration restricts evaluation of any existing public bucket policy: when the flag is on, public grants in the bucket policy are limited to AWS service principals and authorized AWS services (e.g., CloudFront OAC). When this specific flag is `false`, historical `Principal: "*"` grants stay fully effective — enabling `BlockPublicPolicy` alone does not neutralize policies that were in place before the flag was turned on. The umbrella `CTL.S3.CONTROLS.001` fires when any of the four PAB flags is off; this control narrows the finding to the specific flag so the operator knows the fix is not "block new public policies" but "restrict the ones already there." Prowler and ScoutSuite both report the four flags independently.
+
+**Remediation:** Enable the `RestrictPublicBuckets` flag on the bucket's Public Access Block configuration. Pair it with `BlockPublicPolicy` for full policy-path coverage — the pair prevents new public policy writes and limits the effect of any historical public grants to service principals.
+
+---
+
 ### CTL.S3.POLICY.DISCLOSURE.001
 
 **No Public Read of Bucket Policy**
@@ -8390,6 +8457,22 @@ S3 bucket policies must not grant s3:GetBucketPolicy to an anonymous or wildcard
 S3 buckets must have an explicit resource-based bucket policy. Without a policy, access controls rely entirely on IAM and ACLs — there is no resource-level enforcement of encryption requirements, VPC restrictions, or transport security.
 
 **Remediation:** Attach an explicit bucket policy. At minimum the policy should deny HTTP requests (aws:SecureTransport false), deny unencrypted PutObject, and restrict access to known principals or VPC endpoints.
+
+---
+
+### CTL.S3.POLICY.OBJECTSCOPED.001
+
+**Public Read Grants Must Not Target Specific Objects**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.8.3; nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+Bucket policy contains at least one Allow statement with a non-narrow principal whose Resource field names one or more specific object keys (e.g. `arn:aws:s3:::bucket/backup.xlsx`) rather than the whole bucket (`arn:aws:s3:::bucket/*`) or a logical prefix (`bucket/assets/*`). Object-scoped public grants are a distinct attack surface from bucket-wide public grants: the specific object ARN in the policy readback (exposed by `iam:GetBucketPolicy` if that permission is also public — see `CTL.S3.POLICY.DISCLOSURE.001`) hands an attacker a targeting list. The January 2026 Reju Kole disclosure chained exactly this pattern: a public `GetBucketPolicy` grant revealed that `backup.xlsx` was individually granted to `Principal: "*"`, the researcher fetched it, cracked its Office password offline, and reused the recovered credentials for further compromise. Prowler and Pacu treat object-scoped grants as a distinct finding class for the same reason.
+Severity is medium, not high, because object-scoped public grants are a legitimate pattern for individually-published documents (PDFs, binaries, static assets pinned to specific keys). Operators triage based on the specific object keys listed in the finding's diagnostic context. When the target bucket also carries `storage.tags.data-classification in [phi, pii, confidential]`, `CTL.S3.PUBLIC.002` already fires at high severity on the composite signal — this control does not duplicate that coverage; it catches the untagged case where the object's sensitivity is not expressed in the contract.
+
+**Remediation:** Review each object listed as a public target. For intentionally published documents, move to a published-assets prefix pattern (`bucket/public/*`) so the policy no longer enumerates individual keys. For anything not intentionally public, remove the grant. Consider moving published documents to a dedicated bucket so the host bucket never has object-scoped public grants at all. If the bucket also has `s3:GetBucketPolicy` open to the public (see `CTL.S3.POLICY.DISCLOSURE.001`), close that first — it is the discovery primitive that makes object-scoped grants exploitable without prior knowledge of key names.
 
 ---
 

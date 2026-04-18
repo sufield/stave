@@ -169,6 +169,7 @@ schema version bump.
 | Field | Type | Description |
 |-------|------|-------------|
 | `storage.access.public_read` | bool | Public read access |
+| `storage.access.public_read_scope` | string/null | Scope of any public-read grant in the bucket policy: `"bucket"` (Resource is the bucket itself or `bucket/*`), `"prefix"` (Resource is a `bucket/prefix/*` pattern narrower than the whole bucket), `"object"` (Resource names one or more specific object keys, e.g. `bucket/backup.xlsx`), or `"mixed"` (a single Allow statement contains Resource entries spanning more than one of the above). `null` or omitted when `public_read = false` — nothing to scope. |
 | `storage.access.public_list` | bool | Public list access |
 | `storage.access.public_write` | bool | Public write access |
 | `storage.access.read_via_identity` | bool | Read via identity-based policy |

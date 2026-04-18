@@ -1,0 +1,81 @@
+dsl_version: ctrl.v1
+id: CTL.S3.POLICY.OBJECTSCOPED.001
+name: Public Read Grants Must Not Target Specific Objects
+description: >
+  Bucket policy contains at least one Allow statement with a non-narrow
+  principal whose Resource field names one or more specific object keys
+  (e.g. `arn:aws:s3:::bucket/backup.xlsx`) rather than the whole bucket
+  (`arn:aws:s3:::bucket/*`) or a logical prefix (`bucket/assets/*`).
+  Object-scoped public grants are a distinct attack surface from
+  bucket-wide public grants: the specific object ARN in the policy
+  readback (exposed by `iam:GetBucketPolicy` if that permission is
+  also public — see `CTL.S3.POLICY.DISCLOSURE.001`) hands an attacker
+  a targeting list. The January 2026 Reju Kole disclosure chained
+  exactly this pattern: a public `GetBucketPolicy` grant revealed that
+  `backup.xlsx` was individually granted to `Principal: "*"`, the
+  researcher fetched it, cracked its Office password offline, and
+  reused the recovered credentials for further compromise. Prowler and
+  Pacu treat object-scoped grants as a distinct finding class for the
+  same reason.
+
+  Severity is medium, not high, because object-scoped public grants
+  are a legitimate pattern for individually-published documents (PDFs,
+  binaries, static assets pinned to specific keys). Operators triage
+  based on the specific object keys listed in the finding's diagnostic
+  context. When the target bucket also carries
+  `storage.tags.data-classification in [phi, pii, confidential]`,
+  `CTL.S3.PUBLIC.002` already fires at high severity on the
+  composite signal — this control does not duplicate that coverage;
+  it catches the untagged case where the object's sensitivity is not
+  expressed in the contract.
+domain: exposure
+severity: medium
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-3"
+  fedramp_moderate: "AC-3"
+  iso_27001_2022: "A.8.3"
+  ccm_v4: ["DSP-07", "DSP-17"]
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    Bucket policy grants public read to one or more specific object
+    keys (scope = "object" or "mixed"). The targeting list is visible
+    to anyone who can read the policy; if that object population
+    includes anything sensitive, the combination is a one-request
+    exfiltration path.
+  action: >
+    Review each object listed as a public target. For intentionally
+    published documents, move to a published-assets prefix pattern
+    (`bucket/public/*`) so the policy no longer enumerates individual
+    keys. For anything not intentionally public, remove the grant.
+    Consider moving published documents to a dedicated bucket so the
+    host bucket never has object-scoped public grants at all. If the
+    bucket also has `s3:GetBucketPolicy` open to the public (see
+    `CTL.S3.POLICY.DISCLOSURE.001`), close that first — it is the
+    discovery primitive that makes object-scoped grants exploitable
+    without prior knowledge of key names.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "access": {
+          "public_read": true,
+          "public_read_scope": "prefix"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.access.public_read_scope
+      op: in
+      value: ["object", "mixed"]

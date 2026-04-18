@@ -1,5 +1,5 @@
 dsl_version: ctrl.v1
-id: CTL.S3.PAB.IGNORE_PUBLIC_ACLS.001
+id: CTL.S3.PAB.IGNOREPUBLICACLS.001
 name: S3 Bucket Ignore Public ACLs Flag Must Be Enabled
 description: >
   The `IgnorePublicAcls` flag of the bucket's Public Access Block
