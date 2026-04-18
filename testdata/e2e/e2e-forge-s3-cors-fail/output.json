@@ -130,11 +130,8 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "b0f26994c50379ed94752854bad6cebdc54e829e",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-s3-cors-fail/controls/"
-      ]
+      "head_commit": "e6cb109c014f99ed764915a9a3c6dfdaabf1da88",
+      "dirty": false
     }
   }
 }

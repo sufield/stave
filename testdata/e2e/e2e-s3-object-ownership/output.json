@@ -1,0 +1,300 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "97522425ca09b7be10a04653030cb51cd03dd9429f2864432818656356798675",
+        "2026-01-11T000000Z.json": "8d0a8815e4e829192d08c6c99745ed1bac826a64e67a9371d6b85525f581aa6e"
+      },
+      "overall": "7f9a5f53455484c701d73645d9cadcd6a3d58db52dd287516f286e20c1208e1e"
+    },
+    "policy_fingerprint": "4f601195baab30c6298ecfb60e7ffa7033d53b19f89684ae53ca509ce2d6a378",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 4,
+    "exposed_resources": 3,
+    "violations": 3
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.S3.OWNERSHIP.001",
+      "asset_id": "absent-ownership-bucket",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.OWNERSHIP.001",
+      "asset_id": "bucket-owner-preferred-bucket",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.OWNERSHIP.001",
+      "asset_id": "object-writer-bucket",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:97ed23f6976f717e",
+      "control_id": "CTL.S3.OWNERSHIP.001",
+      "control_name": "S3 Object Ownership Must Be Bucket Owner Enforced",
+      "control_description": "S3 buckets must have Object Ownership set to BucketOwnerEnforced, which disables ACLs entirely. When ACLs are disabled, the bucket owner automatically owns every object regardless of who uploaded it, and access is controlled exclusively through IAM and bucket policies. This eliminates the entire class of ACL-based exposure: public grants, privilege escalation via WRITE_ACP, and object-level ACL overrides. Since April 2023 new buckets default to BucketOwnerEnforced, but buckets created before this date may still have ACLs enabled.\n",
+      "asset_id": "absent-ownership-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "storage.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          },
+          {
+            "property": "storage.object_ownership.rule",
+            "actual_value": "[SANITIZED]",
+            "operator": "missing",
+            "unsafe_value": true
+          },
+          {
+            "property": "storage.object_ownership.rule",
+            "actual_value": "[SANITIZED]",
+            "operator": "ne",
+            "unsafe_value": "BucketOwnerEnforced"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_aws_v3.0": "2.1.2",
+        "fedramp_moderate": "AC-3",
+        "iso_27001_2022": "A.8.3",
+        "nist_800_53_r5": "AC-3",
+        "soc2": "CC6.1"
+      },
+      "control_compliance_ccm_v4": [
+        "DSP-06",
+        "DSP-07"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Bucket does not have Object Ownership set to BucketOwnerEnforced. ACLs remain active and can grant public or cross-account access to individual objects, bypassing bucket policies.",
+        "action": "Set Object Ownership to BucketOwnerEnforced using aws s3api put-bucket-ownership-controls. This disables all ACLs on the bucket. Before enabling, audit existing ACL grants and migrate any legitimate access to bucket policies or IAM policies. All existing ACL-based access will stop working once BucketOwnerEnforced is set.",
+        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"object_ownership\": {\n      \"rule\": \"BucketOwnerEnforced\"\n    }\n  }\n}\n"
+      }
+    },
+    {
+      "finding_id": "sha256:07cd52d86dd948b9",
+      "control_id": "CTL.S3.OWNERSHIP.001",
+      "control_name": "S3 Object Ownership Must Be Bucket Owner Enforced",
+      "control_description": "S3 buckets must have Object Ownership set to BucketOwnerEnforced, which disables ACLs entirely. When ACLs are disabled, the bucket owner automatically owns every object regardless of who uploaded it, and access is controlled exclusively through IAM and bucket policies. This eliminates the entire class of ACL-based exposure: public grants, privilege escalation via WRITE_ACP, and object-level ACL overrides. Since April 2023 new buckets default to BucketOwnerEnforced, but buckets created before this date may still have ACLs enabled.\n",
+      "asset_id": "bucket-owner-preferred-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "storage.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          },
+          {
+            "property": "storage.object_ownership.rule",
+            "actual_value": "[SANITIZED]",
+            "operator": "missing",
+            "unsafe_value": true
+          },
+          {
+            "property": "storage.object_ownership.rule",
+            "actual_value": "[SANITIZED]",
+            "operator": "ne",
+            "unsafe_value": "BucketOwnerEnforced"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_aws_v3.0": "2.1.2",
+        "fedramp_moderate": "AC-3",
+        "iso_27001_2022": "A.8.3",
+        "nist_800_53_r5": "AC-3",
+        "soc2": "CC6.1"
+      },
+      "control_compliance_ccm_v4": [
+        "DSP-06",
+        "DSP-07"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Bucket does not have Object Ownership set to BucketOwnerEnforced. ACLs remain active and can grant public or cross-account access to individual objects, bypassing bucket policies.",
+        "action": "Set Object Ownership to BucketOwnerEnforced using aws s3api put-bucket-ownership-controls. This disables all ACLs on the bucket. Before enabling, audit existing ACL grants and migrate any legitimate access to bucket policies or IAM policies. All existing ACL-based access will stop working once BucketOwnerEnforced is set.",
+        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"object_ownership\": {\n      \"rule\": \"BucketOwnerEnforced\"\n    }\n  }\n}\n"
+      }
+    },
+    {
+      "finding_id": "sha256:b4c18825901d3d70",
+      "control_id": "CTL.S3.OWNERSHIP.001",
+      "control_name": "S3 Object Ownership Must Be Bucket Owner Enforced",
+      "control_description": "S3 buckets must have Object Ownership set to BucketOwnerEnforced, which disables ACLs entirely. When ACLs are disabled, the bucket owner automatically owns every object regardless of who uploaded it, and access is controlled exclusively through IAM and bucket policies. This eliminates the entire class of ACL-based exposure: public grants, privilege escalation via WRITE_ACP, and object-level ACL overrides. Since April 2023 new buckets default to BucketOwnerEnforced, but buckets created before this date may still have ACLs enabled.\n",
+      "asset_id": "object-writer-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "storage.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          },
+          {
+            "property": "storage.object_ownership.rule",
+            "actual_value": "[SANITIZED]",
+            "operator": "missing",
+            "unsafe_value": true
+          },
+          {
+            "property": "storage.object_ownership.rule",
+            "actual_value": "[SANITIZED]",
+            "operator": "ne",
+            "unsafe_value": "BucketOwnerEnforced"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_aws_v3.0": "2.1.2",
+        "fedramp_moderate": "AC-3",
+        "iso_27001_2022": "A.8.3",
+        "nist_800_53_r5": "AC-3",
+        "soc2": "CC6.1"
+      },
+      "control_compliance_ccm_v4": [
+        "DSP-06",
+        "DSP-07"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Bucket does not have Object Ownership set to BucketOwnerEnforced. ACLs remain active and can grant public or cross-account access to individual objects, bypassing bucket policies.",
+        "action": "Set Object Ownership to BucketOwnerEnforced using aws s3api put-bucket-ownership-controls. This disables all ACLs on the bucket. Before enabling, audit existing ACL grants and migrate any legitimate access to bucket policies or IAM policies. All existing ACL-based access will stop working once BucketOwnerEnforced is set.",
+        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"object_ownership\": {\n      \"rule\": \"BucketOwnerEnforced\"\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.S3.OWNERSHIP.001",
+      "asset_id": "absent-ownership-bucket",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 1,
+      "control_id": "CTL.S3.OWNERSHIP.001",
+      "asset_id": "bucket-owner-preferred-bucket",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 2,
+      "control_id": "CTL.S3.OWNERSHIP.001",
+      "asset_id": "object-writer-bucket",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-s3-object-ownership/controls",
+      "observations": "testdata/e2e/e2e-s3-object-ownership/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "e6cb109c014f99ed764915a9a3c6dfdaabf1da88",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-s3-object-ownership/controls/CTL.S3.OWNERSHIP.001.yaml"
+      ]
+    }
+  }
+}

@@ -166,6 +166,7 @@ New observation properties are additive and backward-compatible. Existing contro
 | `tenant` | 1 | Prefix-based tenant isolation |
 | `takeover` | 2 | Dangling bucket references, CDN origins |
 | `artifacts` | 1 | VCS artifacts on public buckets |
+| `cors` | 1 | Wildcard origin CORS on non-public-by-design buckets |
 | `misc` | 4 | Incomplete data, completeness checks |
 
 ### AWS IAM (73 controls)

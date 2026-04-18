@@ -50,6 +50,10 @@ unsafe_predicate:
     - field: properties.storage.kind
       op: eq
       value: bucket
-    - field: properties.storage.object_ownership.rule
-      op: ne
-      value: BucketOwnerEnforced
+    - any:
+        - field: properties.storage.object_ownership.rule
+          op: missing
+          value: true
+        - field: properties.storage.object_ownership.rule
+          op: ne
+          value: BucketOwnerEnforced

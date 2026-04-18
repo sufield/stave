@@ -1,0 +1,65 @@
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws-s3-snapshot",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "captured_at": "2026-01-01T00:00:00Z",
+  "assets": [
+    {
+      "id": "absent-ownership-bucket",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "absent-ownership-bucket"
+        }
+      }
+    },
+    {
+      "id": "object-writer-bucket",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "object-writer-bucket",
+          "object_ownership": {
+            "rule": "ObjectWriter"
+          }
+        }
+      }
+    },
+    {
+      "id": "bucket-owner-preferred-bucket",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "bucket-owner-preferred-bucket",
+          "object_ownership": {
+            "rule": "BucketOwnerPreferred"
+          }
+        }
+      }
+    },
+    {
+      "id": "enforced-bucket",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "enforced-bucket",
+          "object_ownership": {
+            "rule": "BucketOwnerEnforced"
+          }
+        }
+      }
+    }
+  ],
+  "source": "deployed"
+}
