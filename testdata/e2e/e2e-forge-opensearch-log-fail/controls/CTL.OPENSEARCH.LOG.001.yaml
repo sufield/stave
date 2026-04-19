@@ -13,11 +13,13 @@ compliance:
   soc2: "CC7.1"
   nist_800_53_r5: "AU-2"
   fedramp_moderate: "AU-2"
+  ccm_v4: ["LOG-05", "LOG-12"]
 scope_tags:
   - aws
   - opensearch
 type: unsafe_state
-params: {}
+params:
+  attack_stage: detection_evasion
 remediation:
   description: >
     OpenSearch domain does not have audit logging enabled. Access

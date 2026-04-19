@@ -71,7 +71,7 @@ A point-in-time snapshot of asset state. Structure is flat JSON (no
 Each asset: `id`, `type`, `vendor`, `properties` (required), `source`
 (optional).
 
-See [Observation Contract](observation-contract.md) for the full field
+See [Observation Contract](contract/README.md) for the full field
 dictionary.
 
 ---

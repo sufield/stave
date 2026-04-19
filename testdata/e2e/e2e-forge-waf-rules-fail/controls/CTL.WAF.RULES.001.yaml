@@ -12,11 +12,13 @@ compliance:
   pci_dss_v4.0: "6.4.1"
   nist_800_53_r5: "SI-3"
   fedramp_moderate: "SI-3"
+  ccm_v4: ["IVS-09", "LOG-12"]
 scope_tags:
   - aws
   - waf
 type: unsafe_state
-params: {}
+params:
+  attack_stage: initial_access
 remediation:
   description: >
     WAF web ACL does not include managed rule groups. No baseline

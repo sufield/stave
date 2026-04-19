@@ -6,10 +6,17 @@ description: >
   WRITE_ACP permission enables attackers to modify the ACL itself,
   granting themselves FULL_CONTROL and escalating to read, write,
   and delete all objects.
+compliance:
+  ccm_v4: ["DSP-17", "IAM-16"]
 domain: exposure
+exposure:
+  type: acl_write
+  principal_scope: public
+severity: high
 scope_tags: [aws, s3]
 type: unsafe_state
-params: {}
+params:
+  attack_stage: initial_access
 remediation:
   description: >
     Bucket grants ACL modification (WRITE_ACP) to public or authenticated
@@ -29,11 +36,4 @@ remediation:
         }
       }
     }
-unsafe_predicate:
-  any:
-    - field: properties.storage.access.public_admin
-      op: eq
-      value: true
-    - field: properties.storage.access.authenticated_admin
-      op: eq
-      value: true
+unsafe_predicate_alias: s3.acl_writable

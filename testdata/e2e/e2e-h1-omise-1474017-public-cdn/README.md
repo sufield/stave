@@ -22,12 +22,12 @@ Only these two controls are loaded to keep the test focused on the exact exposur
 
 ## Snapshot Fields (Key Ones)
 
-- `storage.visibility.public_read = true` — bucket objects readable by anyone
-- `storage.visibility.public_list = true` — bucket listing exposed to anyone
-- `storage.visibility.public_write = false` — no evidence of public write access
-- `storage.visibility.public_read_via_policy = true` — policy grants `s3:GetObject` to `Principal: *`
-- `storage.visibility.public_read_via_acl = true` — ACL grants READ to AllUsers
-- `storage.visibility.public_list_via_policy = true` — policy grants `s3:ListBucket` to `Principal: *`
+- `storage.access.public_read = true` — bucket objects readable by anyone
+- `storage.access.public_list = true` — bucket listing exposed to anyone
+- `storage.access.public_write = false` — no evidence of public write access
+- `storage.access.public_read_via_policy = true` — policy grants `s3:GetObject` to `Principal: *`
+- `storage.access.public_read_via_acl = true` — ACL grants READ to AllUsers
+- `storage.access.public_list_via_policy = true` — policy grants `s3:ListBucket` to `Principal: *`
 - `storage.controls.public_access_fully_blocked = false` — no PAB safety net
 - `storage.controls.public_access_block.*` — all four PAB settings are `false`
 - `vendor.aws.s3.cdn_endpoint = "https://cdn2.omise.co/"` — stored in vendor evidence

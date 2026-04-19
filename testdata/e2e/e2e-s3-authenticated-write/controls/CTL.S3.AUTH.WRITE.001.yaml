@@ -7,10 +7,17 @@ description: >
   AWS account holder worldwide can upload, overwrite, or delete
   objects — enabling data injection, ransomware, and supply
   chain poisoning.
+compliance:
+  ccm_v4: ["DSP-17", "IAM-16"]
 domain: exposure
+exposure:
+  type: authenticated_write
+  principal_scope: authenticated
+severity: high
 scope_tags: [aws, s3]
 type: unsafe_state
-params: {}
+params:
+  attack_stage: initial_access
 remediation:
   description: >
     Bucket grants write access to the AuthenticatedUsers group.
@@ -28,8 +35,4 @@ remediation:
         }
       }
     }
-unsafe_predicate:
-  any:
-    - field: properties.storage.access.authenticated_write
-      op: eq
-      value: true
+unsafe_predicate_alias: s3.authenticated_users_write

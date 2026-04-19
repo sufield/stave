@@ -20,6 +20,7 @@ compliance:
   pci_dss_v4.0: "7.2.1"
   soc2: "CC6.1, CC9.2"
   iso_27001_2022: "A.8.3"
+  ccm_v4: ["DCS-07", "IAM-16"]
 scope_tags:
   - aws
   - iam

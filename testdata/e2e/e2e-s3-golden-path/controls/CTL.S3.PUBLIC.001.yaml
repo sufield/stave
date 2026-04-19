@@ -10,14 +10,25 @@ exposure:
   principal_scope: public
 severity: critical
 compliance:
+  hipaa: "164.312(a)(1)"
   cis_aws_v1.4.0: "2.1.5"
   pci_dss_v3.2.1: "1.2.1"
   soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-3"
+  fedramp_moderate: "AC-3"
+  gdpr: "Art.32"
+  ffiec: "ISH-4"
+  iso_27001_2022: "A.8.3"
+  ccm_v4: ["DSP-07", "DSP-17"]
 scope_tags:
   - aws
   - s3
 type: unsafe_state
-params: {}
+params:
+  attack_stage: initial_access
+observation_fields:
+  - storage.access.public_read
 remediation:
   description: >
     Bucket has public read access enabled via policy or ACL.

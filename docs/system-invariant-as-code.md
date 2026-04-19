@@ -55,10 +55,10 @@ scope_tags: [aws, s3]
 type: unsafe_state
 unsafe_predicate:
   any:
-    - field: properties.storage.visibility.public_read
+    - field: properties.storage.access.public_read
       op: eq
       value: true
-    - field: properties.storage.visibility.public_list
+    - field: properties.storage.access.public_list
       op: eq
       value: true
 ```

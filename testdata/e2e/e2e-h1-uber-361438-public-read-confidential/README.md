@@ -22,11 +22,11 @@ Both controls are copied from `controls/s3/` (canonical directory). PUBLIC.002 i
 ## Snapshot Fields (Key Ones)
 
 - `storage.kind = "bucket"`
-- `storage.visibility.public_read = true` — objects readable by anyone via policy
-- `storage.visibility.public_list = false` — report does not claim listing was possible
-- `storage.visibility.public_write = false` — no evidence of public write
-- `storage.visibility.public_read_via_policy = true` — policy grants `s3:GetObject` to `Principal: *`
-- `storage.visibility.public_read_via_acl = false` — no ACL-based public read
+- `storage.access.public_read = true` — objects readable by anyone via policy
+- `storage.access.public_list = false` — report does not claim listing was possible
+- `storage.access.public_write = false` — no evidence of public write
+- `storage.access.public_read_via_policy = true` — policy grants `s3:GetObject` to `Principal: *`
+- `storage.access.public_read_via_acl = false` — no ACL-based public read
 - `storage.tags.data-classification = "confidential"` — matches PUBLIC.002 predicate exactly
 - `storage.controls.public_access_fully_blocked = false` — no PAB safety net
 - `storage.encryption.at_rest_enabled = false` — no encryption configured

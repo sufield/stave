@@ -1,0 +1,71 @@
+dsl_version: ctrl.v1
+id: CTL.S3.ACCESS.004
+name: Bucket Policy Must Not Be Effectively Public
+description: >
+  Bucket policy evaluates as effectively public under AWS PolicyStatus.IsPublic
+  semantics — a wildcard principal (`Principal: "*"` or `Principal: {"AWS": "*"}`)
+  without a scoping Condition on `aws:SourceVpc`, `aws:SourceVpce`,
+  `aws:PrincipalOrgID`, `aws:PrincipalArn`, or a narrow `aws:SourceIp`. The
+  control reads the policy in isolation: Public Access Block state does not
+  affect whether it fires — PAB only affects whether the exposure is active
+  right now or latent (one account-level or bucket-level PAB toggle away from
+  active). Paired with the PAB controls, this is the posture signal that says
+  "if every PAB layer were removed tomorrow, this bucket would be public".
+  Distinct from CTL.S3.ACCESS.002, which detects the raw presence of a
+  wildcard principal without reasoning about scoping Conditions: ACCESS.002
+  answers "is there a wildcard whose Conditions we still need to verify?",
+  ACCESS.004 answers "has the verification already concluded that the policy
+  is public?".
+compliance:
+  nist_800_53_r5: "AC-3"
+  hipaa: "164.312(a)(1)"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-07", "DSP-17", "IAM-16"]
+domain: exposure
+exposure:
+  type: effectively_public_policy
+  principal_scope: public
+severity: high
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    Bucket policy evaluates as effectively public — at least one Allow
+    statement reaches a wildcard principal and carries no restricting
+    Condition that narrows the caller. If Block Public Access is fully
+    enforcing today, the bucket is not reachable from the public internet;
+    the finding is a posture / fragility signal. If BPA is not fully
+    enforcing, the bucket is actively reachable from the internet.
+  action: >
+    1. Identify the Allow statement with the wildcard principal. If it is
+       not intentional, remove it.
+    2. If the statement is intentional (CDN origin, cross-organization
+       data distribution), add a Condition that fixes the caller set —
+       `aws:PrincipalOrgID` for same-org access, `aws:SourceVpc` or
+       `aws:SourceVpce` for VPC-bound access, `aws:SourceIp` with a
+       fixed CIDR for known network ranges, or `aws:SourceArn` for a
+       specific invoking service or distribution.
+    3. Until the policy is fixed, keep S3 Block Public Access fully
+       enforced at the account and bucket level so the exposure stays
+       latent rather than active.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "access": {
+          "policy_is_effectively_public": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.access.policy_is_effectively_public
+      op: eq
+      value: true

@@ -23,11 +23,13 @@ compliance:
   pci_dss_v4.0: "4.2.1"
   soc2: "CC6.6"
   hipaa: "164.312(e)(2)(ii)"
+  ccm_v4: ["CEK-03", "CEK-04", "DSP-10"]
 scope_tags:
   - aws
   - cloudfront
 type: unsafe_state
-params: {}
+params:
+  attack_stage: exfiltration
 remediation:
   description: >
     CloudFront distribution security policy permits TLS 1.0 or TLS 1.1

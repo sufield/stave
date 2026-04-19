@@ -19,11 +19,20 @@ compliance:
   ffiec: "ISH-4"
   iso_27001_2022: "A.8.15"
   nist_csf_2.0: "DE.CM"
+  ccm_v4: ["LOG-05", "LOG-12"]
 scope_tags:
   - aws
   - cloudtrail
 type: unsafe_state
-params: {}
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 2.5
+observation_fields:
+  - audit_trail.kind
+  - audit_trail.multi_region_enabled
 remediation:
   description: >
     CloudTrail trail is not configured for multi-region logging. API

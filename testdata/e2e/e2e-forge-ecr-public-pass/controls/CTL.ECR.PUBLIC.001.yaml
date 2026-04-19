@@ -14,11 +14,13 @@ compliance:
   soc2: "CC6.1"
   nist_800_53_r5: "AC-3"
   fedramp_moderate: "AC-3"
+  ccm_v4: ["DSP-07", "DSP-17"]
 scope_tags:
   - aws
   - ecr
 type: unsafe_state
-params: {}
+params:
+  attack_stage: initial_access
 remediation:
   description: >
     ECR repository is publicly accessible. Container images can be

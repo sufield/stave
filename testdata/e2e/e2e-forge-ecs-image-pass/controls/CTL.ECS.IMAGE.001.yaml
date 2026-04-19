@@ -2,21 +2,31 @@ dsl_version: ctrl.v1
 id: CTL.ECS.IMAGE.001
 name: ECS Container Images Must Not Use the latest Tag
 description: >
-  Detects assets where uses_latest_tag is eq true.
+  ECS container images must use specific tags or digest references, not the latest tag. The latest tag is mutable — a compromised pipeline can push a malicious image that automatically deploys on next task restart. Pinned tags or digests provide immutable references for forensic reproducibility.
 domain: exposure
 severity: medium
+compliance:
+  nist_800_53_r5: "SI-7"
+  fedramp_moderate: "SI-7"
+  pci_dss_v4.0: "6.3.2"
+  soc2: "CC8.1"
+  ccm_v4: ["CCC-04", "CCC-07", "IVS-06", "LOG-12"]
 scope_tags:
   - aws
   - ecs
 type: unsafe_state
-params: {}
+params:
+  attack_stage: persistence
 remediation:
   description: >
-    Detects assets where uses_latest_tag is eq true.
+    ECS container references an image with the latest tag or no tag.
   action: >
-    Pin container images to specific tags or digests.
+    Pin container images to specific version tags or use digest references (@sha256:...) for immutability.
 unsafe_predicate:
   all:
+    - field: properties.container.kind
+      op: eq
+      value: task_definition
     - field: properties.container.image.uses_latest_tag
       op: eq
       value: true

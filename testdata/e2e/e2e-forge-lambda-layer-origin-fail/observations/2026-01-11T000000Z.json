@@ -4,6 +4,7 @@
       "id": "test-lambda-function",
       "properties": {
         "compute": {
+          "kind": "function",
           "layers": {
             "has_untrusted_origin": true
           }

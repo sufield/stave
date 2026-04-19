@@ -3,7 +3,7 @@
     "context_name": "stave",
     "git": {
       "dirty": false,
-      "head_commit": "23e8d39cdce1f114627b5eb473daceca93c7fddc",
+      "head_commit": "74f975c98eab8c8fba8a2bb86a60ce6b3ab19ff7",
       "repo_root": "/home/zepho/work/bizacademy"
     },
     "resolved_paths": {
@@ -19,10 +19,22 @@
       "asset_vendor": "aws",
       "control_compliance": {
         "cis_aws_v1.4.0": "1.5",
+        "cis_aws_v3.0": "1.5",
+        "fedramp_moderate": "IA-2(1)",
+        "ffiec": "CAT-D3",
+        "gdpr": "Art.32",
         "hipaa": "164.312(d)",
+        "iso_27001_2022": "A.8.5",
+        "nist_800_53_r5": "IA-2(1)",
+        "nist_csf_2.0": "PR.AA",
         "pci_dss_v3.2.1": "8.3",
+        "pci_dss_v4.0": "8.3.1",
         "soc2": "CC6.1"
       },
+      "control_compliance_ccm_v4": [
+        "IAM-09",
+        "IAM-14"
+      ],
       "control_description": "The AWS root account must have multi-factor authentication enabled. Root has unrestricted access to all resources. Compromise without MFA is the highest-severity identity risk.\n",
       "control_id": "CTL.IAM.ROOT.MFA.001",
       "control_name": "Root Account Must Have MFA Enabled",

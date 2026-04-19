@@ -16,11 +16,13 @@ compliance:
   nist_800_53_r5: "SC-7"
   fedramp_moderate: "SC-7"
   iso_27001_2022: "A.8.20"
+  ccm_v4: ["DSP-17", "IAM-16"]
 scope_tags:
   - aws
   - opensearch
 type: unsafe_state
-params: {}
+params:
+  attack_stage: initial_access
 remediation:
   description: >
     OpenSearch domain is not deployed in a VPC. The cluster endpoint

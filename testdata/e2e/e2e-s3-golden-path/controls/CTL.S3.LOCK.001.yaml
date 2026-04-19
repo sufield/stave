@@ -11,12 +11,16 @@ description: >
 domain: exposure
 severity: medium
 compliance:
+  hipaa: "164.316(b)(2)"
   soc2: "CC6.1"
+  nist_800_53_r5: "AU-9"
+  ccm_v4: ["BCR-08", "DSP-16"]
 scope_tags:
   - aws
   - s3
 type: unsafe_state
-params: {}
+params:
+  attack_stage: resilience
 remediation:
   description: >
     Compliance-tagged bucket does not have S3 Object Lock enabled.

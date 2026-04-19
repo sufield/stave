@@ -17,11 +17,13 @@ compliance:
   nist_800_53_r5: "AC-5"
   fedramp_moderate: "AC-5"
   iso_27001_2022: "A.8.3"
+  ccm_v4: ["IAM-04", "IAM-05", "IAM-16"]
 scope_tags:
   - aws
   - iam
 type: unsafe_state
-params: {}
+params:
+  attack_stage: privilege_escalation
 remediation:
   description: >
     IAM role has both data access and IAM management permissions.

@@ -1,28 +1,41 @@
 dsl_version: ctrl.v1
 id: CTL.S3.ACCESS.002
-name: No Wildcard Action Policies
+name: No Wildcard Principal Policies
 description: >
-  S3 bucket policies must not use wildcard actions (s3:* or *).
-  Wildcard policies grant more permissions than intended and
-  violate the principle of least privilege.
+  S3 bucket policies must not grant access to a wildcard principal
+  (Principal "*" or AWS: "*"). A wildcard principal makes every
+  statement in the policy effectively anonymous or cross-account
+  unless a restricting Condition (aws:PrincipalOrgID, aws:SourceVpc,
+  aws:SourceIp with a fixed CIDR, aws:SourceArn, etc.) narrows it.
+  Without such a Condition, the policy is a public-access grant
+  regardless of which specific S3 actions are allowed.
 domain: exposure
 exposure:
-  type: wildcard_action
+  type: wildcard_principal
   principal_scope: public
 severity: high
+compliance:
+  nist_800_53_r5: "AC-6"
+  ccm_v4: ["DSP-17", "IAM-16"]
 scope_tags:
   - aws
   - s3
 type: unsafe_state
-params: {}
+params:
+  attack_stage: exfiltration
 remediation:
   description: >
-    Bucket policy uses wildcard actions (s3:* or *), granting more
-    permissions than intended and violating least privilege.
+    Bucket policy contains a statement with a wildcard principal.
+    Unless a Condition restricts the caller, any AWS identity or
+    anonymous caller can invoke the statement's allowed actions.
   action: >
-    Replace wildcard actions with specific S3 actions required by the
-    use case (e.g., s3:GetObject, s3:PutObject). Audit which principals
-    use this policy and scope actions to their actual needs.
+    Replace the wildcard principal with the specific AWS account IDs
+    or ARNs that need access, or add a restricting Condition on
+    aws:PrincipalOrgID, aws:SourceVpc, aws:SourceIp (with a fixed
+    CIDR), or aws:SourceArn. If the bucket genuinely needs to be
+    public (CDN origin, static asset bucket), narrow the Actions to
+    the minimum set and keep Public Access Block enabled where
+    compatible.
   example: |
     {
       "storage": {

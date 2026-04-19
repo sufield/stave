@@ -4,6 +4,7 @@
       "id": "test-lambda-function",
       "properties": {
         "compute": {
+          "kind": "function",
           "concurrency": {
             "reserved_set": false
           }

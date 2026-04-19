@@ -58,7 +58,7 @@ Each asset represents a single infrastructure component.
   "vendor": "aws",
   "properties": {
     "storage": {
-      "visibility": { "public_read": true }
+      "access": { "public_read": true }
     }
   },
   "source": { "file": "infra/main.tf", "line": 42 }
@@ -73,7 +73,7 @@ Each asset represents a single infrastructure component.
 | `properties` | object | Yes | Asset properties for predicate evaluation |
 | `source` | [source_ref](#source-reference) | No | Source file reference |
 
-The `properties` object is free-form — its structure depends on the asset type. Control predicates reference fields within `properties` using dot-notation paths (e.g., `properties.storage.visibility.public_read`).
+The `properties` object is free-form — its structure depends on the asset type. Control predicates reference fields within `properties` using dot-notation paths (e.g., `properties.storage.access.public_read`).
 
 ## Identity
 

@@ -127,5 +127,5 @@ fires: data can leave with minimal detection risk.
 |---|---|
 | `controls/exposure/exfil/CTL.EXPOSURE.EXFIL.001-002.yaml` | 2 exfiltration controls |
 | `chains/data_exfiltration_path.yaml` | Compound chain definition |
-| `docs/observation-contract.md` | `reachability.exfiltration.*` namespace |
+| `docs/contract/README.md` | `reachability.exfiltration.*` namespace |
 | `docs/extractor-exfiltration.md` | Extractor implementation guide |

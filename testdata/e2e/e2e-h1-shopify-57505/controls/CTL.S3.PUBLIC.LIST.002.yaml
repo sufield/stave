@@ -4,12 +4,36 @@ name: Anonymous S3 Listing Must Be Explicitly Intended
 description: >
   Anonymous bucket listing increases exposure surface even when objects are
   public by design. Listing must be explicitly intended via tag.
+compliance:
+  ccm_v4: ["DSP-07", "DSP-17"]
 domain: exposure
+exposure:
+  type: public_list
+  principal_scope: public
+severity: high
 scope_tags:
   - aws
   - s3
 type: unsafe_state
-params: {}
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    Bucket has public listing enabled without an explicit intent tag.
+    Anonymous listing increases exposure surface even for public content.
+  action: >
+    If listing is intentional, add the tag public_list_intended=true
+    to the bucket. Otherwise, remove the policy or ACL granting
+    s3:ListBucket to Principal "*" or AllUsers.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "access": {
+          "public_list": false
+        }
+      }
+    }
 unsafe_predicate:
   all:
     - field: properties.storage.kind

@@ -7,12 +7,37 @@ description: >
   uses AWS-managed keys with no customer control over key rotation,
   access policies, or audit trails. This fires on all classified data
   except explicitly public or non-sensitive buckets.
+compliance:
+  ccm_v4: ["CEK-03"]
 domain: exposure
+severity: high
 scope_tags:
   - aws
   - s3
 type: unsafe_state
-params: {}
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    Bucket with classified data is using SSE-S3 (AES256) instead of
+    SSE-KMS. AWS-managed keys provide no customer control over key
+    rotation, access policies, or audit trails.
+  action: >
+    Change the bucket default encryption to SSE-KMS with a
+    customer-managed key. Re-encrypt existing objects by copying them
+    in place with the new encryption settings.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "tags": {
+          "data-classification": "confidential"
+        },
+        "encryption": {
+          "algorithm": "aws:kms"
+        }
+      }
+    }
 unsafe_predicate:
   all:
     - field: properties.storage.kind

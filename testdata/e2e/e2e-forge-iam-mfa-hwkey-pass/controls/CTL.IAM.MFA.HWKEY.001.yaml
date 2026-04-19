@@ -20,11 +20,13 @@ compliance:
   gdpr: "Art.32"
   iso_27001_2022: "A.8.5"
   nist_csf_2.0: "PR.AA"
+  ccm_v4: ["IAM-14"]
 scope_tags:
   - aws
   - iam
 type: unsafe_state
-params: {}
+params:
+  attack_stage: credential_access
 remediation:
   description: >
     Privileged IAM user uses virtual MFA instead of hardware MFA.

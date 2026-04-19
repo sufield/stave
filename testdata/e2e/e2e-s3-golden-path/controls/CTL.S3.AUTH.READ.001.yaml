@@ -5,6 +5,8 @@ description: >
   S3 buckets must not grant read access to all authenticated AWS users.
   AuthenticatedUsers scope means any AWS account can read objects,
   which is nearly as dangerous as fully public access.
+compliance:
+  ccm_v4: ["DSP-17", "IAM-16"]
 domain: exposure
 exposure:
   type: authenticated_read
@@ -14,7 +16,8 @@ scope_tags:
   - aws
   - s3
 type: unsafe_state
-params: {}
+params:
+  attack_stage: initial_access
 remediation:
   description: >
     Bucket grants read access to the AuthenticatedUsers group. Any AWS

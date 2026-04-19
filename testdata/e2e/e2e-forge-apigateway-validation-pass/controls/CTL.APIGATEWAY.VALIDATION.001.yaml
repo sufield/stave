@@ -25,11 +25,13 @@ compliance:
   pci_dss_v4.0: "6.2.4"
   soc2: "CC6.6"
   hipaa: "164.312(c)(1)"
+  ccm_v4: ["AIS-01", "AIS-04"]
 scope_tags:
   - aws
   - apigateway
 type: unsafe_state
-params: {}
+params:
+  attack_stage: initial_access
 remediation:
   description: >
     API Gateway REST API has no request validation configured. All

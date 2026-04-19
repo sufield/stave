@@ -72,7 +72,7 @@ drift. Data access combined with IAM write, plus high unused ratio.
 
 ## Observation properties
 
-See [Observation Contract](observation-contract.md#entitlement-entropy-namespace)
+See [Observation Contract](contract/README.md#entitlement-entropy-namespace)
 for the full property table.
 
 ## Key files

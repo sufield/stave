@@ -20,6 +20,7 @@ compliance:
   pci_dss_v4.0: "3.6.1"
   soc2: "CC6.7"
   iso_27001_2022: "A.8.24"
+  ccm_v4: ["CEK-03", "IVS-06"]
 params:
   base_impact: 10
   attack_stage: exfiltration

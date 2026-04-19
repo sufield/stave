@@ -7,7 +7,7 @@ in the Tarun Koyalwar (May 2022) disclosure.
 
 ## The contradiction
 
-**Contract** (`docs/observation-contract.md`):
+**Contract** (`docs/contract/README.md`):
 
 ```
 | storage.access.public_admin | bool | Public ACL write-ACP |

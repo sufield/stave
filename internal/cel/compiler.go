@@ -206,6 +206,15 @@ func ruleToExpr(r *policy.PredicateRule, scopeVar string) (string, error) {
 		ofa := scopedFieldAccess(other, scopeVar)
 		ohf := scopedHasField(other, scopeVar)
 		return fmt.Sprintf("(%s && %s.exists(x, !(%s) || !(x in %s)))", hf, fa, ohf, ofa), nil
+	case predicate.OpAnyInField:
+		// field.exists(x, x in other_field) — true when the field (a list)
+		// has at least one element that also appears in another field's
+		// list. Both sides must be present; either missing → false.
+		// Complement of OpNotSubsetOfField.
+		other := fmt.Sprint(val)
+		ofa := scopedFieldAccess(other, scopeVar)
+		ohf := scopedHasField(other, scopeVar)
+		return fmt.Sprintf("(%s && %s && %s.exists(x, x in %s))", hf, ohf, fa, ofa), nil
 	case predicate.OpAnyMatch:
 		return ruleToExprAnyMatch(r, val)
 	default:

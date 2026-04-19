@@ -21,6 +21,7 @@ compliance:
   pci_dss_v4.0: "6.3.2"
   soc2: "CC8.1"
   iso_27001_2022: "A.8.4"
+  ccm_v4: ["CCC-04", "CCC-07", "DCS-07", "IAM-06"]
 scope_tags:
   - aws
   - codecommit

@@ -52,7 +52,8 @@
             "list_empty",
             "neq_field",
             "not_in_field",
-            "not_subset_of_field"
+            "not_subset_of_field",
+            "any_in_field"
           ]
         },
         "value": {

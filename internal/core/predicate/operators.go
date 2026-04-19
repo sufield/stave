@@ -43,6 +43,14 @@ const (
 	OpContains Operator = "contains"
 	// OpAnyMatch matches when any element in a list satisfies the condition.
 	OpAnyMatch Operator = "any_match"
+	// OpAnyInField matches when the field is a list containing at least one
+	// element that also appears in another field's list. Used for
+	// list-intersects-list checks where one side is typically a params
+	// reference (e.g., a deny-list of service names checked against a
+	// derived list on the principal). Both sides must be present and
+	// resolve to lists; either missing → false. Complement of
+	// OpNotSubsetOfField.
+	OpAnyInField Operator = "any_in_field"
 )
 
 // supportedOps is the canonical registry. Sorted once at init for
@@ -52,7 +60,7 @@ var supportedOps = func() []Operator {
 		OpEq, OpNe, OpGt, OpLt, OpGte, OpLte,
 		OpMissing, OpPresent, OpIn, OpListEmpty,
 		OpNotSubsetOfField, OpNeqField, OpNotInField,
-		OpContains, OpAnyMatch,
+		OpContains, OpAnyMatch, OpAnyInField,
 	}
 	slices.SortFunc(ops, func(a, b Operator) int {
 		return cmp.Compare(string(a), string(b))
@@ -66,7 +74,7 @@ func IsSupported(op Operator) bool {
 	case OpEq, OpNe, OpGt, OpLt, OpGte, OpLte,
 		OpMissing, OpPresent, OpIn, OpListEmpty, OpContains,
 		OpNeqField, OpNotInField, OpNotSubsetOfField,
-		OpAnyMatch:
+		OpAnyMatch, OpAnyInField:
 		return true
 	}
 	return false

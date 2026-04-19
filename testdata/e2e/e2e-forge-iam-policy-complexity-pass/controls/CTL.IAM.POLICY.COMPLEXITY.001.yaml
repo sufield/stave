@@ -14,11 +14,13 @@ compliance:
   soc2: "CC6.1"
   nist_800_53_r5: "AC-6"
   fedramp_moderate: "AC-6"
+  ccm_v4: ["IAM-05", "IAM-16"]
 scope_tags:
   - aws
   - iam
 type: unsafe_state
-params: {}
+params:
+  attack_stage: privilege_escalation
 remediation:
   description: >
     IAM entity has policies with more than 25 total statements.

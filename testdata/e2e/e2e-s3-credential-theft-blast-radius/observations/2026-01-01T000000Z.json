@@ -1,0 +1,131 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "bucket-a-broad-allow-no-condition",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "bucket-a-broad-allow-no-condition",
+          "controls": {
+            "public_access_fully_blocked": true,
+            "public_access_block": {
+              "block_public_acls": true,
+              "ignore_public_acls": true,
+              "block_public_policy": true,
+              "restrict_public_buckets": true
+            }
+          },
+          "access": {
+            "public_read": false,
+            "public_list": false,
+            "public_write": false,
+            "has_wildcard_principal": false,
+            "policy_is_effectively_public": false,
+            "policy_has_scoping_condition": false,
+            "has_vpc_condition": false,
+            "has_ip_condition": false,
+            "effective_network_scope": "account"
+          }
+        }
+      }
+    },
+    {
+      "id": "bucket-b-ip-scoped",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "bucket-b-ip-scoped",
+          "controls": {
+            "public_access_fully_blocked": true,
+            "public_access_block": {
+              "block_public_acls": true,
+              "ignore_public_acls": true,
+              "block_public_policy": true,
+              "restrict_public_buckets": true
+            }
+          },
+          "access": {
+            "public_read": false,
+            "public_list": false,
+            "public_write": false,
+            "has_wildcard_principal": false,
+            "policy_is_effectively_public": false,
+            "policy_has_scoping_condition": true,
+            "has_vpc_condition": false,
+            "has_ip_condition": true,
+            "effective_network_scope": "ip_restricted"
+          }
+        }
+      }
+    },
+    {
+      "id": "bucket-c-narrow-allow-no-condition",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "bucket-c-narrow-allow-no-condition",
+          "controls": {
+            "public_access_fully_blocked": true,
+            "public_access_block": {
+              "block_public_acls": true,
+              "ignore_public_acls": true,
+              "block_public_policy": true,
+              "restrict_public_buckets": true
+            }
+          },
+          "access": {
+            "public_read": false,
+            "public_list": false,
+            "public_write": false,
+            "has_wildcard_principal": false,
+            "policy_is_effectively_public": false,
+            "policy_has_scoping_condition": null,
+            "has_vpc_condition": false,
+            "has_ip_condition": false,
+            "effective_network_scope": "account"
+          }
+        }
+      }
+    },
+    {
+      "id": "bucket-d-compound-ssrf-aftermath-worst-case",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "bucket-d-compound-ssrf-aftermath-worst-case",
+          "controls": {
+            "public_access_fully_blocked": false,
+            "public_access_block": {
+              "block_public_acls": false,
+              "ignore_public_acls": false,
+              "block_public_policy": false,
+              "restrict_public_buckets": false
+            }
+          },
+          "access": {
+            "public_read": true,
+            "public_list": false,
+            "public_write": false,
+            "has_wildcard_principal": true,
+            "policy_is_effectively_public": true,
+            "policy_has_scoping_condition": false,
+            "has_vpc_condition": false,
+            "has_ip_condition": false,
+            "effective_network_scope": "public"
+          }
+        }
+      }
+    }
+  ]
+}

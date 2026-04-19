@@ -14,6 +14,7 @@ compliance:
   cis_aws_v3.0: "1.16"
   pci_dss_v4.0: "7.2.2"
   fedramp_moderate: "AC-6(5)"
+  ccm_v4: ["IAM-09", "IAM-14"]
 scope_tags:
   - aws
   - iam

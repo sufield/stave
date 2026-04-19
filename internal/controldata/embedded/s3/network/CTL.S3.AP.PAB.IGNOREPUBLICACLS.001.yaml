@@ -1,0 +1,63 @@
+dsl_version: ctrl.v1
+id: CTL.S3.AP.PAB.IGNOREPUBLICACLS.001
+name: S3 Access Point Ignore Public ACLs Flag Must Be Enabled
+description: >
+  The `IgnorePublicAcls` flag of a single-region S3 Access Point's Public
+  Access Block configuration causes any existing public ACL grants on
+  objects exposed through the Access Point to be ignored at evaluation
+  time. When this specific flag is `false`, existing ACLs that grant
+  `READ`, `WRITE`, `READ_ACP`, or `WRITE_ACP` to `AllUsers` or
+  `AuthenticatedUsers` remain effective when requests arrive through
+  the Access Point endpoint, preserving public reachability regardless
+  of bucket-level hardening. The umbrella `CTL.S3.AP.PAB.001` fires when
+  any of the four AP PAB flags is off; this control narrows the finding
+  to the specific flag so remediation is a one-command fix rather than
+  requiring the operator to enumerate which of the four is missing.
+  Prowler and ScoutSuite both report the four flags independently.
+domain: exposure
+severity: high
+compliance:
+  hipaa: "164.312(a)(1)"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-07", "DSP-17"]
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    The Access Point's `IgnorePublicAcls` PAB flag is disabled. Existing
+    public ACL grants on objects reached through this Access Point
+    remain effective and continue to expose data to AllUsers or
+    AuthenticatedUsers.
+  action: >
+    Enable the `IgnorePublicAcls` flag on the Access Point's Public
+    Access Block configuration. From the CLI:
+
+        aws s3control put-access-point-public-access-block \
+          --account-id <account> \
+          --name <access-point-name> \
+          --public-access-block-configuration \
+          'BlockPublicAcls=<current>,IgnorePublicAcls=true,BlockPublicPolicy=<current>,RestrictPublicBuckets=<current>'
+
+    Preserve the other three flag values so enabling this one doesn't
+    silently disable the others.
+  example: |
+    {
+      "storage": {
+        "kind": "access_point",
+        "public_access_block": {
+          "ignore_public_acls": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: access_point
+    - field: properties.storage.public_access_block.ignore_public_acls
+      op: eq
+      value: false

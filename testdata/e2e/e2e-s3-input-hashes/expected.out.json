@@ -3,7 +3,7 @@
     "context_name": "stave",
     "git": {
       "dirty": false,
-      "head_commit": "23e8d39cdce1f114627b5eb473daceca93c7fddc",
+      "head_commit": "74f975c98eab8c8fba8a2bb86a60ce6b3ab19ff7",
       "repo_root": "/home/zepho/work/bizacademy"
     },
     "resolved_paths": {
@@ -17,9 +17,14 @@
       "asset_id": "latent-bucket",
       "asset_type": "aws_s3_bucket",
       "asset_vendor": "aws",
+      "control_compliance_ccm_v4": [
+        "DSP-07",
+        "DSP-17"
+      ],
       "control_description": "S3 buckets must not have latent public read exposure where a public mechanism (policy or ACL) is masked only by Public Access Block. Removing PAB would immediately expose the bucket.",
       "control_id": "CTL.S3.PUBLIC.005",
       "control_name": "No Latent Public Read Exposure",
+      "control_severity": "medium",
       "evidence": {
         "first_unsafe_at": "2026-01-01T00:00:00Z",
         "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
@@ -37,6 +42,10 @@
         "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z.",
         "threshold_hours": 168,
         "unsafe_duration_hours": 240
+      },
+      "exposure": {
+        "principal_scope": "public",
+        "type": "latent_public_read"
       },
       "finding_id": "sha256:e2cd995700dd0179",
       "fix_plan": {
@@ -78,8 +87,9 @@
         "pattern": "persistent"
       },
       "remediation": {
-        "action": "Restrict access to authorized principals only.",
-        "description": "Resource is exposed to the public internet."
+        "action": "Remove the underlying public-granting policy statement or ACL entry so the bucket does not depend solely on PAB for protection. Then verify PAB remains enabled as defense-in-depth.",
+        "description": "Bucket has a policy or ACL granting public read, currently masked only by Public Access Block. Removing PAB would immediately expose the bucket.",
+        "example": "{\n  \"storage\": {\n    \"access\": {\n      \"latent_public_read\": false\n    }\n  }\n}\n"
       }
     }
   ],
@@ -151,7 +161,7 @@
     },
     "now": "2026-01-11T00:00:00Z",
     "offline": true,
-    "policy_fingerprint": "918baadc4c2a4a495129093f6b4458f8f035c8e8a80729d1d6081d65dec421b3",
+    "policy_fingerprint": "08943ebfcbaef3f2999b262a2a54169db0773c4ff73b21bb0dac639ab11d7729",
     "sla_threshold": "7d",
     "snapshots": 2,
     "tool_version": "edge"
@@ -167,14 +177,14 @@
     {
       "asset_id": "latent-bucket",
       "breakdown": {
-        "base_score": 10,
+        "base_score": 50,
         "blast_multiplier": 1,
         "days_blind": 10,
         "duration_factor": 1,
-        "exposure_multiplier": 1
+        "exposure_multiplier": 2
       },
       "control_id": "CTL.S3.PUBLIC.005",
-      "exposure_score": 10,
+      "exposure_score": 100,
       "finding_index": 0,
       "silent_killer": false
     }

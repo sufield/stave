@@ -2,21 +2,41 @@ dsl_version: ctrl.v1
 id: CTL.LAMBDA.PASSROLE.001
 name: Lambda Execution Role Must Not Have Unconstrained iam:PassRole
 description: >
-  Detects assets where has_wildcard_passrole is eq true.
+  Lambda execution roles must not have iam:PassRole with Resource: *. Unconstrained PassRole allows the function to attach any IAM role to new resources — effectively enabling privilege escalation to any role in the account including admin roles.
 domain: identity
 severity: critical
+compliance:
+  nist_800_53_r5: "AC-6"
+  fedramp_moderate: "AC-6"
+  iso_27001_2022: "A.8.3"
+  pci_dss_v4.0: "7.2.1"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-04", "IAM-05"]
 scope_tags:
   - aws
   - lambda
 type: unsafe_state
-params: {}
+params:
+  attack_stage: persistence
 remediation:
   description: >
-    Detects assets where has_wildcard_passrole is eq true.
+    Lambda execution role has iam:PassRole with Resource: *.
   action: >
-    Scope iam:PassRole to specific role ARNs.
+    Scope iam:PassRole in the execution role policy to specific role ARNs that the function legitimately needs to pass.
+  example: |
+    {
+      "compute": {
+        "kind": "function",
+        "execution_role": {
+          "has_wildcard_passrole": false
+        }
+      }
+    }
 unsafe_predicate:
   all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
     - field: properties.compute.execution_role.has_wildcard_passrole
       op: eq
       value: true

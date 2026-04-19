@@ -3,15 +3,15 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 670
-**Pack hash:** `c8ccaa5ab12d59b23a02e73a146710418fdc63fc49d37bab88517b8c29f0370c`
+**Total controls:** 675
+**Pack hash:** `ebf3bb2a6bd19f809dc6d05dfb01f793d0a5b5ce6b6e0c444b2f0955c1246916`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 120 |
-| high | 298 |
+| high | 303 |
 | info | 16 |
 | low | 52 |
 | medium | 184 |
@@ -21,9 +21,9 @@
 | audit | 10 |
 | detection | 2 |
 | encryption | 9 |
-| exposure | 455 |
+| exposure | 459 |
 | governance | 18 |
-| identity | 157 |
+| identity | 158 |
 | network | 7 |
 | resilience | 4 |
 | storage | 8 |
@@ -5035,6 +5035,36 @@ iam:PassRole permissions must be scoped to specific role ARNs, not wildcard reso
 
 ---
 
+### CTL.IAM.POLICY.SERVICEWILDCARD.001
+
+**No Service-Wildcard Grants on Denied Services**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+IAM users and roles must not have any attached policy (inline or customer-managed) that grants `<service>:*` on `Resource: "*"` for services on the denied list. Service-wildcard grants are scoped to a single service but still exceed least-privilege for high-blast-radius services. The default denied list covers three Prowler-flagged services:
+
+  - cloudtrail: enables trail tampering (StopLogging,
+    DeleteTrail), log-tamper vector — upstream checks
+    `iam_inline_policy_no_full_access_to_cloudtrail` and
+    `iam_policy_no_full_access_to_cloudtrail`.
+  - kms: enables full key management (ScheduleKeyDeletion,
+    ReEncrypt, DisableKey), key-tamper vector — upstream checks
+    `iam_inline_policy_no_full_access_to_kms` and
+    `iam_policy_no_full_access_to_kms`.
+  - aws-marketplace: enables unauthorized resource provisioning
+    with direct billing impact — upstream checks
+    `iam_inline_policy_no_wildcard_marketplace_subscribe` and
+    `iam_policy_no_wildcard_marketplace_subscribe`.
+
+Operators extend the denied list via `params.denied_service_wildcards` as new service-wildcard abuse patterns emerge. The control does not fire on principals with no attached policies — the field `identity.policies.service_wildcards_granted` is `null` in that case and the `present` gate keeps the check silent.
+
+**Remediation:** Replace the `<service>:*` Action with the minimum specific actions the principal actually needs (e.g., `cloudtrail:LookupEvents` for read-only audit, `kms:Decrypt` + `kms:GenerateDataKey` for data access). If the principal legitimately needs broad service authority, narrow `Resource` to specific ARNs rather than `"*"`. For admin personas, use AWS-managed admin policies governed by `CTL.IAM.POLICY.ADMIN.001` instead of per-service wildcard grants.
+
+---
+
 ### CTL.IAM.POLICY.SHADOW.001
 
 **IAM Policy Must Not Use NotAction Construct**
@@ -7683,6 +7713,98 @@ An S3 bucket whose own controls all evaluate clean — Public Access Block fully
 Single-region S3 Access Points have their own Public Access Block settings, independent of the parent bucket's PAB. A bucket can be hardened with PAB fully enforcing while one of its Access Points has PAB disabled — the Access Point endpoint remains a public path to the same underlying data. Prowler and ScoutSuite treat Access Points as a distinct resource with their own exposure surface precisely because of this overlay semantics.
 
 **Remediation:** Enable all four PAB flags on the Access Point via `aws s3control put-access-point-public-access-block` with `BlockPublicAcls=true`, `IgnorePublicAcls=true`, `BlockPublicPolicy=true`, `RestrictPublicBuckets=true`. If the Access Point is intentionally public (rare), document the exposure and add a Stave exemption.
+
+---
+
+### CTL.S3.AP.PAB.BLOCKPUBLICACLS.001
+
+**S3 Access Point Block Public ACLs Flag Must Be Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(1); soc2: CC6.1;
+
+The `BlockPublicAcls` flag of a single-region S3 Access Point's Public Access Block configuration rejects any new ACL grant applied through the Access Point endpoint that would make the data publicly accessible. When this specific flag is `false`, new PUT-ACL calls routed via the Access Point that grant `READ`, `WRITE`, `READ_ACP`, or `WRITE_ACP` to `http://acs.amazonaws.com/groups/global/AllUsers` or `.../AuthenticatedUsers` succeed rather than being rejected at the Access Point boundary. The umbrella `CTL.S3.AP.PAB.001` fires when any of the four AP PAB flags is off; this control narrows the finding to the specific flag so remediation is a one-command fix rather than requiring the operator to enumerate which of the four is missing. Prowler and ScoutSuite both report the four flags independently.
+
+**Remediation:** Enable the `BlockPublicAcls` flag on the Access Point's Public Access Block configuration. From the CLI:
+
+    aws s3control put-access-point-public-access-block \
+      --account-id <account> \
+      --name <access-point-name> \
+      --public-access-block-configuration \
+      'BlockPublicAcls=true,IgnorePublicAcls=<current>,BlockPublicPolicy=<current>,RestrictPublicBuckets=<current>'
+
+Preserve the other three flag values so enabling this one doesn't silently disable the others.
+
+---
+
+### CTL.S3.AP.PAB.BLOCKPUBLICPOLICY.001
+
+**S3 Access Point Block Public Policy Flag Must Be Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(1); soc2: CC6.1;
+
+The `BlockPublicPolicy` flag of a single-region S3 Access Point's Public Access Block configuration rejects any new Access Point policy that grants access to a public principal (`Principal: "*"`, `Principal: {"AWS": "*"}`, or an Allow block with no Principal) without a narrowing `Condition`. When this specific flag is `false`, new policies with wildcard principals and no scoping Condition succeed at PUT time rather than being rejected at the Access Point boundary. The umbrella `CTL.S3.AP.PAB.001` fires when any of the four AP PAB flags is off; this control narrows the finding to the specific flag so remediation is a one-command fix rather than requiring the operator to enumerate which of the four is missing. Prowler and ScoutSuite both report the four flags independently.
+
+**Remediation:** Enable the `BlockPublicPolicy` flag on the Access Point's Public Access Block configuration. From the CLI:
+
+    aws s3control put-access-point-public-access-block \
+      --account-id <account> \
+      --name <access-point-name> \
+      --public-access-block-configuration \
+      'BlockPublicAcls=<current>,IgnorePublicAcls=<current>,BlockPublicPolicy=true,RestrictPublicBuckets=<current>'
+
+Preserve the other three flag values so enabling this one doesn't silently disable the others.
+
+---
+
+### CTL.S3.AP.PAB.IGNOREPUBLICACLS.001
+
+**S3 Access Point Ignore Public ACLs Flag Must Be Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(1); soc2: CC6.1;
+
+The `IgnorePublicAcls` flag of a single-region S3 Access Point's Public Access Block configuration causes any existing public ACL grants on objects exposed through the Access Point to be ignored at evaluation time. When this specific flag is `false`, existing ACLs that grant `READ`, `WRITE`, `READ_ACP`, or `WRITE_ACP` to `AllUsers` or `AuthenticatedUsers` remain effective when requests arrive through the Access Point endpoint, preserving public reachability regardless of bucket-level hardening. The umbrella `CTL.S3.AP.PAB.001` fires when any of the four AP PAB flags is off; this control narrows the finding to the specific flag so remediation is a one-command fix rather than requiring the operator to enumerate which of the four is missing. Prowler and ScoutSuite both report the four flags independently.
+
+**Remediation:** Enable the `IgnorePublicAcls` flag on the Access Point's Public Access Block configuration. From the CLI:
+
+    aws s3control put-access-point-public-access-block \
+      --account-id <account> \
+      --name <access-point-name> \
+      --public-access-block-configuration \
+      'BlockPublicAcls=<current>,IgnorePublicAcls=true,BlockPublicPolicy=<current>,RestrictPublicBuckets=<current>'
+
+Preserve the other three flag values so enabling this one doesn't silently disable the others.
+
+---
+
+### CTL.S3.AP.PAB.RESTRICTPUBLICBUCKETS.001
+
+**S3 Access Point Restrict Public Buckets Flag Must Be Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(1); soc2: CC6.1;
+
+The `RestrictPublicBuckets` flag of a single-region S3 Access Point's Public Access Block configuration suppresses any existing Access Point policy statement that grants public access; at evaluation time only AWS-service principals (via `aws:PrincipalService`) and principals in the same AWS account remain able to reach the Access Point. When this specific flag is `false`, previously-authored public Access Point policies remain effective and the endpoint stays publicly reachable regardless of bucket-level hardening. The umbrella `CTL.S3.AP.PAB.001` fires when any of the four AP PAB flags is off; this control narrows the finding to the specific flag so remediation is a one-command fix rather than requiring the operator to enumerate which of the four is missing. Prowler and ScoutSuite both report the four flags independently.
+
+**Remediation:** Enable the `RestrictPublicBuckets` flag on the Access Point's Public Access Block configuration. From the CLI:
+
+    aws s3control put-access-point-public-access-block \
+      --account-id <account> \
+      --name <access-point-name> \
+      --public-access-block-configuration \
+      'BlockPublicAcls=<current>,IgnorePublicAcls=<current>,BlockPublicPolicy=<current>,RestrictPublicBuckets=true'
+
+Preserve the other three flag values so enabling this one doesn't silently disable the others.
 
 ---
 

@@ -11,11 +11,14 @@ exposure:
 severity: critical
 compliance:
   hipaa: "164.312(a)(1)"
+  soc2: "CC6.1"
+  ccm_v4: ["DCS-07", "DSP-07", "IAM-16", "IVS-03"]
 scope_tags:
   - aws
   - s3
 type: unsafe_state
-params: {}
+params:
+  attack_stage: initial_access
 remediation:
   description: >
     A Multi-Region Access Point exists with Block Public Access disabled.

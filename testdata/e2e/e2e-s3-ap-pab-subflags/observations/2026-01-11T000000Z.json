@@ -1,0 +1,115 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:s3:us-east-1:123456789012:accesspoint/fully-blocked-ap",
+      "type": "aws_s3_access_point",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "access_point",
+          "name": "fully-blocked-ap",
+          "public_access_block": {
+            "block_public_acls": true,
+            "ignore_public_acls": true,
+            "block_public_policy": true,
+            "restrict_public_buckets": true
+          },
+          "public_access_fully_blocked": true
+        }
+      }
+    },
+    {
+      "id": "arn:aws:s3:us-east-1:123456789012:accesspoint/missing-block-public-acls-ap",
+      "type": "aws_s3_access_point",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "access_point",
+          "name": "missing-block-public-acls-ap",
+          "public_access_block": {
+            "block_public_acls": false,
+            "ignore_public_acls": true,
+            "block_public_policy": true,
+            "restrict_public_buckets": true
+          },
+          "public_access_fully_blocked": false
+        }
+      }
+    },
+    {
+      "id": "arn:aws:s3:us-east-1:123456789012:accesspoint/missing-ignore-public-acls-ap",
+      "type": "aws_s3_access_point",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "access_point",
+          "name": "missing-ignore-public-acls-ap",
+          "public_access_block": {
+            "block_public_acls": true,
+            "ignore_public_acls": false,
+            "block_public_policy": true,
+            "restrict_public_buckets": true
+          },
+          "public_access_fully_blocked": false
+        }
+      }
+    },
+    {
+      "id": "arn:aws:s3:us-east-1:123456789012:accesspoint/missing-block-public-policy-ap",
+      "type": "aws_s3_access_point",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "access_point",
+          "name": "missing-block-public-policy-ap",
+          "public_access_block": {
+            "block_public_acls": true,
+            "ignore_public_acls": true,
+            "block_public_policy": false,
+            "restrict_public_buckets": true
+          },
+          "public_access_fully_blocked": false
+        }
+      }
+    },
+    {
+      "id": "arn:aws:s3:us-east-1:123456789012:accesspoint/missing-restrict-public-buckets-ap",
+      "type": "aws_s3_access_point",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "access_point",
+          "name": "missing-restrict-public-buckets-ap",
+          "public_access_block": {
+            "block_public_acls": true,
+            "ignore_public_acls": true,
+            "block_public_policy": true,
+            "restrict_public_buckets": false
+          },
+          "public_access_fully_blocked": false
+        }
+      }
+    },
+    {
+      "id": "arn:aws:s3:us-east-1:123456789012:accesspoint/all-flags-off-ap",
+      "type": "aws_s3_access_point",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "access_point",
+          "name": "all-flags-off-ap",
+          "public_access_block": {
+            "block_public_acls": false,
+            "ignore_public_acls": false,
+            "block_public_policy": false,
+            "restrict_public_buckets": false
+          },
+          "public_access_fully_blocked": false
+        }
+      }
+    }
+  ]
+}

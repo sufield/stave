@@ -2,21 +2,39 @@ dsl_version: ctrl.v1
 id: CTL.LAMBDA.UPDATECODE.SCOPE.001
 name: lambda:UpdateFunctionCode Must Not Be Broadly Granted
 description: >
-  Detects assets where broadly_granted is eq true.
+  IAM policies must not grant lambda:UpdateFunctionCode with Resource: * to non-administrative principals. Broad UpdateFunctionCode allows any developer to replace the code of any Lambda function in the account — injecting malicious code that executes with that function's execution role permissions.
 domain: identity
 severity: high
+compliance:
+  nist_800_53_r5: "AC-6"
+  fedramp_moderate: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["CCC-04", "IAM-04", "IAM-05"]
 scope_tags:
   - aws
   - lambda
 type: unsafe_state
-params: {}
+params:
+  attack_stage: persistence
 remediation:
   description: >
-    Detects assets where broadly_granted is eq true.
+    lambda:UpdateFunctionCode is granted with Resource: * to non-admin principals.
   action: >
-    Scope lambda:UpdateFunctionCode to specific function ARNs.
+    Scope lambda:UpdateFunctionCode to specific function ARNs in IAM policies. Restrict code deployment to CI/CD pipeline roles only.
+  example: |
+    {
+      "compute": {
+        "kind": "function",
+        "update_code": {
+          "broadly_granted": false
+        }
+      }
+    }
 unsafe_predicate:
   all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
     - field: properties.compute.update_code.broadly_granted
       op: eq
       value: true

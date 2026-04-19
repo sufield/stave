@@ -5,11 +5,43 @@ description: >
   S3 buckets must enforce HTTPS via a deny policy on aws:SecureTransport=false.
   Without this, data transfers occur in plaintext.
 domain: exposure
+severity: high
+compliance:
+  hipaa: "164.312(e)(2)(ii)"
+  cis_aws_v1.4.0: "2.1.2"
+  cis_aws_v3.0: "2.1.1"
+  pci_dss_v3.2.1: "4.1"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "4.2.1"
+  nist_800_53_r5: "SC-8"
+  fedramp_moderate: "SC-8"
+  gdpr: "Art.32"
+  ffiec: "ISH-4"
+  iso_27001_2022: "A.8.24"
+  nist_csf_2.0: "PR.DS"
+  ccm_v4: ["CEK-03"]
 scope_tags:
   - aws
   - s3
 type: unsafe_state
-params: {}
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    Bucket does not enforce HTTPS for data transfers. Requests over
+    plain HTTP transmit data in cleartext.
+  action: >
+    Add a bucket policy statement that denies all actions when
+    aws:SecureTransport is false. This forces all API calls to use HTTPS.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "encryption": {
+          "in_transit_enforced": true
+        }
+      }
+    }
 unsafe_predicate:
   all:
     - field: properties.storage.kind

@@ -14,11 +14,13 @@ compliance:
   soc2: "CC6.6"
   nist_800_53_r5: "SC-7"
   fedramp_moderate: "SC-7"
+  ccm_v4: ["IVS-03"]
 scope_tags:
   - aws
   - vpc
 type: unsafe_state
-params: {}
+params:
+  attack_stage: lateral_movement
 remediation:
   description: >
     Security group allows all outbound traffic to the internet.

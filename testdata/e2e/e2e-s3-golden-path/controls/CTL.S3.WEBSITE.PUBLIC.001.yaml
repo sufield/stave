@@ -10,11 +10,15 @@ exposure:
   type: website_public
   principal_scope: public
 severity: critical
+compliance:
+  nist_800_53_r5: "AC-3"
+  ccm_v4: ["DSP-07", "DSP-17"]
 scope_tags:
   - aws
   - s3
 type: unsafe_state
-params: {}
+params:
+  attack_stage: initial_access
 remediation:
   description: >
     Bucket has static website hosting enabled with public read access.

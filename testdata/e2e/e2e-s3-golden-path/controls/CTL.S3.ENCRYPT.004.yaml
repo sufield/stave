@@ -7,13 +7,16 @@ description: >
   uses AWS-managed keys with no customer control over key rotation,
   access policies, or audit trails. This fires on all classified data
   except explicitly public or non-sensitive buckets.
+compliance:
+  ccm_v4: ["CEK-03"]
 domain: exposure
 severity: high
 scope_tags:
   - aws
   - s3
 type: unsafe_state
-params: {}
+params:
+  attack_stage: exfiltration
 remediation:
   description: >
     Bucket with classified data is using SSE-S3 (AES256) instead of

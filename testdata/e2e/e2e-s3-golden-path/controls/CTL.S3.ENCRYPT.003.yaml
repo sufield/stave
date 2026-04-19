@@ -9,13 +9,24 @@ description: >
   at rest.
 domain: exposure
 severity: high
+compliance:
+  soc2: "CC6.7"
+  pci_dss_v4.0: "3.5.1"
+  nist_800_53_r5: "SC-28"
+  fedramp_moderate: "SC-28"
+  gdpr: "Art.32"
+  ffiec: "ISH-4"
+  iso_27001_2022: "A.8.24"
+  nist_csf_2.0: "PR.DS"
+  ccm_v4: ["CEK-03"]
 scope_tags:
   - aws
   - s3
   - sensitive-data
   - hipaa
 type: unsafe_state
-params: {}
+params:
+  attack_stage: exfiltration
 remediation:
   description: >
     PHI bucket is not using SSE-KMS with a customer-managed key. The

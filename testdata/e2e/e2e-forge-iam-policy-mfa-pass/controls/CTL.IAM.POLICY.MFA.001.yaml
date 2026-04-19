@@ -17,6 +17,7 @@ compliance:
   pci_dss_v4.0: "8.4.1"
   fedramp_moderate: "IA-2(1)"
   hipaa: "164.312(d)"
+  ccm_v4: ["IAM-05", "IAM-14", "IAM-16"]
 scope_tags:
   - aws
   - iam

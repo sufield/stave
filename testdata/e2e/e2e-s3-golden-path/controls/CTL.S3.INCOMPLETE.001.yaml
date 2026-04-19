@@ -5,6 +5,9 @@ description: S3 bucket safety cannot be proven when policy or ACL data is missin
   from the snapshot.
 domain: storage
 severity: low
+compliance:
+  nist_800_53_r5: "SI-12"
+  ccm_v4: ["DCS-06"]
 scope_tags:
 - aws
 - s3

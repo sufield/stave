@@ -1,4 +1,4 @@
-.PHONY: all build build-dev test test-coverage test-compliance cover-report clean-cover lint lint-fix fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls gofixer imports imports-check sync-public fuzz bench docker-demo demo-check readme readme-check
+.PHONY: all build build-dev test test-coverage test-compliance cover-report clean-cover lint lint-fix fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls gofixer imports imports-check sync-public fuzz bench docker-demo demo-check readme readme-check golden regenerate-goldens
 # Binary name
 BINARY=stave
 
@@ -132,9 +132,14 @@ check: fmt vet lint test
 ## ci: CI pipeline (tidy, check, build)
 ci: tidy check build
 
-## golden: Update e2e expected outputs from current behavior
+## golden: Update e2e expected outputs from current behavior (legacy narrow target)
+##
+## This target predates regenerate-goldens and only updates expected.summary.json
+## + expected.findings.count for fixtures without command.txt. Prefer
+## `make regenerate-goldens` for full coverage (expected.out.json, profile
+## goldens, command.txt fixtures) and a categorized diff report.
 golden: build
-	@echo "Updating golden files..."
+	@echo "Updating golden files (narrow legacy target — consider regenerate-goldens instead)..."
 	@for case in testdata/e2e/e2e-*; do \
 		if [ -f "$$case/command.txt" ]; then continue; fi; \
 		extra=""; \
@@ -154,6 +159,25 @@ golden: build
 		fi; \
 	done
 	@echo "Golden files updated"
+
+## regenerate-goldens: Batch-regenerate all fixture goldens and report a categorized diff
+##
+## After changes that affect control YAML (metadata edits, predicate edits,
+## new/removed controls), run this target once. The tool writes updated
+## goldens across every fixture shape (expected.out.json, expected.summary.json,
+## expected.findings.count, expected.exit, profile golden.json, etc.) and
+## emits a report bucketed as CLEAN / FINGERPRINT-ONLY / METADATA-ONLY /
+## BEHAVIORAL / MIXED so you can tell metadata churn apart from detection
+## changes before committing.
+##
+## Safe-to-commit categories: CLEAN, FINGERPRINT-ONLY, METADATA-ONLY.
+## Investigate before committing: BEHAVIORAL, MIXED.
+##
+## Flags (pass via ARGS):
+##   ARGS="-dry-run"           preview diffs without writing
+##   ARGS="-filter pattern"    limit to fixture names matching regex
+regenerate-goldens: build
+	$(GOCMD) run ./internal/tools/regengoldens $(ARGS)
 
 ## e2e: Run end-to-end tests
 e2e: build

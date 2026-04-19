@@ -11,7 +11,7 @@
 
 ## Model Limitations
 
-The original report describes **object-level** public-read ACLs, not bucket-level exposure. Stave MVP 1.0 does not represent per-object ACLs — only bucket-level effective exposure via `properties.storage.visibility.public_read`. This test models the case as "bucket has effective public read" (the closest representable state).
+The original report describes **object-level** public-read ACLs, not bucket-level exposure. Stave MVP 1.0 does not represent per-object ACLs — only bucket-level effective exposure via `properties.storage.access.public_read`. This test models the case as "bucket has effective public read" (the closest representable state).
 
 ## Engine Behavior Notes
 

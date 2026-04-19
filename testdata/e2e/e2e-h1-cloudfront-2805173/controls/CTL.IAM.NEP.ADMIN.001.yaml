@@ -17,6 +17,7 @@ compliance:
   pci_dss_v4.0: "7.2.1"
   soc2: "CC6.1"
   hipaa: "164.312(a)(1)"
+  ccm_v4: ["IAM-05"]
 scope_tags:
   - aws
   - iam

@@ -4,6 +4,7 @@
       "id": "test-lambda-function",
       "properties": {
         "compute": {
+          "kind": "function",
           "update_code": {
             "broadly_granted": true
           }

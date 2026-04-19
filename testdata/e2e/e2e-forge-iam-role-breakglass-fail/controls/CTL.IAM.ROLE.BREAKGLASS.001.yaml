@@ -14,11 +14,13 @@ compliance:
   soc2: "CC6.1"
   nist_800_53_r5: "AC-2"
   fedramp_moderate: "AC-2"
+  ccm_v4: ["IAM-05", "IAM-09", "IAM-16"]
 scope_tags:
   - aws
   - iam
 type: unsafe_state
-params: {}
+params:
+  attack_stage: privilege_escalation
 remediation:
   description: >
     An IAM role with elevated permissions has persisted beyond 7 days

@@ -14,11 +14,13 @@ compliance:
   nist_800_53_r5: "IA-5"
   fedramp_moderate: "IA-5"
   nist_csf_2.0: "PR.AA"
+  ccm_v4: ["IAM-05", "IAM-16"]
 scope_tags:
   - aws
   - iam
 type: unsafe_state
-params: {}
+params:
+  attack_stage: credential_access
 remediation:
   description: >
     Service uses long-lived access keys instead of short-lived

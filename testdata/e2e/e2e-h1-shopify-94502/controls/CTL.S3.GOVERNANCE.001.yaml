@@ -8,11 +8,34 @@ description: >
   silently passes all sensitivity-gated checks regardless of actual
   content.
 domain: exposure
+severity: low
+compliance:
+  nist_800_53_r5: "CM-8"
+  ccm_v4: ["DSP-07", "GRC-05"]
 scope_tags:
   - aws
   - s3
 type: unsafe_state
-params: {}
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    Bucket is missing the data-classification tag. Without this tag,
+    sensitivity-gated controls cannot evaluate and the bucket silently
+    passes all data-protection checks.
+  action: >
+    Add a data-classification tag to the bucket with an appropriate value
+    (e.g., phi, pii, confidential, internal, public, non-sensitive).
+    Update your tagging policy to require this tag on all S3 buckets.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "tags": {
+          "data-classification": "internal"
+        }
+      }
+    }
 unsafe_predicate:
   all:
     - field: properties.storage.kind

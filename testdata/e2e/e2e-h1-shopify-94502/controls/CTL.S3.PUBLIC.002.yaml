@@ -4,13 +4,41 @@ name: No Public S3 Buckets With Sensitive Data
 description: >
   S3 buckets tagged with sensitive data classifications
   (PHI, PII, confidential) must not allow any public access.
+compliance:
+  ccm_v4: ["DSP-07", "DSP-17"]
 domain: exposure
+exposure:
+  type: public_read
+  principal_scope: public
+severity: critical
 scope_tags:
   - aws
   - s3
   - sensitive-data
 type: unsafe_state
-params: {}
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    A bucket containing sensitive data (PHI, PII, or confidential) has public
+    read or list access. This data is accessible to anyone on the internet.
+  action: >
+    Immediately enable S3 Public Access Block (all four settings).
+    Remove bucket policy statements granting access to Principal "*".
+    Remove ACL grants to AllUsers or AuthenticatedUsers. Audit CloudTrail
+    logs for unauthorized access during the exposure window.
+  example: |
+    {
+      "storage": {
+        "access": {
+          "public_read": false,
+          "public_list": false
+        },
+        "tags": {
+          "data-classification": "phi"
+        }
+      }
+    }
 unsafe_predicate:
   all:
     - any:

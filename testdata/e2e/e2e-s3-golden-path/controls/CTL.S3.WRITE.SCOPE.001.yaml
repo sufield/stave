@@ -5,6 +5,8 @@ description: >
   Signed upload policies must restrict write permission to a single exact
   object key. Prefix-wide permissions (e.g., starts-with $key files/)
   enable arbitrary overwrite and cross-tenant tampering.
+compliance:
+  ccm_v4: ["DSP-17", "IAM-16"]
 domain: exposure
 exposure:
   type: write_scope_prefix
@@ -12,7 +14,8 @@ exposure:
 severity: high
 scope_tags: [aws, s3]
 type: unsafe_state
-params: {}
+params:
+  attack_stage: exfiltration
 remediation:
   description: >
     Signed upload policy uses prefix-wide write permissions instead of

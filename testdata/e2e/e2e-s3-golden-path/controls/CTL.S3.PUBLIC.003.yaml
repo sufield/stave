@@ -4,6 +4,8 @@ name: No Public Write Access
 description: >
   S3 buckets must not allow public write or delete access.
   Public write enables data injection, ransomware, and policy takeover.
+compliance:
+  ccm_v4: ["DSP-07", "DSP-17"]
 domain: exposure
 exposure:
   type: public_write
@@ -13,7 +15,8 @@ scope_tags:
   - aws
   - s3
 type: unsafe_state
-params: {}
+params:
+  attack_stage: initial_access
 remediation:
   description: >
     Bucket allows public write or delete access. Attackers can inject

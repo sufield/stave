@@ -2,21 +2,38 @@ dsl_version: ctrl.v1
 id: CTL.LAMBDA.DLQ.001
 name: Lambda Async Invocations Must Have a Dead Letter Queue
 description: >
-  Detects assets where dlq_configured is eq false.
+  Lambda functions with asynchronous invocation sources must have a dead-letter queue (SQS or SNS) configured. Without a DLQ, failed async invocations are silently discarded after retries. For functions processing PHI events or compliance-relevant data, silent discard is an undetectable data integrity violation.
 domain: exposure
 severity: medium
+compliance:
+  soc2: "PI1.1"
+  hipaa: "164.308(a)(7)"
+  ccm_v4: ["BCR-08"]
 scope_tags:
   - aws
   - lambda
 type: unsafe_state
-params: {}
+params:
+  attack_stage: resilience
 remediation:
   description: >
-    Detects assets where dlq_configured is eq false.
+    Async Lambda function has no dead-letter queue. Failed invocations are silently discarded.
   action: >
-    Configure a dead-letter queue for async invocations.
+    Configure a dead-letter queue (SQS queue or SNS topic) for the function via aws lambda update-function-configuration --dead-letter-config.
+  example: |
+    {
+      "compute": {
+        "kind": "function",
+        "async": {
+          "dlq_configured": true
+        }
+      }
+    }
 unsafe_predicate:
   all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
     - field: properties.compute.async.dlq_configured
       op: eq
       value: false

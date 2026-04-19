@@ -3,7 +3,7 @@
     "context_name": "stave",
     "git": {
       "dirty": false,
-      "head_commit": "23e8d39cdce1f114627b5eb473daceca93c7fddc",
+      "head_commit": "74f975c98eab8c8fba8a2bb86a60ce6b3ab19ff7",
       "repo_root": "/home/zepho/work/bizacademy"
     },
     "resolved_paths": {
@@ -18,8 +18,14 @@
       "asset_type": "aws_s3_bucket",
       "asset_vendor": "aws",
       "control_compliance": {
-        "hipaa": "164.312(a)(1)"
+        "hipaa": "164.312(a)(1)",
+        "soc2": "CC6.1"
       },
+      "control_compliance_ccm_v4": [
+        "CCC-04",
+        "DSP-07",
+        "DSP-17"
+      ],
       "control_description": "A bucket with Block Public Access enabled can still serve objects publicly through CloudFront if the bucket policy grants access to the cloudfront.amazonaws.com service principal. This creates a false sense of security \u2014 the bucket appears private but objects are accessible via the CloudFront distribution URL.\n",
       "control_id": "CTL.S3.CDN.EXPOSURE.001",
       "control_name": "Private Bucket Must Not Be Publicly Exposed Via CloudFront",
@@ -107,6 +113,10 @@
       "asset_id": "cdn-bucket",
       "asset_type": "aws_s3_bucket",
       "asset_vendor": "aws",
+      "control_compliance_ccm_v4": [
+        "DSP-07",
+        "DSP-17"
+      ],
       "control_description": "When S3 objects are served via CloudFront, Origin Access Control (OAC) should be used instead of the legacy Origin Access Identity (OAI). OAC supports SSE-KMS, SigV4, and all S3 features. OAI is a legacy mechanism that does not support KMS encryption and is being deprecated.\n",
       "control_id": "CTL.S3.CDN.OAC.001",
       "control_name": "CloudFront Access Must Use OAC Not Legacy OAI",

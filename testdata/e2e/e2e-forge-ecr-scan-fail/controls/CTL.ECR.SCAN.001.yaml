@@ -11,11 +11,13 @@ compliance:
   soc2: "CC7.1"
   nist_800_53_r5: "RA-5"
   fedramp_moderate: "RA-5"
+  ccm_v4: ["AIS-06", "TVM-07"]
 scope_tags:
   - aws
   - ecr
 type: unsafe_state
-params: {}
+params:
+  attack_stage: initial_access
 remediation:
   description: >
     ECR repository does not have image scanning enabled. Vulnerable

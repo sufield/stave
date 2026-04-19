@@ -1,0 +1,98 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:iam::111122223333:user/alice-inline-cloudtrail-wildcard",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "policies": {
+            "service_wildcards_granted": ["cloudtrail"]
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:user/bob-customer-managed-kms-wildcard",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "policies": {
+            "service_wildcards_granted": ["kms"]
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:role/carol-marketplace-wildcard-role",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "policies": {
+            "service_wildcards_granted": ["aws-marketplace"]
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:user/dan-cloudtrail-specific-action",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "policies": {
+            "service_wildcards_granted": []
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:user/erin-cloudtrail-scoped-resource",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "policies": {
+            "service_wildcards_granted": []
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:user/frank-s3-wildcard-allowed-service",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "policies": {
+            "service_wildcards_granted": ["s3"]
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:user/grace-no-policies",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "policies": {
+            "service_wildcards_granted": null
+          }
+        }
+      }
+    }
+  ]
+}

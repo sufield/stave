@@ -4,6 +4,7 @@
       "id": "test-ecs-task-definition",
       "properties": {
         "container": {
+          "kind": "task_definition",
           "privileged": {
             "enabled": true
           }

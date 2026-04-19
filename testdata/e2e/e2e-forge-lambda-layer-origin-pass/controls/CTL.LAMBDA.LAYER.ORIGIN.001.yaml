@@ -2,21 +2,40 @@ dsl_version: ctrl.v1
 id: CTL.LAMBDA.LAYER.ORIGIN.001
 name: Lambda Layers Must Originate from Trusted Accounts
 description: >
-  Detects assets where has_untrusted_origin is eq true.
+  All Lambda layers referenced by a function must have ARNs whose account IDs are in the organization's trusted account list. Lambda layers execute in the function runtime with the function's execution role permissions. A layer from an untrusted account is unaudited code executing with full function permissions — a supply chain risk independent of the function's own code.
 domain: exposure
 severity: high
+compliance:
+  nist_800_53_r5: "SI-7"
+  fedramp_moderate: "SI-7"
+  gdpr: "Art.32"
+  soc2: "CC7.1"
+  ccm_v4: ["CCC-04", "CCC-07"]
 scope_tags:
   - aws
   - lambda
 type: unsafe_state
-params: {}
+params:
+  attack_stage: initial_access
 remediation:
   description: >
-    Detects assets where has_untrusted_origin is eq true.
+    Lambda function references layers from accounts outside the organization's trusted account list.
   action: >
-    Replace layers from untrusted accounts with organization-owned layers.
+    Replace external layers with organization-owned layers. If third-party layers are required, vendor them into an organization-owned account and reference the vendored copy.
+  example: |
+    {
+      "compute": {
+        "kind": "function",
+        "layers": {
+          "has_untrusted_origin": false
+        }
+      }
+    }
 unsafe_predicate:
   all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
     - field: properties.compute.layers.has_untrusted_origin
       op: eq
       value: true

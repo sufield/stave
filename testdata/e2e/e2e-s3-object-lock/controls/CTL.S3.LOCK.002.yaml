@@ -4,12 +4,41 @@ name: PHI Buckets Must Use COMPLIANCE Mode Object Lock
 description: >
   S3 buckets tagged with data-classification=phi that have Object
   Lock enabled must use COMPLIANCE mode, not GOVERNANCE mode.
+  COMPLIANCE mode prevents ANY user, including the root account,
+  from deleting or overwriting protected objects during the
+  retention period. GOVERNANCE mode allows users with special
+  permissions to override retention, which is insufficient for
+  HIPAA-regulated PHI data where tamper-proof storage is required.
+compliance:
+  ccm_v4: ["BCR-08", "DSP-16"]
 domain: exposure
+severity: medium
 scope_tags:
   - aws
   - s3
 type: unsafe_state
-params: {}
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    PHI bucket with Object Lock is using GOVERNANCE mode instead of
+    COMPLIANCE mode. Users with special permissions can override retention.
+  action: >
+    Change the Object Lock default retention mode from GOVERNANCE to
+    COMPLIANCE. In COMPLIANCE mode, no user (including root) can delete
+    or modify protected objects during the retention period.
+  example: |
+    {
+      "storage": {
+        "tags": {
+          "data-classification": "phi"
+        },
+        "object_lock": {
+          "enabled": true,
+          "mode": "COMPLIANCE"
+        }
+      }
+    }
 unsafe_predicate:
   all:
     - field: properties.storage.tags.data-classification

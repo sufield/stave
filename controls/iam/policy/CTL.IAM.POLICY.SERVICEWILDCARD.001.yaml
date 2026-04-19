@@ -1,0 +1,85 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.POLICY.SERVICEWILDCARD.001
+name: No Service-Wildcard Grants on Denied Services
+description: >
+  IAM users and roles must not have any attached policy (inline or
+  customer-managed) that grants `<service>:*` on `Resource: "*"` for
+  services on the denied list. Service-wildcard grants are scoped to a
+  single service but still exceed least-privilege for high-blast-radius
+  services. The default denied list covers three Prowler-flagged
+  services:
+
+    - cloudtrail: enables trail tampering (StopLogging,
+      DeleteTrail), log-tamper vector — upstream checks
+      `iam_inline_policy_no_full_access_to_cloudtrail` and
+      `iam_policy_no_full_access_to_cloudtrail`.
+    - kms: enables full key management (ScheduleKeyDeletion,
+      ReEncrypt, DisableKey), key-tamper vector — upstream checks
+      `iam_inline_policy_no_full_access_to_kms` and
+      `iam_policy_no_full_access_to_kms`.
+    - aws-marketplace: enables unauthorized resource provisioning
+      with direct billing impact — upstream checks
+      `iam_inline_policy_no_wildcard_marketplace_subscribe` and
+      `iam_policy_no_wildcard_marketplace_subscribe`.
+
+  Operators extend the denied list via `params.denied_service_wildcards`
+  as new service-wildcard abuse patterns emerge. The control does not
+  fire on principals with no attached policies — the field
+  `identity.policies.service_wildcards_granted` is `null` in that case
+  and the `present` gate keeps the check silent.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-6(5)"
+  fedramp_moderate: "AC-6(5)"
+  iso_27001_2022: "A.8.3"
+  ccm_v4: ["IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+params:
+  attack_stage: privilege_escalation
+  # AWS service names (as they appear in the Action field, e.g. `cloudtrail`,
+  # `kms`, `aws-marketplace`) that must not be granted `<service>:*` on
+  # Resource: "*" by any attached policy. Extend per methodology.
+  denied_service_wildcards:
+    - cloudtrail
+    - kms
+    - aws-marketplace
+remediation:
+  description: >
+    An IAM principal (user or role) has an attached policy that grants
+    `<service>:*` on `Resource: "*"` for a service on the denied list.
+    Even scoped to one service, these grants confer full administrative
+    authority over that service's resources.
+  action: >
+    Replace the `<service>:*` Action with the minimum specific actions
+    the principal actually needs (e.g., `cloudtrail:LookupEvents` for
+    read-only audit, `kms:Decrypt` + `kms:GenerateDataKey` for data
+    access). If the principal legitimately needs broad service authority,
+    narrow `Resource` to specific ARNs rather than `"*"`. For admin
+    personas, use AWS-managed admin policies governed by
+    `CTL.IAM.POLICY.ADMIN.001` instead of per-service wildcard grants.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "policies": {
+          "service_wildcards_granted": []
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: in
+      value: ["user", "role"]
+    - field: properties.identity.policies.service_wildcards_granted
+      op: present
+      value: true
+    - field: properties.identity.policies.service_wildcards_granted
+      op: any_in_field
+      value: params.denied_service_wildcards

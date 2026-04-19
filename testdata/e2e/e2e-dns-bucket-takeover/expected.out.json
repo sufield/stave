@@ -3,7 +3,7 @@
     "context_name": "stave",
     "git": {
       "dirty": false,
-      "head_commit": "23e8d39cdce1f114627b5eb473daceca93c7fddc",
+      "head_commit": "74f975c98eab8c8fba8a2bb86a60ce6b3ab19ff7",
       "repo_root": "/home/zepho/work/bizacademy"
     },
     "resolved_paths": {
@@ -17,6 +17,9 @@
       "asset_id": "a2.bime.io-cname",
       "asset_type": "dns_record",
       "asset_vendor": "cloudflare",
+      "control_compliance_ccm_v4": [
+        "CCC-04"
+      ],
       "control_description": "DNS records (CNAME, ALIAS, A) that reference external cloud resources must resolve to resources that exist and are owned by the organization. A dangling DNS record pointing to a deleted or unclaimed resource enables subdomain takeover \u2014 the attacker claims the resource and serves content under the organization's domain.\n",
       "control_id": "CTL.DNS.DANGLING.001",
       "control_name": "DNS Records Must Not Point to Unclaimed Resources",

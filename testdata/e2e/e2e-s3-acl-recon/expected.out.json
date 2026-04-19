@@ -3,7 +3,7 @@
     "context_name": "stave",
     "git": {
       "dirty": false,
-      "head_commit": "23e8d39cdce1f114627b5eb473daceca93c7fddc",
+      "head_commit": "74f975c98eab8c8fba8a2bb86a60ce6b3ab19ff7",
       "repo_root": "/home/zepho/work/bizacademy"
     },
     "resolved_paths": {
@@ -17,9 +17,14 @@
       "asset_id": "acl-readable-bucket",
       "asset_type": "aws_s3_bucket",
       "asset_vendor": "aws",
+      "control_compliance_ccm_v4": [
+        "DSP-17",
+        "IAM-16"
+      ],
       "control_description": "S3 bucket ACLs should not be readable by unauthenticated users. READ_ACP permission enables attackers to enumerate ACL grants, discover which principals have access, and find escalation paths.\n",
       "control_id": "CTL.S3.ACL.RECON.001",
       "control_name": "No Public ACL Readability",
+      "control_severity": "high",
       "evidence": {
         "first_unsafe_at": "2026-01-01T00:00:00Z",
         "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
@@ -37,6 +42,10 @@
         "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z.",
         "threshold_hours": 168,
         "unsafe_duration_hours": 240
+      },
+      "exposure": {
+        "principal_scope": "public",
+        "type": "acl_read"
       },
       "finding_id": "sha256:fe26f93edf61a8f9",
       "posture_drift": {
@@ -74,7 +83,7 @@
     },
     "now": "2026-01-11T00:00:00Z",
     "offline": true,
-    "policy_fingerprint": "b551b1abfa28b7c5e0292eb2ce6e8c4a764e13a60a96321d50ce16812b5f4cd8",
+    "policy_fingerprint": "cfd037b94fe42ee37b1cba2024cb22728803e5695a82127760a3bc4150c144ec",
     "sla_threshold": "7d",
     "snapshots": 2,
     "tool_version": "edge"
@@ -90,14 +99,14 @@
     {
       "asset_id": "acl-readable-bucket",
       "breakdown": {
-        "base_score": 10,
+        "base_score": 75,
         "blast_multiplier": 1,
         "days_blind": 10,
         "duration_factor": 1,
-        "exposure_multiplier": 1
+        "exposure_multiplier": 2
       },
       "control_id": "CTL.S3.ACL.RECON.001",
-      "exposure_score": 10,
+      "exposure_score": 150,
       "finding_index": 0,
       "silent_killer": false
     }

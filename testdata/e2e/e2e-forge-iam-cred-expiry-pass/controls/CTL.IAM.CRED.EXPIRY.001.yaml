@@ -16,11 +16,13 @@ compliance:
   nist_800_53_r5: "AC-2"
   fedramp_moderate: "AC-2"
   iso_27001_2022: "A.8.5"
+  ccm_v4: ["IAM-02", "IAM-08"]
 scope_tags:
   - aws
   - iam
 type: unsafe_state
-params: {}
+params:
+  attack_stage: credential_access
 remediation:
   description: >
     IAM credential has no defined expiry. The credential will remain

@@ -10,11 +10,16 @@ description: >
   violating retention policy requirements.
 domain: exposure
 severity: medium
+compliance:
+  soc2: "C1.2"
+  nist_800_53_r5: "SI-12"
+  ccm_v4: ["DSP-16"]
 scope_tags:
   - aws
   - s3
 type: unsafe_state
-params: {}
+params:
+  attack_stage: resilience
 remediation:
   description: >
     Bucket tagged with data-retention has no lifecycle rules configured.

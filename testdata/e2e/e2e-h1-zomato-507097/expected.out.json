@@ -3,7 +3,7 @@
     "context_name": "stave",
     "git": {
       "dirty": false,
-      "head_commit": "23e8d39cdce1f114627b5eb473daceca93c7fddc",
+      "head_commit": "74f975c98eab8c8fba8a2bb86a60ce6b3ab19ff7",
       "repo_root": "/home/zepho/work/bizacademy"
     },
     "resolved_paths": {
@@ -17,19 +17,30 @@
       "asset_id": "zomato-chat-images",
       "asset_type": "aws_s3_bucket",
       "asset_vendor": "aws",
-      "control_description": "S3 buckets must not allow public read or list access. Detects buckets with public access via bucket policies, ACLs, or missing public access block settings.\n",
+      "control_compliance": {
+        "cis_aws_v1.4.0": "2.1.5",
+        "fedramp_moderate": "AC-3",
+        "ffiec": "ISH-4",
+        "gdpr": "Art.32",
+        "hipaa": "164.312(a)(1)",
+        "iso_27001_2022": "A.8.3",
+        "nist_800_53_r5": "AC-3",
+        "pci_dss_v3.2.1": "1.2.1",
+        "pci_dss_v4.0": "7.2.1",
+        "soc2": "CC6.1"
+      },
+      "control_compliance_ccm_v4": [
+        "DSP-07",
+        "DSP-17"
+      ],
+      "control_description": "S3 buckets must not allow public read access. Detects buckets with anonymous read exposure via policy or ACL.\n",
       "control_id": "CTL.S3.PUBLIC.001",
-      "control_name": "No Public S3 Buckets",
+      "control_name": "No Public S3 Bucket Read",
+      "control_severity": "critical",
       "evidence": {
         "first_unsafe_at": "2019-03-01T00:00:00Z",
         "last_seen_unsafe_at": "2019-03-09T00:00:00Z",
         "misconfigurations": [
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "property": "storage.access.public_list",
-            "unsafe_value": true
-          },
           {
             "actual_value": "[SANITIZED]",
             "operator": "eq",
@@ -43,6 +54,10 @@
         "temporal_risk": "Asset non-compliant for 60192 hours (SLA: 168 hours). Exposed since 2019-03-01T00:00:00Z.",
         "threshold_hours": 168,
         "unsafe_duration_hours": 60192
+      },
+      "exposure": {
+        "principal_scope": "public",
+        "type": "public_read"
       },
       "finding_id": "sha256:78623a97e68d01d5",
       "fix_plan": {
@@ -84,17 +99,23 @@
         "pattern": "persistent"
       },
       "remediation": {
-        "action": "Restrict access to authorized principals only.",
-        "description": "Resource is exposed to the public internet."
+        "action": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers.",
+        "description": "Bucket has public read access enabled via policy or ACL. Anyone on the internet can access objects in this bucket.",
+        "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_read\": false\n    }\n  }\n}\n"
       }
     },
     {
       "asset_id": "zomato-chat-images",
       "asset_type": "aws_s3_bucket",
       "asset_vendor": "aws",
+      "control_compliance_ccm_v4": [
+        "DSP-07",
+        "DSP-17"
+      ],
       "control_description": "Anonymous bucket listing increases exposure surface even when objects are public by design. Listing must be explicitly intended via tag.\n",
       "control_id": "CTL.S3.PUBLIC.LIST.002",
       "control_name": "Anonymous S3 Listing Must Be Explicitly Intended",
+      "control_severity": "high",
       "evidence": {
         "first_unsafe_at": "2019-03-01T00:00:00Z",
         "last_seen_unsafe_at": "2019-03-09T00:00:00Z",
@@ -130,6 +151,10 @@
         "temporal_risk": "Asset non-compliant for 60192 hours (SLA: 168 hours). Exposed since 2019-03-01T00:00:00Z.",
         "threshold_hours": 168,
         "unsafe_duration_hours": 60192
+      },
+      "exposure": {
+        "principal_scope": "public",
+        "type": "public_list"
       },
       "finding_id": "sha256:0eedb6ab2f180541",
       "fix_plan": {
@@ -171,8 +196,9 @@
         "pattern": "persistent"
       },
       "remediation": {
-        "action": "Restrict access to authorized principals only.",
-        "description": "Resource is exposed to the public internet."
+        "action": "If listing is intentional, add the tag public_list_intended=true to the bucket. Otherwise, remove the policy or ACL granting s3:ListBucket to Principal \"*\" or AllUsers.",
+        "description": "Bucket has public listing enabled without an explicit intent tag. Anonymous listing increases exposure surface even for public content.",
+        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"access\": {\n      \"public_list\": false\n    }\n  }\n}\n"
       }
     }
   ],
@@ -255,7 +281,7 @@
     },
     "now": "2026-01-11T00:00:00Z",
     "offline": true,
-    "policy_fingerprint": "07f3ea4521979798bd9f71b270175ac54c50d50c12b81a080354d4d2eb336126",
+    "policy_fingerprint": "87b7926cb5589261e3d4c63df2da7923bfac54eca22cb3a4d15a1e2512ee5424",
     "sla_threshold": "7d",
     "snapshots": 2,
     "tool_version": "edge"
@@ -271,28 +297,28 @@
     {
       "asset_id": "zomato-chat-images",
       "breakdown": {
-        "base_score": 10,
+        "base_score": 100,
         "blast_multiplier": 1,
         "days_blind": 2508,
         "duration_factor": 5,
-        "exposure_multiplier": 1
+        "exposure_multiplier": 2
       },
       "control_id": "CTL.S3.PUBLIC.001",
-      "exposure_score": 50,
+      "exposure_score": 1000,
       "finding_index": 0,
       "silent_killer": true
     },
     {
       "asset_id": "zomato-chat-images",
       "breakdown": {
-        "base_score": 10,
+        "base_score": 75,
         "blast_multiplier": 1,
         "days_blind": 2508,
         "duration_factor": 5,
-        "exposure_multiplier": 1
+        "exposure_multiplier": 2
       },
       "control_id": "CTL.S3.PUBLIC.LIST.002",
-      "exposure_score": 50,
+      "exposure_score": 750,
       "finding_index": 1,
       "silent_killer": true
     }

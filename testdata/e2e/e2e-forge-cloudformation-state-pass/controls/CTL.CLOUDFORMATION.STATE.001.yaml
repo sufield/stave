@@ -13,11 +13,13 @@ compliance:
   soc2: "CC8.1"
   nist_800_53_r5: "CM-3"
   fedramp_moderate: "CM-3"
+  ccm_v4: ["CCC-04", "CCC-07"]
 scope_tags:
   - aws
   - cloudformation
 type: unsafe_state
-params: {}
+params:
+  attack_stage: resilience
 remediation:
   description: >
     Terraform state is not stored in a versioned backend. State

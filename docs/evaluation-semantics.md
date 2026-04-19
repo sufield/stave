@@ -75,7 +75,7 @@ Nested combinators are supported (e.g., `any` containing `all` blocks).
 Field references use dot-separated paths into asset properties:
 
 ```
-properties.storage.visibility.public_read
+properties.storage.access.public_read
 ```
 
 The CEL environment resolves these paths against the flattened asset
@@ -128,6 +128,7 @@ Supported operators in `ctrl.v1`:
 | `not_in_field` | Value not in another field's list |
 | `list_empty` | List field is empty |
 | `not_subset_of_field` | Not a subset of another field's list |
+| `any_in_field` | List field has at least one element also in another field's list (complement of `not_subset_of_field`) |
 
 ## Missing-Field Semantics
 
@@ -150,5 +151,5 @@ field.
 See:
 
 - [Output Schema](schema/out.v0.1.md)
-- [Observation Contract](observation-contract.md)
+- [Observation Contract](contract/README.md)
 - [Control Schema](schema/ctrl.v1.md)

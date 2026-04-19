@@ -25,6 +25,7 @@ compliance:
   pci_dss_v4.0: "6.4.1"
   soc2: "CC6.6"
   owasp_top10_2021: "A03"
+  ccm_v4: ["CCC-04", "GRC-05"]
 scope_tags:
   - aws
   - waf

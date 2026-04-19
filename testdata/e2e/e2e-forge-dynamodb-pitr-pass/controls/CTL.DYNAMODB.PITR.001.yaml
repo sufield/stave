@@ -13,11 +13,13 @@ compliance:
   soc2: "A1.1"
   nist_800_53_r5: "CP-9"
   fedramp_moderate: "CP-9"
+  ccm_v4: ["BCR-08"]
 scope_tags:
   - aws
   - dynamodb
 type: unsafe_state
-params: {}
+params:
+  attack_stage: resilience
 remediation:
   description: >
     DynamoDB table does not have point-in-time recovery enabled.

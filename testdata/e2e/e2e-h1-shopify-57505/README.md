@@ -18,7 +18,7 @@ anonymous bucket listing was unintended. The control fires because
 
 Only `CTL.S3.PUBLIC.LIST.002` is loaded. It fires when:
 1. `properties.storage.kind == "bucket"`
-2. `properties.storage.visibility.public_list == true`
+2. `properties.storage.access.public_list == true`
 3. `properties.storage.tags.public_list_intended` is missing OR not `"true"`
 
 ## Observations

@@ -3,7 +3,7 @@
     "context_name": "stave",
     "git": {
       "dirty": false,
-      "head_commit": "23e8d39cdce1f114627b5eb473daceca93c7fddc",
+      "head_commit": "74f975c98eab8c8fba8a2bb86a60ce6b3ab19ff7",
       "repo_root": "/home/zepho/work/bizacademy"
     },
     "resolved_paths": {
@@ -18,8 +18,15 @@
       "asset_type": "aws_s3_bucket",
       "asset_vendor": "aws",
       "control_compliance": {
-        "hipaa": "164.312(a)(1)"
+        "hipaa": "164.312(a)(1)",
+        "soc2": "CC6.1"
       },
+      "control_compliance_ccm_v4": [
+        "DCS-07",
+        "DSP-07",
+        "IAM-16",
+        "IVS-03"
+      ],
       "control_description": "MRAPs have their own PAB settings independent of bucket PAB. A bucket can have PAB enabled while the MRAP has PAB disabled.\n",
       "control_id": "CTL.S3.MRAP.PAB.001",
       "control_name": "Multi-Region Access Point Must Have Block Public Access Enabled",
@@ -67,6 +74,11 @@
       "asset_id": "mrap-bucket",
       "asset_type": "aws_s3_bucket",
       "asset_vendor": "aws",
+      "control_compliance_ccm_v4": [
+        "DCS-07",
+        "IAM-16",
+        "IVS-03"
+      ],
       "control_description": "MRAPs can have their own resource policy evaluated independently of the bucket policy. A public MRAP policy creates a public access path.\n",
       "control_id": "CTL.S3.MRAP.POLICY.001",
       "control_name": "Multi-Region Access Point Policy Must Not Be Public",

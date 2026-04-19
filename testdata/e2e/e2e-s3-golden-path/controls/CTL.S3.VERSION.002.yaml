@@ -8,13 +8,16 @@ description: >
   and accidental mass deletion of backup data. Without MFA delete,
   any principal with s3:DeleteObject permission can permanently
   destroy backup versions.
+compliance:
+  ccm_v4: ["BCR-08"]
 domain: exposure
 severity: medium
 scope_tags:
   - aws
   - s3
 type: unsafe_state
-params: {}
+params:
+  attack_stage: resilience
 remediation:
   description: >
     Backup bucket does not have MFA delete enabled. Any principal with

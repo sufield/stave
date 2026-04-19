@@ -2,21 +2,32 @@ dsl_version: ctrl.v1
 id: CTL.ECS.LOG.001
 name: ECS Task Definitions Must Have CloudWatch Logging Configured
 description: >
-  Detects assets where driver_configured is eq false.
+  ECS essential containers must have a log driver configured. Without logging, container stdout and stderr are discarded — invocations, errors, and execution output leave no audit trail. A compromised container generating no logs is forensically invisible.
 domain: exposure
 severity: high
+compliance:
+  nist_800_53_r5: "AU-2"
+  fedramp_moderate: "AU-2"
+  hipaa: "164.312(b)"
+  pci_dss_v4.0: "10.2.1"
+  soc2: "CC7.1"
+  ccm_v4: ["IVS-06", "LOG-12"]
 scope_tags:
   - aws
   - ecs
 type: unsafe_state
-params: {}
+params:
+  attack_stage: detection_evasion
 remediation:
   description: >
-    Detects assets where driver_configured is eq false.
+    ECS essential container has no log driver configured.
   action: >
-    Configure a log driver for all essential containers.
+    Configure the awslogs log driver for all essential containers in the task definition.
 unsafe_predicate:
   all:
+    - field: properties.container.kind
+      op: eq
+      value: task_definition
     - field: properties.container.logging.driver_configured
       op: eq
       value: false

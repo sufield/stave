@@ -2,9 +2,12 @@ dsl_version: ctrl.v1
 id: CTL.ECS.INCOMPLETE.001
 name: Complete Data Required for ECS Assessment
 description: >
-  Detects assets where has_plaintext_secrets is missing true.
+  ECS task definition or service configuration is missing required properties for security assessment. Re-run the extractor with ecs:DescribeTaskDefinition, ecs:DescribeServices, ecs:ListTaskDefinitions, and ecs:ListServices permissions.
+compliance:
+  ccm_v4: ["DCS-06", "IVS-06", "LOG-12"]
 domain: exposure
 severity: low
+
 scope_tags:
   - aws
   - ecs
@@ -12,11 +15,14 @@ type: unsafe_state
 params: {}
 remediation:
   description: >
-    Detects assets where has_plaintext_secrets is missing true.
+    ECS assessment data is incomplete.
   action: >
-    Re-run extractor with ecs:DescribeTaskDefinition permissions.
+    Re-run extractor with full ECS permissions.
 unsafe_predicate:
   all:
+    - field: properties.container.kind
+      op: eq
+      value: task_definition
     - field: properties.container.env.has_plaintext_secrets
       op: missing
       value: true

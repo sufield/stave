@@ -1,0 +1,63 @@
+dsl_version: ctrl.v1
+id: CTL.S3.AP.PAB.RESTRICTPUBLICBUCKETS.001
+name: S3 Access Point Restrict Public Buckets Flag Must Be Enabled
+description: >
+  The `RestrictPublicBuckets` flag of a single-region S3 Access Point's
+  Public Access Block configuration suppresses any existing Access Point
+  policy statement that grants public access; at evaluation time only
+  AWS-service principals (via `aws:PrincipalService`) and principals in
+  the same AWS account remain able to reach the Access Point. When this
+  specific flag is `false`, previously-authored public Access Point
+  policies remain effective and the endpoint stays publicly reachable
+  regardless of bucket-level hardening. The umbrella `CTL.S3.AP.PAB.001`
+  fires when any of the four AP PAB flags is off; this control narrows
+  the finding to the specific flag so remediation is a one-command fix
+  rather than requiring the operator to enumerate which of the four is
+  missing. Prowler and ScoutSuite both report the four flags
+  independently.
+domain: exposure
+severity: high
+compliance:
+  hipaa: "164.312(a)(1)"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-07", "DSP-17"]
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    The Access Point's `RestrictPublicBuckets` PAB flag is disabled.
+    Existing Access Point policies that grant public access remain
+    effective and continue to expose the endpoint.
+  action: >
+    Enable the `RestrictPublicBuckets` flag on the Access Point's Public
+    Access Block configuration. From the CLI:
+
+        aws s3control put-access-point-public-access-block \
+          --account-id <account> \
+          --name <access-point-name> \
+          --public-access-block-configuration \
+          'BlockPublicAcls=<current>,IgnorePublicAcls=<current>,BlockPublicPolicy=<current>,RestrictPublicBuckets=true'
+
+    Preserve the other three flag values so enabling this one doesn't
+    silently disable the others.
+  example: |
+    {
+      "storage": {
+        "kind": "access_point",
+        "public_access_block": {
+          "restrict_public_buckets": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: access_point
+    - field: properties.storage.public_access_block.restrict_public_buckets
+      op: eq
+      value: false

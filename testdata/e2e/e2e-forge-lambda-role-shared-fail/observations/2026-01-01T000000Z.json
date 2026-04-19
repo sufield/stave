@@ -4,6 +4,7 @@
       "id": "test-lambda-function",
       "properties": {
         "compute": {
+          "kind": "function",
           "execution_role": {
             "is_shared": true
           }

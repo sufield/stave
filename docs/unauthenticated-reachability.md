@@ -399,5 +399,5 @@ cannot see.
 | `controls/exposure/anon/CTL.EXPOSURE.ANON.001-004.yaml` | 4 reachability controls |
 | `controls/exposure/anon/CTL.EXPOSURE.ANON.PARTIAL.001.yaml` | Graph completeness control |
 | `chains/unauthenticated_data_path.yaml` | Compound chain definition |
-| `docs/observation-contract.md` | `reachability.*` namespace specification |
+| `docs/contract/README.md` | `reachability.*` namespace specification |
 | `docs/extractor-reachability.md` | Extractor implementation guide |

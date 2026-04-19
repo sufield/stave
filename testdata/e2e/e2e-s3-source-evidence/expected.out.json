@@ -3,7 +3,7 @@
     "context_name": "stave",
     "git": {
       "dirty": false,
-      "head_commit": "23e8d39cdce1f114627b5eb473daceca93c7fddc",
+      "head_commit": "74f975c98eab8c8fba8a2bb86a60ce6b3ab19ff7",
       "repo_root": "/home/zepho/work/bizacademy"
     },
     "resolved_paths": {
@@ -17,9 +17,26 @@
       "asset_id": "exposed-bucket",
       "asset_type": "aws_s3_bucket",
       "asset_vendor": "aws",
-      "control_description": "S3 bucket policies must not grant public read access (Principal=*) to PHI data.",
+      "control_compliance": {
+        "cis_aws_v1.4.0": "2.1.5",
+        "fedramp_moderate": "AC-3",
+        "ffiec": "ISH-4",
+        "gdpr": "Art.32",
+        "hipaa": "164.312(a)(1)",
+        "iso_27001_2022": "A.8.3",
+        "nist_800_53_r5": "AC-3",
+        "pci_dss_v3.2.1": "1.2.1",
+        "pci_dss_v4.0": "7.2.1",
+        "soc2": "CC6.1"
+      },
+      "control_compliance_ccm_v4": [
+        "DSP-07",
+        "DSP-17"
+      ],
+      "control_description": "S3 buckets must not allow public read access. Detects buckets with anonymous read exposure via policy or ACL.\n",
       "control_id": "CTL.S3.PUBLIC.001",
-      "control_name": "No Public Read via Bucket Policy",
+      "control_name": "No Public S3 Bucket Read",
+      "control_severity": "critical",
       "evidence": {
         "first_unsafe_at": "2026-01-01T00:00:00Z",
         "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
@@ -27,15 +44,20 @@
           {
             "actual_value": "[SANITIZED]",
             "operator": "eq",
-            "property": "storage.access.read_via_identity",
+            "property": "storage.access.public_read",
             "unsafe_value": true
           }
         ],
         "root_causes": [
-          "identity"
+          "general"
         ],
-        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z.",
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z.",
+        "threshold_hours": 168,
         "unsafe_duration_hours": 240
+      },
+      "exposure": {
+        "principal_scope": "public",
+        "type": "public_read"
       },
       "finding_id": "sha256:2e48317513355283",
       "fix_plan": {
@@ -77,17 +99,23 @@
         "pattern": "persistent"
       },
       "remediation": {
-        "action": "Restrict access to authorized principals only.",
-        "description": "Resource is exposed to the public internet."
+        "action": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers.",
+        "description": "Bucket has public read access enabled via policy or ACL. Anyone on the internet can access objects in this bucket.",
+        "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_read\": false\n    }\n  }\n}\n"
       }
     },
     {
       "asset_id": "exposed-bucket",
       "asset_type": "aws_s3_bucket",
       "asset_vendor": "aws",
-      "control_description": "S3 bucket ACLs must not grant read access to AllUsers or AuthenticatedUsers for PHI data.",
+      "control_compliance_ccm_v4": [
+        "DSP-07",
+        "DSP-17"
+      ],
+      "control_description": "S3 bucket policies must not grant read access to an anonymous or wildcard principal. A Statement with Effect Allow, Principal \"*\" or AWS: \"*\", and an Action such as s3:GetObject without a restricting Condition enables any unauthenticated caller to read objects. This is distinct from CTL.S3.PUBLIC.001, which fires on the composite public_read signal regardless of mechanism; this control narrows to the bucket-policy path so the finding points the operator at the policy specifically. For ACL-based public read, see CTL.S3.ACL.FULLCONTROL.001 (FULL_CONTROL grants) and CTL.S3.ACL.ESCALATION.001 (WRITE_ACP grants).\n",
       "control_id": "CTL.S3.PUBLIC.004",
-      "control_name": "No Public Read via ACL",
+      "control_name": "No Public Read via Bucket Policy",
+      "control_severity": "medium",
       "evidence": {
         "first_unsafe_at": "2026-01-01T00:00:00Z",
         "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
@@ -104,6 +132,10 @@
         ],
         "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z.",
         "unsafe_duration_hours": 240
+      },
+      "exposure": {
+        "principal_scope": "public",
+        "type": "policy_public_read"
       },
       "finding_id": "sha256:011146815d21ed0b",
       "fix_plan": {
@@ -145,8 +177,9 @@
         "pattern": "persistent"
       },
       "remediation": {
-        "action": "Restrict access to authorized principals only.",
-        "description": "Resource is exposed to the public internet."
+        "action": "Remove or constrain the policy statement granting read actions to Principal \"*\" or AWS: \"*\". If broad read access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public read.",
+        "description": "Bucket policy grants s3:GetObject, s3:GetObjectAcl, or equivalent read action to an anonymous or wildcard principal. Any unauthenticated caller can read objects.",
+        "example": "{\n  \"storage\": {\n    \"access\": {\n      \"read_via_resource\": false\n    }\n  }\n}\n"
       }
     }
   ],
@@ -200,7 +233,7 @@
     {
       "asset_id": "exposed-bucket",
       "asset_type": "aws_s3_bucket",
-      "control_id": "CTL.S3.PUBLIC.001",
+      "control_id": "CTL.S3.PUBLIC.004",
       "due_at": "2026-01-01T00:00:00Z",
       "first_unsafe_at": "2026-01-01T00:00:00Z",
       "remaining_hours": -240,
@@ -210,12 +243,12 @@
     {
       "asset_id": "exposed-bucket",
       "asset_type": "aws_s3_bucket",
-      "control_id": "CTL.S3.PUBLIC.004",
-      "due_at": "2026-01-01T00:00:00Z",
+      "control_id": "CTL.S3.PUBLIC.001",
+      "due_at": "2026-01-08T00:00:00Z",
       "first_unsafe_at": "2026-01-01T00:00:00Z",
-      "remaining_hours": -240,
+      "remaining_hours": -72,
       "status": "OVERDUE",
-      "threshold_hours": 0
+      "threshold_hours": 168
     }
   ],
   "run": {
@@ -229,7 +262,7 @@
     },
     "now": "2026-01-11T00:00:00Z",
     "offline": true,
-    "policy_fingerprint": "52f6b3f3665b664bc8ef3c275e6b1811e429250ad82dec2474da8c9caefa74fe",
+    "policy_fingerprint": "1912ed4b60297ea488c3c22e9f0fdb5adc1696a945e3990cf2920f1d7622cf75",
     "sla_threshold": "7d",
     "snapshots": 2,
     "tool_version": "edge"
@@ -245,28 +278,28 @@
     {
       "asset_id": "exposed-bucket",
       "breakdown": {
-        "base_score": 10,
+        "base_score": 100,
         "blast_multiplier": 1,
         "days_blind": 10,
         "duration_factor": 1,
-        "exposure_multiplier": 1
+        "exposure_multiplier": 2
       },
       "control_id": "CTL.S3.PUBLIC.001",
-      "exposure_score": 10,
+      "exposure_score": 200,
       "finding_index": 0,
       "silent_killer": false
     },
     {
       "asset_id": "exposed-bucket",
       "breakdown": {
-        "base_score": 10,
+        "base_score": 50,
         "blast_multiplier": 1,
         "days_blind": 10,
         "duration_factor": 1,
-        "exposure_multiplier": 1
+        "exposure_multiplier": 2
       },
       "control_id": "CTL.S3.PUBLIC.004",
-      "exposure_score": 10,
+      "exposure_score": 100,
       "finding_index": 1,
       "silent_killer": false
     }

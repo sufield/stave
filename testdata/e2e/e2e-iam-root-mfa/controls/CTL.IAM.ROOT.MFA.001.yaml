@@ -9,14 +9,27 @@ domain: identity
 severity: critical
 compliance:
   cis_aws_v1.4.0: "1.5"
+  cis_aws_v3.0: "1.5"
   hipaa: "164.312(d)"
   pci_dss_v3.2.1: "8.3"
   soc2: "CC6.1"
+  pci_dss_v4.0: "8.3.1"
+  nist_800_53_r5: "IA-2(1)"
+  fedramp_moderate: "IA-2(1)"
+  gdpr: "Art.32"
+  ffiec: "CAT-D3"
+  iso_27001_2022: "A.8.5"
+  nist_csf_2.0: "PR.AA"
+  ccm_v4: ["IAM-09", "IAM-14"]
 scope_tags:
   - aws
   - iam
 type: unsafe_state
-params: {}
+params:
+  attack_stage: credential_access
+observation_fields:
+  - identity.kind
+  - identity.root.mfa_enabled
 remediation:
   description: >
     Root account does not have MFA enabled. An attacker with root

@@ -7,12 +7,45 @@ description: >
   tenant prefix.  An identity that allows path traversal (../) or
   disables prefix enforcement lets one tenant read or overwrite
   another tenant's objects.
+compliance:
+  ccm_v4: ["IVS-06"]
 domain: exposure
+exposure:
+  type: tenant_isolation_breach
+  principal_scope: cross_account
+severity: high
 scope_tags:
   - aws
   - s3
 type: unsafe_state
-params: {}
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    Shared bucket has an app-signer identity that allows path traversal
+    or disables prefix enforcement. One tenant can read or overwrite
+    another tenant's objects.
+  action: >
+    Update the app-signer configuration to enforce tenant prefix
+    restrictions (enforce_prefix=true) and block path traversal
+    (allow_traversal=false) on all presigned URL signers.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "tags": {
+          "tenant_mode": "shared",
+          "tenant_prefix": "org-123"
+        }
+      },
+      "identities": [
+        {
+          "type": "app_signer",
+          "id": "appsigner:s3:uploads",
+          "purpose": "enforce_prefix=true allow_traversal=false"
+        }
+      ]
+    }
 unsafe_predicate:
   all:
     - field: properties.storage.kind

@@ -17,11 +17,13 @@ compliance:
   pci_dss_v4.0: "8.1.4"
   nist_800_53_r5: "AC-2"
   fedramp_moderate: "AC-2"
+  ccm_v4: ["IAM-02", "IAM-08"]
 scope_tags:
   - aws
   - iam
 type: unsafe_state
-params: {}
+params:
+  attack_stage: credential_access
 remediation:
   description: >
     IAM account has had no activity for over 90 days. Dormant accounts

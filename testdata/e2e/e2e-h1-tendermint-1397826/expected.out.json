@@ -3,7 +3,7 @@
     "context_name": "stave",
     "git": {
       "dirty": false,
-      "head_commit": "23e8d39cdce1f114627b5eb473daceca93c7fddc",
+      "head_commit": "74f975c98eab8c8fba8a2bb86a60ce6b3ab19ff7",
       "repo_root": "/home/zepho/work/bizacademy"
     },
     "resolved_paths": {
@@ -17,9 +17,13 @@
       "asset_id": "tendermint-packages-ref",
       "asset_type": "s3_bucket_reference",
       "asset_vendor": "aws",
+      "control_compliance_ccm_v4": [
+        "CCC-04"
+      ],
       "control_description": "Any externally referenced S3 bucket must exist and be owned. Dangling references (missing or unowned buckets) enable bucket takeover and attacker-controlled content delivery.\n",
       "control_id": "CTL.S3.BUCKET.TAKEOVER.001",
       "control_name": "Referenced S3 Buckets Must Exist And Be Owned",
+      "control_severity": "critical",
       "evidence": {
         "first_unsafe_at": "2021-11-15T00:00:00Z",
         "last_seen_unsafe_at": "2021-11-23T00:00:00Z",
@@ -43,6 +47,10 @@
         "temporal_risk": "Asset non-compliant for 36432 hours (SLA: 168 hours). Exposed since 2021-11-15T00:00:00Z.",
         "threshold_hours": 168,
         "unsafe_duration_hours": 36432
+      },
+      "exposure": {
+        "principal_scope": "public",
+        "type": "bucket_takeover"
       },
       "finding_id": "sha256:5e4038798b063c89",
       "fix_plan": {
@@ -84,8 +92,9 @@
         "pattern": "persistent"
       },
       "remediation": {
-        "action": "Restrict access to authorized principals only.",
-        "description": "Resource is exposed to the public internet."
+        "action": "Create the S3 bucket in your AWS account, or remove the DNS record, CDN origin, or application reference pointing to the unclaimed bucket.",
+        "description": "An external reference (DNS CNAME, CDN origin, or application config) points to an S3 bucket that does not exist or is not owned by your account. An attacker can claim this bucket name and serve malicious content.",
+        "example": "{\n  \"s3_ref\": {\n    \"bucket_exists\": true,\n    \"bucket_owned\": true\n  }\n}\n"
       }
     }
   ],
@@ -157,7 +166,7 @@
     },
     "now": "2026-01-11T00:00:00Z",
     "offline": true,
-    "policy_fingerprint": "3974a542c722c2afbd4b6da8d18b089756733bedb5ea45c4bd260b2fbc56b4b3",
+    "policy_fingerprint": "93a1b1121a58a0aa243ab03ecb388e1be144c99135e6f80373c0e5721f1f678f",
     "sla_threshold": "7d",
     "snapshots": 2,
     "tool_version": "edge"
@@ -173,14 +182,14 @@
     {
       "asset_id": "tendermint-packages-ref",
       "breakdown": {
-        "base_score": 10,
+        "base_score": 100,
         "blast_multiplier": 1,
         "days_blind": 1518,
         "duration_factor": 3,
-        "exposure_multiplier": 1
+        "exposure_multiplier": 2
       },
       "control_id": "CTL.S3.BUCKET.TAKEOVER.001",
-      "exposure_score": 30,
+      "exposure_score": 600,
       "finding_index": 0,
       "silent_killer": true
     }

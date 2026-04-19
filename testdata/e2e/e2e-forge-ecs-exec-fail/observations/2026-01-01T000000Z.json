@@ -4,6 +4,7 @@
       "id": "test-ecs-service",
       "properties": {
         "container": {
+          "kind": "ecs_service",
           "exec": {
             "enabled_in_production": true
           }

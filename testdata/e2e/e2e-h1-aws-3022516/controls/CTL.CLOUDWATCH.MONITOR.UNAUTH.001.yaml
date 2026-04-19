@@ -9,11 +9,13 @@ severity: critical
 compliance:
   cis_aws_v3.0: "4.1"
   soc2: "CC7.1"
+  ccm_v4: ["LOG-03"]
 scope_tags:
   - aws
   - cloudwatch
 type: unsafe_state
-params: {}
+params:
+  attack_stage: detection_evasion
 remediation:
   description: >
     No metric filter or alarm is configured to monitor unauthorized api calls.

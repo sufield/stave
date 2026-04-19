@@ -3,7 +3,7 @@
     "context_name": "stave",
     "git": {
       "dirty": false,
-      "head_commit": "23e8d39cdce1f114627b5eb473daceca93c7fddc",
+      "head_commit": "74f975c98eab8c8fba8a2bb86a60ce6b3ab19ff7",
       "repo_root": "/home/zepho/work/bizacademy"
     },
     "resolved_paths": {
@@ -17,9 +17,14 @@
       "asset_id": "upload-policy-unrestricted-content",
       "asset_type": "s3_upload_policy",
       "asset_vendor": "aws",
+      "control_compliance_ccm_v4": [
+        "DSP-17",
+        "IAM-16"
+      ],
       "control_description": "Signed upload policies must restrict allowed content types. Unrestricted content types enable attackers to upload SVGs with embedded JavaScript or HTML files, causing stored XSS when served from the bucket's domain.\n",
       "control_id": "CTL.S3.WRITE.CONTENT.001",
       "control_name": "S3 Signed Upload Must Restrict Content Types",
+      "control_severity": "high",
       "evidence": {
         "first_unsafe_at": "2026-01-01T00:00:00Z",
         "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
@@ -49,6 +54,10 @@
         "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z.",
         "threshold_hours": 168,
         "unsafe_duration_hours": 240
+      },
+      "exposure": {
+        "principal_scope": "public",
+        "type": "unrestricted_content_type"
       },
       "finding_id": "sha256:37bb892a16d72a77",
       "posture_drift": {
@@ -86,7 +95,7 @@
     },
     "now": "2026-01-11T00:00:00Z",
     "offline": true,
-    "policy_fingerprint": "1320204a0127ae873d6cbe2925c210b11dabfcb1f7679873e8d1592fe4f6911a",
+    "policy_fingerprint": "de39ba2e81fb6b30212c6719de9d808a459468e661c500f54d7f58289ad2e913",
     "sla_threshold": "7d",
     "snapshots": 2,
     "tool_version": "edge"
@@ -102,14 +111,14 @@
     {
       "asset_id": "upload-policy-unrestricted-content",
       "breakdown": {
-        "base_score": 10,
+        "base_score": 75,
         "blast_multiplier": 1,
         "days_blind": 10,
         "duration_factor": 1,
-        "exposure_multiplier": 1
+        "exposure_multiplier": 2
       },
       "control_id": "CTL.S3.WRITE.CONTENT.001",
-      "exposure_score": 10,
+      "exposure_score": 150,
       "finding_index": 0,
       "silent_killer": false
     }

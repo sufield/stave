@@ -16,11 +16,13 @@ compliance:
   pci_dss_v4.0: "7.2.1"
   iso_27001_2022: "A.8.3"
   nist_csf_2.0: "PR.AA"
+  ccm_v4: ["IAM-05", "IAM-16"]
 scope_tags:
   - aws
   - iam
 type: unsafe_state
-params: {}
+params:
+  attack_stage: privilege_escalation
 remediation:
   description: >
     AWS Organization relies solely on the default FullAWSAccess SCP

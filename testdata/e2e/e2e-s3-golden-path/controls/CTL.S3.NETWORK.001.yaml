@@ -11,11 +11,15 @@ description: >
   restrictions.
 domain: exposure
 severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  ccm_v4: ["DCS-07", "IVS-03"]
 scope_tags:
   - aws
   - s3
 type: unsafe_state
-params: {}
+params:
+  attack_stage: exfiltration
 remediation:
   description: >
     Bucket policy grants access to Principal * without network-scoping

@@ -4,6 +4,8 @@ name: CDN S3 Origins Must Not Be Dangling
 description: >
   CloudFront distributions must not reference S3 origins that do not exist.
   A missing/unclaimed origin bucket enables takeover and CDN content poisoning.
+compliance:
+  ccm_v4: ["CCC-04"]
 domain: exposure
 exposure:
   type: dangling_origin
@@ -14,7 +16,8 @@ scope_tags:
   - s3
   - cloudfront
 type: unsafe_state
-params: {}
+params:
+  attack_stage: exfiltration
 remediation:
   description: >
     CloudFront distribution references an S3 origin bucket that does not

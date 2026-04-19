@@ -61,6 +61,49 @@ E2E tests (`scripts/e2e.sh`, `scripts/e2e-counterfactual.sh`) require:
 
 These are not needed for unit tests (`make test`), only for E2E validation.
 
+### Regenerating fixture goldens
+
+When a change modifies control YAML (metadata, predicate, add/remove
+control) the e2e goldens under `testdata/e2e/*/expected.*` and
+`testdata/e2e/*/golden.json` go stale. Regenerate them with:
+
+```bash
+make regenerate-goldens
+```
+
+The tool:
+
+- Walks every fixture under `testdata/e2e/`.
+- Picks the correct invocation shape (default `apply`, `command.txt`
+  override, or profile-style `apply --profile aws-s3/hipaa`).
+- Writes the updated goldens (`expected.out.json`,
+  `expected.summary.json`, `expected.findings.count`, `expected.exit`,
+  `expected.input_hashes.json`, `expected.source_evidence.json`,
+  `expected.out.sarif`, `golden.json`).
+- Prints a report bucketed as CLEAN / FINGERPRINT-ONLY /
+  METADATA-ONLY / BEHAVIORAL / MIXED.
+
+Flags are passed via the `ARGS` variable:
+
+```bash
+make regenerate-goldens ARGS="-dry-run"            # preview, no writes
+make regenerate-goldens ARGS="-filter s3-public"   # limit to regex match
+```
+
+Interpreting the diff categories:
+
+| Category | What it means | Safe to commit? |
+|---|---|---|
+| CLEAN | Fixture output unchanged. | Yes — nothing to commit. |
+| FINGERPRINT-ONLY | Only `run.policy_fingerprint` shifted (a new control joined the catalog and changed the per-profile hash; detection behavior is identical). | Yes. |
+| METADATA-ONLY | Only projected metadata changed: `control_name`, `control_description`, `control_compliance*`, `remediation.*`, `exposure.*`. Detection identical. | Yes. |
+| BEHAVIORAL | Findings identity, count, severity, evidence, or summary changed. Detection behavior shifted. | **Investigate first.** Confirm the shift matches the intended change. |
+| MIXED | Both metadata and behavioral paths diffed in the same fixture. | **Investigate first.** |
+
+The target does not run as part of `make check` or CI. It is a
+developer tool — run it explicitly, review the report, then commit.
+Automatic regeneration is what masked the drift-cleanup series bugs.
+
 ## Code Quality
 
 Before submitting changes, ensure your code passes all checks:

@@ -476,3 +476,193 @@ func TestParseRuleList_BadItem(t *testing.T) {
 		t.Fatal("expected error")
 	}
 }
+
+// ---------------------------------------------------------------------------
+// OpAnyInField — list-intersects-list operator
+// ---------------------------------------------------------------------------
+
+// Adversarial matrix covering every null/empty/type-mismatch combination
+// the operator must survive. One compiled predicate, many inputs.
+func TestCompile_AnyInField(t *testing.T) {
+	compiler, err := NewCompiler()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	pred := policy.UnsafePredicate{
+		All: []policy.PredicateRule{
+			{
+				Field: predicate.NewFieldPath("properties.identity.policies.service_wildcards_granted"),
+				Op:    predicate.OpAnyInField,
+				Value: policy.Str("params.denied_service_wildcards"),
+			},
+		},
+	}
+	cp, err := compiler.Compile(pred)
+	if err != nil {
+		t.Fatalf("compile: %v", err)
+	}
+	if cp.Expression == "" {
+		t.Fatal("empty expression")
+	}
+
+	buildProps := func(granted any) map[string]any {
+		props := map[string]any{}
+		if granted != nil {
+			props["identity"] = map[string]any{
+				"policies": map[string]any{
+					"service_wildcards_granted": granted,
+				},
+			}
+		}
+		return props
+	}
+
+	buildParams := func(denied any) map[string]any {
+		params := map[string]any{}
+		if denied != nil {
+			params["denied_service_wildcards"] = denied
+		}
+		return params
+	}
+
+	tests := []struct {
+		name    string
+		granted any
+		denied  any
+		want    bool
+	}{
+		{
+			name:    "intersection non-empty — single overlap",
+			granted: []any{"cloudtrail", "ec2"},
+			denied:  []any{"cloudtrail", "kms", "aws-marketplace"},
+			want:    true,
+		},
+		{
+			name:    "intersection non-empty — multiple overlaps",
+			granted: []any{"cloudtrail", "kms"},
+			denied:  []any{"cloudtrail", "kms", "aws-marketplace"},
+			want:    true,
+		},
+		{
+			name:    "no intersection — disjoint lists",
+			granted: []any{"s3", "ec2"},
+			denied:  []any{"cloudtrail", "kms", "aws-marketplace"},
+			want:    false,
+		},
+		{
+			name:    "observation field empty list",
+			granted: []any{},
+			denied:  []any{"cloudtrail"},
+			want:    false,
+		},
+		{
+			name:    "params field empty list",
+			granted: []any{"cloudtrail"},
+			denied:  []any{},
+			want:    false,
+		},
+		{
+			name:    "both fields empty",
+			granted: []any{},
+			denied:  []any{},
+			want:    false,
+		},
+		{
+			name:    "observation field null",
+			granted: nil,
+			denied:  []any{"cloudtrail"},
+			want:    false,
+		},
+		{
+			name:    "params field missing",
+			granted: []any{"cloudtrail"},
+			denied:  nil,
+			want:    false,
+		},
+		{
+			name:    "both fields missing",
+			granted: nil,
+			denied:  nil,
+			want:    false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			props := buildProps(tt.granted)
+			params := buildParams(tt.denied)
+			got, err := evaluateWithParams(cp, props, params, nil)
+			if err != nil {
+				t.Fatalf("eval: %v", err)
+			}
+			if got != tt.want {
+				t.Errorf("got %v, want %v\n  granted=%v\n  denied=%v\n  expr=%s",
+					got, tt.want, tt.granted, tt.denied, cp.Expression)
+			}
+		})
+	}
+}
+
+// Type-mismatch cases surface as CEL runtime errors rather than structured
+// false — matches existing operator behavior (inconclusive path). This
+// test pins that behavior so a future evaluator change that accidentally
+// converts type errors to silent false is caught.
+func TestCompile_AnyInField_TypeMismatchReturnsError(t *testing.T) {
+	compiler, err := NewCompiler()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	pred := policy.UnsafePredicate{
+		All: []policy.PredicateRule{
+			{
+				Field: predicate.NewFieldPath("properties.identity.policies.service_wildcards_granted"),
+				Op:    predicate.OpAnyInField,
+				Value: policy.Str("params.denied_service_wildcards"),
+			},
+		},
+	}
+	cp, err := compiler.Compile(pred)
+	if err != nil {
+		t.Fatalf("compile: %v", err)
+	}
+
+	// Observation field is a string instead of a list — .exists() cannot
+	// iterate it; CEL raises a runtime error.
+	props := map[string]any{
+		"identity": map[string]any{
+			"policies": map[string]any{
+				"service_wildcards_granted": "cloudtrail",
+			},
+		},
+	}
+	params := map[string]any{"denied_service_wildcards": []any{"cloudtrail"}}
+	_, err = evaluateWithParams(cp, props, params, nil)
+	if err == nil {
+		t.Error("expected CEL error for non-list observation field, got nil — " +
+			"evaluator may have silently coerced the type mismatch")
+	}
+}
+
+// Mirror of OpNotSubsetOfField's compilation test — ensures the operator
+// produces a non-empty expression even before evaluation. Guards against
+// regressions where the case is accidentally dropped from the compiler.
+func TestCompile_AnyInFieldOperator(t *testing.T) {
+	compiler, err := NewCompiler()
+	if err != nil {
+		t.Fatal(err)
+	}
+	pred := policy.UnsafePredicate{
+		All: []policy.PredicateRule{
+			{Field: predicate.NewFieldPath("properties.a"), Op: predicate.OpAnyInField, Value: policy.Str("properties.b")},
+		},
+	}
+	cp, err := compiler.Compile(pred)
+	if err != nil {
+		t.Fatalf("compile: %v", err)
+	}
+	if cp.Expression == "" {
+		t.Fatal("empty expression")
+	}
+}

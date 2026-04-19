@@ -8,13 +8,15 @@ description: >
   mechanism that does not support KMS encryption and is being deprecated.
 domain: governance
 severity: medium
-compliance: {}
+compliance:
+  ccm_v4: ["DSP-07", "DSP-17"]
 scope_tags:
   - aws
   - s3
   - cloudfront
 type: unsafe_state
-params: {}
+params:
+  attack_stage: exfiltration
 remediation:
   description: >
     A CloudFront distribution accesses this bucket using a legacy

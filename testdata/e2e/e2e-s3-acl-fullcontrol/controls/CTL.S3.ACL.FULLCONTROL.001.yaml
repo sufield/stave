@@ -7,9 +7,17 @@ description: >
   misconfiguration — the grantee can read, write, and delete
   objects and modify the ACL itself.
 domain: exposure
+exposure:
+  type: acl_full_control
+  principal_scope: public
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-3"
+  ccm_v4: ["DSP-17", "IAM-16"]
 scope_tags: [aws, s3]
 type: unsafe_state
-params: {}
+params:
+  attack_stage: initial_access
 remediation:
   description: >
     Bucket ACL grants FULL_CONTROL to AllUsers or AuthenticatedUsers.
@@ -28,11 +36,4 @@ remediation:
         }
       }
     }
-unsafe_predicate:
-  any:
-    - field: properties.storage.access.has_full_control_public
-      op: eq
-      value: true
-    - field: properties.storage.access.has_full_control_authenticated
-      op: eq
-      value: true
+unsafe_predicate_alias: s3.has_full_control_grant

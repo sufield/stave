@@ -7,6 +7,8 @@ description: >
   tenant prefix.  An identity that allows path traversal (../) or
   disables prefix enforcement lets one tenant read or overwrite
   another tenant's objects.
+compliance:
+  ccm_v4: ["IVS-06"]
 domain: exposure
 exposure:
   type: tenant_isolation_breach
@@ -16,7 +18,8 @@ scope_tags:
   - aws
   - s3
 type: unsafe_state
-params: {}
+params:
+  attack_stage: exfiltration
 remediation:
   description: >
     Shared bucket has an app-signer identity that allows path traversal

@@ -33,7 +33,7 @@
 - [Multi-Profile Evaluation](multi-profile.md) — Compliance compression, per-framework readiness, remediation ROI
 - [Remediation Ranking](remediation-ranking.md) — Prioritized roadmap, SLA urgency, remediation bundles
 - [Evaluation Engine Capabilities](evaluation-engine-capabilities.md) — Predicate operators and matching
-- [Observation Contract](observation-contract.md) — Observation data requirements
+- [Observation Contract](contract/README.md) — Observation data requirements
 - [Contract-First Schemas](contracts.md) — Schema-driven design
 - [Scope and Support](scope-and-support.md) — What Stave covers
 

@@ -2,21 +2,32 @@ dsl_version: ctrl.v1
 id: CTL.ECS.NETWORK.001
 name: ECS Task Definitions Must Not Use Host Network Mode
 description: >
-  Detects assets where host_mode is eq true.
+  ECS task definitions must not use host network mode. Host networking removes network isolation between the container and the EC2 host — the container shares the host network namespace, can bind to any host port, and can access services on localhost including the ECS agent and metadata endpoint. Use awsvpc mode for per-task network isolation.
 domain: exposure
 severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  fedramp_moderate: "SC-7"
+  hipaa: "164.312(e)(1)"
+  pci_dss_v4.0: "1.3.2"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "IVS-06", "LOG-12"]
 scope_tags:
   - aws
   - ecs
 type: unsafe_state
-params: {}
+params:
+  attack_stage: lateral_movement
 remediation:
   description: >
-    Detects assets where host_mode is eq true.
+    ECS task definition uses host network mode.
   action: >
-    Switch to awsvpc network mode.
+    Switch to awsvpc network mode for per-task ENI with dedicated security group.
 unsafe_predicate:
   all:
+    - field: properties.container.kind
+      op: eq
+      value: task_definition
     - field: properties.container.network.host_mode
       op: eq
       value: true

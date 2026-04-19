@@ -47,7 +47,7 @@ This glossary maps Stave's internal terminology to security industry standards
 | **Property Namespace** | The `properties.*` path structure for a domain. S3 uses `properties.storage.*`, IAM uses `properties.identity.*`, DNS uses `properties.dns.*`. |
 | **Kind** | A discriminator within a property namespace. `storage.kind: "bucket"`, `identity.kind: "user"`, `identity.kind: "account"`. |
 | **Vendor** | The cloud provider or service hosting the asset. Open string — accepts `aws`, `gcp`, `azure`, `cloudflare`, `namecheap`, or any value. Controls never evaluate vendor. |
-| **Observation Contract** | The specification (`docs/observation-contract.md`) that tells extractor authors what properties to populate for each domain. Stave's multi-domain capability is this contract, not code. |
+| **Observation Contract** | The specification (`docs/contract/README.md`) that tells extractor authors what properties to populate for each domain. Stave's multi-domain capability is this contract, not code. |
 | **INCOMPLETE Control** | A control that fires when the extractor provides insufficient data. Prevents false compliant verdicts. Every domain must have one. |
 
 ## Logic Trace Terms

@@ -1,0 +1,587 @@
+# Stave Output-Model Metrics
+
+## Preamble
+
+These are the six metrics Stave optimizes for. Every feature proposal
+runs through this document. A proposal names which metrics the work
+improves and which metrics it risks deteriorating; proposals that
+improve nothing are out of scope unless they close a drift or
+documentation gap, and proposals that deteriorate a metric require
+explicit justification before they ship.
+
+The Amazon parallel frames the intent. Amazon optimizes for fast
+shipping as the north-star property that organizes every operational
+decision — warehouse placement, packaging, fulfillment routing,
+inventory strategy all derive from it. Stave optimizes for these six
+metrics as the north-star set that organizes every feature, every
+control, every output change. The metrics are the constraint; the
+iterations are subordinate to them.
+
+## Scope constraints
+
+- Stave is a deterministic detection tool. No AI inference anywhere
+  internally. Predicate evaluation is pure CEL against observation
+  JSON.
+- Stave produces findings. Remediation execution happens outside
+  Stave. The boundary is the data in the finding, not the change in
+  the cloud account.
+- Stave's output is designed to be consumed by downstream tooling,
+  including AI prompts, CI/CD pipelines, ticket systems, and humans.
+  The structured fields in the finding exist so downstream tools do
+  not have to parse prose.
+- Stave does not track authorship of code or configuration. Security
+  state is independent of who or what produced it. Human-authored and
+  AI-authored misconfigurations get the same treatment — the finding
+  stands on the observation, not on the provenance of the source.
+- Stave plays well with other tools. The consolidated-view claim
+  (metric 6) is about output quality, not vendor lock-in. Users
+  running Prowler or ScoutSuite alongside Stave should see Stave
+  consolidate rather than duplicate.
+- This document defines output-model metrics. Catalog coverage,
+  observation contract design, and extractor conformance are separate
+  concerns governed by their own documents (`docs/contract/`,
+  `docs/methodology-coverage-*.md`).
+
+## The six metrics
+
+### Metric 1: Prioritization
+
+**Definition.** Findings are ordered by actionable priority. Priority
+is a score that combines: (1) base severity from the control's
+`severity:` field, mapped via `SeverityToWeight` or overridden by the
+control's `base_impact:` param; (2) a stepped duration factor keyed
+on days-blind (`DurationFactor` — 1.0 at ≤30d, 1.5 at 30d+, 2.0 at
+90d+, 3.0 at 365d+, 5.0 at 1643d+/4.5-year "silent killer"
+threshold); (3) a blast multiplier from the control's
+`blast_multiplier:` param; (4) an exposure multiplier derived from
+the control's `exposure:` block, not a single `IsPublic` bool;
+(5) a chain-membership bonus when the finding participates in one or
+more fired chains, proportional to the chain's `compound_score` and
+the finding's role (member vs missing-safeguard). The default sort
+order of `findings[]` is score descending; the score and its
+factor-by-factor breakdown are emitted on every finding so the order
+is inspectable, not oracular.
+
+**Why it matters.** The Aikido 2026 survey reports that **98% of
+organizations report false positives** from their security tools.
+False positives are the output-side manifestation of absent
+prioritization: every finding carries equal weight, users triage
+sequentially, noise and signal arrive in the same queue. Teams stop
+reading output after the third irrelevant finding. Prioritization
+turns the queue into a ranking the user can scan top-down and stop
+when they hit diminishing returns.
+
+**Baseline.** PARTIAL. `risk.RankExposures` at
+`internal/core/evaluation/risk/exposure_rank.go:102` computes an
+exposure score with factor breakdown (`base × durationFactor × blast
+× exposureMult`) and emits a sorted `top_exposures[]` view. The main
+`findings[]` array is sorted alphabetically by `SortFindings` at
+`internal/core/evaluation/finding.go:80` — by `ControlID` then
+`AssetID`, not by score. Exploitability in the current scoring is
+binary via `exposureMultiplier` reading `Exposure.IsPublic`
+(`exposure_rank.go:86`). Chain membership is recorded on findings
+(`Finding.ChainMembership[]`) but does not feed back into the
+`ExposureRank` score.
+
+**Target.** Default-sort `findings[]` by `ExposureScore` descending.
+Fold chain membership into the individual finding score (every member
+of a fired chain gets a bonus proportional to the chain's
+`compound_score`; missing-safeguard findings get a distinct signal).
+Broaden exploitability beyond `IsPublic` — the exposure multiplier
+reads the `exposure.type` enum and the principal-scope value, not a
+single bool. The `top_exposures[]` parallel view remains for
+downstream tooling that wants the top-N slice explicitly.
+
+**Improvement signal.**
+- Default `findings[]` sort matches `top_exposures[]` ordering.
+- Chain membership demonstrably changes an individual finding's
+  rank — fixture with a chain fires and the member findings rank
+  above non-member peers with the same base severity.
+- A finding's score and breakdown are emitted on every finding, not
+  only on the top-N slice.
+- Exploitability distinguishes `public_internet` from
+  `cross_account`, `cross_account` from `same_account_privileged`,
+  and scores each distinctly.
+- The score is deterministic and reproducible — two runs against
+  identical observations produce identical ranks.
+
+**Deterioration signal.**
+- A proposal introduces ranking that is non-deterministic or depends
+  on wall-clock time.
+- A proposal hides the score or the breakdown — users can see the
+  rank but cannot see why.
+- A proposal reintroduces alphabetical as default sort for
+  `findings[]` under any format.
+- A proposal adds a factor without documenting it in this metric's
+  Definition section and in `exposure_rank.go`.
+- A proposal makes the score dependent on per-tenant configuration
+  that varies across runs — scores must be comparable across runs on
+  the same catalog.
+
+### Metric 2: Deduplication
+
+**Definition.** Findings that share a root cause are consolidated
+into a single issue. Root cause is the shared predicate-consumed
+observation field: two findings share a root cause when their control
+predicates consume the same observation field (or set of fields) and
+those fields have the same triggering value on the same asset.
+Example: `CTL.S3.CONTROLS.001` (PAB umbrella) and the four
+`CTL.S3.PAB.*` sub-flag controls all read
+`storage.controls.public_access_block.*` on the same bucket — one
+root cause. The dedup output is an `issues[]` view parallel to
+`findings[]`, where each issue carries the root-cause field set, the
+asset, and the list of contributing findings. `findings[]` remains
+the full per-control emission; downstream tools choose which view
+they consume.
+
+**Why it matters.** The same Aikido 2026 finding (**98% false
+positives**) applies. Noise manifests not only as unranked findings
+but as repeated findings: a single misconfiguration that five
+controls each detect produces five triage tickets. Users stop
+believing output that repeats. Dedup by root cause collapses the
+PAB-umbrella-plus-four-sub-flags case to one issue with five
+contributing signals, not five distinct problems.
+
+**Baseline.** PARTIAL. `remediation.BuildGroups` at
+`internal/core/evaluation/remediation/grouping.go:51` clusters
+findings by `(asset_id, actions_fingerprint)`. The text writer
+surfaces the result under a "Remediation groups" section. Two
+limitations: (1) `findings[]` in JSON output still lists every
+finding individually — the grouping is a view, not a replacement;
+(2) the dedup key is remediation-action equality, not root-cause
+equality. The PAB umbrella and its four sub-flag siblings produce
+different `RemediationPlan.Actions` (each has its own one-command
+fix), so the action-fingerprint key separates them — they do not
+currently dedup even though they share a root cause.
+
+**Target.** A root-cause dedup key keyed on shared
+predicate-consumed observation fields per asset. Controls annotate
+their predicate-consumed fields explicitly (either derived from the
+predicate AST or declared in a control-level `root_cause_fields:`
+list). Dedup logic groups findings whose root-cause field sets
+overlap on the same asset. Output emits an `issues[]` parallel
+view; each issue names the root-cause field set, the asset, and the
+contributing findings. Remediation-action grouping
+(`BuildGroups`) continues as a distinct secondary view.
+
+**Improvement signal.**
+- PAB-umbrella + 4 sub-flags on the same bucket produces 1 issue
+  with 5 contributing findings, not 5 issues.
+- The root-cause field set is exposed on each issue; users can read
+  which observation fields triggered the bundle.
+- A control-side annotation convention exists; new controls declare
+  their root-cause fields explicitly rather than relying on predicate
+  AST inference.
+- Dedup is lossless — each contributing finding is reachable from the
+  issue record (by `finding_id` reference), so downstream tools that
+  want per-finding remediation data retain access.
+- Action-fingerprint grouping remains intact as a separate view for
+  the "these findings have the same fix" use case.
+
+**Deterioration signal.**
+- A proposal adds a dedup path that hides contributing findings
+  (lossy dedup — users can see the issue but not the underlying
+  findings).
+- A proposal dedups across asset boundaries (two findings on
+  different assets collapse into one issue) without explicit
+  cross-asset-root-cause semantics.
+- A proposal dedups across control boundaries without a shared
+  root-cause field set — arbitrary merging by severity or attack
+  stage alone.
+- A proposal replaces `BuildGroups` with the root-cause dedup path —
+  both views coexist; they answer different questions.
+- A proposal introduces dedup that depends on runtime configuration
+  that varies across runs — dedup behavior must be reproducible.
+
+### Metric 3: Traceability
+
+**Definition.** Every finding includes a reasoning-chain summary
+inline in the default output. The summary lists the predicate
+clauses that matched (the ones that pushed the overall predicate to
+true) together with the observed value each clause saw. Example, for
+`CTL.S3.NETWORK.VPC.001` firing on a bucket: `matched_clauses: [
+  {field: "storage.kind", op: "eq", value: "bucket",
+  observed: "bucket"}, {field: "storage.access.has_vpc_condition",
+  op: "eq", value: false, observed: false},
+  {field: "storage.access.has_ip_condition", op: "eq", value: false,
+  observed: false} ]`. This is "matched clauses + observed values"
+(option (b) from the survey's traceability-shape gap). Full
+step-by-step trace (every predicate evaluation, intermediate result,
+decision point) stays opt-in behind `--trace` as today.
+
+**Why it matters.** The Aikido 2026 survey identifies that developers
+and security engineers lose trust in tools whose verdicts cannot be
+inspected. A finding that says "this bucket is unsafe" without
+showing why is indistinguishable from noise; one that shows the
+three observation values that tripped the predicate is falsifiable
+and, when wrong, actionable. Traceability is what converts a finding
+from an assertion into evidence.
+
+**Baseline.** PARTIAL. Full `LogicTrace` exists
+(`internal/core/trace/trace.go:17`, schema `trace.v0.1`) with
+per-assessment `Steps[]` recording inputs and results at each stage.
+It is opt-in (`--trace path.json` or `STAVE_TRACE` env var) and
+written to a separate file, not embedded in the default output.
+Inline today, each finding carries `Evidence.Misconfigurations[]`
+(`internal/core/evaluation/evidence.go:47`) listing
+`{property, operator, unsafe_value, actual_value}` per triggering
+field — a partial match to the target "matched clauses + observed
+values" shape, but structured as a violations list rather than the
+full predicate-match record.
+
+**Target.** A compact `reasoning` block on every finding in every
+output format. Shape: the list of predicate clauses whose evaluation
+pushed the overall predicate to true, each with the operator, the
+expected value, and the value observed on the asset. For `any`
+predicates, the matched clause(s) only. For `all` predicates, every
+clause (since every one contributed). Machine-consumable in JSON;
+prose-rendered in text mode using the self-explaining translator
+(metric 5). `--trace` remains for users who need full step-by-step
+including skipped clauses, timing, and intermediate states.
+
+**Improvement signal.**
+- Every finding in `apply` JSON output carries a `reasoning` field
+  listing matched clauses + observed values.
+- The `reasoning` shape is stable and documented — downstream tools
+  can rely on it.
+- Text-mode output renders `reasoning` in a readable form without
+  requiring users to cross-reference control YAML or contract docs.
+- `--trace` remains supported and is strictly a superset of inline
+  reasoning (everything inline is also in the trace; trace adds
+  per-step timing and skipped clauses).
+- Fixtures confirm `reasoning` accuracy — a fixture-level test
+  asserts that the reasoning emitted matches the predicate's
+  actually-evaluated clauses.
+
+**Deterioration signal.**
+- A proposal embeds reasoning only in JSON and not in text — text
+  mode remains unreasoned.
+- A proposal emits reasoning that references predicate AST
+  implementation details (CEL expression strings, raw operator
+  enums) rather than the clause-level structure.
+- A proposal omits observed values from the inline reasoning —
+  clauses without values are opaque.
+- A proposal truncates reasoning on large predicates without a
+  documented truncation convention.
+- A proposal makes inline reasoning dependent on `--trace` being
+  enabled — breaking the "default-on, no-flag" target.
+
+### Metric 4: Remediation data quality
+
+**Definition.** Each finding carries structured, complete, reliable
+data describing what needs to change. "Structured" means machine-
+consumable fields, not prose-only descriptions. "Complete" means the
+data is sufficient for downstream tools (AI prompts, CI/CD
+pipelines, ticket systems, humans) to act without needing to go back
+to Stave for more information. "Reliable" means the data matches the
+actual remediation — the CLI command runs, the property change
+closes the specific door. Concrete remediation is a runnable CLI
+string with asset-parameterized substitutions where the asset
+identity permits. When `HasSafeDefault=false`, the
+`PropertyChange.RequiredValue` field is empty and the record
+documents that the required value is context-dependent; downstream
+tools handle the prompt for user input. Stave produces the data;
+Stave does not execute the fix. No auto-fix, ever — that boundary
+is a hard scope constraint.
+
+**Why it matters.** The Aikido 2026 survey identifies that
+remediation handoff is where security tooling breaks down — the
+finding names a problem, the developer has to translate it into a
+change. AI-assisted development amplifies the gap because AI
+assistants need structured input to produce reliable changes. A
+finding whose remediation is prose ("enable Block Public Access")
+requires the AI or human to research what specifically to enable on
+which flag. A finding whose remediation carries a runnable CLI
+parameterized to the asset is directly consumable.
+
+**Baseline.** PARTIAL. `RemediationSpec` at
+`internal/core/controldef/remediation_spec.go:7` carries
+`Description`, `Action` (prose CLI — often concrete, e.g.
+`aws s3api put-public-access-block --bucket <name> ...`), `Example`,
+`Confidence`, `RiskScore`, `Changes[]`, and `FindingID`.
+`PropertyChange` at `remediation_spec.go:35` is IaC-tool-agnostic
+with `PropertyPath`, `CurrentValue`, `RequiredValue`, `ResourceType`,
+`Description`, `HasSafeDefault`. `RemediationPlan` at
+`internal/core/evaluation/remediation.go:16` adds structured
+`Actions[]` with `Target` and `ExpectedEffect`. Gaps: (1) when
+`HasSafeDefault=false`, `RequiredValue` is empty and the record does
+not standardize how the required value is surfaced for user prompt;
+(2) the CLI `Action` string is not consistently parameterized to the
+specific asset (placeholders like `<name>` appear); (3) no
+per-IaC-stack rendering (Terraform vs CloudFormation vs CDK) — the
+CLI is the lowest-common-denominator; (4) the structured export shape
+for AI-prompt consumption is not explicitly documented.
+
+**Target.** An explicit "structured remediation export" shape per
+finding: one JSON blob containing `Evidence` + `RemediationSpec` +
+`RemediationPlan` in a layout that AI prompts can consume without
+preprocessing. CLI actions parameterized to the specific asset
+(`<name>` → actual bucket name). When `HasSafeDefault=false`, the
+record includes a `required_value_prompt` field — the text of the
+question to ask the user. The auto-fix boundary is explicit in the
+documentation and enforced in code: no CLI flag, no API, no
+mechanism invokes a remediation from Stave.
+
+**Improvement signal.**
+- CLI `Action` strings are parameterized to the specific asset in
+  fixture outputs — no `<placeholder>` tokens remain where the asset
+  identity resolves them.
+- Every `HasSafeDefault=false` finding carries structured prompt
+  text for the required value.
+- The export-for-AI-prompt shape is documented in `docs/contract/`
+  or an equivalent product-level location and downstream consumers
+  can rely on it.
+- A fixture-level test confirms the CLI string produced is runnable
+  (syntactically valid; parameters resolved).
+- Per-IaC-stack rendering, if added, is additive — the CLI remains
+  the default.
+
+**Deterioration signal.**
+- A proposal adds auto-fix execution, directly or transitively
+  (CLI flag, API, watch mode, CI-hook-triggered mutation).
+- A proposal makes remediation data AI-inferred rather than
+  deterministic — the structured fields stop being reliable.
+- A proposal removes the structured fields in favor of prose-only
+  descriptions.
+- A proposal varies remediation shape across output formats — AI
+  prompts get one shape, text another, SARIF a third.
+- A proposal ships remediation for a control without a fixture-
+  level test confirming the remediation actually closes the
+  detection.
+
+### Metric 5: Self-explaining output
+
+**Definition.** Output is legible without Stave fluency. Predicate-
+DSL vocabulary is translated to plain language. Control IDs are
+paired with one-line summaries. Evidence fields surface the observed
+state in terms a target reader recognizes — AWS-level vocabulary
+(`bucket policy`, `principal`, `Condition`), not Stave-level
+vocabulary (`policy_has_scoping_condition`, `unsafe_value`). The
+target persona is a cloud-security-fluent engineer encountering
+Stave for the first time: they know what a bucket policy is, what
+`aws:SourceIp` means, what a Condition does. They do not know
+Stave's control IDs, predicate operator enum values, or contract
+field names. The output meets them where they are.
+
+**Why it matters.** The Aikido 2026 survey identifies that security
+tooling with high adoption friction gets bypassed. Friction comes
+from output that requires tool-specific fluency before the first
+finding is actionable. A first-time reader who sees
+`unsafe_value: true, operator: eq, property:
+policy_has_scoping_condition` has to look up what
+`policy_has_scoping_condition` means, what `eq` means in this
+context, and what `unsafe_value: true` means when combined. A reader
+who sees "the bucket policy has at least one Allow statement with a
+wildcard principal and no restricting Condition — the statement
+effectively allows any AWS caller unless narrowed" starts acting.
+
+**Baseline.** PARTIAL. The text writer at
+`internal/adapters/output/text/finding_writer.go:25` produces a
+structured report with sections (header, violations, skipped,
+exempted, remediation groups, chain findings, attack stage,
+top exposures, framework readiness). Most sections read cleanly for
+a first-time reader. Per-finding evidence surfaces predicate-DSL
+vocabulary: the `Misconfigurations[]` list shows
+`{property, operator, unsafe_value, actual_value}` in terms a reader
+has to decode against the observation contract. Control IDs
+(`CTL.S3.POLICY.SCOPING.001`) appear without one-line glossary
+entries inline. Long-form `control_description` is present but is
+the canonical description from YAML, not a scan-optimized one-liner.
+
+**Target.** A plain-language translator that renders predicate-DSL
+constructs as prose for the target persona. `{property:
+policy_has_scoping_condition, operator: eq, value: false}` becomes
+"the bucket policy has no scoping Condition on any Allow statement
+with a non-narrow principal". A control-ID glossary (one-line
+summary per control) rendered inline in text mode when a control
+first appears. JSON output preserves the structured form for
+downstream tooling; text output uses the translated form. Plain-
+language renderings live alongside the DSL vocabulary, not
+replacing it — downstream tooling parsing structured fields is
+unaffected.
+
+**Improvement signal.**
+- Text-mode output renders predicate-DSL misconfigurations as prose
+  in AWS vocabulary.
+- Every control ID that appears in text output is paired with a
+  one-line summary on first appearance.
+- Structured JSON fields are unchanged — the translator is a text-
+  rendering concern, not a data model change.
+- A fixture-level test asserts that text output for a named control
+  contains the expected plain-language rendering.
+- Readings by a first-time reader (unit-test-style or reviewer-
+  feedback-driven) confirm legibility without catalog reference.
+
+**Deterioration signal.**
+- A proposal removes the structured DSL fields from JSON to make
+  text output cleaner — the translator's job is to layer, not
+  replace.
+- A proposal introduces translator vocabulary that assumes Stave-
+  specific concepts (profile names, scope_tags, CEL syntax) instead
+  of cloud-provider vocabulary.
+- A proposal targets a persona other than the cloud-security-fluent
+  engineer without updating this document first.
+- A proposal renders different translations across output formats
+  for the same finding — JSON's "the bucket policy" must not
+  disagree with text's rendering.
+- A proposal ships a control whose YAML description is written for
+  Stave insiders rather than the target persona.
+
+### Metric 6: Single source of truth / cross-tool posture
+
+**Definition.** Output is designed as the consolidated security
+view. Two output surfaces deliver this: (1) every control carries
+optional `equivalents:` metadata mapping it to parallel checks in
+Prowler (primary yardstick), ScoutSuite (secondary), and manual-
+pentest playbooks (Rhino Security IAM cluster, S3 pentest
+checklist). Findings emit `equivalent_signals: [...]` listing what
+other tools call the same detection. (2) `apply` output includes an
+optional "coverage posture" section summarizing Stave's coverage
+against Prowler checks in the scanned resource set — pulling the
+data from `docs/methodology-coverage-*-prowler.md` into runtime
+visibility. Equivalence bar is intent-overlap (the two checks detect
+the same class of misconfiguration) not exact-check match (they
+flag the same bit, same threshold, same message). Commercial tools
+(Wiz, Orca, Lacework) are out of scope — their catalogs are opaque,
+no reliable equivalence data exists.
+
+**Why it matters.** The Aikido 2026 survey identifies tool sprawl
+as a material operational cost — teams run three to seven security
+tools in parallel, each producing a partial view, with dedup
+happening manually or not at all. A tool that presents itself as
+"one more signal" joins the pile. A tool that presents itself as
+the consolidation layer, with explicit cross-references to the
+tools already in place, displaces the pile. The "single source of
+truth" claim is not about exclusivity; it is about designing the
+output to consolidate against known parallel sources.
+
+**Baseline.** ABSENT. No cross-tool equivalence metadata in control
+YAML. No `equivalent_signals` field on findings. `apply` output
+contains no coverage posture section. Methodology coverage exists
+at `docs/methodology-coverage-s3-prowler.md` and
+`docs/methodology-coverage-iam-prowler.md` as repo docs only — a
+user reading `apply` output cannot see Stave's coverage posture
+against Prowler's IAM or S3 checks without reading separate
+markdown files.
+
+**Target.** Control-level `equivalents:` metadata populated for
+every control that has a plausible equivalent (the coverage-
+markdown already contains the mapping; moving it into control YAML
+makes it machine-addressable). Finding-level `equivalent_signals:`
+emitted when equivalents exist. `apply` output grows a coverage-
+posture section summarizing, for the scanned resource set, how many
+Prowler IAM checks and Prowler S3 checks Stave covers and how many
+of those actually ran against the observations in this invocation.
+Surface stays opt-in for users who want the slim finding list —
+default text output includes it; `--format json` includes it
+structurally; a `--no-coverage-posture` flag suppresses it. Manual-
+pentest playbook references ride the same `equivalents:` annotation
+with a playbook-section identifier.
+
+**Improvement signal.**
+- New controls land with `equivalents:` populated where an
+  equivalent exists in Prowler or ScoutSuite.
+- Existing coverage-markdown content migrates into control YAML
+  (one-time backfill; subsequent edits live in YAML only, markdown
+  regenerates).
+- `apply` output shows Prowler-coverage posture for the scanned
+  resource set by default in text mode.
+- Users running Stave alongside Prowler can dedup against a known
+  machine-readable mapping.
+- Commercial-tool equivalence stays explicitly out of scope in
+  this document — no drift into catalogs Stave cannot verify.
+
+**Deterioration signal.**
+- A proposal adds equivalence data for a commercial tool without
+  attested reference to the tool's public catalog.
+- A proposal inflates equivalence bar to "exact-check match",
+  producing false-negative gaps where intent-overlap would hold.
+- A proposal removes methodology-coverage markdown in favor of
+  code-only generation — the markdown is the human-reviewable
+  source during the backfill window.
+- A proposal makes coverage-posture a hard dependency (fails
+  `apply` when Prowler data is unavailable) rather than a best-
+  effort surface.
+- A proposal vendors another tool's output format (emits SARIF
+  shaped like Prowler's output) — Stave stays itself and points to
+  parallels; it does not masquerade.
+
+## Enforcement
+
+Every iteration prompt that proposes new work references this
+document. The proposal names which metrics the work improves and
+which metrics it risks deteriorating. A proposal that cannot
+identify at least one metric it improves is out of scope unless it
+closes a drift or documentation gap — those are a separate category
+tracked in `docs/audits/` and the drift-cleanup summaries, and they
+do not require a metric claim.
+
+A proposal that deteriorates any metric requires explicit
+justification. The justification names the specific deterioration
+signal tripped, states why the deterioration is acceptable in this
+case, names the metric gain or external constraint that outweighs
+it, and schedules the future work that reverses the deterioration.
+Proposals that trip a deterioration signal without justification do
+not ship — they get redesigned or dropped.
+
+Baselines in the Baseline sections update as work lands. When a
+metric moves from PARTIAL to PRESENT, the iteration that moved it
+updates the Baseline paragraph and removes the improvement signals
+that have been delivered. Target sections update when the "direction
+of improvement" has been achieved — the Target reorients to the next
+level of ambition or the metric's section notes "Target achieved;
+preserve." Improvement-signal and deterioration-signal bullets stay
+stable across minor work; changes to those bullets require explicit
+metric-scope iteration of their own.
+
+New metrics may be added to this document. Adding a metric follows
+the same section structure (Definition, Why it matters, Baseline,
+Target, Improvement signal, Deterioration signal) and requires a
+separate iteration with its own scope. Informal additions to the
+metric set — mentioned in commit messages, slacked around, assumed
+in subsequent proposals — do not bind. The authoritative set is what
+appears under "The six metrics" (or the next numeric expansion) in
+this file.
+
+## Relationship to other documents
+
+- `docs/contract/` defines the observation contract — the shape of
+  JSON the extractors emit and the predicate engine consumes. The
+  metrics document does not constrain contract design; the contract
+  is upstream of output. A finding's content depends on what the
+  observation says.
+- `docs/methodology-coverage-s3-prowler.md` and
+  `docs/methodology-coverage-iam-prowler.md` document catalog
+  coverage against external methodologies. Metric 6 uses these as
+  the source of truth for equivalence mapping; the coverage
+  documents themselves do not optimize for metrics — they report
+  per-check coverage status.
+- `docs/audits/` contains incident-replay audits that demonstrate
+  Stave's coverage against specific named attack classes (e.g.,
+  `2026-04-ssrf-imds-s3-coverage.md`). The audits are evidence;
+  the metrics document is the target. An audit that shows a gap
+  may feed into a future metrics-improving iteration, but the
+  audit itself is scoped to its attack-class question.
+- `docs/fixture-drift-cleanup-*.md` documents mechanical cleanup
+  iterations. These close drift gaps and are explicitly outside
+  the metrics-improvement category; they exist to keep the catalog
+  and fixtures honest, not to move metrics.
+- This document's place: the output-model constraint that every
+  feature proposal runs through. When the six metrics and the
+  enforcement rules contradict an adjacent document, the adjacent
+  document wins for its domain (contract shapes, coverage methodology,
+  audit scope) and this document yields. When the adjacent document
+  is silent, this document is authoritative.
+
+---
+
+*Footnote on source citation.* The Aikido "State of AI in Security &
+Development 2026" report is referenced by specific finding
+(e.g., "98% of organizations report false positives"). Where a
+metric's "Why it matters" section references the report thematically
+without a specific percentage, the report's framing on tool sprawl,
+remediation handoff, developer trust, or adoption friction applies;
+the metric's direction is grounded in the report's qualitative
+signals even when the specific percentage is not quoted. Future
+updates to this document should add verbatim percentages as
+specific findings are matched to metrics.

@@ -13,11 +13,13 @@ compliance:
   soc2: "CC6.7"
   nist_800_53_r5: "SC-28"
   fedramp_moderate: "SC-28"
+  ccm_v4: ["BCR-08"]
 scope_tags:
   - aws
   - opensearch
 type: unsafe_state
-params: {}
+params:
+  attack_stage: exfiltration
 remediation:
   description: >
     OpenSearch snapshot repository is not encrypted. Snapshots contain

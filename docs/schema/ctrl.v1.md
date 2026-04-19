@@ -75,10 +75,10 @@ A predicate defines unsafe conditions using boolean logic. It contains either `a
 # OR: any one match triggers
 unsafe_predicate:
   any:
-    - field: properties.storage.visibility.public_read
+    - field: properties.storage.access.public_read
       op: eq
       value: true
-    - field: properties.storage.visibility.public_list
+    - field: properties.storage.access.public_list
       op: eq
       value: true
 

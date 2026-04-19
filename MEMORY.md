@@ -210,7 +210,7 @@ The 2-month refactoring and Phase 2 implementation revealed Stave's true identit
 
 ### Key realizations
 
-- **Multi-cloud is a schema specification, not code.** Stave doesn't need adapters for each cloud. It defines the observation contract (property namespaces), and clients build extractors that populate those properties. Adding a new cloud provider = extending `docs/observation-contract.md` + writing YAML controls.
+- **Multi-cloud is a schema specification, not code.** Stave doesn't need adapters for each cloud. It defines the observation contract (property namespaces), and clients build extractors that populate those properties. Adding a new cloud provider = extending `docs/contract/README.md` + writing YAML controls.
 
 - **Extractors are external — Stave owns the contract.** Stave never imports cloud SDKs. It reads obs.v0.1 JSON. The extractor is the client's responsibility. Stave's responsibility is to detect when extractor data is incomplete (INCOMPLETE controls).
 

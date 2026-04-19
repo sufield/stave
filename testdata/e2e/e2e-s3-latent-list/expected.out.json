@@ -3,7 +3,7 @@
     "context_name": "stave",
     "git": {
       "dirty": false,
-      "head_commit": "23e8d39cdce1f114627b5eb473daceca93c7fddc",
+      "head_commit": "74f975c98eab8c8fba8a2bb86a60ce6b3ab19ff7",
       "repo_root": "/home/zepho/work/bizacademy"
     },
     "resolved_paths": {
@@ -17,9 +17,14 @@
       "asset_id": "latent-listable-bucket",
       "asset_type": "aws_s3_bucket",
       "asset_vendor": "aws",
+      "control_compliance_ccm_v4": [
+        "DSP-07",
+        "DSP-17"
+      ],
       "control_description": "S3 bucket has a policy or ACL that would allow public listing if the public access block were removed. The public access block is currently the only control preventing directory enumeration. This is a latent vulnerability \u2014 one configuration change away from exposing all object keys.\n",
       "control_id": "CTL.S3.PUBLIC.006",
       "control_name": "No Latent Public Bucket Listing",
+      "control_severity": "critical",
       "evidence": {
         "first_unsafe_at": "2026-01-01T00:00:00Z",
         "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
@@ -43,6 +48,10 @@
         "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z.",
         "threshold_hours": 168,
         "unsafe_duration_hours": 240
+      },
+      "exposure": {
+        "principal_scope": "public",
+        "type": "latent_public_list"
       },
       "finding_id": "sha256:6a2dc24c7add828f",
       "fix_plan": {
@@ -84,8 +93,9 @@
         "pattern": "persistent"
       },
       "remediation": {
-        "action": "Restrict access to authorized principals only.",
-        "description": "Resource is exposed to the public internet."
+        "action": "Remove the underlying policy statement or ACL entry that grants s3:ListBucket to Principal \"*\" or AllUsers. Do not rely solely on PAB to prevent directory enumeration.",
+        "description": "Bucket has a policy or ACL that would allow public listing if the Public Access Block were removed. One configuration change away from exposing all object keys.",
+        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"access\": {\n      \"latent_public_list\": false\n    }\n  }\n}\n"
       }
     }
   ],
@@ -157,7 +167,7 @@
     },
     "now": "2026-01-11T00:00:00Z",
     "offline": true,
-    "policy_fingerprint": "9273c59706c02b6bd09337c02b4ae6a55a1fc7a0ff652539f48c0e2df21492e4",
+    "policy_fingerprint": "d033aff29937cac32d5b974c3ee9fe7ecce434d3f74abc313c14f957134337db",
     "sla_threshold": "7d",
     "snapshots": 2,
     "tool_version": "edge"
@@ -173,14 +183,14 @@
     {
       "asset_id": "latent-listable-bucket",
       "breakdown": {
-        "base_score": 10,
+        "base_score": 100,
         "blast_multiplier": 1,
         "days_blind": 10,
         "duration_factor": 1,
-        "exposure_multiplier": 1
+        "exposure_multiplier": 2
       },
       "control_id": "CTL.S3.PUBLIC.006",
-      "exposure_score": 10,
+      "exposure_score": 200,
       "finding_index": 0,
       "silent_killer": false
     }

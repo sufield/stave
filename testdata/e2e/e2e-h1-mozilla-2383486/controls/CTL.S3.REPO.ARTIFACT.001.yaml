@@ -5,12 +5,37 @@ description: >
   Buckets that serve public content must not expose version control artifacts
   such as .git/ or .svn/. Presence of these paths enables repo reconstruction
   and can leak secrets.
+compliance:
+  ccm_v4: ["AIS-06", "DSP-17"]
 domain: exposure
+severity: medium
 scope_tags:
   - aws
   - s3
 type: unsafe_state
-params: {}
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    Public bucket exposes version control artifacts (.git/, .svn/) that
+    enable full repository reconstruction and may leak secrets, credentials,
+    or internal code.
+  action: >
+    Remove .git/, .svn/, and other VCS directories from the bucket.
+    Add a lifecycle rule or deployment script that excludes VCS artifacts
+    from uploads. If the bucket is a static website, configure your build
+    pipeline to strip VCS files before deployment.
+  example: |
+    {
+      "storage": {
+        "access": {
+          "public_read": false
+        },
+        "content": {
+          "exposed_repo_artifacts": false
+        }
+      }
+    }
 unsafe_predicate:
   all:
     - any:

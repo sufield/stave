@@ -1,8 +1,17 @@
 dsl_version: ctrl.v1
 id: CTL.S3.PUBLIC.007
-name: No Public Read via Policy
+name: No Public Read via Identity Policy
 description: >
-  S3 bucket policies must not grant public read access.
+  IAM identity-based policies attached to users or roles must not
+  grant broad read access to S3 buckets that is effectively public —
+  for example, a policy attached to a widely-assumed role or to a
+  role trusted by a public federated identity provider. This is
+  distinct from CTL.S3.PUBLIC.004 (resource-based bucket policy
+  granting public read); the identity-policy path is a separate AWS
+  evaluation branch and deserves its own finding so the operator
+  fixes the right artifact.
+compliance:
+  ccm_v4: ["DSP-07", "DSP-17"]
 domain: exposure
 exposure:
   type: read_via_identity
@@ -12,13 +21,20 @@ scope_tags:
   - aws
   - s3
 type: unsafe_state
-params: {}
+params:
+  attack_stage: initial_access
 remediation:
   description: >
-    Bucket policy grants public read (Principal \"*\" with read action).
+    An IAM identity-based policy grants effectively public read
+    access to this bucket. The policy is attached to a principal
+    whose trust chain permits unauthenticated or broadly-federated
+    access.
   action: >
-    Remove or constrain the public policy statement. Use restrictive
-    principals or conditions and keep Public Access Block enabled.
+    Identify the identity-based policy statement granting read access
+    and either remove it, scope it to specific bucket/object ARNs, or
+    add conditions restricting the requesting principal. If a
+    widely-trusted role is the root cause, tighten that role's trust
+    policy first.
   example: |
     {
       "storage": {

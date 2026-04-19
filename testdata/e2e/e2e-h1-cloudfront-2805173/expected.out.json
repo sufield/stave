@@ -3,7 +3,7 @@
     "context_name": "stave",
     "git": {
       "dirty": false,
-      "head_commit": "23e8d39cdce1f114627b5eb473daceca93c7fddc",
+      "head_commit": "74f975c98eab8c8fba8a2bb86a60ce6b3ab19ff7",
       "repo_root": "/home/zepho/work/bizacademy"
     },
     "resolved_paths": {
@@ -24,6 +24,9 @@
         "pci_dss_v4.0": "7.2.1",
         "soc2": "CC6.1"
       },
+      "control_compliance_ccm_v4": [
+        "IAM-05"
+      ],
       "control_description": "After resolving all policy layers (SCPs, permission boundaries, identity-based policies, explicit denies), a principal not designated as administrative must not have admin-equivalent effective permissions. This is distinct from CTL.IAM.POLICY.ADMIN.001 which checks policy content \u2014 this control checks the resolved effective permissions after organizational constraints are applied. A principal may have an AdminAccess policy attached but be effectively constrained by an SCP.\n",
       "control_id": "CTL.IAM.NEP.ADMIN.001",
       "control_name": "Net Effective Permissions Must Not Include Admin-Equivalent Actions",
@@ -68,6 +71,9 @@
         "pci_dss_v4.0": "7.2.1",
         "soc2": "CC6.1"
       },
+      "control_compliance_ccm_v4": [
+        "IAM-05"
+      ],
       "control_description": "After resolving all policy layers including transitive role assumption chains, no non-administrative principal may have effective permissions to escalate beyond their intended privilege scope. Escalation is detected in two forms: direct escalation primitives (iam:CreatePolicyVersion, iam:AttachRolePolicy, etc.) in the resolved effective allow set, and transitive escalation through role chains that reach higher privilege levels than the principal's direct permissions. A developer role that can assume a pipeline role that can assume an admin role has effective admin access \u2014 neither individual role appears dangerous, but the chain is the finding.\n",
       "control_id": "CTL.IAM.NEP.ESCALATION.001",
       "control_name": "No Principal May Have Net Effective Permissions to Escalate Privileges",
@@ -112,6 +118,9 @@
         "pci_dss_v4.0": "7.2.1",
         "soc2": "CC6.1"
       },
+      "control_compliance_ccm_v4": [
+        "IAM-05"
+      ],
       "control_description": "After resolving all policy layers including transitive role assumption chains, no non-administrative principal may have effective permissions to escalate beyond their intended privilege scope. Escalation is detected in two forms: direct escalation primitives (iam:CreatePolicyVersion, iam:AttachRolePolicy, etc.) in the resolved effective allow set, and transitive escalation through role chains that reach higher privilege levels than the principal's direct permissions. A developer role that can assume a pipeline role that can assume an admin role has effective admin access \u2014 neither individual role appears dangerous, but the chain is the finding.\n",
       "control_id": "CTL.IAM.NEP.ESCALATION.001",
       "control_name": "No Principal May Have Net Effective Permissions to Escalate Privileges",
@@ -155,6 +164,10 @@
         "pci_dss_v4.0": "7.2.1",
         "soc2": "CC6.1"
       },
+      "control_compliance_ccm_v4": [
+        "IAM-04",
+        "IAM-05"
+      ],
       "control_description": "Lambda function execution roles must not have overly broad permissions. An over-privileged execution role grants the function \u2014 and any attacker who compromises or invokes it \u2014 access to AWS resources beyond what the function requires. Common violations include admin policies, wildcard resource ARNs on sensitive actions, or managed policies like AmazonS3FullAccess attached to functions that only need read access to a single bucket. When combined with a public function URL or a compromised dependency, an over-privileged role converts a single function compromise into account-wide lateral movement.\n",
       "control_id": "CTL.LAMBDA.ROLE.LEASTPRIV.001",
       "control_name": "Lambda Execution Role Must Follow Least Privilege",
@@ -205,6 +218,10 @@
         "pci_dss_v4.0": "7.2.1",
         "soc2": "CC6.1"
       },
+      "control_compliance_ccm_v4": [
+        "IAM-04",
+        "IAM-05"
+      ],
       "control_description": "Lambda function execution roles must not have overly broad permissions. An over-privileged execution role grants the function \u2014 and any attacker who compromises or invokes it \u2014 access to AWS resources beyond what the function requires. Common violations include admin policies, wildcard resource ARNs on sensitive actions, or managed policies like AmazonS3FullAccess attached to functions that only need read access to a single bucket. When combined with a public function URL or a compromised dependency, an over-privileged role converts a single function compromise into account-wide lateral movement.\n",
       "control_id": "CTL.LAMBDA.ROLE.LEASTPRIV.001",
       "control_name": "Lambda Execution Role Must Follow Least Privilege",
@@ -255,6 +272,10 @@
         "pci_dss_v4.0": "7.2.1",
         "soc2": "CC6.1"
       },
+      "control_compliance_ccm_v4": [
+        "IAM-04",
+        "IAM-05"
+      ],
       "control_description": "Lambda function execution roles must not have overly broad permissions. An over-privileged execution role grants the function \u2014 and any attacker who compromises or invokes it \u2014 access to AWS resources beyond what the function requires. Common violations include admin policies, wildcard resource ARNs on sensitive actions, or managed policies like AmazonS3FullAccess attached to functions that only need read access to a single bucket. When combined with a public function URL or a compromised dependency, an over-privileged role converts a single function compromise into account-wide lateral movement.\n",
       "control_id": "CTL.LAMBDA.ROLE.LEASTPRIV.001",
       "control_name": "Lambda Execution Role Must Follow Least Privilege",
@@ -305,6 +326,10 @@
         "pci_dss_v4.0": "7.2.1",
         "soc2": "CC6.1"
       },
+      "control_compliance_ccm_v4": [
+        "IAM-04",
+        "IAM-05"
+      ],
       "control_description": "Lambda function execution roles must not have overly broad permissions. An over-privileged execution role grants the function \u2014 and any attacker who compromises or invokes it \u2014 access to AWS resources beyond what the function requires. Common violations include admin policies, wildcard resource ARNs on sensitive actions, or managed policies like AmazonS3FullAccess attached to functions that only need read access to a single bucket. When combined with a public function URL or a compromised dependency, an over-privileged role converts a single function compromise into account-wide lateral movement.\n",
       "control_id": "CTL.LAMBDA.ROLE.LEASTPRIV.001",
       "control_name": "Lambda Execution Role Must Follow Least Privilege",
@@ -355,6 +380,10 @@
         "pci_dss_v4.0": "7.2.1",
         "soc2": "CC6.1"
       },
+      "control_compliance_ccm_v4": [
+        "IAM-04",
+        "IAM-05"
+      ],
       "control_description": "Lambda function execution roles must not have overly broad permissions. An over-privileged execution role grants the function \u2014 and any attacker who compromises or invokes it \u2014 access to AWS resources beyond what the function requires. Common violations include admin policies, wildcard resource ARNs on sensitive actions, or managed policies like AmazonS3FullAccess attached to functions that only need read access to a single bucket. When combined with a public function URL or a compromised dependency, an over-privileged role converts a single function compromise into account-wide lateral movement.\n",
       "control_id": "CTL.LAMBDA.ROLE.LEASTPRIV.001",
       "control_name": "Lambda Execution Role Must Follow Least Privilege",
@@ -405,6 +434,10 @@
         "pci_dss_v4.0": "7.2.1",
         "soc2": "CC6.1"
       },
+      "control_compliance_ccm_v4": [
+        "IAM-04",
+        "IAM-05"
+      ],
       "control_description": "Lambda function execution roles must not have overly broad permissions. An over-privileged execution role grants the function \u2014 and any attacker who compromises or invokes it \u2014 access to AWS resources beyond what the function requires. Common violations include admin policies, wildcard resource ARNs on sensitive actions, or managed policies like AmazonS3FullAccess attached to functions that only need read access to a single bucket. When combined with a public function URL or a compromised dependency, an over-privileged role converts a single function compromise into account-wide lateral movement.\n",
       "control_id": "CTL.LAMBDA.ROLE.LEASTPRIV.001",
       "control_name": "Lambda Execution Role Must Follow Least Privilege",

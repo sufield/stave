@@ -2,21 +2,32 @@ dsl_version: ctrl.v1
 id: CTL.LAMBDA.TRACE.001
 name: Lambda Functions Must Have Active X-Ray Tracing Enabled
 description: >
-  Detects assets where mode_active is eq false.
+  Lambda functions must have X-Ray tracing set to Active, not PassThrough. Active tracing captures downstream service calls independently of function log output — providing an audit trail of what the function actually did at the infrastructure layer. PassThrough tracing only traces requests with upstream sampling decisions, creating a detection gap exploitable by compromised functions that suppress their own log output.
 domain: exposure
 severity: medium
+compliance:
+  nist_800_53_r5: "AU-12"
+  fedramp_moderate: "AU-12"
+  hipaa: "164.312(b)"
+  soc2: "CC7.1"
+  pci_dss_v4.0: "10.2.1"
+  ccm_v4: ["LOG-12"]
 scope_tags:
   - aws
   - lambda
 type: unsafe_state
-params: {}
+params:
+  attack_stage: detection_evasion
 remediation:
   description: >
-    Detects assets where mode_active is eq false.
+    Lambda function tracing is set to PassThrough. Downstream service calls are not independently traced.
   action: >
-    Set tracing mode to Active.
+    Set the function tracing mode to Active via aws lambda update-function-configuration --tracing-config Mode=Active.
 unsafe_predicate:
   all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
     - field: properties.compute.tracing.mode_active
       op: eq
       value: false

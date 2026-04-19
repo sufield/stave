@@ -44,7 +44,7 @@ A property of deployed infrastructure that must hold across all observable state
 A single asset's configuration properties at a specific point in time. The atomic unit of a [snapshot](#snapshot). Contains the asset's ID, type, vendor, and a `properties` map of arbitrary depth.
 
 **Observation Contract**
-The schema defining what properties are available for each asset type. Controls reference properties via dot notation in predicates. Extractors must emit conforming JSON. Documented per service in `docs/contracts/`. See [observation-contract.md](../explanation/observation-contract.md).
+The schema defining what properties are available for each asset type. Controls reference properties via dot notation in predicates. Extractors must emit conforming JSON. Documented per service in `docs/contracts/`. See [contract/README.md](../explanation/contract/README.md).
 
 **Posture Score**
 A 0-100 composite metric computed from four weighted dimensions: severity distribution (45%), SLA compliance (25%), chain activity (20%), and coverage (10%). See [posture-score.md](../explanation/posture-score.md).

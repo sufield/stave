@@ -2,19 +2,26 @@ dsl_version: ctrl.v1
 id: CTL.IAM.POLICY.GHOSTREF.001
 name: IAM Policies Must Not Reference Non-Existent Resources
 description: >
-  Detects assets where has_ghost_resource_refs is eq true.
+  All fully-qualified non-wildcard ARNs in IAM policy Allow statements must resolve to resources present in the snapshot inventory. A dangling reference — an Allow statement granting permissions on a resource that no longer exists — is a persistence mechanism waiting to be exploited. An attacker who can create a resource with the same name inherits all permissions that reference it. For S3 buckets, which have globally unique names and no account-scoped protection, this is an active supply chain takeover vector. This control cross-references the IAM policy ARN inventory against the resource inventory and only fires when snapshot completeness for the relevant resource types is confirmed.
 domain: identity
 severity: high
+compliance:
+  nist_800_53_r5: "AC-6"
+  fedramp_moderate: "AC-3"
+  pci_dss_v4.0: "7.2.1"
+  soc2: "CC6.1"
+  ccm_v4: ["CCC-04", "GRC-05"]
 scope_tags:
   - aws
   - iam
 type: unsafe_state
-params: {}
+params:
+  attack_stage: persistence
 remediation:
   description: >
-    Detects assets where has_ghost_resource_refs is eq true.
+    IAM policy references non-existent resources in Allow statements.
   action: >
-    Remove or update Allow statements that reference ARNs for non-existent resources.
+    Remove or update Allow statements referencing ARNs for resources that no longer exist. If the resource was intentionally deleted, remove the policy statement. If the resource was renamed, update the ARN.
 unsafe_predicate:
   all:
     - field: properties.identity.policy.has_ghost_resource_refs

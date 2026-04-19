@@ -252,10 +252,10 @@
             "enabled": true
           },
           "access": {
-            "external_accounts": [
-              "arn:aws:iam::999888777666:root"
-            ],
             "has_external_access": true,
+            "external_account_ids": [
+              "999888777666"
+            ],
             "has_wildcard_principal": false,
             "public_read": false,
             "public_list": false,

@@ -3,7 +3,7 @@
     "context_name": "stave",
     "git": {
       "dirty": false,
-      "head_commit": "23e8d39cdce1f114627b5eb473daceca93c7fddc",
+      "head_commit": "74f975c98eab8c8fba8a2bb86a60ce6b3ab19ff7",
       "repo_root": "/home/zepho/work/bizacademy"
     },
     "resolved_paths": {
@@ -17,9 +17,14 @@
       "asset_id": "upload-api-bcm-hk",
       "asset_type": "s3_upload_policy",
       "asset_vendor": "aws",
+      "control_compliance_ccm_v4": [
+        "DSP-17",
+        "IAM-16"
+      ],
       "control_description": "Signed upload policies must restrict write permission to a single exact object key. Prefix-wide permissions (e.g., starts-with $key files/) enable arbitrary overwrite and cross-tenant tampering.\n",
       "control_id": "CTL.S3.WRITE.SCOPE.001",
       "control_name": "S3 Signed Upload Must Bind To Exact Object Key",
+      "control_severity": "high",
       "evidence": {
         "first_unsafe_at": "2019-12-15T00:00:00Z",
         "last_seen_unsafe_at": "2019-12-25T00:00:00Z",
@@ -50,14 +55,19 @@
         "threshold_hours": 168,
         "unsafe_duration_hours": 53256
       },
+      "exposure": {
+        "principal_scope": "public",
+        "type": "write_scope_prefix"
+      },
       "finding_id": "sha256:6aad0908e47e6a3c",
       "posture_drift": {
         "exposure_window_count": 1,
         "pattern": "persistent"
       },
       "remediation": {
-        "action": "Review the misconfigured properties and revert to compliant values.",
-        "description": "Resource configuration deviates from security baseline."
+        "action": "Change the signed upload policy to use an exact key condition (eq instead of starts-with) that binds each upload to a specific object path. Generate unique object keys server-side.",
+        "description": "Signed upload policy uses prefix-wide write permissions instead of binding to an exact object key. This enables arbitrary overwrite and cross-tenant tampering.",
+        "example": "{\n  \"s3_upload\": {\n    \"operation\": \"write\",\n    \"allowed_key_mode\": \"exact\"\n  }\n}\n"
       }
     }
   ],
@@ -85,7 +95,7 @@
     },
     "now": "2026-01-11T00:00:00Z",
     "offline": true,
-    "policy_fingerprint": "99903dddb325d3da5b913b2b2fcdae439658c42272a3983f3a2d13eb18d22040",
+    "policy_fingerprint": "bc95b07450e4e888801e0c4290c59ecd23db2cf4bd6e9e5efb135e4a6cb166b4",
     "sla_threshold": "7d",
     "snapshots": 2,
     "tool_version": "edge"
@@ -101,14 +111,14 @@
     {
       "asset_id": "upload-api-bcm-hk",
       "breakdown": {
-        "base_score": 10,
+        "base_score": 75,
         "blast_multiplier": 1,
         "days_blind": 2219,
         "duration_factor": 5,
-        "exposure_multiplier": 1
+        "exposure_multiplier": 2
       },
       "control_id": "CTL.S3.WRITE.SCOPE.001",
-      "exposure_score": 50,
+      "exposure_score": 750,
       "finding_index": 0,
       "silent_killer": true
     }

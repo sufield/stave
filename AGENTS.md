@@ -302,7 +302,7 @@ construction time via `NewControlID`, `NewDigest`, etc.).
 ### Adding a new domain requires
 
 1. Control YAML files in `controls/{domain}/`
-2. Property namespace in `docs/observation-contract.md`
+2. Property namespace in `docs/contract/README.md`
 3. Pack entry in `internal/builtin/pack/embedded/index.yaml`
 4. Embed glob in `internal/controldata/embed.go`
 5. Profile constant in `cmd/apply/profile.go` (optional)
@@ -338,11 +338,11 @@ construction time via `NewControlID`, `NewDigest`, etc.).
 
 ## Observation Contract
 
-Stave's multi-domain capability is a **schema specification**, not code. The observation contract (`docs/observation-contract.md`) tells extractor authors what properties to populate. Controls evaluate those properties. If an extractor provides insufficient data, INCOMPLETE controls fire rather than giving false compliant verdicts.
+Stave's multi-domain capability is a **schema specification**, not code. The observation contract (`docs/contract/README.md`) tells extractor authors what properties to populate. Controls evaluate those properties. If an extractor provides insufficient data, INCOMPLETE controls fire rather than giving false compliant verdicts.
 
 ### Do
 
-- Document every new property namespace in `docs/observation-contract.md` before writing controls that use it.
+- Document every new property namespace in `docs/contract/README.md` before writing controls that use it.
 - Add an INCOMPLETE control for every new domain (e.g., `CTL.DNS.INCOMPLETE.001`).
 - Write controls against the documented contract, not against vendor API responses.
 

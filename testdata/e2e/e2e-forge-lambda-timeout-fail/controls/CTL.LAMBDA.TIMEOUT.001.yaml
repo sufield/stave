@@ -2,21 +2,31 @@ dsl_version: ctrl.v1
 id: CTL.LAMBDA.TIMEOUT.001
 name: Lambda Function Timeout Must Not Exceed Safe Threshold
 description: >
-  Detects assets where exceeds_threshold is eq true.
+  Lambda functions must not have a timeout exceeding the safe threshold (default 60 seconds) without a documented justification. Excessively long timeouts amplify Denial of Wallet attacks (pricing is per-millisecond), mask hung or compromised functions, and contribute to account-wide concurrency exhaustion. The threshold is configurable per function via a stave/lambda-timeout-justified tag.
 domain: exposure
 severity: medium
+compliance:
+  nist_800_53_r5: "SC-5"
+  fedramp_moderate: "SC-5"
+  soc2: "A1.1"
+  hipaa: "164.308(a)(7)"
+  ccm_v4: ["BCR-08"]
 scope_tags:
   - aws
   - lambda
 type: unsafe_state
-params: {}
+params:
+  attack_stage: resilience
 remediation:
   description: >
-    Detects assets where exceeds_threshold is eq true.
+    Lambda function timeout exceeds the safe threshold without justification.
   action: >
-    Reduce timeout to 60 seconds or add a stave/lambda-timeout-justified tag.
+    Reduce the timeout to 60 seconds or less for synchronous API-serving functions. If a longer timeout is operationally required, add a stave/lambda-timeout-justified tag documenting the reason.
 unsafe_predicate:
   all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
     - field: properties.compute.timeout.exceeds_threshold
       op: eq
       value: true

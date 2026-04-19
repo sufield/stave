@@ -23,6 +23,7 @@ compliance:
   pci_dss_v4.0: "12.5.2"
   soc2: "CC6.1"
   gdpr: "Art.30"
+  ccm_v4: ["DSP-07", "GRC-05"]
 scope_tags:
   - aws
   - s3

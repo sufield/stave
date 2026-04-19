@@ -42,5 +42,15 @@
       }
     }
   ],
+  "identities": [
+    {
+      "id": "appsigner:s3:unikrn-uploads",
+      "type": "app_signer",
+      "vendor": "aws",
+      "properties": {
+        "purpose": "signs_uploads;enforce_prefix=false;allow_traversal=true"
+      }
+    }
+  ],
   "source": "deployed"
 }

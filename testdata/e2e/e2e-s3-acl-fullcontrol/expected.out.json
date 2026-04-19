@@ -3,7 +3,7 @@
     "context_name": "stave",
     "git": {
       "dirty": false,
-      "head_commit": "23e8d39cdce1f114627b5eb473daceca93c7fddc",
+      "head_commit": "74f975c98eab8c8fba8a2bb86a60ce6b3ab19ff7",
       "repo_root": "/home/zepho/work/bizacademy"
     },
     "resolved_paths": {
@@ -17,9 +17,17 @@
       "asset_id": "fullcontrol-auth-bucket",
       "asset_type": "aws_s3_bucket",
       "asset_vendor": "aws",
+      "control_compliance": {
+        "nist_800_53_r5": "AC-3"
+      },
+      "control_compliance_ccm_v4": [
+        "DSP-17",
+        "IAM-16"
+      ],
       "control_description": "S3 bucket ACLs must not grant FULL_CONTROL to AllUsers or AuthenticatedUsers. FULL_CONTROL is the worst-case ACL misconfiguration \u2014 the grantee can read, write, and delete objects and modify the ACL itself.\n",
       "control_id": "CTL.S3.ACL.FULLCONTROL.001",
       "control_name": "No FULL_CONTROL ACL Grants to Public",
+      "control_severity": "critical",
       "evidence": {
         "first_unsafe_at": "2026-01-01T00:00:00Z",
         "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
@@ -43,6 +51,10 @@
         "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z.",
         "threshold_hours": 168,
         "unsafe_duration_hours": 240
+      },
+      "exposure": {
+        "principal_scope": "public",
+        "type": "acl_full_control"
       },
       "finding_id": "sha256:2a489a7678baa433",
       "posture_drift": {
@@ -59,9 +71,17 @@
       "asset_id": "fullcontrol-public-bucket",
       "asset_type": "aws_s3_bucket",
       "asset_vendor": "aws",
+      "control_compliance": {
+        "nist_800_53_r5": "AC-3"
+      },
+      "control_compliance_ccm_v4": [
+        "DSP-17",
+        "IAM-16"
+      ],
       "control_description": "S3 bucket ACLs must not grant FULL_CONTROL to AllUsers or AuthenticatedUsers. FULL_CONTROL is the worst-case ACL misconfiguration \u2014 the grantee can read, write, and delete objects and modify the ACL itself.\n",
       "control_id": "CTL.S3.ACL.FULLCONTROL.001",
       "control_name": "No FULL_CONTROL ACL Grants to Public",
+      "control_severity": "critical",
       "evidence": {
         "first_unsafe_at": "2026-01-01T00:00:00Z",
         "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
@@ -85,6 +105,10 @@
         "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z.",
         "threshold_hours": 168,
         "unsafe_duration_hours": 240
+      },
+      "exposure": {
+        "principal_scope": "public",
+        "type": "acl_full_control"
       },
       "finding_id": "sha256:e1ee3d00f05f9f46",
       "posture_drift": {
@@ -132,7 +156,7 @@
     },
     "now": "2026-01-11T00:00:00Z",
     "offline": true,
-    "policy_fingerprint": "bb2796b107f79b683675e287f7a477ecd5f5bfd13c5fa2823b7cfc990cec6dc6",
+    "policy_fingerprint": "7ef2f3d78495cd8181eab07aabf9b7b248d3390ee9e43ce482c487bac833e5c4",
     "sla_threshold": "7d",
     "snapshots": 2,
     "tool_version": "edge"
@@ -148,28 +172,28 @@
     {
       "asset_id": "fullcontrol-auth-bucket",
       "breakdown": {
-        "base_score": 10,
+        "base_score": 100,
         "blast_multiplier": 1,
         "days_blind": 10,
         "duration_factor": 1,
-        "exposure_multiplier": 1
+        "exposure_multiplier": 2
       },
       "control_id": "CTL.S3.ACL.FULLCONTROL.001",
-      "exposure_score": 10,
+      "exposure_score": 200,
       "finding_index": 0,
       "silent_killer": false
     },
     {
       "asset_id": "fullcontrol-public-bucket",
       "breakdown": {
-        "base_score": 10,
+        "base_score": 100,
         "blast_multiplier": 1,
         "days_blind": 10,
         "duration_factor": 1,
-        "exposure_multiplier": 1
+        "exposure_multiplier": 2
       },
       "control_id": "CTL.S3.ACL.FULLCONTROL.001",
-      "exposure_score": 10,
+      "exposure_score": 200,
       "finding_index": 1,
       "silent_killer": false
     }

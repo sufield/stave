@@ -3,7 +3,7 @@
     "context_name": "stave",
     "git": {
       "dirty": false,
-      "head_commit": "23e8d39cdce1f114627b5eb473daceca93c7fddc",
+      "head_commit": "74f975c98eab8c8fba8a2bb86a60ce6b3ab19ff7",
       "repo_root": "/home/zepho/work/bizacademy"
     },
     "resolved_paths": {
@@ -17,9 +17,14 @@
       "asset_id": "auth-acl-writable-bucket",
       "asset_type": "aws_s3_bucket",
       "asset_vendor": "aws",
+      "control_compliance_ccm_v4": [
+        "DSP-17",
+        "IAM-16"
+      ],
       "control_description": "S3 bucket ACLs must not be writable by AllUsers or AuthenticatedUsers. WRITE_ACP permission enables attackers to modify the ACL itself, granting themselves FULL_CONTROL and escalating to read, write, and delete all objects.\n",
       "control_id": "CTL.S3.ACL.ESCALATION.001",
       "control_name": "No Public ACL Modification",
+      "control_severity": "high",
       "evidence": {
         "first_unsafe_at": "2026-01-01T00:00:00Z",
         "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
@@ -43,6 +48,10 @@
         "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z.",
         "threshold_hours": 168,
         "unsafe_duration_hours": 240
+      },
+      "exposure": {
+        "principal_scope": "public",
+        "type": "acl_write"
       },
       "finding_id": "sha256:35b88bd6b6ef8743",
       "posture_drift": {
@@ -59,9 +68,14 @@
       "asset_id": "public-acl-writable-bucket",
       "asset_type": "aws_s3_bucket",
       "asset_vendor": "aws",
+      "control_compliance_ccm_v4": [
+        "DSP-17",
+        "IAM-16"
+      ],
       "control_description": "S3 bucket ACLs must not be writable by AllUsers or AuthenticatedUsers. WRITE_ACP permission enables attackers to modify the ACL itself, granting themselves FULL_CONTROL and escalating to read, write, and delete all objects.\n",
       "control_id": "CTL.S3.ACL.ESCALATION.001",
       "control_name": "No Public ACL Modification",
+      "control_severity": "high",
       "evidence": {
         "first_unsafe_at": "2026-01-01T00:00:00Z",
         "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
@@ -85,6 +99,10 @@
         "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z.",
         "threshold_hours": 168,
         "unsafe_duration_hours": 240
+      },
+      "exposure": {
+        "principal_scope": "public",
+        "type": "acl_write"
       },
       "finding_id": "sha256:73aa40948c106572",
       "posture_drift": {
@@ -132,7 +150,7 @@
     },
     "now": "2026-01-11T00:00:00Z",
     "offline": true,
-    "policy_fingerprint": "dd7b9e429093195e73f8ecd2ce0746b4d36d7bc82c83c15e54e578762cbae6c1",
+    "policy_fingerprint": "7960771eb1bc6d2e024835667d815c26775ad064a064595e4fdc54325ee86a65",
     "sla_threshold": "7d",
     "snapshots": 2,
     "tool_version": "edge"
@@ -148,28 +166,28 @@
     {
       "asset_id": "auth-acl-writable-bucket",
       "breakdown": {
-        "base_score": 10,
+        "base_score": 75,
         "blast_multiplier": 1,
         "days_blind": 10,
         "duration_factor": 1,
-        "exposure_multiplier": 1
+        "exposure_multiplier": 2
       },
       "control_id": "CTL.S3.ACL.ESCALATION.001",
-      "exposure_score": 10,
+      "exposure_score": 150,
       "finding_index": 0,
       "silent_killer": false
     },
     {
       "asset_id": "public-acl-writable-bucket",
       "breakdown": {
-        "base_score": 10,
+        "base_score": 75,
         "blast_multiplier": 1,
         "days_blind": 10,
         "duration_factor": 1,
-        "exposure_multiplier": 1
+        "exposure_multiplier": 2
       },
       "control_id": "CTL.S3.ACL.ESCALATION.001",
-      "exposure_score": 10,
+      "exposure_score": 150,
       "finding_index": 1,
       "silent_killer": false
     }

@@ -1,8 +1,16 @@
 dsl_version: ctrl.v1
 id: CTL.S3.PUBLIC.008
-name: No Public List via Policy
+name: No Public List via Identity Policy
 description: >
-  S3 bucket policies must not grant anonymous object listing.
+  IAM identity-based policies attached to users or roles must not
+  grant broad list access (s3:ListBucket) that is effectively public.
+  Anonymous-or-near-anonymous listing enables enumeration of the
+  bucket contents, which typically precedes targeted object
+  exfiltration. This is distinct from the ACL-based list exposure
+  covered by CTL.S3.PUBLIC.LIST.001 / .002 and from resource-based
+  list grants; the identity-policy path is its own finding.
+compliance:
+  ccm_v4: ["DSP-07", "DSP-17"]
 domain: exposure
 exposure:
   type: list_via_identity
@@ -12,13 +20,20 @@ scope_tags:
   - aws
   - s3
 type: unsafe_state
-params: {}
+params:
+  attack_stage: initial_access
 remediation:
   description: >
-    Bucket policy grants public listing (Principal \"*\" with list action).
+    An IAM identity-based policy grants effectively public
+    s3:ListBucket access. The policy is attached to a principal
+    whose trust chain permits unauthenticated or broadly-federated
+    access.
   action: >
-    Remove or constrain policy statements allowing s3:ListBucket to
-    anonymous principals.
+    Identify the identity-based policy statement granting
+    s3:ListBucket and remove it, scope it to specific bucket ARNs,
+    or add conditions restricting the requesting principal. If a
+    widely-trusted role is the root cause, tighten that role's trust
+    policy first.
   example: |
     {
       "storage": {

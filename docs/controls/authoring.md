@@ -84,7 +84,7 @@ domain directory if no existing domain fits.
 When adding controls for a new service or cloud provider:
 
 1. Create `controls/{domain}/{category}/` directories
-2. Document the property namespace in `docs/observation-contract.md`
+2. Document the property namespace in `docs/contract/README.md`
 3. Add an INCOMPLETE control for missing extractor data
 4. Update `internal/controldata/embed.go` with the new glob
 5. Add pack and control entries to `internal/builtin/pack/embedded/index.yaml`
@@ -313,7 +313,7 @@ params:
 
 ## Property Namespaces
 
-Each domain uses its own namespace. See `docs/observation-contract.md` for the
+Each domain uses its own namespace. See `docs/contract/README.md` for the
 full field dictionary.
 
 | Domain | Namespace | Discriminator |
@@ -383,7 +383,7 @@ Before submitting a new control:
 - [ ] Control passes `stave validate`
 - [ ] Pass and fail test fixtures exist
 - [ ] Golden-file output committed for regression testing
-- [ ] Property namespace documented in `docs/observation-contract.md`
+- [ ] Property namespace documented in `docs/contract/README.md`
 - [ ] INCOMPLETE control exists for the domain
 
 ## Build Integration
@@ -400,6 +400,6 @@ make e2e                # Verify all tests pass
 
 ## Further Reading
 
-- [Observation Contract](../observation-contract.md) — property namespace specification
+- [Observation Contract](../contract/README.md) — property namespace specification
 - [Control Reference](reference.md) — auto-generated reference for all built-in controls
 - [Evaluation Semantics](../evaluation-semantics.md) — how duration tracking works

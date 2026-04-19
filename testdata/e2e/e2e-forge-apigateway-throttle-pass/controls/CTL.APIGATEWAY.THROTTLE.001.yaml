@@ -22,6 +22,7 @@ compliance:
   hipaa: "164.308(a)(1)(ii)(B)"
   pci_dss_v4.0: "6.4.1"
   soc2: "A1.1"
+  ccm_v4: ["AIS-01", "IVS-09"]
 scope_tags:
   - aws
   - apigateway

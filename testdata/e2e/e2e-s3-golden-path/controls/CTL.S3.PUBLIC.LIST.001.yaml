@@ -4,6 +4,8 @@ name: No Public S3 Bucket Listing
 description: >
   S3 buckets must not allow anonymous listing of objects.
   Public listing exposes object keys, enabling targeted data exfiltration.
+compliance:
+  ccm_v4: ["DSP-07", "DSP-17"]
 domain: exposure
 exposure:
   type: public_list
@@ -13,7 +15,8 @@ scope_tags:
   - aws
   - s3
 type: unsafe_state
-params: {}
+params:
+  attack_stage: initial_access
 remediation:
   description: >
     Bucket allows anonymous listing of objects. Public listing exposes

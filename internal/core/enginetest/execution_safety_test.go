@@ -111,6 +111,7 @@ func TestOperatorList_MatchesDocumentation(t *testing.T) {
 		predicate.OpNotInField,
 		predicate.OpContains,
 		predicate.OpAnyMatch,
+		predicate.OpAnyInField,
 	}
 
 	actual := predicate.ListSupported()
