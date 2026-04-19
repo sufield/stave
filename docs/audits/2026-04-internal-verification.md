@@ -609,6 +609,56 @@ The third potential contributor (queue item 4,
 not regress AI-ready since the field is consumed
 optionally; the architectural promise is met.
 
+**2026-04-19** — Item 4 (`command` field carries
+parameterized command) resolved. Investigation
+decomposed the audit's item into two distinct
+problems; this iteration ships fixes for both
+and defers the catalog-authoring gap as tracked
+target work.
+
+- *Problem A (surface inconsistency):* Text output's
+  Remediation section read `RemediationSpec.Action`
+  (the template) while JSON's
+  `remediation_context.command` and SARIF's
+  `fixes[].description.text` both read
+  `RemediationPlan.Command` (parameterized via
+  `parameterizeCommand`). Three surfaces rendered
+  three different forms for the same logical field.
+  Fix: `text/finding_writer.go:writeFindingRemediation`
+  now prefers `RemediationPlan.Command` with fallback
+  to `RemediationSpec.Action`. All three surfaces now
+  agree.
+- *Problem B1 (field-name honesty):* The wire field
+  `command` advertised CLI content but carried prose
+  for 75% of the catalog. Fix: renamed both DTOs
+  (`RemediationContextDTO.Command` → `.Action` with
+  `json:"action"`; same on `RemediationPlanDTO`). The
+  Go domain type `evaluation.RemediationPlan.Command`
+  stays named Command because in-engine it represents
+  the executable command when one exists; only the
+  output wire format renames. No schema version bump
+  (out.v0.1 treats `remediation_context` and `fix_plan`
+  as open objects).
+- *Problem B3 (catalog-authoring gap, deferred):*
+  Survey shows 25% of 675 controls have CLI tools in
+  their `action:` field, 13% have parameterizable
+  placeholders, 75% are prose-only. Backfilling prose
+  Actions into parameterizable CLI templates is
+  catalog-authoring work tracked in metrics.md §
+  Metric 4 Target — measurable by the shift of the
+  25%/13%/75% ratio toward CLI+placeholders.
+
+Verification on the lordofheaven snapshot: text output
+for `CTL.S3.PAB.BLOCKPUBLICACLS.001` on
+`gov-writable-bucket-1` renders `aws s3api put-public-
+access-block --bucket gov-writable-bucket-1` (was
+`--bucket <name>`); JSON carries
+`remediation_context.action` (zero occurrences of
+`remediation_context.command`); SARIF unchanged
+(still parameterized via its direct
+`RemediationPlan.Command` read); prose-only controls
+render consistent prose across all three surfaces.
+
 ## Prioritized refinement queue
 
 Ordered by (1) blocking gaps first, (2) architectural
@@ -648,12 +698,14 @@ over speculative, (4) leverage-weighted across metrics
    architectural decision's downgrade-to-PARTIAL.
    Single layer, single refinement."
 
-4. **`command` field carries a parameterized command.**
-   Either rename to `action` (matching the YAML field)
+4. ~~**`command` field carries a parameterized command.**~~
+   **RESOLVED** (see Resolution log above). Original
+   text retained for historical reference: "Either
+   rename to `action` (matching the YAML field)
    or populate with a real shell command using the
    asset identifier. Closes M4 expectation-mismatch.
    Improves AI-ready primitive (consumers expecting
-   CLI commands get them).
+   CLI commands get them)."
 
 5. **Issues block: suppress singletons by default.**
    When an Issue groups one finding, it adds no

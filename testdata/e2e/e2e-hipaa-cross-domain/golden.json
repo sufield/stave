@@ -433,7 +433,7 @@
           "asset_id": "main-trail",
           "asset_type": "aws_cloudtrail_trail"
         },
-        "command": "Update the trail to enable multi-region logging. Run: aws cloudtrail update-trail --name xxx --is-multi-region-trail"
+        "action": "Update the trail to enable multi-region logging. Run: aws cloudtrail update-trail --name xxx --is-multi-region-trail"
       },
       "chain_membership": [
         {
@@ -508,7 +508,7 @@
             "description": "Set audit_trail.multi_region_enabled to true"
           }
         ],
-        "command": "Update the trail to enable multi-region logging. Run: aws cloudtrail update-trail --name xxx --is-multi-region-trail"
+        "action": "Update the trail to enable multi-region logging. Run: aws cloudtrail update-trail --name xxx --is-multi-region-trail"
       }
     },
     {
@@ -576,7 +576,7 @@
           "asset_id": "config-recorder",
           "asset_type": "aws_config_recorder"
         },
-        "command": "Enable the Config recorder with all resource types. Run: aws configservice put-configuration-recorder --configuration-recorder name=default,roleARN=arn:...,recordingGroup={allSupported=true}"
+        "action": "Enable the Config recorder with all resource types. Run: aws configservice put-configuration-recorder --configuration-recorder name=default,roleARN=arn:...,recordingGroup={allSupported=true}"
       },
       "chain_membership": [
         {
@@ -651,7 +651,7 @@
             "description": "Set compliance.recording_enabled to true"
           }
         ],
-        "command": "Enable the Config recorder with all resource types. Run: aws configservice put-configuration-recorder --configuration-recorder name=default,roleARN=arn:...,recordingGroup={allSupported=true}"
+        "action": "Enable the Config recorder with all resource types. Run: aws configservice put-configuration-recorder --configuration-recorder name=default,roleARN=arn:...,recordingGroup={allSupported=true}"
       }
     },
     {
@@ -713,7 +713,7 @@
           "asset_id": "vpc-prod-001",
           "asset_type": "aws_vpc"
         },
-        "command": "Enable VPC flow logs to CloudWatch Logs or S3. Run: aws ec2 create-flow-logs --resource-type VPC --resource-ids vpc-xxx --traffic-type ALL --log-destination-type cloud-watch-logs"
+        "action": "Enable VPC flow logs to CloudWatch Logs or S3. Run: aws ec2 create-flow-logs --resource-type VPC --resource-ids vpc-xxx --traffic-type ALL --log-destination-type cloud-watch-logs"
       },
       "chain_membership": [
         {
@@ -788,7 +788,7 @@
             "description": "Change network.kind from vpc"
           }
         ],
-        "command": "Enable VPC flow logs to CloudWatch Logs or S3. Run: aws ec2 create-flow-logs --resource-type VPC --resource-ids vpc-xxx --traffic-type ALL --log-destination-type cloud-watch-logs"
+        "action": "Enable VPC flow logs to CloudWatch Logs or S3. Run: aws ec2 create-flow-logs --resource-type VPC --resource-ids vpc-xxx --traffic-type ALL --log-destination-type cloud-watch-logs"
       }
     },
     {
@@ -852,7 +852,7 @@
           "asset_id": "aws-account-root",
           "asset_type": "aws_iam_account"
         },
-        "command": "Delete the root access keys. Create IAM users or roles with least-privilege policies for programmatic access."
+        "action": "Delete the root access keys. Create IAM users or roles with least-privilege policies for programmatic access."
       },
       "chain_membership": [
         {
@@ -927,7 +927,7 @@
             "description": "Set identity.root.has_access_keys to false"
           }
         ],
-        "command": "Delete the root access keys. Create IAM users or roles with least-privilege policies for programmatic access."
+        "action": "Delete the root access keys. Create IAM users or roles with least-privilege policies for programmatic access."
       },
       "alternatives": [
         {
@@ -1003,7 +1003,7 @@
           "asset_id": "aws-account-root",
           "asset_type": "aws_iam_account"
         },
-        "command": "Enable MFA on the root account using a hardware MFA device or virtual MFA app. Navigate to IAM \u003e Security credentials \u003e MFA."
+        "action": "Enable MFA on the root account using a hardware MFA device or virtual MFA app. Navigate to IAM \u003e Security credentials \u003e MFA."
       },
       "chain_membership": [
         {
@@ -1078,7 +1078,7 @@
             "description": "Set identity.root.mfa_enabled to true"
           }
         ],
-        "command": "Enable MFA on the root account using a hardware MFA device or virtual MFA app. Navigate to IAM \u003e Security credentials \u003e MFA."
+        "action": "Enable MFA on the root account using a hardware MFA device or virtual MFA app. Navigate to IAM \u003e Security credentials \u003e MFA."
       },
       "alternatives": [
         {
@@ -1179,7 +1179,7 @@
           }
         ],
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
-        "command": "Modify the instance to disable public accessibility. Run: aws rds modify-db-instance --db-instance-identifier xxx --no-publicly-accessible --apply-immediately"
+        "action": "Modify the instance to disable public accessibility. Run: aws rds modify-db-instance --db-instance-identifier xxx --no-publicly-accessible --apply-immediately"
       },
       "chain_membership": [
         {
@@ -1255,7 +1255,7 @@
             "description": "Change database.kind from instance"
           }
         ],
-        "command": "Modify the instance to disable public accessibility. Run: aws rds modify-db-instance --db-instance-identifier xxx --no-publicly-accessible --apply-immediately"
+        "action": "Modify the instance to disable public accessibility. Run: aws rds modify-db-instance --db-instance-identifier xxx --no-publicly-accessible --apply-immediately"
       }
     },
     {
@@ -1321,7 +1321,7 @@
           "asset_id": "phi-database",
           "asset_type": "aws_rds_instance"
         },
-        "command": "Storage encryption can only be enabled at creation time. Create a snapshot, copy it with encryption enabled, then restore to a new encrypted instance. Enable encryption by default for new instances."
+        "action": "Storage encryption can only be enabled at creation time. Create a snapshot, copy it with encryption enabled, then restore to a new encrypted instance. Enable encryption by default for new instances."
       },
       "chain_membership": [
         {
@@ -1397,7 +1397,7 @@
             "description": "Change database.kind from instance"
           }
         ],
-        "command": "Storage encryption can only be enabled at creation time. Create a snapshot, copy it with encryption enabled, then restore to a new encrypted instance. Enable encryption by default for new instances."
+        "action": "Storage encryption can only be enabled at creation time. Create a snapshot, copy it with encryption enabled, then restore to a new encrypted instance. Enable encryption by default for new instances."
       }
     },
     {
@@ -1460,7 +1460,7 @@
           "asset_id": "phi-api",
           "asset_type": "aws_apigateway_stage"
         },
-        "command": "Set the minimum TLS version on the custom domain or API stage. For REST APIs, configure a security policy of TLS_1_2 on the custom domain name."
+        "action": "Set the minimum TLS version on the custom domain or API stage. For REST APIs, configure a security policy of TLS_1_2 on the custom domain name."
       },
       "exposure_score": 75,
       "score_breakdown": {
@@ -1525,7 +1525,7 @@
             "description": "Change api.kind from rest_api"
           }
         ],
-        "command": "Set the minimum TLS version on the custom domain or API stage. For REST APIs, configure a security policy of TLS_1_2 on the custom domain name."
+        "action": "Set the minimum TLS version on the custom domain or API stage. For REST APIs, configure a security policy of TLS_1_2 on the custom domain name."
       }
     },
     {
@@ -1585,7 +1585,7 @@
           "asset_id": "backup-phi-database",
           "asset_type": "aws_backup_resource"
         },
-        "command": "Configure automated backups via AWS Backup, RDS automated snapshots, or S3 cross-region replication depending on the resource type."
+        "action": "Configure automated backups via AWS Backup, RDS automated snapshots, or S3 cross-region replication depending on the resource type."
       },
       "exposure_score": 75,
       "score_breakdown": {
@@ -1650,7 +1650,7 @@
             "description": "Change backup.kind from resource"
           }
         ],
-        "command": "Configure automated backups via AWS Backup, RDS automated snapshots, or S3 cross-region replication depending on the resource type."
+        "action": "Configure automated backups via AWS Backup, RDS automated snapshots, or S3 cross-region replication depending on the resource type."
       }
     },
     {
@@ -1713,7 +1713,7 @@
           "asset_id": "main-trail",
           "asset_type": "aws_cloudtrail_trail"
         },
-        "command": "Configure the trail to use a KMS key for log encryption. Run: aws cloudtrail update-trail --name xxx --kms-key-id arn:aws:kms:..."
+        "action": "Configure the trail to use a KMS key for log encryption. Run: aws cloudtrail update-trail --name xxx --kms-key-id arn:aws:kms:..."
       },
       "exposure_score": 75,
       "score_breakdown": {
@@ -1778,7 +1778,7 @@
             "description": "Change audit_trail.kind from trail"
           }
         ],
-        "command": "Configure the trail to use a KMS key for log encryption. Run: aws cloudtrail update-trail --name xxx --kms-key-id arn:aws:kms:..."
+        "action": "Configure the trail to use a KMS key for log encryption. Run: aws cloudtrail update-trail --name xxx --kms-key-id arn:aws:kms:..."
       }
     },
     {
@@ -1844,7 +1844,7 @@
           "asset_id": "main-trail",
           "asset_type": "aws_cloudtrail_trail"
         },
-        "command": "Enable log file validation on the trail. Run: aws cloudtrail update-trail --name xxx --enable-log-file-validation"
+        "action": "Enable log file validation on the trail. Run: aws cloudtrail update-trail --name xxx --enable-log-file-validation"
       },
       "exposure_score": 75,
       "score_breakdown": {
@@ -1909,7 +1909,7 @@
             "description": "Set audit_trail.log_file_validation_enabled to true"
           }
         ],
-        "command": "Enable log file validation on the trail. Run: aws cloudtrail update-trail --name xxx --enable-log-file-validation"
+        "action": "Enable log file validation on the trail. Run: aws cloudtrail update-trail --name xxx --enable-log-file-validation"
       }
     },
     {
@@ -1967,7 +1967,7 @@
           "asset_id": "app-logs",
           "asset_type": "aws_cloudwatch_log_group"
         },
-        "command": "Set a retention policy on the log group. Run: aws logs put-retention-policy --log-group-name xxx --retention-in-days 365"
+        "action": "Set a retention policy on the log group. Run: aws logs put-retention-policy --log-group-name xxx --retention-in-days 365"
       },
       "exposure_score": 75,
       "score_breakdown": {
@@ -2032,7 +2032,7 @@
             "description": "Change log_group.kind from log_group"
           }
         ],
-        "command": "Set a retention policy on the log group. Run: aws logs put-retention-policy --log-group-name xxx --retention-in-days 365"
+        "action": "Set a retention policy on the log group. Run: aws logs put-retention-policy --log-group-name xxx --retention-in-days 365"
       }
     },
     {
@@ -2093,7 +2093,7 @@
           "asset_id": "patient-portal",
           "asset_type": "aws_cognito_user_pool"
         },
-        "command": "Set MfaConfiguration to ON (required) on the user pool. Run: aws cognito-idp set-user-pool-mfa-config --user-pool-id xxx --mfa-configuration ON --software-token-mfa-configuration Enabled=true"
+        "action": "Set MfaConfiguration to ON (required) on the user pool. Run: aws cognito-idp set-user-pool-mfa-config --user-pool-id xxx --mfa-configuration ON --software-token-mfa-configuration Enabled=true"
       },
       "exposure_score": 75,
       "score_breakdown": {
@@ -2158,7 +2158,7 @@
             "description": "Change identity.kind from user_pool"
           }
         ],
-        "command": "Set MfaConfiguration to ON (required) on the user pool. Run: aws cognito-idp set-user-pool-mfa-config --user-pool-id xxx --mfa-configuration ON --software-token-mfa-configuration Enabled=true"
+        "action": "Set MfaConfiguration to ON (required) on the user pool. Run: aws cognito-idp set-user-pool-mfa-config --user-pool-id xxx --mfa-configuration ON --software-token-mfa-configuration Enabled=true"
       }
     },
     {
@@ -2219,7 +2219,7 @@
           "asset_id": "phi-events-table",
           "asset_type": "aws_dynamodb_table"
         },
-        "command": "Update the table encryption to use a customer-managed KMS key. Run: aws dynamodb update-table --table-name xxx --sse-specification Enabled=true,SSEType=KMS,KMSMasterKeyId=arn:..."
+        "action": "Update the table encryption to use a customer-managed KMS key. Run: aws dynamodb update-table --table-name xxx --sse-specification Enabled=true,SSEType=KMS,KMSMasterKeyId=arn:..."
       },
       "exposure_score": 75,
       "score_breakdown": {
@@ -2283,7 +2283,7 @@
             "description": "Change database.kind from table"
           }
         ],
-        "command": "Update the table encryption to use a customer-managed KMS key. Run: aws dynamodb update-table --table-name xxx --sse-specification Enabled=true,SSEType=KMS,KMSMasterKeyId=arn:..."
+        "action": "Update the table encryption to use a customer-managed KMS key. Run: aws dynamodb update-table --table-name xxx --sse-specification Enabled=true,SSEType=KMS,KMSMasterKeyId=arn:..."
       }
     },
     {
@@ -2349,7 +2349,7 @@
           "asset_id": "i-0abc123def",
           "asset_type": "aws_instance"
         },
-        "command": "Enable EBS encryption by default for the account. For existing volumes, create an encrypted snapshot and restore to a new encrypted volume. Run: aws ec2 enable-ebs-encryption-by-default"
+        "action": "Enable EBS encryption by default for the account. For existing volumes, create an encrypted snapshot and restore to a new encrypted volume. Run: aws ec2 enable-ebs-encryption-by-default"
       },
       "exposure_score": 75,
       "score_breakdown": {
@@ -2414,7 +2414,7 @@
             "description": "Change compute.kind from instance"
           }
         ],
-        "command": "Enable EBS encryption by default for the account. For existing volumes, create an encrypted snapshot and restore to a new encrypted volume. Run: aws ec2 enable-ebs-encryption-by-default"
+        "action": "Enable EBS encryption by default for the account. For existing volumes, create an encrypted snapshot and restore to a new encrypted volume. Run: aws ec2 enable-ebs-encryption-by-default"
       }
     },
     {
@@ -2503,7 +2503,7 @@
           }
         ],
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
-        "command": "Launch instances in private subnets without public IP assignment. Use NAT Gateway or VPC endpoints for outbound internet access. Use ALB or NLB for inbound traffic that requires internet access."
+        "action": "Launch instances in private subnets without public IP assignment. Use NAT Gateway or VPC endpoints for outbound internet access. Use ALB or NLB for inbound traffic that requires internet access."
       },
       "exposure_score": 75,
       "score_breakdown": {
@@ -2568,7 +2568,7 @@
             "description": "Set compute.network.has_public_ip to false"
           }
         ],
-        "command": "Launch instances in private subnets without public IP assignment. Use NAT Gateway or VPC endpoints for outbound internet access. Use ALB or NLB for inbound traffic that requires internet access."
+        "action": "Launch instances in private subnets without public IP assignment. Use NAT Gateway or VPC endpoints for outbound internet access. Use ALB or NLB for inbound traffic that requires internet access."
       }
     },
     {
@@ -2630,7 +2630,7 @@
           "asset_id": "session-cache",
           "asset_type": "aws_elasticache_cluster"
         },
-        "command": "In-transit encryption can only be enabled at cluster creation. Create a new replication group with TransitEncryptionEnabled=true and migrate data from the existing cluster."
+        "action": "In-transit encryption can only be enabled at cluster creation. Create a new replication group with TransitEncryptionEnabled=true and migrate data from the existing cluster."
       },
       "exposure_score": 75,
       "score_breakdown": {
@@ -2695,7 +2695,7 @@
             "description": "Change cache.kind from cluster"
           }
         ],
-        "command": "In-transit encryption can only be enabled at cluster creation. Create a new replication group with TransitEncryptionEnabled=true and migrate data from the existing cluster."
+        "action": "In-transit encryption can only be enabled at cluster creation. Create a new replication group with TransitEncryptionEnabled=true and migrate data from the existing cluster."
       }
     },
     {
@@ -2751,7 +2751,7 @@
           "asset_id": "alb-phi-api",
           "asset_type": "aws_load_balancer"
         },
-        "command": "Add a listener rule on port 80 that redirects to HTTPS (443) with status code 301."
+        "action": "Add a listener rule on port 80 that redirects to HTTPS (443) with status code 301."
       },
       "exposure_score": 75,
       "score_breakdown": {
@@ -2798,7 +2798,7 @@
             "description": "Set loadbalancer.encryption.http_to_https_redirect to true"
           }
         ],
-        "command": "Add a listener rule on port 80 that redirects to HTTPS (443) with status code 301."
+        "action": "Add a listener rule on port 80 that redirects to HTTPS (443) with status code 301."
       }
     },
     {
@@ -2855,7 +2855,7 @@
           "asset_id": "alb-phi-api",
           "asset_type": "aws_load_balancer"
         },
-        "command": "Update the HTTPS listener to use an ELBSecurityPolicy that enforces TLS 1.2 minimum (e.g., ELBSecurityPolicy-TLS-1-2-2017-01)."
+        "action": "Update the HTTPS listener to use an ELBSecurityPolicy that enforces TLS 1.2 minimum (e.g., ELBSecurityPolicy-TLS-1-2-2017-01)."
       },
       "exposure_score": 75,
       "score_breakdown": {
@@ -2902,7 +2902,7 @@
             "description": "Set loadbalancer.encryption.tls_1_2_or_higher to true"
           }
         ],
-        "command": "Update the HTTPS listener to use an ELBSecurityPolicy that enforces TLS 1.2 minimum (e.g., ELBSecurityPolicy-TLS-1-2-2017-01)."
+        "action": "Update the HTTPS listener to use an ELBSecurityPolicy that enforces TLS 1.2 minimum (e.g., ELBSecurityPolicy-TLS-1-2-2017-01)."
       }
     },
     {
@@ -2967,7 +2967,7 @@
           "asset_id": "phi-cmk",
           "asset_type": "aws_kms_key"
         },
-        "command": "Update the key policy to restrict Principal to specific IAM roles or accounts. Remove any statements with Principal \"*\"."
+        "action": "Update the key policy to restrict Principal to specific IAM roles or accounts. Remove any statements with Principal \"*\"."
       },
       "exposure_score": 75,
       "score_breakdown": {
@@ -3032,7 +3032,7 @@
             "description": "Set cryptography.policy.has_wildcard_principal to false"
           }
         ],
-        "command": "Update the key policy to restrict Principal to specific IAM roles or accounts. Remove any statements with Principal \"*\"."
+        "action": "Update the key policy to restrict Principal to specific IAM roles or accounts. Remove any statements with Principal \"*\"."
       }
     },
     {
@@ -3089,7 +3089,7 @@
           "asset_id": "phi-database",
           "asset_type": "aws_rds_instance"
         },
-        "command": "Enable automated backups with at least 7 days retention. Run: aws rds modify-db-instance --db-instance-identifier xxx --backup-retention-period 7 --apply-immediately"
+        "action": "Enable automated backups with at least 7 days retention. Run: aws rds modify-db-instance --db-instance-identifier xxx --backup-retention-period 7 --apply-immediately"
       },
       "exposure_score": 75,
       "score_breakdown": {
@@ -3154,7 +3154,7 @@
             "description": "Change database.kind from instance"
           }
         ],
-        "command": "Enable automated backups with at least 7 days retention. Run: aws rds modify-db-instance --db-instance-identifier xxx --backup-retention-period 7 --apply-immediately"
+        "action": "Enable automated backups with at least 7 days retention. Run: aws rds modify-db-instance --db-instance-identifier xxx --backup-retention-period 7 --apply-immediately"
       }
     },
     {
@@ -3215,7 +3215,7 @@
           "asset_id": "db-credentials",
           "asset_type": "aws_secretsmanager_secret"
         },
-        "command": "Recreate the secret with a customer-managed KMS key specified. Secrets Manager does not allow changing the encryption key after creation."
+        "action": "Recreate the secret with a customer-managed KMS key specified. Secrets Manager does not allow changing the encryption key after creation."
       },
       "exposure_score": 75,
       "score_breakdown": {
@@ -3280,7 +3280,7 @@
             "description": "Change secret.kind from secret"
           }
         ],
-        "command": "Recreate the secret with a customer-managed KMS key specified. Secrets Manager does not allow changing the encryption key after creation."
+        "action": "Recreate the secret with a customer-managed KMS key specified. Secrets Manager does not allow changing the encryption key after creation."
       }
     },
     {
@@ -3337,7 +3337,7 @@
           "asset_id": "phi-alerts",
           "asset_type": "aws_sns_topic"
         },
-        "command": "Enable SSE-KMS on the topic. Run: aws sns set-topic-attributes --topic-arn xxx --attribute-name KmsMasterKeyId --attribute-value arn:aws:kms:..."
+        "action": "Enable SSE-KMS on the topic. Run: aws sns set-topic-attributes --topic-arn xxx --attribute-name KmsMasterKeyId --attribute-value arn:aws:kms:..."
       },
       "exposure_score": 75,
       "score_breakdown": {
@@ -3402,7 +3402,7 @@
             "description": "Change messaging.kind from topic"
           }
         ],
-        "command": "Enable SSE-KMS on the topic. Run: aws sns set-topic-attributes --topic-arn xxx --attribute-name KmsMasterKeyId --attribute-value arn:aws:kms:..."
+        "action": "Enable SSE-KMS on the topic. Run: aws sns set-topic-attributes --topic-arn xxx --attribute-name KmsMasterKeyId --attribute-value arn:aws:kms:..."
       }
     },
     {
@@ -3459,7 +3459,7 @@
           "asset_id": "phi-notifications",
           "asset_type": "aws_sqs_queue"
         },
-        "command": "Enable SSE-KMS on the queue. Run: aws sqs set-queue-attributes --queue-url xxx --attributes KmsMasterKeyId=arn:aws:kms:..."
+        "action": "Enable SSE-KMS on the queue. Run: aws sqs set-queue-attributes --queue-url xxx --attributes KmsMasterKeyId=arn:aws:kms:..."
       },
       "exposure_score": 75,
       "score_breakdown": {
@@ -3524,7 +3524,7 @@
             "description": "Change messaging.kind from queue"
           }
         ],
-        "command": "Enable SSE-KMS on the queue. Run: aws sqs set-queue-attributes --queue-url xxx --attributes KmsMasterKeyId=arn:aws:kms:..."
+        "action": "Enable SSE-KMS on the queue. Run: aws sqs set-queue-attributes --queue-url xxx --attributes KmsMasterKeyId=arn:aws:kms:..."
       }
     },
     {
@@ -3582,7 +3582,7 @@
           "asset_id": "backup-phi-database",
           "asset_type": "aws_backup_resource"
         },
-        "command": "Enable Multi-AZ deployment or configure cross-AZ replication depending on the resource type (RDS Multi-AZ, S3 cross-region replication, ELB multi-AZ targets)."
+        "action": "Enable Multi-AZ deployment or configure cross-AZ replication depending on the resource type (RDS Multi-AZ, S3 cross-region replication, ELB multi-AZ targets)."
       },
       "exposure_score": 50,
       "score_breakdown": {
@@ -3647,7 +3647,7 @@
             "description": "Set availability.multi_az to true"
           }
         ],
-        "command": "Enable Multi-AZ deployment or configure cross-AZ replication depending on the resource type (RDS Multi-AZ, S3 cross-region replication, ELB multi-AZ targets)."
+        "action": "Enable Multi-AZ deployment or configure cross-AZ replication depending on the resource type (RDS Multi-AZ, S3 cross-region replication, ELB multi-AZ targets)."
       }
     },
     {
@@ -3705,7 +3705,7 @@
           "asset_id": "backup-phi-database",
           "asset_type": "aws_backup_resource"
         },
-        "command": "Configure cross-region replication: S3 CRR, RDS cross-region read replica, or AWS Backup cross-region copy rule."
+        "action": "Configure cross-region replication: S3 CRR, RDS cross-region read replica, or AWS Backup cross-region copy rule."
       },
       "exposure_score": 50,
       "score_breakdown": {
@@ -3770,7 +3770,7 @@
             "description": "Change replication.kind from resource"
           }
         ],
-        "command": "Configure cross-region replication: S3 CRR, RDS cross-region read replica, or AWS Backup cross-region copy rule."
+        "action": "Configure cross-region replication: S3 CRR, RDS cross-region read replica, or AWS Backup cross-region copy rule."
       }
     },
     {
@@ -3832,7 +3832,7 @@
           "asset_id": "config-recorder",
           "asset_type": "aws_config_recorder"
         },
-        "command": "Deploy Config Rules for your compliance requirements. Start with AWS managed rules for common checks (encrypted-volumes, restricted-common-ports, etc)."
+        "action": "Deploy Config Rules for your compliance requirements. Start with AWS managed rules for common checks (encrypted-volumes, restricted-common-ports, etc)."
       },
       "exposure_score": 50,
       "score_breakdown": {
@@ -3897,7 +3897,7 @@
             "description": "Change compliance.kind from recorder"
           }
         ],
-        "command": "Deploy Config Rules for your compliance requirements. Start with AWS managed rules for common checks (encrypted-volumes, restricted-common-ports, etc)."
+        "action": "Deploy Config Rules for your compliance requirements. Start with AWS managed rules for common checks (encrypted-volumes, restricted-common-ports, etc)."
       }
     },
     {
@@ -3950,7 +3950,7 @@
           "asset_id": "alb-phi-api",
           "asset_type": "aws_load_balancer"
         },
-        "command": "Enable cross-zone load balancing. Run: aws elbv2 modify-load-balancer-attributes --load-balancer-arn xxx --attributes Key=load_balancing.cross_zone.enabled,Value=true"
+        "action": "Enable cross-zone load balancing. Run: aws elbv2 modify-load-balancer-attributes --load-balancer-arn xxx --attributes Key=load_balancing.cross_zone.enabled,Value=true"
       },
       "exposure_score": 50,
       "score_breakdown": {
@@ -3997,7 +3997,7 @@
             "description": "Set loadbalancer.availability.cross_zone_enabled to true"
           }
         ],
-        "command": "Enable cross-zone load balancing. Run: aws elbv2 modify-load-balancer-attributes --load-balancer-arn xxx --attributes Key=load_balancing.cross_zone.enabled,Value=true"
+        "action": "Enable cross-zone load balancing. Run: aws elbv2 modify-load-balancer-attributes --load-balancer-arn xxx --attributes Key=load_balancing.cross_zone.enabled,Value=true"
       }
     },
     {
@@ -4048,7 +4048,7 @@
           "asset_id": "alb-phi-api",
           "asset_type": "aws_load_balancer"
         },
-        "command": "Enable access logging to an S3 bucket. Run: aws elbv2 modify-load-balancer-attributes --load-balancer-arn xxx --attributes Key=access_logs.s3.enabled,Value=true Key=access_logs.s3.bucket,Value=my-elb-logs"
+        "action": "Enable access logging to an S3 bucket. Run: aws elbv2 modify-load-balancer-attributes --load-balancer-arn xxx --attributes Key=access_logs.s3.enabled,Value=true Key=access_logs.s3.bucket,Value=my-elb-logs"
       },
       "exposure_score": 50,
       "score_breakdown": {
@@ -4095,7 +4095,7 @@
             "description": "Set loadbalancer.logging.access_log_enabled to true"
           }
         ],
-        "command": "Enable access logging to an S3 bucket. Run: aws elbv2 modify-load-balancer-attributes --load-balancer-arn xxx --attributes Key=access_logs.s3.enabled,Value=true Key=access_logs.s3.bucket,Value=my-elb-logs"
+        "action": "Enable access logging to an S3 bucket. Run: aws elbv2 modify-load-balancer-attributes --load-balancer-arn xxx --attributes Key=access_logs.s3.enabled,Value=true Key=access_logs.s3.bucket,Value=my-elb-logs"
       }
     },
     {
@@ -4152,7 +4152,7 @@
           "asset_id": "phi-database",
           "asset_type": "aws_rds_instance"
         },
-        "command": "Enable CloudWatch log exports for the database engine. Run: aws rds modify-db-instance --db-instance-identifier xxx --cloudwatch-logs-export-configuration '{\"EnableLogTypes\":[\"audit\",\"error\",\"slowquery\"]}'"
+        "action": "Enable CloudWatch log exports for the database engine. Run: aws rds modify-db-instance --db-instance-identifier xxx --cloudwatch-logs-export-configuration '{\"EnableLogTypes\":[\"audit\",\"error\",\"slowquery\"]}'"
       },
       "exposure_score": 50,
       "score_breakdown": {
@@ -4217,7 +4217,7 @@
             "description": "Set database.logging.audit_log_enabled to true"
           }
         ],
-        "command": "Enable CloudWatch log exports for the database engine. Run: aws rds modify-db-instance --db-instance-identifier xxx --cloudwatch-logs-export-configuration '{\"EnableLogTypes\":[\"audit\",\"error\",\"slowquery\"]}'"
+        "action": "Enable CloudWatch log exports for the database engine. Run: aws rds modify-db-instance --db-instance-identifier xxx --cloudwatch-logs-export-configuration '{\"EnableLogTypes\":[\"audit\",\"error\",\"slowquery\"]}'"
       }
     },
     {
@@ -4275,7 +4275,7 @@
           "asset_id": "phi-database",
           "asset_type": "aws_rds_instance"
         },
-        "command": "Modify the instance to enable Multi-AZ. Run: aws rds modify-db-instance --db-instance-identifier xxx --multi-az --apply-immediately"
+        "action": "Modify the instance to enable Multi-AZ. Run: aws rds modify-db-instance --db-instance-identifier xxx --multi-az --apply-immediately"
       },
       "exposure_score": 50,
       "score_breakdown": {
@@ -4340,7 +4340,7 @@
             "description": "Change database.kind from instance"
           }
         ],
-        "command": "Modify the instance to enable Multi-AZ. Run: aws rds modify-db-instance --db-instance-identifier xxx --multi-az --apply-immediately"
+        "action": "Modify the instance to enable Multi-AZ. Run: aws rds modify-db-instance --db-instance-identifier xxx --multi-az --apply-immediately"
       }
     },
     {
@@ -4398,7 +4398,7 @@
           "asset_id": "db-credentials",
           "asset_type": "aws_secretsmanager_secret"
         },
-        "command": "Configure automatic rotation with a Lambda function. Run: aws secretsmanager rotate-secret --secret-id xxx --rotation-lambda-arn arn:aws:lambda:... --rotation-rules AutomaticallyAfterDays=90"
+        "action": "Configure automatic rotation with a Lambda function. Run: aws secretsmanager rotate-secret --secret-id xxx --rotation-lambda-arn arn:aws:lambda:... --rotation-rules AutomaticallyAfterDays=90"
       },
       "exposure_score": 50,
       "score_breakdown": {
@@ -4463,7 +4463,7 @@
             "description": "Change secret.kind from secret"
           }
         ],
-        "command": "Configure automatic rotation with a Lambda function. Run: aws secretsmanager rotate-secret --secret-id xxx --rotation-lambda-arn arn:aws:lambda:... --rotation-rules AutomaticallyAfterDays=90"
+        "action": "Configure automatic rotation with a Lambda function. Run: aws secretsmanager rotate-secret --secret-id xxx --rotation-lambda-arn arn:aws:lambda:... --rotation-rules AutomaticallyAfterDays=90"
       }
     }
   ],
@@ -4819,7 +4819,7 @@
           "asset_id": "alb-phi-api",
           "asset_type": "aws_load_balancer"
         },
-        "command": "Add a listener rule on port 80 that redirects to HTTPS (443) with status code 301."
+        "action": "Add a listener rule on port 80 that redirects to HTTPS (443) with status code 301."
       },
       "contributing_controls": [
         "CTL.ELB.CROSSZONE.001",
@@ -4838,7 +4838,7 @@
           "asset_id": "app-logs",
           "asset_type": "aws_cloudwatch_log_group"
         },
-        "command": "Set a retention policy on the log group. Run: aws logs put-retention-policy --log-group-name xxx --retention-in-days 365"
+        "action": "Set a retention policy on the log group. Run: aws logs put-retention-policy --log-group-name xxx --retention-in-days 365"
       },
       "contributing_controls": [
         "CTL.CLOUDWATCH.RETENTION.001"
@@ -4854,7 +4854,7 @@
           "asset_id": "aws-account-root",
           "asset_type": "aws_iam_account"
         },
-        "command": "Delete the root access keys. Create IAM users or roles with least-privilege policies for programmatic access."
+        "action": "Delete the root access keys. Create IAM users or roles with least-privilege policies for programmatic access."
       },
       "contributing_controls": [
         "CTL.IAM.ROOT.ACCESSKEY.001",
@@ -4871,7 +4871,7 @@
           "asset_id": "backup-phi-database",
           "asset_type": "aws_backup_resource"
         },
-        "command": "Configure automated backups via AWS Backup, RDS automated snapshots, or S3 cross-region replication depending on the resource type."
+        "action": "Configure automated backups via AWS Backup, RDS automated snapshots, or S3 cross-region replication depending on the resource type."
       },
       "contributing_controls": [
         "CTL.BACKUP.EXISTS.001",
@@ -4889,7 +4889,7 @@
           "asset_id": "config-recorder",
           "asset_type": "aws_config_recorder"
         },
-        "command": "Enable the Config recorder with all resource types. Run: aws configservice put-configuration-recorder --configuration-recorder name=default,roleARN=arn:...,recordingGroup={allSupported=true}"
+        "action": "Enable the Config recorder with all resource types. Run: aws configservice put-configuration-recorder --configuration-recorder name=default,roleARN=arn:...,recordingGroup={allSupported=true}"
       },
       "contributing_controls": [
         "CTL.CONFIG.ENABLED.001",
@@ -4906,7 +4906,7 @@
           "asset_id": "db-credentials",
           "asset_type": "aws_secretsmanager_secret"
         },
-        "command": "Recreate the secret with a customer-managed KMS key specified. Secrets Manager does not allow changing the encryption key after creation."
+        "action": "Recreate the secret with a customer-managed KMS key specified. Secrets Manager does not allow changing the encryption key after creation."
       },
       "contributing_controls": [
         "CTL.SECRETSMANAGER.ACCESS.001",
@@ -4923,7 +4923,7 @@
           "asset_id": "i-0abc123def",
           "asset_type": "aws_instance"
         },
-        "command": "Enable EBS encryption by default for the account. For existing volumes, create an encrypted snapshot and restore to a new encrypted volume. Run: aws ec2 enable-ebs-encryption-by-default"
+        "action": "Enable EBS encryption by default for the account. For existing volumes, create an encrypted snapshot and restore to a new encrypted volume. Run: aws ec2 enable-ebs-encryption-by-default"
       },
       "contributing_controls": [
         "CTL.EC2.EBS.ENCRYPT.001"
@@ -4966,7 +4966,7 @@
           }
         ],
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
-        "command": "Launch instances in private subnets without public IP assignment. Use NAT Gateway or VPC endpoints for outbound internet access. Use ALB or NLB for inbound traffic that requires internet access."
+        "action": "Launch instances in private subnets without public IP assignment. Use NAT Gateway or VPC endpoints for outbound internet access. Use ALB or NLB for inbound traffic that requires internet access."
       },
       "contributing_controls": [
         "CTL.EC2.PUBLIC.001"
@@ -4982,7 +4982,7 @@
           "asset_id": "main-trail",
           "asset_type": "aws_cloudtrail_trail"
         },
-        "command": "Update the trail to enable multi-region logging. Run: aws cloudtrail update-trail --name xxx --is-multi-region-trail"
+        "action": "Update the trail to enable multi-region logging. Run: aws cloudtrail update-trail --name xxx --is-multi-region-trail"
       },
       "contributing_controls": [
         "CTL.CLOUDTRAIL.ENABLED.001",
@@ -5000,7 +5000,7 @@
           "asset_id": "patient-portal",
           "asset_type": "aws_cognito_user_pool"
         },
-        "command": "Set MfaConfiguration to ON (required) on the user pool. Run: aws cognito-idp set-user-pool-mfa-config --user-pool-id xxx --mfa-configuration ON --software-token-mfa-configuration Enabled=true"
+        "action": "Set MfaConfiguration to ON (required) on the user pool. Run: aws cognito-idp set-user-pool-mfa-config --user-pool-id xxx --mfa-configuration ON --software-token-mfa-configuration Enabled=true"
       },
       "contributing_controls": [
         "CTL.COGNITO.MFA.001"
@@ -5016,7 +5016,7 @@
           "asset_id": "phi-alerts",
           "asset_type": "aws_sns_topic"
         },
-        "command": "Enable SSE-KMS on the topic. Run: aws sns set-topic-attributes --topic-arn xxx --attribute-name KmsMasterKeyId --attribute-value arn:aws:kms:..."
+        "action": "Enable SSE-KMS on the topic. Run: aws sns set-topic-attributes --topic-arn xxx --attribute-name KmsMasterKeyId --attribute-value arn:aws:kms:..."
       },
       "contributing_controls": [
         "CTL.SNS.ENCRYPT.001"
@@ -5032,7 +5032,7 @@
           "asset_id": "phi-api",
           "asset_type": "aws_apigateway_stage"
         },
-        "command": "Set the minimum TLS version on the custom domain or API stage. For REST APIs, configure a security policy of TLS_1_2 on the custom domain name."
+        "action": "Set the minimum TLS version on the custom domain or API stage. For REST APIs, configure a security policy of TLS_1_2 on the custom domain name."
       },
       "contributing_controls": [
         "CTL.APIGATEWAY.TLS.001"
@@ -5048,7 +5048,7 @@
           "asset_id": "phi-cmk",
           "asset_type": "aws_kms_key"
         },
-        "command": "Update the key policy to restrict Principal to specific IAM roles or accounts. Remove any statements with Principal \"*\"."
+        "action": "Update the key policy to restrict Principal to specific IAM roles or accounts. Remove any statements with Principal \"*\"."
       },
       "contributing_controls": [
         "CTL.KMS.POLICY.001"
@@ -5064,7 +5064,7 @@
           "asset_id": "phi-database",
           "asset_type": "aws_rds_instance"
         },
-        "command": "Storage encryption can only be enabled at creation time. Create a snapshot, copy it with encryption enabled, then restore to a new encrypted instance. Enable encryption by default for new instances."
+        "action": "Storage encryption can only be enabled at creation time. Create a snapshot, copy it with encryption enabled, then restore to a new encrypted instance. Enable encryption by default for new instances."
       },
       "contributing_controls": [
         "CTL.RDS.BACKUP.001",
@@ -5110,7 +5110,7 @@
           }
         ],
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
-        "command": "Modify the instance to disable public accessibility. Run: aws rds modify-db-instance --db-instance-identifier xxx --no-publicly-accessible --apply-immediately"
+        "action": "Modify the instance to disable public accessibility. Run: aws rds modify-db-instance --db-instance-identifier xxx --no-publicly-accessible --apply-immediately"
       },
       "contributing_controls": [
         "CTL.RDS.PUBLIC.001"
@@ -5126,7 +5126,7 @@
           "asset_id": "phi-events-table",
           "asset_type": "aws_dynamodb_table"
         },
-        "command": "Update the table encryption to use a customer-managed KMS key. Run: aws dynamodb update-table --table-name xxx --sse-specification Enabled=true,SSEType=KMS,KMSMasterKeyId=arn:..."
+        "action": "Update the table encryption to use a customer-managed KMS key. Run: aws dynamodb update-table --table-name xxx --sse-specification Enabled=true,SSEType=KMS,KMSMasterKeyId=arn:..."
       },
       "contributing_controls": [
         "CTL.DYNAMODB.ENCRYPT.001"
@@ -5142,7 +5142,7 @@
           "asset_id": "phi-notifications",
           "asset_type": "aws_sqs_queue"
         },
-        "command": "Enable SSE-KMS on the queue. Run: aws sqs set-queue-attributes --queue-url xxx --attributes KmsMasterKeyId=arn:aws:kms:..."
+        "action": "Enable SSE-KMS on the queue. Run: aws sqs set-queue-attributes --queue-url xxx --attributes KmsMasterKeyId=arn:aws:kms:..."
       },
       "contributing_controls": [
         "CTL.SQS.ENCRYPT.001"
@@ -5158,7 +5158,7 @@
           "asset_id": "session-cache",
           "asset_type": "aws_elasticache_cluster"
         },
-        "command": "In-transit encryption can only be enabled at cluster creation. Create a new replication group with TransitEncryptionEnabled=true and migrate data from the existing cluster."
+        "action": "In-transit encryption can only be enabled at cluster creation. Create a new replication group with TransitEncryptionEnabled=true and migrate data from the existing cluster."
       },
       "contributing_controls": [
         "CTL.ELASTICACHE.TRANSIT.001"
@@ -5174,7 +5174,7 @@
           "asset_id": "vpc-prod-001",
           "asset_type": "aws_vpc"
         },
-        "command": "Enable VPC flow logs to CloudWatch Logs or S3. Run: aws ec2 create-flow-logs --resource-type VPC --resource-ids vpc-xxx --traffic-type ALL --log-destination-type cloud-watch-logs"
+        "action": "Enable VPC flow logs to CloudWatch Logs or S3. Run: aws ec2 create-flow-logs --resource-type VPC --resource-ids vpc-xxx --traffic-type ALL --log-destination-type cloud-watch-logs"
       },
       "contributing_controls": [
         "CTL.VPC.FLOWLOG.001"

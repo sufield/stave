@@ -473,6 +473,15 @@ func classifyPath(path string) string {
 	if path == "coverage_posture" || strings.HasPrefix(path, "coverage_posture.") {
 		return "metadata"
 	}
+	// remediation_groups[].fix_plan uses the same RemediationPlanDTO
+	// as findings[].fix_plan; the command → action rename propagates
+	// through both. Both field keys reflect the same underlying
+	// string; identity-set is unchanged.
+	if strings.HasPrefix(path, "remediation_groups[") {
+		if strings.HasSuffix(path, ".fix_plan.command") || strings.HasSuffix(path, ".fix_plan.action") {
+			return "metadata"
+		}
+	}
 	// findings[i].<metadata-subfield>
 	if strings.HasPrefix(path, "findings[") {
 		// extract the sub-path after the index
@@ -516,6 +525,16 @@ func classifyPath(path string) string {
 				strings.HasSuffix(rest, ".has_safe_default"):
 				return "metadata"
 			}
+		}
+		// Command → action field rename on remediation_context and
+		// fix_plan. Both sides of the rename (the disappearing
+		// "command" key and the new "action" key) reflect the same
+		// underlying string (RemediationPlan.Command or
+		// RemediationSpec.Action); identity-set is unchanged.
+		switch rest {
+		case "remediation_context.command", "remediation_context.action",
+			"fix_plan.command", "fix_plan.action":
+			return "metadata"
 		}
 	}
 	return "behavioral"

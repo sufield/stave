@@ -173,7 +173,7 @@
           }
         ],
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
-        "command": "Remove bucket policy statements that grant s3:PutObject or s3:DeleteObject to Principal \"*\". Remove ACL grants that allow WRITE or FULL_CONTROL to AllUsers or AuthenticatedUsers. Enable S3 Public Access Block."
+        "action": "Remove bucket policy statements that grant s3:PutObject or s3:DeleteObject to Principal \"*\". Remove ACL grants that allow WRITE or FULL_CONTROL to AllUsers or AuthenticatedUsers. Enable S3 Public Access Block."
       },
       "exposure_score": 200,
       "score_breakdown": {
@@ -220,7 +220,7 @@
             "description": "Set storage.access.public_write to false"
           }
         ],
-        "command": "Remove bucket policy statements that grant s3:PutObject or s3:DeleteObject to Principal \"*\". Remove ACL grants that allow WRITE or FULL_CONTROL to AllUsers or AuthenticatedUsers. Enable S3 Public Access Block."
+        "action": "Remove bucket policy statements that grant s3:PutObject or s3:DeleteObject to Principal \"*\". Remove ACL grants that allow WRITE or FULL_CONTROL to AllUsers or AuthenticatedUsers. Enable S3 Public Access Block."
       }
     },
     {
@@ -282,7 +282,7 @@
           "asset_id": "vuln-wildcard-policy",
           "asset_type": "aws_s3_bucket"
         },
-        "command": "Replace the wildcard principal with the specific AWS account IDs or ARNs that need access, or add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, aws:SourceIp (with a fixed CIDR), or aws:SourceArn. If the bucket genuinely needs to be public (CDN origin, static asset bucket), narrow the Actions to the minimum set and keep Public Access Block enabled where compatible."
+        "action": "Replace the wildcard principal with the specific AWS account IDs or ARNs that need access, or add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, aws:SourceIp (with a fixed CIDR), or aws:SourceArn. If the bucket genuinely needs to be public (CDN origin, static asset bucket), narrow the Actions to the minimum set and keep Public Access Block enabled where compatible."
       },
       "exposure_score": 150,
       "score_breakdown": {
@@ -347,7 +347,7 @@
             "description": "Change storage.kind from bucket"
           }
         ],
-        "command": "Replace the wildcard principal with the specific AWS account IDs or ARNs that need access, or add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, aws:SourceIp (with a fixed CIDR), or aws:SourceArn. If the bucket genuinely needs to be public (CDN origin, static asset bucket), narrow the Actions to the minimum set and keep Public Access Block enabled where compatible."
+        "action": "Replace the wildcard principal with the specific AWS account IDs or ARNs that need access, or add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, aws:SourceIp (with a fixed CIDR), or aws:SourceArn. If the bucket genuinely needs to be public (CDN origin, static asset bucket), narrow the Actions to the minimum set and keep Public Access Block enabled where compatible."
       }
     },
     {
@@ -414,7 +414,7 @@
           "asset_id": "vuln-cross-account",
           "asset_type": "aws_s3_bucket"
         },
-        "command": "Review bucket policy Principal elements for external account IDs. Remove statements granting access to accounts not in your organization. Use aws:PrincipalOrgID condition to restrict access to your AWS Organization."
+        "action": "Review bucket policy Principal elements for external account IDs. Remove statements granting access to accounts not in your organization. Use aws:PrincipalOrgID condition to restrict access to your AWS Organization."
       },
       "exposure_score": 75,
       "score_breakdown": {
@@ -482,7 +482,7 @@
             "description": "Change storage.kind from bucket"
           }
         ],
-        "command": "Review bucket policy Principal elements for external account IDs. Remove statements granting access to accounts not in your organization. Use aws:PrincipalOrgID condition to restrict access to your AWS Organization."
+        "action": "Review bucket policy Principal elements for external account IDs. Remove statements granting access to accounts not in your organization. Use aws:PrincipalOrgID condition to restrict access to your AWS Organization."
       }
     },
     {
@@ -549,7 +549,7 @@
           "asset_id": "vuln-no-encryption",
           "asset_type": "aws_s3_bucket"
         },
-        "command": "Enable default bucket encryption using SSE-S3 (AES256) or SSE-KMS. Use aws s3api put-bucket-encryption to set the default encryption configuration. For sensitive data, use SSE-KMS with a customer-managed key."
+        "action": "Enable default bucket encryption using SSE-S3 (AES256) or SSE-KMS. Use aws s3api put-bucket-encryption to set the default encryption configuration. For sensitive data, use SSE-KMS with a customer-managed key."
       },
       "exposure_score": 75,
       "score_breakdown": {
@@ -614,7 +614,7 @@
             "description": "Change storage.kind from bucket"
           }
         ],
-        "command": "Enable default bucket encryption using SSE-S3 (AES256) or SSE-KMS. Use aws s3api put-bucket-encryption to set the default encryption configuration. For sensitive data, use SSE-KMS with a customer-managed key."
+        "action": "Enable default bucket encryption using SSE-S3 (AES256) or SSE-KMS. Use aws s3api put-bucket-encryption to set the default encryption configuration. For sensitive data, use SSE-KMS with a customer-managed key."
       }
     },
     {
@@ -682,7 +682,7 @@
           "asset_id": "vuln-no-https",
           "asset_type": "aws_s3_bucket"
         },
-        "command": "Add a bucket policy statement that denies all actions when aws:SecureTransport is false. This forces all API calls to use HTTPS."
+        "action": "Add a bucket policy statement that denies all actions when aws:SecureTransport is false. This forces all API calls to use HTTPS."
       },
       "exposure_score": 75,
       "score_breakdown": {
@@ -747,7 +747,7 @@
             "description": "Change storage.kind from bucket"
           }
         ],
-        "command": "Add a bucket policy statement that denies all actions when aws:SecureTransport is false. This forces all API calls to use HTTPS."
+        "action": "Add a bucket policy statement that denies all actions when aws:SecureTransport is false. This forces all API calls to use HTTPS."
       }
     },
     {
@@ -813,7 +813,7 @@
           "asset_id": "vuln-no-logging",
           "asset_type": "aws_s3_bucket"
         },
-        "command": "Enable S3 server access logging and specify a target bucket for log delivery. Ensure the target bucket has appropriate access controls and is in the same region."
+        "action": "Enable S3 server access logging and specify a target bucket for log delivery. Ensure the target bucket has appropriate access controls and is in the same region."
       },
       "exposure_score": 75,
       "score_breakdown": {
@@ -878,7 +878,7 @@
             "description": "Set storage.logging.enabled to true"
           }
         ],
-        "command": "Enable S3 server access logging and specify a target bucket for log delivery. Ensure the target bucket has appropriate access controls and is in the same region."
+        "action": "Enable S3 server access logging and specify a target bucket for log delivery. Ensure the target bucket has appropriate access controls and is in the same region."
       }
     },
     {
@@ -938,7 +938,7 @@
           "asset_id": "vuln-no-versioning",
           "asset_type": "aws_s3_bucket"
         },
-        "command": "Enable versioning on the bucket using aws s3api put-bucket-versioning. Once enabled, configure lifecycle rules to manage noncurrent versions and control storage costs."
+        "action": "Enable versioning on the bucket using aws s3api put-bucket-versioning. Once enabled, configure lifecycle rules to manage noncurrent versions and control storage costs."
       },
       "exposure_score": 50,
       "score_breakdown": {
@@ -1003,7 +1003,7 @@
             "description": "Set storage.versioning.enabled to true"
           }
         ],
-        "command": "Enable versioning on the bucket using aws s3api put-bucket-versioning. Once enabled, configure lifecycle rules to manage noncurrent versions and control storage costs."
+        "action": "Enable versioning on the bucket using aws s3api put-bucket-versioning. Once enabled, configure lifecycle rules to manage noncurrent versions and control storage costs."
       }
     }
   ],
@@ -1117,7 +1117,7 @@
           "asset_id": "vuln-cross-account",
           "asset_type": "aws_s3_bucket"
         },
-        "command": "Review bucket policy Principal elements for external account IDs. Remove statements granting access to accounts not in your organization. Use aws:PrincipalOrgID condition to restrict access to your AWS Organization."
+        "action": "Review bucket policy Principal elements for external account IDs. Remove statements granting access to accounts not in your organization. Use aws:PrincipalOrgID condition to restrict access to your AWS Organization."
       },
       "contributing_controls": [
         "CTL.S3.ACCESS.001"
@@ -1133,7 +1133,7 @@
           "asset_id": "vuln-no-encryption",
           "asset_type": "aws_s3_bucket"
         },
-        "command": "Enable default bucket encryption using SSE-S3 (AES256) or SSE-KMS. Use aws s3api put-bucket-encryption to set the default encryption configuration. For sensitive data, use SSE-KMS with a customer-managed key."
+        "action": "Enable default bucket encryption using SSE-S3 (AES256) or SSE-KMS. Use aws s3api put-bucket-encryption to set the default encryption configuration. For sensitive data, use SSE-KMS with a customer-managed key."
       },
       "contributing_controls": [
         "CTL.S3.ENCRYPT.001"
@@ -1149,7 +1149,7 @@
           "asset_id": "vuln-no-https",
           "asset_type": "aws_s3_bucket"
         },
-        "command": "Add a bucket policy statement that denies all actions when aws:SecureTransport is false. This forces all API calls to use HTTPS."
+        "action": "Add a bucket policy statement that denies all actions when aws:SecureTransport is false. This forces all API calls to use HTTPS."
       },
       "contributing_controls": [
         "CTL.S3.ENCRYPT.002"
@@ -1165,7 +1165,7 @@
           "asset_id": "vuln-no-logging",
           "asset_type": "aws_s3_bucket"
         },
-        "command": "Enable S3 server access logging and specify a target bucket for log delivery. Ensure the target bucket has appropriate access controls and is in the same region."
+        "action": "Enable S3 server access logging and specify a target bucket for log delivery. Ensure the target bucket has appropriate access controls and is in the same region."
       },
       "contributing_controls": [
         "CTL.S3.LOG.001"
@@ -1181,7 +1181,7 @@
           "asset_id": "vuln-no-versioning",
           "asset_type": "aws_s3_bucket"
         },
-        "command": "Enable versioning on the bucket using aws s3api put-bucket-versioning. Once enabled, configure lifecycle rules to manage noncurrent versions and control storage costs."
+        "action": "Enable versioning on the bucket using aws s3api put-bucket-versioning. Once enabled, configure lifecycle rules to manage noncurrent versions and control storage costs."
       },
       "contributing_controls": [
         "CTL.S3.VERSION.001"
@@ -1224,7 +1224,7 @@
           }
         ],
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
-        "command": "Remove bucket policy statements that grant s3:PutObject or s3:DeleteObject to Principal \"*\". Remove ACL grants that allow WRITE or FULL_CONTROL to AllUsers or AuthenticatedUsers. Enable S3 Public Access Block."
+        "action": "Remove bucket policy statements that grant s3:PutObject or s3:DeleteObject to Principal \"*\". Remove ACL grants that allow WRITE or FULL_CONTROL to AllUsers or AuthenticatedUsers. Enable S3 Public Access Block."
       },
       "contributing_controls": [
         "CTL.S3.PUBLIC.003"
@@ -1240,7 +1240,7 @@
           "asset_id": "vuln-wildcard-policy",
           "asset_type": "aws_s3_bucket"
         },
-        "command": "Replace the wildcard principal with the specific AWS account IDs or ARNs that need access, or add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, aws:SourceIp (with a fixed CIDR), or aws:SourceArn. If the bucket genuinely needs to be public (CDN origin, static asset bucket), narrow the Actions to the minimum set and keep Public Access Block enabled where compatible."
+        "action": "Replace the wildcard principal with the specific AWS account IDs or ARNs that need access, or add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, aws:SourceIp (with a fixed CIDR), or aws:SourceArn. If the bucket genuinely needs to be public (CDN origin, static asset bucket), narrow the Actions to the minimum set and keep Public Access Block enabled where compatible."
       },
       "contributing_controls": [
         "CTL.S3.ACCESS.002"
@@ -1448,7 +1448,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "1a337200eb5c008d17ea570ba9886f86c6b5660b",
+      "head_commit": "d3b6ec6771a33f08d03385b88034130c1a381d7e",
       "dirty": false
     }
   }

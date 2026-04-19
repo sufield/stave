@@ -98,7 +98,7 @@
           "asset_id": "upload-api-bcm-hk",
           "asset_type": "s3_upload_policy"
         },
-        "command": "Change the signed upload policy to use an exact key condition (eq instead of starts-with) that binds each upload to a specific object path. Generate unique object keys server-side."
+        "action": "Change the signed upload policy to use an exact key condition (eq instead of starts-with) that binds each upload to a specific object path. Generate unique object keys server-side."
       },
       "exposure_score": 750,
       "score_breakdown": {
@@ -180,7 +180,7 @@
             "description": "Change type from s3_upload_policy"
           }
         ],
-        "command": "Change the signed upload policy to use an exact key condition (eq instead of starts-with) that binds each upload to a specific object path. Generate unique object keys server-side."
+        "action": "Change the signed upload policy to use an exact key condition (eq instead of starts-with) that binds each upload to a specific object path. Generate unique object keys server-side."
       }
     }
   ],
@@ -211,7 +211,7 @@
           "asset_id": "upload-api-bcm-hk",
           "asset_type": "s3_upload_policy"
         },
-        "command": "Change the signed upload policy to use an exact key condition (eq instead of starts-with) that binds each upload to a specific object path. Generate unique object keys server-side."
+        "action": "Change the signed upload policy to use an exact key condition (eq instead of starts-with) that binds each upload to a specific object path. Generate unique object keys server-side."
       },
       "contributing_controls": [
         "CTL.S3.WRITE.SCOPE.001"
@@ -329,7 +329,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "1a337200eb5c008d17ea570ba9886f86c6b5660b",
+      "head_commit": "d3b6ec6771a33f08d03385b88034130c1a381d7e",
       "dirty": false
     }
   }

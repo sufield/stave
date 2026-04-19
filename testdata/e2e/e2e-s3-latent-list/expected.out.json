@@ -119,7 +119,7 @@
           }
         ],
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
-        "command": "Remove the underlying policy statement or ACL entry that grants s3:ListBucket to Principal \"*\" or AllUsers. Do not rely solely on PAB to prevent directory enumeration."
+        "action": "Remove the underlying policy statement or ACL entry that grants s3:ListBucket to Principal \"*\" or AllUsers. Do not rely solely on PAB to prevent directory enumeration."
       },
       "exposure_score": 200,
       "score_breakdown": {
@@ -184,7 +184,7 @@
             "description": "Change storage.kind from bucket"
           }
         ],
-        "command": "Remove the underlying policy statement or ACL entry that grants s3:ListBucket to Principal \"*\" or AllUsers. Do not rely solely on PAB to prevent directory enumeration."
+        "action": "Remove the underlying policy statement or ACL entry that grants s3:ListBucket to Principal \"*\" or AllUsers. Do not rely solely on PAB to prevent directory enumeration."
       }
     }
   ],
@@ -241,7 +241,7 @@
           }
         ],
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
-        "command": "Remove the underlying policy statement or ACL entry that grants s3:ListBucket to Principal \"*\" or AllUsers. Do not rely solely on PAB to prevent directory enumeration."
+        "action": "Remove the underlying policy statement or ACL entry that grants s3:ListBucket to Principal \"*\" or AllUsers. Do not rely solely on PAB to prevent directory enumeration."
       },
       "contributing_controls": [
         "CTL.S3.PUBLIC.006"
@@ -359,7 +359,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "1a337200eb5c008d17ea570ba9886f86c6b5660b",
+      "head_commit": "d3b6ec6771a33f08d03385b88034130c1a381d7e",
       "dirty": false
     }
   }

@@ -119,7 +119,7 @@
           "asset_id": "compliance-no-lock",
           "asset_type": "aws_s3_bucket"
         },
-        "command": "Enable S3 Object Lock on the bucket. Note: Object Lock can only be enabled at bucket creation. If the bucket already exists, create a new bucket with Object Lock enabled and migrate objects. Set a default retention period appropriate for your compliance framework."
+        "action": "Enable S3 Object Lock on the bucket. Note: Object Lock can only be enabled at bucket creation. If the bucket already exists, create a new bucket with Object Lock enabled and migrate objects. Set a default retention period appropriate for your compliance framework."
       },
       "exposure_score": 50,
       "score_breakdown": {
@@ -203,7 +203,7 @@
             "description": "Remove storage.tags.compliance"
           }
         ],
-        "command": "Enable S3 Object Lock on the bucket. Note: Object Lock can only be enabled at bucket creation. If the bucket already exists, create a new bucket with Object Lock enabled and migrate objects. Set a default retention period appropriate for your compliance framework."
+        "action": "Enable S3 Object Lock on the bucket. Note: Object Lock can only be enabled at bucket creation. If the bucket already exists, create a new bucket with Object Lock enabled and migrate objects. Set a default retention period appropriate for your compliance framework."
       }
     },
     {
@@ -264,7 +264,7 @@
           "asset_id": "phi-governance-lock",
           "asset_type": "aws_s3_bucket"
         },
-        "command": "Change the Object Lock default retention mode from GOVERNANCE to COMPLIANCE. In COMPLIANCE mode, no user (including root) can delete or modify protected objects during the retention period."
+        "action": "Change the Object Lock default retention mode from GOVERNANCE to COMPLIANCE. In COMPLIANCE mode, no user (including root) can delete or modify protected objects during the retention period."
       },
       "exposure_score": 50,
       "score_breakdown": {
@@ -347,7 +347,7 @@
             "description": "Change storage.tags.data-classification from phi"
           }
         ],
-        "command": "Change the Object Lock default retention mode from GOVERNANCE to COMPLIANCE. In COMPLIANCE mode, no user (including root) can delete or modify protected objects during the retention period."
+        "action": "Change the Object Lock default retention mode from GOVERNANCE to COMPLIANCE. In COMPLIANCE mode, no user (including root) can delete or modify protected objects during the retention period."
       }
     },
     {
@@ -408,7 +408,7 @@
           "asset_id": "phi-short-retention",
           "asset_type": "aws_s3_bucket"
         },
-        "command": "Increase the Object Lock default retention period to at least 2190 days. Use aws s3api put-object-lock-configuration to update the default retention settings."
+        "action": "Increase the Object Lock default retention period to at least 2190 days. Use aws s3api put-object-lock-configuration to update the default retention settings."
       },
       "exposure_score": 50,
       "score_breakdown": {
@@ -491,7 +491,7 @@
             "description": "Change storage.tags.data-classification from phi"
           }
         ],
-        "command": "Increase the Object Lock default retention period to at least 2190 days. Use aws s3api put-object-lock-configuration to update the default retention settings."
+        "action": "Increase the Object Lock default retention period to at least 2190 days. Use aws s3api put-object-lock-configuration to update the default retention settings."
       }
     }
   ],
@@ -557,7 +557,7 @@
           "asset_id": "compliance-no-lock",
           "asset_type": "aws_s3_bucket"
         },
-        "command": "Enable S3 Object Lock on the bucket. Note: Object Lock can only be enabled at bucket creation. If the bucket already exists, create a new bucket with Object Lock enabled and migrate objects. Set a default retention period appropriate for your compliance framework."
+        "action": "Enable S3 Object Lock on the bucket. Note: Object Lock can only be enabled at bucket creation. If the bucket already exists, create a new bucket with Object Lock enabled and migrate objects. Set a default retention period appropriate for your compliance framework."
       },
       "contributing_controls": [
         "CTL.S3.LOCK.001"
@@ -573,7 +573,7 @@
           "asset_id": "phi-governance-lock",
           "asset_type": "aws_s3_bucket"
         },
-        "command": "Change the Object Lock default retention mode from GOVERNANCE to COMPLIANCE. In COMPLIANCE mode, no user (including root) can delete or modify protected objects during the retention period."
+        "action": "Change the Object Lock default retention mode from GOVERNANCE to COMPLIANCE. In COMPLIANCE mode, no user (including root) can delete or modify protected objects during the retention period."
       },
       "contributing_controls": [
         "CTL.S3.LOCK.002"
@@ -589,7 +589,7 @@
           "asset_id": "phi-short-retention",
           "asset_type": "aws_s3_bucket"
         },
-        "command": "Increase the Object Lock default retention period to at least 2190 days. Use aws s3api put-object-lock-configuration to update the default retention settings."
+        "action": "Increase the Object Lock default retention period to at least 2190 days. Use aws s3api put-object-lock-configuration to update the default retention settings."
       },
       "contributing_controls": [
         "CTL.S3.LOCK.003"
@@ -737,7 +737,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "1a337200eb5c008d17ea570ba9886f86c6b5660b",
+      "head_commit": "d3b6ec6771a33f08d03385b88034130c1a381d7e",
       "dirty": false
     }
   }

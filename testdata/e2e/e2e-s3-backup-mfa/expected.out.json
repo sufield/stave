@@ -87,7 +87,7 @@
           "asset_id": "backup-no-mfa",
           "asset_type": "aws_s3_bucket"
         },
-        "command": "Enable MFA delete on the bucket using aws s3api put-bucket-versioning with the MFA flag. This requires the root account credentials and an MFA device. Only the root account can enable or disable MFA delete."
+        "action": "Enable MFA delete on the bucket using aws s3api put-bucket-versioning with the MFA flag. This requires the root account credentials and an MFA device. Only the root account can enable or disable MFA delete."
       },
       "exposure_score": 50,
       "score_breakdown": {
@@ -153,7 +153,7 @@
             "description": "Set storage.versioning.mfa_delete_enabled to true"
           }
         ],
-        "command": "Enable MFA delete on the bucket using aws s3api put-bucket-versioning with the MFA flag. This requires the root account credentials and an MFA device. Only the root account can enable or disable MFA delete."
+        "action": "Enable MFA delete on the bucket using aws s3api put-bucket-versioning with the MFA flag. This requires the root account credentials and an MFA device. Only the root account can enable or disable MFA delete."
       }
     }
   ],
@@ -185,7 +185,7 @@
           "asset_id": "backup-no-mfa",
           "asset_type": "aws_s3_bucket"
         },
-        "command": "Enable MFA delete on the bucket using aws s3api put-bucket-versioning with the MFA flag. This requires the root account credentials and an MFA device. Only the root account can enable or disable MFA delete."
+        "action": "Enable MFA delete on the bucket using aws s3api put-bucket-versioning with the MFA flag. This requires the root account credentials and an MFA device. Only the root account can enable or disable MFA delete."
       },
       "contributing_controls": [
         "CTL.S3.VERSION.002"
@@ -303,7 +303,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "1a337200eb5c008d17ea570ba9886f86c6b5660b",
+      "head_commit": "d3b6ec6771a33f08d03385b88034130c1a381d7e",
       "dirty": false
     }
   }

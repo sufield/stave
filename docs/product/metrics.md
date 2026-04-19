@@ -439,9 +439,39 @@ Known limitations:
   preserved as bool, `invertBool` succeeds and the description
   renders the actual target value (e.g., "Set
   storage.access.public_read to false").
+- ~~`command` field carries prose instead of the parameterized
+  CLI; three output surfaces (text, JSON, SARIF) disagree on
+  which form to show~~ — **resolved 2026-04-19** by two
+  coordinated changes. (1) The text writer now prefers
+  `RemediationPlan.Command` over `RemediationSpec.Action`, so
+  text output matches JSON's `remediation_context.action` and
+  SARIF's `fixes[].description.text` — all three surfaces show
+  the parameterized form when the control declares a templated
+  CLI. (2) The JSON wire field renames `command` → `action` on
+  both `remediation_context` and `fix_plan` blocks, matching
+  the control YAML's `action:` field name. The field name now
+  honestly describes what it carries (prose or CLI, whichever
+  the control author wrote); the surface inconsistency between
+  text and JSON/SARIF is gone.
+- Catalog-coverage known-limitation: 75% of the catalog's
+  `action:` fields are prose descriptions without CLI commands
+  or parameterizable placeholders (508 of 675 controls as of
+  2026-04-19). For findings on these controls, the `action`
+  field carries prose across all three output surfaces. AI-
+  prompt consumers receive prose guidance rather than
+  executable commands for these cases. Backfilling the prose
+  Actions with parameterizable CLI templates is measurable
+  catalog-authoring work; the 25%/13%/75% split (CLI / with
+  placeholders / prose-only) is the baseline.
 
 **Target.** Remaining work for this metric:
 
+- **Catalog-coverage backfill.** Rewrite prose-only `action:`
+  fields as parameterizable CLI templates where the
+  remediation has a concrete CLI form. Starting baseline:
+  25% CLI / 13% with placeholders / 75% prose-only (675
+  controls total). Measurable progress is the shift of this
+  ratio toward CLI+placeholders.
 - Extend placeholder vocabulary as new controls ship with new
   token conventions.
 - Bulk-author `RequiredValuePrompt` for the HasSafeDefault=false

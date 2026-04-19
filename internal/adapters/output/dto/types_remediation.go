@@ -13,7 +13,12 @@ type RemediationPlanDTO struct {
 	Preconditions  []string               `json:"preconditions,omitempty"`
 	Actions        []RemediationActionDTO `json:"actions,omitempty"`
 	ExpectedEffect string                 `json:"expected_effect,omitempty"`
-	Command        string                 `json:"command,omitempty"`
+	// Action carries the same content as the underlying
+	// RemediationPlan.Command — parameterized when the control
+	// author wrote a templated CLI, prose otherwise. Renamed from
+	// the previous "command" wire name to match what the field
+	// actually carries; the domain type field remains .Command.
+	Action string `json:"action,omitempty"`
 }
 
 // RemediationTargetDTO mirrors evaluation.RemediationTarget.

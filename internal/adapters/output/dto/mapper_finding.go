@@ -164,7 +164,7 @@ func buildRemediationContext(f *remediation.Finding) *RemediationContextDTO {
 	}
 
 	if f.RemediationPlan != nil && f.RemediationPlan.Command != "" {
-		ctx.Command = f.RemediationPlan.Command
+		ctx.Action = f.RemediationPlan.Command
 	}
 
 	return ctx
@@ -235,7 +235,7 @@ func fromRemediationPlan(p evaluation.RemediationPlan) RemediationPlanDTO {
 		},
 		Preconditions:  p.Preconditions,
 		ExpectedEffect: p.ExpectedEffect,
-		Command:        p.Command,
+		Action:         p.Command,
 	}
 	if len(p.Actions) > 0 {
 		dto.Actions = mapSlice(p.Actions, func(a evaluation.RemediationAction) RemediationActionDTO { return fromRemediationAction(a) })

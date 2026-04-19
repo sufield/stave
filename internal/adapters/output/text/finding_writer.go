@@ -407,9 +407,29 @@ func writeFindingRemediation(d *drawer, f *remediation.Finding) {
 	if f.RemediationSpec.Description != "" {
 		d.f("     %s\n", f.RemediationSpec.Description)
 	}
-	if f.RemediationSpec.Action != "" {
-		d.f("     Action: %s\n", f.RemediationSpec.Action)
+	// Prefer the parameterized command from RemediationPlan when
+	// available; fall back to the raw Action template. This matches
+	// SARIF's fixes[] rendering and JSON's remediation_context.action
+	// so the three output surfaces agree on which form the reader
+	// sees. parameterizeCommand always populates RemediationPlan.Command
+	// when the Action is non-empty (for prose-only controls it
+	// equals Action by construction), so this branch is the common
+	// path; the fallback covers enrichment flows that skip the
+	// planner.
+	if action := remediationAction(f); action != "" {
+		d.f("     Action: %s\n", action)
 	}
+}
+
+// remediationAction returns the action text to display. Prefers
+// RemediationPlan.Command (parameterized when placeholders resolve)
+// over RemediationSpec.Action (the reusable template). Returns "" when
+// neither is set.
+func remediationAction(f *remediation.Finding) string {
+	if f.RemediationPlan != nil && f.RemediationPlan.Command != "" {
+		return f.RemediationPlan.Command
+	}
+	return f.RemediationSpec.Action
 }
 
 // toRemediationFindings converts port-boundary enriched findings to

@@ -59,7 +59,13 @@ type RemediationContextDTO struct {
 	Asset     RemediationAssetDTO     `json:"asset"`
 	Violation RemediationViolationDTO `json:"violation"`
 	Changes   []PropertyChangeDTO     `json:"changes,omitempty"`
-	Command   string                  `json:"command,omitempty"`
+	// Action carries the remediation text — parameterized CLI when
+	// the underlying control declares a templated command, or prose
+	// when the control's action is descriptive. The field name
+	// matches the control YAML's `action:` field; content may be
+	// executable (CLI) or advisory (prose) depending on catalog
+	// authoring. See docs/product/metrics.md § Metric 4.
+	Action string `json:"action,omitempty"`
 }
 
 // RemediationAssetDTO carries the asset identity a downstream consumer
