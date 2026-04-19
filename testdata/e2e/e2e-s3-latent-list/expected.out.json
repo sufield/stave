@@ -1,163 +1,12 @@
 {
-  "extensions": {
-    "context_name": "stave",
-    "git": {
-      "dirty": false,
-      "head_commit": "74f975c98eab8c8fba8a2bb86a60ce6b3ab19ff7",
-      "repo_root": "/home/zepho/work/bizacademy"
-    },
-    "resolved_paths": {
-      "controls": "testdata/e2e/e2e-s3-latent-list/controls",
-      "observations": "testdata/e2e/e2e-s3-latent-list/observations"
-    },
-    "selected_controls_source": "dir"
-  },
-  "findings": [
-    {
-      "asset_id": "latent-listable-bucket",
-      "asset_type": "aws_s3_bucket",
-      "asset_vendor": "aws",
-      "control_compliance_ccm_v4": [
-        "DSP-07",
-        "DSP-17"
-      ],
-      "control_description": "S3 bucket has a policy or ACL that would allow public listing if the public access block were removed. The public access block is currently the only control preventing directory enumeration. This is a latent vulnerability \u2014 one configuration change away from exposing all object keys.\n",
-      "control_id": "CTL.S3.PUBLIC.006",
-      "control_name": "No Latent Public Bucket Listing",
-      "control_severity": "critical",
-      "evidence": {
-        "first_unsafe_at": "2026-01-01T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
-        "misconfigurations": [
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "property": "storage.access.latent_public_list",
-            "unsafe_value": true
-          },
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "property": "storage.kind",
-            "unsafe_value": "bucket"
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z.",
-        "threshold_hours": 168,
-        "unsafe_duration_hours": 240
-      },
-      "exposure": {
-        "principal_scope": "public",
-        "type": "latent_public_list"
-      },
-      "finding_id": "sha256:6a2dc24c7add828f",
-      "fix_plan": {
-        "actions": [
-          {
-            "action_type": "set",
-            "path": "security_posture.block_identity_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_metadata_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
-            "value": true
-          }
-        ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
-        "id": "fix-d4589654a40e7f1b",
-        "preconditions": [
-          "Confirm resource ownership and internal change window approval.",
-          "Ensure public access is not explicitly required for this specific resource's function."
-        ],
-        "target": {
-          "asset_id": "latent-listable-bucket",
-          "asset_type": "aws_s3_bucket"
-        }
-      },
-      "posture_drift": {
-        "exposure_window_count": 1,
-        "pattern": "persistent"
-      },
-      "remediation": {
-        "action": "Remove the underlying policy statement or ACL entry that grants s3:ListBucket to Principal \"*\" or AllUsers. Do not rely solely on PAB to prevent directory enumeration.",
-        "description": "Bucket has a policy or ACL that would allow public listing if the Public Access Block were removed. One configuration change away from exposing all object keys.",
-        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"access\": {\n      \"latent_public_list\": false\n    }\n  }\n}\n"
-      }
-    }
-  ],
+  "schema_version": "out.v0.1",
   "kind": "ASSESSMENT",
-  "remediation_groups": [
-    {
-      "asset_id": "latent-listable-bucket",
-      "asset_type": "aws_s3_bucket",
-      "contributing_controls": [
-        "CTL.S3.PUBLIC.006"
-      ],
-      "finding_count": 1,
-      "fix_plan": {
-        "actions": [
-          {
-            "action_type": "set",
-            "path": "security_posture.block_identity_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_metadata_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
-            "value": true
-          }
-        ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
-        "id": "fix-d4589654a40e7f1b",
-        "preconditions": [
-          "Confirm resource ownership and internal change window approval.",
-          "Ensure public access is not explicitly required for this specific resource's function."
-        ],
-        "target": {
-          "asset_id": "latent-listable-bucket",
-          "asset_type": "aws_s3_bucket"
-        }
-      }
-    }
-  ],
-  "risk_signals": [
-    {
-      "asset_id": "latent-listable-bucket",
-      "asset_type": "aws_s3_bucket",
-      "control_id": "CTL.S3.PUBLIC.006",
-      "due_at": "2026-01-08T00:00:00Z",
-      "first_unsafe_at": "2026-01-01T00:00:00Z",
-      "remaining_hours": -72,
-      "status": "OVERDUE",
-      "threshold_hours": 168
-    }
-  ],
   "run": {
-    "evaluated_state": "deployed",
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
     "input_hashes": {
       "files": {
         "2026-01-01T000000Z.json": "6138abc0d721d76ea23092abd6a2c6826cc1e3d74a0ed3dca4c96a239acd7854",
@@ -165,34 +14,211 @@
       },
       "overall": "165e6ac86e9eaf0057db4d040d7c23cb2435ce4c09ef79f8e99787b43eedc021"
     },
-    "now": "2026-01-11T00:00:00Z",
-    "offline": true,
     "policy_fingerprint": "d033aff29937cac32d5b974c3ee9fe7ecce434d3f74abc313c14f957134337db",
-    "sla_threshold": "7d",
-    "snapshots": 2,
-    "tool_version": "edge"
+    "evaluated_state": "deployed"
   },
-  "schema_version": "out.v0.1",
-  "status": "NON_COMPLIANT",
   "summary": {
-    "exposed_resources": 1,
     "total_assets": 1,
+    "exposed_resources": 1,
     "violations": 1
   },
-  "top_exposures": [
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.S3.PUBLIC.006",
+      "asset_id": "latent-listable-bucket",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:6a2dc24c7add828f",
+      "control_id": "CTL.S3.PUBLIC.006",
+      "control_name": "No Latent Public Bucket Listing",
+      "control_description": "S3 bucket has a policy or ACL that would allow public listing if the public access block were removed. The public access block is currently the only control preventing directory enumeration. This is a latent vulnerability — one configuration change away from exposing all object keys.\n",
+      "asset_id": "latent-listable-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "storage.access.latent_public_list",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "storage.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance_ccm_v4": [
+        "DSP-07",
+        "DSP-17"
+      ],
+      "exposure": {
+        "type": "latent_public_list",
+        "principal_scope": "public"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Bucket has a policy or ACL that would allow public listing if the Public Access Block were removed. One configuration change away from exposing all object keys.",
+        "action": "Remove the underlying policy statement or ACL entry that grants s3:ListBucket to Principal \"*\" or AllUsers. Do not rely solely on PAB to prevent directory enumeration.",
+        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"access\": {\n      \"latent_public_list\": false\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-d4589654a40e7f1b",
+        "target": {
+          "asset_id": "latent-listable-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+      },
+      "exposure_score": 200,
+      "score_breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "days_blind": 10
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "storage.access.latent_public_list eq true",
+          "observation_key": "storage.access.latent_public_list",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": true
+        },
+        {
+          "predicate_expr": "storage.kind eq \"bucket\"",
+          "observation_key": "storage.kind",
+          "operator": "eq",
+          "expected_value": "bucket",
+          "observed_value": "bucket"
+        }
+      ]
+    }
+  ],
+  "remediation_groups": [
     {
       "asset_id": "latent-listable-bucket",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-d4589654a40e7f1b",
+        "target": {
+          "asset_id": "latent-listable-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+      },
+      "contributing_controls": [
+        "CTL.S3.PUBLIC.006"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.S3.PUBLIC.006",
+      "asset_id": "latent-listable-bucket",
+      "exposure_score": 200,
       "breakdown": {
         "base_score": 100,
-        "blast_multiplier": 1,
-        "days_blind": 10,
         "duration_factor": 1,
-        "exposure_multiplier": 2
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "days_blind": 10
       },
-      "control_id": "CTL.S3.PUBLIC.006",
-      "exposure_score": 200,
-      "finding_index": 0,
       "silent_killer": false
     }
-  ]
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-s3-latent-list/controls",
+      "observations": "testdata/e2e/e2e-s3-latent-list/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "e75fb9b105c8552f0ab8fcae488af7655933cf1a",
+      "dirty": false
+    }
+  }
 }

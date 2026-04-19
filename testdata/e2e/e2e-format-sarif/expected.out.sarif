@@ -47,7 +47,18 @@
                 "text": "Review the misconfigured properties and revert to compliant values."
               }
             }
-          ]
+          ],
+          "properties": {
+            "reasoning_trace": [
+              {
+                "expected_value": true,
+                "observation_key": "public",
+                "observed_value": true,
+                "operator": "eq",
+                "predicate_expr": "public eq true"
+              }
+            ]
+          }
         }
       ]
     }

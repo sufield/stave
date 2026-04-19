@@ -27,17 +27,34 @@ type ScoreBreakdown struct {
 	DurationFactor     float64 `json:"duration_factor"`
 	BlastMultiplier    float64 `json:"blast_multiplier"`
 	ExposureMultiplier float64 `json:"exposure_multiplier"`
+	ChainBonus         float64 `json:"chain_bonus"`
 	DaysBlind          float64 `json:"days_blind"`
 }
 
 // RankInput carries the data needed to score one finding without
 // importing the evaluation package (which already imports risk).
 type RankInput struct {
-	ControlID           kernel.ControlID
-	AssetID             asset.ID
-	ControlSeverity     policy.Severity
-	Exposure            *policy.Exposure
-	UnsafeDurationHours float64
+	ControlID            kernel.ControlID
+	AssetID              asset.ID
+	ControlSeverity      policy.Severity
+	Exposure             *policy.Exposure
+	UnsafeDurationHours  float64
+	ChainMembershipCount int
+}
+
+// ChainBonus returns the multiplicative boost applied to a finding
+// based on how many fired chains it participates in. Defaults per
+// docs/product/metrics.md § Metric 1: 1.0× for non-members,
+// 1.5× for a single chain, 2.0× for two or more.
+func ChainBonus(chainCount int) float64 {
+	switch {
+	case chainCount >= 2:
+		return 2.0
+	case chainCount == 1:
+		return 1.5
+	default:
+		return 1.0
+	}
 }
 
 // silentKillerDaysThreshold is the minimum days blind to flag a
@@ -128,8 +145,9 @@ func RankExposures(
 		daysBlind := f.UnsafeDurationHours / 24.0
 		durFactor := DurationFactor(f.UnsafeDurationHours)
 		expMult := exposureMultiplier(f.Exposure)
+		chainBonus := ChainBonus(f.ChainMembershipCount)
 
-		score := float64(base) * durFactor * blast * expMult
+		score := float64(base) * durFactor * blast * expMult * chainBonus
 
 		ranks = append(ranks, ExposureRank{
 			FindingIndex:  i,
@@ -142,6 +160,7 @@ func RankExposures(
 				DurationFactor:     durFactor,
 				BlastMultiplier:    blast,
 				ExposureMultiplier: expMult,
+				ChainBonus:         chainBonus,
 				DaysBlind:          daysBlind,
 			},
 		})

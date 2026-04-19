@@ -1,79 +1,12 @@
 {
-  "extensions": {
-    "context_name": "stave",
-    "git": {
-      "dirty": false,
-      "head_commit": "74f975c98eab8c8fba8a2bb86a60ce6b3ab19ff7",
-      "repo_root": "/home/zepho/work/bizacademy"
-    },
-    "resolved_paths": {
-      "controls": "testdata/e2e/e2e-s3-acl-recon/controls",
-      "observations": "testdata/e2e/e2e-s3-acl-recon/observations"
-    },
-    "selected_controls_source": "dir"
-  },
-  "findings": [
-    {
-      "asset_id": "acl-readable-bucket",
-      "asset_type": "aws_s3_bucket",
-      "asset_vendor": "aws",
-      "control_compliance_ccm_v4": [
-        "DSP-17",
-        "IAM-16"
-      ],
-      "control_description": "S3 bucket ACLs should not be readable by unauthenticated users. READ_ACP permission enables attackers to enumerate ACL grants, discover which principals have access, and find escalation paths.\n",
-      "control_id": "CTL.S3.ACL.RECON.001",
-      "control_name": "No Public ACL Readability",
-      "control_severity": "high",
-      "evidence": {
-        "first_unsafe_at": "2026-01-01T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
-        "misconfigurations": [
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "property": "storage.access.public_admin",
-            "unsafe_value": true
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z.",
-        "threshold_hours": 168,
-        "unsafe_duration_hours": 240
-      },
-      "exposure": {
-        "principal_scope": "public",
-        "type": "acl_read"
-      },
-      "finding_id": "sha256:fe26f93edf61a8f9",
-      "posture_drift": {
-        "exposure_window_count": 1,
-        "pattern": "persistent"
-      },
-      "remediation": {
-        "action": "Remove READ_ACP grants from the bucket ACL and remove policy statements granting s3:GetBucketAcl or s3:GetObjectAcl to public principals. Enable S3 Public Access Block with BlockPublicAcls set to true.",
-        "description": "Bucket grants ACL read access (READ_ACP) to public users. An attacker can call GetBucketAcl to discover which principals have access and identify escalation paths.",
-        "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_admin\": false\n    }\n  }\n}\n"
-      }
-    }
-  ],
+  "schema_version": "out.v0.1",
   "kind": "ASSESSMENT",
-  "risk_signals": [
-    {
-      "asset_id": "acl-readable-bucket",
-      "asset_type": "aws_s3_bucket",
-      "control_id": "CTL.S3.ACL.RECON.001",
-      "due_at": "2026-01-08T00:00:00Z",
-      "first_unsafe_at": "2026-01-01T00:00:00Z",
-      "remaining_hours": -72,
-      "status": "OVERDUE",
-      "threshold_hours": 168
-    }
-  ],
   "run": {
-    "evaluated_state": "deployed",
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
     "input_hashes": {
       "files": {
         "2026-01-01T000000Z.json": "d59e41daec54115a699084421196e360c8264e4930165fe932f46e36d88ce033",
@@ -81,34 +14,120 @@
       },
       "overall": "e62f4eef1efbca24ed48f3db0cdb52d3d11ddc477297a569e976ff8c9b4d739a"
     },
-    "now": "2026-01-11T00:00:00Z",
-    "offline": true,
     "policy_fingerprint": "cfd037b94fe42ee37b1cba2024cb22728803e5695a82127760a3bc4150c144ec",
-    "sla_threshold": "7d",
-    "snapshots": 2,
-    "tool_version": "edge"
+    "evaluated_state": "deployed"
   },
-  "schema_version": "out.v0.1",
-  "status": "NON_COMPLIANT",
   "summary": {
-    "exposed_resources": 1,
     "total_assets": 2,
+    "exposed_resources": 1,
     "violations": 1
   },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.S3.ACL.RECON.001",
+      "asset_id": "acl-readable-bucket",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:fe26f93edf61a8f9",
+      "control_id": "CTL.S3.ACL.RECON.001",
+      "control_name": "No Public ACL Readability",
+      "control_description": "S3 bucket ACLs should not be readable by unauthenticated users. READ_ACP permission enables attackers to enumerate ACL grants, discover which principals have access, and find escalation paths.\n",
+      "asset_id": "acl-readable-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "storage.access.public_admin",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance_ccm_v4": [
+        "DSP-17",
+        "IAM-16"
+      ],
+      "exposure": {
+        "type": "acl_read",
+        "principal_scope": "public"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Bucket grants ACL read access (READ_ACP) to public users. An attacker can call GetBucketAcl to discover which principals have access and identify escalation paths.",
+        "action": "Remove READ_ACP grants from the bucket ACL and remove policy statements granting s3:GetBucketAcl or s3:GetObjectAcl to public principals. Enable S3 Public Access Block with BlockPublicAcls set to true.",
+        "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_admin\": false\n    }\n  }\n}\n"
+      },
+      "exposure_score": 150,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "days_blind": 10
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "storage.access.public_admin eq true",
+          "observation_key": "storage.access.public_admin",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": true
+        }
+      ]
+    }
+  ],
   "top_exposures": [
     {
+      "finding_index": 0,
+      "control_id": "CTL.S3.ACL.RECON.001",
       "asset_id": "acl-readable-bucket",
+      "exposure_score": 150,
       "breakdown": {
         "base_score": 75,
-        "blast_multiplier": 1,
-        "days_blind": 10,
         "duration_factor": 1,
-        "exposure_multiplier": 2
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "days_blind": 10
       },
-      "control_id": "CTL.S3.ACL.RECON.001",
-      "exposure_score": 150,
-      "finding_index": 0,
       "silent_killer": false
     }
-  ]
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-s3-acl-recon/controls",
+      "observations": "testdata/e2e/e2e-s3-acl-recon/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "e75fb9b105c8552f0ab8fcae488af7655933cf1a",
+      "dirty": false
+    }
+  }
 }

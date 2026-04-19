@@ -195,7 +195,7 @@ func (o *Options) bindApplySpecific(cmd *cobra.Command) {
 	f.StringVar(&o.InputFile, "input", "", "Path to observations bundle file (required with --profile)")
 	f.StringSliceVar(&o.BucketAllowlist, "bucket-allowlist", nil, "Bucket names/ARNs to include")
 	f.BoolVar(&o.IncludeAll, "include-all", false, "Disable health scope filtering")
-	f.StringVar(&o.TracePath, "trace", "", "Write logic audit trace to file (e.g. audit_trace.json)")
+	f.StringVar(&o.TracePath, "trace", "", "Write full step-by-step audit trace to file. The compact reasoning trace (matched clauses + observed values) is already emitted inline on every finding by default; this flag writes the full Assessment.Steps[] superset to a separate file for deep-dive.")
 	f.StringSliceVar(&o.ProfileFiles, "profile-file", nil, "custom compliance profile YAML (can be repeated)")
 	f.StringVar(&o.OverlayPath, "overlay", "", "environment-specific severity overlay YAML")
 	f.BoolVar(&o.ShowSuppressed, "show-suppressed", false, "include overlay-suppressed controls in output")

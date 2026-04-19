@@ -54,6 +54,20 @@ func FromFinding(f *remediation.Finding) FindingDTO {
 	dto.SLAOverdueHours = f.SLAOverdueHours
 	dto.SLAEscalatedSeverity = f.SLAEscalatedSeverity
 	dto.SLAPolicySource = f.SLAPolicySource
+	dto.ExposureScore = f.ExposureScore
+	dto.ScoreBreakdown = f.ScoreBreakdown
+	if len(f.ReasoningTrace) > 0 {
+		dto.ReasoningTrace = make([]MatchedClauseDTO, len(f.ReasoningTrace))
+		for i, mc := range f.ReasoningTrace {
+			dto.ReasoningTrace[i] = MatchedClauseDTO{
+				PredicateExpr:  mc.PredicateExpr,
+				ObservationKey: mc.ObservationKey,
+				Operator:       mc.Operator,
+				ExpectedValue:  mc.ExpectedValue,
+				ObservedValue:  mc.ObservedValue,
+			}
+		}
+	}
 
 	// Normalize empty severity to match omitempty behavior.
 	if dto.ControlSeverity == "" {

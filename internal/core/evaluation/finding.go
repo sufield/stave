@@ -4,10 +4,12 @@ import (
 	"cmp"
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"slices"
 
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
@@ -49,6 +51,99 @@ type Finding struct {
 
 	// Reachability — populated when IAM data is in the snapshot.
 	Reachability *ReachabilityContext `json:"reachability,omitempty"`
+
+	// ExposureScore is the priority score used to order findings. Populated
+	// by the enrichment pass (internal/app/eval/workflow.go) after chain
+	// membership is annotated. 0 on findings that have not been scored yet
+	// (e.g., during assessor.compileReport before enrichment runs).
+	ExposureScore float64 `json:"exposure_score,omitempty"`
+
+	// ScoreBreakdown decomposes ExposureScore into the factors that produced
+	// it. Populated alongside ExposureScore. Nil on unscored findings.
+	ScoreBreakdown *risk.ScoreBreakdown `json:"score_breakdown,omitempty"`
+
+	// ReasoningTrace lists the predicate leaf clauses that the engine
+	// evaluated to produce this finding, each paired with the observed
+	// value from the snapshot. For predicates rooted in `all:` (the
+	// dominant shape in the catalog), every entry is a matched clause.
+	// For predicates rooted in `any:`, entries are the full set of
+	// evaluated clauses — the reader compares ObservedValue to
+	// ExpectedValue to infer which satisfied the operator. Nil on
+	// findings produced without a backing predicate (rare: compound
+	// chain findings in report.ChainFindings).
+	ReasoningTrace []MatchedClause `json:"reasoning_trace,omitempty"`
+}
+
+// ReasoningTraceFromMisconfigurations converts a predicate-extracted
+// misconfiguration list into the reasoning-trace shape surfaced on a
+// finding. The two carry the same triggering state from slightly
+// different angles: Misconfiguration is the failed-logic-gate framing
+// (used by Evidence), MatchedClause is the predicate-match-record
+// framing (used by ReasoningTrace).
+//
+// See docs/product/metrics.md § Metric 3 for the inline-trace
+// specification and the "shared predicate-consumed observation
+// fields" framing that Metric 2 (Deduplication) will consume.
+func ReasoningTraceFromMisconfigurations(ms []policy.Misconfiguration) []MatchedClause {
+	if len(ms) == 0 {
+		return nil
+	}
+	out := make([]MatchedClause, len(ms))
+	for i, mc := range ms {
+		key := mc.DisplayProperty()
+		expected := mc.UnsafeValue
+		operator := string(mc.Operator)
+		out[i] = MatchedClause{
+			PredicateExpr:  formatClauseExpr(key, operator, expected),
+			ObservationKey: key,
+			Operator:       operator,
+			ExpectedValue:  expected,
+			ObservedValue:  mc.ActualValue,
+		}
+	}
+	return out
+}
+
+// formatClauseExpr renders the clause in the authored form for display.
+func formatClauseExpr(key, op string, expected any) string {
+	switch expected.(type) {
+	case nil:
+		return key + " " + op
+	default:
+		return key + " " + op + " " + stringifyExpected(expected)
+	}
+}
+
+// stringifyExpected returns a compact display form of the expected value.
+// Strings are quoted; other scalars use default Go formatting.
+func stringifyExpected(v any) string {
+	switch t := v.(type) {
+	case string:
+		return "\"" + t + "\""
+	default:
+		return fmt.Sprint(t)
+	}
+}
+
+// MatchedClause records one predicate leaf clause and the observed
+// value that triggered (or was considered in) the fire. See
+// docs/product/metrics.md § Metric 3 for semantics.
+type MatchedClause struct {
+	// PredicateExpr is the authored form of the clause, e.g.
+	// "storage.access.public_read eq true" — convenient for display.
+	PredicateExpr string `json:"predicate_expr"`
+	// ObservationKey is the field path the clause consumed, with the
+	// "properties." prefix stripped for readability.
+	ObservationKey string `json:"observation_key"`
+	// Operator is the clause's op, e.g. "eq", "any_in_field".
+	Operator string `json:"operator"`
+	// ExpectedValue is the value the clause expected (or the param
+	// reference when the value was `params.<name>`).
+	ExpectedValue any `json:"expected_value,omitempty"`
+	// ObservedValue is the value resolved from the snapshot at
+	// ObservationKey. Nil when the field is absent from the
+	// observation.
+	ObservedValue any `json:"observed_value,omitempty"`
 }
 
 // ReachabilityContext carries IAM reachability data for a finding.
@@ -76,10 +171,22 @@ type ChainMembershipEntry struct {
 	Narrative string `json:"narrative"`
 }
 
-// SortFindings sorts findings deterministically.
+// SortFindings sorts findings by actionable priority:
+// ExposureScore descending (highest-score findings first), with
+// alphabetical tiebreaker on ControlID + AssetID (and further
+// fallbacks) so the order stays deterministic when scores collide
+// or when the sort is called before scoring runs.
+//
+// Unscored findings (ExposureScore == 0, e.g. during
+// assessor.compileReport before the enrichment pass populates
+// scores) fall through to the alphabetical tiebreaker, matching the
+// previous sort semantics in that window.
 func SortFindings(fs []Finding) {
 	slices.SortFunc(fs, func(a, b Finding) int {
 		return cmp.Or(
+			// Primary: ExposureScore descending.
+			cmp.Compare(b.ExposureScore, a.ExposureScore),
+			// Tiebreaker: deterministic alphabetical ordering.
 			cmp.Compare(a.ControlID, b.ControlID),
 			cmp.Compare(a.AssetID, b.AssetID),
 			cmp.Compare(a.Evidence.TemporalRisk, b.Evidence.TemporalRisk),

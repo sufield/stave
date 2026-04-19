@@ -176,18 +176,40 @@ func (w *AuditWorkflow) enrichWithRiskReasoning(
 	report.AttackStageSummary = risk.BuildAttackStageSummary(failingIDs, controlLookup)
 
 	// Rank findings by exposure score (silent killer detection).
+	// ChainMembership must be annotated before this loop runs so the
+	// chain-bonus factor feeds into per-finding scores.
 	rankInputs := make([]risk.RankInput, len(report.Findings))
 	for i := range report.Findings {
 		f := &report.Findings[i]
 		rankInputs[i] = risk.RankInput{
-			ControlID:           f.ControlID,
-			AssetID:             f.AssetID,
-			ControlSeverity:     f.ControlSeverity,
-			Exposure:            f.Exposure,
-			UnsafeDurationHours: f.Evidence.UnsafeDurationHours,
+			ControlID:            f.ControlID,
+			AssetID:              f.AssetID,
+			ControlSeverity:      f.ControlSeverity,
+			Exposure:             f.Exposure,
+			UnsafeDurationHours:  f.Evidence.UnsafeDurationHours,
+			ChainMembershipCount: len(f.ChainMembership),
 		}
 	}
 	report.TopExposures = risk.RankExposures(rankInputs, controlLookup, 0)
+
+	// Propagate the per-finding score + breakdown back onto each
+	// Finding so downstream sorts and output can read the score
+	// without a parallel lookup. Matches metrics.md § Metric 1
+	// improvement signal: "score and breakdown are emitted on every
+	// finding, not only on the top-N slice".
+	for i := range report.TopExposures {
+		er := &report.TopExposures[i]
+		if er.FindingIndex < 0 || er.FindingIndex >= len(report.Findings) {
+			continue
+		}
+		f := &report.Findings[er.FindingIndex]
+		f.ExposureScore = er.ExposureScore
+		breakdown := er.Breakdown
+		f.ScoreBreakdown = &breakdown
+	}
+
+	// Re-sort findings by the newly-populated score.
+	evaluation.SortFindings(report.Findings)
 }
 
 // annotateChainMembership cross-references fired chains with individual

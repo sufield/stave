@@ -2,7 +2,7 @@
 
 ## Preamble
 
-These are the six metrics Stave optimizes for. Every feature proposal
+Stave optimizes for six metrics. Every feature proposal
 runs through this document. A proposal names which metrics the work
 improves and which metrics it risks deteriorating; proposals that
 improve nothing are out of scope unless they close a drift or
@@ -72,25 +72,30 @@ turns the queue into a ranking the user can scan top-down and stop
 when they hit diminishing returns.
 
 **Baseline.** PARTIAL. `risk.RankExposures` at
-`internal/core/evaluation/risk/exposure_rank.go:102` computes an
+`internal/core/evaluation/risk/exposure_rank.go` computes an
 exposure score with factor breakdown (`base × durationFactor × blast
-× exposureMult`) and emits a sorted `top_exposures[]` view. The main
-`findings[]` array is sorted alphabetically by `SortFindings` at
-`internal/core/evaluation/finding.go:80` — by `ControlID` then
-`AssetID`, not by score. Exploitability in the current scoring is
-binary via `exposureMultiplier` reading `Exposure.IsPublic`
-(`exposure_rank.go:86`). Chain membership is recorded on findings
-(`Finding.ChainMembership[]`) but does not feed back into the
-`ExposureRank` score.
+× exposureMult × chainBonus`) and emits a sorted `top_exposures[]`
+view. The main `findings[]` array is sorted by `ExposureScore`
+descending via `SortFindings` at
+`internal/core/evaluation/finding.go` with alphabetical tiebreaker
+on `ControlID` + `AssetID` (commit `5462430d5`'s follow-up iteration).
+Chain membership feeds into per-finding scores through
+`ChainMembershipCount` on `RankInput` and the `ChainBonus` factor
+(1.0× / 1.5× / 2.0× for zero / one / two-or-more chains).
+Exploitability remains binary via `exposureMultiplier` reading
+`Exposure.IsPublic` — broadening to the `exposure.type` enum and
+principal-scope value is the remaining improvement to close out this
+metric. Each finding carries its `exposure_score` and
+`score_breakdown` inline; the `top_exposures[]` parallel view is
+retained as the summary "Critical-Path Exposures" surface in text
+output.
 
-**Target.** Default-sort `findings[]` by `ExposureScore` descending.
-Fold chain membership into the individual finding score (every member
-of a fired chain gets a bonus proportional to the chain's
-`compound_score`; missing-safeguard findings get a distinct signal).
-Broaden exploitability beyond `IsPublic` — the exposure multiplier
-reads the `exposure.type` enum and the principal-scope value, not a
-single bool. The `top_exposures[]` parallel view remains for
-downstream tooling that wants the top-N slice explicitly.
+**Target.** Broaden exploitability beyond binary `IsPublic` — the
+exposure multiplier reads the `exposure.type` enum
+(`public_internet` vs `cross_account` vs `same_account_privileged`)
+and scores each distinctly. The default sort and chain-bonus
+factors landed; the exposure-model widening is the remaining work
+for this metric to reach full coverage.
 
 **Improvement signal.**
 - Default `findings[]` sort matches `top_exposures[]` ordering.
@@ -217,27 +222,54 @@ three observation values that tripped the predicate is falsifiable
 and, when wrong, actionable. Traceability is what converts a finding
 from an assertion into evidence.
 
-**Baseline.** PARTIAL. Full `LogicTrace` exists
-(`internal/core/trace/trace.go:17`, schema `trace.v0.1`) with
-per-assessment `Steps[]` recording inputs and results at each stage.
-It is opt-in (`--trace path.json` or `STAVE_TRACE` env var) and
-written to a separate file, not embedded in the default output.
-Inline today, each finding carries `Evidence.Misconfigurations[]`
-(`internal/core/evaluation/evidence.go:47`) listing
-`{property, operator, unsafe_value, actual_value}` per triggering
-field — a partial match to the target "matched clauses + observed
-values" shape, but structured as a violations list rather than the
-full predicate-match record.
+**Baseline.** PARTIAL. Every finding now carries a `reasoning_trace`
+field inline in the default output — a list of `MatchedClause`
+records, each pairing the clause's authored predicate expression,
+observation key, operator, expected value, and the value observed
+from the snapshot. The list is populated by
+`ReasoningTraceFromMisconfigurations` at
+`internal/core/evaluation/finding.go` and wired into finding
+construction in `internal/core/evaluation/engine/finding_gen.go` and
+`finding_builder.go`. DTO surface (`FindingDTO.ReasoningTrace`), text
+output (per-finding "Reasoning:" block), and SARIF output
+(`properties.reasoning_trace` bag) all emit the trace. Full
+`LogicTrace` (`internal/core/trace/trace.go`, schema `trace.v0.1`)
+remains opt-in behind `--trace path.json` and is a strict superset —
+whole-predicate aggregate `Step`s plus any instrumentation a future
+iteration adds. `Evidence.Misconfigurations[]` continues to emit
+alongside `reasoning_trace` (duplicate-looking but different framing:
+violations list vs predicate-match record); consolidating the two is
+future work.
 
-**Target.** A compact `reasoning` block on every finding in every
-output format. Shape: the list of predicate clauses whose evaluation
-pushed the overall predicate to true, each with the operator, the
-expected value, and the value observed on the asset. For `any`
-predicates, the matched clause(s) only. For `all` predicates, every
-clause (since every one contributed). Machine-consumable in JSON;
-prose-rendered in text mode using the self-explaining translator
-(metric 5). `--trace` remains for users who need full step-by-step
-including skipped clauses, timing, and intermediate states.
+Known limitation: for the ~15 of 675 controls using `any:` at the
+predicate root, the reasoning trace includes every leaf clause the
+engine considered, not only the clause that satisfied the `any`.
+Readers compare `observed_value` to `expected_value` inline to infer
+which clause actually matched. Per-clause match resolution for `any`
+predicates is a future refinement; the dominant `all:` case (660/675)
+emits the exact matched set.
+
+**Target.** The default-inline compact trace landed in the prior
+iteration. Remaining work on this metric:
+
+- Per-clause match resolution for `any:` predicates — the 15 of 675
+  controls where the current trace over-reports (shows all leaf
+  clauses the engine considered, not just the matched one). Requires
+  a per-op clause-level evaluator.
+- Prose rendering in text mode driven by the self-explaining
+  translator (metric 5) — today's text output shows the clause's
+  authored form (`storage.access.has_wildcard_principal eq true`),
+  which leaks predicate-DSL vocabulary. Plain-language translation is
+  Metric 5's work; once landed, it consumes the reasoning_trace
+  structure.
+- Consolidation of `Evidence.Misconfigurations[]` and
+  `reasoning_trace` into a single structured surface — they currently
+  emit side-by-side with overlapping content.
+- Open design question: should full `--trace` output become the
+  default for specific finding categories (e.g., critical-severity,
+  chain-member, silent-killer)? Compact trace is sufficient for the
+  dominant case; full trace shines during post-incident deep-dive.
+  Not committed work; flagged for discussion.
 
 **Improvement signal.**
 - Every finding in `apply` JSON output carries a `reasoning` field

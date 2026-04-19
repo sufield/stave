@@ -137,14 +137,31 @@ func buildResults(findings []remediation.Finding, ruleIndex map[kernel.ControlID
 			}
 		}
 
-		// Add chain context to properties bag.
-		if len(f.ChainMembership) > 0 {
-			cm := f.ChainMembership[0]
-			result.Properties = map[string]any{
-				"chain_id":       cm.ChainID,
-				"chain_severity": cm.ChainSeverity,
-				"stage_span":     cm.StageSpan,
-				"finding_id":     f.FindingID,
+		// Add chain context and reasoning trace to properties bag.
+		// SARIF codeFlows is designed for source-code flow graphs; Stave's
+		// compact predicate trace lives in the properties bag per SARIF
+		// extension conventions.
+		if len(f.ChainMembership) > 0 || len(f.ReasoningTrace) > 0 {
+			result.Properties = map[string]any{}
+			if len(f.ChainMembership) > 0 {
+				cm := f.ChainMembership[0]
+				result.Properties["chain_id"] = cm.ChainID
+				result.Properties["chain_severity"] = cm.ChainSeverity
+				result.Properties["stage_span"] = cm.StageSpan
+				result.Properties["finding_id"] = f.FindingID
+			}
+			if len(f.ReasoningTrace) > 0 {
+				trace := make([]map[string]any, len(f.ReasoningTrace))
+				for i, mc := range f.ReasoningTrace {
+					trace[i] = map[string]any{
+						"predicate_expr":  mc.PredicateExpr,
+						"observation_key": mc.ObservationKey,
+						"operator":        mc.Operator,
+						"expected_value":  mc.ExpectedValue,
+						"observed_value":  mc.ObservedValue,
+					}
+				}
+				result.Properties["reasoning_trace"] = trace
 			}
 		}
 

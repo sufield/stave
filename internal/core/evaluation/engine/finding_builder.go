@@ -24,6 +24,7 @@ func NewFinding(
 		Misconfigurations: ctx.Misconfigs,
 		TemporalRisk:      ctx.Reason,
 	}
+	f.ReasoningTrace = evaluation.ReasoningTraceFromMisconfigurations(ctx.Misconfigs)
 	return f
 }
 

@@ -1,84 +1,12 @@
 {
-  "extensions": {
-    "context_name": "stave",
-    "git": {
-      "dirty": false,
-      "head_commit": "74f975c98eab8c8fba8a2bb86a60ce6b3ab19ff7",
-      "repo_root": "/home/zepho/work/bizacademy"
-    },
-    "resolved_paths": {
-      "controls": "testdata/e2e/e2e-rds-iam-auth/controls",
-      "observations": "testdata/e2e/e2e-rds-iam-auth/observations"
-    },
-    "selected_controls_source": "dir"
-  },
-  "findings": [
-    {
-      "asset_id": "phi-database",
-      "asset_type": "aws_rds_instance",
-      "asset_vendor": "aws",
-      "control_compliance": {
-        "hipaa": "164.312(d)"
-      },
-      "control_compliance_ccm_v4": [
-        "DSP-17",
-        "IAM-16"
-      ],
-      "control_description": "RDS instances should enable IAM database authentication. IAM auth eliminates long-lived database passwords and integrates with AWS identity governance for centralized access control and audit.\n",
-      "control_id": "CTL.RDS.IAMAUTH.001",
-      "control_name": "RDS Must Enable IAM Authentication",
-      "control_severity": "medium",
-      "evidence": {
-        "first_unsafe_at": "2026-01-01T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
-        "misconfigurations": [
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "property": "database.access.iam_authentication_enabled",
-            "unsafe_value": false
-          },
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "property": "database.kind",
-            "unsafe_value": "instance"
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z.",
-        "threshold_hours": 168,
-        "unsafe_duration_hours": 240
-      },
-      "finding_id": "sha256:365df8283b5f6f06",
-      "posture_drift": {
-        "exposure_window_count": 1,
-        "pattern": "persistent"
-      },
-      "remediation": {
-        "action": "Enable IAM authentication on the instance. Run: aws rds modify-db-instance --db-instance-identifier xxx --enable-iam-database-authentication --apply-immediately",
-        "description": "RDS instance does not have IAM authentication enabled. Database access relies on long-lived passwords that are harder to rotate and audit.",
-        "example": "{\n  \"database\": {\n    \"kind\": \"instance\",\n    \"access\": {\n      \"iam_authentication_enabled\": true\n    }\n  }\n}\n"
-      }
-    }
-  ],
+  "schema_version": "out.v0.1",
   "kind": "ASSESSMENT",
-  "risk_signals": [
-    {
-      "asset_id": "phi-database",
-      "asset_type": "aws_rds_instance",
-      "control_id": "CTL.RDS.IAMAUTH.001",
-      "due_at": "2026-01-08T00:00:00Z",
-      "first_unsafe_at": "2026-01-01T00:00:00Z",
-      "remaining_hours": -72,
-      "status": "OVERDUE",
-      "threshold_hours": 168
-    }
-  ],
   "run": {
-    "evaluated_state": "deployed",
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
     "input_hashes": {
       "files": {
         "2026-01-01T000000Z.json": "348f803387bafb89ff4b74551b231047b0cc86ca8697555b4a8204c1a62ea75b",
@@ -86,34 +14,132 @@
       },
       "overall": "9ac450ebf5a029e16470e45d8b387100ea290be9141158bb7b83f7abeeb3b12a"
     },
-    "now": "2026-01-11T00:00:00Z",
-    "offline": true,
     "policy_fingerprint": "e89fc87dfa1eb031594465ab81b52c34f44d701d8a33e40ac48f0eeddc3d3b9d",
-    "sla_threshold": "7d",
-    "snapshots": 2,
-    "tool_version": "edge"
+    "evaluated_state": "deployed"
   },
-  "schema_version": "out.v0.1",
-  "status": "NON_COMPLIANT",
   "summary": {
-    "exposed_resources": 1,
     "total_assets": 1,
+    "exposed_resources": 1,
     "violations": 1
   },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.RDS.IAMAUTH.001",
+      "asset_id": "phi-database",
+      "asset_type": "aws_rds_instance",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:365df8283b5f6f06",
+      "control_id": "CTL.RDS.IAMAUTH.001",
+      "control_name": "RDS Must Enable IAM Authentication",
+      "control_description": "RDS instances should enable IAM database authentication. IAM auth eliminates long-lived database passwords and integrates with AWS identity governance for centralized access control and audit.\n",
+      "asset_id": "phi-database",
+      "asset_type": "aws_rds_instance",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "database.access.iam_authentication_enabled",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "database.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "instance"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "hipaa": "164.312(d)"
+      },
+      "control_compliance_ccm_v4": [
+        "DSP-17",
+        "IAM-16"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "RDS instance does not have IAM authentication enabled. Database access relies on long-lived passwords that are harder to rotate and audit.",
+        "action": "Enable IAM authentication on the instance. Run: aws rds modify-db-instance --db-instance-identifier xxx --enable-iam-database-authentication --apply-immediately",
+        "example": "{\n  \"database\": {\n    \"kind\": \"instance\",\n    \"access\": {\n      \"iam_authentication_enabled\": true\n    }\n  }\n}\n"
+      },
+      "exposure_score": 50,
+      "score_breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 10
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "database.access.iam_authentication_enabled eq false",
+          "observation_key": "database.access.iam_authentication_enabled",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "database.kind eq \"instance\"",
+          "observation_key": "database.kind",
+          "operator": "eq",
+          "expected_value": "instance",
+          "observed_value": "instance"
+        }
+      ]
+    }
+  ],
   "top_exposures": [
     {
+      "finding_index": 0,
+      "control_id": "CTL.RDS.IAMAUTH.001",
       "asset_id": "phi-database",
+      "exposure_score": 50,
       "breakdown": {
         "base_score": 50,
-        "blast_multiplier": 1,
-        "days_blind": 10,
         "duration_factor": 1,
-        "exposure_multiplier": 1
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 10
       },
-      "control_id": "CTL.RDS.IAMAUTH.001",
-      "exposure_score": 50,
-      "finding_index": 0,
       "silent_killer": false
     }
-  ]
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-rds-iam-auth/controls",
+      "observations": "testdata/e2e/e2e-rds-iam-auth/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "e75fb9b105c8552f0ab8fcae488af7655933cf1a",
+      "dirty": false
+    }
+  }
 }

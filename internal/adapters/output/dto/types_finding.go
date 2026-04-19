@@ -5,6 +5,7 @@ import (
 
 	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/evaluation"
+	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
@@ -32,6 +33,18 @@ type FindingDTO struct {
 	SLAOverdueHours      *float64                  `json:"sla_overdue_hours,omitempty"`
 	SLAEscalatedSeverity string                    `json:"sla_escalated_severity,omitempty"`
 	SLAPolicySource      string                    `json:"sla_policy_source,omitempty"`
+	ExposureScore        float64                   `json:"exposure_score,omitempty"`
+	ScoreBreakdown       *risk.ScoreBreakdown      `json:"score_breakdown,omitempty"`
+	ReasoningTrace       []MatchedClauseDTO        `json:"reasoning_trace,omitempty"`
+}
+
+// MatchedClauseDTO mirrors evaluation.MatchedClause.
+type MatchedClauseDTO struct {
+	PredicateExpr  string `json:"predicate_expr"`
+	ObservationKey string `json:"observation_key"`
+	Operator       string `json:"operator"`
+	ExpectedValue  any    `json:"expected_value,omitempty"`
+	ObservedValue  any    `json:"observed_value,omitempty"`
 }
 
 // ChainMembershipEntryDTO mirrors evaluation.ChainMembershipEntry.

@@ -1,22 +1,78 @@
 {
-  "extensions": {
-    "context_name": "stave",
-    "git": {
-      "dirty": false,
-      "head_commit": "74f975c98eab8c8fba8a2bb86a60ce6b3ab19ff7",
-      "repo_root": "/home/zepho/work/bizacademy"
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2019-03-01T000000Z.json": "c2252d466871c3e99ca331c6888787a9e186abe1b88e9817e917776f7e969bac",
+        "2019-03-09T000000Z.json": "b44e64247606dab256853c42d96c30508e27c6b035bf0349ac3fd1e307407d71"
+      },
+      "overall": "520fcb9d9bb6033313a525a0267d3ce5b2b7dbf3e8476a6cafd5fd5ebcb74c86"
     },
-    "resolved_paths": {
-      "controls": "testdata/e2e/e2e-h1-zomato-507097/controls",
-      "observations": "testdata/e2e/e2e-h1-zomato-507097/observations"
-    },
-    "selected_controls_source": "dir"
+    "policy_fingerprint": "87b7926cb5589261e3d4c63df2da7923bfac54eca22cb3a4d15a1e2512ee5424",
+    "evaluated_state": "deployed"
   },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 2
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.S3.PUBLIC.001",
+      "asset_id": "zomato-chat-images",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2019-03-08T00:00:00Z",
+      "remaining_hours": -60024,
+      "first_unsafe_at": "2019-03-01T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.PUBLIC.LIST.002",
+      "asset_id": "zomato-chat-images",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2019-03-08T00:00:00Z",
+      "remaining_hours": -60024,
+      "first_unsafe_at": "2019-03-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
   "findings": [
     {
+      "finding_id": "sha256:78623a97e68d01d5",
+      "control_id": "CTL.S3.PUBLIC.001",
+      "control_name": "No Public S3 Bucket Read",
+      "control_description": "S3 buckets must not allow public read access. Detects buckets with anonymous read exposure via policy or ACL.\n",
       "asset_id": "zomato-chat-images",
       "asset_type": "aws_s3_bucket",
       "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2019-03-01T00:00:00Z",
+        "last_seen_unsafe_at": "2019-03-09T00:00:00Z",
+        "unsafe_duration_hours": 60192,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "storage.access.public_read",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 60192 hours (SLA: 168 hours). Exposed since 2019-03-01T00:00:00Z."
+      },
+      "control_severity": "critical",
       "control_compliance": {
         "cis_aws_v1.4.0": "2.1.5",
         "fedramp_moderate": "AC-3",
@@ -33,34 +89,29 @@
         "DSP-07",
         "DSP-17"
       ],
-      "control_description": "S3 buckets must not allow public read access. Detects buckets with anonymous read exposure via policy or ACL.\n",
-      "control_id": "CTL.S3.PUBLIC.001",
-      "control_name": "No Public S3 Bucket Read",
-      "control_severity": "critical",
-      "evidence": {
-        "first_unsafe_at": "2019-03-01T00:00:00Z",
-        "last_seen_unsafe_at": "2019-03-09T00:00:00Z",
-        "misconfigurations": [
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "property": "storage.access.public_read",
-            "unsafe_value": true
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 60192 hours (SLA: 168 hours). Exposed since 2019-03-01T00:00:00Z.",
-        "threshold_hours": 168,
-        "unsafe_duration_hours": 60192
-      },
       "exposure": {
-        "principal_scope": "public",
-        "type": "public_read"
+        "type": "public_read",
+        "principal_scope": "public"
       },
-      "finding_id": "sha256:78623a97e68d01d5",
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Bucket has public read access enabled via policy or ACL. Anyone on the internet can access objects in this bucket.",
+        "action": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers.",
+        "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_read\": false\n    }\n  }\n}\n"
+      },
       "fix_plan": {
+        "id": "fix-81313fa1ba57cf6a",
+        "target": {
+          "asset_id": "zomato-chat-images",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
         "actions": [
           {
             "action_type": "set",
@@ -83,81 +134,99 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
-        "id": "fix-81313fa1ba57cf6a",
-        "preconditions": [
-          "Confirm resource ownership and internal change window approval.",
-          "Ensure public access is not explicitly required for this specific resource's function."
-        ],
-        "target": {
-          "asset_id": "zomato-chat-images",
-          "asset_type": "aws_s3_bucket"
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+      },
+      "exposure_score": 1000,
+      "score_breakdown": {
+        "base_score": 100,
+        "duration_factor": 5,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "days_blind": 2508
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "storage.access.public_read eq true",
+          "observation_key": "storage.access.public_read",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": true
         }
-      },
-      "posture_drift": {
-        "exposure_window_count": 1,
-        "pattern": "persistent"
-      },
-      "remediation": {
-        "action": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers.",
-        "description": "Bucket has public read access enabled via policy or ACL. Anyone on the internet can access objects in this bucket.",
-        "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_read\": false\n    }\n  }\n}\n"
-      }
+      ]
     },
     {
+      "finding_id": "sha256:0eedb6ab2f180541",
+      "control_id": "CTL.S3.PUBLIC.LIST.002",
+      "control_name": "Anonymous S3 Listing Must Be Explicitly Intended",
+      "control_description": "Anonymous bucket listing increases exposure surface even when objects are public by design. Listing must be explicitly intended via tag.\n",
       "asset_id": "zomato-chat-images",
       "asset_type": "aws_s3_bucket",
       "asset_vendor": "aws",
-      "control_compliance_ccm_v4": [
-        "DSP-07",
-        "DSP-17"
-      ],
-      "control_description": "Anonymous bucket listing increases exposure surface even when objects are public by design. Listing must be explicitly intended via tag.\n",
-      "control_id": "CTL.S3.PUBLIC.LIST.002",
-      "control_name": "Anonymous S3 Listing Must Be Explicitly Intended",
-      "control_severity": "high",
       "evidence": {
         "first_unsafe_at": "2019-03-01T00:00:00Z",
         "last_seen_unsafe_at": "2019-03-09T00:00:00Z",
+        "unsafe_duration_hours": 60192,
+        "threshold_hours": 168,
         "misconfigurations": [
           {
+            "property": "storage.access.public_list",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
-            "property": "storage.access.public_list",
             "unsafe_value": true
           },
           {
+            "property": "storage.kind",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
-            "property": "storage.kind",
             "unsafe_value": "bucket"
           },
           {
+            "property": "storage.tags.public_list_intended",
             "actual_value": "[SANITIZED]",
             "operator": "missing",
-            "property": "storage.tags.public_list_intended",
             "unsafe_value": true
           },
           {
+            "property": "storage.tags.public_list_intended",
             "actual_value": "[SANITIZED]",
             "operator": "ne",
-            "property": "storage.tags.public_list_intended",
             "unsafe_value": "true"
           }
         ],
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset non-compliant for 60192 hours (SLA: 168 hours). Exposed since 2019-03-01T00:00:00Z.",
-        "threshold_hours": 168,
-        "unsafe_duration_hours": 60192
+        "temporal_risk": "Asset non-compliant for 60192 hours (SLA: 168 hours). Exposed since 2019-03-01T00:00:00Z."
       },
+      "control_severity": "high",
+      "control_compliance_ccm_v4": [
+        "DSP-07",
+        "DSP-17"
+      ],
       "exposure": {
-        "principal_scope": "public",
-        "type": "public_list"
+        "type": "public_list",
+        "principal_scope": "public"
       },
-      "finding_id": "sha256:0eedb6ab2f180541",
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Bucket has public listing enabled without an explicit intent tag. Anonymous listing increases exposure surface even for public content.",
+        "action": "If listing is intentional, add the tag public_list_intended=true to the bucket. Otherwise, remove the policy or ACL granting s3:ListBucket to Principal \"*\" or AllUsers.",
+        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"access\": {\n      \"public_list\": false\n    }\n  }\n}\n"
+      },
       "fix_plan": {
+        "id": "fix-81313fa1ba57cf6a",
+        "target": {
+          "asset_id": "zomato-chat-images",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
         "actions": [
           {
             "action_type": "set",
@@ -180,39 +249,61 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
-        "id": "fix-81313fa1ba57cf6a",
-        "preconditions": [
-          "Confirm resource ownership and internal change window approval.",
-          "Ensure public access is not explicitly required for this specific resource's function."
-        ],
-        "target": {
-          "asset_id": "zomato-chat-images",
-          "asset_type": "aws_s3_bucket"
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+      },
+      "exposure_score": 750,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 5,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "days_blind": 2508
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "storage.access.public_list eq true",
+          "observation_key": "storage.access.public_list",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": true
+        },
+        {
+          "predicate_expr": "storage.kind eq \"bucket\"",
+          "observation_key": "storage.kind",
+          "operator": "eq",
+          "expected_value": "bucket",
+          "observed_value": "bucket"
+        },
+        {
+          "predicate_expr": "storage.tags.public_list_intended missing true",
+          "observation_key": "storage.tags.public_list_intended",
+          "operator": "missing",
+          "expected_value": true
+        },
+        {
+          "predicate_expr": "storage.tags.public_list_intended ne \"true\"",
+          "observation_key": "storage.tags.public_list_intended",
+          "operator": "ne",
+          "expected_value": "true"
         }
-      },
-      "posture_drift": {
-        "exposure_window_count": 1,
-        "pattern": "persistent"
-      },
-      "remediation": {
-        "action": "If listing is intentional, add the tag public_list_intended=true to the bucket. Otherwise, remove the policy or ACL granting s3:ListBucket to Principal \"*\" or AllUsers.",
-        "description": "Bucket has public listing enabled without an explicit intent tag. Anonymous listing increases exposure surface even for public content.",
-        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"access\": {\n      \"public_list\": false\n    }\n  }\n}\n"
-      }
+      ]
     }
   ],
-  "kind": "ASSESSMENT",
   "remediation_groups": [
     {
       "asset_id": "zomato-chat-images",
       "asset_type": "aws_s3_bucket",
-      "contributing_controls": [
-        "CTL.S3.PUBLIC.001",
-        "CTL.S3.PUBLIC.LIST.002"
-      ],
-      "finding_count": 2,
       "fix_plan": {
+        "id": "fix-81313fa1ba57cf6a",
+        "target": {
+          "asset_id": "zomato-chat-images",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
         "actions": [
           {
             "action_type": "set",
@@ -235,92 +326,58 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
-        "id": "fix-81313fa1ba57cf6a",
-        "preconditions": [
-          "Confirm resource ownership and internal change window approval.",
-          "Ensure public access is not explicitly required for this specific resource's function."
-        ],
-        "target": {
-          "asset_id": "zomato-chat-images",
-          "asset_type": "aws_s3_bucket"
-        }
-      }
-    }
-  ],
-  "risk_signals": [
-    {
-      "asset_id": "zomato-chat-images",
-      "asset_type": "aws_s3_bucket",
-      "control_id": "CTL.S3.PUBLIC.001",
-      "due_at": "2019-03-08T00:00:00Z",
-      "first_unsafe_at": "2019-03-01T00:00:00Z",
-      "remaining_hours": -60024,
-      "status": "OVERDUE",
-      "threshold_hours": 168
-    },
-    {
-      "asset_id": "zomato-chat-images",
-      "asset_type": "aws_s3_bucket",
-      "control_id": "CTL.S3.PUBLIC.LIST.002",
-      "due_at": "2019-03-08T00:00:00Z",
-      "first_unsafe_at": "2019-03-01T00:00:00Z",
-      "remaining_hours": -60024,
-      "status": "OVERDUE",
-      "threshold_hours": 168
-    }
-  ],
-  "run": {
-    "evaluated_state": "deployed",
-    "input_hashes": {
-      "files": {
-        "2019-03-01T000000Z.json": "c2252d466871c3e99ca331c6888787a9e186abe1b88e9817e917776f7e969bac",
-        "2019-03-09T000000Z.json": "b44e64247606dab256853c42d96c30508e27c6b035bf0349ac3fd1e307407d71"
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
       },
-      "overall": "520fcb9d9bb6033313a525a0267d3ce5b2b7dbf3e8476a6cafd5fd5ebcb74c86"
-    },
-    "now": "2026-01-11T00:00:00Z",
-    "offline": true,
-    "policy_fingerprint": "87b7926cb5589261e3d4c63df2da7923bfac54eca22cb3a4d15a1e2512ee5424",
-    "sla_threshold": "7d",
-    "snapshots": 2,
-    "tool_version": "edge"
-  },
-  "schema_version": "out.v0.1",
-  "status": "NON_COMPLIANT",
-  "summary": {
-    "exposed_resources": 1,
-    "total_assets": 1,
-    "violations": 2
-  },
+      "contributing_controls": [
+        "CTL.S3.PUBLIC.001",
+        "CTL.S3.PUBLIC.LIST.002"
+      ],
+      "finding_count": 2
+    }
+  ],
   "top_exposures": [
     {
+      "finding_index": 0,
+      "control_id": "CTL.S3.PUBLIC.001",
       "asset_id": "zomato-chat-images",
+      "exposure_score": 1000,
       "breakdown": {
         "base_score": 100,
-        "blast_multiplier": 1,
-        "days_blind": 2508,
         "duration_factor": 5,
-        "exposure_multiplier": 2
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "days_blind": 2508
       },
-      "control_id": "CTL.S3.PUBLIC.001",
-      "exposure_score": 1000,
-      "finding_index": 0,
       "silent_killer": true
     },
     {
+      "finding_index": 1,
+      "control_id": "CTL.S3.PUBLIC.LIST.002",
       "asset_id": "zomato-chat-images",
+      "exposure_score": 750,
       "breakdown": {
         "base_score": 75,
-        "blast_multiplier": 1,
-        "days_blind": 2508,
         "duration_factor": 5,
-        "exposure_multiplier": 2
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "days_blind": 2508
       },
-      "control_id": "CTL.S3.PUBLIC.LIST.002",
-      "exposure_score": 750,
-      "finding_index": 1,
       "silent_killer": true
     }
-  ]
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-h1-zomato-507097/controls",
+      "observations": "testdata/e2e/e2e-h1-zomato-507097/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "e75fb9b105c8552f0ab8fcae488af7655933cf1a",
+      "dirty": false
+    }
+  }
 }

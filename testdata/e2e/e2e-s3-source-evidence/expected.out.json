@@ -1,22 +1,78 @@
 {
-  "extensions": {
-    "context_name": "stave",
-    "git": {
-      "dirty": false,
-      "head_commit": "74f975c98eab8c8fba8a2bb86a60ce6b3ab19ff7",
-      "repo_root": "/home/zepho/work/bizacademy"
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "5994bd31be18a17e0844137af9a599e614c9e1ce4a771fa41953246a418c3626",
+        "2026-01-11T000000Z.json": "f3c32f83a263aa46ac72582c23da8bb354e27319fb49304372499619656d6675"
+      },
+      "overall": "601e4c2eecc9549954dceb5f48829f32534f49ec74af6bae267e8596edfd6dc4"
     },
-    "resolved_paths": {
-      "controls": "testdata/e2e/e2e-s3-source-evidence/controls",
-      "observations": "testdata/e2e/e2e-s3-source-evidence/observations"
-    },
-    "selected_controls_source": "dir"
+    "policy_fingerprint": "1912ed4b60297ea488c3c22e9f0fdb5adc1696a945e3990cf2920f1d7622cf75",
+    "evaluated_state": "deployed"
   },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 2
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.S3.PUBLIC.004",
+      "asset_id": "exposed-bucket",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-01T00:00:00Z",
+      "remaining_hours": -240,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 0
+    },
+    {
+      "control_id": "CTL.S3.PUBLIC.001",
+      "asset_id": "exposed-bucket",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
   "findings": [
     {
+      "finding_id": "sha256:2e48317513355283",
+      "control_id": "CTL.S3.PUBLIC.001",
+      "control_name": "No Public S3 Bucket Read",
+      "control_description": "S3 buckets must not allow public read access. Detects buckets with anonymous read exposure via policy or ACL.\n",
       "asset_id": "exposed-bucket",
       "asset_type": "aws_s3_bucket",
       "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "storage.access.public_read",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "critical",
       "control_compliance": {
         "cis_aws_v1.4.0": "2.1.5",
         "fedramp_moderate": "AC-3",
@@ -33,34 +89,29 @@
         "DSP-07",
         "DSP-17"
       ],
-      "control_description": "S3 buckets must not allow public read access. Detects buckets with anonymous read exposure via policy or ACL.\n",
-      "control_id": "CTL.S3.PUBLIC.001",
-      "control_name": "No Public S3 Bucket Read",
-      "control_severity": "critical",
-      "evidence": {
-        "first_unsafe_at": "2026-01-01T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
-        "misconfigurations": [
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "property": "storage.access.public_read",
-            "unsafe_value": true
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z.",
-        "threshold_hours": 168,
-        "unsafe_duration_hours": 240
-      },
       "exposure": {
-        "principal_scope": "public",
-        "type": "public_read"
+        "type": "public_read",
+        "principal_scope": "public"
       },
-      "finding_id": "sha256:2e48317513355283",
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Bucket has public read access enabled via policy or ACL. Anyone on the internet can access objects in this bucket.",
+        "action": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers.",
+        "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_read\": false\n    }\n  }\n}\n"
+      },
       "fix_plan": {
+        "id": "fix-feace1b24c72a549",
+        "target": {
+          "asset_id": "exposed-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
         "actions": [
           {
             "action_type": "set",
@@ -83,62 +134,80 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
-        "id": "fix-feace1b24c72a549",
-        "preconditions": [
-          "Confirm resource ownership and internal change window approval.",
-          "Ensure public access is not explicitly required for this specific resource's function."
-        ],
-        "target": {
-          "asset_id": "exposed-bucket",
-          "asset_type": "aws_s3_bucket"
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+      },
+      "exposure_score": 200,
+      "score_breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "days_blind": 10
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "storage.access.public_read eq true",
+          "observation_key": "storage.access.public_read",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": true
         }
-      },
-      "posture_drift": {
-        "exposure_window_count": 1,
-        "pattern": "persistent"
-      },
-      "remediation": {
-        "action": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers.",
-        "description": "Bucket has public read access enabled via policy or ACL. Anyone on the internet can access objects in this bucket.",
-        "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_read\": false\n    }\n  }\n}\n"
-      }
+      ]
     },
     {
+      "finding_id": "sha256:011146815d21ed0b",
+      "control_id": "CTL.S3.PUBLIC.004",
+      "control_name": "No Public Read via Bucket Policy",
+      "control_description": "S3 bucket policies must not grant read access to an anonymous or wildcard principal. A Statement with Effect Allow, Principal \"*\" or AWS: \"*\", and an Action such as s3:GetObject without a restricting Condition enables any unauthenticated caller to read objects. This is distinct from CTL.S3.PUBLIC.001, which fires on the composite public_read signal regardless of mechanism; this control narrows to the bucket-policy path so the finding points the operator at the policy specifically. For ACL-based public read, see CTL.S3.ACL.FULLCONTROL.001 (FULL_CONTROL grants) and CTL.S3.ACL.ESCALATION.001 (WRITE_ACP grants).\n",
       "asset_id": "exposed-bucket",
       "asset_type": "aws_s3_bucket",
       "asset_vendor": "aws",
-      "control_compliance_ccm_v4": [
-        "DSP-07",
-        "DSP-17"
-      ],
-      "control_description": "S3 bucket policies must not grant read access to an anonymous or wildcard principal. A Statement with Effect Allow, Principal \"*\" or AWS: \"*\", and an Action such as s3:GetObject without a restricting Condition enables any unauthenticated caller to read objects. This is distinct from CTL.S3.PUBLIC.001, which fires on the composite public_read signal regardless of mechanism; this control narrows to the bucket-policy path so the finding points the operator at the policy specifically. For ACL-based public read, see CTL.S3.ACL.FULLCONTROL.001 (FULL_CONTROL grants) and CTL.S3.ACL.ESCALATION.001 (WRITE_ACP grants).\n",
-      "control_id": "CTL.S3.PUBLIC.004",
-      "control_name": "No Public Read via Bucket Policy",
-      "control_severity": "medium",
       "evidence": {
         "first_unsafe_at": "2026-01-01T00:00:00Z",
         "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
         "misconfigurations": [
           {
+            "property": "storage.access.read_via_resource",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
-            "property": "storage.access.read_via_resource",
             "unsafe_value": true
           }
         ],
         "root_causes": [
           "resource"
         ],
-        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z.",
-        "unsafe_duration_hours": 240
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
       },
+      "control_severity": "medium",
+      "control_compliance_ccm_v4": [
+        "DSP-07",
+        "DSP-17"
+      ],
       "exposure": {
-        "principal_scope": "public",
-        "type": "policy_public_read"
+        "type": "policy_public_read",
+        "principal_scope": "public"
       },
-      "finding_id": "sha256:011146815d21ed0b",
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Bucket policy grants s3:GetObject, s3:GetObjectAcl, or equivalent read action to an anonymous or wildcard principal. Any unauthenticated caller can read objects.",
+        "action": "Remove or constrain the policy statement granting read actions to Principal \"*\" or AWS: \"*\". If broad read access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public read.",
+        "example": "{\n  \"storage\": {\n    \"access\": {\n      \"read_via_resource\": false\n    }\n  }\n}\n"
+      },
       "fix_plan": {
+        "id": "fix-feace1b24c72a549",
+        "target": {
+          "asset_id": "exposed-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
         "actions": [
           {
             "action_type": "set",
@@ -161,39 +230,42 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
-        "id": "fix-feace1b24c72a549",
-        "preconditions": [
-          "Confirm resource ownership and internal change window approval.",
-          "Ensure public access is not explicitly required for this specific resource's function."
-        ],
-        "target": {
-          "asset_id": "exposed-bucket",
-          "asset_type": "aws_s3_bucket"
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+      },
+      "exposure_score": 100,
+      "score_breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "days_blind": 10
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "storage.access.read_via_resource eq true",
+          "observation_key": "storage.access.read_via_resource",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": true
         }
-      },
-      "posture_drift": {
-        "exposure_window_count": 1,
-        "pattern": "persistent"
-      },
-      "remediation": {
-        "action": "Remove or constrain the policy statement granting read actions to Principal \"*\" or AWS: \"*\". If broad read access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public read.",
-        "description": "Bucket policy grants s3:GetObject, s3:GetObjectAcl, or equivalent read action to an anonymous or wildcard principal. Any unauthenticated caller can read objects.",
-        "example": "{\n  \"storage\": {\n    \"access\": {\n      \"read_via_resource\": false\n    }\n  }\n}\n"
-      }
+      ]
     }
   ],
-  "kind": "ASSESSMENT",
   "remediation_groups": [
     {
       "asset_id": "exposed-bucket",
       "asset_type": "aws_s3_bucket",
-      "contributing_controls": [
-        "CTL.S3.PUBLIC.001",
-        "CTL.S3.PUBLIC.004"
-      ],
-      "finding_count": 2,
       "fix_plan": {
+        "id": "fix-feace1b24c72a549",
+        "target": {
+          "asset_id": "exposed-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
         "actions": [
           {
             "action_type": "set",
@@ -216,92 +288,58 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
-        "id": "fix-feace1b24c72a549",
-        "preconditions": [
-          "Confirm resource ownership and internal change window approval.",
-          "Ensure public access is not explicitly required for this specific resource's function."
-        ],
-        "target": {
-          "asset_id": "exposed-bucket",
-          "asset_type": "aws_s3_bucket"
-        }
-      }
-    }
-  ],
-  "risk_signals": [
-    {
-      "asset_id": "exposed-bucket",
-      "asset_type": "aws_s3_bucket",
-      "control_id": "CTL.S3.PUBLIC.004",
-      "due_at": "2026-01-01T00:00:00Z",
-      "first_unsafe_at": "2026-01-01T00:00:00Z",
-      "remaining_hours": -240,
-      "status": "OVERDUE",
-      "threshold_hours": 0
-    },
-    {
-      "asset_id": "exposed-bucket",
-      "asset_type": "aws_s3_bucket",
-      "control_id": "CTL.S3.PUBLIC.001",
-      "due_at": "2026-01-08T00:00:00Z",
-      "first_unsafe_at": "2026-01-01T00:00:00Z",
-      "remaining_hours": -72,
-      "status": "OVERDUE",
-      "threshold_hours": 168
-    }
-  ],
-  "run": {
-    "evaluated_state": "deployed",
-    "input_hashes": {
-      "files": {
-        "2026-01-01T000000Z.json": "5994bd31be18a17e0844137af9a599e614c9e1ce4a771fa41953246a418c3626",
-        "2026-01-11T000000Z.json": "f3c32f83a263aa46ac72582c23da8bb354e27319fb49304372499619656d6675"
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
       },
-      "overall": "601e4c2eecc9549954dceb5f48829f32534f49ec74af6bae267e8596edfd6dc4"
-    },
-    "now": "2026-01-11T00:00:00Z",
-    "offline": true,
-    "policy_fingerprint": "1912ed4b60297ea488c3c22e9f0fdb5adc1696a945e3990cf2920f1d7622cf75",
-    "sla_threshold": "7d",
-    "snapshots": 2,
-    "tool_version": "edge"
-  },
-  "schema_version": "out.v0.1",
-  "status": "NON_COMPLIANT",
-  "summary": {
-    "exposed_resources": 1,
-    "total_assets": 1,
-    "violations": 2
-  },
+      "contributing_controls": [
+        "CTL.S3.PUBLIC.001",
+        "CTL.S3.PUBLIC.004"
+      ],
+      "finding_count": 2
+    }
+  ],
   "top_exposures": [
     {
+      "finding_index": 0,
+      "control_id": "CTL.S3.PUBLIC.001",
       "asset_id": "exposed-bucket",
+      "exposure_score": 200,
       "breakdown": {
         "base_score": 100,
-        "blast_multiplier": 1,
-        "days_blind": 10,
         "duration_factor": 1,
-        "exposure_multiplier": 2
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "days_blind": 10
       },
-      "control_id": "CTL.S3.PUBLIC.001",
-      "exposure_score": 200,
-      "finding_index": 0,
       "silent_killer": false
     },
     {
+      "finding_index": 1,
+      "control_id": "CTL.S3.PUBLIC.004",
       "asset_id": "exposed-bucket",
+      "exposure_score": 100,
       "breakdown": {
         "base_score": 50,
-        "blast_multiplier": 1,
-        "days_blind": 10,
         "duration_factor": 1,
-        "exposure_multiplier": 2
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "days_blind": 10
       },
-      "control_id": "CTL.S3.PUBLIC.004",
-      "exposure_score": 100,
-      "finding_index": 1,
       "silent_killer": false
     }
-  ]
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-s3-source-evidence/controls",
+      "observations": "testdata/e2e/e2e-s3-source-evidence/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "e75fb9b105c8552f0ab8fcae488af7655933cf1a",
+      "dirty": false
+    }
+  }
 }

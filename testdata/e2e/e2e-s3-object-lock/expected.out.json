@@ -1,22 +1,100 @@
 {
-  "extensions": {
-    "context_name": "stave",
-    "git": {
-      "dirty": false,
-      "head_commit": "74f975c98eab8c8fba8a2bb86a60ce6b3ab19ff7",
-      "repo_root": "/home/zepho/work/bizacademy"
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "5c4a987a79d52522f708fab56e93f9bfbd743de4265056fe0760040908253619",
+        "2026-01-11T000000Z.json": "479a153077d0b61f007b0ed3bd0fc143b681e7628b3cebceffa572811c57c264"
+      },
+      "overall": "27a48f4152705f4a21f02a6b2a4d1a43a585e1904fc2b1e602c8739bb6d72399"
     },
-    "resolved_paths": {
-      "controls": "testdata/e2e/e2e-s3-object-lock/controls",
-      "observations": "testdata/e2e/e2e-s3-object-lock/observations"
-    },
-    "selected_controls_source": "dir"
+    "policy_fingerprint": "b0a1d353ce0b3cfa2c7559e66e7bd0d63e6e9249c5e9d2bac7b11e2045055e90",
+    "evaluated_state": "deployed"
   },
+  "summary": {
+    "total_assets": 5,
+    "exposed_resources": 3,
+    "violations": 3
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.S3.LOCK.001",
+      "asset_id": "compliance-no-lock",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.LOCK.002",
+      "asset_id": "phi-governance-lock",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.LOCK.003",
+      "asset_id": "phi-short-retention",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
   "findings": [
     {
+      "finding_id": "sha256:b6d05ff1963bda95",
+      "control_id": "CTL.S3.LOCK.001",
+      "control_name": "Compliance-Tagged Buckets Must Have Object Lock Enabled",
+      "control_description": "S3 buckets tagged with any compliance framework (soc2, gdpr, hipaa, pci-dss, etc.) must have S3 Object Lock enabled. Object Lock provides WORM (Write Once Read Many) protection, preventing objects from being deleted or overwritten for a specified retention period. Regulatory frameworks require immutable storage for audit logs, compliance records, and protected data.\n",
       "asset_id": "compliance-no-lock",
       "asset_type": "aws_s3_bucket",
       "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "storage.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          },
+          {
+            "property": "storage.object_lock.enabled",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "storage.tags.compliance",
+            "actual_value": "[SANITIZED]",
+            "operator": "present",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
       "control_compliance": {
         "hipaa": "164.316(b)(2)",
         "nist_800_53_r5": "AU-9",
@@ -26,256 +104,277 @@
         "BCR-08",
         "DSP-16"
       ],
-      "control_description": "S3 buckets tagged with any compliance framework (soc2, gdpr, hipaa, pci-dss, etc.) must have S3 Object Lock enabled. Object Lock provides WORM (Write Once Read Many) protection, preventing objects from being deleted or overwritten for a specified retention period. Regulatory frameworks require immutable storage for audit logs, compliance records, and protected data.\n",
-      "control_id": "CTL.S3.LOCK.001",
-      "control_name": "Compliance-Tagged Buckets Must Have Object Lock Enabled",
-      "control_severity": "medium",
-      "evidence": {
-        "first_unsafe_at": "2026-01-01T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
-        "misconfigurations": [
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "property": "storage.kind",
-            "unsafe_value": "bucket"
-          },
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "property": "storage.object_lock.enabled",
-            "unsafe_value": false
-          },
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "present",
-            "property": "storage.tags.compliance",
-            "unsafe_value": true
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z.",
-        "threshold_hours": 168,
-        "unsafe_duration_hours": 240
-      },
-      "finding_id": "sha256:b6d05ff1963bda95",
       "posture_drift": {
-        "exposure_window_count": 1,
-        "pattern": "persistent"
+        "pattern": "persistent",
+        "exposure_window_count": 1
       },
       "remediation": {
-        "action": "Enable S3 Object Lock on the bucket. Note: Object Lock can only be enabled at bucket creation. If the bucket already exists, create a new bucket with Object Lock enabled and migrate objects. Set a default retention period appropriate for your compliance framework.",
         "description": "Compliance-tagged bucket does not have S3 Object Lock enabled. Objects can be deleted or overwritten without WORM protection.",
+        "action": "Enable S3 Object Lock on the bucket. Note: Object Lock can only be enabled at bucket creation. If the bucket already exists, create a new bucket with Object Lock enabled and migrate objects. Set a default retention period appropriate for your compliance framework.",
         "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"tags\": {\n      \"compliance\": \"hipaa\"\n    },\n    \"object_lock\": {\n      \"enabled\": true\n    }\n  }\n}\n"
-      }
+      },
+      "exposure_score": 50,
+      "score_breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 10
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "storage.kind eq \"bucket\"",
+          "observation_key": "storage.kind",
+          "operator": "eq",
+          "expected_value": "bucket",
+          "observed_value": "bucket"
+        },
+        {
+          "predicate_expr": "storage.object_lock.enabled eq false",
+          "observation_key": "storage.object_lock.enabled",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "storage.tags.compliance present true",
+          "observation_key": "storage.tags.compliance",
+          "operator": "present",
+          "expected_value": true,
+          "observed_value": true
+        }
+      ]
     },
     {
+      "finding_id": "sha256:48c4da7865eb8989",
+      "control_id": "CTL.S3.LOCK.002",
+      "control_name": "PHI Buckets Must Use COMPLIANCE Mode Object Lock",
+      "control_description": "S3 buckets tagged with data-classification=phi that have Object Lock enabled must use COMPLIANCE mode, not GOVERNANCE mode. COMPLIANCE mode prevents ANY user, including the root account, from deleting or overwriting protected objects during the retention period. GOVERNANCE mode allows users with special permissions to override retention, which is insufficient for HIPAA-regulated PHI data where tamper-proof storage is required.\n",
       "asset_id": "phi-governance-lock",
       "asset_type": "aws_s3_bucket",
       "asset_vendor": "aws",
-      "control_compliance_ccm_v4": [
-        "BCR-08",
-        "DSP-16"
-      ],
-      "control_description": "S3 buckets tagged with data-classification=phi that have Object Lock enabled must use COMPLIANCE mode, not GOVERNANCE mode. COMPLIANCE mode prevents ANY user, including the root account, from deleting or overwriting protected objects during the retention period. GOVERNANCE mode allows users with special permissions to override retention, which is insufficient for HIPAA-regulated PHI data where tamper-proof storage is required.\n",
-      "control_id": "CTL.S3.LOCK.002",
-      "control_name": "PHI Buckets Must Use COMPLIANCE Mode Object Lock",
-      "control_severity": "medium",
       "evidence": {
         "first_unsafe_at": "2026-01-01T00:00:00Z",
         "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
         "misconfigurations": [
           {
+            "property": "storage.object_lock.enabled",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
-            "property": "storage.object_lock.enabled",
             "unsafe_value": true
           },
           {
+            "property": "storage.object_lock.mode",
             "actual_value": "[SANITIZED]",
             "operator": "ne",
-            "property": "storage.object_lock.mode",
             "unsafe_value": "COMPLIANCE"
           },
           {
+            "property": "storage.tags.data-classification",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
-            "property": "storage.tags.data-classification",
             "unsafe_value": "phi"
           }
         ],
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z.",
-        "threshold_hours": 168,
-        "unsafe_duration_hours": 240
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
       },
-      "finding_id": "sha256:48c4da7865eb8989",
-      "posture_drift": {
-        "exposure_window_count": 1,
-        "pattern": "persistent"
-      },
-      "remediation": {
-        "action": "Change the Object Lock default retention mode from GOVERNANCE to COMPLIANCE. In COMPLIANCE mode, no user (including root) can delete or modify protected objects during the retention period.",
-        "description": "PHI bucket with Object Lock is using GOVERNANCE mode instead of COMPLIANCE mode. Users with special permissions can override retention.",
-        "example": "{\n  \"storage\": {\n    \"tags\": {\n      \"data-classification\": \"phi\"\n    },\n    \"object_lock\": {\n      \"enabled\": true,\n      \"mode\": \"COMPLIANCE\"\n    }\n  }\n}\n"
-      }
-    },
-    {
-      "asset_id": "phi-short-retention",
-      "asset_type": "aws_s3_bucket",
-      "asset_vendor": "aws",
+      "control_severity": "medium",
       "control_compliance_ccm_v4": [
         "BCR-08",
         "DSP-16"
       ],
-      "control_description": "S3 buckets tagged with data-classification=phi that have Object Lock enabled must have a default retention period of at least 2190 days (6 years) to meet HIPAA minimum retention requirements. Shorter retention periods risk premature expiration of WORM protection, allowing deletion or modification of PHI data before the regulatory retention period has elapsed.\n",
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "PHI bucket with Object Lock is using GOVERNANCE mode instead of COMPLIANCE mode. Users with special permissions can override retention.",
+        "action": "Change the Object Lock default retention mode from GOVERNANCE to COMPLIANCE. In COMPLIANCE mode, no user (including root) can delete or modify protected objects during the retention period.",
+        "example": "{\n  \"storage\": {\n    \"tags\": {\n      \"data-classification\": \"phi\"\n    },\n    \"object_lock\": {\n      \"enabled\": true,\n      \"mode\": \"COMPLIANCE\"\n    }\n  }\n}\n"
+      },
+      "exposure_score": 50,
+      "score_breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 10
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "storage.object_lock.enabled eq true",
+          "observation_key": "storage.object_lock.enabled",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": true
+        },
+        {
+          "predicate_expr": "storage.object_lock.mode ne \"COMPLIANCE\"",
+          "observation_key": "storage.object_lock.mode",
+          "operator": "ne",
+          "expected_value": "COMPLIANCE",
+          "observed_value": "GOVERNANCE"
+        },
+        {
+          "predicate_expr": "storage.tags.data-classification eq \"phi\"",
+          "observation_key": "storage.tags.data-classification",
+          "operator": "eq",
+          "expected_value": "phi",
+          "observed_value": "phi"
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:72a8a7272fee0dad",
       "control_id": "CTL.S3.LOCK.003",
       "control_name": "PHI Object Lock Retention Must Meet Minimum Period",
-      "control_severity": "medium",
+      "control_description": "S3 buckets tagged with data-classification=phi that have Object Lock enabled must have a default retention period of at least 2190 days (6 years) to meet HIPAA minimum retention requirements. Shorter retention periods risk premature expiration of WORM protection, allowing deletion or modification of PHI data before the regulatory retention period has elapsed.\n",
+      "asset_id": "phi-short-retention",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
       "evidence": {
         "first_unsafe_at": "2026-01-01T00:00:00Z",
         "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
         "misconfigurations": [
           {
+            "property": "storage.object_lock.enabled",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
-            "property": "storage.object_lock.enabled",
             "unsafe_value": true
           },
           {
+            "property": "storage.object_lock.retention_days",
             "actual_value": "[SANITIZED]",
             "operator": "lt",
-            "property": "storage.object_lock.retention_days",
             "unsafe_value": 2190
           },
           {
+            "property": "storage.tags.data-classification",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
-            "property": "storage.tags.data-classification",
             "unsafe_value": "phi"
           }
         ],
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z.",
-        "threshold_hours": 168,
-        "unsafe_duration_hours": 240
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
       },
-      "finding_id": "sha256:72a8a7272fee0dad",
+      "control_severity": "medium",
+      "control_compliance_ccm_v4": [
+        "BCR-08",
+        "DSP-16"
+      ],
       "posture_drift": {
-        "exposure_window_count": 1,
-        "pattern": "persistent"
+        "pattern": "persistent",
+        "exposure_window_count": 1
       },
       "remediation": {
-        "action": "Increase the Object Lock default retention period to at least 2190 days. Use aws s3api put-object-lock-configuration to update the default retention settings.",
         "description": "PHI bucket Object Lock retention period is shorter than the HIPAA minimum of 6 years (2190 days). WORM protection may expire before the regulatory retention period.",
+        "action": "Increase the Object Lock default retention period to at least 2190 days. Use aws s3api put-object-lock-configuration to update the default retention settings.",
         "example": "{\n  \"storage\": {\n    \"tags\": {\n      \"data-classification\": \"phi\"\n    },\n    \"object_lock\": {\n      \"enabled\": true,\n      \"retention_days\": 2190\n    }\n  }\n}\n"
-      }
-    }
-  ],
-  "kind": "ASSESSMENT",
-  "risk_signals": [
-    {
-      "asset_id": "compliance-no-lock",
-      "asset_type": "aws_s3_bucket",
-      "control_id": "CTL.S3.LOCK.001",
-      "due_at": "2026-01-08T00:00:00Z",
-      "first_unsafe_at": "2026-01-01T00:00:00Z",
-      "remaining_hours": -72,
-      "status": "OVERDUE",
-      "threshold_hours": 168
-    },
-    {
-      "asset_id": "phi-governance-lock",
-      "asset_type": "aws_s3_bucket",
-      "control_id": "CTL.S3.LOCK.002",
-      "due_at": "2026-01-08T00:00:00Z",
-      "first_unsafe_at": "2026-01-01T00:00:00Z",
-      "remaining_hours": -72,
-      "status": "OVERDUE",
-      "threshold_hours": 168
-    },
-    {
-      "asset_id": "phi-short-retention",
-      "asset_type": "aws_s3_bucket",
-      "control_id": "CTL.S3.LOCK.003",
-      "due_at": "2026-01-08T00:00:00Z",
-      "first_unsafe_at": "2026-01-01T00:00:00Z",
-      "remaining_hours": -72,
-      "status": "OVERDUE",
-      "threshold_hours": 168
-    }
-  ],
-  "run": {
-    "evaluated_state": "deployed",
-    "input_hashes": {
-      "files": {
-        "2026-01-01T000000Z.json": "5c4a987a79d52522f708fab56e93f9bfbd743de4265056fe0760040908253619",
-        "2026-01-11T000000Z.json": "479a153077d0b61f007b0ed3bd0fc143b681e7628b3cebceffa572811c57c264"
       },
-      "overall": "27a48f4152705f4a21f02a6b2a4d1a43a585e1904fc2b1e602c8739bb6d72399"
-    },
-    "now": "2026-01-11T00:00:00Z",
-    "offline": true,
-    "policy_fingerprint": "b0a1d353ce0b3cfa2c7559e66e7bd0d63e6e9249c5e9d2bac7b11e2045055e90",
-    "sla_threshold": "7d",
-    "snapshots": 2,
-    "tool_version": "edge"
-  },
-  "schema_version": "out.v0.1",
-  "status": "NON_COMPLIANT",
-  "summary": {
-    "exposed_resources": 3,
-    "total_assets": 5,
-    "violations": 3
-  },
+      "exposure_score": 50,
+      "score_breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 10
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "storage.object_lock.enabled eq true",
+          "observation_key": "storage.object_lock.enabled",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": true
+        },
+        {
+          "predicate_expr": "storage.object_lock.retention_days lt 2190",
+          "observation_key": "storage.object_lock.retention_days",
+          "operator": "lt",
+          "expected_value": 2190,
+          "observed_value": 365
+        },
+        {
+          "predicate_expr": "storage.tags.data-classification eq \"phi\"",
+          "observation_key": "storage.tags.data-classification",
+          "operator": "eq",
+          "expected_value": "phi",
+          "observed_value": "phi"
+        }
+      ]
+    }
+  ],
   "top_exposures": [
     {
-      "asset_id": "compliance-no-lock",
-      "breakdown": {
-        "base_score": 50,
-        "blast_multiplier": 1,
-        "days_blind": 10,
-        "duration_factor": 1,
-        "exposure_multiplier": 1
-      },
-      "control_id": "CTL.S3.LOCK.001",
-      "exposure_score": 50,
       "finding_index": 0,
+      "control_id": "CTL.S3.LOCK.001",
+      "asset_id": "compliance-no-lock",
+      "exposure_score": 50,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 10
+      },
       "silent_killer": false
     },
     {
-      "asset_id": "phi-governance-lock",
-      "breakdown": {
-        "base_score": 50,
-        "blast_multiplier": 1,
-        "days_blind": 10,
-        "duration_factor": 1,
-        "exposure_multiplier": 1
-      },
-      "control_id": "CTL.S3.LOCK.002",
-      "exposure_score": 50,
       "finding_index": 1,
+      "control_id": "CTL.S3.LOCK.002",
+      "asset_id": "phi-governance-lock",
+      "exposure_score": 50,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 10
+      },
       "silent_killer": false
     },
     {
+      "finding_index": 2,
+      "control_id": "CTL.S3.LOCK.003",
       "asset_id": "phi-short-retention",
+      "exposure_score": 50,
       "breakdown": {
         "base_score": 50,
-        "blast_multiplier": 1,
-        "days_blind": 10,
         "duration_factor": 1,
-        "exposure_multiplier": 1
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 10
       },
-      "control_id": "CTL.S3.LOCK.003",
-      "exposure_score": 50,
-      "finding_index": 2,
       "silent_killer": false
     }
-  ]
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-s3-object-lock/controls",
+      "observations": "testdata/e2e/e2e-s3-object-lock/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "e75fb9b105c8552f0ab8fcae488af7655933cf1a",
+      "dirty": false
+    }
+  }
 }

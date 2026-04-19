@@ -370,213 +370,6 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:81b8ce81c12cc518",
-      "control_id": "CTL.APIGATEWAY.TLS.001",
-      "control_name": "API Gateway Must Enforce TLS 1.2",
-      "control_description": "API Gateway stages must enforce TLS 1.2 or higher. Allowing older TLS versions exposes API traffic to known cryptographic attacks (BEAST, POODLE, etc).\n",
-      "asset_id": "phi-api",
-      "asset_type": "aws_apigateway_stage",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2026-01-10T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
-        "unsafe_duration_hours": 120,
-        "misconfigurations": [
-          {
-            "property": "api.encryption.tls_enforced",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": false
-          },
-          {
-            "property": "api.kind",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": "rest_api"
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
-      },
-      "control_severity": "high",
-      "control_compliance": {
-        "fedramp_moderate": "SC-8",
-        "gdpr": "Art.32",
-        "hipaa": "164.312(e)(2)(ii)",
-        "nist_800_53_r5": "SC-8",
-        "pci_dss_v4.0": "4.2.1",
-        "soc2": "CC6.6"
-      },
-      "control_compliance_ccm_v4": [
-        "AIS-01",
-        "CEK-03",
-        "DSP-10"
-      ],
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "API Gateway does not enforce TLS 1.2. Clients can connect with older, vulnerable TLS versions.",
-        "action": "Set the minimum TLS version on the custom domain or API stage. For REST APIs, configure a security policy of TLS_1_2 on the custom domain name.",
-        "example": "{\n  \"api\": {\n    \"kind\": \"rest_api\",\n    \"encryption\": {\n      \"minimum_tls_version\": \"TLS_1_2\"\n    }\n  }\n}\n"
-      }
-    },
-    {
-      "finding_id": "sha256:a52edc7322ea1dde",
-      "control_id": "CTL.BACKUP.EXISTS.001",
-      "control_name": "Critical Resources Must Have Backups",
-      "control_description": "Resources tagged as critical or containing PHI must have at least one backup configured. Without backups, data loss from accidental deletion, corruption, or ransomware is permanent and unrecoverable.\n",
-      "asset_id": "backup-phi-database",
-      "asset_type": "aws_backup_resource",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2026-01-10T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
-        "unsafe_duration_hours": 120,
-        "misconfigurations": [
-          {
-            "property": "backup.has_backup",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": false
-          },
-          {
-            "property": "backup.kind",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": "resource"
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
-      },
-      "control_severity": "high",
-      "control_compliance": {
-        "hipaa": "164.308(a)(7)",
-        "soc2": "A1.1"
-      },
-      "control_compliance_ccm_v4": [
-        "BCR-08",
-        "CCC-04",
-        "CCC-07",
-        "CEK-03"
-      ],
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "Resource has no backup configured. Data loss is not recoverable.",
-        "action": "Configure automated backups via AWS Backup, RDS automated snapshots, or S3 cross-region replication depending on the resource type.",
-        "example": "{\n  \"backup\": {\n    \"kind\": \"resource\",\n    \"has_backup\": true\n  }\n}\n"
-      }
-    },
-    {
-      "finding_id": "sha256:99ff439877cf27fd",
-      "control_id": "CTL.BACKUP.MULTIAZ.001",
-      "control_name": "Critical Resources Must Be Multi-AZ",
-      "control_description": "Resources tagged as critical must be deployed across multiple Availability Zones. Single-AZ deployment has a single point of failure that causes unavailability during AZ outages.\n",
-      "asset_id": "backup-phi-database",
-      "asset_type": "aws_backup_resource",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2026-01-10T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
-        "unsafe_duration_hours": 120,
-        "misconfigurations": [
-          {
-            "property": "availability.kind",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": "resource"
-          },
-          {
-            "property": "availability.multi_az",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": false
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
-      },
-      "control_severity": "medium",
-      "control_compliance": {
-        "hipaa": "164.308(a)(7)",
-        "soc2": "A1.1"
-      },
-      "control_compliance_ccm_v4": [
-        "BCR-08",
-        "CEK-03"
-      ],
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "Resource is deployed in a single Availability Zone. An AZ outage will cause unavailability.",
-        "action": "Enable Multi-AZ deployment or configure cross-AZ replication depending on the resource type (RDS Multi-AZ, S3 cross-region replication, ELB multi-AZ targets).",
-        "example": "{\n  \"availability\": {\n    \"kind\": \"resource\",\n    \"multi_az\": true\n  }\n}\n"
-      }
-    },
-    {
-      "finding_id": "sha256:826ab06811b86f5a",
-      "control_id": "CTL.BACKUP.REPLICATION.001",
-      "control_name": "Critical Data Must Have Cross-Region Replication",
-      "control_description": "Data classified as critical or PHI must have cross-region replication configured for disaster recovery. Single-region data is vulnerable to regional outages and cannot meet recovery time objectives (RTO) for multi-region failover.\n",
-      "asset_id": "backup-phi-database",
-      "asset_type": "aws_backup_resource",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2026-01-10T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
-        "unsafe_duration_hours": 120,
-        "misconfigurations": [
-          {
-            "property": "replication.cross_region_enabled",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": false
-          },
-          {
-            "property": "replication.kind",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": "resource"
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
-      },
-      "control_severity": "medium",
-      "control_compliance": {
-        "hipaa": "164.308(a)(7)",
-        "soc2": "A1.1"
-      },
-      "control_compliance_ccm_v4": [
-        "BCR-08",
-        "CEK-03"
-      ],
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "Resource does not have cross-region replication configured. A regional outage could cause permanent data unavailability.",
-        "action": "Configure cross-region replication: S3 CRR, RDS cross-region read replica, or AWS Backup cross-region copy rule.",
-        "example": "{\n  \"replication\": {\n    \"kind\": \"resource\",\n    \"cross_region_enabled\": true\n  }\n}\n"
-      }
-    },
-    {
       "finding_id": "sha256:4b8c49734af61142",
       "control_id": "CTL.CLOUDTRAIL.ENABLED.001",
       "control_name": "CloudTrail Must Be Enabled in All Regions",
@@ -643,223 +436,32 @@
           ],
           "narrative": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n"
         }
+      ],
+      "exposure_score": 375,
+      "score_breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 2.5,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1.5,
+        "days_blind": 5
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "audit_trail.kind eq \"trail\"",
+          "observation_key": "audit_trail.kind",
+          "operator": "eq",
+          "expected_value": "trail",
+          "observed_value": "trail"
+        },
+        {
+          "predicate_expr": "audit_trail.multi_region_enabled eq false",
+          "observation_key": "audit_trail.multi_region_enabled",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        }
       ]
-    },
-    {
-      "finding_id": "sha256:f237d540e872de4d",
-      "control_id": "CTL.CLOUDTRAIL.ENCRYPT.001",
-      "control_name": "CloudTrail Logs Must Be Encrypted with KMS",
-      "control_description": "CloudTrail logs must be encrypted at rest using a KMS customer-managed key. Default S3 encryption (SSE-S3) does not provide key revocation capability needed for breach response.\n",
-      "asset_id": "main-trail",
-      "asset_type": "aws_cloudtrail_trail",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2026-01-10T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
-        "unsafe_duration_hours": 120,
-        "misconfigurations": [
-          {
-            "property": "audit_trail.encryption.encrypted",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": false
-          },
-          {
-            "property": "audit_trail.kind",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": "trail"
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
-      },
-      "control_severity": "high",
-      "control_compliance": {
-        "cis_aws_v1.4.0": "3.7",
-        "cis_aws_v3.0": "3.5",
-        "fedramp_moderate": "AU-9",
-        "hipaa": "164.312(a)(2)(iv)",
-        "nist_800_53_r5": "AU-9",
-        "pci_dss_v4.0": "10.5.1",
-        "soc2": "CC6.7"
-      },
-      "control_compliance_ccm_v4": [
-        "CEK-03",
-        "LOG-05"
-      ],
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "CloudTrail logs are not encrypted with a KMS customer-managed key. Log data may be exposed if the S3 bucket is compromised.",
-        "action": "Configure the trail to use a KMS key for log encryption. Run: aws cloudtrail update-trail --name xxx --kms-key-id arn:aws:kms:...",
-        "example": "{\n  \"audit_trail\": {\n    \"kind\": \"trail\",\n    \"encryption\": {\n      \"encrypted\": true,\n      \"kms_key_id\": \"arn:aws:kms:us-east-1:123456789012:key/abc\"\n    }\n  }\n}\n"
-      }
-    },
-    {
-      "finding_id": "sha256:1bb3180bd93c6975",
-      "control_id": "CTL.CLOUDTRAIL.VALIDATION.001",
-      "control_name": "CloudTrail Log File Validation Must Be Enabled",
-      "control_description": "CloudTrail must have log file integrity validation enabled. Without validation, an attacker who gains access to the log bucket can modify or delete log entries to cover their tracks.\n",
-      "asset_id": "main-trail",
-      "asset_type": "aws_cloudtrail_trail",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2026-01-10T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
-        "unsafe_duration_hours": 120,
-        "misconfigurations": [
-          {
-            "property": "audit_trail.kind",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": "trail"
-          },
-          {
-            "property": "audit_trail.log_file_validation_enabled",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": false
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
-      },
-      "control_severity": "high",
-      "control_compliance": {
-        "cis_aws_v1.4.0": "3.2",
-        "cis_aws_v3.0": "3.2",
-        "fedramp_moderate": "AU-9",
-        "ffiec": "ISH-4",
-        "gdpr": "Art.32",
-        "hipaa": "164.312(b)",
-        "iso_27001_2022": "A.8.15",
-        "nist_800_53_r5": "AU-9",
-        "pci_dss_v4.0": "10.2.1",
-        "soc2": "CC7.1"
-      },
-      "control_compliance_ccm_v4": [
-        "LOG-05",
-        "LOG-12"
-      ],
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "CloudTrail log file validation is disabled. Log integrity cannot be verified.",
-        "action": "Enable log file validation on the trail. Run: aws cloudtrail update-trail --name xxx --enable-log-file-validation",
-        "example": "{\n  \"audit_trail\": {\n    \"kind\": \"trail\",\n    \"log_file_validation_enabled\": true\n  }\n}\n"
-      }
-    },
-    {
-      "finding_id": "sha256:801f9bd87a66bd5f",
-      "control_id": "CTL.CLOUDWATCH.RETENTION.001",
-      "control_name": "CloudWatch Log Groups Must Have Retention Policy",
-      "control_description": "CloudWatch Logs log groups must have a retention policy configured. Without a retention policy, logs are kept indefinitely (incurring cost) or may be deleted manually without audit trail.\n",
-      "asset_id": "app-logs",
-      "asset_type": "aws_cloudwatch_log_group",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2026-01-10T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
-        "unsafe_duration_hours": 120,
-        "misconfigurations": [
-          {
-            "property": "log_group.has_retention_policy",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": false
-          },
-          {
-            "property": "log_group.kind",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": "log_group"
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
-      },
-      "control_severity": "medium",
-      "control_compliance": {
-        "hipaa": "164.312(b)",
-        "soc2": "CC7.1"
-      },
-      "control_compliance_ccm_v4": [
-        "DSP-16",
-        "LOG-03"
-      ],
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "CloudWatch log group does not have a retention policy. Logs may accumulate indefinitely or be deleted without governance.",
-        "action": "Set a retention policy on the log group. Run: aws logs put-retention-policy --log-group-name xxx --retention-in-days 365",
-        "example": "{\n  \"log_group\": {\n    \"kind\": \"log_group\",\n    \"has_retention_policy\": true\n  }\n}\n"
-      }
-    },
-    {
-      "finding_id": "sha256:a73625cd410ebe3c",
-      "control_id": "CTL.COGNITO.MFA.001",
-      "control_name": "Cognito User Pool Must Enforce MFA",
-      "control_description": "Cognito user pools handling PHI must enforce multi-factor authentication. Without MFA, a compromised password grants full access to the application and any PHI it serves.\n",
-      "asset_id": "patient-portal",
-      "asset_type": "aws_cognito_user_pool",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2026-01-10T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
-        "unsafe_duration_hours": 120,
-        "misconfigurations": [
-          {
-            "property": "identity.auth.mfa_enforced",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": false
-          },
-          {
-            "property": "identity.kind",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": "user_pool"
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
-      },
-      "control_severity": "high",
-      "control_compliance": {
-        "fedramp_moderate": "IA-2(1)",
-        "hipaa": "164.312(d)",
-        "nist_800_53_r5": "IA-2(1)",
-        "pci_dss_v4.0": "8.3.1",
-        "soc2": "CC6.1"
-      },
-      "control_compliance_ccm_v4": [
-        "IAM-14",
-        "IAM-16"
-      ],
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "Cognito user pool does not enforce MFA. User authentication relies on password alone.",
-        "action": "Set MfaConfiguration to ON (required) on the user pool. Run: aws cognito-idp set-user-pool-mfa-config --user-pool-id xxx --mfa-configuration ON --software-token-mfa-configuration Enabled=true",
-        "example": "{\n  \"identity\": {\n    \"kind\": \"user_pool\",\n    \"auth\": {\n      \"mfa_enforced\": true\n    }\n  }\n}\n"
-      }
     },
     {
       "finding_id": "sha256:aa66250e8a1dc01c",
@@ -929,15 +531,40 @@
           ],
           "narrative": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n"
         }
+      ],
+      "exposure_score": 281.25,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 2.5,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1.5,
+        "days_blind": 5
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "compliance.kind eq \"recorder\"",
+          "observation_key": "compliance.kind",
+          "operator": "eq",
+          "expected_value": "recorder",
+          "observed_value": "recorder"
+        },
+        {
+          "predicate_expr": "compliance.recording_enabled eq false",
+          "observation_key": "compliance.recording_enabled",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        }
       ]
     },
     {
-      "finding_id": "sha256:c2ed914d02c8ae20",
-      "control_id": "CTL.CONFIG.RULES.001",
-      "control_name": "AWS Config Must Have Active Rules",
-      "control_description": "AWS Config must have active Config Rules to evaluate resource compliance. Recording without rules provides change history but no automated drift detection.\n",
-      "asset_id": "config-recorder",
-      "asset_type": "aws_config_recorder",
+      "finding_id": "sha256:81f43f35236b5e56",
+      "control_id": "CTL.VPC.FLOWLOG.001",
+      "control_name": "VPC Flow Logging Must Be Enabled",
+      "control_description": "VPC flow logs capture information about IP traffic going to and from network interfaces. Without flow logs, network-level access patterns cannot be audited and unauthorized traffic goes undetected.\n",
+      "asset_id": "vpc-prod-001",
+      "asset_type": "aws_vpc",
       "asset_vendor": "aws",
       "evidence": {
         "first_unsafe_at": "2026-01-10T00:00:00Z",
@@ -945,70 +572,16 @@
         "unsafe_duration_hours": 120,
         "misconfigurations": [
           {
-            "property": "compliance.has_active_rules",
+            "property": "network.flow_log.enabled",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": false
           },
           {
-            "property": "compliance.kind",
+            "property": "network.kind",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
-            "unsafe_value": "recorder"
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
-      },
-      "control_severity": "medium",
-      "control_compliance": {
-        "fedramp_moderate": "CM-3",
-        "hipaa": "164.312(c)(1)",
-        "nist_800_53_r5": "CM-3",
-        "pci_dss_v4.0": "6.3.2",
-        "soc2": "CC6.3"
-      },
-      "control_compliance_ccm_v4": [
-        "CCC-04",
-        "CCC-07",
-        "LOG-03"
-      ],
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "AWS Config has no active rules. Configuration drift will not be detected automatically.",
-        "action": "Deploy Config Rules for your compliance requirements. Start with AWS managed rules for common checks (encrypted-volumes, restricted-common-ports, etc).",
-        "example": "{\n  \"compliance\": {\n    \"kind\": \"recorder\",\n    \"has_active_rules\": true\n  }\n}\n"
-      }
-    },
-    {
-      "finding_id": "sha256:57cf047d8c46d33b",
-      "control_id": "CTL.DYNAMODB.ENCRYPT.001",
-      "control_name": "DynamoDB Must Use Customer-Managed KMS Encryption",
-      "control_description": "DynamoDB tables must use a customer-managed KMS key for encryption at rest. The default AWS-owned key does not support key revocation, audit of key usage, or cross-account key policies.\n",
-      "asset_id": "phi-events-table",
-      "asset_type": "aws_dynamodb_table",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2026-01-10T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
-        "unsafe_duration_hours": 120,
-        "misconfigurations": [
-          {
-            "property": "database.encryption.sse_type",
-            "actual_value": "[SANITIZED]",
-            "operator": "ne",
-            "unsafe_value": "KMS"
-          },
-          {
-            "property": "database.kind",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": "table"
+            "unsafe_value": "vpc"
           }
         ],
         "root_causes": [
@@ -1018,347 +591,12 @@
       },
       "control_severity": "high",
       "control_compliance": {
-        "fedramp_moderate": "SC-28",
-        "gdpr": "Art.32",
-        "hipaa": "164.312(a)(2)(iv)",
-        "nist_800_53_r5": "SC-28",
-        "pci_dss_v4.0": "3.4.1",
-        "soc2": "CC6.7"
-      },
-      "control_compliance_ccm_v4": [
-        "CEK-03"
-      ],
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "DynamoDB table is not encrypted with a customer-managed KMS key.",
-        "action": "Update the table encryption to use a customer-managed KMS key. Run: aws dynamodb update-table --table-name xxx --sse-specification Enabled=true,SSEType=KMS,KMSMasterKeyId=arn:...",
-        "example": "{\n  \"database\": {\n    \"kind\": \"table\",\n    \"encryption\": {\n      \"sse_type\": \"KMS\"\n    }\n  }\n}\n"
-      }
-    },
-    {
-      "finding_id": "sha256:6ecde267626a20de",
-      "control_id": "CTL.EC2.EBS.ENCRYPT.001",
-      "control_name": "EBS Volumes Must Be Encrypted",
-      "control_description": "EBS volumes attached to EC2 instances must have encryption enabled. Unencrypted volumes storing PHI or sensitive data violate encryption at rest requirements.\n",
-      "asset_id": "i-0abc123def",
-      "asset_type": "aws_instance",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2026-01-10T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
-        "unsafe_duration_hours": 120,
-        "misconfigurations": [
-          {
-            "property": "compute.encryption.ebs_encrypted",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": false
-          },
-          {
-            "property": "compute.kind",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": "instance"
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
-      },
-      "control_severity": "high",
-      "control_compliance": {
-        "cis_aws_v1.4.0": "2.2.1",
-        "cis_aws_v3.0": "2.2.1",
-        "fedramp_moderate": "SC-28",
-        "ffiec": "ISH-4",
-        "gdpr": "Art.32",
-        "hipaa": "164.312(a)(2)(iv)",
-        "iso_27001_2022": "A.8.24",
-        "nist_800_53_r5": "SC-28",
-        "nist_csf_2.0": "PR.DS",
-        "pci_dss_v4.0": "3.4.1",
-        "soc2": "CC6.7"
-      },
-      "control_compliance_ccm_v4": [
-        "CEK-03"
-      ],
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "EBS volume is not encrypted. Data at rest is stored in plaintext on the underlying storage hardware.",
-        "action": "Enable EBS encryption by default for the account. For existing volumes, create an encrypted snapshot and restore to a new encrypted volume. Run: aws ec2 enable-ebs-encryption-by-default",
-        "example": "{\n  \"compute\": {\n    \"kind\": \"instance\",\n    \"encryption\": {\n      \"ebs_encrypted\": true\n    }\n  }\n}\n"
-      }
-    },
-    {
-      "finding_id": "sha256:3a1554c5a78a5816",
-      "control_id": "CTL.EC2.PUBLIC.001",
-      "control_name": "EC2 Instances Must Not Have Public IP Addresses",
-      "control_description": "EC2 instances should not have public IP addresses unless explicitly required. Public IP assignment exposes the instance to direct internet access, bypassing network perimeter controls.\n",
-      "asset_id": "i-0abc123def",
-      "asset_type": "aws_instance",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2026-01-10T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
-        "unsafe_duration_hours": 120,
-        "misconfigurations": [
-          {
-            "property": "compute.kind",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": "instance"
-          },
-          {
-            "property": "compute.network.has_public_ip",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": true
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
-      },
-      "control_severity": "high",
-      "control_compliance": {
-        "cis_aws_v1.4.0": "5.1",
-        "fedramp_moderate": "AC-3",
-        "gdpr": "Art.32",
-        "hipaa": "164.312(e)(1)",
-        "nist_800_53_r5": "AC-3",
-        "pci_dss_v4.0": "1.3.4",
-        "soc2": "CC6.6"
-      },
-      "control_compliance_ccm_v4": [
-        "IVS-03"
-      ],
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "EC2 instance has a public IP address. The instance is directly reachable from the internet.",
-        "action": "Launch instances in private subnets without public IP assignment. Use NAT Gateway or VPC endpoints for outbound internet access. Use ALB or NLB for inbound traffic that requires internet access.",
-        "example": "{\n  \"compute\": {\n    \"kind\": \"instance\",\n    \"network\": {\n      \"has_public_ip\": false\n    }\n  }\n}\n"
-      },
-      "fix_plan": {
-        "id": "fix-1e180f0376e7b400",
-        "target": {
-          "asset_id": "i-0abc123def",
-          "asset_type": "aws_instance"
-        },
-        "preconditions": [
-          "Confirm resource ownership and internal change window approval.",
-          "Ensure public access is not explicitly required for this specific resource's function."
-        ],
-        "actions": [
-          {
-            "action_type": "set",
-            "path": "security_posture.block_identity_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_metadata_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
-            "value": true
-          }
-        ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
-      }
-    },
-    {
-      "finding_id": "sha256:9ba0b33d2248da3a",
-      "control_id": "CTL.ELASTICACHE.TRANSIT.001",
-      "control_name": "ElastiCache Must Have In-Transit Encryption Enabled",
-      "control_description": "ElastiCache clusters must have in-transit encryption enabled. Without TLS, cache traffic travels in plaintext between the application and the cache nodes, exposing cached PHI data.\n",
-      "asset_id": "session-cache",
-      "asset_type": "aws_elasticache_cluster",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2026-01-10T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
-        "unsafe_duration_hours": 120,
-        "misconfigurations": [
-          {
-            "property": "cache.encryption.in_transit_enabled",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": false
-          },
-          {
-            "property": "cache.kind",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": "cluster"
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
-      },
-      "control_severity": "high",
-      "control_compliance": {
-        "fedramp_moderate": "SC-8",
-        "gdpr": "Art.32",
-        "hipaa": "164.312(e)(2)(ii)",
-        "nist_800_53_r5": "SC-8",
-        "pci_dss_v4.0": "4.2.1",
-        "soc2": "CC6.6"
-      },
-      "control_compliance_ccm_v4": [
-        "CEK-03",
-        "DSP-10"
-      ],
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "ElastiCache cluster does not have in-transit encryption enabled. Cache traffic is transmitted in plaintext.",
-        "action": "In-transit encryption can only be enabled at cluster creation. Create a new replication group with TransitEncryptionEnabled=true and migrate data from the existing cluster.",
-        "example": "{\n  \"cache\": {\n    \"kind\": \"cluster\",\n    \"encryption\": {\n      \"in_transit_enabled\": true\n    }\n  }\n}\n"
-      }
-    },
-    {
-      "finding_id": "sha256:0eea80a827ddcfa6",
-      "control_id": "CTL.ELB.CROSSZONE.001",
-      "control_name": "Load Balancer Must Have Cross-Zone Load Balancing Enabled",
-      "control_description": "Load balancers must distribute traffic across all registered targets in all enabled Availability Zones. Without cross-zone balancing, uneven distribution can cause availability issues during AZ failures.\n",
-      "asset_id": "alb-phi-api",
-      "asset_type": "aws_load_balancer",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2026-01-10T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
-        "unsafe_duration_hours": 120,
-        "misconfigurations": [
-          {
-            "property": "loadbalancer.availability.cross_zone_enabled",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": false
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
-      },
-      "control_severity": "medium",
-      "control_compliance": {
-        "ffiec": "BCP",
-        "hipaa": "164.308(a)(7)",
-        "soc2": "A1.1"
-      },
-      "control_compliance_ccm_v4": [
-        "BCR-03",
-        "IVS-09"
-      ],
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "Load balancer does not have cross-zone load balancing enabled. Traffic is not evenly distributed across AZs.",
-        "action": "Enable cross-zone load balancing. Run: aws elbv2 modify-load-balancer-attributes --load-balancer-arn xxx --attributes Key=load_balancing.cross_zone.enabled,Value=true",
-        "example": "{\n  \"loadbalancer\": {\n    \"kind\": \"alb\",\n    \"availability\": {\n      \"cross_zone_enabled\": true\n    }\n  }\n}\n"
-      }
-    },
-    {
-      "finding_id": "sha256:571de1d96c48afd6",
-      "control_id": "CTL.ELB.HTTPS.001",
-      "control_name": "Load Balancer Must Redirect HTTP to HTTPS",
-      "control_description": "Load balancers serving PHI must redirect all HTTP traffic to HTTPS. Allowing plaintext HTTP exposes data in transit to interception.\n",
-      "asset_id": "alb-phi-api",
-      "asset_type": "aws_load_balancer",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2026-01-10T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
-        "unsafe_duration_hours": 120,
-        "misconfigurations": [
-          {
-            "property": "loadbalancer.encryption.http_to_https_redirect",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": false
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
-      },
-      "control_severity": "high",
-      "control_compliance": {
-        "fedramp_moderate": "SC-8",
-        "gdpr": "Art.32",
-        "hipaa": "164.312(e)(2)(ii)",
-        "nist_800_53_r5": "SC-8",
-        "pci_dss_v4.0": "4.2.1",
-        "soc2": "CC6.6"
-      },
-      "control_compliance_ccm_v4": [
-        "CEK-03",
-        "DSP-10"
-      ],
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "Load balancer accepts HTTP traffic without redirecting to HTTPS. Data in transit may be unencrypted.",
-        "action": "Add a listener rule on port 80 that redirects to HTTPS (443) with status code 301.",
-        "example": "{\n  \"loadbalancer\": {\n    \"kind\": \"alb\",\n    \"encryption\": {\n      \"http_to_https_redirect\": true\n    }\n  }\n}\n"
-      }
-    },
-    {
-      "finding_id": "sha256:be85087768aeabce",
-      "control_id": "CTL.ELB.LOG.001",
-      "control_name": "Load Balancer Access Logging Must Be Enabled",
-      "control_description": "Load balancer access logging must be enabled for audit and forensic analysis. Without access logs, request patterns and potential unauthorized access cannot be investigated after an incident.\n",
-      "asset_id": "alb-phi-api",
-      "asset_type": "aws_load_balancer",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2026-01-10T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
-        "unsafe_duration_hours": 120,
-        "misconfigurations": [
-          {
-            "property": "loadbalancer.logging.access_log_enabled",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": false
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
-      },
-      "control_severity": "medium",
-      "control_compliance": {
+        "cis_aws_v1.4.0": "3.9",
+        "cis_aws_v3.0": "3.7",
+        "fedramp_moderate": "AU-2",
         "hipaa": "164.312(b)",
+        "nist_800_53_r5": "AU-2",
+        "pci_dss_v4.0": "1.2.1",
         "soc2": "CC7.1"
       },
       "control_compliance_ccm_v4": [
@@ -1369,59 +607,45 @@
         "exposure_window_count": 1
       },
       "remediation": {
-        "description": "Load balancer does not have access logging enabled. Request patterns are not recorded for audit.",
-        "action": "Enable access logging to an S3 bucket. Run: aws elbv2 modify-load-balancer-attributes --load-balancer-arn xxx --attributes Key=access_logs.s3.enabled,Value=true Key=access_logs.s3.bucket,Value=my-elb-logs",
-        "example": "{\n  \"loadbalancer\": {\n    \"kind\": \"alb\",\n    \"logging\": {\n      \"access_log_enabled\": true\n    }\n  }\n}\n"
-      }
-    },
-    {
-      "finding_id": "sha256:45813734adb9d32e",
-      "control_id": "CTL.ELB.TLS.001",
-      "control_name": "Load Balancer Must Use TLS 1.2 or Higher",
-      "control_description": "Application and Network Load Balancers must use TLS 1.2 or higher for HTTPS listeners. Older TLS versions have known vulnerabilities.\n",
-      "asset_id": "alb-phi-api",
-      "asset_type": "aws_load_balancer",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2026-01-10T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
-        "unsafe_duration_hours": 120,
-        "misconfigurations": [
-          {
-            "property": "loadbalancer.encryption.tls_1_2_or_higher",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": false
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+        "description": "VPC does not have flow logging enabled. Network traffic patterns are invisible to audit and forensic analysis.",
+        "action": "Enable VPC flow logs to CloudWatch Logs or S3. Run: aws ec2 create-flow-logs --resource-type VPC --resource-ids vpc-xxx --traffic-type ALL --log-destination-type cloud-watch-logs",
+        "example": "{\n  \"network\": {\n    \"kind\": \"vpc\",\n    \"flow_log\": {\n      \"enabled\": true\n    }\n  }\n}\n"
       },
-      "control_severity": "high",
-      "control_compliance": {
-        "fedramp_moderate": "SC-8",
-        "ffiec": "ISH-4",
-        "gdpr": "Art.32",
-        "hipaa": "164.312(e)(2)(ii)",
-        "nist_800_53_r5": "SC-8",
-        "pci_dss_v4.0": "4.2.1",
-        "soc2": "CC6.6"
-      },
-      "control_compliance_ccm_v4": [
-        "CEK-03",
-        "DSP-10"
+      "chain_membership": [
+        {
+          "chain_id": "detection_blindness",
+          "chain_severity": "critical",
+          "stage_span": [
+            "detection_evasion"
+          ],
+          "narrative": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n"
+        }
       ],
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
+      "exposure_score": 225,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 2,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1.5,
+        "days_blind": 5
       },
-      "remediation": {
-        "description": "Load balancer uses a TLS version older than 1.2. Traffic is vulnerable to downgrade attacks.",
-        "action": "Update the HTTPS listener to use an ELBSecurityPolicy that enforces TLS 1.2 minimum (e.g., ELBSecurityPolicy-TLS-1-2-2017-01).",
-        "example": "{\n  \"loadbalancer\": {\n    \"kind\": \"alb\",\n    \"encryption\": {\n      \"tls_minimum_version\": \"TLSv1.2\"\n    }\n  }\n}\n"
-      }
+      "reasoning_trace": [
+        {
+          "predicate_expr": "network.flow_log.enabled eq false",
+          "observation_key": "network.flow_log.enabled",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "network.kind eq \"vpc\"",
+          "observation_key": "network.kind",
+          "operator": "eq",
+          "expected_value": "vpc",
+          "observed_value": "vpc"
+        }
+      ]
     },
     {
       "finding_id": "sha256:686a676fcb4f9731",
@@ -1486,6 +710,31 @@
             "credential_access"
           ],
           "narrative": "Root account lacks fundamental protections. Without MFA, with active access keys, and with admin policies attached — a single credential theft gives unrestricted account control. This is the highest-impact identity chain.\n"
+        }
+      ],
+      "exposure_score": 150,
+      "score_breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1.5,
+        "days_blind": 5
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "identity.kind eq \"account\"",
+          "observation_key": "identity.kind",
+          "operator": "eq",
+          "expected_value": "account",
+          "observed_value": "account"
+        },
+        {
+          "predicate_expr": "identity.root.has_access_keys eq true",
+          "observation_key": "identity.root.has_access_keys",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": true
         }
       ]
     },
@@ -1557,281 +806,32 @@
           ],
           "narrative": "Root account lacks fundamental protections. Without MFA, with active access keys, and with admin policies attached — a single credential theft gives unrestricted account control. This is the highest-impact identity chain.\n"
         }
-      ]
-    },
-    {
-      "finding_id": "sha256:1e9883ff6455c056",
-      "control_id": "CTL.KMS.POLICY.001",
-      "control_name": "KMS Key Policy Must Restrict Access to Specific Roles",
-      "control_description": "KMS key policies must not grant wildcard principal access. A key policy with Principal \"*\" allows any IAM entity in the account (or any account if conditions are missing) to use the key, defeating the purpose of customer-managed encryption.\n",
-      "asset_id": "phi-cmk",
-      "asset_type": "aws_kms_key",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2026-01-10T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
-        "unsafe_duration_hours": 120,
-        "misconfigurations": [
-          {
-            "property": "cryptography.kind",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": "key"
-          },
-          {
-            "property": "cryptography.policy.has_wildcard_principal",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": true
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
-      },
-      "control_severity": "high",
-      "control_compliance": {
-        "fedramp_moderate": "AC-3",
-        "ffiec": "ISH-4",
-        "gdpr": "Art.32",
-        "hipaa": "164.312(a)(1)",
-        "iso_27001_2022": "A.8.24",
-        "nist_800_53_r5": "AC-3",
-        "nist_csf_2.0": "PR.DS",
-        "pci_dss_v4.0": "3.4.1",
-        "soc2": "CC6.1"
-      },
-      "control_compliance_ccm_v4": [
-        "CEK-03",
-        "IAM-16"
       ],
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
+      "exposure_score": 150,
+      "score_breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1.5,
+        "days_blind": 5
       },
-      "remediation": {
-        "description": "KMS key policy grants access to wildcard principals. Any IAM entity can use this key for encryption and decryption.",
-        "action": "Update the key policy to restrict Principal to specific IAM roles or accounts. Remove any statements with Principal \"*\".",
-        "example": "{\n  \"cryptography\": {\n    \"kind\": \"key\",\n    \"policy\": {\n      \"has_wildcard_principal\": false\n    }\n  }\n}\n"
-      }
-    },
-    {
-      "finding_id": "sha256:d3c473c720840e6d",
-      "control_id": "CTL.RDS.BACKUP.001",
-      "control_name": "RDS Automated Backups Must Be Enabled",
-      "control_description": "RDS instances must have automated backups enabled with a retention period of at least 7 days. Without backups, data loss from accidental deletion, corruption, or ransomware is permanent.\n",
-      "asset_id": "phi-database",
-      "asset_type": "aws_rds_instance",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2026-01-10T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
-        "unsafe_duration_hours": 120,
-        "misconfigurations": [
-          {
-            "property": "database.backup.enabled",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": false
-          },
-          {
-            "property": "database.kind",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": "instance"
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
-      },
-      "control_severity": "high",
-      "control_compliance": {
-        "hipaa": "164.308(a)(7)",
-        "soc2": "A1.1"
-      },
-      "control_compliance_ccm_v4": [
-        "BCR-08"
-      ],
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "RDS instance has automated backups disabled or retention period is too short. Data loss is not recoverable.",
-        "action": "Enable automated backups with at least 7 days retention. Run: aws rds modify-db-instance --db-instance-identifier xxx --backup-retention-period 7 --apply-immediately",
-        "example": "{\n  \"database\": {\n    \"kind\": \"instance\",\n    \"backup\": {\n      \"enabled\": true,\n      \"retention_days\": 7\n    }\n  }\n}\n"
-      }
-    },
-    {
-      "finding_id": "sha256:9ac53f47bd4f1f1b",
-      "control_id": "CTL.RDS.ENCRYPT.001",
-      "control_name": "RDS Storage Encryption Must Be Enabled",
-      "control_description": "RDS instances must have storage encryption enabled. Unencrypted database storage exposes data at rest to unauthorized access if the underlying storage is compromised.\n",
-      "asset_id": "phi-database",
-      "asset_type": "aws_rds_instance",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2026-01-10T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
-        "unsafe_duration_hours": 120,
-        "misconfigurations": [
-          {
-            "property": "database.encryption.storage_encrypted",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": false
-          },
-          {
-            "property": "database.kind",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": "instance"
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
-      },
-      "control_severity": "high",
-      "control_compliance": {
-        "cis_aws_v1.4.0": "2.3.1",
-        "cis_aws_v3.0": "2.3.1",
-        "fedramp_moderate": "SC-28",
-        "ffiec": "ISH-4",
-        "gdpr": "Art.32",
-        "hipaa": "164.312(a)(2)(iv)",
-        "iso_27001_2022": "A.8.24",
-        "nist_800_53_r5": "SC-28",
-        "nist_csf_2.0": "PR.DS",
-        "pci_dss_v4.0": "3.4.1",
-        "soc2": "CC6.7"
-      },
-      "control_compliance_ccm_v4": [
-        "CEK-03"
-      ],
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "RDS instance does not have storage encryption enabled. Database contents are stored in plaintext on the underlying EBS volumes.",
-        "action": "Storage encryption can only be enabled at creation time. Create a snapshot, copy it with encryption enabled, then restore to a new encrypted instance. Enable encryption by default for new instances.",
-        "example": "{\n  \"database\": {\n    \"kind\": \"instance\",\n    \"encryption\": {\n      \"storage_encrypted\": true\n    }\n  }\n}\n"
-      },
-      "chain_membership": [
+      "reasoning_trace": [
         {
-          "chain_id": "eol_database_phi_exposure",
-          "chain_severity": "critical",
-          "stage_span": [
-            "initial_access",
-            "exfiltration"
-          ],
-          "narrative": "RDS instance is running an EOL database engine with no security patches available. The instance is either unencrypted, publicly accessible, or both. An unpatched database engine with known CVEs is exposed through the public network or unencrypted storage. For PHI workloads this constitutes a direct compliance failure across multiple requirements.\n"
+          "predicate_expr": "identity.kind eq \"account\"",
+          "observation_key": "identity.kind",
+          "operator": "eq",
+          "expected_value": "account",
+          "observed_value": "account"
+        },
+        {
+          "predicate_expr": "identity.root.mfa_enabled eq false",
+          "observation_key": "identity.root.mfa_enabled",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
         }
       ]
-    },
-    {
-      "finding_id": "sha256:2653bff61b751ad6",
-      "control_id": "CTL.RDS.LOG.001",
-      "control_name": "RDS Audit Logging Must Be Enabled",
-      "control_description": "RDS instances must export audit logs to CloudWatch. Without audit logging, database access patterns cannot be monitored and unauthorized queries are undetectable.\n",
-      "asset_id": "phi-database",
-      "asset_type": "aws_rds_instance",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2026-01-10T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
-        "unsafe_duration_hours": 120,
-        "misconfigurations": [
-          {
-            "property": "database.kind",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": "instance"
-          },
-          {
-            "property": "database.logging.audit_log_enabled",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": false
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
-      },
-      "control_severity": "medium",
-      "control_compliance": {
-        "hipaa": "164.312(b)",
-        "soc2": "CC7.1"
-      },
-      "control_compliance_ccm_v4": [
-        "LOG-12"
-      ],
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "RDS instance does not export audit logs to CloudWatch. Database access is not auditable.",
-        "action": "Enable CloudWatch log exports for the database engine. Run: aws rds modify-db-instance --db-instance-identifier xxx --cloudwatch-logs-export-configuration '{\"EnableLogTypes\":[\"audit\",\"error\",\"slowquery\"]}'",
-        "example": "{\n  \"database\": {\n    \"kind\": \"instance\",\n    \"logging\": {\n      \"audit_log_enabled\": true\n    }\n  }\n}\n"
-      }
-    },
-    {
-      "finding_id": "sha256:c215d91c260588c6",
-      "control_id": "CTL.RDS.MULTIAZ.001",
-      "control_name": "RDS Instances Must Use Multi-AZ Deployment",
-      "control_description": "Production RDS instances must use Multi-AZ deployment for high availability. Single-AZ instances have a single point of failure that can cause data unavailability during AZ outages.\n",
-      "asset_id": "phi-database",
-      "asset_type": "aws_rds_instance",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2026-01-10T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
-        "unsafe_duration_hours": 120,
-        "misconfigurations": [
-          {
-            "property": "database.access.multi_az",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": false
-          },
-          {
-            "property": "database.kind",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": "instance"
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
-      },
-      "control_severity": "medium",
-      "control_compliance": {
-        "hipaa": "164.308(a)(7)",
-        "soc2": "A1.1"
-      },
-      "control_compliance_ccm_v4": [
-        "DSP-17",
-        "IAM-16"
-      ],
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "RDS instance is not configured for Multi-AZ deployment. An AZ outage will cause database unavailability.",
-        "action": "Modify the instance to enable Multi-AZ. Run: aws rds modify-db-instance --db-instance-identifier xxx --multi-az --apply-immediately",
-        "example": "{\n  \"database\": {\n    \"kind\": \"instance\",\n    \"access\": {\n      \"multi_az\": true\n    }\n  }\n}\n"
-      }
     },
     {
       "finding_id": "sha256:6d6e5d5f2078bd42",
@@ -1934,15 +934,40 @@
           ],
           "narrative": "RDS instance is running an EOL database engine with no security patches available. The instance is either unencrypted, publicly accessible, or both. An unpatched database engine with known CVEs is exposed through the public network or unencrypted storage. For PHI workloads this constitutes a direct compliance failure across multiple requirements.\n"
         }
+      ],
+      "exposure_score": 150,
+      "score_breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1.5,
+        "days_blind": 5
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "database.access.publicly_accessible eq true",
+          "observation_key": "database.access.publicly_accessible",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": true
+        },
+        {
+          "predicate_expr": "database.kind eq \"instance\"",
+          "observation_key": "database.kind",
+          "operator": "eq",
+          "expected_value": "instance",
+          "observed_value": "instance"
+        }
       ]
     },
     {
-      "finding_id": "sha256:7ea0b9680c5e0447",
-      "control_id": "CTL.SECRETSMANAGER.ACCESS.001",
-      "control_name": "Secrets Must Have Rotation Enabled",
-      "control_description": "Secrets Manager secrets must have automatic rotation enabled. Long-lived secrets that are never rotated increase the blast radius of credential leaks and prevent timely revocation.\n",
-      "asset_id": "db-credentials",
-      "asset_type": "aws_secretsmanager_secret",
+      "finding_id": "sha256:9ac53f47bd4f1f1b",
+      "control_id": "CTL.RDS.ENCRYPT.001",
+      "control_name": "RDS Storage Encryption Must Be Enabled",
+      "control_description": "RDS instances must have storage encryption enabled. Unencrypted database storage exposes data at rest to unauthorized access if the underlying storage is compromised.\n",
+      "asset_id": "phi-database",
+      "asset_type": "aws_rds_instance",
       "asset_vendor": "aws",
       "evidence": {
         "first_unsafe_at": "2026-01-10T00:00:00Z",
@@ -1950,16 +975,430 @@
         "unsafe_duration_hours": 120,
         "misconfigurations": [
           {
-            "property": "secret.access.rotation_enabled",
+            "property": "database.encryption.storage_encrypted",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": false
           },
           {
-            "property": "secret.kind",
+            "property": "database.kind",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
-            "unsafe_value": "secret"
+            "unsafe_value": "instance"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_aws_v1.4.0": "2.3.1",
+        "cis_aws_v3.0": "2.3.1",
+        "fedramp_moderate": "SC-28",
+        "ffiec": "ISH-4",
+        "gdpr": "Art.32",
+        "hipaa": "164.312(a)(2)(iv)",
+        "iso_27001_2022": "A.8.24",
+        "nist_800_53_r5": "SC-28",
+        "nist_csf_2.0": "PR.DS",
+        "pci_dss_v4.0": "3.4.1",
+        "soc2": "CC6.7"
+      },
+      "control_compliance_ccm_v4": [
+        "CEK-03"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "RDS instance does not have storage encryption enabled. Database contents are stored in plaintext on the underlying EBS volumes.",
+        "action": "Storage encryption can only be enabled at creation time. Create a snapshot, copy it with encryption enabled, then restore to a new encrypted instance. Enable encryption by default for new instances.",
+        "example": "{\n  \"database\": {\n    \"kind\": \"instance\",\n    \"encryption\": {\n      \"storage_encrypted\": true\n    }\n  }\n}\n"
+      },
+      "chain_membership": [
+        {
+          "chain_id": "eol_database_phi_exposure",
+          "chain_severity": "critical",
+          "stage_span": [
+            "initial_access",
+            "exfiltration"
+          ],
+          "narrative": "RDS instance is running an EOL database engine with no security patches available. The instance is either unencrypted, publicly accessible, or both. An unpatched database engine with known CVEs is exposed through the public network or unencrypted storage. For PHI workloads this constitutes a direct compliance failure across multiple requirements.\n"
+        }
+      ],
+      "exposure_score": 112.5,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1.5,
+        "days_blind": 5
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "database.encryption.storage_encrypted eq false",
+          "observation_key": "database.encryption.storage_encrypted",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "database.kind eq \"instance\"",
+          "observation_key": "database.kind",
+          "operator": "eq",
+          "expected_value": "instance",
+          "observed_value": "instance"
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:81b8ce81c12cc518",
+      "control_id": "CTL.APIGATEWAY.TLS.001",
+      "control_name": "API Gateway Must Enforce TLS 1.2",
+      "control_description": "API Gateway stages must enforce TLS 1.2 or higher. Allowing older TLS versions exposes API traffic to known cryptographic attacks (BEAST, POODLE, etc).\n",
+      "asset_id": "phi-api",
+      "asset_type": "aws_apigateway_stage",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
+        "unsafe_duration_hours": 120,
+        "misconfigurations": [
+          {
+            "property": "api.encryption.tls_enforced",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "api.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "rest_api"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "fedramp_moderate": "SC-8",
+        "gdpr": "Art.32",
+        "hipaa": "164.312(e)(2)(ii)",
+        "nist_800_53_r5": "SC-8",
+        "pci_dss_v4.0": "4.2.1",
+        "soc2": "CC6.6"
+      },
+      "control_compliance_ccm_v4": [
+        "AIS-01",
+        "CEK-03",
+        "DSP-10"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "API Gateway does not enforce TLS 1.2. Clients can connect with older, vulnerable TLS versions.",
+        "action": "Set the minimum TLS version on the custom domain or API stage. For REST APIs, configure a security policy of TLS_1_2 on the custom domain name.",
+        "example": "{\n  \"api\": {\n    \"kind\": \"rest_api\",\n    \"encryption\": {\n      \"minimum_tls_version\": \"TLS_1_2\"\n    }\n  }\n}\n"
+      },
+      "exposure_score": 75,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 5
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "api.encryption.tls_enforced eq false",
+          "observation_key": "api.encryption.tls_enforced",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "api.kind eq \"rest_api\"",
+          "observation_key": "api.kind",
+          "operator": "eq",
+          "expected_value": "rest_api",
+          "observed_value": "rest_api"
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:a52edc7322ea1dde",
+      "control_id": "CTL.BACKUP.EXISTS.001",
+      "control_name": "Critical Resources Must Have Backups",
+      "control_description": "Resources tagged as critical or containing PHI must have at least one backup configured. Without backups, data loss from accidental deletion, corruption, or ransomware is permanent and unrecoverable.\n",
+      "asset_id": "backup-phi-database",
+      "asset_type": "aws_backup_resource",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
+        "unsafe_duration_hours": 120,
+        "misconfigurations": [
+          {
+            "property": "backup.has_backup",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "backup.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "resource"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "hipaa": "164.308(a)(7)",
+        "soc2": "A1.1"
+      },
+      "control_compliance_ccm_v4": [
+        "BCR-08",
+        "CCC-04",
+        "CCC-07",
+        "CEK-03"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Resource has no backup configured. Data loss is not recoverable.",
+        "action": "Configure automated backups via AWS Backup, RDS automated snapshots, or S3 cross-region replication depending on the resource type.",
+        "example": "{\n  \"backup\": {\n    \"kind\": \"resource\",\n    \"has_backup\": true\n  }\n}\n"
+      },
+      "exposure_score": 75,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 5
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "backup.has_backup eq false",
+          "observation_key": "backup.has_backup",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "backup.kind eq \"resource\"",
+          "observation_key": "backup.kind",
+          "operator": "eq",
+          "expected_value": "resource",
+          "observed_value": "resource"
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:f237d540e872de4d",
+      "control_id": "CTL.CLOUDTRAIL.ENCRYPT.001",
+      "control_name": "CloudTrail Logs Must Be Encrypted with KMS",
+      "control_description": "CloudTrail logs must be encrypted at rest using a KMS customer-managed key. Default S3 encryption (SSE-S3) does not provide key revocation capability needed for breach response.\n",
+      "asset_id": "main-trail",
+      "asset_type": "aws_cloudtrail_trail",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
+        "unsafe_duration_hours": 120,
+        "misconfigurations": [
+          {
+            "property": "audit_trail.encryption.encrypted",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "audit_trail.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "trail"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_aws_v1.4.0": "3.7",
+        "cis_aws_v3.0": "3.5",
+        "fedramp_moderate": "AU-9",
+        "hipaa": "164.312(a)(2)(iv)",
+        "nist_800_53_r5": "AU-9",
+        "pci_dss_v4.0": "10.5.1",
+        "soc2": "CC6.7"
+      },
+      "control_compliance_ccm_v4": [
+        "CEK-03",
+        "LOG-05"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "CloudTrail logs are not encrypted with a KMS customer-managed key. Log data may be exposed if the S3 bucket is compromised.",
+        "action": "Configure the trail to use a KMS key for log encryption. Run: aws cloudtrail update-trail --name xxx --kms-key-id arn:aws:kms:...",
+        "example": "{\n  \"audit_trail\": {\n    \"kind\": \"trail\",\n    \"encryption\": {\n      \"encrypted\": true,\n      \"kms_key_id\": \"arn:aws:kms:us-east-1:123456789012:key/abc\"\n    }\n  }\n}\n"
+      },
+      "exposure_score": 75,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 5
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "audit_trail.encryption.encrypted eq false",
+          "observation_key": "audit_trail.encryption.encrypted",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "audit_trail.kind eq \"trail\"",
+          "observation_key": "audit_trail.kind",
+          "operator": "eq",
+          "expected_value": "trail",
+          "observed_value": "trail"
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:1bb3180bd93c6975",
+      "control_id": "CTL.CLOUDTRAIL.VALIDATION.001",
+      "control_name": "CloudTrail Log File Validation Must Be Enabled",
+      "control_description": "CloudTrail must have log file integrity validation enabled. Without validation, an attacker who gains access to the log bucket can modify or delete log entries to cover their tracks.\n",
+      "asset_id": "main-trail",
+      "asset_type": "aws_cloudtrail_trail",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
+        "unsafe_duration_hours": 120,
+        "misconfigurations": [
+          {
+            "property": "audit_trail.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "trail"
+          },
+          {
+            "property": "audit_trail.log_file_validation_enabled",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_aws_v1.4.0": "3.2",
+        "cis_aws_v3.0": "3.2",
+        "fedramp_moderate": "AU-9",
+        "ffiec": "ISH-4",
+        "gdpr": "Art.32",
+        "hipaa": "164.312(b)",
+        "iso_27001_2022": "A.8.15",
+        "nist_800_53_r5": "AU-9",
+        "pci_dss_v4.0": "10.2.1",
+        "soc2": "CC7.1"
+      },
+      "control_compliance_ccm_v4": [
+        "LOG-05",
+        "LOG-12"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "CloudTrail log file validation is disabled. Log integrity cannot be verified.",
+        "action": "Enable log file validation on the trail. Run: aws cloudtrail update-trail --name xxx --enable-log-file-validation",
+        "example": "{\n  \"audit_trail\": {\n    \"kind\": \"trail\",\n    \"log_file_validation_enabled\": true\n  }\n}\n"
+      },
+      "exposure_score": 75,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 5
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "audit_trail.kind eq \"trail\"",
+          "observation_key": "audit_trail.kind",
+          "operator": "eq",
+          "expected_value": "trail",
+          "observed_value": "trail"
+        },
+        {
+          "predicate_expr": "audit_trail.log_file_validation_enabled eq false",
+          "observation_key": "audit_trail.log_file_validation_enabled",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:801f9bd87a66bd5f",
+      "control_id": "CTL.CLOUDWATCH.RETENTION.001",
+      "control_name": "CloudWatch Log Groups Must Have Retention Policy",
+      "control_description": "CloudWatch Logs log groups must have a retention policy configured. Without a retention policy, logs are kept indefinitely (incurring cost) or may be deleted manually without audit trail.\n",
+      "asset_id": "app-logs",
+      "asset_type": "aws_cloudwatch_log_group",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
+        "unsafe_duration_hours": 120,
+        "misconfigurations": [
+          {
+            "property": "log_group.has_retention_policy",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "log_group.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "log_group"
           }
         ],
         "root_causes": [
@@ -1969,11 +1408,89 @@
       },
       "control_severity": "medium",
       "control_compliance": {
-        "hipaa": "164.312(a)(1)",
+        "hipaa": "164.312(b)",
+        "soc2": "CC7.1"
+      },
+      "control_compliance_ccm_v4": [
+        "DSP-16",
+        "LOG-03"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "CloudWatch log group does not have a retention policy. Logs may accumulate indefinitely or be deleted without governance.",
+        "action": "Set a retention policy on the log group. Run: aws logs put-retention-policy --log-group-name xxx --retention-in-days 365",
+        "example": "{\n  \"log_group\": {\n    \"kind\": \"log_group\",\n    \"has_retention_policy\": true\n  }\n}\n"
+      },
+      "exposure_score": 75,
+      "score_breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1.5,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 5
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "log_group.has_retention_policy eq false",
+          "observation_key": "log_group.has_retention_policy",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "log_group.kind eq \"log_group\"",
+          "observation_key": "log_group.kind",
+          "operator": "eq",
+          "expected_value": "log_group",
+          "observed_value": "log_group"
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:a73625cd410ebe3c",
+      "control_id": "CTL.COGNITO.MFA.001",
+      "control_name": "Cognito User Pool Must Enforce MFA",
+      "control_description": "Cognito user pools handling PHI must enforce multi-factor authentication. Without MFA, a compromised password grants full access to the application and any PHI it serves.\n",
+      "asset_id": "patient-portal",
+      "asset_type": "aws_cognito_user_pool",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
+        "unsafe_duration_hours": 120,
+        "misconfigurations": [
+          {
+            "property": "identity.auth.mfa_enforced",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "identity.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "user_pool"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "fedramp_moderate": "IA-2(1)",
+        "hipaa": "164.312(d)",
+        "nist_800_53_r5": "IA-2(1)",
+        "pci_dss_v4.0": "8.3.1",
         "soc2": "CC6.1"
       },
       "control_compliance_ccm_v4": [
-        "DSP-17",
+        "IAM-14",
         "IAM-16"
       ],
       "posture_drift": {
@@ -1981,10 +1498,677 @@
         "exposure_window_count": 1
       },
       "remediation": {
-        "description": "Secret does not have automatic rotation enabled. The secret value may be stale or compromised without detection.",
-        "action": "Configure automatic rotation with a Lambda function. Run: aws secretsmanager rotate-secret --secret-id xxx --rotation-lambda-arn arn:aws:lambda:... --rotation-rules AutomaticallyAfterDays=90",
-        "example": "{\n  \"secret\": {\n    \"kind\": \"secret\",\n    \"access\": {\n      \"rotation_enabled\": true\n    }\n  }\n}\n"
-      }
+        "description": "Cognito user pool does not enforce MFA. User authentication relies on password alone.",
+        "action": "Set MfaConfiguration to ON (required) on the user pool. Run: aws cognito-idp set-user-pool-mfa-config --user-pool-id xxx --mfa-configuration ON --software-token-mfa-configuration Enabled=true",
+        "example": "{\n  \"identity\": {\n    \"kind\": \"user_pool\",\n    \"auth\": {\n      \"mfa_enforced\": true\n    }\n  }\n}\n"
+      },
+      "exposure_score": 75,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 5
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "identity.auth.mfa_enforced eq false",
+          "observation_key": "identity.auth.mfa_enforced",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "identity.kind eq \"user_pool\"",
+          "observation_key": "identity.kind",
+          "operator": "eq",
+          "expected_value": "user_pool",
+          "observed_value": "user_pool"
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:57cf047d8c46d33b",
+      "control_id": "CTL.DYNAMODB.ENCRYPT.001",
+      "control_name": "DynamoDB Must Use Customer-Managed KMS Encryption",
+      "control_description": "DynamoDB tables must use a customer-managed KMS key for encryption at rest. The default AWS-owned key does not support key revocation, audit of key usage, or cross-account key policies.\n",
+      "asset_id": "phi-events-table",
+      "asset_type": "aws_dynamodb_table",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
+        "unsafe_duration_hours": 120,
+        "misconfigurations": [
+          {
+            "property": "database.encryption.sse_type",
+            "actual_value": "[SANITIZED]",
+            "operator": "ne",
+            "unsafe_value": "KMS"
+          },
+          {
+            "property": "database.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "table"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "fedramp_moderate": "SC-28",
+        "gdpr": "Art.32",
+        "hipaa": "164.312(a)(2)(iv)",
+        "nist_800_53_r5": "SC-28",
+        "pci_dss_v4.0": "3.4.1",
+        "soc2": "CC6.7"
+      },
+      "control_compliance_ccm_v4": [
+        "CEK-03"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "DynamoDB table is not encrypted with a customer-managed KMS key.",
+        "action": "Update the table encryption to use a customer-managed KMS key. Run: aws dynamodb update-table --table-name xxx --sse-specification Enabled=true,SSEType=KMS,KMSMasterKeyId=arn:...",
+        "example": "{\n  \"database\": {\n    \"kind\": \"table\",\n    \"encryption\": {\n      \"sse_type\": \"KMS\"\n    }\n  }\n}\n"
+      },
+      "exposure_score": 75,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 5
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "database.encryption.sse_type ne \"KMS\"",
+          "observation_key": "database.encryption.sse_type",
+          "operator": "ne",
+          "expected_value": "KMS",
+          "observed_value": "DEFAULT"
+        },
+        {
+          "predicate_expr": "database.kind eq \"table\"",
+          "observation_key": "database.kind",
+          "operator": "eq",
+          "expected_value": "table",
+          "observed_value": "table"
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:6ecde267626a20de",
+      "control_id": "CTL.EC2.EBS.ENCRYPT.001",
+      "control_name": "EBS Volumes Must Be Encrypted",
+      "control_description": "EBS volumes attached to EC2 instances must have encryption enabled. Unencrypted volumes storing PHI or sensitive data violate encryption at rest requirements.\n",
+      "asset_id": "i-0abc123def",
+      "asset_type": "aws_instance",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
+        "unsafe_duration_hours": 120,
+        "misconfigurations": [
+          {
+            "property": "compute.encryption.ebs_encrypted",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "compute.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "instance"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_aws_v1.4.0": "2.2.1",
+        "cis_aws_v3.0": "2.2.1",
+        "fedramp_moderate": "SC-28",
+        "ffiec": "ISH-4",
+        "gdpr": "Art.32",
+        "hipaa": "164.312(a)(2)(iv)",
+        "iso_27001_2022": "A.8.24",
+        "nist_800_53_r5": "SC-28",
+        "nist_csf_2.0": "PR.DS",
+        "pci_dss_v4.0": "3.4.1",
+        "soc2": "CC6.7"
+      },
+      "control_compliance_ccm_v4": [
+        "CEK-03"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "EBS volume is not encrypted. Data at rest is stored in plaintext on the underlying storage hardware.",
+        "action": "Enable EBS encryption by default for the account. For existing volumes, create an encrypted snapshot and restore to a new encrypted volume. Run: aws ec2 enable-ebs-encryption-by-default",
+        "example": "{\n  \"compute\": {\n    \"kind\": \"instance\",\n    \"encryption\": {\n      \"ebs_encrypted\": true\n    }\n  }\n}\n"
+      },
+      "exposure_score": 75,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 5
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "compute.encryption.ebs_encrypted eq false",
+          "observation_key": "compute.encryption.ebs_encrypted",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "compute.kind eq \"instance\"",
+          "observation_key": "compute.kind",
+          "operator": "eq",
+          "expected_value": "instance",
+          "observed_value": "instance"
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:3a1554c5a78a5816",
+      "control_id": "CTL.EC2.PUBLIC.001",
+      "control_name": "EC2 Instances Must Not Have Public IP Addresses",
+      "control_description": "EC2 instances should not have public IP addresses unless explicitly required. Public IP assignment exposes the instance to direct internet access, bypassing network perimeter controls.\n",
+      "asset_id": "i-0abc123def",
+      "asset_type": "aws_instance",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
+        "unsafe_duration_hours": 120,
+        "misconfigurations": [
+          {
+            "property": "compute.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "instance"
+          },
+          {
+            "property": "compute.network.has_public_ip",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_aws_v1.4.0": "5.1",
+        "fedramp_moderate": "AC-3",
+        "gdpr": "Art.32",
+        "hipaa": "164.312(e)(1)",
+        "nist_800_53_r5": "AC-3",
+        "pci_dss_v4.0": "1.3.4",
+        "soc2": "CC6.6"
+      },
+      "control_compliance_ccm_v4": [
+        "IVS-03"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "EC2 instance has a public IP address. The instance is directly reachable from the internet.",
+        "action": "Launch instances in private subnets without public IP assignment. Use NAT Gateway or VPC endpoints for outbound internet access. Use ALB or NLB for inbound traffic that requires internet access.",
+        "example": "{\n  \"compute\": {\n    \"kind\": \"instance\",\n    \"network\": {\n      \"has_public_ip\": false\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-1e180f0376e7b400",
+        "target": {
+          "asset_id": "i-0abc123def",
+          "asset_type": "aws_instance"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+      },
+      "exposure_score": 75,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 5
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "compute.kind eq \"instance\"",
+          "observation_key": "compute.kind",
+          "operator": "eq",
+          "expected_value": "instance",
+          "observed_value": "instance"
+        },
+        {
+          "predicate_expr": "compute.network.has_public_ip eq true",
+          "observation_key": "compute.network.has_public_ip",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": true
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:9ba0b33d2248da3a",
+      "control_id": "CTL.ELASTICACHE.TRANSIT.001",
+      "control_name": "ElastiCache Must Have In-Transit Encryption Enabled",
+      "control_description": "ElastiCache clusters must have in-transit encryption enabled. Without TLS, cache traffic travels in plaintext between the application and the cache nodes, exposing cached PHI data.\n",
+      "asset_id": "session-cache",
+      "asset_type": "aws_elasticache_cluster",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
+        "unsafe_duration_hours": 120,
+        "misconfigurations": [
+          {
+            "property": "cache.encryption.in_transit_enabled",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "cache.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "cluster"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "fedramp_moderate": "SC-8",
+        "gdpr": "Art.32",
+        "hipaa": "164.312(e)(2)(ii)",
+        "nist_800_53_r5": "SC-8",
+        "pci_dss_v4.0": "4.2.1",
+        "soc2": "CC6.6"
+      },
+      "control_compliance_ccm_v4": [
+        "CEK-03",
+        "DSP-10"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "ElastiCache cluster does not have in-transit encryption enabled. Cache traffic is transmitted in plaintext.",
+        "action": "In-transit encryption can only be enabled at cluster creation. Create a new replication group with TransitEncryptionEnabled=true and migrate data from the existing cluster.",
+        "example": "{\n  \"cache\": {\n    \"kind\": \"cluster\",\n    \"encryption\": {\n      \"in_transit_enabled\": true\n    }\n  }\n}\n"
+      },
+      "exposure_score": 75,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 5
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "cache.encryption.in_transit_enabled eq false",
+          "observation_key": "cache.encryption.in_transit_enabled",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "cache.kind eq \"cluster\"",
+          "observation_key": "cache.kind",
+          "operator": "eq",
+          "expected_value": "cluster",
+          "observed_value": "cluster"
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:571de1d96c48afd6",
+      "control_id": "CTL.ELB.HTTPS.001",
+      "control_name": "Load Balancer Must Redirect HTTP to HTTPS",
+      "control_description": "Load balancers serving PHI must redirect all HTTP traffic to HTTPS. Allowing plaintext HTTP exposes data in transit to interception.\n",
+      "asset_id": "alb-phi-api",
+      "asset_type": "aws_load_balancer",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
+        "unsafe_duration_hours": 120,
+        "misconfigurations": [
+          {
+            "property": "loadbalancer.encryption.http_to_https_redirect",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "fedramp_moderate": "SC-8",
+        "gdpr": "Art.32",
+        "hipaa": "164.312(e)(2)(ii)",
+        "nist_800_53_r5": "SC-8",
+        "pci_dss_v4.0": "4.2.1",
+        "soc2": "CC6.6"
+      },
+      "control_compliance_ccm_v4": [
+        "CEK-03",
+        "DSP-10"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Load balancer accepts HTTP traffic without redirecting to HTTPS. Data in transit may be unencrypted.",
+        "action": "Add a listener rule on port 80 that redirects to HTTPS (443) with status code 301.",
+        "example": "{\n  \"loadbalancer\": {\n    \"kind\": \"alb\",\n    \"encryption\": {\n      \"http_to_https_redirect\": true\n    }\n  }\n}\n"
+      },
+      "exposure_score": 75,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 5
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "loadbalancer.encryption.http_to_https_redirect eq false",
+          "observation_key": "loadbalancer.encryption.http_to_https_redirect",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:45813734adb9d32e",
+      "control_id": "CTL.ELB.TLS.001",
+      "control_name": "Load Balancer Must Use TLS 1.2 or Higher",
+      "control_description": "Application and Network Load Balancers must use TLS 1.2 or higher for HTTPS listeners. Older TLS versions have known vulnerabilities.\n",
+      "asset_id": "alb-phi-api",
+      "asset_type": "aws_load_balancer",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
+        "unsafe_duration_hours": 120,
+        "misconfigurations": [
+          {
+            "property": "loadbalancer.encryption.tls_1_2_or_higher",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "fedramp_moderate": "SC-8",
+        "ffiec": "ISH-4",
+        "gdpr": "Art.32",
+        "hipaa": "164.312(e)(2)(ii)",
+        "nist_800_53_r5": "SC-8",
+        "pci_dss_v4.0": "4.2.1",
+        "soc2": "CC6.6"
+      },
+      "control_compliance_ccm_v4": [
+        "CEK-03",
+        "DSP-10"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Load balancer uses a TLS version older than 1.2. Traffic is vulnerable to downgrade attacks.",
+        "action": "Update the HTTPS listener to use an ELBSecurityPolicy that enforces TLS 1.2 minimum (e.g., ELBSecurityPolicy-TLS-1-2-2017-01).",
+        "example": "{\n  \"loadbalancer\": {\n    \"kind\": \"alb\",\n    \"encryption\": {\n      \"tls_minimum_version\": \"TLSv1.2\"\n    }\n  }\n}\n"
+      },
+      "exposure_score": 75,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 5
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "loadbalancer.encryption.tls_1_2_or_higher eq false",
+          "observation_key": "loadbalancer.encryption.tls_1_2_or_higher",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:1e9883ff6455c056",
+      "control_id": "CTL.KMS.POLICY.001",
+      "control_name": "KMS Key Policy Must Restrict Access to Specific Roles",
+      "control_description": "KMS key policies must not grant wildcard principal access. A key policy with Principal \"*\" allows any IAM entity in the account (or any account if conditions are missing) to use the key, defeating the purpose of customer-managed encryption.\n",
+      "asset_id": "phi-cmk",
+      "asset_type": "aws_kms_key",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
+        "unsafe_duration_hours": 120,
+        "misconfigurations": [
+          {
+            "property": "cryptography.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "key"
+          },
+          {
+            "property": "cryptography.policy.has_wildcard_principal",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "fedramp_moderate": "AC-3",
+        "ffiec": "ISH-4",
+        "gdpr": "Art.32",
+        "hipaa": "164.312(a)(1)",
+        "iso_27001_2022": "A.8.24",
+        "nist_800_53_r5": "AC-3",
+        "nist_csf_2.0": "PR.DS",
+        "pci_dss_v4.0": "3.4.1",
+        "soc2": "CC6.1"
+      },
+      "control_compliance_ccm_v4": [
+        "CEK-03",
+        "IAM-16"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "KMS key policy grants access to wildcard principals. Any IAM entity can use this key for encryption and decryption.",
+        "action": "Update the key policy to restrict Principal to specific IAM roles or accounts. Remove any statements with Principal \"*\".",
+        "example": "{\n  \"cryptography\": {\n    \"kind\": \"key\",\n    \"policy\": {\n      \"has_wildcard_principal\": false\n    }\n  }\n}\n"
+      },
+      "exposure_score": 75,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 5
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "cryptography.kind eq \"key\"",
+          "observation_key": "cryptography.kind",
+          "operator": "eq",
+          "expected_value": "key",
+          "observed_value": "key"
+        },
+        {
+          "predicate_expr": "cryptography.policy.has_wildcard_principal eq true",
+          "observation_key": "cryptography.policy.has_wildcard_principal",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": true
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:d3c473c720840e6d",
+      "control_id": "CTL.RDS.BACKUP.001",
+      "control_name": "RDS Automated Backups Must Be Enabled",
+      "control_description": "RDS instances must have automated backups enabled with a retention period of at least 7 days. Without backups, data loss from accidental deletion, corruption, or ransomware is permanent.\n",
+      "asset_id": "phi-database",
+      "asset_type": "aws_rds_instance",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
+        "unsafe_duration_hours": 120,
+        "misconfigurations": [
+          {
+            "property": "database.backup.enabled",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "database.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "instance"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "hipaa": "164.308(a)(7)",
+        "soc2": "A1.1"
+      },
+      "control_compliance_ccm_v4": [
+        "BCR-08"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "RDS instance has automated backups disabled or retention period is too short. Data loss is not recoverable.",
+        "action": "Enable automated backups with at least 7 days retention. Run: aws rds modify-db-instance --db-instance-identifier xxx --backup-retention-period 7 --apply-immediately",
+        "example": "{\n  \"database\": {\n    \"kind\": \"instance\",\n    \"backup\": {\n      \"enabled\": true,\n      \"retention_days\": 7\n    }\n  }\n}\n"
+      },
+      "exposure_score": 75,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 5
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "database.backup.enabled eq false",
+          "observation_key": "database.backup.enabled",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "database.kind eq \"instance\"",
+          "observation_key": "database.kind",
+          "operator": "eq",
+          "expected_value": "instance",
+          "observed_value": "instance"
+        }
+      ]
     },
     {
       "finding_id": "sha256:4faec0c040d11d18",
@@ -2037,7 +2221,32 @@
         "description": "Secret is not encrypted with a customer-managed KMS key.",
         "action": "Recreate the secret with a customer-managed KMS key specified. Secrets Manager does not allow changing the encryption key after creation.",
         "example": "{\n  \"secret\": {\n    \"kind\": \"secret\",\n    \"encryption\": {\n      \"customer_managed_key\": true\n    }\n  }\n}\n"
-      }
+      },
+      "exposure_score": 75,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 5
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "secret.encryption.customer_managed_key eq false",
+          "observation_key": "secret.encryption.customer_managed_key",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "secret.kind eq \"secret\"",
+          "observation_key": "secret.kind",
+          "operator": "eq",
+          "expected_value": "secret",
+          "observed_value": "secret"
+        }
+      ]
     },
     {
       "finding_id": "sha256:284126ed74a244f3",
@@ -2086,7 +2295,32 @@
         "description": "SNS topic is not encrypted with KMS. Notification data is stored in plaintext.",
         "action": "Enable SSE-KMS on the topic. Run: aws sns set-topic-attributes --topic-arn xxx --attribute-name KmsMasterKeyId --attribute-value arn:aws:kms:...",
         "example": "{\n  \"messaging\": {\n    \"kind\": \"topic\",\n    \"encryption\": {\n      \"encrypted\": true\n    }\n  }\n}\n"
-      }
+      },
+      "exposure_score": 75,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 5
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "messaging.encryption.encrypted eq false",
+          "observation_key": "messaging.encryption.encrypted",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "messaging.kind eq \"topic\"",
+          "observation_key": "messaging.kind",
+          "operator": "eq",
+          "expected_value": "topic",
+          "observed_value": "topic"
+        }
+      ]
     },
     {
       "finding_id": "sha256:63bc7609a3b16aa7",
@@ -2135,15 +2369,40 @@
         "description": "SQS queue is not encrypted with KMS. Message data is stored in plaintext.",
         "action": "Enable SSE-KMS on the queue. Run: aws sqs set-queue-attributes --queue-url xxx --attributes KmsMasterKeyId=arn:aws:kms:...",
         "example": "{\n  \"messaging\": {\n    \"kind\": \"queue\",\n    \"encryption\": {\n      \"encrypted\": true\n    }\n  }\n}\n"
-      }
+      },
+      "exposure_score": 75,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 5
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "messaging.encryption.encrypted eq false",
+          "observation_key": "messaging.encryption.encrypted",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "messaging.kind eq \"queue\"",
+          "observation_key": "messaging.kind",
+          "operator": "eq",
+          "expected_value": "queue",
+          "observed_value": "queue"
+        }
+      ]
     },
     {
-      "finding_id": "sha256:81f43f35236b5e56",
-      "control_id": "CTL.VPC.FLOWLOG.001",
-      "control_name": "VPC Flow Logging Must Be Enabled",
-      "control_description": "VPC flow logs capture information about IP traffic going to and from network interfaces. Without flow logs, network-level access patterns cannot be audited and unauthorized traffic goes undetected.\n",
-      "asset_id": "vpc-prod-001",
-      "asset_type": "aws_vpc",
+      "finding_id": "sha256:99ff439877cf27fd",
+      "control_id": "CTL.BACKUP.MULTIAZ.001",
+      "control_name": "Critical Resources Must Be Multi-AZ",
+      "control_description": "Resources tagged as critical must be deployed across multiple Availability Zones. Single-AZ deployment has a single point of failure that causes unavailability during AZ outages.\n",
+      "asset_id": "backup-phi-database",
+      "asset_type": "aws_backup_resource",
       "asset_vendor": "aws",
       "evidence": {
         "first_unsafe_at": "2026-01-10T00:00:00Z",
@@ -2151,16 +2410,16 @@
         "unsafe_duration_hours": 120,
         "misconfigurations": [
           {
-            "property": "network.flow_log.enabled",
+            "property": "availability.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "resource"
+          },
+          {
+            "property": "availability.multi_az",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": false
-          },
-          {
-            "property": "network.kind",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": "vpc"
           }
         ],
         "root_causes": [
@@ -2168,14 +2427,295 @@
         ],
         "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
       },
-      "control_severity": "high",
+      "control_severity": "medium",
       "control_compliance": {
-        "cis_aws_v1.4.0": "3.9",
-        "cis_aws_v3.0": "3.7",
-        "fedramp_moderate": "AU-2",
+        "hipaa": "164.308(a)(7)",
+        "soc2": "A1.1"
+      },
+      "control_compliance_ccm_v4": [
+        "BCR-08",
+        "CEK-03"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Resource is deployed in a single Availability Zone. An AZ outage will cause unavailability.",
+        "action": "Enable Multi-AZ deployment or configure cross-AZ replication depending on the resource type (RDS Multi-AZ, S3 cross-region replication, ELB multi-AZ targets).",
+        "example": "{\n  \"availability\": {\n    \"kind\": \"resource\",\n    \"multi_az\": true\n  }\n}\n"
+      },
+      "exposure_score": 50,
+      "score_breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 5
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "availability.kind eq \"resource\"",
+          "observation_key": "availability.kind",
+          "operator": "eq",
+          "expected_value": "resource",
+          "observed_value": "resource"
+        },
+        {
+          "predicate_expr": "availability.multi_az eq false",
+          "observation_key": "availability.multi_az",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:826ab06811b86f5a",
+      "control_id": "CTL.BACKUP.REPLICATION.001",
+      "control_name": "Critical Data Must Have Cross-Region Replication",
+      "control_description": "Data classified as critical or PHI must have cross-region replication configured for disaster recovery. Single-region data is vulnerable to regional outages and cannot meet recovery time objectives (RTO) for multi-region failover.\n",
+      "asset_id": "backup-phi-database",
+      "asset_type": "aws_backup_resource",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
+        "unsafe_duration_hours": 120,
+        "misconfigurations": [
+          {
+            "property": "replication.cross_region_enabled",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "replication.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "resource"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "hipaa": "164.308(a)(7)",
+        "soc2": "A1.1"
+      },
+      "control_compliance_ccm_v4": [
+        "BCR-08",
+        "CEK-03"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Resource does not have cross-region replication configured. A regional outage could cause permanent data unavailability.",
+        "action": "Configure cross-region replication: S3 CRR, RDS cross-region read replica, or AWS Backup cross-region copy rule.",
+        "example": "{\n  \"replication\": {\n    \"kind\": \"resource\",\n    \"cross_region_enabled\": true\n  }\n}\n"
+      },
+      "exposure_score": 50,
+      "score_breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 5
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "replication.cross_region_enabled eq false",
+          "observation_key": "replication.cross_region_enabled",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "replication.kind eq \"resource\"",
+          "observation_key": "replication.kind",
+          "operator": "eq",
+          "expected_value": "resource",
+          "observed_value": "resource"
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:c2ed914d02c8ae20",
+      "control_id": "CTL.CONFIG.RULES.001",
+      "control_name": "AWS Config Must Have Active Rules",
+      "control_description": "AWS Config must have active Config Rules to evaluate resource compliance. Recording without rules provides change history but no automated drift detection.\n",
+      "asset_id": "config-recorder",
+      "asset_type": "aws_config_recorder",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
+        "unsafe_duration_hours": 120,
+        "misconfigurations": [
+          {
+            "property": "compliance.has_active_rules",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "compliance.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "recorder"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "fedramp_moderate": "CM-3",
+        "hipaa": "164.312(c)(1)",
+        "nist_800_53_r5": "CM-3",
+        "pci_dss_v4.0": "6.3.2",
+        "soc2": "CC6.3"
+      },
+      "control_compliance_ccm_v4": [
+        "CCC-04",
+        "CCC-07",
+        "LOG-03"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "AWS Config has no active rules. Configuration drift will not be detected automatically.",
+        "action": "Deploy Config Rules for your compliance requirements. Start with AWS managed rules for common checks (encrypted-volumes, restricted-common-ports, etc).",
+        "example": "{\n  \"compliance\": {\n    \"kind\": \"recorder\",\n    \"has_active_rules\": true\n  }\n}\n"
+      },
+      "exposure_score": 50,
+      "score_breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 5
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "compliance.has_active_rules eq false",
+          "observation_key": "compliance.has_active_rules",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "compliance.kind eq \"recorder\"",
+          "observation_key": "compliance.kind",
+          "operator": "eq",
+          "expected_value": "recorder",
+          "observed_value": "recorder"
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:0eea80a827ddcfa6",
+      "control_id": "CTL.ELB.CROSSZONE.001",
+      "control_name": "Load Balancer Must Have Cross-Zone Load Balancing Enabled",
+      "control_description": "Load balancers must distribute traffic across all registered targets in all enabled Availability Zones. Without cross-zone balancing, uneven distribution can cause availability issues during AZ failures.\n",
+      "asset_id": "alb-phi-api",
+      "asset_type": "aws_load_balancer",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
+        "unsafe_duration_hours": 120,
+        "misconfigurations": [
+          {
+            "property": "loadbalancer.availability.cross_zone_enabled",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "ffiec": "BCP",
+        "hipaa": "164.308(a)(7)",
+        "soc2": "A1.1"
+      },
+      "control_compliance_ccm_v4": [
+        "BCR-03",
+        "IVS-09"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Load balancer does not have cross-zone load balancing enabled. Traffic is not evenly distributed across AZs.",
+        "action": "Enable cross-zone load balancing. Run: aws elbv2 modify-load-balancer-attributes --load-balancer-arn xxx --attributes Key=load_balancing.cross_zone.enabled,Value=true",
+        "example": "{\n  \"loadbalancer\": {\n    \"kind\": \"alb\",\n    \"availability\": {\n      \"cross_zone_enabled\": true\n    }\n  }\n}\n"
+      },
+      "exposure_score": 50,
+      "score_breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 5
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "loadbalancer.availability.cross_zone_enabled eq false",
+          "observation_key": "loadbalancer.availability.cross_zone_enabled",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:be85087768aeabce",
+      "control_id": "CTL.ELB.LOG.001",
+      "control_name": "Load Balancer Access Logging Must Be Enabled",
+      "control_description": "Load balancer access logging must be enabled for audit and forensic analysis. Without access logs, request patterns and potential unauthorized access cannot be investigated after an incident.\n",
+      "asset_id": "alb-phi-api",
+      "asset_type": "aws_load_balancer",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
+        "unsafe_duration_hours": 120,
+        "misconfigurations": [
+          {
+            "property": "loadbalancer.logging.access_log_enabled",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
         "hipaa": "164.312(b)",
-        "nist_800_53_r5": "AU-2",
-        "pci_dss_v4.0": "1.2.1",
         "soc2": "CC7.1"
       },
       "control_compliance_ccm_v4": [
@@ -2186,18 +2726,250 @@
         "exposure_window_count": 1
       },
       "remediation": {
-        "description": "VPC does not have flow logging enabled. Network traffic patterns are invisible to audit and forensic analysis.",
-        "action": "Enable VPC flow logs to CloudWatch Logs or S3. Run: aws ec2 create-flow-logs --resource-type VPC --resource-ids vpc-xxx --traffic-type ALL --log-destination-type cloud-watch-logs",
-        "example": "{\n  \"network\": {\n    \"kind\": \"vpc\",\n    \"flow_log\": {\n      \"enabled\": true\n    }\n  }\n}\n"
+        "description": "Load balancer does not have access logging enabled. Request patterns are not recorded for audit.",
+        "action": "Enable access logging to an S3 bucket. Run: aws elbv2 modify-load-balancer-attributes --load-balancer-arn xxx --attributes Key=access_logs.s3.enabled,Value=true Key=access_logs.s3.bucket,Value=my-elb-logs",
+        "example": "{\n  \"loadbalancer\": {\n    \"kind\": \"alb\",\n    \"logging\": {\n      \"access_log_enabled\": true\n    }\n  }\n}\n"
       },
-      "chain_membership": [
+      "exposure_score": 50,
+      "score_breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 5
+      },
+      "reasoning_trace": [
         {
-          "chain_id": "detection_blindness",
-          "chain_severity": "critical",
-          "stage_span": [
-            "detection_evasion"
-          ],
-          "narrative": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n"
+          "predicate_expr": "loadbalancer.logging.access_log_enabled eq false",
+          "observation_key": "loadbalancer.logging.access_log_enabled",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:2653bff61b751ad6",
+      "control_id": "CTL.RDS.LOG.001",
+      "control_name": "RDS Audit Logging Must Be Enabled",
+      "control_description": "RDS instances must export audit logs to CloudWatch. Without audit logging, database access patterns cannot be monitored and unauthorized queries are undetectable.\n",
+      "asset_id": "phi-database",
+      "asset_type": "aws_rds_instance",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
+        "unsafe_duration_hours": 120,
+        "misconfigurations": [
+          {
+            "property": "database.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "instance"
+          },
+          {
+            "property": "database.logging.audit_log_enabled",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "hipaa": "164.312(b)",
+        "soc2": "CC7.1"
+      },
+      "control_compliance_ccm_v4": [
+        "LOG-12"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "RDS instance does not export audit logs to CloudWatch. Database access is not auditable.",
+        "action": "Enable CloudWatch log exports for the database engine. Run: aws rds modify-db-instance --db-instance-identifier xxx --cloudwatch-logs-export-configuration '{\"EnableLogTypes\":[\"audit\",\"error\",\"slowquery\"]}'",
+        "example": "{\n  \"database\": {\n    \"kind\": \"instance\",\n    \"logging\": {\n      \"audit_log_enabled\": true\n    }\n  }\n}\n"
+      },
+      "exposure_score": 50,
+      "score_breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 5
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "database.kind eq \"instance\"",
+          "observation_key": "database.kind",
+          "operator": "eq",
+          "expected_value": "instance",
+          "observed_value": "instance"
+        },
+        {
+          "predicate_expr": "database.logging.audit_log_enabled eq false",
+          "observation_key": "database.logging.audit_log_enabled",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:c215d91c260588c6",
+      "control_id": "CTL.RDS.MULTIAZ.001",
+      "control_name": "RDS Instances Must Use Multi-AZ Deployment",
+      "control_description": "Production RDS instances must use Multi-AZ deployment for high availability. Single-AZ instances have a single point of failure that can cause data unavailability during AZ outages.\n",
+      "asset_id": "phi-database",
+      "asset_type": "aws_rds_instance",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
+        "unsafe_duration_hours": 120,
+        "misconfigurations": [
+          {
+            "property": "database.access.multi_az",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "database.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "instance"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "hipaa": "164.308(a)(7)",
+        "soc2": "A1.1"
+      },
+      "control_compliance_ccm_v4": [
+        "DSP-17",
+        "IAM-16"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "RDS instance is not configured for Multi-AZ deployment. An AZ outage will cause database unavailability.",
+        "action": "Modify the instance to enable Multi-AZ. Run: aws rds modify-db-instance --db-instance-identifier xxx --multi-az --apply-immediately",
+        "example": "{\n  \"database\": {\n    \"kind\": \"instance\",\n    \"access\": {\n      \"multi_az\": true\n    }\n  }\n}\n"
+      },
+      "exposure_score": 50,
+      "score_breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 5
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "database.access.multi_az eq false",
+          "observation_key": "database.access.multi_az",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "database.kind eq \"instance\"",
+          "observation_key": "database.kind",
+          "operator": "eq",
+          "expected_value": "instance",
+          "observed_value": "instance"
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:7ea0b9680c5e0447",
+      "control_id": "CTL.SECRETSMANAGER.ACCESS.001",
+      "control_name": "Secrets Must Have Rotation Enabled",
+      "control_description": "Secrets Manager secrets must have automatic rotation enabled. Long-lived secrets that are never rotated increase the blast radius of credential leaks and prevent timely revocation.\n",
+      "asset_id": "db-credentials",
+      "asset_type": "aws_secretsmanager_secret",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
+        "unsafe_duration_hours": 120,
+        "misconfigurations": [
+          {
+            "property": "secret.access.rotation_enabled",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "secret.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "secret"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "hipaa": "164.312(a)(1)",
+        "soc2": "CC6.1"
+      },
+      "control_compliance_ccm_v4": [
+        "DSP-17",
+        "IAM-16"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Secret does not have automatic rotation enabled. The secret value may be stale or compromised without detection.",
+        "action": "Configure automatic rotation with a Lambda function. Run: aws secretsmanager rotate-secret --secret-id xxx --rotation-lambda-arn arn:aws:lambda:... --rotation-rules AutomaticallyAfterDays=90",
+        "example": "{\n  \"secret\": {\n    \"kind\": \"secret\",\n    \"access\": {\n      \"rotation_enabled\": true\n    }\n  }\n}\n"
+      },
+      "exposure_score": 50,
+      "score_breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 5
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "secret.access.rotation_enabled eq false",
+          "observation_key": "secret.access.rotation_enabled",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "secret.kind eq \"secret\"",
+          "observation_key": "secret.kind",
+          "operator": "eq",
+          "expected_value": "secret",
+          "observed_value": "secret"
         }
       ]
     }
@@ -2293,12 +3065,13 @@
       "finding_index": 4,
       "control_id": "CTL.CLOUDTRAIL.ENABLED.001",
       "asset_id": "main-trail",
-      "exposure_score": 250,
+      "exposure_score": 375,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 2.5,
         "exposure_multiplier": 1,
+        "chain_bonus": 1.5,
         "days_blind": 5
       },
       "silent_killer": false
@@ -2307,12 +3080,13 @@
       "finding_index": 9,
       "control_id": "CTL.CONFIG.ENABLED.001",
       "asset_id": "config-recorder",
-      "exposure_score": 187.5,
+      "exposure_score": 281.25,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 2.5,
         "exposure_multiplier": 1,
+        "chain_bonus": 1.5,
         "days_blind": 5
       },
       "silent_killer": false
@@ -2321,12 +3095,13 @@
       "finding_index": 31,
       "control_id": "CTL.VPC.FLOWLOG.001",
       "asset_id": "vpc-prod-001",
-      "exposure_score": 150,
+      "exposure_score": 225,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 2,
         "exposure_multiplier": 1,
+        "chain_bonus": 1.5,
         "days_blind": 5
       },
       "silent_killer": false
@@ -2335,12 +3110,13 @@
       "finding_index": 19,
       "control_id": "CTL.IAM.ROOT.ACCESSKEY.001",
       "asset_id": "aws-account-root",
-      "exposure_score": 100,
+      "exposure_score": 150,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
+        "chain_bonus": 1.5,
         "days_blind": 5
       },
       "silent_killer": false
@@ -2349,12 +3125,13 @@
       "finding_index": 20,
       "control_id": "CTL.IAM.ROOT.MFA.001",
       "asset_id": "aws-account-root",
-      "exposure_score": 100,
+      "exposure_score": 150,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
+        "chain_bonus": 1.5,
         "days_blind": 5
       },
       "silent_killer": false
@@ -2363,12 +3140,28 @@
       "finding_index": 26,
       "control_id": "CTL.RDS.PUBLIC.001",
       "asset_id": "phi-database",
-      "exposure_score": 100,
+      "exposure_score": 150,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
+        "chain_bonus": 1.5,
+        "days_blind": 5
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 23,
+      "control_id": "CTL.RDS.ENCRYPT.001",
+      "asset_id": "phi-database",
+      "exposure_score": 112.5,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1.5,
         "days_blind": 5
       },
       "silent_killer": false
@@ -2383,6 +3176,7 @@
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
+        "chain_bonus": 1,
         "days_blind": 5
       },
       "silent_killer": false
@@ -2397,6 +3191,7 @@
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
+        "chain_bonus": 1,
         "days_blind": 5
       },
       "silent_killer": false
@@ -2411,6 +3206,7 @@
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
+        "chain_bonus": 1,
         "days_blind": 5
       },
       "silent_killer": false
@@ -2425,6 +3221,7 @@
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
+        "chain_bonus": 1,
         "days_blind": 5
       },
       "silent_killer": false
@@ -2439,6 +3236,7 @@
         "duration_factor": 1,
         "blast_multiplier": 1.5,
         "exposure_multiplier": 1,
+        "chain_bonus": 1,
         "days_blind": 5
       },
       "silent_killer": false
@@ -2453,6 +3251,7 @@
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
+        "chain_bonus": 1,
         "days_blind": 5
       },
       "silent_killer": false
@@ -2467,6 +3266,7 @@
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
+        "chain_bonus": 1,
         "days_blind": 5
       },
       "silent_killer": false
@@ -2481,6 +3281,7 @@
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
+        "chain_bonus": 1,
         "days_blind": 5
       },
       "silent_killer": false
@@ -2495,6 +3296,7 @@
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
+        "chain_bonus": 1,
         "days_blind": 5
       },
       "silent_killer": false
@@ -2509,6 +3311,7 @@
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
+        "chain_bonus": 1,
         "days_blind": 5
       },
       "silent_killer": false
@@ -2523,6 +3326,7 @@
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
+        "chain_bonus": 1,
         "days_blind": 5
       },
       "silent_killer": false
@@ -2537,6 +3341,7 @@
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
+        "chain_bonus": 1,
         "days_blind": 5
       },
       "silent_killer": false
@@ -2551,6 +3356,7 @@
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
+        "chain_bonus": 1,
         "days_blind": 5
       },
       "silent_killer": false
@@ -2565,20 +3371,7 @@
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
-        "days_blind": 5
-      },
-      "silent_killer": false
-    },
-    {
-      "finding_index": 23,
-      "control_id": "CTL.RDS.ENCRYPT.001",
-      "asset_id": "phi-database",
-      "exposure_score": 75,
-      "breakdown": {
-        "base_score": 75,
-        "duration_factor": 1,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 1,
+        "chain_bonus": 1,
         "days_blind": 5
       },
       "silent_killer": false
@@ -2593,6 +3386,7 @@
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
+        "chain_bonus": 1,
         "days_blind": 5
       },
       "silent_killer": false
@@ -2607,6 +3401,7 @@
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
+        "chain_bonus": 1,
         "days_blind": 5
       },
       "silent_killer": false
@@ -2621,6 +3416,7 @@
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
+        "chain_bonus": 1,
         "days_blind": 5
       },
       "silent_killer": false
@@ -2635,6 +3431,7 @@
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
+        "chain_bonus": 1,
         "days_blind": 5
       },
       "silent_killer": false
@@ -2649,6 +3446,7 @@
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
+        "chain_bonus": 1,
         "days_blind": 5
       },
       "silent_killer": false
@@ -2663,6 +3461,7 @@
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
+        "chain_bonus": 1,
         "days_blind": 5
       },
       "silent_killer": false
@@ -2677,6 +3476,7 @@
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
+        "chain_bonus": 1,
         "days_blind": 5
       },
       "silent_killer": false
@@ -2691,6 +3491,7 @@
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
+        "chain_bonus": 1,
         "days_blind": 5
       },
       "silent_killer": false
@@ -2705,6 +3506,7 @@
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
+        "chain_bonus": 1,
         "days_blind": 5
       },
       "silent_killer": false
@@ -2719,6 +3521,7 @@
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
+        "chain_bonus": 1,
         "days_blind": 5
       },
       "silent_killer": false
@@ -2733,6 +3536,7 @@
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
+        "chain_bonus": 1,
         "days_blind": 5
       },
       "silent_killer": false

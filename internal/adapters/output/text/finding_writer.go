@@ -224,6 +224,7 @@ func (w *FindingWriter) writeIsolatedFinding(d *drawer, num int, f *remediation.
 	}
 	writeFindingSource(d, f)
 	writeFindingEvidence(d, f)
+	writeFindingReasoning(d, f)
 	writeFindingRemediation(d, f)
 }
 
@@ -264,6 +265,21 @@ func writeFindingEvidenceContext(d *drawer, f *remediation.Finding) {
 	}
 	if f.Evidence.TemporalRisk != "" {
 		d.f("     Why now:      %s\n", f.Evidence.TemporalRisk)
+	}
+}
+
+// writeFindingReasoning renders the inline reasoning trace — the
+// predicate clauses the engine evaluated and the observed values it
+// saw. Surface delivers docs/product/metrics.md § Metric 3's inline-
+// trace target. Silent when the finding has no backing predicate
+// (e.g., compound-chain findings with no extractable clauses).
+func writeFindingReasoning(d *drawer, f *remediation.Finding) {
+	if len(f.ReasoningTrace) == 0 {
+		return
+	}
+	d.f("   Reasoning:\n")
+	for _, mc := range f.ReasoningTrace {
+		d.f("     %s (observed: %v)\n", mc.PredicateExpr, mc.ObservedValue)
 	}
 }
 
@@ -340,8 +356,14 @@ func (w *FindingWriter) writeTopExposures(d *drawer, result *evaluation.Complian
 	if len(result.TopExposures) == 0 {
 		return
 	}
-	d.f("\nTop Exposures")
-	d.f("\n-------------\n")
+	// The main findings list is already sorted by ExposureScore
+	// descending (see evaluation.SortFindings). This section is
+	// retained as an at-a-glance "address these first" summary —
+	// same items the reader sees at the top of the list, re-rendered
+	// with the full score breakdown inline for a quick read without
+	// scrolling through per-finding evidence blocks.
+	d.f("\nCritical-Path Exposures (address first)")
+	d.f("\n---------------------------------------\n")
 	limit := min(len(result.TopExposures), 10)
 	for i := range limit {
 		r := &result.TopExposures[i]
@@ -354,8 +376,8 @@ func (w *FindingWriter) writeTopExposures(d *drawer, result *evaluation.Complian
 		} else {
 			d.f("     ")
 		}
-		d.f("  base=%d \u00d7 duration=%.1f \u00d7 blast=%.1f \u00d7 exposure=%.1f\n",
-			b.BaseScore, b.DurationFactor, b.BlastMultiplier, b.ExposureMultiplier)
+		d.f("  base=%d \u00d7 duration=%.1f \u00d7 blast=%.1f \u00d7 exposure=%.1f \u00d7 chain=%.1f\n",
+			b.BaseScore, b.DurationFactor, b.BlastMultiplier, b.ExposureMultiplier, b.ChainBonus)
 	}
 }
 

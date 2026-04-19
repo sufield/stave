@@ -1,70 +1,12 @@
 {
-  "extensions": {
-    "context_name": "stave",
-    "git": {
-      "dirty": false,
-      "head_commit": "23e8d39cdce1f114627b5eb473daceca93c7fddc",
-      "repo_root": "/home/zepho/work/bizacademy"
-    },
-    "resolved_paths": {
-      "controls": "testdata/e2e/e2e-23-messy-duplicates/controls",
-      "observations": "testdata/e2e/e2e-23-messy-duplicates/observations"
-    },
-    "selected_controls_source": "dir"
-  },
-  "findings": [
-    {
-      "asset_id": "k8s:ClusterRoleBinding/admin-binding",
-      "asset_type": "k8s.clusterrolebinding",
-      "asset_vendor": "kubernetes",
-      "control_description": "Detects ClusterRoleBindings that bind to the cluster-admin ClusterRole.\nApplies to: k8s.clusterrolebinding resources\n",
-      "control_id": "CTL.ID.KUBE.001",
-      "control_name": "Cluster-Admin Binding Detected",
-      "control_severity": "critical",
-      "evidence": {
-        "first_unsafe_at": "2026-01-01T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
-        "misconfigurations": [
-          {
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "property": "binds_to_cluster_admin",
-            "unsafe_value": true
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z.",
-        "threshold_hours": 168,
-        "unsafe_duration_hours": 240
-      },
-      "finding_id": "sha256:ef0bb60baf0caf2b",
-      "posture_drift": {
-        "exposure_window_count": 1,
-        "pattern": "persistent"
-      },
-      "remediation": {
-        "action": "Review the misconfigured properties and revert to compliant values.",
-        "description": "Resource configuration deviates from security baseline."
-      }
-    }
-  ],
+  "schema_version": "out.v0.1",
   "kind": "ASSESSMENT",
-  "risk_signals": [
-    {
-      "asset_id": "k8s:ClusterRoleBinding/admin-binding",
-      "asset_type": "k8s.clusterrolebinding",
-      "control_id": "CTL.ID.KUBE.001",
-      "due_at": "2026-01-08T00:00:00Z",
-      "first_unsafe_at": "2026-01-01T00:00:00Z",
-      "remaining_hours": -72,
-      "status": "OVERDUE",
-      "threshold_hours": 168
-    }
-  ],
   "run": {
-    "evaluated_state": "deployed",
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
     "input_hashes": {
       "files": {
         "2026-01-01T000000Z.json": "de408251733efa097db532d9ceb77b12b54a90de8544fc81ea135ebb110c8d0a",
@@ -72,34 +14,111 @@
       },
       "overall": "1659fc267700423f66c42e021bed4d63f8227955a2240b153c0496e413ba6b5e"
     },
-    "now": "2026-01-11T00:00:00Z",
-    "offline": true,
     "policy_fingerprint": "32d553a9add7dd6c518ff4c6a854015b9483268d4803ecbef916466246d3022a",
-    "sla_threshold": "7d",
-    "snapshots": 2,
-    "tool_version": "edge"
+    "evaluated_state": "deployed"
   },
-  "schema_version": "out.v0.1",
-  "status": "NON_COMPLIANT",
   "summary": {
-    "exposed_resources": 1,
     "total_assets": 1,
+    "exposed_resources": 1,
     "violations": 1
   },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.ID.KUBE.001",
+      "asset_id": "k8s:ClusterRoleBinding/admin-binding",
+      "asset_type": "k8s.clusterrolebinding",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:ef0bb60baf0caf2b",
+      "control_id": "CTL.ID.KUBE.001",
+      "control_name": "Cluster-Admin Binding Detected",
+      "control_description": "Detects ClusterRoleBindings that bind to the cluster-admin ClusterRole.\nApplies to: k8s.clusterrolebinding resources\n",
+      "asset_id": "k8s:ClusterRoleBinding/admin-binding",
+      "asset_type": "k8s.clusterrolebinding",
+      "asset_vendor": "kubernetes",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "binds_to_cluster_admin",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Resource configuration deviates from security baseline.",
+        "action": "Review the misconfigured properties and revert to compliant values."
+      },
+      "exposure_score": 100,
+      "score_breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 10
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "binds_to_cluster_admin eq true",
+          "observation_key": "binds_to_cluster_admin",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": true
+        }
+      ]
+    }
+  ],
   "top_exposures": [
     {
+      "finding_index": 0,
+      "control_id": "CTL.ID.KUBE.001",
       "asset_id": "k8s:ClusterRoleBinding/admin-binding",
+      "exposure_score": 100,
       "breakdown": {
         "base_score": 100,
-        "blast_multiplier": 1,
-        "days_blind": 10,
         "duration_factor": 1,
-        "exposure_multiplier": 1
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 10
       },
-      "control_id": "CTL.ID.KUBE.001",
-      "exposure_score": 100,
-      "finding_index": 0,
       "silent_killer": false
     }
-  ]
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-23-messy-duplicates/controls",
+      "observations": "testdata/e2e/e2e-23-messy-duplicates/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "e75fb9b105c8552f0ab8fcae488af7655933cf1a",
+      "dirty": false
+    }
+  }
 }

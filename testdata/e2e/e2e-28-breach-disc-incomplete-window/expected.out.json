@@ -1,52 +1,12 @@
 {
-  "extensions": {
-    "context_name": "stave",
-    "git": {
-      "dirty": false,
-      "head_commit": "23e8d39cdce1f114627b5eb473daceca93c7fddc",
-      "repo_root": "/home/zepho/work/bizacademy"
-    },
-    "resolved_paths": {
-      "controls": "testdata/e2e/e2e-28-breach-disc-incomplete-window/controls",
-      "observations": "testdata/e2e/e2e-28-breach-disc-incomplete-window/observations"
-    },
-    "selected_controls_source": "dir"
-  },
-  "findings": [
-    {
-      "asset_id": "res:aws:s3:bucket:recurring-bucket",
-      "asset_type": "storage_bucket",
-      "asset_vendor": "aws",
-      "control_description": "An asset must not have too many unsafe episodes within a rolling window.",
-      "control_id": "CTL.EXP.RECURRENCE.001",
-      "control_name": "Unsafe Exposure Recurrence Limit",
-      "evidence": {
-        "exposure_window_count": 2,
-        "first_exposure_window_at": "2026-01-01T00:00:00Z",
-        "first_unsafe_at": "2026-01-01T00:00:00Z",
-        "last_exposure_window_at": "2026-01-11T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
-        "recurrence_limit": 2,
-        "window_days": 90
-      },
-      "finding_id": "sha256:48f82fbfef4ef963",
-      "posture_drift": {
-        "exposure_window_count": 2,
-        "pattern": "intermittent"
-      },
-      "remediation": {
-        "action": "Review the misconfigured properties and revert to compliant values.",
-        "description": "Resource configuration deviates from security baseline."
-      },
-      "source": {
-        "file": "main.tf",
-        "line": 42
-      }
-    }
-  ],
+  "schema_version": "out.v0.1",
   "kind": "ASSESSMENT",
   "run": {
-    "evaluated_state": "deployed",
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 3,
     "input_hashes": {
       "files": {
         "2026-01-01T000000Z.json": "229da4e54ceb0e23dd8f9d520aca91f262a47bf1d495502e429468bf124c871f",
@@ -55,34 +15,84 @@
       },
       "overall": "25115889d0c10d6130e26d63650c81500d88d9bcdbb75670496384b5fa4f543f"
     },
-    "now": "2026-01-11T00:00:00Z",
-    "offline": true,
     "policy_fingerprint": "4565d45c31e9b6d511bf94ba81e81ecad148e22ada5649e1b3cad9a112d3e71f",
-    "sla_threshold": "7d",
-    "snapshots": 3,
-    "tool_version": "edge"
+    "evaluated_state": "deployed"
   },
-  "schema_version": "out.v0.1",
-  "status": "NON_COMPLIANT",
   "summary": {
-    "exposed_resources": 1,
     "total_assets": 1,
+    "exposed_resources": 1,
     "violations": 1
   },
+  "status": "NON_COMPLIANT",
+  "findings": [
+    {
+      "finding_id": "sha256:48f82fbfef4ef963",
+      "control_id": "CTL.EXP.RECURRENCE.001",
+      "control_name": "Unsafe Exposure Recurrence Limit",
+      "control_description": "An asset must not have too many unsafe episodes within a rolling window.",
+      "asset_id": "res:aws:s3:bucket:recurring-bucket",
+      "asset_type": "storage_bucket",
+      "asset_vendor": "aws",
+      "source": {
+        "file": "main.tf",
+        "line": 42
+      },
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "exposure_window_count": 2,
+        "window_days": 90,
+        "recurrence_limit": 2,
+        "first_exposure_window_at": "2026-01-01T00:00:00Z",
+        "last_exposure_window_at": "2026-01-11T00:00:00Z"
+      },
+      "posture_drift": {
+        "pattern": "intermittent",
+        "exposure_window_count": 2
+      },
+      "remediation": {
+        "description": "Resource configuration deviates from security baseline.",
+        "action": "Review the misconfigured properties and revert to compliant values."
+      },
+      "exposure_score": 10,
+      "score_breakdown": {
+        "base_score": 10,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 0
+      }
+    }
+  ],
   "top_exposures": [
     {
+      "finding_index": 0,
+      "control_id": "CTL.EXP.RECURRENCE.001",
       "asset_id": "res:aws:s3:bucket:recurring-bucket",
+      "exposure_score": 10,
       "breakdown": {
         "base_score": 10,
-        "blast_multiplier": 1,
-        "days_blind": 0,
         "duration_factor": 1,
-        "exposure_multiplier": 1
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 0
       },
-      "control_id": "CTL.EXP.RECURRENCE.001",
-      "exposure_score": 10,
-      "finding_index": 0,
       "silent_killer": false
     }
-  ]
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-28-breach-disc-incomplete-window/controls",
+      "observations": "testdata/e2e/e2e-28-breach-disc-incomplete-window/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "5462430d5c673db65ab5f0411af24493edea5d9d",
+      "dirty": false
+    }
+  }
 }

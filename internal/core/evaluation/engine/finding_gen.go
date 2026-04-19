@@ -39,6 +39,7 @@ func CreateDurationFinding(in DurationFindingInput) *evaluation.Finding {
 		SourceEvidence:      ExtractSourceEvidence(a, causes),
 		TemporalRisk:        in.ExposureLifecycle.FormatExposureSummary(in.Threshold, in.Now),
 	}
+	f.ReasoningTrace = evaluation.ReasoningTraceFromMisconfigurations(misconfigs)
 	return f
 }
 
