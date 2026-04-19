@@ -139,7 +139,8 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "1. Review whether public CDN access is intentional for this bucket. 2. If not intentional, remove the CloudFront distribution or restrict\n   it with signed URLs/cookies.\n3. If intentional, document this as an acknowledged exposure path\n   and add a Stave exemption for this bucket."
       },
       "exposure_score": 150,
       "score_breakdown": {
@@ -172,7 +173,57 @@
           "expected_value": "bucket",
           "observed_value": "bucket"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "cdn-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.CDN.EXPOSURE.001",
+          "control_name": "Private Bucket Must Not Be Publicly Exposed Via CloudFront",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "the bucket policy grants the CloudFront service principal must equal true, but is true",
+              "observation_key": "storage.cdn_access.bucket_policy_grants_cloudfront",
+              "observed_value": true
+            },
+            {
+              "clause": "all four Public Access Block flags are enabled must equal true, but is true",
+              "observation_key": "storage.controls.public_access_fully_blocked",
+              "observed_value": true
+            },
+            {
+              "clause": "storage.kind must equal \"bucket\", but is \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.cdn_access.bucket_policy_grants_cloudfront",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.cdn_access.bucket_policy_grants_cloudfront to "
+          },
+          {
+            "path": "storage.controls.public_access_fully_blocked",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.controls.public_access_fully_blocked to "
+          },
+          {
+            "path": "storage.kind",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change storage.kind from [SANITIZED]"
+          }
+        ],
+        "command": "1. Review whether public CDN access is intentional for this bucket. 2. If not intentional, remove the CloudFront distribution or restrict\n   it with signed URLs/cookies.\n3. If intentional, document this as an acknowledged exposure path\n   and add a Stave exemption for this bucket."
+      }
     },
     {
       "finding_id": "sha256:cbf48381fc3f897a",
@@ -220,6 +271,14 @@
         "action": "1. Create an Origin Access Control for the distribution. 2. Update the distribution origin to use OAC instead of OAI. 3. Update the bucket policy to grant cloudfront.amazonaws.com\n   with a Condition restricting to the distribution ARN.\n4. Remove the legacy OAI.",
         "example": "{\n  \"storage\": {\n    \"cdn_access\": {\n      \"cloudfront_oac\": { \"enabled\": true },\n      \"cloudfront_oai\": { \"enabled\": false }\n    }\n  }\n}\n"
       },
+      "fix_plan": {
+        "id": "fix-7af9de05f20fe7e9",
+        "target": {
+          "asset_id": "cdn-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "1. Create an Origin Access Control for the distribution. 2. Update the distribution origin to use OAC instead of OAI. 3. Update the bucket policy to grant cloudfront.amazonaws.com\n   with a Condition restricting to the distribution ARN.\n4. Remove the legacy OAI."
+      },
       "exposure_score": 50,
       "score_breakdown": {
         "base_score": 50,
@@ -244,7 +303,46 @@
           "expected_value": "bucket",
           "observed_value": "bucket"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "cdn-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.CDN.OAC.001",
+          "control_name": "CloudFront Access Must Use OAC Not Legacy OAI",
+          "severity": "medium",
+          "reasoning": [
+            {
+              "clause": "a legacy CloudFront Origin Access Identity is attached must equal true, but is true",
+              "observation_key": "storage.cdn_access.cloudfront_oai.enabled",
+              "observed_value": true
+            },
+            {
+              "clause": "storage.kind must equal \"bucket\", but is \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.cdn_access.cloudfront_oai.enabled",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.cdn_access.cloudfront_oai.enabled to "
+          },
+          {
+            "path": "storage.kind",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change storage.kind from [SANITIZED]"
+          }
+        ],
+        "command": "1. Create an Origin Access Control for the distribution. 2. Update the distribution origin to use OAC instead of OAI. 3. Update the bucket policy to grant cloudfront.amazonaws.com\n   with a Condition restricting to the distribution ARN.\n4. Remove the legacy OAI."
+      }
     }
   ],
   "issues": [
@@ -284,6 +382,22 @@
       "asset_id": "cdn-bucket",
       "asset_type": "aws_s3_bucket",
       "fix_plan": {
+        "id": "fix-7af9de05f20fe7e9",
+        "target": {
+          "asset_id": "cdn-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "1. Create an Origin Access Control for the distribution. 2. Update the distribution origin to use OAC instead of OAI. 3. Update the bucket policy to grant cloudfront.amazonaws.com\n   with a Condition restricting to the distribution ARN.\n4. Remove the legacy OAI."
+      },
+      "contributing_controls": [
+        "CTL.S3.CDN.OAC.001"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "cdn-bucket",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
         "id": "fix-f939df2a60df642d",
         "target": {
           "asset_id": "cdn-bucket",
@@ -315,7 +429,8 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "1. Review whether public CDN access is intentional for this bucket. 2. If not intentional, remove the CloudFront distribution or restrict\n   it with signed URLs/cookies.\n3. If intentional, document this as an acknowledged exposure path\n   and add a Stave exemption for this bucket."
       },
       "contributing_controls": [
         "CTL.S3.CDN.EXPOSURE.001"
@@ -364,7 +479,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "c1c45531ee9c4f709d5c08d5f98701a6ebb54603",
+      "head_commit": "339115f57a19490ec07e549efaaf605795eb78bc",
       "dirty": false
     }
   }

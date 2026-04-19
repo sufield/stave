@@ -92,6 +92,14 @@
         "action": "Set the rds.force_ssl parameter to 1 in the parameter group (PostgreSQL) or require_secure_transport to ON (MySQL). For Aurora, use the cluster parameter group.",
         "example": "{\n  \"database\": {\n    \"kind\": \"instance\",\n    \"encryption\": {\n      \"require_ssl\": true\n    }\n  }\n}\n"
       },
+      "fix_plan": {
+        "id": "fix-4233e63a00340e1b",
+        "target": {
+          "asset_id": "phi-database",
+          "asset_type": "aws_rds_instance"
+        },
+        "command": "Set the rds.force_ssl parameter to 1 in the parameter group (PostgreSQL) or require_secure_transport to ON (MySQL). For Aurora, use the cluster parameter group."
+      },
       "exposure_score": 75,
       "score_breakdown": {
         "base_score": 75,
@@ -116,7 +124,46 @@
           "expected_value": "instance",
           "observed_value": "instance"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "phi-database",
+          "type": "aws_rds_instance",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.RDS.SSL.001",
+          "control_name": "RDS Must Require SSL Connections",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "the database requires SSL connections must equal false, but is false",
+              "observation_key": "database.encryption.require_ssl",
+              "observed_value": false
+            },
+            {
+              "clause": "database.kind must equal \"instance\", but is \"instance\"",
+              "observation_key": "database.kind",
+              "observed_value": "instance"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "database.encryption.require_ssl",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set database.encryption.require_ssl to "
+          },
+          {
+            "path": "database.kind",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change database.kind from [SANITIZED]"
+          }
+        ],
+        "command": "Set the rds.force_ssl parameter to 1 in the parameter group (PostgreSQL) or require_secure_transport to ON (MySQL). For Aurora, use the cluster parameter group."
+      }
     }
   ],
   "issues": [
@@ -134,6 +181,24 @@
       ],
       "consolidated_score": 75,
       "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "phi-database",
+      "asset_type": "aws_rds_instance",
+      "fix_plan": {
+        "id": "fix-4233e63a00340e1b",
+        "target": {
+          "asset_id": "phi-database",
+          "asset_type": "aws_rds_instance"
+        },
+        "command": "Set the rds.force_ssl parameter to 1 in the parameter group (PostgreSQL) or require_secure_transport to ON (MySQL). For Aurora, use the cluster parameter group."
+      },
+      "contributing_controls": [
+        "CTL.RDS.SSL.001"
+      ],
+      "finding_count": 1
     }
   ],
   "top_exposures": [
@@ -162,7 +227,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "c1c45531ee9c4f709d5c08d5f98701a6ebb54603",
+      "head_commit": "339115f57a19490ec07e549efaaf605795eb78bc",
       "dirty": false
     }
   }

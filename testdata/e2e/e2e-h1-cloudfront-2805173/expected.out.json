@@ -169,6 +169,14 @@
         "action": "Scope the execution role policy to only the specific actions and resource ARNs the function needs. Replace managed policies like AmazonS3FullAccess with inline policies scoped to specific buckets and actions. Use IAM Access Analyzer to identify unused permissions and generate a least-privilege policy from actual function activity.",
         "example": "{\n  \"compute\": {\n    \"kind\": \"function\",\n    \"execution_role\": {\n      \"is_overprivileged\": false\n    }\n  }\n}\n"
       },
+      "fix_plan": {
+        "id": "fix-aace251f561caeb7",
+        "target": {
+          "asset_id": "arn:aws:lambda:us-east-1:123456789012:function/cf_config_version_exporter",
+          "asset_type": "aws_lambda_function"
+        },
+        "command": "Scope the execution role policy to only the specific actions and resource ARNs the function needs. Replace managed policies like AmazonS3FullAccess with inline policies scoped to specific buckets and actions. Use IAM Access Analyzer to identify unused permissions and generate a least-privilege policy from actual function activity."
+      },
       "exposure_score": 112.5,
       "score_breakdown": {
         "base_score": 75,
@@ -193,7 +201,48 @@
           "expected_value": "function",
           "observed_value": "function"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "arn:aws:lambda:us-east-1:123456789012:function/cf_config_version_exporter",
+          "type": "aws_lambda_function",
+          "vendor": "aws",
+          "arn": "arn:aws:lambda:us-east-1:123456789012:function/cf_config_version_exporter",
+          "region": "us-east-1"
+        },
+        "violation": {
+          "control_id": "CTL.LAMBDA.ROLE.LEASTPRIV.001",
+          "control_name": "Lambda Execution Role Must Follow Least Privilege",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "the compute execution role is over-privileged must equal true, but is true",
+              "observation_key": "compute.execution_role.is_overprivileged",
+              "observed_value": true
+            },
+            {
+              "clause": "compute.kind must equal \"function\", but is \"function\"",
+              "observation_key": "compute.kind",
+              "observed_value": "function"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "compute.execution_role.is_overprivileged",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set compute.execution_role.is_overprivileged to "
+          },
+          {
+            "path": "compute.kind",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change compute.kind from [SANITIZED]"
+          }
+        ],
+        "command": "Scope the execution role policy to only the specific actions and resource ARNs the function needs. Replace managed policies like AmazonS3FullAccess with inline policies scoped to specific buckets and actions. Use IAM Access Analyzer to identify unused permissions and generate a least-privilege policy from actual function activity."
+      }
     },
     {
       "finding_id": "sha256:3bd75724de9608f7",
@@ -248,6 +297,14 @@
         "action": "Scope the execution role policy to only the specific actions and resource ARNs the function needs. Replace managed policies like AmazonS3FullAccess with inline policies scoped to specific buckets and actions. Use IAM Access Analyzer to identify unused permissions and generate a least-privilege policy from actual function activity.",
         "example": "{\n  \"compute\": {\n    \"kind\": \"function\",\n    \"execution_role\": {\n      \"is_overprivileged\": false\n    }\n  }\n}\n"
       },
+      "fix_plan": {
+        "id": "fix-fb92925040cf146d",
+        "target": {
+          "asset_id": "arn:aws:lambda:us-east-1:123456789012:function/cf_config_version_manager",
+          "asset_type": "aws_lambda_function"
+        },
+        "command": "Scope the execution role policy to only the specific actions and resource ARNs the function needs. Replace managed policies like AmazonS3FullAccess with inline policies scoped to specific buckets and actions. Use IAM Access Analyzer to identify unused permissions and generate a least-privilege policy from actual function activity."
+      },
       "exposure_score": 112.5,
       "score_breakdown": {
         "base_score": 75,
@@ -272,7 +329,48 @@
           "expected_value": "function",
           "observed_value": "function"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "arn:aws:lambda:us-east-1:123456789012:function/cf_config_version_manager",
+          "type": "aws_lambda_function",
+          "vendor": "aws",
+          "arn": "arn:aws:lambda:us-east-1:123456789012:function/cf_config_version_manager",
+          "region": "us-east-1"
+        },
+        "violation": {
+          "control_id": "CTL.LAMBDA.ROLE.LEASTPRIV.001",
+          "control_name": "Lambda Execution Role Must Follow Least Privilege",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "the compute execution role is over-privileged must equal true, but is true",
+              "observation_key": "compute.execution_role.is_overprivileged",
+              "observed_value": true
+            },
+            {
+              "clause": "compute.kind must equal \"function\", but is \"function\"",
+              "observation_key": "compute.kind",
+              "observed_value": "function"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "compute.execution_role.is_overprivileged",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set compute.execution_role.is_overprivileged to "
+          },
+          {
+            "path": "compute.kind",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change compute.kind from [SANITIZED]"
+          }
+        ],
+        "command": "Scope the execution role policy to only the specific actions and resource ARNs the function needs. Replace managed policies like AmazonS3FullAccess with inline policies scoped to specific buckets and actions. Use IAM Access Analyzer to identify unused permissions and generate a least-privilege policy from actual function activity."
+      }
     },
     {
       "finding_id": "sha256:3589e399b5df2a40",
@@ -327,6 +425,14 @@
         "action": "Scope the execution role policy to only the specific actions and resource ARNs the function needs. Replace managed policies like AmazonS3FullAccess with inline policies scoped to specific buckets and actions. Use IAM Access Analyzer to identify unused permissions and generate a least-privilege policy from actual function activity.",
         "example": "{\n  \"compute\": {\n    \"kind\": \"function\",\n    \"execution_role\": {\n      \"is_overprivileged\": false\n    }\n  }\n}\n"
       },
+      "fix_plan": {
+        "id": "fix-2c4ab9c0f819b902",
+        "target": {
+          "asset_id": "arn:aws:lambda:us-east-1:123456789012:function/cf_config_version_manager_graphql",
+          "asset_type": "aws_lambda_function"
+        },
+        "command": "Scope the execution role policy to only the specific actions and resource ARNs the function needs. Replace managed policies like AmazonS3FullAccess with inline policies scoped to specific buckets and actions. Use IAM Access Analyzer to identify unused permissions and generate a least-privilege policy from actual function activity."
+      },
       "exposure_score": 112.5,
       "score_breakdown": {
         "base_score": 75,
@@ -351,7 +457,48 @@
           "expected_value": "function",
           "observed_value": "function"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "arn:aws:lambda:us-east-1:123456789012:function/cf_config_version_manager_graphql",
+          "type": "aws_lambda_function",
+          "vendor": "aws",
+          "arn": "arn:aws:lambda:us-east-1:123456789012:function/cf_config_version_manager_graphql",
+          "region": "us-east-1"
+        },
+        "violation": {
+          "control_id": "CTL.LAMBDA.ROLE.LEASTPRIV.001",
+          "control_name": "Lambda Execution Role Must Follow Least Privilege",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "the compute execution role is over-privileged must equal true, but is true",
+              "observation_key": "compute.execution_role.is_overprivileged",
+              "observed_value": true
+            },
+            {
+              "clause": "compute.kind must equal \"function\", but is \"function\"",
+              "observation_key": "compute.kind",
+              "observed_value": "function"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "compute.execution_role.is_overprivileged",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set compute.execution_role.is_overprivileged to "
+          },
+          {
+            "path": "compute.kind",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change compute.kind from [SANITIZED]"
+          }
+        ],
+        "command": "Scope the execution role policy to only the specific actions and resource ARNs the function needs. Replace managed policies like AmazonS3FullAccess with inline policies scoped to specific buckets and actions. Use IAM Access Analyzer to identify unused permissions and generate a least-privilege policy from actual function activity."
+      }
     },
     {
       "finding_id": "sha256:da5eaa3c60700baa",
@@ -406,6 +553,14 @@
         "action": "Scope the execution role policy to only the specific actions and resource ARNs the function needs. Replace managed policies like AmazonS3FullAccess with inline policies scoped to specific buckets and actions. Use IAM Access Analyzer to identify unused permissions and generate a least-privilege policy from actual function activity.",
         "example": "{\n  \"compute\": {\n    \"kind\": \"function\",\n    \"execution_role\": {\n      \"is_overprivileged\": false\n    }\n  }\n}\n"
       },
+      "fix_plan": {
+        "id": "fix-bb1a3df4207c2ff6",
+        "target": {
+          "asset_id": "arn:aws:lambda:us-east-1:123456789012:function/cloudFrontExtensionsConso-RepoConstructExtDeployer-1uHGWxrjog9S",
+          "asset_type": "aws_lambda_function"
+        },
+        "command": "Scope the execution role policy to only the specific actions and resource ARNs the function needs. Replace managed policies like AmazonS3FullAccess with inline policies scoped to specific buckets and actions. Use IAM Access Analyzer to identify unused permissions and generate a least-privilege policy from actual function activity."
+      },
       "exposure_score": 112.5,
       "score_breakdown": {
         "base_score": 75,
@@ -430,7 +585,48 @@
           "expected_value": "function",
           "observed_value": "function"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "arn:aws:lambda:us-east-1:123456789012:function/cloudFrontExtensionsConso-RepoConstructExtDeployer-1uHGWxrjog9S",
+          "type": "aws_lambda_function",
+          "vendor": "aws",
+          "arn": "arn:aws:lambda:us-east-1:123456789012:function/cloudFrontExtensionsConso-RepoConstructExtDeployer-1uHGWxrjog9S",
+          "region": "us-east-1"
+        },
+        "violation": {
+          "control_id": "CTL.LAMBDA.ROLE.LEASTPRIV.001",
+          "control_name": "Lambda Execution Role Must Follow Least Privilege",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "the compute execution role is over-privileged must equal true, but is true",
+              "observation_key": "compute.execution_role.is_overprivileged",
+              "observed_value": true
+            },
+            {
+              "clause": "compute.kind must equal \"function\", but is \"function\"",
+              "observation_key": "compute.kind",
+              "observed_value": "function"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "compute.execution_role.is_overprivileged",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set compute.execution_role.is_overprivileged to "
+          },
+          {
+            "path": "compute.kind",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change compute.kind from [SANITIZED]"
+          }
+        ],
+        "command": "Scope the execution role policy to only the specific actions and resource ARNs the function needs. Replace managed policies like AmazonS3FullAccess with inline policies scoped to specific buckets and actions. Use IAM Access Analyzer to identify unused permissions and generate a least-privilege policy from actual function activity."
+      }
     },
     {
       "finding_id": "sha256:e4433a0bee175ad8",
@@ -485,6 +681,14 @@
         "action": "Scope the execution role policy to only the specific actions and resource ARNs the function needs. Replace managed policies like AmazonS3FullAccess with inline policies scoped to specific buckets and actions. Use IAM Access Analyzer to identify unused permissions and generate a least-privilege policy from actual function activity.",
         "example": "{\n  \"compute\": {\n    \"kind\": \"function\",\n    \"execution_role\": {\n      \"is_overprivileged\": false\n    }\n  }\n}\n"
       },
+      "fix_plan": {
+        "id": "fix-aa7844290dab4683",
+        "target": {
+          "asset_id": "arn:aws:lambda:us-east-1:123456789012:function/cloudFrontExtensionsConso-RepoConstructSyncExtensi-ydrYwNGQCoFr",
+          "asset_type": "aws_lambda_function"
+        },
+        "command": "Scope the execution role policy to only the specific actions and resource ARNs the function needs. Replace managed policies like AmazonS3FullAccess with inline policies scoped to specific buckets and actions. Use IAM Access Analyzer to identify unused permissions and generate a least-privilege policy from actual function activity."
+      },
       "exposure_score": 112.5,
       "score_breakdown": {
         "base_score": 75,
@@ -509,7 +713,48 @@
           "expected_value": "function",
           "observed_value": "function"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "arn:aws:lambda:us-east-1:123456789012:function/cloudFrontExtensionsConso-RepoConstructSyncExtensi-ydrYwNGQCoFr",
+          "type": "aws_lambda_function",
+          "vendor": "aws",
+          "arn": "arn:aws:lambda:us-east-1:123456789012:function/cloudFrontExtensionsConso-RepoConstructSyncExtensi-ydrYwNGQCoFr",
+          "region": "us-east-1"
+        },
+        "violation": {
+          "control_id": "CTL.LAMBDA.ROLE.LEASTPRIV.001",
+          "control_name": "Lambda Execution Role Must Follow Least Privilege",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "the compute execution role is over-privileged must equal true, but is true",
+              "observation_key": "compute.execution_role.is_overprivileged",
+              "observed_value": true
+            },
+            {
+              "clause": "compute.kind must equal \"function\", but is \"function\"",
+              "observation_key": "compute.kind",
+              "observed_value": "function"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "compute.execution_role.is_overprivileged",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set compute.execution_role.is_overprivileged to "
+          },
+          {
+            "path": "compute.kind",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change compute.kind from [SANITIZED]"
+          }
+        ],
+        "command": "Scope the execution role policy to only the specific actions and resource ARNs the function needs. Replace managed policies like AmazonS3FullAccess with inline policies scoped to specific buckets and actions. Use IAM Access Analyzer to identify unused permissions and generate a least-privilege policy from actual function activity."
+      }
     },
     {
       "finding_id": "sha256:4942c3d80f3e1e24",
@@ -564,6 +809,14 @@
         "action": "Scope the execution role policy to only the specific actions and resource ARNs the function needs. Replace managed policies like AmazonS3FullAccess with inline policies scoped to specific buckets and actions. Use IAM Access Analyzer to identify unused permissions and generate a least-privilege policy from actual function activity.",
         "example": "{\n  \"compute\": {\n    \"kind\": \"function\",\n    \"execution_role\": {\n      \"is_overprivileged\": false\n    }\n  }\n}\n"
       },
+      "fix_plan": {
+        "id": "fix-0c57a85d2a7f9c47",
+        "target": {
+          "asset_id": "arn:aws:lambda:us-east-1:123456789012:function/cloudFrontExtensionsConso-SingletonLambdaf7d4f7304-ZbLF9YFgQ4eq",
+          "asset_type": "aws_lambda_function"
+        },
+        "command": "Scope the execution role policy to only the specific actions and resource ARNs the function needs. Replace managed policies like AmazonS3FullAccess with inline policies scoped to specific buckets and actions. Use IAM Access Analyzer to identify unused permissions and generate a least-privilege policy from actual function activity."
+      },
       "exposure_score": 112.5,
       "score_breakdown": {
         "base_score": 75,
@@ -588,7 +841,48 @@
           "expected_value": "function",
           "observed_value": "function"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "arn:aws:lambda:us-east-1:123456789012:function/cloudFrontExtensionsConso-SingletonLambdaf7d4f7304-ZbLF9YFgQ4eq",
+          "type": "aws_lambda_function",
+          "vendor": "aws",
+          "arn": "arn:aws:lambda:us-east-1:123456789012:function/cloudFrontExtensionsConso-SingletonLambdaf7d4f7304-ZbLF9YFgQ4eq",
+          "region": "us-east-1"
+        },
+        "violation": {
+          "control_id": "CTL.LAMBDA.ROLE.LEASTPRIV.001",
+          "control_name": "Lambda Execution Role Must Follow Least Privilege",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "the compute execution role is over-privileged must equal true, but is true",
+              "observation_key": "compute.execution_role.is_overprivileged",
+              "observed_value": true
+            },
+            {
+              "clause": "compute.kind must equal \"function\", but is \"function\"",
+              "observation_key": "compute.kind",
+              "observed_value": "function"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "compute.execution_role.is_overprivileged",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set compute.execution_role.is_overprivileged to "
+          },
+          {
+            "path": "compute.kind",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change compute.kind from [SANITIZED]"
+          }
+        ],
+        "command": "Scope the execution role policy to only the specific actions and resource ARNs the function needs. Replace managed policies like AmazonS3FullAccess with inline policies scoped to specific buckets and actions. Use IAM Access Analyzer to identify unused permissions and generate a least-privilege policy from actual function activity."
+      }
     },
     {
       "finding_id": "sha256:a3acb432af776825",
@@ -635,6 +929,14 @@
         "description": "Principal has admin-equivalent net effective permissions after all policy layers are resolved.",
         "action": "Review the identity-based policies granting admin-equivalent actions. Apply an SCP or permission boundary to constrain the effective permissions. If the principal requires admin access, tag it with stave/role-type: administrative to document the intent."
       },
+      "fix_plan": {
+        "id": "fix-938ac73fdcc102b4",
+        "target": {
+          "asset_id": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-RepoConstructExtDeployerR-wBEukYirZfbr",
+          "asset_type": "aws_iam_role"
+        },
+        "command": "Review the identity-based policies granting admin-equivalent actions. Apply an SCP or permission boundary to constrain the effective permissions. If the principal requires admin access, tag it with stave/role-type: administrative to document the intent."
+      },
       "exposure_score": 100,
       "score_breakdown": {
         "base_score": 100,
@@ -652,7 +954,36 @@
           "expected_value": true,
           "observed_value": true
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-RepoConstructExtDeployerR-wBEukYirZfbr",
+          "type": "aws_iam_role",
+          "vendor": "aws",
+          "arn": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-RepoConstructExtDeployerR-wBEukYirZfbr"
+        },
+        "violation": {
+          "control_id": "CTL.IAM.NEP.ADMIN.001",
+          "control_name": "Net Effective Permissions Must Not Include Admin-Equivalent Actions",
+          "severity": "critical",
+          "reasoning": [
+            {
+              "clause": "this identity has net-effective admin privileges must equal true, but is true",
+              "observation_key": "identity.nep.is_admin",
+              "observed_value": true
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "identity.nep.is_admin",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set identity.nep.is_admin to "
+          }
+        ],
+        "command": "Review the identity-based policies granting admin-equivalent actions. Apply an SCP or permission boundary to constrain the effective permissions. If the principal requires admin access, tag it with stave/role-type: administrative to document the intent."
+      }
     },
     {
       "finding_id": "sha256:0d2f8798db3789f3",
@@ -700,6 +1031,14 @@
         "description": "Principal has effective privilege escalation capability — either a direct escalation primitive or a transitive role chain reaching admin-equivalent permissions.",
         "action": "For direct primitives: remove or scope the escalation action to specific resource ARNs. For transitive chains: remove the sts:AssumeRole grant that enables the chain, or scope it to specific non-admin role ARNs."
       },
+      "fix_plan": {
+        "id": "fix-273b414e03981490",
+        "target": {
+          "asset_id": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-CloudFrontConfigVersionCo-rAgdktzDTPRh",
+          "asset_type": "aws_iam_role"
+        },
+        "command": "For direct primitives: remove or scope the escalation action to specific resource ARNs. For transitive chains: remove the sts:AssumeRole grant that enables the chain, or scope it to specific non-admin role ARNs."
+      },
       "exposure_score": 100,
       "score_breakdown": {
         "base_score": 100,
@@ -717,7 +1056,36 @@
           "expected_value": true,
           "observed_value": true
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-CloudFrontConfigVersionCo-rAgdktzDTPRh",
+          "type": "aws_iam_role",
+          "vendor": "aws",
+          "arn": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-CloudFrontConfigVersionCo-rAgdktzDTPRh"
+        },
+        "violation": {
+          "control_id": "CTL.IAM.NEP.ESCALATION.001",
+          "control_name": "No Principal May Have Net Effective Permissions to Escalate Privileges",
+          "severity": "critical",
+          "reasoning": [
+            {
+              "clause": "a net-effective privilege escalation path exists for this identity must equal true, but is true",
+              "observation_key": "identity.nep.has_escalation_path",
+              "observed_value": true
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "identity.nep.has_escalation_path",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set identity.nep.has_escalation_path to "
+          }
+        ],
+        "command": "For direct primitives: remove or scope the escalation action to specific resource ARNs. For transitive chains: remove the sts:AssumeRole grant that enables the chain, or scope it to specific non-admin role ARNs."
+      }
     },
     {
       "finding_id": "sha256:c6ed7d32277555dd",
@@ -765,6 +1133,14 @@
         "description": "Principal has effective privilege escalation capability — either a direct escalation primitive or a transitive role chain reaching admin-equivalent permissions.",
         "action": "For direct primitives: remove or scope the escalation action to specific resource ARNs. For transitive chains: remove the sts:AssumeRole grant that enables the chain, or scope it to specific non-admin role ARNs."
       },
+      "fix_plan": {
+        "id": "fix-938ac73fdcc102b4",
+        "target": {
+          "asset_id": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-RepoConstructExtDeployerR-wBEukYirZfbr",
+          "asset_type": "aws_iam_role"
+        },
+        "command": "For direct primitives: remove or scope the escalation action to specific resource ARNs. For transitive chains: remove the sts:AssumeRole grant that enables the chain, or scope it to specific non-admin role ARNs."
+      },
       "exposure_score": 100,
       "score_breakdown": {
         "base_score": 100,
@@ -782,7 +1158,36 @@
           "expected_value": true,
           "observed_value": true
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-RepoConstructExtDeployerR-wBEukYirZfbr",
+          "type": "aws_iam_role",
+          "vendor": "aws",
+          "arn": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-RepoConstructExtDeployerR-wBEukYirZfbr"
+        },
+        "violation": {
+          "control_id": "CTL.IAM.NEP.ESCALATION.001",
+          "control_name": "No Principal May Have Net Effective Permissions to Escalate Privileges",
+          "severity": "critical",
+          "reasoning": [
+            {
+              "clause": "a net-effective privilege escalation path exists for this identity must equal true, but is true",
+              "observation_key": "identity.nep.has_escalation_path",
+              "observed_value": true
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "identity.nep.has_escalation_path",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set identity.nep.has_escalation_path to "
+          }
+        ],
+        "command": "For direct primitives: remove or scope the escalation action to specific resource ARNs. For transitive chains: remove the sts:AssumeRole grant that enables the chain, or scope it to specific non-admin role ARNs."
+      }
     }
   ],
   "issues": [
@@ -899,6 +1304,137 @@
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-CloudFrontConfigVersionCo-rAgdktzDTPRh",
+      "asset_type": "aws_iam_role",
+      "fix_plan": {
+        "id": "fix-273b414e03981490",
+        "target": {
+          "asset_id": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-CloudFrontConfigVersionCo-rAgdktzDTPRh",
+          "asset_type": "aws_iam_role"
+        },
+        "command": "For direct primitives: remove or scope the escalation action to specific resource ARNs. For transitive chains: remove the sts:AssumeRole grant that enables the chain, or scope it to specific non-admin role ARNs."
+      },
+      "contributing_controls": [
+        "CTL.IAM.NEP.ESCALATION.001"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-RepoConstructExtDeployerR-wBEukYirZfbr",
+      "asset_type": "aws_iam_role",
+      "fix_plan": {
+        "id": "fix-938ac73fdcc102b4",
+        "target": {
+          "asset_id": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-RepoConstructExtDeployerR-wBEukYirZfbr",
+          "asset_type": "aws_iam_role"
+        },
+        "command": "Review the identity-based policies granting admin-equivalent actions. Apply an SCP or permission boundary to constrain the effective permissions. If the principal requires admin access, tag it with stave/role-type: administrative to document the intent."
+      },
+      "contributing_controls": [
+        "CTL.IAM.NEP.ADMIN.001",
+        "CTL.IAM.NEP.ESCALATION.001"
+      ],
+      "finding_count": 2
+    },
+    {
+      "asset_id": "arn:aws:lambda:us-east-1:123456789012:function/cf_config_version_exporter",
+      "asset_type": "aws_lambda_function",
+      "fix_plan": {
+        "id": "fix-aace251f561caeb7",
+        "target": {
+          "asset_id": "arn:aws:lambda:us-east-1:123456789012:function/cf_config_version_exporter",
+          "asset_type": "aws_lambda_function"
+        },
+        "command": "Scope the execution role policy to only the specific actions and resource ARNs the function needs. Replace managed policies like AmazonS3FullAccess with inline policies scoped to specific buckets and actions. Use IAM Access Analyzer to identify unused permissions and generate a least-privilege policy from actual function activity."
+      },
+      "contributing_controls": [
+        "CTL.LAMBDA.ROLE.LEASTPRIV.001"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "arn:aws:lambda:us-east-1:123456789012:function/cf_config_version_manager",
+      "asset_type": "aws_lambda_function",
+      "fix_plan": {
+        "id": "fix-fb92925040cf146d",
+        "target": {
+          "asset_id": "arn:aws:lambda:us-east-1:123456789012:function/cf_config_version_manager",
+          "asset_type": "aws_lambda_function"
+        },
+        "command": "Scope the execution role policy to only the specific actions and resource ARNs the function needs. Replace managed policies like AmazonS3FullAccess with inline policies scoped to specific buckets and actions. Use IAM Access Analyzer to identify unused permissions and generate a least-privilege policy from actual function activity."
+      },
+      "contributing_controls": [
+        "CTL.LAMBDA.ROLE.LEASTPRIV.001"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "arn:aws:lambda:us-east-1:123456789012:function/cf_config_version_manager_graphql",
+      "asset_type": "aws_lambda_function",
+      "fix_plan": {
+        "id": "fix-2c4ab9c0f819b902",
+        "target": {
+          "asset_id": "arn:aws:lambda:us-east-1:123456789012:function/cf_config_version_manager_graphql",
+          "asset_type": "aws_lambda_function"
+        },
+        "command": "Scope the execution role policy to only the specific actions and resource ARNs the function needs. Replace managed policies like AmazonS3FullAccess with inline policies scoped to specific buckets and actions. Use IAM Access Analyzer to identify unused permissions and generate a least-privilege policy from actual function activity."
+      },
+      "contributing_controls": [
+        "CTL.LAMBDA.ROLE.LEASTPRIV.001"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "arn:aws:lambda:us-east-1:123456789012:function/cloudFrontExtensionsConso-RepoConstructExtDeployer-1uHGWxrjog9S",
+      "asset_type": "aws_lambda_function",
+      "fix_plan": {
+        "id": "fix-bb1a3df4207c2ff6",
+        "target": {
+          "asset_id": "arn:aws:lambda:us-east-1:123456789012:function/cloudFrontExtensionsConso-RepoConstructExtDeployer-1uHGWxrjog9S",
+          "asset_type": "aws_lambda_function"
+        },
+        "command": "Scope the execution role policy to only the specific actions and resource ARNs the function needs. Replace managed policies like AmazonS3FullAccess with inline policies scoped to specific buckets and actions. Use IAM Access Analyzer to identify unused permissions and generate a least-privilege policy from actual function activity."
+      },
+      "contributing_controls": [
+        "CTL.LAMBDA.ROLE.LEASTPRIV.001"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "arn:aws:lambda:us-east-1:123456789012:function/cloudFrontExtensionsConso-RepoConstructSyncExtensi-ydrYwNGQCoFr",
+      "asset_type": "aws_lambda_function",
+      "fix_plan": {
+        "id": "fix-aa7844290dab4683",
+        "target": {
+          "asset_id": "arn:aws:lambda:us-east-1:123456789012:function/cloudFrontExtensionsConso-RepoConstructSyncExtensi-ydrYwNGQCoFr",
+          "asset_type": "aws_lambda_function"
+        },
+        "command": "Scope the execution role policy to only the specific actions and resource ARNs the function needs. Replace managed policies like AmazonS3FullAccess with inline policies scoped to specific buckets and actions. Use IAM Access Analyzer to identify unused permissions and generate a least-privilege policy from actual function activity."
+      },
+      "contributing_controls": [
+        "CTL.LAMBDA.ROLE.LEASTPRIV.001"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "arn:aws:lambda:us-east-1:123456789012:function/cloudFrontExtensionsConso-SingletonLambdaf7d4f7304-ZbLF9YFgQ4eq",
+      "asset_type": "aws_lambda_function",
+      "fix_plan": {
+        "id": "fix-0c57a85d2a7f9c47",
+        "target": {
+          "asset_id": "arn:aws:lambda:us-east-1:123456789012:function/cloudFrontExtensionsConso-SingletonLambdaf7d4f7304-ZbLF9YFgQ4eq",
+          "asset_type": "aws_lambda_function"
+        },
+        "command": "Scope the execution role policy to only the specific actions and resource ARNs the function needs. Replace managed policies like AmazonS3FullAccess with inline policies scoped to specific buckets and actions. Use IAM Access Analyzer to identify unused permissions and generate a least-privilege policy from actual function activity."
+      },
+      "contributing_controls": [
+        "CTL.LAMBDA.ROLE.LEASTPRIV.001"
+      ],
+      "finding_count": 1
     }
   ],
   "top_exposures": [
@@ -1047,7 +1583,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "c1c45531ee9c4f709d5c08d5f98701a6ebb54603",
+      "head_commit": "339115f57a19490ec07e549efaaf605795eb78bc",
       "dirty": false
     }
   }

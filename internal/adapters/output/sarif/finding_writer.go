@@ -149,12 +149,20 @@ func buildResults(findings []remediation.Finding, ruleIndex map[kernel.ControlID
 			Locations: buildLocations(f),
 		}
 
-		// Add fix suggestion from remediation.
-		if f.RemediationSpec.Action != "" {
+		// Add fix suggestion from remediation. Prefer the asset-
+		// parameterized Command (from RemediationPlan) when present;
+		// fall back to the raw template Action on the spec. See
+		// docs/product/metrics.md § Metric 4 (SARIF fix-object
+		// completeness).
+		fixText := f.RemediationSpec.Action
+		if f.RemediationPlan != nil && f.RemediationPlan.Command != "" {
+			fixText = f.RemediationPlan.Command
+		}
+		if fixText != "" {
 			result.Suggestions = []sarifSuggestion{
 				{
 					Description: sarifMessage{
-						Text: f.RemediationSpec.Action,
+						Text: fixText,
 					},
 				},
 			}

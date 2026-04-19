@@ -92,6 +92,14 @@
         "action": "Add an exact content-type condition to the signed upload policy (e.g., eq $Content-Type image/jpeg). Avoid starts-with with empty prefix, which allows any content type.",
         "example": "{\n  \"s3_upload\": {\n    \"operation\": \"write\",\n    \"content_type_restricted\": true,\n    \"allowed_content_types\": [\"image/jpeg\", \"image/png\"]\n  }\n}\n"
       },
+      "fix_plan": {
+        "id": "fix-375ebfda30576afa",
+        "target": {
+          "asset_id": "upload-policy-unrestricted-content",
+          "asset_type": "s3_upload_policy"
+        },
+        "command": "Add an exact content-type condition to the signed upload policy (e.g., eq $Content-Type image/jpeg). Avoid starts-with with empty prefix, which allows any content type."
+      },
       "exposure_score": 150,
       "score_breakdown": {
         "base_score": 75,
@@ -123,7 +131,57 @@
           "expected_value": "s3_upload_policy",
           "observed_value": "s3_upload_policy"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "upload-policy-unrestricted-content",
+          "type": "s3_upload_policy",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.WRITE.CONTENT.001",
+          "control_name": "S3 Signed Upload Must Restrict Content Types",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "content-type is restricted on the S3 upload must equal false, but is false",
+              "observation_key": "s3_upload.content_type_restricted",
+              "observed_value": false
+            },
+            {
+              "clause": "the S3 upload operation must equal \"write\", but is \"write\"",
+              "observation_key": "s3_upload.operation",
+              "observed_value": "write"
+            },
+            {
+              "clause": "the asset type must equal \"s3_upload_policy\", but is \"s3_upload_policy\"",
+              "observation_key": "type",
+              "observed_value": "s3_upload_policy"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "s3_upload.content_type_restricted",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set s3_upload.content_type_restricted to "
+          },
+          {
+            "path": "s3_upload.operation",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change s3_upload.operation from [SANITIZED]"
+          },
+          {
+            "path": "type",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change type from [SANITIZED]"
+          }
+        ],
+        "command": "Add an exact content-type condition to the signed upload policy (e.g., eq $Content-Type image/jpeg). Avoid starts-with with empty prefix, which allows any content type."
+      }
     }
   ],
   "issues": [
@@ -141,6 +199,24 @@
       ],
       "consolidated_score": 150,
       "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "upload-policy-unrestricted-content",
+      "asset_type": "s3_upload_policy",
+      "fix_plan": {
+        "id": "fix-375ebfda30576afa",
+        "target": {
+          "asset_id": "upload-policy-unrestricted-content",
+          "asset_type": "s3_upload_policy"
+        },
+        "command": "Add an exact content-type condition to the signed upload policy (e.g., eq $Content-Type image/jpeg). Avoid starts-with with empty prefix, which allows any content type."
+      },
+      "contributing_controls": [
+        "CTL.S3.WRITE.CONTENT.001"
+      ],
+      "finding_count": 1
     }
   ],
   "top_exposures": [
@@ -169,7 +245,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "c1c45531ee9c4f709d5c08d5f98701a6ebb54603",
+      "head_commit": "339115f57a19490ec07e549efaaf605795eb78bc",
       "dirty": false
     }
   }

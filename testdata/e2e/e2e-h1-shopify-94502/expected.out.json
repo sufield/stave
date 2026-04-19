@@ -214,7 +214,8 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
       },
       "exposure_score": 1000,
       "score_breakdown": {
@@ -233,7 +234,35 @@
           "expected_value": true,
           "observed_value": true
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "shopify-owned-1",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.PUBLIC.001",
+          "control_name": "No Public S3 Bucket Read",
+          "severity": "critical",
+          "reasoning": [
+            {
+              "clause": "the bucket allows anonymous read must equal true, but is true",
+              "observation_key": "storage.access.public_read",
+              "observed_value": true
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.access.public_read",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.access.public_read to "
+          }
+        ],
+        "command": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
+      }
     },
     {
       "finding_id": "sha256:482a1ac6937bd145",
@@ -323,7 +352,8 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
       },
       "exposure_score": 1000,
       "score_breakdown": {
@@ -342,7 +372,35 @@
           "expected_value": true,
           "observed_value": true
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "shopify-owned-2",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.PUBLIC.001",
+          "control_name": "No Public S3 Bucket Read",
+          "severity": "critical",
+          "reasoning": [
+            {
+              "clause": "the bucket allows anonymous read must equal true, but is true",
+              "observation_key": "storage.access.public_read",
+              "observed_value": true
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.access.public_read",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.access.public_read to "
+          }
+        ],
+        "command": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
+      }
     },
     {
       "finding_id": "sha256:0b92ba3d2504b8d5",
@@ -432,7 +490,8 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
       },
       "exposure_score": 1000,
       "score_breakdown": {
@@ -451,7 +510,35 @@
           "expected_value": true,
           "observed_value": true
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "shopify-writeable-1",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.PUBLIC.001",
+          "control_name": "No Public S3 Bucket Read",
+          "severity": "critical",
+          "reasoning": [
+            {
+              "clause": "the bucket allows anonymous read must equal true, but is true",
+              "observation_key": "storage.access.public_read",
+              "observed_value": true
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.access.public_read",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.access.public_read to "
+          }
+        ],
+        "command": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
+      }
     },
     {
       "finding_id": "sha256:afd4d52b25be3baa",
@@ -529,7 +616,8 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "Remove bucket policy statements that grant s3:PutObject or s3:DeleteObject to Principal \"*\". Remove ACL grants that allow WRITE or FULL_CONTROL to AllUsers or AuthenticatedUsers. Enable S3 Public Access Block."
       },
       "exposure_score": 1000,
       "score_breakdown": {
@@ -548,7 +636,35 @@
           "expected_value": true,
           "observed_value": true
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "shopify-writeable-1",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.PUBLIC.003",
+          "control_name": "No Public Write Access",
+          "severity": "critical",
+          "reasoning": [
+            {
+              "clause": "the bucket allows anonymous write must equal true, but is true",
+              "observation_key": "storage.access.public_write",
+              "observed_value": true
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.access.public_write",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.access.public_write to "
+          }
+        ],
+        "command": "Remove bucket policy statements that grant s3:PutObject or s3:DeleteObject to Principal \"*\". Remove ACL grants that allow WRITE or FULL_CONTROL to AllUsers or AuthenticatedUsers. Enable S3 Public Access Block."
+      }
     },
     {
       "finding_id": "sha256:9885b41f3e8e5b79",
@@ -625,7 +741,8 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "Remove or constrain the policy statement granting read actions to Principal \"*\" or AWS: \"*\". If broad read access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public read."
       },
       "exposure_score": 500,
       "score_breakdown": {
@@ -644,7 +761,35 @@
           "expected_value": true,
           "observed_value": true
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "shopify-owned-1",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.PUBLIC.004",
+          "control_name": "No Public Read via Bucket Policy",
+          "severity": "medium",
+          "reasoning": [
+            {
+              "clause": "the bucket policy grants read to a public principal must equal true, but is true",
+              "observation_key": "storage.access.read_via_resource",
+              "observed_value": true
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.access.read_via_resource",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.access.read_via_resource to "
+          }
+        ],
+        "command": "Remove or constrain the policy statement granting read actions to Principal \"*\" or AWS: \"*\". If broad read access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public read."
+      }
     },
     {
       "finding_id": "sha256:e9b8512b9fed396b",
@@ -721,7 +866,8 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "Remove or constrain the policy statement granting read actions to Principal \"*\" or AWS: \"*\". If broad read access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public read."
       },
       "exposure_score": 500,
       "score_breakdown": {
@@ -740,7 +886,35 @@
           "expected_value": true,
           "observed_value": true
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "shopify-owned-2",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.PUBLIC.004",
+          "control_name": "No Public Read via Bucket Policy",
+          "severity": "medium",
+          "reasoning": [
+            {
+              "clause": "the bucket policy grants read to a public principal must equal true, but is true",
+              "observation_key": "storage.access.read_via_resource",
+              "observed_value": true
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.access.read_via_resource",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.access.read_via_resource to "
+          }
+        ],
+        "command": "Remove or constrain the policy statement granting read actions to Principal \"*\" or AWS: \"*\". If broad read access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public read."
+      }
     },
     {
       "finding_id": "sha256:94fd30ba678b6000",
@@ -817,7 +991,8 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "Remove or constrain the policy statement granting read actions to Principal \"*\" or AWS: \"*\". If broad read access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public read."
       },
       "exposure_score": 500,
       "score_breakdown": {
@@ -836,7 +1011,35 @@
           "expected_value": true,
           "observed_value": true
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "shopify-writeable-1",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.PUBLIC.004",
+          "control_name": "No Public Read via Bucket Policy",
+          "severity": "medium",
+          "reasoning": [
+            {
+              "clause": "the bucket policy grants read to a public principal must equal true, but is true",
+              "observation_key": "storage.access.read_via_resource",
+              "observed_value": true
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.access.read_via_resource",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.access.read_via_resource to "
+          }
+        ],
+        "command": "Remove or constrain the policy statement granting read actions to Principal \"*\" or AWS: \"*\". If broad read access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public read."
+      }
     },
     {
       "finding_id": "sha256:d81c1dac4e7e312a",
@@ -897,6 +1100,14 @@
         "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets.",
         "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"controls\": {\n      \"public_access_fully_blocked\": true\n    }\n  }\n}\n"
       },
+      "fix_plan": {
+        "id": "fix-615ea15597343a26",
+        "target": {
+          "asset_id": "shopify-owned-1",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
+      },
       "exposure_score": 375,
       "score_breakdown": {
         "base_score": 75,
@@ -921,7 +1132,46 @@
           "expected_value": "bucket",
           "observed_value": "bucket"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "shopify-owned-1",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.CONTROLS.001",
+          "control_name": "Public Access Block Must Be Enabled",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "all four Public Access Block flags are enabled must equal false, but is false",
+              "observation_key": "storage.controls.public_access_fully_blocked",
+              "observed_value": false
+            },
+            {
+              "clause": "storage.kind must equal \"bucket\", but is \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.controls.public_access_fully_blocked",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.controls.public_access_fully_blocked to "
+          },
+          {
+            "path": "storage.kind",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change storage.kind from [SANITIZED]"
+          }
+        ],
+        "command": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
+      }
     },
     {
       "finding_id": "sha256:748776a78c800b08",
@@ -982,6 +1232,14 @@
         "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets.",
         "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"controls\": {\n      \"public_access_fully_blocked\": true\n    }\n  }\n}\n"
       },
+      "fix_plan": {
+        "id": "fix-7e4244a99e10acdb",
+        "target": {
+          "asset_id": "shopify-owned-2",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
+      },
       "exposure_score": 375,
       "score_breakdown": {
         "base_score": 75,
@@ -1006,7 +1264,46 @@
           "expected_value": "bucket",
           "observed_value": "bucket"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "shopify-owned-2",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.CONTROLS.001",
+          "control_name": "Public Access Block Must Be Enabled",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "all four Public Access Block flags are enabled must equal false, but is false",
+              "observation_key": "storage.controls.public_access_fully_blocked",
+              "observed_value": false
+            },
+            {
+              "clause": "storage.kind must equal \"bucket\", but is \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.controls.public_access_fully_blocked",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.controls.public_access_fully_blocked to "
+          },
+          {
+            "path": "storage.kind",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change storage.kind from [SANITIZED]"
+          }
+        ],
+        "command": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
+      }
     },
     {
       "finding_id": "sha256:d14260350514a42e",
@@ -1067,6 +1364,14 @@
         "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets.",
         "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"controls\": {\n      \"public_access_fully_blocked\": true\n    }\n  }\n}\n"
       },
+      "fix_plan": {
+        "id": "fix-655489696a02bf28",
+        "target": {
+          "asset_id": "shopify-writeable-1",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
+      },
       "exposure_score": 375,
       "score_breakdown": {
         "base_score": 75,
@@ -1091,7 +1396,46 @@
           "expected_value": "bucket",
           "observed_value": "bucket"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "shopify-writeable-1",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.CONTROLS.001",
+          "control_name": "Public Access Block Must Be Enabled",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "all four Public Access Block flags are enabled must equal false, but is false",
+              "observation_key": "storage.controls.public_access_fully_blocked",
+              "observed_value": false
+            },
+            {
+              "clause": "storage.kind must equal \"bucket\", but is \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.controls.public_access_fully_blocked",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.controls.public_access_fully_blocked to "
+          },
+          {
+            "path": "storage.kind",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change storage.kind from [SANITIZED]"
+          }
+        ],
+        "command": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
+      }
     }
   ],
   "issues": [
@@ -1193,6 +1537,22 @@
       "asset_id": "shopify-owned-1",
       "asset_type": "aws_s3_bucket",
       "fix_plan": {
+        "id": "fix-615ea15597343a26",
+        "target": {
+          "asset_id": "shopify-owned-1",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
+      },
+      "contributing_controls": [
+        "CTL.S3.CONTROLS.001"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "shopify-owned-1",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
         "id": "fix-728fc9e1572de8e9",
         "target": {
           "asset_id": "shopify-owned-1",
@@ -1224,13 +1584,30 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
       },
       "contributing_controls": [
         "CTL.S3.PUBLIC.001",
         "CTL.S3.PUBLIC.004"
       ],
       "finding_count": 2
+    },
+    {
+      "asset_id": "shopify-owned-2",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-7e4244a99e10acdb",
+        "target": {
+          "asset_id": "shopify-owned-2",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
+      },
+      "contributing_controls": [
+        "CTL.S3.CONTROLS.001"
+      ],
+      "finding_count": 1
     },
     {
       "asset_id": "shopify-owned-2",
@@ -1267,7 +1644,8 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
       },
       "contributing_controls": [
         "CTL.S3.PUBLIC.001",
@@ -1310,7 +1688,8 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
       },
       "contributing_controls": [
         "CTL.S3.PUBLIC.001",
@@ -1318,6 +1697,22 @@
         "CTL.S3.PUBLIC.004"
       ],
       "finding_count": 3
+    },
+    {
+      "asset_id": "shopify-writeable-1",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-655489696a02bf28",
+        "target": {
+          "asset_id": "shopify-writeable-1",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
+      },
+      "contributing_controls": [
+        "CTL.S3.CONTROLS.001"
+      ],
+      "finding_count": 1
     }
   ],
   "top_exposures": [
@@ -1481,7 +1876,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "c1c45531ee9c4f709d5c08d5f98701a6ebb54603",
+      "head_commit": "339115f57a19490ec07e549efaaf605795eb78bc",
       "dirty": false
     }
   }

@@ -63,6 +63,14 @@
         "description": "Resource configuration deviates from security baseline.",
         "action": "Review the misconfigured properties and revert to compliant values."
       },
+      "fix_plan": {
+        "id": "fix-bd81ba94f46a45a5",
+        "target": {
+          "asset_id": "res:aws:s3:bucket:example-bucket",
+          "asset_type": "storage_bucket"
+        },
+        "command": "Review the misconfigured properties and revert to compliant values."
+      },
       "exposure_score": 10,
       "score_breakdown": {
         "base_score": 10,
@@ -94,7 +102,56 @@
           "expected_value": "data/secrets/",
           "observed_value": "data/secrets/"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "res:aws:s3:bucket:example-bucket",
+          "type": "storage_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.EXP.VISIBILITY.003",
+          "control_name": "Public Read Allowed Only for Approved Prefixes",
+          "reasoning": [
+            {
+              "clause": "the exposure source must equal \"config_overlap\", but is \"config_overlap\"",
+              "observation_key": "exposure_source",
+              "observed_value": "config_overlap"
+            },
+            {
+              "clause": "the overlapping prefix must equal \"data/\", but is \"data/\"",
+              "observation_key": "overlap_with",
+              "observed_value": "data/"
+            },
+            {
+              "clause": "the protected prefix must equal \"data/secrets/\", but is \"data/secrets/\"",
+              "observation_key": "protected_prefix",
+              "observed_value": "data/secrets/"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "exposure_source",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change exposure_source from [SANITIZED]"
+          },
+          {
+            "path": "overlap_with",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change overlap_with from [SANITIZED]"
+          },
+          {
+            "path": "protected_prefix",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change protected_prefix from [SANITIZED]"
+          }
+        ],
+        "command": "Review the misconfigured properties and revert to compliant values."
+      }
     }
   ],
   "issues": [
@@ -112,6 +169,24 @@
       ],
       "consolidated_score": 10,
       "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "res:aws:s3:bucket:example-bucket",
+      "asset_type": "storage_bucket",
+      "fix_plan": {
+        "id": "fix-bd81ba94f46a45a5",
+        "target": {
+          "asset_id": "res:aws:s3:bucket:example-bucket",
+          "asset_type": "storage_bucket"
+        },
+        "command": "Review the misconfigured properties and revert to compliant values."
+      },
+      "contributing_controls": [
+        "CTL.EXP.VISIBILITY.003"
+      ],
+      "finding_count": 1
     }
   ],
   "top_exposures": [
@@ -140,7 +215,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "c1c45531ee9c4f709d5c08d5f98701a6ebb54603",
+      "head_commit": "339115f57a19490ec07e549efaaf605795eb78bc",
       "dirty": false
     }
   }

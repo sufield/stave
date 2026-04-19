@@ -36,6 +36,57 @@ type FindingDTO struct {
 	ExposureScore        float64                   `json:"exposure_score,omitempty"`
 	ScoreBreakdown       *risk.ScoreBreakdown      `json:"score_breakdown,omitempty"`
 	ReasoningTrace       []MatchedClauseDTO        `json:"reasoning_trace,omitempty"`
+	RemediationContext   *RemediationContextDTO    `json:"remediation_context,omitempty"`
+}
+
+// RemediationContextDTO packages asset identity, violation reasoning,
+// structured changes, and the parameterized command in one shape a
+// downstream consumer (AI prompt, CI/CD, ticket system) can feed
+// directly into a fix-generation template. See
+// docs/product/metrics.md § Metric 4.
+type RemediationContextDTO struct {
+	Asset     RemediationAssetDTO     `json:"asset"`
+	Violation RemediationViolationDTO `json:"violation"`
+	Changes   []PropertyChangeDTO     `json:"changes,omitempty"`
+	Command   string                  `json:"command,omitempty"`
+}
+
+// RemediationAssetDTO carries the asset identity a downstream consumer
+// needs to act on this finding.
+type RemediationAssetDTO struct {
+	ID     string `json:"id"`
+	Type   string `json:"type"`
+	Vendor string `json:"vendor,omitempty"`
+	ARN    string `json:"arn,omitempty"`
+	Region string `json:"region,omitempty"`
+}
+
+// RemediationViolationDTO summarizes the violation: what fired, why.
+type RemediationViolationDTO struct {
+	ControlID   string                    `json:"control_id"`
+	ControlName string                    `json:"control_name"`
+	Severity    string                    `json:"severity,omitempty"`
+	Reasoning   []RemediationReasoningDTO `json:"reasoning,omitempty"`
+}
+
+// RemediationReasoningDTO renders one matched clause in both the
+// structured form (observation_key, observed_value) and the
+// plain-English clause the text writer would show.
+type RemediationReasoningDTO struct {
+	Clause         string `json:"clause"`
+	ObservationKey string `json:"observation_key"`
+	ObservedValue  any    `json:"observed_value,omitempty"`
+}
+
+// PropertyChangeDTO mirrors controldef.PropertyChange for the JSON
+// output of the remediation_context block.
+type PropertyChangeDTO struct {
+	Path                string `json:"path"`
+	CurrentValue        string `json:"current_value"`
+	RequiredValue       string `json:"required_value,omitempty"`
+	RequiredValuePrompt string `json:"required_value_prompt,omitempty"`
+	HasSafeDefault      bool   `json:"has_safe_default"`
+	Description         string `json:"description,omitempty"`
 }
 
 // MatchedClauseDTO mirrors evaluation.MatchedClause.

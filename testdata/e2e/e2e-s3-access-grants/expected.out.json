@@ -105,6 +105,14 @@
         "action": "Restrict grant scope to specific prefixes. Use READ not READWRITE.",
         "example": "{ \"storage\": { \"access_grants\": { \"has_broad_write_grant\": false } } }\n"
       },
+      "fix_plan": {
+        "id": "fix-96e353532f236ad3",
+        "target": {
+          "asset_id": "grants-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Restrict grant scope to specific prefixes. Use READ not READWRITE."
+      },
       "exposure_score": 75,
       "score_breakdown": {
         "base_score": 75,
@@ -136,7 +144,57 @@
           "expected_value": "bucket",
           "observed_value": "bucket"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "grants-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.ACCESS.GRANTS.001",
+          "control_name": "S3 Access Grants Must Not Grant Broad Permissions",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "an Access Grants entry has a broad write grant must equal true, but is true",
+              "observation_key": "storage.access_grants.has_broad_write_grant",
+              "observed_value": true
+            },
+            {
+              "clause": "an S3 Access Grants instance exists for the account must equal true, but is true",
+              "observation_key": "storage.access_grants.instance_exists",
+              "observed_value": true
+            },
+            {
+              "clause": "storage.kind must equal \"bucket\", but is \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.access_grants.has_broad_write_grant",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.access_grants.has_broad_write_grant to "
+          },
+          {
+            "path": "storage.access_grants.instance_exists",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.access_grants.instance_exists to "
+          },
+          {
+            "path": "storage.kind",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change storage.kind from [SANITIZED]"
+          }
+        ],
+        "command": "Restrict grant scope to specific prefixes. Use READ not READWRITE."
+      }
     },
     {
       "finding_id": "sha256:548b689caded6b8d",
@@ -190,6 +248,14 @@
         "action": "Associate IAM Identity Center with the Access Grants instance using aws s3control associate-access-grants-identity-center. This enables directory-based grantee resolution.",
         "example": "{\n  \"storage\": {\n    \"access_grants\": {\n      \"instance_exists\": true,\n      \"identity_center_attached\": true\n    }\n  }\n}\n"
       },
+      "fix_plan": {
+        "id": "fix-96e353532f236ad3",
+        "target": {
+          "asset_id": "grants-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Associate IAM Identity Center with the Access Grants instance using aws s3control associate-access-grants-identity-center. This enables directory-based grantee resolution."
+      },
       "exposure_score": 50,
       "score_breakdown": {
         "base_score": 50,
@@ -221,7 +287,57 @@
           "expected_value": "bucket",
           "observed_value": "bucket"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "grants-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.ACCESS.GRANTS.002",
+          "control_name": "S3 Access Grants Identity Center Must Be Attached",
+          "severity": "medium",
+          "reasoning": [
+            {
+              "clause": "Identity Center is attached to the Access Grants instance must equal false, but is false",
+              "observation_key": "storage.access_grants.identity_center_attached",
+              "observed_value": false
+            },
+            {
+              "clause": "an S3 Access Grants instance exists for the account must equal true, but is true",
+              "observation_key": "storage.access_grants.instance_exists",
+              "observed_value": true
+            },
+            {
+              "clause": "storage.kind must equal \"bucket\", but is \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.access_grants.identity_center_attached",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.access_grants.identity_center_attached to "
+          },
+          {
+            "path": "storage.access_grants.instance_exists",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.access_grants.instance_exists to "
+          },
+          {
+            "path": "storage.kind",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change storage.kind from [SANITIZED]"
+          }
+        ],
+        "command": "Associate IAM Identity Center with the Access Grants instance using aws s3control associate-access-grants-identity-center. This enables directory-based grantee resolution."
+      }
     }
   ],
   "issues": [
@@ -241,6 +357,25 @@
       ],
       "consolidated_score": 75,
       "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "grants-bucket",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-96e353532f236ad3",
+        "target": {
+          "asset_id": "grants-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Restrict grant scope to specific prefixes. Use READ not READWRITE."
+      },
+      "contributing_controls": [
+        "CTL.S3.ACCESS.GRANTS.001",
+        "CTL.S3.ACCESS.GRANTS.002"
+      ],
+      "finding_count": 2
     }
   ],
   "top_exposures": [
@@ -284,7 +419,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "c1c45531ee9c4f709d5c08d5f98701a6ebb54603",
+      "head_commit": "339115f57a19490ec07e549efaaf605795eb78bc",
       "dirty": false
     }
   }

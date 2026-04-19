@@ -117,7 +117,8 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "Create the S3 bucket in your AWS account, or remove the DNS record, CDN origin, or application reference pointing to the unclaimed bucket."
       },
       "exposure_score": 600,
       "score_breakdown": {
@@ -143,7 +144,46 @@
           "expected_value": false,
           "observed_value": false
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "apptio-endpoint-ref-1",
+          "type": "s3_bucket_reference",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.BUCKET.TAKEOVER.001",
+          "control_name": "Referenced S3 Buckets Must Exist And Be Owned",
+          "severity": "critical",
+          "reasoning": [
+            {
+              "clause": "the referenced S3 bucket exists must equal false, but is false",
+              "observation_key": "s3_ref.bucket_exists",
+              "observed_value": false
+            },
+            {
+              "clause": "the referenced S3 bucket is owned by the account must equal false, but is false",
+              "observation_key": "s3_ref.bucket_owned",
+              "observed_value": false
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "s3_ref.bucket_exists",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set s3_ref.bucket_exists to "
+          },
+          {
+            "path": "s3_ref.bucket_owned",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set s3_ref.bucket_owned to "
+          }
+        ],
+        "command": "Create the S3 bucket in your AWS account, or remove the DNS record, CDN origin, or application reference pointing to the unclaimed bucket."
+      }
     }
   ],
   "issues": [
@@ -198,7 +238,8 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "Create the S3 bucket in your AWS account, or remove the DNS record, CDN origin, or application reference pointing to the unclaimed bucket."
       },
       "contributing_controls": [
         "CTL.S3.BUCKET.TAKEOVER.001"
@@ -232,7 +273,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "c1c45531ee9c4f709d5c08d5f98701a6ebb54603",
+      "head_commit": "339115f57a19490ec07e549efaaf605795eb78bc",
       "dirty": false
     }
   }

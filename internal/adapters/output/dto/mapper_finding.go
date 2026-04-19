@@ -1,12 +1,15 @@
 package dto
 
 import (
+	"strings"
+
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/core/translation"
 )
 
 // FromFinding projects a single remediation.Finding into a FindingDTO.
@@ -68,6 +71,7 @@ func FromFinding(f *remediation.Finding) FindingDTO {
 			}
 		}
 	}
+	dto.RemediationContext = buildRemediationContext(f)
 
 	// Normalize empty severity to match omitempty behavior.
 	if dto.ControlSeverity == "" {
@@ -78,6 +82,81 @@ func FromFinding(f *remediation.Finding) FindingDTO {
 	}
 
 	return dto
+}
+
+// buildRemediationContext packages the asset identity, violation
+// reasoning, structured changes, and the asset-parameterized command
+// in one shape downstream consumers can feed into AI prompts or
+// ticketing. See docs/product/metrics.md § Metric 4.
+func buildRemediationContext(f *remediation.Finding) *RemediationContextDTO {
+	// Skip when the finding has neither reasoning nor remediation to
+	// package — avoids emitting empty context blocks.
+	hasTrace := len(f.ReasoningTrace) > 0
+	hasSpec := f.RemediationSpec.Action != "" || f.RemediationSpec.Description != ""
+	if !hasTrace && !hasSpec {
+		return nil
+	}
+
+	ctx := &RemediationContextDTO{
+		Asset: RemediationAssetDTO{
+			ID:     string(f.AssetID),
+			Type:   string(f.AssetType),
+			Vendor: string(f.AssetVendor),
+		},
+		Violation: RemediationViolationDTO{
+			ControlID:   string(f.ControlID),
+			ControlName: f.ControlName,
+			Severity:    f.ControlSeverity.String(),
+		},
+	}
+
+	// Asset ARN + region when derivable from an ARN-shaped AssetID.
+	if strings.HasPrefix(string(f.AssetID), "arn:aws:") {
+		ctx.Asset.ARN = string(f.AssetID)
+		parts := strings.SplitN(string(f.AssetID), ":", 6)
+		if len(parts) == 6 {
+			ctx.Asset.Region = parts[3]
+		}
+	}
+
+	// Reasoning: mirror each matched clause in a structured shape
+	// paired with its plain-English rendering.
+	for _, mc := range f.ReasoningTrace {
+		ctx.Violation.Reasoning = append(ctx.Violation.Reasoning, RemediationReasoningDTO{
+			Clause: translation.RenderClause(translation.Clause{
+				ObservationKey: mc.ObservationKey,
+				Operator:       mc.Operator,
+				ExpectedValue:  mc.ExpectedValue,
+				ObservedValue:  mc.ObservedValue,
+			}, translation.DefaultFieldRegistry),
+			ObservationKey: mc.ObservationKey,
+			ObservedValue:  mc.ObservedValue,
+		})
+	}
+
+	// Changes: derive on the fly from misconfigurations; propagate
+	// the spec's RequiredValuePrompt onto each HasSafeDefault=false
+	// entry.
+	changes := policy.DeriveChanges(f.Evidence.Misconfigurations)
+	for i := range changes {
+		if !changes[i].HasSafeDefault && f.RemediationSpec.RequiredValuePrompt != "" {
+			changes[i].RequiredValuePrompt = f.RemediationSpec.RequiredValuePrompt
+		}
+		ctx.Changes = append(ctx.Changes, PropertyChangeDTO{
+			Path:                changes[i].PropertyPath,
+			CurrentValue:        changes[i].CurrentValue,
+			RequiredValue:       changes[i].RequiredValue,
+			RequiredValuePrompt: changes[i].RequiredValuePrompt,
+			HasSafeDefault:      changes[i].HasSafeDefault,
+			Description:         changes[i].Description,
+		})
+	}
+
+	if f.RemediationPlan != nil && f.RemediationPlan.Command != "" {
+		ctx.Command = f.RemediationPlan.Command
+	}
+
+	return ctx
 }
 
 func fromFindings(fs []remediation.Finding) []FindingDTO {
@@ -145,6 +224,7 @@ func fromRemediationPlan(p evaluation.RemediationPlan) RemediationPlanDTO {
 		},
 		Preconditions:  p.Preconditions,
 		ExpectedEffect: p.ExpectedEffect,
+		Command:        p.Command,
 	}
 	if len(p.Actions) > 0 {
 		dto.Actions = mapSlice(p.Actions, func(a evaluation.RemediationAction) RemediationActionDTO { return fromRemediationAction(a) })

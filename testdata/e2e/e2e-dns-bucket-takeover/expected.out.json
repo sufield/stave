@@ -85,6 +85,14 @@
         "action": "Either claim the target resource in your cloud account to block takeover, or delete the DNS record that points to the unclaimed resource. Audit all DNS zones for records pointing to decommissioned infrastructure.",
         "example": "{\n  \"dns\": {\n    \"record_type\": \"CNAME\",\n    \"target_exists\": true,\n    \"target_owned\": true\n  }\n}\n"
       },
+      "fix_plan": {
+        "id": "fix-1800741e78332132",
+        "target": {
+          "asset_id": "a2.bime.io-cname",
+          "asset_type": "dns_record"
+        },
+        "command": "Either claim the target resource in your cloud account to block takeover, or delete the DNS record that points to the unclaimed resource. Audit all DNS zones for records pointing to decommissioned infrastructure."
+      },
       "exposure_score": 200,
       "score_breakdown": {
         "base_score": 100,
@@ -109,7 +117,46 @@
           "expected_value": false,
           "observed_value": false
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "a2.bime.io-cname",
+          "type": "dns_record",
+          "vendor": "cloudflare"
+        },
+        "violation": {
+          "control_id": "CTL.DNS.DANGLING.001",
+          "control_name": "DNS Records Must Not Point to Unclaimed Resources",
+          "severity": "critical",
+          "reasoning": [
+            {
+              "clause": "the DNS record's target exists must equal false, but is false",
+              "observation_key": "dns.target_exists",
+              "observed_value": false
+            },
+            {
+              "clause": "the DNS record's target is owned by the account must equal false, but is false",
+              "observation_key": "dns.target_owned",
+              "observed_value": false
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "dns.target_exists",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set dns.target_exists to "
+          },
+          {
+            "path": "dns.target_owned",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set dns.target_owned to "
+          }
+        ],
+        "command": "Either claim the target resource in your cloud account to block takeover, or delete the DNS record that points to the unclaimed resource. Audit all DNS zones for records pointing to decommissioned infrastructure."
+      }
     }
   ],
   "issues": [
@@ -126,6 +173,24 @@
       ],
       "consolidated_score": 200,
       "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "a2.bime.io-cname",
+      "asset_type": "dns_record",
+      "fix_plan": {
+        "id": "fix-1800741e78332132",
+        "target": {
+          "asset_id": "a2.bime.io-cname",
+          "asset_type": "dns_record"
+        },
+        "command": "Either claim the target resource in your cloud account to block takeover, or delete the DNS record that points to the unclaimed resource. Audit all DNS zones for records pointing to decommissioned infrastructure."
+      },
+      "contributing_controls": [
+        "CTL.DNS.DANGLING.001"
+      ],
+      "finding_count": 1
     }
   ],
   "top_exposures": [
@@ -154,7 +219,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "c1c45531ee9c4f709d5c08d5f98701a6ebb54603",
+      "head_commit": "339115f57a19490ec07e549efaaf605795eb78bc",
       "dirty": false
     }
   }

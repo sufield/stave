@@ -96,6 +96,14 @@
         "action": "Remove WRITE_ACP grants from the bucket ACL and remove policy statements granting s3:PutBucketAcl or s3:PutObjectAcl to public principals. Enable S3 Public Access Block with BlockPublicAcls set to true.",
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_admin\": false,\n      \"authenticated_admin\": false\n    }\n  }\n}\n"
       },
+      "fix_plan": {
+        "id": "fix-404375c2e4623026",
+        "target": {
+          "asset_id": "auth-acl-writable-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Remove WRITE_ACP grants from the bucket ACL and remove policy statements granting s3:PutBucketAcl or s3:PutObjectAcl to public principals. Enable S3 Public Access Block with BlockPublicAcls set to true."
+      },
       "exposure_score": 150,
       "score_breakdown": {
         "base_score": 75,
@@ -120,7 +128,46 @@
           "expected_value": true,
           "observed_value": false
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "auth-acl-writable-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.ACL.ESCALATION.001",
+          "control_name": "No Public ACL Modification",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "the bucket allows authenticated-users write-ACP must equal true, but is true",
+              "observation_key": "storage.access.authenticated_admin",
+              "observed_value": true
+            },
+            {
+              "clause": "the bucket allows anonymous write-ACP must equal true, but is false",
+              "observation_key": "storage.access.public_admin",
+              "observed_value": false
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.access.authenticated_admin",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.access.authenticated_admin to "
+          },
+          {
+            "path": "storage.access.public_admin",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.access.public_admin to "
+          }
+        ],
+        "command": "Remove WRITE_ACP grants from the bucket ACL and remove policy statements granting s3:PutBucketAcl or s3:PutObjectAcl to public principals. Enable S3 Public Access Block with BlockPublicAcls set to true."
+      }
     },
     {
       "finding_id": "sha256:73aa40948c106572",
@@ -172,6 +219,14 @@
         "action": "Remove WRITE_ACP grants from the bucket ACL and remove policy statements granting s3:PutBucketAcl or s3:PutObjectAcl to public principals. Enable S3 Public Access Block with BlockPublicAcls set to true.",
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_admin\": false,\n      \"authenticated_admin\": false\n    }\n  }\n}\n"
       },
+      "fix_plan": {
+        "id": "fix-68ede8ff1c1988b8",
+        "target": {
+          "asset_id": "public-acl-writable-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Remove WRITE_ACP grants from the bucket ACL and remove policy statements granting s3:PutBucketAcl or s3:PutObjectAcl to public principals. Enable S3 Public Access Block with BlockPublicAcls set to true."
+      },
       "exposure_score": 150,
       "score_breakdown": {
         "base_score": 75,
@@ -196,7 +251,46 @@
           "expected_value": true,
           "observed_value": true
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "public-acl-writable-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.ACL.ESCALATION.001",
+          "control_name": "No Public ACL Modification",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "the bucket allows authenticated-users write-ACP must equal true, but is false",
+              "observation_key": "storage.access.authenticated_admin",
+              "observed_value": false
+            },
+            {
+              "clause": "the bucket allows anonymous write-ACP must equal true, but is true",
+              "observation_key": "storage.access.public_admin",
+              "observed_value": true
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.access.authenticated_admin",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.access.authenticated_admin to "
+          },
+          {
+            "path": "storage.access.public_admin",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.access.public_admin to "
+          }
+        ],
+        "command": "Remove WRITE_ACP grants from the bucket ACL and remove policy statements granting s3:PutBucketAcl or s3:PutObjectAcl to public principals. Enable S3 Public Access Block with BlockPublicAcls set to true."
+      }
     }
   ],
   "issues": [
@@ -229,6 +323,40 @@
       ],
       "consolidated_score": 150,
       "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "auth-acl-writable-bucket",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-404375c2e4623026",
+        "target": {
+          "asset_id": "auth-acl-writable-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Remove WRITE_ACP grants from the bucket ACL and remove policy statements granting s3:PutBucketAcl or s3:PutObjectAcl to public principals. Enable S3 Public Access Block with BlockPublicAcls set to true."
+      },
+      "contributing_controls": [
+        "CTL.S3.ACL.ESCALATION.001"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "public-acl-writable-bucket",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-68ede8ff1c1988b8",
+        "target": {
+          "asset_id": "public-acl-writable-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Remove WRITE_ACP grants from the bucket ACL and remove policy statements granting s3:PutBucketAcl or s3:PutObjectAcl to public principals. Enable S3 Public Access Block with BlockPublicAcls set to true."
+      },
+      "contributing_controls": [
+        "CTL.S3.ACL.ESCALATION.001"
+      ],
+      "finding_count": 1
     }
   ],
   "top_exposures": [
@@ -272,7 +400,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "c1c45531ee9c4f709d5c08d5f98701a6ebb54603",
+      "head_commit": "339115f57a19490ec07e549efaaf605795eb78bc",
       "dirty": false
     }
   }

@@ -75,6 +75,14 @@
         "description": "Resource configuration deviates from security baseline.",
         "action": "Review the misconfigured properties and revert to compliant values."
       },
+      "fix_plan": {
+        "id": "fix-87e9af3ab9a06ede",
+        "target": {
+          "asset_id": "res:aws:s3:bucket:disappearing-bucket",
+          "asset_type": "storage_bucket"
+        },
+        "command": "Review the misconfigured properties and revert to compliant values."
+      },
       "exposure_score": 10,
       "score_breakdown": {
         "base_score": 10,
@@ -92,7 +100,34 @@
           "expected_value": true,
           "observed_value": true
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "res:aws:s3:bucket:disappearing-bucket",
+          "type": "storage_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.EXP.DURATION.001",
+          "control_name": "Unsafe Exposure Duration Bound",
+          "reasoning": [
+            {
+              "clause": "the resource is public must equal true, but is true",
+              "observation_key": "public",
+              "observed_value": true
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "public",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set public to "
+          }
+        ],
+        "command": "Review the misconfigured properties and revert to compliant values."
+      }
     }
   ],
   "issues": [
@@ -108,6 +143,24 @@
       ],
       "consolidated_score": 10,
       "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "res:aws:s3:bucket:disappearing-bucket",
+      "asset_type": "storage_bucket",
+      "fix_plan": {
+        "id": "fix-87e9af3ab9a06ede",
+        "target": {
+          "asset_id": "res:aws:s3:bucket:disappearing-bucket",
+          "asset_type": "storage_bucket"
+        },
+        "command": "Review the misconfigured properties and revert to compliant values."
+      },
+      "contributing_controls": [
+        "CTL.EXP.DURATION.001"
+      ],
+      "finding_count": 1
     }
   ],
   "top_exposures": [
@@ -136,7 +189,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "c1c45531ee9c4f709d5c08d5f98701a6ebb54603",
+      "head_commit": "339115f57a19490ec07e549efaaf605795eb78bc",
       "dirty": false
     }
   }

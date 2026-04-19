@@ -96,6 +96,14 @@
         "action": "Enable MFA on the root account using a hardware MFA device or virtual MFA app. Navigate to IAM \u003e Security credentials \u003e MFA.",
         "example": "{\n  \"identity\": {\n    \"kind\": \"account\",\n    \"root\": {\n      \"mfa_enabled\": true\n    }\n  }\n}\n"
       },
+      "fix_plan": {
+        "id": "fix-f9a2337611d1420a",
+        "target": {
+          "asset_id": "aws-account-root",
+          "asset_type": "aws_iam_account"
+        },
+        "command": "Enable MFA on the root account using a hardware MFA device or virtual MFA app. Navigate to IAM \u003e Security credentials \u003e MFA."
+      },
       "exposure_score": 100,
       "score_breakdown": {
         "base_score": 100,
@@ -120,7 +128,46 @@
           "expected_value": false,
           "observed_value": false
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "aws-account-root",
+          "type": "aws_iam_account",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.IAM.ROOT.MFA.001",
+          "control_name": "Root Account Must Have MFA Enabled",
+          "severity": "critical",
+          "reasoning": [
+            {
+              "clause": "identity.kind must equal \"account\", but is \"account\"",
+              "observation_key": "identity.kind",
+              "observed_value": "account"
+            },
+            {
+              "clause": "MFA is enabled on the root account must equal false, but is false",
+              "observation_key": "identity.root.mfa_enabled",
+              "observed_value": false
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "identity.kind",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change identity.kind from [SANITIZED]"
+          },
+          {
+            "path": "identity.root.mfa_enabled",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set identity.root.mfa_enabled to "
+          }
+        ],
+        "command": "Enable MFA on the root account using a hardware MFA device or virtual MFA app. Navigate to IAM \u003e Security credentials \u003e MFA."
+      }
     }
   ],
   "issues": [
@@ -137,6 +184,24 @@
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "aws-account-root",
+      "asset_type": "aws_iam_account",
+      "fix_plan": {
+        "id": "fix-f9a2337611d1420a",
+        "target": {
+          "asset_id": "aws-account-root",
+          "asset_type": "aws_iam_account"
+        },
+        "command": "Enable MFA on the root account using a hardware MFA device or virtual MFA app. Navigate to IAM \u003e Security credentials \u003e MFA."
+      },
+      "contributing_controls": [
+        "CTL.IAM.ROOT.MFA.001"
+      ],
+      "finding_count": 1
     }
   ],
   "top_exposures": [
@@ -165,7 +230,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "c1c45531ee9c4f709d5c08d5f98701a6ebb54603",
+      "head_commit": "339115f57a19490ec07e549efaaf605795eb78bc",
       "dirty": false
     }
   }

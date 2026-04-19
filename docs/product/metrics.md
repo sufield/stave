@@ -352,33 +352,72 @@ requires the AI or human to research what specifically to enable on
 which flag. A finding whose remediation carries a runnable CLI
 parameterized to the asset is directly consumable.
 
-**Baseline.** PARTIAL. `RemediationSpec` at
-`internal/core/controldef/remediation_spec.go:7` carries
-`Description`, `Action` (prose CLI — often concrete, e.g.
-`aws s3api put-public-access-block --bucket <name> ...`), `Example`,
-`Confidence`, `RiskScore`, `Changes[]`, and `FindingID`.
-`PropertyChange` at `remediation_spec.go:35` is IaC-tool-agnostic
-with `PropertyPath`, `CurrentValue`, `RequiredValue`, `ResourceType`,
-`Description`, `HasSafeDefault`. `RemediationPlan` at
-`internal/core/evaluation/remediation.go:16` adds structured
-`Actions[]` with `Target` and `ExpectedEffect`. Gaps: (1) when
-`HasSafeDefault=false`, `RequiredValue` is empty and the record does
-not standardize how the required value is surfaced for user prompt;
-(2) the CLI `Action` string is not consistently parameterized to the
-specific asset (placeholders like `<name>` appear); (3) no
-per-IaC-stack rendering (Terraform vs CloudFormation vs CDK) — the
-CLI is the lowest-common-denominator; (4) the structured export shape
-for AI-prompt consumption is not explicitly documented.
+**Baseline.** PARTIAL. Four deliverables landed:
 
-**Target.** An explicit "structured remediation export" shape per
-finding: one JSON blob containing `Evidence` + `RemediationSpec` +
-`RemediationPlan` in a layout that AI prompts can consume without
-preprocessing. CLI actions parameterized to the specific asset
-(`<name>` → actual bucket name). When `HasSafeDefault=false`, the
-record includes a `required_value_prompt` field — the text of the
-question to ask the user. The auto-fix boundary is explicit in the
-documentation and enforced in code: no CLI flag, no API, no
-mechanism invokes a remediation from Stave.
+1. **Asset-parameterized CLI commands.** `FormatRemediationAction`
+   at `internal/core/evaluation/remediation/formatter.go`
+   substitutes placeholder tokens (`<id>`, `<name>`,
+   `<bucket-name>`, `<role-arn>`, `<cluster>`, `<region>`,
+   `<account>`, etc.) in the `RemediationSpec.Action` template
+   with the specific asset's identifiers at enrichment time. The
+   result is stored on a new `RemediationPlan.Command` field.
+   `<current>` markers in multi-flag PAB commands are preserved
+   verbatim (they mean "keep the existing value"). Unknown tokens
+   pass through. 8 unit tests cover substitution, ARN parsing,
+   type-mismatch, unknown-token, and `<current>`-preservation
+   cases.
+2. **RequiredValuePrompt.** `PropertyChange` gains a
+   `RequiredValuePrompt` field (propagated from the control's
+   `RemediationSpec.RequiredValuePrompt` when `HasSafeDefault=false`).
+   Control authors add a single prompt per control in YAML; the
+   prompt attaches to every HasSafeDefault=false change derived
+   from that control's violations.
+3. **Structured export (remediation_context).** Every finding in
+   JSON output now carries `remediation_context`: an asset-identity
+   block (id, type, vendor, ARN, region), a violation block
+   (control_id, control_name, severity, reasoning[] with
+   plain-English clause + observation_key + observed_value),
+   structured changes[], and the parameterized command. Shape is
+   direct-consumable by AI prompt templates.
+4. **Hard scope boundary reinforced.** `./stave apply --help` now
+   includes an explicit "Remediation scope" block stating Stave
+   produces data, not changes; pipe output to downstream tooling
+   for fix generation; no auto-fix flag exists and none is planned.
+
+SARIF output gains parameterized command in result fixes —
+preferring `RemediationPlan.Command` over the raw template when
+available. Text output is unchanged (the existing remediation
+section carries prose description + action; adding structured
+changes would bloat human-oriented output).
+
+Known limitations:
+
+- Placeholder vocabulary covers the shipped catalog's common
+  patterns (~20 tokens). New controls with new token conventions
+  fall through unchanged until the formatter extends.
+- `RequiredValuePrompt` is authored per-control (not per-change).
+  A given control with multiple HasSafeDefault=false changes emits
+  the same prompt on each; granular per-property prompts are
+  future work.
+- Prompts are sparsely populated across shipped controls (the
+  iteration shipped infrastructure + limited author examples).
+  Bulk prompt authoring is follow-up work.
+- CLI-only remediation (no per-IaC-stack rendering). Terraform /
+  CloudFormation / CDK snippet generation is orthogonal future
+  work; the parameterized CLI remains the lowest-common-denominator.
+
+**Target.** Remaining work for this metric:
+
+- Extend placeholder vocabulary as new controls ship with new
+  token conventions.
+- Bulk-author `RequiredValuePrompt` for the HasSafeDefault=false
+  catalog (time-box: 50 prompts per iteration until coverage
+  stabilizes).
+- Consider per-IaC-stack rendering as a separate output mode
+  (e.g., `--format terraform`) if user demand surfaces.
+- SARIF fix-object completeness — not every finding has a fix
+  populated initially; ongoing as the catalog-side remediation
+  data extends.
 
 **Improvement signal.**
 - CLI `Action` strings are parameterized to the specific asset in
@@ -433,30 +472,56 @@ who sees "the bucket policy has at least one Allow statement with a
 wildcard principal and no restricting Condition — the statement
 effectively allows any AWS caller unless narrowed" starts acting.
 
-**Baseline.** PARTIAL. The text writer at
-`internal/adapters/output/text/finding_writer.go:25` produces a
-structured report with sections (header, violations, skipped,
-exempted, remediation groups, chain findings, attack stage,
-top exposures, framework readiness). Most sections read cleanly for
-a first-time reader. Per-finding evidence surfaces predicate-DSL
-vocabulary: the `Misconfigurations[]` list shows
-`{property, operator, unsafe_value, actual_value}` in terms a reader
-has to decode against the observation contract. Control IDs
-(`CTL.S3.POLICY.SCOPING.001`) appear without one-line glossary
-entries inline. Long-form `control_description` is present but is
-the canonical description from YAML, not a scan-optimized one-liner.
+**Baseline.** PARTIAL. Plain-language translation landed via the
+`internal/core/translation` package — `RenderClause(Clause,
+FieldRegistry) string` composes the field's prose (from
+`DefaultFieldRegistry`), the operator's verb phrase (from
+`operatorProse`), and the expected/observed values into one line
+per clause. Text output's per-finding "Reasoning:" block now
+renders each `ReasoningTrace` entry through the translator; JSON
+and SARIF retain the raw DSL shape for downstream tooling (per the
+metric's rule that structured output stays structured). Control IDs
+continue to appear as identifiers paired with their `ControlName`
+one-liner at the finding header.
 
-**Target.** A plain-language translator that renders predicate-DSL
-constructs as prose for the target persona. `{property:
-policy_has_scoping_condition, operator: eq, value: false}` becomes
-"the bucket policy has no scoping Condition on any Allow statement
-with a non-narrow principal". A control-ID glossary (one-line
-summary per control) rendered inline in text mode when a control
-first appears. JSON output preserves the structured form for
-downstream tooling; text output uses the translated form. Plain-
-language renderings live alongside the DSL vocabulary, not
-replacing it — downstream tooling parsing structured fields is
-unaffected.
+Registry coverage: hand-maintained map at
+`internal/core/translation/fields.go` covering the 111 distinct
+non-discriminator `ObservationKey` paths actually emitted into
+`ReasoningTrace` output across shipped fixtures. Long-tail paths
+(out of the full ~713-path contract surface) fall back to raw DSL
+rendering until the registry extends.
+
+Known limitations:
+
+- Prose template reads awkwardly when the predicate's `value:` is
+  the unsafe value (e.g., `has_wildcard_principal eq true`) —
+  renders as "… must equal true, but is true". The template is
+  correct for clauses where `value:` is the safe value (e.g., PAB
+  `block_public_acls eq false` where BlockPublicAcls being enabled
+  means true); the other pattern reads as contradiction. Refining
+  the template to branch on safe-vs-unsafe expected values is
+  future work and requires contract-level annotation.
+- Registry is hand-maintained in Go. A distributed
+  contract-markdown parser (one Translation: line per field in
+  `docs/contract/*.md`, code-gen at build time) is the long-term
+  direction but deferred for scope.
+- Control IDs pair with `ControlName` (one-line summary), not with
+  `ControlDescription` (canonical prose). A scan-optimized
+  one-liner glossary distinct from ControlName is a future
+  refinement.
+
+**Target.** Remaining work for this metric:
+
+- Refine the prose template to handle safe-vs-unsafe expected
+  values (requires adding a safe-value annotation to controls or
+  the observation contract).
+- Extend the registry toward the full 713-path contract surface —
+  the long-tail coverage.
+- Optionally introduce a distributed contract-markdown parser with
+  build-time codegen so contract authors maintain translations
+  adjacent to field definitions.
+- Optionally add a `--trace-raw` or similar flag to render the
+  original DSL form in text output for users who prefer it.
 
 **Improvement signal.**
 - Text-mode output renders predicate-DSL misconfigurations as prose

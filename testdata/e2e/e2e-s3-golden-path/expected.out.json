@@ -194,7 +194,8 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
       },
       "exposure_score": 200,
       "score_breakdown": {
@@ -213,7 +214,35 @@
           "expected_value": true,
           "observed_value": true
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "public-phi-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.PUBLIC.001",
+          "control_name": "No Public S3 Bucket Read",
+          "severity": "critical",
+          "reasoning": [
+            {
+              "clause": "the bucket allows anonymous read must equal true, but is true",
+              "observation_key": "storage.access.public_read",
+              "observed_value": true
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.access.public_read",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.access.public_read to "
+          }
+        ],
+        "command": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
+      }
     },
     {
       "finding_id": "sha256:a8db07ec8df71531",
@@ -315,7 +344,8 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "Immediately enable S3 Public Access Block (all four settings). Remove bucket policy statements granting access to Principal \"*\". Remove ACL grants to AllUsers or AuthenticatedUsers. Audit CloudTrail logs for unauthorized access during the exposure window."
       },
       "exposure_score": 200,
       "score_breakdown": {
@@ -362,7 +392,79 @@
           "expected_value": "pii",
           "observed_value": "phi"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "public-phi-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.PUBLIC.002",
+          "control_name": "No Public S3 Buckets With Sensitive Data",
+          "severity": "critical",
+          "reasoning": [
+            {
+              "clause": "the bucket allows anonymous list must equal true, but is true",
+              "observation_key": "storage.access.public_list",
+              "observed_value": true
+            },
+            {
+              "clause": "the bucket allows anonymous read must equal true, but is true",
+              "observation_key": "storage.access.public_read",
+              "observed_value": true
+            },
+            {
+              "clause": "the bucket's data-classification tag must equal \"confidential\", but is \"phi\"",
+              "observation_key": "storage.tags.data-classification",
+              "observed_value": "phi"
+            },
+            {
+              "clause": "the bucket's data-classification tag must equal \"phi\", but is \"phi\"",
+              "observation_key": "storage.tags.data-classification",
+              "observed_value": "phi"
+            },
+            {
+              "clause": "the bucket's data-classification tag must equal \"pii\", but is \"phi\"",
+              "observation_key": "storage.tags.data-classification",
+              "observed_value": "phi"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.access.public_list",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.access.public_list to "
+          },
+          {
+            "path": "storage.access.public_read",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.access.public_read to "
+          },
+          {
+            "path": "storage.tags.data-classification",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change storage.tags.data-classification from [SANITIZED]"
+          },
+          {
+            "path": "storage.tags.data-classification",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change storage.tags.data-classification from [SANITIZED]"
+          },
+          {
+            "path": "storage.tags.data-classification",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change storage.tags.data-classification from [SANITIZED]"
+          }
+        ],
+        "command": "Immediately enable S3 Public Access Block (all four settings). Remove bucket policy statements granting access to Principal \"*\". Remove ACL grants to AllUsers or AuthenticatedUsers. Audit CloudTrail logs for unauthorized access during the exposure window."
+      }
     },
     {
       "finding_id": "sha256:5ce777d4af066e45",
@@ -440,7 +542,8 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "Identify the identity-based policy statement granting read access and either remove it, scope it to specific bucket/object ARNs, or add conditions restricting the requesting principal. If a widely-trusted role is the root cause, tighten that role's trust policy first."
       },
       "exposure_score": 200,
       "score_breakdown": {
@@ -459,7 +562,35 @@
           "expected_value": true,
           "observed_value": true
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "public-phi-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.PUBLIC.007",
+          "control_name": "No Public Read via Identity Policy",
+          "severity": "critical",
+          "reasoning": [
+            {
+              "clause": "an IAM identity has read access to the bucket must equal true, but is true",
+              "observation_key": "storage.access.read_via_identity",
+              "observed_value": true
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.access.read_via_identity",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.access.read_via_identity to "
+          }
+        ],
+        "command": "Identify the identity-based policy statement granting read access and either remove it, scope it to specific bucket/object ARNs, or add conditions restricting the requesting principal. If a widely-trusted role is the root cause, tighten that role's trust policy first."
+      }
     },
     {
       "finding_id": "sha256:5d1205a18974cf1c",
@@ -537,7 +668,8 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "Identify the identity-based policy statement granting s3:ListBucket and remove it, scope it to specific bucket ARNs, or add conditions restricting the requesting principal. If a widely-trusted role is the root cause, tighten that role's trust policy first."
       },
       "exposure_score": 200,
       "score_breakdown": {
@@ -556,7 +688,35 @@
           "expected_value": true,
           "observed_value": true
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "public-phi-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.PUBLIC.008",
+          "control_name": "No Public List via Identity Policy",
+          "severity": "critical",
+          "reasoning": [
+            {
+              "clause": "an IAM identity has list access to the bucket must equal true, but is true",
+              "observation_key": "storage.access.list_via_identity",
+              "observed_value": true
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.access.list_via_identity",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.access.list_via_identity to "
+          }
+        ],
+        "command": "Identify the identity-based policy statement granting s3:ListBucket and remove it, scope it to specific bucket ARNs, or add conditions restricting the requesting principal. If a widely-trusted role is the root cause, tighten that role's trust policy first."
+      }
     },
     {
       "finding_id": "sha256:2d804935b823b211",
@@ -634,7 +794,8 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "Remove bucket policy statements that grant s3:ListBucket to Principal \"*\". Remove ACL grants that allow READ to AllUsers. Enable S3 Public Access Block."
       },
       "exposure_score": 150,
       "score_breakdown": {
@@ -653,7 +814,35 @@
           "expected_value": true,
           "observed_value": true
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "public-phi-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.PUBLIC.LIST.001",
+          "control_name": "No Public S3 Bucket Listing",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "the bucket allows anonymous list must equal true, but is true",
+              "observation_key": "storage.access.public_list",
+              "observed_value": true
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.access.public_list",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.access.public_list to "
+          }
+        ],
+        "command": "Remove bucket policy statements that grant s3:ListBucket to Principal \"*\". Remove ACL grants that allow READ to AllUsers. Enable S3 Public Access Block."
+      }
     },
     {
       "finding_id": "sha256:3e039dfc23916f37",
@@ -749,7 +938,8 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "If listing is intentional, add the tag public_list_intended=true to the bucket. Otherwise, remove the policy or ACL granting s3:ListBucket to Principal \"*\" or AllUsers."
       },
       "exposure_score": 150,
       "score_breakdown": {
@@ -787,7 +977,67 @@
           "operator": "ne",
           "expected_value": "true"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "public-phi-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.PUBLIC.LIST.002",
+          "control_name": "Anonymous S3 Listing Must Be Explicitly Intended",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "the bucket allows anonymous list must equal true, but is true",
+              "observation_key": "storage.access.public_list",
+              "observed_value": true
+            },
+            {
+              "clause": "storage.kind must equal \"bucket\", but is \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            },
+            {
+              "clause": "the bucket's public-list-intended tag must be missing (and is)",
+              "observation_key": "storage.tags.public_list_intended"
+            },
+            {
+              "clause": "the bucket's public-list-intended tag must not equal \"true\", but is not set",
+              "observation_key": "storage.tags.public_list_intended"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.access.public_list",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.access.public_list to "
+          },
+          {
+            "path": "storage.kind",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change storage.kind from [SANITIZED]"
+          },
+          {
+            "path": "storage.tags.public_list_intended",
+            "current_value": "[SANITIZED]",
+            "required_value": "present",
+            "has_safe_default": false,
+            "description": "Ensure storage.tags.public_list_intended is present"
+          },
+          {
+            "path": "storage.tags.public_list_intended",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change storage.tags.public_list_intended from [SANITIZED]"
+          }
+        ],
+        "command": "If listing is intentional, add the tag public_list_intended=true to the bucket. Otherwise, remove the policy or ACL granting s3:ListBucket to Principal \"*\" or AllUsers."
+      }
     },
     {
       "finding_id": "sha256:cfc8d5e23f723d4e",
@@ -864,7 +1114,8 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
       },
       "exposure_score": 150,
       "score_breakdown": {
@@ -890,7 +1141,46 @@
           "expected_value": "backups/",
           "observed_value": "backups/"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "private-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.PUBLIC.PREFIX.001",
+          "control_name": "Protected Prefixes Must Not Be Publicly Readable",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "the exposure source must equal \"missing_evidence\", but is \"missing_evidence\"",
+              "observation_key": "exposure_source",
+              "observed_value": "missing_evidence"
+            },
+            {
+              "clause": "the protected prefix must equal \"backups/\", but is \"backups/\"",
+              "observation_key": "protected_prefix",
+              "observed_value": "backups/"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "exposure_source",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change exposure_source from [SANITIZED]"
+          },
+          {
+            "path": "protected_prefix",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change protected_prefix from [SANITIZED]"
+          }
+        ],
+        "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
+      }
     },
     {
       "finding_id": "sha256:cfc8d5e23f723d4e",
@@ -967,7 +1257,8 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
       },
       "exposure_score": 150,
       "score_breakdown": {
@@ -993,7 +1284,46 @@
           "expected_value": "internal/",
           "observed_value": "internal/"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "private-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.PUBLIC.PREFIX.001",
+          "control_name": "Protected Prefixes Must Not Be Publicly Readable",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "the exposure source must equal \"missing_evidence\", but is \"missing_evidence\"",
+              "observation_key": "exposure_source",
+              "observed_value": "missing_evidence"
+            },
+            {
+              "clause": "the protected prefix must equal \"internal/\", but is \"internal/\"",
+              "observation_key": "protected_prefix",
+              "observed_value": "internal/"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "exposure_source",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change exposure_source from [SANITIZED]"
+          },
+          {
+            "path": "protected_prefix",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change protected_prefix from [SANITIZED]"
+          }
+        ],
+        "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
+      }
     },
     {
       "finding_id": "sha256:cfc8d5e23f723d4e",
@@ -1070,7 +1400,8 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
       },
       "exposure_score": 150,
       "score_breakdown": {
@@ -1096,7 +1427,46 @@
           "expected_value": "invoices/",
           "observed_value": "invoices/"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "private-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.PUBLIC.PREFIX.001",
+          "control_name": "Protected Prefixes Must Not Be Publicly Readable",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "the exposure source must equal \"missing_evidence\", but is \"missing_evidence\"",
+              "observation_key": "exposure_source",
+              "observed_value": "missing_evidence"
+            },
+            {
+              "clause": "the protected prefix must equal \"invoices/\", but is \"invoices/\"",
+              "observation_key": "protected_prefix",
+              "observed_value": "invoices/"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "exposure_source",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change exposure_source from [SANITIZED]"
+          },
+          {
+            "path": "protected_prefix",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change protected_prefix from [SANITIZED]"
+          }
+        ],
+        "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
+      }
     },
     {
       "finding_id": "sha256:cfc8d5e23f723d4e",
@@ -1173,7 +1543,8 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
       },
       "exposure_score": 150,
       "score_breakdown": {
@@ -1199,7 +1570,46 @@
           "expected_value": "secrets/",
           "observed_value": "secrets/"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "private-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.PUBLIC.PREFIX.001",
+          "control_name": "Protected Prefixes Must Not Be Publicly Readable",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "the exposure source must equal \"missing_evidence\", but is \"missing_evidence\"",
+              "observation_key": "exposure_source",
+              "observed_value": "missing_evidence"
+            },
+            {
+              "clause": "the protected prefix must equal \"secrets/\", but is \"secrets/\"",
+              "observation_key": "protected_prefix",
+              "observed_value": "secrets/"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "exposure_source",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change exposure_source from [SANITIZED]"
+          },
+          {
+            "path": "protected_prefix",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change protected_prefix from [SANITIZED]"
+          }
+        ],
+        "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
+      }
     },
     {
       "finding_id": "sha256:d94d878f0d5908e3",
@@ -1276,7 +1686,8 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
       },
       "exposure_score": 150,
       "score_breakdown": {
@@ -1302,7 +1713,46 @@
           "expected_value": "backups/",
           "observed_value": "backups/"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "public-phi-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.PUBLIC.PREFIX.001",
+          "control_name": "Protected Prefixes Must Not Be Publicly Readable",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "the exposure source must equal \"missing_evidence\", but is \"missing_evidence\"",
+              "observation_key": "exposure_source",
+              "observed_value": "missing_evidence"
+            },
+            {
+              "clause": "the protected prefix must equal \"backups/\", but is \"backups/\"",
+              "observation_key": "protected_prefix",
+              "observed_value": "backups/"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "exposure_source",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change exposure_source from [SANITIZED]"
+          },
+          {
+            "path": "protected_prefix",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change protected_prefix from [SANITIZED]"
+          }
+        ],
+        "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
+      }
     },
     {
       "finding_id": "sha256:d94d878f0d5908e3",
@@ -1379,7 +1829,8 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
       },
       "exposure_score": 150,
       "score_breakdown": {
@@ -1405,7 +1856,46 @@
           "expected_value": "internal/",
           "observed_value": "internal/"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "public-phi-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.PUBLIC.PREFIX.001",
+          "control_name": "Protected Prefixes Must Not Be Publicly Readable",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "the exposure source must equal \"missing_evidence\", but is \"missing_evidence\"",
+              "observation_key": "exposure_source",
+              "observed_value": "missing_evidence"
+            },
+            {
+              "clause": "the protected prefix must equal \"internal/\", but is \"internal/\"",
+              "observation_key": "protected_prefix",
+              "observed_value": "internal/"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "exposure_source",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change exposure_source from [SANITIZED]"
+          },
+          {
+            "path": "protected_prefix",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change protected_prefix from [SANITIZED]"
+          }
+        ],
+        "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
+      }
     },
     {
       "finding_id": "sha256:d94d878f0d5908e3",
@@ -1482,7 +1972,8 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
       },
       "exposure_score": 150,
       "score_breakdown": {
@@ -1508,7 +1999,46 @@
           "expected_value": "invoices/",
           "observed_value": "invoices/"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "public-phi-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.PUBLIC.PREFIX.001",
+          "control_name": "Protected Prefixes Must Not Be Publicly Readable",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "the exposure source must equal \"missing_evidence\", but is \"missing_evidence\"",
+              "observation_key": "exposure_source",
+              "observed_value": "missing_evidence"
+            },
+            {
+              "clause": "the protected prefix must equal \"invoices/\", but is \"invoices/\"",
+              "observation_key": "protected_prefix",
+              "observed_value": "invoices/"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "exposure_source",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change exposure_source from [SANITIZED]"
+          },
+          {
+            "path": "protected_prefix",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change protected_prefix from [SANITIZED]"
+          }
+        ],
+        "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
+      }
     },
     {
       "finding_id": "sha256:d94d878f0d5908e3",
@@ -1585,7 +2115,8 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
       },
       "exposure_score": 150,
       "score_breakdown": {
@@ -1611,7 +2142,46 @@
           "expected_value": "secrets/",
           "observed_value": "secrets/"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "public-phi-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.PUBLIC.PREFIX.001",
+          "control_name": "Protected Prefixes Must Not Be Publicly Readable",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "the exposure source must equal \"missing_evidence\", but is \"missing_evidence\"",
+              "observation_key": "exposure_source",
+              "observed_value": "missing_evidence"
+            },
+            {
+              "clause": "the protected prefix must equal \"secrets/\", but is \"secrets/\"",
+              "observation_key": "protected_prefix",
+              "observed_value": "secrets/"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "exposure_source",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change exposure_source from [SANITIZED]"
+          },
+          {
+            "path": "protected_prefix",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change protected_prefix from [SANITIZED]"
+          }
+        ],
+        "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
+      }
     },
     {
       "finding_id": "sha256:583ae8ba1a6a68ff",
@@ -1672,6 +2242,14 @@
         "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets.",
         "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"controls\": {\n      \"public_access_fully_blocked\": true\n    }\n  }\n}\n"
       },
+      "fix_plan": {
+        "id": "fix-e80ea979b508da8c",
+        "target": {
+          "asset_id": "public-phi-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
+      },
       "exposure_score": 75,
       "score_breakdown": {
         "base_score": 75,
@@ -1696,7 +2274,46 @@
           "expected_value": "bucket",
           "observed_value": "bucket"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "public-phi-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.CONTROLS.001",
+          "control_name": "Public Access Block Must Be Enabled",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "all four Public Access Block flags are enabled must equal false, but is false",
+              "observation_key": "storage.controls.public_access_fully_blocked",
+              "observed_value": false
+            },
+            {
+              "clause": "storage.kind must equal \"bucket\", but is \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.controls.public_access_fully_blocked",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.controls.public_access_fully_blocked to "
+          },
+          {
+            "path": "storage.kind",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change storage.kind from [SANITIZED]"
+          }
+        ],
+        "command": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
+      }
     },
     {
       "finding_id": "sha256:04376e057daa240f",
@@ -1747,6 +2364,14 @@
         "action": "Add a data-classification tag to the bucket with an appropriate value (e.g., phi, pii, confidential, internal, public, non-sensitive). Update your tagging policy to require this tag on all S3 buckets.",
         "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"tags\": {\n      \"data-classification\": \"internal\"\n    }\n  }\n}\n"
       },
+      "fix_plan": {
+        "id": "fix-50a3325077dca86e",
+        "target": {
+          "asset_id": "private-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Add a data-classification tag to the bucket with an appropriate value (e.g., phi, pii, confidential, internal, public, non-sensitive). Update your tagging policy to require this tag on all S3 buckets."
+      },
       "exposure_score": 25,
       "score_breakdown": {
         "base_score": 25,
@@ -1770,7 +2395,46 @@
           "operator": "missing",
           "expected_value": true
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "private-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.GOVERNANCE.001",
+          "control_name": "Data Classification Tag Required",
+          "severity": "low",
+          "reasoning": [
+            {
+              "clause": "storage.kind must equal \"bucket\", but is \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            },
+            {
+              "clause": "the bucket's data-classification tag must be missing (and is)",
+              "observation_key": "storage.tags.data-classification"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.kind",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change storage.kind from [SANITIZED]"
+          },
+          {
+            "path": "storage.tags.data-classification",
+            "current_value": "[SANITIZED]",
+            "required_value": "present",
+            "has_safe_default": false,
+            "description": "Ensure storage.tags.data-classification is present"
+          }
+        ],
+        "command": "Add a data-classification tag to the bucket with an appropriate value (e.g., phi, pii, confidential, internal, public, non-sensitive). Update your tagging policy to require this tag on all S3 buckets."
+      }
     }
   ],
   "issues": [
@@ -1867,6 +2531,22 @@
       "asset_id": "private-bucket",
       "asset_type": "aws_s3_bucket",
       "fix_plan": {
+        "id": "fix-50a3325077dca86e",
+        "target": {
+          "asset_id": "private-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Add a data-classification tag to the bucket with an appropriate value (e.g., phi, pii, confidential, internal, public, non-sensitive). Update your tagging policy to require this tag on all S3 buckets."
+      },
+      "contributing_controls": [
+        "CTL.S3.GOVERNANCE.001"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "private-bucket",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
         "id": "fix-ddeb6cdb0d875ed0",
         "target": {
           "asset_id": "private-bucket",
@@ -1898,7 +2578,8 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
       },
       "contributing_controls": [
         "CTL.S3.PUBLIC.PREFIX.001"
@@ -1940,7 +2621,8 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
       },
       "contributing_controls": [
         "CTL.S3.PUBLIC.001",
@@ -1952,6 +2634,22 @@
         "CTL.S3.PUBLIC.PREFIX.001"
       ],
       "finding_count": 10
+    },
+    {
+      "asset_id": "public-phi-bucket",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-e80ea979b508da8c",
+        "target": {
+          "asset_id": "public-phi-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
+      },
+      "contributing_controls": [
+        "CTL.S3.CONTROLS.001"
+      ],
+      "finding_count": 1
     }
   ],
   "top_exposures": [
@@ -2205,7 +2903,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "c1c45531ee9c4f709d5c08d5f98701a6ebb54603",
+      "head_commit": "339115f57a19490ec07e549efaaf605795eb78bc",
       "dirty": false
     }
   }

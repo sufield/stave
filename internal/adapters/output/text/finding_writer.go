@@ -11,6 +11,7 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/core/translation"
 	"github.com/sufield/stave/internal/env"
 	"github.com/sufield/stave/internal/platform/crypto"
 )
@@ -332,16 +333,23 @@ func lookupControlForFindingID(findings []evaluation.Finding, fid string) (strin
 
 // writeFindingReasoning renders the inline reasoning trace — the
 // predicate clauses the engine evaluated and the observed values it
-// saw. Surface delivers docs/product/metrics.md § Metric 3's inline-
-// trace target. Silent when the finding has no backing predicate
-// (e.g., compound-chain findings with no extractable clauses).
+// saw — translated into plain English per
+// docs/product/metrics.md § Metric 5. Silent when the finding has
+// no backing predicate (e.g., compound-chain findings with no
+// extractable clauses). JSON and SARIF output retain the raw DSL
+// shape; prose is a text-writer concern.
 func writeFindingReasoning(d *drawer, f *remediation.Finding) {
 	if len(f.ReasoningTrace) == 0 {
 		return
 	}
 	d.f("   Reasoning:\n")
 	for _, mc := range f.ReasoningTrace {
-		d.f("     %s (observed: %v)\n", mc.PredicateExpr, mc.ObservedValue)
+		d.f("     %s\n", translation.RenderClause(translation.Clause{
+			ObservationKey: mc.ObservationKey,
+			Operator:       mc.Operator,
+			ExpectedValue:  mc.ExpectedValue,
+			ObservedValue:  mc.ObservedValue,
+		}, translation.DefaultFieldRegistry))
 	}
 }
 

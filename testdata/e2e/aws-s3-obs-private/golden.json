@@ -104,7 +104,8 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
       },
       "exposure_score": 150,
       "score_breakdown": {
@@ -130,7 +131,46 @@
           "expected_value": "backups/",
           "observed_value": "backups/"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "private-test-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.PUBLIC.PREFIX.001",
+          "control_name": "Protected Prefixes Must Not Be Publicly Readable",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "the exposure source must equal \"missing_evidence\", but is \"missing_evidence\"",
+              "observation_key": "exposure_source",
+              "observed_value": "missing_evidence"
+            },
+            {
+              "clause": "the protected prefix must equal \"backups/\", but is \"backups/\"",
+              "observation_key": "protected_prefix",
+              "observed_value": "backups/"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "exposure_source",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change exposure_source from [SANITIZED]"
+          },
+          {
+            "path": "protected_prefix",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change protected_prefix from [SANITIZED]"
+          }
+        ],
+        "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
+      }
     },
     {
       "finding_id": "sha256:f7c61bb76d54d7f0",
@@ -207,7 +247,8 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
       },
       "exposure_score": 150,
       "score_breakdown": {
@@ -233,7 +274,46 @@
           "expected_value": "internal/",
           "observed_value": "internal/"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "private-test-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.PUBLIC.PREFIX.001",
+          "control_name": "Protected Prefixes Must Not Be Publicly Readable",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "the exposure source must equal \"missing_evidence\", but is \"missing_evidence\"",
+              "observation_key": "exposure_source",
+              "observed_value": "missing_evidence"
+            },
+            {
+              "clause": "the protected prefix must equal \"internal/\", but is \"internal/\"",
+              "observation_key": "protected_prefix",
+              "observed_value": "internal/"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "exposure_source",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change exposure_source from [SANITIZED]"
+          },
+          {
+            "path": "protected_prefix",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change protected_prefix from [SANITIZED]"
+          }
+        ],
+        "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
+      }
     },
     {
       "finding_id": "sha256:f7c61bb76d54d7f0",
@@ -310,7 +390,8 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
       },
       "exposure_score": 150,
       "score_breakdown": {
@@ -336,7 +417,46 @@
           "expected_value": "invoices/",
           "observed_value": "invoices/"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "private-test-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.PUBLIC.PREFIX.001",
+          "control_name": "Protected Prefixes Must Not Be Publicly Readable",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "the exposure source must equal \"missing_evidence\", but is \"missing_evidence\"",
+              "observation_key": "exposure_source",
+              "observed_value": "missing_evidence"
+            },
+            {
+              "clause": "the protected prefix must equal \"invoices/\", but is \"invoices/\"",
+              "observation_key": "protected_prefix",
+              "observed_value": "invoices/"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "exposure_source",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change exposure_source from [SANITIZED]"
+          },
+          {
+            "path": "protected_prefix",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change protected_prefix from [SANITIZED]"
+          }
+        ],
+        "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
+      }
     },
     {
       "finding_id": "sha256:f7c61bb76d54d7f0",
@@ -413,7 +533,8 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
       },
       "exposure_score": 150,
       "score_breakdown": {
@@ -439,7 +560,46 @@
           "expected_value": "secrets/",
           "observed_value": "secrets/"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "private-test-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.PUBLIC.PREFIX.001",
+          "control_name": "Protected Prefixes Must Not Be Publicly Readable",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "the exposure source must equal \"missing_evidence\", but is \"missing_evidence\"",
+              "observation_key": "exposure_source",
+              "observed_value": "missing_evidence"
+            },
+            {
+              "clause": "the protected prefix must equal \"secrets/\", but is \"secrets/\"",
+              "observation_key": "protected_prefix",
+              "observed_value": "secrets/"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "exposure_source",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change exposure_source from [SANITIZED]"
+          },
+          {
+            "path": "protected_prefix",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change protected_prefix from [SANITIZED]"
+          }
+        ],
+        "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
+      }
     },
     {
       "finding_id": "sha256:3db4f35a105643f4",
@@ -499,6 +659,14 @@
         "action": "Set Object Ownership to BucketOwnerEnforced using aws s3api put-bucket-ownership-controls. This disables all ACLs on the bucket. Before enabling, audit existing ACL grants and migrate any legitimate access to bucket policies or IAM policies. All existing ACL-based access will stop working once BucketOwnerEnforced is set.",
         "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"object_ownership\": {\n      \"rule\": \"BucketOwnerEnforced\"\n    }\n  }\n}\n"
       },
+      "fix_plan": {
+        "id": "fix-dd2d4de0f87b8e47",
+        "target": {
+          "asset_id": "private-test-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Set Object Ownership to BucketOwnerEnforced using aws s3api put-bucket-ownership-controls. This disables all ACLs on the bucket. Before enabling, audit existing ACL grants and migrate any legitimate access to bucket policies or IAM policies. All existing ACL-based access will stop working once BucketOwnerEnforced is set."
+      },
       "exposure_score": 75,
       "score_breakdown": {
         "base_score": 75,
@@ -528,7 +696,56 @@
           "operator": "ne",
           "expected_value": "BucketOwnerEnforced"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "private-test-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.OWNERSHIP.001",
+          "control_name": "S3 Object Ownership Must Be Bucket Owner Enforced",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "storage.kind must equal \"bucket\", but is \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            },
+            {
+              "clause": "the Object Ownership rule must be missing (and is)",
+              "observation_key": "storage.object_ownership.rule"
+            },
+            {
+              "clause": "the Object Ownership rule must not equal \"BucketOwnerEnforced\", but is not set",
+              "observation_key": "storage.object_ownership.rule"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.kind",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change storage.kind from [SANITIZED]"
+          },
+          {
+            "path": "storage.object_ownership.rule",
+            "current_value": "[SANITIZED]",
+            "required_value": "present",
+            "has_safe_default": false,
+            "description": "Ensure storage.object_ownership.rule is present"
+          },
+          {
+            "path": "storage.object_ownership.rule",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change storage.object_ownership.rule from [SANITIZED]"
+          }
+        ],
+        "command": "Set Object Ownership to BucketOwnerEnforced using aws s3api put-bucket-ownership-controls. This disables all ACLs on the bucket. Before enabling, audit existing ACL grants and migrate any legitimate access to bucket policies or IAM policies. All existing ACL-based access will stop working once BucketOwnerEnforced is set."
+      }
     }
   ],
   "issues": [
@@ -600,12 +817,29 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
       },
       "contributing_controls": [
         "CTL.S3.PUBLIC.PREFIX.001"
       ],
       "finding_count": 4
+    },
+    {
+      "asset_id": "private-test-bucket",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-dd2d4de0f87b8e47",
+        "target": {
+          "asset_id": "private-test-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Set Object Ownership to BucketOwnerEnforced using aws s3api put-bucket-ownership-controls. This disables all ACLs on the bucket. Before enabling, audit existing ACL grants and migrate any legitimate access to bucket policies or IAM policies. All existing ACL-based access will stop working once BucketOwnerEnforced is set."
+      },
+      "contributing_controls": [
+        "CTL.S3.OWNERSHIP.001"
+      ],
+      "finding_count": 1
     }
   ],
   "top_exposures": [

@@ -13,6 +13,7 @@ type RemediationPlanDTO struct {
 	Preconditions  []string               `json:"preconditions,omitempty"`
 	Actions        []RemediationActionDTO `json:"actions,omitempty"`
 	ExpectedEffect string                 `json:"expected_effect,omitempty"`
+	Command        string                 `json:"command,omitempty"`
 }
 
 // RemediationTargetDTO mirrors evaluation.RemediationTarget.

@@ -86,6 +86,14 @@
         "action": "Remove bucket policy statements granting s3:PutObject, s3:DeleteObject, or s3:PutBucketPolicy to external accounts. If cross-account write is required, restrict to specific account IDs with condition keys.",
         "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"access\": {\n      \"has_external_write\": false\n    }\n  }\n}\n"
       },
+      "fix_plan": {
+        "id": "fix-b8a640881f91a050",
+        "target": {
+          "asset_id": "shared-upload-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Remove bucket policy statements granting s3:PutObject, s3:DeleteObject, or s3:PutBucketPolicy to external accounts. If cross-account write is required, restrict to specific account IDs with condition keys."
+      },
       "exposure_score": 75,
       "score_breakdown": {
         "base_score": 75,
@@ -110,7 +118,46 @@
           "expected_value": "bucket",
           "observed_value": "bucket"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "shared-upload-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.ACCESS.003",
+          "control_name": "No External Write Access",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "the bucket grants write to an external account must equal true, but is true",
+              "observation_key": "storage.access.has_external_write",
+              "observed_value": true
+            },
+            {
+              "clause": "storage.kind must equal \"bucket\", but is \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.access.has_external_write",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.access.has_external_write to "
+          },
+          {
+            "path": "storage.kind",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change storage.kind from [SANITIZED]"
+          }
+        ],
+        "command": "Remove bucket policy statements granting s3:PutObject, s3:DeleteObject, or s3:PutBucketPolicy to external accounts. If cross-account write is required, restrict to specific account IDs with condition keys."
+      }
     }
   ],
   "issues": [
@@ -127,6 +174,24 @@
       ],
       "consolidated_score": 75,
       "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "shared-upload-bucket",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-b8a640881f91a050",
+        "target": {
+          "asset_id": "shared-upload-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Remove bucket policy statements granting s3:PutObject, s3:DeleteObject, or s3:PutBucketPolicy to external accounts. If cross-account write is required, restrict to specific account IDs with condition keys."
+      },
+      "contributing_controls": [
+        "CTL.S3.ACCESS.003"
+      ],
+      "finding_count": 1
     }
   ],
   "top_exposures": [
@@ -155,7 +220,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "c1c45531ee9c4f709d5c08d5f98701a6ebb54603",
+      "head_commit": "339115f57a19490ec07e549efaaf605795eb78bc",
       "dirty": false
     }
   }

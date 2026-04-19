@@ -99,6 +99,14 @@
         "action": "Replace the bucket ACL with \"BucketOwnerFullControl\" or remove the FULL_CONTROL grant to public groups. Enable S3 Public Access Block with BlockPublicAcls and IgnorePublicAcls set to true.",
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"has_full_control_public\": false,\n      \"has_full_control_authenticated\": false\n    }\n  }\n}\n"
       },
+      "fix_plan": {
+        "id": "fix-8580f09c6e867c3a",
+        "target": {
+          "asset_id": "fullcontrol-auth-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Replace the bucket ACL with \"BucketOwnerFullControl\" or remove the FULL_CONTROL grant to public groups. Enable S3 Public Access Block with BlockPublicAcls and IgnorePublicAcls set to true."
+      },
       "exposure_score": 200,
       "score_breakdown": {
         "base_score": 100,
@@ -123,7 +131,46 @@
           "expected_value": true,
           "observed_value": false
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "fullcontrol-auth-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.ACL.FULLCONTROL.001",
+          "control_name": "No FULL_CONTROL ACL Grants to Public",
+          "severity": "critical",
+          "reasoning": [
+            {
+              "clause": "the bucket grants FULL_CONTROL to AuthenticatedUsers must equal true, but is true",
+              "observation_key": "storage.access.has_full_control_authenticated",
+              "observed_value": true
+            },
+            {
+              "clause": "the bucket grants FULL_CONTROL to AllUsers must equal true, but is false",
+              "observation_key": "storage.access.has_full_control_public",
+              "observed_value": false
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.access.has_full_control_authenticated",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.access.has_full_control_authenticated to "
+          },
+          {
+            "path": "storage.access.has_full_control_public",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.access.has_full_control_public to "
+          }
+        ],
+        "command": "Replace the bucket ACL with \"BucketOwnerFullControl\" or remove the FULL_CONTROL grant to public groups. Enable S3 Public Access Block with BlockPublicAcls and IgnorePublicAcls set to true."
+      }
     },
     {
       "finding_id": "sha256:e1ee3d00f05f9f46",
@@ -178,6 +225,14 @@
         "action": "Replace the bucket ACL with \"BucketOwnerFullControl\" or remove the FULL_CONTROL grant to public groups. Enable S3 Public Access Block with BlockPublicAcls and IgnorePublicAcls set to true.",
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"has_full_control_public\": false,\n      \"has_full_control_authenticated\": false\n    }\n  }\n}\n"
       },
+      "fix_plan": {
+        "id": "fix-7df90071dcb017e9",
+        "target": {
+          "asset_id": "fullcontrol-public-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Replace the bucket ACL with \"BucketOwnerFullControl\" or remove the FULL_CONTROL grant to public groups. Enable S3 Public Access Block with BlockPublicAcls and IgnorePublicAcls set to true."
+      },
       "exposure_score": 200,
       "score_breakdown": {
         "base_score": 100,
@@ -202,7 +257,46 @@
           "expected_value": true,
           "observed_value": true
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "fullcontrol-public-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.ACL.FULLCONTROL.001",
+          "control_name": "No FULL_CONTROL ACL Grants to Public",
+          "severity": "critical",
+          "reasoning": [
+            {
+              "clause": "the bucket grants FULL_CONTROL to AuthenticatedUsers must equal true, but is false",
+              "observation_key": "storage.access.has_full_control_authenticated",
+              "observed_value": false
+            },
+            {
+              "clause": "the bucket grants FULL_CONTROL to AllUsers must equal true, but is true",
+              "observation_key": "storage.access.has_full_control_public",
+              "observed_value": true
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.access.has_full_control_authenticated",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.access.has_full_control_authenticated to "
+          },
+          {
+            "path": "storage.access.has_full_control_public",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.access.has_full_control_public to "
+          }
+        ],
+        "command": "Replace the bucket ACL with \"BucketOwnerFullControl\" or remove the FULL_CONTROL grant to public groups. Enable S3 Public Access Block with BlockPublicAcls and IgnorePublicAcls set to true."
+      }
     }
   ],
   "issues": [
@@ -235,6 +329,40 @@
       ],
       "consolidated_score": 200,
       "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "fullcontrol-auth-bucket",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-8580f09c6e867c3a",
+        "target": {
+          "asset_id": "fullcontrol-auth-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Replace the bucket ACL with \"BucketOwnerFullControl\" or remove the FULL_CONTROL grant to public groups. Enable S3 Public Access Block with BlockPublicAcls and IgnorePublicAcls set to true."
+      },
+      "contributing_controls": [
+        "CTL.S3.ACL.FULLCONTROL.001"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "fullcontrol-public-bucket",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-7df90071dcb017e9",
+        "target": {
+          "asset_id": "fullcontrol-public-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Replace the bucket ACL with \"BucketOwnerFullControl\" or remove the FULL_CONTROL grant to public groups. Enable S3 Public Access Block with BlockPublicAcls and IgnorePublicAcls set to true."
+      },
+      "contributing_controls": [
+        "CTL.S3.ACL.FULLCONTROL.001"
+      ],
+      "finding_count": 1
     }
   ],
   "top_exposures": [
@@ -278,7 +406,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "c1c45531ee9c4f709d5c08d5f98701a6ebb54603",
+      "head_commit": "339115f57a19490ec07e549efaaf605795eb78bc",
       "dirty": false
     }
   }

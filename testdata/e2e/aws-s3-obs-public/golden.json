@@ -196,7 +196,8 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
       },
       "exposure_score": 200,
       "score_breakdown": {
@@ -215,7 +216,35 @@
           "expected_value": true,
           "observed_value": true
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "public-test-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.PUBLIC.001",
+          "control_name": "No Public S3 Bucket Read",
+          "severity": "critical",
+          "reasoning": [
+            {
+              "clause": "the bucket allows anonymous read must equal true, but is true",
+              "observation_key": "storage.access.public_read",
+              "observed_value": true
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.access.public_read",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.access.public_read to "
+          }
+        ],
+        "command": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
+      }
     },
     {
       "finding_id": "sha256:3ce8171b2640244e",
@@ -292,7 +321,8 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
       },
       "exposure_score": 150,
       "score_breakdown": {
@@ -318,7 +348,46 @@
           "expected_value": "backups/",
           "observed_value": "backups/"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "public-test-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.PUBLIC.PREFIX.001",
+          "control_name": "Protected Prefixes Must Not Be Publicly Readable",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "the exposure source must equal \"missing_evidence\", but is \"missing_evidence\"",
+              "observation_key": "exposure_source",
+              "observed_value": "missing_evidence"
+            },
+            {
+              "clause": "the protected prefix must equal \"backups/\", but is \"backups/\"",
+              "observation_key": "protected_prefix",
+              "observed_value": "backups/"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "exposure_source",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change exposure_source from [SANITIZED]"
+          },
+          {
+            "path": "protected_prefix",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change protected_prefix from [SANITIZED]"
+          }
+        ],
+        "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
+      }
     },
     {
       "finding_id": "sha256:3ce8171b2640244e",
@@ -395,7 +464,8 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
       },
       "exposure_score": 150,
       "score_breakdown": {
@@ -421,7 +491,46 @@
           "expected_value": "internal/",
           "observed_value": "internal/"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "public-test-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.PUBLIC.PREFIX.001",
+          "control_name": "Protected Prefixes Must Not Be Publicly Readable",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "the exposure source must equal \"missing_evidence\", but is \"missing_evidence\"",
+              "observation_key": "exposure_source",
+              "observed_value": "missing_evidence"
+            },
+            {
+              "clause": "the protected prefix must equal \"internal/\", but is \"internal/\"",
+              "observation_key": "protected_prefix",
+              "observed_value": "internal/"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "exposure_source",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change exposure_source from [SANITIZED]"
+          },
+          {
+            "path": "protected_prefix",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change protected_prefix from [SANITIZED]"
+          }
+        ],
+        "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
+      }
     },
     {
       "finding_id": "sha256:3ce8171b2640244e",
@@ -498,7 +607,8 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
       },
       "exposure_score": 150,
       "score_breakdown": {
@@ -524,7 +634,46 @@
           "expected_value": "invoices/",
           "observed_value": "invoices/"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "public-test-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.PUBLIC.PREFIX.001",
+          "control_name": "Protected Prefixes Must Not Be Publicly Readable",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "the exposure source must equal \"missing_evidence\", but is \"missing_evidence\"",
+              "observation_key": "exposure_source",
+              "observed_value": "missing_evidence"
+            },
+            {
+              "clause": "the protected prefix must equal \"invoices/\", but is \"invoices/\"",
+              "observation_key": "protected_prefix",
+              "observed_value": "invoices/"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "exposure_source",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change exposure_source from [SANITIZED]"
+          },
+          {
+            "path": "protected_prefix",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change protected_prefix from [SANITIZED]"
+          }
+        ],
+        "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
+      }
     },
     {
       "finding_id": "sha256:3ce8171b2640244e",
@@ -601,7 +750,8 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
       },
       "exposure_score": 150,
       "score_breakdown": {
@@ -627,7 +777,46 @@
           "expected_value": "secrets/",
           "observed_value": "secrets/"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "public-test-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.PUBLIC.PREFIX.001",
+          "control_name": "Protected Prefixes Must Not Be Publicly Readable",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "the exposure source must equal \"missing_evidence\", but is \"missing_evidence\"",
+              "observation_key": "exposure_source",
+              "observed_value": "missing_evidence"
+            },
+            {
+              "clause": "the protected prefix must equal \"secrets/\", but is \"secrets/\"",
+              "observation_key": "protected_prefix",
+              "observed_value": "secrets/"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "exposure_source",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change exposure_source from [SANITIZED]"
+          },
+          {
+            "path": "protected_prefix",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change protected_prefix from [SANITIZED]"
+          }
+        ],
+        "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
+      }
     },
     {
       "finding_id": "sha256:c600c7fe517e8f5d",
@@ -682,6 +871,14 @@
         "action": "Enable all four S3 Block Public Access settings at the account level using aws s3control put-public-access-block with the --account-id parameter. This blocks public access for all current and future buckets in the account. If specific buckets require public access, use CloudFront with Origin Access Control instead of making buckets directly public.",
         "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"controls\": {\n      \"account_public_access_fully_blocked\": true,\n      \"public_access_fully_blocked\": true\n    }\n  }\n}\n"
       },
+      "fix_plan": {
+        "id": "fix-6c6bf4529bfb9ec9",
+        "target": {
+          "asset_id": "public-test-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Enable all four S3 Block Public Access settings at the account level using aws s3control put-public-access-block with the --account-id parameter. This blocks public access for all current and future buckets in the account. If specific buckets require public access, use CloudFront with Origin Access Control instead of making buckets directly public."
+      },
       "exposure_score": 75,
       "score_breakdown": {
         "base_score": 75,
@@ -706,7 +903,46 @@
           "expected_value": "bucket",
           "observed_value": "bucket"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "public-test-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.ACCOUNT.PAB.001",
+          "control_name": "Account-Level Block Public Access Must Be Enabled",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "all four account-level Public Access Block flags are enabled must equal false, but is false",
+              "observation_key": "storage.controls.account_public_access_fully_blocked",
+              "observed_value": false
+            },
+            {
+              "clause": "storage.kind must equal \"bucket\", but is \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.controls.account_public_access_fully_blocked",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.controls.account_public_access_fully_blocked to "
+          },
+          {
+            "path": "storage.kind",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change storage.kind from [SANITIZED]"
+          }
+        ],
+        "command": "Enable all four S3 Block Public Access settings at the account level using aws s3control put-public-access-block with the --account-id parameter. This blocks public access for all current and future buckets in the account. If specific buckets require public access, use CloudFront with Origin Access Control instead of making buckets directly public."
+      }
     },
     {
       "finding_id": "sha256:8df0e432ac4c38e4",
@@ -763,6 +999,14 @@
         "action": "Enable MFA Delete (requires root credentials): aws s3api put-bucket-versioning --bucket \u003cname\u003e --versioning-configuration Status=Enabled,MFADelete=Enabled --mfa \"arn:aws:iam::\u003caccount\u003e:mfa/root-account-mfa-device \u003ccode\u003e\"",
         "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"versioning\": {\n      \"enabled\": true,\n      \"mfa_delete_enabled\": true\n    }\n  }\n}\n"
       },
+      "fix_plan": {
+        "id": "fix-6c6bf4529bfb9ec9",
+        "target": {
+          "asset_id": "public-test-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Enable MFA Delete (requires root credentials): aws s3api put-bucket-versioning --bucket public-test-bucket --versioning-configuration Status=Enabled,MFADelete=Enabled --mfa \"arn:aws:iam::\u003caccount\u003e:mfa/root-account-mfa-device \u003ccode\u003e\""
+      },
       "exposure_score": 75,
       "score_breakdown": {
         "base_score": 75,
@@ -794,7 +1038,57 @@
           "expected_value": false,
           "observed_value": false
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "public-test-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.MFADELETE.001",
+          "control_name": "MFA Delete Must Be Enabled on S3 Buckets",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "storage.kind must equal \"bucket\", but is \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            },
+            {
+              "clause": "versioning is enabled must equal true, but is true",
+              "observation_key": "storage.versioning.enabled",
+              "observed_value": true
+            },
+            {
+              "clause": "MFA Delete is enabled must equal false, but is false",
+              "observation_key": "storage.versioning.mfa_delete_enabled",
+              "observed_value": false
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.kind",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change storage.kind from [SANITIZED]"
+          },
+          {
+            "path": "storage.versioning.enabled",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.versioning.enabled to "
+          },
+          {
+            "path": "storage.versioning.mfa_delete_enabled",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.versioning.mfa_delete_enabled to "
+          }
+        ],
+        "command": "Enable MFA Delete (requires root credentials): aws s3api put-bucket-versioning --bucket public-test-bucket --versioning-configuration Status=Enabled,MFADelete=Enabled --mfa \"arn:aws:iam::\u003caccount\u003e:mfa/root-account-mfa-device \u003ccode\u003e\""
+      }
     },
     {
       "finding_id": "sha256:4deaa2ba101afbc5",
@@ -851,6 +1145,14 @@
         "action": "Add a VPC gateway endpoint for S3 and route bucket traffic through it, or add an IP condition (aws:SourceIp) to the bucket policy to restrict access to known CIDR ranges.",
         "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"access\": {\n      \"has_vpc_condition\": true,\n      \"has_ip_condition\": false\n    }\n  }\n}\n"
       },
+      "fix_plan": {
+        "id": "fix-6c6bf4529bfb9ec9",
+        "target": {
+          "asset_id": "public-test-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Add a VPC gateway endpoint for S3 and route bucket traffic through it, or add an IP condition (aws:SourceIp) to the bucket policy to restrict access to known CIDR ranges."
+      },
       "exposure_score": 75,
       "score_breakdown": {
         "base_score": 75,
@@ -882,7 +1184,57 @@
           "expected_value": "bucket",
           "observed_value": "bucket"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "public-test-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.NETWORK.VPC.001",
+          "control_name": "VPC Endpoint or IP Condition Required",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "an IP-scoping Condition is present (aws:SourceIp with a fixed CIDR) must equal false, but is false",
+              "observation_key": "storage.access.has_ip_condition",
+              "observed_value": false
+            },
+            {
+              "clause": "a VPC-scoping Condition is present (aws:SourceVpc / aws:SourceVpce) must equal false, but is false",
+              "observation_key": "storage.access.has_vpc_condition",
+              "observed_value": false
+            },
+            {
+              "clause": "storage.kind must equal \"bucket\", but is \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.access.has_ip_condition",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.access.has_ip_condition to "
+          },
+          {
+            "path": "storage.access.has_vpc_condition",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.access.has_vpc_condition to "
+          },
+          {
+            "path": "storage.kind",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change storage.kind from [SANITIZED]"
+          }
+        ],
+        "command": "Add a VPC gateway endpoint for S3 and route bucket traffic through it, or add an IP condition (aws:SourceIp) to the bucket policy to restrict access to known CIDR ranges."
+      }
     },
     {
       "finding_id": "sha256:377505bf614ff60b",
@@ -942,6 +1294,14 @@
         "action": "Set Object Ownership to BucketOwnerEnforced using aws s3api put-bucket-ownership-controls. This disables all ACLs on the bucket. Before enabling, audit existing ACL grants and migrate any legitimate access to bucket policies or IAM policies. All existing ACL-based access will stop working once BucketOwnerEnforced is set.",
         "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"object_ownership\": {\n      \"rule\": \"BucketOwnerEnforced\"\n    }\n  }\n}\n"
       },
+      "fix_plan": {
+        "id": "fix-6c6bf4529bfb9ec9",
+        "target": {
+          "asset_id": "public-test-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Set Object Ownership to BucketOwnerEnforced using aws s3api put-bucket-ownership-controls. This disables all ACLs on the bucket. Before enabling, audit existing ACL grants and migrate any legitimate access to bucket policies or IAM policies. All existing ACL-based access will stop working once BucketOwnerEnforced is set."
+      },
       "exposure_score": 75,
       "score_breakdown": {
         "base_score": 75,
@@ -971,7 +1331,56 @@
           "operator": "ne",
           "expected_value": "BucketOwnerEnforced"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "public-test-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.OWNERSHIP.001",
+          "control_name": "S3 Object Ownership Must Be Bucket Owner Enforced",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "storage.kind must equal \"bucket\", but is \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            },
+            {
+              "clause": "the Object Ownership rule must be missing (and is)",
+              "observation_key": "storage.object_ownership.rule"
+            },
+            {
+              "clause": "the Object Ownership rule must not equal \"BucketOwnerEnforced\", but is not set",
+              "observation_key": "storage.object_ownership.rule"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.kind",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change storage.kind from [SANITIZED]"
+          },
+          {
+            "path": "storage.object_ownership.rule",
+            "current_value": "[SANITIZED]",
+            "required_value": "present",
+            "has_safe_default": false,
+            "description": "Ensure storage.object_ownership.rule is present"
+          },
+          {
+            "path": "storage.object_ownership.rule",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change storage.object_ownership.rule from [SANITIZED]"
+          }
+        ],
+        "command": "Set Object Ownership to BucketOwnerEnforced using aws s3api put-bucket-ownership-controls. This disables all ACLs on the bucket. Before enabling, audit existing ACL grants and migrate any legitimate access to bucket policies or IAM policies. All existing ACL-based access will stop working once BucketOwnerEnforced is set."
+      }
     },
     {
       "finding_id": "sha256:96f5d0e38950552e",
@@ -1031,6 +1440,14 @@
         "action": "Enable the `BlockPublicAcls` flag on the bucket's Public Access Block configuration. From the CLI:\n\n    aws s3api put-public-access-block \\\n      --bucket \u003cname\u003e \\\n      --public-access-block-configuration \\\n      'BlockPublicAcls=true,IgnorePublicAcls=\u003ccurrent\u003e,BlockPublicPolicy=\u003ccurrent\u003e,RestrictPublicBuckets=\u003ccurrent\u003e'\n\nPreserve the other three flag values so enabling this one doesn't silently disable the others.",
         "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"controls\": {\n      \"public_access_block\": {\n        \"block_public_acls\": true\n      }\n    }\n  }\n}\n"
       },
+      "fix_plan": {
+        "id": "fix-6c6bf4529bfb9ec9",
+        "target": {
+          "asset_id": "public-test-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Enable the `BlockPublicAcls` flag on the bucket's Public Access Block configuration. From the CLI:\n\n    aws s3api put-public-access-block \\\n      --bucket public-test-bucket \\\n      --public-access-block-configuration \\\n      'BlockPublicAcls=true,IgnorePublicAcls=\u003ccurrent\u003e,BlockPublicPolicy=\u003ccurrent\u003e,RestrictPublicBuckets=\u003ccurrent\u003e'\n\nPreserve the other three flag values so enabling this one doesn't silently disable the others."
+      },
       "exposure_score": 75,
       "score_breakdown": {
         "base_score": 75,
@@ -1055,7 +1472,46 @@
           "expected_value": "bucket",
           "observed_value": "bucket"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "public-test-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.PAB.BLOCKPUBLICACLS.001",
+          "control_name": "S3 Bucket Block Public ACLs Flag Must Be Enabled",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "BlockPublicAcls is enabled must equal false, but is false",
+              "observation_key": "storage.controls.public_access_block.block_public_acls",
+              "observed_value": false
+            },
+            {
+              "clause": "storage.kind must equal \"bucket\", but is \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.controls.public_access_block.block_public_acls",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.controls.public_access_block.block_public_acls to "
+          },
+          {
+            "path": "storage.kind",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change storage.kind from [SANITIZED]"
+          }
+        ],
+        "command": "Enable the `BlockPublicAcls` flag on the bucket's Public Access Block configuration. From the CLI:\n\n    aws s3api put-public-access-block \\\n      --bucket public-test-bucket \\\n      --public-access-block-configuration \\\n      'BlockPublicAcls=true,IgnorePublicAcls=\u003ccurrent\u003e,BlockPublicPolicy=\u003ccurrent\u003e,RestrictPublicBuckets=\u003ccurrent\u003e'\n\nPreserve the other three flag values so enabling this one doesn't silently disable the others."
+      }
     },
     {
       "finding_id": "sha256:184e616d42d418ff",
@@ -1115,6 +1571,14 @@
         "action": "Enable the `BlockPublicPolicy` flag on the bucket's Public Access Block configuration. Preserve the other three flag values so enabling this one doesn't silently disable the others.",
         "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"controls\": {\n      \"public_access_block\": {\n        \"block_public_policy\": true\n      }\n    }\n  }\n}\n"
       },
+      "fix_plan": {
+        "id": "fix-6c6bf4529bfb9ec9",
+        "target": {
+          "asset_id": "public-test-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Enable the `BlockPublicPolicy` flag on the bucket's Public Access Block configuration. Preserve the other three flag values so enabling this one doesn't silently disable the others."
+      },
       "exposure_score": 75,
       "score_breakdown": {
         "base_score": 75,
@@ -1139,7 +1603,46 @@
           "expected_value": "bucket",
           "observed_value": "bucket"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "public-test-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.PAB.BLOCKPUBLICPOLICY.001",
+          "control_name": "S3 Bucket Block Public Policy Flag Must Be Enabled",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "BlockPublicPolicy is enabled must equal false, but is false",
+              "observation_key": "storage.controls.public_access_block.block_public_policy",
+              "observed_value": false
+            },
+            {
+              "clause": "storage.kind must equal \"bucket\", but is \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.controls.public_access_block.block_public_policy",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.controls.public_access_block.block_public_policy to "
+          },
+          {
+            "path": "storage.kind",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change storage.kind from [SANITIZED]"
+          }
+        ],
+        "command": "Enable the `BlockPublicPolicy` flag on the bucket's Public Access Block configuration. Preserve the other three flag values so enabling this one doesn't silently disable the others."
+      }
     },
     {
       "finding_id": "sha256:5162c97d09aac8a6",
@@ -1199,6 +1702,14 @@
         "action": "Enable the `IgnorePublicAcls` flag on the bucket's Public Access Block configuration. Pair it with `BlockPublicAcls` for full ACL-path coverage — the pair prevents new public ACL grants and neutralizes existing ones.",
         "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"controls\": {\n      \"public_access_block\": {\n        \"ignore_public_acls\": true\n      }\n    }\n  }\n}\n"
       },
+      "fix_plan": {
+        "id": "fix-6c6bf4529bfb9ec9",
+        "target": {
+          "asset_id": "public-test-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Enable the `IgnorePublicAcls` flag on the bucket's Public Access Block configuration. Pair it with `BlockPublicAcls` for full ACL-path coverage — the pair prevents new public ACL grants and neutralizes existing ones."
+      },
       "exposure_score": 75,
       "score_breakdown": {
         "base_score": 75,
@@ -1223,7 +1734,46 @@
           "expected_value": "bucket",
           "observed_value": "bucket"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "public-test-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.PAB.IGNOREPUBLICACLS.001",
+          "control_name": "S3 Bucket Ignore Public ACLs Flag Must Be Enabled",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "IgnorePublicAcls is enabled must equal false, but is false",
+              "observation_key": "storage.controls.public_access_block.ignore_public_acls",
+              "observed_value": false
+            },
+            {
+              "clause": "storage.kind must equal \"bucket\", but is \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.controls.public_access_block.ignore_public_acls",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.controls.public_access_block.ignore_public_acls to "
+          },
+          {
+            "path": "storage.kind",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change storage.kind from [SANITIZED]"
+          }
+        ],
+        "command": "Enable the `IgnorePublicAcls` flag on the bucket's Public Access Block configuration. Pair it with `BlockPublicAcls` for full ACL-path coverage — the pair prevents new public ACL grants and neutralizes existing ones."
+      }
     },
     {
       "finding_id": "sha256:c54e72c5a695247a",
@@ -1283,6 +1833,14 @@
         "action": "Enable the `RestrictPublicBuckets` flag on the bucket's Public Access Block configuration. Pair it with `BlockPublicPolicy` for full policy-path coverage — the pair prevents new public policy writes and limits the effect of any historical public grants to service principals.",
         "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"controls\": {\n      \"public_access_block\": {\n        \"restrict_public_buckets\": true\n      }\n    }\n  }\n}\n"
       },
+      "fix_plan": {
+        "id": "fix-6c6bf4529bfb9ec9",
+        "target": {
+          "asset_id": "public-test-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Enable the `RestrictPublicBuckets` flag on the bucket's Public Access Block configuration. Pair it with `BlockPublicPolicy` for full policy-path coverage — the pair prevents new public policy writes and limits the effect of any historical public grants to service principals."
+      },
       "exposure_score": 75,
       "score_breakdown": {
         "base_score": 75,
@@ -1307,7 +1865,46 @@
           "expected_value": "bucket",
           "observed_value": "bucket"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "public-test-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.PAB.RESTRICTPUBLICBUCKETS.001",
+          "control_name": "S3 Bucket Restrict Public Buckets Flag Must Be Enabled",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "RestrictPublicBuckets is enabled must equal false, but is false",
+              "observation_key": "storage.controls.public_access_block.restrict_public_buckets",
+              "observed_value": false
+            },
+            {
+              "clause": "storage.kind must equal \"bucket\", but is \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.controls.public_access_block.restrict_public_buckets",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.controls.public_access_block.restrict_public_buckets to "
+          },
+          {
+            "path": "storage.kind",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change storage.kind from [SANITIZED]"
+          }
+        ],
+        "command": "Enable the `RestrictPublicBuckets` flag on the bucket's Public Access Block configuration. Pair it with `BlockPublicPolicy` for full policy-path coverage — the pair prevents new public policy writes and limits the effect of any historical public grants to service principals."
+      }
     }
   ],
   "issues": [
@@ -1445,13 +2042,37 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
       },
       "contributing_controls": [
         "CTL.S3.PUBLIC.001",
         "CTL.S3.PUBLIC.PREFIX.001"
       ],
       "finding_count": 5
+    },
+    {
+      "asset_id": "public-test-bucket",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-6c6bf4529bfb9ec9",
+        "target": {
+          "asset_id": "public-test-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Enable all four S3 Block Public Access settings at the account level using aws s3control put-public-access-block with the --account-id parameter. This blocks public access for all current and future buckets in the account. If specific buckets require public access, use CloudFront with Origin Access Control instead of making buckets directly public."
+      },
+      "contributing_controls": [
+        "CTL.S3.ACCOUNT.PAB.001",
+        "CTL.S3.MFADELETE.001",
+        "CTL.S3.NETWORK.VPC.001",
+        "CTL.S3.OWNERSHIP.001",
+        "CTL.S3.PAB.BLOCKPUBLICACLS.001",
+        "CTL.S3.PAB.BLOCKPUBLICPOLICY.001",
+        "CTL.S3.PAB.IGNOREPUBLICACLS.001",
+        "CTL.S3.PAB.RESTRICTPUBLICBUCKETS.001"
+      ],
+      "finding_count": 8
     }
   ],
   "top_exposures": [

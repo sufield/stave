@@ -124,6 +124,14 @@
         "action": "Update the app-signer configuration to enforce tenant prefix restrictions (enforce_prefix=true) and block path traversal (allow_traversal=false) on all presigned URL signers.",
         "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"tags\": {\n      \"tenant_mode\": \"shared\",\n      \"tenant_prefix\": \"org-123\"\n    }\n  },\n  \"identities\": [\n    {\n      \"type\": \"app_signer\",\n      \"id\": \"appsigner:s3:uploads\",\n      \"purpose\": \"enforce_prefix=true allow_traversal=false\"\n    }\n  ]\n}\n"
       },
+      "fix_plan": {
+        "id": "fix-b4082fbbf062effb",
+        "target": {
+          "asset_id": "shopify-merchant-assets",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Update the app-signer configuration to enforce tenant prefix restrictions (enforce_prefix=true) and block path traversal (allow_traversal=false) on all presigned URL signers."
+      },
       "exposure_score": 375,
       "score_breakdown": {
         "base_score": 75,
@@ -188,7 +196,68 @@
           "expected_value": true,
           "observed_value": "shops/{shop_id}/"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "shopify-merchant-assets",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.TENANT.ISOLATION.001",
+          "control_name": "Shared-Bucket Tenant Isolation Must Enforce Prefix",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "the observation's identities list must match at least one of map[all:[map[field:type op:eq value:app_signer] map[field:id op:contains value:appsigner:s3:] map[any:[map[field:purpose op:contains value:allow_traversal=true] map[field:purpose op:contains value:enforce_prefix=false]]]]], but is not set",
+              "observation_key": "identities"
+            },
+            {
+              "clause": "storage.kind must equal \"bucket\", but is \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            },
+            {
+              "clause": "the bucket's tenant_mode tag must equal \"shared\", but is \"shared\"",
+              "observation_key": "storage.tags.tenant_mode",
+              "observed_value": "shared"
+            },
+            {
+              "clause": "the bucket's tenant_prefix tag must be set (observed: \"shops/{shop_id}/\")",
+              "observation_key": "storage.tags.tenant_prefix",
+              "observed_value": "shops/{shop_id}/"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "identities",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change identities from [SANITIZED]"
+          },
+          {
+            "path": "storage.kind",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change storage.kind from [SANITIZED]"
+          },
+          {
+            "path": "storage.tags.tenant_mode",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change storage.tags.tenant_mode from [SANITIZED]"
+          },
+          {
+            "path": "storage.tags.tenant_prefix",
+            "current_value": "[SANITIZED]",
+            "required_value": "absent",
+            "has_safe_default": false,
+            "description": "Remove storage.tags.tenant_prefix"
+          }
+        ],
+        "command": "Update the app-signer configuration to enforce tenant prefix restrictions (enforce_prefix=true) and block path traversal (allow_traversal=false) on all presigned URL signers."
+      }
     }
   ],
   "issues": [
@@ -207,6 +276,24 @@
       ],
       "consolidated_score": 375,
       "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "shopify-merchant-assets",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-b4082fbbf062effb",
+        "target": {
+          "asset_id": "shopify-merchant-assets",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Update the app-signer configuration to enforce tenant prefix restrictions (enforce_prefix=true) and block path traversal (allow_traversal=false) on all presigned URL signers."
+      },
+      "contributing_controls": [
+        "CTL.S3.TENANT.ISOLATION.001"
+      ],
+      "finding_count": 1
     }
   ],
   "top_exposures": [
@@ -235,7 +322,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "c1c45531ee9c4f709d5c08d5f98701a6ebb54603",
+      "head_commit": "339115f57a19490ec07e549efaaf605795eb78bc",
       "dirty": false
     }
   }

@@ -140,7 +140,17 @@ Exit Codes:
   2   - Invalid input or configuration error
   3   - Violations found
   4   - Internal error
-  130 - Interrupted (SIGINT)` + metadata.OfflineHelpSuffix,
+  130 - Interrupted (SIGINT)
+
+Remediation scope:
+  Stave produces findings with structured remediation data
+  (asset-parameterized CLI in findings[].fix_plan.command,
+  property-level changes in findings[].remediation_context.changes,
+  AI-prompt-ready context in findings[].remediation_context). It
+  does NOT execute remediation. Pipe apply output to downstream
+  tooling — AI prompts, CI/CD pipelines, ticket systems — for fix
+  generation. There is no --apply-fixes flag and no auto-fix mode;
+  the boundary is the data, not the change.` + metadata.OfflineHelpSuffix,
 		Example: `  # Standard evaluation
   stave apply --controls ./controls --observations ./obs --format json
 
@@ -195,7 +205,7 @@ func (o *Options) bindApplySpecific(cmd *cobra.Command) {
 	f.StringVar(&o.InputFile, "input", "", "Path to observations bundle file (required with --profile)")
 	f.StringSliceVar(&o.BucketAllowlist, "bucket-allowlist", nil, "Bucket names/ARNs to include")
 	f.BoolVar(&o.IncludeAll, "include-all", false, "Disable health scope filtering")
-	f.StringVar(&o.TracePath, "trace", "", "Write full step-by-step audit trace to file. The compact reasoning trace (matched clauses + observed values) is already emitted inline on every finding by default; this flag writes the full Assessment.Steps[] superset to a separate file for deep-dive.")
+	f.StringVar(&o.TracePath, "trace", "", "Write full step-by-step audit trace to file. Every finding already emits a compact reasoning_trace inline (rendered as prose in text output, as raw DSL in JSON/SARIF); this flag writes the full Assessment.Steps[] superset to a separate file for users who want the precise predicate-DSL form or per-step timing.")
 	f.StringSliceVar(&o.ProfileFiles, "profile-file", nil, "custom compliance profile YAML (can be repeated)")
 	f.StringVar(&o.OverlayPath, "overlay", "", "environment-specific severity overlay YAML")
 	f.BoolVar(&o.ShowSuppressed, "show-suppressed", false, "include overlay-suppressed controls in output")

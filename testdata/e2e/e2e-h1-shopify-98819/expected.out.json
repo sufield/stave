@@ -122,7 +122,8 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "Remove or constrain the policy statement granting write actions to Principal \"*\" or AWS: \"*\". If broad write access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public write."
       },
       "exposure_score": 1000,
       "score_breakdown": {
@@ -141,7 +142,35 @@
           "expected_value": true,
           "observed_value": true
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "shopify-internal-assets",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.POLICY.WRITE.001",
+          "control_name": "No Public Write via Bucket Policy",
+          "severity": "critical",
+          "reasoning": [
+            {
+              "clause": "the bucket policy grants write to a public principal must equal true, but is true",
+              "observation_key": "storage.access.write_via_resource",
+              "observed_value": true
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.access.write_via_resource",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.access.write_via_resource to "
+          }
+        ],
+        "command": "Remove or constrain the policy statement granting write actions to Principal \"*\" or AWS: \"*\". If broad write access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public write."
+      }
     },
     {
       "finding_id": "sha256:a01a06a82cb5f0fe",
@@ -187,6 +216,14 @@
         "action": "Remove the ACL grant to AuthenticatedUsers. Replace with specific IAM principals or use bucket policy with explicit account IDs. Enable S3 Public Access Block with IgnorePublicAcls set to true.",
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"authenticated_read\": false\n    }\n  }\n}\n"
       },
+      "fix_plan": {
+        "id": "fix-4266448eeaffaebf",
+        "target": {
+          "asset_id": "shopify-internal-assets",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Remove the ACL grant to AuthenticatedUsers. Replace with specific IAM principals or use bucket policy with explicit account IDs. Enable S3 Public Access Block with IgnorePublicAcls set to true."
+      },
       "exposure_score": 375,
       "score_breakdown": {
         "base_score": 75,
@@ -204,7 +241,35 @@
           "expected_value": true,
           "observed_value": true
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "shopify-internal-assets",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.AUTH.READ.001",
+          "control_name": "No Authenticated-Users Read Access",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "the bucket allows authenticated-users read must equal true, but is true",
+              "observation_key": "storage.access.authenticated_read",
+              "observed_value": true
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.access.authenticated_read",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.access.authenticated_read to "
+          }
+        ],
+        "command": "Remove the ACL grant to AuthenticatedUsers. Replace with specific IAM principals or use bucket policy with explicit account IDs. Enable S3 Public Access Block with IgnorePublicAcls set to true."
+      }
     }
   ],
   "issues": [
@@ -226,6 +291,22 @@
     }
   ],
   "remediation_groups": [
+    {
+      "asset_id": "shopify-internal-assets",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-4266448eeaffaebf",
+        "target": {
+          "asset_id": "shopify-internal-assets",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Remove the ACL grant to AuthenticatedUsers. Replace with specific IAM principals or use bucket policy with explicit account IDs. Enable S3 Public Access Block with IgnorePublicAcls set to true."
+      },
+      "contributing_controls": [
+        "CTL.S3.AUTH.READ.001"
+      ],
+      "finding_count": 1
+    },
     {
       "asset_id": "shopify-internal-assets",
       "asset_type": "aws_s3_bucket",
@@ -261,7 +342,8 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "Remove or constrain the policy statement granting write actions to Principal \"*\" or AWS: \"*\". If broad write access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public write."
       },
       "contributing_controls": [
         "CTL.S3.POLICY.WRITE.001"
@@ -310,7 +392,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "c1c45531ee9c4f709d5c08d5f98701a6ebb54603",
+      "head_commit": "339115f57a19490ec07e549efaaf605795eb78bc",
       "dirty": false
     }
   }

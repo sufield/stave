@@ -95,6 +95,14 @@
         "action": "Add S3 lifecycle rules to manage object expiration and transitions. Configure rules matching the retention period specified in the data-retention tag. Use lifecycle transitions to move data to cheaper storage classes before expiration.",
         "example": "{\n  \"storage\": {\n    \"tags\": {\n      \"data-retention\": \"7-years\"\n    },\n    \"lifecycle\": {\n      \"rules_configured\": true\n    }\n  }\n}\n"
       },
+      "fix_plan": {
+        "id": "fix-8f54ca2d1dad4043",
+        "target": {
+          "asset_id": "retention-no-rules",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Add S3 lifecycle rules to manage object expiration and transitions. Configure rules matching the retention period specified in the data-retention tag. Use lifecycle transitions to move data to cheaper storage classes before expiration."
+      },
       "exposure_score": 50,
       "score_breakdown": {
         "base_score": 50,
@@ -119,7 +127,47 @@
           "expected_value": true,
           "observed_value": "6-year"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "retention-no-rules",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.LIFECYCLE.001",
+          "control_name": "Retention-Tagged Buckets Must Have Lifecycle Rules",
+          "severity": "medium",
+          "reasoning": [
+            {
+              "clause": "lifecycle rules are configured must equal false, but is false",
+              "observation_key": "storage.lifecycle.rules_configured",
+              "observed_value": false
+            },
+            {
+              "clause": "the bucket's data-retention tag must be set (observed: \"6-year\")",
+              "observation_key": "storage.tags.data-retention",
+              "observed_value": "6-year"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.lifecycle.rules_configured",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.lifecycle.rules_configured to "
+          },
+          {
+            "path": "storage.tags.data-retention",
+            "current_value": "[SANITIZED]",
+            "required_value": "absent",
+            "has_safe_default": false,
+            "description": "Remove storage.tags.data-retention"
+          }
+        ],
+        "command": "Add S3 lifecycle rules to manage object expiration and transitions. Configure rules matching the retention period specified in the data-retention tag. Use lifecycle transitions to move data to cheaper storage classes before expiration."
+      }
     },
     {
       "finding_id": "sha256:b12eb488d6b1fc1f",
@@ -175,6 +223,14 @@
         "action": "Increase the lifecycle expiration period to at least the configured min_retention_days value. If the current rule is for storage class transition, ensure the expiration rule is separate and meets the minimum retention period.",
         "example": "{\n  \"storage\": {\n    \"tags\": {\n      \"data-classification\": \"phi\"\n    },\n    \"lifecycle\": {\n      \"has_expiration\": true,\n      \"min_expiration_days\": 2190\n    }\n  }\n}\n"
       },
+      "fix_plan": {
+        "id": "fix-b6ea7f683d1674d1",
+        "target": {
+          "asset_id": "phi-short-expiry",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Increase the lifecycle expiration period to at least the configured min_retention_days value. If the current rule is for storage class transition, ensure the expiration rule is separate and meets the minimum retention period."
+      },
       "exposure_score": 50,
       "score_breakdown": {
         "base_score": 50,
@@ -206,7 +262,57 @@
           "expected_value": "phi",
           "observed_value": "phi"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "phi-short-expiry",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.LIFECYCLE.002",
+          "control_name": "PHI Buckets Must Not Expire Data Before Minimum Retention",
+          "severity": "medium",
+          "reasoning": [
+            {
+              "clause": "a lifecycle expiration rule is configured must equal true, but is true",
+              "observation_key": "storage.lifecycle.has_expiration",
+              "observed_value": true
+            },
+            {
+              "clause": "the minimum lifecycle expiration in days must be less than \"params.min_retention_days\", but is 90",
+              "observation_key": "storage.lifecycle.min_expiration_days",
+              "observed_value": 90
+            },
+            {
+              "clause": "the bucket's data-classification tag must equal \"phi\", but is \"phi\"",
+              "observation_key": "storage.tags.data-classification",
+              "observed_value": "phi"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.lifecycle.has_expiration",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.lifecycle.has_expiration to "
+          },
+          {
+            "path": "storage.lifecycle.min_expiration_days",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change storage.lifecycle.min_expiration_days from [SANITIZED]"
+          },
+          {
+            "path": "storage.tags.data-classification",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change storage.tags.data-classification from [SANITIZED]"
+          }
+        ],
+        "command": "Increase the lifecycle expiration period to at least the configured min_retention_days value. If the current rule is for storage class transition, ensure the expiration rule is separate and meets the minimum retention period."
+      }
     }
   ],
   "issues": [
@@ -242,6 +348,40 @@
       ],
       "consolidated_score": 50,
       "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "phi-short-expiry",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-b6ea7f683d1674d1",
+        "target": {
+          "asset_id": "phi-short-expiry",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Increase the lifecycle expiration period to at least the configured min_retention_days value. If the current rule is for storage class transition, ensure the expiration rule is separate and meets the minimum retention period."
+      },
+      "contributing_controls": [
+        "CTL.S3.LIFECYCLE.002"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "retention-no-rules",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-8f54ca2d1dad4043",
+        "target": {
+          "asset_id": "retention-no-rules",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Add S3 lifecycle rules to manage object expiration and transitions. Configure rules matching the retention period specified in the data-retention tag. Use lifecycle transitions to move data to cheaper storage classes before expiration."
+      },
+      "contributing_controls": [
+        "CTL.S3.LIFECYCLE.001"
+      ],
+      "finding_count": 1
     }
   ],
   "top_exposures": [
@@ -285,7 +425,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "c1c45531ee9c4f709d5c08d5f98701a6ebb54603",
+      "head_commit": "339115f57a19490ec07e549efaaf605795eb78bc",
       "dirty": false
     }
   }

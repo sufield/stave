@@ -20,6 +20,12 @@ type RemediationPlan struct {
 	Preconditions      []string                 `json:"preconditions,omitempty"`
 	Actions            []RemediationAction      `json:"actions,omitempty"`
 	ExpectedEffect     string                   `json:"expected_effect,omitempty"`
+	// Command is the RemediationSpec.Action template parameterized to
+	// the specific asset this plan applies to — bucket names, ARNs,
+	// account IDs, regions substituted into placeholder tokens. See
+	// docs/product/metrics.md § Metric 4. Empty when the source
+	// template was empty or when no substitution applies.
+	Command string `json:"command,omitempty"`
 }
 
 // ComputeFingerprint sets ActionsFingerprint to a stable hash of the plan's actions.

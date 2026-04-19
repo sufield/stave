@@ -113,6 +113,14 @@
         "action": "Enable S3 Object Lock on the bucket. Note: Object Lock can only be enabled at bucket creation. If the bucket already exists, create a new bucket with Object Lock enabled and migrate objects. Set a default retention period appropriate for your compliance framework.",
         "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"tags\": {\n      \"compliance\": \"hipaa\"\n    },\n    \"object_lock\": {\n      \"enabled\": true\n    }\n  }\n}\n"
       },
+      "fix_plan": {
+        "id": "fix-27b62c9c5814f3ae",
+        "target": {
+          "asset_id": "compliance-no-lock",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Enable S3 Object Lock on the bucket. Note: Object Lock can only be enabled at bucket creation. If the bucket already exists, create a new bucket with Object Lock enabled and migrate objects. Set a default retention period appropriate for your compliance framework."
+      },
       "exposure_score": 50,
       "score_breakdown": {
         "base_score": 50,
@@ -144,7 +152,58 @@
           "expected_value": true,
           "observed_value": true
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "compliance-no-lock",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.LOCK.001",
+          "control_name": "Compliance-Tagged Buckets Must Have Object Lock Enabled",
+          "severity": "medium",
+          "reasoning": [
+            {
+              "clause": "storage.kind must equal \"bucket\", but is \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            },
+            {
+              "clause": "Object Lock is enabled must equal false, but is false",
+              "observation_key": "storage.object_lock.enabled",
+              "observed_value": false
+            },
+            {
+              "clause": "the bucket's compliance tag must be set (observed: true)",
+              "observation_key": "storage.tags.compliance",
+              "observed_value": true
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.kind",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change storage.kind from [SANITIZED]"
+          },
+          {
+            "path": "storage.object_lock.enabled",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.object_lock.enabled to "
+          },
+          {
+            "path": "storage.tags.compliance",
+            "current_value": "[SANITIZED]",
+            "required_value": "absent",
+            "has_safe_default": false,
+            "description": "Remove storage.tags.compliance"
+          }
+        ],
+        "command": "Enable S3 Object Lock on the bucket. Note: Object Lock can only be enabled at bucket creation. If the bucket already exists, create a new bucket with Object Lock enabled and migrate objects. Set a default retention period appropriate for your compliance framework."
+      }
     },
     {
       "finding_id": "sha256:48c4da7865eb8989",
@@ -198,6 +257,14 @@
         "action": "Change the Object Lock default retention mode from GOVERNANCE to COMPLIANCE. In COMPLIANCE mode, no user (including root) can delete or modify protected objects during the retention period.",
         "example": "{\n  \"storage\": {\n    \"tags\": {\n      \"data-classification\": \"phi\"\n    },\n    \"object_lock\": {\n      \"enabled\": true,\n      \"mode\": \"COMPLIANCE\"\n    }\n  }\n}\n"
       },
+      "fix_plan": {
+        "id": "fix-72154cf102acfd2c",
+        "target": {
+          "asset_id": "phi-governance-lock",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Change the Object Lock default retention mode from GOVERNANCE to COMPLIANCE. In COMPLIANCE mode, no user (including root) can delete or modify protected objects during the retention period."
+      },
       "exposure_score": 50,
       "score_breakdown": {
         "base_score": 50,
@@ -229,7 +296,57 @@
           "expected_value": "phi",
           "observed_value": "phi"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "phi-governance-lock",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.LOCK.002",
+          "control_name": "PHI Buckets Must Use COMPLIANCE Mode Object Lock",
+          "severity": "medium",
+          "reasoning": [
+            {
+              "clause": "Object Lock is enabled must equal true, but is true",
+              "observation_key": "storage.object_lock.enabled",
+              "observed_value": true
+            },
+            {
+              "clause": "Object Lock retention mode must not equal \"COMPLIANCE\", but is \"GOVERNANCE\"",
+              "observation_key": "storage.object_lock.mode",
+              "observed_value": "GOVERNANCE"
+            },
+            {
+              "clause": "the bucket's data-classification tag must equal \"phi\", but is \"phi\"",
+              "observation_key": "storage.tags.data-classification",
+              "observed_value": "phi"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.object_lock.enabled",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.object_lock.enabled to "
+          },
+          {
+            "path": "storage.object_lock.mode",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change storage.object_lock.mode from [SANITIZED]"
+          },
+          {
+            "path": "storage.tags.data-classification",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change storage.tags.data-classification from [SANITIZED]"
+          }
+        ],
+        "command": "Change the Object Lock default retention mode from GOVERNANCE to COMPLIANCE. In COMPLIANCE mode, no user (including root) can delete or modify protected objects during the retention period."
+      }
     },
     {
       "finding_id": "sha256:72a8a7272fee0dad",
@@ -283,6 +400,14 @@
         "action": "Increase the Object Lock default retention period to at least 2190 days. Use aws s3api put-object-lock-configuration to update the default retention settings.",
         "example": "{\n  \"storage\": {\n    \"tags\": {\n      \"data-classification\": \"phi\"\n    },\n    \"object_lock\": {\n      \"enabled\": true,\n      \"retention_days\": 2190\n    }\n  }\n}\n"
       },
+      "fix_plan": {
+        "id": "fix-f3941067ab3fdbb6",
+        "target": {
+          "asset_id": "phi-short-retention",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Increase the Object Lock default retention period to at least 2190 days. Use aws s3api put-object-lock-configuration to update the default retention settings."
+      },
       "exposure_score": 50,
       "score_breakdown": {
         "base_score": 50,
@@ -314,7 +439,57 @@
           "expected_value": "phi",
           "observed_value": "phi"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "phi-short-retention",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.LOCK.003",
+          "control_name": "PHI Object Lock Retention Must Meet Minimum Period",
+          "severity": "medium",
+          "reasoning": [
+            {
+              "clause": "Object Lock is enabled must equal true, but is true",
+              "observation_key": "storage.object_lock.enabled",
+              "observed_value": true
+            },
+            {
+              "clause": "Object Lock retention days must be less than 2190, but is 365",
+              "observation_key": "storage.object_lock.retention_days",
+              "observed_value": 365
+            },
+            {
+              "clause": "the bucket's data-classification tag must equal \"phi\", but is \"phi\"",
+              "observation_key": "storage.tags.data-classification",
+              "observed_value": "phi"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.object_lock.enabled",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.object_lock.enabled to "
+          },
+          {
+            "path": "storage.object_lock.retention_days",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change storage.object_lock.retention_days from [SANITIZED]"
+          },
+          {
+            "path": "storage.tags.data-classification",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change storage.tags.data-classification from [SANITIZED]"
+          }
+        ],
+        "command": "Increase the Object Lock default retention period to at least 2190 days. Use aws s3api put-object-lock-configuration to update the default retention settings."
+      }
     }
   ],
   "issues": [
@@ -367,6 +542,56 @@
       ],
       "consolidated_score": 50,
       "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "compliance-no-lock",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-27b62c9c5814f3ae",
+        "target": {
+          "asset_id": "compliance-no-lock",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Enable S3 Object Lock on the bucket. Note: Object Lock can only be enabled at bucket creation. If the bucket already exists, create a new bucket with Object Lock enabled and migrate objects. Set a default retention period appropriate for your compliance framework."
+      },
+      "contributing_controls": [
+        "CTL.S3.LOCK.001"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "phi-governance-lock",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-72154cf102acfd2c",
+        "target": {
+          "asset_id": "phi-governance-lock",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Change the Object Lock default retention mode from GOVERNANCE to COMPLIANCE. In COMPLIANCE mode, no user (including root) can delete or modify protected objects during the retention period."
+      },
+      "contributing_controls": [
+        "CTL.S3.LOCK.002"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "phi-short-retention",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-f3941067ab3fdbb6",
+        "target": {
+          "asset_id": "phi-short-retention",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Increase the Object Lock default retention period to at least 2190 days. Use aws s3api put-object-lock-configuration to update the default retention settings."
+      },
+      "contributing_controls": [
+        "CTL.S3.LOCK.003"
+      ],
+      "finding_count": 1
     }
   ],
   "top_exposures": [
@@ -425,7 +650,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "c1c45531ee9c4f709d5c08d5f98701a6ebb54603",
+      "head_commit": "339115f57a19490ec07e549efaaf605795eb78bc",
       "dirty": false
     }
   }

@@ -134,7 +134,8 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
       },
       "exposure_score": 200,
       "score_breakdown": {
@@ -153,7 +154,35 @@
           "expected_value": true,
           "observed_value": true
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "omise-cdn-2",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.PUBLIC.001",
+          "control_name": "No Public S3 Bucket Read",
+          "severity": "critical",
+          "reasoning": [
+            {
+              "clause": "the bucket allows anonymous read must equal true, but is true",
+              "observation_key": "storage.access.public_read",
+              "observed_value": true
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.access.public_read",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.access.public_read to "
+          }
+        ],
+        "command": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
+      }
     },
     {
       "finding_id": "sha256:d9330865200aa495",
@@ -214,6 +243,14 @@
         "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets.",
         "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"controls\": {\n      \"public_access_fully_blocked\": true\n    }\n  }\n}\n"
       },
+      "fix_plan": {
+        "id": "fix-036969967de51e6b",
+        "target": {
+          "asset_id": "omise-cdn-2",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
+      },
       "exposure_score": 75,
       "score_breakdown": {
         "base_score": 75,
@@ -238,7 +275,46 @@
           "expected_value": "bucket",
           "observed_value": "bucket"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "omise-cdn-2",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.CONTROLS.001",
+          "control_name": "Public Access Block Must Be Enabled",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "all four Public Access Block flags are enabled must equal false, but is false",
+              "observation_key": "storage.controls.public_access_fully_blocked",
+              "observed_value": false
+            },
+            {
+              "clause": "storage.kind must equal \"bucket\", but is \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.controls.public_access_fully_blocked",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.controls.public_access_fully_blocked to "
+          },
+          {
+            "path": "storage.kind",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change storage.kind from [SANITIZED]"
+          }
+        ],
+        "command": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
+      }
     }
   ],
   "issues": [
@@ -276,6 +352,22 @@
       "asset_id": "omise-cdn-2",
       "asset_type": "aws_s3_bucket",
       "fix_plan": {
+        "id": "fix-036969967de51e6b",
+        "target": {
+          "asset_id": "omise-cdn-2",
+          "asset_type": "aws_s3_bucket"
+        },
+        "command": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
+      },
+      "contributing_controls": [
+        "CTL.S3.CONTROLS.001"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "omise-cdn-2",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
         "id": "fix-3d303074b3ff773c",
         "target": {
           "asset_id": "omise-cdn-2",
@@ -307,7 +399,8 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
       },
       "contributing_controls": [
         "CTL.S3.PUBLIC.001"
@@ -356,7 +449,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "c1c45531ee9c4f709d5c08d5f98701a6ebb54603",
+      "head_commit": "339115f57a19490ec07e549efaaf605795eb78bc",
       "dirty": false
     }
   }

@@ -85,6 +85,14 @@
         "action": "Enable IAM authentication on the instance. Run: aws rds modify-db-instance --db-instance-identifier xxx --enable-iam-database-authentication --apply-immediately",
         "example": "{\n  \"database\": {\n    \"kind\": \"instance\",\n    \"access\": {\n      \"iam_authentication_enabled\": true\n    }\n  }\n}\n"
       },
+      "fix_plan": {
+        "id": "fix-4233e63a00340e1b",
+        "target": {
+          "asset_id": "phi-database",
+          "asset_type": "aws_rds_instance"
+        },
+        "command": "Enable IAM authentication on the instance. Run: aws rds modify-db-instance --db-instance-identifier xxx --enable-iam-database-authentication --apply-immediately"
+      },
       "exposure_score": 50,
       "score_breakdown": {
         "base_score": 50,
@@ -109,7 +117,46 @@
           "expected_value": "instance",
           "observed_value": "instance"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "phi-database",
+          "type": "aws_rds_instance",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.RDS.IAMAUTH.001",
+          "control_name": "RDS Must Enable IAM Authentication",
+          "severity": "medium",
+          "reasoning": [
+            {
+              "clause": "IAM database authentication is enabled must equal false, but is false",
+              "observation_key": "database.access.iam_authentication_enabled",
+              "observed_value": false
+            },
+            {
+              "clause": "database.kind must equal \"instance\", but is \"instance\"",
+              "observation_key": "database.kind",
+              "observed_value": "instance"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "database.access.iam_authentication_enabled",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set database.access.iam_authentication_enabled to "
+          },
+          {
+            "path": "database.kind",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change database.kind from [SANITIZED]"
+          }
+        ],
+        "command": "Enable IAM authentication on the instance. Run: aws rds modify-db-instance --db-instance-identifier xxx --enable-iam-database-authentication --apply-immediately"
+      }
     }
   ],
   "issues": [
@@ -127,6 +174,24 @@
       ],
       "consolidated_score": 50,
       "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "phi-database",
+      "asset_type": "aws_rds_instance",
+      "fix_plan": {
+        "id": "fix-4233e63a00340e1b",
+        "target": {
+          "asset_id": "phi-database",
+          "asset_type": "aws_rds_instance"
+        },
+        "command": "Enable IAM authentication on the instance. Run: aws rds modify-db-instance --db-instance-identifier xxx --enable-iam-database-authentication --apply-immediately"
+      },
+      "contributing_controls": [
+        "CTL.RDS.IAMAUTH.001"
+      ],
+      "finding_count": 1
     }
   ],
   "top_exposures": [
@@ -155,7 +220,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "c1c45531ee9c4f709d5c08d5f98701a6ebb54603",
+      "head_commit": "339115f57a19490ec07e549efaaf605795eb78bc",
       "dirty": false
     }
   }

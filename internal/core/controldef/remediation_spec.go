@@ -25,6 +25,14 @@ type RemediationSpec struct {
 	// derived from the finding's misconfigurations.
 	Changes []PropertyChange `json:"changes,omitempty"`
 
+	// RequiredValuePrompt is a natural-language question a downstream
+	// consumer (AI prompt, ticket system, human) can use to elicit the
+	// correct value from the user when HasSafeDefault is false. Empty
+	// means the control author didn't provide a prompt — downstream
+	// consumers handle absence by asking the user directly. See
+	// docs/product/metrics.md § Metric 4.
+	RequiredValuePrompt string `json:"required_value_prompt,omitempty" yaml:"required_value_prompt"`
+
 	// FindingID is the stable fingerprint for the (control, asset) pair.
 	// Copied from Finding.FindingID at construction — not recomputed.
 	FindingID string `json:"finding_id,omitempty"`
@@ -42,6 +50,12 @@ type PropertyChange struct {
 	// RequiredValue is the value needed to satisfy the control.
 	// Empty when HasSafeDefault is false (context-dependent).
 	RequiredValue string `json:"required_value"`
+
+	// RequiredValuePrompt is a natural-language question a downstream
+	// consumer can use to elicit the correct value when
+	// HasSafeDefault is false. Populated by propagation from the
+	// control's RemediationSpec.RequiredValuePrompt when available.
+	RequiredValuePrompt string `json:"required_value_prompt,omitempty"`
 
 	// ResourceType is the AWS resource type this property belongs to.
 	ResourceType string `json:"resource_type,omitempty"`

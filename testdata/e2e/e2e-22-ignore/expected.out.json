@@ -85,6 +85,14 @@
         "description": "Resource configuration deviates from security baseline.",
         "action": "Review the misconfigured properties and revert to compliant values."
       },
+      "fix_plan": {
+        "id": "fix-19a491600ba41d48",
+        "target": {
+          "asset_id": "k8s:ClusterRoleBinding/anonymous-binding",
+          "asset_type": "k8s.clusterrolebinding"
+        },
+        "command": "Review the misconfigured properties and revert to compliant values."
+      },
       "exposure_score": 100,
       "score_breakdown": {
         "base_score": 100,
@@ -102,7 +110,35 @@
           "expected_value": true,
           "observed_value": true
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "k8s:ClusterRoleBinding/anonymous-binding",
+          "type": "k8s.clusterrolebinding",
+          "vendor": "kubernetes"
+        },
+        "violation": {
+          "control_id": "CTL.ID.KUBE.003",
+          "control_name": "Binding to system:unauthenticated",
+          "severity": "critical",
+          "reasoning": [
+            {
+              "clause": "the role binds to system:unauthenticated must equal true, but is true",
+              "observation_key": "binds_to_system_unauthenticated",
+              "observed_value": true
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "binds_to_system_unauthenticated",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set binds_to_system_unauthenticated to "
+          }
+        ],
+        "command": "Review the misconfigured properties and revert to compliant values."
+      }
     }
   ],
   "issues": [
@@ -118,6 +154,24 @@
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "k8s:ClusterRoleBinding/anonymous-binding",
+      "asset_type": "k8s.clusterrolebinding",
+      "fix_plan": {
+        "id": "fix-19a491600ba41d48",
+        "target": {
+          "asset_id": "k8s:ClusterRoleBinding/anonymous-binding",
+          "asset_type": "k8s.clusterrolebinding"
+        },
+        "command": "Review the misconfigured properties and revert to compliant values."
+      },
+      "contributing_controls": [
+        "CTL.ID.KUBE.003"
+      ],
+      "finding_count": 1
     }
   ],
   "exempted_assets": [
@@ -153,7 +207,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "c1c45531ee9c4f709d5c08d5f98701a6ebb54603",
+      "head_commit": "339115f57a19490ec07e549efaaf605795eb78bc",
       "dirty": false
     }
   }

@@ -54,6 +54,14 @@
         "description": "Resource configuration deviates from security baseline.",
         "action": "Review the misconfigured properties and revert to compliant values."
       },
+      "fix_plan": {
+        "id": "fix-a01eaf73fdbdb5d7",
+        "target": {
+          "asset_id": "res:aws:s3:bucket:recurring-bucket",
+          "asset_type": "storage_bucket"
+        },
+        "command": "Review the misconfigured properties and revert to compliant values."
+      },
       "exposure_score": 10,
       "score_breakdown": {
         "base_score": 10,
@@ -62,6 +70,18 @@
         "exposure_multiplier": 1,
         "chain_bonus": 1,
         "days_blind": 0
+      },
+      "remediation_context": {
+        "asset": {
+          "id": "res:aws:s3:bucket:recurring-bucket",
+          "type": "storage_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.EXP.RECURRENCE.001",
+          "control_name": "Unsafe Exposure Recurrence Limit"
+        },
+        "command": "Review the misconfigured properties and revert to compliant values."
       }
     }
   ],
@@ -76,6 +96,24 @@
       ],
       "consolidated_score": 10,
       "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "res:aws:s3:bucket:recurring-bucket",
+      "asset_type": "storage_bucket",
+      "fix_plan": {
+        "id": "fix-a01eaf73fdbdb5d7",
+        "target": {
+          "asset_id": "res:aws:s3:bucket:recurring-bucket",
+          "asset_type": "storage_bucket"
+        },
+        "command": "Review the misconfigured properties and revert to compliant values."
+      },
+      "contributing_controls": [
+        "CTL.EXP.RECURRENCE.001"
+      ],
+      "finding_count": 1
     }
   ],
   "top_exposures": [
@@ -104,7 +142,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "c1c45531ee9c4f709d5c08d5f98701a6ebb54603",
+      "head_commit": "339115f57a19490ec07e549efaaf605795eb78bc",
       "dirty": false
     }
   }

@@ -130,7 +130,8 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "If listing is intentional, add the tag public_list_intended=true to the bucket. Otherwise, remove the policy or ACL granting s3:ListBucket to Principal \"*\" or AllUsers."
       },
       "exposure_score": 150,
       "score_breakdown": {
@@ -168,7 +169,67 @@
           "operator": "ne",
           "expected_value": "true"
         }
-      ]
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "shopify-public-assets",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.PUBLIC.LIST.002",
+          "control_name": "Anonymous S3 Listing Must Be Explicitly Intended",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "the bucket allows anonymous list must equal true, but is true",
+              "observation_key": "storage.access.public_list",
+              "observed_value": true
+            },
+            {
+              "clause": "storage.kind must equal \"bucket\", but is \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            },
+            {
+              "clause": "the bucket's public-list-intended tag must be missing (and is)",
+              "observation_key": "storage.tags.public_list_intended"
+            },
+            {
+              "clause": "the bucket's public-list-intended tag must not equal \"true\", but is not set",
+              "observation_key": "storage.tags.public_list_intended"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.access.public_list",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": true,
+            "description": "Set storage.access.public_list to "
+          },
+          {
+            "path": "storage.kind",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change storage.kind from [SANITIZED]"
+          },
+          {
+            "path": "storage.tags.public_list_intended",
+            "current_value": "[SANITIZED]",
+            "required_value": "present",
+            "has_safe_default": false,
+            "description": "Ensure storage.tags.public_list_intended is present"
+          },
+          {
+            "path": "storage.tags.public_list_intended",
+            "current_value": "[SANITIZED]",
+            "has_safe_default": false,
+            "description": "Change storage.tags.public_list_intended from [SANITIZED]"
+          }
+        ],
+        "command": "If listing is intentional, add the tag public_list_intended=true to the bucket. Otherwise, remove the policy or ACL granting s3:ListBucket to Principal \"*\" or AllUsers."
+      }
     }
   ],
   "issues": [
@@ -225,7 +286,8 @@
             "value": true
           }
         ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "command": "If listing is intentional, add the tag public_list_intended=true to the bucket. Otherwise, remove the policy or ACL granting s3:ListBucket to Principal \"*\" or AllUsers."
       },
       "contributing_controls": [
         "CTL.S3.PUBLIC.LIST.002"
@@ -259,7 +321,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "c1c45531ee9c4f709d5c08d5f98701a6ebb54603",
+      "head_commit": "339115f57a19490ec07e549efaaf605795eb78bc",
       "dirty": false
     }
   }

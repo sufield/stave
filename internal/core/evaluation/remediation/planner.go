@@ -1,6 +1,7 @@
 package remediation
 
 import (
+	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"
 )
@@ -53,7 +54,33 @@ func (p *Planner) EnrichFindings(result *evaluation.ComplianceReport) []Finding 
 			RemediationSpec: resolveSpec(f),
 		}
 		findingWithPlan.RemediationPlan = p.PlanFor(findingWithPlan)
+		parameterizeCommand(&findingWithPlan)
 		enriched[i] = findingWithPlan
 	}
 	return enriched
+}
+
+// parameterizeCommand substitutes placeholder tokens in the
+// RemediationSpec.Action prose CLI with asset-specific values and
+// stores the result on RemediationPlan.Command. The RemediationSpec
+// template itself is never mutated — it stays reusable across assets.
+// See docs/product/metrics.md § Metric 4.
+func parameterizeCommand(f *Finding) {
+	if f.RemediationSpec.Action == "" {
+		return
+	}
+	if f.RemediationPlan == nil {
+		// Construct a minimal plan to carry the parameterized command
+		// when no class-specific plan exists. Preserves the
+		// remediation data surface without requiring every class to
+		// register a Specialist.
+		f.RemediationPlan = &evaluation.RemediationPlan{
+			Target: evaluation.RemediationTarget{
+				AssetID:   f.AssetID,
+				AssetType: f.AssetType,
+			},
+		}
+	}
+	syntheticAsset := asset.Asset{ID: f.AssetID, Type: f.AssetType, Vendor: f.AssetVendor}
+	f.RemediationPlan.Command = FormatRemediationAction(f.RemediationSpec.Action, syntheticAsset)
 }
