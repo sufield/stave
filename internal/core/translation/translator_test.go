@@ -1,6 +1,9 @@
 package translation
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestClassifyClause_Discriminator(t *testing.T) {
 	for key := range discriminatorKeys {
@@ -77,7 +80,7 @@ func TestRenderClause_NoContradictionShape(t *testing.T) {
 	}
 	for _, c := range cases {
 		got := RenderClause(c, DefaultFieldRegistry)
-		if contains(got, "must equal") || contains(got, "but is") {
+		if strings.Contains(got, "must equal") || strings.Contains(got, "but is") {
 			t.Errorf("RenderClause(%+v) = %q — contradiction-shape wording leaked", c, got)
 		}
 	}
@@ -104,22 +107,10 @@ func TestRenderClause_Ne(t *testing.T) {
 func TestRenderClause_GenericOperator(t *testing.T) {
 	c := Clause{ObservationKey: "storage.object_lock.retention_days", Operator: "gte", ExpectedValue: 365, ObservedValue: 30}
 	got := RenderClause(c, DefaultFieldRegistry)
-	if !contains(got, "(observed: 30)") {
+	if !strings.Contains(got, "(observed: 30)") {
 		t.Errorf("RenderClause(gte) = %q, expected '(observed: 30)' suffix", got)
 	}
-	if !contains(got, "365") {
+	if !strings.Contains(got, "365") {
 		t.Errorf("RenderClause(gte) = %q, expected expected-value 365", got)
 	}
-}
-
-func contains(s, sub string) bool {
-	if len(sub) == 0 {
-		return true
-	}
-	for i := 0; i+len(sub) <= len(s); i++ {
-		if s[i:i+len(sub)] == sub {
-			return true
-		}
-	}
-	return false
 }
