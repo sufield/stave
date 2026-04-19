@@ -52,13 +52,13 @@
         "misconfigurations": [
           {
             "property": "database.encryption.require_ssl",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": false
           },
           {
             "property": "database.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "instance",
             "operator": "eq",
             "unsafe_value": "instance"
           }
@@ -137,12 +137,12 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "the database requires SSL connections must equal false, but is false",
+              "clause": "the database requires SSL connections = false",
               "observation_key": "database.encryption.require_ssl",
               "observed_value": false
             },
             {
-              "clause": "database.kind must equal \"instance\", but is \"instance\"",
+              "clause": "database.kind = \"instance\"",
               "observation_key": "database.kind",
               "observed_value": "instance"
             }
@@ -151,15 +151,16 @@
         "changes": [
           {
             "path": "database.encryption.require_ssl",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set database.encryption.require_ssl to "
+            "description": "Set database.encryption.require_ssl to true"
           },
           {
             "path": "database.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "instance",
             "has_safe_default": false,
-            "description": "Change database.kind from [SANITIZED]"
+            "description": "Change database.kind from instance"
           }
         ],
         "command": "Set the rds.force_ssl parameter to 1 in the parameter group (PostgreSQL) or require_secure_transport to ON (MySQL). For Aurora, use the cluster parameter group."
@@ -311,7 +312,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "1ae8b4da8479e5e75eaf0d7d9b907f3f5e5929e7",
+      "head_commit": "1a337200eb5c008d17ea570ba9886f86c6b5660b",
       "dirty": false
     }
   }

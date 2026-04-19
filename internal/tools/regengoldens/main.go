@@ -490,6 +490,33 @@ func classifyPath(path string) string {
 			strings.HasPrefix(rest, "alternatives"):
 			return "metadata"
 		}
+		// remediation_context.violation.reasoning[*].clause is the
+		// translator-rendered prose embedded in JSON. The underlying
+		// structured fields (observation_key, observed_value, operator)
+		// remain behavioral; only the prose rendering is metadata.
+		if strings.HasPrefix(rest, "remediation_context.violation.reasoning") &&
+			strings.HasSuffix(rest, ".clause") {
+			return "metadata"
+		}
+		// Sanitization-policy outputs: actual_value on Misconfiguration
+		// entries and the derived remediation_context.changes fields
+		// (current_value, description, required_value). All four reflect
+		// the type-discriminated sanitizer's policy choices, not
+		// detection behavior. The underlying finding identity-set is
+		// unchanged.
+		if strings.HasPrefix(rest, "evidence.misconfigurations") &&
+			strings.HasSuffix(rest, ".actual_value") {
+			return "metadata"
+		}
+		if strings.HasPrefix(rest, "remediation_context.changes") {
+			switch {
+			case strings.HasSuffix(rest, ".current_value"),
+				strings.HasSuffix(rest, ".description"),
+				strings.HasSuffix(rest, ".required_value"),
+				strings.HasSuffix(rest, ".has_safe_default"):
+				return "metadata"
+			}
+		}
 	}
 	return "behavioral"
 }

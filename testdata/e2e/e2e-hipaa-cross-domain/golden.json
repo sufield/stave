@@ -384,13 +384,13 @@
         "misconfigurations": [
           {
             "property": "audit_trail.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "trail",
             "operator": "eq",
             "unsafe_value": "trail"
           },
           {
             "property": "audit_trail.multi_region_enabled",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": false
           }
@@ -482,12 +482,12 @@
           "severity": "critical",
           "reasoning": [
             {
-              "clause": "audit_trail.kind must equal \"trail\", but is \"trail\"",
+              "clause": "audit_trail.kind = \"trail\"",
               "observation_key": "audit_trail.kind",
               "observed_value": "trail"
             },
             {
-              "clause": "the audit trail is multi-region must equal false, but is false",
+              "clause": "the audit trail is multi-region = false",
               "observation_key": "audit_trail.multi_region_enabled",
               "observed_value": false
             }
@@ -496,15 +496,16 @@
         "changes": [
           {
             "path": "audit_trail.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "trail",
             "has_safe_default": false,
-            "description": "Change audit_trail.kind from [SANITIZED]"
+            "description": "Change audit_trail.kind from trail"
           },
           {
             "path": "audit_trail.multi_region_enabled",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set audit_trail.multi_region_enabled to "
+            "description": "Set audit_trail.multi_region_enabled to true"
           }
         ],
         "command": "Update the trail to enable multi-region logging. Run: aws cloudtrail update-trail --name xxx --is-multi-region-trail"
@@ -525,13 +526,13 @@
         "misconfigurations": [
           {
             "property": "compliance.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "recorder",
             "operator": "eq",
             "unsafe_value": "recorder"
           },
           {
             "property": "compliance.recording_enabled",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": false
           }
@@ -624,12 +625,12 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "compliance.kind must equal \"recorder\", but is \"recorder\"",
+              "clause": "compliance.kind = \"recorder\"",
               "observation_key": "compliance.kind",
               "observed_value": "recorder"
             },
             {
-              "clause": "compliance recording is enabled must equal false, but is false",
+              "clause": "compliance recording is enabled = false",
               "observation_key": "compliance.recording_enabled",
               "observed_value": false
             }
@@ -638,15 +639,16 @@
         "changes": [
           {
             "path": "compliance.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "recorder",
             "has_safe_default": false,
-            "description": "Change compliance.kind from [SANITIZED]"
+            "description": "Change compliance.kind from recorder"
           },
           {
             "path": "compliance.recording_enabled",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set compliance.recording_enabled to "
+            "description": "Set compliance.recording_enabled to true"
           }
         ],
         "command": "Enable the Config recorder with all resource types. Run: aws configservice put-configuration-recorder --configuration-recorder name=default,roleARN=arn:...,recordingGroup={allSupported=true}"
@@ -667,13 +669,13 @@
         "misconfigurations": [
           {
             "property": "network.flow_log.enabled",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": false
           },
           {
             "property": "network.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "vpc",
             "operator": "eq",
             "unsafe_value": "vpc"
           }
@@ -760,12 +762,12 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "VPC Flow Logs are enabled must equal false, but is false",
+              "clause": "VPC Flow Logs are enabled = false",
               "observation_key": "network.flow_log.enabled",
               "observed_value": false
             },
             {
-              "clause": "network.kind must equal \"vpc\", but is \"vpc\"",
+              "clause": "network.kind = \"vpc\"",
               "observation_key": "network.kind",
               "observed_value": "vpc"
             }
@@ -774,15 +776,16 @@
         "changes": [
           {
             "path": "network.flow_log.enabled",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set network.flow_log.enabled to "
+            "description": "Set network.flow_log.enabled to true"
           },
           {
             "path": "network.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "vpc",
             "has_safe_default": false,
-            "description": "Change network.kind from [SANITIZED]"
+            "description": "Change network.kind from vpc"
           }
         ],
         "command": "Enable VPC flow logs to CloudWatch Logs or S3. Run: aws ec2 create-flow-logs --resource-type VPC --resource-ids vpc-xxx --traffic-type ALL --log-destination-type cloud-watch-logs"
@@ -803,13 +806,13 @@
         "misconfigurations": [
           {
             "property": "identity.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "account",
             "operator": "eq",
             "unsafe_value": "account"
           },
           {
             "property": "identity.root.has_access_keys",
-            "actual_value": "[SANITIZED]",
+            "actual_value": true,
             "operator": "eq",
             "unsafe_value": true
           }
@@ -898,12 +901,12 @@
           "severity": "critical",
           "reasoning": [
             {
-              "clause": "identity.kind must equal \"account\", but is \"account\"",
+              "clause": "identity.kind = \"account\"",
               "observation_key": "identity.kind",
               "observed_value": "account"
             },
             {
-              "clause": "the root account has access keys must equal true, but is true",
+              "clause": "the root account has access keys = true",
               "observation_key": "identity.root.has_access_keys",
               "observed_value": true
             }
@@ -912,15 +915,16 @@
         "changes": [
           {
             "path": "identity.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "account",
             "has_safe_default": false,
-            "description": "Change identity.kind from [SANITIZED]"
+            "description": "Change identity.kind from account"
           },
           {
             "path": "identity.root.has_access_keys",
-            "current_value": "[SANITIZED]",
+            "current_value": "true",
+            "required_value": "false",
             "has_safe_default": true,
-            "description": "Set identity.root.has_access_keys to "
+            "description": "Set identity.root.has_access_keys to false"
           }
         ],
         "command": "Delete the root access keys. Create IAM users or roles with least-privilege policies for programmatic access."
@@ -949,13 +953,13 @@
         "misconfigurations": [
           {
             "property": "identity.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "account",
             "operator": "eq",
             "unsafe_value": "account"
           },
           {
             "property": "identity.root.mfa_enabled",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": false
           }
@@ -1048,12 +1052,12 @@
           "severity": "critical",
           "reasoning": [
             {
-              "clause": "identity.kind must equal \"account\", but is \"account\"",
+              "clause": "identity.kind = \"account\"",
               "observation_key": "identity.kind",
               "observed_value": "account"
             },
             {
-              "clause": "MFA is enabled on the root account must equal false, but is false",
+              "clause": "MFA is enabled on the root account = false",
               "observation_key": "identity.root.mfa_enabled",
               "observed_value": false
             }
@@ -1062,15 +1066,16 @@
         "changes": [
           {
             "path": "identity.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "account",
             "has_safe_default": false,
-            "description": "Change identity.kind from [SANITIZED]"
+            "description": "Change identity.kind from account"
           },
           {
             "path": "identity.root.mfa_enabled",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set identity.root.mfa_enabled to "
+            "description": "Set identity.root.mfa_enabled to true"
           }
         ],
         "command": "Enable MFA on the root account using a hardware MFA device or virtual MFA app. Navigate to IAM \u003e Security credentials \u003e MFA."
@@ -1099,13 +1104,13 @@
         "misconfigurations": [
           {
             "property": "database.access.publicly_accessible",
-            "actual_value": "[SANITIZED]",
+            "actual_value": true,
             "operator": "eq",
             "unsafe_value": true
           },
           {
             "property": "database.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "instance",
             "operator": "eq",
             "unsafe_value": "instance"
           }
@@ -1224,12 +1229,12 @@
           "severity": "critical",
           "reasoning": [
             {
-              "clause": "the database is publicly accessible must equal true, but is true",
+              "clause": "the database is publicly accessible = true",
               "observation_key": "database.access.publicly_accessible",
               "observed_value": true
             },
             {
-              "clause": "database.kind must equal \"instance\", but is \"instance\"",
+              "clause": "database.kind = \"instance\"",
               "observation_key": "database.kind",
               "observed_value": "instance"
             }
@@ -1238,15 +1243,16 @@
         "changes": [
           {
             "path": "database.access.publicly_accessible",
-            "current_value": "[SANITIZED]",
+            "current_value": "true",
+            "required_value": "false",
             "has_safe_default": true,
-            "description": "Set database.access.publicly_accessible to "
+            "description": "Set database.access.publicly_accessible to false"
           },
           {
             "path": "database.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "instance",
             "has_safe_default": false,
-            "description": "Change database.kind from [SANITIZED]"
+            "description": "Change database.kind from instance"
           }
         ],
         "command": "Modify the instance to disable public accessibility. Run: aws rds modify-db-instance --db-instance-identifier xxx --no-publicly-accessible --apply-immediately"
@@ -1267,13 +1273,13 @@
         "misconfigurations": [
           {
             "property": "database.encryption.storage_encrypted",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": false
           },
           {
             "property": "database.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "instance",
             "operator": "eq",
             "unsafe_value": "instance"
           }
@@ -1365,12 +1371,12 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "storage-at-rest encryption is enabled on the database must equal false, but is false",
+              "clause": "storage-at-rest encryption is enabled on the database = false",
               "observation_key": "database.encryption.storage_encrypted",
               "observed_value": false
             },
             {
-              "clause": "database.kind must equal \"instance\", but is \"instance\"",
+              "clause": "database.kind = \"instance\"",
               "observation_key": "database.kind",
               "observed_value": "instance"
             }
@@ -1379,15 +1385,16 @@
         "changes": [
           {
             "path": "database.encryption.storage_encrypted",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set database.encryption.storage_encrypted to "
+            "description": "Set database.encryption.storage_encrypted to true"
           },
           {
             "path": "database.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "instance",
             "has_safe_default": false,
-            "description": "Change database.kind from [SANITIZED]"
+            "description": "Change database.kind from instance"
           }
         ],
         "command": "Storage encryption can only be enabled at creation time. Create a snapshot, copy it with encryption enabled, then restore to a new encrypted instance. Enable encryption by default for new instances."
@@ -1408,13 +1415,13 @@
         "misconfigurations": [
           {
             "property": "api.encryption.tls_enforced",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": false
           },
           {
             "property": "api.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "rest_api",
             "operator": "eq",
             "unsafe_value": "rest_api"
           }
@@ -1492,12 +1499,12 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "API Gateway TLS is enforced must equal false, but is false",
+              "clause": "API Gateway TLS is enforced = false",
               "observation_key": "api.encryption.tls_enforced",
               "observed_value": false
             },
             {
-              "clause": "api.kind must equal \"rest_api\", but is \"rest_api\"",
+              "clause": "api.kind = \"rest_api\"",
               "observation_key": "api.kind",
               "observed_value": "rest_api"
             }
@@ -1506,15 +1513,16 @@
         "changes": [
           {
             "path": "api.encryption.tls_enforced",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set api.encryption.tls_enforced to "
+            "description": "Set api.encryption.tls_enforced to true"
           },
           {
             "path": "api.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "rest_api",
             "has_safe_default": false,
-            "description": "Change api.kind from [SANITIZED]"
+            "description": "Change api.kind from rest_api"
           }
         ],
         "command": "Set the minimum TLS version on the custom domain or API stage. For REST APIs, configure a security policy of TLS_1_2 on the custom domain name."
@@ -1535,13 +1543,13 @@
         "misconfigurations": [
           {
             "property": "backup.has_backup",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": false
           },
           {
             "property": "backup.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "resource",
             "operator": "eq",
             "unsafe_value": "resource"
           }
@@ -1616,12 +1624,12 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "the resource has a backup configured must equal false, but is false",
+              "clause": "the resource has a backup configured = false",
               "observation_key": "backup.has_backup",
               "observed_value": false
             },
             {
-              "clause": "backup.kind must equal \"resource\", but is \"resource\"",
+              "clause": "backup.kind = \"resource\"",
               "observation_key": "backup.kind",
               "observed_value": "resource"
             }
@@ -1630,15 +1638,16 @@
         "changes": [
           {
             "path": "backup.has_backup",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set backup.has_backup to "
+            "description": "Set backup.has_backup to true"
           },
           {
             "path": "backup.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "resource",
             "has_safe_default": false,
-            "description": "Change backup.kind from [SANITIZED]"
+            "description": "Change backup.kind from resource"
           }
         ],
         "command": "Configure automated backups via AWS Backup, RDS automated snapshots, or S3 cross-region replication depending on the resource type."
@@ -1659,13 +1668,13 @@
         "misconfigurations": [
           {
             "property": "audit_trail.encryption.encrypted",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": false
           },
           {
             "property": "audit_trail.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "trail",
             "operator": "eq",
             "unsafe_value": "trail"
           }
@@ -1743,12 +1752,12 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "the audit trail is encrypted must equal false, but is false",
+              "clause": "the audit trail is encrypted = false",
               "observation_key": "audit_trail.encryption.encrypted",
               "observed_value": false
             },
             {
-              "clause": "audit_trail.kind must equal \"trail\", but is \"trail\"",
+              "clause": "audit_trail.kind = \"trail\"",
               "observation_key": "audit_trail.kind",
               "observed_value": "trail"
             }
@@ -1757,15 +1766,16 @@
         "changes": [
           {
             "path": "audit_trail.encryption.encrypted",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set audit_trail.encryption.encrypted to "
+            "description": "Set audit_trail.encryption.encrypted to true"
           },
           {
             "path": "audit_trail.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "trail",
             "has_safe_default": false,
-            "description": "Change audit_trail.kind from [SANITIZED]"
+            "description": "Change audit_trail.kind from trail"
           }
         ],
         "command": "Configure the trail to use a KMS key for log encryption. Run: aws cloudtrail update-trail --name xxx --kms-key-id arn:aws:kms:..."
@@ -1786,13 +1796,13 @@
         "misconfigurations": [
           {
             "property": "audit_trail.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "trail",
             "operator": "eq",
             "unsafe_value": "trail"
           },
           {
             "property": "audit_trail.log_file_validation_enabled",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": false
           }
@@ -1873,12 +1883,12 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "audit_trail.kind must equal \"trail\", but is \"trail\"",
+              "clause": "audit_trail.kind = \"trail\"",
               "observation_key": "audit_trail.kind",
               "observed_value": "trail"
             },
             {
-              "clause": "audit trail log file validation is enabled must equal false, but is false",
+              "clause": "audit trail log file validation is enabled = false",
               "observation_key": "audit_trail.log_file_validation_enabled",
               "observed_value": false
             }
@@ -1887,15 +1897,16 @@
         "changes": [
           {
             "path": "audit_trail.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "trail",
             "has_safe_default": false,
-            "description": "Change audit_trail.kind from [SANITIZED]"
+            "description": "Change audit_trail.kind from trail"
           },
           {
             "path": "audit_trail.log_file_validation_enabled",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set audit_trail.log_file_validation_enabled to "
+            "description": "Set audit_trail.log_file_validation_enabled to true"
           }
         ],
         "command": "Enable log file validation on the trail. Run: aws cloudtrail update-trail --name xxx --enable-log-file-validation"
@@ -1916,13 +1927,13 @@
         "misconfigurations": [
           {
             "property": "log_group.has_retention_policy",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": false
           },
           {
             "property": "log_group.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "log_group",
             "operator": "eq",
             "unsafe_value": "log_group"
           }
@@ -1995,12 +2006,12 @@
           "severity": "medium",
           "reasoning": [
             {
-              "clause": "the log group has a retention policy must equal false, but is false",
+              "clause": "the log group has a retention policy = false",
               "observation_key": "log_group.has_retention_policy",
               "observed_value": false
             },
             {
-              "clause": "the log group resource kind must equal \"log_group\", but is \"log_group\"",
+              "clause": "the log group resource kind = \"log_group\"",
               "observation_key": "log_group.kind",
               "observed_value": "log_group"
             }
@@ -2009,15 +2020,16 @@
         "changes": [
           {
             "path": "log_group.has_retention_policy",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set log_group.has_retention_policy to "
+            "description": "Set log_group.has_retention_policy to true"
           },
           {
             "path": "log_group.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "log_group",
             "has_safe_default": false,
-            "description": "Change log_group.kind from [SANITIZED]"
+            "description": "Change log_group.kind from log_group"
           }
         ],
         "command": "Set a retention policy on the log group. Run: aws logs put-retention-policy --log-group-name xxx --retention-in-days 365"
@@ -2038,13 +2050,13 @@
         "misconfigurations": [
           {
             "property": "identity.auth.mfa_enforced",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": false
           },
           {
             "property": "identity.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "user_pool",
             "operator": "eq",
             "unsafe_value": "user_pool"
           }
@@ -2120,12 +2132,12 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "MFA is enforced for this identity must equal false, but is false",
+              "clause": "MFA is enforced for this identity = false",
               "observation_key": "identity.auth.mfa_enforced",
               "observed_value": false
             },
             {
-              "clause": "identity.kind must equal \"user_pool\", but is \"user_pool\"",
+              "clause": "identity.kind = \"user_pool\"",
               "observation_key": "identity.kind",
               "observed_value": "user_pool"
             }
@@ -2134,15 +2146,16 @@
         "changes": [
           {
             "path": "identity.auth.mfa_enforced",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set identity.auth.mfa_enforced to "
+            "description": "Set identity.auth.mfa_enforced to true"
           },
           {
             "path": "identity.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "user_pool",
             "has_safe_default": false,
-            "description": "Change identity.kind from [SANITIZED]"
+            "description": "Change identity.kind from user_pool"
           }
         ],
         "command": "Set MfaConfiguration to ON (required) on the user pool. Run: aws cognito-idp set-user-pool-mfa-config --user-pool-id xxx --mfa-configuration ON --software-token-mfa-configuration Enabled=true"
@@ -2163,13 +2176,13 @@
         "misconfigurations": [
           {
             "property": "database.encryption.sse_type",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "DEFAULT",
             "operator": "ne",
             "unsafe_value": "KMS"
           },
           {
             "property": "database.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "table",
             "operator": "eq",
             "unsafe_value": "table"
           }
@@ -2245,12 +2258,12 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "the database SSE type must not equal \"KMS\", but is \"DEFAULT\"",
+              "clause": "the database SSE type not equal \"KMS\" (observed: \"DEFAULT\")",
               "observation_key": "database.encryption.sse_type",
               "observed_value": "DEFAULT"
             },
             {
-              "clause": "database.kind must equal \"table\", but is \"table\"",
+              "clause": "database.kind = \"table\"",
               "observation_key": "database.kind",
               "observed_value": "table"
             }
@@ -2259,15 +2272,15 @@
         "changes": [
           {
             "path": "database.encryption.sse_type",
-            "current_value": "[SANITIZED]",
+            "current_value": "DEFAULT",
             "has_safe_default": false,
-            "description": "Change database.encryption.sse_type from [SANITIZED]"
+            "description": "Change database.encryption.sse_type from DEFAULT"
           },
           {
             "path": "database.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "table",
             "has_safe_default": false,
-            "description": "Change database.kind from [SANITIZED]"
+            "description": "Change database.kind from table"
           }
         ],
         "command": "Update the table encryption to use a customer-managed KMS key. Run: aws dynamodb update-table --table-name xxx --sse-specification Enabled=true,SSEType=KMS,KMSMasterKeyId=arn:..."
@@ -2288,13 +2301,13 @@
         "misconfigurations": [
           {
             "property": "compute.encryption.ebs_encrypted",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": false
           },
           {
             "property": "compute.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "instance",
             "operator": "eq",
             "unsafe_value": "instance"
           }
@@ -2375,12 +2388,12 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "EBS volumes are encrypted must equal false, but is false",
+              "clause": "EBS volumes are encrypted = false",
               "observation_key": "compute.encryption.ebs_encrypted",
               "observed_value": false
             },
             {
-              "clause": "compute.kind must equal \"instance\", but is \"instance\"",
+              "clause": "compute.kind = \"instance\"",
               "observation_key": "compute.kind",
               "observed_value": "instance"
             }
@@ -2389,15 +2402,16 @@
         "changes": [
           {
             "path": "compute.encryption.ebs_encrypted",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set compute.encryption.ebs_encrypted to "
+            "description": "Set compute.encryption.ebs_encrypted to true"
           },
           {
             "path": "compute.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "instance",
             "has_safe_default": false,
-            "description": "Change compute.kind from [SANITIZED]"
+            "description": "Change compute.kind from instance"
           }
         ],
         "command": "Enable EBS encryption by default for the account. For existing volumes, create an encrypted snapshot and restore to a new encrypted volume. Run: aws ec2 enable-ebs-encryption-by-default"
@@ -2418,13 +2432,13 @@
         "misconfigurations": [
           {
             "property": "compute.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "instance",
             "operator": "eq",
             "unsafe_value": "instance"
           },
           {
             "property": "compute.network.has_public_ip",
-            "actual_value": "[SANITIZED]",
+            "actual_value": true,
             "operator": "eq",
             "unsafe_value": true
           }
@@ -2528,12 +2542,12 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "compute.kind must equal \"instance\", but is \"instance\"",
+              "clause": "compute.kind = \"instance\"",
               "observation_key": "compute.kind",
               "observed_value": "instance"
             },
             {
-              "clause": "the compute resource has a public IP must equal true, but is true",
+              "clause": "the compute resource has a public IP = true",
               "observation_key": "compute.network.has_public_ip",
               "observed_value": true
             }
@@ -2542,15 +2556,16 @@
         "changes": [
           {
             "path": "compute.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "instance",
             "has_safe_default": false,
-            "description": "Change compute.kind from [SANITIZED]"
+            "description": "Change compute.kind from instance"
           },
           {
             "path": "compute.network.has_public_ip",
-            "current_value": "[SANITIZED]",
+            "current_value": "true",
+            "required_value": "false",
             "has_safe_default": true,
-            "description": "Set compute.network.has_public_ip to "
+            "description": "Set compute.network.has_public_ip to false"
           }
         ],
         "command": "Launch instances in private subnets without public IP assignment. Use NAT Gateway or VPC endpoints for outbound internet access. Use ALB or NLB for inbound traffic that requires internet access."
@@ -2571,13 +2586,13 @@
         "misconfigurations": [
           {
             "property": "cache.encryption.in_transit_enabled",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": false
           },
           {
             "property": "cache.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "cluster",
             "operator": "eq",
             "unsafe_value": "cluster"
           }
@@ -2654,12 +2669,12 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "cache in-transit encryption is enabled must equal false, but is false",
+              "clause": "cache in-transit encryption is enabled = false",
               "observation_key": "cache.encryption.in_transit_enabled",
               "observed_value": false
             },
             {
-              "clause": "the cache resource kind must equal \"cluster\", but is \"cluster\"",
+              "clause": "the cache resource kind = \"cluster\"",
               "observation_key": "cache.kind",
               "observed_value": "cluster"
             }
@@ -2668,15 +2683,16 @@
         "changes": [
           {
             "path": "cache.encryption.in_transit_enabled",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set cache.encryption.in_transit_enabled to "
+            "description": "Set cache.encryption.in_transit_enabled to true"
           },
           {
             "path": "cache.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "cluster",
             "has_safe_default": false,
-            "description": "Change cache.kind from [SANITIZED]"
+            "description": "Change cache.kind from cluster"
           }
         ],
         "command": "In-transit encryption can only be enabled at cluster creation. Create a new replication group with TransitEncryptionEnabled=true and migrate data from the existing cluster."
@@ -2697,7 +2713,7 @@
         "misconfigurations": [
           {
             "property": "loadbalancer.encryption.http_to_https_redirect",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": false
           }
@@ -2767,7 +2783,7 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "the load balancer redirects HTTP to HTTPS must equal false, but is false",
+              "clause": "the load balancer redirects HTTP to HTTPS = false",
               "observation_key": "loadbalancer.encryption.http_to_https_redirect",
               "observed_value": false
             }
@@ -2776,9 +2792,10 @@
         "changes": [
           {
             "path": "loadbalancer.encryption.http_to_https_redirect",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set loadbalancer.encryption.http_to_https_redirect to "
+            "description": "Set loadbalancer.encryption.http_to_https_redirect to true"
           }
         ],
         "command": "Add a listener rule on port 80 that redirects to HTTPS (443) with status code 301."
@@ -2799,7 +2816,7 @@
         "misconfigurations": [
           {
             "property": "loadbalancer.encryption.tls_1_2_or_higher",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": false
           }
@@ -2870,7 +2887,7 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "the load balancer uses TLS 1.2 or higher must equal false, but is false",
+              "clause": "the load balancer uses TLS 1.2 or higher = false",
               "observation_key": "loadbalancer.encryption.tls_1_2_or_higher",
               "observed_value": false
             }
@@ -2879,9 +2896,10 @@
         "changes": [
           {
             "path": "loadbalancer.encryption.tls_1_2_or_higher",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set loadbalancer.encryption.tls_1_2_or_higher to "
+            "description": "Set loadbalancer.encryption.tls_1_2_or_higher to true"
           }
         ],
         "command": "Update the HTTPS listener to use an ELBSecurityPolicy that enforces TLS 1.2 minimum (e.g., ELBSecurityPolicy-TLS-1-2-2017-01)."
@@ -2902,13 +2920,13 @@
         "misconfigurations": [
           {
             "property": "cryptography.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "key",
             "operator": "eq",
             "unsafe_value": "key"
           },
           {
             "property": "cryptography.policy.has_wildcard_principal",
-            "actual_value": "[SANITIZED]",
+            "actual_value": true,
             "operator": "eq",
             "unsafe_value": true
           }
@@ -2988,12 +3006,12 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "cryptography.kind must equal \"key\", but is \"key\"",
+              "clause": "cryptography.kind = \"key\"",
               "observation_key": "cryptography.kind",
               "observed_value": "key"
             },
             {
-              "clause": "the KMS key policy grants to Principal \"*\" must equal true, but is true",
+              "clause": "the KMS key policy grants to Principal \"*\" = true",
               "observation_key": "cryptography.policy.has_wildcard_principal",
               "observed_value": true
             }
@@ -3002,15 +3020,16 @@
         "changes": [
           {
             "path": "cryptography.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "key",
             "has_safe_default": false,
-            "description": "Change cryptography.kind from [SANITIZED]"
+            "description": "Change cryptography.kind from key"
           },
           {
             "path": "cryptography.policy.has_wildcard_principal",
-            "current_value": "[SANITIZED]",
+            "current_value": "true",
+            "required_value": "false",
             "has_safe_default": true,
-            "description": "Set cryptography.policy.has_wildcard_principal to "
+            "description": "Set cryptography.policy.has_wildcard_principal to false"
           }
         ],
         "command": "Update the key policy to restrict Principal to specific IAM roles or accounts. Remove any statements with Principal \"*\"."
@@ -3031,13 +3050,13 @@
         "misconfigurations": [
           {
             "property": "database.backup.enabled",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": false
           },
           {
             "property": "database.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "instance",
             "operator": "eq",
             "unsafe_value": "instance"
           }
@@ -3109,12 +3128,12 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "automated backups are enabled on the database must equal false, but is false",
+              "clause": "automated backups are enabled on the database = false",
               "observation_key": "database.backup.enabled",
               "observed_value": false
             },
             {
-              "clause": "database.kind must equal \"instance\", but is \"instance\"",
+              "clause": "database.kind = \"instance\"",
               "observation_key": "database.kind",
               "observed_value": "instance"
             }
@@ -3123,15 +3142,16 @@
         "changes": [
           {
             "path": "database.backup.enabled",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set database.backup.enabled to "
+            "description": "Set database.backup.enabled to true"
           },
           {
             "path": "database.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "instance",
             "has_safe_default": false,
-            "description": "Change database.kind from [SANITIZED]"
+            "description": "Change database.kind from instance"
           }
         ],
         "command": "Enable automated backups with at least 7 days retention. Run: aws rds modify-db-instance --db-instance-identifier xxx --backup-retention-period 7 --apply-immediately"
@@ -3152,13 +3172,13 @@
         "misconfigurations": [
           {
             "property": "secret.encryption.customer_managed_key",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": false
           },
           {
             "property": "secret.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "secret",
             "operator": "eq",
             "unsafe_value": "secret"
           }
@@ -3234,12 +3254,12 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "the secret is encrypted with a customer-managed key must equal false, but is false",
+              "clause": "the secret is encrypted with a customer-managed key = false",
               "observation_key": "secret.encryption.customer_managed_key",
               "observed_value": false
             },
             {
-              "clause": "secret.kind must equal \"secret\", but is \"secret\"",
+              "clause": "secret.kind = \"secret\"",
               "observation_key": "secret.kind",
               "observed_value": "secret"
             }
@@ -3248,15 +3268,16 @@
         "changes": [
           {
             "path": "secret.encryption.customer_managed_key",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set secret.encryption.customer_managed_key to "
+            "description": "Set secret.encryption.customer_managed_key to true"
           },
           {
             "path": "secret.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "secret",
             "has_safe_default": false,
-            "description": "Change secret.kind from [SANITIZED]"
+            "description": "Change secret.kind from secret"
           }
         ],
         "command": "Recreate the secret with a customer-managed KMS key specified. Secrets Manager does not allow changing the encryption key after creation."
@@ -3277,13 +3298,13 @@
         "misconfigurations": [
           {
             "property": "messaging.encryption.encrypted",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": false
           },
           {
             "property": "messaging.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "topic",
             "operator": "eq",
             "unsafe_value": "topic"
           }
@@ -3355,12 +3376,12 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "messaging encryption is enabled must equal false, but is false",
+              "clause": "messaging encryption is enabled = false",
               "observation_key": "messaging.encryption.encrypted",
               "observed_value": false
             },
             {
-              "clause": "messaging.kind must equal \"topic\", but is \"topic\"",
+              "clause": "messaging.kind = \"topic\"",
               "observation_key": "messaging.kind",
               "observed_value": "topic"
             }
@@ -3369,15 +3390,16 @@
         "changes": [
           {
             "path": "messaging.encryption.encrypted",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set messaging.encryption.encrypted to "
+            "description": "Set messaging.encryption.encrypted to true"
           },
           {
             "path": "messaging.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "topic",
             "has_safe_default": false,
-            "description": "Change messaging.kind from [SANITIZED]"
+            "description": "Change messaging.kind from topic"
           }
         ],
         "command": "Enable SSE-KMS on the topic. Run: aws sns set-topic-attributes --topic-arn xxx --attribute-name KmsMasterKeyId --attribute-value arn:aws:kms:..."
@@ -3398,13 +3420,13 @@
         "misconfigurations": [
           {
             "property": "messaging.encryption.encrypted",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": false
           },
           {
             "property": "messaging.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "queue",
             "operator": "eq",
             "unsafe_value": "queue"
           }
@@ -3476,12 +3498,12 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "messaging encryption is enabled must equal false, but is false",
+              "clause": "messaging encryption is enabled = false",
               "observation_key": "messaging.encryption.encrypted",
               "observed_value": false
             },
             {
-              "clause": "messaging.kind must equal \"queue\", but is \"queue\"",
+              "clause": "messaging.kind = \"queue\"",
               "observation_key": "messaging.kind",
               "observed_value": "queue"
             }
@@ -3490,15 +3512,16 @@
         "changes": [
           {
             "path": "messaging.encryption.encrypted",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set messaging.encryption.encrypted to "
+            "description": "Set messaging.encryption.encrypted to true"
           },
           {
             "path": "messaging.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "queue",
             "has_safe_default": false,
-            "description": "Change messaging.kind from [SANITIZED]"
+            "description": "Change messaging.kind from queue"
           }
         ],
         "command": "Enable SSE-KMS on the queue. Run: aws sqs set-queue-attributes --queue-url xxx --attributes KmsMasterKeyId=arn:aws:kms:..."
@@ -3519,13 +3542,13 @@
         "misconfigurations": [
           {
             "property": "availability.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "resource",
             "operator": "eq",
             "unsafe_value": "resource"
           },
           {
             "property": "availability.multi_az",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": false
           }
@@ -3598,12 +3621,12 @@
           "severity": "medium",
           "reasoning": [
             {
-              "clause": "the availability resource kind must equal \"resource\", but is \"resource\"",
+              "clause": "the availability resource kind = \"resource\"",
               "observation_key": "availability.kind",
               "observed_value": "resource"
             },
             {
-              "clause": "the resource is deployed Multi-AZ must equal false, but is false",
+              "clause": "the resource is deployed Multi-AZ = false",
               "observation_key": "availability.multi_az",
               "observed_value": false
             }
@@ -3612,15 +3635,16 @@
         "changes": [
           {
             "path": "availability.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "resource",
             "has_safe_default": false,
-            "description": "Change availability.kind from [SANITIZED]"
+            "description": "Change availability.kind from resource"
           },
           {
             "path": "availability.multi_az",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set availability.multi_az to "
+            "description": "Set availability.multi_az to true"
           }
         ],
         "command": "Enable Multi-AZ deployment or configure cross-AZ replication depending on the resource type (RDS Multi-AZ, S3 cross-region replication, ELB multi-AZ targets)."
@@ -3641,13 +3665,13 @@
         "misconfigurations": [
           {
             "property": "replication.cross_region_enabled",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": false
           },
           {
             "property": "replication.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "resource",
             "operator": "eq",
             "unsafe_value": "resource"
           }
@@ -3720,12 +3744,12 @@
           "severity": "medium",
           "reasoning": [
             {
-              "clause": "cross-region replication is enabled must equal false, but is false",
+              "clause": "cross-region replication is enabled = false",
               "observation_key": "replication.cross_region_enabled",
               "observed_value": false
             },
             {
-              "clause": "the replication resource kind must equal \"resource\", but is \"resource\"",
+              "clause": "the replication resource kind = \"resource\"",
               "observation_key": "replication.kind",
               "observed_value": "resource"
             }
@@ -3734,15 +3758,16 @@
         "changes": [
           {
             "path": "replication.cross_region_enabled",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set replication.cross_region_enabled to "
+            "description": "Set replication.cross_region_enabled to true"
           },
           {
             "path": "replication.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "resource",
             "has_safe_default": false,
-            "description": "Change replication.kind from [SANITIZED]"
+            "description": "Change replication.kind from resource"
           }
         ],
         "command": "Configure cross-region replication: S3 CRR, RDS cross-region read replica, or AWS Backup cross-region copy rule."
@@ -3763,13 +3788,13 @@
         "misconfigurations": [
           {
             "property": "compliance.has_active_rules",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": false
           },
           {
             "property": "compliance.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "recorder",
             "operator": "eq",
             "unsafe_value": "recorder"
           }
@@ -3846,12 +3871,12 @@
           "severity": "medium",
           "reasoning": [
             {
-              "clause": "compliance service has active rules must equal false, but is false",
+              "clause": "compliance service has active rules = false",
               "observation_key": "compliance.has_active_rules",
               "observed_value": false
             },
             {
-              "clause": "compliance.kind must equal \"recorder\", but is \"recorder\"",
+              "clause": "compliance.kind = \"recorder\"",
               "observation_key": "compliance.kind",
               "observed_value": "recorder"
             }
@@ -3860,15 +3885,16 @@
         "changes": [
           {
             "path": "compliance.has_active_rules",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set compliance.has_active_rules to "
+            "description": "Set compliance.has_active_rules to true"
           },
           {
             "path": "compliance.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "recorder",
             "has_safe_default": false,
-            "description": "Change compliance.kind from [SANITIZED]"
+            "description": "Change compliance.kind from recorder"
           }
         ],
         "command": "Deploy Config Rules for your compliance requirements. Start with AWS managed rules for common checks (encrypted-volumes, restricted-common-ports, etc)."
@@ -3889,7 +3915,7 @@
         "misconfigurations": [
           {
             "property": "loadbalancer.availability.cross_zone_enabled",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": false
           }
@@ -3956,7 +3982,7 @@
           "severity": "medium",
           "reasoning": [
             {
-              "clause": "cross-zone load balancing is enabled must equal false, but is false",
+              "clause": "cross-zone load balancing is enabled = false",
               "observation_key": "loadbalancer.availability.cross_zone_enabled",
               "observed_value": false
             }
@@ -3965,9 +3991,10 @@
         "changes": [
           {
             "path": "loadbalancer.availability.cross_zone_enabled",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set loadbalancer.availability.cross_zone_enabled to "
+            "description": "Set loadbalancer.availability.cross_zone_enabled to true"
           }
         ],
         "command": "Enable cross-zone load balancing. Run: aws elbv2 modify-load-balancer-attributes --load-balancer-arn xxx --attributes Key=load_balancing.cross_zone.enabled,Value=true"
@@ -3988,7 +4015,7 @@
         "misconfigurations": [
           {
             "property": "loadbalancer.logging.access_log_enabled",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": false
           }
@@ -4053,7 +4080,7 @@
           "severity": "medium",
           "reasoning": [
             {
-              "clause": "load balancer access logging is enabled must equal false, but is false",
+              "clause": "load balancer access logging is enabled = false",
               "observation_key": "loadbalancer.logging.access_log_enabled",
               "observed_value": false
             }
@@ -4062,9 +4089,10 @@
         "changes": [
           {
             "path": "loadbalancer.logging.access_log_enabled",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set loadbalancer.logging.access_log_enabled to "
+            "description": "Set loadbalancer.logging.access_log_enabled to true"
           }
         ],
         "command": "Enable access logging to an S3 bucket. Run: aws elbv2 modify-load-balancer-attributes --load-balancer-arn xxx --attributes Key=access_logs.s3.enabled,Value=true Key=access_logs.s3.bucket,Value=my-elb-logs"
@@ -4085,13 +4113,13 @@
         "misconfigurations": [
           {
             "property": "database.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "instance",
             "operator": "eq",
             "unsafe_value": "instance"
           },
           {
             "property": "database.logging.audit_log_enabled",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": false
           }
@@ -4163,12 +4191,12 @@
           "severity": "medium",
           "reasoning": [
             {
-              "clause": "database.kind must equal \"instance\", but is \"instance\"",
+              "clause": "database.kind = \"instance\"",
               "observation_key": "database.kind",
               "observed_value": "instance"
             },
             {
-              "clause": "database audit logging is enabled must equal false, but is false",
+              "clause": "database audit logging is enabled = false",
               "observation_key": "database.logging.audit_log_enabled",
               "observed_value": false
             }
@@ -4177,15 +4205,16 @@
         "changes": [
           {
             "path": "database.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "instance",
             "has_safe_default": false,
-            "description": "Change database.kind from [SANITIZED]"
+            "description": "Change database.kind from instance"
           },
           {
             "path": "database.logging.audit_log_enabled",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set database.logging.audit_log_enabled to "
+            "description": "Set database.logging.audit_log_enabled to true"
           }
         ],
         "command": "Enable CloudWatch log exports for the database engine. Run: aws rds modify-db-instance --db-instance-identifier xxx --cloudwatch-logs-export-configuration '{\"EnableLogTypes\":[\"audit\",\"error\",\"slowquery\"]}'"
@@ -4206,13 +4235,13 @@
         "misconfigurations": [
           {
             "property": "database.access.multi_az",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": false
           },
           {
             "property": "database.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "instance",
             "operator": "eq",
             "unsafe_value": "instance"
           }
@@ -4285,12 +4314,12 @@
           "severity": "medium",
           "reasoning": [
             {
-              "clause": "the database is deployed Multi-AZ must equal false, but is false",
+              "clause": "the database is deployed Multi-AZ = false",
               "observation_key": "database.access.multi_az",
               "observed_value": false
             },
             {
-              "clause": "database.kind must equal \"instance\", but is \"instance\"",
+              "clause": "database.kind = \"instance\"",
               "observation_key": "database.kind",
               "observed_value": "instance"
             }
@@ -4299,15 +4328,16 @@
         "changes": [
           {
             "path": "database.access.multi_az",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set database.access.multi_az to "
+            "description": "Set database.access.multi_az to true"
           },
           {
             "path": "database.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "instance",
             "has_safe_default": false,
-            "description": "Change database.kind from [SANITIZED]"
+            "description": "Change database.kind from instance"
           }
         ],
         "command": "Modify the instance to enable Multi-AZ. Run: aws rds modify-db-instance --db-instance-identifier xxx --multi-az --apply-immediately"
@@ -4328,13 +4358,13 @@
         "misconfigurations": [
           {
             "property": "secret.access.rotation_enabled",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": false
           },
           {
             "property": "secret.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "secret",
             "operator": "eq",
             "unsafe_value": "secret"
           }
@@ -4407,12 +4437,12 @@
           "severity": "medium",
           "reasoning": [
             {
-              "clause": "secret rotation is enabled must equal false, but is false",
+              "clause": "secret rotation is enabled = false",
               "observation_key": "secret.access.rotation_enabled",
               "observed_value": false
             },
             {
-              "clause": "secret.kind must equal \"secret\", but is \"secret\"",
+              "clause": "secret.kind = \"secret\"",
               "observation_key": "secret.kind",
               "observed_value": "secret"
             }
@@ -4421,15 +4451,16 @@
         "changes": [
           {
             "path": "secret.access.rotation_enabled",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set secret.access.rotation_enabled to "
+            "description": "Set secret.access.rotation_enabled to true"
           },
           {
             "path": "secret.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "secret",
             "has_safe_default": false,
-            "description": "Change secret.kind from [SANITIZED]"
+            "description": "Change secret.kind from secret"
           }
         ],
         "command": "Configure automatic rotation with a Lambda function. Run: aws secretsmanager rotate-secret --secret-id xxx --rotation-lambda-arn arn:aws:lambda:... --rotation-rules AutomaticallyAfterDays=90"

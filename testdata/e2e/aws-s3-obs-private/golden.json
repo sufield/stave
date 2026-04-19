@@ -41,13 +41,13 @@
         "misconfigurations": [
           {
             "property": "exposure_source",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "missing_evidence",
             "operator": "eq",
             "unsafe_value": "missing_evidence"
           },
           {
             "property": "protected_prefix",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "backups/",
             "operator": "eq",
             "unsafe_value": "backups/"
           }
@@ -144,12 +144,12 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "the exposure source must equal \"missing_evidence\", but is \"missing_evidence\"",
+              "clause": "the exposure source = \"missing_evidence\"",
               "observation_key": "exposure_source",
               "observed_value": "missing_evidence"
             },
             {
-              "clause": "the protected prefix must equal \"backups/\", but is \"backups/\"",
+              "clause": "the protected prefix = \"backups/\"",
               "observation_key": "protected_prefix",
               "observed_value": "backups/"
             }
@@ -158,15 +158,15 @@
         "changes": [
           {
             "path": "exposure_source",
-            "current_value": "[SANITIZED]",
+            "current_value": "missing_evidence",
             "has_safe_default": false,
-            "description": "Change exposure_source from [SANITIZED]"
+            "description": "Change exposure_source from missing_evidence"
           },
           {
             "path": "protected_prefix",
-            "current_value": "[SANITIZED]",
+            "current_value": "backups/",
             "has_safe_default": false,
-            "description": "Change protected_prefix from [SANITIZED]"
+            "description": "Change protected_prefix from backups/"
           }
         ],
         "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
@@ -184,13 +184,13 @@
         "misconfigurations": [
           {
             "property": "exposure_source",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "missing_evidence",
             "operator": "eq",
             "unsafe_value": "missing_evidence"
           },
           {
             "property": "protected_prefix",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "internal/",
             "operator": "eq",
             "unsafe_value": "internal/"
           }
@@ -287,12 +287,12 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "the exposure source must equal \"missing_evidence\", but is \"missing_evidence\"",
+              "clause": "the exposure source = \"missing_evidence\"",
               "observation_key": "exposure_source",
               "observed_value": "missing_evidence"
             },
             {
-              "clause": "the protected prefix must equal \"internal/\", but is \"internal/\"",
+              "clause": "the protected prefix = \"internal/\"",
               "observation_key": "protected_prefix",
               "observed_value": "internal/"
             }
@@ -301,15 +301,15 @@
         "changes": [
           {
             "path": "exposure_source",
-            "current_value": "[SANITIZED]",
+            "current_value": "missing_evidence",
             "has_safe_default": false,
-            "description": "Change exposure_source from [SANITIZED]"
+            "description": "Change exposure_source from missing_evidence"
           },
           {
             "path": "protected_prefix",
-            "current_value": "[SANITIZED]",
+            "current_value": "internal/",
             "has_safe_default": false,
-            "description": "Change protected_prefix from [SANITIZED]"
+            "description": "Change protected_prefix from internal/"
           }
         ],
         "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
@@ -327,13 +327,13 @@
         "misconfigurations": [
           {
             "property": "exposure_source",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "missing_evidence",
             "operator": "eq",
             "unsafe_value": "missing_evidence"
           },
           {
             "property": "protected_prefix",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "invoices/",
             "operator": "eq",
             "unsafe_value": "invoices/"
           }
@@ -430,12 +430,12 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "the exposure source must equal \"missing_evidence\", but is \"missing_evidence\"",
+              "clause": "the exposure source = \"missing_evidence\"",
               "observation_key": "exposure_source",
               "observed_value": "missing_evidence"
             },
             {
-              "clause": "the protected prefix must equal \"invoices/\", but is \"invoices/\"",
+              "clause": "the protected prefix = \"invoices/\"",
               "observation_key": "protected_prefix",
               "observed_value": "invoices/"
             }
@@ -444,15 +444,15 @@
         "changes": [
           {
             "path": "exposure_source",
-            "current_value": "[SANITIZED]",
+            "current_value": "missing_evidence",
             "has_safe_default": false,
-            "description": "Change exposure_source from [SANITIZED]"
+            "description": "Change exposure_source from missing_evidence"
           },
           {
             "path": "protected_prefix",
-            "current_value": "[SANITIZED]",
+            "current_value": "invoices/",
             "has_safe_default": false,
-            "description": "Change protected_prefix from [SANITIZED]"
+            "description": "Change protected_prefix from invoices/"
           }
         ],
         "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
@@ -470,13 +470,13 @@
         "misconfigurations": [
           {
             "property": "exposure_source",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "missing_evidence",
             "operator": "eq",
             "unsafe_value": "missing_evidence"
           },
           {
             "property": "protected_prefix",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "secrets/",
             "operator": "eq",
             "unsafe_value": "secrets/"
           }
@@ -573,12 +573,12 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "the exposure source must equal \"missing_evidence\", but is \"missing_evidence\"",
+              "clause": "the exposure source = \"missing_evidence\"",
               "observation_key": "exposure_source",
               "observed_value": "missing_evidence"
             },
             {
-              "clause": "the protected prefix must equal \"secrets/\", but is \"secrets/\"",
+              "clause": "the protected prefix = \"secrets/\"",
               "observation_key": "protected_prefix",
               "observed_value": "secrets/"
             }
@@ -587,15 +587,15 @@
         "changes": [
           {
             "path": "exposure_source",
-            "current_value": "[SANITIZED]",
+            "current_value": "missing_evidence",
             "has_safe_default": false,
-            "description": "Change exposure_source from [SANITIZED]"
+            "description": "Change exposure_source from missing_evidence"
           },
           {
             "path": "protected_prefix",
-            "current_value": "[SANITIZED]",
+            "current_value": "secrets/",
             "has_safe_default": false,
-            "description": "Change protected_prefix from [SANITIZED]"
+            "description": "Change protected_prefix from secrets/"
           }
         ],
         "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
@@ -616,19 +616,19 @@
         "misconfigurations": [
           {
             "property": "storage.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "bucket",
             "operator": "eq",
             "unsafe_value": "bucket"
           },
           {
             "property": "storage.object_ownership.rule",
-            "actual_value": "[SANITIZED]",
+            "actual_value": null,
             "operator": "missing",
             "unsafe_value": true
           },
           {
             "property": "storage.object_ownership.rule",
-            "actual_value": "[SANITIZED]",
+            "actual_value": null,
             "operator": "ne",
             "unsafe_value": "BucketOwnerEnforced"
           }
@@ -709,16 +709,16 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "storage.kind must equal \"bucket\", but is \"bucket\"",
+              "clause": "storage.kind = \"bucket\"",
               "observation_key": "storage.kind",
               "observed_value": "bucket"
             },
             {
-              "clause": "the Object Ownership rule must be missing (and is)",
+              "clause": "the Object Ownership rule is not set",
               "observation_key": "storage.object_ownership.rule"
             },
             {
-              "clause": "the Object Ownership rule must not equal \"BucketOwnerEnforced\", but is not set",
+              "clause": "the Object Ownership rule not equal \"BucketOwnerEnforced\" (observed: not set)",
               "observation_key": "storage.object_ownership.rule"
             }
           ]
@@ -726,22 +726,22 @@
         "changes": [
           {
             "path": "storage.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "bucket",
             "has_safe_default": false,
-            "description": "Change storage.kind from [SANITIZED]"
+            "description": "Change storage.kind from bucket"
           },
           {
             "path": "storage.object_ownership.rule",
-            "current_value": "[SANITIZED]",
+            "current_value": "",
             "required_value": "present",
             "has_safe_default": false,
             "description": "Ensure storage.object_ownership.rule is present"
           },
           {
             "path": "storage.object_ownership.rule",
-            "current_value": "[SANITIZED]",
+            "current_value": "",
             "has_safe_default": false,
-            "description": "Change storage.object_ownership.rule from [SANITIZED]"
+            "description": "Change storage.object_ownership.rule from "
           }
         ],
         "command": "Set Object Ownership to BucketOwnerEnforced using aws s3api put-bucket-ownership-controls. This disables all ACLs on the bucket. Before enabling, audit existing ACL grants and migrate any legitimate access to bucket policies or IAM policies. All existing ACL-based access will stop working once BucketOwnerEnforced is set."

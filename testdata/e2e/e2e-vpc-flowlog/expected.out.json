@@ -52,13 +52,13 @@
         "misconfigurations": [
           {
             "property": "network.flow_log.enabled",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": false
           },
           {
             "property": "network.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "vpc",
             "operator": "eq",
             "unsafe_value": "vpc"
           }
@@ -135,12 +135,12 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "VPC Flow Logs are enabled must equal false, but is false",
+              "clause": "VPC Flow Logs are enabled = false",
               "observation_key": "network.flow_log.enabled",
               "observed_value": false
             },
             {
-              "clause": "network.kind must equal \"vpc\", but is \"vpc\"",
+              "clause": "network.kind = \"vpc\"",
               "observation_key": "network.kind",
               "observed_value": "vpc"
             }
@@ -149,15 +149,16 @@
         "changes": [
           {
             "path": "network.flow_log.enabled",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set network.flow_log.enabled to "
+            "description": "Set network.flow_log.enabled to true"
           },
           {
             "path": "network.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "vpc",
             "has_safe_default": false,
-            "description": "Change network.kind from [SANITIZED]"
+            "description": "Change network.kind from vpc"
           }
         ],
         "command": "Enable VPC flow logs to CloudWatch Logs or S3. Run: aws ec2 create-flow-logs --resource-type VPC --resource-ids vpc-xxx --traffic-type ALL --log-destination-type cloud-watch-logs"
@@ -309,7 +310,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "1ae8b4da8479e5e75eaf0d7d9b907f3f5e5929e7",
+      "head_commit": "1a337200eb5c008d17ea570ba9886f86c6b5660b",
       "dirty": false
     }
   }

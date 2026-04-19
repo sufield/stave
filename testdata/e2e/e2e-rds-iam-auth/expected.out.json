@@ -52,13 +52,13 @@
         "misconfigurations": [
           {
             "property": "database.access.iam_authentication_enabled",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": false
           },
           {
             "property": "database.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "instance",
             "operator": "eq",
             "unsafe_value": "instance"
           }
@@ -130,12 +130,12 @@
           "severity": "medium",
           "reasoning": [
             {
-              "clause": "IAM database authentication is enabled must equal false, but is false",
+              "clause": "IAM database authentication is enabled = false",
               "observation_key": "database.access.iam_authentication_enabled",
               "observed_value": false
             },
             {
-              "clause": "database.kind must equal \"instance\", but is \"instance\"",
+              "clause": "database.kind = \"instance\"",
               "observation_key": "database.kind",
               "observed_value": "instance"
             }
@@ -144,15 +144,16 @@
         "changes": [
           {
             "path": "database.access.iam_authentication_enabled",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set database.access.iam_authentication_enabled to "
+            "description": "Set database.access.iam_authentication_enabled to true"
           },
           {
             "path": "database.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "instance",
             "has_safe_default": false,
-            "description": "Change database.kind from [SANITIZED]"
+            "description": "Change database.kind from instance"
           }
         ],
         "command": "Enable IAM authentication on the instance. Run: aws rds modify-db-instance --db-instance-identifier xxx --enable-iam-database-authentication --apply-immediately"
@@ -304,7 +305,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "1ae8b4da8479e5e75eaf0d7d9b907f3f5e5929e7",
+      "head_commit": "1a337200eb5c008d17ea570ba9886f86c6b5660b",
       "dirty": false
     }
   }

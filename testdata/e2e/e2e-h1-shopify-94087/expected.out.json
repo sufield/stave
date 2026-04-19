@@ -52,7 +52,7 @@
         "misconfigurations": [
           {
             "property": "identities",
-            "actual_value": "[SANITIZED]",
+            "actual_value": null,
             "operator": "any_match",
             "unsafe_value": {
               "all": [
@@ -85,19 +85,19 @@
           },
           {
             "property": "storage.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "bucket",
             "operator": "eq",
             "unsafe_value": "bucket"
           },
           {
             "property": "storage.tags.tenant_mode",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "shared",
             "operator": "eq",
             "unsafe_value": "shared"
           },
           {
             "property": "storage.tags.tenant_prefix",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "shops/{shop_id}/",
             "operator": "present",
             "unsafe_value": true
           }
@@ -209,21 +209,21 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "the observation's identities list must match at least one of map[all:[map[field:type op:eq value:app_signer] map[field:id op:contains value:appsigner:s3:] map[any:[map[field:purpose op:contains value:allow_traversal=true] map[field:purpose op:contains value:enforce_prefix=false]]]]], but is not set",
+              "clause": "the observation's identities list match at least one of map[all:[map[field:type op:eq value:app_signer] map[field:id op:contains value:appsigner:s3:] map[any:[map[field:purpose op:contains value:allow_traversal=true] map[field:purpose op:contains value:enforce_prefix=false]]]]] (observed: not set)",
               "observation_key": "identities"
             },
             {
-              "clause": "storage.kind must equal \"bucket\", but is \"bucket\"",
+              "clause": "storage.kind = \"bucket\"",
               "observation_key": "storage.kind",
               "observed_value": "bucket"
             },
             {
-              "clause": "the bucket's tenant_mode tag must equal \"shared\", but is \"shared\"",
+              "clause": "the bucket's tenant_mode tag = \"shared\"",
               "observation_key": "storage.tags.tenant_mode",
               "observed_value": "shared"
             },
             {
-              "clause": "the bucket's tenant_prefix tag must be set (observed: \"shops/{shop_id}/\")",
+              "clause": "the bucket's tenant_prefix tag is set (observed: \"shops/{shop_id}/\")",
               "observation_key": "storage.tags.tenant_prefix",
               "observed_value": "shops/{shop_id}/"
             }
@@ -232,25 +232,25 @@
         "changes": [
           {
             "path": "identities",
-            "current_value": "[SANITIZED]",
+            "current_value": "",
             "has_safe_default": false,
-            "description": "Change identities from [SANITIZED]"
+            "description": "Change identities from "
           },
           {
             "path": "storage.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "bucket",
             "has_safe_default": false,
-            "description": "Change storage.kind from [SANITIZED]"
+            "description": "Change storage.kind from bucket"
           },
           {
             "path": "storage.tags.tenant_mode",
-            "current_value": "[SANITIZED]",
+            "current_value": "shared",
             "has_safe_default": false,
-            "description": "Change storage.tags.tenant_mode from [SANITIZED]"
+            "description": "Change storage.tags.tenant_mode from shared"
           },
           {
             "path": "storage.tags.tenant_prefix",
-            "current_value": "[SANITIZED]",
+            "current_value": "shops/{shop_id}/",
             "required_value": "absent",
             "has_safe_default": false,
             "description": "Remove storage.tags.tenant_prefix"
@@ -406,7 +406,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "1ae8b4da8479e5e75eaf0d7d9b907f3f5e5929e7",
+      "head_commit": "1a337200eb5c008d17ea570ba9886f86c6b5660b",
       "dirty": false
     }
   }

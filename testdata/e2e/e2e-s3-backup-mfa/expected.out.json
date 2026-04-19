@@ -52,13 +52,13 @@
         "misconfigurations": [
           {
             "property": "storage.tags.backup",
-            "actual_value": "[SANITIZED]",
+            "actual_value": true,
             "operator": "eq",
             "unsafe_value": "true"
           },
           {
             "property": "storage.versioning.mfa_delete_enabled",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": false
           }
@@ -126,12 +126,12 @@
           "severity": "medium",
           "reasoning": [
             {
-              "clause": "the bucket's backup tag must equal \"true\", but is true",
+              "clause": "the bucket's backup tag = true",
               "observation_key": "storage.tags.backup",
               "observed_value": true
             },
             {
-              "clause": "MFA Delete is enabled must equal false, but is false",
+              "clause": "MFA Delete is enabled = false",
               "observation_key": "storage.versioning.mfa_delete_enabled",
               "observed_value": false
             }
@@ -140,15 +140,17 @@
         "changes": [
           {
             "path": "storage.tags.backup",
-            "current_value": "[SANITIZED]",
-            "has_safe_default": false,
-            "description": "Change storage.tags.backup from [SANITIZED]"
+            "current_value": "true",
+            "required_value": "false",
+            "has_safe_default": true,
+            "description": "Set storage.tags.backup to false"
           },
           {
             "path": "storage.versioning.mfa_delete_enabled",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set storage.versioning.mfa_delete_enabled to "
+            "description": "Set storage.versioning.mfa_delete_enabled to true"
           }
         ],
         "command": "Enable MFA delete on the bucket using aws s3api put-bucket-versioning with the MFA flag. This requires the root account credentials and an MFA device. Only the root account can enable or disable MFA delete."
@@ -301,7 +303,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "1ae8b4da8479e5e75eaf0d7d9b907f3f5e5929e7",
+      "head_commit": "1a337200eb5c008d17ea570ba9886f86c6b5660b",
       "dirty": false
     }
   }

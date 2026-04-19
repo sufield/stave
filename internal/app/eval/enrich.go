@@ -59,8 +59,18 @@ func SanitizeFindings(s kernel.Sanitizer, findings []remediation.Finding) []reme
 	return out
 }
 
-// sanitizeFinding returns a deep copy of the Finding with infrastructure
-// identifiers masked. This is presentation/privacy logic, not domain logic.
+// sanitizeFinding returns a deep copy of the Finding with
+// infrastructure identifiers masked. This is presentation/privacy
+// logic, not domain logic.
+//
+// Sanitization is type-discriminated: identifier-shaped fields
+// (asset IDs, source paths, identity statements, grantees) route
+// through the per-field Sanitizer interface; primitive observation
+// values (booleans, numbers, nil) pass through unchanged so
+// downstream consumers see the actual observed state. See
+// sanitizeActualValue for the full type matrix and rationale, and
+// docs/product/architecture.md § "Sanitization policy" for the
+// architectural commitment.
 //
 //nolint:gocritic // hugeParam: deep-copy semantics require value parameter
 func sanitizeFinding(f remediation.Finding, s kernel.Sanitizer) remediation.Finding {
@@ -76,7 +86,7 @@ func sanitizeFinding(f remediation.Finding, s kernel.Sanitizer) remediation.Find
 	if len(f.Evidence.Misconfigurations) > 0 {
 		out.Evidence.Misconfigurations = make([]policy.Misconfiguration, len(f.Evidence.Misconfigurations))
 		for i, m := range f.Evidence.Misconfigurations {
-			m.ActualValue = kernel.Redacted
+			m.ActualValue = sanitizeActualValue(m.ActualValue, s)
 			out.Evidence.Misconfigurations[i] = m
 		}
 	}
@@ -95,6 +105,51 @@ func sanitizeFinding(f remediation.Finding, s kernel.Sanitizer) remediation.Find
 	}
 
 	return out
+}
+
+// sanitizeActualValue routes a Misconfiguration.ActualValue through
+// the per-field Sanitizer based on its concrete type. The policy is
+// type-discriminated so primitive values reach downstream consumers
+// (AI prompts, ticketing systems, audit consumers) intact:
+//
+//   - bool, int, int64, float64, nil — pass through unchanged.
+//     These types cannot carry identifier-shaped data; redacting them
+//     destroys signal without protecting any sensitive content.
+//   - string — routed through s.Value(). Strings may carry ARNs,
+//     account IDs, principal names, or other identifiers; the
+//     existing per-field opt-in Sanitizer applies.
+//   - []string, []any — element-wise sanitization with the same rules.
+//   - map[string]any — recursive over values.
+//   - any other type — falls back to kernel.Redacted as a conservative
+//     default. Better to over-redact an unknown shape than to leak it.
+//
+// UnsafeValue is intentionally not sanitized: DeriveChanges depends
+// on its original primitive value to detect boolean inversions.
+func sanitizeActualValue(v any, s kernel.Sanitizer) any {
+	switch t := v.(type) {
+	case nil:
+		return nil
+	case bool, int, int64, float64:
+		return v
+	case string:
+		return s.Value(t)
+	case []string:
+		return sanitizeSlice(t, s)
+	case []any:
+		out := make([]any, len(t))
+		for i, e := range t {
+			out[i] = sanitizeActualValue(e, s)
+		}
+		return out
+	case map[string]any:
+		out := make(map[string]any, len(t))
+		for k, e := range t {
+			out[k] = sanitizeActualValue(e, s)
+		}
+		return out
+	default:
+		return kernel.Redacted
+	}
 }
 
 // sanitizeSlice clones and replaces every element using the provided sanitizer.

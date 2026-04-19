@@ -62,13 +62,13 @@
         "misconfigurations": [
           {
             "property": "storage.lifecycle.rules_configured",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": false
           },
           {
             "property": "storage.tags.data-retention",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "6-year",
             "operator": "present",
             "unsafe_value": true
           }
@@ -140,12 +140,12 @@
           "severity": "medium",
           "reasoning": [
             {
-              "clause": "lifecycle rules are configured must equal false, but is false",
+              "clause": "lifecycle rules are configured = false",
               "observation_key": "storage.lifecycle.rules_configured",
               "observed_value": false
             },
             {
-              "clause": "the bucket's data-retention tag must be set (observed: \"6-year\")",
+              "clause": "the bucket's data-retention tag is set (observed: \"6-year\")",
               "observation_key": "storage.tags.data-retention",
               "observed_value": "6-year"
             }
@@ -154,13 +154,14 @@
         "changes": [
           {
             "path": "storage.lifecycle.rules_configured",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set storage.lifecycle.rules_configured to "
+            "description": "Set storage.lifecycle.rules_configured to true"
           },
           {
             "path": "storage.tags.data-retention",
-            "current_value": "[SANITIZED]",
+            "current_value": "6-year",
             "required_value": "absent",
             "has_safe_default": false,
             "description": "Remove storage.tags.data-retention"
@@ -185,19 +186,19 @@
         "misconfigurations": [
           {
             "property": "storage.lifecycle.has_expiration",
-            "actual_value": "[SANITIZED]",
+            "actual_value": true,
             "operator": "eq",
             "unsafe_value": true
           },
           {
             "property": "storage.lifecycle.min_expiration_days",
-            "actual_value": "[SANITIZED]",
+            "actual_value": 90,
             "operator": "lt",
             "unsafe_value": "params.min_retention_days"
           },
           {
             "property": "storage.tags.data-classification",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "phi",
             "operator": "eq",
             "unsafe_value": "phi"
           }
@@ -275,17 +276,17 @@
           "severity": "medium",
           "reasoning": [
             {
-              "clause": "a lifecycle expiration rule is configured must equal true, but is true",
+              "clause": "a lifecycle expiration rule is configured = true",
               "observation_key": "storage.lifecycle.has_expiration",
               "observed_value": true
             },
             {
-              "clause": "the minimum lifecycle expiration in days must be less than \"params.min_retention_days\", but is 90",
+              "clause": "the minimum lifecycle expiration in days be less than \"params.min_retention_days\" (observed: 90)",
               "observation_key": "storage.lifecycle.min_expiration_days",
               "observed_value": 90
             },
             {
-              "clause": "the bucket's data-classification tag must equal \"phi\", but is \"phi\"",
+              "clause": "the bucket's data-classification tag = \"phi\"",
               "observation_key": "storage.tags.data-classification",
               "observed_value": "phi"
             }
@@ -294,21 +295,22 @@
         "changes": [
           {
             "path": "storage.lifecycle.has_expiration",
-            "current_value": "[SANITIZED]",
+            "current_value": "true",
+            "required_value": "false",
             "has_safe_default": true,
-            "description": "Set storage.lifecycle.has_expiration to "
+            "description": "Set storage.lifecycle.has_expiration to false"
           },
           {
             "path": "storage.lifecycle.min_expiration_days",
-            "current_value": "[SANITIZED]",
+            "current_value": "90",
             "has_safe_default": false,
-            "description": "Change storage.lifecycle.min_expiration_days from [SANITIZED]"
+            "description": "Change storage.lifecycle.min_expiration_days from 90"
           },
           {
             "path": "storage.tags.data-classification",
-            "current_value": "[SANITIZED]",
+            "current_value": "phi",
             "has_safe_default": false,
-            "description": "Change storage.tags.data-classification from [SANITIZED]"
+            "description": "Change storage.tags.data-classification from phi"
           }
         ],
         "command": "Increase the lifecycle expiration period to at least the configured min_retention_days value. If the current rule is for storage class transition, ensure the expiration rule is separate and meets the minimum retention period."
@@ -509,7 +511,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "1ae8b4da8479e5e75eaf0d7d9b907f3f5e5929e7",
+      "head_commit": "1a337200eb5c008d17ea570ba9886f86c6b5660b",
       "dirty": false
     }
   }

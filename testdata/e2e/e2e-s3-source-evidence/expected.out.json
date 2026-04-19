@@ -62,7 +62,7 @@
         "misconfigurations": [
           {
             "property": "storage.access.public_read",
-            "actual_value": "[SANITIZED]",
+            "actual_value": true,
             "operator": "eq",
             "unsafe_value": true
           }
@@ -167,7 +167,7 @@
           "severity": "critical",
           "reasoning": [
             {
-              "clause": "the bucket allows anonymous read must equal true, but is true",
+              "clause": "the bucket allows anonymous read = true",
               "observation_key": "storage.access.public_read",
               "observed_value": true
             }
@@ -176,9 +176,10 @@
         "changes": [
           {
             "path": "storage.access.public_read",
-            "current_value": "[SANITIZED]",
+            "current_value": "true",
+            "required_value": "false",
             "has_safe_default": true,
-            "description": "Set storage.access.public_read to "
+            "description": "Set storage.access.public_read to false"
           }
         ],
         "command": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
@@ -199,7 +200,7 @@
         "misconfigurations": [
           {
             "property": "storage.access.read_via_resource",
-            "actual_value": "[SANITIZED]",
+            "actual_value": true,
             "operator": "eq",
             "unsafe_value": true
           }
@@ -292,7 +293,7 @@
           "severity": "medium",
           "reasoning": [
             {
-              "clause": "the bucket policy grants read to a public principal must equal true, but is true",
+              "clause": "the bucket policy grants read to a public principal = true",
               "observation_key": "storage.access.read_via_resource",
               "observed_value": true
             }
@@ -301,9 +302,10 @@
         "changes": [
           {
             "path": "storage.access.read_via_resource",
-            "current_value": "[SANITIZED]",
+            "current_value": "true",
+            "required_value": "false",
             "has_safe_default": true,
-            "description": "Set storage.access.read_via_resource to "
+            "description": "Set storage.access.read_via_resource to false"
           }
         ],
         "command": "Remove or constrain the policy statement granting read actions to Principal \"*\" or AWS: \"*\". If broad read access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public read."
@@ -499,7 +501,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "1ae8b4da8479e5e75eaf0d7d9b907f3f5e5929e7",
+      "head_commit": "1a337200eb5c008d17ea570ba9886f86c6b5660b",
       "dirty": false
     }
   }

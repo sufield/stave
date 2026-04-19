@@ -276,6 +276,22 @@ architectural commitment — not just feature rationale.
   access scopes. Reduces operational friction that contributes
   to tool sprawl's administrative burden.
 
+- **Sanitization policy.** Stave's output may carry data
+  derived from observations: account IDs, ARNs, principal
+  names, resource identifiers. The sanitization policy is
+  type-discriminated. Values that can carry identifier-shaped
+  data — strings and collections of strings — route through a
+  per-field opt-in Sanitizer (the
+  `internal/core/kernel.Sanitizer` interface). Primitive
+  types (booleans, integers, floats, null) pass through
+  unchanged. This preserves the factual content of
+  observations (a PAB flag is `false`, a retention threshold
+  is `30`) while preventing identifier leakage where
+  sensitivity is declared. The AI-ready architectural
+  decision depends on this policy: AI consumers and
+  fix-plan templates need the actual observed values to
+  generate coherent remediation prompts.
+
 These commitments are durable. Each was made because a market
 problem demanded it, not because it was convenient. Reversing
 one requires the same threshold of evidence that admits a new

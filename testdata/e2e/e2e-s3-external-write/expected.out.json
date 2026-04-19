@@ -52,13 +52,13 @@
         "misconfigurations": [
           {
             "property": "storage.access.has_external_write",
-            "actual_value": "[SANITIZED]",
+            "actual_value": true,
             "operator": "eq",
             "unsafe_value": true
           },
           {
             "property": "storage.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "bucket",
             "operator": "eq",
             "unsafe_value": "bucket"
           }
@@ -131,12 +131,12 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "the bucket grants write to an external account must equal true, but is true",
+              "clause": "the bucket grants write to an external account = true",
               "observation_key": "storage.access.has_external_write",
               "observed_value": true
             },
             {
-              "clause": "storage.kind must equal \"bucket\", but is \"bucket\"",
+              "clause": "storage.kind = \"bucket\"",
               "observation_key": "storage.kind",
               "observed_value": "bucket"
             }
@@ -145,15 +145,16 @@
         "changes": [
           {
             "path": "storage.access.has_external_write",
-            "current_value": "[SANITIZED]",
+            "current_value": "true",
+            "required_value": "false",
             "has_safe_default": true,
-            "description": "Set storage.access.has_external_write to "
+            "description": "Set storage.access.has_external_write to false"
           },
           {
             "path": "storage.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "bucket",
             "has_safe_default": false,
-            "description": "Change storage.kind from [SANITIZED]"
+            "description": "Change storage.kind from bucket"
           }
         ],
         "command": "Remove bucket policy statements granting s3:PutObject, s3:DeleteObject, or s3:PutBucketPolicy to external accounts. If cross-account write is required, restrict to specific account IDs with condition keys."
@@ -304,7 +305,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "1ae8b4da8479e5e75eaf0d7d9b907f3f5e5929e7",
+      "head_commit": "1a337200eb5c008d17ea570ba9886f86c6b5660b",
       "dirty": false
     }
   }

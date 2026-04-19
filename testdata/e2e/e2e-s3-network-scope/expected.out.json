@@ -62,7 +62,7 @@
         "misconfigurations": [
           {
             "property": "storage.access.effective_network_scope",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "public",
             "operator": "eq",
             "unsafe_value": "public"
           }
@@ -127,7 +127,7 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "the bucket's effective network scope must equal \"public\", but is \"public\"",
+              "clause": "the bucket's effective network scope = \"public\"",
               "observation_key": "storage.access.effective_network_scope",
               "observed_value": "public"
             }
@@ -136,9 +136,9 @@
         "changes": [
           {
             "path": "storage.access.effective_network_scope",
-            "current_value": "[SANITIZED]",
+            "current_value": "public",
             "has_safe_default": false,
-            "description": "Change storage.access.effective_network_scope from [SANITIZED]"
+            "description": "Change storage.access.effective_network_scope from public"
           }
         ],
         "command": "Add network-scoping conditions to the bucket policy: aws:SourceIp for IP range restrictions, aws:SourceVpce for VPC endpoint restrictions, aws:SourceVpc for VPC restrictions, or aws:PrincipalOrgID for organization-only access."
@@ -160,7 +160,7 @@
         "misconfigurations": [
           {
             "property": "storage.access.effective_network_scope",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "public",
             "operator": "eq",
             "unsafe_value": "public"
           }
@@ -225,7 +225,7 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "the bucket's effective network scope must equal \"public\", but is \"public\"",
+              "clause": "the bucket's effective network scope = \"public\"",
               "observation_key": "storage.access.effective_network_scope",
               "observed_value": "public"
             }
@@ -234,9 +234,9 @@
         "changes": [
           {
             "path": "storage.access.effective_network_scope",
-            "current_value": "[SANITIZED]",
+            "current_value": "public",
             "has_safe_default": false,
-            "description": "Change storage.access.effective_network_scope from [SANITIZED]"
+            "description": "Change storage.access.effective_network_scope from public"
           }
         ],
         "command": "Add network-scoping conditions to the bucket policy: aws:SourceIp for IP range restrictions, aws:SourceVpce for VPC endpoint restrictions, aws:SourceVpc for VPC restrictions, or aws:PrincipalOrgID for organization-only access."
@@ -432,7 +432,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "1ae8b4da8479e5e75eaf0d7d9b907f3f5e5929e7",
+      "head_commit": "1a337200eb5c008d17ea570ba9886f86c6b5660b",
       "dirty": false
     }
   }

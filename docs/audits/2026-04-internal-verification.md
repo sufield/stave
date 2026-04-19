@@ -510,6 +510,105 @@ absent from output the same way they would be if
 absent from the catalog). The exit condition the audit
 named is met exactly.
 
+**2026-04-19** — Item 2 (reasoning-trace wording fix)
+resolved. Two sub-bugs from M5 closed:
+
+- *Sub-bug 1 (contradiction shape):* The translator at
+  `internal/core/translation/translator.go:RenderClause`
+  was rewritten to drop the "must equal X, but is X"
+  scaffolding. `eq` clauses now render as `{field} =
+  {observed}`; `missing` matches as `{field} is not
+  set`; other operators as `{field} {verb} {expected}
+  (observed: {observed})`. No contract extension; pure
+  renderer change.
+- *Sub-bug 2 (gate-clause leakage):* The text writer at
+  `internal/adapters/output/text/finding_writer.go:writeFindingReasoning`
+  now partitions clauses by `translation.ClassifyClause`
+  into `Scope:` (asset-class discriminators and
+  parameterized constraints) and `Reasoning:` (unsafe-
+  match clauses). Empty sections suppressed.
+
+Classification heuristic refined from the prompt's
+proposed Possibility A (`expected == observed for eq`)
+which would have misclassified ~32% of clauses
+(boolean unsafe-match where observed equals expected by
+match definition). The shipped heuristic uses
+observation-key shape: kind-discriminator set (reused
+from `internal/core/evaluation/issue.go:68`) plus top-
+level keys (no `.`) classify as gates; everything else
+is unsafe-match. Validates 21/21 distinct clauses in
+the lordofheaven post-gate run.
+
+JSON and SARIF structured fields unchanged
+(`observation_key`, `observed_value`, `operator`); only
+the embedded prose `clause` field in
+`remediation_context.violation.reasoning[]` reflects
+the new template. Goldens regenerated as METADATA-ONLY
+(65 fixtures); identity-set preserved (no findings
+added or removed).
+
+All 17 contradiction patterns from this audit's M5
+section render legibly under the new template;
+verified by re-running apply against the lordofheaven
+snapshot and inspecting all distinct rendered lines.
+
+AI-ready architectural decision was downgraded to
+PARTIAL in this audit because of two contributing bugs:
+the M5 contradiction shape (now resolved) and the M4
+sanitizer redacting boolean current_values (queue item
+3, still open). With one of two contributors closed,
+AI-ready remains PARTIAL pending item 3.
+
+**2026-04-19** — Item 3 (per-field sanitization
+policy) resolved. Both M4 contributing sub-bugs the
+audit named close in one fix:
+
+- *Sub-bug 1 (current_value: "[SANITIZED]" for
+  booleans):* `internal/app/eval/enrich.go:79` was a
+  blanket `m.ActualValue = kernel.Redacted` overwrite
+  of every Misconfiguration's ActualValue regardless
+  of type. Replaced with `sanitizeActualValue` — a
+  type-discriminated routing through the per-field
+  Sanitizer interface. Booleans, integers, floats, nil
+  pass through unchanged; strings continue routing
+  through `s.Value()`; collections recurse; unknown
+  types fall back to `kernel.Redacted` (conservative).
+- *Sub-bug 2 (description: "Set X to " trailing-space):*
+  Downstream symptom of the same root. With ActualValue
+  preserved as bool, `derive_changes.go:isBooleanInversion`
+  triggers correctly, `invertBool` returns the actual
+  target value, and the description renders cleanly
+  (e.g., "Set storage.access.public_read to false").
+  Same fix closes both. The `has_safe_default` field
+  on PropertyChange also flips from incorrect-false to
+  correct-true for boolean inversions.
+
+Sanitization policy now documented at two layers: a
+doc-comment on `enrich.go:sanitizeFinding` describing
+the type matrix, and a new architectural commitment in
+`docs/product/architecture.md` § Sanitization policy
+under the Architectural decisions section.
+
+Verification on the lordofheaven snapshot: zero
+"[SANITIZED]" literals in `actual_value` /
+`current_value` paths (was 218 before); zero
+trailing-space "Set X to " descriptions; 109/109
+reasoning_trace clauses render cleanly (no
+contradiction shapes). String identifiers continue to
+route through `s.Value()` (verified by unit test;
+preserved as passthrough when no `--sanitize` flag).
+
+**AI-ready architectural decision moves PARTIAL →
+HOLDS.** Both contributing bugs from this audit
+(M5 contradiction shape, M4 sanitization redaction)
+are now closed. The AI-prompt input the architectural
+decision targets — coherent reasoning text plus
+factual current_value/description fields — is delivered.
+The third potential contributor (queue item 4,
+`command` field carrying prose instead of CLI) does
+not regress AI-ready since the field is consumed
+optionally; the architectural promise is met.
+
 ## Prioritized refinement queue
 
 Ordered by (1) blocking gaps first, (2) architectural
@@ -529,22 +628,25 @@ over speculative, (4) leverage-weighted across metrics
    leverage. Evidence: 24 of 78 findings cross-tabbed
    by `(domain, asset_type)`."
 
-2. **Reasoning-trace wording fix.** Replace "must equal
-   X, but is X" with non-contradictory phrasing.
+2. ~~**Reasoning-trace wording fix.**~~ **RESOLVED**
+   (see Resolution log above). Original text retained
+   for historical reference: "Replace 'must equal X,
+   but is X' with non-contradictory phrasing.
    Distinguish gate clauses from violation clauses
    (separate `gates[]` from `violations[]`; render only
    violation clauses inline). Improves M4, M5, AI-ready
    architectural decision, misconfiguration primitive
    sufficiency. Second-highest leverage; one fix, four
-   layers.
+   layers."
 
-3. **Per-field sanitization policy.** Sanitize
-   identifiers and strings; preserve booleans,
-   enumerated values, numeric ranges. Closes the
-   `current_value: "[SANITIZED]"` data-loss in M4
-   and the AI-ready architectural decision's
-   downgrade-to-PARTIAL. Single layer, single
-   refinement.
+3. ~~**Per-field sanitization policy.**~~ **RESOLVED**
+   (see Resolution log above). Original text retained
+   for historical reference: "Sanitize identifiers and
+   strings; preserve booleans, enumerated values,
+   numeric ranges. Closes the `current_value:
+   '[SANITIZED]'` data-loss in M4 and the AI-ready
+   architectural decision's downgrade-to-PARTIAL.
+   Single layer, single refinement."
 
 4. **`command` field carries a parameterized command.**
    Either rename to `action` (matching the YAML field)

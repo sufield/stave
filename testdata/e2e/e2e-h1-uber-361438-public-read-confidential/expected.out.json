@@ -62,7 +62,7 @@
         "misconfigurations": [
           {
             "property": "storage.access.public_read",
-            "actual_value": "[SANITIZED]",
+            "actual_value": true,
             "operator": "eq",
             "unsafe_value": true
           }
@@ -167,7 +167,7 @@
           "severity": "critical",
           "reasoning": [
             {
-              "clause": "the bucket allows anonymous read must equal true, but is true",
+              "clause": "the bucket allows anonymous read = true",
               "observation_key": "storage.access.public_read",
               "observed_value": true
             }
@@ -176,9 +176,10 @@
         "changes": [
           {
             "path": "storage.access.public_read",
-            "current_value": "[SANITIZED]",
+            "current_value": "true",
+            "required_value": "false",
             "has_safe_default": true,
-            "description": "Set storage.access.public_read to "
+            "description": "Set storage.access.public_read to false"
           }
         ],
         "command": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
@@ -200,31 +201,31 @@
         "misconfigurations": [
           {
             "property": "storage.access.public_list",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": true
           },
           {
             "property": "storage.access.public_read",
-            "actual_value": "[SANITIZED]",
+            "actual_value": true,
             "operator": "eq",
             "unsafe_value": true
           },
           {
             "property": "storage.tags.data-classification",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "confidential",
             "operator": "eq",
             "unsafe_value": "confidential"
           },
           {
             "property": "storage.tags.data-classification",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "confidential",
             "operator": "eq",
             "unsafe_value": "phi"
           },
           {
             "property": "storage.tags.data-classification",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "confidential",
             "operator": "eq",
             "unsafe_value": "pii"
           }
@@ -345,27 +346,27 @@
           "severity": "critical",
           "reasoning": [
             {
-              "clause": "the bucket allows anonymous list must equal true, but is false",
+              "clause": "the bucket allows anonymous list = false",
               "observation_key": "storage.access.public_list",
               "observed_value": false
             },
             {
-              "clause": "the bucket allows anonymous read must equal true, but is true",
+              "clause": "the bucket allows anonymous read = true",
               "observation_key": "storage.access.public_read",
               "observed_value": true
             },
             {
-              "clause": "the bucket's data-classification tag must equal \"confidential\", but is \"confidential\"",
+              "clause": "the bucket's data-classification tag = \"confidential\"",
               "observation_key": "storage.tags.data-classification",
               "observed_value": "confidential"
             },
             {
-              "clause": "the bucket's data-classification tag must equal \"phi\", but is \"confidential\"",
+              "clause": "the bucket's data-classification tag = \"confidential\"",
               "observation_key": "storage.tags.data-classification",
               "observed_value": "confidential"
             },
             {
-              "clause": "the bucket's data-classification tag must equal \"pii\", but is \"confidential\"",
+              "clause": "the bucket's data-classification tag = \"confidential\"",
               "observation_key": "storage.tags.data-classification",
               "observed_value": "confidential"
             }
@@ -374,33 +375,35 @@
         "changes": [
           {
             "path": "storage.access.public_list",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set storage.access.public_list to "
+            "description": "Set storage.access.public_list to true"
           },
           {
             "path": "storage.access.public_read",
-            "current_value": "[SANITIZED]",
+            "current_value": "true",
+            "required_value": "false",
             "has_safe_default": true,
-            "description": "Set storage.access.public_read to "
+            "description": "Set storage.access.public_read to false"
           },
           {
             "path": "storage.tags.data-classification",
-            "current_value": "[SANITIZED]",
+            "current_value": "confidential",
             "has_safe_default": false,
-            "description": "Change storage.tags.data-classification from [SANITIZED]"
+            "description": "Change storage.tags.data-classification from confidential"
           },
           {
             "path": "storage.tags.data-classification",
-            "current_value": "[SANITIZED]",
+            "current_value": "confidential",
             "has_safe_default": false,
-            "description": "Change storage.tags.data-classification from [SANITIZED]"
+            "description": "Change storage.tags.data-classification from confidential"
           },
           {
             "path": "storage.tags.data-classification",
-            "current_value": "[SANITIZED]",
+            "current_value": "confidential",
             "has_safe_default": false,
-            "description": "Change storage.tags.data-classification from [SANITIZED]"
+            "description": "Change storage.tags.data-classification from confidential"
           }
         ],
         "command": "Immediately enable S3 Public Access Block (all four settings). Remove bucket policy statements granting access to Principal \"*\". Remove ACL grants to AllUsers or AuthenticatedUsers. Audit CloudTrail logs for unauthorized access during the exposure window."
@@ -598,7 +601,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "1ae8b4da8479e5e75eaf0d7d9b907f3f5e5929e7",
+      "head_commit": "1a337200eb5c008d17ea570ba9886f86c6b5660b",
       "dirty": false
     }
   }

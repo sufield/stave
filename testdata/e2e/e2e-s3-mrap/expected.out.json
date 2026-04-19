@@ -62,13 +62,13 @@
         "misconfigurations": [
           {
             "property": "storage.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "bucket",
             "operator": "eq",
             "unsafe_value": "bucket"
           },
           {
             "property": "storage.mrap_public_access_blocked",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": false
           }
@@ -147,12 +147,12 @@
           "severity": "critical",
           "reasoning": [
             {
-              "clause": "storage.kind must equal \"bucket\", but is \"bucket\"",
+              "clause": "storage.kind = \"bucket\"",
               "observation_key": "storage.kind",
               "observed_value": "bucket"
             },
             {
-              "clause": "the Multi-Region Access Point blocks public access must equal false, but is false",
+              "clause": "the Multi-Region Access Point blocks public access = false",
               "observation_key": "storage.mrap_public_access_blocked",
               "observed_value": false
             }
@@ -161,15 +161,16 @@
         "changes": [
           {
             "path": "storage.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "bucket",
             "has_safe_default": false,
-            "description": "Change storage.kind from [SANITIZED]"
+            "description": "Change storage.kind from bucket"
           },
           {
             "path": "storage.mrap_public_access_blocked",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set storage.mrap_public_access_blocked to "
+            "description": "Set storage.mrap_public_access_blocked to true"
           }
         ],
         "command": "Enable all four PAB flags on the MRAP."
@@ -191,13 +192,13 @@
         "misconfigurations": [
           {
             "property": "storage.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "bucket",
             "operator": "eq",
             "unsafe_value": "bucket"
           },
           {
             "property": "storage.mrap_policy_is_public",
-            "actual_value": "[SANITIZED]",
+            "actual_value": true,
             "operator": "eq",
             "unsafe_value": true
           }
@@ -271,12 +272,12 @@
           "severity": "critical",
           "reasoning": [
             {
-              "clause": "storage.kind must equal \"bucket\", but is \"bucket\"",
+              "clause": "storage.kind = \"bucket\"",
               "observation_key": "storage.kind",
               "observed_value": "bucket"
             },
             {
-              "clause": "the Multi-Region Access Point policy is public must equal true, but is true",
+              "clause": "the Multi-Region Access Point policy is public = true",
               "observation_key": "storage.mrap_policy_is_public",
               "observed_value": true
             }
@@ -285,15 +286,16 @@
         "changes": [
           {
             "path": "storage.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "bucket",
             "has_safe_default": false,
-            "description": "Change storage.kind from [SANITIZED]"
+            "description": "Change storage.kind from bucket"
           },
           {
             "path": "storage.mrap_policy_is_public",
-            "current_value": "[SANITIZED]",
+            "current_value": "true",
+            "required_value": "false",
             "has_safe_default": true,
-            "description": "Set storage.mrap_policy_is_public to "
+            "description": "Set storage.mrap_policy_is_public to false"
           }
         ],
         "command": "Remove public access from the MRAP policy."
@@ -472,7 +474,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "1ae8b4da8479e5e75eaf0d7d9b907f3f5e5929e7",
+      "head_commit": "1a337200eb5c008d17ea570ba9886f86c6b5660b",
       "dirty": false
     }
   }

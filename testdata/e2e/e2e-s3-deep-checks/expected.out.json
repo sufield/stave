@@ -112,7 +112,7 @@
         "misconfigurations": [
           {
             "property": "storage.access.public_write",
-            "actual_value": "[SANITIZED]",
+            "actual_value": true,
             "operator": "eq",
             "unsafe_value": true
           }
@@ -205,7 +205,7 @@
           "severity": "critical",
           "reasoning": [
             {
-              "clause": "the bucket allows anonymous write must equal true, but is true",
+              "clause": "the bucket allows anonymous write = true",
               "observation_key": "storage.access.public_write",
               "observed_value": true
             }
@@ -214,9 +214,10 @@
         "changes": [
           {
             "path": "storage.access.public_write",
-            "current_value": "[SANITIZED]",
+            "current_value": "true",
+            "required_value": "false",
             "has_safe_default": true,
-            "description": "Set storage.access.public_write to "
+            "description": "Set storage.access.public_write to false"
           }
         ],
         "command": "Remove bucket policy statements that grant s3:PutObject or s3:DeleteObject to Principal \"*\". Remove ACL grants that allow WRITE or FULL_CONTROL to AllUsers or AuthenticatedUsers. Enable S3 Public Access Block."
@@ -238,13 +239,13 @@
         "misconfigurations": [
           {
             "property": "storage.access.has_wildcard_principal",
-            "actual_value": "[SANITIZED]",
+            "actual_value": true,
             "operator": "eq",
             "unsafe_value": true
           },
           {
             "property": "storage.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "bucket",
             "operator": "eq",
             "unsafe_value": "bucket"
           }
@@ -320,12 +321,12 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "the bucket policy grants to Principal \"*\" must equal true, but is true",
+              "clause": "the bucket policy grants to Principal \"*\" = true",
               "observation_key": "storage.access.has_wildcard_principal",
               "observed_value": true
             },
             {
-              "clause": "storage.kind must equal \"bucket\", but is \"bucket\"",
+              "clause": "storage.kind = \"bucket\"",
               "observation_key": "storage.kind",
               "observed_value": "bucket"
             }
@@ -334,15 +335,16 @@
         "changes": [
           {
             "path": "storage.access.has_wildcard_principal",
-            "current_value": "[SANITIZED]",
+            "current_value": "true",
+            "required_value": "false",
             "has_safe_default": true,
-            "description": "Set storage.access.has_wildcard_principal to "
+            "description": "Set storage.access.has_wildcard_principal to false"
           },
           {
             "path": "storage.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "bucket",
             "has_safe_default": false,
-            "description": "Change storage.kind from [SANITIZED]"
+            "description": "Change storage.kind from bucket"
           }
         ],
         "command": "Replace the wildcard principal with the specific AWS account IDs or ARNs that need access, or add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, aws:SourceIp (with a fixed CIDR), or aws:SourceArn. If the bucket genuinely needs to be public (CDN origin, static asset bucket), narrow the Actions to the minimum set and keep Public Access Block enabled where compatible."
@@ -364,13 +366,15 @@
         "misconfigurations": [
           {
             "property": "storage.access.external_account_ids",
-            "actual_value": "[SANITIZED]",
+            "actual_value": [
+              "999888777666"
+            ],
             "operator": "not_subset_of_field",
             "unsafe_value": "params.allowed_accounts"
           },
           {
             "property": "storage.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "bucket",
             "operator": "eq",
             "unsafe_value": "bucket"
           }
@@ -451,14 +455,14 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "the bucket policy lists external accounts must not be a subset of \"params.allowed_accounts\", but is [\"999888777666\"]",
+              "clause": "the bucket policy lists external accounts not be a subset of \"params.allowed_accounts\" (observed: [\"999888777666\"])",
               "observation_key": "storage.access.external_account_ids",
               "observed_value": [
                 "999888777666"
               ]
             },
             {
-              "clause": "storage.kind must equal \"bucket\", but is \"bucket\"",
+              "clause": "storage.kind = \"bucket\"",
               "observation_key": "storage.kind",
               "observed_value": "bucket"
             }
@@ -467,15 +471,15 @@
         "changes": [
           {
             "path": "storage.access.external_account_ids",
-            "current_value": "[SANITIZED]",
+            "current_value": "[999888777666]",
             "has_safe_default": false,
-            "description": "Change storage.access.external_account_ids from [SANITIZED]"
+            "description": "Change storage.access.external_account_ids from [999888777666]"
           },
           {
             "path": "storage.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "bucket",
             "has_safe_default": false,
-            "description": "Change storage.kind from [SANITIZED]"
+            "description": "Change storage.kind from bucket"
           }
         ],
         "command": "Review bucket policy Principal elements for external account IDs. Remove statements granting access to accounts not in your organization. Use aws:PrincipalOrgID condition to restrict access to your AWS Organization."
@@ -497,13 +501,13 @@
         "misconfigurations": [
           {
             "property": "storage.encryption.at_rest_enabled",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": false
           },
           {
             "property": "storage.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "bucket",
             "operator": "eq",
             "unsafe_value": "bucket"
           }
@@ -584,12 +588,12 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "server-side encryption at rest is enabled must equal false, but is false",
+              "clause": "server-side encryption at rest is enabled = false",
               "observation_key": "storage.encryption.at_rest_enabled",
               "observed_value": false
             },
             {
-              "clause": "storage.kind must equal \"bucket\", but is \"bucket\"",
+              "clause": "storage.kind = \"bucket\"",
               "observation_key": "storage.kind",
               "observed_value": "bucket"
             }
@@ -598,15 +602,16 @@
         "changes": [
           {
             "path": "storage.encryption.at_rest_enabled",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set storage.encryption.at_rest_enabled to "
+            "description": "Set storage.encryption.at_rest_enabled to true"
           },
           {
             "path": "storage.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "bucket",
             "has_safe_default": false,
-            "description": "Change storage.kind from [SANITIZED]"
+            "description": "Change storage.kind from bucket"
           }
         ],
         "command": "Enable default bucket encryption using SSE-S3 (AES256) or SSE-KMS. Use aws s3api put-bucket-encryption to set the default encryption configuration. For sensitive data, use SSE-KMS with a customer-managed key."
@@ -628,13 +633,13 @@
         "misconfigurations": [
           {
             "property": "storage.encryption.in_transit_enforced",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": false
           },
           {
             "property": "storage.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "bucket",
             "operator": "eq",
             "unsafe_value": "bucket"
           }
@@ -716,12 +721,12 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "HTTPS-only (aws:SecureTransport) is enforced must equal false, but is false",
+              "clause": "HTTPS-only (aws:SecureTransport) is enforced = false",
               "observation_key": "storage.encryption.in_transit_enforced",
               "observed_value": false
             },
             {
-              "clause": "storage.kind must equal \"bucket\", but is \"bucket\"",
+              "clause": "storage.kind = \"bucket\"",
               "observation_key": "storage.kind",
               "observed_value": "bucket"
             }
@@ -730,15 +735,16 @@
         "changes": [
           {
             "path": "storage.encryption.in_transit_enforced",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set storage.encryption.in_transit_enforced to "
+            "description": "Set storage.encryption.in_transit_enforced to true"
           },
           {
             "path": "storage.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "bucket",
             "has_safe_default": false,
-            "description": "Change storage.kind from [SANITIZED]"
+            "description": "Change storage.kind from bucket"
           }
         ],
         "command": "Add a bucket policy statement that denies all actions when aws:SecureTransport is false. This forces all API calls to use HTTPS."
@@ -760,13 +766,13 @@
         "misconfigurations": [
           {
             "property": "storage.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "bucket",
             "operator": "eq",
             "unsafe_value": "bucket"
           },
           {
             "property": "storage.logging.enabled",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": false
           }
@@ -846,12 +852,12 @@
           "severity": "medium",
           "reasoning": [
             {
-              "clause": "storage.kind must equal \"bucket\", but is \"bucket\"",
+              "clause": "storage.kind = \"bucket\"",
               "observation_key": "storage.kind",
               "observed_value": "bucket"
             },
             {
-              "clause": "access logging is enabled must equal false, but is false",
+              "clause": "access logging is enabled = false",
               "observation_key": "storage.logging.enabled",
               "observed_value": false
             }
@@ -860,15 +866,16 @@
         "changes": [
           {
             "path": "storage.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "bucket",
             "has_safe_default": false,
-            "description": "Change storage.kind from [SANITIZED]"
+            "description": "Change storage.kind from bucket"
           },
           {
             "path": "storage.logging.enabled",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set storage.logging.enabled to "
+            "description": "Set storage.logging.enabled to true"
           }
         ],
         "command": "Enable S3 server access logging and specify a target bucket for log delivery. Ensure the target bucket has appropriate access controls and is in the same region."
@@ -890,13 +897,13 @@
         "misconfigurations": [
           {
             "property": "storage.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "bucket",
             "operator": "eq",
             "unsafe_value": "bucket"
           },
           {
             "property": "storage.versioning.enabled",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": false
           }
@@ -970,12 +977,12 @@
           "severity": "medium",
           "reasoning": [
             {
-              "clause": "storage.kind must equal \"bucket\", but is \"bucket\"",
+              "clause": "storage.kind = \"bucket\"",
               "observation_key": "storage.kind",
               "observed_value": "bucket"
             },
             {
-              "clause": "versioning is enabled must equal false, but is false",
+              "clause": "versioning is enabled = false",
               "observation_key": "storage.versioning.enabled",
               "observed_value": false
             }
@@ -984,15 +991,16 @@
         "changes": [
           {
             "path": "storage.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "bucket",
             "has_safe_default": false,
-            "description": "Change storage.kind from [SANITIZED]"
+            "description": "Change storage.kind from bucket"
           },
           {
             "path": "storage.versioning.enabled",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set storage.versioning.enabled to "
+            "description": "Set storage.versioning.enabled to true"
           }
         ],
         "command": "Enable versioning on the bucket using aws s3api put-bucket-versioning. Once enabled, configure lifecycle rules to manage noncurrent versions and control storage costs."
@@ -1440,7 +1448,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "1ae8b4da8479e5e75eaf0d7d9b907f3f5e5929e7",
+      "head_commit": "1a337200eb5c008d17ea570ba9886f86c6b5660b",
       "dirty": false
     }
   }

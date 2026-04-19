@@ -122,7 +122,7 @@
         "misconfigurations": [
           {
             "property": "storage.access.public_read",
-            "actual_value": "[SANITIZED]",
+            "actual_value": true,
             "operator": "eq",
             "unsafe_value": true
           }
@@ -227,7 +227,7 @@
           "severity": "critical",
           "reasoning": [
             {
-              "clause": "the bucket allows anonymous read must equal true, but is true",
+              "clause": "the bucket allows anonymous read = true",
               "observation_key": "storage.access.public_read",
               "observed_value": true
             }
@@ -236,9 +236,10 @@
         "changes": [
           {
             "path": "storage.access.public_read",
-            "current_value": "[SANITIZED]",
+            "current_value": "true",
+            "required_value": "false",
             "has_safe_default": true,
-            "description": "Set storage.access.public_read to "
+            "description": "Set storage.access.public_read to false"
           }
         ],
         "command": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
@@ -260,31 +261,31 @@
         "misconfigurations": [
           {
             "property": "storage.access.public_list",
-            "actual_value": "[SANITIZED]",
+            "actual_value": true,
             "operator": "eq",
             "unsafe_value": true
           },
           {
             "property": "storage.access.public_read",
-            "actual_value": "[SANITIZED]",
+            "actual_value": true,
             "operator": "eq",
             "unsafe_value": true
           },
           {
             "property": "storage.tags.data-classification",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "phi",
             "operator": "eq",
             "unsafe_value": "confidential"
           },
           {
             "property": "storage.tags.data-classification",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "phi",
             "operator": "eq",
             "unsafe_value": "phi"
           },
           {
             "property": "storage.tags.data-classification",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "phi",
             "operator": "eq",
             "unsafe_value": "pii"
           }
@@ -405,27 +406,27 @@
           "severity": "critical",
           "reasoning": [
             {
-              "clause": "the bucket allows anonymous list must equal true, but is true",
+              "clause": "the bucket allows anonymous list = true",
               "observation_key": "storage.access.public_list",
               "observed_value": true
             },
             {
-              "clause": "the bucket allows anonymous read must equal true, but is true",
+              "clause": "the bucket allows anonymous read = true",
               "observation_key": "storage.access.public_read",
               "observed_value": true
             },
             {
-              "clause": "the bucket's data-classification tag must equal \"confidential\", but is \"phi\"",
+              "clause": "the bucket's data-classification tag = \"phi\"",
               "observation_key": "storage.tags.data-classification",
               "observed_value": "phi"
             },
             {
-              "clause": "the bucket's data-classification tag must equal \"phi\", but is \"phi\"",
+              "clause": "the bucket's data-classification tag = \"phi\"",
               "observation_key": "storage.tags.data-classification",
               "observed_value": "phi"
             },
             {
-              "clause": "the bucket's data-classification tag must equal \"pii\", but is \"phi\"",
+              "clause": "the bucket's data-classification tag = \"phi\"",
               "observation_key": "storage.tags.data-classification",
               "observed_value": "phi"
             }
@@ -434,33 +435,35 @@
         "changes": [
           {
             "path": "storage.access.public_list",
-            "current_value": "[SANITIZED]",
+            "current_value": "true",
+            "required_value": "false",
             "has_safe_default": true,
-            "description": "Set storage.access.public_list to "
+            "description": "Set storage.access.public_list to false"
           },
           {
             "path": "storage.access.public_read",
-            "current_value": "[SANITIZED]",
+            "current_value": "true",
+            "required_value": "false",
             "has_safe_default": true,
-            "description": "Set storage.access.public_read to "
+            "description": "Set storage.access.public_read to false"
           },
           {
             "path": "storage.tags.data-classification",
-            "current_value": "[SANITIZED]",
+            "current_value": "phi",
             "has_safe_default": false,
-            "description": "Change storage.tags.data-classification from [SANITIZED]"
+            "description": "Change storage.tags.data-classification from phi"
           },
           {
             "path": "storage.tags.data-classification",
-            "current_value": "[SANITIZED]",
+            "current_value": "phi",
             "has_safe_default": false,
-            "description": "Change storage.tags.data-classification from [SANITIZED]"
+            "description": "Change storage.tags.data-classification from phi"
           },
           {
             "path": "storage.tags.data-classification",
-            "current_value": "[SANITIZED]",
+            "current_value": "phi",
             "has_safe_default": false,
-            "description": "Change storage.tags.data-classification from [SANITIZED]"
+            "description": "Change storage.tags.data-classification from phi"
           }
         ],
         "command": "Immediately enable S3 Public Access Block (all four settings). Remove bucket policy statements granting access to Principal \"*\". Remove ACL grants to AllUsers or AuthenticatedUsers. Audit CloudTrail logs for unauthorized access during the exposure window."
@@ -482,7 +485,7 @@
         "misconfigurations": [
           {
             "property": "storage.access.read_via_identity",
-            "actual_value": "[SANITIZED]",
+            "actual_value": true,
             "operator": "eq",
             "unsafe_value": true
           }
@@ -575,7 +578,7 @@
           "severity": "critical",
           "reasoning": [
             {
-              "clause": "an IAM identity has read access to the bucket must equal true, but is true",
+              "clause": "an IAM identity has read access to the bucket = true",
               "observation_key": "storage.access.read_via_identity",
               "observed_value": true
             }
@@ -584,9 +587,10 @@
         "changes": [
           {
             "path": "storage.access.read_via_identity",
-            "current_value": "[SANITIZED]",
+            "current_value": "true",
+            "required_value": "false",
             "has_safe_default": true,
-            "description": "Set storage.access.read_via_identity to "
+            "description": "Set storage.access.read_via_identity to false"
           }
         ],
         "command": "Identify the identity-based policy statement granting read access and either remove it, scope it to specific bucket/object ARNs, or add conditions restricting the requesting principal. If a widely-trusted role is the root cause, tighten that role's trust policy first."
@@ -608,7 +612,7 @@
         "misconfigurations": [
           {
             "property": "storage.access.list_via_identity",
-            "actual_value": "[SANITIZED]",
+            "actual_value": true,
             "operator": "eq",
             "unsafe_value": true
           }
@@ -701,7 +705,7 @@
           "severity": "critical",
           "reasoning": [
             {
-              "clause": "an IAM identity has list access to the bucket must equal true, but is true",
+              "clause": "an IAM identity has list access to the bucket = true",
               "observation_key": "storage.access.list_via_identity",
               "observed_value": true
             }
@@ -710,9 +714,10 @@
         "changes": [
           {
             "path": "storage.access.list_via_identity",
-            "current_value": "[SANITIZED]",
+            "current_value": "true",
+            "required_value": "false",
             "has_safe_default": true,
-            "description": "Set storage.access.list_via_identity to "
+            "description": "Set storage.access.list_via_identity to false"
           }
         ],
         "command": "Identify the identity-based policy statement granting s3:ListBucket and remove it, scope it to specific bucket ARNs, or add conditions restricting the requesting principal. If a widely-trusted role is the root cause, tighten that role's trust policy first."
@@ -734,7 +739,7 @@
         "misconfigurations": [
           {
             "property": "storage.access.public_list",
-            "actual_value": "[SANITIZED]",
+            "actual_value": true,
             "operator": "eq",
             "unsafe_value": true
           }
@@ -827,7 +832,7 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "the bucket allows anonymous list must equal true, but is true",
+              "clause": "the bucket allows anonymous list = true",
               "observation_key": "storage.access.public_list",
               "observed_value": true
             }
@@ -836,9 +841,10 @@
         "changes": [
           {
             "path": "storage.access.public_list",
-            "current_value": "[SANITIZED]",
+            "current_value": "true",
+            "required_value": "false",
             "has_safe_default": true,
-            "description": "Set storage.access.public_list to "
+            "description": "Set storage.access.public_list to false"
           }
         ],
         "command": "Remove bucket policy statements that grant s3:ListBucket to Principal \"*\". Remove ACL grants that allow READ to AllUsers. Enable S3 Public Access Block."
@@ -860,25 +866,25 @@
         "misconfigurations": [
           {
             "property": "storage.access.public_list",
-            "actual_value": "[SANITIZED]",
+            "actual_value": true,
             "operator": "eq",
             "unsafe_value": true
           },
           {
             "property": "storage.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "bucket",
             "operator": "eq",
             "unsafe_value": "bucket"
           },
           {
             "property": "storage.tags.public_list_intended",
-            "actual_value": "[SANITIZED]",
+            "actual_value": null,
             "operator": "missing",
             "unsafe_value": true
           },
           {
             "property": "storage.tags.public_list_intended",
-            "actual_value": "[SANITIZED]",
+            "actual_value": null,
             "operator": "ne",
             "unsafe_value": "true"
           }
@@ -990,21 +996,21 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "the bucket allows anonymous list must equal true, but is true",
+              "clause": "the bucket allows anonymous list = true",
               "observation_key": "storage.access.public_list",
               "observed_value": true
             },
             {
-              "clause": "storage.kind must equal \"bucket\", but is \"bucket\"",
+              "clause": "storage.kind = \"bucket\"",
               "observation_key": "storage.kind",
               "observed_value": "bucket"
             },
             {
-              "clause": "the bucket's public-list-intended tag must be missing (and is)",
+              "clause": "the bucket's public-list-intended tag is not set",
               "observation_key": "storage.tags.public_list_intended"
             },
             {
-              "clause": "the bucket's public-list-intended tag must not equal \"true\", but is not set",
+              "clause": "the bucket's public-list-intended tag not equal \"true\" (observed: not set)",
               "observation_key": "storage.tags.public_list_intended"
             }
           ]
@@ -1012,28 +1018,29 @@
         "changes": [
           {
             "path": "storage.access.public_list",
-            "current_value": "[SANITIZED]",
+            "current_value": "true",
+            "required_value": "false",
             "has_safe_default": true,
-            "description": "Set storage.access.public_list to "
+            "description": "Set storage.access.public_list to false"
           },
           {
             "path": "storage.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "bucket",
             "has_safe_default": false,
-            "description": "Change storage.kind from [SANITIZED]"
+            "description": "Change storage.kind from bucket"
           },
           {
             "path": "storage.tags.public_list_intended",
-            "current_value": "[SANITIZED]",
+            "current_value": "",
             "required_value": "present",
             "has_safe_default": false,
             "description": "Ensure storage.tags.public_list_intended is present"
           },
           {
             "path": "storage.tags.public_list_intended",
-            "current_value": "[SANITIZED]",
+            "current_value": "",
             "has_safe_default": false,
-            "description": "Change storage.tags.public_list_intended from [SANITIZED]"
+            "description": "Change storage.tags.public_list_intended from "
           }
         ],
         "command": "If listing is intentional, add the tag public_list_intended=true to the bucket. Otherwise, remove the policy or ACL granting s3:ListBucket to Principal \"*\" or AllUsers."
@@ -1051,13 +1058,13 @@
         "misconfigurations": [
           {
             "property": "exposure_source",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "missing_evidence",
             "operator": "eq",
             "unsafe_value": "missing_evidence"
           },
           {
             "property": "protected_prefix",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "backups/",
             "operator": "eq",
             "unsafe_value": "backups/"
           }
@@ -1154,12 +1161,12 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "the exposure source must equal \"missing_evidence\", but is \"missing_evidence\"",
+              "clause": "the exposure source = \"missing_evidence\"",
               "observation_key": "exposure_source",
               "observed_value": "missing_evidence"
             },
             {
-              "clause": "the protected prefix must equal \"backups/\", but is \"backups/\"",
+              "clause": "the protected prefix = \"backups/\"",
               "observation_key": "protected_prefix",
               "observed_value": "backups/"
             }
@@ -1168,15 +1175,15 @@
         "changes": [
           {
             "path": "exposure_source",
-            "current_value": "[SANITIZED]",
+            "current_value": "missing_evidence",
             "has_safe_default": false,
-            "description": "Change exposure_source from [SANITIZED]"
+            "description": "Change exposure_source from missing_evidence"
           },
           {
             "path": "protected_prefix",
-            "current_value": "[SANITIZED]",
+            "current_value": "backups/",
             "has_safe_default": false,
-            "description": "Change protected_prefix from [SANITIZED]"
+            "description": "Change protected_prefix from backups/"
           }
         ],
         "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
@@ -1194,13 +1201,13 @@
         "misconfigurations": [
           {
             "property": "exposure_source",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "missing_evidence",
             "operator": "eq",
             "unsafe_value": "missing_evidence"
           },
           {
             "property": "protected_prefix",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "internal/",
             "operator": "eq",
             "unsafe_value": "internal/"
           }
@@ -1297,12 +1304,12 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "the exposure source must equal \"missing_evidence\", but is \"missing_evidence\"",
+              "clause": "the exposure source = \"missing_evidence\"",
               "observation_key": "exposure_source",
               "observed_value": "missing_evidence"
             },
             {
-              "clause": "the protected prefix must equal \"internal/\", but is \"internal/\"",
+              "clause": "the protected prefix = \"internal/\"",
               "observation_key": "protected_prefix",
               "observed_value": "internal/"
             }
@@ -1311,15 +1318,15 @@
         "changes": [
           {
             "path": "exposure_source",
-            "current_value": "[SANITIZED]",
+            "current_value": "missing_evidence",
             "has_safe_default": false,
-            "description": "Change exposure_source from [SANITIZED]"
+            "description": "Change exposure_source from missing_evidence"
           },
           {
             "path": "protected_prefix",
-            "current_value": "[SANITIZED]",
+            "current_value": "internal/",
             "has_safe_default": false,
-            "description": "Change protected_prefix from [SANITIZED]"
+            "description": "Change protected_prefix from internal/"
           }
         ],
         "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
@@ -1337,13 +1344,13 @@
         "misconfigurations": [
           {
             "property": "exposure_source",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "missing_evidence",
             "operator": "eq",
             "unsafe_value": "missing_evidence"
           },
           {
             "property": "protected_prefix",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "invoices/",
             "operator": "eq",
             "unsafe_value": "invoices/"
           }
@@ -1440,12 +1447,12 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "the exposure source must equal \"missing_evidence\", but is \"missing_evidence\"",
+              "clause": "the exposure source = \"missing_evidence\"",
               "observation_key": "exposure_source",
               "observed_value": "missing_evidence"
             },
             {
-              "clause": "the protected prefix must equal \"invoices/\", but is \"invoices/\"",
+              "clause": "the protected prefix = \"invoices/\"",
               "observation_key": "protected_prefix",
               "observed_value": "invoices/"
             }
@@ -1454,15 +1461,15 @@
         "changes": [
           {
             "path": "exposure_source",
-            "current_value": "[SANITIZED]",
+            "current_value": "missing_evidence",
             "has_safe_default": false,
-            "description": "Change exposure_source from [SANITIZED]"
+            "description": "Change exposure_source from missing_evidence"
           },
           {
             "path": "protected_prefix",
-            "current_value": "[SANITIZED]",
+            "current_value": "invoices/",
             "has_safe_default": false,
-            "description": "Change protected_prefix from [SANITIZED]"
+            "description": "Change protected_prefix from invoices/"
           }
         ],
         "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
@@ -1480,13 +1487,13 @@
         "misconfigurations": [
           {
             "property": "exposure_source",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "missing_evidence",
             "operator": "eq",
             "unsafe_value": "missing_evidence"
           },
           {
             "property": "protected_prefix",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "secrets/",
             "operator": "eq",
             "unsafe_value": "secrets/"
           }
@@ -1583,12 +1590,12 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "the exposure source must equal \"missing_evidence\", but is \"missing_evidence\"",
+              "clause": "the exposure source = \"missing_evidence\"",
               "observation_key": "exposure_source",
               "observed_value": "missing_evidence"
             },
             {
-              "clause": "the protected prefix must equal \"secrets/\", but is \"secrets/\"",
+              "clause": "the protected prefix = \"secrets/\"",
               "observation_key": "protected_prefix",
               "observed_value": "secrets/"
             }
@@ -1597,15 +1604,15 @@
         "changes": [
           {
             "path": "exposure_source",
-            "current_value": "[SANITIZED]",
+            "current_value": "missing_evidence",
             "has_safe_default": false,
-            "description": "Change exposure_source from [SANITIZED]"
+            "description": "Change exposure_source from missing_evidence"
           },
           {
             "path": "protected_prefix",
-            "current_value": "[SANITIZED]",
+            "current_value": "secrets/",
             "has_safe_default": false,
-            "description": "Change protected_prefix from [SANITIZED]"
+            "description": "Change protected_prefix from secrets/"
           }
         ],
         "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
@@ -1623,13 +1630,13 @@
         "misconfigurations": [
           {
             "property": "exposure_source",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "missing_evidence",
             "operator": "eq",
             "unsafe_value": "missing_evidence"
           },
           {
             "property": "protected_prefix",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "backups/",
             "operator": "eq",
             "unsafe_value": "backups/"
           }
@@ -1726,12 +1733,12 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "the exposure source must equal \"missing_evidence\", but is \"missing_evidence\"",
+              "clause": "the exposure source = \"missing_evidence\"",
               "observation_key": "exposure_source",
               "observed_value": "missing_evidence"
             },
             {
-              "clause": "the protected prefix must equal \"backups/\", but is \"backups/\"",
+              "clause": "the protected prefix = \"backups/\"",
               "observation_key": "protected_prefix",
               "observed_value": "backups/"
             }
@@ -1740,15 +1747,15 @@
         "changes": [
           {
             "path": "exposure_source",
-            "current_value": "[SANITIZED]",
+            "current_value": "missing_evidence",
             "has_safe_default": false,
-            "description": "Change exposure_source from [SANITIZED]"
+            "description": "Change exposure_source from missing_evidence"
           },
           {
             "path": "protected_prefix",
-            "current_value": "[SANITIZED]",
+            "current_value": "backups/",
             "has_safe_default": false,
-            "description": "Change protected_prefix from [SANITIZED]"
+            "description": "Change protected_prefix from backups/"
           }
         ],
         "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
@@ -1766,13 +1773,13 @@
         "misconfigurations": [
           {
             "property": "exposure_source",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "missing_evidence",
             "operator": "eq",
             "unsafe_value": "missing_evidence"
           },
           {
             "property": "protected_prefix",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "internal/",
             "operator": "eq",
             "unsafe_value": "internal/"
           }
@@ -1869,12 +1876,12 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "the exposure source must equal \"missing_evidence\", but is \"missing_evidence\"",
+              "clause": "the exposure source = \"missing_evidence\"",
               "observation_key": "exposure_source",
               "observed_value": "missing_evidence"
             },
             {
-              "clause": "the protected prefix must equal \"internal/\", but is \"internal/\"",
+              "clause": "the protected prefix = \"internal/\"",
               "observation_key": "protected_prefix",
               "observed_value": "internal/"
             }
@@ -1883,15 +1890,15 @@
         "changes": [
           {
             "path": "exposure_source",
-            "current_value": "[SANITIZED]",
+            "current_value": "missing_evidence",
             "has_safe_default": false,
-            "description": "Change exposure_source from [SANITIZED]"
+            "description": "Change exposure_source from missing_evidence"
           },
           {
             "path": "protected_prefix",
-            "current_value": "[SANITIZED]",
+            "current_value": "internal/",
             "has_safe_default": false,
-            "description": "Change protected_prefix from [SANITIZED]"
+            "description": "Change protected_prefix from internal/"
           }
         ],
         "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
@@ -1909,13 +1916,13 @@
         "misconfigurations": [
           {
             "property": "exposure_source",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "missing_evidence",
             "operator": "eq",
             "unsafe_value": "missing_evidence"
           },
           {
             "property": "protected_prefix",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "invoices/",
             "operator": "eq",
             "unsafe_value": "invoices/"
           }
@@ -2012,12 +2019,12 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "the exposure source must equal \"missing_evidence\", but is \"missing_evidence\"",
+              "clause": "the exposure source = \"missing_evidence\"",
               "observation_key": "exposure_source",
               "observed_value": "missing_evidence"
             },
             {
-              "clause": "the protected prefix must equal \"invoices/\", but is \"invoices/\"",
+              "clause": "the protected prefix = \"invoices/\"",
               "observation_key": "protected_prefix",
               "observed_value": "invoices/"
             }
@@ -2026,15 +2033,15 @@
         "changes": [
           {
             "path": "exposure_source",
-            "current_value": "[SANITIZED]",
+            "current_value": "missing_evidence",
             "has_safe_default": false,
-            "description": "Change exposure_source from [SANITIZED]"
+            "description": "Change exposure_source from missing_evidence"
           },
           {
             "path": "protected_prefix",
-            "current_value": "[SANITIZED]",
+            "current_value": "invoices/",
             "has_safe_default": false,
-            "description": "Change protected_prefix from [SANITIZED]"
+            "description": "Change protected_prefix from invoices/"
           }
         ],
         "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
@@ -2052,13 +2059,13 @@
         "misconfigurations": [
           {
             "property": "exposure_source",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "missing_evidence",
             "operator": "eq",
             "unsafe_value": "missing_evidence"
           },
           {
             "property": "protected_prefix",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "secrets/",
             "operator": "eq",
             "unsafe_value": "secrets/"
           }
@@ -2155,12 +2162,12 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "the exposure source must equal \"missing_evidence\", but is \"missing_evidence\"",
+              "clause": "the exposure source = \"missing_evidence\"",
               "observation_key": "exposure_source",
               "observed_value": "missing_evidence"
             },
             {
-              "clause": "the protected prefix must equal \"secrets/\", but is \"secrets/\"",
+              "clause": "the protected prefix = \"secrets/\"",
               "observation_key": "protected_prefix",
               "observed_value": "secrets/"
             }
@@ -2169,15 +2176,15 @@
         "changes": [
           {
             "path": "exposure_source",
-            "current_value": "[SANITIZED]",
+            "current_value": "missing_evidence",
             "has_safe_default": false,
-            "description": "Change exposure_source from [SANITIZED]"
+            "description": "Change exposure_source from missing_evidence"
           },
           {
             "path": "protected_prefix",
-            "current_value": "[SANITIZED]",
+            "current_value": "secrets/",
             "has_safe_default": false,
-            "description": "Change protected_prefix from [SANITIZED]"
+            "description": "Change protected_prefix from secrets/"
           }
         ],
         "command": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
@@ -2199,13 +2206,13 @@
         "misconfigurations": [
           {
             "property": "storage.controls.public_access_fully_blocked",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": false
           },
           {
             "property": "storage.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "bucket",
             "operator": "eq",
             "unsafe_value": "bucket"
           }
@@ -2287,12 +2294,12 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "all four Public Access Block flags are enabled must equal false, but is false",
+              "clause": "all four Public Access Block flags are enabled = false",
               "observation_key": "storage.controls.public_access_fully_blocked",
               "observed_value": false
             },
             {
-              "clause": "storage.kind must equal \"bucket\", but is \"bucket\"",
+              "clause": "storage.kind = \"bucket\"",
               "observation_key": "storage.kind",
               "observed_value": "bucket"
             }
@@ -2301,15 +2308,16 @@
         "changes": [
           {
             "path": "storage.controls.public_access_fully_blocked",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set storage.controls.public_access_fully_blocked to "
+            "description": "Set storage.controls.public_access_fully_blocked to true"
           },
           {
             "path": "storage.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "bucket",
             "has_safe_default": false,
-            "description": "Change storage.kind from [SANITIZED]"
+            "description": "Change storage.kind from bucket"
           }
         ],
         "command": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
@@ -2331,13 +2339,13 @@
         "misconfigurations": [
           {
             "property": "storage.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "bucket",
             "operator": "eq",
             "unsafe_value": "bucket"
           },
           {
             "property": "storage.tags.data-classification",
-            "actual_value": "[SANITIZED]",
+            "actual_value": null,
             "operator": "missing",
             "unsafe_value": true
           }
@@ -2408,12 +2416,12 @@
           "severity": "low",
           "reasoning": [
             {
-              "clause": "storage.kind must equal \"bucket\", but is \"bucket\"",
+              "clause": "storage.kind = \"bucket\"",
               "observation_key": "storage.kind",
               "observed_value": "bucket"
             },
             {
-              "clause": "the bucket's data-classification tag must be missing (and is)",
+              "clause": "the bucket's data-classification tag is not set",
               "observation_key": "storage.tags.data-classification"
             }
           ]
@@ -2421,13 +2429,13 @@
         "changes": [
           {
             "path": "storage.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "bucket",
             "has_safe_default": false,
-            "description": "Change storage.kind from [SANITIZED]"
+            "description": "Change storage.kind from bucket"
           },
           {
             "path": "storage.tags.data-classification",
-            "current_value": "[SANITIZED]",
+            "current_value": "",
             "required_value": "present",
             "has_safe_default": false,
             "description": "Ensure storage.tags.data-classification is present"
@@ -2987,7 +2995,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "1ae8b4da8479e5e75eaf0d7d9b907f3f5e5929e7",
+      "head_commit": "1a337200eb5c008d17ea570ba9886f86c6b5660b",
       "dirty": false
     }
   }

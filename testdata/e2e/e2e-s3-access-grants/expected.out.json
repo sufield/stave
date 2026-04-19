@@ -62,19 +62,19 @@
         "misconfigurations": [
           {
             "property": "storage.access_grants.has_broad_write_grant",
-            "actual_value": "[SANITIZED]",
+            "actual_value": true,
             "operator": "eq",
             "unsafe_value": true
           },
           {
             "property": "storage.access_grants.instance_exists",
-            "actual_value": "[SANITIZED]",
+            "actual_value": true,
             "operator": "eq",
             "unsafe_value": true
           },
           {
             "property": "storage.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "bucket",
             "operator": "eq",
             "unsafe_value": "bucket"
           }
@@ -157,17 +157,17 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "an Access Grants entry has a broad write grant must equal true, but is true",
+              "clause": "an Access Grants entry has a broad write grant = true",
               "observation_key": "storage.access_grants.has_broad_write_grant",
               "observed_value": true
             },
             {
-              "clause": "an S3 Access Grants instance exists for the account must equal true, but is true",
+              "clause": "an S3 Access Grants instance exists for the account = true",
               "observation_key": "storage.access_grants.instance_exists",
               "observed_value": true
             },
             {
-              "clause": "storage.kind must equal \"bucket\", but is \"bucket\"",
+              "clause": "storage.kind = \"bucket\"",
               "observation_key": "storage.kind",
               "observed_value": "bucket"
             }
@@ -176,21 +176,23 @@
         "changes": [
           {
             "path": "storage.access_grants.has_broad_write_grant",
-            "current_value": "[SANITIZED]",
+            "current_value": "true",
+            "required_value": "false",
             "has_safe_default": true,
-            "description": "Set storage.access_grants.has_broad_write_grant to "
+            "description": "Set storage.access_grants.has_broad_write_grant to false"
           },
           {
             "path": "storage.access_grants.instance_exists",
-            "current_value": "[SANITIZED]",
+            "current_value": "true",
+            "required_value": "false",
             "has_safe_default": true,
-            "description": "Set storage.access_grants.instance_exists to "
+            "description": "Set storage.access_grants.instance_exists to false"
           },
           {
             "path": "storage.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "bucket",
             "has_safe_default": false,
-            "description": "Change storage.kind from [SANITIZED]"
+            "description": "Change storage.kind from bucket"
           }
         ],
         "command": "Restrict grant scope to specific prefixes. Use READ not READWRITE."
@@ -212,19 +214,19 @@
         "misconfigurations": [
           {
             "property": "storage.access_grants.identity_center_attached",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": false
           },
           {
             "property": "storage.access_grants.instance_exists",
-            "actual_value": "[SANITIZED]",
+            "actual_value": true,
             "operator": "eq",
             "unsafe_value": true
           },
           {
             "property": "storage.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "bucket",
             "operator": "eq",
             "unsafe_value": "bucket"
           }
@@ -300,17 +302,17 @@
           "severity": "medium",
           "reasoning": [
             {
-              "clause": "Identity Center is attached to the Access Grants instance must equal false, but is false",
+              "clause": "Identity Center is attached to the Access Grants instance = false",
               "observation_key": "storage.access_grants.identity_center_attached",
               "observed_value": false
             },
             {
-              "clause": "an S3 Access Grants instance exists for the account must equal true, but is true",
+              "clause": "an S3 Access Grants instance exists for the account = true",
               "observation_key": "storage.access_grants.instance_exists",
               "observed_value": true
             },
             {
-              "clause": "storage.kind must equal \"bucket\", but is \"bucket\"",
+              "clause": "storage.kind = \"bucket\"",
               "observation_key": "storage.kind",
               "observed_value": "bucket"
             }
@@ -319,21 +321,23 @@
         "changes": [
           {
             "path": "storage.access_grants.identity_center_attached",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set storage.access_grants.identity_center_attached to "
+            "description": "Set storage.access_grants.identity_center_attached to true"
           },
           {
             "path": "storage.access_grants.instance_exists",
-            "current_value": "[SANITIZED]",
+            "current_value": "true",
+            "required_value": "false",
             "has_safe_default": true,
-            "description": "Set storage.access_grants.instance_exists to "
+            "description": "Set storage.access_grants.instance_exists to false"
           },
           {
             "path": "storage.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "bucket",
             "has_safe_default": false,
-            "description": "Change storage.kind from [SANITIZED]"
+            "description": "Change storage.kind from bucket"
           }
         ],
         "command": "Associate IAM Identity Center with the Access Grants instance using aws s3control associate-access-grants-identity-center. This enables directory-based grantee resolution."
@@ -503,7 +507,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "1ae8b4da8479e5e75eaf0d7d9b907f3f5e5929e7",
+      "head_commit": "1a337200eb5c008d17ea570ba9886f86c6b5660b",
       "dirty": false
     }
   }

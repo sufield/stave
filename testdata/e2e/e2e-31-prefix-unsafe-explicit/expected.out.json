@@ -36,13 +36,13 @@
         "misconfigurations": [
           {
             "property": "exposure_source",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "missing_evidence",
             "operator": "eq",
             "unsafe_value": "missing_evidence"
           },
           {
             "property": "protected_prefix",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "invoices/",
             "operator": "eq",
             "unsafe_value": "invoices/"
           }
@@ -101,12 +101,12 @@
           "control_name": "Public Read Allowed Only for Approved Prefixes",
           "reasoning": [
             {
-              "clause": "the exposure source must equal \"missing_evidence\", but is \"missing_evidence\"",
+              "clause": "the exposure source = \"missing_evidence\"",
               "observation_key": "exposure_source",
               "observed_value": "missing_evidence"
             },
             {
-              "clause": "the protected prefix must equal \"invoices/\", but is \"invoices/\"",
+              "clause": "the protected prefix = \"invoices/\"",
               "observation_key": "protected_prefix",
               "observed_value": "invoices/"
             }
@@ -115,15 +115,15 @@
         "changes": [
           {
             "path": "exposure_source",
-            "current_value": "[SANITIZED]",
+            "current_value": "missing_evidence",
             "has_safe_default": false,
-            "description": "Change exposure_source from [SANITIZED]"
+            "description": "Change exposure_source from missing_evidence"
           },
           {
             "path": "protected_prefix",
-            "current_value": "[SANITIZED]",
+            "current_value": "invoices/",
             "has_safe_default": false,
-            "description": "Change protected_prefix from [SANITIZED]"
+            "description": "Change protected_prefix from invoices/"
           }
         ],
         "command": "Review the misconfigured properties and revert to compliant values."
@@ -274,7 +274,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "1ae8b4da8479e5e75eaf0d7d9b907f3f5e5929e7",
+      "head_commit": "1a337200eb5c008d17ea570ba9886f86c6b5660b",
       "dirty": false
     }
   }

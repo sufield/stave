@@ -52,19 +52,19 @@
         "misconfigurations": [
           {
             "property": "s3_upload.allowed_key_mode",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "prefix",
             "operator": "eq",
             "unsafe_value": "prefix"
           },
           {
             "property": "s3_upload.operation",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "write",
             "operator": "eq",
             "unsafe_value": "write"
           },
           {
             "property": "type",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "s3_upload_policy",
             "operator": "eq",
             "unsafe_value": "s3_upload_policy"
           }
@@ -144,17 +144,17 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "the S3 upload key-allowlist mode must equal \"prefix\", but is \"prefix\"",
+              "clause": "the S3 upload key-allowlist mode = \"prefix\"",
               "observation_key": "s3_upload.allowed_key_mode",
               "observed_value": "prefix"
             },
             {
-              "clause": "the S3 upload operation must equal \"write\", but is \"write\"",
+              "clause": "the S3 upload operation = \"write\"",
               "observation_key": "s3_upload.operation",
               "observed_value": "write"
             },
             {
-              "clause": "the asset type must equal \"s3_upload_policy\", but is \"s3_upload_policy\"",
+              "clause": "the asset type = \"s3_upload_policy\"",
               "observation_key": "type",
               "observed_value": "s3_upload_policy"
             }
@@ -163,21 +163,21 @@
         "changes": [
           {
             "path": "s3_upload.allowed_key_mode",
-            "current_value": "[SANITIZED]",
+            "current_value": "prefix",
             "has_safe_default": false,
-            "description": "Change s3_upload.allowed_key_mode from [SANITIZED]"
+            "description": "Change s3_upload.allowed_key_mode from prefix"
           },
           {
             "path": "s3_upload.operation",
-            "current_value": "[SANITIZED]",
+            "current_value": "write",
             "has_safe_default": false,
-            "description": "Change s3_upload.operation from [SANITIZED]"
+            "description": "Change s3_upload.operation from write"
           },
           {
             "path": "type",
-            "current_value": "[SANITIZED]",
+            "current_value": "s3_upload_policy",
             "has_safe_default": false,
-            "description": "Change type from [SANITIZED]"
+            "description": "Change type from s3_upload_policy"
           }
         ],
         "command": "Change the signed upload policy to use an exact key condition (eq instead of starts-with) that binds each upload to a specific object path. Generate unique object keys server-side."
@@ -329,7 +329,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "1ae8b4da8479e5e75eaf0d7d9b907f3f5e5929e7",
+      "head_commit": "1a337200eb5c008d17ea570ba9886f86c6b5660b",
       "dirty": false
     }
   }

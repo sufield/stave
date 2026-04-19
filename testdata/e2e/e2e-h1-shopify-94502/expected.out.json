@@ -142,7 +142,7 @@
         "misconfigurations": [
           {
             "property": "storage.access.public_read",
-            "actual_value": "[SANITIZED]",
+            "actual_value": true,
             "operator": "eq",
             "unsafe_value": true
           }
@@ -247,7 +247,7 @@
           "severity": "critical",
           "reasoning": [
             {
-              "clause": "the bucket allows anonymous read must equal true, but is true",
+              "clause": "the bucket allows anonymous read = true",
               "observation_key": "storage.access.public_read",
               "observed_value": true
             }
@@ -256,9 +256,10 @@
         "changes": [
           {
             "path": "storage.access.public_read",
-            "current_value": "[SANITIZED]",
+            "current_value": "true",
+            "required_value": "false",
             "has_safe_default": true,
-            "description": "Set storage.access.public_read to "
+            "description": "Set storage.access.public_read to false"
           }
         ],
         "command": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
@@ -280,7 +281,7 @@
         "misconfigurations": [
           {
             "property": "storage.access.public_read",
-            "actual_value": "[SANITIZED]",
+            "actual_value": true,
             "operator": "eq",
             "unsafe_value": true
           }
@@ -385,7 +386,7 @@
           "severity": "critical",
           "reasoning": [
             {
-              "clause": "the bucket allows anonymous read must equal true, but is true",
+              "clause": "the bucket allows anonymous read = true",
               "observation_key": "storage.access.public_read",
               "observed_value": true
             }
@@ -394,9 +395,10 @@
         "changes": [
           {
             "path": "storage.access.public_read",
-            "current_value": "[SANITIZED]",
+            "current_value": "true",
+            "required_value": "false",
             "has_safe_default": true,
-            "description": "Set storage.access.public_read to "
+            "description": "Set storage.access.public_read to false"
           }
         ],
         "command": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
@@ -418,7 +420,7 @@
         "misconfigurations": [
           {
             "property": "storage.access.public_read",
-            "actual_value": "[SANITIZED]",
+            "actual_value": true,
             "operator": "eq",
             "unsafe_value": true
           }
@@ -523,7 +525,7 @@
           "severity": "critical",
           "reasoning": [
             {
-              "clause": "the bucket allows anonymous read must equal true, but is true",
+              "clause": "the bucket allows anonymous read = true",
               "observation_key": "storage.access.public_read",
               "observed_value": true
             }
@@ -532,9 +534,10 @@
         "changes": [
           {
             "path": "storage.access.public_read",
-            "current_value": "[SANITIZED]",
+            "current_value": "true",
+            "required_value": "false",
             "has_safe_default": true,
-            "description": "Set storage.access.public_read to "
+            "description": "Set storage.access.public_read to false"
           }
         ],
         "command": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
@@ -556,7 +559,7 @@
         "misconfigurations": [
           {
             "property": "storage.access.public_write",
-            "actual_value": "[SANITIZED]",
+            "actual_value": true,
             "operator": "eq",
             "unsafe_value": true
           }
@@ -649,7 +652,7 @@
           "severity": "critical",
           "reasoning": [
             {
-              "clause": "the bucket allows anonymous write must equal true, but is true",
+              "clause": "the bucket allows anonymous write = true",
               "observation_key": "storage.access.public_write",
               "observed_value": true
             }
@@ -658,9 +661,10 @@
         "changes": [
           {
             "path": "storage.access.public_write",
-            "current_value": "[SANITIZED]",
+            "current_value": "true",
+            "required_value": "false",
             "has_safe_default": true,
-            "description": "Set storage.access.public_write to "
+            "description": "Set storage.access.public_write to false"
           }
         ],
         "command": "Remove bucket policy statements that grant s3:PutObject or s3:DeleteObject to Principal \"*\". Remove ACL grants that allow WRITE or FULL_CONTROL to AllUsers or AuthenticatedUsers. Enable S3 Public Access Block."
@@ -681,7 +685,7 @@
         "misconfigurations": [
           {
             "property": "storage.access.read_via_resource",
-            "actual_value": "[SANITIZED]",
+            "actual_value": true,
             "operator": "eq",
             "unsafe_value": true
           }
@@ -774,7 +778,7 @@
           "severity": "medium",
           "reasoning": [
             {
-              "clause": "the bucket policy grants read to a public principal must equal true, but is true",
+              "clause": "the bucket policy grants read to a public principal = true",
               "observation_key": "storage.access.read_via_resource",
               "observed_value": true
             }
@@ -783,9 +787,10 @@
         "changes": [
           {
             "path": "storage.access.read_via_resource",
-            "current_value": "[SANITIZED]",
+            "current_value": "true",
+            "required_value": "false",
             "has_safe_default": true,
-            "description": "Set storage.access.read_via_resource to "
+            "description": "Set storage.access.read_via_resource to false"
           }
         ],
         "command": "Remove or constrain the policy statement granting read actions to Principal \"*\" or AWS: \"*\". If broad read access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public read."
@@ -806,7 +811,7 @@
         "misconfigurations": [
           {
             "property": "storage.access.read_via_resource",
-            "actual_value": "[SANITIZED]",
+            "actual_value": true,
             "operator": "eq",
             "unsafe_value": true
           }
@@ -899,7 +904,7 @@
           "severity": "medium",
           "reasoning": [
             {
-              "clause": "the bucket policy grants read to a public principal must equal true, but is true",
+              "clause": "the bucket policy grants read to a public principal = true",
               "observation_key": "storage.access.read_via_resource",
               "observed_value": true
             }
@@ -908,9 +913,10 @@
         "changes": [
           {
             "path": "storage.access.read_via_resource",
-            "current_value": "[SANITIZED]",
+            "current_value": "true",
+            "required_value": "false",
             "has_safe_default": true,
-            "description": "Set storage.access.read_via_resource to "
+            "description": "Set storage.access.read_via_resource to false"
           }
         ],
         "command": "Remove or constrain the policy statement granting read actions to Principal \"*\" or AWS: \"*\". If broad read access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public read."
@@ -931,7 +937,7 @@
         "misconfigurations": [
           {
             "property": "storage.access.read_via_resource",
-            "actual_value": "[SANITIZED]",
+            "actual_value": true,
             "operator": "eq",
             "unsafe_value": true
           }
@@ -1024,7 +1030,7 @@
           "severity": "medium",
           "reasoning": [
             {
-              "clause": "the bucket policy grants read to a public principal must equal true, but is true",
+              "clause": "the bucket policy grants read to a public principal = true",
               "observation_key": "storage.access.read_via_resource",
               "observed_value": true
             }
@@ -1033,9 +1039,10 @@
         "changes": [
           {
             "path": "storage.access.read_via_resource",
-            "current_value": "[SANITIZED]",
+            "current_value": "true",
+            "required_value": "false",
             "has_safe_default": true,
-            "description": "Set storage.access.read_via_resource to "
+            "description": "Set storage.access.read_via_resource to false"
           }
         ],
         "command": "Remove or constrain the policy statement granting read actions to Principal \"*\" or AWS: \"*\". If broad read access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public read."
@@ -1057,13 +1064,13 @@
         "misconfigurations": [
           {
             "property": "storage.controls.public_access_fully_blocked",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": false
           },
           {
             "property": "storage.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "bucket",
             "operator": "eq",
             "unsafe_value": "bucket"
           }
@@ -1145,12 +1152,12 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "all four Public Access Block flags are enabled must equal false, but is false",
+              "clause": "all four Public Access Block flags are enabled = false",
               "observation_key": "storage.controls.public_access_fully_blocked",
               "observed_value": false
             },
             {
-              "clause": "storage.kind must equal \"bucket\", but is \"bucket\"",
+              "clause": "storage.kind = \"bucket\"",
               "observation_key": "storage.kind",
               "observed_value": "bucket"
             }
@@ -1159,15 +1166,16 @@
         "changes": [
           {
             "path": "storage.controls.public_access_fully_blocked",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set storage.controls.public_access_fully_blocked to "
+            "description": "Set storage.controls.public_access_fully_blocked to true"
           },
           {
             "path": "storage.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "bucket",
             "has_safe_default": false,
-            "description": "Change storage.kind from [SANITIZED]"
+            "description": "Change storage.kind from bucket"
           }
         ],
         "command": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
@@ -1189,13 +1197,13 @@
         "misconfigurations": [
           {
             "property": "storage.controls.public_access_fully_blocked",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": false
           },
           {
             "property": "storage.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "bucket",
             "operator": "eq",
             "unsafe_value": "bucket"
           }
@@ -1277,12 +1285,12 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "all four Public Access Block flags are enabled must equal false, but is false",
+              "clause": "all four Public Access Block flags are enabled = false",
               "observation_key": "storage.controls.public_access_fully_blocked",
               "observed_value": false
             },
             {
-              "clause": "storage.kind must equal \"bucket\", but is \"bucket\"",
+              "clause": "storage.kind = \"bucket\"",
               "observation_key": "storage.kind",
               "observed_value": "bucket"
             }
@@ -1291,15 +1299,16 @@
         "changes": [
           {
             "path": "storage.controls.public_access_fully_blocked",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set storage.controls.public_access_fully_blocked to "
+            "description": "Set storage.controls.public_access_fully_blocked to true"
           },
           {
             "path": "storage.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "bucket",
             "has_safe_default": false,
-            "description": "Change storage.kind from [SANITIZED]"
+            "description": "Change storage.kind from bucket"
           }
         ],
         "command": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
@@ -1321,13 +1330,13 @@
         "misconfigurations": [
           {
             "property": "storage.controls.public_access_fully_blocked",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": false
           },
           {
             "property": "storage.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "bucket",
             "operator": "eq",
             "unsafe_value": "bucket"
           }
@@ -1409,12 +1418,12 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "all four Public Access Block flags are enabled must equal false, but is false",
+              "clause": "all four Public Access Block flags are enabled = false",
               "observation_key": "storage.controls.public_access_fully_blocked",
               "observed_value": false
             },
             {
-              "clause": "storage.kind must equal \"bucket\", but is \"bucket\"",
+              "clause": "storage.kind = \"bucket\"",
               "observation_key": "storage.kind",
               "observed_value": "bucket"
             }
@@ -1423,15 +1432,16 @@
         "changes": [
           {
             "path": "storage.controls.public_access_fully_blocked",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set storage.controls.public_access_fully_blocked to "
+            "description": "Set storage.controls.public_access_fully_blocked to true"
           },
           {
             "path": "storage.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "bucket",
             "has_safe_default": false,
-            "description": "Change storage.kind from [SANITIZED]"
+            "description": "Change storage.kind from bucket"
           }
         ],
         "command": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
@@ -1960,7 +1970,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "1ae8b4da8479e5e75eaf0d7d9b907f3f5e5929e7",
+      "head_commit": "1a337200eb5c008d17ea570ba9886f86c6b5660b",
       "dirty": false
     }
   }

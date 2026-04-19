@@ -57,8 +57,12 @@ func TestSanitizeFindings_Redaction(t *testing.T) {
 	if s.Source.File != "public.yaml" {
 		t.Errorf("Source.File = %q, want public.yaml", s.Source.File)
 	}
-	if s.Evidence.Misconfigurations[0].ActualValue != "[SANITIZED]" {
-		t.Errorf("Misconfigurations[0].ActualValue = %v, want [SANITIZED]", s.Evidence.Misconfigurations[0].ActualValue)
+	// Per the type-discriminated sanitization policy, boolean
+	// ActualValue passes through unchanged — booleans cannot carry
+	// identifier-shaped data, and redacting them destroys the signal
+	// downstream consumers (AI prompts, fix-plan templates) need.
+	if s.Evidence.Misconfigurations[0].ActualValue != true {
+		t.Errorf("Misconfigurations[0].ActualValue = %v, want true (boolean preserved)", s.Evidence.Misconfigurations[0].ActualValue)
 	}
 	if s.Evidence.Misconfigurations[0].Property.String() != "properties.storage.access.public_read" {
 		t.Errorf("Misconfigurations[0].Property changed")

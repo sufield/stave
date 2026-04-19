@@ -354,22 +354,48 @@ func lookupControlForFindingID(findings []evaluation.Finding, fid string) (strin
 // writeFindingReasoning renders the inline reasoning trace — the
 // predicate clauses the engine evaluated and the observed values it
 // saw — translated into plain English per
-// docs/product/metrics.md § Metric 5. Silent when the finding has
-// no backing predicate (e.g., compound-chain findings with no
-// extractable clauses). JSON and SARIF output retain the raw DSL
-// shape; prose is a text-writer concern.
+// docs/product/metrics.md § Metric 5.
+//
+// Clauses are partitioned by translation.ClassifyClause into two
+// sections: "Scope:" lists predicate gates (asset-class
+// discriminators, parameterized constraints) that select which
+// assets the predicate applies to; "Reasoning:" lists unsafe-match
+// clauses that identify the unsafe condition. The split lets the
+// reader see at a glance which clauses point at the violation. Empty
+// sections are suppressed.
+//
+// Silent when the finding has no backing predicate (e.g., compound-
+// chain findings with no extractable clauses). JSON and SARIF output
+// retain the raw DSL shape; prose is a text-writer concern.
 func writeFindingReasoning(d *drawer, f *remediation.Finding) {
 	if len(f.ReasoningTrace) == 0 {
 		return
 	}
-	d.f("   Reasoning:\n")
+	var scope, reasoning []translation.Clause
 	for _, mc := range f.ReasoningTrace {
-		d.f("     %s\n", translation.RenderClause(translation.Clause{
+		c := translation.Clause{
 			ObservationKey: mc.ObservationKey,
 			Operator:       mc.Operator,
 			ExpectedValue:  mc.ExpectedValue,
 			ObservedValue:  mc.ObservedValue,
-		}, translation.DefaultFieldRegistry))
+		}
+		if translation.ClassifyClause(mc.ObservationKey) == translation.RoleGate {
+			scope = append(scope, c)
+		} else {
+			reasoning = append(reasoning, c)
+		}
+	}
+	if len(scope) > 0 {
+		d.f("   Scope:\n")
+		for _, c := range scope {
+			d.f("     %s\n", translation.RenderClause(c, translation.DefaultFieldRegistry))
+		}
+	}
+	if len(reasoning) > 0 {
+		d.f("   Reasoning:\n")
+		for _, c := range reasoning {
+			d.f("     %s\n", translation.RenderClause(c, translation.DefaultFieldRegistry))
+		}
 	}
 }
 

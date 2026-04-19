@@ -424,6 +424,21 @@ Known limitations:
 - CLI-only remediation (no per-IaC-stack rendering). Terraform /
   CloudFormation / CDK snippet generation is orthogonal future
   work; the parameterized CLI remains the lowest-common-denominator.
+- ~~`current_value: "[SANITIZED]"` for booleans destroys signal
+  the AI consumer needs~~ — **resolved 2026-04-19** by the
+  type-discriminated sanitization policy at
+  `internal/app/eval/enrich.go:sanitizeActualValue`. Booleans,
+  numbers, and nil pass through unchanged; strings continue
+  routing through the per-field Sanitizer. See
+  `docs/product/architecture.md` § Sanitization policy.
+- ~~`description: "Set <prop> to "` (trailing space, no value)~~
+  — **resolved 2026-04-19** by the same fix. The empty-target
+  string was a downstream symptom of the boolean ActualValue
+  being sanitized to a string, defeating
+  `derive_changes.go:isBooleanInversion`. With ActualValue
+  preserved as bool, `invertBool` succeeds and the description
+  renders the actual target value (e.g., "Set
+  storage.access.public_read to false").
 
 **Target.** Remaining work for this metric:
 
@@ -512,14 +527,22 @@ rendering until the registry extends.
 
 Known limitations:
 
-- Prose template reads awkwardly when the predicate's `value:` is
-  the unsafe value (e.g., `has_wildcard_principal eq true`) —
-  renders as "… must equal true, but is true". The template is
-  correct for clauses where `value:` is the safe value (e.g., PAB
-  `block_public_acls eq false` where BlockPublicAcls being enabled
-  means true); the other pattern reads as contradiction. Refining
-  the template to branch on safe-vs-unsafe expected values is
-  future work and requires contract-level annotation.
+- ~~Prose template reads awkwardly when the predicate's `value:`
+  is the unsafe value~~ — **resolved 2026-04-19**. Template
+  rewritten to drop the "must equal X, but is X" scaffolding for
+  `eq` operators in favor of factual `{field} = {observed}`
+  rendering. The internal-verification audit's contradiction-
+  shape sub-bug is closed; no contract-level annotation
+  required.
+- ~~Predicate gates render alongside violation clauses with no
+  visual distinction~~ — **resolved 2026-04-19**. Renderer now
+  partitions clauses into a `Scope:` section (asset-class
+  discriminators and parameterized constraints — gates) and a
+  `Reasoning:` section (unsafe-match clauses — violations).
+  Classification is heuristic from existing structured data
+  (`internal/core/translation/translator.go:ClassifyClause`);
+  no new reasoning_trace fields. The internal-verification
+  audit's gate-clause-leakage sub-bug is closed.
 - Registry is hand-maintained in Go. A distributed
   contract-markdown parser (one Translation: line per field in
   `docs/contract/*.md`, code-gen at build time) is the long-term
@@ -534,16 +557,13 @@ As of 2026-04-19, asset-type gating
 gate-clause-leak case where a control's predicate matched only
 because the asset type didn't carry the field
 (e.g., `the load balancer uses TLS 1.2 or higher must be missing
-(and is)` on an S3 bucket). The contradiction-shape rendering
-remains for the safe-vs-unsafe-expected-value case identified
-above; gating reduces output by ~31% on cross-domain runs but
-does not address the contradiction template itself.
+(and is)` on an S3 bucket). The accompanying renderer rewrite
+above resolves the remaining two M5 known-limitations from the
+internal-verification audit (contradiction shape, gate/violation
+distinction).
 
 **Target.** Remaining work for this metric:
 
-- Refine the prose template to handle safe-vs-unsafe expected
-  values (requires adding a safe-value annotation to controls or
-  the observation contract).
 - Extend the registry toward the full 713-path contract surface —
   the long-tail coverage.
 - Optionally introduce a distributed contract-markdown parser with

@@ -72,19 +72,19 @@
         "misconfigurations": [
           {
             "property": "storage.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "bucket",
             "operator": "eq",
             "unsafe_value": "bucket"
           },
           {
             "property": "storage.object_lock.enabled",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": false
           },
           {
             "property": "storage.tags.compliance",
-            "actual_value": "[SANITIZED]",
+            "actual_value": true,
             "operator": "present",
             "unsafe_value": true
           }
@@ -165,17 +165,17 @@
           "severity": "medium",
           "reasoning": [
             {
-              "clause": "storage.kind must equal \"bucket\", but is \"bucket\"",
+              "clause": "storage.kind = \"bucket\"",
               "observation_key": "storage.kind",
               "observed_value": "bucket"
             },
             {
-              "clause": "Object Lock is enabled must equal false, but is false",
+              "clause": "Object Lock is enabled = false",
               "observation_key": "storage.object_lock.enabled",
               "observed_value": false
             },
             {
-              "clause": "the bucket's compliance tag must be set (observed: true)",
+              "clause": "the bucket's compliance tag is set (observed: true)",
               "observation_key": "storage.tags.compliance",
               "observed_value": true
             }
@@ -184,19 +184,20 @@
         "changes": [
           {
             "path": "storage.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "bucket",
             "has_safe_default": false,
-            "description": "Change storage.kind from [SANITIZED]"
+            "description": "Change storage.kind from bucket"
           },
           {
             "path": "storage.object_lock.enabled",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set storage.object_lock.enabled to "
+            "description": "Set storage.object_lock.enabled to true"
           },
           {
             "path": "storage.tags.compliance",
-            "current_value": "[SANITIZED]",
+            "current_value": "true",
             "required_value": "absent",
             "has_safe_default": false,
             "description": "Remove storage.tags.compliance"
@@ -221,19 +222,19 @@
         "misconfigurations": [
           {
             "property": "storage.object_lock.enabled",
-            "actual_value": "[SANITIZED]",
+            "actual_value": true,
             "operator": "eq",
             "unsafe_value": true
           },
           {
             "property": "storage.object_lock.mode",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "GOVERNANCE",
             "operator": "ne",
             "unsafe_value": "COMPLIANCE"
           },
           {
             "property": "storage.tags.data-classification",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "phi",
             "operator": "eq",
             "unsafe_value": "phi"
           }
@@ -309,17 +310,17 @@
           "severity": "medium",
           "reasoning": [
             {
-              "clause": "Object Lock is enabled must equal true, but is true",
+              "clause": "Object Lock is enabled = true",
               "observation_key": "storage.object_lock.enabled",
               "observed_value": true
             },
             {
-              "clause": "Object Lock retention mode must not equal \"COMPLIANCE\", but is \"GOVERNANCE\"",
+              "clause": "Object Lock retention mode not equal \"COMPLIANCE\" (observed: \"GOVERNANCE\")",
               "observation_key": "storage.object_lock.mode",
               "observed_value": "GOVERNANCE"
             },
             {
-              "clause": "the bucket's data-classification tag must equal \"phi\", but is \"phi\"",
+              "clause": "the bucket's data-classification tag = \"phi\"",
               "observation_key": "storage.tags.data-classification",
               "observed_value": "phi"
             }
@@ -328,21 +329,22 @@
         "changes": [
           {
             "path": "storage.object_lock.enabled",
-            "current_value": "[SANITIZED]",
+            "current_value": "true",
+            "required_value": "false",
             "has_safe_default": true,
-            "description": "Set storage.object_lock.enabled to "
+            "description": "Set storage.object_lock.enabled to false"
           },
           {
             "path": "storage.object_lock.mode",
-            "current_value": "[SANITIZED]",
+            "current_value": "GOVERNANCE",
             "has_safe_default": false,
-            "description": "Change storage.object_lock.mode from [SANITIZED]"
+            "description": "Change storage.object_lock.mode from GOVERNANCE"
           },
           {
             "path": "storage.tags.data-classification",
-            "current_value": "[SANITIZED]",
+            "current_value": "phi",
             "has_safe_default": false,
-            "description": "Change storage.tags.data-classification from [SANITIZED]"
+            "description": "Change storage.tags.data-classification from phi"
           }
         ],
         "command": "Change the Object Lock default retention mode from GOVERNANCE to COMPLIANCE. In COMPLIANCE mode, no user (including root) can delete or modify protected objects during the retention period."
@@ -364,19 +366,19 @@
         "misconfigurations": [
           {
             "property": "storage.object_lock.enabled",
-            "actual_value": "[SANITIZED]",
+            "actual_value": true,
             "operator": "eq",
             "unsafe_value": true
           },
           {
             "property": "storage.object_lock.retention_days",
-            "actual_value": "[SANITIZED]",
+            "actual_value": 365,
             "operator": "lt",
             "unsafe_value": 2190
           },
           {
             "property": "storage.tags.data-classification",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "phi",
             "operator": "eq",
             "unsafe_value": "phi"
           }
@@ -452,17 +454,17 @@
           "severity": "medium",
           "reasoning": [
             {
-              "clause": "Object Lock is enabled must equal true, but is true",
+              "clause": "Object Lock is enabled = true",
               "observation_key": "storage.object_lock.enabled",
               "observed_value": true
             },
             {
-              "clause": "Object Lock retention days must be less than 2190, but is 365",
+              "clause": "Object Lock retention days be less than 2190 (observed: 365)",
               "observation_key": "storage.object_lock.retention_days",
               "observed_value": 365
             },
             {
-              "clause": "the bucket's data-classification tag must equal \"phi\", but is \"phi\"",
+              "clause": "the bucket's data-classification tag = \"phi\"",
               "observation_key": "storage.tags.data-classification",
               "observed_value": "phi"
             }
@@ -471,21 +473,22 @@
         "changes": [
           {
             "path": "storage.object_lock.enabled",
-            "current_value": "[SANITIZED]",
+            "current_value": "true",
+            "required_value": "false",
             "has_safe_default": true,
-            "description": "Set storage.object_lock.enabled to "
+            "description": "Set storage.object_lock.enabled to false"
           },
           {
             "path": "storage.object_lock.retention_days",
-            "current_value": "[SANITIZED]",
+            "current_value": "365",
             "has_safe_default": false,
-            "description": "Change storage.object_lock.retention_days from [SANITIZED]"
+            "description": "Change storage.object_lock.retention_days from 365"
           },
           {
             "path": "storage.tags.data-classification",
-            "current_value": "[SANITIZED]",
+            "current_value": "phi",
             "has_safe_default": false,
-            "description": "Change storage.tags.data-classification from [SANITIZED]"
+            "description": "Change storage.tags.data-classification from phi"
           }
         ],
         "command": "Increase the Object Lock default retention period to at least 2190 days. Use aws s3api put-object-lock-configuration to update the default retention settings."
@@ -734,7 +737,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "1ae8b4da8479e5e75eaf0d7d9b907f3f5e5929e7",
+      "head_commit": "1a337200eb5c008d17ea570ba9886f86c6b5660b",
       "dirty": false
     }
   }

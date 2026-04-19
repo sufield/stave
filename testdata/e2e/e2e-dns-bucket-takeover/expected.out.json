@@ -52,13 +52,13 @@
         "misconfigurations": [
           {
             "property": "dns.target_exists",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": false
           },
           {
             "property": "dns.target_owned",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": false
           }
@@ -130,12 +130,12 @@
           "severity": "critical",
           "reasoning": [
             {
-              "clause": "the DNS record's target exists must equal false, but is false",
+              "clause": "the DNS record's target exists = false",
               "observation_key": "dns.target_exists",
               "observed_value": false
             },
             {
-              "clause": "the DNS record's target is owned by the account must equal false, but is false",
+              "clause": "the DNS record's target is owned by the account = false",
               "observation_key": "dns.target_owned",
               "observed_value": false
             }
@@ -144,15 +144,17 @@
         "changes": [
           {
             "path": "dns.target_exists",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set dns.target_exists to "
+            "description": "Set dns.target_exists to true"
           },
           {
             "path": "dns.target_owned",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set dns.target_owned to "
+            "description": "Set dns.target_owned to true"
           }
         ],
         "command": "Either claim the target resource in your cloud account to block takeover, or delete the DNS record that points to the unclaimed resource. Audit all DNS zones for records pointing to decommissioned infrastructure."
@@ -303,7 +305,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "1ae8b4da8479e5e75eaf0d7d9b907f3f5e5929e7",
+      "head_commit": "1a337200eb5c008d17ea570ba9886f86c6b5660b",
       "dirty": false
     }
   }

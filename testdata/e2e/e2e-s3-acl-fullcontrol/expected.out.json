@@ -62,13 +62,13 @@
         "misconfigurations": [
           {
             "property": "storage.access.has_full_control_authenticated",
-            "actual_value": "[SANITIZED]",
+            "actual_value": true,
             "operator": "eq",
             "unsafe_value": true
           },
           {
             "property": "storage.access.has_full_control_public",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": true
           }
@@ -144,12 +144,12 @@
           "severity": "critical",
           "reasoning": [
             {
-              "clause": "the bucket grants FULL_CONTROL to AuthenticatedUsers must equal true, but is true",
+              "clause": "the bucket grants FULL_CONTROL to AuthenticatedUsers = true",
               "observation_key": "storage.access.has_full_control_authenticated",
               "observed_value": true
             },
             {
-              "clause": "the bucket grants FULL_CONTROL to AllUsers must equal true, but is false",
+              "clause": "the bucket grants FULL_CONTROL to AllUsers = false",
               "observation_key": "storage.access.has_full_control_public",
               "observed_value": false
             }
@@ -158,15 +158,17 @@
         "changes": [
           {
             "path": "storage.access.has_full_control_authenticated",
-            "current_value": "[SANITIZED]",
+            "current_value": "true",
+            "required_value": "false",
             "has_safe_default": true,
-            "description": "Set storage.access.has_full_control_authenticated to "
+            "description": "Set storage.access.has_full_control_authenticated to false"
           },
           {
             "path": "storage.access.has_full_control_public",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set storage.access.has_full_control_public to "
+            "description": "Set storage.access.has_full_control_public to true"
           }
         ],
         "command": "Replace the bucket ACL with \"BucketOwnerFullControl\" or remove the FULL_CONTROL grant to public groups. Enable S3 Public Access Block with BlockPublicAcls and IgnorePublicAcls set to true."
@@ -188,13 +190,13 @@
         "misconfigurations": [
           {
             "property": "storage.access.has_full_control_authenticated",
-            "actual_value": "[SANITIZED]",
+            "actual_value": false,
             "operator": "eq",
             "unsafe_value": true
           },
           {
             "property": "storage.access.has_full_control_public",
-            "actual_value": "[SANITIZED]",
+            "actual_value": true,
             "operator": "eq",
             "unsafe_value": true
           }
@@ -270,12 +272,12 @@
           "severity": "critical",
           "reasoning": [
             {
-              "clause": "the bucket grants FULL_CONTROL to AuthenticatedUsers must equal true, but is false",
+              "clause": "the bucket grants FULL_CONTROL to AuthenticatedUsers = false",
               "observation_key": "storage.access.has_full_control_authenticated",
               "observed_value": false
             },
             {
-              "clause": "the bucket grants FULL_CONTROL to AllUsers must equal true, but is true",
+              "clause": "the bucket grants FULL_CONTROL to AllUsers = true",
               "observation_key": "storage.access.has_full_control_public",
               "observed_value": true
             }
@@ -284,15 +286,17 @@
         "changes": [
           {
             "path": "storage.access.has_full_control_authenticated",
-            "current_value": "[SANITIZED]",
+            "current_value": "false",
+            "required_value": "true",
             "has_safe_default": true,
-            "description": "Set storage.access.has_full_control_authenticated to "
+            "description": "Set storage.access.has_full_control_authenticated to true"
           },
           {
             "path": "storage.access.has_full_control_public",
-            "current_value": "[SANITIZED]",
+            "current_value": "true",
+            "required_value": "false",
             "has_safe_default": true,
-            "description": "Set storage.access.has_full_control_public to "
+            "description": "Set storage.access.has_full_control_public to false"
           }
         ],
         "command": "Replace the bucket ACL with \"BucketOwnerFullControl\" or remove the FULL_CONTROL grant to public groups. Enable S3 Public Access Block with BlockPublicAcls and IgnorePublicAcls set to true."
@@ -490,7 +494,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "1ae8b4da8479e5e75eaf0d7d9b907f3f5e5929e7",
+      "head_commit": "1a337200eb5c008d17ea570ba9886f86c6b5660b",
       "dirty": false
     }
   }

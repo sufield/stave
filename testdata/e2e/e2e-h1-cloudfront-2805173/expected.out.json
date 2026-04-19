@@ -132,13 +132,13 @@
         "misconfigurations": [
           {
             "property": "compute.execution_role.is_overprivileged",
-            "actual_value": "[SANITIZED]",
+            "actual_value": true,
             "operator": "eq",
             "unsafe_value": true
           },
           {
             "property": "compute.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "function",
             "operator": "eq",
             "unsafe_value": "function"
           }
@@ -216,12 +216,12 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "the compute execution role is over-privileged must equal true, but is true",
+              "clause": "the compute execution role is over-privileged = true",
               "observation_key": "compute.execution_role.is_overprivileged",
               "observed_value": true
             },
             {
-              "clause": "compute.kind must equal \"function\", but is \"function\"",
+              "clause": "compute.kind = \"function\"",
               "observation_key": "compute.kind",
               "observed_value": "function"
             }
@@ -230,15 +230,16 @@
         "changes": [
           {
             "path": "compute.execution_role.is_overprivileged",
-            "current_value": "[SANITIZED]",
+            "current_value": "true",
+            "required_value": "false",
             "has_safe_default": true,
-            "description": "Set compute.execution_role.is_overprivileged to "
+            "description": "Set compute.execution_role.is_overprivileged to false"
           },
           {
             "path": "compute.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "function",
             "has_safe_default": false,
-            "description": "Change compute.kind from [SANITIZED]"
+            "description": "Change compute.kind from function"
           }
         ],
         "command": "Scope the execution role policy to only the specific actions and resource ARNs the function needs. Replace managed policies like AmazonS3FullAccess with inline policies scoped to specific buckets and actions. Use IAM Access Analyzer to identify unused permissions and generate a least-privilege policy from actual function activity."
@@ -260,13 +261,13 @@
         "misconfigurations": [
           {
             "property": "compute.execution_role.is_overprivileged",
-            "actual_value": "[SANITIZED]",
+            "actual_value": true,
             "operator": "eq",
             "unsafe_value": true
           },
           {
             "property": "compute.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "function",
             "operator": "eq",
             "unsafe_value": "function"
           }
@@ -344,12 +345,12 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "the compute execution role is over-privileged must equal true, but is true",
+              "clause": "the compute execution role is over-privileged = true",
               "observation_key": "compute.execution_role.is_overprivileged",
               "observed_value": true
             },
             {
-              "clause": "compute.kind must equal \"function\", but is \"function\"",
+              "clause": "compute.kind = \"function\"",
               "observation_key": "compute.kind",
               "observed_value": "function"
             }
@@ -358,15 +359,16 @@
         "changes": [
           {
             "path": "compute.execution_role.is_overprivileged",
-            "current_value": "[SANITIZED]",
+            "current_value": "true",
+            "required_value": "false",
             "has_safe_default": true,
-            "description": "Set compute.execution_role.is_overprivileged to "
+            "description": "Set compute.execution_role.is_overprivileged to false"
           },
           {
             "path": "compute.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "function",
             "has_safe_default": false,
-            "description": "Change compute.kind from [SANITIZED]"
+            "description": "Change compute.kind from function"
           }
         ],
         "command": "Scope the execution role policy to only the specific actions and resource ARNs the function needs. Replace managed policies like AmazonS3FullAccess with inline policies scoped to specific buckets and actions. Use IAM Access Analyzer to identify unused permissions and generate a least-privilege policy from actual function activity."
@@ -388,13 +390,13 @@
         "misconfigurations": [
           {
             "property": "compute.execution_role.is_overprivileged",
-            "actual_value": "[SANITIZED]",
+            "actual_value": true,
             "operator": "eq",
             "unsafe_value": true
           },
           {
             "property": "compute.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "function",
             "operator": "eq",
             "unsafe_value": "function"
           }
@@ -472,12 +474,12 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "the compute execution role is over-privileged must equal true, but is true",
+              "clause": "the compute execution role is over-privileged = true",
               "observation_key": "compute.execution_role.is_overprivileged",
               "observed_value": true
             },
             {
-              "clause": "compute.kind must equal \"function\", but is \"function\"",
+              "clause": "compute.kind = \"function\"",
               "observation_key": "compute.kind",
               "observed_value": "function"
             }
@@ -486,15 +488,16 @@
         "changes": [
           {
             "path": "compute.execution_role.is_overprivileged",
-            "current_value": "[SANITIZED]",
+            "current_value": "true",
+            "required_value": "false",
             "has_safe_default": true,
-            "description": "Set compute.execution_role.is_overprivileged to "
+            "description": "Set compute.execution_role.is_overprivileged to false"
           },
           {
             "path": "compute.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "function",
             "has_safe_default": false,
-            "description": "Change compute.kind from [SANITIZED]"
+            "description": "Change compute.kind from function"
           }
         ],
         "command": "Scope the execution role policy to only the specific actions and resource ARNs the function needs. Replace managed policies like AmazonS3FullAccess with inline policies scoped to specific buckets and actions. Use IAM Access Analyzer to identify unused permissions and generate a least-privilege policy from actual function activity."
@@ -516,13 +519,13 @@
         "misconfigurations": [
           {
             "property": "compute.execution_role.is_overprivileged",
-            "actual_value": "[SANITIZED]",
+            "actual_value": true,
             "operator": "eq",
             "unsafe_value": true
           },
           {
             "property": "compute.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "function",
             "operator": "eq",
             "unsafe_value": "function"
           }
@@ -600,12 +603,12 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "the compute execution role is over-privileged must equal true, but is true",
+              "clause": "the compute execution role is over-privileged = true",
               "observation_key": "compute.execution_role.is_overprivileged",
               "observed_value": true
             },
             {
-              "clause": "compute.kind must equal \"function\", but is \"function\"",
+              "clause": "compute.kind = \"function\"",
               "observation_key": "compute.kind",
               "observed_value": "function"
             }
@@ -614,15 +617,16 @@
         "changes": [
           {
             "path": "compute.execution_role.is_overprivileged",
-            "current_value": "[SANITIZED]",
+            "current_value": "true",
+            "required_value": "false",
             "has_safe_default": true,
-            "description": "Set compute.execution_role.is_overprivileged to "
+            "description": "Set compute.execution_role.is_overprivileged to false"
           },
           {
             "path": "compute.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "function",
             "has_safe_default": false,
-            "description": "Change compute.kind from [SANITIZED]"
+            "description": "Change compute.kind from function"
           }
         ],
         "command": "Scope the execution role policy to only the specific actions and resource ARNs the function needs. Replace managed policies like AmazonS3FullAccess with inline policies scoped to specific buckets and actions. Use IAM Access Analyzer to identify unused permissions and generate a least-privilege policy from actual function activity."
@@ -644,13 +648,13 @@
         "misconfigurations": [
           {
             "property": "compute.execution_role.is_overprivileged",
-            "actual_value": "[SANITIZED]",
+            "actual_value": true,
             "operator": "eq",
             "unsafe_value": true
           },
           {
             "property": "compute.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "function",
             "operator": "eq",
             "unsafe_value": "function"
           }
@@ -728,12 +732,12 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "the compute execution role is over-privileged must equal true, but is true",
+              "clause": "the compute execution role is over-privileged = true",
               "observation_key": "compute.execution_role.is_overprivileged",
               "observed_value": true
             },
             {
-              "clause": "compute.kind must equal \"function\", but is \"function\"",
+              "clause": "compute.kind = \"function\"",
               "observation_key": "compute.kind",
               "observed_value": "function"
             }
@@ -742,15 +746,16 @@
         "changes": [
           {
             "path": "compute.execution_role.is_overprivileged",
-            "current_value": "[SANITIZED]",
+            "current_value": "true",
+            "required_value": "false",
             "has_safe_default": true,
-            "description": "Set compute.execution_role.is_overprivileged to "
+            "description": "Set compute.execution_role.is_overprivileged to false"
           },
           {
             "path": "compute.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "function",
             "has_safe_default": false,
-            "description": "Change compute.kind from [SANITIZED]"
+            "description": "Change compute.kind from function"
           }
         ],
         "command": "Scope the execution role policy to only the specific actions and resource ARNs the function needs. Replace managed policies like AmazonS3FullAccess with inline policies scoped to specific buckets and actions. Use IAM Access Analyzer to identify unused permissions and generate a least-privilege policy from actual function activity."
@@ -772,13 +777,13 @@
         "misconfigurations": [
           {
             "property": "compute.execution_role.is_overprivileged",
-            "actual_value": "[SANITIZED]",
+            "actual_value": true,
             "operator": "eq",
             "unsafe_value": true
           },
           {
             "property": "compute.kind",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "function",
             "operator": "eq",
             "unsafe_value": "function"
           }
@@ -856,12 +861,12 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "the compute execution role is over-privileged must equal true, but is true",
+              "clause": "the compute execution role is over-privileged = true",
               "observation_key": "compute.execution_role.is_overprivileged",
               "observed_value": true
             },
             {
-              "clause": "compute.kind must equal \"function\", but is \"function\"",
+              "clause": "compute.kind = \"function\"",
               "observation_key": "compute.kind",
               "observed_value": "function"
             }
@@ -870,15 +875,16 @@
         "changes": [
           {
             "path": "compute.execution_role.is_overprivileged",
-            "current_value": "[SANITIZED]",
+            "current_value": "true",
+            "required_value": "false",
             "has_safe_default": true,
-            "description": "Set compute.execution_role.is_overprivileged to "
+            "description": "Set compute.execution_role.is_overprivileged to false"
           },
           {
             "path": "compute.kind",
-            "current_value": "[SANITIZED]",
+            "current_value": "function",
             "has_safe_default": false,
-            "description": "Change compute.kind from [SANITIZED]"
+            "description": "Change compute.kind from function"
           }
         ],
         "command": "Scope the execution role policy to only the specific actions and resource ARNs the function needs. Replace managed policies like AmazonS3FullAccess with inline policies scoped to specific buckets and actions. Use IAM Access Analyzer to identify unused permissions and generate a least-privilege policy from actual function activity."
@@ -900,7 +906,7 @@
         "misconfigurations": [
           {
             "property": "identity.nep.is_admin",
-            "actual_value": "[SANITIZED]",
+            "actual_value": true,
             "operator": "eq",
             "unsafe_value": true
           }
@@ -968,7 +974,7 @@
           "severity": "critical",
           "reasoning": [
             {
-              "clause": "this identity has net-effective admin privileges must equal true, but is true",
+              "clause": "this identity has net-effective admin privileges = true",
               "observation_key": "identity.nep.is_admin",
               "observed_value": true
             }
@@ -977,9 +983,10 @@
         "changes": [
           {
             "path": "identity.nep.is_admin",
-            "current_value": "[SANITIZED]",
+            "current_value": "true",
+            "required_value": "false",
             "has_safe_default": true,
-            "description": "Set identity.nep.is_admin to "
+            "description": "Set identity.nep.is_admin to false"
           }
         ],
         "command": "Review the identity-based policies granting admin-equivalent actions. Apply an SCP or permission boundary to constrain the effective permissions. If the principal requires admin access, tag it with stave/role-type: administrative to document the intent."
@@ -1001,7 +1008,7 @@
         "misconfigurations": [
           {
             "property": "identity.nep.has_escalation_path",
-            "actual_value": "[SANITIZED]",
+            "actual_value": true,
             "operator": "eq",
             "unsafe_value": true
           }
@@ -1070,7 +1077,7 @@
           "severity": "critical",
           "reasoning": [
             {
-              "clause": "a net-effective privilege escalation path exists for this identity must equal true, but is true",
+              "clause": "a net-effective privilege escalation path exists for this identity = true",
               "observation_key": "identity.nep.has_escalation_path",
               "observed_value": true
             }
@@ -1079,9 +1086,10 @@
         "changes": [
           {
             "path": "identity.nep.has_escalation_path",
-            "current_value": "[SANITIZED]",
+            "current_value": "true",
+            "required_value": "false",
             "has_safe_default": true,
-            "description": "Set identity.nep.has_escalation_path to "
+            "description": "Set identity.nep.has_escalation_path to false"
           }
         ],
         "command": "For direct primitives: remove or scope the escalation action to specific resource ARNs. For transitive chains: remove the sts:AssumeRole grant that enables the chain, or scope it to specific non-admin role ARNs."
@@ -1103,7 +1111,7 @@
         "misconfigurations": [
           {
             "property": "identity.nep.has_escalation_path",
-            "actual_value": "[SANITIZED]",
+            "actual_value": true,
             "operator": "eq",
             "unsafe_value": true
           }
@@ -1172,7 +1180,7 @@
           "severity": "critical",
           "reasoning": [
             {
-              "clause": "a net-effective privilege escalation path exists for this identity must equal true, but is true",
+              "clause": "a net-effective privilege escalation path exists for this identity = true",
               "observation_key": "identity.nep.has_escalation_path",
               "observed_value": true
             }
@@ -1181,9 +1189,10 @@
         "changes": [
           {
             "path": "identity.nep.has_escalation_path",
-            "current_value": "[SANITIZED]",
+            "current_value": "true",
+            "required_value": "false",
             "has_safe_default": true,
-            "description": "Set identity.nep.has_escalation_path to "
+            "description": "Set identity.nep.has_escalation_path to false"
           }
         ],
         "command": "For direct primitives: remove or scope the escalation action to specific resource ARNs. For transitive chains: remove the sts:AssumeRole grant that enables the chain, or scope it to specific non-admin role ARNs."
@@ -1667,7 +1676,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "1ae8b4da8479e5e75eaf0d7d9b907f3f5e5929e7",
+      "head_commit": "1a337200eb5c008d17ea570ba9886f86c6b5660b",
       "dirty": false
     }
   }
