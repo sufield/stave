@@ -1,4 +1,4 @@
-.PHONY: all build build-dev test test-coverage test-compliance cover-report clean-cover lint lint-fix fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls gofixer imports imports-check sync-public fuzz bench docker-demo demo-check readme readme-check golden regenerate-goldens
+.PHONY: all build build-dev test test-coverage test-compliance cover-report clean-cover lint lint-fix fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives gofixer imports imports-check sync-public fuzz bench docker-demo demo-check readme readme-check golden regenerate-goldens docs-controls docs-controls-check docs-coverage docs-coverage-check
 # Binary name
 BINARY=stave
 
@@ -19,6 +19,10 @@ SCHEMA_DST=internal/contracts/schema/embedded
 # Control sync (canonical controls → embedded runtime copy)
 CONTROL_SRC=controls
 CONTROL_DST=internal/controldata/embedded
+
+# Alternatives inventory sync (canonical inventories → embedded runtime copy)
+ALTERNATIVES_SRC=data/alternatives
+ALTERNATIVES_DST=internal/adapters/coverage/embedded
 
 # Version from VERSION file
 VERSION=$(shell cat VERSION)
@@ -44,16 +48,22 @@ sync-controls:
 	rm -rf $(CONTROL_DST)/*
 	cp -R $(CONTROL_SRC)/* $(CONTROL_DST)/
 
+## sync-alternatives: Copy canonical alternative-tool inventories into embed directory
+sync-alternatives:
+	@mkdir -p $(ALTERNATIVES_DST)
+	rm -rf $(ALTERNATIVES_DST)/*
+	cp -R $(ALTERNATIVES_SRC)/* $(ALTERNATIVES_DST)/
+
 ## build: Build the production binary
-build: sync-schemas sync-controls
+build: sync-schemas sync-controls sync-alternatives
 	$(GOBUILD) $(LDFLAGS) -o $(BINARY) ./cmd/stave
 
 ## build-dev: Build the dev binary with all commands
-build-dev: sync-schemas sync-controls
+build-dev: sync-schemas sync-controls sync-alternatives
 	$(GOBUILD) $(LDFLAGS) -tags stavedev -o stave-dev ./cmd/stave-dev
 
 ## test: Run all tests with race detector (includes dev-only packages via build tag)
-test: sync-schemas sync-controls
+test: sync-schemas sync-controls sync-alternatives
 	$(GOTEST) -tags stavedev -race -v ./...
 
 ## test-coverage: Run tests with coverage
@@ -62,7 +72,7 @@ test-coverage:
 	$(GOCMD) tool cover -html=coverage.out -o coverage.html
 
 ## test-compliance: Run metadata linter + testscript with global coverage
-test-compliance: sync-schemas sync-controls
+test-compliance: sync-schemas sync-controls sync-alternatives
 	@echo "==> Running Compliance & Integration Tests..."
 	$(GOTEST) -coverprofile=compliance-coverage.out -coverpkg=./... ./cmd/ ./cmd/stave/
 	@echo ""
@@ -80,7 +90,7 @@ clean-cover:
 	rm -f coverage.out coverage.html compliance-coverage.out compliance-coverage.html
 
 ## script-test: Run testscript behavioral CLI tests
-script-test: sync-schemas sync-controls
+script-test: sync-schemas sync-controls sync-alternatives
 	$(GOTEST) ./cmd/stave/ -run TestScripts -count=1
 
 ## clig-check: Verify CLI commands follow clig.dev guidelines
@@ -299,7 +309,7 @@ bench:
 	$(GOTEST) -bench=BenchmarkEvaluateLargeSnapshot -benchmem -count=1 ./internal/app/
 
 ## fuzz: Run Go native fuzz tests (30s per target)
-fuzz: sync-schemas sync-controls
+fuzz: sync-schemas sync-controls sync-alternatives
 	$(GOTEST) -fuzz=Fuzz -fuzztime=30s ./internal/core/s3/policy/
 	$(GOTEST) -fuzz=Fuzz -fuzztime=30s ./internal/adapters/observations/
 	$(GOTEST) -fuzz=Fuzz -fuzztime=30s ./internal/contracts/validator/
@@ -341,6 +351,14 @@ docs-controls: sync-controls
 ## docs-controls-check: Verify control reference is up to date
 docs-controls-check: sync-controls
 	$(GOCMD) run ./internal/tools/gencontroldocs -check
+
+## docs-coverage: Regenerate methodology-coverage docs from control + inventory data
+docs-coverage: sync-controls sync-alternatives
+	$(GOCMD) run ./internal/tools/genmethodologycoverage
+
+## docs-coverage-check: Verify methodology-coverage docs are up to date
+docs-coverage-check: sync-controls sync-alternatives
+	$(GOCMD) run ./internal/tools/genmethodologycoverage -check
 
 ## docker-demo: Build demo Docker image using Go version from go.mod
 docker-demo: build

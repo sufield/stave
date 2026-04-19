@@ -7,6 +7,7 @@ import (
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
+	"github.com/sufield/stave/internal/core/evaluation/coverage"
 	"github.com/sufield/stave/internal/core/evaluation/diagnosis"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/evaluation/risk"
@@ -60,6 +61,7 @@ type Assessment struct {
 	RemediationGroups    []remediation.Group          `json:"remediation_groups,omitempty"`
 	SkippedControls      []evaluation.SkippedControl  `json:"skipped_controls,omitempty"`
 	ExemptedAssets       []asset.ExemptedAsset        `json:"exempted_assets,omitempty"`
+	CoveragePosture      *coverage.CoverageIndex      `json:"-"`
 	Extensions           *evaluation.Extensions       `json:"extensions,omitempty"`
 }
 

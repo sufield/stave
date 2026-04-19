@@ -44,3 +44,8 @@ unsafe_predicate:
     - field: properties.identity.root.last_used_days
       op: lt
       value: 90
+alternatives:
+  - tool: prowler
+    check_id: iam_avoid_root_usage
+    coverage: covered
+    note: Both check root-account activity signals.

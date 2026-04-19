@@ -360,6 +360,36 @@
             "additionalProperties": true
           }
         },
+        "coverage_posture": {
+          "type": "object",
+          "title": "Alternative-Tool Coverage Posture",
+          "description": "Per-(tool, domain) coverage posture aggregated from each control's alternatives annotations. Outer key is the alternative tool's identifier (opaque string); inner key is the domain identifier declared by the inventory file. Omitted when no inventories are loaded.",
+          "additionalProperties": {
+            "type": "object",
+            "description": "Per-domain coverage entries for one alternative tool.",
+            "additionalProperties": {
+              "type": "object",
+              "required": ["covered", "total", "not_covered_checks"],
+              "properties": {
+                "covered": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "description": "Number of distinct check IDs from the alternative tool that at least one Stave control covers (covered or partial)."
+                },
+                "total": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "description": "Total checks declared by the alternative tool's inventory for this domain. Zero when no inventory is loaded for the tool."
+                },
+                "not_covered_checks": {
+                  "type": "array",
+                  "items": { "type": "string" },
+                  "description": "Inventory check IDs not covered by any Stave control. Empty when no inventory is loaded for the tool."
+                }
+              }
+            }
+          }
+        },
         "extensions": {
           "type": "object",
           "title": "Extension Data",

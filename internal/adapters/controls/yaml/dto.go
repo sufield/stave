@@ -17,6 +17,7 @@ type yamlControlDefinition struct {
 	Severity             policy.Severity      `yaml:"severity,omitempty"`
 	Domain               kernel.AssetDomain   `yaml:"domain,omitempty"`
 	ScopeTags            []string             `yaml:"scope_tags,omitempty"`
+	ApplicableAssetTypes []string             `yaml:"applicable_asset_types,omitempty"`
 	Compliance           map[string]any       `yaml:"compliance,omitempty"`
 	Type                 policy.ControlType   `yaml:"type"`
 	Params               map[string]any       `yaml:"params"`
@@ -25,7 +26,16 @@ type yamlControlDefinition struct {
 	Remediation          *yamlRemediationSpec `yaml:"remediation,omitempty"`
 	Exposure             *yamlExposure        `yaml:"exposure,omitempty"`
 	ObservationFields    []string             `yaml:"observation_fields,omitempty"`
+	Alternatives         []yamlAlternative    `yaml:"alternatives,omitempty"`
 	Tests                []policy.ControlTest `yaml:"tests,omitempty"`
+}
+
+// yamlAlternative is the YAML wire-format for policy.Alternative.
+type yamlAlternative struct {
+	Tool     string `yaml:"tool"`
+	CheckID  string `yaml:"check_id"`
+	Coverage string `yaml:"coverage"`
+	Note     string `yaml:"note,omitempty"`
 }
 
 // yamlUnsafePredicate is the YAML wire-format for policy.UnsafePredicate.

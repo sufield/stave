@@ -55,3 +55,10 @@ unsafe_predicate:
     - field: properties.identity.trust_policy.source_arn_protected
       op: eq
       value: false
+alternatives:
+  - tool: prowler
+    check_id: iam_role_cross_service_confused_deputy_prevention
+    coverage: covered
+    note: >-
+      Stave splits third-party trust (needs ExternalId) from AWS-service-principal
+      trust (needs SourceArn/SourceAccount); union covers Prowler.

@@ -458,13 +458,20 @@ func diffPaths(a, b any, prefix string) []string {
 // dot-path diffed between two goldens.
 //
 // Metadata paths are purely projected from the control YAML (name,
-// description, compliance, remediation, exposure). Everything else —
+// description, compliance, remediation, exposure, alternatives) or
+// from the per-tool inventory (coverage_posture). Everything else —
 // findings identity, count, severity, evidence, summary, status,
 // risk_signals, top_exposures, run fields other than fingerprint — is
 // treated as behavioral so the developer is prompted to review.
 func classifyPath(path string) string {
 	if path == "run.policy_fingerprint" {
 		return "fingerprint"
+	}
+	// coverage_posture is computed entirely from declarative data
+	// (control alternatives blocks + inventory files); changes here
+	// reflect data-only edits, not detection behavior.
+	if path == "coverage_posture" || strings.HasPrefix(path, "coverage_posture.") {
+		return "metadata"
 	}
 	// findings[i].<metadata-subfield>
 	if strings.HasPrefix(path, "findings[") {
@@ -478,7 +485,9 @@ func classifyPath(path string) string {
 			rest == "control_description",
 			strings.HasPrefix(rest, "control_compliance"),
 			strings.HasPrefix(rest, "remediation."),
-			strings.HasPrefix(rest, "exposure."):
+			strings.HasPrefix(rest, "exposure."),
+			rest == "alternatives",
+			strings.HasPrefix(rest, "alternatives"):
 			return "metadata"
 		}
 	}

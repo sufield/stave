@@ -84,3 +84,12 @@ tests:
           kind: role
           role_active_days: 365
           unused_service_ratio: 0.45
+alternatives:
+  - tool: prowler
+    check_id: iam_role_access_not_stale_to_bedrock
+    coverage: partial
+    note: Generic unused-permissions drift catches the spirit; Bedrock-specific freshness is not explicit.
+  - tool: prowler
+    check_id: iam_user_access_not_stale_to_bedrock
+    coverage: partial
+    note: Generic staleness; no Bedrock-specific freshness tracking.

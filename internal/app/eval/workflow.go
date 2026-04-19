@@ -51,6 +51,12 @@ type AuditWorkflow struct {
 	ReportPublisher appcontracts.FindingMarshaler
 	ContextEnricher appcontracts.EnrichFunc
 	Logger          *slog.Logger
+
+	// LoadedControls holds the control definitions used by the most
+	// recent PerformAssessment call. Populated after assessment runs;
+	// callers consume it for post-assessment metadata such as coverage
+	// posture aggregation. Reset on each PerformAssessment.
+	LoadedControls []policy.ControlDefinition
 }
 
 // NewAuditWorkflow initializes the workflow with required security connectors.
@@ -86,6 +92,7 @@ func (w *AuditWorkflow) PerformAssessment(ctx context.Context, cfg AssessmentCon
 	if auditData.HasErrors() {
 		return evaluation.ComplianceReport{}, "", auditData.FirstError()
 	}
+	w.LoadedControls = auditData.Controls
 
 	report, err := Evaluate(EvaluateInput{
 		Controls:             auditData.Controls,

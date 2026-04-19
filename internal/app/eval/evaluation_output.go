@@ -10,14 +10,16 @@ import (
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/core/evaluation"
+	"github.com/sufield/stave/internal/core/evaluation/coverage"
 )
 
 // OutputPipeline handles the Enrich → Marshal → Write sequence for
 // evaluation results.
 type OutputPipeline struct {
-	Marshaler appcontracts.FindingMarshaler
-	Enricher  appcontracts.EnrichFunc
-	Logger    *slog.Logger
+	Marshaler       appcontracts.FindingMarshaler
+	Enricher        appcontracts.EnrichFunc
+	CoveragePosture *coverage.CoverageIndex
+	Logger          *slog.Logger
 }
 
 // Run executes the pipeline, writing the marshaled result to w.
@@ -32,6 +34,7 @@ func (p *OutputPipeline) Run(ctx context.Context, w io.Writer, result *evaluatio
 	if err != nil {
 		return fmt.Errorf("enrich: %w", err)
 	}
+	enriched.CoveragePosture = p.CoveragePosture
 
 	if err = ctx.Err(); err != nil {
 		return err

@@ -53,3 +53,8 @@ unsafe_predicate:
     - field: properties.storage.logging.enabled
       op: eq
       value: false
+alternatives:
+  - tool: prowler
+    check_id: s3_bucket_server_access_logging_enabled
+    coverage: covered
+    note: Both check storage.logging.enabled.

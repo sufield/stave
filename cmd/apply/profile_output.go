@@ -9,11 +9,12 @@ import (
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/asset"
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 )
 
-func (r *Runner) writeResults(ctx context.Context, cfg Config, result *evaluation.ComplianceReport) error {
+func (r *Runner) writeResults(ctx context.Context, cfg Config, result *evaluation.ComplianceReport, controls []policy.ControlDefinition) error {
 	marshaler, err := r.newFindingWriter(cfg.OutputFormat, false)
 	if err != nil {
 		return err
@@ -25,8 +26,9 @@ func (r *Runner) writeResults(ctx context.Context, cfg Config, result *evaluatio
 	}
 
 	pipeline := &appeval.OutputPipeline{
-		Marshaler: marshaler,
-		Enricher:  enrichFn,
+		Marshaler:       marshaler,
+		Enricher:        enrichFn,
+		CoveragePosture: buildCoveragePosture(controls, nil),
 	}
 	return pipeline.Run(ctx, cfg.Stdout, result)
 }

@@ -48,3 +48,36 @@ unsafe_predicate:
     - field: properties.identity.policies.has_admin_access
       op: eq
       value: true
+alternatives:
+  - tool: prowler
+    check_id: iam_aws_attached_policy_no_administrative_privileges
+    coverage: covered
+    note: >-
+      Fires on identity.policies.has_admin_access = true for any principal attachment,
+      including AWS-managed.
+  - tool: prowler
+    check_id: iam_customer_attached_policy_no_administrative_privileges
+    coverage: covered
+    note: Same field as AWS-managed; has_admin_access is agnostic to policy source.
+  - tool: prowler
+    check_id: iam_customer_unattached_policy_no_administrative_privileges
+    coverage: partial
+    note: >-
+      Stave's signal is per-principal-attached; unattached admin policies (inventory
+      hygiene) not currently surfaced.
+  - tool: prowler
+    check_id: iam_group_administrator_access_policy
+    coverage: covered
+    note: Catches admin access regardless of whether attached directly or via group membership.
+  - tool: prowler
+    check_id: iam_inline_policy_no_administrative_privileges
+    coverage: covered
+    note: "POLICY.ADMIN catches *:*; POLICY.INLINE enforces no-inline-on-users as structural hygiene."
+  - tool: prowler
+    check_id: iam_role_administratoraccess_policy
+    coverage: covered
+    note: has_admin_access is principal-kind-agnostic; same control covers user and role cases.
+  - tool: prowler
+    check_id: iam_user_administrator_access_policy
+    coverage: covered
+    note: Per-user admin attach plus account-wide admin-count threshold.

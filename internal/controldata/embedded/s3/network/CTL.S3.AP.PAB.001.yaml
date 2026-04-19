@@ -51,3 +51,8 @@ unsafe_predicate:
     - field: properties.storage.public_access_fully_blocked
       op: eq
       value: false
+alternatives:
+  - tool: prowler
+    check_id: s3_access_point_public_access_block
+    coverage: covered
+    note: Stave umbrella requires all 4 access-point PAB flags; Prowler matches.

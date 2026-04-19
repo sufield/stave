@@ -60,3 +60,8 @@ unsafe_predicate:
     - field: properties.storage.replication.destination_region
       op: eq
       value: ""
+alternatives:
+  - tool: prowler
+    check_id: s3_bucket_cross_region_replication
+    coverage: partial
+    note: Stave's cross-region replication is PHI-tag-gated; Prowler requires it account-wide.

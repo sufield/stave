@@ -52,3 +52,12 @@ unsafe_predicate:
     - field: properties.identity.escalation.can_escalate_to_admin
       op: eq
       value: true
+alternatives:
+  - tool: prowler
+    check_id: iam_inline_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 24 per-technique controls covering the aggregated Prowler check.
+  - tool: prowler
+    check_id: iam_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 24 per-technique controls covering the aggregated Prowler check.

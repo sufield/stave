@@ -50,3 +50,12 @@ unsafe_predicate:
     - field: properties.identity.policies.has_inline_policies
       op: eq
       value: true
+alternatives:
+  - tool: prowler
+    check_id: iam_inline_policy_no_administrative_privileges
+    coverage: covered
+    note: "POLICY.ADMIN catches *:*; POLICY.INLINE enforces no-inline-on-users as structural hygiene."
+  - tool: prowler
+    check_id: iam_policy_attached_only_to_group_or_roles
+    coverage: covered
+    note: Stave splits 'no direct managed attach' from 'no inline policies' into two controls; union matches.

@@ -47,3 +47,8 @@ unsafe_predicate:
     - field: properties.identity.credentials.uses_short_lived
       op: eq
       value: false
+alternatives:
+  - tool: prowler
+    check_id: iam_user_with_temporary_credentials
+    coverage: covered
+    note: Stave's short-lived credentials posture; Prowler's IAM/STS exception is acceptable-use nuance.

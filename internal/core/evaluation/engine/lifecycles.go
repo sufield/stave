@@ -128,6 +128,14 @@ func recordAssetObservation(
 ) error {
 	for i := range controls {
 		ctl := &controls[i]
+		// Asset-type gate. Skip silently when the control declares its
+		// applicable types and the current asset is not in the list. No
+		// finding, no lifecycle entry, no inconclusive — the control is
+		// absent from output for this asset, identical to the asset
+		// being outside the control's declared scope.
+		if !ctl.AppliesToAssetType(a.Type) {
+			continue
+		}
 		lcs := lifecyclesByControl[ctl.ID]
 
 		t, exists := lcs[a.ID]

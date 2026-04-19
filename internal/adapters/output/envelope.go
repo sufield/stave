@@ -31,6 +31,7 @@ func BuildAssessmentFromEnriched(enriched *appcontracts.EnrichedResult) *report.
 		Issues:               enriched.Result.Issues,
 	})
 	out.Extensions = enriched.Result.Metadata.ToExtensions()
+	out.CoveragePosture = enriched.CoveragePosture
 	h := crypto.NewHasher()
 	remediation.PrepareForGrouping(h, h, findings)
 	out.RemediationGroups = remediation.BuildGroups(findings)

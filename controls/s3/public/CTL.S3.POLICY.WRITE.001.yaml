@@ -51,3 +51,10 @@ unsafe_predicate:
     - field: properties.storage.access.write_via_resource
       op: eq
       value: true
+alternatives:
+  - tool: prowler
+    check_id: s3_bucket_policy_public_write_access
+    coverage: covered
+    note: >-
+      Both check for s3:PutObject / s3:Delete* / s3:* grants to non-narrow principals
+      in the bucket policy.

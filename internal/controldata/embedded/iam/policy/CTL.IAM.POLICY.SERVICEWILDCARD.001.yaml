@@ -83,3 +83,28 @@ unsafe_predicate:
     - field: properties.identity.policies.service_wildcards_granted
       op: any_in_field
       value: params.denied_service_wildcards
+alternatives:
+  - tool: prowler
+    check_id: iam_inline_policy_no_full_access_to_cloudtrail
+    coverage: covered
+    note: cloudtrail is in the default denied_service_wildcards list.
+  - tool: prowler
+    check_id: iam_policy_no_full_access_to_cloudtrail
+    coverage: covered
+    note: Customer-managed variant; same denied-list mechanism.
+  - tool: prowler
+    check_id: iam_inline_policy_no_full_access_to_kms
+    coverage: covered
+    note: kms is in the default denied_service_wildcards list.
+  - tool: prowler
+    check_id: iam_policy_no_full_access_to_kms
+    coverage: covered
+    note: Customer-managed variant for kms.
+  - tool: prowler
+    check_id: iam_inline_policy_no_wildcard_marketplace_subscribe
+    coverage: covered
+    note: aws-marketplace is in the default denied_service_wildcards list.
+  - tool: prowler
+    check_id: iam_policy_no_wildcard_marketplace_subscribe
+    coverage: covered
+    note: Customer-managed variant for aws-marketplace.

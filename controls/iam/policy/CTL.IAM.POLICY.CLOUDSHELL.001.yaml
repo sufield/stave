@@ -41,3 +41,8 @@ unsafe_predicate:
     - field: properties.identity.policies.cloudshell_unrestricted
       op: eq
       value: true
+alternatives:
+  - tool: prowler
+    check_id: iam_policy_cloudshell_admin_not_attached
+    coverage: covered
+    note: Both check the specific AWSCloudShellFullAccess attachment.

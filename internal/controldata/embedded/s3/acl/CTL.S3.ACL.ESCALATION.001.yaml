@@ -37,3 +37,10 @@ remediation:
       }
     }
 unsafe_predicate_alias: s3.acl_writable
+alternatives:
+  - tool: prowler
+    check_id: s3_bucket_public_write_acl
+    coverage: covered
+    note: >-
+      Stave splits ACL-write detection across public-write composite, FULL_CONTROL
+      grants, and WRITE_ACP (escalation) grants.

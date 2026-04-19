@@ -52,3 +52,8 @@ unsafe_predicate:
     - field: properties.identity.root.hardware_mfa
       op: eq
       value: false
+alternatives:
+  - tool: prowler
+    check_id: iam_root_hardware_mfa_enabled
+    coverage: covered
+    note: Both check root account hardware MFA.

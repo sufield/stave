@@ -37,6 +37,7 @@ type ControlDefinition struct {
 	Severity             Severity
 	Domain               kernel.AssetDomain
 	ScopeTags            []kernel.ScopeTag
+	ApplicableAssetTypes []kernel.AssetType
 	Compliance           ComplianceMapping
 	CCMV4                []string
 	Type                 ControlType
@@ -46,6 +47,7 @@ type ControlDefinition struct {
 	Remediation          *RemediationSpec
 	Exposure             *Exposure
 	ObservationFields    []string      // property paths for compliance evidence extraction
+	Alternatives         []Alternative // mappings to alternative detection tools' checks
 	Tests                []ControlTest `yaml:"tests,omitempty" json:"-"`
 
 	// Prepared holds pre-calculated values to optimize the evaluation hot path.
@@ -55,6 +57,18 @@ type ControlDefinition struct {
 // HasCompliance reports whether the control has a non-empty mapping for the given framework key.
 func (ctl *ControlDefinition) HasCompliance(key ComplianceFramework) bool {
 	return ctl.Compliance.Has(key)
+}
+
+// AppliesToAssetType reports whether this control should evaluate against
+// the given asset type. Returns true when the control declares no
+// applicable types (legacy default — fire on all) or when the asset type
+// is in the declared list. Comparison is by exact string equality on the
+// underlying type identifier.
+func (ctl *ControlDefinition) AppliesToAssetType(assetType kernel.AssetType) bool {
+	if len(ctl.ApplicableAssetTypes) == 0 {
+		return true
+	}
+	return slices.Contains(ctl.ApplicableAssetTypes, assetType)
 }
 
 // Prepare extracts and validates typed parameters from the raw Params map.
@@ -403,14 +417,15 @@ func (ctl *ControlDefinition) IsEvaluatable() bool {
 
 // ControlMetadata provides a read-only snapshot of core identity and classification.
 type ControlMetadata struct {
-	ID          kernel.ControlID
-	Name        string
-	Description string
-	Severity    Severity
-	Compliance  ComplianceMapping
-	CCMV4       []string
-	Remediation *RemediationSpec
-	Exposure    *Exposure
+	ID           kernel.ControlID
+	Name         string
+	Description  string
+	Severity     Severity
+	Compliance   ComplianceMapping
+	CCMV4        []string
+	Remediation  *RemediationSpec
+	Exposure     *Exposure
+	Alternatives []Alternative
 }
 
 // Fingerprint computes a stable hash of the control's identity and logic
@@ -433,13 +448,14 @@ func (ctl *ControlDefinition) Fingerprint(h ports.Digester) kernel.Digest {
 // packaged for Finding construction.
 func (ctl *ControlDefinition) Metadata() ControlMetadata {
 	return ControlMetadata{
-		ID:          ctl.ID,
-		Name:        ctl.Name,
-		Description: ctl.Description,
-		Severity:    ctl.Severity,
-		Compliance:  ctl.Compliance,
-		CCMV4:       ctl.CCMV4,
-		Remediation: ctl.Remediation,
-		Exposure:    ctl.Exposure,
+		ID:           ctl.ID,
+		Name:         ctl.Name,
+		Description:  ctl.Description,
+		Severity:     ctl.Severity,
+		Compliance:   ctl.Compliance,
+		CCMV4:        ctl.CCMV4,
+		Remediation:  ctl.Remediation,
+		Exposure:     ctl.Exposure,
+		Alternatives: ctl.Alternatives,
 	}
 }

@@ -1,0 +1,60 @@
+# Prowler IAM check inventory.
+#
+# Declarative list of the AWS IAM checks Prowler ships, used by Stave's
+# coverage aggregation to compute per-domain totals and not-covered
+# lists. Source: prowler-cloud/prowler/prowler/providers/aws/services/iam/
+# on the upstream master branch.
+#
+# Update this list when Prowler adds, removes, or renames an IAM check.
+# Stave core does not interpret the tool name; it appears as an opaque
+# string identifier on alternatives entries in control YAMLs.
+tool: prowler
+domain: iam
+checks:
+  - id: iam_administrator_access_with_mfa
+  - id: iam_avoid_root_usage
+  - id: iam_aws_attached_policy_no_administrative_privileges
+  - id: iam_check_saml_providers_sts
+  - id: iam_customer_attached_policy_no_administrative_privileges
+  - id: iam_customer_unattached_policy_no_administrative_privileges
+  - id: iam_group_administrator_access_policy
+  - id: iam_inline_policy_allows_privilege_escalation
+  - id: iam_inline_policy_no_administrative_privileges
+  - id: iam_inline_policy_no_full_access_to_cloudtrail
+  - id: iam_inline_policy_no_full_access_to_kms
+  - id: iam_inline_policy_no_wildcard_marketplace_subscribe
+  - id: iam_no_custom_policy_permissive_role_assumption
+  - id: iam_no_expired_server_certificates_stored
+  - id: iam_no_root_access_key
+  - id: iam_password_policy_expires_passwords_within_90_days_or_less
+  - id: iam_password_policy_lowercase
+  - id: iam_password_policy_minimum_length_14
+  - id: iam_password_policy_number
+  - id: iam_password_policy_reuse_24
+  - id: iam_password_policy_symbol
+  - id: iam_password_policy_uppercase
+  - id: iam_policy_allows_privilege_escalation
+  - id: iam_policy_attached_only_to_group_or_roles
+  - id: iam_policy_cloudshell_admin_not_attached
+  - id: iam_policy_no_full_access_to_cloudtrail
+  - id: iam_policy_no_full_access_to_kms
+  - id: iam_policy_no_wildcard_marketplace_subscribe
+  - id: iam_role_access_not_stale_to_bedrock
+  - id: iam_role_administratoraccess_policy
+  - id: iam_role_cross_account_readonlyaccess_policy
+  - id: iam_role_cross_service_confused_deputy_prevention
+  - id: iam_root_credentials_management_enabled
+  - id: iam_root_hardware_mfa_enabled
+  - id: iam_root_mfa_enabled
+  - id: iam_rotate_access_key_90_days
+  - id: iam_securityaudit_role_created
+  - id: iam_support_role_created
+  - id: iam_user_access_not_stale_to_bedrock
+  - id: iam_user_accesskey_unused
+  - id: iam_user_administrator_access_policy
+  - id: iam_user_console_access_unused
+  - id: iam_user_hardware_mfa_enabled
+  - id: iam_user_mfa_enabled_console_access
+  - id: iam_user_no_setup_initial_access_key
+  - id: iam_user_two_active_access_key
+  - id: iam_user_with_temporary_credentials

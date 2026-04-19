@@ -96,3 +96,12 @@ tests:
           escalation:
             passrole_runinstances:
               present: false
+alternatives:
+  - tool: prowler
+    check_id: iam_inline_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 24 per-technique controls covering the aggregated Prowler check.
+  - tool: prowler
+    check_id: iam_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 24 per-technique controls covering the aggregated Prowler check.

@@ -72,6 +72,17 @@ func FromFinding(f *remediation.Finding) FindingDTO {
 		}
 	}
 	dto.RemediationContext = buildRemediationContext(f)
+	if len(f.Alternatives) > 0 {
+		dto.Alternatives = make([]AlternativeDTO, len(f.Alternatives))
+		for i, a := range f.Alternatives {
+			dto.Alternatives[i] = AlternativeDTO{
+				Tool:     a.Tool,
+				CheckID:  a.CheckID,
+				Coverage: string(a.Coverage),
+				Note:     a.Note,
+			}
+		}
+	}
 
 	// Normalize empty severity to match omitempty behavior.
 	if dto.ControlSeverity == "" {

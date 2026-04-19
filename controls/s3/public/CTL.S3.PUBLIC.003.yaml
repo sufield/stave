@@ -38,3 +38,10 @@ unsafe_predicate:
     - field: properties.storage.access.public_write
       op: eq
       value: true
+alternatives:
+  - tool: prowler
+    check_id: s3_bucket_public_write_acl
+    coverage: covered
+    note: >-
+      Stave splits ACL-write detection across public-write composite, FULL_CONTROL
+      grants, and WRITE_ACP (escalation) grants.

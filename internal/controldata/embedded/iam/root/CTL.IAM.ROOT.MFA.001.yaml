@@ -54,3 +54,8 @@ unsafe_predicate:
     - field: properties.identity.root.mfa_enabled
       op: eq
       value: false
+alternatives:
+  - tool: prowler
+    check_id: iam_root_mfa_enabled
+    coverage: covered
+    note: Both check root MFA presence.

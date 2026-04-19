@@ -88,7 +88,11 @@ principal-scope value is the remaining improvement to close out this
 metric. Each finding carries its `exposure_score` and
 `score_breakdown` inline; the `top_exposures[]` parallel view is
 retained as the summary "Critical-Path Exposures" surface in text
-output.
+output. As of 2026-04-19, asset-type gating
+(`applicable_asset_types` field on control YAMLs) suppresses
+cross-domain noise — controls no longer fire on assets outside
+their declared types, removing the 31% noise inflation the
+internal-verification audit observed.
 
 **Target.** Broaden exploitability beyond binary `IsPublic` — the
 exposure multiplier reads the `exposure.type` enum
@@ -183,6 +187,13 @@ Known limitations:
 - Discriminator exclusion is a hardcoded list; future iteration may
   drive it from control metadata.
 
+As of 2026-04-19, asset-type gating
+(`applicable_asset_types` field on control YAMLs) prevents
+cross-domain noise findings from polluting Issues with spurious
+members. The internal-verification audit's 23-of-42 singleton-
+Issue rate reflected partly catalog noise; with noise gated, the
+genuine consolidation ratio improves.
+
 **Target.** Remaining work for this metric:
 
 - Cross-derived-field consolidation (PAB umbrella + sub-flags merge
@@ -274,6 +285,14 @@ Readers compare `observed_value` to `expected_value` inline to infer
 which clause actually matched. Per-clause match resolution for `any`
 predicates is a future refinement; the dominant `all:` case (660/675)
 emits the exact matched set.
+
+As of 2026-04-19, asset-type gating
+(`applicable_asset_types` field on control YAMLs) suppresses
+findings whose reasoning trace would otherwise leak gate clauses
+matched only because the asset type doesn't carry the field
+(e.g., `the load balancer uses TLS 1.2 or higher must be missing
+(and is)` previously appeared on S3 buckets). Each remaining
+finding's reasoning trace is now worth reading.
 
 **Target.** The default-inline compact trace landed in the prior
 iteration. Remaining work on this metric:
@@ -510,6 +529,16 @@ Known limitations:
   one-liner glossary distinct from ControlName is a future
   refinement.
 
+As of 2026-04-19, asset-type gating
+(`applicable_asset_types` field on control YAMLs) removes the
+gate-clause-leak case where a control's predicate matched only
+because the asset type didn't carry the field
+(e.g., `the load balancer uses TLS 1.2 or higher must be missing
+(and is)` on an S3 bucket). The contradiction-shape rendering
+remains for the safe-vs-unsafe-expected-value case identified
+above; gating reduces output by ~31% on cross-domain runs but
+does not address the contradiction template itself.
+
 **Target.** Remaining work for this metric:
 
 - Refine the prose template to handle safe-vs-unsafe expected
@@ -554,19 +583,27 @@ Known limitations:
 
 **Definition.** Output is designed as the consolidated security
 view. Two output surfaces deliver this: (1) every control carries
-optional `equivalents:` metadata mapping it to parallel checks in
+optional `alternatives:` metadata mapping it to parallel checks in
 Prowler (primary yardstick), ScoutSuite (secondary), and manual-
 pentest playbooks (Rhino Security IAM cluster, S3 pentest
-checklist). Findings emit `equivalent_signals: [...]` listing what
-other tools call the same detection. (2) `apply` output includes an
-optional "coverage posture" section summarizing Stave's coverage
-against Prowler checks in the scanned resource set — pulling the
-data from `docs/methodology-coverage-*-prowler.md` into runtime
-visibility. Equivalence bar is intent-overlap (the two checks detect
-the same class of misconfiguration) not exact-check match (they
-flag the same bit, same threshold, same message). Commercial tools
-(Wiz, Orca, Lacework) are out of scope — their catalogs are opaque,
-no reliable equivalence data exists.
+checklist). Findings emit `alternatives: [...]` listing what other
+tools call the same detection. (2) `apply` output includes a
+"Coverage posture" section summarizing Stave's coverage against the
+inventoried checks of every alternative tool annotated in the
+control catalog. Equivalence bar is intent-overlap (the two checks
+detect the same class of misconfiguration) not exact-check match
+(they flag the same bit, same threshold, same message). Commercial
+tools (Wiz, Orca, Lacework) are out of scope — their catalogs are
+opaque, no reliable equivalence data exists.
+
+The architecture is tool-agnostic: core code in `internal/core/`
+contains zero references to specific alternative-tool names. Tool
+identifiers are opaque strings flowing through declarative YAML
+(control `alternatives:` blocks plus `data/alternatives/*.yaml`
+inventory files) into the aggregation, which buckets by string
+equality. Adding a new alternative tool (ScoutSuite, CIS benchmarks,
+a private framework) is a data-only change — drop in an inventory
+file, annotate the relevant controls, regenerate goldens.
 
 **Why it matters.** The Aikido 2026 survey identifies tool sprawl
 as a material operational cost — teams run three to seven security
@@ -578,39 +615,44 @@ tools already in place, displaces the pile. The "single source of
 truth" claim is not about exclusivity; it is about designing the
 output to consolidate against known parallel sources.
 
-**Baseline.** ABSENT. No cross-tool equivalence metadata in control
-YAML. No `equivalent_signals` field on findings. `apply` output
-contains no coverage posture section. Methodology coverage exists
-at `docs/methodology-coverage-s3-prowler.md` and
-`docs/methodology-coverage-iam-prowler.md` as repo docs only — a
-user reading `apply` output cannot see Stave's coverage posture
-against Prowler's IAM or S3 checks without reading separate
-markdown files.
+**Baseline.** PARTIAL — Prowler S3 + IAM coverage delivered as the
+first instance. Control-level `alternatives:` blocks populated for
+20 of 21 Prowler S3 checks (88 control YAMLs touched) and 44 of 47
+Prowler IAM checks. Per-finding `alternatives` field surfaces in
+text, JSON, and SARIF output. `apply` output's "Coverage posture"
+section reports per-tool / per-domain counts and a capped
+not-covered list. JSON output carries the full inventory difference
+under `coverage_posture`. The methodology-coverage markdown
+documents at `docs/methodology-coverage-{s3,iam}-prowler.md` are
+now derived artifacts, regenerated by
+`go run ./internal/tools/genmethodologycoverage` from the same
+control YAMLs and inventory files that feed `apply`. Tool-agnostic
+architecture in place: zero tool names in `internal/core/`. Adding
+ScoutSuite, CIS, or a private framework is now a data-only change.
 
-**Target.** Control-level `equivalents:` metadata populated for
-every control that has a plausible equivalent (the coverage-
-markdown already contains the mapping; moving it into control YAML
-makes it machine-addressable). Finding-level `equivalent_signals:`
-emitted when equivalents exist. `apply` output grows a coverage-
-posture section summarizing, for the scanned resource set, how many
-Prowler IAM checks and Prowler S3 checks Stave covers and how many
-of those actually ran against the observations in this invocation.
-Surface stays opt-in for users who want the slim finding list —
-default text output includes it; `--format json` includes it
-structurally; a `--no-coverage-posture` flag suppresses it. Manual-
-pentest playbook references ride the same `equivalents:` annotation
-with a playbook-section identifier.
+**Target.** Remaining work: (1) inventory files for additional
+alternative tools (ScoutSuite, CIS benchmarks, manual-pentest
+playbooks) — the architecture supports them; only the data needs
+to land. (2) Per-domain coverage beyond S3 and IAM — EC2, RDS, KMS,
+CloudTrail, Organizations are unmapped. (3) Inventory-refresh
+mechanism as alternative tools add or remove checks (currently
+manual updates to `data/alternatives/*.yaml`). (4) Optional
+`--no-coverage-posture` flag for users who want the slim finding
+list.
 
 **Improvement signal.**
-- New controls land with `equivalents:` populated where an
-  equivalent exists in Prowler or ScoutSuite.
-- Existing coverage-markdown content migrates into control YAML
-  (one-time backfill; subsequent edits live in YAML only, markdown
-  regenerates).
-- `apply` output shows Prowler-coverage posture for the scanned
-  resource set by default in text mode.
-- Users running Stave alongside Prowler can dedup against a known
-  machine-readable mapping.
+- New controls land with `alternatives:` populated where an
+  alternative exists in any inventoried tool.
+- New alternative tools (ScoutSuite, CIS, private frameworks) land
+  as data-only additions — one inventory file under
+  `data/alternatives/` plus annotations on the affected controls;
+  no core code changes required.
+- `apply` output shows multi-tool coverage posture for every tool
+  with an inventory loaded — adding a tool's data automatically
+  surfaces its row in apply output.
+- Users running Stave alongside any inventoried tool can dedup
+  against a machine-readable mapping (per-finding `alternatives`
+  field in JSON/SARIF; one-line entries in text).
 - Commercial-tool equivalence stays explicitly out of scope in
   this document — no drift into catalogs Stave cannot verify.
 
@@ -619,11 +661,15 @@ with a playbook-section identifier.
   attested reference to the tool's public catalog.
 - A proposal inflates equivalence bar to "exact-check match",
   producing false-negative gaps where intent-overlap would hold.
-- A proposal removes methodology-coverage markdown in favor of
-  code-only generation — the markdown is the human-reviewable
-  source during the backfill window.
+- A proposal hand-edits `docs/methodology-coverage-*.md` instead
+  of regenerating from `genmethodologycoverage` — the markdown is
+  derived; the YAML is the source.
+- A proposal pattern-matches on a specific tool name in
+  `internal/core/` (e.g., `if alt.Tool == "prowler"`) — that
+  defeats the tool-agnostic architecture. Tool-specific behavior
+  belongs in adapter code or, ideally, in declarative data.
 - A proposal makes coverage-posture a hard dependency (fails
-  `apply` when Prowler data is unavailable) rather than a best-
+  `apply` when inventory data is unavailable) rather than a best-
   effort surface.
 - A proposal vendors another tool's output format (emits SARIF
   shaped like Prowler's output) — Stave stays itself and points to
@@ -668,6 +714,22 @@ this file.
 
 ## Relationship to other documents
 
+- `docs/product/positioning.md` defines who the target persona is
+  (cloud-security-fluent engineer in AWS environments) and when
+  that changes. Positioning and metrics are co-equal constraints:
+  metrics defines what good output looks like for that persona;
+  positioning defines who the output is for and the evidence
+  threshold for expanding beyond the primary persona. Both
+  documents share the Aikido 2026 survey as their evidence base,
+  and both bind every feature proposal.
+- `docs/product/architecture.md` defines what belongs in Stave
+  core versus in Stave apps. Metrics defines output quality;
+  positioning defines target persona; architecture defines the
+  platform shape. The three are co-equal constraints — every
+  proposal runs through all three. A metric-improving proposal
+  that is app-shaped goes to an app (the CLI is the first),
+  not into core; a metric-improving proposal that is core-
+  shaped and serves the target persona is in scope.
 - `docs/contract/` defines the observation contract — the shape of
   JSON the extractors emit and the predicate engine consumes. The
   metrics document does not constrain contract design; the contract

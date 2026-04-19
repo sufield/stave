@@ -69,3 +69,10 @@ unsafe_predicate:
     - field: properties.storage.access.policy_is_effectively_public
       op: eq
       value: true
+alternatives:
+  - tool: prowler
+    check_id: s3_bucket_public_access
+    coverage: covered
+    note: >-
+      Stave splits public-access detection across composite, policy, and
+      effective-public views; union covers Prowler.

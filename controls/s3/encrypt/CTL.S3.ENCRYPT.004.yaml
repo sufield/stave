@@ -55,3 +55,8 @@ unsafe_predicate:
     - field: properties.storage.encryption.algorithm
       op: ne
       value: "aws:kms"
+alternatives:
+  - tool: prowler
+    check_id: s3_bucket_kms_encryption
+    coverage: partial
+    note: Stave requires KMS only for PHI/sensitive-tagged buckets; Prowler requires it for all.

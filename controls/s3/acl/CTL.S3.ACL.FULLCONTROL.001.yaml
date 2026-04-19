@@ -37,3 +37,16 @@ remediation:
       }
     }
 unsafe_predicate_alias: s3.has_full_control_grant
+alternatives:
+  - tool: prowler
+    check_id: s3_bucket_public_list_acl
+    coverage: covered
+    note: >-
+      Stave splits ACL-list detection across public-list composite, READ_ACP (recon),
+      and FULL_CONTROL paths.
+  - tool: prowler
+    check_id: s3_bucket_public_write_acl
+    coverage: covered
+    note: >-
+      Stave splits ACL-write detection across public-write composite, FULL_CONTROL
+      grants, and WRITE_ACP (escalation) grants.

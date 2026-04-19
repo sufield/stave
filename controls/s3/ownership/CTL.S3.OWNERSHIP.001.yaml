@@ -57,3 +57,8 @@ unsafe_predicate:
         - field: properties.storage.object_ownership.rule
           op: ne
           value: BucketOwnerEnforced
+alternatives:
+  - tool: prowler
+    check_id: s3_bucket_acl_prohibited
+    coverage: covered
+    note: Both check object_ownership.rule = BucketOwnerEnforced.

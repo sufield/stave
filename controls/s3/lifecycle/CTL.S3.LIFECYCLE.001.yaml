@@ -48,3 +48,8 @@ unsafe_predicate:
     - field: properties.storage.lifecycle.rules_configured
       op: eq
       value: false
+alternatives:
+  - tool: prowler
+    check_id: s3_bucket_lifecycle_enabled
+    coverage: covered
+    note: Both check presence of a lifecycle configuration with at least one enabled rule.

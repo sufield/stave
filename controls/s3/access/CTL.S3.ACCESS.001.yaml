@@ -50,3 +50,8 @@ unsafe_predicate:
     - field: properties.storage.access.external_account_ids
       op: not_subset_of_field
       value: params.allowed_accounts
+alternatives:
+  - tool: prowler
+    check_id: s3_bucket_cross_account_access
+    coverage: covered
+    note: Stave fires on non-empty external_account_ids; matches Prowler's policy-principal analysis.

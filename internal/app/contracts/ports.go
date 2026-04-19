@@ -9,6 +9,7 @@ import (
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
+	"github.com/sufield/stave/internal/core/evaluation/coverage"
 	"github.com/sufield/stave/internal/core/ports"
 )
 
@@ -71,10 +72,11 @@ type EnrichedFinding struct {
 // "marshal" pipeline steps. Marshalers should read ExemptedAssets and Run
 // from this struct (not from Result) because they are pre-sanitized.
 type EnrichedResult struct {
-	Result         evaluation.ComplianceReport
-	Findings       []EnrichedFinding
-	ExemptedAssets []asset.ExemptedAsset
-	Run            evaluation.RunInfo
+	Result          evaluation.ComplianceReport
+	Findings        []EnrichedFinding
+	ExemptedAssets  []asset.ExemptedAsset
+	Run             evaluation.RunInfo
+	CoveragePosture *coverage.CoverageIndex
 }
 
 // FindingMarshaler transforms enriched findings into format-specific bytes

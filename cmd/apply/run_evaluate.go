@@ -68,9 +68,10 @@ func executeEvaluation(ctx context.Context, ec evalContext) (EvaluateResult, err
 	annotateReachability(&result, ec.Opts.ObservationsDir)
 
 	pipeline := &appeval.OutputPipeline{
-		Marshaler: deps.Runner.ReportPublisher,
-		Enricher:  deps.Runner.ContextEnricher,
-		Logger:    ec.Logger,
+		Marshaler:       deps.Runner.ReportPublisher,
+		Enricher:        deps.Runner.ContextEnricher,
+		CoveragePosture: buildCoveragePosture(activeControls(deps), ec.Logger),
+		Logger:          ec.Logger,
 	}
 	if err := pipeline.Run(ctx, deps.Config.Output, &result); err != nil {
 		return EvaluateResult{}, fmt.Errorf("run output pipeline: %w", err)

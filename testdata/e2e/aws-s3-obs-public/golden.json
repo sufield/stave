@@ -244,7 +244,15 @@
           }
         ],
         "command": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
-      }
+      },
+      "alternatives": [
+        {
+          "tool": "prowler",
+          "check_id": "s3_bucket_public_access",
+          "coverage": "covered",
+          "note": "Stave splits public-access detection across composite, policy, and effective-public views; union covers Prowler."
+        }
+      ]
     },
     {
       "finding_id": "sha256:3ce8171b2640244e",
@@ -942,7 +950,15 @@
           }
         ],
         "command": "Enable all four S3 Block Public Access settings at the account level using aws s3control put-public-access-block with the --account-id parameter. This blocks public access for all current and future buckets in the account. If specific buckets require public access, use CloudFront with Origin Access Control instead of making buckets directly public."
-      }
+      },
+      "alternatives": [
+        {
+          "tool": "prowler",
+          "check_id": "s3_account_level_public_access_blocks",
+          "coverage": "covered",
+          "note": "Stave requires all 4 flags vs Prowler's 2 (ignore_public_acls + restrict_public_buckets). Stave is stricter."
+        }
+      ]
     },
     {
       "finding_id": "sha256:8df0e432ac4c38e4",
@@ -1088,7 +1104,15 @@
           }
         ],
         "command": "Enable MFA Delete (requires root credentials): aws s3api put-bucket-versioning --bucket public-test-bucket --versioning-configuration Status=Enabled,MFADelete=Enabled --mfa \"arn:aws:iam::\u003caccount\u003e:mfa/root-account-mfa-device \u003ccode\u003e\""
-      }
+      },
+      "alternatives": [
+        {
+          "tool": "prowler",
+          "check_id": "s3_bucket_no_mfa_delete",
+          "coverage": "covered",
+          "note": "Both check storage.versioning.mfa_delete_enabled on versioned buckets."
+        }
+      ]
     },
     {
       "finding_id": "sha256:4deaa2ba101afbc5",
@@ -1380,7 +1404,15 @@
           }
         ],
         "command": "Set Object Ownership to BucketOwnerEnforced using aws s3api put-bucket-ownership-controls. This disables all ACLs on the bucket. Before enabling, audit existing ACL grants and migrate any legitimate access to bucket policies or IAM policies. All existing ACL-based access will stop working once BucketOwnerEnforced is set."
-      }
+      },
+      "alternatives": [
+        {
+          "tool": "prowler",
+          "check_id": "s3_bucket_acl_prohibited",
+          "coverage": "covered",
+          "note": "Both check object_ownership.rule = BucketOwnerEnforced."
+        }
+      ]
     },
     {
       "finding_id": "sha256:96f5d0e38950552e",
@@ -1511,7 +1543,15 @@
           }
         ],
         "command": "Enable the `BlockPublicAcls` flag on the bucket's Public Access Block configuration. From the CLI:\n\n    aws s3api put-public-access-block \\\n      --bucket public-test-bucket \\\n      --public-access-block-configuration \\\n      'BlockPublicAcls=true,IgnorePublicAcls=\u003ccurrent\u003e,BlockPublicPolicy=\u003ccurrent\u003e,RestrictPublicBuckets=\u003ccurrent\u003e'\n\nPreserve the other three flag values so enabling this one doesn't silently disable the others."
-      }
+      },
+      "alternatives": [
+        {
+          "tool": "prowler",
+          "check_id": "s3_bucket_level_public_access_block",
+          "coverage": "covered",
+          "note": "Stave umbrella requires all 4 flags vs Prowler's 2; per-flag controls give actionable remediation."
+        }
+      ]
     },
     {
       "finding_id": "sha256:184e616d42d418ff",
@@ -1642,7 +1682,15 @@
           }
         ],
         "command": "Enable the `BlockPublicPolicy` flag on the bucket's Public Access Block configuration. Preserve the other three flag values so enabling this one doesn't silently disable the others."
-      }
+      },
+      "alternatives": [
+        {
+          "tool": "prowler",
+          "check_id": "s3_bucket_level_public_access_block",
+          "coverage": "covered",
+          "note": "Stave umbrella requires all 4 flags vs Prowler's 2; per-flag controls give actionable remediation."
+        }
+      ]
     },
     {
       "finding_id": "sha256:5162c97d09aac8a6",
@@ -1773,7 +1821,15 @@
           }
         ],
         "command": "Enable the `IgnorePublicAcls` flag on the bucket's Public Access Block configuration. Pair it with `BlockPublicAcls` for full ACL-path coverage — the pair prevents new public ACL grants and neutralizes existing ones."
-      }
+      },
+      "alternatives": [
+        {
+          "tool": "prowler",
+          "check_id": "s3_bucket_level_public_access_block",
+          "coverage": "covered",
+          "note": "Stave umbrella requires all 4 flags vs Prowler's 2; per-flag controls give actionable remediation."
+        }
+      ]
     },
     {
       "finding_id": "sha256:c54e72c5a695247a",
@@ -1904,7 +1960,15 @@
           }
         ],
         "command": "Enable the `RestrictPublicBuckets` flag on the bucket's Public Access Block configuration. Pair it with `BlockPublicPolicy` for full policy-path coverage — the pair prevents new public policy writes and limits the effect of any historical public grants to service principals."
-      }
+      },
+      "alternatives": [
+        {
+          "tool": "prowler",
+          "check_id": "s3_bucket_level_public_access_block",
+          "coverage": "covered",
+          "note": "Stave umbrella requires all 4 flags vs Prowler's 2; per-flag controls give actionable remediation."
+        }
+      ]
     }
   ],
   "issues": [
@@ -2271,5 +2335,69 @@
       },
       "silent_killer": false
     }
-  ]
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 20,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_bucket_event_notifications_enabled"
+        ]
+      }
+    }
+  }
 }

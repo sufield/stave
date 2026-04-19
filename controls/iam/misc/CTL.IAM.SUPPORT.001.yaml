@@ -41,3 +41,8 @@ unsafe_predicate:
     - field: properties.identity.support_role.exists
       op: eq
       value: false
+alternatives:
+  - tool: prowler
+    check_id: iam_support_role_created
+    coverage: covered
+    note: Both check for an existing role with the AWSSupportAccess policy.

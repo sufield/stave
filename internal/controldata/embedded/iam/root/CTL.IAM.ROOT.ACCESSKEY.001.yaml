@@ -47,3 +47,8 @@ unsafe_predicate:
     - field: properties.identity.root.has_access_keys
       op: eq
       value: true
+alternatives:
+  - tool: prowler
+    check_id: iam_no_root_access_key
+    coverage: covered
+    note: Both check identity.root.has_access_keys.

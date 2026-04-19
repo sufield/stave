@@ -43,3 +43,8 @@ unsafe_predicate:
     - field: properties.identity.policies.assumerole_unrestricted
       op: eq
       value: true
+alternatives:
+  - tool: prowler
+    check_id: iam_no_custom_policy_permissive_role_assumption
+    coverage: covered
+    note: "Both require sts:AssumeRole to be scoped to specific role ARNs."

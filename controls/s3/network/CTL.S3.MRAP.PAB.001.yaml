@@ -34,3 +34,8 @@ unsafe_predicate:
     - field: properties.storage.mrap_public_access_blocked
       op: eq
       value: false
+alternatives:
+  - tool: prowler
+    check_id: s3_multi_region_access_point_public_access_block
+    coverage: covered
+    note: Both check that all 4 MRAP PAB flags are enabled.

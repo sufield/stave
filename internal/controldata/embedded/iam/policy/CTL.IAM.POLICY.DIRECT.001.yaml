@@ -50,3 +50,8 @@ unsafe_predicate:
     - field: properties.identity.policies.has_direct_policies
       op: eq
       value: true
+alternatives:
+  - tool: prowler
+    check_id: iam_policy_attached_only_to_group_or_roles
+    coverage: covered
+    note: Stave splits 'no direct managed attach' from 'no inline policies' into two controls; union matches.

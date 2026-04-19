@@ -1,153 +1,12 @@
 {
-  "extensions": {
-    "context_name": "stave",
-    "git": {
-      "dirty": false,
-      "head_commit": "23e8d39cdce1f114627b5eb473daceca93c7fddc",
-      "repo_root": "/home/zepho/work/bizacademy"
-    },
-    "resolved_paths": {
-      "controls": "testdata/e2e/k8s-cis-level1/controls",
-      "observations": "testdata/e2e/k8s-cis-level1/observations"
-    },
-    "selected_controls_source": "dir"
-  },
-  "findings": [],
+  "schema_version": "out.v0.1",
   "kind": "ASSESSMENT",
-  "risk_signals": [
-    {
-      "asset_id": "apiserver-dev-01",
-      "asset_type": "k8s_apiserver",
-      "control_id": "CTL.K8S.APISERVER.ANON.001",
-      "due_at": "2026-01-17T00:00:00Z",
-      "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": 144,
-      "status": "UPCOMING",
-      "threshold_hours": 168
-    },
-    {
-      "asset_id": "apiserver-staging-01",
-      "asset_type": "k8s_apiserver",
-      "control_id": "CTL.K8S.APISERVER.ANON.001",
-      "due_at": "2026-01-17T00:00:00Z",
-      "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": 144,
-      "status": "UPCOMING",
-      "threshold_hours": 168
-    },
-    {
-      "asset_id": "apiserver-dev-01",
-      "asset_type": "k8s_apiserver",
-      "control_id": "CTL.K8S.APISERVER.AUDIT.001",
-      "due_at": "2026-01-17T00:00:00Z",
-      "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": 144,
-      "status": "UPCOMING",
-      "threshold_hours": 168
-    },
-    {
-      "asset_id": "apiserver-staging-01",
-      "asset_type": "k8s_apiserver",
-      "control_id": "CTL.K8S.APISERVER.AUDIT.001",
-      "due_at": "2026-01-17T00:00:00Z",
-      "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": 144,
-      "status": "UPCOMING",
-      "threshold_hours": 168
-    },
-    {
-      "asset_id": "apiserver-staging-01",
-      "asset_type": "k8s_apiserver",
-      "control_id": "CTL.K8S.APISERVER.AUTHZ.001",
-      "due_at": "2026-01-17T00:00:00Z",
-      "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": 144,
-      "status": "UPCOMING",
-      "threshold_hours": 168
-    },
-    {
-      "asset_id": "etcd-dev-01",
-      "asset_type": "k8s_etcd",
-      "control_id": "CTL.K8S.ETCD.CERT.001",
-      "due_at": "2026-01-17T00:00:00Z",
-      "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": 144,
-      "status": "UPCOMING",
-      "threshold_hours": 168
-    },
-    {
-      "asset_id": "etcd-staging-01",
-      "asset_type": "k8s_etcd",
-      "control_id": "CTL.K8S.ETCD.CERT.001",
-      "due_at": "2026-01-17T00:00:00Z",
-      "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": 144,
-      "status": "UPCOMING",
-      "threshold_hours": 168
-    },
-    {
-      "asset_id": "etcd-dev-01",
-      "asset_type": "k8s_etcd",
-      "control_id": "CTL.K8S.ETCD.CLIENT.AUTH.001",
-      "due_at": "2026-01-17T00:00:00Z",
-      "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": 144,
-      "status": "UPCOMING",
-      "threshold_hours": 168
-    },
-    {
-      "asset_id": "etcd-staging-01",
-      "asset_type": "k8s_etcd",
-      "control_id": "CTL.K8S.ETCD.CLIENT.AUTH.001",
-      "due_at": "2026-01-17T00:00:00Z",
-      "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": 144,
-      "status": "UPCOMING",
-      "threshold_hours": 168
-    },
-    {
-      "asset_id": "kubelet-dev-node-01",
-      "asset_type": "k8s_kubelet",
-      "control_id": "CTL.K8S.KUBELET.ANON.001",
-      "due_at": "2026-01-17T00:00:00Z",
-      "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": 144,
-      "status": "UPCOMING",
-      "threshold_hours": 168
-    },
-    {
-      "asset_id": "kubelet-staging-node-01",
-      "asset_type": "k8s_kubelet",
-      "control_id": "CTL.K8S.KUBELET.ANON.001",
-      "due_at": "2026-01-17T00:00:00Z",
-      "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": 144,
-      "status": "UPCOMING",
-      "threshold_hours": 168
-    },
-    {
-      "asset_id": "kubelet-staging-node-01",
-      "asset_type": "k8s_kubelet",
-      "control_id": "CTL.K8S.KUBELET.AUTHZ.001",
-      "due_at": "2026-01-17T00:00:00Z",
-      "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": 144,
-      "status": "UPCOMING",
-      "threshold_hours": 168
-    },
-    {
-      "asset_id": "kubelet-staging-node-01",
-      "asset_type": "k8s_kubelet",
-      "control_id": "CTL.K8S.KUBELET.READONLY.001",
-      "due_at": "2026-01-17T00:00:00Z",
-      "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": 144,
-      "status": "UPCOMING",
-      "threshold_hours": 168
-    }
-  ],
   "run": {
-    "evaluated_state": "deployed",
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 3,
     "input_hashes": {
       "files": {
         "chain.json": "ea14626727e4ebe0a95f18aeeeefcf129761ed5ef6a07f0d78738e805e9c5c30",
@@ -156,18 +15,243 @@
       },
       "overall": "98d6ea9656c6a032a802937950763804cb282f32e02100bd72d5b72288686cda"
     },
-    "now": "2026-01-11T00:00:00Z",
-    "offline": true,
     "policy_fingerprint": "d0b3f132ddac641536b77acbadcf9be6f325791defaac5c93d912a478aab47a3",
-    "sla_threshold": "7d",
-    "snapshots": 3,
-    "tool_version": "edge"
+    "evaluated_state": "deployed"
   },
-  "schema_version": "out.v0.1",
-  "status": "AT_RISK",
   "summary": {
-    "exposed_resources": 6,
     "total_assets": 9,
+    "exposed_resources": 6,
     "violations": 0
+  },
+  "status": "AT_RISK",
+  "risk_signals": [
+    {
+      "control_id": "CTL.K8S.APISERVER.ANON.001",
+      "asset_id": "apiserver-dev-01",
+      "asset_type": "k8s_apiserver",
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 144,
+      "first_unsafe_at": "2026-01-10T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.K8S.APISERVER.ANON.001",
+      "asset_id": "apiserver-staging-01",
+      "asset_type": "k8s_apiserver",
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 144,
+      "first_unsafe_at": "2026-01-10T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.K8S.APISERVER.AUDIT.001",
+      "asset_id": "apiserver-dev-01",
+      "asset_type": "k8s_apiserver",
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 144,
+      "first_unsafe_at": "2026-01-10T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.K8S.APISERVER.AUDIT.001",
+      "asset_id": "apiserver-staging-01",
+      "asset_type": "k8s_apiserver",
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 144,
+      "first_unsafe_at": "2026-01-10T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.K8S.APISERVER.AUTHZ.001",
+      "asset_id": "apiserver-staging-01",
+      "asset_type": "k8s_apiserver",
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 144,
+      "first_unsafe_at": "2026-01-10T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.K8S.ETCD.CERT.001",
+      "asset_id": "etcd-dev-01",
+      "asset_type": "k8s_etcd",
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 144,
+      "first_unsafe_at": "2026-01-10T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.K8S.ETCD.CERT.001",
+      "asset_id": "etcd-staging-01",
+      "asset_type": "k8s_etcd",
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 144,
+      "first_unsafe_at": "2026-01-10T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.K8S.ETCD.CLIENT.AUTH.001",
+      "asset_id": "etcd-dev-01",
+      "asset_type": "k8s_etcd",
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 144,
+      "first_unsafe_at": "2026-01-10T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.K8S.ETCD.CLIENT.AUTH.001",
+      "asset_id": "etcd-staging-01",
+      "asset_type": "k8s_etcd",
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 144,
+      "first_unsafe_at": "2026-01-10T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.K8S.KUBELET.ANON.001",
+      "asset_id": "kubelet-dev-node-01",
+      "asset_type": "k8s_kubelet",
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 144,
+      "first_unsafe_at": "2026-01-10T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.K8S.KUBELET.ANON.001",
+      "asset_id": "kubelet-staging-node-01",
+      "asset_type": "k8s_kubelet",
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 144,
+      "first_unsafe_at": "2026-01-10T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.K8S.KUBELET.AUTHZ.001",
+      "asset_id": "kubelet-staging-node-01",
+      "asset_type": "k8s_kubelet",
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 144,
+      "first_unsafe_at": "2026-01-10T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.K8S.KUBELET.READONLY.001",
+      "asset_id": "kubelet-staging-node-01",
+      "asset_type": "k8s_kubelet",
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 144,
+      "first_unsafe_at": "2026-01-10T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/k8s-cis-level1/controls",
+      "observations": "testdata/e2e/k8s-cis-level1/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "1ae8b4da8479e5e75eaf0d7d9b907f3f5e5929e7",
+      "dirty": false
+    }
   }
 }

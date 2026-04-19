@@ -112,8 +112,15 @@ func buildRules(findings []remediation.Finding) ([]sarifRule, map[kernel.Control
 			rule.Help = &sarifMessage{Text: f.RemediationSpec.Action}
 		}
 		tags := buildRuleTags(f)
-		if len(tags) > 0 {
-			rule.Properties = map[string]any{"tags": tags}
+		alts := alternativesAsProperties(f.Alternatives)
+		if len(tags) > 0 || len(alts) > 0 {
+			rule.Properties = map[string]any{}
+			if len(tags) > 0 {
+				rule.Properties["tags"] = tags
+			}
+			if len(alts) > 0 {
+				rule.Properties["alternatives"] = alts
+			}
 		}
 		rules = append(rules, rule)
 	}
@@ -168,11 +175,13 @@ func buildResults(findings []remediation.Finding, ruleIndex map[kernel.ControlID
 			}
 		}
 
-		// Add chain context and reasoning trace to properties bag.
-		// SARIF codeFlows is designed for source-code flow graphs; Stave's
-		// compact predicate trace lives in the properties bag per SARIF
+		// Add chain context, reasoning trace, and alternative-tool
+		// coverage to properties bag. SARIF codeFlows is designed for
+		// source-code flow graphs; Stave's compact predicate trace and
+		// per-finding alternatives use the properties bag per SARIF
 		// extension conventions.
-		if len(f.ChainMembership) > 0 || len(f.ReasoningTrace) > 0 {
+		alts := alternativesAsProperties(f.Alternatives)
+		if len(f.ChainMembership) > 0 || len(f.ReasoningTrace) > 0 || len(alts) > 0 {
 			result.Properties = map[string]any{}
 			if len(f.ChainMembership) > 0 {
 				cm := f.ChainMembership[0]
@@ -193,6 +202,9 @@ func buildResults(findings []remediation.Finding, ruleIndex map[kernel.ControlID
 					}
 				}
 				result.Properties["reasoning_trace"] = trace
+			}
+			if len(alts) > 0 {
+				result.Properties["alternatives"] = alts
 			}
 		}
 
@@ -248,6 +260,28 @@ func buildMessage(f *remediation.Finding) string {
 	}
 	msg += suffix
 	return msg
+}
+
+// alternativesAsProperties shapes a control's alternative-tool entries
+// for the SARIF properties bag. Returns nil when there are no entries
+// so callers can branch cleanly on len(alts) > 0.
+func alternativesAsProperties(alts []policy.Alternative) []map[string]any {
+	if len(alts) == 0 {
+		return nil
+	}
+	out := make([]map[string]any, len(alts))
+	for i, a := range alts {
+		entry := map[string]any{
+			"tool":     a.Tool,
+			"check_id": a.CheckID,
+			"coverage": string(a.Coverage),
+		}
+		if a.Note != "" {
+			entry["note"] = a.Note
+		}
+		out[i] = entry
+	}
+	return out
 }
 
 // buildRuleTags creates the tags array for a SARIF rule's properties.

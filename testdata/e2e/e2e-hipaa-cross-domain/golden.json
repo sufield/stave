@@ -924,7 +924,15 @@
           }
         ],
         "command": "Delete the root access keys. Create IAM users or roles with least-privilege policies for programmatic access."
-      }
+      },
+      "alternatives": [
+        {
+          "tool": "prowler",
+          "check_id": "iam_no_root_access_key",
+          "coverage": "covered",
+          "note": "Both check identity.root.has_access_keys."
+        }
+      ]
     },
     {
       "finding_id": "sha256:d1659912ae8d6344",
@@ -1066,7 +1074,15 @@
           }
         ],
         "command": "Enable MFA on the root account using a hardware MFA device or virtual MFA app. Navigate to IAM \u003e Security credentials \u003e MFA."
-      }
+      },
+      "alternatives": [
+        {
+          "tool": "prowler",
+          "check_id": "iam_root_mfa_enabled",
+          "coverage": "covered",
+          "note": "Both check root MFA presence."
+        }
+      ]
     },
     {
       "finding_id": "sha256:6d6e5d5f2078bd42",
@@ -5616,5 +5632,57 @@
       },
       "silent_killer": false
     }
-  ]
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 23,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_administrator_access_policy",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 9,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_shadow_resource_vulnerability"
+        ]
+      }
+    }
+  }
 }

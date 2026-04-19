@@ -45,3 +45,8 @@ unsafe_predicate:
     - field: properties.identity.admin_user_count
       op: gt
       value: 2
+alternatives:
+  - tool: prowler
+    check_id: iam_user_administrator_access_policy
+    coverage: covered
+    note: Per-user admin attach plus account-wide admin-count threshold.

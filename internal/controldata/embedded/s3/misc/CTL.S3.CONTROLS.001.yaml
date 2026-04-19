@@ -51,3 +51,8 @@ unsafe_predicate:
     - field: properties.storage.controls.public_access_fully_blocked
       op: eq
       value: false
+alternatives:
+  - tool: prowler
+    check_id: s3_bucket_level_public_access_block
+    coverage: covered
+    note: Stave umbrella requires all 4 flags vs Prowler's 2; per-flag controls give actionable remediation.

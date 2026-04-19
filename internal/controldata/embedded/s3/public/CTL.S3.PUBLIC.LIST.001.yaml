@@ -38,3 +38,10 @@ unsafe_predicate:
     - field: properties.storage.access.public_list
       op: eq
       value: true
+alternatives:
+  - tool: prowler
+    check_id: s3_bucket_public_list_acl
+    coverage: covered
+    note: >-
+      Stave splits ACL-list detection across public-list composite, READ_ACP (recon),
+      and FULL_CONTROL paths.

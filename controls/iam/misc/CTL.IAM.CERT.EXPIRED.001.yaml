@@ -39,3 +39,8 @@ unsafe_predicate:
     - field: properties.identity.certificates.has_expired
       op: eq
       value: true
+alternatives:
+  - tool: prowler
+    check_id: iam_no_expired_server_certificates_stored
+    coverage: covered
+    note: Both check IAM server certificate expiry.

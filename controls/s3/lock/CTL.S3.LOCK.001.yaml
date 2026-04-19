@@ -53,3 +53,10 @@ unsafe_predicate:
     - field: properties.storage.object_lock.enabled
       op: eq
       value: false
+alternatives:
+  - tool: prowler
+    check_id: s3_bucket_object_lock
+    coverage: covered
+    note: >-
+      Stave splits enablement, mode, and retention-days into three controls; Prowler
+      covered by enablement.

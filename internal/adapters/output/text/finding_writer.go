@@ -31,6 +31,7 @@ func (w *FindingWriter) MarshalFindings(enriched *appcontracts.EnrichedResult) (
 	w.writeHeader(d, &result)
 	if len(result.Findings) == 0 {
 		w.writeNoViolationsSummary(d)
+		w.writeCoveragePosture(d, enriched.CoveragePosture)
 		if d.err != nil {
 			return nil, d.err
 		}
@@ -48,6 +49,7 @@ func (w *FindingWriter) MarshalFindings(enriched *appcontracts.EnrichedResult) (
 	w.writeSkippedControls(d, result.SkippedControls)
 	writeExemptedAssets(d, enriched.ExemptedAssets)
 	w.writeExceptedFindings(d, result.ExceptedFindings)
+	w.writeCoveragePosture(d, enriched.CoveragePosture)
 	if !env.Demo.IsTrue() {
 		d.f("\nNext step: run `stave diagnose --controls <dir> --observations <dir>` for root-cause guidance.\n")
 	}
@@ -229,9 +231,27 @@ func (w *FindingWriter) writeIsolatedFinding(d *drawer, num int, f *remediation.
 		d.f("   (isolated finding \u2014 not part of any active attack path)\n")
 	}
 	writeFindingSource(d, f)
+	writeFindingAlternatives(d, f)
 	writeFindingEvidence(d, f)
 	writeFindingReasoning(d, f)
 	writeFindingRemediation(d, f)
+}
+
+// writeFindingAlternatives renders one line per alternative-tool check
+// the control covers, e.g.,
+//
+//	Alternative: prowler/s3_bucket_acl_prohibited (covered)
+//
+// Silent when the control declares no alternatives. The Note field is
+// not rendered in text output to keep finding headers compact; full
+// note text remains in JSON output.
+func writeFindingAlternatives(d *drawer, f *remediation.Finding) {
+	if len(f.Alternatives) == 0 {
+		return
+	}
+	for _, a := range f.Alternatives {
+		d.f("   Alternative: %s/%s (%s)\n", a.Tool, a.CheckID, a.Coverage)
+	}
 }
 
 func writeFindingHeader(d *drawer, num int, f *remediation.Finding) {

@@ -45,3 +45,8 @@ unsafe_predicate:
     - field: properties.iam.federation_recommended_but_missing
       op: eq
       value: true
+alternatives:
+  - tool: prowler
+    check_id: iam_check_saml_providers_sts
+    coverage: partial
+    note: Stave encourages federation but doesn't inventory SAML provider presence.

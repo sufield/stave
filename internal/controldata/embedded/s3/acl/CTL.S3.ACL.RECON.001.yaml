@@ -35,3 +35,10 @@ remediation:
       }
     }
 unsafe_predicate_alias: s3.acl_readable_by_public
+alternatives:
+  - tool: prowler
+    check_id: s3_bucket_public_list_acl
+    coverage: covered
+    note: >-
+      Stave splits ACL-list detection across public-list composite, READ_ACP (recon),
+      and FULL_CONTROL paths.

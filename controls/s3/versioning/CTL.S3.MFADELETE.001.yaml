@@ -47,3 +47,8 @@ unsafe_predicate:
     - field: properties.storage.versioning.mfa_delete_enabled
       op: eq
       value: false
+alternatives:
+  - tool: prowler
+    check_id: s3_bucket_no_mfa_delete
+    coverage: covered
+    note: Both check storage.versioning.mfa_delete_enabled on versioned buckets.

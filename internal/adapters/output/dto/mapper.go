@@ -21,6 +21,7 @@ func FromEvaluation(e *report.Assessment) ResultDTO {
 		SkippedControls:   fromSkippedControls(e.SkippedControls),
 		ExemptedAssets:    fromExemptedAssets(e.ExemptedAssets),
 		TopExposures:      e.TopExposures,
+		CoveragePosture:   FromCoverageIndex(e.CoveragePosture),
 		Extensions:        fromExtensions(e.Extensions),
 	}
 }

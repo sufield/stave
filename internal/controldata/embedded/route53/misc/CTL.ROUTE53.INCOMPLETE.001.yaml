@@ -10,6 +10,8 @@ compliance:
 scope_tags:
   - aws
   - route53
+applicable_asset_types:
+  - aws_route53_hosted_zone
 type: unsafe_state
 params: {}
 remediation:

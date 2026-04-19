@@ -37,6 +37,17 @@ type FindingDTO struct {
 	ScoreBreakdown       *risk.ScoreBreakdown      `json:"score_breakdown,omitempty"`
 	ReasoningTrace       []MatchedClauseDTO        `json:"reasoning_trace,omitempty"`
 	RemediationContext   *RemediationContextDTO    `json:"remediation_context,omitempty"`
+	Alternatives         []AlternativeDTO          `json:"alternatives,omitempty"`
+}
+
+// AlternativeDTO mirrors controldef.Alternative for JSON output.
+// Each entry maps this finding's control to a check in an alternative
+// detection tool. Tool is an opaque string identifier.
+type AlternativeDTO struct {
+	Tool     string `json:"tool"`
+	CheckID  string `json:"check_id"`
+	Coverage string `json:"coverage"`
+	Note     string `json:"note,omitempty"`
 }
 
 // RemediationContextDTO packages asset identity, violation reasoning,

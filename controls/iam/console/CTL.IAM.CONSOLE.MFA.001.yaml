@@ -59,3 +59,14 @@ unsafe_predicate:
     - field: properties.identity.console_access.mfa_enabled
       op: eq
       value: false
+alternatives:
+  - tool: prowler
+    check_id: iam_administrator_access_with_mfa
+    coverage: covered
+    note: >-
+      Stave requires hardware MFA on privileged accounts; Prowler requires any MFA.
+      Stave is stricter on MFA factor.
+  - tool: prowler
+    check_id: iam_user_mfa_enabled_console_access
+    coverage: covered
+    note: Both fire when a user has console access without MFA.

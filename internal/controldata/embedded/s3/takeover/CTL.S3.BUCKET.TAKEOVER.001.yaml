@@ -39,3 +39,11 @@ unsafe_predicate:
     - field: properties.s3_ref.bucket_owned
       op: eq
       value: false
+alternatives:
+  - tool: prowler
+    check_id: s3_bucket_shadow_resource_vulnerability
+    coverage: partial
+    note: >-
+      Stave catches dangling/wrong-owner via s3_ref.bucket_exists +
+      s3_ref.bucket_owned; Prowler additionally enumerates predictable service-name
+      patterns.

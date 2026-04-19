@@ -58,3 +58,10 @@ unsafe_predicate:
     - field: properties.storage.controls.account_public_access_fully_blocked
       op: eq
       value: false
+alternatives:
+  - tool: prowler
+    check_id: s3_account_level_public_access_blocks
+    coverage: covered
+    note: >-
+      Stave requires all 4 flags vs Prowler's 2 (ignore_public_acls +
+      restrict_public_buckets). Stave is stricter.

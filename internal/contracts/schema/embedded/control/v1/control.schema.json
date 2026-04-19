@@ -169,7 +169,17 @@
         "scope_tags": {
           "type": "array",
           "title": "Scope Tags",
-          "description": "Optional tags describing applicability scope (e.g., aws, s3, prod).",
+          "description": "Optional tags describing applicability scope (e.g., aws, s3, prod). Authoring metadata used for selector filtering and vendor pre-indexing; not an evaluation gate. See applicable_asset_types for asset-type gating.",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "applicable_asset_types": {
+          "type": "array",
+          "title": "Applicable Asset Types",
+          "description": "Asset types this control evaluates. When present, the engine skips the control silently for assets whose type is not in this list (no finding, no trace, no tally entry). When absent, the control fires on all asset types (legacy behavior). Asset type values come from the observation contract (e.g., aws_s3_bucket, aws_iam_role, aws_kms_key).",
+          "minItems": 1,
           "items": {
             "type": "string",
             "minLength": 1
@@ -284,6 +294,42 @@
               "type": "string",
               "title": "Remediation Example",
               "description": "Optional example showing the remediation action applied to a real asset."
+            }
+          }
+        },
+        "alternatives": {
+          "type": "array",
+          "title": "Alternative-Tool Coverage",
+          "description": "Records mapping to alternative detection tools' checks. Tool names are opaque identifiers; core code does not interpret them. Omit the field entirely when the control has no alternative-tool equivalent (Stave-unique detection).",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["tool", "check_id", "coverage"],
+            "properties": {
+              "tool": {
+                "type": "string",
+                "minLength": 1,
+                "title": "Alternative Tool",
+                "description": "Opaque identifier for an alternative detection tool (e.g., prowler, scoutsuite). Convention: lowercase, no spaces."
+              },
+              "check_id": {
+                "type": "string",
+                "minLength": 1,
+                "title": "Alternative Check ID",
+                "description": "The alternative tool's check identifier, verbatim from its catalog."
+              },
+              "coverage": {
+                "type": "string",
+                "enum": ["covered", "partial"],
+                "title": "Coverage Status",
+                "description": "How completely this Stave control covers the referenced alternative check. Use 'covered' for full coverage, 'partial' when a posture-policy difference or scope gap remains. Absence of an entry on any control implies the alternative check is not covered by Stave."
+              },
+              "note": {
+                "type": "string",
+                "title": "Coverage Note",
+                "description": "Optional per-mapping commentary (e.g., why coverage is partial, what Stave catches that the alternative does not)."
+              }
             }
           }
         },

@@ -22,6 +22,7 @@ func controlDefinitionToDomain(y yamlControlDefinition) policy.ControlDefinition
 		Severity:             y.Severity,
 		Domain:               y.Domain,
 		ScopeTags:            scopeTagsToDomain(y.ScopeTags),
+		ApplicableAssetTypes: assetTypesToDomain(y.ApplicableAssetTypes),
 		Compliance:           mapping,
 		CCMV4:                ccmV4,
 		Type:                 y.Type,
@@ -31,8 +32,28 @@ func controlDefinitionToDomain(y yamlControlDefinition) policy.ControlDefinition
 		Remediation:          remediationToDomain(y.Remediation),
 		Exposure:             exposureToDomain(y.Exposure),
 		ObservationFields:    y.ObservationFields,
+		Alternatives:         alternativesToDomain(y.Alternatives),
 		Tests:                y.Tests,
 	}
+}
+
+// alternativesToDomain translates the YAML wire entries to domain values.
+// Returns nil when the input is empty so absence and emptiness are
+// indistinguishable downstream.
+func alternativesToDomain(in []yamlAlternative) []policy.Alternative {
+	if len(in) == 0 {
+		return nil
+	}
+	out := make([]policy.Alternative, len(in))
+	for i, a := range in {
+		out[i] = policy.Alternative{
+			Tool:     a.Tool,
+			CheckID:  a.CheckID,
+			Coverage: policy.CoverageStatus(a.Coverage),
+			Note:     a.Note,
+		}
+	}
+	return out
 }
 
 // splitComplianceBlock separates the special "ccm_v4" list from the rest of
@@ -93,6 +114,17 @@ func scopeTagsToDomain(tags []string) []kernel.ScopeTag {
 	out := make([]kernel.ScopeTag, len(tags))
 	for i, t := range tags {
 		out[i] = kernel.ScopeTag(t)
+	}
+	return out
+}
+
+func assetTypesToDomain(types []string) []kernel.AssetType {
+	if len(types) == 0 {
+		return nil
+	}
+	out := make([]kernel.AssetType, len(types))
+	for i, t := range types {
+		out[i] = kernel.AssetType(t)
 	}
 	return out
 }

@@ -50,3 +50,8 @@ unsafe_predicate:
     - field: properties.storage.encryption.in_transit_enforced
       op: eq
       value: false
+alternatives:
+  - tool: prowler
+    check_id: s3_bucket_secure_transport_policy
+    coverage: covered
+    note: "Both check storage.encryption.in_transit_enforced (Deny on aws:SecureTransport = false)."

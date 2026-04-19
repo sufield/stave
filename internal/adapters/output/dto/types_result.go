@@ -79,5 +79,6 @@ type ResultDTO struct {
 	SkippedControls   []SkippedControlDTO      `json:"skipped_controls,omitempty"`
 	ExemptedAssets    []ExemptedAssetDTO       `json:"exempted_assets,omitempty"`
 	TopExposures      []risk.ExposureRank      `json:"top_exposures,omitempty"`
+	CoveragePosture   CoveragePostureDTO       `json:"coverage_posture,omitempty"`
 	Extensions        *ExtensionsDTO           `json:"extensions,omitempty"`
 }
