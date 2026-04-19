@@ -207,6 +207,24 @@
       ]
     }
   ],
+  "issues": [
+    {
+      "issue_id": "sha256:0341dc4be475c884",
+      "asset_id": "shopify-internal-assets",
+      "shared_keys": [
+        "storage.access",
+        "storage.access.authenticated_read",
+        "storage.access.write_via_resource"
+      ],
+      "headline_finding_id": "sha256:f9fdbdcd4b8389a7",
+      "member_finding_ids": [
+        "sha256:a01a06a82cb5f0fe",
+        "sha256:f9fdbdcd4b8389a7"
+      ],
+      "consolidated_score": 1000,
+      "consolidated_blast_radius": 1
+    }
+  ],
   "remediation_groups": [
     {
       "asset_id": "shopify-internal-assets",
@@ -292,7 +310,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e75fb9b105c8552f0ab8fcae488af7655933cf1a",
+      "head_commit": "c1c45531ee9c4f709d5c08d5f98701a6ebb54603",
       "dirty": false
     }
   }

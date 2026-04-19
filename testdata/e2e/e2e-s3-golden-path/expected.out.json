@@ -1773,6 +1773,95 @@
       ]
     }
   ],
+  "issues": [
+    {
+      "issue_id": "sha256:16865eb8ca711f5b",
+      "asset_id": "public-phi-bucket",
+      "shared_keys": [
+        "storage.access",
+        "storage.access.list_via_identity",
+        "storage.access.public_list",
+        "storage.access.public_read",
+        "storage.access.read_via_identity",
+        "storage.tags",
+        "storage.tags.data-classification",
+        "storage.tags.public_list_intended"
+      ],
+      "headline_finding_id": "sha256:4213b4640ec19233",
+      "member_finding_ids": [
+        "sha256:2d804935b823b211",
+        "sha256:3e039dfc23916f37",
+        "sha256:4213b4640ec19233",
+        "sha256:5ce777d4af066e45",
+        "sha256:5d1205a18974cf1c",
+        "sha256:a8db07ec8df71531"
+      ],
+      "consolidated_score": 200,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:88ea9b904638ddc7",
+      "asset_id": "private-bucket",
+      "shared_keys": [
+        "exposure_source",
+        "protected_prefix"
+      ],
+      "headline_finding_id": "sha256:cfc8d5e23f723d4e",
+      "member_finding_ids": [
+        "sha256:cfc8d5e23f723d4e",
+        "sha256:cfc8d5e23f723d4e",
+        "sha256:cfc8d5e23f723d4e",
+        "sha256:cfc8d5e23f723d4e"
+      ],
+      "consolidated_score": 150,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:7bde279c1fcc37ca",
+      "asset_id": "public-phi-bucket",
+      "shared_keys": [
+        "exposure_source",
+        "protected_prefix"
+      ],
+      "headline_finding_id": "sha256:d94d878f0d5908e3",
+      "member_finding_ids": [
+        "sha256:d94d878f0d5908e3",
+        "sha256:d94d878f0d5908e3",
+        "sha256:d94d878f0d5908e3",
+        "sha256:d94d878f0d5908e3"
+      ],
+      "consolidated_score": 150,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:ea4fd3e5dcf1765d",
+      "asset_id": "public-phi-bucket",
+      "shared_keys": [
+        "storage.controls",
+        "storage.controls.public_access_fully_blocked"
+      ],
+      "headline_finding_id": "sha256:583ae8ba1a6a68ff",
+      "member_finding_ids": [
+        "sha256:583ae8ba1a6a68ff"
+      ],
+      "consolidated_score": 75,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:49117554317fd454",
+      "asset_id": "private-bucket",
+      "shared_keys": [
+        "storage.tags",
+        "storage.tags.data-classification"
+      ],
+      "headline_finding_id": "sha256:04376e057daa240f",
+      "member_finding_ids": [
+        "sha256:04376e057daa240f"
+      ],
+      "consolidated_score": 25,
+      "consolidated_blast_radius": 1
+    }
+  ],
   "remediation_groups": [
     {
       "asset_id": "private-bucket",
@@ -2116,7 +2205,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e75fb9b105c8552f0ab8fcae488af7655933cf1a",
+      "head_commit": "c1c45531ee9c4f709d5c08d5f98701a6ebb54603",
       "dirty": false
     }
   }

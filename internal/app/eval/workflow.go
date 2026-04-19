@@ -210,6 +210,11 @@ func (w *AuditWorkflow) enrichWithRiskReasoning(
 
 	// Re-sort findings by the newly-populated score.
 	evaluation.SortFindings(report.Findings)
+
+	// Build consolidated Issues from the scored findings. Runs after
+	// ranking so ConsolidatedScore uses the final per-finding score
+	// including chain bonus. See docs/product/metrics.md § Metric 2.
+	report.Issues = evaluation.BuildIssues(report.Findings)
 }
 
 // annotateChainMembership cross-references fired chains with individual

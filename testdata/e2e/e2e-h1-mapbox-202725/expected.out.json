@@ -146,6 +146,22 @@
       ]
     }
   ],
+  "issues": [
+    {
+      "issue_id": "sha256:2fe85fbf3b5f443c",
+      "asset_id": "mapbox-private-objects",
+      "shared_keys": [
+        "storage.access",
+        "storage.access.public_read"
+      ],
+      "headline_finding_id": "sha256:1ddacc755000d758",
+      "member_finding_ids": [
+        "sha256:1ddacc755000d758"
+      ],
+      "consolidated_score": 1000,
+      "consolidated_blast_radius": 1
+    }
+  ],
   "remediation_groups": [
     {
       "asset_id": "mapbox-private-objects",
@@ -216,7 +232,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e75fb9b105c8552f0ab8fcae488af7655933cf1a",
+      "head_commit": "c1c45531ee9c4f709d5c08d5f98701a6ebb54603",
       "dirty": false
     }
   }

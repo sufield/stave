@@ -119,6 +119,23 @@
       ]
     }
   ],
+  "issues": [
+    {
+      "issue_id": "sha256:e524a6a8a9085142",
+      "asset_id": "phi-database",
+      "shared_keys": [
+        "database.encryption",
+        "database.encryption.require_ssl",
+        "database.kind"
+      ],
+      "headline_finding_id": "sha256:2fb1907cd3250569",
+      "member_finding_ids": [
+        "sha256:2fb1907cd3250569"
+      ],
+      "consolidated_score": 75,
+      "consolidated_blast_radius": 1
+    }
+  ],
   "top_exposures": [
     {
       "finding_index": 0,
@@ -145,7 +162,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e75fb9b105c8552f0ab8fcae488af7655933cf1a",
+      "head_commit": "c1c45531ee9c4f709d5c08d5f98701a6ebb54603",
       "dirty": false
     }
   }

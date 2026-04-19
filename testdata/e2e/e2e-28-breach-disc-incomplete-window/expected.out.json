@@ -65,6 +65,19 @@
       }
     }
   ],
+  "issues": [
+    {
+      "issue_id": "sha256:8f6f6c9b92ce88f1",
+      "asset_id": "res:aws:s3:bucket:recurring-bucket",
+      "shared_keys": [],
+      "headline_finding_id": "sha256:48f82fbfef4ef963",
+      "member_finding_ids": [
+        "sha256:48f82fbfef4ef963"
+      ],
+      "consolidated_score": 10,
+      "consolidated_blast_radius": 1
+    }
+  ],
   "top_exposures": [
     {
       "finding_index": 0,
@@ -91,7 +104,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "5462430d5c673db65ab5f0411af24493edea5d9d",
+      "head_commit": "c1c45531ee9c4f709d5c08d5f98701a6ebb54603",
       "dirty": false
     }
   }

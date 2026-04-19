@@ -146,6 +146,22 @@
       ]
     }
   ],
+  "issues": [
+    {
+      "issue_id": "sha256:054212dd0b41ee39",
+      "asset_id": "grnhse-marketing-site-assets",
+      "shared_keys": [
+        "storage.access",
+        "storage.access.public_read"
+      ],
+      "headline_finding_id": "sha256:86fec6a4d45bfbe6",
+      "member_finding_ids": [
+        "sha256:86fec6a4d45bfbe6"
+      ],
+      "consolidated_score": 200,
+      "consolidated_blast_radius": 1
+    }
+  ],
   "remediation_groups": [
     {
       "asset_id": "grnhse-marketing-site-assets",
@@ -216,7 +232,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e75fb9b105c8552f0ab8fcae488af7655933cf1a",
+      "head_commit": "c1c45531ee9c4f709d5c08d5f98701a6ebb54603",
       "dirty": false
     }
   }

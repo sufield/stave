@@ -37,6 +37,7 @@ func (w *FindingWriter) MarshalFindings(enriched *appcontracts.EnrichedResult) (
 	}
 
 	remFindings := toRemediationFindings(enriched.Findings)
+	w.writeIssues(d, &result)
 	w.writeViolationsFromEnriched(d, &result, remFindings)
 	w.writeChainFindings(d, &result)
 	w.writeAttackStageSummary(d, &result)
@@ -67,7 +68,11 @@ func (w *FindingWriter) writeHeader(d *drawer, result *evaluation.ComplianceRepo
 	d.ln("-------")
 	d.f("  Assets evaluated:    %d\n", result.Summary.TotalAssets)
 	d.f("  Attack surface:      %d\n", result.Summary.ExposedResources)
-	d.f("  Violations:          %d\n\n", result.Summary.Violations)
+	d.f("  Violations:          %d\n", result.Summary.Violations)
+	if len(result.Issues) > 0 {
+		d.f("  Issues (consolidated): %d\n", len(result.Issues))
+	}
+	d.f("\n")
 }
 
 func (w *FindingWriter) writeNoViolationsSummary(d *drawer) {
@@ -266,6 +271,63 @@ func writeFindingEvidenceContext(d *drawer, f *remediation.Finding) {
 	if f.Evidence.TemporalRisk != "" {
 		d.f("     Why now:      %s\n", f.Evidence.TemporalRisk)
 	}
+}
+
+// writeIssues renders the Issues section — consolidated view of
+// findings sharing a root-cause signal per asset. Emitted ahead of
+// the findings list so readers see the reduced triage set first;
+// per-control detail stays in the findings list below. See
+// docs/product/metrics.md § Metric 2.
+func (w *FindingWriter) writeIssues(d *drawer, result *evaluation.ComplianceReport) {
+	issues := result.Issues
+	if len(issues) == 0 {
+		return
+	}
+	// Skip when every Issue is a singleton — there's nothing consolidated
+	// to show and the findings list below carries the same information.
+	anyMulti := false
+	for i := range issues {
+		if len(issues[i].MemberFindingIDs) > 1 {
+			anyMulti = true
+			break
+		}
+	}
+	if !anyMulti {
+		return
+	}
+
+	d.f("\nIssues (consolidated by shared root cause)")
+	d.f("\n------------------------------------------\n")
+	for i := range issues {
+		iss := &issues[i]
+		d.f("\n%d. %s  (%d %s)\n", i+1, iss.AssetID, len(iss.MemberFindingIDs), pluralize(len(iss.MemberFindingIDs), "finding", "findings"))
+		d.f("   Score: %.1f\n", iss.ConsolidatedScore)
+		d.f("   Root cause: %s\n", strings.Join(iss.SharedKeys, ", "))
+		d.f("   Members:\n")
+		for _, fid := range iss.MemberFindingIDs {
+			if cid, aid, ok := lookupControlForFindingID(result.Findings, fid); ok {
+				d.f("     - %s (%s)\n", cid, aid)
+			} else {
+				d.f("     - %s\n", fid)
+			}
+		}
+	}
+}
+
+func pluralize(n int, singular, plural string) string {
+	if n == 1 {
+		return singular
+	}
+	return plural
+}
+
+func lookupControlForFindingID(findings []evaluation.Finding, fid string) (string, string, bool) {
+	for i := range findings {
+		if findings[i].FindingID == fid {
+			return string(findings[i].ControlID), string(findings[i].AssetID), true
+		}
+	}
+	return "", "", false
 }
 
 // writeFindingReasoning renders the inline reasoning trace — the

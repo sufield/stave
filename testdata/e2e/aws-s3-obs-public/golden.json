@@ -1310,6 +1310,105 @@
       ]
     }
   ],
+  "issues": [
+    {
+      "issue_id": "sha256:93934249f4b5e78a",
+      "asset_id": "public-test-bucket",
+      "shared_keys": [
+        "storage.access",
+        "storage.access.has_ip_condition",
+        "storage.access.has_vpc_condition",
+        "storage.access.public_read"
+      ],
+      "headline_finding_id": "sha256:a43a2ae5ed908e4d",
+      "member_finding_ids": [
+        "sha256:4deaa2ba101afbc5",
+        "sha256:a43a2ae5ed908e4d"
+      ],
+      "consolidated_score": 200,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:02538f1e1085aac2",
+      "asset_id": "public-test-bucket",
+      "shared_keys": [
+        "exposure_source",
+        "protected_prefix"
+      ],
+      "headline_finding_id": "sha256:3ce8171b2640244e",
+      "member_finding_ids": [
+        "sha256:3ce8171b2640244e",
+        "sha256:3ce8171b2640244e",
+        "sha256:3ce8171b2640244e",
+        "sha256:3ce8171b2640244e"
+      ],
+      "consolidated_score": 150,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:0a96ba4d3876668d",
+      "asset_id": "public-test-bucket",
+      "shared_keys": [
+        "storage.controls.public_access_block",
+        "storage.controls.public_access_block.block_public_acls",
+        "storage.controls.public_access_block.block_public_policy",
+        "storage.controls.public_access_block.ignore_public_acls",
+        "storage.controls.public_access_block.restrict_public_buckets"
+      ],
+      "headline_finding_id": "sha256:96f5d0e38950552e",
+      "member_finding_ids": [
+        "sha256:184e616d42d418ff",
+        "sha256:5162c97d09aac8a6",
+        "sha256:96f5d0e38950552e",
+        "sha256:c54e72c5a695247a"
+      ],
+      "consolidated_score": 75,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:262cfd9371f56a08",
+      "asset_id": "public-test-bucket",
+      "shared_keys": [
+        "storage.versioning",
+        "storage.versioning.enabled",
+        "storage.versioning.mfa_delete_enabled"
+      ],
+      "headline_finding_id": "sha256:8df0e432ac4c38e4",
+      "member_finding_ids": [
+        "sha256:8df0e432ac4c38e4"
+      ],
+      "consolidated_score": 75,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:db7d5864444ee98e",
+      "asset_id": "public-test-bucket",
+      "shared_keys": [
+        "storage.controls",
+        "storage.controls.account_public_access_fully_blocked"
+      ],
+      "headline_finding_id": "sha256:c600c7fe517e8f5d",
+      "member_finding_ids": [
+        "sha256:c600c7fe517e8f5d"
+      ],
+      "consolidated_score": 75,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:ec373b429b73814f",
+      "asset_id": "public-test-bucket",
+      "shared_keys": [
+        "storage.object_ownership",
+        "storage.object_ownership.rule"
+      ],
+      "headline_finding_id": "sha256:377505bf614ff60b",
+      "member_finding_ids": [
+        "sha256:377505bf614ff60b"
+      ],
+      "consolidated_score": 75,
+      "consolidated_blast_radius": 1
+    }
+  ],
   "remediation_groups": [
     {
       "asset_id": "public-test-bucket",

@@ -206,6 +206,34 @@
       ]
     }
   ],
+  "issues": [
+    {
+      "issue_id": "sha256:36bf2ae8d67d5efd",
+      "asset_id": "mrap-bucket",
+      "shared_keys": [
+        "storage.mrap_policy_is_public"
+      ],
+      "headline_finding_id": "sha256:4dc192f371721197",
+      "member_finding_ids": [
+        "sha256:4dc192f371721197"
+      ],
+      "consolidated_score": 200,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:39a55775082a5c89",
+      "asset_id": "mrap-bucket",
+      "shared_keys": [
+        "storage.mrap_public_access_blocked"
+      ],
+      "headline_finding_id": "sha256:99e24f781f3cd3ad",
+      "member_finding_ids": [
+        "sha256:99e24f781f3cd3ad"
+      ],
+      "consolidated_score": 200,
+      "consolidated_blast_radius": 1
+    }
+  ],
   "top_exposures": [
     {
       "finding_index": 0,
@@ -247,7 +275,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e75fb9b105c8552f0ab8fcae488af7655933cf1a",
+      "head_commit": "c1c45531ee9c4f709d5c08d5f98701a6ebb54603",
       "dirty": false
     }
   }

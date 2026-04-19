@@ -40,6 +40,29 @@ func (w *FindingWriter) MarshalFindings(enriched *appcontracts.EnrichedResult) (
 	rules, ruleIndex := buildRules(remFindings)
 	results := buildResults(remFindings, ruleIndex)
 
+	// Annotate each SARIF result with its Issue fingerprint so
+	// downstream consumers can reconstruct the consolidated view.
+	// See docs/product/metrics.md § Metric 2.
+	if len(enriched.Result.Issues) > 0 {
+		fidToIssue := make(map[string]string, len(remFindings))
+		for _, iss := range enriched.Result.Issues {
+			for _, fid := range iss.MemberFindingIDs {
+				fidToIssue[fid] = iss.IssueID
+			}
+		}
+		for i := range results {
+			if i >= len(remFindings) {
+				break
+			}
+			if issueID, ok := fidToIssue[remFindings[i].FindingID]; ok {
+				if results[i].PartialFingerprints == nil {
+					results[i].PartialFingerprints = map[string]string{}
+				}
+				results[i].PartialFingerprints["stave/issue_id"] = issueID
+			}
+		}
+	}
+
 	report := sarifReport{
 		Version: "2.1.0",
 		Schema:  "https://docs.oasis-open.org/sarif/sarif/v2.1.0/cos02/schemas/sarif-schema-2.1.0.json",

@@ -112,6 +112,22 @@
       ]
     }
   ],
+  "issues": [
+    {
+      "issue_id": "sha256:de9d90648ffb0aa5",
+      "asset_id": "a2.bime.io-cname",
+      "shared_keys": [
+        "dns.target_exists",
+        "dns.target_owned"
+      ],
+      "headline_finding_id": "sha256:3cbe0e3478b4c1c8",
+      "member_finding_ids": [
+        "sha256:3cbe0e3478b4c1c8"
+      ],
+      "consolidated_score": 200,
+      "consolidated_blast_radius": 1
+    }
+  ],
   "top_exposures": [
     {
       "finding_index": 0,
@@ -138,7 +154,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e75fb9b105c8552f0ab8fcae488af7655933cf1a",
+      "head_commit": "c1c45531ee9c4f709d5c08d5f98701a6ebb54603",
       "dirty": false
     }
   }

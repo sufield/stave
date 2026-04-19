@@ -28,6 +28,7 @@ func BuildAssessmentFromEnriched(enriched *appcontracts.EnrichedResult) *report.
 		ChainFindings:        enriched.Result.ChainFindings,
 		AttackStageSummary:   enriched.Result.AttackStageSummary,
 		TopExposures:         enriched.Result.TopExposures,
+		Issues:               enriched.Result.Issues,
 	})
 	out.Extensions = enriched.Result.Metadata.ToExtensions()
 	h := crypto.NewHasher()

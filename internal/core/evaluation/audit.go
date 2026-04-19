@@ -251,6 +251,7 @@ type ComplianceReport struct {
 	SecurityState        SecurityState                `json:"security_state"`
 	RiskSignals          risk.ThresholdItems          `json:"risk_signals,omitempty"`
 	Findings             []Finding                    `json:"findings"`
+	Issues               []Issue                      `json:"issues,omitempty"`
 	ChainFindings        []risk.CompoundFinding       `json:"chain_findings,omitempty"`
 	AttackStageSummary   map[string]string            `json:"attack_stage_summary,omitempty"`
 	TopExposures         []risk.ExposureRank          `json:"top_exposures,omitempty"`

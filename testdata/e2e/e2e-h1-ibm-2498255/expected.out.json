@@ -146,6 +146,22 @@
       ]
     }
   ],
+  "issues": [
+    {
+      "issue_id": "sha256:30778cddba458dc5",
+      "asset_id": "apptio-endpoint-ref-1",
+      "shared_keys": [
+        "s3_ref.bucket_exists",
+        "s3_ref.bucket_owned"
+      ],
+      "headline_finding_id": "sha256:fcb9a57f38726853",
+      "member_finding_ids": [
+        "sha256:fcb9a57f38726853"
+      ],
+      "consolidated_score": 600,
+      "consolidated_blast_radius": 1
+    }
+  ],
   "remediation_groups": [
     {
       "asset_id": "apptio-endpoint-ref-1",
@@ -216,7 +232,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e75fb9b105c8552f0ab8fcae488af7655933cf1a",
+      "head_commit": "c1c45531ee9c4f709d5c08d5f98701a6ebb54603",
       "dirty": false
     }
   }

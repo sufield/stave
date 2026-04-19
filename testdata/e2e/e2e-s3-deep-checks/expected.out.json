@@ -686,6 +686,106 @@
       ]
     }
   ],
+  "issues": [
+    {
+      "issue_id": "sha256:d9c86e62f54ab81e",
+      "asset_id": "vuln-public-write",
+      "shared_keys": [
+        "storage.access",
+        "storage.access.public_write"
+      ],
+      "headline_finding_id": "sha256:67a0c2180e432109",
+      "member_finding_ids": [
+        "sha256:67a0c2180e432109"
+      ],
+      "consolidated_score": 200,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:0421f893c32aec7e",
+      "asset_id": "vuln-wildcard-policy",
+      "shared_keys": [
+        "storage.access",
+        "storage.access.has_wildcard_principal"
+      ],
+      "headline_finding_id": "sha256:39aa8d4a21c81d37",
+      "member_finding_ids": [
+        "sha256:39aa8d4a21c81d37"
+      ],
+      "consolidated_score": 150,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:3947f01adca0f9b7",
+      "asset_id": "vuln-cross-account",
+      "shared_keys": [
+        "storage.access",
+        "storage.access.external_account_ids"
+      ],
+      "headline_finding_id": "sha256:447b517eb02e207e",
+      "member_finding_ids": [
+        "sha256:447b517eb02e207e"
+      ],
+      "consolidated_score": 75,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:5b7c88584f1dc965",
+      "asset_id": "vuln-no-encryption",
+      "shared_keys": [
+        "storage.encryption",
+        "storage.encryption.at_rest_enabled"
+      ],
+      "headline_finding_id": "sha256:57cd3c51cb7f4bf1",
+      "member_finding_ids": [
+        "sha256:57cd3c51cb7f4bf1"
+      ],
+      "consolidated_score": 75,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:3fada32a4de4a946",
+      "asset_id": "vuln-no-https",
+      "shared_keys": [
+        "storage.encryption",
+        "storage.encryption.in_transit_enforced"
+      ],
+      "headline_finding_id": "sha256:18b53853355a91aa",
+      "member_finding_ids": [
+        "sha256:18b53853355a91aa"
+      ],
+      "consolidated_score": 75,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:465c05cc64c70a7f",
+      "asset_id": "vuln-no-logging",
+      "shared_keys": [
+        "storage.logging",
+        "storage.logging.enabled"
+      ],
+      "headline_finding_id": "sha256:68d3599e7b239cd6",
+      "member_finding_ids": [
+        "sha256:68d3599e7b239cd6"
+      ],
+      "consolidated_score": 75,
+      "consolidated_blast_radius": 1.5
+    },
+    {
+      "issue_id": "sha256:0a1ce63c04e7e282",
+      "asset_id": "vuln-no-versioning",
+      "shared_keys": [
+        "storage.versioning",
+        "storage.versioning.enabled"
+      ],
+      "headline_finding_id": "sha256:56aadad096a67670",
+      "member_finding_ids": [
+        "sha256:56aadad096a67670"
+      ],
+      "consolidated_score": 50,
+      "consolidated_blast_radius": 1
+    }
+  ],
   "remediation_groups": [
     {
       "asset_id": "vuln-public-write",
@@ -846,7 +946,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e75fb9b105c8552f0ab8fcae488af7655933cf1a",
+      "head_commit": "c1c45531ee9c4f709d5c08d5f98701a6ebb54603",
       "dirty": false
     }
   }

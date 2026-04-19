@@ -235,6 +235,42 @@
       ]
     }
   ],
+  "issues": [
+    {
+      "issue_id": "sha256:e563c3fcfc29f020",
+      "asset_id": "phi-bucket-aes256",
+      "shared_keys": [
+        "storage.encryption",
+        "storage.encryption.algorithm",
+        "storage.encryption.kms_key_id",
+        "storage.tags",
+        "storage.tags.data-classification"
+      ],
+      "headline_finding_id": "sha256:253091218eb6daa8",
+      "member_finding_ids": [
+        "sha256:253091218eb6daa8"
+      ],
+      "consolidated_score": 75,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:d3291c16b9424ecd",
+      "asset_id": "phi-bucket-no-config",
+      "shared_keys": [
+        "storage.encryption",
+        "storage.encryption.algorithm",
+        "storage.encryption.kms_key_id",
+        "storage.tags",
+        "storage.tags.data-classification"
+      ],
+      "headline_finding_id": "sha256:fcc6bceefefac3c7",
+      "member_finding_ids": [
+        "sha256:fcc6bceefefac3c7"
+      ],
+      "consolidated_score": 75,
+      "consolidated_blast_radius": 1
+    }
+  ],
   "top_exposures": [
     {
       "finding_index": 0,
@@ -276,7 +312,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e75fb9b105c8552f0ab8fcae488af7655933cf1a",
+      "head_commit": "c1c45531ee9c4f709d5c08d5f98701a6ebb54603",
       "dirty": false
     }
   }

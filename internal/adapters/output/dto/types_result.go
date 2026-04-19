@@ -53,6 +53,17 @@ type GitMetadataDTO struct {
 	Modified []string `json:"modified_paths,omitempty"`
 }
 
+// IssueDTO mirrors evaluation.Issue for JSON output.
+type IssueDTO struct {
+	IssueID                 string   `json:"issue_id"`
+	AssetID                 string   `json:"asset_id"`
+	SharedKeys              []string `json:"shared_keys"`
+	HeadlineFindingID       string   `json:"headline_finding_id"`
+	MemberFindingIDs        []string `json:"member_finding_ids"`
+	ConsolidatedScore       float64  `json:"consolidated_score"`
+	ConsolidatedBlastRadius float64  `json:"consolidated_blast_radius"`
+}
+
 // ResultDTO is the top-level evaluation output envelope content.
 type ResultDTO struct {
 	SchemaVersion     kernel.Schema            `json:"schema_version"`
@@ -62,6 +73,7 @@ type ResultDTO struct {
 	SecurityState     evaluation.SecurityState `json:"status"`
 	RiskSignals       []AtRiskItemDTO          `json:"risk_signals,omitempty"`
 	Findings          []FindingDTO             `json:"findings"`
+	Issues            []IssueDTO               `json:"issues,omitempty"`
 	ExceptedFindings  []ExceptedFindingDTO     `json:"excepted_findings,omitempty"`
 	RemediationGroups []RemediationGroupDTO    `json:"remediation_groups,omitempty"`
 	SkippedControls   []SkippedControlDTO      `json:"skipped_controls,omitempty"`

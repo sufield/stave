@@ -146,6 +146,22 @@
       ]
     }
   ],
+  "issues": [
+    {
+      "issue_id": "sha256:f9aed81f0404353e",
+      "asset_id": "my-project-public-bucket",
+      "shared_keys": [
+        "storage.access",
+        "storage.access.public_read"
+      ],
+      "headline_finding_id": "sha256:35117df1ab0a73d3",
+      "member_finding_ids": [
+        "sha256:35117df1ab0a73d3"
+      ],
+      "consolidated_score": 100,
+      "consolidated_blast_radius": 1
+    }
+  ],
   "remediation_groups": [
     {
       "asset_id": "my-project-public-bucket",
@@ -216,7 +232,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e75fb9b105c8552f0ab8fcae488af7655933cf1a",
+      "head_commit": "c1c45531ee9c4f709d5c08d5f98701a6ebb54603",
       "dirty": false
     }
   }

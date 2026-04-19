@@ -1,6 +1,7 @@
 package dto
 
 import (
+	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/report"
 )
 
@@ -14,6 +15,7 @@ func FromEvaluation(e *report.Assessment) ResultDTO {
 		SecurityState:     e.Status,
 		RiskSignals:       fromAtRiskItems(e.RiskSignals),
 		Findings:          fromFindings(e.Findings),
+		Issues:            fromIssues(e.Issues),
 		ExceptedFindings:  fromExceptedFindings(e.ExceptedFindings),
 		RemediationGroups: fromRemediationGroups(e.RemediationGroups),
 		SkippedControls:   fromSkippedControls(e.SkippedControls),
@@ -21,6 +23,26 @@ func FromEvaluation(e *report.Assessment) ResultDTO {
 		TopExposures:      e.TopExposures,
 		Extensions:        fromExtensions(e.Extensions),
 	}
+}
+
+// fromIssues converts evaluation.Issue values into the DTO shape.
+func fromIssues(is []evaluation.Issue) []IssueDTO {
+	if len(is) == 0 {
+		return nil
+	}
+	out := make([]IssueDTO, len(is))
+	for i, iss := range is {
+		out[i] = IssueDTO{
+			IssueID:                 iss.IssueID,
+			AssetID:                 string(iss.AssetID),
+			SharedKeys:              iss.SharedKeys,
+			HeadlineFindingID:       iss.HeadlineFindingID,
+			MemberFindingIDs:        iss.MemberFindingIDs,
+			ConsolidatedScore:       iss.ConsolidatedScore,
+			ConsolidatedBlastRadius: iss.ConsolidatedBlastRadius,
+		}
+	}
+	return out
 }
 
 func mapSlice[T, U any](s []T, f func(T) U) []U {

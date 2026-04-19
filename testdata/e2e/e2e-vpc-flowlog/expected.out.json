@@ -117,6 +117,23 @@
       ]
     }
   ],
+  "issues": [
+    {
+      "issue_id": "sha256:64c339ba4b6dc329",
+      "asset_id": "vpc-test-001",
+      "shared_keys": [
+        "network.flow_log",
+        "network.flow_log.enabled",
+        "network.kind"
+      ],
+      "headline_finding_id": "sha256:f78119ae6823a874",
+      "member_finding_ids": [
+        "sha256:f78119ae6823a874"
+      ],
+      "consolidated_score": 150,
+      "consolidated_blast_radius": 2
+    }
+  ],
   "top_exposures": [
     {
       "finding_index": 0,
@@ -143,7 +160,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e75fb9b105c8552f0ab8fcae488af7655933cf1a",
+      "head_commit": "c1c45531ee9c4f709d5c08d5f98701a6ebb54603",
       "dirty": false
     }
   }

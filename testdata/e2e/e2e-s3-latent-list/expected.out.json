@@ -147,6 +147,22 @@
       ]
     }
   ],
+  "issues": [
+    {
+      "issue_id": "sha256:f21b43faa9882e3b",
+      "asset_id": "latent-listable-bucket",
+      "shared_keys": [
+        "storage.access",
+        "storage.access.latent_public_list"
+      ],
+      "headline_finding_id": "sha256:6a2dc24c7add828f",
+      "member_finding_ids": [
+        "sha256:6a2dc24c7add828f"
+      ],
+      "consolidated_score": 200,
+      "consolidated_blast_radius": 1
+    }
+  ],
   "remediation_groups": [
     {
       "asset_id": "latent-listable-bucket",
@@ -217,7 +233,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e75fb9b105c8552f0ab8fcae488af7655933cf1a",
+      "head_commit": "c1c45531ee9c4f709d5c08d5f98701a6ebb54603",
       "dirty": false
     }
   }

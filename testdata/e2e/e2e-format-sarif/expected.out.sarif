@@ -48,6 +48,9 @@
               }
             }
           ],
+          "partialFingerprints": {
+            "stave/issue_id": "sha256:c3097f841f2213c3"
+          },
           "properties": {
             "reasoning_trace": [
               {

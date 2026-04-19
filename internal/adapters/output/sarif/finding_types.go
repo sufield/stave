@@ -38,10 +38,11 @@ type sarifResult struct {
 	Message   sarifMessage     `json:"message"`
 	Locations []sarifLocation  `json:"locations"`
 	// Suggestions are rendered using SARIF's "fixes" field for compatibility.
-	Suggestions   []sarifSuggestion  `json:"fixes,omitempty"`
-	BaselineState string             `json:"baselineState,omitempty"`
-	Suppressions  []sarifSuppression `json:"suppressions,omitempty"`
-	Properties    map[string]any     `json:"properties,omitempty"`
+	Suggestions         []sarifSuggestion  `json:"fixes,omitempty"`
+	BaselineState       string             `json:"baselineState,omitempty"`
+	Suppressions        []sarifSuppression `json:"suppressions,omitempty"`
+	PartialFingerprints map[string]string  `json:"partialFingerprints,omitempty"`
+	Properties          map[string]any     `json:"properties,omitempty"`
 }
 
 type sarifSuppression struct {

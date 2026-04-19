@@ -147,27 +147,53 @@ believing output that repeats. Dedup by root cause collapses the
 PAB-umbrella-plus-four-sub-flags case to one issue with five
 contributing signals, not five distinct problems.
 
-**Baseline.** PARTIAL. `remediation.BuildGroups` at
-`internal/core/evaluation/remediation/grouping.go:51` clusters
-findings by `(asset_id, actions_fingerprint)`. The text writer
-surfaces the result under a "Remediation groups" section. Two
-limitations: (1) `findings[]` in JSON output still lists every
-finding individually — the grouping is a view, not a replacement;
-(2) the dedup key is remediation-action equality, not root-cause
-equality. The PAB umbrella and its four sub-flag siblings produce
-different `RemediationPlan.Actions` (each has its own one-command
-fix), so the action-fingerprint key separates them — they do not
-currently dedup even though they share a root cause.
+**Baseline.** PARTIAL. Root-cause dedup via
+`evaluation.BuildIssues` at
+`internal/core/evaluation/issue.go` now emits `issues[]` alongside
+`findings[]` in `out.v0.1` JSON output; a new Issues section leads
+the text report; SARIF results carry
+`partialFingerprints.stave/issue_id` for post-processing
+reconstruction. The dedup rule is shared
+predicate-consumed observation fields per asset, union-find with
+transitive closure, derived from each finding's `ReasoningTrace` as
+shipped in the traceability iteration. Two refinements to the
+literal intersection rule ship with this baseline: (1) kind-
+discriminator fields (`storage.kind`, `compute.kind`,
+`identity.kind`, `cryptography.kind`, `container.kind`,
+`backup.kind`) are excluded from the dedup key set to prevent every
+co-asset finding collapsing into one Issue; (2) each ObservationKey
+contributes both itself and its parent namespace (all but last
+segment, with ≥2-segment parents) so sibling sub-field findings
+under the same namespace merge. `remediation.BuildGroups` continues
+as a distinct secondary view of the same findings set by
+remediation-action equality.
 
-**Target.** A root-cause dedup key keyed on shared
-predicate-consumed observation fields per asset. Controls annotate
-their predicate-consumed fields explicitly (either derived from the
-predicate AST or declared in a control-level `root_cause_fields:`
-list). Dedup logic groups findings whose root-cause field sets
-overlap on the same asset. Output emits an `issues[]` parallel
-view; each issue names the root-cause field set, the asset, and the
-contributing findings. Remediation-action grouping
-(`BuildGroups`) continues as a distinct secondary view.
+Known limitations:
+
+- The PAB umbrella + sub-flag case partially consolidates: 4
+  sub-flag findings merge via their shared `storage.public_access_block`
+  namespace, but the umbrella (`storage.public_access_fully_blocked`)
+  remains a separate Issue because its path has no ≥2-segment shared
+  prefix with the sub-flags. Semantic grouping across derived-field
+  boundaries is future work.
+- Coincidental namespace overlap is not yet distinguished from
+  meaningful overlap. If two unrelated controls on the same asset
+  both read fields under a common namespace, they merge. No evidence
+  yet that this surfaces in practice; will flag if it does.
+- Discriminator exclusion is a hardcoded list; future iteration may
+  drive it from control metadata.
+
+**Target.** Remaining work for this metric:
+
+- Cross-derived-field consolidation (PAB umbrella + sub-flags merge
+  into one Issue). Requires either semantic annotation on controls
+  that share a root cause expressed via different observation fields,
+  or a contract-level derivation layer linking related fields.
+- Driving discriminator exclusion from control metadata rather than
+  a hardcoded list.
+- Issue-level remediation consolidation — currently each member
+  carries its own remediation; an Issue-level unified remediation
+  summary is an open design question.
 
 **Improvement signal.**
 - PAB-umbrella + 4 sub-flags on the same bucket produces 1 issue

@@ -1094,6 +1094,100 @@
       ]
     }
   ],
+  "issues": [
+    {
+      "issue_id": "sha256:51217ad41d32ff58",
+      "asset_id": "shopify-owned-1",
+      "shared_keys": [
+        "storage.access",
+        "storage.access.public_read",
+        "storage.access.read_via_resource"
+      ],
+      "headline_finding_id": "sha256:5414a7d05efd5406",
+      "member_finding_ids": [
+        "sha256:5414a7d05efd5406",
+        "sha256:9885b41f3e8e5b79"
+      ],
+      "consolidated_score": 1000,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:880179e3a92510df",
+      "asset_id": "shopify-owned-2",
+      "shared_keys": [
+        "storage.access",
+        "storage.access.public_read",
+        "storage.access.read_via_resource"
+      ],
+      "headline_finding_id": "sha256:482a1ac6937bd145",
+      "member_finding_ids": [
+        "sha256:482a1ac6937bd145",
+        "sha256:e9b8512b9fed396b"
+      ],
+      "consolidated_score": 1000,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:154e2ecfd035558d",
+      "asset_id": "shopify-writeable-1",
+      "shared_keys": [
+        "storage.access",
+        "storage.access.public_read",
+        "storage.access.public_write",
+        "storage.access.read_via_resource"
+      ],
+      "headline_finding_id": "sha256:0b92ba3d2504b8d5",
+      "member_finding_ids": [
+        "sha256:0b92ba3d2504b8d5",
+        "sha256:94fd30ba678b6000",
+        "sha256:afd4d52b25be3baa"
+      ],
+      "consolidated_score": 1000,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:94beec8e6c7d048b",
+      "asset_id": "shopify-owned-1",
+      "shared_keys": [
+        "storage.controls",
+        "storage.controls.public_access_fully_blocked"
+      ],
+      "headline_finding_id": "sha256:d81c1dac4e7e312a",
+      "member_finding_ids": [
+        "sha256:d81c1dac4e7e312a"
+      ],
+      "consolidated_score": 375,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:a7cb459e48026ab7",
+      "asset_id": "shopify-owned-2",
+      "shared_keys": [
+        "storage.controls",
+        "storage.controls.public_access_fully_blocked"
+      ],
+      "headline_finding_id": "sha256:748776a78c800b08",
+      "member_finding_ids": [
+        "sha256:748776a78c800b08"
+      ],
+      "consolidated_score": 375,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:f91e57a9516de88a",
+      "asset_id": "shopify-writeable-1",
+      "shared_keys": [
+        "storage.controls",
+        "storage.controls.public_access_fully_blocked"
+      ],
+      "headline_finding_id": "sha256:d14260350514a42e",
+      "member_finding_ids": [
+        "sha256:d14260350514a42e"
+      ],
+      "consolidated_score": 375,
+      "consolidated_blast_radius": 1
+    }
+  ],
   "remediation_groups": [
     {
       "asset_id": "shopify-owned-1",
@@ -1387,7 +1481,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e75fb9b105c8552f0ab8fcae488af7655933cf1a",
+      "head_commit": "c1c45531ee9c4f709d5c08d5f98701a6ebb54603",
       "dirty": false
     }
   }

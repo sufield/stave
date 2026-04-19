@@ -317,6 +317,58 @@
       ]
     }
   ],
+  "issues": [
+    {
+      "issue_id": "sha256:44d5b8d32e62b4d5",
+      "asset_id": "compliance-no-lock",
+      "shared_keys": [
+        "storage.object_lock",
+        "storage.object_lock.enabled",
+        "storage.tags",
+        "storage.tags.compliance"
+      ],
+      "headline_finding_id": "sha256:b6d05ff1963bda95",
+      "member_finding_ids": [
+        "sha256:b6d05ff1963bda95"
+      ],
+      "consolidated_score": 50,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:a31a706501003634",
+      "asset_id": "phi-governance-lock",
+      "shared_keys": [
+        "storage.object_lock",
+        "storage.object_lock.enabled",
+        "storage.object_lock.mode",
+        "storage.tags",
+        "storage.tags.data-classification"
+      ],
+      "headline_finding_id": "sha256:48c4da7865eb8989",
+      "member_finding_ids": [
+        "sha256:48c4da7865eb8989"
+      ],
+      "consolidated_score": 50,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:c32300ee66797fc4",
+      "asset_id": "phi-short-retention",
+      "shared_keys": [
+        "storage.object_lock",
+        "storage.object_lock.enabled",
+        "storage.object_lock.retention_days",
+        "storage.tags",
+        "storage.tags.data-classification"
+      ],
+      "headline_finding_id": "sha256:72a8a7272fee0dad",
+      "member_finding_ids": [
+        "sha256:72a8a7272fee0dad"
+      ],
+      "consolidated_score": 50,
+      "consolidated_blast_radius": 1
+    }
+  ],
   "top_exposures": [
     {
       "finding_index": 0,
@@ -373,7 +425,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e75fb9b105c8552f0ab8fcae488af7655933cf1a",
+      "head_commit": "c1c45531ee9c4f709d5c08d5f98701a6ebb54603",
       "dirty": false
     }
   }

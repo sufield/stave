@@ -126,6 +126,23 @@
       ]
     }
   ],
+  "issues": [
+    {
+      "issue_id": "sha256:cafae3acadec2b62",
+      "asset_id": "upload-api-bcm-hk",
+      "shared_keys": [
+        "s3_upload.allowed_key_mode",
+        "s3_upload.operation",
+        "type"
+      ],
+      "headline_finding_id": "sha256:6aad0908e47e6a3c",
+      "member_finding_ids": [
+        "sha256:6aad0908e47e6a3c"
+      ],
+      "consolidated_score": 750,
+      "consolidated_blast_radius": 1
+    }
+  ],
   "top_exposures": [
     {
       "finding_index": 0,
@@ -152,7 +169,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e75fb9b105c8552f0ab8fcae488af7655933cf1a",
+      "head_commit": "c1c45531ee9c4f709d5c08d5f98701a6ebb54603",
       "dirty": false
     }
   }

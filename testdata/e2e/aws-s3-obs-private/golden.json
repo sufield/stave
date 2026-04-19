@@ -531,6 +531,39 @@
       ]
     }
   ],
+  "issues": [
+    {
+      "issue_id": "sha256:6d3dce2a6bd5ab1c",
+      "asset_id": "private-test-bucket",
+      "shared_keys": [
+        "exposure_source",
+        "protected_prefix"
+      ],
+      "headline_finding_id": "sha256:f7c61bb76d54d7f0",
+      "member_finding_ids": [
+        "sha256:f7c61bb76d54d7f0",
+        "sha256:f7c61bb76d54d7f0",
+        "sha256:f7c61bb76d54d7f0",
+        "sha256:f7c61bb76d54d7f0"
+      ],
+      "consolidated_score": 150,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:ed12de6b5ee08d20",
+      "asset_id": "private-test-bucket",
+      "shared_keys": [
+        "storage.object_ownership",
+        "storage.object_ownership.rule"
+      ],
+      "headline_finding_id": "sha256:3db4f35a105643f4",
+      "member_finding_ids": [
+        "sha256:3db4f35a105643f4"
+      ],
+      "consolidated_score": 75,
+      "consolidated_blast_radius": 1
+    }
+  ],
   "remediation_groups": [
     {
       "asset_id": "private-test-bucket",

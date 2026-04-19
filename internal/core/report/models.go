@@ -35,6 +35,7 @@ type AssessmentRequest struct {
 	ChainFindings        []risk.CompoundFinding
 	AttackStageSummary   map[string]string
 	TopExposures         []risk.ExposureRank
+	Issues               []evaluation.Issue
 	SkippedControls      []evaluation.SkippedControl
 	ExemptedAssets       []asset.ExemptedAsset
 	ExceptedFindings     []evaluation.ExceptedFinding
@@ -53,6 +54,7 @@ type Assessment struct {
 	ChainFindings        []risk.CompoundFinding       `json:"chain_findings,omitempty"`
 	AttackStageSummary   map[string]string            `json:"attack_stage_summary,omitempty"`
 	TopExposures         []risk.ExposureRank          `json:"top_exposures,omitempty"`
+	Issues               []evaluation.Issue           `json:"issues,omitempty"`
 	ExceptedFindings     []evaluation.ExceptedFinding `json:"excepted_findings,omitempty"`
 	AcknowledgedFindings []policy.AcknowledgedFinding `json:"acknowledged_findings,omitempty"`
 	RemediationGroups    []remediation.Group          `json:"remediation_groups,omitempty"`
@@ -75,6 +77,7 @@ func NewAssessment(req AssessmentRequest) *Assessment {
 		ChainFindings:        req.ChainFindings,
 		AttackStageSummary:   req.AttackStageSummary,
 		TopExposures:         req.TopExposures,
+		Issues:               req.Issues,
 		ExceptedFindings:     emptyIfNil(req.ExceptedFindings),
 		AcknowledgedFindings: emptyIfNil(req.AcknowledgedFindings),
 		SkippedControls:      emptyIfNil(req.SkippedControls),

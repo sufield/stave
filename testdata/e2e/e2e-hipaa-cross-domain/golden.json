@@ -2974,6 +2974,348 @@
       ]
     }
   ],
+  "issues": [
+    {
+      "issue_id": "sha256:fdc3b4aaddddd41b",
+      "asset_id": "main-trail",
+      "shared_keys": [
+        "audit_trail.encryption",
+        "audit_trail.encryption.encrypted",
+        "audit_trail.kind",
+        "audit_trail.log_file_validation_enabled",
+        "audit_trail.multi_region_enabled"
+      ],
+      "headline_finding_id": "sha256:4b8c49734af61142",
+      "member_finding_ids": [
+        "sha256:1bb3180bd93c6975",
+        "sha256:4b8c49734af61142",
+        "sha256:f237d540e872de4d"
+      ],
+      "consolidated_score": 375,
+      "consolidated_blast_radius": 2.5
+    },
+    {
+      "issue_id": "sha256:3d241bf836d2c38a",
+      "asset_id": "config-recorder",
+      "shared_keys": [
+        "compliance.has_active_rules",
+        "compliance.kind",
+        "compliance.recording_enabled"
+      ],
+      "headline_finding_id": "sha256:aa66250e8a1dc01c",
+      "member_finding_ids": [
+        "sha256:aa66250e8a1dc01c",
+        "sha256:c2ed914d02c8ae20"
+      ],
+      "consolidated_score": 281.25,
+      "consolidated_blast_radius": 2.5
+    },
+    {
+      "issue_id": "sha256:bd5eb19786e23e64",
+      "asset_id": "vpc-prod-001",
+      "shared_keys": [
+        "network.flow_log",
+        "network.flow_log.enabled",
+        "network.kind"
+      ],
+      "headline_finding_id": "sha256:81f43f35236b5e56",
+      "member_finding_ids": [
+        "sha256:81f43f35236b5e56"
+      ],
+      "consolidated_score": 225,
+      "consolidated_blast_radius": 2
+    },
+    {
+      "issue_id": "sha256:962f9aa7601dd20a",
+      "asset_id": "aws-account-root",
+      "shared_keys": [
+        "identity.root",
+        "identity.root.has_access_keys",
+        "identity.root.mfa_enabled"
+      ],
+      "headline_finding_id": "sha256:686a676fcb4f9731",
+      "member_finding_ids": [
+        "sha256:686a676fcb4f9731",
+        "sha256:d1659912ae8d6344"
+      ],
+      "consolidated_score": 150,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:67ea1884f309e4dd",
+      "asset_id": "phi-database",
+      "shared_keys": [
+        "database.access",
+        "database.access.multi_az",
+        "database.access.publicly_accessible",
+        "database.backup",
+        "database.backup.enabled",
+        "database.encryption",
+        "database.encryption.storage_encrypted",
+        "database.kind",
+        "database.logging",
+        "database.logging.audit_log_enabled"
+      ],
+      "headline_finding_id": "sha256:6d6e5d5f2078bd42",
+      "member_finding_ids": [
+        "sha256:2653bff61b751ad6",
+        "sha256:6d6e5d5f2078bd42",
+        "sha256:9ac53f47bd4f1f1b",
+        "sha256:c215d91c260588c6",
+        "sha256:d3c473c720840e6d"
+      ],
+      "consolidated_score": 150,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:7ab78dfe04046e86",
+      "asset_id": "alb-phi-api",
+      "shared_keys": [
+        "loadbalancer.encryption",
+        "loadbalancer.encryption.http_to_https_redirect",
+        "loadbalancer.encryption.tls_1_2_or_higher"
+      ],
+      "headline_finding_id": "sha256:571de1d96c48afd6",
+      "member_finding_ids": [
+        "sha256:45813734adb9d32e",
+        "sha256:571de1d96c48afd6"
+      ],
+      "consolidated_score": 75,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:3816d7d4b96ab8ba",
+      "asset_id": "app-logs",
+      "shared_keys": [
+        "log_group.has_retention_policy",
+        "log_group.kind"
+      ],
+      "headline_finding_id": "sha256:801f9bd87a66bd5f",
+      "member_finding_ids": [
+        "sha256:801f9bd87a66bd5f"
+      ],
+      "consolidated_score": 75,
+      "consolidated_blast_radius": 1.5
+    },
+    {
+      "issue_id": "sha256:9b6a2ddd116bcd9e",
+      "asset_id": "backup-phi-database",
+      "shared_keys": [
+        "backup.has_backup"
+      ],
+      "headline_finding_id": "sha256:a52edc7322ea1dde",
+      "member_finding_ids": [
+        "sha256:a52edc7322ea1dde"
+      ],
+      "consolidated_score": 75,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:f2b6425304f73e88",
+      "asset_id": "db-credentials",
+      "shared_keys": [
+        "secret.access",
+        "secret.access.rotation_enabled",
+        "secret.encryption",
+        "secret.encryption.customer_managed_key",
+        "secret.kind"
+      ],
+      "headline_finding_id": "sha256:4faec0c040d11d18",
+      "member_finding_ids": [
+        "sha256:4faec0c040d11d18",
+        "sha256:7ea0b9680c5e0447"
+      ],
+      "consolidated_score": 75,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:c7c0bd1ad33902d5",
+      "asset_id": "i-0abc123def",
+      "shared_keys": [
+        "compute.network",
+        "compute.network.has_public_ip"
+      ],
+      "headline_finding_id": "sha256:3a1554c5a78a5816",
+      "member_finding_ids": [
+        "sha256:3a1554c5a78a5816"
+      ],
+      "consolidated_score": 75,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:ec67278ad7daaa50",
+      "asset_id": "i-0abc123def",
+      "shared_keys": [
+        "compute.encryption",
+        "compute.encryption.ebs_encrypted"
+      ],
+      "headline_finding_id": "sha256:6ecde267626a20de",
+      "member_finding_ids": [
+        "sha256:6ecde267626a20de"
+      ],
+      "consolidated_score": 75,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:65ba1ea70bed7453",
+      "asset_id": "patient-portal",
+      "shared_keys": [
+        "identity.auth",
+        "identity.auth.mfa_enforced"
+      ],
+      "headline_finding_id": "sha256:a73625cd410ebe3c",
+      "member_finding_ids": [
+        "sha256:a73625cd410ebe3c"
+      ],
+      "consolidated_score": 75,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:2feffae280e54145",
+      "asset_id": "phi-alerts",
+      "shared_keys": [
+        "messaging.encryption",
+        "messaging.encryption.encrypted",
+        "messaging.kind"
+      ],
+      "headline_finding_id": "sha256:284126ed74a244f3",
+      "member_finding_ids": [
+        "sha256:284126ed74a244f3"
+      ],
+      "consolidated_score": 75,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:54c08de12863598b",
+      "asset_id": "phi-api",
+      "shared_keys": [
+        "api.encryption",
+        "api.encryption.tls_enforced",
+        "api.kind"
+      ],
+      "headline_finding_id": "sha256:81b8ce81c12cc518",
+      "member_finding_ids": [
+        "sha256:81b8ce81c12cc518"
+      ],
+      "consolidated_score": 75,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:fd28cccf5706cd28",
+      "asset_id": "phi-cmk",
+      "shared_keys": [
+        "cryptography.policy",
+        "cryptography.policy.has_wildcard_principal"
+      ],
+      "headline_finding_id": "sha256:1e9883ff6455c056",
+      "member_finding_ids": [
+        "sha256:1e9883ff6455c056"
+      ],
+      "consolidated_score": 75,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:aff69772d0dd9fb2",
+      "asset_id": "phi-events-table",
+      "shared_keys": [
+        "database.encryption",
+        "database.encryption.sse_type",
+        "database.kind"
+      ],
+      "headline_finding_id": "sha256:57cf047d8c46d33b",
+      "member_finding_ids": [
+        "sha256:57cf047d8c46d33b"
+      ],
+      "consolidated_score": 75,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:d328f3aa6e8c398f",
+      "asset_id": "phi-notifications",
+      "shared_keys": [
+        "messaging.encryption",
+        "messaging.encryption.encrypted",
+        "messaging.kind"
+      ],
+      "headline_finding_id": "sha256:63bc7609a3b16aa7",
+      "member_finding_ids": [
+        "sha256:63bc7609a3b16aa7"
+      ],
+      "consolidated_score": 75,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:1e82264ab74586f3",
+      "asset_id": "session-cache",
+      "shared_keys": [
+        "cache.encryption",
+        "cache.encryption.in_transit_enabled",
+        "cache.kind"
+      ],
+      "headline_finding_id": "sha256:9ba0b33d2248da3a",
+      "member_finding_ids": [
+        "sha256:9ba0b33d2248da3a"
+      ],
+      "consolidated_score": 75,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:c86637b8491d1a30",
+      "asset_id": "alb-phi-api",
+      "shared_keys": [
+        "loadbalancer.logging",
+        "loadbalancer.logging.access_log_enabled"
+      ],
+      "headline_finding_id": "sha256:be85087768aeabce",
+      "member_finding_ids": [
+        "sha256:be85087768aeabce"
+      ],
+      "consolidated_score": 50,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:d7ffaf8105aa01a5",
+      "asset_id": "alb-phi-api",
+      "shared_keys": [
+        "loadbalancer.availability",
+        "loadbalancer.availability.cross_zone_enabled"
+      ],
+      "headline_finding_id": "sha256:0eea80a827ddcfa6",
+      "member_finding_ids": [
+        "sha256:0eea80a827ddcfa6"
+      ],
+      "consolidated_score": 50,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:38fd912e62dd8168",
+      "asset_id": "backup-phi-database",
+      "shared_keys": [
+        "availability.kind",
+        "availability.multi_az"
+      ],
+      "headline_finding_id": "sha256:99ff439877cf27fd",
+      "member_finding_ids": [
+        "sha256:99ff439877cf27fd"
+      ],
+      "consolidated_score": 50,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:4c7fa1c11d0fef04",
+      "asset_id": "backup-phi-database",
+      "shared_keys": [
+        "replication.cross_region_enabled",
+        "replication.kind"
+      ],
+      "headline_finding_id": "sha256:826ab06811b86f5a",
+      "member_finding_ids": [
+        "sha256:826ab06811b86f5a"
+      ],
+      "consolidated_score": 50,
+      "consolidated_blast_radius": 1
+    }
+  ],
   "remediation_groups": [
     {
       "asset_id": "i-0abc123def",

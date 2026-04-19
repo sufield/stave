@@ -247,6 +247,38 @@
       ]
     }
   ],
+  "issues": [
+    {
+      "issue_id": "sha256:1558b47dc626023e",
+      "asset_id": "cdn-bucket",
+      "shared_keys": [
+        "storage.cdn_access",
+        "storage.cdn_access.bucket_policy_grants_cloudfront",
+        "storage.controls",
+        "storage.controls.public_access_fully_blocked"
+      ],
+      "headline_finding_id": "sha256:9c8e6d678102035a",
+      "member_finding_ids": [
+        "sha256:9c8e6d678102035a"
+      ],
+      "consolidated_score": 150,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:1fdb0256278a6be1",
+      "asset_id": "cdn-bucket",
+      "shared_keys": [
+        "storage.cdn_access.cloudfront_oai",
+        "storage.cdn_access.cloudfront_oai.enabled"
+      ],
+      "headline_finding_id": "sha256:cbf48381fc3f897a",
+      "member_finding_ids": [
+        "sha256:cbf48381fc3f897a"
+      ],
+      "consolidated_score": 50,
+      "consolidated_blast_radius": 1
+    }
+  ],
   "remediation_groups": [
     {
       "asset_id": "cdn-bucket",
@@ -332,7 +364,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e75fb9b105c8552f0ab8fcae488af7655933cf1a",
+      "head_commit": "c1c45531ee9c4f709d5c08d5f98701a6ebb54603",
       "dirty": false
     }
   }

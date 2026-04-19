@@ -111,6 +111,21 @@
       ]
     }
   ],
+  "issues": [
+    {
+      "issue_id": "sha256:91ec93e7730021a0",
+      "asset_id": "k8s:ClusterRoleBinding/user-admin-binding",
+      "shared_keys": [
+        "binds_to_cluster_admin"
+      ],
+      "headline_finding_id": "sha256:75ab2c3520481d18",
+      "member_finding_ids": [
+        "sha256:75ab2c3520481d18"
+      ],
+      "consolidated_score": 100,
+      "consolidated_blast_radius": 1
+    }
+  ],
   "exempted_assets": [
     {
       "asset_id": "k8s:ClusterRoleBinding/system-admin-binding",
@@ -149,7 +164,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e75fb9b105c8552f0ab8fcae488af7655933cf1a",
+      "head_commit": "c1c45531ee9c4f709d5c08d5f98701a6ebb54603",
       "dirty": false
     }
   }
