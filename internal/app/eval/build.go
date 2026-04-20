@@ -107,7 +107,7 @@ func BuildDependencies(ctx context.Context, in *BuildDependenciesInput) (BuildDe
 		WithPredicateParser(in.Runtime.PredicateParser),
 		WithCELEvaluator(in.Runtime.CELEvaluator),
 		WithTracer(in.Runtime.Tracer),
-		WithChainDefs(filterResolvedChains(in.Runtime.ChainDefs, preloaded)),
+		WithChainDefs(filterResolvedChains(in.Runtime.ChainDefs, preloaded, in.Logger)),
 		WithSLAConfig(in.Runtime.SLAConfig),
 	}
 	if resolved.ControlSource.Source != "" {
@@ -154,29 +154,51 @@ func resolveOutputWriters(output, stderr io.Writer) (io.Writer, io.Writer) {
 	return output, stderr
 }
 
-// filterResolvedChains returns only chains whose controls are ALL present
-// in the active control set. Chains referencing missing controls (e.g.,
-// excluded by profile filtering) are silently dropped.
-func filterResolvedChains(chains []policy.ChainDefinition, controls []policy.ControlDefinition) []policy.ChainDefinition {
+// filterResolvedChains returns only chains whose controls are ALL
+// present in the active control set. Chains referencing missing
+// controls — e.g. excluded by profile filtering or authored with a
+// typo — are dropped, with each drop logged as a warning so users
+// get feedback instead of silent tolerance. The warning names the
+// chain and every missing reference; a typo surfaces the same way
+// a profile-filter drop does, letting the user distinguish by
+// inspection.
+func filterResolvedChains(chains []policy.ChainDefinition, controls []policy.ControlDefinition, logger *slog.Logger) []policy.ChainDefinition {
 	if len(chains) == 0 {
 		return nil
+	}
+	issues := policy.ValidateChainRefs(chains, controls)
+	if len(issues) > 0 && logger != nil {
+		for _, issue := range issues {
+			missing := make([]string, len(issue.MissingControl))
+			for i, id := range issue.MissingControl {
+				missing[i] = string(id)
+			}
+			logger.Warn("chain dropped: references controls not in the active catalog",
+				"chain", issue.ChainID,
+				"missing_controls", missing,
+			)
+		}
 	}
 	activeIDs := make(map[kernel.ControlID]bool, len(controls))
 	for i := range controls {
 		activeIDs[controls[i].ID] = true
 	}
-	var resolved []policy.ChainDefinition
+	resolved := make([]policy.ChainDefinition, 0, len(chains))
 	for i := range chains {
+		chain := &chains[i]
 		allPresent := true
-		for _, ctlID := range chains[i].ControlIDs {
+		for _, ctlID := range chain.ControlIDs {
 			if !activeIDs[ctlID] {
 				allPresent = false
 				break
 			}
 		}
 		if allPresent {
-			resolved = append(resolved, chains[i])
+			resolved = append(resolved, *chain)
 		}
+	}
+	if len(resolved) == 0 {
+		return nil
 	}
 	return resolved
 }

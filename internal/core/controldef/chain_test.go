@@ -80,6 +80,51 @@ func TestChainDefinition_Validate_InvalidCapability(t *testing.T) {
 	}
 }
 
+func TestValidateChainRefs_AllPresent(t *testing.T) {
+	chains := []ChainDefinition{{
+		ID:         "chain_a",
+		ControlIDs: []kernel.ControlID{"CTL.A.001", "CTL.A.002"},
+	}}
+	catalog := []ControlDefinition{{ID: "CTL.A.001"}, {ID: "CTL.A.002"}}
+	if issues := ValidateChainRefs(chains, catalog); len(issues) != 0 {
+		t.Fatalf("expected no issues, got %+v", issues)
+	}
+}
+
+func TestValidateChainRefs_MissingRefs(t *testing.T) {
+	chains := []ChainDefinition{{
+		ID:         "chain_a",
+		ControlIDs: []kernel.ControlID{"CTL.A.001", "CTL.A.MISSING", "CTL.B.MISSING"},
+	}, {
+		ID:         "chain_b",
+		ControlIDs: []kernel.ControlID{"CTL.A.001"},
+	}}
+	catalog := []ControlDefinition{{ID: "CTL.A.001"}}
+
+	issues := ValidateChainRefs(chains, catalog)
+	if len(issues) != 1 {
+		t.Fatalf("want 1 issue, got %d: %+v", len(issues), issues)
+	}
+	if issues[0].ChainID != "chain_a" {
+		t.Errorf("ChainID: got %q, want %q", issues[0].ChainID, "chain_a")
+	}
+	want := []kernel.ControlID{"CTL.A.MISSING", "CTL.B.MISSING"}
+	if len(issues[0].MissingControl) != len(want) {
+		t.Fatalf("MissingControl length: got %d, want %d", len(issues[0].MissingControl), len(want))
+	}
+	for i, id := range want {
+		if issues[0].MissingControl[i] != id {
+			t.Errorf("MissingControl[%d]: got %q, want %q", i, issues[0].MissingControl[i], id)
+		}
+	}
+}
+
+func TestValidateChainRefs_EmptyInput(t *testing.T) {
+	if issues := ValidateChainRefs(nil, nil); issues != nil {
+		t.Errorf("expected nil on empty input, got %+v", issues)
+	}
+}
+
 func containsStr(s, substr string) bool {
 	return len(s) >= len(substr) && (s == substr || s != "" && containsSubstring(s, substr))
 }

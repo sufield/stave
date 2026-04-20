@@ -1,7 +1,9 @@
 package eval
 
 import (
+	"bytes"
 	"context"
+	"log/slog"
 	"strings"
 	"testing"
 	"time"
@@ -9,6 +11,7 @@ import (
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 type depsObservationRepoStub struct{}
@@ -170,5 +173,54 @@ func TestBuildDependencies_PassesExemptionConfig(t *testing.T) {
 	}
 	if out.Config.ExemptionRules == nil || len(out.Config.ExemptionRules.Assets) != 1 {
 		t.Fatalf("expected exemption config to be passed through, got %#v", out.Config.ExemptionRules)
+	}
+}
+
+// TestFilterResolvedChains_WarnsOnMissingRefs covers the fix for
+// silent-drop tolerance: when a chain references a control not in
+// the active set, the drop must be observable to users.
+func TestFilterResolvedChains_WarnsOnMissingRefs(t *testing.T) {
+	chains := []policy.ChainDefinition{
+		{ID: "kept_chain", ControlIDs: []kernel.ControlID{"CTL.A.001", "CTL.A.002"}},
+		{ID: "dropped_chain", ControlIDs: []kernel.ControlID{"CTL.A.001", "CTL.MISSING.001"}},
+	}
+	controls := []policy.ControlDefinition{{ID: "CTL.A.001"}, {ID: "CTL.A.002"}}
+
+	var buf bytes.Buffer
+	logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelInfo}))
+
+	resolved := filterResolvedChains(chains, controls, logger)
+
+	if len(resolved) != 1 || resolved[0].ID != "kept_chain" {
+		t.Fatalf("want kept_chain only, got %+v", resolved)
+	}
+	logOut := buf.String()
+	if !strings.Contains(logOut, "dropped_chain") {
+		t.Errorf("warning should name the dropped chain; log: %q", logOut)
+	}
+	if !strings.Contains(logOut, "CTL.MISSING.001") {
+		t.Errorf("warning should list the missing control; log: %q", logOut)
+	}
+	if strings.Contains(logOut, "kept_chain") {
+		t.Errorf("warning should not mention the kept chain; log: %q", logOut)
+	}
+}
+
+func TestFilterResolvedChains_SilentWhenAllRefsResolve(t *testing.T) {
+	chains := []policy.ChainDefinition{
+		{ID: "chain_a", ControlIDs: []kernel.ControlID{"CTL.A.001"}},
+	}
+	controls := []policy.ControlDefinition{{ID: "CTL.A.001"}}
+
+	var buf bytes.Buffer
+	logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelInfo}))
+
+	resolved := filterResolvedChains(chains, controls, logger)
+
+	if len(resolved) != 1 {
+		t.Fatalf("want 1 resolved chain, got %d", len(resolved))
+	}
+	if buf.Len() > 0 {
+		t.Errorf("no warning expected for fully-resolved chains; log: %q", buf.String())
 	}
 }
