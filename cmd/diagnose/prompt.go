@@ -152,7 +152,7 @@ type promptFromFindingOpts struct {
 
 // runPromptFromFinding executes the prompt-from-finding workflow.
 func runPromptFromFinding(cmd *cobra.Command, opts promptFromFindingOpts) error {
-	fmtValue, fmtErr := compose.ResolveFormatValue(cmd, opts.format)
+	fmtValue, fmtErr := compose.ResolveFormatValue(opts.format)
 	if fmtErr != nil {
 		return fmtErr
 	}

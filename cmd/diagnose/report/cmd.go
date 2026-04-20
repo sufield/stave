@@ -72,7 +72,7 @@ Examples:
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			flags := cliflags.GetGlobalFlags(cmd)
-			fmtValue, err := opts.resolveFormat(cmd)
+			fmtValue, err := opts.resolveFormat()
 			if err != nil {
 				return err
 			}

@@ -23,7 +23,7 @@ func resolveProfileMode(o *Options, cs cobraState) (RunConfig, error) {
 		return RunConfig{}, &ui.UserError{Err: err}
 	}
 
-	format, err := compose.ResolveFormatValuePure(o.Format, cs.FormatChanged, false)
+	format, err := compose.ResolveFormatValue(o.Format)
 	if err != nil {
 		return RunConfig{}, &ui.UserError{Err: err}
 	}

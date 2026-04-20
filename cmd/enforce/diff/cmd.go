@@ -49,7 +49,7 @@ Exit Codes:
 			return opts.Prepare(cmd)
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			cfg, err := toConfig(&opts, cmd.Flags().Changed("format"))
+			cfg, err := toConfig(&opts)
 			if err != nil {
 				return err
 			}

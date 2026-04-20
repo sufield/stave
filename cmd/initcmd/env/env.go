@@ -127,7 +127,7 @@ Exit Codes:
 		Example: `  stave config env list`,
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			fmtValue, err := compose.ResolveFormatValue(cmd, format)
+			fmtValue, err := compose.ResolveFormatValue(format)
 			if err != nil {
 				return err
 			}

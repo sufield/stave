@@ -52,20 +52,6 @@ func TestWithDynamicDefaultHelp(t *testing.T) {
 	}
 }
 
-func TestResolveFormat_TrimsWhitespace(t *testing.T) {
-	got := ResolveFormat(nil, "  json  ")
-	if got != "json" {
-		t.Fatalf("got %q, want %q", got, "json")
-	}
-}
-
-func TestResolveFormatPure_TrimsWhitespace(t *testing.T) {
-	got := ResolveFormatPure("  text  ", false, false)
-	if got != "text" {
-		t.Fatalf("got %q, want %q", got, "text")
-	}
-}
-
 func TestGlobalFlags_TextOutputEnabled(t *testing.T) {
 	tests := []struct {
 		quiet bool

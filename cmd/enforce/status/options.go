@@ -24,15 +24,14 @@ func (o *options) BindFlags(cmd *cobra.Command) {
 
 // cmdIO holds values extracted from *cobra.Command in RunE.
 type cmdIO struct {
-	Stdout        io.Writer
-	Stderr        io.Writer
-	FormatChanged bool
+	Stdout io.Writer
+	Stderr io.Writer
 }
 
 // toConfig validates flags and returns a typed config.
 // Standalone function — does not depend on cobra.
 func toConfig(o *options, cio cmdIO) (config, error) {
-	format, err := compose.ResolveFormatValuePure(o.Format, cio.FormatChanged, false)
+	format, err := compose.ResolveFormatValue(o.Format)
 	if err != nil {
 		return config{}, err
 	}

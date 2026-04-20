@@ -25,6 +25,11 @@ func NewFindingCmd(newObsRepo compose.ObsRepoFactory, newCtlRepo compose.CtlRepo
 		template        string
 		controlID       string
 		assetID         string
+		// Flag-explicitness bits captured in PreRunE so RunE
+		// (and PrepareEvaluationContext) stay off cobra.
+		controlsChanged bool
+		obsChanged      bool
+		formatChanged   bool
 	)
 
 	cmd := &cobra.Command{
@@ -82,6 +87,9 @@ Examples:
 			if !cmd.Flags().Changed("max-unsafe") {
 				maxUnsafe = eval.MaxUnsafeDuration()
 			}
+			controlsChanged = cmd.Flags().Changed("controls")
+			obsChanged = cmd.Flags().Changed("observations")
+			formatChanged = cmd.Flags().Changed("format")
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
@@ -90,12 +98,12 @@ Examples:
 			ec, err := compose.PrepareEvaluationContext(compose.EvalContextRequest{
 				ControlsDir:       controlsDir,
 				ObservationsDir:   observationsDir,
-				ControlsChanged:   cmd.Flags().Changed("controls"),
-				ObsChanged:        cmd.Flags().Changed("observations"),
+				ControlsChanged:   controlsChanged,
+				ObsChanged:        obsChanged,
 				MaxUnsafeDuration: maxUnsafe,
 				NowTime:           nowTime,
 				Format:            format,
-				FormatChanged:     cmd.Flags().Changed("format"),
+				FormatChanged:     formatChanged,
 			})
 			if err != nil {
 				return err

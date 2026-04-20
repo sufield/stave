@@ -26,5 +26,5 @@ func (o *options) Prepare(cmd *cobra.Command) error {
 
 // resolveFormat resolves the output format without needing *cobra.Command.
 func (o *options) resolveFormat() (appcontracts.OutputFormat, error) {
-	return compose.ResolveFormatValuePure(o.Format, o.formatChanged, false)
+	return compose.ResolveFormatValue(o.Format)
 }

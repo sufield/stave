@@ -41,19 +41,16 @@ func ResolveClock(raw string) (ports.Clock, error) {
 	return ports.FixedClock(t), nil
 }
 
-// ResolveFormatValue determines the effective output format from a flag value and
-// global JSON mode. When the flag was not explicitly changed and global JSON mode
-// is active, "json" is used instead.
-func ResolveFormatValue(cmd *cobra.Command, raw string) (appcontracts.OutputFormat, error) {
-	formatRaw := cliflags.ResolveFormat(cmd, raw)
-	return ui.ParseOutputFormat(strings.ToLower(formatRaw))
-}
-
-// ResolveFormatValuePure determines the effective output format without cobra.
-// formatChanged indicates whether --format was explicitly set by the user.
-func ResolveFormatValuePure(raw string, formatChanged bool, isJSONMode bool) (appcontracts.OutputFormat, error) {
-	formatRaw := cliflags.ResolveFormatPure(raw, formatChanged, isJSONMode)
-	return ui.ParseOutputFormat(strings.ToLower(formatRaw))
+// ResolveFormatValue parses the --format flag value into an
+// [appcontracts.OutputFormat]. Takes only the raw string — the
+// earlier signature accepted *cobra.Command but never consulted
+// it (the underlying resolver was a plain TrimSpace wrapper).
+// Callers previously reading "was the flag explicitly set" via
+// cobra should capture that in PreRunE onto their Options struct
+// and reference it from there; format resolution itself does not
+// need the information.
+func ResolveFormatValue(raw string) (appcontracts.OutputFormat, error) {
+	return ui.ParseOutputFormat(strings.ToLower(strings.TrimSpace(raw)))
 }
 
 // ResolveNowDiag parses a --now flag value and returns a diagnostic issue on failure.

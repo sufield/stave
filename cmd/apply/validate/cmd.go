@@ -78,7 +78,7 @@ func NewCmd(newObsRepo compose.ObsRepoFactory, newCtlRepo compose.CtlRepoFactory
 			return opts.Prepare(cmd)
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			resolvedFormat, fmtErr := compose.ResolveFormatValue(cmd, opts.Format)
+			resolvedFormat, fmtErr := compose.ResolveFormatValue(opts.Format)
 			if fmtErr != nil {
 				return fmtErr
 			}

@@ -57,7 +57,7 @@ Exit Codes:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			fmtValue, fmtErr := compose.ResolveFormatValue(cmd, format)
+			fmtValue, fmtErr := compose.ResolveFormatValue(format)
 			if fmtErr != nil {
 				return fmtErr
 			}

@@ -33,7 +33,7 @@ func (o *options) Prepare(_ *cobra.Command) error {
 	return nil
 }
 
-// resolveFormat resolves the output format using the command context.
-func (o *options) resolveFormat(cmd *cobra.Command) (appcontracts.OutputFormat, error) {
-	return compose.ResolveFormatValue(cmd, o.Format)
+// resolveFormat resolves the output format from the options.
+func (o *options) resolveFormat() (appcontracts.OutputFormat, error) {
+	return compose.ResolveFormatValue(o.Format)
 }

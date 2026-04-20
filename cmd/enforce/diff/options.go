@@ -48,8 +48,8 @@ func (o *Options) Prepare(_ *cobra.Command) error {
 
 // toConfig converts raw CLI options into a validated logic configuration.
 // Standalone function — does not depend on cobra.
-func toConfig(o *Options, formatChanged bool) (config, error) {
-	format, err := compose.ResolveFormatValuePure(o.Format, formatChanged, false)
+func toConfig(o *Options) (config, error) {
+	format, err := compose.ResolveFormatValue(o.Format)
 	if err != nil {
 		return config{}, err
 	}

@@ -78,7 +78,7 @@ Exit Codes:
 				Sanitizer:     gf.GetSanitizer(),
 				Quiet:         gf.Quiet,
 				Stdout:        cmd.OutOrStdout(),
-				ResolveFormat: func(raw string) (appcontracts.OutputFormat, error) { return compose.ResolveFormatValue(cmd, raw) },
+				ResolveFormat: func(raw string) (appcontracts.OutputFormat, error) { return compose.ResolveFormatValue(raw) },
 			})
 			if err != nil {
 				return err

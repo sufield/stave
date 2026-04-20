@@ -227,7 +227,7 @@ Exit Codes:
 				Resolver: res,
 				Stdout:   cmd.OutOrStdout(),
 			}
-			fmtValue, fmtErr := compose.ResolveFormatValue(cmd, format)
+			fmtValue, fmtErr := compose.ResolveFormatValue(format)
 			if fmtErr != nil {
 				return fmtErr
 			}

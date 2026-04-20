@@ -55,7 +55,7 @@ Exit Codes:
 		SilenceErrors: true,
 		Args:          cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			resolved, err := compose.ResolveFormatValue(cmd, format)
+			resolved, err := compose.ResolveFormatValue(format)
 			if err != nil {
 				return err
 			}
@@ -142,7 +142,7 @@ Exit Codes:
 		SilenceErrors: true,
 		Args:          cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			resolved, err := compose.ResolveFormatValue(cmd, format)
+			resolved, err := compose.ResolveFormatValue(format)
 			if err != nil {
 				return err
 			}

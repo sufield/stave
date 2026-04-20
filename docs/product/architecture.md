@@ -422,6 +422,13 @@ JSON. New Go prototypes and Stave-aware apps import
 `github.com/sufield/stave/pkg/stave` rather than rebuilding the
 JSON walk; non-Go consumers continue to use the CLI's JSON output.
 
+The exact boundary between shared evaluation core and adapter
+layers — which packages both the CLI and the library import,
+which are CLI-only, which are library-only — is enumerated in
+`docs/design/architecture-boundary.md`. That document also
+records the refactor-on-touch policy for migrating CLI commands
+to route through `pkg/stave/` over time.
+
 ### stave-explorer (scaffolding, not a Stave app)
 
 `stave-explorer/` is a minimal bubbletea-based TUI living at

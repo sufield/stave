@@ -97,7 +97,7 @@ Exit Codes:
 			if err != nil {
 				return err
 			}
-			format, err := compose.ResolveFormatValue(cmd, opts.FormatFlag)
+			format, err := compose.ResolveFormatValue(opts.FormatFlag)
 			if err != nil {
 				return err
 			}

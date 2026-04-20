@@ -40,9 +40,8 @@ Examples:
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			cio := cmdIO{
-				Stdout:        cmd.OutOrStdout(),
-				Stderr:        cmd.ErrOrStderr(),
-				FormatChanged: cmd.Flags().Changed("format"),
+				Stdout: cmd.OutOrStdout(),
+				Stderr: cmd.ErrOrStderr(),
 			}
 			cfg, err := toConfig(opts, cio)
 			if err != nil {

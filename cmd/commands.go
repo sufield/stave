@@ -2,10 +2,7 @@ package cmd
 
 import (
 	"context"
-	"fmt"
 	"os"
-	"path/filepath"
-	"time"
 
 	"github.com/spf13/cobra"
 
@@ -71,7 +68,6 @@ import (
 	infrafix "github.com/sufield/stave/internal/adapters/fix"
 	infragate "github.com/sufield/stave/internal/adapters/gate"
 	infrareport "github.com/sufield/stave/internal/adapters/report"
-	"github.com/sufield/stave/internal/app/snapshotquery"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
@@ -82,7 +78,6 @@ import (
 	"github.com/sufield/stave/internal/core/usecase"
 	"github.com/sufield/stave/internal/platform/fileout"
 	"github.com/sufield/stave/internal/platform/fsutil"
-	"github.com/sufield/stave/internal/util/jsonutil"
 )
 
 const (
@@ -302,7 +297,6 @@ func wireSnapshotSubtree(
 	loadSnapshots compose.SnapshotLoader,
 ) {
 	snapshotCmd.AddCommand(enforce.NewDiffCmd(loadSnapshots))
-	snapshotCmd.AddCommand(newSnapshotQueryCmd())
 	for _, subCmd := range prune.Commands(newObs, newSnapshot, loadAssets, loadSnapshots) {
 		snapshotCmd.AddCommand(subCmd)
 	}
@@ -391,107 +385,6 @@ func wireCISubtree(
 			Loader: &infrafix.FindingLoader{CELEvaluator: celEval, ReadFile: fsutil.ReadFileLimited},
 		},
 	}))
-}
-
-func newSnapshotQueryCmd() *cobra.Command {
-	var dir, olderThan, newerThan, format, now string
-	var health bool
-
-	cmd := &cobra.Command{
-		Use:   "query",
-		Short: "Query snapshot archive metadata",
-		Long: `Query scans an observation directory and returns metadata about each
-snapshot file including captured_at timestamp, age, size, and schema validity.
-
-Use --health to produce a summary health report of the archive.
-
-Exit Codes:
-  0   Query completed
-  2   Invalid input
-  4   Internal error`,
-		Example: `  stave snapshot query --dir observations
-  stave snapshot query --dir observations --older-than 720h
-  stave snapshot query --dir observations --health
-  stave snapshot query --dir observations --format json`,
-		Args:          cobra.NoArgs,
-		SilenceUsage:  true,
-		SilenceErrors: true,
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			if dir == "" {
-				dir = "observations"
-			}
-
-			nowTime := time.Now().UTC()
-			if now != "" {
-				t, err := time.Parse(time.RFC3339, now)
-				if err != nil {
-					return &ui.UserError{Err: fmt.Errorf("parse --now: %w", err)}
-				}
-				nowTime = t
-			}
-
-			stdout := cmd.OutOrStdout()
-
-			if health {
-				report, err := snapshotquery.Health(dir, nowTime)
-				if err != nil {
-					return fmt.Errorf("snapshot health: %w", err)
-				}
-				if format == "json" {
-					return jsonutil.WriteIndented(stdout, report)
-				}
-				fmt.Fprintf(stdout, "Total: %d  Valid: %d  Malformed: %d\n",
-					report.Total, report.SchemaValid, len(report.Malformed))
-				fmt.Fprintf(stdout, "Age: <30d=%d  30-90d=%d  >90d=%d\n",
-					report.ByAge.Under30, report.ByAge.From30To90, report.ByAge.Over90)
-				return nil
-			}
-
-			f := snapshotquery.Filter{Now: nowTime}
-			if olderThan != "" {
-				d, err := time.ParseDuration(olderThan)
-				if err != nil {
-					return &ui.UserError{Err: fmt.Errorf("parse --older-than: %w", err)}
-				}
-				f.OlderThan = d
-			}
-			if newerThan != "" {
-				d, err := time.ParseDuration(newerThan)
-				if err != nil {
-					return &ui.UserError{Err: fmt.Errorf("parse --newer-than: %w", err)}
-				}
-				f.NewerThan = d
-			}
-
-			results, err := snapshotquery.Query(dir, f)
-			if err != nil {
-				return fmt.Errorf("snapshot query: %w", err)
-			}
-
-			if format == "json" {
-				return jsonutil.WriteIndented(stdout, results)
-			}
-
-			if len(results) == 0 {
-				fmt.Fprintln(stdout, "No matching snapshots found.")
-				return nil
-			}
-			for _, s := range results {
-				fmt.Fprintf(stdout, "%-40s  %s  %.0fd  %d assets\n",
-					filepath.Base(s.Path), s.CapturedAt.Format(time.RFC3339), s.AgeDays, s.AssetCount)
-			}
-			return nil
-		},
-	}
-
-	cmd.Flags().StringVar(&dir, "dir", "observations", "Observation snapshots directory")
-	cmd.Flags().StringVar(&olderThan, "older-than", "", "Filter to snapshots older than duration (e.g. 720h)")
-	cmd.Flags().StringVar(&newerThan, "newer-than", "", "Filter to snapshots newer than duration (e.g. 48h)")
-	cmd.Flags().BoolVar(&health, "health", false, "Produce archive health summary")
-	cmd.Flags().StringVarP(&format, "format", "f", "text", "Output format: text or json")
-	cmd.Flags().StringVar(&now, "now", "", "Override current time (RFC3339) for deterministic output")
-
-	return cmd
 }
 
 func assignCommandGroup(root *cobra.Command, use, groupID string) {

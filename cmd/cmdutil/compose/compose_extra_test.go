@@ -135,10 +135,10 @@ func TestResolveStdout_NilWriter(t *testing.T) {
 	}
 }
 
-// --- ResolveFormatValuePure ---
+// --- ResolveFormatValue ---
 
-func TestResolveFormatValuePure_Text(t *testing.T) {
-	f, err := ResolveFormatValuePure("text", false, false)
+func TestResolveFormatValue_Text(t *testing.T) {
+	f, err := ResolveFormatValue("text")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -147,8 +147,8 @@ func TestResolveFormatValuePure_Text(t *testing.T) {
 	}
 }
 
-func TestResolveFormatValuePure_JSON(t *testing.T) {
-	f, err := ResolveFormatValuePure("json", true, false)
+func TestResolveFormatValue_JSON(t *testing.T) {
+	f, err := ResolveFormatValue("json")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -157,8 +157,8 @@ func TestResolveFormatValuePure_JSON(t *testing.T) {
 	}
 }
 
-func TestResolveFormatValuePure_SARIF(t *testing.T) {
-	f, err := ResolveFormatValuePure("sarif", true, false)
+func TestResolveFormatValue_SARIF(t *testing.T) {
+	f, err := ResolveFormatValue("sarif")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -167,15 +167,15 @@ func TestResolveFormatValuePure_SARIF(t *testing.T) {
 	}
 }
 
-func TestResolveFormatValuePure_Invalid(t *testing.T) {
-	_, err := ResolveFormatValuePure("xml", true, false)
+func TestResolveFormatValue_Invalid(t *testing.T) {
+	_, err := ResolveFormatValue("xml")
 	if err == nil {
 		t.Fatal("expected error for invalid format")
 	}
 }
 
-func TestResolveFormatValuePure_CaseInsensitive(t *testing.T) {
-	f, err := ResolveFormatValuePure("JSON", true, false)
+func TestResolveFormatValue_CaseInsensitive(t *testing.T) {
+	f, err := ResolveFormatValue("JSON")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

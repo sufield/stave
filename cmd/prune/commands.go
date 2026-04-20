@@ -21,6 +21,7 @@ func Commands(
 ) []*cobra.Command {
 	return []*cobra.Command{
 		upcoming.NewCmd(loadAssets),
+		snapshot.NewQueryCmd(),
 		snapshot.NewQualityCmd(loadSnapshots),
 		snapshot.NewPlanCmd(newSnapshot),
 		hygiene.NewStatusCmd(newObs, newSnapshot),

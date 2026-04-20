@@ -46,7 +46,7 @@ Exit Codes:
 			if err != nil {
 				return err
 			}
-			format, err := compose.ResolveFormatValue(cmd, formatFlag)
+			format, err := compose.ResolveFormatValue(formatFlag)
 			if err != nil {
 				return err
 			}

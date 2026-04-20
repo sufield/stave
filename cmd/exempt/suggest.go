@@ -18,8 +18,90 @@ import (
 	"github.com/sufield/stave/internal/core/report"
 )
 
+type suggestOptions struct {
+	HistoryDir     string
+	WindowRaw      string
+	MinDwellRaw    string
+	Format         string
+	AcceptanceFile string
+	// Resolved in Normalize.
+	Window   time.Duration
+	MinDwell time.Duration
+}
+
+// Normalize parses the "Nd" and standard duration strings from
+// --window and --min-dwell into time.Durations. The run function
+// below sees only the resolved fields.
+func (o *suggestOptions) Normalize() error {
+	w, err := parseSuggestDuration(o.WindowRaw)
+	if err != nil {
+		return fmt.Errorf("invalid --window: %w", err)
+	}
+	o.Window = w
+	d, err := parseSuggestDuration(o.MinDwellRaw)
+	if err != nil {
+		return fmt.Errorf("invalid --min-dwell: %w", err)
+	}
+	o.MinDwell = d
+	return nil
+}
+
+func runSuggest(ctx context.Context, opts suggestOptions) (*exemptionsuggest.Result, error) {
+	history, err := loadSuggestHistory(ctx, opts.HistoryDir)
+	if err != nil {
+		return nil, fmt.Errorf("load history: %w", err)
+	}
+
+	if len(history) == 0 {
+		return nil, nil
+	}
+
+	// Load existing exemptions to exclude already-handled findings.
+	exemptedKeys := make(map[string]bool)
+	if opts.AcceptanceFile != "" {
+		af, loadErr := appexempt.Load(opts.AcceptanceFile)
+		if loadErr == nil {
+			for i := range af.Acknowledgments {
+				if af.Acknowledgments[i].Status == "active" {
+					exemptedKeys[af.Acknowledgments[i].ID] = true
+				}
+			}
+			for i := range af.Exceptions {
+				key := af.Exceptions[i].ControlID + "@" + af.Exceptions[i].AssetID
+				exemptedKeys[key] = true
+			}
+		}
+	}
+
+	return exemptionsuggest.Suggest(exemptionsuggest.Input{
+		History:      history,
+		Window:       opts.Window,
+		MinDwell:     opts.MinDwell,
+		Now:          time.Now().UTC(),
+		ExemptedKeys: exemptedKeys,
+	}), nil
+}
+
+func renderSuggest(w io.Writer, result *exemptionsuggest.Result, format string) error {
+	if result == nil {
+		_, err := fmt.Fprintln(w, "No assessment history found.")
+		return err
+	}
+	if format == "json" {
+		enc := json.NewEncoder(w)
+		enc.SetIndent("", "  ")
+		return enc.Encode(result)
+	}
+	return writeSuggestTable(w, result)
+}
+
 func newSuggestCmd() *cobra.Command {
-	var historyDir, window, minDwell, format, file string
+	opts := suggestOptions{
+		WindowRaw:      "30d",
+		MinDwellRaw:    "14d",
+		Format:         "table",
+		AcceptanceFile: defaultFile,
+	}
 
 	cmd := &cobra.Command{
 		Use:   "suggest",
@@ -38,74 +120,26 @@ Exit Codes:
   stave exempt suggest --history ./history --format json`,
 		SilenceUsage:  true,
 		SilenceErrors: true,
+		PreRunE: func(_ *cobra.Command, _ []string) error {
+			return opts.Normalize()
+		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runSuggest(cmd.Context(), cmd.OutOrStdout(), historyDir, window, minDwell, format, file)
+			result, err := runSuggest(cmd.Context(), opts)
+			if err != nil {
+				return err
+			}
+			return renderSuggest(cmd.OutOrStdout(), result, opts.Format)
 		},
 	}
 
-	cmd.Flags().StringVar(&historyDir, "history", "", "directory of historical assessment JSON files (required)")
-	cmd.Flags().StringVar(&window, "window", "30d", "how far back to look for patterns (e.g. 30d, 90d)")
-	cmd.Flags().StringVar(&minDwell, "min-dwell", "14d", "minimum time a finding must be open to be chronic (e.g. 14d)")
-	cmd.Flags().StringVarP(&format, "format", "f", "table", "output format: table | json")
-	cmd.Flags().StringVar(&file, "file", defaultFile, "path to acceptance file (for excluding already-exempted findings)")
+	cmd.Flags().StringVar(&opts.HistoryDir, "history", "", "directory of historical assessment JSON files (required)")
+	cmd.Flags().StringVar(&opts.WindowRaw, "window", opts.WindowRaw, "how far back to look for patterns (e.g. 30d, 90d)")
+	cmd.Flags().StringVar(&opts.MinDwellRaw, "min-dwell", opts.MinDwellRaw, "minimum time a finding must be open to be chronic (e.g. 14d)")
+	cmd.Flags().StringVarP(&opts.Format, "format", "f", opts.Format, "output format: table | json")
+	cmd.Flags().StringVar(&opts.AcceptanceFile, "file", opts.AcceptanceFile, "path to acceptance file (for excluding already-exempted findings)")
 	_ = cmd.MarkFlagRequired("history")
 
 	return cmd
-}
-
-func runSuggest(ctx context.Context, w io.Writer, historyDir, windowStr, minDwellStr, format, acceptanceFile string) error {
-	windowDur, err := parseSuggestDuration(windowStr)
-	if err != nil {
-		return fmt.Errorf("invalid --window: %w", err)
-	}
-	minDwellDur, err := parseSuggestDuration(minDwellStr)
-	if err != nil {
-		return fmt.Errorf("invalid --min-dwell: %w", err)
-	}
-
-	history, err := loadSuggestHistory(ctx, historyDir)
-	if err != nil {
-		return fmt.Errorf("load history: %w", err)
-	}
-
-	if len(history) == 0 {
-		fmt.Fprintln(w, "No assessment history found.")
-		return nil
-	}
-
-	// Load existing exemptions to exclude already-handled findings.
-	exemptedKeys := make(map[string]bool)
-	if acceptanceFile != "" {
-		af, loadErr := appexempt.Load(acceptanceFile)
-		if loadErr == nil {
-			for i := range af.Acknowledgments {
-				if af.Acknowledgments[i].Status == "active" {
-					exemptedKeys[af.Acknowledgments[i].ID] = true
-				}
-			}
-			for i := range af.Exceptions {
-				key := af.Exceptions[i].ControlID + "@" + af.Exceptions[i].AssetID
-				exemptedKeys[key] = true
-			}
-		}
-	}
-
-	result := exemptionsuggest.Suggest(exemptionsuggest.Input{
-		History:      history,
-		Window:       windowDur,
-		MinDwell:     minDwellDur,
-		Now:          time.Now().UTC(),
-		ExemptedKeys: exemptedKeys,
-	})
-
-	switch format {
-	case "json":
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-		return enc.Encode(result)
-	default:
-		return writeSuggestTable(w, result)
-	}
 }
 
 func writeSuggestTable(w io.Writer, r *exemptionsuggest.Result) error {

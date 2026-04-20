@@ -52,8 +52,61 @@ Subcommands:
 	return cmd
 }
 
+// --- acknowledge ---
+
+type acknowledgeOptions struct {
+	ControlID    string
+	AssetID      string
+	Reason       string
+	Approver     string
+	Expires      string
+	Compensating string
+	File         string
+}
+
+// Normalize is a no-op for acknowledge — all user-facing fields are
+// cobra-required and File has a flag-default. The method exists so
+// PreRunE has a stable hook if future validation lands here.
+func (o *acknowledgeOptions) Normalize() error { return nil }
+
+type acknowledgeResult struct {
+	ControlID string
+	AssetID   string
+	Expires   string
+}
+
+func runAcknowledge(opts acknowledgeOptions) (acknowledgeResult, error) {
+	f, err := appexempt.Load(opts.File)
+	if err != nil {
+		return acknowledgeResult{}, err
+	}
+	var comps []string
+	if opts.Compensating != "" {
+		comps = strings.Split(opts.Compensating, ",")
+	}
+	if addErr := f.AddAcknowledgment(appexempt.AcknowledgmentEntry{
+		ControlID:            opts.ControlID,
+		AssetID:              opts.AssetID,
+		Reason:               opts.Reason,
+		Approver:             opts.Approver,
+		ExpiryDate:           opts.Expires,
+		CompensatingControls: comps,
+	}, time.Now().UTC().Format(time.RFC3339)); addErr != nil {
+		return acknowledgeResult{}, addErr
+	}
+	if saveErr := appexempt.Save(opts.File, f, "stave exempt acknowledge", time.Now().UTC().Format(time.RFC3339)); saveErr != nil {
+		return acknowledgeResult{}, saveErr
+	}
+	return acknowledgeResult{ControlID: opts.ControlID, AssetID: opts.AssetID, Expires: opts.Expires}, nil
+}
+
+func renderAcknowledge(w io.Writer, r acknowledgeResult) error {
+	_, err := fmt.Fprintf(w, "Acknowledged: %s@%s (expires %s)\n", r.ControlID, r.AssetID, r.Expires)
+	return err
+}
+
 func newAcknowledgeCmd() *cobra.Command {
-	var controlID, assetID, reason, approver, expires, compensating, file string
+	opts := acknowledgeOptions{File: defaultFile}
 
 	cmd := &cobra.Command{
 		Use:   "acknowledge",
@@ -74,40 +127,25 @@ Exit Codes:
     --expires 2026-09-01`,
 		SilenceUsage:  true,
 		SilenceErrors: true,
+		PreRunE: func(_ *cobra.Command, _ []string) error {
+			return opts.Normalize()
+		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			f, err := appexempt.Load(file)
+			result, err := runAcknowledge(opts)
 			if err != nil {
 				return err
 			}
-			var comps []string
-			if compensating != "" {
-				comps = strings.Split(compensating, ",")
-			}
-			if addErr := f.AddAcknowledgment(appexempt.AcknowledgmentEntry{
-				ControlID:            controlID,
-				AssetID:              assetID,
-				Reason:               reason,
-				Approver:             approver,
-				ExpiryDate:           expires,
-				CompensatingControls: comps,
-			}, time.Now().UTC().Format(time.RFC3339)); addErr != nil {
-				return addErr
-			}
-			if saveErr := appexempt.Save(file, f, "stave exempt acknowledge", time.Now().UTC().Format(time.RFC3339)); saveErr != nil {
-				return saveErr
-			}
-			fmt.Fprintf(cmd.OutOrStdout(), "Acknowledged: %s@%s (expires %s)\n", controlID, assetID, expires)
-			return nil
+			return renderAcknowledge(cmd.OutOrStdout(), result)
 		},
 	}
 
-	cmd.Flags().StringVar(&controlID, "control-id", "", "control ID (required)")
-	cmd.Flags().StringVar(&assetID, "asset-id", "", "asset ARN or ID (required)")
-	cmd.Flags().StringVar(&reason, "reason", "", "rationale for accepting this risk (required)")
-	cmd.Flags().StringVar(&approver, "approver", "", "identity of approving authority (required)")
-	cmd.Flags().StringVar(&expires, "expires", "", "expiry date YYYY-MM-DD (required)")
-	cmd.Flags().StringVar(&compensating, "compensating", "", "comma-separated compensating control IDs")
-	cmd.Flags().StringVar(&file, "file", defaultFile, "path to acceptance file")
+	cmd.Flags().StringVar(&opts.ControlID, "control-id", "", "control ID (required)")
+	cmd.Flags().StringVar(&opts.AssetID, "asset-id", "", "asset ARN or ID (required)")
+	cmd.Flags().StringVar(&opts.Reason, "reason", "", "rationale for accepting this risk (required)")
+	cmd.Flags().StringVar(&opts.Approver, "approver", "", "identity of approving authority (required)")
+	cmd.Flags().StringVar(&opts.Expires, "expires", "", "expiry date YYYY-MM-DD (required)")
+	cmd.Flags().StringVar(&opts.Compensating, "compensating", "", "comma-separated compensating control IDs")
+	cmd.Flags().StringVar(&opts.File, "file", opts.File, "path to acceptance file")
 
 	_ = cmd.MarkFlagRequired("control-id")
 	_ = cmd.MarkFlagRequired("asset-id")
@@ -118,8 +156,36 @@ Exit Codes:
 	return cmd
 }
 
+// --- except ---
+
+type exceptOptions struct {
+	ControlID string
+	AssetID   string
+	Expires   string
+	Reason    string
+	File      string
+}
+
+func (o *exceptOptions) Normalize() error { return nil }
+
+func runExcept(opts exceptOptions) error {
+	f, err := appexempt.Load(opts.File)
+	if err != nil {
+		return err
+	}
+	if addErr := f.AddException(appexempt.ExceptionEntry{
+		ControlID:  opts.ControlID,
+		AssetID:    opts.AssetID,
+		ExpiryDate: opts.Expires,
+		Reason:     opts.Reason,
+	}); addErr != nil {
+		return addErr
+	}
+	return appexempt.Save(opts.File, f, "stave exempt except", time.Now().UTC().Format(time.RFC3339))
+}
+
 func newExceptCmd() *cobra.Command {
-	var controlID, assetID, expires, reason, file string
+	opts := exceptOptions{File: defaultFile}
 
 	cmd := &cobra.Command{
 		Use:   "except",
@@ -133,28 +199,19 @@ Exit Codes:
 		Example:       `  stave exempt except --control-id CTL.IAM.MFA.001 --asset-id arn:aws:iam::123:user/svc`,
 		SilenceUsage:  true,
 		SilenceErrors: true,
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			f, err := appexempt.Load(file)
-			if err != nil {
-				return err
-			}
-			if addErr := f.AddException(appexempt.ExceptionEntry{
-				ControlID:  controlID,
-				AssetID:    assetID,
-				ExpiryDate: expires,
-				Reason:     reason,
-			}); addErr != nil {
-				return addErr
-			}
-			return appexempt.Save(file, f, "stave exempt except", time.Now().UTC().Format(time.RFC3339))
+		PreRunE: func(_ *cobra.Command, _ []string) error {
+			return opts.Normalize()
+		},
+		RunE: func(_ *cobra.Command, _ []string) error {
+			return runExcept(opts)
 		},
 	}
 
-	cmd.Flags().StringVar(&controlID, "control-id", "", "control ID (required)")
-	cmd.Flags().StringVar(&assetID, "asset-id", "", "asset ARN or ID (required)")
-	cmd.Flags().StringVar(&expires, "expires", "", "expiry date YYYY-MM-DD")
-	cmd.Flags().StringVar(&reason, "reason", "", "reason for exception")
-	cmd.Flags().StringVar(&file, "file", defaultFile, "path to acceptance file")
+	cmd.Flags().StringVar(&opts.ControlID, "control-id", "", "control ID (required)")
+	cmd.Flags().StringVar(&opts.AssetID, "asset-id", "", "asset ARN or ID (required)")
+	cmd.Flags().StringVar(&opts.Expires, "expires", "", "expiry date YYYY-MM-DD")
+	cmd.Flags().StringVar(&opts.Reason, "reason", "", "reason for exception")
+	cmd.Flags().StringVar(&opts.File, "file", opts.File, "path to acceptance file")
 
 	_ = cmd.MarkFlagRequired("control-id")
 	_ = cmd.MarkFlagRequired("asset-id")
@@ -162,8 +219,32 @@ Exit Codes:
 	return cmd
 }
 
+// --- asset (exemption) ---
+
+type assetOptions struct {
+	Pattern string
+	Reason  string
+	File    string
+}
+
+func (o *assetOptions) Normalize() error { return nil }
+
+func runAsset(opts assetOptions) error {
+	f, err := appexempt.Load(opts.File)
+	if err != nil {
+		return err
+	}
+	if addErr := f.AddExemption(appexempt.ExemptionEntry{
+		AssetPattern: opts.Pattern,
+		Reason:       opts.Reason,
+	}); addErr != nil {
+		return addErr
+	}
+	return appexempt.Save(opts.File, f, "stave exempt asset", time.Now().UTC().Format(time.RFC3339))
+}
+
 func newExemptSubCmd() *cobra.Command {
-	var pattern, reason, file string
+	opts := assetOptions{File: defaultFile}
 
 	cmd := &cobra.Command{
 		Use:   "asset",
@@ -178,33 +259,40 @@ Exit Codes:
 		Example:       `  stave exempt asset --pattern "arn:aws:s3:::sandbox-*" --reason "sandbox"`,
 		SilenceUsage:  true,
 		SilenceErrors: true,
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			f, err := appexempt.Load(file)
-			if err != nil {
-				return err
-			}
-			if addErr := f.AddExemption(appexempt.ExemptionEntry{
-				AssetPattern: pattern,
-				Reason:       reason,
-			}); addErr != nil {
-				return addErr
-			}
-			return appexempt.Save(file, f, "stave exempt asset", time.Now().UTC().Format(time.RFC3339))
+		PreRunE: func(_ *cobra.Command, _ []string) error {
+			return opts.Normalize()
+		},
+		RunE: func(_ *cobra.Command, _ []string) error {
+			return runAsset(opts)
 		},
 	}
 
-	cmd.Flags().StringVar(&pattern, "pattern", "", "asset ID or glob pattern (required)")
-	cmd.Flags().StringVar(&reason, "reason", "", "reason for exemption")
-	cmd.Flags().StringVar(&file, "file", defaultFile, "path to acceptance file")
+	cmd.Flags().StringVar(&opts.Pattern, "pattern", "", "asset ID or glob pattern (required)")
+	cmd.Flags().StringVar(&opts.Reason, "reason", "", "reason for exemption")
+	cmd.Flags().StringVar(&opts.File, "file", opts.File, "path to acceptance file")
 
 	_ = cmd.MarkFlagRequired("pattern")
 
 	return cmd
 }
 
+// --- list ---
+
+type listOptions struct {
+	File        string
+	Format      string
+	ListType    string
+	ShowExpired bool
+}
+
+func (o *listOptions) Normalize() error { return nil }
+
+func runList(opts listOptions) (*appexempt.AcceptanceFile, error) {
+	return appexempt.Load(opts.File)
+}
+
 func newListCmd() *cobra.Command {
-	var file, format, listType string
-	var showExpired bool
+	opts := listOptions{File: defaultFile, Format: "table", ListType: "all"}
 
 	cmd := &cobra.Command{
 		Use:   "list",
@@ -218,25 +306,58 @@ Exit Codes:
 		Example:       "  stave exempt list\n  stave exempt list --format json --expired",
 		SilenceUsage:  true,
 		SilenceErrors: true,
+		PreRunE: func(_ *cobra.Command, _ []string) error {
+			return opts.Normalize()
+		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			f, err := appexempt.Load(file)
+			f, err := runList(opts)
 			if err != nil {
 				return err
 			}
-			return writeList(cmd.OutOrStdout(), f, format, listType, showExpired)
+			return writeList(cmd.OutOrStdout(), f, opts.Format, opts.ListType, opts.ShowExpired)
 		},
 	}
 
-	cmd.Flags().StringVar(&file, "file", defaultFile, "path to acceptance file")
-	cmd.Flags().StringVarP(&format, "format", "f", "table", "output format: table | json")
-	cmd.Flags().StringVar(&listType, "type", "all", "filter by type: acknowledgment | exception | exemption | all")
-	cmd.Flags().BoolVar(&showExpired, "expired", false, "include expired/revoked entries")
+	cmd.Flags().StringVar(&opts.File, "file", opts.File, "path to acceptance file")
+	cmd.Flags().StringVarP(&opts.Format, "format", "f", opts.Format, "output format: table | json")
+	cmd.Flags().StringVar(&opts.ListType, "type", opts.ListType, "filter by type: acknowledgment | exception | exemption | all")
+	cmd.Flags().BoolVar(&opts.ShowExpired, "expired", false, "include expired/revoked entries")
 
 	return cmd
 }
 
+// --- remove ---
+
+type removeOptions struct {
+	ID   string
+	File string
+}
+
+func (o *removeOptions) Normalize() error { return nil }
+
+type removeResult struct{ ID string }
+
+func runRemove(opts removeOptions) (removeResult, error) {
+	f, err := appexempt.Load(opts.File)
+	if err != nil {
+		return removeResult{}, err
+	}
+	if rmErr := f.Remove(opts.ID, time.Now().UTC().Format(time.RFC3339)); rmErr != nil {
+		return removeResult{}, rmErr
+	}
+	if saveErr := appexempt.Save(opts.File, f, "stave exempt remove", time.Now().UTC().Format(time.RFC3339)); saveErr != nil {
+		return removeResult{}, saveErr
+	}
+	return removeResult{ID: opts.ID}, nil
+}
+
+func renderRemove(w io.Writer, r removeResult) error {
+	_, err := fmt.Fprintf(w, "Revoked: %s\n", r.ID)
+	return err
+}
+
 func newRemoveCmd() *cobra.Command {
-	var id, file string
+	opts := removeOptions{File: defaultFile}
 
 	cmd := &cobra.Command{
 		Use:   "remove",
@@ -250,33 +371,86 @@ Exit Codes:
 		Example:       `  stave exempt remove --id "CTL.S3.PUBLIC.001@arn:aws:s3:::bucket"`,
 		SilenceUsage:  true,
 		SilenceErrors: true,
+		PreRunE: func(_ *cobra.Command, _ []string) error {
+			return opts.Normalize()
+		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			f, err := appexempt.Load(file)
+			result, err := runRemove(opts)
 			if err != nil {
 				return err
 			}
-			if rmErr := f.Remove(id, time.Now().UTC().Format(time.RFC3339)); rmErr != nil {
-				return rmErr
-			}
-			if saveErr := appexempt.Save(file, f, "stave exempt remove", time.Now().UTC().Format(time.RFC3339)); saveErr != nil {
-				return saveErr
-			}
-			fmt.Fprintf(cmd.OutOrStdout(), "Revoked: %s\n", id)
-			return nil
+			return renderRemove(cmd.OutOrStdout(), result)
 		},
 	}
 
-	cmd.Flags().StringVar(&id, "id", "", "acknowledgment ID (control_id@asset_id)")
-	cmd.Flags().StringVar(&file, "file", defaultFile, "path to acceptance file")
+	cmd.Flags().StringVar(&opts.ID, "id", "", "acknowledgment ID (control_id@asset_id)")
+	cmd.Flags().StringVar(&opts.File, "file", opts.File, "path to acceptance file")
 
 	_ = cmd.MarkFlagRequired("id")
 
 	return cmd
 }
 
+// --- upcoming ---
+
+type upcomingOptions struct {
+	File string
+	Days int
+	// Resolved in Normalize.
+	Now time.Time
+}
+
+// Normalize resolves the "now" reference that determines remaining
+// days. Kept here (rather than in the runner) so a future --now
+// override flag can slot in without reshaping the run function.
+func (o *upcomingOptions) Normalize() error {
+	o.Now = time.Now().UTC()
+	return nil
+}
+
+type upcomingResult struct {
+	Days    int
+	Entries []appexempt.AcknowledgmentEntry
+	Now     time.Time
+}
+
+func runUpcoming(opts upcomingOptions) (upcomingResult, error) {
+	f, err := appexempt.Load(opts.File)
+	if err != nil {
+		return upcomingResult{}, err
+	}
+	return upcomingResult{
+		Days:    opts.Days,
+		Entries: f.Upcoming(opts.Days, opts.Now),
+		Now:     opts.Now,
+	}, nil
+}
+
+func renderUpcoming(w io.Writer, r upcomingResult) error {
+	if len(r.Entries) == 0 {
+		_, err := fmt.Fprintf(w, "No acceptances expiring within %d days.\n", r.Days)
+		return err
+	}
+	if _, err := fmt.Fprintf(w, "ACCEPTANCES EXPIRING WITHIN %d DAYS\n", r.Days); err != nil {
+		return err
+	}
+	if _, err := fmt.Fprintln(w, strings.Repeat("-", 70)); err != nil {
+		return err
+	}
+	for i := range r.Entries {
+		a := &r.Entries[i]
+		expiry, _ := time.Parse("2006-01-02", a.ExpiryDate)
+		daysLeft := int(time.Until(expiry).Hours() / 24)
+		if _, err := fmt.Fprintf(w, "  %-40s  %s  %d days  %s\n",
+			a.ID, a.ExpiryDate, daysLeft, a.Approver); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func newUpcomingCmd() *cobra.Command {
-	var file string
-	var days int
+	opts := upcomingOptions{File: defaultFile, Days: 30}
 
 	cmd := &cobra.Command{
 		Use:   "upcoming",
@@ -290,37 +464,57 @@ Exit Codes:
 		Example:       "  stave exempt upcoming --days 30",
 		SilenceUsage:  true,
 		SilenceErrors: true,
+		PreRunE: func(_ *cobra.Command, _ []string) error {
+			return opts.Normalize()
+		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			f, err := appexempt.Load(file)
+			result, err := runUpcoming(opts)
 			if err != nil {
 				return err
 			}
-			upcoming := f.Upcoming(days, time.Now().UTC())
-			if len(upcoming) == 0 {
-				fmt.Fprintf(cmd.OutOrStdout(), "No acceptances expiring within %d days.\n", days)
-				return nil
-			}
-			fmt.Fprintf(cmd.OutOrStdout(), "ACCEPTANCES EXPIRING WITHIN %d DAYS\n", days)
-			fmt.Fprintln(cmd.OutOrStdout(), strings.Repeat("-", 70))
-			for i := range upcoming {
-				a := &upcoming[i]
-				expiry, _ := time.Parse("2006-01-02", a.ExpiryDate)
-				daysLeft := int(time.Until(expiry).Hours() / 24)
-				fmt.Fprintf(cmd.OutOrStdout(), "  %-40s  %s  %d days  %s\n",
-					a.ID, a.ExpiryDate, daysLeft, a.Approver)
-			}
-			return nil
+			return renderUpcoming(cmd.OutOrStdout(), result)
 		},
 	}
 
-	cmd.Flags().StringVar(&file, "file", defaultFile, "path to acceptance file")
-	cmd.Flags().IntVar(&days, "days", 30, "look-ahead window in days")
+	cmd.Flags().StringVar(&opts.File, "file", opts.File, "path to acceptance file")
+	cmd.Flags().IntVar(&opts.Days, "days", opts.Days, "look-ahead window in days")
 
 	return cmd
 }
 
+// --- history ---
+
+type historyOptions struct {
+	File   string
+	Format string
+}
+
+func (o *historyOptions) Normalize() error { return nil }
+
+func runHistory(opts historyOptions) ([]appexempt.AcknowledgmentEntry, error) {
+	f, err := appexempt.Load(opts.File)
+	if err != nil {
+		return nil, err
+	}
+	return f.History(), nil
+}
+
+func renderHistory(w io.Writer, entries []appexempt.AcknowledgmentEntry, format string) error {
+	if len(entries) == 0 {
+		_, err := fmt.Fprintln(w, "No acknowledgment history.")
+		return err
+	}
+	if format == "json" {
+		enc := json.NewEncoder(w)
+		enc.SetIndent("", "  ")
+		return enc.Encode(entries)
+	}
+	writeHistory(w, entries)
+	return nil
+}
+
 func newHistoryCmd() *cobra.Command {
-	var file, format string
+	opts := historyOptions{File: defaultFile, Format: "table"}
 
 	cmd := &cobra.Command{
 		Use:   "history",
@@ -335,28 +529,20 @@ Exit Codes:
 		Example:       "  stave exempt history\n  stave exempt history --format json",
 		SilenceUsage:  true,
 		SilenceErrors: true,
+		PreRunE: func(_ *cobra.Command, _ []string) error {
+			return opts.Normalize()
+		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			f, err := appexempt.Load(file)
+			entries, err := runHistory(opts)
 			if err != nil {
 				return err
 			}
-			history := f.History()
-			if len(history) == 0 {
-				fmt.Fprintln(cmd.OutOrStdout(), "No acknowledgment history.")
-				return nil
-			}
-			if format == "json" {
-				enc := json.NewEncoder(cmd.OutOrStdout())
-				enc.SetIndent("", "  ")
-				return enc.Encode(history)
-			}
-			writeHistory(cmd.OutOrStdout(), history)
-			return nil
+			return renderHistory(cmd.OutOrStdout(), entries, opts.Format)
 		},
 	}
 
-	cmd.Flags().StringVar(&file, "file", defaultFile, "path to acceptance file")
-	cmd.Flags().StringVarP(&format, "format", "f", "table", "output format: table | json")
+	cmd.Flags().StringVar(&opts.File, "file", opts.File, "path to acceptance file")
+	cmd.Flags().StringVarP(&opts.Format, "format", "f", opts.Format, "output format: table | json")
 
 	return cmd
 }
@@ -386,8 +572,51 @@ func writeHistory(w io.Writer, entries []appexempt.AcknowledgmentEntry) {
 	}
 }
 
+// --- validate ---
+
+type validateOptions struct {
+	File string
+}
+
+func (o *validateOptions) Normalize() error { return nil }
+
+type validateResult struct {
+	Errors []string
+}
+
+func runValidate(opts validateOptions) (validateResult, error) {
+	f, err := appexempt.Load(opts.File)
+	if err != nil {
+		return validateResult{}, err
+	}
+
+	// Load catalog for compensating control validation.
+	knownIDs := make(map[string]bool)
+	store := builtinctl.NewControlStore(controldata.FS, ".")
+	if controls, loadErr := store.All(); loadErr == nil {
+		for i := range controls {
+			knownIDs[string(controls[i].ID)] = true
+		}
+	}
+
+	return validateResult{Errors: f.ValidateWithCatalog(knownIDs)}, nil
+}
+
+func renderValidate(w io.Writer, r validateResult) error {
+	if len(r.Errors) == 0 {
+		_, err := fmt.Fprintln(w, "Acceptance file is valid.")
+		return err
+	}
+	for _, e := range r.Errors {
+		if _, err := fmt.Fprintf(w, "  ERROR: %s\n", e); err != nil {
+			return err
+		}
+	}
+	return errors.New("validation failed")
+}
+
 func newValidateCmd() *cobra.Command {
-	var file string
+	opts := validateOptions{File: defaultFile}
 
 	cmd := &cobra.Command{
 		Use:   "validate",
@@ -401,37 +630,24 @@ Exit Codes:
 		Example:       "  stave exempt validate --file ./stave-acknowledgments.yaml",
 		SilenceUsage:  true,
 		SilenceErrors: true,
+		PreRunE: func(_ *cobra.Command, _ []string) error {
+			return opts.Normalize()
+		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			f, err := appexempt.Load(file)
+			result, err := runValidate(opts)
 			if err != nil {
 				return err
 			}
-
-			// Load catalog for compensating control validation.
-			knownIDs := make(map[string]bool)
-			store := builtinctl.NewControlStore(controldata.FS, ".")
-			if controls, loadErr := store.All(); loadErr == nil {
-				for i := range controls {
-					knownIDs[string(controls[i].ID)] = true
-				}
-			}
-
-			errs := f.ValidateWithCatalog(knownIDs)
-			if len(errs) == 0 {
-				fmt.Fprintln(cmd.OutOrStdout(), "Acceptance file is valid.")
-				return nil
-			}
-			for _, e := range errs {
-				fmt.Fprintf(cmd.OutOrStdout(), "  ERROR: %s\n", e)
-			}
-			return errors.New("validation failed")
+			return renderValidate(cmd.OutOrStdout(), result)
 		},
 	}
 
-	cmd.Flags().StringVar(&file, "file", defaultFile, "path to acceptance file")
+	cmd.Flags().StringVar(&opts.File, "file", opts.File, "path to acceptance file")
 
 	return cmd
 }
+
+// --- list renderer (shared with newListCmd) ---
 
 func writeList(w io.Writer, f *appexempt.AcceptanceFile, format, listType string, showExpired bool) error {
 	if format == "json" {

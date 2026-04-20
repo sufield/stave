@@ -147,7 +147,7 @@ func resolveFlags(ec *EvalContext, req EvalContextRequest) error {
 	}
 
 	if !req.SkipFormat {
-		format, err := ResolveFormatValuePure(req.Format, req.FormatChanged, req.IsJSONMode)
+		format, err := ResolveFormatValue(req.Format)
 		if err != nil {
 			return err
 		}

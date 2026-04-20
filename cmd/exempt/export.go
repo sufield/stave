@@ -17,8 +17,82 @@ import (
 	"github.com/sufield/stave/internal/version"
 )
 
+type exportOptions struct {
+	File       string
+	Format     string
+	OutputFile string // --output: path to assessment.json
+	SystemUUID string
+	Assessor   string
+	OutPath    string // --out: write POAM to file instead of stdout
+}
+
+// Normalize validates that --format is supported. The previous
+// implementation deferred this into the runner; hoisting it lets
+// PreRunE reject bad flag combinations before side-effect code
+// (file loads) runs.
+func (o *exportOptions) Normalize() error {
+	if o.Format != "oscal-poam" {
+		return fmt.Errorf("unsupported format %q (use oscal-poam)", o.Format)
+	}
+	return nil
+}
+
+// exportResult carries the built POAM document and the writer
+// destination the caller resolved. Side effects (stdout vs file)
+// happen in runExport, matching the "runners do I/O" rule — the
+// renderer is an encoder, not a destination chooser.
+type exportResult struct {
+	Document map[string]any
+	Dest     io.Writer
+	CloseFn  func() error
+}
+
+func runExport(opts exportOptions, stdout io.Writer) (exportResult, error) {
+	af, err := appexempt.Load(opts.File)
+	if err != nil {
+		return exportResult{}, fmt.Errorf("load acceptance file: %w", err)
+	}
+
+	var assessment *report.Assessment
+	if opts.OutputFile != "" {
+		data, readErr := fsutil.ReadFileLimited(opts.OutputFile)
+		if readErr != nil {
+			return exportResult{}, fmt.Errorf("read assessment: %w", readErr)
+		}
+		var a report.Assessment
+		if jsonErr := json.Unmarshal(data, &a); jsonErr != nil {
+			return exportResult{}, fmt.Errorf("parse assessment: %w", jsonErr)
+		}
+		assessment = &a
+	}
+
+	poam := buildPOAM(af, assessment, opts.SystemUUID, opts.Assessor, time.Now().UTC())
+
+	dest := stdout
+	var closeFn func() error
+	if opts.OutPath != "" {
+		f, createErr := os.Create(opts.OutPath) //nolint:gosec // user-specified output path
+		if createErr != nil {
+			return exportResult{}, fmt.Errorf("create output: %w", createErr)
+		}
+		dest = f
+		closeFn = f.Close
+	}
+
+	return exportResult{Document: poam, Dest: dest, CloseFn: closeFn}, nil
+}
+
+func renderExport(r exportResult) error {
+	if r.CloseFn != nil {
+		defer func() { _ = r.CloseFn() }()
+	}
+	enc := json.NewEncoder(r.Dest)
+	enc.SetIndent("", "  ")
+	return enc.Encode(r.Document)
+}
+
 func newExportCmd() *cobra.Command {
-	var file, format, outputFile, systemUUID, assessor, outPath string
+	opts := exportOptions{File: defaultFile, Format: "oscal-poam", Assessor: "Stave automated assessment"}
 
 	cmd := &cobra.Command{
 		Use:   "export",
@@ -34,62 +108,26 @@ Exit Codes:
   stave exempt export --format oscal-poam --output assessment.json --out poam.json`,
 		SilenceUsage:  true,
 		SilenceErrors: true,
+		PreRunE: func(_ *cobra.Command, _ []string) error {
+			return opts.Normalize()
+		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runExemptExport(cmd.OutOrStdout(), file, format, outputFile, systemUUID, assessor, outPath)
+			result, err := runExport(opts, cmd.OutOrStdout())
+			if err != nil {
+				return err
+			}
+			return renderExport(result)
 		},
 	}
 
-	cmd.Flags().StringVar(&file, "file", defaultFile, "path to acknowledgment YAML file")
-	cmd.Flags().StringVarP(&format, "format", "f", "oscal-poam", "output format: oscal-poam")
-	cmd.Flags().StringVar(&outputFile, "output", "", "path to out.v0.1.json for open findings")
-	cmd.Flags().StringVar(&systemUUID, "system-uuid", "", "UUID of the System Security Plan")
-	cmd.Flags().StringVar(&assessor, "assessor", "Stave automated assessment", "assessor name")
-	cmd.Flags().StringVar(&outPath, "out", "", "write to file instead of stdout")
+	cmd.Flags().StringVar(&opts.File, "file", opts.File, "path to acknowledgment YAML file")
+	cmd.Flags().StringVarP(&opts.Format, "format", "f", opts.Format, "output format: oscal-poam")
+	cmd.Flags().StringVar(&opts.OutputFile, "output", "", "path to out.v0.1.json for open findings")
+	cmd.Flags().StringVar(&opts.SystemUUID, "system-uuid", "", "UUID of the System Security Plan")
+	cmd.Flags().StringVar(&opts.Assessor, "assessor", opts.Assessor, "assessor name")
+	cmd.Flags().StringVar(&opts.OutPath, "out", "", "write to file instead of stdout")
 
 	return cmd
-}
-
-func runExemptExport(stdout io.Writer, file, format, outputFile, systemUUID, assessor, outPath string) error {
-	if format != "oscal-poam" {
-		return fmt.Errorf("unsupported format %q (use oscal-poam)", format)
-	}
-
-	// Load acknowledgments.
-	af, err := appexempt.Load(file)
-	if err != nil {
-		return fmt.Errorf("load acceptance file: %w", err)
-	}
-
-	// Optionally load assessment for open findings.
-	var assessment *report.Assessment
-	if outputFile != "" {
-		data, readErr := fsutil.ReadFileLimited(outputFile)
-		if readErr != nil {
-			return fmt.Errorf("read assessment: %w", readErr)
-		}
-		var a report.Assessment
-		if jsonErr := json.Unmarshal(data, &a); jsonErr != nil {
-			return fmt.Errorf("parse assessment: %w", jsonErr)
-		}
-		assessment = &a
-	}
-
-	now := time.Now().UTC()
-	poam := buildPOAM(af, assessment, systemUUID, assessor, now)
-
-	out := stdout
-	if outPath != "" {
-		f, createErr := os.Create(outPath) //nolint:gosec // user-specified output path
-		if createErr != nil {
-			return fmt.Errorf("create output: %w", createErr)
-		}
-		defer f.Close()
-		out = f
-	}
-
-	enc := json.NewEncoder(out)
-	enc.SetIndent("", "  ")
-	return enc.Encode(poam)
 }
 
 func buildPOAM(af *appexempt.AcceptanceFile, assessment *report.Assessment, systemUUID, assessor string, now time.Time) map[string]any {

@@ -136,16 +136,6 @@ func ControlsFlagChanged(cmd *cobra.Command) bool {
 	return cmd.Flags().Changed(FlagControls)
 }
 
-// ResolveFormat returns the trimmed format string.
-func ResolveFormat(_ *cobra.Command, rawFormat string) string {
-	return strings.TrimSpace(rawFormat)
-}
-
-// ResolveFormatPure returns the trimmed format string without cobra.
-func ResolveFormatPure(rawFormat string, _ bool, _ bool) string {
-	return strings.TrimSpace(rawFormat)
-}
-
 // CollectVisibleFlags returns a list of all non-hidden flag strings (e.g., "--force", "-f").
 func CollectVisibleFlags(cmd *cobra.Command) []string {
 	var flags []string
