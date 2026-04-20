@@ -192,7 +192,11 @@
         ],
         "action": "Change the signed upload policy to use an exact key condition (eq instead of starts-with) that binds each upload to a specific object path. Generate unique object keys server-side."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     },
     {
       "finding_id": "sha256:30cb3aa1f0378f75",
@@ -416,7 +420,11 @@
         ],
         "action": "Update the app-signer configuration to enforce tenant prefix restrictions (enforce_prefix=true) and block path traversal (allow_traversal=false) on all presigned URL signers."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     }
   ],
   "issues": [
@@ -611,12 +619,8 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "0578f31dbab7ba7cc75679379c501bdc799e5a7f",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-h1-unikrn-254200/controls/CTL.S3.TENANT.ISOLATION.001.yaml",
-        "stave/testdata/e2e/e2e-h1-unikrn-254200/controls/CTL.S3.WRITE.SCOPE.001.yaml"
-      ]
+      "head_commit": "ab547939e47c809219c51ab1e17466440e85f3fa",
+      "dirty": false
     }
   }
 }

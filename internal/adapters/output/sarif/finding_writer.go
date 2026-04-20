@@ -183,10 +183,18 @@ func buildResults(findings []remediation.Finding, ruleIndex map[kernel.ControlID
 		// SARIF extension conventions.
 		alts := alternativesAsProperties(f.Alternatives)
 		hasClass := f.Classification != ""
-		if len(f.ChainMembership) > 0 || len(f.ReasoningTrace) > 0 || len(alts) > 0 || hasClass {
+		hasScopeTags := len(f.ScopeTags) > 0
+		if len(f.ChainMembership) > 0 || len(f.ReasoningTrace) > 0 || len(alts) > 0 || hasClass || hasScopeTags {
 			result.Properties = map[string]any{}
 			if hasClass {
 				result.Properties["stave/classification"] = string(f.Classification)
+			}
+			if hasScopeTags {
+				tags := make([]string, len(f.ScopeTags))
+				for i, t := range f.ScopeTags {
+					tags[i] = string(t)
+				}
+				result.Properties["stave/scope_tags"] = tags
 			}
 			if len(f.ChainMembership) > 0 {
 				cm := f.ChainMembership[0]

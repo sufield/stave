@@ -28,6 +28,7 @@ func FromFinding(f *remediation.Finding) FindingDTO {
 		ControlCCMV4:       f.ControlCCMV4,
 		Remediation:        fromRemediationSpec(f.RemediationSpec),
 		Classification:     string(f.Classification),
+		ScopeTags:          scopeTagsToStrings(f.ScopeTags),
 	}
 
 	if f.Source != nil {
@@ -341,6 +342,17 @@ func complianceToStrings(m policy.ComplianceMapping) map[string]string {
 	out := make(map[string]string, len(m))
 	for k, v := range m {
 		out[string(k)] = v
+	}
+	return out
+}
+
+func scopeTagsToStrings(tags []kernel.ScopeTag) []string {
+	if len(tags) == 0 {
+		return nil
+	}
+	out := make([]string, len(tags))
+	for i, t := range tags {
+		out[i] = string(t)
 	}
 	return out
 }

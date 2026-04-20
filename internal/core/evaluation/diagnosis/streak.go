@@ -53,8 +53,11 @@ type assetStreakRequest struct {
 // analyzeAssetStreak walks an asset's chronological lifecycle to find the
 // longest contiguous unsafe period (streak). A streak starts when the predicate
 // first matches and ends when it stops matching or at endTime if still unsafe.
-func analyzeAssetStreak(req assetStreakRequest) (maxStreak time.Duration, matched bool) {
-	if req.Eval == nil {
+//
+// req is passed by pointer to avoid copying the embedded ControlDefinition
+// (~512 bytes).
+func analyzeAssetStreak(req *assetStreakRequest) (maxStreak time.Duration, matched bool) {
+	if req == nil || req.Eval == nil {
 		return 0, false
 	}
 	var tracker streakTracker

@@ -159,7 +159,11 @@
         ],
         "action": "Remove bucket policy statements granting s3:PutObject, s3:DeleteObject, or s3:PutBucketPolicy to external accounts. If cross-account write is required, restrict to specific account IDs with condition keys."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     }
   ],
   "issues": [
@@ -306,11 +310,8 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "0578f31dbab7ba7cc75679379c501bdc799e5a7f",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-s3-external-write/controls/CTL.S3.ACCESS.003.yaml"
-      ]
+      "head_commit": "ab547939e47c809219c51ab1e17466440e85f3fa",
+      "dirty": false
     }
   }
 }

@@ -135,7 +135,11 @@
         ],
         "action": "Remove the ACL grant or policy statement granting write access to AuthenticatedUsers. Replace with specific IAM principals or use bucket policy with explicit account IDs. Enable S3 Public Access Block with BlockPublicAcls and IgnorePublicAcls set to true."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     }
   ],
   "issues": [
@@ -282,11 +286,8 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "0578f31dbab7ba7cc75679379c501bdc799e5a7f",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-s3-authenticated-write/controls/CTL.S3.AUTH.WRITE.001.yaml"
-      ]
+      "head_commit": "ab547939e47c809219c51ab1e17466440e85f3fa",
+      "dirty": false
     }
   }
 }

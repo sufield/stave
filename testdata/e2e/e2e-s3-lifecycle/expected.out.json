@@ -169,7 +169,11 @@
         ],
         "action": "Add S3 lifecycle rules to manage object expiration and transitions. Configure rules matching the retention period specified in the data-retention tag. Use lifecycle transitions to move data to cheaper storage classes before expiration."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     },
     {
       "finding_id": "sha256:b12eb488d6b1fc1f",
@@ -316,7 +320,11 @@
         ],
         "action": "Increase the lifecycle expiration period to at least the configured min_retention_days value. If the current rule is for storage class transition, ensure the expiration rule is separate and meets the minimum retention period."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     }
   ],
   "issues": [
@@ -513,12 +521,8 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "0578f31dbab7ba7cc75679379c501bdc799e5a7f",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-s3-lifecycle/controls/CTL.S3.LIFECYCLE.001.yaml",
-        "stave/testdata/e2e/e2e-s3-lifecycle/controls/CTL.S3.LIFECYCLE.002.yaml"
-      ]
+      "head_commit": "ab547939e47c809219c51ab1e17466440e85f3fa",
+      "dirty": false
     }
   }
 }

@@ -428,6 +428,7 @@ type ControlMetadata struct {
 	Exposure       *Exposure
 	Alternatives   []Alternative
 	Classification Classification
+	ScopeTags      []kernel.ScopeTag
 }
 
 // Fingerprint computes a stable hash of the control's identity and logic
@@ -460,5 +461,6 @@ func (ctl *ControlDefinition) Metadata() ControlMetadata {
 		Exposure:       ctl.Exposure,
 		Alternatives:   ctl.Alternatives,
 		Classification: ctl.Classification,
+		ScopeTags:      ctl.ScopeTags,
 	}
 }

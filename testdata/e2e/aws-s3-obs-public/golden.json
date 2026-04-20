@@ -254,7 +254,11 @@
           "note": "Stave splits public-access detection across composite, policy, and effective-public views; union covers Prowler."
         }
       ],
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     },
     {
       "finding_id": "sha256:3ce8171b2640244e",
@@ -398,7 +402,11 @@
         ],
         "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
       },
-      "classification": "absence_check"
+      "classification": "absence_check",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     },
     {
       "finding_id": "sha256:3ce8171b2640244e",
@@ -542,7 +550,11 @@
         ],
         "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
       },
-      "classification": "absence_check"
+      "classification": "absence_check",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     },
     {
       "finding_id": "sha256:3ce8171b2640244e",
@@ -686,7 +698,11 @@
         ],
         "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
       },
-      "classification": "absence_check"
+      "classification": "absence_check",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     },
     {
       "finding_id": "sha256:3ce8171b2640244e",
@@ -830,7 +846,11 @@
         ],
         "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
       },
-      "classification": "absence_check"
+      "classification": "absence_check",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     },
     {
       "finding_id": "sha256:c600c7fe517e8f5d",
@@ -966,7 +986,11 @@
           "note": "Stave requires all 4 flags vs Prowler's 2 (ignore_public_acls + restrict_public_buckets). Stave is stricter."
         }
       ],
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     },
     {
       "finding_id": "sha256:8df0e432ac4c38e4",
@@ -1123,7 +1147,11 @@
           "note": "Both check storage.versioning.mfa_delete_enabled on versioned buckets."
         }
       ],
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     },
     {
       "finding_id": "sha256:4deaa2ba101afbc5",
@@ -1272,7 +1300,11 @@
         ],
         "action": "Add a VPC gateway endpoint for S3 and route bucket traffic through it, or add an IP condition (aws:SourceIp) to the bucket policy to restrict access to known CIDR ranges."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     },
     {
       "finding_id": "sha256:377505bf614ff60b",
@@ -1427,7 +1459,11 @@
           "note": "Both check object_ownership.rule = BucketOwnerEnforced."
         }
       ],
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     },
     {
       "finding_id": "sha256:96f5d0e38950552e",
@@ -1568,7 +1604,11 @@
           "note": "Stave umbrella requires all 4 flags vs Prowler's 2; per-flag controls give actionable remediation."
         }
       ],
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     },
     {
       "finding_id": "sha256:184e616d42d418ff",
@@ -1709,7 +1749,11 @@
           "note": "Stave umbrella requires all 4 flags vs Prowler's 2; per-flag controls give actionable remediation."
         }
       ],
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     },
     {
       "finding_id": "sha256:5162c97d09aac8a6",
@@ -1850,7 +1894,11 @@
           "note": "Stave umbrella requires all 4 flags vs Prowler's 2; per-flag controls give actionable remediation."
         }
       ],
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     },
     {
       "finding_id": "sha256:c54e72c5a695247a",
@@ -1991,7 +2039,11 @@
           "note": "Stave umbrella requires all 4 flags vs Prowler's 2; per-flag controls give actionable remediation."
         }
       ],
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     }
   ],
   "issues": [

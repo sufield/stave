@@ -175,7 +175,7 @@ func computeStats(input Input) map[kernel.ControlID]controlStat {
 		cs := controlStat{matchedAssetIDs: make(map[asset.ID]struct{})}
 
 		for id, history := range assetHistories {
-			streak, matched := analyzeAssetStreak(assetStreakRequest{
+			streak, matched := analyzeAssetStreak(&assetStreakRequest{
 				Points:  history,
 				Control: *ctl,
 				EndTime: endTime,

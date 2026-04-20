@@ -510,7 +510,11 @@
         ],
         "action": "Update the trail to enable multi-region logging. Run: aws cloudtrail update-trail --name xxx --is-multi-region-trail"
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "cloudtrail"
+      ]
     },
     {
       "finding_id": "sha256:aa66250e8a1dc01c",
@@ -654,7 +658,11 @@
         ],
         "action": "Enable the Config recorder with all resource types. Run: aws configservice put-configuration-recorder --configuration-recorder name=default,roleARN=arn:...,recordingGroup={allSupported=true}"
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "config"
+      ]
     },
     {
       "finding_id": "sha256:81f43f35236b5e56",
@@ -792,7 +800,11 @@
         ],
         "action": "Enable VPC flow logs to CloudWatch Logs or S3. Run: aws ec2 create-flow-logs --resource-type VPC --resource-ids vpc-xxx --traffic-type ALL --log-destination-type cloud-watch-logs"
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "vpc"
+      ]
     },
     {
       "finding_id": "sha256:686a676fcb4f9731",
@@ -940,7 +952,11 @@
           "note": "Both check identity.root.has_access_keys."
         }
       ],
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "iam"
+      ]
     },
     {
       "finding_id": "sha256:d1659912ae8d6344",
@@ -1092,7 +1108,11 @@
           "note": "Both check root MFA presence."
         }
       ],
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "iam"
+      ]
     },
     {
       "finding_id": "sha256:6d6e5d5f2078bd42",
@@ -1262,7 +1282,11 @@
         ],
         "action": "Modify the instance to disable public accessibility. Run: aws rds modify-db-instance --db-instance-identifier xxx --no-publicly-accessible --apply-immediately"
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "rds"
+      ]
     },
     {
       "finding_id": "sha256:9ac53f47bd4f1f1b",
@@ -1405,7 +1429,11 @@
         ],
         "action": "Storage encryption can only be enabled at creation time. Create a snapshot, copy it with encryption enabled, then restore to a new encrypted instance. Enable encryption by default for new instances."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "rds"
+      ]
     },
     {
       "finding_id": "sha256:81b8ce81c12cc518",
@@ -1534,7 +1562,11 @@
         ],
         "action": "Set the minimum TLS version on the custom domain or API stage. For REST APIs, configure a security policy of TLS_1_2 on the custom domain name."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "apigateway"
+      ]
     },
     {
       "finding_id": "sha256:a52edc7322ea1dde",
@@ -1660,7 +1692,11 @@
         ],
         "action": "Configure automated backups via AWS Backup, RDS automated snapshots, or S3 cross-region replication depending on the resource type."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "backup"
+      ]
     },
     {
       "finding_id": "sha256:f237d540e872de4d",
@@ -1789,7 +1825,11 @@
         ],
         "action": "Configure the trail to use a KMS key for log encryption. Run: aws cloudtrail update-trail --name xxx --kms-key-id arn:aws:kms:..."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "cloudtrail"
+      ]
     },
     {
       "finding_id": "sha256:1bb3180bd93c6975",
@@ -1921,7 +1961,11 @@
         ],
         "action": "Enable log file validation on the trail. Run: aws cloudtrail update-trail --name xxx --enable-log-file-validation"
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "cloudtrail"
+      ]
     },
     {
       "finding_id": "sha256:801f9bd87a66bd5f",
@@ -2045,7 +2089,11 @@
         ],
         "action": "Set a retention policy on the log group. Run: aws logs put-retention-policy --log-group-name xxx --retention-in-days 365"
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "cloudwatch"
+      ]
     },
     {
       "finding_id": "sha256:a73625cd410ebe3c",
@@ -2172,7 +2220,11 @@
         ],
         "action": "Set MfaConfiguration to ON (required) on the user pool. Run: aws cognito-idp set-user-pool-mfa-config --user-pool-id xxx --mfa-configuration ON --software-token-mfa-configuration Enabled=true"
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "cognito"
+      ]
     },
     {
       "finding_id": "sha256:57cf047d8c46d33b",
@@ -2298,7 +2350,11 @@
         ],
         "action": "Update the table encryption to use a customer-managed KMS key. Run: aws dynamodb update-table --table-name xxx --sse-specification Enabled=true,SSEType=KMS,KMSMasterKeyId=arn:..."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "dynamodb"
+      ]
     },
     {
       "finding_id": "sha256:6ecde267626a20de",
@@ -2430,7 +2486,11 @@
         ],
         "action": "Enable EBS encryption by default for the account. For existing volumes, create an encrypted snapshot and restore to a new encrypted volume. Run: aws ec2 enable-ebs-encryption-by-default"
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "ec2"
+      ]
     },
     {
       "finding_id": "sha256:3a1554c5a78a5816",
@@ -2585,7 +2645,11 @@
         ],
         "action": "Launch instances in private subnets without public IP assignment. Use NAT Gateway or VPC endpoints for outbound internet access. Use ALB or NLB for inbound traffic that requires internet access."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "ec2"
+      ]
     },
     {
       "finding_id": "sha256:9ba0b33d2248da3a",
@@ -2713,7 +2777,11 @@
         ],
         "action": "In-transit encryption can only be enabled at cluster creation. Create a new replication group with TransitEncryptionEnabled=true and migrate data from the existing cluster."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "elasticache"
+      ]
     },
     {
       "finding_id": "sha256:571de1d96c48afd6",
@@ -2817,7 +2885,11 @@
         ],
         "action": "Add a listener rule on port 80 that redirects to HTTPS (443) with status code 301."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "elb"
+      ]
     },
     {
       "finding_id": "sha256:45813734adb9d32e",
@@ -2922,7 +2994,11 @@
         ],
         "action": "Update the HTTPS listener to use an ELBSecurityPolicy that enforces TLS 1.2 minimum (e.g., ELBSecurityPolicy-TLS-1-2-2017-01)."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "elb"
+      ]
     },
     {
       "finding_id": "sha256:1e9883ff6455c056",
@@ -3053,7 +3129,11 @@
         ],
         "action": "Update the key policy to restrict Principal to specific IAM roles or accounts. Remove any statements with Principal \"*\"."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "kms"
+      ]
     },
     {
       "finding_id": "sha256:d3c473c720840e6d",
@@ -3176,7 +3256,11 @@
         ],
         "action": "Enable automated backups with at least 7 days retention. Run: aws rds modify-db-instance --db-instance-identifier xxx --backup-retention-period 7 --apply-immediately"
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "rds"
+      ]
     },
     {
       "finding_id": "sha256:4faec0c040d11d18",
@@ -3303,7 +3387,11 @@
         ],
         "action": "Recreate the secret with a customer-managed KMS key specified. Secrets Manager does not allow changing the encryption key after creation."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "secretsmanager"
+      ]
     },
     {
       "finding_id": "sha256:284126ed74a244f3",
@@ -3426,7 +3514,11 @@
         ],
         "action": "Enable SSE-KMS on the topic. Run: aws sns set-topic-attributes --topic-arn xxx --attribute-name KmsMasterKeyId --attribute-value arn:aws:kms:..."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "sns"
+      ]
     },
     {
       "finding_id": "sha256:63bc7609a3b16aa7",
@@ -3549,7 +3641,11 @@
         ],
         "action": "Enable SSE-KMS on the queue. Run: aws sqs set-queue-attributes --queue-url xxx --attributes KmsMasterKeyId=arn:aws:kms:..."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "sqs"
+      ]
     },
     {
       "finding_id": "sha256:99ff439877cf27fd",
@@ -3673,7 +3769,11 @@
         ],
         "action": "Enable Multi-AZ deployment or configure cross-AZ replication depending on the resource type (RDS Multi-AZ, S3 cross-region replication, ELB multi-AZ targets)."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "backup"
+      ]
     },
     {
       "finding_id": "sha256:826ab06811b86f5a",
@@ -3797,7 +3897,11 @@
         ],
         "action": "Configure cross-region replication: S3 CRR, RDS cross-region read replica, or AWS Backup cross-region copy rule."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "backup"
+      ]
     },
     {
       "finding_id": "sha256:c2ed914d02c8ae20",
@@ -3925,7 +4029,11 @@
         ],
         "action": "Deploy Config Rules for your compliance requirements. Start with AWS managed rules for common checks (encrypted-volumes, restricted-common-ports, etc)."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "config"
+      ]
     },
     {
       "finding_id": "sha256:0eea80a827ddcfa6",
@@ -4026,7 +4134,11 @@
         ],
         "action": "Enable cross-zone load balancing. Run: aws elbv2 modify-load-balancer-attributes --load-balancer-arn xxx --attributes Key=load_balancing.cross_zone.enabled,Value=true"
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "elb"
+      ]
     },
     {
       "finding_id": "sha256:be85087768aeabce",
@@ -4125,7 +4237,11 @@
         ],
         "action": "Enable access logging to an S3 bucket. Run: aws elbv2 modify-load-balancer-attributes --load-balancer-arn xxx --attributes Key=access_logs.s3.enabled,Value=true Key=access_logs.s3.bucket,Value=my-elb-logs"
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "elb"
+      ]
     },
     {
       "finding_id": "sha256:2653bff61b751ad6",
@@ -4248,7 +4364,11 @@
         ],
         "action": "Enable CloudWatch log exports for the database engine. Run: aws rds modify-db-instance --db-instance-identifier xxx --cloudwatch-logs-export-configuration '{\"EnableLogTypes\":[\"audit\",\"error\",\"slowquery\"]}'"
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "rds"
+      ]
     },
     {
       "finding_id": "sha256:c215d91c260588c6",
@@ -4372,7 +4492,11 @@
         ],
         "action": "Modify the instance to enable Multi-AZ. Run: aws rds modify-db-instance --db-instance-identifier xxx --multi-az --apply-immediately"
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "rds"
+      ]
     },
     {
       "finding_id": "sha256:7ea0b9680c5e0447",
@@ -4496,7 +4620,11 @@
         ],
         "action": "Configure automatic rotation with a Lambda function. Run: aws secretsmanager rotate-secret --secret-id xxx --rotation-lambda-arn arn:aws:lambda:... --rotation-rules AutomaticallyAfterDays=90"
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "secretsmanager"
+      ]
     }
   ],
   "issues": [

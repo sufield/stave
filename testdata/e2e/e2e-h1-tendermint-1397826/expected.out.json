@@ -186,7 +186,11 @@
         ],
         "action": "Create the S3 bucket in your AWS account, or remove the DNS record, CDN origin, or application reference pointing to the unclaimed bucket."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     }
   ],
   "issues": [
@@ -360,11 +364,8 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "0578f31dbab7ba7cc75679379c501bdc799e5a7f",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-h1-tendermint-1397826/controls/CTL.S3.BUCKET.TAKEOVER.001.yaml"
-      ]
+      "head_commit": "ab547939e47c809219c51ab1e17466440e85f3fa",
+      "dirty": false
     }
   }
 }

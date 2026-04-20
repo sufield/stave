@@ -244,7 +244,11 @@
         ],
         "action": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     },
     {
       "finding_id": "sha256:a8db07ec8df71531",
@@ -469,7 +473,12 @@
         ],
         "action": "Immediately enable S3 Public Access Block (all four settings). Remove bucket policy statements granting access to Principal \"*\". Remove ACL grants to AllUsers or AuthenticatedUsers. Audit CloudTrail logs for unauthorized access during the exposure window."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3",
+        "sensitive-data"
+      ]
     },
     {
       "finding_id": "sha256:5ce777d4af066e45",
@@ -597,7 +606,11 @@
         ],
         "action": "Identify the identity-based policy statement granting read access and either remove it, scope it to specific bucket/object ARNs, or add conditions restricting the requesting principal. If a widely-trusted role is the root cause, tighten that role's trust policy first."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     },
     {
       "finding_id": "sha256:5d1205a18974cf1c",
@@ -725,7 +738,11 @@
         ],
         "action": "Identify the identity-based policy statement granting s3:ListBucket and remove it, scope it to specific bucket ARNs, or add conditions restricting the requesting principal. If a widely-trusted role is the root cause, tighten that role's trust policy first."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     },
     {
       "finding_id": "sha256:2d804935b823b211",
@@ -853,7 +870,11 @@
         ],
         "action": "Remove bucket policy statements that grant s3:ListBucket to Principal \"*\". Remove ACL grants that allow READ to AllUsers. Enable S3 Public Access Block."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     },
     {
       "finding_id": "sha256:3e039dfc23916f37",
@@ -1050,7 +1071,11 @@
         ],
         "action": "If listing is intentional, add the tag public_list_intended=true to the bucket. Otherwise, remove the policy or ACL granting s3:ListBucket to Principal \"*\" or AllUsers."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     },
     {
       "finding_id": "sha256:cfc8d5e23f723d4e",
@@ -1194,7 +1219,11 @@
         ],
         "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
       },
-      "classification": "absence_check"
+      "classification": "absence_check",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     },
     {
       "finding_id": "sha256:cfc8d5e23f723d4e",
@@ -1338,7 +1367,11 @@
         ],
         "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
       },
-      "classification": "absence_check"
+      "classification": "absence_check",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     },
     {
       "finding_id": "sha256:cfc8d5e23f723d4e",
@@ -1482,7 +1515,11 @@
         ],
         "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
       },
-      "classification": "absence_check"
+      "classification": "absence_check",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     },
     {
       "finding_id": "sha256:cfc8d5e23f723d4e",
@@ -1626,7 +1663,11 @@
         ],
         "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
       },
-      "classification": "absence_check"
+      "classification": "absence_check",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     },
     {
       "finding_id": "sha256:d94d878f0d5908e3",
@@ -1770,7 +1811,11 @@
         ],
         "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
       },
-      "classification": "absence_check"
+      "classification": "absence_check",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     },
     {
       "finding_id": "sha256:d94d878f0d5908e3",
@@ -1914,7 +1959,11 @@
         ],
         "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
       },
-      "classification": "absence_check"
+      "classification": "absence_check",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     },
     {
       "finding_id": "sha256:d94d878f0d5908e3",
@@ -2058,7 +2107,11 @@
         ],
         "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
       },
-      "classification": "absence_check"
+      "classification": "absence_check",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     },
     {
       "finding_id": "sha256:d94d878f0d5908e3",
@@ -2202,7 +2255,11 @@
         ],
         "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
       },
-      "classification": "absence_check"
+      "classification": "absence_check",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     },
     {
       "finding_id": "sha256:583ae8ba1a6a68ff",
@@ -2336,7 +2393,11 @@
         ],
         "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     },
     {
       "finding_id": "sha256:04376e057daa240f",
@@ -2458,7 +2519,11 @@
         ],
         "action": "Add a data-classification tag to the bucket with an appropriate value (e.g., phi, pii, confidential, internal, public, non-sensitive). Update your tagging policy to require this tag on all S3 buckets."
       },
-      "classification": "absence_check"
+      "classification": "absence_check",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     }
   ],
   "issues": [
@@ -3011,53 +3076,8 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "0578f31dbab7ba7cc75679379c501bdc799e5a7f",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.ACCESS.001.yaml",
-        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.ACCESS.002.yaml",
-        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.ACCESS.003.yaml",
-        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.ACL.ESCALATION.001.yaml",
-        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.ACL.FULLCONTROL.001.yaml",
-        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.ACL.RECON.001.yaml",
-        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.AUTH.READ.001.yaml",
-        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.AUTH.WRITE.001.yaml",
-        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.BUCKET.TAKEOVER.001.yaml",
-        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.CONTROLS.001.yaml",
-        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.DANGLING.ORIGIN.001.yaml",
-        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.ENCRYPT.001.yaml",
-        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.ENCRYPT.002.yaml",
-        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.ENCRYPT.003.yaml",
-        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.ENCRYPT.004.yaml",
-        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.GOVERNANCE.001.yaml",
-        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.INCOMPLETE.001.yaml",
-        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.LIFECYCLE.001.yaml",
-        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.LIFECYCLE.002.yaml",
-        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.LOCK.001.yaml",
-        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.LOCK.002.yaml",
-        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.LOCK.003.yaml",
-        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.LOG.001.yaml",
-        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.NETWORK.001.yaml",
-        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.POLICY.WRITE.001.yaml",
-        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.PUBLIC.001.yaml",
-        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.PUBLIC.002.yaml",
-        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.PUBLIC.003.yaml",
-        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.PUBLIC.004.yaml",
-        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.PUBLIC.005.yaml",
-        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.PUBLIC.006.yaml",
-        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.PUBLIC.007.yaml",
-        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.PUBLIC.008.yaml",
-        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.PUBLIC.LIST.001.yaml",
-        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.PUBLIC.LIST.002.yaml",
-        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.PUBLIC.PREFIX.001.yaml",
-        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.REPO.ARTIFACT.001.yaml",
-        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.TENANT.ISOLATION.001.yaml",
-        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.VERSION.001.yaml",
-        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.VERSION.002.yaml",
-        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.WEBSITE.PUBLIC.001.yaml",
-        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.WRITE.CONTENT.001.yaml",
-        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.WRITE.SCOPE.001.yaml"
-      ]
+      "head_commit": "ab547939e47c809219c51ab1e17466440e85f3fa",
+      "dirty": false
     }
   }
 }

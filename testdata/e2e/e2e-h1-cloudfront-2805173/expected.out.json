@@ -244,7 +244,11 @@
         ],
         "action": "Scope the execution role policy to only the specific actions and resource ARNs the function needs. Replace managed policies like AmazonS3FullAccess with inline policies scoped to specific buckets and actions. Use IAM Access Analyzer to identify unused permissions and generate a least-privilege policy from actual function activity."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "lambda"
+      ]
     },
     {
       "finding_id": "sha256:3bd75724de9608f7",
@@ -374,7 +378,11 @@
         ],
         "action": "Scope the execution role policy to only the specific actions and resource ARNs the function needs. Replace managed policies like AmazonS3FullAccess with inline policies scoped to specific buckets and actions. Use IAM Access Analyzer to identify unused permissions and generate a least-privilege policy from actual function activity."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "lambda"
+      ]
     },
     {
       "finding_id": "sha256:3589e399b5df2a40",
@@ -504,7 +512,11 @@
         ],
         "action": "Scope the execution role policy to only the specific actions and resource ARNs the function needs. Replace managed policies like AmazonS3FullAccess with inline policies scoped to specific buckets and actions. Use IAM Access Analyzer to identify unused permissions and generate a least-privilege policy from actual function activity."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "lambda"
+      ]
     },
     {
       "finding_id": "sha256:da5eaa3c60700baa",
@@ -634,7 +646,11 @@
         ],
         "action": "Scope the execution role policy to only the specific actions and resource ARNs the function needs. Replace managed policies like AmazonS3FullAccess with inline policies scoped to specific buckets and actions. Use IAM Access Analyzer to identify unused permissions and generate a least-privilege policy from actual function activity."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "lambda"
+      ]
     },
     {
       "finding_id": "sha256:e4433a0bee175ad8",
@@ -764,7 +780,11 @@
         ],
         "action": "Scope the execution role policy to only the specific actions and resource ARNs the function needs. Replace managed policies like AmazonS3FullAccess with inline policies scoped to specific buckets and actions. Use IAM Access Analyzer to identify unused permissions and generate a least-privilege policy from actual function activity."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "lambda"
+      ]
     },
     {
       "finding_id": "sha256:4942c3d80f3e1e24",
@@ -894,7 +914,11 @@
         ],
         "action": "Scope the execution role policy to only the specific actions and resource ARNs the function needs. Replace managed policies like AmazonS3FullAccess with inline policies scoped to specific buckets and actions. Use IAM Access Analyzer to identify unused permissions and generate a least-privilege policy from actual function activity."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "lambda"
+      ]
     },
     {
       "finding_id": "sha256:a3acb432af776825",
@@ -997,7 +1021,11 @@
         ],
         "action": "Review the identity-based policies granting admin-equivalent actions. Apply an SCP or permission boundary to constrain the effective permissions. If the principal requires admin access, tag it with stave/role-type: administrative to document the intent."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "iam"
+      ]
     },
     {
       "finding_id": "sha256:0d2f8798db3789f3",
@@ -1101,7 +1129,11 @@
         ],
         "action": "For direct primitives: remove or scope the escalation action to specific resource ARNs. For transitive chains: remove the sts:AssumeRole grant that enables the chain, or scope it to specific non-admin role ARNs."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "iam"
+      ]
     },
     {
       "finding_id": "sha256:c6ed7d32277555dd",
@@ -1205,7 +1237,11 @@
         ],
         "action": "For direct primitives: remove or scope the escalation action to specific resource ARNs. For transitive chains: remove the sts:AssumeRole grant that enables the chain, or scope it to specific non-admin role ARNs."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "iam"
+      ]
     }
   ],
   "issues": [
@@ -1685,13 +1721,8 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "0578f31dbab7ba7cc75679379c501bdc799e5a7f",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-h1-cloudfront-2805173/controls/CTL.IAM.NEP.ADMIN.001.yaml",
-        "stave/testdata/e2e/e2e-h1-cloudfront-2805173/controls/CTL.IAM.NEP.ESCALATION.001.yaml",
-        "stave/testdata/e2e/e2e-h1-cloudfront-2805173/controls/CTL.LAMBDA.ROLE.LEASTPRIV.001.yaml"
-      ]
+      "head_commit": "ab547939e47c809219c51ab1e17466440e85f3fa",
+      "dirty": false
     }
   }
 }

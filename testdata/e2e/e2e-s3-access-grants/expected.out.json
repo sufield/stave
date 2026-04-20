@@ -197,7 +197,11 @@
         ],
         "action": "Restrict grant scope to specific prefixes. Use READ not READWRITE."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     },
     {
       "finding_id": "sha256:548b689caded6b8d",
@@ -343,7 +347,11 @@
         ],
         "action": "Associate IAM Identity Center with the Access Grants instance using aws s3control associate-access-grants-identity-center. This enables directory-based grantee resolution."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     }
   ],
   "issues": [
@@ -509,12 +517,8 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "0578f31dbab7ba7cc75679379c501bdc799e5a7f",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-s3-access-grants/controls/CTL.S3.ACCESS.GRANTS.001.yaml",
-        "stave/testdata/e2e/e2e-s3-access-grants/controls/CTL.S3.ACCESS.GRANTS.002.yaml"
-      ]
+      "head_commit": "ab547939e47c809219c51ab1e17466440e85f3fa",
+      "dirty": false
     }
   }
 }

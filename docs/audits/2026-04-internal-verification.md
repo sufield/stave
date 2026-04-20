@@ -722,6 +722,31 @@ role, not just observation values). AI-ready stays at
 HOLDS (classification is additive metadata; does not
 regress field contents).
 
+**2026-04-20** — Finding.ScopeTags propagation bug
+closed. bucket-intent observed that findings came
+through without scope_tags despite controls authoring
+`scope_tags:` in YAML. Root cause:
+`ControlDefinition.Metadata()` at
+`internal/core/controldef/definition.go:451` silently
+omitted ScopeTags when assembling `ControlMetadata`.
+Fix: added the missing field copy — the data now
+flows through to `Finding.ScopeTags`, JSON's
+`findings[].scope_tags`, and SARIF's
+`properties.stave/scope_tags`. Text output unchanged.
+
+Observable outcome on the lordofheaven run: every
+finding's `scope_tags` populates correctly (54/54 with
+`["aws", "s3"]`). bucket-intent's three exit-condition
+verdicts unchanged. Side-finding worth noting: the
+`public-access` tag bucket-intent's observations
+hypothesized doesn't exist in the authored catalog.
+scope_tags is a vendor + service-domain marker, not a
+semantic-family marker. Authoring a finer-grained
+scope_tags vocabulary (public-access, credential-theft,
+network-exposure) would let consumers tighten filters;
+that's catalog-authoring work, not a primitive gap.
+Goldens regenerated as METADATA-ONLY.
+
 ## Prioritized refinement queue
 
 Ordered by (1) blocking gaps first, (2) architectural

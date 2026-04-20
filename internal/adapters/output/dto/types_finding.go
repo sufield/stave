@@ -39,6 +39,7 @@ type FindingDTO struct {
 	RemediationContext   *RemediationContextDTO    `json:"remediation_context,omitempty"`
 	Alternatives         []AlternativeDTO          `json:"alternatives,omitempty"`
 	Classification       string                    `json:"classification,omitempty"`
+	ScopeTags            []string                  `json:"scope_tags,omitempty"`
 }
 
 // AlternativeDTO mirrors controldef.Alternative for JSON output.

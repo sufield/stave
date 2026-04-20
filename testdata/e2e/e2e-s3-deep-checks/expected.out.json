@@ -222,7 +222,11 @@
         ],
         "action": "Remove bucket policy statements that grant s3:PutObject or s3:DeleteObject to Principal \"*\". Remove ACL grants that allow WRITE or FULL_CONTROL to AllUsers or AuthenticatedUsers. Enable S3 Public Access Block."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     },
     {
       "finding_id": "sha256:39aa8d4a21c81d37",
@@ -350,7 +354,11 @@
         ],
         "action": "Replace the wildcard principal with the specific AWS account IDs or ARNs that need access, or add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, aws:SourceIp (with a fixed CIDR), or aws:SourceArn. If the bucket genuinely needs to be public (CDN origin, static asset bucket), narrow the Actions to the minimum set and keep Public Access Block enabled where compatible."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     },
     {
       "finding_id": "sha256:447b517eb02e207e",
@@ -486,7 +494,11 @@
         ],
         "action": "Review bucket policy Principal elements for external account IDs. Remove statements granting access to accounts not in your organization. Use aws:PrincipalOrgID condition to restrict access to your AWS Organization."
       },
-      "classification": "parameterized_check"
+      "classification": "parameterized_check",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     },
     {
       "finding_id": "sha256:57cd3c51cb7f4bf1",
@@ -619,7 +631,11 @@
         ],
         "action": "Enable default bucket encryption using SSE-S3 (AES256) or SSE-KMS. Use aws s3api put-bucket-encryption to set the default encryption configuration. For sensitive data, use SSE-KMS with a customer-managed key."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     },
     {
       "finding_id": "sha256:18b53853355a91aa",
@@ -753,7 +769,11 @@
         ],
         "action": "Add a bucket policy statement that denies all actions when aws:SecureTransport is false. This forces all API calls to use HTTPS."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     },
     {
       "finding_id": "sha256:68d3599e7b239cd6",
@@ -885,7 +905,11 @@
         ],
         "action": "Enable S3 server access logging and specify a target bucket for log delivery. Ensure the target bucket has appropriate access controls and is in the same region."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     },
     {
       "finding_id": "sha256:56aadad096a67670",
@@ -1011,7 +1035,11 @@
         ],
         "action": "Enable versioning on the bucket using aws s3api put-bucket-versioning. Once enabled, configure lifecycle rules to manage noncurrent versions and control storage costs."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     }
   ],
   "issues": [
@@ -1455,17 +1483,8 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "0578f31dbab7ba7cc75679379c501bdc799e5a7f",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-s3-deep-checks/controls/CTL.S3.ACCESS.001.yaml",
-        "stave/testdata/e2e/e2e-s3-deep-checks/controls/CTL.S3.ACCESS.002.yaml",
-        "stave/testdata/e2e/e2e-s3-deep-checks/controls/CTL.S3.ENCRYPT.001.yaml",
-        "stave/testdata/e2e/e2e-s3-deep-checks/controls/CTL.S3.ENCRYPT.002.yaml",
-        "stave/testdata/e2e/e2e-s3-deep-checks/controls/CTL.S3.LOG.001.yaml",
-        "stave/testdata/e2e/e2e-s3-deep-checks/controls/CTL.S3.PUBLIC.003.yaml",
-        "stave/testdata/e2e/e2e-s3-deep-checks/controls/CTL.S3.VERSION.001.yaml"
-      ]
+      "head_commit": "ab547939e47c809219c51ab1e17466440e85f3fa",
+      "dirty": false
     }
   }
 }

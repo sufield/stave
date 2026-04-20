@@ -486,6 +486,8 @@ func classifyPath(path string) string {
 	if strings.HasPrefix(path, "runs[") && strings.Contains(path, ".results[") {
 		switch {
 		case strings.HasSuffix(path, ".properties.stave/classification"),
+			strings.HasSuffix(path, ".properties.stave/scope_tags"),
+			strings.Contains(path, ".properties.stave/scope_tags["),
 			strings.HasSuffix(path, ".properties.alternatives"),
 			strings.Contains(path, ".properties.alternatives["):
 			return "metadata"
@@ -515,7 +517,9 @@ func classifyPath(path string) string {
 			strings.HasPrefix(rest, "exposure."),
 			rest == "alternatives",
 			strings.HasPrefix(rest, "alternatives"),
-			rest == "classification":
+			rest == "classification",
+			rest == "scope_tags",
+			strings.HasPrefix(rest, "scope_tags["):
 			return "metadata"
 		}
 		// remediation_context.violation.reasoning[*].clause is the

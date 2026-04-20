@@ -33,6 +33,7 @@ type Finding struct {
 	ControlRemediation *policy.RemediationSpec  `json:"-"`
 	Alternatives       []policy.Alternative     `json:"alternatives,omitempty"`
 	Classification     policy.Classification    `json:"classification,omitempty"`
+	ScopeTags          []kernel.ScopeTag        `json:"scope_tags,omitempty"`
 
 	// ChainMembership is non-empty when this finding is a member
 	// of one or more chains that are currently firing.
@@ -222,6 +223,7 @@ func NewFindingFromMetadata(m policy.ControlMetadata) Finding {
 		Exposure:           m.Exposure,
 		Alternatives:       m.Alternatives,
 		Classification:     m.Classification,
+		ScopeTags:          m.ScopeTags,
 	}
 }
 

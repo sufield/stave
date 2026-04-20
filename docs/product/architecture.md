@@ -117,6 +117,17 @@ depend on them.
   `internal/core/controldef/classification.go`; required field
   on every control YAML; propagated through
   `Finding.Classification`.
+- **Scope tags** — the control's authoring-metadata tags
+  (`[aws, s3]`, `[aws, iam]`, `[gcp, gcs]`, etc.) propagated
+  to every finding. Used by apps that filter findings by
+  vendor or service domain. Source: `ScopeTags` on
+  `ControlDefinition` (declared in control YAML);
+  propagated through `Finding.ScopeTags` to JSON's
+  `findings[].scope_tags` and SARIF's
+  `properties.stave/scope_tags`. Orthogonal to
+  Classification: combining them lets consumers compose
+  filters on both axes (e.g., "state_assertion findings
+  tagged `s3`").
 - **Score breakdown** — the multiplicative factors that
   produced a finding's exposure score (`base × duration ×
   blast × exposure × chain`). Source: `ScoreBreakdown` field on
