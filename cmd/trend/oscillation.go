@@ -106,15 +106,7 @@ Exit Codes:
 				return strings.Compare(a.AssetID, b.AssetID)
 			})
 
-			stdout := cmd.OutOrStdout()
-			if format == "json" {
-				enc := json.NewEncoder(stdout)
-				enc.SetIndent("", "  ")
-				return enc.Encode(results)
-			}
-
-			writeOscillationTable(stdout, results)
-			return nil
+			return renderOscillation(cmd.OutOrStdout(), results, format)
 		},
 	}
 
@@ -124,6 +116,20 @@ Exit Codes:
 	cmd.Flags().StringVarP(&format, "format", "f", "table", "Output format: table or json")
 
 	return cmd
+}
+
+// renderOscillation writes the classification results in the
+// requested format. Takes an io.Writer so the caller — typically
+// RunE resolving cmd.OutOrStdout() — owns the cobra boundary; this
+// function stays off the cobra import graph.
+func renderOscillation(w io.Writer, results []oscillation.Classification, format string) error {
+	if format == "json" {
+		enc := json.NewEncoder(w)
+		enc.SetIndent("", "  ")
+		return enc.Encode(results)
+	}
+	writeOscillationTable(w, results)
+	return nil
 }
 
 func writeOscillationTable(w io.Writer, results []oscillation.Classification) {

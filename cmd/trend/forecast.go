@@ -96,15 +96,7 @@ Exit Codes:
 				return err
 			}
 
-			switch format {
-			case "json":
-				enc := json.NewEncoder(cmd.OutOrStdout())
-				enc.SetIndent("", "  ")
-				return enc.Encode(result)
-			default:
-				writeForecastTable(cmd.OutOrStdout(), result)
-				return nil
-			}
+			return renderForecast(cmd.OutOrStdout(), result, format)
 		},
 	}
 
@@ -161,6 +153,19 @@ func buildMTTRHistory(assessments []*report.Assessment) map[string][]float64 {
 	}
 
 	return sevTotals
+}
+
+// renderForecast writes the forecast result in the requested
+// format. Takes an io.Writer so the caller owns the cobra
+// boundary; this function stays off the cobra import graph.
+func renderForecast(w io.Writer, r *forecast.Result, format string) error {
+	if format == "json" {
+		enc := json.NewEncoder(w)
+		enc.SetIndent("", "  ")
+		return enc.Encode(r)
+	}
+	writeForecastTable(w, r)
+	return nil
 }
 
 func writeForecastTable(w io.Writer, r *forecast.Result) {

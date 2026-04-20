@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	appconfig "github.com/sufield/stave/internal/app/config"
@@ -18,6 +19,24 @@ import (
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/util/jsonutil"
 )
+
+// renderGate writes the gate response in JSON (when isJSON) or
+// text. Text is suppressed when quiet is set. Takes an io.Writer
+// so the caller owns the cobra boundary.
+func renderGate(w io.Writer, resp usecase.GateResponse, isJSON, quiet bool) error {
+	if isJSON {
+		return jsonutil.WriteIndented(w, resp)
+	}
+	if quiet {
+		return nil
+	}
+	status := "FAIL"
+	if resp.Passed {
+		status = "PASS"
+	}
+	_, err := fmt.Fprintf(w, "Gate %s (%s): %s\n", status, resp.Policy, resp.Reason)
+	return err
+}
 
 // Deps groups the infrastructure implementations for the gate command.
 type Deps struct {
@@ -119,18 +138,8 @@ Exit Codes:
 				}
 			}
 
-			if cfg.Format.IsJSON() {
-				if renderErr := jsonutil.WriteIndented(cfg.Stdout, resp); renderErr != nil {
-					return renderErr
-				}
-			} else if !cfg.Quiet {
-				status := "FAIL"
-				if resp.Passed {
-					status = "PASS"
-				}
-				if _, renderErr := fmt.Fprintf(cfg.Stdout, "Gate %s (%s): %s\n", status, resp.Policy, resp.Reason); renderErr != nil {
-					return renderErr
-				}
+			if renderErr := renderGate(cfg.Stdout, resp, cfg.Format.IsJSON(), cfg.Quiet); renderErr != nil {
+				return renderErr
 			}
 
 			if !resp.Passed {

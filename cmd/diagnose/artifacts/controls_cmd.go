@@ -179,17 +179,21 @@ Exit Codes:
 		SilenceErrors: true,
 		Args:          cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			names := predicates.ListAliases(category)
-			for _, name := range names {
-				if _, err := fmt.Fprintln(cmd.OutOrStdout(), name); err != nil {
-					return err
-				}
-			}
-			return nil
+			return renderAliasNames(cmd.OutOrStdout(), predicates.ListAliases(category))
 		},
 	}
 	cmd.Flags().StringVar(&category, "category", "", "Filter by category (e.g. Encryption, Logging)")
 	return cmd
+}
+
+// renderAliasNames writes one alias name per line.
+func renderAliasNames(w io.Writer, names []string) error {
+	for _, name := range names {
+		if _, err := fmt.Fprintln(w, name); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func newControlsAliasExplainCmd() *cobra.Command {
@@ -256,21 +260,7 @@ Exit Codes:
 				AttackStage: attackStage,
 			})
 
-			stdout := cmd.OutOrStdout()
-			if format == "json" {
-				return jsonutil.WriteIndented(stdout, results)
-			}
-
-			if len(results) == 0 {
-				_, err := fmt.Fprintln(stdout, "No matching controls found.")
-				return err
-			}
-			for _, r := range results {
-				if _, err := fmt.Fprintf(stdout, "%-30s %-8s %s\n", r.ControlID, r.Severity, r.Name); err != nil {
-					return err
-				}
-			}
-			return nil
+			return renderControlSearch(cmd.OutOrStdout(), results, format)
 		},
 	}
 
@@ -281,6 +271,25 @@ Exit Codes:
 	cmd.Flags().StringVarP(&format, "format", "f", "text", "Output format: text or json")
 
 	return cmd
+}
+
+// renderControlSearch writes catalog-search results in the
+// requested format. Takes an io.Writer so the caller owns the
+// cobra boundary; this function stays off the cobra import graph.
+func renderControlSearch(w io.Writer, results []catalogsearch.SearchResult, format string) error {
+	if format == "json" {
+		return jsonutil.WriteIndented(w, results)
+	}
+	if len(results) == 0 {
+		_, err := fmt.Fprintln(w, "No matching controls found.")
+		return err
+	}
+	for _, r := range results {
+		if _, err := fmt.Fprintf(w, "%-30s %-8s %s\n", r.ControlID, r.Severity, r.Name); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // buildPolicySource constructs the right ControlProvider based on config.
