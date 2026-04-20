@@ -182,7 +182,8 @@
           }
         ],
         "action": "Add an exact content-type condition to the signed upload policy (e.g., eq $Content-Type image/jpeg). Avoid starts-with with empty prefix, which allows any content type."
-      }
+      },
+      "classification": "state_assertion"
     }
   ],
   "issues": [
@@ -330,8 +331,11 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "d3b6ec6771a33f08d03385b88034130c1a381d7e",
-      "dirty": false
+      "head_commit": "0578f31dbab7ba7cc75679379c501bdc799e5a7f",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-s3-upload-content-type/controls/CTL.S3.WRITE.CONTENT.001.yaml"
+      ]
     }
   }
 }

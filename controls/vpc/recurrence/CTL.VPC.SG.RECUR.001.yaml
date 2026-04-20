@@ -16,6 +16,7 @@ scope_tags:
   - aws
   - vpc
 type: unsafe_recurrence
+classification: aggregate_check
 params:
   recurrence_limit: 2
   window_days: 30

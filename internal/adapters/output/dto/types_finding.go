@@ -38,6 +38,7 @@ type FindingDTO struct {
 	ReasoningTrace       []MatchedClauseDTO        `json:"reasoning_trace,omitempty"`
 	RemediationContext   *RemediationContextDTO    `json:"remediation_context,omitempty"`
 	Alternatives         []AlternativeDTO          `json:"alternatives,omitempty"`
+	Classification       string                    `json:"classification,omitempty"`
 }
 
 // AlternativeDTO mirrors controldef.Alternative for JSON output.

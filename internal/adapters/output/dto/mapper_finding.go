@@ -27,6 +27,7 @@ func FromFinding(f *remediation.Finding) FindingDTO {
 		ControlCompliance:  complianceToStrings(f.ControlCompliance),
 		ControlCCMV4:       f.ControlCCMV4,
 		Remediation:        fromRemediationSpec(f.RemediationSpec),
+		Classification:     string(f.Classification),
 	}
 
 	if f.Source != nil {

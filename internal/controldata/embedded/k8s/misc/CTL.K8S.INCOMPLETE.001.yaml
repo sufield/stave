@@ -12,6 +12,7 @@ severity: low
 scope_tags:
   - kubernetes
 type: unsafe_state
+classification: state_assertion
 params: {}
 remediation:
   description: >

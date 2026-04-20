@@ -26,6 +26,7 @@ scope_tags:
   - iam
   - glue
 type: unsafe_state
+classification: state_assertion
 params:
   attack_stage: privilege_escalation
   base_impact: 9

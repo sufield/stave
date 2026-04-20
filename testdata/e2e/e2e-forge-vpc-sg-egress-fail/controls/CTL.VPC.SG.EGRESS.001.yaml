@@ -19,6 +19,7 @@ scope_tags:
   - aws
   - vpc
 type: unsafe_state
+classification: state_assertion
 params:
   attack_stage: lateral_movement
 remediation:

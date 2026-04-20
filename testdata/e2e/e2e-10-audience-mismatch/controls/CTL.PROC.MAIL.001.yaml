@@ -14,6 +14,7 @@ description: |
   - OR intended_audience is empty
   - OR actual_audience is empty
 type: audience_boundary
+classification: state_assertion
 params: {}
 unsafe_predicate:
   any:

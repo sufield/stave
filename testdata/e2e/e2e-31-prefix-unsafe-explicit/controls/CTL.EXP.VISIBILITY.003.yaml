@@ -10,6 +10,7 @@ scope_tags:
   - s3
 version: ctrl.v1
 type: prefix_exposure
+classification: absence_check
 params:
   allowed_public_prefixes:
     - "images/"

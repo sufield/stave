@@ -13,6 +13,7 @@ compliance:
 scope_tags:
   - active_directory
 type: unsafe_state
+classification: parameterized_check
 params:
   base_impact: 9
   attack_stage: persistence

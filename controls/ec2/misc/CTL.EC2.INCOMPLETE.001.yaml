@@ -13,6 +13,7 @@ scope_tags:
   - aws
   - ec2
 type: unsafe_state
+classification: absence_check
 params: {}
 remediation:
   description: >

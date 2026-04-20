@@ -21,6 +21,7 @@ scope_tags:
   - iam
   - supply-chain
 type: unsafe_state
+classification: state_assertion
 params:
   base_impact: 10
   attack_stage: initial_access

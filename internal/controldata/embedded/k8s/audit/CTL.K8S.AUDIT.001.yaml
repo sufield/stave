@@ -16,6 +16,7 @@ scope_tags:
   - kubernetes
   - audit
 type: unsafe_state
+classification: state_assertion
 params:
   attack_stage: detection_evasion
 remediation:

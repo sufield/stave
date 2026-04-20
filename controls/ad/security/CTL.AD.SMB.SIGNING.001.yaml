@@ -16,6 +16,7 @@ compliance:
 scope_tags:
   - active_directory
 type: unsafe_state
+classification: state_assertion
 params:
   base_impact: 7
   attack_stage: lateral_movement

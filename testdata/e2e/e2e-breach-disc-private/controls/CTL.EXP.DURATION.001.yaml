@@ -7,6 +7,7 @@ description: |
   rather than intentional temporary exposure.
   Derived from prc-entropy analysis: highly_structured pattern
 type: unsafe_duration
+classification: aggregate_check
 severity: high
 params:
   max_unsafe_duration: "24h"

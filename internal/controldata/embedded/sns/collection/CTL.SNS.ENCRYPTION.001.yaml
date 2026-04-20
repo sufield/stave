@@ -20,6 +20,7 @@ scope_tags:
   - aws
   - sns
 type: unsafe_state
+classification: state_assertion
 params:
   attack_stage: collection
 remediation:

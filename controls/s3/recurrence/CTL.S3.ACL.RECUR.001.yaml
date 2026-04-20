@@ -14,6 +14,7 @@ scope_tags:
   - aws
   - s3
 type: unsafe_recurrence
+classification: aggregate_check
 params:
   recurrence_limit: 1
   window_days: 7

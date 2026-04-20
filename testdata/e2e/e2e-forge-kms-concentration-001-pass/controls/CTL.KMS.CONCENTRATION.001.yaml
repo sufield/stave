@@ -17,6 +17,7 @@ scope_tags:
   - aws
   - kms
 type: unsafe_state
+classification: parameterized_check
 params:
   base_impact: 8
   attack_stage: resilience

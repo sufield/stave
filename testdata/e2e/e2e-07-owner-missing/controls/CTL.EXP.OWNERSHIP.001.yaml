@@ -3,6 +3,7 @@ id: CTL.EXP.OWNERSHIP.001
 name: Public Exposure Requires Owner
 description: A publicly exposed resource must have an owner. Missing ownership on public resources indicates unaccountable exposure.
 type: ownership_required
+classification: state_assertion
 params: {}
 unsafe_predicate:
   all:

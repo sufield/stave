@@ -28,6 +28,7 @@ scope_tags:
   - aws
   - organizations
 type: unsafe_state
+classification: state_assertion
 params:
   attack_stage: detection_evasion
   base_impact: 8

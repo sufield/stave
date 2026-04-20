@@ -28,6 +28,7 @@ scope_tags:
   - aws
   - shield
 type: unsafe_state
+classification: state_assertion
 params:
   attack_stage: resilience
   base_impact: 8

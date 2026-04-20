@@ -263,7 +263,8 @@
           }
         ],
         "action": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
-      }
+      },
+      "classification": "state_assertion"
     },
     {
       "finding_id": "sha256:482a1ac6937bd145",
@@ -402,7 +403,8 @@
           }
         ],
         "action": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
-      }
+      },
+      "classification": "state_assertion"
     },
     {
       "finding_id": "sha256:0b92ba3d2504b8d5",
@@ -541,7 +543,8 @@
           }
         ],
         "action": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
-      }
+      },
+      "classification": "state_assertion"
     },
     {
       "finding_id": "sha256:afd4d52b25be3baa",
@@ -668,7 +671,8 @@
           }
         ],
         "action": "Remove bucket policy statements that grant s3:PutObject or s3:DeleteObject to Principal \"*\". Remove ACL grants that allow WRITE or FULL_CONTROL to AllUsers or AuthenticatedUsers. Enable S3 Public Access Block."
-      }
+      },
+      "classification": "state_assertion"
     },
     {
       "finding_id": "sha256:9885b41f3e8e5b79",
@@ -794,7 +798,8 @@
           }
         ],
         "action": "Remove or constrain the policy statement granting read actions to Principal \"*\" or AWS: \"*\". If broad read access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public read."
-      }
+      },
+      "classification": "aggregate_check"
     },
     {
       "finding_id": "sha256:e9b8512b9fed396b",
@@ -920,7 +925,8 @@
           }
         ],
         "action": "Remove or constrain the policy statement granting read actions to Principal \"*\" or AWS: \"*\". If broad read access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public read."
-      }
+      },
+      "classification": "aggregate_check"
     },
     {
       "finding_id": "sha256:94fd30ba678b6000",
@@ -1046,7 +1052,8 @@
           }
         ],
         "action": "Remove or constrain the policy statement granting read actions to Principal \"*\" or AWS: \"*\". If broad read access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public read."
-      }
+      },
+      "classification": "aggregate_check"
     },
     {
       "finding_id": "sha256:d81c1dac4e7e312a",
@@ -1179,7 +1186,8 @@
           }
         ],
         "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
-      }
+      },
+      "classification": "state_assertion"
     },
     {
       "finding_id": "sha256:748776a78c800b08",
@@ -1312,7 +1320,8 @@
           }
         ],
         "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
-      }
+      },
+      "classification": "state_assertion"
     },
     {
       "finding_id": "sha256:d14260350514a42e",
@@ -1445,7 +1454,8 @@
           }
         ],
         "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
-      }
+      },
+      "classification": "state_assertion"
     }
   ],
   "issues": [
@@ -1970,8 +1980,35 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "d3b6ec6771a33f08d03385b88034130c1a381d7e",
-      "dirty": false
+      "head_commit": "0578f31dbab7ba7cc75679379c501bdc799e5a7f",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-h1-shopify-94502/controls/CTL.S3.ACCESS.001.yaml",
+        "stave/testdata/e2e/e2e-h1-shopify-94502/controls/CTL.S3.ACCESS.002.yaml",
+        "stave/testdata/e2e/e2e-h1-shopify-94502/controls/CTL.S3.ACCESS.003.yaml",
+        "stave/testdata/e2e/e2e-h1-shopify-94502/controls/CTL.S3.CONTROLS.001.yaml",
+        "stave/testdata/e2e/e2e-h1-shopify-94502/controls/CTL.S3.ENCRYPT.001.yaml",
+        "stave/testdata/e2e/e2e-h1-shopify-94502/controls/CTL.S3.ENCRYPT.002.yaml",
+        "stave/testdata/e2e/e2e-h1-shopify-94502/controls/CTL.S3.ENCRYPT.003.yaml",
+        "stave/testdata/e2e/e2e-h1-shopify-94502/controls/CTL.S3.ENCRYPT.004.yaml",
+        "stave/testdata/e2e/e2e-h1-shopify-94502/controls/CTL.S3.GOVERNANCE.001.yaml",
+        "stave/testdata/e2e/e2e-h1-shopify-94502/controls/CTL.S3.INCOMPLETE.001.yaml",
+        "stave/testdata/e2e/e2e-h1-shopify-94502/controls/CTL.S3.LIFECYCLE.001.yaml",
+        "stave/testdata/e2e/e2e-h1-shopify-94502/controls/CTL.S3.LIFECYCLE.002.yaml",
+        "stave/testdata/e2e/e2e-h1-shopify-94502/controls/CTL.S3.LOCK.001.yaml",
+        "stave/testdata/e2e/e2e-h1-shopify-94502/controls/CTL.S3.LOCK.002.yaml",
+        "stave/testdata/e2e/e2e-h1-shopify-94502/controls/CTL.S3.LOCK.003.yaml",
+        "stave/testdata/e2e/e2e-h1-shopify-94502/controls/CTL.S3.LOG.001.yaml",
+        "stave/testdata/e2e/e2e-h1-shopify-94502/controls/CTL.S3.NETWORK.001.yaml",
+        "stave/testdata/e2e/e2e-h1-shopify-94502/controls/CTL.S3.PUBLIC.001.yaml",
+        "stave/testdata/e2e/e2e-h1-shopify-94502/controls/CTL.S3.PUBLIC.002.yaml",
+        "stave/testdata/e2e/e2e-h1-shopify-94502/controls/CTL.S3.PUBLIC.003.yaml",
+        "stave/testdata/e2e/e2e-h1-shopify-94502/controls/CTL.S3.PUBLIC.004.yaml",
+        "stave/testdata/e2e/e2e-h1-shopify-94502/controls/CTL.S3.PUBLIC.005.yaml",
+        "stave/testdata/e2e/e2e-h1-shopify-94502/controls/CTL.S3.PUBLIC.006.yaml",
+        "stave/testdata/e2e/e2e-h1-shopify-94502/controls/CTL.S3.VERSION.001.yaml",
+        "stave/testdata/e2e/e2e-h1-shopify-94502/controls/CTL.S3.VERSION.002.yaml"
+      ]
     }
   }
 }

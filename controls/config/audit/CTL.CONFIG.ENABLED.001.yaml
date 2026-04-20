@@ -24,6 +24,7 @@ scope_tags:
   - aws
   - config
 type: unsafe_state
+classification: state_assertion
 params:
   attack_stage: detection_evasion
   blast_radius:

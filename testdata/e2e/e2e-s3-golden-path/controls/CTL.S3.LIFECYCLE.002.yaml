@@ -18,6 +18,7 @@ scope_tags:
   - aws
   - s3
 type: unsafe_state
+classification: state_assertion
 params:
   attack_stage: resilience
   # Minimum retention period in days. Default is 2190 (6 years, HIPAA minimum).

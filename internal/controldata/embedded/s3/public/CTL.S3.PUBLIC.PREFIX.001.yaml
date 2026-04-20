@@ -17,6 +17,7 @@ scope_tags:
   - aws
   - s3
 type: prefix_exposure
+classification: absence_check
 params:
   attack_stage: initial_access
   protected_prefixes:

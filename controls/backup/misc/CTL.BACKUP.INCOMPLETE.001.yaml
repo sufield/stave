@@ -12,6 +12,7 @@ scope_tags:
   - aws
   - backup
 type: unsafe_state
+classification: absence_check
 params: {}
 remediation:
   description: >

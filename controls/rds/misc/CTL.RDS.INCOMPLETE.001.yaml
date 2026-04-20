@@ -13,6 +13,7 @@ scope_tags:
   - aws
   - rds
 type: unsafe_state
+classification: state_assertion
 params: {}
 remediation:
   description: >

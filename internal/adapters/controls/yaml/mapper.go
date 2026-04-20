@@ -26,6 +26,7 @@ func controlDefinitionToDomain(y yamlControlDefinition) policy.ControlDefinition
 		Compliance:           mapping,
 		CCMV4:                ccmV4,
 		Type:                 y.Type,
+		Classification:       policy.Classification(y.Classification),
 		Params:               policy.NewParams(y.Params),
 		UnsafePredicate:      unsafePredicateToDomain(y.UnsafePredicate),
 		UnsafePredicateAlias: y.UnsafePredicateAlias,

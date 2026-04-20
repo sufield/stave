@@ -7,6 +7,7 @@ description: |
   indicating systematic exposure rather than random events.
   Pattern classification: structured (high confidence)
 type: unsafe_state
+classification: state_assertion
 severity: critical
 params:
   max_unsafe_duration: "0h"

@@ -32,6 +32,7 @@ type Finding struct {
 	PostureDrift       *PostureDrift            `json:"posture_drift,omitempty"`
 	ControlRemediation *policy.RemediationSpec  `json:"-"`
 	Alternatives       []policy.Alternative     `json:"alternatives,omitempty"`
+	Classification     policy.Classification    `json:"classification,omitempty"`
 
 	// ChainMembership is non-empty when this finding is a member
 	// of one or more chains that are currently firing.
@@ -220,6 +221,7 @@ func NewFindingFromMetadata(m policy.ControlMetadata) Finding {
 		ControlRemediation: m.Remediation,
 		Exposure:           m.Exposure,
 		Alternatives:       m.Alternatives,
+		Classification:     m.Classification,
 	}
 }
 

@@ -225,7 +225,8 @@
           }
         ],
         "action": "1. Review whether public CDN access is intentional for this bucket. 2. If not intentional, remove the CloudFront distribution or restrict\n   it with signed URLs/cookies.\n3. If intentional, document this as an acknowledged exposure path\n   and add a Stave exemption for this bucket."
-      }
+      },
+      "classification": "state_assertion"
     },
     {
       "finding_id": "sha256:cbf48381fc3f897a",
@@ -345,7 +346,8 @@
           }
         ],
         "action": "1. Create an Origin Access Control for the distribution. 2. Update the distribution origin to use OAC instead of OAI. 3. Update the bucket policy to grant cloudfront.amazonaws.com\n   with a Condition restricting to the distribution ARN.\n4. Remove the legacy OAI."
-      }
+      },
+      "classification": "state_assertion"
     }
   ],
   "issues": [
@@ -566,8 +568,12 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "d3b6ec6771a33f08d03385b88034130c1a381d7e",
-      "dirty": false
+      "head_commit": "0578f31dbab7ba7cc75679379c501bdc799e5a7f",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-s3-cloudfront-oac/controls/CTL.S3.CDN.EXPOSURE.001.yaml",
+        "stave/testdata/e2e/e2e-s3-cloudfront-oac/controls/CTL.S3.CDN.OAC.001.yaml"
+      ]
     }
   }
 }

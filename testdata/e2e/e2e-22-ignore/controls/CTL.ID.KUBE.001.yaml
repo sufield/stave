@@ -5,6 +5,7 @@ description: |
   Detects ClusterRoleBindings that bind to the cluster-admin ClusterRole.
   Applies to: k8s.clusterrolebinding resources
 type: unsafe_state
+classification: state_assertion
 severity: critical
 params: {}
 unsafe_predicate:

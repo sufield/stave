@@ -24,6 +24,7 @@ scope_tags:
   - iam
   - ec2
 type: unsafe_state
+classification: state_assertion
 params:
   attack_stage: privilege_escalation
   base_impact: 9

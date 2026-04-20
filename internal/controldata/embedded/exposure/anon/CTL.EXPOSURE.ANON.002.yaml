@@ -20,6 +20,7 @@ scope_tags:
   - aws
   - cross-service
 type: unsafe_state
+classification: state_assertion
 params:
   base_impact: 7
   attack_stage: initial_access

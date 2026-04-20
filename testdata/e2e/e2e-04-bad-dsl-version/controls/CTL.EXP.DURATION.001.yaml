@@ -3,6 +3,7 @@ id: CTL.EXP.DURATION.001
 name: Unsafe Exposure Duration Bound
 description: Bad DSL version
 type: unsafe_duration
+classification: aggregate_check
 params:
   max_unsafe_duration: "168h"
 unsafe_predicate:

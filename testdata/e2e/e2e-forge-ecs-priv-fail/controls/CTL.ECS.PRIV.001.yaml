@@ -16,6 +16,7 @@ scope_tags:
   - aws
   - ecs
 type: unsafe_state
+classification: state_assertion
 params:
   attack_stage: privilege_escalation
 remediation:

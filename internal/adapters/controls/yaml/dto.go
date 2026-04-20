@@ -20,6 +20,7 @@ type yamlControlDefinition struct {
 	ApplicableAssetTypes []string             `yaml:"applicable_asset_types,omitempty"`
 	Compliance           map[string]any       `yaml:"compliance,omitempty"`
 	Type                 policy.ControlType   `yaml:"type"`
+	Classification       string               `yaml:"classification"`
 	Params               map[string]any       `yaml:"params"`
 	UnsafePredicate      yamlUnsafePredicate  `yaml:"unsafe_predicate"`
 	UnsafePredicateAlias string               `yaml:"unsafe_predicate_alias,omitempty"`

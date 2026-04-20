@@ -16,6 +16,7 @@ applicable_asset_types:
   - aws_elb_load_balancer
   - aws_elbv2_load_balancer
 type: unsafe_state
+classification: absence_check
 params: {}
 remediation:
   description: >

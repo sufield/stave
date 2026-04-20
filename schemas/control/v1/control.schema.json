@@ -117,7 +117,8 @@
         "id",
         "name",
         "description",
-        "type"
+        "type",
+        "classification"
       ],
       "anyOf": [
         {
@@ -189,6 +190,12 @@
           "$ref": "#/$defs/controlType",
           "title": "Check Type",
           "description": "Category of safety check (e.g., unsafe_state, authorization_boundary)."
+        },
+        "classification": {
+          "type": "string",
+          "enum": ["state_assertion", "parameterized_check", "absence_check", "aggregate_check"],
+          "title": "Semantic Classification",
+          "description": "Semantic role of the control's evaluation — distinct from `type` (engine-level mechanism) and `domain` (asset class). Lets downstream consumers filter findings by what the control actually checks: state_assertion (asset state matches an unsafe value); parameterized_check (asset state is unsafe relative to a parameterized threshold); absence_check (required evidence is missing); aggregate_check (compound or recurrence-based condition). Required so consumers can rely on the field existing without silent defaults; new controls declare it explicitly."
         },
         "severity": {
           "type": "string",

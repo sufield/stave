@@ -16,6 +16,7 @@ scope_tags:
   - aws
   - guardduty
 type: unsafe_state
+classification: state_assertion
 params:
   base_impact: 10
   attack_stage: detection_evasion

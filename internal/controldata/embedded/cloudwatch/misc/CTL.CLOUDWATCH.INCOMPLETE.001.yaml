@@ -12,6 +12,7 @@ scope_tags:
   - aws
   - cloudwatch
 type: unsafe_state
+classification: state_assertion
 params: {}
 remediation:
   description: >

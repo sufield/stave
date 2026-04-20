@@ -60,7 +60,8 @@
                 "operator": "eq",
                 "predicate_expr": "public eq true"
               }
-            ]
+            ],
+            "stave/classification": "aggregate_check"
           }
         }
       ]

@@ -26,6 +26,7 @@ scope_tags:
   - aws
   - iam
 type: unsafe_state
+classification: parameterized_check
 params:
   base_impact: 10
   attack_stage: exfiltration

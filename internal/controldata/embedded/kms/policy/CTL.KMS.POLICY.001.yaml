@@ -23,6 +23,7 @@ scope_tags:
   - aws
   - kms
 type: unsafe_state
+classification: state_assertion
 params:
   attack_stage: exfiltration
 remediation:

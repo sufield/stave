@@ -17,6 +17,7 @@ scope_tags:
   - aws
   - cloudformation
 type: unsafe_state
+classification: state_assertion
 params:
   attack_stage: resilience
 remediation:

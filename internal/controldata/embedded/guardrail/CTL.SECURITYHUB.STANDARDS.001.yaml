@@ -16,6 +16,7 @@ scope_tags:
   - aws
   - securityhub
 type: unsafe_state
+classification: state_assertion
 params:
   base_impact: 7
   attack_stage: detection_evasion

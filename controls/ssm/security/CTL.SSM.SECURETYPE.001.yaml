@@ -20,6 +20,7 @@ scope_tags:
   - aws
   - ssm
 type: unsafe_state
+classification: state_assertion
 params:
   attack_stage: credential_access
 observation_fields:

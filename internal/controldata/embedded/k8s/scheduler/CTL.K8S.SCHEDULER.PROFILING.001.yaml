@@ -14,6 +14,7 @@ scope_tags:
   - kubernetes
   - scheduler
 type: unsafe_state
+classification: state_assertion
 params:
   attack_stage: discovery
 remediation:

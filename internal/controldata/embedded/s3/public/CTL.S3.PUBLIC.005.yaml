@@ -18,6 +18,7 @@ version: ctrl.v1
 params:
   attack_stage: initial_access
 type: unsafe_state
+classification: state_assertion
 remediation:
   description: >
     Bucket has a policy or ACL granting public read, currently masked only

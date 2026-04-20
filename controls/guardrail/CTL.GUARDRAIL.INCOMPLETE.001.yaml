@@ -12,6 +12,7 @@ scope_tags:
   - aws
   - guardrail
 type: unsafe_state
+classification: state_assertion
 params:
   base_impact: 2
 remediation:

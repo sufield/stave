@@ -12,6 +12,7 @@ scope_tags:
   - aws
   - autoscaling
 type: unsafe_state
+classification: parameterized_check
 params:
   attack_stage: resilience
 remediation:

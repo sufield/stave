@@ -19,6 +19,7 @@ scope_tags:
   - aws
   - opensearch
 type: unsafe_state
+classification: state_assertion
 params:
   attack_stage: initial_access
 remediation:

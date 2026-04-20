@@ -15,6 +15,7 @@ scope_tags:
   - kubernetes
   - controller_manager
 type: unsafe_state
+classification: state_assertion
 params:
   attack_stage: credential_access
 remediation:

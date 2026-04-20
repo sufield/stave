@@ -17,6 +17,7 @@ scope_tags:
   - vmware
   - vm
 type: unsafe_state
+classification: parameterized_check
 params:
   attack_stage: resilience
 remediation:

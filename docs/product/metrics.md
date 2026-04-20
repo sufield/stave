@@ -592,6 +592,23 @@ above resolves the remaining two M5 known-limitations from the
 internal-verification audit (contradiction shape, gate/violation
 distinction).
 
+As of 2026-04-19, every finding carries a `classification` field
+(`state_assertion` | `parameterized_check` | `absence_check` |
+`aggregate_check`) propagated from the control's required
+catalog-level declaration. The classification expresses the
+finding's semantic role independently of the control's `type`
+(engine mechanism) and `domain` (asset class), letting downstream
+consumers filter by what the control actually checks rather than
+re-deriving from `control_id` substring heuristics. The
+bucket-intent prototype that motivated the field — its substring
+heuristic produced a false-positive MISMATCH on
+`gov-hardened-bucket` because `CTL.S3.PUBLIC.PREFIX.001`
+(absence_check) matched the `.PUBLIC.` substring — now filters by
+`classification == state_assertion` and produces the correct
+MATCH verdict. Catalog distribution: 610 state_assertion, 41
+parameterized_check, 16 absence_check, 8 aggregate_check (out of
+675 controls).
+
 **Target.** Remaining work for this metric:
 
 - Extend the registry toward the full 713-path contract surface —

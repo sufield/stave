@@ -4,6 +4,7 @@ name: Cluster-Admin Binding Detected
 description: |
   Detects ClusterRoleBindings that bind to the cluster-admin ClusterRole.
 type: unsafe_state
+classification: state_assertion
 severity: critical
 params: {}
 unsafe_predicate:

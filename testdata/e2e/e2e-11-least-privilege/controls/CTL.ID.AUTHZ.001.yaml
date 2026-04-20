@@ -16,6 +16,7 @@ description: |
   - actor_subject_id is set AND actor_subject_id != subject_id (accessing someone else's data)
   - OR action == "export" AND resource_type is sensitive AND subject_id not in allowed_subjects
 type: authorization_boundary
+classification: state_assertion
 params: {}
 unsafe_predicate:
   any:

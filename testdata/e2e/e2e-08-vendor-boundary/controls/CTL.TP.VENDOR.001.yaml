@@ -9,6 +9,7 @@ description: |
   - vendor_allowed: bool (true if vendor is on approved list)
   Violation occurs when sensitive data is shared without vendor approval.
 type: authorization_boundary
+classification: state_assertion
 params: {}
 unsafe_predicate:
   all:

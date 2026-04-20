@@ -343,11 +343,9 @@ func classifyDiff(goldenName string, oldBytes, newBytes []byte) (diffCategory, s
 		return catBehavioral, fmt.Sprintf("%s: %q → %q", goldenName, oldT, newT)
 	}
 
-	// SARIF: fall back to byte-level diff as BEHAVIORAL (SARIF field
-	// mapping to metadata-vs-behavioral isn't defined here; err safer).
-	if goldenName == "expected.out.sarif" {
-		return catBehavioral, fmt.Sprintf("%s: sarif content changed", goldenName)
-	}
+	// SARIF: parse as JSON and reuse the path classifier. Stave's
+	// SARIF-specific paths (under runs[].results[].properties) are
+	// registered in classifyPath alongside the out.v0.1 paths.
 
 	var oldVal, newVal any
 	oldErr := json.Unmarshal(oldBytes, &oldVal)
@@ -482,6 +480,26 @@ func classifyPath(path string) string {
 			return "metadata"
 		}
 	}
+	// SARIF: per-result properties bag entries derived from finding
+	// metadata. Identity-set unchanged; only the property values
+	// reflect Stave-side metadata changes.
+	if strings.HasPrefix(path, "runs[") && strings.Contains(path, ".results[") {
+		switch {
+		case strings.HasSuffix(path, ".properties.stave/classification"),
+			strings.HasSuffix(path, ".properties.alternatives"),
+			strings.Contains(path, ".properties.alternatives["):
+			return "metadata"
+		}
+	}
+	// SARIF: per-rule properties bag entries derived from control
+	// metadata. Same reasoning as the per-result case.
+	if strings.HasPrefix(path, "runs[") && strings.Contains(path, ".tool.driver.rules[") {
+		switch {
+		case strings.HasSuffix(path, ".properties.alternatives"),
+			strings.Contains(path, ".properties.alternatives["):
+			return "metadata"
+		}
+	}
 	// findings[i].<metadata-subfield>
 	if strings.HasPrefix(path, "findings[") {
 		// extract the sub-path after the index
@@ -496,7 +514,8 @@ func classifyPath(path string) string {
 			strings.HasPrefix(rest, "remediation."),
 			strings.HasPrefix(rest, "exposure."),
 			rest == "alternatives",
-			strings.HasPrefix(rest, "alternatives"):
+			strings.HasPrefix(rest, "alternatives"),
+			rest == "classification":
 			return "metadata"
 		}
 		// remediation_context.violation.reasoning[*].clause is the

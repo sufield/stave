@@ -15,6 +15,7 @@ scope_tags:
   - vmware
   - esxi
 type: unsafe_state
+classification: state_assertion
 params:
   attack_stage: detection_evasion
 remediation:

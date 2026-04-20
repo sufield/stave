@@ -12,6 +12,7 @@ compliance:
 scope_tags:
   - active_directory
 type: unsafe_state
+classification: state_assertion
 params:
   attack_stage: persistence
 remediation:

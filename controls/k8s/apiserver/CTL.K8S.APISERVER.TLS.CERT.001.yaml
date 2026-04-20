@@ -13,6 +13,7 @@ scope_tags:
   - kubernetes
   - apiserver
 type: unsafe_state
+classification: state_assertion
 params:
   attack_stage: credential_access
 remediation:

@@ -185,7 +185,8 @@
           }
         ],
         "action": "Remove the underlying policy statement or ACL entry that grants s3:ListBucket to Principal \"*\" or AllUsers. Do not rely solely on PAB to prevent directory enumeration."
-      }
+      },
+      "classification": "state_assertion"
     }
   ],
   "issues": [
@@ -359,8 +360,11 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "d3b6ec6771a33f08d03385b88034130c1a381d7e",
-      "dirty": false
+      "head_commit": "0578f31dbab7ba7cc75679379c501bdc799e5a7f",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-s3-latent-list/controls/CTL.S3.PUBLIC.006.yaml"
+      ]
     }
   }
 }

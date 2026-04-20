@@ -14,6 +14,7 @@ scope_tags:
   - aws
   - iam
 type: unsafe_state
+classification: state_assertion
 params:
   attack_stage: privilege_escalation
 remediation:

@@ -9,6 +9,7 @@ description: |
   - third_party_platform: string (optional, e.g., "google_analytics", "segment")
   Violation occurs when integration is enabled without declared boundary.
 type: authorization_boundary
+classification: state_assertion
 params: {}
 unsafe_predicate:
   all:

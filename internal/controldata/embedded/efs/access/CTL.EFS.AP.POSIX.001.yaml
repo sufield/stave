@@ -15,6 +15,7 @@ scope_tags:
   - aws
   - efs
 type: unsafe_state
+classification: state_assertion
 params:
   base_impact: 7
   attack_stage: privilege_escalation

@@ -105,6 +105,18 @@ depend on them.
   evaluated to produce a finding, paired with observed values.
   Source: `ReasoningTrace` field on `Finding`
   (`internal/core/evaluation/finding.go`).
+- **Classification** — the control's semantic evaluation role
+  (`state_assertion` | `parameterized_check` | `absence_check`
+  | `aggregate_check`), required at the catalog layer and
+  propagated to every finding. Distinct from `type` (engine
+  mechanism) and `domain` (asset class); lets downstream
+  consumers filter by what the control actually checks
+  ("show me unsafe-state findings" vs "show me missing-evidence
+  findings") without re-deriving from `control_id` substring
+  heuristics. Source: `Classification` type at
+  `internal/core/controldef/classification.go`; required field
+  on every control YAML; propagated through
+  `Finding.Classification`.
 - **Score breakdown** — the multiplicative factors that
   produced a finding's exposure score (`base × duration ×
   blast × exposure × chain`). Source: `ScoreBreakdown` field on
@@ -372,6 +384,74 @@ Implications:
 This document does not propose any specific extraction. The
 graduation path is named so future iterations have a recipe; no
 extraction is in scope here.
+
+### stave-explorer (scaffolding, not a Stave app)
+
+`stave-explorer/` is a minimal bubbletea-based TUI living at
+the monorepo level (sibling to `stave/`). It probes Stave's
+JSON output against the five pain-point metrics validated by
+the Aikido 2026 and Thales 2026 surveys: triage time, false-
+positive rate, MTTR, compliance knowledge, tool sprawl. It
+invokes Stave via `./stave apply` and consumes the resulting
+JSON envelope; it has no special access to Stave core
+internals and does not require core modifications.
+
+Its primary affordance is structured logging: every
+computation step (JSON field reads, intermediate structs,
+classification decisions, final answers) is logged via
+`log/slog`'s JSONHandler to
+`stave-explorer/logs/session-{timestamp}.log`. The TUI is the
+interaction surface; the logs are the evidence. Per-question
+log volume serves as a shape-quality signal — a question that
+takes 280 log lines to compute a number indicates the
+envelope is missing a pre-aggregated primitive; a question
+that takes 5 lines indicates the envelope is shaped well for
+the metric.
+
+The prototype's purpose is to surface measurement gaps in
+Stave's output that drive future core iterations. Gap
+observations land in `stave-explorer/gaps.yaml` (per-question,
+with session-log line references) and `stave-explorer/findings.md`
+(top-three gap candidates plus clean observations). Future
+core iterations may consume these as evidence-grounded inputs
+to prioritization, in the same shape that `docs/audits/`
+documents drive iteration prompts.
+
+Like the CLI, stave-explorer is not a Stave app in the
+platform-pattern sense. It is scaffolding at the user-question
+layer. Personal-specific output, dashboard-style composition,
+or product-quality interaction belong in apps proper; this
+prototype exists only to make the envelope's measurement
+adequacy visible.
+
+### bucket-intent (scaffolding, not a Stave app)
+
+`bucket-intent/` is a hello-world prototype living at the
+monorepo level (sibling to `stave/` and `stave-explorer/`). It
+answers one question — "is this S3 bucket public when the
+intent is private?" — for one bucket at a time, declared via
+`--bucket` and `--intent` flags. The prototype's value is
+what writing it teaches about intent-vs-actual composition,
+not the question itself: it is hello-world scope for a future
+larger intent-checking surface.
+
+Same scaffolding pattern as stave-explorer: shells out to
+Stave / consumes JSON output, logs every step via `log/slog`
+to `bucket-intent/logs/session-{timestamp}.log`. Observations
+land in `bucket-intent/observations.md`, including specific
+calls to Stave-output shape gaps surfaced by writing the
+prototype (e.g., `Finding.classification` would let consumers
+distinguish state-assertion controls from parameterized
+checks without re-deriving via control_id substring
+heuristics — already shown to misclassify on the lordofheaven
+fixture's `CTL.S3.PUBLIC.PREFIX.001` case).
+
+The "third copy = extraction" rule applies: pieces copied
+from stave-explorer are tracked in observations.md. When a
+third prototype reuses the same scaffolding, the duplication
+becomes evidence for promoting it to a shared scaffolding
+module — until then, copying is cheaper than designing a
+shape that hasn't been validated by use.
 
 ## Relationship to metrics.md and positioning.md
 

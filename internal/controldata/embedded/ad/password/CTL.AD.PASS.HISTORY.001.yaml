@@ -17,6 +17,7 @@ compliance:
 scope_tags:
   - active_directory
 type: unsafe_state
+classification: parameterized_check
 params:
   attack_stage: credential_access
 remediation:

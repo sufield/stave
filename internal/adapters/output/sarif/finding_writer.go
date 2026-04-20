@@ -175,14 +175,19 @@ func buildResults(findings []remediation.Finding, ruleIndex map[kernel.ControlID
 			}
 		}
 
-		// Add chain context, reasoning trace, and alternative-tool
-		// coverage to properties bag. SARIF codeFlows is designed for
-		// source-code flow graphs; Stave's compact predicate trace and
-		// per-finding alternatives use the properties bag per SARIF
-		// extension conventions.
+		// Add chain context, reasoning trace, alternative-tool
+		// coverage, and semantic classification to properties bag.
+		// SARIF codeFlows is designed for source-code flow graphs;
+		// Stave's compact predicate trace, per-finding alternatives,
+		// and semantic classification use the properties bag per
+		// SARIF extension conventions.
 		alts := alternativesAsProperties(f.Alternatives)
-		if len(f.ChainMembership) > 0 || len(f.ReasoningTrace) > 0 || len(alts) > 0 {
+		hasClass := f.Classification != ""
+		if len(f.ChainMembership) > 0 || len(f.ReasoningTrace) > 0 || len(alts) > 0 || hasClass {
 			result.Properties = map[string]any{}
+			if hasClass {
+				result.Properties["stave/classification"] = string(f.Classification)
+			}
 			if len(f.ChainMembership) > 0 {
 				cm := f.ChainMembership[0]
 				result.Properties["chain_id"] = cm.ChainID

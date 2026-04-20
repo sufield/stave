@@ -24,6 +24,7 @@ scope_tags:
   - aws
   - iam
 type: unsafe_state
+classification: state_assertion
 params:
   base_impact: 10
   attack_stage: persistence

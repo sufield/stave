@@ -26,6 +26,7 @@ scope_tags:
   - aws
   - scp
 type: unsafe_state
+classification: state_assertion
 params:
   attack_stage: persistence
   base_impact: 10

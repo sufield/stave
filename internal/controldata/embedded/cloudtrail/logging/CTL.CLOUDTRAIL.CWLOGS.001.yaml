@@ -27,6 +27,7 @@ scope_tags:
   - aws
   - cloudtrail
 type: unsafe_state
+classification: state_assertion
 params:
   attack_stage: detection_evasion
 remediation:

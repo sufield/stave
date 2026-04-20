@@ -16,6 +16,7 @@ scope_tags:
   - aws
   - config
 type: unsafe_state
+classification: state_assertion
 params:
   base_impact: 8
   attack_stage: resilience

@@ -10,6 +10,7 @@ description: >
 domain: exposure
 severity: critical
 type: unsafe_state
+classification: state_assertion
 scope_tags:
   - aws
   - kms

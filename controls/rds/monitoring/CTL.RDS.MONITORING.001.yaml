@@ -19,6 +19,7 @@ scope_tags:
   - aws
   - rds
 type: unsafe_state
+classification: state_assertion
 params:
   base_impact: 4
   attack_stage: detection_evasion

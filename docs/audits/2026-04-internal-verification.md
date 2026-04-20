@@ -659,6 +659,69 @@ access-block --bucket gov-writable-bucket-1` (was
 `RemediationPlan.Command` read); prose-only controls
 render consistent prose across all three surfaces.
 
+**2026-04-19** — Item 5 (semantic classification
+primitive) resolved. The bucket-intent prototype at
+the monorepo level surfaced a false positive that
+evaded Stave's unit and end-to-end tests:
+`CTL.S3.PUBLIC.PREFIX.001` (an absence-of-evidence
+check) fires on hardened buckets, and the prototype's
+`.PUBLIC.` substring heuristic mis-classified it as a
+public-access state assertion. Any downstream consumer
+— prototype, app, AI prompt, CI/CD integration —
+inheriting that ambiguity would produce the same
+false-positive class.
+
+Fix: added a required `classification` field to every
+control YAML in the catalog (675 controls migrated;
+617 fixture-bundled controls also migrated for
+test-fixture validity). The field carries one of four
+values: `state_assertion` (asset state matches an
+unsafe value), `parameterized_check` (state is unsafe
+relative to a threshold), `absence_check` (required
+evidence is missing), `aggregate_check` (compound or
+recurrence-based condition). Classification flows
+through `Finding.Classification` to JSON's per-finding
+`classification` field and SARIF's
+`properties.stave/classification`. Text output
+unchanged.
+
+bucket-intent updated to filter findings by
+`classification == state_assertion` plus the existing
+control-family scope. Three exit-condition
+verifications:
+
+- `gov-writable-bucket-1` + private intent → MISMATCH
+  (correct; was already correct)
+- `gov-hardened-bucket` + private intent → MATCH
+  (was MISMATCH; this is the false positive the
+  primitive closes)
+- `gov-writable-bucket-2` + public intent → MATCH
+  (correct; was already correct)
+
+Catalog distribution: 610 state_assertion (90%), 41
+parameterized_check (6%), 16 absence_check (2%), 8
+aggregate_check (1%) out of 675 controls. The
+classification heuristic operated on predicate shape
+plus `type` field; spot-check of all 16 absence_check
+classifications confirmed each is genuinely
+absence-dominant (13 `*.INCOMPLETE.001` evidence
+checks, 2 missing-tag checks, 1 prefix_exposure).
+
+Tiebreak rule for predicates with mixed shapes: when
+non-gate clauses include both `op: missing` and
+state-assertion or parameterized clauses, the more-
+specific category wins (state_assertion >
+parameterized_check > aggregate_check > absence_check).
+Pure absence patterns stay absence_check.
+
+Architectural impact: classification is added as a
+new primitive shape in `architecture.md` § Primitive
+shapes. The architectural decision "Inspectable
+reasoning" is enriched (findings now carry semantic
+role, not just observation values). AI-ready stays at
+HOLDS (classification is additive metadata; does not
+regress field contents).
+
 ## Prioritized refinement queue
 
 Ordered by (1) blocking gaps first, (2) architectural
