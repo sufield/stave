@@ -14,14 +14,14 @@ import (
 // cobraState holds all values extracted from *cobra.Command.
 // Populated once in RunE; all downstream functions are cobra-free.
 // Context is not stored here — it flows through function parameters.
+// Flag-explicitness bits (controlsSet / formatSet / obsSet) live on
+// Options instead, captured in PreRunE.
 type cobraState struct {
-	Logger        *slog.Logger
-	Stdout        io.Writer
-	Stderr        io.Writer
-	Stdin         io.Reader
-	GlobalFlags   cliflags.GlobalFlags
-	FormatChanged bool
-	ObsChanged    bool
+	Logger      *slog.Logger
+	Stdout      io.Writer
+	Stderr      io.Writer
+	Stdin       io.Reader
+	GlobalFlags cliflags.GlobalFlags
 }
 
 type runMode string

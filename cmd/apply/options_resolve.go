@@ -40,7 +40,7 @@ func Resolve(o *Options, cs cobraState) (RunConfig, error) {
 		return resolveProfileMode(o, cs)
 	}
 
-	ec, err := resolvePathInference(o.ControlsDir, o.ObservationsDir, o.controlsSet, cs.ObsChanged)
+	ec, err := resolvePathInference(o.ControlsDir, o.ObservationsDir, o.controlsSet, o.obsSet)
 	if err != nil {
 		return RunConfig{}, err
 	}

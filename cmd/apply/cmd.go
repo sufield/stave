@@ -42,9 +42,13 @@ type SharedOptions struct {
 	NowTime           string
 	Format            string
 
-	// controlsSet tracks whether --controls was explicitly set by the user.
-	// Derived from Cobra in PreRunE; not a user-facing flag.
+	// controlsSet / formatSet / obsSet track whether the respective
+	// flag was explicitly set by the user. All three are derived
+	// from Cobra in PreRunE and read thereafter as plain data;
+	// downstream code never calls cmd.Flags().Changed() itself.
 	controlsSet bool
+	formatSet   bool
+	obsSet      bool
 }
 
 func (o *SharedOptions) bindCommon(cmd *cobra.Command, defaultFormat string) {
@@ -162,6 +166,8 @@ Remediation scope:
 		Args: cobra.NoArgs,
 		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			opts.controlsSet = cliflags.ControlsFlagChanged(cmd)
+			opts.formatSet = cmd.Flags().Changed("format")
+			opts.obsSet = cmd.Flags().Changed("observations")
 			opts.normalize()
 			opts.resolveEnvVarDefaults(cmd)
 			opts.resolveApplyConfigDefaults(cmd)
@@ -169,13 +175,11 @@ Remediation scope:
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			cs := cobraState{
-				Logger:        cmdctx.LoggerFromCmd(cmd),
-				Stdout:        cmd.OutOrStdout(),
-				Stderr:        cmd.ErrOrStderr(),
-				Stdin:         cmd.InOrStdin(),
-				GlobalFlags:   cliflags.GetGlobalFlags(cmd),
-				FormatChanged: cmd.Flags().Changed("format"),
-				ObsChanged:    cmd.Flags().Changed("observations"),
+				Logger:      cmdctx.LoggerFromCmd(cmd),
+				Stdout:      cmd.OutOrStdout(),
+				Stderr:      cmd.ErrOrStderr(),
+				Stdin:       cmd.InOrStdin(),
+				GlobalFlags: cliflags.GetGlobalFlags(cmd),
 			}
 			return runApply(cmd.Context(), deps, opts, cs)
 		},

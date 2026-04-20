@@ -15,11 +15,11 @@ func ResolveDryRun(o *Options, cs cobraState) (ReadinessConfig, error) {
 		ControlsDir:                o.ControlsDir,
 		ObservationsDir:            o.ObservationsDir,
 		ControlsChanged:            o.controlsSet,
-		ObsChanged:                 cs.ObsChanged || o.ObservationsDir == "-",
+		ObsChanged:                 o.obsSet || o.ObservationsDir == "-",
 		MaxUnsafeDuration:          o.MaxUnsafeDuration,
 		NowTime:                    o.NowTime,
 		Format:                     o.Format,
-		FormatChanged:              cs.FormatChanged,
+		FormatChanged:              o.formatSet,
 		SkipControlsValidation:     true,
 		SkipObservationsValidation: true,
 	})
