@@ -3,15 +3,14 @@ package exposure
 import (
 	"encoding/json"
 	"fmt"
-
-	"github.com/spf13/cobra"
+	"io"
 
 	domainexposure "github.com/sufield/stave/internal/core/evaluation/exposure"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-// Input is the JSON input for exposure classification.
-type Input struct {
+// Payload is the JSON input shape the command parses from file or stdin.
+type Payload struct {
 	Resources []ResourceInput `json:"resources"`
 	Access    *AccessInput    `json:"access,omitempty"`
 }
@@ -91,20 +90,27 @@ type Output struct {
 	Visibility      *domainexposure.ResourceExposure `json:"visibility,omitempty"`
 }
 
-func run(cmd *cobra.Command, file string) error {
-	input, err := fsutil.ReadFileOrStdin(file, cmd.InOrStdin())
+// Input is the per-run payload assembled at the RunE boundary.
+type Input struct {
+	Stdin  io.Reader
+	Stdout io.Writer
+	File   string
+}
+
+func run(in Input) error {
+	data, err := fsutil.ReadFileOrStdin(in.File, in.Stdin)
 	if err != nil {
 		return err
 	}
 
-	var in Input
-	if err := json.Unmarshal(input, &in); err != nil {
+	var payload Payload
+	if err := json.Unmarshal(data, &payload); err != nil {
 		return fmt.Errorf("parse exposure input: %w", err)
 	}
 
 	// Transform input to domain types.
-	resources := make([]domainexposure.NormalizedResourceInput, len(in.Resources))
-	for i, r := range in.Resources {
+	resources := make([]domainexposure.NormalizedResourceInput, len(payload.Resources))
+	for i, r := range payload.Resources {
 		resources[i] = r.ToDomain()
 	}
 
@@ -114,8 +120,8 @@ func run(cmd *cobra.Command, file string) error {
 	}
 
 	// Resolve bucket access if access input provided.
-	if in.Access != nil {
-		a := in.Access
+	if payload.Access != nil {
+		a := payload.Access
 		identity := domainexposure.Visibility{
 			Public:        toCaps(a.IdentityPublic),
 			Authenticated: toCaps(a.IdentityAuthenticated),
@@ -146,7 +152,7 @@ func run(cmd *cobra.Command, file string) error {
 		output.BucketAccess = &bucketAccess
 	}
 
-	enc := json.NewEncoder(cmd.OutOrStdout())
+	enc := json.NewEncoder(in.Stdout)
 	enc.SetIndent("", "  ")
 	return enc.Encode(output)
 }

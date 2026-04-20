@@ -26,6 +26,7 @@ name: No Public S3 Bucket Read
 description: Test.
 domain: exposure
 severity: critical
+classification: aggregate_check
 type: unsafe_duration
 params:
   max_unsafe_duration: "168h"

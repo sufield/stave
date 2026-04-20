@@ -6,6 +6,8 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
+	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/metadata"
 )
 
@@ -64,8 +66,15 @@ Exit Codes:
 
   # Scope to a specific resource
   stave bisect -i controls/ -o snapshots/ --control-id CTL.S3.ENCRYPT.001 --resource arn:aws:s3:::prod-bucket`,
-		Args:          cobra.NoArgs,
-		RunE:          func(cmd *cobra.Command, _ []string) error { return runBisect(cmd, opts) },
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			return runBisect(compose.CommandContext(cmd), Input{
+				Stdout: cmd.OutOrStdout(),
+				Stderr: cmd.ErrOrStderr(),
+				Logger: cmdctx.LoggerFromCmd(cmd),
+				Opts:   opts,
+			})
+		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}

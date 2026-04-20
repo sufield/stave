@@ -1,12 +1,12 @@
 package bisect
 
 import (
+	"context"
 	"fmt"
+	"io"
+	"log/slog"
 	"time"
 
-	"github.com/spf13/cobra"
-
-	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appbisect "github.com/sufield/stave/internal/app/bisect"
 	"github.com/sufield/stave/internal/core/asset"
@@ -18,12 +18,23 @@ import (
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-func runBisect(cmd *cobra.Command, opts *options) error {
+// Input is the per-run payload the bisect command's RunE assembles
+// at the adapter boundary. All cobra-owned values are pre-resolved
+// so runBisect runs on plain data. Context is passed as a function
+// argument per Go convention, not stored on the struct.
+type Input struct {
+	Stdout io.Writer
+	Stderr io.Writer
+	Logger *slog.Logger
+	Opts   *options
+}
+
+func runBisect(ctx context.Context, in Input) error {
+	opts := in.Opts
 	if err := opts.validate(); err != nil {
 		return err
 	}
 
-	logger := cmdctx.LoggerFromCmd(cmd)
 	controlsDir := fsutil.CleanUserPath(opts.ControlsDir)
 	obsDir := fsutil.CleanUserPath(opts.ObsDir)
 
@@ -33,7 +44,7 @@ func runBisect(cmd *cobra.Command, opts *options) error {
 	if err != nil {
 		return fmt.Errorf("create control loader: %w", err)
 	}
-	controls, err := ctlRepo.LoadControls(cmd.Context(), controlsDir)
+	controls, err := ctlRepo.LoadControls(ctx, controlsDir)
 	if err != nil {
 		return fmt.Errorf("load controls from %s: %w", controlsDir, err)
 	}
@@ -46,7 +57,7 @@ func runBisect(cmd *cobra.Command, opts *options) error {
 	}
 
 	// Load snapshot archive.
-	snapshots, err := appbisect.LoadSnapshotDir(obsDir, fsutil.ReadFileLimited, logger)
+	snapshots, err := appbisect.LoadSnapshotDir(obsDir, fsutil.ReadFileLimited, in.Logger)
 	if err != nil {
 		return err
 	}
@@ -86,11 +97,11 @@ func runBisect(cmd *cobra.Command, opts *options) error {
 
 	// Run.
 	eng := &appbisect.Engine{Evaluate: evaluator}
-	result, err := eng.Run(cmd.Context(), snapshots, mode, string(targetID), opts.ResourceARN)
+	result, err := eng.Run(ctx, snapshots, mode, string(targetID), opts.ResourceARN)
 	if err != nil {
 		return err
 	}
 
 	// Output.
-	return writeOutput(cmd.OutOrStdout(), cmd.ErrOrStderr(), result, opts.Format, logger)
+	return writeOutput(in.Stdout, in.Stderr, result, opts.Format, in.Logger)
 }

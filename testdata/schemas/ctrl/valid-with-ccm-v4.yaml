@@ -2,6 +2,7 @@ dsl_version: ctrl.v1
 id: CTL.TEST.CCM.001
 name: Golden CCM v4 Mapping Test Control
 description: Minimal valid control carrying CCM v4 mappings alongside existing framework keys.
+classification: state_assertion
 type: unsafe_state
 severity: medium
 scope_tags:

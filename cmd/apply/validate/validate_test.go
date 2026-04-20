@@ -11,7 +11,6 @@ import (
 
 	"os"
 
-	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/diagnose"
 	appvalidation "github.com/sufield/stave/internal/app/validation"
@@ -118,17 +117,22 @@ func TestRunValidate_DirectoryMode_ValidatesBothArtifacts(t *testing.T) {
 		Format:            "text",
 	}
 
-	cmd := &cobra.Command{Use: "test"}
-	cmd.SetContext(context.Background())
 	var stdout, stderr bytes.Buffer
-	cmd.SetOut(&stdout)
-	cmd.SetErr(&stderr)
 
 	// Exercise full validate command flow (directory mode).
 	f := compose.DefaultFactories()
-	err := runValidate(cmd, validateDeps{
-		NewObsRepo: f.NewObsRepo, NewCtlRepo: f.NewCtlRepo, NewCELEvaluator: f.NewCELEvaluator,
-	}, ui.DefaultRuntime(), opts)
+	err := runValidate(context.Background(), Input{
+		Stdout: &stdout,
+		Stderr: &stderr,
+		Format: "text",
+		Deps: validateDeps{
+			NewObsRepo:      f.NewObsRepo,
+			NewCtlRepo:      f.NewCtlRepo,
+			NewCELEvaluator: f.NewCELEvaluator,
+		},
+		Rt:   ui.DefaultRuntime(),
+		Opts: opts,
+	})
 	if err != nil {
 		t.Fatalf("expected directory validate to pass, got: %v\nstderr: %s", err, stderr.String())
 	}

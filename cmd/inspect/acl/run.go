@@ -3,8 +3,7 @@ package acl
 import (
 	"encoding/json"
 	"fmt"
-
-	"github.com/spf13/cobra"
+	"io"
 
 	"github.com/sufield/stave/internal/core/evaluation/risk"
 	s3acl "github.com/sufield/stave/internal/core/s3/acl"
@@ -27,14 +26,23 @@ type GrantDetail struct {
 	PermissionID risk.Permission `json:"permission_mask"`
 }
 
-func run(cmd *cobra.Command, file string) error {
-	input, err := fsutil.ReadFileOrStdin(file, cmd.InOrStdin())
+// Input is the per-run payload assembled at the RunE boundary. No
+// cobra reference — RunE resolves Stdin/Stdout before calling run,
+// so this package can stay off the cobra import graph.
+type Input struct {
+	Stdin  io.Reader
+	Stdout io.Writer
+	File   string
+}
+
+func run(in Input) error {
+	data, err := fsutil.ReadFileOrStdin(in.File, in.Stdin)
 	if err != nil {
 		return err
 	}
 
 	var grants []s3acl.Grant
-	if err := json.Unmarshal(input, &grants); err != nil {
+	if err := json.Unmarshal(data, &grants); err != nil {
 		return fmt.Errorf("parse ACL grants: %w", err)
 	}
 
@@ -56,16 +64,10 @@ func run(cmd *cobra.Command, file string) error {
 			HasFullCtrl:  g.HasFullControl(),
 			PermissionID: g.Permissions(),
 		})
-		// Exercise IsPublicGrantee.
 		_ = s3acl.IsPublicGrantee(g.Grantee)
 	}
 
-	report := Report{
-		Assessment:   assessment,
-		GrantDetails: details,
-	}
-
-	enc := json.NewEncoder(cmd.OutOrStdout())
+	enc := json.NewEncoder(in.Stdout)
 	enc.SetIndent("", "  ")
-	return enc.Encode(report)
+	return enc.Encode(Report{Assessment: assessment, GrantDetails: details})
 }

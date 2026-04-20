@@ -396,16 +396,43 @@ This document does not propose any specific extraction. The
 graduation path is named so future iterations have a recipe; no
 extraction is in scope here.
 
+### pkg/stave — the Go library surface
+
+`pkg/stave/` is the programmatic entry point into Stave core for
+Go consumers. It exposes evaluation as a typed API — `stave.Apply`
+takes a [Config] (snapshots dir, optional controls dir, optional
+clock override) and returns a typed `*Assessment` with
+`Findings`, `Issues`, `Coverage`, `Summary`, and `Status`. The
+library wraps `usecase.Apply` with a production
+[EvaluationRunnerPort] adapter; the CLI path is untouched and
+`./stave apply` output remains byte-identical.
+
+Scope discipline matters: the library starts with `Apply` only.
+`Gate`, `Fix`, `Verify`, `Trace`, `Diagnose`, `SnapshotDiff`, and
+other CLI operations are not exposed until concrete consumer
+evidence justifies them. The same rule that governs core /
+app-shape decisions applies here — additional operations enter
+the library only when a real consumer's needs demonstrate the
+shape is right.
+
+The library is the recommended Go consumer interface.
+`stave-explorer` and `bucket-intent` both consume it directly via
+import rather than shelling out to `./stave apply` and parsing
+JSON. New Go prototypes and Stave-aware apps import
+`github.com/sufield/stave/pkg/stave` rather than rebuilding the
+JSON walk; non-Go consumers continue to use the CLI's JSON output.
+
 ### stave-explorer (scaffolding, not a Stave app)
 
 `stave-explorer/` is a minimal bubbletea-based TUI living at
 the monorepo level (sibling to `stave/`). It probes Stave's
-JSON output against the five pain-point metrics validated by
-the Aikido 2026 and Thales 2026 surveys: triage time, false-
+output against the five pain-point metrics validated by the
+Aikido 2026 and Thales 2026 surveys: triage time, false-
 positive rate, MTTR, compliance knowledge, tool sprawl. It
-invokes Stave via `./stave apply` and consumes the resulting
-JSON envelope; it has no special access to Stave core
-internals and does not require core modifications.
+invokes Stave via `pkg/stave` (typed `stave.Apply` call) and
+consumes the resulting `*Assessment` directly; it has no
+special access to Stave core internals beyond what the public
+library exposes and does not require core modifications.
 
 Its primary affordance is structured logging: every
 computation step (JSON field reads, intermediate structs,
@@ -446,15 +473,16 @@ what writing it teaches about intent-vs-actual composition,
 not the question itself: it is hello-world scope for a future
 larger intent-checking surface.
 
-Same scaffolding pattern as stave-explorer: shells out to
-Stave / consumes JSON output, logs every step via `log/slog`
-to `bucket-intent/logs/session-{timestamp}.log`. Observations
+Same scaffolding pattern as stave-explorer: invokes
+`stave.Apply` from `pkg/stave`, consumes the typed result,
+logs every step via `log/slog` to
+`bucket-intent/logs/session-{timestamp}.log`. Observations
 land in `bucket-intent/observations.md`, including specific
 calls to Stave-output shape gaps surfaced by writing the
-prototype (e.g., `Finding.classification` would let consumers
+prototype (e.g., `Finding.classification` let consumers
 distinguish state-assertion controls from parameterized
 checks without re-deriving via control_id substring
-heuristics — already shown to misclassify on the lordofheaven
+heuristics — shown to misclassify on the lordofheaven
 fixture's `CTL.S3.PUBLIC.PREFIX.001` case).
 
 The "third copy = extraction" rule applies: pieces copied

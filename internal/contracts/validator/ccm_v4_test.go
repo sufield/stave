@@ -8,6 +8,7 @@ const ccmBaseControl = `dsl_version: ctrl.v1
 id: CTL.TEST.CCM.001
 name: Test Control
 description: Test control with CCM mapping
+classification: state_assertion
 type: unsafe_state
 unsafe_predicate:
   any:

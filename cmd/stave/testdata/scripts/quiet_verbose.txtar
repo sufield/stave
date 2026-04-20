@@ -15,6 +15,7 @@ name: Test Control
 description: Test.
 domain: exposure
 severity: high
+classification: aggregate_check
 type: unsafe_duration
 params:
   max_unsafe_duration: "12h"

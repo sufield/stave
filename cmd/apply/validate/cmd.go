@@ -3,6 +3,8 @@ package validate
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
+	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/metadata"
@@ -76,9 +78,25 @@ func NewCmd(newObsRepo compose.ObsRepoFactory, newCtlRepo compose.CtlRepoFactory
 			return opts.Prepare(cmd)
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runValidate(cmd, validateDeps{
-				NewObsRepo: newObsRepo, NewCtlRepo: newCtlRepo, NewCELEvaluator: newCELEvaluator,
-			}, rt, opts)
+			resolvedFormat, fmtErr := compose.ResolveFormatValue(cmd, opts.Format)
+			if fmtErr != nil {
+				return fmtErr
+			}
+			return runValidate(compose.CommandContext(cmd), Input{
+				Stdin:  cmd.InOrStdin(),
+				Stdout: cmd.OutOrStdout(),
+				Stderr: cmd.ErrOrStderr(),
+				Logger: cmdctx.LoggerFromCmd(cmd),
+				Global: cliflags.GlobalSettingsFrom(cmd),
+				Format: resolvedFormat,
+				Deps: validateDeps{
+					NewObsRepo:      newObsRepo,
+					NewCtlRepo:      newCtlRepo,
+					NewCELEvaluator: newCELEvaluator,
+				},
+				Rt:   rt,
+				Opts: opts,
+			})
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,

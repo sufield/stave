@@ -22,6 +22,7 @@ func TestExplainText(t *testing.T) {
 id: CTL.S3.PUBLIC.001
 name: Bucket must not be public
 description: Detect public read/list exposure.
+classification: state_assertion
 type: unsafe_state
 params: {}
 unsafe_predicate:

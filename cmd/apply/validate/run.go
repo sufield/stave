@@ -1,14 +1,17 @@
 package validate
 
 import (
+	"context"
 	"fmt"
+	"io"
+	"log/slog"
 	"time"
 
-	"github.com/spf13/cobra"
-	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/app/staleness"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/config"
 	"github.com/sufield/stave/internal/core/diag"
 
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
@@ -23,60 +26,70 @@ type validateDeps struct {
 	NewCELEvaluator compose.CELEvaluatorFactory
 }
 
+// Input is the per-run payload for the validate command. All
+// cobra-owned values (io, logger, global flags) are resolved at the
+// RunE boundary so runValidate and its helpers stay off the cobra
+// import graph. Context is passed as the first function argument
+// per Go convention rather than stored on the struct.
+type Input struct {
+	Stdin  io.Reader
+	Stdout io.Writer
+	Stderr io.Writer
+	Logger *slog.Logger
+	Global config.GlobalSettings
+	Format appcontracts.OutputFormat
+	Deps   validateDeps
+	Rt     *ui.Runtime
+	Opts   *options
+}
+
 // runValidate is the primary entry point for the cobra command.
-func runValidate(cmd *cobra.Command, deps validateDeps, rt *ui.Runtime, opts *options) error {
+func runValidate(ctx context.Context, in Input) error {
 	// 1. Audit git status and log environment context.
-	if err := opts.auditGitStatus(cmd); err != nil {
+	if err := in.Opts.auditGitStatus(ctx, in.Stderr, in.Global); err != nil {
 		return err
 	}
-	opts.logEnvironment()
+	in.Opts.logEnvironment()
 
-	// 2. Resolve format via shared helper
-	gf := cliflags.GetGlobalFlags(cmd)
-	resolvedFormat, fmtErr := compose.ResolveFormatValue(cmd, opts.Format)
-	if fmtErr != nil {
-		return fmtErr
-	}
+	// 2. Initialize Reporter
+	quiet := in.Global.Quiet
+	in.Rt.Quiet = quiet
+	out := compose.ResolveStdout(in.Stdout, quiet, in.Format)
 
-	// 3. Initialize Reporter
-	quiet := gf.Quiet
-	rt.Quiet = quiet
-	out := compose.ResolveStdout(cmd.OutOrStdout(), quiet, resolvedFormat)
-
-	f := string(resolvedFormat)
-	if opts.Template != "" {
-		f = opts.Template
+	f := string(in.Format)
+	if in.Opts.Template != "" {
+		f = in.Opts.Template
 	}
 	rep := &Reporter{
 		Writer:   out,
 		Format:   f,
-		Strict:   opts.Strict,
-		FixHints: opts.FixHints,
+		Strict:   in.Opts.Strict,
+		FixHints: in.Opts.FixHints,
 	}
 
-	// 4. Branch: Single File vs. Full Project
-	if opts.InputPath != "" {
-		return runValidateSingleFile(cmd.InOrStdin(), rep, opts)
+	// 3. Branch: Single File vs. Full Project
+	if in.Opts.InputPath != "" {
+		return runValidateSingleFile(in.Stdin, rep, in.Opts)
 	}
 
-	return runValidateProject(cmd, deps, rt, rep, opts)
+	return runValidateProject(ctx, in, rep)
 }
 
-func runValidateProject(cmd *cobra.Command, deps validateDeps, rt *ui.Runtime, rep *Reporter, opts *options) error {
+func runValidateProject(ctx context.Context, in Input, rep *Reporter) error {
 	// Prepare parameters (MaxUnsafe, Time, etc)
-	params := opts.parseParams()
+	params := in.Opts.parseParams()
 	if len(params.issues) > 0 {
 		// If flag parsing itself generated diagnostic issues
 		result := &appvalidation.Report{Diagnostics: &diag.Assessment{Findings: params.issues}}
-		if err := rep.Write(result, opts.hintCtx()); err != nil {
+		if err := rep.Write(result, in.Opts.hintCtx()); err != nil {
 			return err
 		}
 		return rep.ExitStatus(result)
 	}
 
 	// Start progress UI
-	done := rt.BeginProgress("validate artifacts")
-	result, err := executeValidateRun(cmd, deps, params, opts)
+	done := in.Rt.BeginProgress("validate artifacts")
+	result, err := executeValidateRun(ctx, in, params)
 	done()
 
 	if err != nil {
@@ -87,13 +100,13 @@ func runValidateProject(cmd *cobra.Command, deps validateDeps, rt *ui.Runtime, r
 	result.Diagnostics.RecordAll(PackConfigIssues())
 
 	// Write Output
-	if err := rep.Write(result, opts.hintCtx()); err != nil {
+	if err := rep.Write(result, in.Opts.hintCtx()); err != nil {
 		return err
 	}
 
 	// Staleness check: --assert-recent.
-	if opts.AssertRecent != "" {
-		threshold, parseErr := time.ParseDuration(opts.AssertRecent)
+	if in.Opts.AssertRecent != "" {
+		threshold, parseErr := time.ParseDuration(in.Opts.AssertRecent)
 		if parseErr != nil {
 			return &ui.UserError{Err: fmt.Errorf("parse --assert-recent: %w", parseErr)}
 		}
@@ -101,7 +114,7 @@ func runValidateProject(cmd *cobra.Command, deps validateDeps, rt *ui.Runtime, r
 		if params.nowTime != (time.Time{}) {
 			now = params.nowTime
 		}
-		snapshots, snapErr := compose.LoadSnapshotsFrom(compose.CommandContext(cmd), deps.NewObsRepo, opts.Observations)
+		snapshots, snapErr := compose.LoadSnapshotsFrom(ctx, in.Deps.NewObsRepo, in.Opts.Observations)
 		if snapErr != nil {
 			return fmt.Errorf("load snapshots for staleness check: %w", snapErr)
 		}
@@ -113,27 +126,27 @@ func runValidateProject(cmd *cobra.Command, deps validateDeps, rt *ui.Runtime, r
 
 	// Print a helpful hint for the next step on success (if not quiet)
 	exitErr := rep.ExitStatus(result)
-	if exitErr == nil && !rt.Quiet {
-		ui.WriteHint(cmd.ErrOrStderr(), fmt.Sprintf(
+	if exitErr == nil && !in.Rt.Quiet {
+		ui.WriteHint(in.Stderr, fmt.Sprintf(
 			"stave apply --controls %s --observations %s",
-			opts.Controls, opts.Observations,
+			in.Opts.Controls, in.Opts.Observations,
 		))
 	}
 
 	return exitErr
 }
 
-func executeValidateRun(cmd *cobra.Command, deps validateDeps, params validateParams, opts *options) (*appvalidation.Report, error) {
+func executeValidateRun(ctx context.Context, in Input, params validateParams) (*appvalidation.Report, error) {
 	// Setup Repositories
-	obsLoader, err := deps.NewObsRepo()
+	obsLoader, err := in.Deps.NewObsRepo()
 	if err != nil {
 		return nil, fmt.Errorf("failed to init observation repository: %w", err)
 	}
-	ctlLoader, err := deps.NewCtlRepo()
+	ctlLoader, err := in.Deps.NewCtlRepo()
 	if err != nil {
 		return nil, fmt.Errorf("failed to init control repository: %w", err)
 	}
-	celEval, err := deps.NewCELEvaluator()
+	celEval, err := in.Deps.NewCELEvaluator()
 	if err != nil {
 		return nil, fmt.Errorf("failed to init CEL evaluator: %w", err)
 	}
@@ -141,14 +154,14 @@ func executeValidateRun(cmd *cobra.Command, deps validateDeps, params validatePa
 	// Execute Domain Logic
 	runner := appvalidation.NewRun(obsLoader, ctlLoader)
 	cfg := appvalidation.Config{
-		ControlsDir:       opts.Controls,
-		ObservationsDir:   opts.Observations,
+		ControlsDir:       in.Opts.Controls,
+		ObservationsDir:   in.Opts.Observations,
 		MaxUnsafeDuration: *params.maxUnsafe,
 		NowTime:           params.nowTime,
-		SanitizePaths:     cliflags.GetGlobalFlags(cmd).Sanitize,
+		SanitizePaths:     in.Global.Sanitize,
 		PredicateParser:   ctlyaml.ParsePredicate,
 		PredicateEval:     celEval,
 	}
 
-	return runner.Execute(compose.CommandContext(cmd), cfg)
+	return runner.Execute(ctx, cfg)
 }

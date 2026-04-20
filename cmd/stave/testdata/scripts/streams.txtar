@@ -28,6 +28,7 @@ name: Test Control
 description: Test.
 domain: exposure
 severity: high
+classification: state_assertion
 type: unsafe_state
 params: {}
 unsafe_predicate:

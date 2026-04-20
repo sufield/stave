@@ -26,8 +26,13 @@ Exit Codes:
   4    Internal error` + metadata.OfflineHelpSuffix,
 		Example: `  stave inspect aliases
   stave inspect aliases --category Encryption`,
-		Args:          cobra.NoArgs,
-		RunE:          func(cmd *cobra.Command, _ []string) error { return run(cmd, category) },
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			return run(Input{
+				Stdout:   cmd.OutOrStdout(),
+				Category: category,
+			})
+		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}

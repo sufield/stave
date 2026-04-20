@@ -25,8 +25,14 @@ Exit Codes:
   4    Internal error` + metadata.OfflineHelpSuffix,
 		Example: `  stave inspect acl --file grants.json
   cat grants.json | stave inspect acl`,
-		Args:          cobra.NoArgs,
-		RunE:          func(cmd *cobra.Command, _ []string) error { return run(cmd, file) },
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			return run(Input{
+				Stdin:  cmd.InOrStdin(),
+				Stdout: cmd.OutOrStdout(),
+				File:   file,
+			})
+		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}

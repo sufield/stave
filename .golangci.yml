@@ -38,13 +38,26 @@ linters:
     depguard:
       rules:
         headless-core:
+          # Core-airgap: everything outside the adapter packages is
+          # banned from importing cobra or pflag — either directly,
+          # or transitively through cliflags / cmdctx. The adapter
+          # packages (anything under cmd/, plus cliflags and cmdctx
+          # by name) are excluded from this rule so they can
+          # translate cobra into plain data and vice versa.
+          list-mode: lax
           files:
-            - "internal/**"
+            - "!**/cmd/**"
+            - "!**/cliflags/**"
+            - "!**/cmdctx/**"
           deny:
             - pkg: "github.com/spf13/cobra"
-              desc: "Core logic must remain headless; CLI dependencies belong in cmd/"
+              desc: "cobra is a CLI adapter; keep it out of application/domain code"
             - pkg: "github.com/spf13/pflag"
-              desc: "Core logic must remain headless; CLI dependencies belong in cmd/"
+              desc: "pflag is a CLI adapter; keep it out of application/domain code"
+            - pkg: "github.com/sufield/stave/cmd/cmdutil/cliflags"
+              desc: "cliflags transitively imports cobra; core code should depend on internal/config (GlobalSettings) instead"
+            - pkg: "github.com/sufield/stave/cmd/cmdutil/cmdctx"
+              desc: "cmdctx transitively imports cobra; core code should receive resolved context/logger values"
         core-no-aws:
           files:
             - "internal/core/**"

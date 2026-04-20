@@ -1,8 +1,10 @@
 package validate
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"strings"
 	"time"
@@ -14,6 +16,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/config"
 	"github.com/sufield/stave/internal/core/diag"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
@@ -134,9 +137,10 @@ func (o *options) normalizeAndValidate(controlsChanged, obsChanged bool) error {
 }
 
 // auditGitStatus checks for uncommitted changes in control/config files
-// and emits a warning to stderr if the working tree is dirty.
-func (o *options) auditGitStatus(cmd *cobra.Command) error {
-	gf := cliflags.GetGlobalFlags(cmd)
+// and emits a warning to stderr if the working tree is dirty. The
+// caller resolves ctx, stderr, and global settings at the CLI
+// boundary — this method stays free of cobra.
+func (o *options) auditGitStatus(ctx context.Context, stderr io.Writer, global config.GlobalSettings) error {
 	resolver, err := projctx.NewResolver()
 	if err != nil {
 		return fmt.Errorf("resolve project context: %w", err)
@@ -148,9 +152,9 @@ func (o *options) auditGitStatus(cmd *cobra.Command) error {
 	}
 
 	root := resolver.ProjectRoot()
-	gitMeta := compose.AuditGitStatus(cmd.Context(), root, []string{o.Controls, cfgPath})
-	if !gf.Quiet {
-		compose.WarnGitDirty(cmd.ErrOrStderr(), gitMeta, "validate")
+	gitMeta := compose.AuditGitStatus(ctx, root, []string{o.Controls, cfgPath})
+	if !global.Quiet {
+		compose.WarnGitDirty(stderr, gitMeta, "validate")
 	}
 	return nil
 }

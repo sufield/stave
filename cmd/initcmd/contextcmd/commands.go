@@ -5,7 +5,7 @@ package contextcmd
 import (
 	"errors"
 	"fmt"
-
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/cli/ui"
 	contexts "github.com/sufield/stave/internal/config"
 	"github.com/sufield/stave/internal/metadata"
@@ -54,7 +55,11 @@ Exit Codes:
 		SilenceErrors: true,
 		Args:          cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runContextList(cmd, format)
+			resolved, err := compose.ResolveFormatValue(cmd, format)
+			if err != nil {
+				return err
+			}
+			return runContextList(ListInput{Stdout: cmd.OutOrStdout(), Format: resolved})
 		},
 	}
 	cmd.Flags().StringVarP(&format, "format", "f", "text", "Output format: text or json")
@@ -81,7 +86,9 @@ Exit Codes:
 		SilenceErrors: true,
 		Args:          cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runContextCreate(cmd, args, contextCreateInput{
+			return runContextCreate(CreateInput{
+				Stdout:          cmd.OutOrStdout(),
+				Name:            args[0],
 				Dir:             dir,
 				ConfigFile:      configFile,
 				ControlsDir:     controls,
@@ -111,7 +118,9 @@ Exit Codes:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		Args:          cobra.ExactArgs(1),
-		RunE:          runContextUse,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runContextUse(UseInput{Stdout: cmd.OutOrStdout(), Name: args[0]})
+		},
 	}
 }
 
@@ -133,7 +142,11 @@ Exit Codes:
 		SilenceErrors: true,
 		Args:          cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runContextShow(cmd, format)
+			resolved, err := compose.ResolveFormatValue(cmd, format)
+			if err != nil {
+				return err
+			}
+			return runContextShow(ShowInput{Stdout: cmd.OutOrStdout(), Format: resolved})
 		},
 	}
 	cmd.Flags().StringVarP(&format, "format", "f", "text", "Output format: text or json")
@@ -156,34 +169,60 @@ Exit Codes:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		Args:          cobra.ExactArgs(1),
-		RunE:          runContextDelete,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runContextDelete(DeleteInput{Stdout: cmd.OutOrStdout(), Name: args[0]})
+		},
 	}
 }
 
-// contextCreateInput groups the parameters for runContextCreate.
-type contextCreateInput struct {
+// --- Per-command Input structs ---
+
+// ListInput is the payload for runContextList, assembled in RunE.
+type ListInput struct {
+	Stdout io.Writer
+	Format appcontracts.OutputFormat
+}
+
+// CreateInput is the payload for runContextCreate, assembled in RunE.
+type CreateInput struct {
+	Stdout          io.Writer
+	Name            string
 	Dir             string
 	ConfigFile      string
 	ControlsDir     string
 	ObservationsDir string
 }
 
-// --- Bridge Functions ---
+// UseInput is the payload for runContextUse, assembled in RunE.
+type UseInput struct {
+	Stdout io.Writer
+	Name   string
+}
 
-func runContextList(cmd *cobra.Command, rawFormat string) error {
+// ShowInput is the payload for runContextShow, assembled in RunE.
+type ShowInput struct {
+	Stdout io.Writer
+	Format appcontracts.OutputFormat
+}
+
+// DeleteInput is the payload for runContextDelete, assembled in RunE.
+type DeleteInput struct {
+	Stdout io.Writer
+	Name   string
+}
+
+// --- Bridge Functions (no cobra) ---
+
+func runContextList(in ListInput) error {
 	st, _, err := contexts.Load()
 	if err != nil {
 		return err
 	}
-	format, fmtErr := compose.ResolveFormatValue(cmd, rawFormat)
-	if fmtErr != nil {
-		return fmtErr
-	}
-	runner := &Runner{Stdout: cmd.OutOrStdout()}
-	return runner.List(st, format)
+	runner := &Runner{Stdout: in.Stdout}
+	return runner.List(st, in.Format)
 }
 
-func runContextCreate(cmd *cobra.Command, args []string, in contextCreateInput) error {
+func runContextCreate(in CreateInput) error {
 	rootAbs, err := filepath.Abs(strings.TrimSpace(in.Dir))
 	if err != nil {
 		return fmt.Errorf("resolve --dir: %w", err)
@@ -203,20 +242,20 @@ func runContextCreate(cmd *cobra.Command, args []string, in contextCreateInput) 
 	c.Defaults.ControlsDir = strings.TrimSpace(in.ControlsDir)
 	c.Defaults.ObservationsDir = strings.TrimSpace(in.ObservationsDir)
 
-	runner := &Runner{Stdout: cmd.OutOrStdout()}
-	return runner.Create(st, args[0], c)
+	runner := &Runner{Stdout: in.Stdout}
+	return runner.Create(st, in.Name, c)
 }
 
-func runContextUse(cmd *cobra.Command, args []string) error {
+func runContextUse(in UseInput) error {
 	st, _, err := contexts.Load()
 	if err != nil {
 		return err
 	}
-	runner := &Runner{Stdout: cmd.OutOrStdout()}
-	return runner.Use(st, args[0])
+	runner := &Runner{Stdout: in.Stdout}
+	return runner.Use(st, in.Name)
 }
 
-func runContextShow(cmd *cobra.Command, rawFormat string) error {
+func runContextShow(in ShowInput) error {
 	st, path, err := contexts.Load()
 	if err != nil {
 		return err
@@ -234,13 +273,8 @@ func runContextShow(cmd *cobra.Command, rawFormat string) error {
 		selectedBy = "env:STAVE_CONTEXT"
 	}
 
-	format, fmtErr := compose.ResolveFormatValue(cmd, rawFormat)
-	if fmtErr != nil {
-		return fmtErr
-	}
-
-	runner := &Runner{Stdout: cmd.OutOrStdout()}
-	return runner.Show(format, ShowResult{
+	runner := &Runner{Stdout: in.Stdout}
+	return runner.Show(in.Format, ShowResult{
 		StoreFile:     path,
 		SelectedBy:    selectedBy,
 		Name:          name,
@@ -251,13 +285,13 @@ func runContextShow(cmd *cobra.Command, rawFormat string) error {
 	})
 }
 
-func runContextDelete(cmd *cobra.Command, args []string) error {
+func runContextDelete(in DeleteInput) error {
 	st, _, err := contexts.Load()
 	if err != nil {
 		return err
 	}
-	runner := &Runner{Stdout: cmd.OutOrStdout()}
-	return runner.Delete(st, args[0])
+	runner := &Runner{Stdout: in.Stdout}
+	return runner.Delete(st, in.Name)
 }
 
 func emptyDash(s string) string {

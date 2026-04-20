@@ -15,6 +15,7 @@ dsl_version: ctrl.v1
 id: CTL.S3.PUBLIC.001
 name: Buckets should stay private
 description: Public buckets increase exposure risk.
+classification: state_assertion
 type: unsafe_state
 unsafe_predicate:
   any:
@@ -40,6 +41,7 @@ dsl_version: ctrl.v1
 id: CTL.S3.PUBLIC.001
 name: Buckets should stay private
 description: Public buckets increase exposure risk.
+classification: state_assertion
 type: unsafe_state
 unsafe_predicate:
   any:

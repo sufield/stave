@@ -20,6 +20,7 @@ func TestControlLoader_RejectsMissingDSLVersion(t *testing.T) {
 	content := `id: CTL.EXP.STATE.101
 name: Test Control
 description: Test
+classification: state_assertion
 type: unsafe_state
 unsafe_predicate:
   any:
@@ -57,6 +58,7 @@ func TestControlLoader_RejectsUnsupportedDSLVersion(t *testing.T) {
 id: CTL.EXP.STATE.101
 name: Test Control
 description: Test
+classification: state_assertion
 type: unsafe_state
 unsafe_predicate:
   any:
@@ -91,6 +93,7 @@ func TestControlLoader_AcceptsSupportedDSLVersion(t *testing.T) {
 id: CTL.EXP.STATE.101
 name: Test Control
 description: Test
+classification: state_assertion
 type: unsafe_state
 unsafe_predicate:
   any:
@@ -191,6 +194,7 @@ func TestControlLoader_RejectsDuplicateIDs(t *testing.T) {
 id: CTL.TEST.DUP.001
 name: First Definition
 description: First version
+classification: state_assertion
 type: unsafe_state
 unsafe_predicate:
   any:
@@ -202,6 +206,7 @@ unsafe_predicate:
 id: CTL.TEST.DUP.001
 name: Second Definition
 description: Duplicate ID
+classification: state_assertion
 type: unsafe_state
 unsafe_predicate:
   any:
@@ -289,6 +294,7 @@ domain: exposure
 scope_tags:
   - aws
   - s3
+classification: state_assertion
 type: unsafe_state
 unsafe_predicate:
   any:
@@ -308,6 +314,7 @@ domain: storage
 scope_tags:
   - aws
   - s3
+classification: aggregate_check
 type: unsafe_duration
 unsafe_predicate:
   any:
@@ -344,6 +351,7 @@ func TestControlLoader_LoadsRemediationField(t *testing.T) {
 id: CTL.TEST.MIT.001
 name: Test Remediation
 description: Test control with remediation
+classification: state_assertion
 type: unsafe_state
 unsafe_predicate:
   any:
@@ -384,7 +392,7 @@ remediation:
 
 func TestControlLoader_LoadsRemediationExampleField(t *testing.T) {
 	dir := t.TempDir()
-	content := "dsl_version: ctrl.v1\nid: CTL.TEST.MITEX.001\nname: Test Remediation Example\ndescription: Test control with remediation example\ntype: unsafe_state\nunsafe_predicate:\n  any:\n    - field: \"properties.test\"\n      op: \"eq\"\n      value: true\nremediation:\n  description: \"Resource is publicly exposed.\"\n  action: \"Remove public access and enable PAB.\"\n  example: |\n    {\n      \"storage\": {\n        \"visibility\": {\n          \"public_read\": false\n        }\n      }\n    }\n"
+	content := "dsl_version: ctrl.v1\nid: CTL.TEST.MITEX.001\nname: Test Remediation Example\ndescription: Test control with remediation example\nclassification: state_assertion\ntype: unsafe_state\nunsafe_predicate:\n  any:\n    - field: \"properties.test\"\n      op: \"eq\"\n      value: true\nremediation:\n  description: \"Resource is publicly exposed.\"\n  action: \"Remove public access and enable PAB.\"\n  example: |\n    {\n      \"storage\": {\n        \"visibility\": {\n          \"public_read\": false\n        }\n      }\n    }\n"
 	if err := os.WriteFile(filepath.Join(dir, "test.yaml"), []byte(content), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -419,6 +427,7 @@ func TestControlLoader_RemediationOptional(t *testing.T) {
 id: CTL.TEST.NOMIT.001
 name: Test No Remediation
 description: Test control without remediation
+classification: state_assertion
 type: unsafe_state
 unsafe_predicate:
   any:
@@ -479,6 +488,7 @@ func validControlYAML(id string) string {
 id: ` + id + `
 name: Test Control
 description: Test control for ` + id + `
+classification: state_assertion
 type: unsafe_state
 unsafe_predicate:
   any:
@@ -703,6 +713,7 @@ func TestControlLoader_UnsafePredicateAliasExpansion(t *testing.T) {
 id: CTL.TEST.ALIAS.001
 name: Alias expansion
  description: alias expansion test
+classification: state_assertion
 type: unsafe_state
 unsafe_predicate_alias: s3.is_public_readable
 `
@@ -733,6 +744,7 @@ func TestControlLoader_UnsafePredicateAliasUnknown(t *testing.T) {
 id: CTL.TEST.ALIAS.002
 name: Alias unknown
  description: alias unknown test
+classification: state_assertion
 type: unsafe_state
 unsafe_predicate_alias: s3.unknown_alias
 `
@@ -795,6 +807,7 @@ func TestControlLoader_ZeroValueUsable(t *testing.T) {
 id: CTL.EXP.STATE.101
 name: Test Control
 description: Test
+classification: state_assertion
 type: unsafe_state
 unsafe_predicate:
   any:
