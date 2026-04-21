@@ -1,0 +1,21 @@
+control: CTL.IAM.TRUST.SESSION.001
+defect: >
+  The role's cross-account trust policy allows assumption without
+  session-limiting conditions. No MFA requirement, no source
+  network restriction, and no reduced session duration are
+  configured.
+infection: >
+  A principal with sts:AssumeRole permission can assume this role
+  from any IP address, without MFA, for up to the maximum session
+  duration (default 1 hour, configurable up to 12 hours). If the
+  assuming principal's credentials are compromised — via phishing,
+  SSRF, or token theft — the attacker has the same unrestricted
+  assumption capability. The absence of network and MFA conditions
+  means the stolen credentials work from the attacker's
+  infrastructure, not just the victim's network.
+failure: >
+  Unrestricted cross-account role assumption. Compromised
+  credentials grant access for the full session duration from any
+  network location without additional authentication, maximizing
+  the blast radius and persistence window of a credential
+  compromise.

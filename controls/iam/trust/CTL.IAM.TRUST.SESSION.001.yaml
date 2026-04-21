@@ -1,0 +1,60 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.TRUST.SESSION.001
+name: Cross-Account Trust Must Have Session-Limiting Conditions
+description: >
+  IAM roles with cross-account trust policies must include at least
+  one session-limiting condition beyond principal identity binding.
+  Without constraints on session duration, source network, or MFA,
+  an assumed-role session is usable from any IP address, without
+  MFA, for the maximum default duration (up to 12 hours). Existing
+  controls verify principal binding (ExternalId, SourceArn,
+  ConfusedDeputy). This control verifies that the trust policy also
+  constrains the assumption context — how long, from where, and
+  with what authentication strength.
+domain: identity
+severity: medium
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-3"
+  fedramp_moderate: "AC-3"
+  ccm_v4: ["IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: >
+    Cross-account trust policy allows assumption without session-
+    limiting conditions. Sessions are usable from any network, without
+    MFA, for the maximum default duration.
+  action: >
+    Add at least one of the following conditions to the trust policy:
+    aws:MultiFactorAuthPresent (require MFA), aws:SourceIp or
+    aws:SourceVpc (restrict network origin), or set
+    MaxSessionDuration on the role to limit session lifetime. For
+    cross-account CI/CD roles, combine OIDC subject scoping (covered
+    by CTL.IAM.TRUST.OIDC.*) with a short MaxSessionDuration.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "trust_policy": {
+          "has_assumption_constraints": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: role
+    - field: properties.identity.trust_policy.has_cross_account_trust
+      op: eq
+      value: true
+    - field: properties.identity.trust_policy.has_assumption_constraints
+      op: eq
+      value: false

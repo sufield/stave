@@ -11,7 +11,7 @@ areas. The 22 ESCALATE controls map 1:1 to known Rhino Security
 Labs / Prowler escalation techniques. The POLICY sub-family covers
 policy hygiene (wildcards, self-modification, NotAction shadows).
 Chain definitions compose individual controls into multi-step
-escalation paths. Two remaining gaps are observation-layer dependent: session
+escalation paths. One remaining gap is observation-layer dependent: session
 duration conditions in trust policies (Gap B) and CloudTrail
 event-level monitoring for specific IAM escalation API calls
 (Gap C).
@@ -51,7 +51,7 @@ multi-step compositions.
 | 10 | **PassRole condition restriction** | CTL.IAM.POLICY.PASSROLE.001 (wildcard Resource), CTL.IAM.POLICY.PASSROLE.CONDITION.001 (missing iam:PassedToService condition) | **Full** |
 | 11 | **Permission boundaries** | CTL.IAM.BOUNDARY.001 (checks boundary is set), CTL.IAM.NEP.BOUNDARY.001 (checks boundary is effective — actually constrains permissions) | **Full** |
 | 12 | **MFA on sensitive operations** | CTL.IAM.POLICY.MFA.001 (checks aws:MultiFactorAuthPresent condition on destructive actions) | **Full** |
-| 13 | **Session/conditions in trust policies** | CTL.IAM.TRUST.EXTERNALID.001 (ExternalId), CTL.IAM.TRUST.CONFUSEDDEPUTY.001 (SourceAccount), CTL.IAM.TRUST.SOURCEARN.001 (SourceArn). No control checks MaxSessionDuration or source IP conditions. | **Partial** |
+| 13 | **Session/conditions in trust policies** | CTL.IAM.TRUST.EXTERNALID.001 (ExternalId), CTL.IAM.TRUST.CONFUSEDDEPUTY.001 (SourceAccount), CTL.IAM.TRUST.SOURCEARN.001 (SourceArn), CTL.IAM.TRUST.SESSION.001 (session-limiting conditions: MFA, SourceIp, MaxSessionDuration) | **Full** |
 | 14 | **CloudTrail monitoring for escalation** | CTL.CLOUDTRAIL.ENABLED.001 (trail exists, multi-region). No control verifies event-level alerting on specific IAM escalation API calls (CreatePolicyVersion, AttachUserPolicy, PassRole). | **Partial** |
 
 ## Gaps
@@ -65,24 +65,14 @@ condition. Combined with PASSROLE.001 (wildcard Resource), both
 the unconstrained-Resource and unconditioned-service cases are
 now covered.
 
-### Gap 13: MaxSessionDuration and source IP in trust policies
+### Gap 13: Trust policy session conditions — CLOSED
 
-**Classification: Gap B** (observation data partially available)
-
-Existing controls check trust policy principal binding (ExternalId,
-SourceArn, SourceAccount, OIDC subject scope). No control checks:
-- MaxSessionDuration (whether assumed-role sessions are time-bounded)
-- Source IP conditions (whether trust is geo-restricted)
-- MFA conditions on cross-account assumption
-
-The observation contract carries trust policy structure but does
-not currently decompose Condition blocks for these specific keys.
-Adding them requires extractor work to parse trust policy
-conditions beyond the current binary flags.
-
-**Priority: Low.** These are defense-in-depth conditions. The
-principal-binding controls (ExternalId, SourceArn) address the
-primary confused-deputy and cross-account risks.
+Closed by CTL.IAM.TRUST.SESSION.001. The control checks
+`identity.trust_policy.has_assumption_constraints == false` on
+cross-account trust policies, firing when the trust policy lacks
+session-limiting conditions (MFA, source IP/VPC,
+MaxSessionDuration). Observation contract extended with
+`has_cross_account_trust` and `has_assumption_constraints`.
 
 ### Gap 14: CloudTrail event-level escalation monitoring
 
@@ -166,10 +156,8 @@ needed based on this audit.
    verify alerts exist for escalation-relevant API calls. Addresses
    Gap 14.
 
-3. **(Low) Add trust policy condition depth.** Parse Condition
-   blocks for MaxSessionDuration, source IP, and MFA requirements.
-   Addresses Gap 13. Lower priority because principal-binding
-   controls already cover the primary risk.
+3. ~~**(Low) Add trust policy condition depth.**~~
+   **CLOSED.** CTL.IAM.TRUST.SESSION.001 authored.
 
 4. **(None needed) Escalation vector coverage.** All 8 vectors
    have Full coverage. No new ESCALATE controls needed unless new

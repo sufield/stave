@@ -187,6 +187,8 @@ var pathOverrides = map[string]string{ //nolint:gosec // property labels, not cr
 	"identity.policies.assumerole_unrestricted":                    "unrestricted AssumeRole permission",
 	"identity.policies.passrole_unrestricted":                      "unrestricted PassRole permission",
 	"identity.policies.passrole_has_service_condition":             "PassRole iam:PassedToService condition",
+	"identity.trust_policy.has_cross_account_trust":                "cross-account trust",
+	"identity.trust_policy.has_assumption_constraints":             "trust policy session-limiting conditions",
 	"identity.policies.cloudshell_unrestricted":                    "unrestricted CloudShell access",
 	"identity.policies.statement_count":                            "policy statement count",
 	"identity.policies.service_wildcards_granted":                  "service-wildcard grants",
