@@ -223,4 +223,23 @@ func ApplyTriage(controls []policy.ControlDefinition, idx *TriageIndex) {
 			controls[i].Failure = resolved.Failure
 		}
 	}
+	DeriveDefects(controls)
+}
+
+// DeriveDefects fills empty Defect fields by generating descriptions
+// from the control's predicate tree. Only applies to controls that
+// still have empty Defect after triage override and family template
+// inheritance. Uses the property-path registry to produce domain-
+// meaningful labels; controls whose predicates contain unlabeled paths
+// are skipped (accuracy over coverage).
+func DeriveDefects(controls []policy.ControlDefinition) {
+	for i := range controls {
+		if controls[i].Defect != "" {
+			continue
+		}
+		derived := policy.DeriveDefect(&controls[i].UnsafePredicate)
+		if derived != "" {
+			controls[i].Defect = derived
+		}
+	}
 }

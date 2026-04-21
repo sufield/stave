@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Predicate-derived defect descriptions.** Controls without per-control
+  defect overrides now get mechanically generated DEFECT text from their
+  predicate tree. A property-path registry maps observation fields to
+  domain-meaningful labels (150+ overrides, algorithmic fallback for the
+  rest). Combined with operator-phrase mapping, the derivation produces
+  accurate sentences like "EBS volume encryption is not enabled" or
+  "S3 BlockPublicAcls setting is not enabled." Coverage: 672 of 675
+  controls (99.6%) now have defect descriptions — 121 from per-control
+  overrides, 551 from derivation, 3 not derivable (complex predicates).
+  Per-control overrides still take precedence. Derivation runs in shared
+  core, used by both CLI and library.
 - **Family template inheritance verified end-to-end.** Targeted test
   (`TestApply_FamilyTemplateInheritance`) confirms 42 of 54 findings
   inherit family-level infection/failure from the builtin catalog, 12

@@ -515,6 +515,7 @@
         "aws",
         "cloudtrail"
       ],
+      "defect": "Multi region is not enabled.",
       "infection": "CloudTrail misconfigurations create gaps in the audit trail. Missing trails, disabled logging, or absent log validation allow an attacker to operate without generating audit records — or to tamper with existing records without detection.\n",
       "failure": "Audit trail gap. Security-relevant API activity is not recorded or recorded logs cannot be trusted, undermining incident investigation and compliance evidence.\n"
     },
@@ -665,6 +666,7 @@
         "aws",
         "config"
       ],
+      "defect": "Recording is not enabled.",
       "infection": "AWS Config misconfigurations mean configuration changes to resources go unrecorded. Without Config recording, there is no baseline to detect drift, no history to investigate incidents, and no evidence for compliance audits.\n",
       "failure": "Configuration visibility gap. Resource changes are untracked, preventing drift detection, incident investigation, and compliance evidence collection.\n"
     },
@@ -809,6 +811,7 @@
         "aws",
         "vpc"
       ],
+      "defect": "VPC flow logging is not enabled.",
       "infection": "VPC misconfigurations weaken network isolation and segmentation. Missing flow logs, overly permissive NACLs, absent VPC endpoint policies, or unrestricted peering connections allow unauthorized network access, unaudited traffic flows, or lateral movement between VPCs.\n",
       "failure": "Network isolation failure. VPC boundaries are weakened, enabling unauthorized network access, lateral movement, or unaudited traffic flows.\n"
     },
@@ -1299,6 +1302,7 @@
         "aws",
         "rds"
       ],
+      "defect": "Access publicly accessible is enabled.",
       "infection": "RDS misconfigurations expose database instances, snapshots, or credentials. Public accessibility, missing encryption at rest, absent automated backups, or unencrypted snapshots allow attackers to connect directly, read data from snapshots, or exploit database vulnerabilities from the internet.\n",
       "failure": "Database exposure. RDS instances, their data, or their snapshots are accessible to unauthorized parties, enabling data theft or database compromise.\n"
     },
@@ -1448,6 +1452,7 @@
         "aws",
         "rds"
       ],
+      "defect": "Database encryption at rest is not enabled.",
       "infection": "RDS misconfigurations expose database instances, snapshots, or credentials. Public accessibility, missing encryption at rest, absent automated backups, or unencrypted snapshots allow attackers to connect directly, read data from snapshots, or exploit database vulnerabilities from the internet.\n",
       "failure": "Database exposure. RDS instances, their data, or their snapshots are accessible to unauthorized parties, enabling data theft or database compromise.\n"
     },
@@ -1583,6 +1588,7 @@
         "aws",
         "apigateway"
       ],
+      "defect": "Encryption TLS enforced is not enabled.",
       "infection": "API Gateway misconfigurations expose backend services to unauthorized callers. Missing authentication, overly permissive authorization, or absent rate limiting allow attackers to enumerate, abuse, or overwhelm the API's backend resources.\n",
       "failure": "Unauthorized API access. Backend services are reachable by unauthorized callers, enabling data exfiltration, abuse, or denial of service through the API layer.\n"
     },
@@ -1715,6 +1721,7 @@
         "aws",
         "backup"
       ],
+      "defect": "Backup is not enabled.",
       "infection": "Backup misconfigurations leave recovery points unencrypted, unreplicated, or unprotected from deletion. An attacker who gains access to unencrypted backups reads the full dataset. Missing cross-region replication means a single region failure destroys all recovery capability.\n",
       "failure": "Data recovery failure or backup data exposure. Backups are either inaccessible when needed or accessible to unauthorized parties.\n"
     },
@@ -1850,6 +1857,7 @@
         "aws",
         "cloudtrail"
       ],
+      "defect": "Encryption is not enabled.",
       "infection": "CloudTrail misconfigurations create gaps in the audit trail. Missing trails, disabled logging, or absent log validation allow an attacker to operate without generating audit records — or to tamper with existing records without detection.\n",
       "failure": "Audit trail gap. Security-relevant API activity is not recorded or recorded logs cannot be trusted, undermining incident investigation and compliance evidence.\n"
     },
@@ -1988,6 +1996,7 @@
         "aws",
         "cloudtrail"
       ],
+      "defect": "Log file validation is not enabled.",
       "infection": "CloudTrail misconfigurations create gaps in the audit trail. Missing trails, disabled logging, or absent log validation allow an attacker to operate without generating audit records — or to tamper with existing records without detection.\n",
       "failure": "Audit trail gap. Security-relevant API activity is not recorded or recorded logs cannot be trusted, undermining incident investigation and compliance evidence.\n"
     },
@@ -2118,6 +2127,7 @@
         "aws",
         "cloudwatch"
       ],
+      "defect": "Retention policy is not enabled.",
       "infection": "Missing CloudWatch alarms and monitoring configurations mean security-relevant events go undetected. Unauthorized API calls, root account usage, configuration changes, and authentication failures occur without triggering alerts.\n",
       "failure": "Detection blind spot. Security events that should trigger investigation occur silently, delaying incident response and allowing attackers to operate undetected.\n"
     },
@@ -2251,6 +2261,7 @@
         "aws",
         "cognito"
       ],
+      "defect": "MFA enforcement is not enabled.",
       "infection": "Cognito misconfigurations weaken user authentication and identity management. Missing MFA enforcement, weak password policies, or insecure identity pool configurations allow attackers to compromise user accounts or obtain elevated AWS credentials.\n",
       "failure": "User identity compromise. Weak authentication controls enable account takeover, credential theft, or unauthorized access to AWS resources through Cognito identity pools.\n"
     },
@@ -2383,6 +2394,7 @@
         "aws",
         "dynamodb"
       ],
+      "defect": "Encryption sse type is not \"KMS\".",
       "infection": "DynamoDB misconfigurations expose table data or weaken access controls. Missing encryption at rest, overly permissive IAM policies, or absent point-in-time recovery leave data vulnerable to unauthorized access and unrecoverable deletion.\n",
       "failure": "Database data exposure or loss. DynamoDB table contents are accessible to unauthorized principals or unrecoverable after deletion.\n"
     },
@@ -2818,6 +2830,7 @@
         "aws",
         "elasticache"
       ],
+      "defect": "Encryption in transit is not enabled.",
       "infection": "ElastiCache misconfigurations expose in-memory data stores to unauthorized access. Missing encryption in transit, absent authentication, or overly permissive security groups allow attackers to read cached data (sessions, credentials, application state) without authentication.\n",
       "failure": "Cache data exposure. ElastiCache contents including session tokens, cached credentials, and application state are readable by unauthorized parties.\n"
     },
@@ -2928,6 +2941,7 @@
         "aws",
         "elb"
       ],
+      "defect": "Encryption HTTP to HTTPS redirect is not enabled.",
       "infection": "ELB misconfigurations weaken transport security or expose backend services. Insecure TLS policies, missing access logging, or absent security headers allow protocol downgrade attacks, untracked access, or client-side vulnerabilities on load-balanced endpoints.\n",
       "failure": "Load balancer security gap. Transport security is degraded, access is unaudited, or backend services are exposed through the load balancer.\n"
     },
@@ -3039,6 +3053,7 @@
         "aws",
         "elb"
       ],
+      "defect": "Encryption TLS 1 2 or higher is not enabled.",
       "infection": "ELB misconfigurations weaken transport security or expose backend services. Insecure TLS policies, missing access logging, or absent security headers allow protocol downgrade attacks, untracked access, or client-side vulnerabilities on load-balanced endpoints.\n",
       "failure": "Load balancer security gap. Transport security is degraded, access is unaudited, or backend services are exposed through the load balancer.\n"
     },
@@ -3176,6 +3191,7 @@
         "aws",
         "kms"
       ],
+      "defect": "Policy has wildcard principal is enabled.",
       "infection": "KMS misconfigurations weaken the cryptographic protection of encrypted data. Overly permissive key policies, disabled key rotation, or broad grants allow unauthorized principals to decrypt data, schedule key deletion, or use keys for unauthorized encryption operations.\n",
       "failure": "Cryptographic control failure. Encrypted data is decryptable by unauthorized principals, or key management operations are accessible to non-administrative identities.\n"
     },
@@ -3305,6 +3321,7 @@
         "aws",
         "rds"
       ],
+      "defect": "Backup is not enabled.",
       "infection": "RDS misconfigurations expose database instances, snapshots, or credentials. Public accessibility, missing encryption at rest, absent automated backups, or unencrypted snapshots allow attackers to connect directly, read data from snapshots, or exploit database vulnerabilities from the internet.\n",
       "failure": "Database exposure. RDS instances, their data, or their snapshots are accessible to unauthorized parties, enabling data theft or database compromise.\n"
     },
@@ -3438,6 +3455,7 @@
         "aws",
         "secretsmanager"
       ],
+      "defect": "Encryption customer managed key is not enabled.",
       "infection": "Secrets Manager misconfigurations weaken secret lifecycle management. Missing automatic rotation, overly permissive resource policies, or absent encryption allow secrets to become stale, broadly accessible, or stored without cryptographic protection.\n",
       "failure": "Managed secret exposure. Secrets stored in Secrets Manager are accessible to unauthorized principals, not rotated on schedule, or stored without encryption.\n"
     },
@@ -3567,6 +3585,7 @@
         "aws",
         "sns"
       ],
+      "defect": "Encryption is not enabled.",
       "infection": "SNS misconfigurations expose notification topics or allow unauthorized publishing. Overly permissive topic policies, missing encryption, or absent access controls allow attackers to read notification contents, inject messages, or subscribe unauthorized endpoints.\n",
       "failure": "Notification channel compromise. SNS topics are accessible to unauthorized publishers or subscribers, enabling message injection or data interception.\n"
     },
@@ -3696,6 +3715,7 @@
         "aws",
         "sqs"
       ],
+      "defect": "Encryption is not enabled.",
       "infection": "SQS misconfigurations expose message queues to unauthorized access. Overly permissive queue policies, missing encryption, or absent dead-letter queue configurations allow attackers to read, inject, or delete messages in processing pipelines.\n",
       "failure": "Message queue compromise. SQS queue contents are accessible to unauthorized principals, enabling data interception, message injection, or processing disruption.\n"
     },
@@ -3826,6 +3846,7 @@
         "aws",
         "backup"
       ],
+      "defect": "Multi az is not enabled.",
       "infection": "Backup misconfigurations leave recovery points unencrypted, unreplicated, or unprotected from deletion. An attacker who gains access to unencrypted backups reads the full dataset. Missing cross-region replication means a single region failure destroys all recovery capability.\n",
       "failure": "Data recovery failure or backup data exposure. Backups are either inaccessible when needed or accessible to unauthorized parties.\n"
     },
@@ -3956,6 +3977,7 @@
         "aws",
         "backup"
       ],
+      "defect": "Cross region is not enabled.",
       "infection": "Backup misconfigurations leave recovery points unencrypted, unreplicated, or unprotected from deletion. An attacker who gains access to unencrypted backups reads the full dataset. Missing cross-region replication means a single region failure destroys all recovery capability.\n",
       "failure": "Data recovery failure or backup data exposure. Backups are either inaccessible when needed or accessible to unauthorized parties.\n"
     },
@@ -4090,6 +4112,7 @@
         "aws",
         "config"
       ],
+      "defect": "Active rules is not enabled.",
       "infection": "AWS Config misconfigurations mean configuration changes to resources go unrecorded. Without Config recording, there is no baseline to detect drift, no history to investigate incidents, and no evidence for compliance audits.\n",
       "failure": "Configuration visibility gap. Resource changes are untracked, preventing drift detection, incident investigation, and compliance evidence collection.\n"
     },
@@ -4197,6 +4220,7 @@
         "aws",
         "elb"
       ],
+      "defect": "Availability cross zone is not enabled.",
       "infection": "ELB misconfigurations weaken transport security or expose backend services. Insecure TLS policies, missing access logging, or absent security headers allow protocol downgrade attacks, untracked access, or client-side vulnerabilities on load-balanced endpoints.\n",
       "failure": "Load balancer security gap. Transport security is degraded, access is unaudited, or backend services are exposed through the load balancer.\n"
     },
@@ -4302,6 +4326,7 @@
         "aws",
         "elb"
       ],
+      "defect": "Logging access log is not enabled.",
       "infection": "ELB misconfigurations weaken transport security or expose backend services. Insecure TLS policies, missing access logging, or absent security headers allow protocol downgrade attacks, untracked access, or client-side vulnerabilities on load-balanced endpoints.\n",
       "failure": "Load balancer security gap. Transport security is degraded, access is unaudited, or backend services are exposed through the load balancer.\n"
     },
@@ -4431,6 +4456,7 @@
         "aws",
         "rds"
       ],
+      "defect": "Logging audit log is not enabled.",
       "infection": "RDS misconfigurations expose database instances, snapshots, or credentials. Public accessibility, missing encryption at rest, absent automated backups, or unencrypted snapshots allow attackers to connect directly, read data from snapshots, or exploit database vulnerabilities from the internet.\n",
       "failure": "Database exposure. RDS instances, their data, or their snapshots are accessible to unauthorized parties, enabling data theft or database compromise.\n"
     },
@@ -4561,6 +4587,7 @@
         "aws",
         "rds"
       ],
+      "defect": "Access multi az is not enabled.",
       "infection": "RDS misconfigurations expose database instances, snapshots, or credentials. Public accessibility, missing encryption at rest, absent automated backups, or unencrypted snapshots allow attackers to connect directly, read data from snapshots, or exploit database vulnerabilities from the internet.\n",
       "failure": "Database exposure. RDS instances, their data, or their snapshots are accessible to unauthorized parties, enabling data theft or database compromise.\n"
     },
@@ -4691,6 +4718,7 @@
         "aws",
         "secretsmanager"
       ],
+      "defect": "Access rotation is not enabled.",
       "infection": "Secrets Manager misconfigurations weaken secret lifecycle management. Missing automatic rotation, overly permissive resource policies, or absent encryption allow secrets to become stale, broadly accessible, or stored without cryptographic protection.\n",
       "failure": "Managed secret exposure. Secrets stored in Secrets Manager are accessible to unauthorized principals, not rotated on schedule, or stored without encryption.\n"
     }

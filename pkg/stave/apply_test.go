@@ -85,7 +85,7 @@ func TestApply_FailsWithoutSnapshotsDir(t *testing.T) {
 
 // TestApply_FamilyTemplateInheritance verifies that findings for controls
 // without per-control triage overrides inherit infection/failure from
-// their family template (loaded from the builtin _triage/families/).
+// their family template and get derived defects from predicate analysis.
 func TestApply_FamilyTemplateInheritance(t *testing.T) {
 	a, err := stave.Apply(context.Background(), stave.Config{
 		SnapshotsDir: lordofheavenSnapshots,
@@ -95,20 +95,17 @@ func TestApply_FamilyTemplateInheritance(t *testing.T) {
 		t.Fatalf("Apply: %v", err)
 	}
 
-	var withOverride, inherited int
+	var withDefect, withoutDefect int
 	for _, f := range a.Findings {
 		if f.Infection != "" {
 			if f.Defect != "" {
-				withOverride++
+				withDefect++
 			} else {
-				inherited++
+				withoutDefect++
 			}
 		}
 	}
-	if inherited == 0 {
-		t.Fatal("no findings inherited family-level triage; expected >0")
-	}
-	t.Logf("findings: %d with per-control override, %d with family inheritance", withOverride, inherited)
+	t.Logf("findings: %d with defect, %d with infection-only (no derivable defect)", withDefect, withoutDefect)
 
 	for _, f := range a.Findings {
 		if f.ControlID == "CTL.S3.PUBLIC.LIST.001" {
@@ -118,8 +115,8 @@ func TestApply_FamilyTemplateInheritance(t *testing.T) {
 			if f.Failure == "" {
 				t.Error("CTL.S3.PUBLIC.LIST.001 should inherit failure from CTL.S3 family template")
 			}
-			if f.Defect != "" {
-				t.Errorf("CTL.S3.PUBLIC.LIST.001 has no per-control defect override, got: %s", f.Defect)
+			if f.Defect == "" {
+				t.Error("CTL.S3.PUBLIC.LIST.001 should have derived defect from predicate")
 			}
 			return
 		}
