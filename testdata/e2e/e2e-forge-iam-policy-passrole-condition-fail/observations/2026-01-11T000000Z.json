@@ -1,0 +1,19 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:iam::111122223333:user/deployer",
+      "properties": {
+        "identity": {
+          "policies": {
+            "passrole_has_service_condition": false
+          }
+        }
+      },
+      "type": "aws_iam_user",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

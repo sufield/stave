@@ -1,0 +1,18 @@
+control: CTL.IAM.POLICY.PASSROLE.CONDITION.001
+defect: >
+  The IAM policy grants iam:PassRole without an iam:PassedToService
+  condition. The principal can pass roles to any AWS service, not
+  just the service the permission was intended for.
+infection: >
+  Without the iam:PassedToService condition, a principal with
+  iam:PassRole can pass a high-privilege role to any compute
+  service — Lambda, EC2, Glue, CodeBuild, CloudFormation, or SSM.
+  Even when PassRole is scoped to specific role ARNs, the absence
+  of a service condition means the principal chooses which service
+  executes under that role. The attacker picks whichever service
+  gives the most convenient execution environment for their payload.
+failure: >
+  Privilege escalation via service-agnostic role passing. The
+  principal gains the permissions of the passed role through
+  whichever AWS service accepts it, enabling lateral movement
+  across compute services.
