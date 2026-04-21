@@ -1,0 +1,64 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.IMAGE.UNTRUSTED.001
+name: ECS Task Definitions Must Reference Images from Trusted Registries
+description: 'ECS task definitions must reference container images from the
+  organization''s trusted registry set (typically the account''s own ECR or
+  a curated approved list). Images from Docker Hub, third- party registries,
+  or unknown sources may contain vulnerabilities, backdoors, or cryptocurrency
+  miners.
+
+  '
+domain: exposure
+severity: medium
+compliance:
+  soc2: CC6.1
+  nist_800_53_r5: SI-7
+  pci_dss_v4.0: 6.3.2
+  ccm_v4:
+  - AIS-06
+  - IVS-04
+scope_tags:
+- aws
+- ecs
+- supply-chain
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: 'ECS task definition references an image from an untrusted
+    registry.
+
+    '
+  action: 'Mirror the required image into the organization''s ECR and reference
+    the ECR copy in the task definition. Enable image scanning on the ECR
+    repository to detect vulnerabilities in mirrored images.
+
+    '
+  example: "{\n  \"container\": {\n    \"kind\": \"task_definition\",\n  \
+    \  \"image\": { \"from_trusted_registry\": true }\n  }\n}\n"
+unsafe_predicate:
+  all:
+  - field: properties.container.kind
+    op: eq
+    value: task_definition
+  - field: properties.container.image.from_trusted_registry
+    op: eq
+    value: false
+defect: 'The ECS task definition references a container image from a registry
+  outside the organization''s trusted set (e.g., Docker Hub or a third-party
+  registry instead of the account''s ECR).
+
+  '
+infection: 'Images from untrusted registries may contain vulnerabilities,
+  backdoors, or cryptocurrency miners. The image executes with the task role''s
+  AWS permissions, meaning malicious code in the image has direct access to
+  the service''s AWS resources. The image source is outside the organization''s
+  control — updates, deletions, or tag mutations by the source owner affect
+  production workloads.
+
+  '
+failure: 'Supply chain compromise. Malicious or vulnerable code executes in
+  the production environment with legitimate service permissions.
+
+  '

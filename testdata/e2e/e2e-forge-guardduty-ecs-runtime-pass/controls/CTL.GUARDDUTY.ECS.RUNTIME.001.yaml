@@ -1,0 +1,59 @@
+dsl_version: ctrl.v1
+id: CTL.GUARDDUTY.ECS.RUNTIME.001
+name: GuardDuty ECS Runtime Monitoring Must Be Enabled
+description: 'GuardDuty ECS Runtime Monitoring must be enabled to detect runtime
+  threats in containers — crypto mining, malware, reverse shells, and credential
+  access. Without runtime monitoring, container compromise proceeds undetected
+  at the process and network level.
+
+  '
+domain: exposure
+severity: medium
+compliance:
+  soc2: CC7.1
+  nist_800_53_r5: SI-4
+  fedramp_moderate: SI-4
+  ccm_v4:
+  - TVM-01
+  - TVM-03
+scope_tags:
+- aws
+- guardduty
+- ecs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: GuardDuty ECS Runtime Monitoring is not enabled.
+  action: 'Enable GuardDuty ECS Runtime Monitoring in the GuardDuty console
+    or via API. Requires the GuardDuty agent deployed as a sidecar or managed
+    add-on on ECS tasks.
+
+    '
+  example: "{\n  \"threat_detection\": {\n    \"kind\": \"detector\",\n  \
+    \  \"ecs_runtime_monitoring\": { \"enabled\": true }\n  }\n}\n"
+unsafe_predicate:
+  all:
+  - field: properties.threat_detection.kind
+    op: eq
+    value: detector
+  - field: properties.threat_detection.ecs_runtime_monitoring.enabled
+    op: eq
+    value: false
+defect: 'GuardDuty ECS Runtime Monitoring is not enabled, leaving container
+  workloads without runtime threat detection.
+
+  '
+infection: 'If a container is compromised through application vulnerability,
+  supply chain attack, or credential theft, the runtime behavior — process
+  execution, network connections, file access — is not monitored. Malware,
+  crypto miners, reverse shells, and credential harvesting proceed without
+  generating runtime alerts.
+
+  '
+failure: 'Undetected container compromise. An attacker operates inside the
+  container environment without triggering runtime alerts, extending the compromise
+  window from minutes to days or weeks.
+
+  '

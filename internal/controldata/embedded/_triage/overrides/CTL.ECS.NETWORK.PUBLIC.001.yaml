@@ -1,0 +1,14 @@
+control: CTL.ECS.NETWORK.PUBLIC.001
+defect: >
+  The ECS task is configured to run in a public subnet with a
+  public IP, making it directly reachable from the internet.
+infection: >
+  An attacker can reach the container directly without traversing
+  a load balancer or NAT gateway. Port scanning, exploit attempts,
+  and credential harvesting target the container's public endpoint.
+  Combined with a privileged container or over-broad task role, the
+  direct access becomes a full compromise path.
+failure: >
+  Direct container compromise from the internet. The attacker gains
+  the task role's permissions and access to any resources the
+  container can reach within the VPC.

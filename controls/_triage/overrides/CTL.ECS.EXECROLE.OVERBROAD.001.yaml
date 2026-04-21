@@ -1,0 +1,15 @@
+control: CTL.ECS.EXECROLE.OVERBROAD.001
+defect: >
+  The ECS execution role has administrator-level or overly broad
+  permissions beyond what the ECS agent requires for image pulls,
+  log writes, and secret retrieval.
+infection: >
+  The execution role credentials are available to the ECS agent
+  infrastructure. If the agent's credential chain is compromised
+  via SSRF, metadata endpoint exposure, or container escape, the
+  attacker gains the execution role's full permissions — which in
+  this case include admin-level access.
+failure: >
+  Privilege escalation from container infrastructure to account-
+  level access. The execution role's over-broad permissions turn
+  a container-level compromise into full account compromise.

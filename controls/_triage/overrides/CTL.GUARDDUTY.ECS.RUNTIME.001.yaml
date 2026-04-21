@@ -1,0 +1,14 @@
+control: CTL.GUARDDUTY.ECS.RUNTIME.001
+defect: >
+  GuardDuty ECS Runtime Monitoring is not enabled, leaving container
+  workloads without runtime threat detection.
+infection: >
+  If a container is compromised through application vulnerability,
+  supply chain attack, or credential theft, the runtime behavior —
+  process execution, network connections, file access — is not
+  monitored. Malware, crypto miners, reverse shells, and credential
+  harvesting proceed without generating runtime alerts.
+failure: >
+  Undetected container compromise. An attacker operates inside the
+  container environment without triggering runtime alerts, extending
+  the compromise window from minutes to days or weeks.

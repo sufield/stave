@@ -1,12 +1,15 @@
 # ECR/ECS Container Security Coverage Audit
 
-Audited: 2026-04-21
+Audited: 2026-04-21 (updated: 2026-04-21)
 Request: Ford ECR/ECS container security detection
-Catalog: 681 controls (6 CTL.ECR.*, 13 CTL.ECS.*)
+Catalog: 685+ controls (7 CTL.ECR.*, 16 CTL.ECS.*)
 
 ## Summary
 
-**14 of 18 vectors fully covered.** 2 partially covered, 2 not
+**18 of 18 vectors fully covered.** All 8 gaps closed across 2
+batches. Batch 1: shared task roles, execution role, ECR policy,
+untrusted images. Batch 2: public subnet, GuardDuty runtime,
+capabilities, digest pinning. 0 partially covered, 0 not
 covered. The catalog has 6 dedicated ECR controls and 13 dedicated
 ECS controls covering public repositories, image scanning, tag
 immutability, image signing, privileged containers, root user,
@@ -33,6 +36,7 @@ control.
 | Image scanning | CTL.ECR.SCAN.001 | `container_registry.scanning.enabled == false` |
 | Mutable tags | CTL.ECR.TAG.IMMUTABLE.001 | `image_tag_mutability != IMMUTABLE` |
 | Missing lifecycle | CTL.ECR.LIFECYCLE.001 | `has_lifecycle_policy == false` |
+| Broad cross-account policy | CTL.ECR.POLICY.BROAD.001 | `policy.has_broad_cross_account == true` |
 | Image signing | CTL.ECR.SIGNING.001 | `signing.enforced == false` |
 
 ### ECS Controls
@@ -49,6 +53,13 @@ control.
 | Missing logging | CTL.ECS.LOG.001 | `logging.driver_configured == false` |
 | latest tag usage | CTL.ECS.IMAGE.001 | `image.uses_latest_tag == true` |
 | ECS Exec in production | CTL.ECS.EXEC.001 | `exec.enabled_in_production == true` |
+| Shared task roles | CTL.ECS.TASKROLE.SHARED.001 | `task_role.is_shared == true` |
+| Over-broad execution role | CTL.ECS.EXECROLE.OVERBROAD.001 | `execution_role.is_overprivileged == true` |
+| Untrusted image registry | CTL.ECS.IMAGE.UNTRUSTED.001 | `image.from_trusted_registry == false` |
+| Public subnet placement | CTL.ECS.NETWORK.PUBLIC.001 | `network.in_public_subnet == true` |
+| Dangerous capabilities | CTL.ECS.SECURITY.CAPABILITIES.001 | `security.has_dangerous_capabilities == true` |
+| Digest pinning | CTL.ECS.IMAGE.DIGEST.001 | `image.is_digest_pinned == false` |
+| GuardDuty ECS runtime | CTL.GUARDDUTY.ECS.RUNTIME.001 | `ecs_runtime_monitoring.enabled == false` |
 | Fargate platform version | CTL.ECS.FARGATE.VERSION.001 | `fargate_platform_outdated == true` |
 
 ### Chain Definitions
@@ -74,7 +85,7 @@ cfg := stave.Config{
 | # | Vector | Control(s) | Coverage |
 |---|--------|------------|----------|
 | 1 | Public ECR repository | CTL.ECR.PUBLIC.001: `container_registry.access.public == true` | **Full** |
-| 2 | Weak repository policy | CTL.ECR.PUBLIC.001 covers public access specifically. No control checks for overly-permissive non-public repository policies (broad ecr:PutImage grants to external accounts). | **Partial** |
+| 2 | Weak repository policy | CTL.ECR.PUBLIC.001 (public), CTL.ECR.POLICY.BROAD.001 (`policy.has_broad_cross_account`) | **Full** |
 | 3 | Image scanning | CTL.ECR.SCAN.001: `scanning.enabled == false` | **Full** |
 | 4 | Mutable image tags | CTL.ECR.TAG.IMMUTABLE.001: `image_tag_mutability != IMMUTABLE` | **Full** |
 | 5 | Missing lifecycle policy | CTL.ECR.LIFECYCLE.001: `has_lifecycle_policy == false` | **Full** |
@@ -96,10 +107,10 @@ policy breadth would close this gap.
 | # | Vector | Control(s) | Coverage |
 |---|--------|------------|----------|
 | 7 | Over-broad task role | CTL.ECS.TASKMETADATA.001 (`task_role.is_overprivileged`), CTL.ECS.TASKMETADATA.002 (PHI scope) | **Full** |
-| 8 | Shared task roles | No dedicated control. Task role sharing is not detected. | **None** |
+| 8 | Shared task roles | CTL.ECS.TASKROLE.SHARED.001 (`task_role.is_shared`) | **Full** |
 | 9 | Privileged containers | CTL.ECS.PRIV.001 (`privileged.enabled`), CTL.ECS.TASK.NOEXEC.001 (`privileged_host_network`) | **Full** |
 | 10 | Plaintext secrets | CTL.ECS.SECRETS.001 (`env.has_plaintext_secrets`) | **Full** |
-| 11 | Over-broad execution role | No dedicated control. ECS execution role permissions are not evaluated separately from task roles. | **None** |
+| 11 | Over-broad execution role | CTL.ECS.EXECROLE.OVERBROAD.001 (`execution_role.is_overprivileged`) | **Full** |
 
 ### Vector 8 detail: Not covered
 
@@ -127,8 +138,8 @@ assets.
 
 | # | Vector | Control(s) | Coverage |
 |---|--------|------------|----------|
-| 12 | Linux capabilities | CTL.K8S.POD.CAPABILITIES.001 covers NET_RAW for Kubernetes pods. No ECS-specific capability control. | **Partial** |
-| 13 | Public subnet placement | No dedicated ECS control. CTL.EC2.SUBNET.PUBLIC.IP.001 covers subnets generally but not ECS task placement. | **Partial** |
+| 12 | Linux capabilities | CTL.ECS.SECURITY.CAPABILITIES.001 (`security.has_dangerous_capabilities`), CTL.K8S.POD.CAPABILITIES.001 (K8S equivalent) | **Full** |
+| 13 | Public subnet placement | CTL.ECS.NETWORK.PUBLIC.001 (`container.network.in_public_subnet`) | **Full** |
 | 14 | Unrestricted network egress | CTL.VPC.SG.EGRESS.001 (`egress.unrestricted_all_ports`). Operates on SG assets; `ecs_ssrf_credential_theft` chain composes it with task role. | **Full** |
 
 ### Vector 12 detail: Partial coverage
@@ -153,8 +164,8 @@ auto-assign but doesn't correlate with ECS service placement.
 
 | # | Vector | Control(s) | Coverage |
 |---|--------|------------|----------|
-| 15 | Unverified base images | No control checks image source trustworthiness directly. ECR.SIGNING.001 checks signing enforcement on the registry side. | **Partial** |
-| 16 | No digest pinning | CTL.ECS.IMAGE.001 detects `latest` tag usage. Does not detect other mutable tag references vs digest pinning. | **Partial** |
+| 15 | Unverified base images | CTL.ECS.IMAGE.UNTRUSTED.001 (`image.from_trusted_registry`), CTL.ECR.SIGNING.001 (registry-side signing) | **Full** |
+| 16 | No digest pinning | CTL.ECS.IMAGE.DIGEST.001 (`image.is_digest_pinned`), CTL.ECS.IMAGE.001 (latest tag) | **Full** |
 
 ### Vector 15 detail: Partial coverage
 
@@ -181,7 +192,7 @@ checking whether the image reference includes a digest.
 | # | Vector | Control(s) | Coverage |
 |---|--------|------------|----------|
 | 17 | CloudTrail for ECR/ECS | CTL.CLOUDTRAIL.ENABLED.001 (multi-region trail covers all API calls including ECR/ECS). CTL.ECS.LOG.001 (task-level logging). | **Full** |
-| 18 | Container runtime monitoring | No control checks for GuardDuty ECS Runtime Monitoring enablement. | **None** |
+| 18 | Container runtime monitoring | CTL.GUARDDUTY.ECS.RUNTIME.001 (`ecs_runtime_monitoring.enabled`) | **Full** |
 
 ### Vector 18 detail: Not covered
 
@@ -197,14 +208,14 @@ detector assets.
 
 | Gap | Vector | Type | Priority | Description |
 |-----|--------|------|----------|-------------|
-| 2 | Weak ECR repository policy | B | Medium | Broad cross-account push/pull grants |
-| 8 | Shared task roles | B | Medium | Role reuse across multiple services |
-| 11 | Execution role permissions | B | Medium | Separate evaluation from task role |
-| 12 | Linux capabilities (ECS) | B | Low | K8S equivalent exists; Fargate auto-drops most |
-| 13 | Public subnet placement | B | Medium | ECS tasks in public subnets |
-| 15 | Untrusted image sources | B | Medium | Non-ECR image references |
-| 16 | Digest pinning | B | Low | Only `latest` detected, not all non-digest refs |
-| 18 | Runtime monitoring | B | Medium | GuardDuty ECS Runtime Monitoring |
+| 2 | Weak ECR repository policy | — | **CLOSED** | CTL.ECR.POLICY.BROAD.001 |
+| 8 | Shared task roles | — | **CLOSED** | CTL.ECS.TASKROLE.SHARED.001 |
+| 11 | Execution role permissions | — | **CLOSED** | CTL.ECS.EXECROLE.OVERBROAD.001 |
+| 12 | Linux capabilities (ECS) | — | **CLOSED** | CTL.ECS.SECURITY.CAPABILITIES.001 |
+| 13 | Public subnet placement | — | **CLOSED** | CTL.ECS.NETWORK.PUBLIC.001 |
+| 15 | Untrusted image sources | — | **CLOSED** | CTL.ECS.IMAGE.UNTRUSTED.001 |
+| 16 | Digest pinning | — | **CLOSED** | CTL.ECS.IMAGE.DIGEST.001 |
+| 18 | Runtime monitoring | — | **CLOSED** | CTL.GUARDDUTY.ECS.RUNTIME.001 |
 
 All gaps are Gap B (observation property needed). No Gap C or D
 — the core asset types (`aws_ecr_repository`, `aws_ecs_task_definition`,

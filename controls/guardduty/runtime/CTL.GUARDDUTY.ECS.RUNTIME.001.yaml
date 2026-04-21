@@ -1,0 +1,44 @@
+dsl_version: ctrl.v1
+id: CTL.GUARDDUTY.ECS.RUNTIME.001
+name: GuardDuty ECS Runtime Monitoring Must Be Enabled
+description: >
+  GuardDuty ECS Runtime Monitoring must be enabled to detect runtime
+  threats in containers — crypto mining, malware, reverse shells,
+  and credential access. Without runtime monitoring, container
+  compromise proceeds undetected at the process and network level.
+domain: exposure
+severity: medium
+compliance:
+  soc2: "CC7.1"
+  nist_800_53_r5: "SI-4"
+  fedramp_moderate: "SI-4"
+  ccm_v4: ["TVM-01", "TVM-03"]
+scope_tags:
+  - aws
+  - guardduty
+  - ecs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: GuardDuty ECS Runtime Monitoring is not enabled.
+  action: >
+    Enable GuardDuty ECS Runtime Monitoring in the GuardDuty console
+    or via API. Requires the GuardDuty agent deployed as a sidecar
+    or managed add-on on ECS tasks.
+  example: |
+    {
+      "threat_detection": {
+        "kind": "detector",
+        "ecs_runtime_monitoring": { "enabled": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.threat_detection.kind
+      op: eq
+      value: detector
+    - field: properties.threat_detection.ecs_runtime_monitoring.enabled
+      op: eq
+      value: false

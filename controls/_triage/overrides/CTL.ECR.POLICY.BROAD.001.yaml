@@ -1,0 +1,15 @@
+control: CTL.ECR.POLICY.BROAD.001
+defect: >
+  The ECR repository policy grants image pull or push access to
+  external AWS accounts without restricting to specific account IDs
+  or the organization via aws:PrincipalOrgID.
+infection: >
+  Any AWS account granted access can pull images (extracting
+  proprietary code, configuration, and secrets baked into image
+  layers) or push images (replacing trusted images with malicious
+  ones if push is granted). The repository is not public but is
+  accessible beyond the intended set of accounts.
+failure: >
+  Image theft or supply chain compromise. Pulled images expose
+  application code and embedded secrets. Pushed malicious images
+  execute in production when deployed.

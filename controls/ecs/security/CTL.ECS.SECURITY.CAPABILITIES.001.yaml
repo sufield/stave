@@ -1,0 +1,44 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.SECURITY.CAPABILITIES.001
+name: ECS Containers Must Not Have Dangerous Linux Capabilities
+description: >
+  ECS task definitions must not add dangerous Linux capabilities
+  (SYS_ADMIN, NET_ADMIN, SYS_PTRACE, SYS_RAWIO, DAC_OVERRIDE,
+  NET_RAW) and should drop all unnecessary capabilities. Dangerous
+  capabilities grant kernel-level access enabling container escape.
+domain: exposure
+severity: low
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "CM-7"
+  ccm_v4: ["IVS-04"]
+scope_tags:
+  - aws
+  - ecs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    ECS container adds dangerous Linux capabilities or does not
+    drop unnecessary ones.
+  action: >
+    Remove added capabilities from the task definition. Use
+    linuxParameters.capabilities.drop = ["ALL"] and only add
+    the specific capabilities the application requires.
+  example: |
+    {
+      "container": {
+        "kind": "ecs_task_definition",
+        "security": { "has_dangerous_capabilities": false }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: ecs_task_definition
+    - field: properties.container.security.has_dangerous_capabilities
+      op: eq
+      value: true

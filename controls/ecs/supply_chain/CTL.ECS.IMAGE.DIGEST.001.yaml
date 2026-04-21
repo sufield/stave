@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.IMAGE.DIGEST.001
+name: ECS Container Images Must Be Referenced by Digest
+description: >
+  ECS task definitions must reference container images by digest
+  (repo@sha256:...) instead of mutable tags (repo:v1.2). Tags are
+  mutable — the same tag can point to different images over time.
+  Digest pinning ensures the exact image deployed is the one that
+  was tested and approved.
+domain: exposure
+severity: low
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "SI-7"
+  ccm_v4: ["AIS-06"]
+scope_tags:
+  - aws
+  - ecs
+  - supply-chain
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: ECS task definition references image by tag, not digest.
+  action: >
+    Replace the tag reference with a digest reference. Example:
+    123456789012.dkr.ecr.us-east-1.amazonaws.com/app@sha256:abc123...
+    Update CI/CD pipelines to output digest references after image
+    push.
+  example: |
+    {
+      "container": {
+        "kind": "ecs_task_definition",
+        "image": { "is_digest_pinned": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: ecs_task_definition
+    - field: properties.container.image.is_digest_pinned
+      op: eq
+      value: false

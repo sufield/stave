@@ -1,0 +1,55 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.NETWORK.PUBLIC.001
+name: ECS Tasks Must Not Run in Public Subnets with Public IPs
+description: 'ECS tasks must not be placed in public subnets with public IP
+  assignment. Public subnet placement makes the container directly reachable
+  from the internet without traversing a load balancer.
+
+  '
+domain: network
+severity: medium
+compliance:
+  soc2: CC6.6
+  nist_800_53_r5: SC-7
+  pci_dss_v4.0: 1.3.4
+  ccm_v4:
+  - IVS-03
+scope_tags:
+- aws
+- ecs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: ECS task runs in a public subnet with a public IP.
+  action: 'Move the task to a private subnet. Use an ALB or API Gateway for
+    inbound traffic and a NAT gateway for outbound.
+
+    '
+  example: "{\n  \"container\": {\n    \"kind\": \"ecs_task_definition\",\n\
+    \    \"network\": { \"in_public_subnet\": false }\n  }\n}\n"
+unsafe_predicate:
+  all:
+  - field: properties.container.kind
+    op: eq
+    value: ecs_task_definition
+  - field: properties.container.network.in_public_subnet
+    op: eq
+    value: true
+defect: 'The ECS task is configured to run in a public subnet with a public
+  IP, making it directly reachable from the internet.
+
+  '
+infection: 'An attacker can reach the container directly without traversing
+  a load balancer or NAT gateway. Port scanning, exploit attempts, and credential
+  harvesting target the container''s public endpoint. Combined with a privileged
+  container or over-broad task role, the direct access becomes a full compromise
+  path.
+
+  '
+failure: 'Direct container compromise from the internet. The attacker gains
+  the task role''s permissions and access to any resources the container can
+  reach within the VPC.
+
+  '

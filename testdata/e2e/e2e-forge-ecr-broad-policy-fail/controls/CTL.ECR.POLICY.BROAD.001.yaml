@@ -1,0 +1,61 @@
+dsl_version: ctrl.v1
+id: CTL.ECR.POLICY.BROAD.001
+name: ECR Repository Policy Must Not Grant Broad Cross-Account Access
+description: 'ECR repository policies must not grant ecr:GetDownloadUrlForLayer,
+  ecr:BatchGetImage, or ecr:PutImage to external accounts without restricting
+  to specific account IDs or aws:PrincipalOrgID. Broad cross-account access
+  allows image theft (pull) or supply chain compromise (push) from any granted
+  account.
+
+  '
+domain: exposure
+severity: high
+compliance:
+  soc2: CC6.1
+  nist_800_53_r5: AC-3
+  pci_dss_v4.0: 7.2.1
+  ccm_v4:
+  - DSP-17
+  - IVS-03
+scope_tags:
+- aws
+- ecr
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: 'ECR repository policy grants broad cross-account image access.
+
+    '
+  action: 'Restrict the repository policy to specific account IDs or add an
+    aws:PrincipalOrgID condition. For push access, restrict to CI/CD pipeline
+    roles only.
+
+    '
+  example: "{\n  \"container_registry\": {\n    \"kind\": \"repository\",\n\
+    \    \"policy\": { \"has_broad_cross_account\": false }\n  }\n}\n"
+unsafe_predicate:
+  all:
+  - field: properties.container_registry.kind
+    op: eq
+    value: repository
+  - field: properties.container_registry.policy.has_broad_cross_account
+    op: eq
+    value: true
+defect: 'The ECR repository policy grants image pull or push access to external
+  AWS accounts without restricting to specific account IDs or the organization
+  via aws:PrincipalOrgID.
+
+  '
+infection: 'Any AWS account granted access can pull images (extracting proprietary
+  code, configuration, and secrets baked into image layers) or push images
+  (replacing trusted images with malicious ones if push is granted). The repository
+  is not public but is accessible beyond the intended set of accounts.
+
+  '
+failure: 'Image theft or supply chain compromise. Pulled images expose application
+  code and embedded secrets. Pushed malicious images execute in production
+  when deployed.
+
+  '

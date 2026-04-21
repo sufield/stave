@@ -1,0 +1,61 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.EXECROLE.OVERBROAD.001
+name: ECS Execution Role Must Not Have Admin or Overly Broad Permissions
+description: 'The ECS execution role (used by the ECS agent for image pulls,
+  log writes, and secret retrieval) must not have AdministratorAccess or overly
+  broad policies. The execution role is distinct from the task role — it operates
+  at the infrastructure level, not the application level.
+
+  '
+domain: identity
+severity: high
+compliance:
+  soc2: CC6.1
+  nist_800_53_r5: AC-6(5)
+  pci_dss_v4.0: 7.2.1
+  ccm_v4:
+  - IAM-04
+  - IAM-05
+scope_tags:
+- aws
+- ecs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: 'ECS execution role has administrator or overly broad permissions.
+
+    '
+  action: 'Replace with a scoped execution role using the AmazonECSTaskExecutionRolePolicy
+    managed policy. Add only the specific ECR, CloudWatch Logs, and Secrets
+    Manager permissions the task requires.
+
+    '
+  example: "{\n  \"container\": {\n    \"kind\": \"task_definition\",\n  \
+    \  \"execution_role\": { \"is_overprivileged\": false }\n  }\n}\n"
+unsafe_predicate:
+  all:
+  - field: properties.container.kind
+    op: eq
+    value: task_definition
+  - field: properties.container.execution_role.is_overprivileged
+    op: eq
+    value: true
+defect: 'The ECS execution role has administrator-level or overly broad permissions
+  beyond what the ECS agent requires for image pulls, log writes, and secret
+  retrieval.
+
+  '
+infection: 'The execution role credentials are available to the ECS agent
+  infrastructure. If the agent''s credential chain is compromised via SSRF,
+  metadata endpoint exposure, or container escape, the attacker gains the
+  execution role''s full permissions — which in this case include admin-level
+  access.
+
+  '
+failure: 'Privilege escalation from container infrastructure to account- level
+  access. The execution role''s over-broad permissions turn a container-level
+  compromise into full account compromise.
+
+  '

@@ -1,0 +1,55 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.IMAGE.DIGEST.001
+name: ECS Container Images Must Be Referenced by Digest
+description: 'ECS task definitions must reference container images by digest
+  (repo@sha256:...) instead of mutable tags (repo:v1.2). Tags are mutable
+  — the same tag can point to different images over time. Digest pinning ensures
+  the exact image deployed is the one that was tested and approved.
+
+  '
+domain: exposure
+severity: low
+compliance:
+  soc2: CC6.1
+  nist_800_53_r5: SI-7
+  ccm_v4:
+  - AIS-06
+scope_tags:
+- aws
+- ecs
+- supply-chain
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: ECS task definition references image by tag, not digest.
+  action: 'Replace the tag reference with a digest reference. Example: 123456789012.dkr.ecr.us-east-1.amazonaws.com/app@sha256:abc123...
+    Update CI/CD pipelines to output digest references after image push.
+
+    '
+  example: "{\n  \"container\": {\n    \"kind\": \"ecs_task_definition\",\n\
+    \    \"image\": { \"is_digest_pinned\": true }\n  }\n}\n"
+unsafe_predicate:
+  all:
+  - field: properties.container.kind
+    op: eq
+    value: ecs_task_definition
+  - field: properties.container.image.is_digest_pinned
+    op: eq
+    value: false
+defect: 'The ECS task definition references a container image by tag instead
+  of digest. Tags are mutable — the same tag can point to different images
+  over time.
+
+  '
+infection: 'An attacker with push access to the registry (or a compromised
+  CI/CD pipeline) can overwrite the tag with a malicious image. The next deployment
+  or scale-out event pulls the malicious image under the trusted tag name
+  without any change to the task definition.
+
+  '
+failure: 'Supply chain compromise via tag mutation. Malicious code executes
+  in production with the service''s task role permissions.
+
+  '

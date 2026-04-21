@@ -1,0 +1,15 @@
+control: CTL.ECS.SECURITY.CAPABILITIES.001
+defect: >
+  The ECS task definition adds dangerous Linux capabilities
+  (SYS_ADMIN, NET_ADMIN, or equivalent) or does not drop
+  unnecessary capabilities.
+infection: >
+  Dangerous capabilities grant the container kernel-level access
+  beyond what application code requires. SYS_ADMIN enables mounting
+  filesystems, modifying namespaces, and escaping container
+  isolation. NET_ADMIN enables network sniffing and route
+  manipulation.
+failure: >
+  Container escape or lateral movement. An attacker exploiting an
+  application vulnerability uses the excessive capabilities to break
+  out of the container or access host-level resources.

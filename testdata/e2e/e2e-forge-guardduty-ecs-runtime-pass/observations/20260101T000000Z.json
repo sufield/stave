@@ -1,0 +1,20 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:guardduty:us-east-1:123456789012:detector/abc123",
+      "properties": {
+        "threat_detection": {
+          "kind": "detector",
+          "ecs_runtime_monitoring": {
+            "enabled": true
+          }
+        }
+      },
+      "type": "aws_guardduty_detector",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

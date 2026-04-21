@@ -1,0 +1,20 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:ecs:us-east-1:123456789012:task-definition/worker:1",
+      "properties": {
+        "container": {
+          "kind": "ecs_task_definition",
+          "security": {
+            "has_dangerous_capabilities": false
+          }
+        }
+      },
+      "type": "aws_ecs_task_definition",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

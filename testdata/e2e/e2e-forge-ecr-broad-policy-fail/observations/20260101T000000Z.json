@@ -1,0 +1,20 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:ecr:us-east-1:123456789012:repository/app-images",
+      "properties": {
+        "container_registry": {
+          "kind": "repository",
+          "policy": {
+            "has_broad_cross_account": true
+          }
+        }
+      },
+      "type": "aws_ecr_repository",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

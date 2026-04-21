@@ -1,0 +1,14 @@
+control: CTL.ECS.TASKROLE.SHARED.001
+defect: >
+  The ECS task definition uses a task role shared with other task
+  definitions, granting all services the union of permissions
+  intended for individual services.
+infection: >
+  Compromise of any service using the shared role grants the attacker
+  permissions intended for all services sharing it. A low-value
+  service with minimal external exposure becomes a pivot point to
+  high-value services through the shared credential.
+failure: >
+  Lateral movement across ECS services via shared credentials. The
+  blast radius of a single container compromise expands to every
+  service using the same role.

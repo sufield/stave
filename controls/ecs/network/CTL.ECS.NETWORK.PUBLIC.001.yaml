@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.NETWORK.PUBLIC.001
+name: ECS Tasks Must Not Run in Public Subnets with Public IPs
+description: >
+  ECS tasks must not be placed in public subnets with public IP
+  assignment. Public subnet placement makes the container directly
+  reachable from the internet without traversing a load balancer.
+domain: network
+severity: medium
+compliance:
+  soc2: "CC6.6"
+  nist_800_53_r5: "SC-7"
+  pci_dss_v4.0: "1.3.4"
+  ccm_v4: ["IVS-03"]
+scope_tags:
+  - aws
+  - ecs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: ECS task runs in a public subnet with a public IP.
+  action: >
+    Move the task to a private subnet. Use an ALB or API Gateway
+    for inbound traffic and a NAT gateway for outbound.
+  example: |
+    {
+      "container": {
+        "kind": "ecs_task_definition",
+        "network": { "in_public_subnet": false }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: ecs_task_definition
+    - field: properties.container.network.in_public_subnet
+      op: eq
+      value: true
