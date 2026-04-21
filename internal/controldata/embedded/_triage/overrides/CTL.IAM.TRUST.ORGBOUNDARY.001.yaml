@@ -1,0 +1,17 @@
+control: CTL.IAM.TRUST.ORGBOUNDARY.001
+defect: >
+  The role's trust policy allows cross-account assumption without
+  an aws:PrincipalOrgID condition, permitting principals from any
+  AWS account to assume the role — not just the organization's
+  member accounts.
+infection: >
+  An external principal outside the organization can assume this
+  role if they obtain or guess the role ARN. Without PrincipalOrgID,
+  the trust boundary extends to all AWS accounts globally. Even
+  with ExternalId or SourceArn conditions, the absence of
+  PrincipalOrgID means the conditions are the only barrier — and
+  conditions can be brute-forced or leaked.
+failure: >
+  Unauthorized cross-account access from outside the organization.
+  An attacker in any AWS account can assume the role, gaining its
+  permissions within the target account.

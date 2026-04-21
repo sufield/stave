@@ -1,0 +1,37 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.TRUST.WILDCARD.001
+name: Trust Policy Must Not Use Wildcard Principal
+description: >
+  Trust must not use Principal "*".
+domain: identity
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-3"
+  ccm_v4: ["IAM-02", "IAM-05", "IAM-16"]
+scope_tags: [aws, iam]
+type: unsafe_state
+classification: state_assertion
+defect: >
+  Trust policy uses wildcard principal (Principal: "*").
+infection: >
+  Any AWS principal in any account can attempt role assumption.
+failure: >
+  Unrestricted role assumption from any AWS account.
+params:
+  attack_stage: initial_access
+  base_impact: 10
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: Trust policy uses wildcard principal.
+  action: Replace Principal "*" with specific account ARNs.
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: role
+    - field: properties.identity.trust_policy.has_wildcard_principal
+      op: eq
+      value: true

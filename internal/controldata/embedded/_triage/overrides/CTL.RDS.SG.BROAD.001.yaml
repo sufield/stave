@@ -1,0 +1,18 @@
+control: CTL.RDS.SG.BROAD.001
+defect: >
+  The RDS instance's associated security group allows 0.0.0.0/0
+  inbound access on the database port. Any IP address can attempt
+  a connection to the database.
+infection: >
+  The database is reachable from any network location — the entire
+  internet if PubliclyAccessible is true, or the entire VPC if
+  false. Automated scanners continuously probe AWS IP ranges for
+  open database ports. Once discovered, the database faces brute-
+  force authentication attempts, exploitation of database engine
+  vulnerabilities, and SQL injection attacks if an application
+  proxies connections.
+failure: >
+  Database compromise via network exposure. An attacker connects
+  directly to the database from any IP address, bypassing network
+  segmentation that was intended to restrict database access to
+  application-tier instances only.

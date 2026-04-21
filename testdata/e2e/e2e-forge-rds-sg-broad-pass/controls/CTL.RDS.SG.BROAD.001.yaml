@@ -1,0 +1,35 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.SG.BROAD.001
+name: RDS Security Group Must Not Allow Broad Ingress on Database Ports
+description: >
+  SG must not allow 0.0.0.0/0 on database port.
+domain: network
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  ccm_v4: ["IVS-03", "IVS-04"]
+scope_tags: [aws, rds]
+type: unsafe_state
+classification: state_assertion
+defect: >
+  The RDS instance's security group allows 0.0.0.0/0 ingress on
+  the database port.
+infection: >
+  The database is reachable from any network location. Automated
+  scanners probe for open database ports continuously.
+failure: >
+  Database compromise via network exposure. An attacker connects
+  directly from any IP address.
+params:
+  attack_stage: initial_access
+remediation:
+  description: SG allows broad ingress on database port.
+  action: Restrict to specific CIDR ranges or security group references.
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_instance
+    - field: properties.database.network.has_broad_sg_ingress
+      op: eq
+      value: true

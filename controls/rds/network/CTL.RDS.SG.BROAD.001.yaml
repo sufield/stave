@@ -1,0 +1,52 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.SG.BROAD.001
+name: RDS Security Group Must Not Allow Broad Ingress on Database Ports
+description: >
+  The RDS instance's associated security group must not allow
+  0.0.0.0/0 ingress on the database port. Broad ingress makes the
+  database reachable from any IP address on the internet. Combined
+  with PubliclyAccessible=true (CTL.RDS.PUBLIC.001), this creates
+  direct internet exposure. Even with PubliclyAccessible=false, a
+  broad SG allows access from anywhere within the VPC — defeating
+  network segmentation if the VPC has a compromised instance.
+domain: network
+severity: high
+compliance:
+  soc2: "CC6.6"
+  pci_dss_v4.0: "1.3.4"
+  nist_800_53_r5: "SC-7"
+  fedramp_moderate: "SC-7"
+  iso_27001_2022: "A.8.20"
+  ccm_v4: ["IVS-03", "IVS-04"]
+scope_tags:
+  - aws
+  - rds
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    RDS instance's security group allows 0.0.0.0/0 ingress on the
+    database port. The database is reachable from any IP address.
+  action: >
+    Replace the broad 0.0.0.0/0 rule with specific CIDR ranges
+    (application server IPs, VPN exit IPs, or security group
+    references for application-tier instances).
+  example: |
+    {
+      "database": {
+        "kind": "rds_instance",
+        "network": {
+          "has_broad_sg_ingress": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_instance
+    - field: properties.database.network.has_broad_sg_ingress
+      op: eq
+      value: true

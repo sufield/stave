@@ -11,7 +11,8 @@ areas. The 22 ESCALATE controls map 1:1 to known Rhino Security
 Labs / Prowler escalation techniques. The POLICY sub-family covers
 policy hygiene (wildcards, self-modification, NotAction shadows).
 Chain definitions compose individual controls into multi-step
-escalation paths. One remaining gap is observation-layer dependent: session
+escalation paths. All gaps from this audit are now closed. Full coverage across all
+8 escalation vectors and all 6 remediation areas: session
 duration conditions in trust policies (Gap B) and CloudTrail
 event-level monitoring for specific IAM escalation API calls
 (Gap C).
@@ -52,7 +53,7 @@ multi-step compositions.
 | 11 | **Permission boundaries** | CTL.IAM.BOUNDARY.001 (checks boundary is set), CTL.IAM.NEP.BOUNDARY.001 (checks boundary is effective — actually constrains permissions) | **Full** |
 | 12 | **MFA on sensitive operations** | CTL.IAM.POLICY.MFA.001 (checks aws:MultiFactorAuthPresent condition on destructive actions) | **Full** |
 | 13 | **Session/conditions in trust policies** | CTL.IAM.TRUST.EXTERNALID.001 (ExternalId), CTL.IAM.TRUST.CONFUSEDDEPUTY.001 (SourceAccount), CTL.IAM.TRUST.SOURCEARN.001 (SourceArn), CTL.IAM.TRUST.SESSION.001 (session-limiting conditions: MFA, SourceIp, MaxSessionDuration) | **Full** |
-| 14 | **CloudTrail monitoring for escalation** | CTL.CLOUDTRAIL.ENABLED.001 (trail exists, multi-region). No control verifies event-level alerting on specific IAM escalation API calls (CreatePolicyVersion, AttachUserPolicy, PassRole). | **Partial** |
+| 14 | **CloudTrail monitoring for escalation** | CTL.CLOUDTRAIL.ENABLED.001 (trail exists, multi-region), CTL.CLOUDWATCH.MONITOR.ESCALATION.001 (metric filter for escalation API calls: CreatePolicyVersion, AttachUserPolicy, PutRolePolicy, CreateAccessKey, UpdateAssumeRolePolicy) | **Full** |
 
 ## Gaps
 
@@ -74,27 +75,18 @@ session-limiting conditions (MFA, source IP/VPC,
 MaxSessionDuration). Observation contract extended with
 `has_cross_account_trust` and `has_assumption_constraints`.
 
-### Gap 14: CloudTrail event-level escalation monitoring
+### Gap 14: CloudTrail event-level escalation monitoring — CLOSED
 
-**Classification: Gap C** (observation data not available)
-
-CTL.CLOUDTRAIL.ENABLED.001 verifies trails exist and are
-multi-region. No control verifies that specific IAM escalation
-events (CreatePolicyVersion, AttachUserPolicy, UpdateAssumeRolePolicy,
-PassRole) trigger CloudWatch alarms or EventBridge rules.
-
-This requires observation data about CloudWatch alarm configurations
-and EventBridge rules — data the observation contract does not
-currently capture. The gap is observation-layer: an extractor would
-need to enumerate CloudWatch alarms and match them against IAM API
-call patterns.
-
-**Priority: Medium.** Detection of escalation events is operationally
-important but orthogonal to preventing escalation (which the
-ESCALATE controls address). The CLOUDWATCH family has monitoring
-controls (CTL.CLOUDWATCH.MONITOR.UNAUTH.001, .AUTHFAIL.001,
-.MFADEVICE.001) that cover some event patterns but not IAM
-escalation specifically.
+Closed by CTL.CLOUDWATCH.MONITOR.ESCALATION.001. The control
+checks `monitoring.metric_filters.iam_escalation_events.exists ==
+false`, using the same `monitoring.metric_filters.<category>.exists`
+pattern as the 13 existing CLOUDWATCH.MONITOR controls. The
+observation contract already defined this pattern — Gap C was
+reclassified from type C (observation data unavailable) to type A
+(catalog authoring gap) upon discovering the established
+`monitoring.metric_filters.*` namespace. The control's remediation
+action lists the specific escalation API calls that the metric
+filter should cover.
 
 ## Compound Chain Coverage
 
@@ -150,15 +142,12 @@ needed based on this audit.
 1. ~~**(Medium) Add PassRole service condition check.**~~
    **CLOSED.** CTL.IAM.POLICY.PASSROLE.CONDITION.001 authored.
 
-2. **(Medium) Add CloudWatch alarm coverage for IAM events.** This
-   is observation-layer work — the extractor needs to capture
-   CloudWatch alarm configurations. Once available, controls can
-   verify alerts exist for escalation-relevant API calls. Addresses
-   Gap 14.
+2. ~~**(Medium) Add CloudWatch alarm coverage for IAM events.**~~
+   **CLOSED.** CTL.CLOUDWATCH.MONITOR.ESCALATION.001 authored.
 
 3. ~~**(Low) Add trust policy condition depth.**~~
    **CLOSED.** CTL.IAM.TRUST.SESSION.001 authored.
 
-4. **(None needed) Escalation vector coverage.** All 8 vectors
-   have Full coverage. No new ESCALATE controls needed unless new
-   escalation techniques emerge.
+4. **(None needed) All gaps closed.** Escalation vectors: 8/8
+   Full. Remediation areas: 6/6 Full. No outstanding
+   recommendations from this audit.

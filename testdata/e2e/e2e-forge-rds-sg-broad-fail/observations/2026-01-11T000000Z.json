@@ -1,0 +1,20 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:rds:us-east-1:123456789012:db:prod-database",
+      "properties": {
+        "database": {
+          "kind": "rds_instance",
+          "network": {
+            "has_broad_sg_ingress": true
+          }
+        }
+      },
+      "type": "aws_rds_instance",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

@@ -1,0 +1,21 @@
+{
+  "assets": [
+    {
+      "id": "test-cloudwatch-account",
+      "properties": {
+        "monitoring": {
+          "metric_filters": {
+            "cross_account_assume_role": {
+              "exists": true
+            }
+          }
+        }
+      },
+      "type": "aws_cloudwatch_account",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

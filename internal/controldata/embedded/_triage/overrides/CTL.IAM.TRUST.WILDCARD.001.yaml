@@ -1,0 +1,16 @@
+control: CTL.IAM.TRUST.WILDCARD.001
+defect: >
+  The role's trust policy uses a wildcard principal (Principal: "*"),
+  allowing any AWS principal in any account to attempt role
+  assumption.
+infection: >
+  Any principal with sts:AssumeRole permission can assume this role.
+  Wildcard trust is the broadest possible trust configuration — the
+  role is reachable by every AWS account globally. Combined with
+  absent or weak conditions, the role is effectively public.
+  Automated tools continuously probe for assumable roles using
+  known ARN patterns.
+failure: >
+  Unrestricted role assumption. Any AWS account, including attacker-
+  controlled accounts, can assume the role and gain its full
+  permissions within the target account.

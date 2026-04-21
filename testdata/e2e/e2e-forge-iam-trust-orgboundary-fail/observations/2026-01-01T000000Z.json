@@ -1,0 +1,21 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:iam::111122223333:role/CrossAccountRole",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "trust_policy": {
+            "has_cross_account_trust": true,
+            "has_org_id_condition": false
+          }
+        }
+      },
+      "type": "aws_iam_role",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

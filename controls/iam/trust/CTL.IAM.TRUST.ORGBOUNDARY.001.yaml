@@ -1,0 +1,56 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.TRUST.ORGBOUNDARY.001
+name: Cross-Account Trust Must Restrict to Organization via PrincipalOrgID
+description: >
+  IAM roles with cross-account trust policies must include an
+  aws:PrincipalOrgID condition restricting assumption to principals
+  within the AWS Organization. Without this condition, any external
+  AWS account — including attacker-controlled accounts — can attempt
+  role assumption. PrincipalOrgID is the broadest safe boundary for
+  multi-account organizations: it permits all org members while
+  denying all outsiders.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-3"
+  fedramp_moderate: "AC-3"
+  iso_27001_2022: "A.8.3"
+  ccm_v4: ["IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: >
+    Cross-account trust policy allows assumption from any AWS
+    account, not just the organization's member accounts.
+  action: >
+    Add an aws:PrincipalOrgID condition to the trust policy:
+    "Condition": {"StringEquals": {"aws:PrincipalOrgID": "o-xxxxxxxxxxxx"}}.
+    This restricts assumption to principals within the organization.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "trust_policy": {
+          "has_cross_account_trust": true,
+          "has_org_id_condition": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: role
+    - field: properties.identity.trust_policy.has_cross_account_trust
+      op: eq
+      value: true
+    - field: properties.identity.trust_policy.has_org_id_condition
+      op: eq
+      value: false

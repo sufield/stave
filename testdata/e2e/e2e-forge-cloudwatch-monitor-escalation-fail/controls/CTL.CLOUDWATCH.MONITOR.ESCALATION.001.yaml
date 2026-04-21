@@ -1,0 +1,43 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.MONITOR.ESCALATION.001
+name: IAM Privilege Escalation Events Must Be Monitored
+description: >
+  A CloudWatch metric filter and alarm must monitor IAM privilege
+  escalation API calls.
+domain: exposure
+severity: medium
+compliance:
+  cis_aws_v3.0: "4.4"
+  nist_800_53_r5: "AU-12"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-03", "LOG-05"]
+scope_tags:
+  - aws
+  - cloudwatch
+  - iam
+type: unsafe_state
+classification: state_assertion
+defect: >
+  No CloudWatch metric filter or alarm is configured to detect IAM
+  privilege escalation API calls.
+infection: >
+  If an attacker performs privilege escalation, no automated alert
+  fires. The escalation proceeds undetected in real time.
+failure: >
+  Undetected privilege escalation. Attacker activity that elevates
+  permissions is not surfaced to security teams in real time.
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    No metric filter or alarm detects IAM escalation events.
+  action: >
+    Create a CloudWatch metric filter matching escalation API calls
+    (CreatePolicyVersion, AttachUserPolicy, PutRolePolicy,
+    CreateAccessKey, UpdateAssumeRolePolicy) and create an alarm
+    with an SNS notification action.
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.metric_filters.iam_escalation_events.exists
+      op: eq
+      value: false

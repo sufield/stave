@@ -1,0 +1,66 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.MONITOR.ESCALATION.001
+name: IAM Privilege Escalation Events Must Be Monitored
+description: >
+  A CloudWatch metric filter and alarm must monitor IAM privilege
+  escalation API calls. These are the specific API actions that
+  enable an attacker to elevate permissions after initial access:
+  CreatePolicyVersion, SetDefaultPolicyVersion, AttachUserPolicy,
+  AttachRolePolicy, AttachGroupPolicy, PutUserPolicy, PutRolePolicy,
+  PutGroupPolicy, CreateAccessKey, CreateLoginProfile,
+  UpdateLoginProfile, UpdateAssumeRolePolicy, and PassRole (as a
+  parameter in RunInstances, CreateFunction, CreateStack, etc.).
+  The existing iam_policy_changes metric filter (CIS 4.4) covers
+  general policy modifications but does not specifically surface the
+  escalation-enabling subset. This control verifies that a dedicated
+  escalation-focused filter and alarm exist.
+domain: exposure
+severity: medium
+compliance:
+  cis_aws_v3.0: "4.4"
+  nist_800_53_r5: "AU-12"
+  soc2: "CC7.1"
+  fedramp_moderate: "AU-12"
+  ccm_v4: ["LOG-03", "LOG-05"]
+scope_tags:
+  - aws
+  - cloudwatch
+  - iam
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    No metric filter or alarm is configured to detect IAM privilege
+    escalation API calls. Escalation events occur without automated
+    alerting.
+  action: >
+    Create a CloudWatch log metric filter on the CloudTrail log
+    group matching escalation-relevant API calls:
+    { ($.eventName = CreatePolicyVersion) ||
+      ($.eventName = SetDefaultPolicyVersion) ||
+      ($.eventName = AttachUserPolicy) ||
+      ($.eventName = AttachRolePolicy) ||
+      ($.eventName = PutUserPolicy) ||
+      ($.eventName = PutRolePolicy) ||
+      ($.eventName = CreateAccessKey) ||
+      ($.eventName = CreateLoginProfile) ||
+      ($.eventName = UpdateAssumeRolePolicy) }.
+    Then create a CloudWatch alarm with an SNS notification action.
+  example: |
+    {
+      "monitoring": {
+        "kind": "account",
+        "metric_filters": {
+          "iam_escalation_events": {
+            "exists": true
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.metric_filters.iam_escalation_events.exists
+      op: eq
+      value: false

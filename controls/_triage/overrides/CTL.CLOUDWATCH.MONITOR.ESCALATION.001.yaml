@@ -1,0 +1,19 @@
+control: CTL.CLOUDWATCH.MONITOR.ESCALATION.001
+defect: >
+  No CloudWatch metric filter or alarm is configured to detect IAM
+  privilege escalation API calls. The escalation-specific subset —
+  CreatePolicyVersion, AttachUserPolicy, PutRolePolicy,
+  CreateAccessKey, UpdateAssumeRolePolicy, and related calls — is
+  not monitored with a dedicated filter.
+infection: >
+  If an attacker performs privilege escalation via any of the
+  monitored API calls, no automated alert fires. The escalation
+  proceeds undetected in real time. CloudTrail records the events
+  but without a metric filter and alarm, the records are only
+  discoverable through manual log inspection — which typically
+  happens days or weeks after the compromise, if at all.
+failure: >
+  Undetected privilege escalation. Attacker activity that elevates
+  permissions within the account is not surfaced to security teams
+  in real time, extending the window of compromise from minutes
+  to days or weeks.

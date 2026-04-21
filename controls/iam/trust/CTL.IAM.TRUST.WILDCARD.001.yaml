@@ -1,0 +1,55 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.TRUST.WILDCARD.001
+name: Trust Policy Must Not Use Wildcard Principal
+description: >
+  IAM role trust policies must not use Principal "*" or
+  Principal: {AWS: "*"}. A wildcard principal allows any AWS
+  principal in any account to attempt role assumption. This is
+  the most dangerous trust configuration — the role is effectively
+  public to the entire AWS ecosystem.
+domain: identity
+severity: critical
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-3"
+  fedramp_moderate: "AC-3"
+  iso_27001_2022: "A.8.3"
+  ccm_v4: ["IAM-02", "IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+  base_impact: 10
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    Trust policy uses a wildcard principal. Any AWS principal in
+    any account can attempt assumption.
+  action: >
+    Replace Principal "*" with specific account ARNs or role ARNs.
+    Add aws:PrincipalOrgID to restrict to the organization.
+    Add sts:ExternalId for third-party integrations.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "trust_policy": {
+          "has_wildcard_principal": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: role
+    - field: properties.identity.trust_policy.has_wildcard_principal
+      op: eq
+      value: true

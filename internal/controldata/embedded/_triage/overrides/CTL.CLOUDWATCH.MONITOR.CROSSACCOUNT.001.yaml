@@ -1,0 +1,15 @@
+control: CTL.CLOUDWATCH.MONITOR.CROSSACCOUNT.001
+defect: >
+  No CloudWatch metric filter or alarm is configured to detect
+  cross-account sts:AssumeRole events from external principals.
+infection: >
+  If an external principal assumes a role in the account —
+  legitimately through a partner integration or through compromised
+  trust — no automated alert fires. Cross-account access proceeds
+  unmonitored. CloudTrail records the event, but without a metric
+  filter the record is only discoverable through manual log
+  inspection.
+failure: >
+  Undetected cross-account access. External principals operating in
+  the account are not surfaced to security teams in real time,
+  allowing unauthorized access to persist undetected.

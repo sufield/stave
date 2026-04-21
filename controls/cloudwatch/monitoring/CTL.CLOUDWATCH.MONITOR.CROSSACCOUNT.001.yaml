@@ -1,0 +1,50 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.MONITOR.CROSSACCOUNT.001
+name: Cross-Account AssumeRole Events Must Be Monitored
+description: >
+  A CloudWatch metric filter and alarm must monitor sts:AssumeRole
+  events from external accounts. Cross-account assumption is a
+  normal operation for partner integrations and CI/CD pipelines,
+  but unexpected external assumptions indicate compromised trust
+  relationships or credential theft. The metric filter should match
+  AssumeRole events where the source account is not in the
+  organization's known account list.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-12"
+  soc2: "CC7.1"
+  fedramp_moderate: "AU-12"
+  ccm_v4: ["LOG-03", "LOG-05"]
+scope_tags:
+  - aws
+  - cloudwatch
+  - iam
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    No metric filter or alarm detects cross-account AssumeRole
+    events from external principals.
+  action: >
+    Create a CloudWatch log metric filter on the CloudTrail log
+    group matching sts:AssumeRole events where the source account
+    differs from the target account. Create an alarm with SNS
+    notification.
+  example: |
+    {
+      "monitoring": {
+        "metric_filters": {
+          "cross_account_assume_role": {
+            "exists": true
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.metric_filters.cross_account_assume_role.exists
+      op: eq
+      value: false
