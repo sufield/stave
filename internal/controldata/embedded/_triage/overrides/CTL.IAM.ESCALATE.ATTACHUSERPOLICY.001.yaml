@@ -1,0 +1,16 @@
+control: CTL.IAM.ESCALATE.ATTACHUSERPOLICY.001
+defect: >
+  The user principal has iam:AttachUserPolicy scoped to its own user
+  ARN — either explicitly, by wildcard "*", or by a user-set that
+  includes itself. The principal can attach any managed policy to
+  its own user.
+infection: >
+  A single AttachUserPolicy call attaches AdministratorAccess to the
+  principal. No other permission, vulnerability, or precondition is
+  needed — self-scoped AttachUserPolicy is a one-step path to full
+  admin. The escalation is immediate and persists until the policy
+  is manually detached.
+failure: >
+  One-step privilege escalation to admin. The principal becomes
+  unrestricted with a single API call, collapsing the account's
+  privilege separation.

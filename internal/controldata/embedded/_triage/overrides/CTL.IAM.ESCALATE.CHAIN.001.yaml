@@ -1,0 +1,19 @@
+control: CTL.IAM.ESCALATE.CHAIN.001
+defect: >
+  The principal has a multi-step permission chain that leads to
+  administrative access. Each individual permission is authorized,
+  but the composition creates a privilege escalation path that
+  policy reviews miss.
+infection: >
+  The attacker chains permissions in sequence — for example,
+  iam:PassRole to a privileged Lambda execution role,
+  lambda:CreateFunction to deploy attacker code under that role,
+  and lambda:InvokeFunction to trigger it. Each step looks
+  authorized in isolation; the escalation emerges from the
+  combination. The chain may cross service boundaries, making it
+  invisible to single-service policy reviews.
+failure: >
+  Privilege escalation to admin via multi-step chain. The principal
+  reaches administrative authority through a sequence of
+  individually-authorized actions, bypassing least-privilege controls
+  that only examine permissions in isolation.

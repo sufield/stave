@@ -1,0 +1,15 @@
+control: CTL.IAM.ESCALATE.PUTGROUPPOLICY.001
+defect: >
+  The user principal has iam:PutGroupPolicy scoped to reach a group
+  it belongs to. The principal can write an arbitrary inline policy
+  onto that group.
+infection: >
+  A single PutGroupPolicy call authors an inline policy granting
+  "Action": "*" on "Resource": "*" on the target group. Every
+  member of the group — including the attacker — inherits the
+  inline policy immediately. The escalation creates collateral
+  elevation for all group members, not just the attacker.
+failure: >
+  Privilege escalation via group inline policy. The principal and
+  all group members gain admin permissions through an inline policy
+  authored by the attacker.

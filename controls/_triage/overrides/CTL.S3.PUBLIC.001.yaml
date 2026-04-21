@@ -1,0 +1,19 @@
+control: CTL.S3.PUBLIC.001
+defect: >
+  The bucket's access configuration grants read permission to the
+  public — either via a bucket policy statement with Principal "*"
+  or via an ACL grant to the AllUsers pseudo-group. The bucket is
+  reachable without authentication from the public internet.
+infection: >
+  Anyone on the internet can fetch objects from this bucket over
+  anonymous HTTP/HTTPS. Search engines and automated scanners
+  continuously enumerate publicly-indexed bucket names, meaning
+  exposure is active from the moment the policy or ACL is in place —
+  not hypothetical. Once the bucket name is known, every object
+  whose key the caller can guess or enumerate is fetchable.
+failure: >
+  Unbounded data exposure. Every file stored in this bucket is
+  readable by arbitrary internet callers, including potentially
+  sensitive operational data, customer information, backup
+  artifacts, or internal documentation that wasn't intended to
+  reach the public surface.

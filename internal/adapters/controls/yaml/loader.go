@@ -93,6 +93,14 @@ func (l *ControlLoader) LoadControls(ctx context.Context, dir string) ([]policy.
 		return cmp.Compare(a.ID, b.ID)
 	})
 
+	triageIdx, triageErr := LoadTriageIndex(dir)
+	if triageErr != nil {
+		return nil, fmt.Errorf("loading triage from %q: %w", dir, triageErr)
+	}
+	if triageIdx != nil {
+		ApplyTriage(controls, triageIdx)
+	}
+
 	return controls, nil
 }
 

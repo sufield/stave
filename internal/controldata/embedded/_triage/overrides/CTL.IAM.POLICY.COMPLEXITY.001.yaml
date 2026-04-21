@@ -1,0 +1,18 @@
+control: CTL.IAM.POLICY.COMPLEXITY.001
+defect: >
+  The IAM entity has policies with more than 25 total statements,
+  indicating excessive complexity that resists audit and increases
+  misconfiguration risk.
+infection: >
+  Complex policies are more likely to contain shadowed statements
+  (rules that never match because a broader rule fires first),
+  contradictory Allow/Deny interactions, or unintended permission
+  grants buried in the statement list. Policy reviewers and automated
+  tools struggle to resolve effective permissions when the statement
+  count exceeds practical review thresholds. The complexity itself
+  becomes an attack surface — effective permissions diverge from what
+  reviewers think the policy grants.
+failure: >
+  Effective permissions diverge from intended permissions. The policy
+  grants access the organization believes is restricted, because the
+  complexity prevents accurate audit.

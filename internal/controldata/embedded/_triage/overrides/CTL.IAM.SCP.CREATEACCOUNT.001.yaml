@@ -1,0 +1,14 @@
+control: CTL.IAM.SCP.CREATEACCOUNT.001
+defect: >
+  AWS Organizations lacks an SCP restricting iam:CreateUser and
+  organizations:CreateAccount. Any principal with these permissions
+  can create persistent identities without organizational guardrails.
+infection: >
+  An attacker who creates an IAM user obtains separate credentials
+  unknown to the incident response team — the user survives access
+  key rotation and session revocation. An attacker who creates an
+  AWS account gets a fresh environment inside the organization's
+  trust boundary with no monitoring infrastructure deployed.
+failure: >
+  Persistence via identity creation. An attacker can create backdoor
+  identities that survive incident response credential rotation.

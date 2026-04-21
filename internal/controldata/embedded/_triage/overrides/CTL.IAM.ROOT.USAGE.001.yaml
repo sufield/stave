@@ -1,0 +1,14 @@
+control: CTL.IAM.ROOT.USAGE.001
+defect: >
+  The root account has been used recently for operations that do
+  not require root-level access.
+infection: >
+  Routine root usage normalizes root activity in CloudTrail, making
+  it harder to detect unauthorized root access among legitimate
+  events. It also increases the probability of root credential
+  exposure — more usage means more sessions, more endpoints, more
+  opportunities for credential theft.
+failure: >
+  Increased root exposure and reduced detection capability. Regular
+  root usage obscures unauthorized access in audit logs and widens
+  the credential exposure surface.

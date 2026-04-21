@@ -1,0 +1,17 @@
+control: CTL.IAM.POLICY.INLINE.001
+defect: >
+  The IAM user has inline policies attached directly. Inline
+  policies are embedded in the user resource, cannot be reused
+  across principals, and are not visible in the IAM managed policy
+  console view.
+infection: >
+  Inline policies bypass centralized policy management and are
+  invisible to IAM Access Analyzer's managed-policy scanning.
+  Permission grants in inline policies are discoverable only by
+  enumerating each principal's inline policies individually — a step
+  many audit workflows skip. Over time, inline policies accumulate
+  permissions that escape regular review cycles.
+failure: >
+  Hidden permission grants. Permissions in inline policies escape
+  centralized governance and audit, creating an invisible attack
+  surface that grows over time.

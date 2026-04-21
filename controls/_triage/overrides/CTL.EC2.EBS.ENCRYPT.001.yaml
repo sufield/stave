@@ -1,0 +1,16 @@
+control: CTL.EC2.EBS.ENCRYPT.001
+defect: >
+  The EBS volume attached to this instance does not have encryption
+  enabled. Data is stored in plaintext on the underlying storage
+  hardware.
+infection: >
+  Any process with read access to the volume — including attacker
+  code running on the instance — can read data without a decryption
+  key requirement. If the volume is snapshotted, the snapshot is
+  also unencrypted and can be shared or copied across accounts
+  without cryptographic controls.
+failure: >
+  Data-at-rest exposure. Sensitive data (application state,
+  database files, credentials, logs) stored on this volume is
+  accessible to anyone who can mount or snapshot it, violating
+  encryption-at-rest compliance requirements.

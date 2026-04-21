@@ -1,0 +1,17 @@
+control: CTL.IAM.POLICY.SHADOW.002
+defect: >
+  An IAM policy using NotAction permits IAM write actions
+  (iam:PutRolePolicy, iam:CreateUser, iam:AttachRolePolicy) through
+  the negative logic gap. The exclusion list does not cover these
+  critical actions.
+infection: >
+  An attacker who discovers this policy can exploit the IAM write
+  actions that fall through the NotAction gap to escalate privileges.
+  The policy was likely intended to deny a specific set of actions
+  while allowing "everything else" — but "everything else" includes
+  the most dangerous IAM mutations. The effective permissions include
+  self-modification, making this a direct escalation path.
+failure: >
+  Privilege escalation via negative logic bypass. The attacker
+  exploits IAM write actions the policy implicitly allows, gaining
+  the ability to modify permissions and achieve admin access.

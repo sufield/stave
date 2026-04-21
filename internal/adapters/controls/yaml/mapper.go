@@ -35,6 +35,9 @@ func controlDefinitionToDomain(y yamlControlDefinition) policy.ControlDefinition
 		ObservationFields:    y.ObservationFields,
 		Alternatives:         alternativesToDomain(y.Alternatives),
 		Tests:                y.Tests,
+		Defect:               y.Defect,
+		Infection:            y.Infection,
+		Failure:              y.Failure,
 	}
 }
 

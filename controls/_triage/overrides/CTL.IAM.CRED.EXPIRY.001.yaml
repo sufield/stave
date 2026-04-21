@@ -1,0 +1,13 @@
+control: CTL.IAM.CRED.EXPIRY.001
+defect: >
+  IAM credential has no defined maximum lifetime. The access key
+  will remain valid indefinitely unless manually revoked.
+infection: >
+  The credential accumulates exposure risk over time — every day it
+  exists is another day it could have been committed to a repository,
+  logged in debug output, shared in a configuration file, or captured
+  by a compromised process. Without expiry, the credential never
+  becomes safe on its own.
+failure: >
+  Permanent attack surface. A leaked credential provides indefinite
+  access until someone discovers the leak and manually revokes it.

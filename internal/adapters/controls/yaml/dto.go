@@ -29,6 +29,15 @@ type yamlControlDefinition struct {
 	ObservationFields    []string             `yaml:"observation_fields,omitempty"`
 	Alternatives         []yamlAlternative    `yaml:"alternatives,omitempty"`
 	Tests                []policy.ControlTest `yaml:"tests,omitempty"`
+
+	// Defect / Infection / Failure carry the authored triage
+	// chain from Andreas Zeller's Why Programs Fail, applied to
+	// cloud misconfigurations. All three are optional during
+	// catalog authoring; absent fields produce empty strings and
+	// rendering skips the corresponding output sections.
+	Defect    string `yaml:"defect,omitempty"`
+	Infection string `yaml:"infection,omitempty"`
+	Failure   string `yaml:"failure,omitempty"`
 }
 
 // yamlAlternative is the YAML wire-format for policy.Alternative.

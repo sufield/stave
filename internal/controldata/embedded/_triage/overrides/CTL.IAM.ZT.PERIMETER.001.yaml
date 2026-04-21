@@ -1,0 +1,16 @@
+control: CTL.IAM.ZT.PERIMETER.001
+defect: >
+  Access to a sensitive resource relies solely on network perimeter
+  controls (VPC, security groups, NACLs) without identity-based
+  authorization.
+infection: >
+  Network perimeter controls fail when the perimeter is bypassed —
+  VPN compromise, lateral movement from a compromised instance,
+  insider threat, or misconfigured security group. Once inside the
+  network perimeter, an attacker inherits the access the perimeter
+  was supposed to gate. Identity-based controls verify who is making
+  the request, not just where it comes from.
+failure: >
+  Network bypass enables unauthorized access. An attacker who reaches
+  the network perimeter gains full access to resources that have no
+  identity-level authorization.

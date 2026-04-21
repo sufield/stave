@@ -1,0 +1,5 @@
+family: CTL.SHIELD
+infection: >
+  AWS Shield misconfigurations leave resources unprotected against DDoS attacks. Missing Shield Advanced enrollment, absent DDoS response team engagement, or unprotected resources mean volumetric and application-layer attacks proceed without automated mitigation.
+failure: >
+  DDoS protection gap. Resources are vulnerable to denial-of-service attacks without automated detection and mitigation.

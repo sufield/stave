@@ -39,6 +39,18 @@ type Assessment struct {
 	// Empty when no alternatives are authored or no inventories
 	// are bundled.
 	Coverage CoveragePosture
+
+	// ChainFindings are compound-risk chains detected during
+	// evaluation — sets of co-failing controls that together
+	// represent a compound attack path. Each ChainFinding
+	// references individual member findings via ControlsFailing
+	// (and every matching finding carries the reverse link in its
+	// ChainMembership slice).
+	//
+	// Empty when Config.ChainsDir is unset and no embedded chain
+	// catalog is bundled, OR when no chain's escalation threshold
+	// was met on the observation set.
+	ChainFindings []ChainFinding
 }
 
 // RunInfo records execution metadata for the evaluation.

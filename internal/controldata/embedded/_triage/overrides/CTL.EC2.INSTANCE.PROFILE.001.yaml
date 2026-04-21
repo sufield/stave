@@ -1,0 +1,18 @@
+control: CTL.EC2.INSTANCE.PROFILE.001
+defect: >
+  The EC2 instance does not have an IAM instance profile attached.
+  AWS API access from this instance may rely on long-term access
+  keys stored on the filesystem or in environment variables.
+infection: >
+  Long-term access keys do not automatically rotate and persist
+  until explicitly revoked. If the instance is compromised via SSRF,
+  file system access, or application vulnerability, the attacker
+  extracts static credentials that work from any network location —
+  not just the instance's metadata service. Instance profile
+  credentials, by contrast, auto-rotate hourly and are scoped to
+  the metadata service.
+failure: >
+  Credential theft with off-instance lateral movement. Static
+  access keys extracted from this instance can be used from any IP
+  address indefinitely until rotated, enabling persistent access
+  that survives instance termination.

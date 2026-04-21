@@ -1,0 +1,16 @@
+control: CTL.EC2.IMDSV2.001
+defect: >
+  The EC2 instance does not enforce IMDSv2 (HttpTokens is not set
+  to "required"). The instance metadata service accepts IMDSv1
+  requests, which do not require a session token.
+infection: >
+  An SSRF vulnerability in any application on this instance can be
+  exploited to steal instance credentials from the metadata endpoint
+  at 169.254.169.254. IMDSv1 requires only a single GET request —
+  no session token handshake — making credential theft trivially
+  automatable from any SSRF vector.
+failure: >
+  Credential theft via SSRF. The instance's IAM role credentials
+  are extractable by any attacker who can trigger an HTTP request
+  from the instance to the metadata service, enabling off-instance
+  lateral movement with the role's permissions.

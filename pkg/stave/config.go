@@ -30,4 +30,28 @@ type Config struct {
 	// for duration-based controls and timestamps in the output.
 	// Zero uses the real current time. Maps to --now.
 	Now time.Time
+
+	// AllowUnknownInput permits observations whose
+	// generated_by.source_type is missing or not in Stave's
+	// supported-connector registry. Default (false) rejects such
+	// observations with a clear error. Set true when feeding
+	// observations from tools that don't annotate with Stave's
+	// expected metadata — common when adopting Stave alongside
+	// existing collection pipelines. Maps to the CLI's
+	// --allow-unknown-input flag.
+	AllowUnknownInput bool
+
+	// ChainsDir is the directory containing chain definition YAML
+	// files. Chains declare compound-risk patterns — sets of
+	// co-failing controls that together represent an attack path.
+	// When a chain's escalation threshold is met, the engine emits a
+	// ChainFinding on the Assessment and annotates each contributing
+	// Finding's ChainMembership.
+	//
+	// Empty (default) skips chain detection. The CLI auto-discovers
+	// chains from the project-root "chains/" directory; the library
+	// requires an explicit path for now. A future iteration may add
+	// embedded-chain auto-loading to parallel the ControlsDir empty
+	// behavior.
+	ChainsDir string
 }

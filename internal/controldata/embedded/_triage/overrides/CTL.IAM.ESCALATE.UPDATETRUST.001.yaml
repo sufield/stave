@@ -1,0 +1,16 @@
+control: CTL.IAM.ESCALATE.UPDATETRUST.001
+defect: >
+  The principal has iam:UpdateAssumeRolePolicy reaching a role whose
+  attached permissions exceed its own. The principal can rewrite the
+  role's trust policy to admit itself.
+infection: >
+  The attacker updates the target role's trust policy to include
+  their own principal, then calls sts:AssumeRole to obtain temporary
+  credentials with the target role's full permission set. The role's
+  permission policies remain unchanged — only the trust policy is
+  modified. This two-step sequence is subtle because the role's
+  effective permissions never change; only who can use them does.
+failure: >
+  Privilege escalation via trust policy manipulation. The attacker
+  gains the target role's full permissions by rewriting who is
+  trusted to assume it.

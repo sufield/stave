@@ -1,0 +1,18 @@
+control: CTL.IAM.ESCALATE.CREATEACCESSKEY.001
+defect: >
+  The principal has iam:CreateAccessKey scoped to reach another IAM
+  user whose attached permissions exceed its own. The principal can
+  create a second access key for that user and authenticate as them
+  immediately.
+infection: >
+  A single CreateAccessKey call produces long-lived credentials
+  (access key ID + secret) that the attacker uses to act as the
+  target user from any network location. Unlike console login,
+  access key creation does not trigger MFA challenges, password
+  checks, or session policies. The credentials persist until
+  explicitly deleted and are usable immediately after creation.
+failure: >
+  Identity takeover with persistent credentials. The attacker
+  obtains long-lived credentials for a more-privileged user,
+  enabling sustained lateral movement that survives session
+  expiration and works from any IP address.

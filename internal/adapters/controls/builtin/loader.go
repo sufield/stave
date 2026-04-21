@@ -5,6 +5,7 @@ import (
 	"embed"
 	"fmt"
 	"io/fs"
+	"path/filepath"
 	"slices"
 	"strings"
 	"sync"
@@ -87,7 +88,14 @@ func (r *ControlStore) load() ([]policy.ControlDefinition, error) {
 		if err != nil {
 			return err
 		}
-		if d.IsDir() || !r.isYAML(path) {
+		if d.IsDir() {
+			name := d.Name()
+			if path != r.root && (strings.HasPrefix(name, "_") || strings.HasPrefix(name, ".")) {
+				return fs.SkipDir
+			}
+			return nil
+		}
+		if !r.isYAML(path) {
 			return nil
 		}
 
@@ -115,6 +123,17 @@ func (r *ControlStore) load() ([]policy.ControlDefinition, error) {
 	slices.SortFunc(controls, func(a, b policy.ControlDefinition) int {
 		return cmp.Compare(a.ID, b.ID)
 	})
+
+	triageSub, subErr := fs.Sub(r.fsys, filepath.Join(r.root, controlyaml.TriageDir))
+	if subErr == nil {
+		triageIdx, triageErr := controlyaml.LoadTriageIndexFS(triageSub, ".")
+		if triageErr != nil {
+			return nil, fmt.Errorf("loading built-in triage: %w", triageErr)
+		}
+		if triageIdx != nil {
+			controlyaml.ApplyTriage(controls, triageIdx)
+		}
+	}
 
 	return controls, nil
 }

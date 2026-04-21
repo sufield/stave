@@ -1,0 +1,17 @@
+control: CTL.IAM.ESCALATE.ATTACHROLEPOLICY.001
+defect: >
+  The role has iam:AttachRolePolicy scoped to its own role ARN —
+  either explicitly, by wildcard "*", or by a role-set that includes
+  itself. Any workload running under this role can attach any
+  managed policy to it.
+infection: >
+  A single AttachRolePolicy call attaches AdministratorAccess (or
+  any other broad managed policy) to the role. The role's effective
+  permissions expand immediately, and every active session under this
+  role picks up the new permissions on the next API call. The role
+  ARN and attachments appear unchanged in casual review — only the
+  attached policy list grows.
+failure: >
+  Privilege escalation to admin. Any workload or principal operating
+  under this role can grant itself unrestricted permissions with a
+  single API call.

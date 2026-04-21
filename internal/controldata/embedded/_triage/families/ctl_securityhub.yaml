@@ -1,0 +1,5 @@
+family: CTL.SECURITYHUB
+infection: >
+  Security Hub misconfigurations disable centralized finding aggregation and compliance monitoring. Missing integrations, absent member account enrollment, or disabled security standards mean findings from multiple services are not correlated and compliance gaps are not detected.
+failure: >
+  Security finding aggregation gap. Security findings are not centrally collected, correlated, or acted upon, leaving threats undetected across the account or organization.

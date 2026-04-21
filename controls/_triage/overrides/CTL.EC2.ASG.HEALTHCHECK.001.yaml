@@ -1,0 +1,17 @@
+control: CTL.EC2.ASG.HEALTHCHECK.001
+defect: >
+  The Auto Scaling Group uses EC2 health checks only, which detect
+  hardware and hypervisor failures but not application-level
+  failures.
+infection: >
+  An instance that is running at the EC2 level but serving errors,
+  hung, or compromised at the application level remains in the
+  ASG's target group and continues receiving traffic. The ASG
+  considers the instance healthy because the underlying EC2 instance
+  is running. ELB health checks would detect the application-level
+  failure and trigger replacement.
+failure: >
+  Degraded availability. Unhealthy or compromised instances remain
+  in service, continuing to serve errors to users or maintaining an
+  attacker's foothold, because the ASG has no visibility into
+  application health.

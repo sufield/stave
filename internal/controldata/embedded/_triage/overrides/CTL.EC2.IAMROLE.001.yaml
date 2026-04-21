@@ -1,0 +1,16 @@
+control: CTL.EC2.IAMROLE.001
+defect: >
+  The EC2 instance does not have an IAM instance profile (role)
+  attached. AWS service access from this instance requires
+  long-term access keys or has no AWS API access at all.
+infection: >
+  Without an instance profile, operators or applications that need
+  AWS API access must embed long-term credentials on the instance.
+  These credentials are static, do not auto-rotate, and can be
+  extracted by any process with filesystem access. Instance profile
+  credentials auto-rotate hourly and are only accessible through
+  the metadata service.
+failure: >
+  Credential management gap. The instance either lacks AWS API
+  access (limiting operational capability) or relies on static
+  credentials that are vulnerable to theft and do not expire.

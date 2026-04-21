@@ -1,0 +1,5 @@
+family: CTL.KMS
+infection: >
+  KMS misconfigurations weaken the cryptographic protection of encrypted data. Overly permissive key policies, disabled key rotation, or broad grants allow unauthorized principals to decrypt data, schedule key deletion, or use keys for unauthorized encryption operations.
+failure: >
+  Cryptographic control failure. Encrypted data is decryptable by unauthorized principals, or key management operations are accessible to non-administrative identities.

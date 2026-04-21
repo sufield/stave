@@ -75,6 +75,16 @@ type Finding struct {
 	// findings produced without a backing predicate (rare: compound
 	// chain findings in report.ChainFindings).
 	ReasoningTrace []MatchedClause `json:"reasoning_trace,omitempty"`
+
+	// Defect / Infection / Failure carry the authored triage chain
+	// from the control's YAML metadata (Andreas Zeller's Why Programs
+	// Fail vocabulary applied to cloud misconfigurations). Empty on
+	// controls that haven't been authored for the triage chain yet;
+	// rendering surfaces skip empty sections rather than emit
+	// placeholders.
+	Defect    string `json:"defect,omitempty"`
+	Infection string `json:"infection,omitempty"`
+	Failure   string `json:"failure,omitempty"`
 }
 
 // ReasoningTraceFromMisconfigurations converts a predicate-extracted
@@ -224,6 +234,9 @@ func NewFindingFromMetadata(m policy.ControlMetadata) Finding {
 		Alternatives:       m.Alternatives,
 		Classification:     m.Classification,
 		ScopeTags:          m.ScopeTags,
+		Defect:             m.Defect,
+		Infection:          m.Infection,
+		Failure:            m.Failure,
 	}
 }
 

@@ -1,0 +1,14 @@
+control: CTL.IAM.TRUST.OIDC.002
+defect: >
+  The IAM role's OIDC federation trust policy uses a wildcard
+  subject claim, accepting any identity from the provider.
+infection: >
+  The wildcard defeats OIDC federation's purpose entirely — it
+  accepts pull request workflows from forks, ephemeral runners, and
+  compromised pipelines. An attacker who triggers any CI/CD job in
+  the provider's namespace generates a valid OIDC token that
+  satisfies the trust policy.
+failure: >
+  Unrestricted supply chain access. The role can be assumed by any
+  identity from the OIDC provider, including untrusted forks and
+  compromised pipelines.

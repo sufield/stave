@@ -1,0 +1,5 @@
+family: CTL.ECR
+infection: >
+  ECR misconfigurations expose container images or allow untrusted images into the deployment pipeline. Public repositories, missing image scanning, or absent tag immutability allow attackers to pull proprietary code or push malicious image layers.
+failure: >
+  Container supply chain compromise. Container images containing application code, credentials, or malicious payloads are accessible to or modifiable by unauthorized parties.

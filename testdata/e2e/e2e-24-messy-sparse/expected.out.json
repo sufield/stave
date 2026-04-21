@@ -126,7 +126,10 @@
         ],
         "action": "Review the misconfigured properties and revert to compliant values."
       },
-      "classification": "state_assertion"
+      "classification": "state_assertion",
+      "defect": "A ClusterRoleBinding references the built-in cluster-admin ClusterRole, which grants every verb on every resource across every namespace. The binding's subject (user, group, or service account) holds unconstrained authority over the cluster.\n",
+      "infection": "Any actor using the bound identity — a compromised service account token, a stolen user credential, a misconfigured continuous-delivery runner — exercises cluster-admin authority without further authorization checks. A single `kubectl` invocation or API call can modify every workload, read every secret, or schedule workloads that tunnel through the cluster's networking to reach adjacent infrastructure.\n",
+      "failure": "Cluster compromise. The entire Kubernetes workload — every namespace, every pod, every stored secret, every cluster-scoped configuration — is accessible to whoever reaches the bound identity. Containment usually requires full cluster recreation because the cluster-admin authority could have rewritten its own audit trail.\n"
     }
   ],
   "issues": [
@@ -272,7 +275,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "0578f31dbab7ba7cc75679379c501bdc799e5a7f",
+      "head_commit": "8fddb4857c80faf46de90a635f56d2e0659353e8",
       "dirty": true,
       "modified_paths": [
         "stave/testdata/e2e/e2e-24-messy-sparse/controls/CTL.ID.KUBE.001.yaml"

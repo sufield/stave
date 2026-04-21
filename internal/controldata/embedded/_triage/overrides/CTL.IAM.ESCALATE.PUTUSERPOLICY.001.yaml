@@ -1,0 +1,14 @@
+control: CTL.IAM.ESCALATE.PUTUSERPOLICY.001
+defect: >
+  The user principal has iam:PutUserPolicy scoped to its own user
+  ARN. The principal can write an arbitrary inline policy onto
+  itself.
+infection: >
+  A single PutUserPolicy call authors an inline policy granting
+  "Action": "*" on "Resource": "*". No other permission or
+  vulnerability is needed — self-scoped PutUserPolicy is a one-step
+  path to full admin. The inline policy takes effect immediately and
+  persists until manually deleted.
+failure: >
+  One-step privilege escalation to admin. The principal grants
+  itself unrestricted permissions via a self-authored inline policy.

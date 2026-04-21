@@ -1,0 +1,18 @@
+control: CTL.EC2.DEFAULT.VPC.001
+defect: >
+  The EC2 instance is deployed in the account's default VPC. The
+  default VPC has a flat network topology with a single public
+  subnet per availability zone, an internet gateway, and no network
+  segmentation.
+infection: >
+  All instances in the default VPC share the same flat network —
+  any compromised instance can reach every other instance in the VPC
+  without crossing subnet boundaries or security group barriers
+  beyond the default. The default VPC's internet gateway and public
+  subnet configuration also means instances are one misconfigured
+  security group away from direct internet exposure.
+failure: >
+  Lateral movement enablement. A single instance compromise in the
+  default VPC gives the attacker network-level access to every other
+  instance in the VPC, with no segmentation barriers to slow lateral
+  movement.

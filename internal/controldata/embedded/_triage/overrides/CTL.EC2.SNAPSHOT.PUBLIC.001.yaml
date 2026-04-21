@@ -1,0 +1,17 @@
+control: CTL.EC2.SNAPSHOT.PUBLIC.001
+defect: >
+  The EBS snapshot's create-volume permission is set to public,
+  allowing any AWS account to copy and restore the snapshot as a
+  mountable volume.
+infection: >
+  Any AWS account can copy this snapshot to their own account,
+  create an EBS volume from it, and mount it on their own
+  instance — gaining full read access to every file on the original
+  disk. Public snapshots appear in public snapshot searches, making
+  discovery trivial. Unlike S3 where the attacker needs a bucket
+  name, public snapshots are enumerable.
+failure: >
+  Complete disk exposure. All data on the original volume —
+  operating system files, application data, database contents,
+  credentials stored on disk — is accessible to any AWS account
+  holder.

@@ -1,0 +1,5 @@
+family: CTL.VSPHERE
+infection: >
+  vSphere misconfigurations weaken hypervisor and virtual machine security. Insecure management interfaces, permissive roles, missing encryption, or absent hardening allow attackers to access the management plane, escape VM boundaries, or compromise the underlying infrastructure.
+failure: >
+  Virtualization infrastructure compromise. The vSphere management plane, hypervisors, or virtual machine boundaries are weakened, enabling infrastructure-level attacks.

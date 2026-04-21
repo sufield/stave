@@ -1,0 +1,5 @@
+family: CTL.ACM
+infection: >
+  An expired or improperly managed TLS certificate exposes connections to interception. Clients that ignore certificate warnings or fall back to unencrypted transport allow attackers to eavesdrop on or modify data in transit.
+failure: >
+  Transport encryption failure. Data in transit is exposed to interception or tampering due to invalid or expired certificates.

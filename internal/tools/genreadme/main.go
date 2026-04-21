@@ -94,6 +94,9 @@ func collect(controlsRoot string) (Data, error) {
 			continue
 		}
 		domainName := domain.Name()
+		if strings.HasPrefix(domainName, "_") || strings.HasPrefix(domainName, ".") {
+			continue
+		}
 		domainDir := filepath.Join(controlsRoot, domainName)
 
 		categories, err := os.ReadDir(domainDir)

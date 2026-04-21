@@ -1,0 +1,16 @@
+control: CTL.EC2.SNAPSHOT.ENCRYPT.001
+defect: >
+  The EBS snapshot is not encrypted. Data at rest in the snapshot
+  is stored in plaintext and can be shared or restored without
+  encryption protection.
+infection: >
+  An unencrypted snapshot can be copied across accounts or made
+  public without any cryptographic gate. Anyone with the snapshot ID
+  and appropriate permissions can restore it as an EBS volume,
+  gaining full read access to the disk contents without needing a
+  KMS key.
+failure: >
+  Data-at-rest exposure. The complete volume contents — operating
+  system files, application data, potentially sensitive credentials
+  and configuration files — are accessible without decryption to
+  anyone who can copy or restore the snapshot.

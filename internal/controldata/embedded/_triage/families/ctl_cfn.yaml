@@ -1,0 +1,5 @@
+family: CTL.CFN
+infection: >
+  CloudFormation template misconfigurations deploy insecure infrastructure as code. The misconfiguration is codified and repeatable — every stack deployment reproduces the same security gap across environments.
+failure: >
+  Infrastructure-as-code vulnerability. Insecure configurations are systematically deployed across environments through the template pipeline.

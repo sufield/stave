@@ -1,0 +1,5 @@
+family: CTL.DYNAMODB
+infection: >
+  DynamoDB misconfigurations expose table data or weaken access controls. Missing encryption at rest, overly permissive IAM policies, or absent point-in-time recovery leave data vulnerable to unauthorized access and unrecoverable deletion.
+failure: >
+  Database data exposure or loss. DynamoDB table contents are accessible to unauthorized principals or unrecoverable after deletion.

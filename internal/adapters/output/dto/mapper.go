@@ -15,6 +15,7 @@ func FromEvaluation(e *report.Assessment) ResultDTO {
 		SecurityState:     e.Status,
 		RiskSignals:       fromAtRiskItems(e.RiskSignals),
 		Findings:          fromFindings(e.Findings),
+		ChainFindings:     e.ChainFindings,
 		Issues:            fromIssues(e.Issues),
 		ExceptedFindings:  fromExceptedFindings(e.ExceptedFindings),
 		RemediationGroups: fromRemediationGroups(e.RemediationGroups),
@@ -33,12 +34,16 @@ func fromIssues(is []evaluation.Issue) []IssueDTO {
 	}
 	out := make([]IssueDTO, len(is))
 	for i, iss := range is {
+		members := make([]string, len(iss.MemberFindingIDs))
+		for j, fid := range iss.MemberFindingIDs {
+			members[j] = string(fid)
+		}
 		out[i] = IssueDTO{
 			IssueID:                 iss.IssueID,
 			AssetID:                 string(iss.AssetID),
 			SharedKeys:              iss.SharedKeys,
-			HeadlineFindingID:       iss.HeadlineFindingID,
-			MemberFindingIDs:        iss.MemberFindingIDs,
+			HeadlineFindingID:       string(iss.HeadlineFindingID),
+			MemberFindingIDs:        members,
 			ConsolidatedScore:       iss.ConsolidatedScore,
 			ConsolidatedBlastRadius: iss.ConsolidatedBlastRadius,
 		}

@@ -1,0 +1,17 @@
+control: CTL.IAM.SCP.DANGEROUS.ALLOWS.001
+defect: >
+  An SCP contains Allow statements for actions that undermine the
+  organization's security posture: audit evasion, data destruction,
+  boundary removal, or privilege escalation actions.
+infection: >
+  SCPs are the organization's last line of defense — they override
+  all member-account IAM policies. An Allow for dangerous actions
+  means someone has deliberately removed the organizational-level
+  protection. The Allow may have been introduced through a change
+  management failure, social engineering, or a compromised automation
+  pipeline.
+failure: >
+  Organizational guardrail removal. The SCP explicitly permits
+  actions that destroy audit trails, delete data, or enable
+  privilege escalation — the protections the organization relies on
+  are disabled.

@@ -1,0 +1,5 @@
+family: CTL.SSM
+infection: >
+  SSM misconfigurations weaken systems management security. Missing session logging, absent patch compliance, or insecure parameter handling allow unaudited access to managed instances, unpatched vulnerabilities, or plaintext secrets in parameter store.
+failure: >
+  Systems management security gap. Managed instances are unpatched, sessions are unaudited, or sensitive parameters are exposed through SSM.

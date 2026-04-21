@@ -176,7 +176,10 @@
       "scope_tags": [
         "aws",
         "s3"
-      ]
+      ],
+      "defect": "The bucket policy contains a Statement with Effect \"Allow\", Principal \"*\" (or AWS: \"*\"), and a write action such as s3:PutObject, s3:DeleteObject, or s3:*. No restricting Condition narrows the principal to a specific account, VPC, IP range, or organization.\n",
+      "infection": "Any unauthenticated HTTP caller can issue PUT or DELETE against the bucket, including object overwrites of existing keys. Object uploads do not require listing permissions, so attackers do not need to enumerate to exploit — they upload crafted objects against guessed or leaked keys, or write fresh malicious content for serving. In combination with public read on the same bucket, an attacker can replace JavaScript, documents, or binaries that legitimate users download.\n",
+      "failure": "Content takeover. Attackers can inject malicious objects, overwrite trusted artifacts, or hold data ransom by deleting and re-uploading encrypted copies. If the bucket backs a website, CDN, or software distribution, every downstream consumer receives attacker-controlled content until the bucket is remediated and the content re-validated.\n"
     },
     {
       "finding_id": "sha256:a01a06a82cb5f0fe",
@@ -281,7 +284,10 @@
       "scope_tags": [
         "aws",
         "s3"
-      ]
+      ],
+      "defect": "The bucket's ACL grants READ permission to the AWS-managed AuthenticatedUsers group, which includes every principal with any valid AWS credential across every AWS account in the world. The bucket is not public to anonymous internet users, but it is effectively public to any AWS account holder.\n",
+      "infection": "Many operators read \"AuthenticatedUsers\" and assume it means \"our account's users\" — it does not. Anyone who signs up for a free AWS account can authenticate and read this bucket's objects. The attack surface is therefore millions of AWS accounts worldwide, accessible via `aws s3 cp s3://bucket/key -` with no other requirement than an AWS login. Automated scanners specifically look for AuthenticatedUsers grants because they are a frequent misunderstanding.\n",
+      "failure": "Data exposure to every AWS account holder globally. Distinct from anonymous-internet exposure but operationally nearly as serious: automated mass-harvest via AWS CLI, researchers indexing exposed buckets, and targeted attackers pretending to be routine AWS customers all exploit this class.\n"
     }
   ],
   "issues": [
@@ -488,8 +494,12 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "ab547939e47c809219c51ab1e17466440e85f3fa",
-      "dirty": false
+      "head_commit": "8fddb4857c80faf46de90a635f56d2e0659353e8",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-h1-shopify-98819/controls/CTL.S3.AUTH.READ.001.yaml",
+        "stave/testdata/e2e/e2e-h1-shopify-98819/controls/CTL.S3.POLICY.WRITE.001.yaml"
+      ]
     }
   }
 }

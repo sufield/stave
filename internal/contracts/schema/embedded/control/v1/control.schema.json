@@ -157,6 +157,21 @@
           "title": "Control Description",
           "description": "Detailed explanation of the unsafe condition this control detects."
         },
+        "defect": {
+          "type": "string",
+          "title": "Defect (authored)",
+          "description": "Authored prose describing what specifically is misconfigured when this control fires. Follows Zeller's failure-theory chain (defect → infection → failure) for technical triage output. Optional; empty or absent produces rendering that skips the defect section."
+        },
+        "infection": {
+          "type": "string",
+          "title": "Infection (authored)",
+          "description": "Authored prose describing how the defect propagates to enable adverse behavior. Plain mechanism language aimed at engineers triaging findings."
+        },
+        "failure": {
+          "type": "string",
+          "title": "Failure (authored)",
+          "description": "Authored prose describing the worst-case outcome if the infection is exploited. Adopter-meaningful terms (data exposure, credential-boundary collapse, cluster compromise), not abstract CVSS categories."
+        },
         "version": {
           "type": "string",
           "title": "Control Version",

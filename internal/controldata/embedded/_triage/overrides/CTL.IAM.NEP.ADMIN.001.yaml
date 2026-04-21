@@ -1,0 +1,24 @@
+control: CTL.IAM.NEP.ADMIN.001
+defect: >
+  After resolving every policy layer (SCPs, permission boundaries,
+  identity-based policies, explicit denies), this principal's net
+  effective permissions include admin-equivalent actions such as
+  iam:*, *:*, or a large set of high-impact actions that together
+  equal administrative authority. The principal is not tagged as
+  intentionally administrative.
+infection: >
+  Any compromise of this principal — a leaked access key, a
+  misconfigured assume-role chain, a captured session token —
+  yields the full admin surface. The effective-permissions
+  resolver has already confirmed that no SCP, boundary, or deny
+  statement constrains the admin actions at runtime, so attackers
+  do not have to bypass organizational controls. When combined
+  with access paths from public-facing resources (public functions,
+  exposed IAM roles in compromised containers), admin-equivalent
+  NEP converts one foothold into full account compromise.
+failure: >
+  Account-wide compromise. The attacker has the same authority as
+  a deliberate administrator: create users, remove logging,
+  disable guardrails, exfiltrate any resource. Containment
+  requires organizational-level rotation and recovery, not a
+  scoped fix.

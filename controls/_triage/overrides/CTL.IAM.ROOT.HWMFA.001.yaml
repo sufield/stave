@@ -1,0 +1,16 @@
+control: CTL.IAM.ROOT.HWMFA.001
+defect: >
+  The root account uses a virtual MFA device instead of a hardware
+  token. Virtual MFA seeds can be extracted from a compromised phone
+  or backup.
+infection: >
+  Virtual MFA devices share the device's security posture — phone
+  malware, cloud backup extraction, or SIM swap attacks can expose
+  the TOTP seed. Hardware tokens have no extractable seed and cannot
+  be phished remotely. For the most privileged identity in the
+  account, the MFA device's resilience to extraction is the last
+  barrier.
+failure: >
+  Root MFA vulnerable to device compromise. An attacker who
+  compromises the phone or backup containing the virtual MFA seed
+  can generate valid TOTP codes for root access.

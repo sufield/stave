@@ -1,0 +1,13 @@
+control: CTL.IAM.CRED.ROTATION.001
+defect: >
+  IAM user has at least one access key older than 90 days. The key
+  has not been rotated within the standard rotation period.
+infection: >
+  Longer-lived keys have more exposure time — more opportunities to
+  be committed to code, logged, shared, or intercepted. If the key
+  was leaked at any point during its extended lifetime, the attacker
+  still has valid credentials.
+failure: >
+  Stale credential with accumulated exposure risk. The key may have
+  been compromised at any point during its extended lifetime, and
+  the compromise would still be active.

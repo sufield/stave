@@ -1,0 +1,15 @@
+control: CTL.IAM.ESCALATE.ATTACHGROUPPOLICY.001
+defect: >
+  The user principal has iam:AttachGroupPolicy scoped to reach a
+  group it belongs to. The principal can attach any managed
+  policy — including AdministratorAccess — to that group.
+infection: >
+  Attaching a broad managed policy to the group elevates every
+  member of the group, including the principal. The escalation is a
+  single API call and takes effect immediately. Other group members
+  receive the escalated permissions as collateral — the blast radius
+  extends beyond the attacker.
+failure: >
+  Privilege escalation via group policy attachment. The principal
+  and all group members gain the attached policy's permissions. With
+  AdministratorAccess, this is full account compromise.

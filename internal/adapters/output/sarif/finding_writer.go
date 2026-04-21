@@ -47,7 +47,7 @@ func (w *FindingWriter) MarshalFindings(enriched *appcontracts.EnrichedResult) (
 		fidToIssue := make(map[string]string, len(remFindings))
 		for _, iss := range enriched.Result.Issues {
 			for _, fid := range iss.MemberFindingIDs {
-				fidToIssue[fid] = iss.IssueID
+				fidToIssue[string(fid)] = iss.IssueID
 			}
 		}
 		for i := range results {

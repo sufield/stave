@@ -1,0 +1,32 @@
+control: CTL.S3.TENANT.ISOLATION.001
+defect: >
+  A shared bucket tagged with a tenant-prefix scheme has an
+  app-signer identity that either allows path traversal
+  (allow_traversal=true) or disables prefix enforcement
+  (enforce_prefix=false). The signer can mint presigned URLs
+  that escape the tenant prefix — either by including "../"
+  in the signed key or by omitting the prefix entirely.
+infection: >
+  Any tenant using this app-signer can request a presigned
+  URL targeting another tenant's prefix. The URL is validly
+  signed, so the bucket policy's signature-based tenant gate
+  never triggers — S3 honors the URL exactly as the signer
+  minted it. This is architecturally invisible to the bucket
+  itself: the ACL remains private, the bucket policy remains
+  tenant-aware, but the signer's presigned URLs bypass both
+  layers. Cross-tenant read or write happens at signing time,
+  not at S3's request-evaluation time. In the unikrn-254200
+  pattern, the signer gives tenant A's session a URL that
+  lists or overwrites tenant B's objects — no S3-layer
+  misconfiguration to audit.
+failure: >
+  Cross-tenant data breach and data integrity failure.
+  Tenant A reads, overwrites, or deletes tenant B's objects
+  through presigned URLs the application legitimately
+  issued. Audit logs show tenant A making signed requests
+  against the bucket — which is normal behavior — so
+  detection requires cross-referencing signer identity state
+  against per-request prefixes, a correlation few shops
+  build. Remediation requires fixing every app-signer with
+  the unsafe setting and revoking any outstanding presigned
+  URLs.

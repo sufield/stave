@@ -1,0 +1,5 @@
+family: CTL.EFS
+infection: >
+  EFS misconfigurations expose shared file systems to unauthorized access. Missing encryption, overly permissive mount targets, or absent access point restrictions allow any instance in the VPC (or any AWS account, for cross-account mounts) to read and write file system contents.
+failure: >
+  Shared file system exposure. EFS contents are accessible to unauthorized instances or accounts, enabling data theft or content tampering.

@@ -1,0 +1,5 @@
+family: CTL.EXPOSURE
+infection: >
+  Public exposure of cloud resources — whether through misconfigured permissions, open ports, or missing access controls — makes the resource discoverable and accessible from the internet. Automated scanners continuously enumerate exposed resources, meaning discovery is immediate.
+failure: >
+  Internet-facing exposure. Cloud resources are directly accessible from the public internet without intended authorization controls.

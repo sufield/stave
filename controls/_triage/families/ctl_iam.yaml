@@ -1,0 +1,5 @@
+family: CTL.IAM
+infection: >
+  IAM misconfigurations grant unauthorized or excessive permissions to principals. Overly broad policies, missing MFA, credential lifecycle gaps, privilege escalation paths, and trust policy weaknesses each enable different attack vectors — from credential theft to full account compromise.
+failure: >
+  Identity and access control failure. Unauthorized access, privilege escalation, or credential compromise is enabled by the IAM misconfiguration.

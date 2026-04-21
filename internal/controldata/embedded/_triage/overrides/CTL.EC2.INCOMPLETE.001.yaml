@@ -1,0 +1,17 @@
+control: CTL.EC2.INCOMPLETE.001
+defect: >
+  The observation snapshot is missing the
+  compute.encryption.ebs_encrypted field for this EC2 instance.
+  The extractor did not populate the data required for encryption
+  assessment.
+infection: >
+  Without encryption status data, the EBS encryption controls
+  (CTL.EC2.EBS.ENCRYPT.001 and related) cannot evaluate this
+  instance. The assessment treats the missing data as a finding
+  rather than silently skipping it — but the underlying encryption
+  posture remains unknown.
+failure: >
+  Assessment blind spot. The instance's EBS encryption status cannot
+  be determined, meaning any actual encryption gap is invisible to
+  the evaluation pipeline until the extractor is re-run with correct
+  EC2 permissions.

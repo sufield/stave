@@ -1,0 +1,18 @@
+control: CTL.IAM.POLICY.SOD.001
+defect: >
+  A single IAM role has both data access permissions (s3:GetObject,
+  dynamodb:GetItem, rds:*, secretsmanager:GetSecretValue) and IAM
+  management permissions (iam:CreateRole, iam:AttachPolicy,
+  iam:PutRolePolicy).
+infection: >
+  A compromised role with both data access and IAM management can
+  read sensitive data AND grant itself additional permissions or
+  create new principals. The combination violates separation of
+  duties — data-path roles should never modify the authorization
+  plane. An attacker who compromises this role does not need a
+  separate escalation path; the role already carries both the
+  data-access payload and the persistence mechanism.
+failure: >
+  Combined data theft and privilege persistence. The compromised
+  role can exfiltrate data and simultaneously ensure continued
+  access by creating backdoor credentials or modifying IAM policies.

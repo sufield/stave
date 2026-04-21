@@ -38,6 +38,35 @@ type CoverageIndex struct {
 	ByTool map[string]map[string]DomainCoverage
 }
 
+// ToolNames returns the sorted list of tools represented in the
+// coverage data. Domain question: what tools does this assessment's
+// coverage posture cover?
+func (c CoverageIndex) ToolNames() []string {
+	names := make([]string, 0, len(c.ByTool))
+	for tool := range c.ByTool {
+		names = append(names, tool)
+	}
+	sort.Strings(names)
+	return names
+}
+
+// DomainsForTool returns the sorted list of domains the named tool
+// covers. Returns an empty (non-nil) slice when the tool is not
+// represented in the coverage data. Domain question: what domains
+// does this tool cover in this assessment?
+func (c CoverageIndex) DomainsForTool(tool string) []string {
+	domains, ok := c.ByTool[tool]
+	if !ok {
+		return []string{}
+	}
+	names := make([]string, 0, len(domains))
+	for d := range domains {
+		names = append(names, d)
+	}
+	sort.Strings(names)
+	return names
+}
+
 // ToolInventory enumerates the canonical check identifiers a single
 // alternative tool publishes for a single domain. Stave loads
 // inventories from data/alternatives/*.yaml at runtime; the file shape

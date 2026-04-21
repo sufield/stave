@@ -1,0 +1,17 @@
+control: CTL.IAM.ESCALATE.CREATELOGINPROFILE.001
+defect: >
+  The principal has iam:CreateLoginProfile scoped to reach a
+  programmatic-only IAM user (no existing console login profile)
+  whose attached permissions exceed its own.
+infection: >
+  A single CreateLoginProfile call creates a console password for
+  the target user — converting a programmatic-only service account
+  into an interactive one under attacker control. Service accounts
+  are often overlooked during permission review precisely because
+  "they can't be logged into." Once the profile exists, the attacker
+  logs into the AWS console as the target user with the chosen
+  password.
+failure: >
+  Identity takeover of a service account. The attacker gains
+  interactive console access to a principal that was designed to be
+  programmatic-only, inheriting all of its permissions.

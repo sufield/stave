@@ -1,0 +1,5 @@
+family: CTL.ELB
+infection: >
+  ELB misconfigurations weaken transport security or expose backend services. Insecure TLS policies, missing access logging, or absent security headers allow protocol downgrade attacks, untracked access, or client-side vulnerabilities on load-balanced endpoints.
+failure: >
+  Load balancer security gap. Transport security is degraded, access is unaudited, or backend services are exposed through the load balancer.

@@ -1,0 +1,18 @@
+control: CTL.IAM.POLICY.GHOSTREF.002
+defect: >
+  IAM policy Allow statements grant write permissions (PutObject,
+  SendMessage, Publish, PutRecord) to non-existent reclaimable
+  resource names — specifically S3 buckets, SQS queues, SNS topics,
+  or Kinesis streams that no longer exist.
+infection: >
+  The victim's systems actively attempt to write to the referenced
+  resource. If an attacker registers the resource name (trivially
+  possible for S3 buckets, which are globally unique), data flows
+  directly to attacker-controlled infrastructure. Unlike read-
+  permission ghost references where the attacker must pull data,
+  write-permission ghost references cause the victim to push data
+  to the attacker automatically.
+failure: >
+  Active data exfiltration. The victim's own systems deliver data to
+  an attacker-controlled resource because the IAM policy still
+  directs writes to a name the attacker has claimed.

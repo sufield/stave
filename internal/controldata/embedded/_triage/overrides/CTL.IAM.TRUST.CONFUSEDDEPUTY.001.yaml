@@ -1,0 +1,16 @@
+control: CTL.IAM.TRUST.CONFUSEDDEPUTY.001
+defect: >
+  An IAM role trusted by a third-party AWS account lacks
+  sts:ExternalId or aws:SourceAccount conditions in its trust
+  policy.
+infection: >
+  Without per-customer binding, any customer of the same third-party
+  vendor can assume this role through the vendor's IAM system. The
+  vendor's role assumption mechanism becomes a shared channel — if
+  the vendor has 1,000 customers, all 1,000 can potentially assume
+  this role. The confused deputy attack requires no vulnerability in
+  the vendor; it exploits the architectural trust gap.
+failure: >
+  Cross-customer access via shared trust. Another customer of the
+  same vendor can access this account's resources through the
+  vendor's role assumption path.

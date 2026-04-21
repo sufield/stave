@@ -1,0 +1,15 @@
+control: CTL.IAM.IDENTITY.BLASTRADIUS.003
+defect: >
+  The IAM role assumption chain exceeds 2 hops (Role A assumes
+  Role B assumes Role C or deeper).
+infection: >
+  Deep chains create hidden transitive access that is difficult to
+  audit. Each hop potentially widens the blast radius — the
+  originating principal may have narrow permissions, but the chain
+  endpoint may carry broad access. The transitive path is invisible
+  in single-role policy reviews; only graph analysis reveals the
+  effective permissions.
+failure: >
+  Hidden transitive access via deep role chains. The effective
+  permissions at the chain endpoint exceed what any individual hop
+  suggests, and the path is invisible to standard audit.

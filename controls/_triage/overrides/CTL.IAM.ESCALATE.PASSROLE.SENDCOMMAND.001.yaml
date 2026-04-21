@@ -1,0 +1,17 @@
+control: CTL.IAM.ESCALATE.PASSROLE.SENDCOMMAND.001
+defect: >
+  The principal has ssm:SendCommand or ssm:StartSession reaching an
+  EC2 instance whose instance-profile role carries permissions
+  exceeding the principal's own.
+infection: >
+  The attacker sends a command or starts an interactive session on
+  the target instance. Commands and sessions execute under the
+  instance's OS context, which has access to the IMDS and the
+  instance-profile role's temporary credentials. Unlike
+  PASSROLE.RUNINSTANCES (which creates a new instance), this
+  exploits an already-running one — no launch permissions needed.
+failure: >
+  Privilege escalation via SSM command execution on a privileged
+  instance. The attacker gains the instance-profile role's
+  credentials by executing code on an existing instance that carries
+  broader permissions.

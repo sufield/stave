@@ -1,0 +1,16 @@
+control: CTL.EC2.SG.DEFAULT.RESTRICT.001
+defect: >
+  The default security group in this VPC has inbound or outbound
+  rules. Any EC2 instance launched without an explicitly specified
+  security group inherits this permissive default.
+infection: >
+  Instances accidentally launched without a security group
+  specification — through CLI typos, CloudFormation defaults, or
+  automated tooling that omits the parameter — inherit the default
+  security group's permissive rules. The failure mode is silent: the
+  instance launches successfully with unintended network access
+  rather than failing with an error.
+failure: >
+  Unintended network exposure. Instances launched without an
+  explicit security group gain permissive inbound and outbound
+  access instead of failing safe with no network connectivity.

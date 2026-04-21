@@ -1,0 +1,17 @@
+control: CTL.IAM.POLICY.DIRECT.001
+defect: >
+  The IAM user has managed policies attached directly to the user
+  rather than through groups or roles.
+infection: >
+  Direct policy attachments create per-user permission
+  configurations that resist centralized governance. Permission
+  changes require modifying each user individually. Permission
+  reviews must enumerate each user's direct attachments, making
+  audits slower and more error-prone. Permissions drift as users
+  accumulate direct attachments over time without corresponding
+  cleanup.
+failure: >
+  Permission sprawl and governance gap. The organization cannot
+  reliably answer "who has what access" because permissions are
+  distributed across individual user attachments rather than
+  centralized in groups.

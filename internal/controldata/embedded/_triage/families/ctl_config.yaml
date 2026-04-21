@@ -1,0 +1,5 @@
+family: CTL.CONFIG
+infection: >
+  AWS Config misconfigurations mean configuration changes to resources go unrecorded. Without Config recording, there is no baseline to detect drift, no history to investigate incidents, and no evidence for compliance audits.
+failure: >
+  Configuration visibility gap. Resource changes are untracked, preventing drift detection, incident investigation, and compliance evidence collection.

@@ -1,0 +1,17 @@
+control: CTL.IAM.POLICY.SERVICEWILDCARD.001
+defect: >
+  An IAM principal has an attached policy granting <service>:* on
+  Resource "*" for a service on the denied list (cloudtrail, kms,
+  or aws-marketplace by default).
+infection: >
+  cloudtrail:* enables trail tampering — the attacker can stop
+  logging, delete trails, or modify event selectors to hide activity.
+  kms:* enables key management abuse — schedule key deletion,
+  re-encrypt data with an attacker-controlled key, or disable keys
+  protecting critical data. aws-marketplace:* enables unauthorized
+  subscription and provisioning with direct billing impact.
+failure: >
+  Full administrative authority over a high-blast-radius service.
+  Trail tampering erases forensic evidence, key management abuse
+  destroys cryptographic protections, and marketplace access creates
+  financial exposure.

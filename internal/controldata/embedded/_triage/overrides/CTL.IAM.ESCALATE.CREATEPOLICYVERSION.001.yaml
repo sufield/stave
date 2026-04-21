@@ -1,0 +1,17 @@
+control: CTL.IAM.ESCALATE.CREATEPOLICYVERSION.001
+defect: >
+  The principal has both iam:CreatePolicyVersion and
+  iam:SetDefaultPolicyVersion on a managed policy attached to
+  itself — directly or via a belonging group. The principal can
+  author a new policy version and activate it as default.
+infection: >
+  The attacker creates a new version of the attached policy with
+  "Action": "*" on "Resource": "*" and sets it as the default
+  version. Every principal attached to this policy — including the
+  attacker — picks up the new permissions immediately. The policy
+  ARN and attachment list remain unchanged; only the version pointer
+  moves, making the escalation subtle in audit.
+failure: >
+  Privilege escalation via policy version manipulation. The attacker
+  gains admin permissions by rewriting a policy already attached to
+  itself, without creating, detaching, or attaching any policy.

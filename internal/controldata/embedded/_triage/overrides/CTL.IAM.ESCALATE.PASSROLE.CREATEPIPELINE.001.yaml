@@ -1,0 +1,17 @@
+control: CTL.IAM.ESCALATE.PASSROLE.CREATEPIPELINE.001
+defect: >
+  The principal has iam:PassRole reaching a role whose effective
+  permissions exceed its own, plus both datapipeline:CreatePipeline
+  and datapipeline:ActivatePipeline to define and activate pipeline
+  actions under that role.
+infection: >
+  The attacker defines a Data Pipeline with actions that run under
+  the privileged role and activates it. The pipeline's EC2-based
+  activities execute arbitrary shell commands under the target role's
+  authority. Activation is the trigger — creation alone queues the
+  pipeline; both permissions are needed for the escalation to
+  execute.
+failure: >
+  Privilege escalation via Data Pipeline execution. The attacker
+  gains code execution under a role whose permissions exceed their
+  own, through a service often overlooked in IAM security reviews.

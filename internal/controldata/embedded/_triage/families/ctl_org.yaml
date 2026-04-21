@@ -1,0 +1,5 @@
+family: CTL.ORG
+infection: >
+  AWS Organizations misconfigurations weaken the centralized governance that protects member accounts. Missing organizational policies, absent guardrails, or permissive trust relationships allow member accounts to operate outside intended security constraints.
+failure: >
+  Organizational governance gap. Member accounts operate without centralized security controls, making the organization's security posture dependent on individual account configurations.

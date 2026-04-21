@@ -1,0 +1,5 @@
+family: CTL.DNS
+infection: >
+  DNS misconfigurations enable domain takeover, traffic redirection, or cache poisoning. Dangling DNS records pointing to deprovisioned resources allow attackers to claim the target and serve malicious content under the trusted domain name.
+failure: >
+  Domain trust compromise. An attacker controls resources that the DNS record resolves to, serving malicious content under the organization's trusted domain name.

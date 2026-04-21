@@ -1,0 +1,5 @@
+family: CTL.AD
+infection: >
+  Active Directory misconfigurations propagate trust relationships and permission grants across the domain. An attacker who exploits a weak AD configuration gains access to every system that trusts the domain controller for authentication and authorization.
+failure: >
+  Domain-wide compromise. The Active Directory trust boundary is weakened, enabling lateral movement and privilege escalation across all domain-joined systems.

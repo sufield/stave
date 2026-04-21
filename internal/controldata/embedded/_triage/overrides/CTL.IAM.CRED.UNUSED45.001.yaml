@@ -1,0 +1,13 @@
+control: CTL.IAM.CRED.UNUSED45.001
+defect: >
+  IAM credentials (passwords and access keys) have been unused for
+  45 or more days, exceeding the CIS v3.0 stricter dormancy
+  threshold.
+infection: >
+  Each additional day of dormancy widens the window during which a
+  compromised credential could be used without detection. At 45 days,
+  legitimate usage patterns have gone cold — anomaly detection
+  baselines based on typical usage frequency no longer apply.
+failure: >
+  Extended dormant credential exposure. The credential has been
+  inactive long enough that any usage is likely unauthorized.

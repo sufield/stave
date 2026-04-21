@@ -1,0 +1,17 @@
+control: CTL.IAM.ESCALATE.PASSROLE.RUNINSTANCES.001
+defect: >
+  The principal has iam:PassRole reaching a role whose effective
+  permissions exceed its own, plus ec2:RunInstances to launch an
+  instance with that role as its instance profile.
+infection: >
+  The attacker launches an EC2 instance with the privileged role as
+  its instance profile and executes code on the instance via
+  user-data or SSH/SSM session. The instance's IMDS returns
+  temporary credentials for the target role. Any code running on the
+  instance — including a simple curl to the metadata endpoint — can
+  obtain and use these credentials.
+failure: >
+  Privilege escalation via EC2 instance profile. The attacker gains
+  temporary credentials for a role whose permissions exceed their
+  own, usable from the launched instance or exfiltrated for
+  off-instance use.

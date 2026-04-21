@@ -1,0 +1,17 @@
+control: CTL.EC2.SSM.SESSION.LOGGING.001
+defect: >
+  SSM Session Manager does not log session content to S3 or
+  CloudWatch Logs. Only session start/stop metadata is recorded
+  in CloudTrail.
+infection: >
+  An attacker with ssm:StartSession permissions can execute
+  arbitrary commands on managed instances with root/administrator
+  privileges and no record of what commands were run. The session
+  metadata in CloudTrail shows that a session occurred but not what
+  happened during it — creating an audit gap between "access was
+  granted" and "these actions were taken."
+failure: >
+  Forensic blind spot. Post-incident investigation cannot
+  reconstruct what commands an attacker executed during SSM sessions,
+  making it impossible to determine the scope of compromise or
+  verify that remediation is complete.

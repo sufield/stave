@@ -1,0 +1,18 @@
+control: CTL.EC2.VPC.ENDPOINT.ACCESS.001
+defect: >
+  A VPC interface endpoint uses the default full-access policy. The
+  endpoint does not restrict which principals can use it or which
+  resources in the target service they can access through it.
+infection: >
+  Any principal in the VPC can use this endpoint to reach any
+  resource in the target service — including resources in other
+  accounts if the service supports cross-account access. For S3
+  endpoints, this means any instance in the VPC can read from or
+  write to any S3 bucket, including attacker-controlled buckets for
+  data exfiltration. The default policy turns the endpoint into an
+  unrestricted gateway.
+failure: >
+  Data exfiltration or unauthorized service access via VPC endpoint.
+  An attacker with access to any instance in the VPC can use the
+  endpoint to reach resources beyond what that instance should
+  access.

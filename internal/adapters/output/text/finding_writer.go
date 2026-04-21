@@ -4,6 +4,7 @@ package text
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
@@ -234,6 +235,8 @@ func (w *FindingWriter) writeIsolatedFinding(d *drawer, num int, f *remediation.
 	writeFindingAlternatives(d, f)
 	writeFindingEvidence(d, f)
 	writeFindingReasoning(d, f)
+	writeFindingTriage(d, f)
+	writeFindingObserved(d, f)
 	writeFindingRemediation(d, f)
 }
 
@@ -326,7 +329,7 @@ func (w *FindingWriter) writeIssues(d *drawer, result *evaluation.ComplianceRepo
 		d.f("   Root cause: %s\n", strings.Join(iss.SharedKeys, ", "))
 		d.f("   Members:\n")
 		for _, fid := range iss.MemberFindingIDs {
-			if cid, aid, ok := lookupControlForFindingID(result.Findings, fid); ok {
+			if cid, aid, ok := lookupControlForFindingID(result.Findings, string(fid)); ok {
 				d.f("     - %s (%s)\n", cid, aid)
 			} else {
 				d.f("     - %s\n", fid)
@@ -396,6 +399,68 @@ func writeFindingReasoning(d *drawer, f *remediation.Finding) {
 		for _, c := range reasoning {
 			d.f("     %s\n", translation.RenderClause(c, translation.DefaultFieldRegistry))
 		}
+	}
+}
+
+// writeFindingTriage renders the authored DEFECT / INFECTION / FAILURE
+// chain — Andreas Zeller's failure-theory vocabulary applied to cloud
+// misconfigurations. Skips any section whose prose is empty; emits
+// nothing at all when all three are empty (controls not yet authored
+// for the triage chain render identically to pre-iteration output).
+func writeFindingTriage(d *drawer, f *remediation.Finding) {
+	if f.Defect == "" && f.Infection == "" && f.Failure == "" {
+		return
+	}
+	if f.Defect != "" {
+		d.f("   Defect:\n")
+		d.f("     %s\n", collapseWhitespace(f.Defect))
+	}
+	if f.Infection != "" {
+		d.f("   Infection:\n")
+		d.f("     %s\n", collapseWhitespace(f.Infection))
+	}
+	if f.Failure != "" {
+		d.f("   Failure:\n")
+		d.f("     %s\n", collapseWhitespace(f.Failure))
+	}
+}
+
+// writeFindingObserved renders the property-path / observed-value pairs
+// the predicate consulted during evaluation. Gated on triage presence:
+// emits only when the control carries authored Defect/Infection/Failure,
+// preserving byte-identical output for unauthored controls.
+func writeFindingObserved(d *drawer, f *remediation.Finding) {
+	if f.Defect == "" && f.Infection == "" && f.Failure == "" {
+		return
+	}
+	if len(f.ReasoningTrace) == 0 {
+		return
+	}
+	d.f("   Observed:\n")
+	for _, mc := range f.ReasoningTrace {
+		d.f("     %s = %s\n", mc.ObservationKey, formatObservedValue(mc.ObservedValue))
+	}
+}
+
+// collapseWhitespace normalizes multi-line YAML-folded prose (which keeps
+// trailing newlines and single-space line joins) into a single clean
+// line for text rendering.
+func collapseWhitespace(s string) string {
+	return strings.Join(strings.Fields(s), " ")
+}
+
+// formatObservedValue renders a scalar or composite observation value
+// for display alongside its property path. Strings are quoted; other
+// types use Go default formatting.
+func formatObservedValue(v any) string {
+	if v == nil {
+		return "<absent>"
+	}
+	switch t := v.(type) {
+	case string:
+		return "\"" + t + "\""
+	default:
+		return fmt.Sprint(t)
 	}
 }
 

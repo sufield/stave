@@ -73,6 +73,7 @@ type ResultDTO struct {
 	SecurityState     evaluation.SecurityState `json:"status"`
 	RiskSignals       []AtRiskItemDTO          `json:"risk_signals,omitempty"`
 	Findings          []FindingDTO             `json:"findings"`
+	ChainFindings     []risk.CompoundFinding   `json:"chain_findings,omitempty"`
 	Issues            []IssueDTO               `json:"issues,omitempty"`
 	ExceptedFindings  []ExceptedFindingDTO     `json:"excepted_findings,omitempty"`
 	RemediationGroups []RemediationGroupDTO    `json:"remediation_groups,omitempty"`

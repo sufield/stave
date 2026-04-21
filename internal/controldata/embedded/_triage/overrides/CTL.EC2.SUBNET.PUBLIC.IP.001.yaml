@@ -1,0 +1,18 @@
+control: CTL.EC2.SUBNET.PUBLIC.IP.001
+defect: >
+  The subnet's MapPublicIpOnLaunch attribute is set to true. Every
+  instance launched into this subnet automatically receives a public
+  IP address, regardless of whether the operator intended it.
+infection: >
+  Operators who launch instances into this subnet without explicitly
+  disabling public IP assignment get an unexpected public IP —
+  making the instance directly internet-reachable. The
+  misconfiguration is silent: the instance launches successfully,
+  the public IP appears in the console, but no alert fires unless
+  the operator checks. Combined with a permissive security group,
+  the instance is immediately internet-exposed.
+failure: >
+  Unintended internet exposure at launch. Instances intended for
+  private use are automatically given public IPs, bypassing the
+  assumption that instances in this subnet would be
+  network-isolated.

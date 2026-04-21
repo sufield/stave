@@ -226,7 +226,10 @@
       "scope_tags": [
         "aws",
         "s3"
-      ]
+      ],
+      "defect": "The bucket's composite storage.access.public_write state is true — via bucket ACL (WRITE or FULL_CONTROL to AllUsers or AuthenticatedUsers), via bucket policy (s3:PutObject/Delete/* to Principal \"*\"), or both. Anonymous callers can upload or delete objects.\n",
+      "infection": "Attackers upload arbitrary objects — malware, phishing pages, inflated payloads to exhaust budget, replacement versions of legitimate files — without authenticating. Object-level keys can be chosen to mimic existing content. If the bucket serves a website, CDN origin, or update channel, the attacker- uploaded content propagates to every downstream consumer automatically. Public write also enables ransomware: delete existing objects, re-upload encrypted copies, demand payment for recovery.\n",
+      "failure": "Active tampering with bucket contents: injected malicious files, ransomware encryption, or supply-chain compromise when downstream consumers fetch attacker content. Unlike public read (which is passive exposure), public write is active compromise — every new object is a potential incident and the integrity of existing objects cannot be trusted without independent verification.\n"
     },
     {
       "finding_id": "sha256:39aa8d4a21c81d37",
@@ -353,6 +356,301 @@
           }
         ],
         "action": "Replace the wildcard principal with the specific AWS account IDs or ARNs that need access, or add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, aws:SourceIp (with a fixed CIDR), or aws:SourceArn. If the bucket genuinely needs to be public (CDN origin, static asset bucket), narrow the Actions to the minimum set and keep Public Access Block enabled where compatible."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
+    },
+    {
+      "finding_id": "sha256:57cd3c51cb7f4bf1",
+      "control_id": "CTL.S3.ENCRYPT.001",
+      "control_name": "Encryption at Rest Required",
+      "control_description": "S3 buckets must have server-side encryption enabled. Unencrypted storage is the top audit finding in regulated industries.\n",
+      "asset_id": "vuln-no-encryption",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "storage.encryption.at_rest_enabled",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "storage.kind",
+            "actual_value": "bucket",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_aws_v1.4.0": "2.1.1",
+        "fedramp_moderate": "SC-28",
+        "ffiec": "ISH-4",
+        "gdpr": "Art.32",
+        "hipaa": "164.312(a)(2)(iv)",
+        "iso_27001_2022": "A.8.24",
+        "nist_800_53_r5": "SC-28",
+        "nist_csf_2.0": "PR.DS",
+        "pci_dss_v3.2.1": "3.4",
+        "pci_dss_v4.0": "3.4.1",
+        "soc2": "CC6.1"
+      },
+      "control_compliance_ccm_v4": [
+        "CEK-03"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Bucket does not have server-side encryption enabled. Objects are stored unencrypted at rest.",
+        "action": "Enable default bucket encryption using SSE-S3 (AES256) or SSE-KMS. Use aws s3api put-bucket-encryption to set the default encryption configuration. For sensitive data, use SSE-KMS with a customer-managed key.",
+        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"encryption\": {\n      \"at_rest_enabled\": true\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-380cee97b949737e",
+        "target": {
+          "asset_id": "vuln-no-encryption",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Enable default bucket encryption using SSE-S3 (AES256) or SSE-KMS. Use aws s3api put-bucket-encryption to set the default encryption configuration. For sensitive data, use SSE-KMS with a customer-managed key."
+      },
+      "chain_membership": [
+        {
+          "chain_id": "public_phi_exposure",
+          "chain_severity": "critical",
+          "stage_span": [
+            "exfiltration",
+            "detection_evasion"
+          ],
+          "narrative": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n"
+        }
+      ],
+      "exposure_score": 112.5,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1.5,
+        "days_blind": 10
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "storage.encryption.at_rest_enabled eq false",
+          "observation_key": "storage.encryption.at_rest_enabled",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "storage.kind eq \"bucket\"",
+          "observation_key": "storage.kind",
+          "operator": "eq",
+          "expected_value": "bucket",
+          "observed_value": "bucket"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "vuln-no-encryption",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.ENCRYPT.001",
+          "control_name": "Encryption at Rest Required",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "server-side encryption at rest is enabled = false",
+              "observation_key": "storage.encryption.at_rest_enabled",
+              "observed_value": false
+            },
+            {
+              "clause": "storage.kind = \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.encryption.at_rest_enabled",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set storage.encryption.at_rest_enabled to true"
+          },
+          {
+            "path": "storage.kind",
+            "current_value": "bucket",
+            "has_safe_default": false,
+            "description": "Change storage.kind from bucket"
+          }
+        ],
+        "action": "Enable default bucket encryption using SSE-S3 (AES256) or SSE-KMS. Use aws s3api put-bucket-encryption to set the default encryption configuration. For sensitive data, use SSE-KMS with a customer-managed key."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
+    },
+    {
+      "finding_id": "sha256:68d3599e7b239cd6",
+      "control_id": "CTL.S3.LOG.001",
+      "control_name": "Access Logging Required",
+      "control_description": "S3 buckets must have server access logging enabled for audit trail and visibility into data access patterns.\n",
+      "asset_id": "vuln-no-logging",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "storage.kind",
+            "actual_value": "bucket",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          },
+          {
+            "property": "storage.logging.enabled",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "cis_aws_v1.4.0": "2.1.3",
+        "fedramp_moderate": "AU-2",
+        "ffiec": "ISH-4",
+        "gdpr": "Art.30",
+        "hipaa": "164.312(b)",
+        "iso_27001_2022": "A.8.15",
+        "nist_800_53_r5": "AU-2",
+        "pci_dss_v3.2.1": "10.2.1",
+        "pci_dss_v4.0": "10.2.1.3",
+        "soc2": "CC7.2"
+      },
+      "control_compliance_ccm_v4": [
+        "LOG-12"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Bucket does not have server access logging enabled. There is no audit trail for data access patterns.",
+        "action": "Enable S3 server access logging and specify a target bucket for log delivery. Ensure the target bucket has appropriate access controls and is in the same region.",
+        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"logging\": {\n      \"enabled\": true\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-f82341e56ddb44f3",
+        "target": {
+          "asset_id": "vuln-no-logging",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Enable S3 server access logging and specify a target bucket for log delivery. Ensure the target bucket has appropriate access controls and is in the same region."
+      },
+      "chain_membership": [
+        {
+          "chain_id": "public_phi_exposure",
+          "chain_severity": "critical",
+          "stage_span": [
+            "exfiltration",
+            "detection_evasion"
+          ],
+          "narrative": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n"
+        }
+      ],
+      "exposure_score": 112.5,
+      "score_breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1.5,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1.5,
+        "days_blind": 10
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "storage.kind eq \"bucket\"",
+          "observation_key": "storage.kind",
+          "operator": "eq",
+          "expected_value": "bucket",
+          "observed_value": "bucket"
+        },
+        {
+          "predicate_expr": "storage.logging.enabled eq false",
+          "observation_key": "storage.logging.enabled",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "vuln-no-logging",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.LOG.001",
+          "control_name": "Access Logging Required",
+          "severity": "medium",
+          "reasoning": [
+            {
+              "clause": "storage.kind = \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            },
+            {
+              "clause": "access logging is enabled = false",
+              "observation_key": "storage.logging.enabled",
+              "observed_value": false
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.kind",
+            "current_value": "bucket",
+            "has_safe_default": false,
+            "description": "Change storage.kind from bucket"
+          },
+          {
+            "path": "storage.logging.enabled",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set storage.logging.enabled to true"
+          }
+        ],
+        "action": "Enable S3 server access logging and specify a target bucket for log delivery. Ensure the target bucket has appropriate access controls and is in the same region."
       },
       "classification": "state_assertion",
       "scope_tags": [
@@ -501,143 +799,6 @@
       ]
     },
     {
-      "finding_id": "sha256:57cd3c51cb7f4bf1",
-      "control_id": "CTL.S3.ENCRYPT.001",
-      "control_name": "Encryption at Rest Required",
-      "control_description": "S3 buckets must have server-side encryption enabled. Unencrypted storage is the top audit finding in regulated industries.\n",
-      "asset_id": "vuln-no-encryption",
-      "asset_type": "aws_s3_bucket",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2026-01-01T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
-        "unsafe_duration_hours": 240,
-        "threshold_hours": 168,
-        "misconfigurations": [
-          {
-            "property": "storage.encryption.at_rest_enabled",
-            "actual_value": false,
-            "operator": "eq",
-            "unsafe_value": false
-          },
-          {
-            "property": "storage.kind",
-            "actual_value": "bucket",
-            "operator": "eq",
-            "unsafe_value": "bucket"
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
-      },
-      "control_severity": "high",
-      "control_compliance": {
-        "cis_aws_v1.4.0": "2.1.1",
-        "fedramp_moderate": "SC-28",
-        "ffiec": "ISH-4",
-        "gdpr": "Art.32",
-        "hipaa": "164.312(a)(2)(iv)",
-        "iso_27001_2022": "A.8.24",
-        "nist_800_53_r5": "SC-28",
-        "nist_csf_2.0": "PR.DS",
-        "pci_dss_v3.2.1": "3.4",
-        "pci_dss_v4.0": "3.4.1",
-        "soc2": "CC6.1"
-      },
-      "control_compliance_ccm_v4": [
-        "CEK-03"
-      ],
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "Bucket does not have server-side encryption enabled. Objects are stored unencrypted at rest.",
-        "action": "Enable default bucket encryption using SSE-S3 (AES256) or SSE-KMS. Use aws s3api put-bucket-encryption to set the default encryption configuration. For sensitive data, use SSE-KMS with a customer-managed key.",
-        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"encryption\": {\n      \"at_rest_enabled\": true\n    }\n  }\n}\n"
-      },
-      "fix_plan": {
-        "id": "fix-380cee97b949737e",
-        "target": {
-          "asset_id": "vuln-no-encryption",
-          "asset_type": "aws_s3_bucket"
-        },
-        "action": "Enable default bucket encryption using SSE-S3 (AES256) or SSE-KMS. Use aws s3api put-bucket-encryption to set the default encryption configuration. For sensitive data, use SSE-KMS with a customer-managed key."
-      },
-      "exposure_score": 75,
-      "score_breakdown": {
-        "base_score": 75,
-        "duration_factor": 1,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 1,
-        "chain_bonus": 1,
-        "days_blind": 10
-      },
-      "reasoning_trace": [
-        {
-          "predicate_expr": "storage.encryption.at_rest_enabled eq false",
-          "observation_key": "storage.encryption.at_rest_enabled",
-          "operator": "eq",
-          "expected_value": false,
-          "observed_value": false
-        },
-        {
-          "predicate_expr": "storage.kind eq \"bucket\"",
-          "observation_key": "storage.kind",
-          "operator": "eq",
-          "expected_value": "bucket",
-          "observed_value": "bucket"
-        }
-      ],
-      "remediation_context": {
-        "asset": {
-          "id": "vuln-no-encryption",
-          "type": "aws_s3_bucket",
-          "vendor": "aws"
-        },
-        "violation": {
-          "control_id": "CTL.S3.ENCRYPT.001",
-          "control_name": "Encryption at Rest Required",
-          "severity": "high",
-          "reasoning": [
-            {
-              "clause": "server-side encryption at rest is enabled = false",
-              "observation_key": "storage.encryption.at_rest_enabled",
-              "observed_value": false
-            },
-            {
-              "clause": "storage.kind = \"bucket\"",
-              "observation_key": "storage.kind",
-              "observed_value": "bucket"
-            }
-          ]
-        },
-        "changes": [
-          {
-            "path": "storage.encryption.at_rest_enabled",
-            "current_value": "false",
-            "required_value": "true",
-            "has_safe_default": true,
-            "description": "Set storage.encryption.at_rest_enabled to true"
-          },
-          {
-            "path": "storage.kind",
-            "current_value": "bucket",
-            "has_safe_default": false,
-            "description": "Change storage.kind from bucket"
-          }
-        ],
-        "action": "Enable default bucket encryption using SSE-S3 (AES256) or SSE-KMS. Use aws s3api put-bucket-encryption to set the default encryption configuration. For sensitive data, use SSE-KMS with a customer-managed key."
-      },
-      "classification": "state_assertion",
-      "scope_tags": [
-        "aws",
-        "s3"
-      ]
-    },
-    {
       "finding_id": "sha256:18b53853355a91aa",
       "control_id": "CTL.S3.ENCRYPT.002",
       "control_name": "Transport Encryption Required",
@@ -776,142 +937,6 @@
       ]
     },
     {
-      "finding_id": "sha256:68d3599e7b239cd6",
-      "control_id": "CTL.S3.LOG.001",
-      "control_name": "Access Logging Required",
-      "control_description": "S3 buckets must have server access logging enabled for audit trail and visibility into data access patterns.\n",
-      "asset_id": "vuln-no-logging",
-      "asset_type": "aws_s3_bucket",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2026-01-01T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
-        "unsafe_duration_hours": 240,
-        "threshold_hours": 168,
-        "misconfigurations": [
-          {
-            "property": "storage.kind",
-            "actual_value": "bucket",
-            "operator": "eq",
-            "unsafe_value": "bucket"
-          },
-          {
-            "property": "storage.logging.enabled",
-            "actual_value": false,
-            "operator": "eq",
-            "unsafe_value": false
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
-      },
-      "control_severity": "medium",
-      "control_compliance": {
-        "cis_aws_v1.4.0": "2.1.3",
-        "fedramp_moderate": "AU-2",
-        "ffiec": "ISH-4",
-        "gdpr": "Art.30",
-        "hipaa": "164.312(b)",
-        "iso_27001_2022": "A.8.15",
-        "nist_800_53_r5": "AU-2",
-        "pci_dss_v3.2.1": "10.2.1",
-        "pci_dss_v4.0": "10.2.1.3",
-        "soc2": "CC7.2"
-      },
-      "control_compliance_ccm_v4": [
-        "LOG-12"
-      ],
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "Bucket does not have server access logging enabled. There is no audit trail for data access patterns.",
-        "action": "Enable S3 server access logging and specify a target bucket for log delivery. Ensure the target bucket has appropriate access controls and is in the same region.",
-        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"logging\": {\n      \"enabled\": true\n    }\n  }\n}\n"
-      },
-      "fix_plan": {
-        "id": "fix-f82341e56ddb44f3",
-        "target": {
-          "asset_id": "vuln-no-logging",
-          "asset_type": "aws_s3_bucket"
-        },
-        "action": "Enable S3 server access logging and specify a target bucket for log delivery. Ensure the target bucket has appropriate access controls and is in the same region."
-      },
-      "exposure_score": 75,
-      "score_breakdown": {
-        "base_score": 50,
-        "duration_factor": 1,
-        "blast_multiplier": 1.5,
-        "exposure_multiplier": 1,
-        "chain_bonus": 1,
-        "days_blind": 10
-      },
-      "reasoning_trace": [
-        {
-          "predicate_expr": "storage.kind eq \"bucket\"",
-          "observation_key": "storage.kind",
-          "operator": "eq",
-          "expected_value": "bucket",
-          "observed_value": "bucket"
-        },
-        {
-          "predicate_expr": "storage.logging.enabled eq false",
-          "observation_key": "storage.logging.enabled",
-          "operator": "eq",
-          "expected_value": false,
-          "observed_value": false
-        }
-      ],
-      "remediation_context": {
-        "asset": {
-          "id": "vuln-no-logging",
-          "type": "aws_s3_bucket",
-          "vendor": "aws"
-        },
-        "violation": {
-          "control_id": "CTL.S3.LOG.001",
-          "control_name": "Access Logging Required",
-          "severity": "medium",
-          "reasoning": [
-            {
-              "clause": "storage.kind = \"bucket\"",
-              "observation_key": "storage.kind",
-              "observed_value": "bucket"
-            },
-            {
-              "clause": "access logging is enabled = false",
-              "observation_key": "storage.logging.enabled",
-              "observed_value": false
-            }
-          ]
-        },
-        "changes": [
-          {
-            "path": "storage.kind",
-            "current_value": "bucket",
-            "has_safe_default": false,
-            "description": "Change storage.kind from bucket"
-          },
-          {
-            "path": "storage.logging.enabled",
-            "current_value": "false",
-            "required_value": "true",
-            "has_safe_default": true,
-            "description": "Set storage.logging.enabled to true"
-          }
-        ],
-        "action": "Enable S3 server access logging and specify a target bucket for log delivery. Ensure the target bucket has appropriate access controls and is in the same region."
-      },
-      "classification": "state_assertion",
-      "scope_tags": [
-        "aws",
-        "s3"
-      ]
-    },
-    {
       "finding_id": "sha256:56aadad096a67670",
       "control_id": "CTL.S3.VERSION.001",
       "control_name": "Versioning Required",
@@ -1042,6 +1067,27 @@
       ]
     }
   ],
+  "chain_findings": [
+    {
+      "chain": "public_phi_exposure",
+      "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n",
+      "controls_failing": [
+        "CTL.S3.ENCRYPT.001",
+        "CTL.S3.LOG.001"
+      ],
+      "missing_safeguards": [
+        "CTL.S3.PUBLIC.001",
+        "CTL.CLOUDTRAIL.DATAREAD.001"
+      ],
+      "compound_score": 90,
+      "severity": "critical",
+      "narrative": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n Failing: CTL.S3.ENCRYPT.001, CTL.S3.LOG.001.",
+      "attack_stages": [
+        "detection_evasion",
+        "exfiltration"
+      ]
+    }
+  ],
   "issues": [
     {
       "issue_id": "sha256:d9c86e62f54ab81e",
@@ -1072,20 +1118,6 @@
       "consolidated_blast_radius": 1
     },
     {
-      "issue_id": "sha256:3947f01adca0f9b7",
-      "asset_id": "vuln-cross-account",
-      "shared_keys": [
-        "storage.access",
-        "storage.access.external_account_ids"
-      ],
-      "headline_finding_id": "sha256:447b517eb02e207e",
-      "member_finding_ids": [
-        "sha256:447b517eb02e207e"
-      ],
-      "consolidated_score": 75,
-      "consolidated_blast_radius": 1
-    },
-    {
       "issue_id": "sha256:5b7c88584f1dc965",
       "asset_id": "vuln-no-encryption",
       "shared_keys": [
@@ -1095,6 +1127,34 @@
       "headline_finding_id": "sha256:57cd3c51cb7f4bf1",
       "member_finding_ids": [
         "sha256:57cd3c51cb7f4bf1"
+      ],
+      "consolidated_score": 112.5,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:465c05cc64c70a7f",
+      "asset_id": "vuln-no-logging",
+      "shared_keys": [
+        "storage.logging",
+        "storage.logging.enabled"
+      ],
+      "headline_finding_id": "sha256:68d3599e7b239cd6",
+      "member_finding_ids": [
+        "sha256:68d3599e7b239cd6"
+      ],
+      "consolidated_score": 112.5,
+      "consolidated_blast_radius": 1.5
+    },
+    {
+      "issue_id": "sha256:3947f01adca0f9b7",
+      "asset_id": "vuln-cross-account",
+      "shared_keys": [
+        "storage.access",
+        "storage.access.external_account_ids"
+      ],
+      "headline_finding_id": "sha256:447b517eb02e207e",
+      "member_finding_ids": [
+        "sha256:447b517eb02e207e"
       ],
       "consolidated_score": 75,
       "consolidated_blast_radius": 1
@@ -1112,20 +1172,6 @@
       ],
       "consolidated_score": 75,
       "consolidated_blast_radius": 1
-    },
-    {
-      "issue_id": "sha256:465c05cc64c70a7f",
-      "asset_id": "vuln-no-logging",
-      "shared_keys": [
-        "storage.logging",
-        "storage.logging.enabled"
-      ],
-      "headline_finding_id": "sha256:68d3599e7b239cd6",
-      "member_finding_ids": [
-        "sha256:68d3599e7b239cd6"
-      ],
-      "consolidated_score": 75,
-      "consolidated_blast_radius": 1.5
     },
     {
       "issue_id": "sha256:0a1ce63c04e7e282",
@@ -1315,24 +1361,39 @@
       "silent_killer": false
     },
     {
-      "finding_index": 0,
-      "control_id": "CTL.S3.ACCESS.001",
-      "asset_id": "vuln-cross-account",
-      "exposure_score": 75,
+      "finding_index": 2,
+      "control_id": "CTL.S3.ENCRYPT.001",
+      "asset_id": "vuln-no-encryption",
+      "exposure_score": 112.5,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
-        "chain_bonus": 1,
+        "chain_bonus": 1.5,
         "days_blind": 10
       },
       "silent_killer": false
     },
     {
-      "finding_index": 2,
-      "control_id": "CTL.S3.ENCRYPT.001",
-      "asset_id": "vuln-no-encryption",
+      "finding_index": 4,
+      "control_id": "CTL.S3.LOG.001",
+      "asset_id": "vuln-no-logging",
+      "exposure_score": 112.5,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1.5,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1.5,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 0,
+      "control_id": "CTL.S3.ACCESS.001",
+      "asset_id": "vuln-cross-account",
       "exposure_score": 75,
       "breakdown": {
         "base_score": 75,
@@ -1353,21 +1414,6 @@
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
-        "exposure_multiplier": 1,
-        "chain_bonus": 1,
-        "days_blind": 10
-      },
-      "silent_killer": false
-    },
-    {
-      "finding_index": 4,
-      "control_id": "CTL.S3.LOG.001",
-      "asset_id": "vuln-no-logging",
-      "exposure_score": 75,
-      "breakdown": {
-        "base_score": 50,
-        "duration_factor": 1,
-        "blast_multiplier": 1.5,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
         "days_blind": 10
@@ -1483,8 +1529,11 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "ab547939e47c809219c51ab1e17466440e85f3fa",
-      "dirty": false
+      "head_commit": "8fddb4857c80faf46de90a635f56d2e0659353e8",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-s3-deep-checks/controls/CTL.S3.PUBLIC.003.yaml"
+      ]
     }
   }
 }

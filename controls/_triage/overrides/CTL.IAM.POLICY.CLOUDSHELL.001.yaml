@@ -1,0 +1,17 @@
+control: CTL.IAM.POLICY.CLOUDSHELL.001
+defect: >
+  The AWSCloudShellFullAccess managed policy is attached to IAM
+  entities that do not require browser-based shell access.
+infection: >
+  CloudShell provides a pre-authenticated browser-based terminal
+  with the caller's IAM credentials, network access to public
+  endpoints, and persistent storage. It bypasses network-level
+  controls (VPN requirements, IP allowlists, VPC restrictions)
+  because it runs in AWS-managed infrastructure outside the
+  customer's VPC. An attacker with console access to a
+  CloudShell-enabled principal gets an unrestricted shell without
+  setting up their own execution environment.
+failure: >
+  Network control bypass. An attacker with console access gains a
+  shell that operates outside the organization's network perimeter,
+  bypassing IP restrictions and VPC-based segmentation.

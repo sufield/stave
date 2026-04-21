@@ -1,0 +1,17 @@
+control: CTL.IAM.POLICY.ESCALATION.001
+defect: >
+  The IAM entity has policies granting the ability to modify, create,
+  or attach policies to its own role or user — specifically
+  iam:CreatePolicyVersion, iam:AttachRolePolicy, or
+  iam:PutRolePolicy scoped to self.
+infection: >
+  A compromised identity can grant itself full admin access without
+  needing any other vulnerability or permission. The
+  self-modification capability means the initial compromise is also
+  the final escalation — there is no privilege boundary between the
+  compromised state and admin. The self-modify pattern is the common
+  root of the specific ESCALATE techniques.
+failure: >
+  Self-service privilege escalation to admin. The compromised
+  identity can grant itself any permission, collapsing the account's
+  privilege separation.

@@ -1,0 +1,5 @@
+family: CTL.CLOUDTRAIL
+infection: >
+  CloudTrail misconfigurations create gaps in the audit trail. Missing trails, disabled logging, or absent log validation allow an attacker to operate without generating audit records — or to tamper with existing records without detection.
+failure: >
+  Audit trail gap. Security-relevant API activity is not recorded or recorded logs cannot be trusted, undermining incident investigation and compliance evidence.

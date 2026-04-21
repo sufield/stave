@@ -1,0 +1,15 @@
+control: CTL.IAM.ROOT.ACCESSKEY.001
+defect: >
+  The AWS root account has active access keys. Root access keys
+  provide unrestricted programmatic access that cannot be scoped or
+  constrained by IAM policies.
+infection: >
+  Root access keys bypass all IAM controls — SCPs, permission
+  boundaries, and session policies do not apply. A leaked root access
+  key provides full, irrevocable programmatic control over the entire
+  AWS account. Unlike IAM user keys, root keys cannot be restricted
+  to specific services, resources, or conditions.
+failure: >
+  Unrestricted account compromise. A leaked root access key gives
+  the attacker full control over every resource, identity, and
+  billing configuration in the account.

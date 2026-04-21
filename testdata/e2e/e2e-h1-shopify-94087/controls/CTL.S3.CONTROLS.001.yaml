@@ -26,6 +26,33 @@ scope_tags:
   - s3
 type: unsafe_state
 classification: state_assertion
+defect: >
+  The bucket's Public Access Block is not fully enabled — at
+  least one of BlockPublicAcls, IgnorePublicAcls,
+  BlockPublicPolicy, RestrictPublicBuckets is disabled. The
+  bucket has no catch-all defense against a future ACL or
+  policy change that would expose content publicly.
+infection: >
+  PAB is a defense-in-depth control: even if the bucket is
+  currently private, any subsequent change to the bucket
+  policy or ACL can make it public with no intermediate
+  warning. PAB, when fully enabled, rejects the change at
+  configuration time — the AWS API returns an error rather
+  than accepting the unsafe policy. Without PAB, operators
+  performing routine maintenance or automation running at
+  scale can accidentally flip a bucket public. Audit trails
+  attribute the exposure to the operator or script, not to
+  the absent safety net, so investigations often miss that
+  PAB-on-everywhere would have prevented the incident.
+failure: >
+  Future accidental exposure through routine bucket changes.
+  The bucket is not currently public, so this control is
+  preventive, not reactive — the failure it describes is
+  whatever would happen if an unrelated configuration change
+  made the bucket public. Enabling PAB eliminates the class
+  entirely for this bucket regardless of which mechanism
+  (ACL, policy, future API surface) would otherwise have
+  opened the exposure.
 params:
   attack_stage: initial_access
 remediation:

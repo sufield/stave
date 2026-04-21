@@ -1,0 +1,16 @@
+control: CTL.IAM.CRED.RECUR.001
+defect: >
+  IAM user console password has been disabled and re-enabled more
+  than once in 30 days. The credential lifecycle is oscillating
+  between active and inactive states.
+infection: >
+  Password lifecycle manipulation — disable, re-enable, repeat —
+  matches the pattern of an attacker maintaining persistence through
+  credential events. Each re-enable restores access after what
+  appeared to be a revocation. The oscillation may indicate a
+  compromised automated process or an attacker racing the incident
+  response team.
+failure: >
+  Persistence through credential lifecycle manipulation. Access that
+  appears to be revoked is being restored repeatedly, defeating
+  credential-based incident response.

@@ -1,0 +1,5 @@
+family: CTL.SQS
+infection: >
+  SQS misconfigurations expose message queues to unauthorized access. Overly permissive queue policies, missing encryption, or absent dead-letter queue configurations allow attackers to read, inject, or delete messages in processing pipelines.
+failure: >
+  Message queue compromise. SQS queue contents are accessible to unauthorized principals, enabling data interception, message injection, or processing disruption.

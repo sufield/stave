@@ -16,6 +16,30 @@ scope_tags:
   - s3
 type: unsafe_state
 classification: state_assertion
+defect: >
+  The bucket's composite storage.access.public_write state is
+  true — via bucket ACL (WRITE or FULL_CONTROL to AllUsers or
+  AuthenticatedUsers), via bucket policy (s3:PutObject/Delete/*
+  to Principal "*"), or both. Anonymous callers can upload or
+  delete objects.
+infection: >
+  Attackers upload arbitrary objects — malware, phishing pages,
+  inflated payloads to exhaust budget, replacement versions of
+  legitimate files — without authenticating. Object-level keys
+  can be chosen to mimic existing content. If the bucket serves
+  a website, CDN origin, or update channel, the attacker-
+  uploaded content propagates to every downstream consumer
+  automatically. Public write also enables ransomware: delete
+  existing objects, re-upload encrypted copies, demand payment
+  for recovery.
+failure: >
+  Active tampering with bucket contents: injected malicious
+  files, ransomware encryption, or supply-chain compromise
+  when downstream consumers fetch attacker content. Unlike
+  public read (which is passive exposure), public write is
+  active compromise — every new object is a potential incident
+  and the integrity of existing objects cannot be trusted
+  without independent verification.
 params:
   attack_stage: initial_access
 remediation:

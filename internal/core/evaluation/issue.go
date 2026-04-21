@@ -5,10 +5,10 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"slices"
-	"sort"
 	"strings"
 
 	"github.com/sufield/stave/internal/core/asset"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // Issue consolidates findings on the same asset that share a root-cause
@@ -39,12 +39,14 @@ type Issue struct {
 	// HeadlineFindingID is the FindingID of the highest-scored
 	// member — the finding that best represents the Issue in
 	// single-line summaries.
-	HeadlineFindingID string `json:"headline_finding_id"`
+	HeadlineFindingID kernel.FindingID `json:"headline_finding_id"`
 
 	// MemberFindingIDs lists every member finding's FindingID,
 	// sorted lexicographically. Consumers cross-reference findings[]
-	// for full detail.
-	MemberFindingIDs []string `json:"member_finding_ids"`
+	// for full detail. Typed so consumers can compare directly with
+	// Finding.FindingID values (e.g. via slices.Contains) without
+	// string casts.
+	MemberFindingIDs []kernel.FindingID `json:"member_finding_ids"`
 
 	// ConsolidatedScore is the maximum ExposureScore across members,
 	// not the sum — Issues should not inflate priority beyond what
@@ -54,6 +56,12 @@ type Issue struct {
 	// ConsolidatedBlastRadius is the maximum blast multiplier across
 	// members, preserving the shape of the most impactful member.
 	ConsolidatedBlastRadius float64 `json:"consolidated_blast_radius"`
+}
+
+// IsConsolidated reports whether the Issue groups multiple findings.
+// Domain question: does this Issue consolidate more than one finding?
+func (i Issue) IsConsolidated() bool {
+	return len(i.MemberFindingIDs) > 1
 }
 
 // discriminatorKeys are never included in the root-cause key set.
@@ -228,14 +236,14 @@ func overlap(a, b map[string]struct{}) bool {
 // finding indices.
 func buildIssue(assetID asset.ID, memberIndices []int, findings []Finding) Issue {
 	// Collect member IDs + find the headline (max score).
-	memberIDs := make([]string, 0, len(memberIndices))
+	memberIDs := make([]kernel.FindingID, 0, len(memberIndices))
 	sharedSet := make(map[string]struct{})
 	var headlineIdx int
 	var headlineScore float64
 	var maxBlast float64
 	for i, idx := range memberIndices {
 		f := &findings[idx]
-		memberIDs = append(memberIDs, f.FindingID)
+		memberIDs = append(memberIDs, kernel.FindingID(f.FindingID))
 		for k := range rootCauseKeys(f.ReasoningTrace) {
 			sharedSet[k] = struct{}{}
 		}
@@ -247,18 +255,18 @@ func buildIssue(assetID asset.ID, memberIndices []int, findings []Finding) Issue
 			maxBlast = f.ScoreBreakdown.BlastMultiplier
 		}
 	}
-	sort.Strings(memberIDs)
+	slices.Sort(memberIDs)
 	shared := make([]string, 0, len(sharedSet))
 	for k := range sharedSet {
 		shared = append(shared, k)
 	}
-	sort.Strings(shared)
+	slices.Sort(shared)
 
 	return Issue{
 		IssueID:                 stableIssueID(assetID, shared, findings[headlineIdx].ControlID.String()),
 		AssetID:                 assetID,
 		SharedKeys:              shared,
-		HeadlineFindingID:       findings[headlineIdx].FindingID,
+		HeadlineFindingID:       kernel.FindingID(findings[headlineIdx].FindingID),
 		MemberFindingIDs:        memberIDs,
 		ConsolidatedScore:       headlineScore,
 		ConsolidatedBlastRadius: maxBlast,

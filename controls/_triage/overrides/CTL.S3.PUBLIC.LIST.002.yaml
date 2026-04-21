@@ -1,0 +1,29 @@
+control: CTL.S3.PUBLIC.LIST.002
+defect: >
+  The bucket grants s3:ListBucket to an anonymous or wildcard
+  principal (public_list = true) without the
+  public_list_intended tag set to true. The catalog treats
+  intentional listing as acceptable (for software download
+  mirrors, archives, and documented-public catalogs) — absence
+  of the tag means listing is almost certainly unintended.
+infection: >
+  Anonymous callers can enumerate every object key in the
+  bucket via a single API call. Enumeration is the step
+  attackers most often lack when objects themselves are
+  publicly readable but unlisted — without a key, a plain
+  public-read bucket is safer than its ACL suggests. Public
+  list removes that obscurity, converting "attackers must
+  guess keys" into "attackers pull the manifest." Automated
+  scanners specifically enumerate bucket contents via
+  list-bucket and archive the manifest even if individual
+  objects are not immediately readable.
+failure: >
+  Catalog exfiltration. Every object's key, size, modification
+  time, and (often) content hash becomes attacker-known. If
+  some objects are additionally public-readable, those become
+  mass-harvestable via list-then-get. If objects are not
+  public-readable, the manifest still discloses data-
+  classification metadata (filenames often reveal sensitivity),
+  business operations (backup cadence, batch-job naming), and
+  organizational structure (folder layouts mirroring team
+  hierarchies).

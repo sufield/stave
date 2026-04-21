@@ -1,0 +1,17 @@
+control: CTL.EC2.PUBLIC.001
+defect: >
+  The EC2 instance has a public IP address assigned, making it
+  directly reachable from the internet without traversing a load
+  balancer, NAT gateway, or other network boundary.
+infection: >
+  The instance is exposed to the full spectrum of internet-
+  originated attacks — port scanning, credential brute-forcing,
+  vulnerability exploitation — on every port permitted by its
+  security group. Any service listening on a permitted port is
+  directly addressable. The attack surface includes not just the
+  intended application but every daemon and listener on the
+  instance.
+failure: >
+  Direct internet exposure. The instance is reachable from any
+  internet address, bypassing network perimeter controls that would
+  otherwise limit the blast radius of a successful exploit.

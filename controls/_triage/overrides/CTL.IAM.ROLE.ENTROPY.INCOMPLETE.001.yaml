@@ -1,0 +1,15 @@
+control: CTL.IAM.ROLE.ENTROPY.INCOMPLETE.001
+defect: >
+  The observation snapshot is missing Access Advisor data, permission
+  policy inventory, or tag inventory for this role. The extractor
+  did not collect the data required for entitlement entropy
+  assessment.
+infection: >
+  Without this data, permission drift, category mixing, and intent
+  mismatch controls cannot evaluate this role. The role's entitlement
+  posture is unknown — any drift or miscategorization is invisible
+  to the evaluation pipeline.
+failure: >
+  Assessment blind spot. The role's permission hygiene cannot be
+  determined until the extractor is re-run with the required IAM
+  permissions.

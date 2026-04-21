@@ -27,6 +27,28 @@ scope_tags:
   - iam
 type: unsafe_state
 classification: state_assertion
+defect: >
+  The principal's resolved net effective permissions include at least
+  one action that enables privilege escalation — for example
+  iam:AttachRolePolicy, iam:CreateRole, iam:PassRole on an unscoped
+  resource, or a transitive sts:AssumeRole path to a higher-privileged
+  role. The escalation is present in the policy graph even if the
+  individual statements don't look dangerous in isolation.
+infection: >
+  Any compromise of this principal becomes a compromise of every
+  privilege the escalation path can reach. An attacker with code
+  execution in a service running under this identity (a Lambda, an
+  EC2 instance, a CI runner, a human-assumed role) exercises the
+  escalation primitive and mints themselves broader credentials in a
+  single IAM call. For direct primitives, one API call crosses the
+  privilege boundary. For transitive chains, a short sequence of
+  assume-role calls does the same.
+failure: >
+  Credential-boundary collapse. The account's intended privilege
+  separation (dev vs. prod, service vs. admin) no longer holds for
+  any attacker who reaches this principal. Post-incident forensics
+  typically show a single initial compromise expanding to admin-
+  equivalent authority within minutes of discovery.
 params:
   attack_stage: privilege_escalation
 remediation:

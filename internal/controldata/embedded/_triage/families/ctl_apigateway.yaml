@@ -1,0 +1,5 @@
+family: CTL.APIGATEWAY
+infection: >
+  API Gateway misconfigurations expose backend services to unauthorized callers. Missing authentication, overly permissive authorization, or absent rate limiting allow attackers to enumerate, abuse, or overwhelm the API's backend resources.
+failure: >
+  Unauthorized API access. Backend services are reachable by unauthorized callers, enabling data exfiltration, abuse, or denial of service through the API layer.

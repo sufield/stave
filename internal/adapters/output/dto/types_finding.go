@@ -40,6 +40,9 @@ type FindingDTO struct {
 	Alternatives         []AlternativeDTO          `json:"alternatives,omitempty"`
 	Classification       string                    `json:"classification,omitempty"`
 	ScopeTags            []string                  `json:"scope_tags,omitempty"`
+	Defect               string                    `json:"defect,omitempty"`
+	Infection            string                    `json:"infection,omitempty"`
+	Failure              string                    `json:"failure,omitempty"`
 }
 
 // AlternativeDTO mirrors controldef.Alternative for JSON output.

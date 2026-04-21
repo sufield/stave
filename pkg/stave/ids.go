@@ -29,9 +29,18 @@ type ScopeTag = kernel.ScopeTag
 
 // FindingID is the stable per-(control, asset) fingerprint the
 // evaluation engine emits. See [evaluation.StableFindingID] for the
-// derivation. Declared as its own string type so the library's
-// shape is clear to consumers.
-type FindingID string
+// derivation. Aliased from the internal kernel package so consumers
+// can compare values from Finding.FindingID with elements of
+// Issue.MemberFindingIDs (e.g. via [slices.Contains]) without
+// string casts.
+type FindingID = kernel.FindingID
+
+// ChainID identifies a compound-risk chain definition (e.g.
+// "privilege_escalation_path"). Aliased from the internal kernel
+// package so consumers can compare values from ChainFinding.ChainID
+// with elements of Finding.ChainMembership[i].ChainID without string
+// casts.
+type ChainID = kernel.ChainID
 
 // Classification marks a control's semantic evaluation role.
 // Aliased from the internal controldef package.

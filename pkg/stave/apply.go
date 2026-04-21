@@ -17,6 +17,7 @@ import (
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/coverage"
+	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/ports"
 	"github.com/sufield/stave/internal/core/usecase"
@@ -46,8 +47,9 @@ func Apply(ctx context.Context, cfg Config) (*Assessment, error) {
 		ObservationsDir:   cfg.SnapshotsDir,
 		MaxUnsafeDuration: formatDuration(cfg.MaxUnsafe),
 		NowTime:           formatTime(cfg.Now),
+		AllowUnknownInput: cfg.AllowUnknownInput,
 	}
-	deps := usecase.ApplyDeps{Runner: &workflowRunner{}}
+	deps := usecase.ApplyDeps{Runner: &workflowRunner{chainsDir: cfg.ChainsDir}}
 
 	resp, err := usecase.Apply(ctx, req, deps)
 	if err != nil {
@@ -74,7 +76,15 @@ type evaluationResult struct {
 // the production [appeval.AuditWorkflow]. It is the first (and
 // currently only) production implementation of the port; the CLI
 // bypasses usecase.Apply and calls the workflow directly.
-type workflowRunner struct{}
+//
+// chainsDir is a library-path-specific field not present on
+// ApplyRequest — the CLI path loads chains from a hardcoded "chains"
+// directory relative to the project root; the library requires an
+// explicit Config.ChainsDir so calls from any working directory work
+// correctly.
+type workflowRunner struct {
+	chainsDir string
+}
 
 func (r *workflowRunner) RunEvaluation(ctx context.Context, req usecase.ApplyRequest) (usecase.ApplyResponse, error) {
 	controls, ctlRepo, err := resolveControls(req.ControlsDir)
@@ -101,6 +111,11 @@ func (r *workflowRunner) RunEvaluation(ctx context.Context, req usecase.ApplyReq
 		PolicyRepo:      ctlRepo,
 	}
 
+	chainDefs, err := loadChainDefs(r.chainsDir)
+	if err != nil {
+		return usecase.ApplyResponse{}, fmt.Errorf("load chains: %w", err)
+	}
+
 	cfg := appeval.AssessmentConfig{
 		ObservationConfig: appeval.ObservationConfig{
 			PolicySource:      req.ControlsDir,
@@ -108,6 +123,7 @@ func (r *workflowRunner) RunEvaluation(ctx context.Context, req usecase.ApplyReq
 			AcceptUnknownData: req.AllowUnknownInput,
 			ActivePolicies:    controls,
 		},
+		ChainDefs:       chainDefs,
 		SLAThreshold:    sla,
 		Clock:           clock,
 		Hasher:          crypto.NewHasher(),
@@ -128,6 +144,17 @@ func (r *workflowRunner) RunEvaluation(ctx context.Context, req usecase.ApplyReq
 		EvaluationData: &evaluationResult{Report: &report, Controls: controls},
 		HasViolations:  len(report.Findings) > 0,
 	}, nil
+}
+
+// loadChainDefs loads chain definitions from dir. Empty dir returns
+// nil (chain detection silently disabled). Missing dir returns nil
+// with no error — adopters who haven't opted into chain detection
+// shouldn't be blocked by the absence of a chains/ directory.
+func loadChainDefs(dir string) ([]policy.ChainDefinition, error) {
+	if dir == "" {
+		return nil, nil
+	}
+	return ctlyaml.LoadChains(dir)
 }
 
 // resolveControls loads the control set used by the evaluation.
@@ -206,10 +233,25 @@ func buildAssessment(report *evaluation.ComplianceReport, controls []policy.Cont
 			ExposedResources: report.Summary.ExposedResources,
 			Violations:       report.Summary.Violations,
 		},
-		Findings: convertFindings(report.Findings),
-		Issues:   report.Issues,
-		Coverage: buildCoverage(controls),
+		Findings:      convertFindings(report.Findings),
+		Issues:        report.Issues,
+		Coverage:      buildCoverage(controls),
+		ChainFindings: convertChainFindings(report.ChainFindings),
 	}
+}
+
+// convertChainFindings copies compound-finding records from the
+// internal report into the library's typed ChainFinding slice,
+// applying ChainID typing at the boundary.
+func convertChainFindings(cfs []risk.CompoundFinding) []ChainFinding {
+	if len(cfs) == 0 {
+		return nil
+	}
+	out := make([]ChainFinding, len(cfs))
+	for i := range cfs {
+		out[i] = convertCompoundFinding(&cfs[i])
+	}
+	return out
 }
 
 func convertFindings(fs []evaluation.Finding) []Finding {
@@ -233,8 +275,27 @@ func convertFinding(f *evaluation.Finding) Finding {
 		ControlCompliance: convertCompliance(f.ControlCompliance),
 		Remediation:       convertRemediation(f),
 		ReasoningTrace:    f.ReasoningTrace,
+		ChainMembership:   convertChainMembership(f.ChainMembership),
+		ChainBonus:        chainBonusFromBreakdown(f),
 		ExposureScore:     f.ExposureScore,
+		Defect:            f.Defect,
+		Infection:         f.Infection,
+		Failure:           f.Failure,
 	}
+}
+
+// chainBonusFromBreakdown reads the chain-bonus multiplier off the
+// internal finding's ScoreBreakdown. Default 1.0 when the breakdown
+// hasn't been populated (pre-enrichment findings) or when the finding
+// doesn't belong to any chain.
+func chainBonusFromBreakdown(f *evaluation.Finding) float64 {
+	if f.ScoreBreakdown == nil {
+		return 1.0
+	}
+	if f.ScoreBreakdown.ChainBonus == 0 {
+		return 1.0
+	}
+	return f.ScoreBreakdown.ChainBonus
 }
 
 func convertCompliance(m policy.ComplianceMapping) map[string]string {

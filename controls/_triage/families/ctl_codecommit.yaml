@@ -1,0 +1,5 @@
+family: CTL.CODECOMMIT
+infection: >
+  CodeCommit repository misconfigurations expose source code and embedded secrets to unauthorized principals. Overly broad repository policies or missing encryption allow read access to infrastructure definitions, application code, and frequently embedded credentials.
+failure: >
+  Source code and credential exposure. Repository contents including application logic, infrastructure definitions, and embedded secrets are accessible to unauthorized principals.

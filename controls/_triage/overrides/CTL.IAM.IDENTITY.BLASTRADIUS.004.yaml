@@ -1,0 +1,14 @@
+control: CTL.IAM.IDENTITY.BLASTRADIUS.004
+defect: >
+  The IAM role can reach more than 20 resources classified as
+  sensitive (PHI, PII, confidential) through its attached and
+  inline policies.
+infection: >
+  Sensitive resource access concentrates the highest-impact data in
+  a single credential's blast radius. A role that reaches 85 PHI
+  resources is qualitatively different from one that reaches 5 —
+  the data exposure from credential compromise scales linearly with
+  the sensitive resource count.
+failure: >
+  Concentrated sensitive data exposure. Credential compromise exposes
+  a disproportionate volume of PHI, PII, or confidential data.

@@ -1,0 +1,16 @@
+control: CTL.IAM.POLICY.PASSROLE.001
+defect: >
+  The IAM entity has iam:PassRole with wildcard Resource "*" —
+  permitting the principal to pass any role in the account to any
+  AWS service.
+infection: >
+  With wildcard PassRole, an attacker can pass any highly-privileged
+  role — including admin roles — to services they control (Lambda,
+  EC2, Glue, CloudFormation). The passed role's permissions become
+  available to the attacker through the service's execution
+  environment. This single wildcard grant enables every PassRole-
+  based escalation technique in the ESCALATE family.
+failure: >
+  Privilege escalation via any service that accepts a role. The
+  attacker can elevate to any role in the account by passing it to
+  a service they can invoke.

@@ -1,0 +1,5 @@
+family: CTL.GUARDDUTY
+infection: >
+  GuardDuty misconfigurations disable threat detection capabilities. Missing detector activation, absent member account coverage, or suppressed finding types mean active threats — credential compromise, unusual API activity, crypto-mining — occur without generating security findings.
+failure: >
+  Threat detection gap. Active security threats occur without GuardDuty generating findings, delaying or preventing incident detection.

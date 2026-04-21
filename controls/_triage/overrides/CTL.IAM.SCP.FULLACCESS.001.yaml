@@ -1,0 +1,15 @@
+control: CTL.IAM.SCP.FULLACCESS.001
+defect: >
+  The AWS Organization relies solely on the default FullAWSAccess
+  SCP with no restrictive policies applied to organizational units.
+infection: >
+  Without restrictive SCPs, every member account can use every AWS
+  service and perform every action that IAM permits. There are no
+  organizational guardrails — no service restrictions, no region
+  limitations, no dangerous-action denials. The organization's
+  security posture depends entirely on individual account IAM
+  policies, which vary in quality.
+failure: >
+  No organizational security boundary. Member accounts have no
+  centralized restrictions, and any IAM misconfiguration in any
+  account is unrestricted by organizational policy.

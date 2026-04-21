@@ -1,0 +1,5 @@
+family: CTL.OPENSEARCH
+infection: >
+  OpenSearch misconfigurations expose search indices and stored data. Missing encryption, public domain endpoints, absent fine-grained access control, or permissive resource policies allow unauthorized principals to query, modify, or delete indexed data.
+failure: >
+  Search index data exposure. OpenSearch domain contents — including indexed logs, application data, and potentially PII — are accessible to unauthorized parties.

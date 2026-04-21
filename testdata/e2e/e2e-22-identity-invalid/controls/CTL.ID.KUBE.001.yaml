@@ -6,6 +6,26 @@ description: |
 type: unsafe_state
 classification: state_assertion
 severity: critical
+defect: >
+  A ClusterRoleBinding references the built-in cluster-admin
+  ClusterRole, which grants every verb on every resource across
+  every namespace. The binding's subject (user, group, or service
+  account) holds unconstrained authority over the cluster.
+infection: >
+  Any actor using the bound identity — a compromised service
+  account token, a stolen user credential, a misconfigured
+  continuous-delivery runner — exercises cluster-admin authority
+  without further authorization checks. A single `kubectl`
+  invocation or API call can modify every workload, read every
+  secret, or schedule workloads that tunnel through the cluster's
+  networking to reach adjacent infrastructure.
+failure: >
+  Cluster compromise. The entire Kubernetes workload — every
+  namespace, every pod, every stored secret, every cluster-scoped
+  configuration — is accessible to whoever reaches the bound
+  identity. Containment usually requires full cluster recreation
+  because the cluster-admin authority could have rewritten its own
+  audit trail.
 params: {}
 unsafe_predicate:
   any:

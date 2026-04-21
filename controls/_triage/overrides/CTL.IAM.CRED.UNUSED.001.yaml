@@ -1,0 +1,14 @@
+control: CTL.IAM.CRED.UNUSED.001
+defect: >
+  IAM credentials have not been used for 90 or more days. The
+  credentials are dormant but remain valid.
+infection: >
+  Dormant credentials are a preferred persistence vector — an
+  attacker using credentials that show no legitimate activity is less
+  likely to trigger usage-pattern anomaly detection. The absence of
+  recent use also suggests no active operator is monitoring the
+  credential's security.
+failure: >
+  Persistent attack surface with low detection probability. A
+  compromised dormant credential provides access without triggering
+  usage-pattern alerts.

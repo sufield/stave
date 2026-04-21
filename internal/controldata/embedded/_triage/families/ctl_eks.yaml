@@ -1,0 +1,5 @@
+family: CTL.EKS
+infection: >
+  EKS misconfigurations weaken Kubernetes cluster security boundaries. Public API endpoints, overly permissive RBAC bindings, missing encryption, or insecure node configurations allow attackers to access the cluster API, escalate privileges, or compromise workloads.
+failure: >
+  Kubernetes cluster compromise. The EKS cluster's API, workloads, secrets, or node infrastructure are accessible to unauthorized parties.

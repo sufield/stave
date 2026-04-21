@@ -1,0 +1,16 @@
+control: CTL.IAM.IDENTITY.BLASTRADIUS.005
+defect: >
+  The IAM user can reach more than 50 resources through attached
+  and inline policies. Long-term user credentials carry wider blast
+  radius than temporary role credentials.
+infection: >
+  IAM user credentials are long-lived, do not auto-rotate, and can
+  be used from any network location. A user with wide blast radius
+  combines the worst credential properties (permanent, portable)
+  with the worst access properties (broad reach). Stolen access keys
+  provide sustained, wide-ranging access that survives session
+  expiration.
+failure: >
+  Wide blast radius with permanent credentials. A leaked access key
+  for this user provides access to 50+ resources indefinitely until
+  manually revoked.

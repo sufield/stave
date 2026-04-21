@@ -1,0 +1,15 @@
+control: CTL.EC2.SSM.MANAGED.001
+defect: >
+  The EC2 instance is not managed by AWS Systems Manager. The SSM
+  agent is either not installed, not running, or the instance lacks
+  the required IAM permissions for SSM communication.
+infection: >
+  Without SSM management, the instance cannot receive automated
+  patches, participate in session-based access (Session Manager), or
+  report compliance status. Administrative access requires SSH with
+  open inbound ports or a bastion host — both of which expand the
+  network attack surface.
+failure: >
+  Unmanaged instance. The instance operates outside the
+  organization's patch management, session audit, and compliance
+  reporting pipelines, creating a gap in visibility and control.

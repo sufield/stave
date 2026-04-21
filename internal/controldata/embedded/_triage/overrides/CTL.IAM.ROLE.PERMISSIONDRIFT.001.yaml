@@ -1,0 +1,16 @@
+control: CTL.IAM.ROLE.PERMISSIONDRIFT.001
+defect: >
+  The IAM role retains access to services that have never been used
+  or were last used more than 90 days ago, despite the role being
+  active for over 90 days.
+infection: >
+  A role with 30 accessible services where 25 are never used has
+  accumulated permissions far beyond its operational scope. The unused
+  services are the hidden blast radius — the legitimate operator uses
+  5 services, but an attacker who compromises the role has access to
+  all 30. Access Advisor data proves which services the role actually
+  needs versus which it merely has.
+failure: >
+  Hidden blast radius from accumulated unused permissions. An
+  attacker who compromises this role gains access to services far
+  beyond the role's operational footprint.

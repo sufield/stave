@@ -1,0 +1,15 @@
+control: CTL.IAM.ROOT.MFA.001
+defect: >
+  The AWS root account does not have multi-factor authentication
+  enabled. Root access is protected by password alone.
+infection: >
+  The root account has unrestricted authority over every resource in
+  the AWS account. Without MFA, a single compromised password — via
+  phishing, credential stuffing, password reuse, or brute force —
+  yields full account control. Root is the only AWS principal that
+  cannot be restricted by IAM policies, SCPs, or permission
+  boundaries.
+failure: >
+  Full account compromise via single-factor authentication. An
+  attacker who obtains the root password has unrestricted access to
+  the entire AWS account.

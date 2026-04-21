@@ -1,0 +1,5 @@
+family: CTL.K8S
+infection: >
+  Kubernetes misconfigurations weaken workload isolation, RBAC boundaries, and cluster security. Overly permissive roles, missing network policies, absent pod security standards, or insecure admission controls allow attackers to escape container boundaries, access cluster secrets, or control the cluster API.
+failure: >
+  Kubernetes cluster or workload compromise. The cluster's workloads, secrets, RBAC boundaries, or node infrastructure are accessible to unauthorized parties.

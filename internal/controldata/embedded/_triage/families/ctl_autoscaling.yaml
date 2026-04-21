@@ -1,0 +1,5 @@
+family: CTL.AUTOSCALING
+infection: >
+  Auto Scaling misconfigurations cause newly launched instances to inherit insecure defaults — missing encryption, outdated AMIs, or permissive security groups. Every scale-out event replicates the misconfiguration, expanding the vulnerable surface.
+failure: >
+  Replicated insecurity at scale. Every new instance launched by the ASG inherits the misconfiguration, compounding the exposure with each scale-out event.

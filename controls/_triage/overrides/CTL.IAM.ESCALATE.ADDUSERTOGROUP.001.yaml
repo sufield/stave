@@ -1,0 +1,16 @@
+control: CTL.IAM.ESCALATE.ADDUSERTOGROUP.001
+defect: >
+  The user principal has iam:AddUserToGroup scoped to reach a group
+  whose effective permissions exceed the principal's own. The
+  principal can add itself to that group with a single API call.
+infection: >
+  Once the principal joins the target group, it immediately inherits
+  all of the group's attached and inline policies. The escalation
+  requires no policy modification — the group's existing permissions
+  are the payload. CloudTrail records the AddUserToGroup call but the
+  permission expansion is an implicit side effect that standard
+  monitoring may not flag.
+failure: >
+  Privilege escalation to the target group's permission set. If the
+  target group carries AdministratorAccess or equivalent, the
+  principal becomes admin.

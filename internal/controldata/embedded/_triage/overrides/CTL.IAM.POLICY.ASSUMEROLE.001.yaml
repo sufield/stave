@@ -1,0 +1,16 @@
+control: CTL.IAM.POLICY.ASSUMEROLE.001
+defect: >
+  The IAM entity has sts:AssumeRole with wildcard Resource "*" —
+  permitting assumption of any role in the account without
+  restriction.
+infection: >
+  A compromised identity can enumerate all roles in the account and
+  assume any whose trust policy admits it. Admin roles, cross-
+  account trust roles, service roles with elevated permissions — all
+  are reachable. The wildcard resource eliminates the last barrier
+  between a compromised identity and the most-privileged role in the
+  account.
+failure: >
+  Privilege escalation to any assumable role. The principal can
+  pivot to the highest-privileged role in the account whose trust
+  policy permits the assumption.

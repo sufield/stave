@@ -1,0 +1,5 @@
+family: CTL.VPC
+infection: >
+  VPC misconfigurations weaken network isolation and segmentation. Missing flow logs, overly permissive NACLs, absent VPC endpoint policies, or unrestricted peering connections allow unauthorized network access, unaudited traffic flows, or lateral movement between VPCs.
+failure: >
+  Network isolation failure. VPC boundaries are weakened, enabling unauthorized network access, lateral movement, or unaudited traffic flows.

@@ -224,3 +224,37 @@ func TestFilterResolvedChains_SilentWhenAllRefsResolve(t *testing.T) {
 		t.Errorf("no warning expected for fully-resolved chains; log: %q", buf.String())
 	}
 }
+
+// TestFilterResolvedChains_EmptyCatalogPassThrough is the
+// drift-regression test: when the filter is called with an empty
+// controls slice (the common CLI `--controls <dir>` path without
+// filter configuration, where PreloadedControls is empty), the filter
+// must NOT drop all chains. Dropping everything produced the adopter-
+// visible CLI/library drift documented in
+// stave-hackerone-tests/HISTORY.md § "Validation iteration:
+// choke-point-via-sort claim refuted". The chain engine at runtime
+// operates against the fully-loaded catalog; missing-control
+// detection happens there.
+func TestFilterResolvedChains_EmptyCatalogPassThrough(t *testing.T) {
+	chains := []policy.ChainDefinition{
+		{ID: "chain_a", ControlIDs: []kernel.ControlID{"CTL.A.001"}},
+		{ID: "chain_b", ControlIDs: []kernel.ControlID{"CTL.B.001", "CTL.B.002"}},
+	}
+
+	var buf bytes.Buffer
+	logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelInfo}))
+
+	resolved := filterResolvedChains(chains, nil, logger)
+
+	if len(resolved) != 2 {
+		t.Fatalf("empty catalog: want 2 chains passed through, got %d", len(resolved))
+	}
+	for i, c := range resolved {
+		if c.ID != chains[i].ID {
+			t.Errorf("chain[%d] id: got %q, want %q", i, c.ID, chains[i].ID)
+		}
+	}
+	if strings.Contains(buf.String(), "chain dropped") {
+		t.Errorf("no chain-drop warnings expected when catalog unknown; log: %q", buf.String())
+	}
+}

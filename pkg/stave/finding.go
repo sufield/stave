@@ -55,11 +55,41 @@ type Finding struct {
 	// ReasoningTrace lists the predicate clauses the engine
 	// evaluated to produce this finding, paired with the observed
 	// values from the snapshot. Useful for explaining why a
-	// finding fired.
+	// finding fired. Also the backing data for the OBSERVED
+	// section when adopters render the full triage chain.
 	ReasoningTrace []MatchedClause
+
+	// Defect / Infection / Failure carry the authored triage
+	// chain from Andreas Zeller's Why Programs Fail, applied to
+	// cloud misconfigurations. Copied from the control's YAML
+	// metadata at evaluation time. Empty when the control hasn't
+	// been authored for the failure-theory chain yet; consumer
+	// rendering should skip empty sections rather than emit
+	// placeholders.
+	Defect    string
+	Infection string
+	Failure   string
+
+	// ChainMembership lists the compound-risk chains this finding
+	// participates in. Empty when no chain's escalation threshold
+	// was met OR when the library was run without chain definitions
+	// loaded. See Assessment.ChainFindings for the top-level chain
+	// entries referenced by ChainID.
+	ChainMembership []ChainMembershipEntry
+
+	// ChainBonus is the ExposureScore multiplier applied to this
+	// finding by virtue of its chain membership: 1.0× for findings
+	// on 0 chains, 1.5× for 1 chain, 2.0× for 2+ chains. Populated
+	// by the engine's ranking pass. Useful when rendering scores
+	// with provenance (e.g. "ExposureScore: 7.6 (2.0× chain
+	// bonus)"). Defaults to 1.0 for findings not enrolled in any
+	// chain.
+	ChainBonus float64
 
 	// ExposureScore is the priority score the engine assigned
 	// after risk enrichment. Higher scores are more urgent.
+	// Incorporates ChainBonus; sort findings by ExposureScore
+	// descending to surface chain-member findings first.
 	ExposureScore float64
 }
 

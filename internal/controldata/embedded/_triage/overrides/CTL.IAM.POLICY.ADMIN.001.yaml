@@ -1,0 +1,16 @@
+control: CTL.IAM.POLICY.ADMIN.001
+defect: >
+  An IAM policy attached to this user grants Effect Allow on
+  Action "*" and Resource "*" — unrestricted administrative access
+  to all AWS services and resources.
+infection: >
+  Any compromise of this principal — stolen access key, SSRF-based
+  credential theft, session hijacking — immediately yields full
+  admin authority over the entire AWS account. There is no privilege
+  boundary to cross after initial access; the attacker is already
+  admin. The blast radius is the entire account, not a single
+  service or resource.
+failure: >
+  Full account compromise on initial access. The attacker inherits
+  unrestricted authority over every service, resource, and IAM
+  principal in the account.

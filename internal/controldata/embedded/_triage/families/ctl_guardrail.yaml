@@ -1,0 +1,5 @@
+family: CTL.GUARDRAIL
+infection: >
+  Organizational guardrail misconfigurations weaken the safety boundary that protects all member accounts. Missing SCPs, absent tag policies, or degraded enforcement allow member accounts to operate outside intended security constraints.
+failure: >
+  Organizational safety boundary degradation. Member accounts operate without the centralized guardrails that enforce security policy across the organization.

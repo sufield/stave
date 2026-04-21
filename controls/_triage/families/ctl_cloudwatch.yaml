@@ -1,0 +1,5 @@
+family: CTL.CLOUDWATCH
+infection: >
+  Missing CloudWatch alarms and monitoring configurations mean security-relevant events go undetected. Unauthorized API calls, root account usage, configuration changes, and authentication failures occur without triggering alerts.
+failure: >
+  Detection blind spot. Security events that should trigger investigation occur silently, delaying incident response and allowing attackers to operate undetected.

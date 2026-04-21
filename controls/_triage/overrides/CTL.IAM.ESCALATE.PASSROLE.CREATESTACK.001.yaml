@@ -1,0 +1,18 @@
+control: CTL.IAM.ESCALATE.PASSROLE.CREATESTACK.001
+defect: >
+  The principal has iam:PassRole reaching a role whose effective
+  permissions exceed its own, plus cloudformation:CreateStack
+  without a condition denying CAPABILITY_IAM or
+  CAPABILITY_NAMED_IAM.
+infection: >
+  The attacker submits a CloudFormation template that performs IAM
+  mutations (attach policy, put inline policy, create access key)
+  and passes the privileged role for CloudFormation to execute under.
+  CloudFormation executes the template's resources under the passed
+  role — the attacker never directly holds the role's credentials
+  but gains its authority through the template's IAM resource
+  definitions.
+failure: >
+  Privilege escalation via CloudFormation template execution. The
+  attacker achieves the target role's authority by having
+  CloudFormation perform IAM mutations on the attacker's behalf.

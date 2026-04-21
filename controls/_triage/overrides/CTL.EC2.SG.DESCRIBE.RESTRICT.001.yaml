@@ -1,0 +1,17 @@
+control: CTL.EC2.SG.DESCRIBE.RESTRICT.001
+defect: >
+  IAM policy grants broad ec2:Describe* permissions to a
+  non-administrative principal, exposing the complete network
+  topology — VPCs, subnets, security groups, route tables, and
+  network interfaces.
+infection: >
+  An attacker who compromises this principal can map the entire
+  network architecture without triggering data-plane alerts. The
+  enumeration reveals which instances are reachable, which security
+  groups are permissive, and which subnets have internet gateways —
+  all the information needed to plan lateral movement.
+failure: >
+  Network reconnaissance. The attacker enters the lateral movement
+  phase with a complete map of the network rather than probing
+  blind, significantly reducing the time between initial access and
+  reaching high-value targets.

@@ -1,0 +1,16 @@
+control: CTL.IAM.POLICY.MFA.001
+defect: >
+  IAM policies governing destructive operations (s3:DeleteBucket,
+  iam:CreateUser, ec2:TerminateInstances) do not include an
+  aws:MultiFactorAuthPresent condition.
+infection: >
+  A stolen access key alone is sufficient to execute destructive
+  operations — the credential is the only barrier. Without
+  policy-level MFA enforcement, destructive actions are authorized
+  by possession of a single long-lived credential. Access keys can
+  be stolen via SSRF, git commits, instance compromise, or
+  phishing — each yielding immediate destructive capability.
+failure: >
+  Destructive actions executable with stolen credentials alone. A
+  single compromised access key can delete S3 buckets, terminate
+  instances, or create backdoor IAM users without an MFA challenge.

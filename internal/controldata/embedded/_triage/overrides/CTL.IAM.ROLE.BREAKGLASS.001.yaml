@@ -1,0 +1,14 @@
+control: CTL.IAM.ROLE.BREAKGLASS.001
+defect: >
+  An IAM role with elevated permissions granted for incident response
+  has persisted beyond 7 days since the elevation was applied.
+infection: >
+  Elevated roles that persist beyond the incident become permanent
+  backdoors — they carry admin-level permissions with no active
+  justification. Each additional day increases the risk that the
+  elevated credentials are discovered by an attacker or misused by
+  operators who find the temporary admin access convenient.
+failure: >
+  Permanent backdoor from unrevoked emergency access. Break-glass
+  permissions intended for a specific incident persist indefinitely,
+  providing a standing admin escalation path.

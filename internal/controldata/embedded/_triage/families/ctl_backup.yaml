@@ -1,0 +1,5 @@
+family: CTL.BACKUP
+infection: >
+  Backup misconfigurations leave recovery points unencrypted, unreplicated, or unprotected from deletion. An attacker who gains access to unencrypted backups reads the full dataset. Missing cross-region replication means a single region failure destroys all recovery capability.
+failure: >
+  Data recovery failure or backup data exposure. Backups are either inaccessible when needed or accessible to unauthorized parties.

@@ -8,6 +8,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Triage separation: `_triage/` directory with family templates and
+  per-control overrides.** Security definitions (predicate,
+  classification, severity) and troubleshooting context (defect,
+  infection, failure) now live in separate files. 121 per-control
+  overrides extracted from control YAMLs into
+  `controls/_triage/overrides/`. 47 family-level templates authored
+  in `controls/_triage/families/`, providing infection/failure prose
+  for every control family. Engine joins both trees at runtime with
+  per-field inheritance: override > family template > empty. Coverage:
+  121 controls have full per-control triage (override); remaining
+  554 inherit family-level infection/failure. The `_triage/` directory
+  is `_`-prefixed so the control scanner skips it during YAML
+  discovery.
+- **Defect/infection/failure metadata on 40 IAM controls** —
+  CRED (7), TRUST (6), ROLE (6), IDENTITY (6), ROOT (5), SCP (4),
+  PASSWORD (4), ZT (2) sub-families authored. Covers credential
+  lifecycle (rotation, expiry, dormancy, recurrence), trust policy
+  hardening (confused deputy, OIDC scoping, source-ARN conditions,
+  external ID), role hygiene (category mixing, intent tags, permission
+  drift, break-glass TTL), blast radius analysis (resource threshold,
+  cross-account, chain depth, sensitive resource concentration), root
+  account hardening (MFA, access keys, usage), SCP guardrails
+  (dangerous allows, OU coverage, identity creation), password policy,
+  and zero trust principles. 0 flagged as ambiguous. 1 golden updated
+  (e2e-hipaa-cross-domain, additive only — ROOT controls). Total
+  authored: 121 of 675 controls (17.9%). Remaining IAM: 20 controls
+  across smaller sub-families. Next iteration: complete remaining IAM
+  (20 controls) then pivot to K8S (64 controls).
+- **Defect/infection/failure metadata on 38 IAM controls** —
+  IAM.ESCALATE (22) and IAM.POLICY (16) sub-families authored. Covers
+  all Rhino Security Labs privilege-escalation techniques (PassRole
+  chains, self-modification, credential manipulation, trust policy
+  rewriting, group-hop escalation), plus policy hygiene controls
+  (admin wildcard, NotAction shadow logic, separation of duties,
+  ghost references, inline policies, MFA enforcement). 0 controls
+  flagged as ambiguous. 0 goldens updated (IAM controls not exercised
+  by existing fixtures). Total authored: 81 of 675 controls (12.0%).
+  Next iteration: remaining IAM sub-families (62 controls) or pivot
+  to K8S (64 controls).
+- **Defect/infection/failure metadata on all 29 CTL.EC2 controls** —
+  complete EC2 family authored in one iteration. Each control now carries
+  `defect`, `infection`, and `failure` prose enabling adopters to triage
+  findings without external reference. Covers: encryption (EBS volumes,
+  snapshots, Nitro Enclaves), network exposure (public IPs, IMDSv2,
+  security groups, VPC endpoints, subnets, default VPC), identity
+  (instance profiles, IAM roles, user-data credentials), audit (detailed
+  monitoring, SSM session logging), governance (launch templates, SSM
+  management), resilience (ASG health checks, termination protection),
+  and version currency (AMI age). Total authored: 43 of 675 controls
+  (14 S3 + IAM + Lambda prior + 29 EC2 this iteration). No case
+  programs affected (none exercise EC2 controls). 1 golden file updated
+  (e2e-hipaa-cross-domain, additive only). Next iteration: IAM
+  sub-families (ESCALATE + POLICY, ~38 controls).
 - **Three per-service IAM privilege-escalation controls** grounded in
   three disclosed incidents. Each detects a distinct privesc path
   where a principal can invoke a service whose role exceeds the

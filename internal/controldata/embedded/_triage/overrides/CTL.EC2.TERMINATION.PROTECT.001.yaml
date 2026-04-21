@@ -1,0 +1,15 @@
+control: CTL.EC2.TERMINATION.PROTECT.001
+defect: >
+  The production EC2 instance does not have API termination
+  protection enabled (DisableApiTermination is false).
+infection: >
+  The instance can be terminated via a single API call, console
+  action, or CLI command by any principal with
+  ec2:TerminateInstances permission. Accidental termination
+  (operator error, misconfigured automation, overly broad IAM
+  policy) or malicious termination results in immediate loss of the
+  running workload and any data on instance-store volumes.
+failure: >
+  Unprotected instance termination. A production workload can be
+  destroyed by a single API call, with no confirmation gate to
+  prevent accidental or malicious deletion.

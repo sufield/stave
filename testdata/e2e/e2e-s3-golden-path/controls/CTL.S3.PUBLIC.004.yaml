@@ -25,6 +25,30 @@ scope_tags:
 version: ctrl.v1
 type: unsafe_duration
 classification: aggregate_check
+defect: >
+  The bucket policy contains a Statement with Effect "Allow",
+  Principal "*" (or AWS: "*"), and a read action such as
+  s3:GetObject or s3:GetObjectAcl. No restricting Condition
+  narrows the principal to a specific account, VPC, IP range,
+  or organization.
+infection: >
+  Any unauthenticated HTTP caller can fetch objects from this
+  bucket. Distinct from ACL-driven exposure in that policy-
+  based public read often applies to specific prefixes or
+  objects, not the whole bucket — but adopters miss the
+  distinction and treat "policy allows public read" as "this
+  bucket is public." Search engines and scanners enumerate
+  buckets via GetBucketPolicy lookups specifically to find
+  policy-granted read access, because it persists even when
+  ACLs are tightened.
+failure: >
+  Data exposure for objects matched by the policy's Resource
+  clause. Scope depends on whether the policy grants read on
+  the whole bucket (arn:aws:s3:::bucket/*) or a subset — but
+  adopters commonly over-scope the Resource clause during
+  authoring, so "intentional limited public read" often
+  becomes "entire bucket public" in practice. Audit the
+  policy's Resource ARNs to understand exposure surface.
 params:
   attack_stage: initial_access
   max_unsafe_duration: 0h

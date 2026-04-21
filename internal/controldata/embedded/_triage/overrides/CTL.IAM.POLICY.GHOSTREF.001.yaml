@@ -1,0 +1,17 @@
+control: CTL.IAM.POLICY.GHOSTREF.001
+defect: >
+  IAM policy Allow statements reference fully-qualified ARNs for
+  resources that no longer exist in the snapshot inventory. The
+  policy grants permissions on resources that have been deleted or
+  renamed.
+infection: >
+  An attacker who can create a resource with the same name as the
+  deleted one inherits all permissions that reference it. For
+  globally-namespaced resources like S3 buckets (where names are
+  unique across all AWS accounts), this is an active supply-chain
+  takeover vector — the attacker registers the abandoned name and
+  receives the permissions the policy still grants.
+failure: >
+  Permission inheritance on recreated resources. Dangling policy
+  references become active grants the moment an attacker (or anyone)
+  creates a resource matching the deleted name.

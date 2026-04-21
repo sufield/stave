@@ -25,6 +25,31 @@ scope_tags:
   - lambda
 type: unsafe_state
 classification: state_assertion
+defect: >
+  The Lambda function's execution role carries broader permissions
+  than the function needs — typically an AWS-managed *FullAccess
+  policy, a wildcard on a sensitive action, or a broadly-scoped
+  inline policy left from development. IAM Access Analyzer would
+  flag the role as over-privileged relative to observed call
+  patterns.
+infection: >
+  Any code the function executes — intentional, injected via a
+  compromised dependency, or triggered via a public function URL
+  — inherits the over-privileged role's access. Lambda's
+  assume-role happens on every invocation, so the runtime's
+  access is the full authority of the execution role, not some
+  subset the function happens to use. If the function is
+  publicly invokable or called from an internet-reachable
+  resource, this single over-privileged role converts a function
+  compromise into lateral movement across the account.
+failure: >
+  Account-wide lateral movement from a single function
+  compromise. Attacker reach extends to every AWS resource the
+  role can touch: S3 buckets, DynamoDB tables, Secrets Manager,
+  other Lambda functions. In a chained exploit with a compromised
+  dependency or a public URL, this is the pivot that turns a
+  local code-execution bug into a full data-exfiltration
+  incident.
 params:
   base_impact: 8
   attack_stage: initial_access

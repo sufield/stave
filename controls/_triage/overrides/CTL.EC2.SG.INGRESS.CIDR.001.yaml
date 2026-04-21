@@ -1,0 +1,17 @@
+control: CTL.EC2.SG.INGRESS.CIDR.001
+defect: >
+  A security group rule allows inbound traffic from 0.0.0.0/0 (the
+  entire internet) on a non-HTTP/HTTPS port, exposing an internal
+  service port to all internet addresses.
+infection: >
+  The exposed port is reachable by any internet host. Automated
+  scanners continuously probe all AWS IP ranges for open ports,
+  meaning the exposed service will be discovered and probed within
+  hours of the rule being created. Any vulnerability in the
+  listening service is directly exploitable without requiring the
+  attacker to bypass a load balancer, WAF, or VPN.
+failure: >
+  Internal service exposure to the internet. A service not designed
+  for public-facing traffic is directly reachable, including its
+  authentication surface, version disclosure, and any application-
+  layer vulnerabilities.

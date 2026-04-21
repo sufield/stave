@@ -1,0 +1,16 @@
+control: CTL.EC2.EBS.DEFAULT.001
+defect: >
+  Account-level EBS default encryption is not enabled for this
+  region. New EBS volumes created by auto-scaling, manual launches,
+  or CloudFormation templates are unencrypted unless encryption is
+  explicitly specified per-volume.
+infection: >
+  Every new EBS volume created without an explicit encryption flag
+  inherits the unencrypted default. The gap compounds over time as
+  auto-scaling events, instance replacements, and ad-hoc launches
+  silently create unencrypted storage that operators assume is
+  protected.
+failure: >
+  Data-at-rest exposure. Unencrypted volumes can be accessed by
+  copying snapshots to another account, mounting via a compromised
+  instance, or through physical media access at the storage layer.

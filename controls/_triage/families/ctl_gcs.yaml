@@ -1,0 +1,5 @@
+family: CTL.GCS
+infection: >
+  GCS bucket misconfigurations expose stored data to unauthorized access. Public ACLs, overly permissive IAM bindings, or missing encryption allow anyone with the bucket name to read, list, or modify objects. Like S3, bucket names are globally unique and easily enumerable.
+failure: >
+  Cloud storage data exposure. GCS bucket contents are accessible to unauthorized parties, including potentially sensitive operational data, user information, or proprietary content.

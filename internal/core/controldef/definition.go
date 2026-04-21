@@ -51,6 +51,13 @@ type ControlDefinition struct {
 	Alternatives         []Alternative // mappings to alternative detection tools' checks
 	Tests                []ControlTest `yaml:"tests,omitempty" json:"-"`
 
+	// Defect / Infection / Failure carry authored triage prose
+	// following Andreas Zeller's Why Programs Fail failure-theory
+	// chain. Optional; empty strings render as skipped sections.
+	Defect    string
+	Infection string
+	Failure   string
+
 	// Prepared holds pre-calculated values to optimize the evaluation hot path.
 	Prepared PreparedParams `json:"-"`
 }
@@ -429,6 +436,9 @@ type ControlMetadata struct {
 	Alternatives   []Alternative
 	Classification Classification
 	ScopeTags      []kernel.ScopeTag
+	Defect         string
+	Infection      string
+	Failure        string
 }
 
 // Fingerprint computes a stable hash of the control's identity and logic
@@ -462,5 +472,8 @@ func (ctl *ControlDefinition) Metadata() ControlMetadata {
 		Alternatives:   ctl.Alternatives,
 		Classification: ctl.Classification,
 		ScopeTags:      ctl.ScopeTags,
+		Defect:         ctl.Defect,
+		Infection:      ctl.Infection,
+		Failure:        ctl.Failure,
 	}
 }

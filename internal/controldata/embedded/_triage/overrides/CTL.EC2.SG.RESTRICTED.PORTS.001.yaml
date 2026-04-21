@@ -1,0 +1,19 @@
+control: CTL.EC2.SG.RESTRICTED.PORTS.001
+defect: >
+  A security group allows unrestricted inbound access (0.0.0.0/0)
+  on one or more high-risk ports: RDP (3389), Telnet (23),
+  FTP (20/21), VNC (5900), database ports (3306/5432/1433/27017),
+  Redis (6379), or Memcached (11211).
+infection: >
+  Each of these services has well-known default credentials,
+  protocol weaknesses, or authentication bypass vectors. Automated
+  botnets continuously scan AWS IP ranges for these specific ports.
+  An exposed database port is typically brute-forced within minutes;
+  an exposed RDP port within hours. These services were designed for
+  private-network access and lack the hardening expected of
+  internet-facing endpoints.
+failure: >
+  Direct exploitation of high-risk services. Database data theft,
+  remote desktop takeover, unauthenticated cache access, or
+  plaintext credential interception — depending on which port is
+  exposed.

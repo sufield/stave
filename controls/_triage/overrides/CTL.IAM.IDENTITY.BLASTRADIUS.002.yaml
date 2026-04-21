@@ -1,0 +1,14 @@
+control: CTL.IAM.IDENTITY.BLASTRADIUS.002
+defect: >
+  An IAM role with cross-account blast radius does not require an
+  external ID condition on its trust policy.
+infection: >
+  The combination of cross-account reach and missing external ID
+  creates maximum blast radius — any principal in the trusted account
+  can assume this role and reach resources across multiple accounts.
+  The cross-account access amplifies the impact: compromise affects
+  not just the source account but every account the role can reach.
+failure: >
+  Cross-account compromise amplification. Any principal in the
+  trusted account can assume this role and reach resources across
+  multiple AWS accounts.

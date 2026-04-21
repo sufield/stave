@@ -1,0 +1,15 @@
+control: CTL.EC2.DETAILED.MONITORING.001
+defect: >
+  Instance monitoring is set to basic (5-minute intervals) instead
+  of detailed (1-minute intervals).
+infection: >
+  Short-duration anomalies — CPU spikes from crypto-mining, burst
+  network traffic during data exfiltration, unusual disk I/O
+  patterns — are averaged into 5-minute metric windows and fall
+  below detection thresholds. Monitoring dashboards and alarms
+  built on these metrics cannot see events shorter than the
+  sampling interval.
+failure: >
+  Detection blind spot. Attackers operating in short bursts (under
+  5 minutes) can exfiltrate data, mine cryptocurrency, or pivot
+  laterally without triggering CloudWatch alarms.

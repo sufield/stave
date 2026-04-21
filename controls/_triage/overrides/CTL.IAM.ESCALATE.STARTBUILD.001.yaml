@@ -1,0 +1,17 @@
+control: CTL.IAM.ESCALATE.STARTBUILD.001
+defect: >
+  The principal has codebuild:StartBuild on a project whose service
+  role exceeds the principal's permissions, plus write access to the
+  project's source repository or buildspec override capability.
+infection: >
+  The attacker modifies the buildspec in the source repository (or
+  overrides it at invocation) and starts a build. The buildspec runs
+  inside CodeBuild under the project's service role. Unlike
+  PassRole-based escalations, the attacker does not need
+  iam:PassRole — the service role is already attached to the
+  project. The attacker only changes what code the role executes.
+failure: >
+  Privilege escalation via CI/CD pipeline injection. The attacker
+  gains code execution under a role whose permissions exceed their
+  own, through a build system commonly trusted to deploy production
+  infrastructure.

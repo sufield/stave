@@ -1,0 +1,16 @@
+control: CTL.IAM.ESCALATE.RESYNCMFADEVICE.001
+defect: >
+  The principal has iam:ResyncMFADevice scoped to reach another IAM
+  user whose attached permissions exceed its own.
+infection: >
+  The attacker forces the target user's MFA device into a resync
+  window where chosen code pairs are accepted, temporarily bypassing
+  MFA protection. Combined with iam:UpdateLoginProfile (password
+  reset) or iam:CreateAccessKey on the same user, this clears the
+  MFA barrier on console login or creates credentials that bypass
+  MFA entirely. The attack chains two individually-low-risk
+  permissions.
+failure: >
+  MFA bypass enabling identity takeover. The attacker disarms the
+  target user's MFA protection, clearing the path for a full
+  credential takeover via password reset or access key creation.

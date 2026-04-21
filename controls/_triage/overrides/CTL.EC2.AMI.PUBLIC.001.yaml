@@ -1,0 +1,17 @@
+control: CTL.EC2.AMI.PUBLIC.001
+defect: >
+  A custom AMI is publicly shared, making the complete disk image
+  available to any AWS account. The AMI appears in public AMI
+  searches and AWS Marketplace listings.
+infection: >
+  Any AWS user can launch an instance from this AMI, gaining access
+  to every file baked into the image — SSH authorized_keys, internal
+  PKI certificates, application source code, configuration files,
+  and hard-coded secrets. Unlike a private resource that requires
+  the attacker to discover the identifier, public AMIs are trivially
+  discoverable through the AWS console and API.
+failure: >
+  Full disk image exposure. The complete contents of the base
+  image — including any secrets, internal code, or configuration
+  baked in at build time — are publicly accessible and cannot be
+  retracted once copied.

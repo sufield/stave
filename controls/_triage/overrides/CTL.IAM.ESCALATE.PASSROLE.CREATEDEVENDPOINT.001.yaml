@@ -1,0 +1,17 @@
+control: CTL.IAM.ESCALATE.PASSROLE.CREATEDEVENDPOINT.001
+defect: >
+  The principal has iam:PassRole reaching a role whose effective
+  permissions exceed its own, plus glue:CreateDevEndpoint to create
+  a Glue development endpoint that runs under that role.
+infection: >
+  The attacker creates a Glue dev endpoint with the privileged role,
+  registers an SSH public key for access, and connects to the
+  endpoint's SSH interface. Code executed on the endpoint runs under
+  the target role's authority. The endpoint provides a persistent
+  interactive environment — not a one-shot function invocation —
+  with full network access to VPC resources.
+failure: >
+  Privilege escalation via Glue dev endpoint. The attacker gains an
+  interactive shell running under a role whose permissions exceed
+  their own, enabling arbitrary AWS API calls with the target role's
+  authority.

@@ -1,0 +1,15 @@
+control: CTL.IAM.TRUST.EXTERNALID.001
+defect: >
+  An IAM role with cross-account trust does not require an
+  sts:ExternalId condition. Any principal in the trusted account can
+  assume the role.
+infection: >
+  The trusted account is a shared trust boundary — every principal
+  in it, including compromised service accounts, overly-permissive
+  CI/CD roles, and test accounts, can assume this role. Without an
+  ExternalId binding the trust to a specific integration, the role
+  is accessible to any identity that reaches the trusted account.
+failure: >
+  Unrestricted cross-account role assumption. Any compromised or
+  overprivileged principal in the trusted account can pivot into
+  this account via the role.

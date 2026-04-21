@@ -1,0 +1,14 @@
+control: CTL.IAM.SCP.OU.COVERAGE.001
+defect: >
+  A production organizational unit does not have restrictive SCPs
+  applied. Security guardrails are not enforcing in this OU.
+infection: >
+  Without restrictive SCPs, member accounts in this OU operate with
+  the default FullAWSAccess policy — any IAM permission granted
+  within the account is allowed. Services that should be blocked are
+  accessible. The OU is a gap in the organizational security
+  perimeter where guardrails that protect other OUs do not apply.
+failure: >
+  Security guardrail gap. Production accounts in this OU operate
+  without the organizational restrictions that protect other OUs,
+  creating an unprotected segment.

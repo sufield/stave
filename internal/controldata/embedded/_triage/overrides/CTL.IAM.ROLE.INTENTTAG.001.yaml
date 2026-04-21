@@ -1,0 +1,15 @@
+control: CTL.IAM.ROLE.INTENTTAG.001
+defect: >
+  The IAM role does not have a role-type tag declaring its intended
+  purpose (application, data-pipeline, readonly, admin, security,
+  ci-cd, break-glass, or service-account).
+infection: >
+  Without a declared purpose, no one has formally stated what this
+  role is supposed to do. Intent-versus-permissions checking cannot
+  operate — the INTENTMISMATCH control has no baseline to compare
+  against. Access reviews must manually determine the role's purpose
+  each time, which is error-prone and inconsistent.
+failure: >
+  Unclassified role. The role's intended purpose is undeclared,
+  preventing systematic verification that its permissions match its
+  function.

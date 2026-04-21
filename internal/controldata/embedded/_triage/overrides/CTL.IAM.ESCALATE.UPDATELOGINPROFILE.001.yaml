@@ -1,0 +1,15 @@
+control: CTL.IAM.ESCALATE.UPDATELOGINPROFILE.001
+defect: >
+  The principal has iam:UpdateLoginProfile scoped to reach another
+  IAM user whose attached permissions exceed its own.
+infection: >
+  A single UpdateLoginProfile call resets the target user's console
+  password to an attacker-chosen value. The attacker then logs into
+  the AWS console as the target user. MFA on the target is a partial
+  barrier — but combined with iam:ResyncMFADevice or
+  iam:DeactivateMFADevice (covered by separate controls), the
+  attacker can disarm MFA first.
+failure: >
+  Identity takeover via password reset. The attacker gains
+  interactive console access to a more-privileged user, inheriting
+  all of their permissions.

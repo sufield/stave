@@ -1,0 +1,5 @@
+family: CTL.COGNITO
+infection: >
+  Cognito misconfigurations weaken user authentication and identity management. Missing MFA enforcement, weak password policies, or insecure identity pool configurations allow attackers to compromise user accounts or obtain elevated AWS credentials.
+failure: >
+  User identity compromise. Weak authentication controls enable account takeover, credential theft, or unauthorized access to AWS resources through Cognito identity pools.

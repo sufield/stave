@@ -1,0 +1,5 @@
+family: CTL.CLOUDFRONT
+infection: >
+  CloudFront distribution misconfigurations expose content or weaken transport security. Missing origin access controls allow direct origin bypass. Absent security headers enable client-side attacks. Weak TLS settings permit protocol downgrade.
+failure: >
+  Content delivery security gap. Origin resources are directly accessible, transport is degraded, or client-side protections are absent on the CDN edge.

@@ -1,0 +1,19 @@
+control: CTL.EC2.AMI.CURRENCY.001
+defect: >
+  The EC2 instance is running on an AMI that is either deprecated
+  by AWS or the AMI owner, or exceeds the maximum AMI age threshold
+  (default 180 days). The underlying operating system image has
+  accumulated unpatched vulnerabilities.
+infection: >
+  When instances are replaced through auto-scaling, redeployment, or
+  disaster recovery, they launch from this aged AMI with all
+  accumulated patch gaps. SSM Patch Manager patches running instances
+  but does not update the AMI itself — so every new instance starts
+  from the same unpatched baseline and must be patched post-launch,
+  creating a window of vulnerability between launch and patch
+  completion.
+failure: >
+  Vulnerability accumulation. The instance's base image contains
+  known, unpatched vulnerabilities that grow over time. New instances
+  launched from this AMI start with an expanding attack surface that
+  widens with each missed patching cycle.

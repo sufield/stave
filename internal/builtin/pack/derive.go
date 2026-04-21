@@ -31,7 +31,14 @@ func DeriveControlRefs(fsys embed.FS, root string) (map[string]ControlRef, error
 		if err != nil {
 			return err
 		}
-		if d.IsDir() || !strings.HasSuffix(p, ".yaml") {
+		if d.IsDir() {
+			name := d.Name()
+			if p != root && (strings.HasPrefix(name, "_") || strings.HasPrefix(name, ".")) {
+				return fs.SkipDir
+			}
+			return nil
+		}
+		if !strings.HasSuffix(p, ".yaml") {
 			return nil
 		}
 		// Skip non-control files (index.yaml, README, etc.)

@@ -188,7 +188,10 @@
       "scope_tags": [
         "aws",
         "s3"
-      ]
+      ],
+      "defect": "The bucket's access configuration grants read permission to the public — either via a bucket policy statement with Principal \"*\" or via an ACL grant to the AllUsers pseudo-group. The bucket is reachable without authentication from the public internet.\n",
+      "infection": "Anyone on the internet can fetch objects from this bucket over anonymous HTTP/HTTPS. Search engines and automated scanners continuously enumerate publicly-indexed bucket names, meaning exposure is active from the moment the policy or ACL is in place — not hypothetical. Once the bucket name is known, every object whose key the caller can guess or enumerate is fetchable.\n",
+      "failure": "Unbounded data exposure. Every file stored in this bucket is readable by arbitrary internet callers, including potentially sensitive operational data, customer information, backup artifacts, or internal documentation that wasn't intended to reach the public surface.\n"
     },
     {
       "finding_id": "sha256:d9330865200aa495",
@@ -326,7 +329,10 @@
       "scope_tags": [
         "aws",
         "s3"
-      ]
+      ],
+      "defect": "The bucket's Public Access Block is not fully enabled — at least one of BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets is disabled. The bucket has no catch-all defense against a future ACL or policy change that would expose content publicly.\n",
+      "infection": "PAB is a defense-in-depth control: even if the bucket is currently private, any subsequent change to the bucket policy or ACL can make it public with no intermediate warning. PAB, when fully enabled, rejects the change at configuration time — the AWS API returns an error rather than accepting the unsafe policy. Without PAB, operators performing routine maintenance or automation running at scale can accidentally flip a bucket public. Audit trails attribute the exposure to the operator or script, not to the absent safety net, so investigations often miss that PAB-on-everywhere would have prevented the incident.\n",
+      "failure": "Future accidental exposure through routine bucket changes. The bucket is not currently public, so this control is preventive, not reactive — the failure it describes is whatever would happen if an unrelated configuration change made the bucket public. Enabling PAB eliminates the class entirely for this bucket regardless of which mechanism (ACL, policy, future API surface) would otherwise have opened the exposure.\n"
     }
   ],
   "issues": [
@@ -545,8 +551,12 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "ab547939e47c809219c51ab1e17466440e85f3fa",
-      "dirty": false
+      "head_commit": "8fddb4857c80faf46de90a635f56d2e0659353e8",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-h1-omise-1474017-public-cdn/controls/CTL.S3.CONTROLS.001.yaml",
+        "stave/testdata/e2e/e2e-h1-omise-1474017-public-cdn/controls/CTL.S3.PUBLIC.001.yaml"
+      ]
     }
   }
 }

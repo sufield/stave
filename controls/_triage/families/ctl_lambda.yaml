@@ -1,0 +1,5 @@
+family: CTL.LAMBDA
+infection: >
+  Lambda misconfigurations expose function code, execution environment, or the function's IAM role to unauthorized use. Overly permissive execution roles, public function URLs, or embedded credentials in environment variables allow attackers to invoke functions, steal credentials, or escalate privileges through the function's role.
+failure: >
+  Serverless function compromise. Lambda functions, their execution roles, or their environment are accessible to unauthorized parties, enabling code execution, credential theft, or privilege escalation.

@@ -1,0 +1,5 @@
+family: CTL.ECS
+infection: >
+  ECS misconfigurations weaken container workload isolation and access controls. Missing encryption, overly permissive task roles, absent logging, or insecure network configurations allow attackers to access container data, escalate privileges, or move laterally.
+failure: >
+  Container workload compromise. ECS tasks, services, or their data are accessible to unauthorized parties due to weakened isolation or access controls.

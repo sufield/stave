@@ -166,6 +166,18 @@ func filterResolvedChains(chains []policy.ChainDefinition, controls []policy.Con
 	if len(chains) == 0 {
 		return nil
 	}
+	// When the active catalog isn't known at this layer (empty preloaded
+	// set — the common case for `stave apply --controls <dir>` without
+	// filter configuration), skip reference validation. The chain engine
+	// operates against the fully-loaded catalog at runtime; chains whose
+	// controls are genuinely missing silently fail to activate there.
+	// Filtering against an empty proxy drops every chain and produces
+	// adopter-facing drift between CLI and library paths. Typo detection
+	// in the no-preload case is a separate concern — see
+	// docs/design-notes for the follow-up proposal.
+	if len(controls) == 0 {
+		return chains
+	}
 	issues := policy.ValidateChainRefs(chains, controls)
 	if len(issues) > 0 && logger != nil {
 		for _, issue := range issues {

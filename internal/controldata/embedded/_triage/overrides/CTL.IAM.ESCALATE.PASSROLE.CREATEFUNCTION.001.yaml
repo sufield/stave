@@ -1,0 +1,16 @@
+control: CTL.IAM.ESCALATE.PASSROLE.CREATEFUNCTION.001
+defect: >
+  The principal has iam:PassRole reaching a role whose effective
+  permissions exceed its own, lambda:CreateFunction to create
+  functions under that role, and an invocation vector (direct
+  invoke, function URL, or event trigger) to execute the function.
+infection: >
+  The attacker creates a Lambda function with the privileged role as
+  its execution role and invokes it. The function's code runs under
+  the target role — any AWS SDK call inside the function executes
+  with the role's full permissions. The attacker uploads code that
+  performs the desired escalation action and triggers execution.
+failure: >
+  Privilege escalation via Lambda execution role. The attacker
+  executes arbitrary code under a role whose permissions exceed
+  their own, enabling any action the role is authorized for.

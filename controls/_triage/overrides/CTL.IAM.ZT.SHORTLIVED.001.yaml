@@ -1,0 +1,15 @@
+control: CTL.IAM.ZT.SHORTLIVED.001
+defect: >
+  Service-to-service access uses long-lived access keys instead of
+  short-lived credentials (STS temporary tokens, OIDC federation,
+  IAM Roles Anywhere).
+infection: >
+  Long-lived access keys do not expire automatically — a stolen key
+  provides indefinite access until someone discovers and revokes it.
+  Short-lived STS credentials expire within hours, automatically
+  limiting the blast radius of credential theft. Every hour a
+  long-lived key exists is an hour it could be used if compromised.
+failure: >
+  Indefinite credential exposure. A stolen access key provides
+  access until manually revoked, with no automatic time bound on
+  the compromise.

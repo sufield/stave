@@ -1,0 +1,15 @@
+control: CTL.IAM.ROOT.RECUR.001
+defect: >
+  Root account API activity has occurred more than once in 30 days.
+  The root credential is being used repeatedly rather than for
+  isolated break-glass events.
+infection: >
+  Repeated root usage within a month indicates either a process
+  failure (an operational workflow incorrectly depends on root) or
+  active compromise (an attacker using root credentials). Single
+  root usage is a break-glass event; repeated usage is a pattern
+  requiring investigation.
+failure: >
+  Persistent root credential usage. Either a process depends on root
+  (operational risk) or root credentials are compromised and being
+  actively exploited (security incident).

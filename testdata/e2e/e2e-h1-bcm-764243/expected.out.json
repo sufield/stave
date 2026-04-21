@@ -186,7 +186,10 @@
       "scope_tags": [
         "aws",
         "s3"
-      ]
+      ],
+      "defect": "A signed S3 upload policy uses prefix-mode key scoping (allowed_key_mode: \"prefix\") rather than binding to an exact object key. The resulting presigned URL can upload to any key under the prefix, not just the intended destination.\n",
+      "infection": "Any caller receiving a presigned URL issued from this policy can upload to any key under the allowed prefix. The application's authentication layer typically assumes the URL is good for exactly one upload to one key — the URL's fine print, however, permits broader writes. In multi-tenant applications, the prefix often covers multiple tenants' storage; a URL issued for one tenant's upload is writable against another tenant's destination. In overwrite scenarios, a crafted PUT can replace existing objects under the prefix, including legitimate content other users uploaded earlier. The attack requires only the presigned URL and knowledge of the target key format — both often derivable from the application's upload endpoint.\n",
+      "failure": "Cross-tenant write or legitimate-content overwrite within the prefix scope. Detection is difficult because S3 sees a valid signed request from the application's signer — the bucket policy, ACLs, and audit trail all show routine behavior. Remediation is policy-side: replace starts-with with eq in the upload policy's key condition and generate per-request object keys server-side.\n"
     }
   ],
   "issues": [
@@ -334,8 +337,11 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "ab547939e47c809219c51ab1e17466440e85f3fa",
-      "dirty": false
+      "head_commit": "8fddb4857c80faf46de90a635f56d2e0659353e8",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-h1-bcm-764243/controls/CTL.S3.WRITE.SCOPE.001.yaml"
+      ]
     }
   }
 }

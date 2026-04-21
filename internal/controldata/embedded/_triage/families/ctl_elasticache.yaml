@@ -1,0 +1,5 @@
+family: CTL.ELASTICACHE
+infection: >
+  ElastiCache misconfigurations expose in-memory data stores to unauthorized access. Missing encryption in transit, absent authentication, or overly permissive security groups allow attackers to read cached data (sessions, credentials, application state) without authentication.
+failure: >
+  Cache data exposure. ElastiCache contents including session tokens, cached credentials, and application state are readable by unauthorized parties.

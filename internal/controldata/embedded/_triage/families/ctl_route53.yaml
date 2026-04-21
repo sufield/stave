@@ -1,0 +1,5 @@
+family: CTL.ROUTE53
+infection: >
+  Route 53 misconfigurations weaken DNS security. Missing DNSSEC validation, absent query logging, or insecure hosted zone configurations allow DNS spoofing, unaudited domain resolution, or unauthorized zone modifications.
+failure: >
+  DNS infrastructure vulnerability. Domain resolution integrity or audit trail is compromised, enabling traffic redirection or undetected DNS manipulation.

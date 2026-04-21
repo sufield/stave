@@ -1,0 +1,5 @@
+family: CTL.EC2
+infection: >
+  EC2 misconfigurations expose compute instances, storage volumes, and network interfaces to unauthorized access. Public IPs, open security groups, unencrypted volumes, missing IMDSv2 enforcement, and embedded credentials each create distinct attack vectors that compound when present together.
+failure: >
+  Compute infrastructure compromise. Instances, volumes, or credentials are accessible to unauthorized parties, enabling data theft, lateral movement, or persistent access.

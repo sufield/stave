@@ -223,6 +223,10 @@ func (r *Index) VerifyNoOrphans(fsys embed.FS, root string) ([]string, error) {
 			return err
 		}
 		if d.IsDir() {
+			name := d.Name()
+			if p != root && (strings.HasPrefix(name, "_") || strings.HasPrefix(name, ".")) {
+				return fs.SkipDir
+			}
 			return nil
 		}
 

@@ -1,0 +1,15 @@
+control: CTL.IAM.ROLE.INTENTMISMATCH.001
+defect: >
+  The role's actual permission categories do not match its declared
+  role-type tag. For example, a role tagged as readonly has iam_write
+  or compute_control permissions.
+infection: >
+  Intent tags are the anchor for systematic access reviews — when
+  the declared purpose diverges from actual permissions, reviewers
+  see a label like readonly and skip past iam_write grants that
+  should trigger investigation. The mismatch conceals the role's
+  true capabilities behind an innocuous label.
+failure: >
+  False labeling of role capabilities. Access reviews that rely on
+  role-type tags will miss dangerous permissions hidden behind an
+  incorrect purpose declaration.

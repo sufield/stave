@@ -1,0 +1,17 @@
+control: CTL.EC2.LAUNCH.TEMPLATE.001
+defect: >
+  The Auto Scaling Group uses a legacy launch configuration instead
+  of a launch template. Launch configurations do not support IMDSv2
+  enforcement, instance metadata tags, Nitro Enclave configuration,
+  or EBS encryption defaults.
+infection: >
+  Instances launched by this ASG cannot be configured with current
+  security features at launch time. IMDSv2 enforcement, metadata
+  tags for access control, and encryption defaults must be applied
+  after launch — creating a window where newly launched instances
+  run with weaker security posture until remediation scripts catch
+  up.
+failure: >
+  Security feature gap. New instances launched by this ASG inherit
+  a degraded security baseline because the launch mechanism cannot
+  express current security requirements.

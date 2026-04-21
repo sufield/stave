@@ -1,0 +1,5 @@
+family: CTL.WAF
+infection: >
+  WAF misconfigurations leave web applications exposed to common attacks. Missing rule groups, absent logging, or permissive default actions allow SQL injection, XSS, and other OWASP Top 10 attacks to reach the application layer unfiltered.
+failure: >
+  Web application protection gap. Application-layer attacks reach the backend unfiltered because the WAF is misconfigured, under-provisioned, or not logging.

@@ -1,0 +1,5 @@
+family: CTL.CISCO
+infection: >
+  Cisco network device misconfigurations weaken perimeter and segmentation controls. Insecure management protocols, default credentials, or permissive ACLs allow attackers to reconfigure network paths, intercept traffic, or disable segmentation.
+failure: >
+  Network infrastructure compromise. An attacker who controls a network device can redirect traffic, bypass segmentation, and establish persistent access to the network fabric.

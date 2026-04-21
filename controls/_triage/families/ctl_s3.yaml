@@ -1,0 +1,5 @@
+family: CTL.S3
+infection: >
+  S3 misconfigurations expose bucket contents to unauthorized access. Public ACLs, permissive bucket policies, missing encryption, or absent access point restrictions allow data to be read, written, or deleted by unauthorized callers — from the public internet or from overly-broad IAM principals.
+failure: >
+  Cloud storage data exposure. Bucket contents — including potentially sensitive operational data, customer information, or proprietary content — are accessible to unauthorized parties.

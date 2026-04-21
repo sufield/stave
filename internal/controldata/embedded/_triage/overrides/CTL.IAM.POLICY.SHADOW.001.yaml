@@ -1,0 +1,16 @@
+control: CTL.IAM.POLICY.SHADOW.001
+defect: >
+  An IAM policy uses the NotAction construct (or NotResource),
+  creating negative logic that implicitly allows all actions (or
+  resources) not in the exclusion list.
+infection: >
+  New AWS services and actions are automatically allowed by the
+  implicit "everything except" grant. The exclusion list rarely
+  covers all dangerous permissions — actions like iam:PutRolePolicy,
+  sts:AssumeRole, or newly-launched service actions fall through the
+  negative logic gap. The effective permissions of a NotAction policy
+  expand silently over time as AWS adds new services and actions.
+failure: >
+  Implicit permission expansion. The policy grants access to actions
+  and services not intentionally authorized, including dangerous IAM
+  write actions that enable privilege escalation.

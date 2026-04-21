@@ -1,0 +1,13 @@
+control: CTL.IAM.CRED.SINGLEKEY.001
+defect: >
+  IAM user has more than one active access key. Multiple active keys
+  double the credential surface area.
+infection: >
+  Each active key is an independent attack vector — an attacker needs
+  only one. Multiple keys also complicate rotation: operators may
+  rotate one key while the other (forgotten or used by legacy systems)
+  remains unchanged for months. The extra key is typically a rotation
+  artifact that was never cleaned up.
+failure: >
+  Expanded credential attack surface. More active keys mean more
+  opportunities for credential theft and harder rotation tracking.

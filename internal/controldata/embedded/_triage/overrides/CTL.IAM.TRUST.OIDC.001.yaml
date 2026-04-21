@@ -1,0 +1,16 @@
+control: CTL.IAM.TRUST.OIDC.001
+defect: >
+  The IAM role's OIDC trust policy accepts any repository from the
+  identity provider. The subject claim is not scoped to a specific
+  repository or branch.
+infection: >
+  Any CI/CD pipeline in the provider's namespace — including
+  compromised repositories, forks, and repositories belonging to
+  other teams — can assume this role. A malicious actor who controls
+  any repository configured with the same OIDC provider can generate
+  tokens that satisfy the trust policy and obtain the role's
+  credentials.
+failure: >
+  Supply chain ingress. Any repository in the OIDC provider's
+  namespace can assume a role intended for a specific deployment
+  pipeline.

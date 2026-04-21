@@ -1,0 +1,14 @@
+control: CTL.IAM.CRED.SETUPKEY.001
+defect: >
+  An access key was created at IAM user creation time rather than
+  on-demand when programmatic access was specifically needed.
+infection: >
+  Setup-time keys are often distributed insecurely — emailed, placed
+  in shared documents, or stored in onboarding scripts. The key may
+  not be needed at all if the user only requires console access. Keys
+  created just in case persist indefinitely without a specific use
+  case to drive rotation.
+failure: >
+  Unnecessary credential exposure. An access key exists without
+  confirmed programmatic need, expanding the attack surface with no
+  operational justification.

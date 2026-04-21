@@ -1,0 +1,24 @@
+control: CTL.S3.PUBLIC.002
+defect: >
+  A bucket tagged with a sensitive-data classification (PHI,
+  PII, or confidential) is exposed via public read or public
+  list. The tag declares the data's sensitivity; the access
+  state contradicts that declaration.
+infection: >
+  Any internet caller can fetch the sensitive objects via
+  anonymous GET or enumerate them via anonymous ListBucket.
+  Search engines and compliance scanners specifically match
+  data-classification tags against access state, so a single
+  tagged-sensitive + public bucket becomes the highest-priority
+  finding in most posture dashboards. Regulators treat the
+  classification tag as evidence of awareness: the organization
+  has labeled this data sensitive and nonetheless exposed it
+  publicly, which weakens claims of accidental oversight.
+failure: >
+  Regulated-data breach. PHI exposure triggers HIPAA breach
+  notification; PII exposure triggers GDPR/CCPA obligations;
+  confidential data exposure typically triggers contractual
+  disclosure and customer notification. Remediation scope is
+  bounded by the exposure window — audit CloudTrail to bound
+  who accessed during that window and produce the notification
+  roster.

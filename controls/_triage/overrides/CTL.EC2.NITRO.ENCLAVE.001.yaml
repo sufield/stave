@@ -1,0 +1,16 @@
+control: CTL.EC2.NITRO.ENCLAVE.001
+defect: >
+  The instance is tagged as requiring Nitro Enclave isolation for
+  cryptographic operations, but enclave support is not enabled on
+  the instance.
+infection: >
+  Cryptographic operations (key generation, signing, decryption)
+  execute in the main instance environment where they are accessible
+  to any process with sufficient privileges. A compromised parent
+  instance can observe or extract cryptographic material that an
+  enclave would have isolated.
+failure: >
+  Cryptographic isolation failure. If the parent instance is
+  compromised, the attacker can access key material and
+  cryptographic operations that were intended to be hardware-isolated
+  from the instance's operating system and hypervisor.

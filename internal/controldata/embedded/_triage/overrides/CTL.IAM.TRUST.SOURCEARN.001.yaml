@@ -1,0 +1,16 @@
+control: CTL.IAM.TRUST.SOURCEARN.001
+defect: >
+  An IAM role trusted by an AWS service principal
+  (*.amazonaws.com) lacks aws:SourceArn or aws:SourceAccount
+  conditions.
+infection: >
+  Without source conditions, the AWS service can assume this role
+  when acting on behalf of any resource in any account — including
+  attacker-controlled resources. A Lambda execution role without
+  aws:SourceArn allows any Lambda function in any account to trigger
+  the assumption. An S3 notification role without SourceArn allows
+  any bucket in any account to use the role.
+failure: >
+  Cross-account service assumption. An attacker in another AWS
+  account can trigger the service to assume this role on behalf of
+  attacker-controlled resources.

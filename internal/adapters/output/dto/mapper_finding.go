@@ -29,6 +29,9 @@ func FromFinding(f *remediation.Finding) FindingDTO {
 		Remediation:        fromRemediationSpec(f.RemediationSpec),
 		Classification:     string(f.Classification),
 		ScopeTags:          scopeTagsToStrings(f.ScopeTags),
+		Defect:             f.Defect,
+		Infection:          f.Infection,
+		Failure:            f.Failure,
 	}
 
 	if f.Source != nil {

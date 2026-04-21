@@ -1,0 +1,16 @@
+control: CTL.IAM.TRUST.OIDC.003
+defect: >
+  The OIDC-federated CI/CD role has permissions exceeding what is
+  needed for its deployment task, such as AdministratorAccess or
+  broad wildcard actions.
+infection: >
+  Any compromise of the CI/CD pipeline — supply chain attack,
+  dependency poisoning, buildspec injection — gains access
+  proportional to the role's permissions. A deployment role with
+  AdministratorAccess turns a CI/CD compromise into full account
+  compromise. The blast radius of a supply chain attack equals the
+  role's effective permissions.
+failure: >
+  Excessive supply chain blast radius. A CI/CD pipeline compromise
+  gains admin or near-admin access instead of scoped deployment
+  permissions.

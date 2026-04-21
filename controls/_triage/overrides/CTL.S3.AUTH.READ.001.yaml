@@ -1,0 +1,22 @@
+control: CTL.S3.AUTH.READ.001
+defect: >
+  The bucket's ACL grants READ permission to the AWS-managed
+  AuthenticatedUsers group, which includes every principal with
+  any valid AWS credential across every AWS account in the
+  world. The bucket is not public to anonymous internet users,
+  but it is effectively public to any AWS account holder.
+infection: >
+  Many operators read "AuthenticatedUsers" and assume it means
+  "our account's users" — it does not. Anyone who signs up for
+  a free AWS account can authenticate and read this bucket's
+  objects. The attack surface is therefore millions of AWS
+  accounts worldwide, accessible via `aws s3 cp s3://bucket/key
+  -` with no other requirement than an AWS login. Automated
+  scanners specifically look for AuthenticatedUsers grants
+  because they are a frequent misunderstanding.
+failure: >
+  Data exposure to every AWS account holder globally. Distinct
+  from anonymous-internet exposure but operationally nearly as
+  serious: automated mass-harvest via AWS CLI, researchers
+  indexing exposed buckets, and targeted attackers pretending
+  to be routine AWS customers all exploit this class.

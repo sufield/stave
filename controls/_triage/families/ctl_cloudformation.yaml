@@ -1,0 +1,5 @@
+family: CTL.CLOUDFORMATION
+infection: >
+  CloudFormation misconfigurations — missing drift detection, stack policy gaps, or insecure parameter handling — allow infrastructure to diverge from its declared state. Manual changes go undetected, and sensitive parameters may be exposed in stack outputs or event logs.
+failure: >
+  Infrastructure drift and governance gap. The actual infrastructure state diverges from the declared template, and security-relevant changes escape detection.

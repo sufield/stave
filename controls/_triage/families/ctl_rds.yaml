@@ -1,0 +1,5 @@
+family: CTL.RDS
+infection: >
+  RDS misconfigurations expose database instances, snapshots, or credentials. Public accessibility, missing encryption at rest, absent automated backups, or unencrypted snapshots allow attackers to connect directly, read data from snapshots, or exploit database vulnerabilities from the internet.
+failure: >
+  Database exposure. RDS instances, their data, or their snapshots are accessible to unauthorized parties, enabling data theft or database compromise.

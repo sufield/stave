@@ -1,0 +1,15 @@
+control: CTL.IAM.IDENTITY.BLASTRADIUS.006
+defect: >
+  The IAM user can reach more than 20 resources classified as
+  sensitive (PHI, PII, confidential) through attached and inline
+  policies.
+infection: >
+  User credentials are long-lived and non-rotating, meaning a single
+  credential leak exposes the full sensitive resource set
+  indefinitely. Unlike role credentials that expire, user access
+  keys persist until manually revoked — the window of sensitive data
+  exposure is unbounded.
+failure: >
+  Concentrated sensitive data exposure via permanent credentials. A
+  leaked access key for this user provides indefinite access to a
+  large volume of PHI, PII, or confidential data.

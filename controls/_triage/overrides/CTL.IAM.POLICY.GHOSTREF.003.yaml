@@ -1,0 +1,17 @@
+control: CTL.IAM.POLICY.GHOSTREF.003
+defect: >
+  IAM policy grants KMS permissions (Encrypt, Decrypt,
+  GenerateDataKey) referencing a KMS key ARN that is in
+  pending-deletion or deleted status.
+infection: >
+  Systems depending on this policy for encrypt/decrypt operations
+  fail silently — data that should be encrypted is written in
+  plaintext, or data that should be decryptable becomes
+  inaccessible. KMS key ARNs include the account ID and a random
+  key ID, so cross-account reclamation is not possible. The risk is
+  operational: cryptographic operations that the policy was supposed
+  to enable no longer function.
+failure: >
+  Cryptographic operations failure. Data integrity violations for
+  workloads depending on the referenced key, with silent fallback to
+  unencrypted storage or inaccessible encrypted data.

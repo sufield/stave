@@ -248,7 +248,10 @@
       "scope_tags": [
         "aws",
         "s3"
-      ]
+      ],
+      "defect": "The bucket's access configuration grants read permission to the public — either via a bucket policy statement with Principal \"*\" or via an ACL grant to the AllUsers pseudo-group. The bucket is reachable without authentication from the public internet.\n",
+      "infection": "Anyone on the internet can fetch objects from this bucket over anonymous HTTP/HTTPS. Search engines and automated scanners continuously enumerate publicly-indexed bucket names, meaning exposure is active from the moment the policy or ACL is in place — not hypothetical. Once the bucket name is known, every object whose key the caller can guess or enumerate is fetchable.\n",
+      "failure": "Unbounded data exposure. Every file stored in this bucket is readable by arbitrary internet callers, including potentially sensitive operational data, customer information, backup artifacts, or internal documentation that wasn't intended to reach the public surface.\n"
     },
     {
       "finding_id": "sha256:a8db07ec8df71531",
@@ -478,7 +481,10 @@
         "aws",
         "s3",
         "sensitive-data"
-      ]
+      ],
+      "defect": "A bucket tagged with a sensitive-data classification (PHI, PII, or confidential) is exposed via public read or public list. The tag declares the data's sensitivity; the access state contradicts that declaration.\n",
+      "infection": "Any internet caller can fetch the sensitive objects via anonymous GET or enumerate them via anonymous ListBucket. Search engines and compliance scanners specifically match data-classification tags against access state, so a single tagged-sensitive + public bucket becomes the highest-priority finding in most posture dashboards. Regulators treat the classification tag as evidence of awareness: the organization has labeled this data sensitive and nonetheless exposed it publicly, which weakens claims of accidental oversight.\n",
+      "failure": "Regulated-data breach. PHI exposure triggers HIPAA breach notification; PII exposure triggers GDPR/CCPA obligations; confidential data exposure typically triggers contractual disclosure and customer notification. Remediation scope is bounded by the exposure window — audit CloudTrail to bound who accessed during that window and produce the notification roster.\n"
     },
     {
       "finding_id": "sha256:5ce777d4af066e45",
@@ -1075,7 +1081,10 @@
       "scope_tags": [
         "aws",
         "s3"
-      ]
+      ],
+      "defect": "The bucket grants s3:ListBucket to an anonymous or wildcard principal (public_list = true) without the public_list_intended tag set to true. The catalog treats intentional listing as acceptable (for software download mirrors, archives, and documented-public catalogs) — absence of the tag means listing is almost certainly unintended.\n",
+      "infection": "Anonymous callers can enumerate every object key in the bucket via a single API call. Enumeration is the step attackers most often lack when objects themselves are publicly readable but unlisted — without a key, a plain public-read bucket is safer than its ACL suggests. Public list removes that obscurity, converting \"attackers must guess keys\" into \"attackers pull the manifest.\" Automated scanners specifically enumerate bucket contents via list-bucket and archive the manifest even if individual objects are not immediately readable.\n",
+      "failure": "Catalog exfiltration. Every object's key, size, modification time, and (often) content hash becomes attacker-known. If some objects are additionally public-readable, those become mass-harvestable via list-then-get. If objects are not public-readable, the manifest still discloses data- classification metadata (filenames often reveal sensitivity), business operations (backup cadence, batch-job naming), and organizational structure (folder layouts mirroring team hierarchies).\n"
     },
     {
       "finding_id": "sha256:cfc8d5e23f723d4e",
@@ -2397,7 +2406,10 @@
       "scope_tags": [
         "aws",
         "s3"
-      ]
+      ],
+      "defect": "The bucket's Public Access Block is not fully enabled — at least one of BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets is disabled. The bucket has no catch-all defense against a future ACL or policy change that would expose content publicly.\n",
+      "infection": "PAB is a defense-in-depth control: even if the bucket is currently private, any subsequent change to the bucket policy or ACL can make it public with no intermediate warning. PAB, when fully enabled, rejects the change at configuration time — the AWS API returns an error rather than accepting the unsafe policy. Without PAB, operators performing routine maintenance or automation running at scale can accidentally flip a bucket public. Audit trails attribute the exposure to the operator or script, not to the absent safety net, so investigations often miss that PAB-on-everywhere would have prevented the incident.\n",
+      "failure": "Future accidental exposure through routine bucket changes. The bucket is not currently public, so this control is preventive, not reactive — the failure it describes is whatever would happen if an unrelated configuration change made the bucket public. Enabling PAB eliminates the class entirely for this bucket regardless of which mechanism (ACL, policy, future API surface) would otherwise have opened the exposure.\n"
     },
     {
       "finding_id": "sha256:04376e057daa240f",
@@ -3076,8 +3088,21 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "ab547939e47c809219c51ab1e17466440e85f3fa",
-      "dirty": false
+      "head_commit": "8fddb4857c80faf46de90a635f56d2e0659353e8",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.AUTH.READ.001.yaml",
+        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.BUCKET.TAKEOVER.001.yaml",
+        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.CONTROLS.001.yaml",
+        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.POLICY.WRITE.001.yaml",
+        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.PUBLIC.001.yaml",
+        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.PUBLIC.002.yaml",
+        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.PUBLIC.003.yaml",
+        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.PUBLIC.004.yaml",
+        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.PUBLIC.LIST.002.yaml",
+        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.TENANT.ISOLATION.001.yaml",
+        "stave/testdata/e2e/e2e-s3-golden-path/controls/CTL.S3.WRITE.SCOPE.001.yaml"
+      ]
     }
   }
 }

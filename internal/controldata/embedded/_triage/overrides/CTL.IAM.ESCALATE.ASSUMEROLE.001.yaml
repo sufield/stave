@@ -1,0 +1,17 @@
+control: CTL.IAM.ESCALATE.ASSUMEROLE.001
+defect: >
+  The principal has sts:AssumeRole reaching a role whose attached
+  permissions exceed its own, and the target role's trust policy
+  admits the principal — either directly by ARN, via account-root
+  delegation, or through a wildcard AWS principal.
+infection: >
+  A single sts:AssumeRole call produces temporary session credentials
+  with the target role's full permission set. The principal does not
+  modify any policy — it pivots into an already-existing role. The
+  session credentials work from any network location and last up to
+  12 hours, giving the attacker a sustained window of elevated
+  access.
+failure: >
+  Privilege escalation to the target role's permission set. If the
+  target role carries admin-equivalent permissions, the principal
+  achieves full account compromise via a single API call.

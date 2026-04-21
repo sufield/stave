@@ -1,0 +1,5 @@
+family: CTL.SNS
+infection: >
+  SNS misconfigurations expose notification topics or allow unauthorized publishing. Overly permissive topic policies, missing encryption, or absent access controls allow attackers to read notification contents, inject messages, or subscribe unauthorized endpoints.
+failure: >
+  Notification channel compromise. SNS topics are accessible to unauthorized publishers or subscribers, enabling message injection or data interception.

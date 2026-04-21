@@ -1,0 +1,16 @@
+control: CTL.EC2.EBS.SNAPSHOT.ENCRYPT.001
+defect: >
+  The EBS snapshot is not encrypted. The snapshot can be copied to
+  another account and restored as a volume without requiring access
+  to a KMS key.
+infection: >
+  An attacker with cross-account snapshot copy permissions (or an
+  insider in another account) can copy this snapshot, mount it as a
+  volume, and read every byte of the original disk. Encrypted
+  snapshots require the source account to explicitly share the KMS
+  key, adding a second authorization gate that this snapshot lacks.
+failure: >
+  Full disk content exposure. The complete contents of the source
+  volume — OS files, application data, database files, credentials
+  stored on disk — are accessible to anyone who can copy the
+  snapshot.

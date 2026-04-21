@@ -1,0 +1,20 @@
+control: CTL.EC2.IMDSV2.002
+defect: >
+  The instance enforces IMDSv2 but runs containerized workloads
+  that can still reach the metadata service. Either a container uses
+  host networking (bypassing the hop limit entirely) or bridge-
+  networked containers operate with HttpPutResponseHopLimit greater
+  than 1.
+infection: >
+  A compromised container can reach the metadata service and steal
+  the host instance's IAM credentials despite IMDSv2 enforcement.
+  Host-networked containers share the host's network namespace and
+  bypass any hop limit. Bridge-networked containers with hop limit
+  greater than 1 can complete the IMDSv2 PUT-for-token request
+  through the Docker bridge. The attack works from EKS, ECS, or
+  Docker-on-EC2.
+failure: >
+  Container-to-host credential theft. An attacker who compromises a
+  container on this host can escalate to the host instance's IAM
+  role, gaining all permissions assigned to the host — typically
+  broader than what any individual container should have.

@@ -1,0 +1,16 @@
+control: CTL.IAM.ROLE.CATEGORYMIX.001
+defect: >
+  The IAM role combines permissions from structurally incompatible
+  categories — for example, data access with IAM management, or
+  compute control with audit control.
+infection: >
+  No single permission in the combination is alarming on its own.
+  The risk emerges from the intersection: data_read + iam_write
+  means a compromised role can access data AND modify who else can.
+  Compute_control + iam_write means the role can create compute AND
+  grant it permissions. Audit_control + data_read means the role can
+  access data AND suppress evidence of having done so.
+failure: >
+  Structural privilege escalation. The incompatible permission
+  combination creates a self-reinforcing attack path — the role
+  carries both the exploit payload and the persistence mechanism.
