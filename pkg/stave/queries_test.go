@@ -4,7 +4,6 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/coverage"
 )
 
@@ -268,5 +267,4 @@ var _ = func() {
 	_ = c.ToolNames()
 	_ = c.DomainsForTool("x")
 
-	var _ evaluation.Issue = iss
 }

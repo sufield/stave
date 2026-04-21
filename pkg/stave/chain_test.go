@@ -89,9 +89,6 @@ postconditions:
 	if cf.ChainID != "public_read_path" {
 		t.Errorf("ChainID: got %q, want %q", cf.ChainID, "public_read_path")
 	}
-	// ChainID is the typed alias — compile-time check passes if it's
-	// assignment-compatible with stave.ChainID.
-	var _ stave.ChainID = cf.ChainID
 	if cf.Severity != stave.SeverityCritical {
 		t.Errorf("Severity: got %q, want critical", cf.Severity)
 	}

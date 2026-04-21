@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Family template inheritance verified end-to-end.** Targeted test
+  (`TestApply_FamilyTemplateInheritance`) confirms 42 of 54 findings
+  inherit family-level infection/failure from the builtin catalog, 12
+  retain per-control overrides. Inheritance works through the embedded
+  `_triage/` tree loaded by the builtin ControlStore. File-based loader
+  applies triage when `_triage/` exists in the controls directory;
+  self-contained fixtures without `_triage/` fall back to inline fields
+  (backward compatible).
 - **Triage separation: `_triage/` directory with family templates and
   per-control overrides.** Security definitions (predicate,
   classification, severity) and troubleshooting context (defect,

@@ -83,6 +83,50 @@ func TestApply_FailsWithoutSnapshotsDir(t *testing.T) {
 	}
 }
 
+// TestApply_FamilyTemplateInheritance verifies that findings for controls
+// without per-control triage overrides inherit infection/failure from
+// their family template (loaded from the builtin _triage/families/).
+func TestApply_FamilyTemplateInheritance(t *testing.T) {
+	a, err := stave.Apply(context.Background(), stave.Config{
+		SnapshotsDir: lordofheavenSnapshots,
+		Now:          frozenNow,
+	})
+	if err != nil {
+		t.Fatalf("Apply: %v", err)
+	}
+
+	var withOverride, inherited int
+	for _, f := range a.Findings {
+		if f.Infection != "" {
+			if f.Defect != "" {
+				withOverride++
+			} else {
+				inherited++
+			}
+		}
+	}
+	if inherited == 0 {
+		t.Fatal("no findings inherited family-level triage; expected >0")
+	}
+	t.Logf("findings: %d with per-control override, %d with family inheritance", withOverride, inherited)
+
+	for _, f := range a.Findings {
+		if f.ControlID == "CTL.S3.PUBLIC.LIST.001" {
+			if f.Infection == "" {
+				t.Error("CTL.S3.PUBLIC.LIST.001 should inherit infection from CTL.S3 family template")
+			}
+			if f.Failure == "" {
+				t.Error("CTL.S3.PUBLIC.LIST.001 should inherit failure from CTL.S3 family template")
+			}
+			if f.Defect != "" {
+				t.Errorf("CTL.S3.PUBLIC.LIST.001 has no per-control defect override, got: %s", f.Defect)
+			}
+			return
+		}
+	}
+	t.Error("CTL.S3.PUBLIC.LIST.001 not found in findings")
+}
+
 // TestApply_ReturnsTypedValues confirms that a consumer reading
 // assessment fields gets the typed IDs the library promises — the
 // core primitive-obsession reduction the package exists to deliver.

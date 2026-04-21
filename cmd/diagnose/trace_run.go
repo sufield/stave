@@ -83,7 +83,7 @@ Exit Codes:
 			}
 
 			tracer := &apptrace.PolicyTracer{}
-			result, err := tracer.Trace(apptrace.TraceRequest{
+			result, err := tracer.Trace(&apptrace.TraceRequest{
 				Control:    control,
 				Snapshot:   snapshot,
 				TargetID:   strings.TrimSpace(assetID),

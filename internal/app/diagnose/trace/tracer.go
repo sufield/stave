@@ -24,7 +24,7 @@ type PolicyTracer struct{}
 
 // Trace executes the logic audit for a single resource and returns
 // a step-by-step breakdown of the evaluation logic.
-func (t *PolicyTracer) Trace(req TraceRequest) (*stavecel.TraceResult, error) {
+func (t *PolicyTracer) Trace(req *TraceRequest) (*stavecel.TraceResult, error) {
 	resource, err := LocateResource(req.Snapshot, asset.ID(req.TargetID), req.SourcePath)
 	if err != nil {
 		return nil, err

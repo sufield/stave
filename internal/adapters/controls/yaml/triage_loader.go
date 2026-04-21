@@ -2,6 +2,7 @@ package yaml
 
 import (
 	"cmp"
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -129,7 +130,8 @@ func loadOverridesFS(fsys fs.FS, dir string, idx *TriageIndex) error {
 			return nil
 		}
 		// embed.FS returns a different error type for missing dirs.
-		if pathErr, ok := err.(*fs.PathError); ok && os.IsNotExist(pathErr.Err) {
+		var pathErr *fs.PathError
+		if errors.As(err, &pathErr) && os.IsNotExist(pathErr.Err) {
 			return nil
 		}
 		return err
@@ -168,7 +170,8 @@ func loadFamiliesFS(fsys fs.FS, dir string, idx *TriageIndex) error {
 		if os.IsNotExist(err) {
 			return nil
 		}
-		if pathErr, ok := err.(*fs.PathError); ok && os.IsNotExist(pathErr.Err) {
+		var pathErr *fs.PathError
+		if errors.As(err, &pathErr) && os.IsNotExist(pathErr.Err) {
 			return nil
 		}
 		return err
