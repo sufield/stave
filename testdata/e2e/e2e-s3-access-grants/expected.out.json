@@ -201,6 +201,20 @@
       "scope_tags": [
         "aws",
         "s3"
+      ],
+      "delta": [
+        {
+          "property_label": "access grants has broad write grant",
+          "property_path": "storage.access_grants.has_broad_write_grant",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        },
+        {
+          "property_label": "S3 Access Grants instance",
+          "property_path": "storage.access_grants.instance_exists",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
       ]
     },
     {
@@ -351,6 +365,20 @@
       "scope_tags": [
         "aws",
         "s3"
+      ],
+      "delta": [
+        {
+          "property_label": "access grants identity center",
+          "property_path": "storage.access_grants.identity_center_attached",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        },
+        {
+          "property_label": "S3 Access Grants instance",
+          "property_path": "storage.access_grants.instance_exists",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
       ]
     }
   ],
@@ -517,7 +545,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "ab547939e47c809219c51ab1e17466440e85f3fa",
+      "head_commit": "8ef91f6c62fe209cbb9f3919ce7310666be52141",
       "dirty": false
     }
   }

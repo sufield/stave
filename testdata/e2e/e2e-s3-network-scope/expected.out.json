@@ -147,6 +147,14 @@
       "scope_tags": [
         "aws",
         "s3"
+      ],
+      "delta": [
+        {
+          "property_label": "access effective network scope",
+          "property_path": "storage.access.effective_network_scope",
+          "current_value": "public",
+          "fix_action": "change from \"public\" to any other value, or remove"
+        }
       ]
     },
     {
@@ -250,6 +258,14 @@
       "scope_tags": [
         "aws",
         "s3"
+      ],
+      "delta": [
+        {
+          "property_label": "access effective network scope",
+          "property_path": "storage.access.effective_network_scope",
+          "current_value": "public",
+          "fix_action": "change from \"public\" to any other value, or remove"
+        }
       ]
     }
   ],
@@ -442,7 +458,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "ab547939e47c809219c51ab1e17466440e85f3fa",
+      "head_commit": "8ef91f6c62fe209cbb9f3919ce7310666be52141",
       "dirty": false
     }
   }

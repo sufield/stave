@@ -189,6 +189,14 @@
       "scope_tags": [
         "gcp",
         "gcs"
+      ],
+      "delta": [
+        {
+          "property_label": "public read access",
+          "property_path": "storage.access.public_read",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
       ]
     }
   ],
@@ -363,7 +371,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "ab547939e47c809219c51ab1e17466440e85f3fa",
+      "head_commit": "8ef91f6c62fe209cbb9f3919ce7310666be52141",
       "dirty": false
     }
   }

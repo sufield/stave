@@ -162,6 +162,20 @@
       "classification": "state_assertion",
       "scope_tags": [
         "dns"
+      ],
+      "delta": [
+        {
+          "property_label": "target exists",
+          "property_path": "dns.target_exists",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        },
+        {
+          "property_label": "target owned",
+          "property_path": "dns.target_owned",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
       ]
     }
   ],
@@ -309,7 +323,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "ab547939e47c809219c51ab1e17466440e85f3fa",
+      "head_commit": "8ef91f6c62fe209cbb9f3919ce7310666be52141",
       "dirty": false
     }
   }

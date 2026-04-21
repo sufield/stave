@@ -43,6 +43,15 @@ type FindingDTO struct {
 	Defect               string                    `json:"defect,omitempty"`
 	Infection            string                    `json:"infection,omitempty"`
 	Failure              string                    `json:"failure,omitempty"`
+	Delta                []DeltaPathDTO            `json:"delta,omitempty"`
+}
+
+// DeltaPathDTO represents one independent fix path in JSON output.
+type DeltaPathDTO struct {
+	PropertyLabel string `json:"property_label"`
+	PropertyPath  string `json:"property_path"`
+	CurrentValue  string `json:"current_value"`
+	FixAction     string `json:"fix_action"`
 }
 
 // AlternativeDTO mirrors controldef.Alternative for JSON output.

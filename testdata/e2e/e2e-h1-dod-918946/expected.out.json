@@ -193,7 +193,21 @@
       ],
       "defect": "An external reference — DNS CNAME, CDN origin, package- manager install URL, application configuration — points at an S3 bucket that does not exist in AWS or is not owned by the referencing account. The bucket name is unclaimed; anyone can register it with `aws s3api create-bucket`.\n",
       "infection": "An attacker claims the unclaimed bucket name and serves arbitrary content from it. Any downstream consumer following the reference — browsers resolving the CNAME, CDNs proxying the origin, package managers fetching install scripts — retrieves attacker content under a trusted-looking URL. Because the bucket's DNS and path appear legitimate (matching the original infrastructure), endpoint detection and user intuition both fail: the attacker's certificate validates, the hostname is familiar, the URL looks routine. Software-distribution takeover is the worst case: `curl | sh` style install commands execute attacker code.\n",
-      "failure": "Attacker-controlled content delivery under a trusted identity. Remediation is complex because affected downstream consumers may have cached or installed attacker-delivered artifacts during the exposure window; full recovery requires re-verifying installed software, rotating credentials potentially captured, and invalidating cached content across CDNs and browser caches.\n"
+      "failure": "Attacker-controlled content delivery under a trusted identity. Remediation is complex because affected downstream consumers may have cached or installed attacker-delivered artifacts during the exposure window; full recovery requires re-verifying installed software, rotating credentials potentially captured, and invalidating cached content across CDNs and browser caches.\n",
+      "delta": [
+        {
+          "property_label": "bucket exists",
+          "property_path": "s3_ref.bucket_exists",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        },
+        {
+          "property_label": "bucket owned",
+          "property_path": "s3_ref.bucket_owned",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
     }
   ],
   "issues": [
@@ -367,11 +381,8 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "8fddb4857c80faf46de90a635f56d2e0659353e8",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-h1-dod-918946/controls/CTL.S3.BUCKET.TAKEOVER.001.yaml"
-      ]
+      "head_commit": "8ef91f6c62fe209cbb9f3919ce7310666be52141",
+      "dirty": false
     }
   }
 }

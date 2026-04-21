@@ -517,7 +517,15 @@
       ],
       "defect": "Multi region is not enabled.",
       "infection": "CloudTrail misconfigurations create gaps in the audit trail. Missing trails, disabled logging, or absent log validation allow an attacker to operate without generating audit records — or to tamper with existing records without detection.\n",
-      "failure": "Audit trail gap. Security-relevant API activity is not recorded or recorded logs cannot be trusted, undermining incident investigation and compliance evidence.\n"
+      "failure": "Audit trail gap. Security-relevant API activity is not recorded or recorded logs cannot be trusted, undermining incident investigation and compliance evidence.\n",
+      "delta": [
+        {
+          "property_label": "multi region",
+          "property_path": "audit_trail.multi_region_enabled",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
     },
     {
       "finding_id": "sha256:aa66250e8a1dc01c",
@@ -668,7 +676,15 @@
       ],
       "defect": "Recording is not enabled.",
       "infection": "AWS Config misconfigurations mean configuration changes to resources go unrecorded. Without Config recording, there is no baseline to detect drift, no history to investigate incidents, and no evidence for compliance audits.\n",
-      "failure": "Configuration visibility gap. Resource changes are untracked, preventing drift detection, incident investigation, and compliance evidence collection.\n"
+      "failure": "Configuration visibility gap. Resource changes are untracked, preventing drift detection, incident investigation, and compliance evidence collection.\n",
+      "delta": [
+        {
+          "property_label": "recording",
+          "property_path": "compliance.recording_enabled",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
     },
     {
       "finding_id": "sha256:81f43f35236b5e56",
@@ -813,7 +829,15 @@
       ],
       "defect": "VPC flow logging is not enabled.",
       "infection": "VPC misconfigurations weaken network isolation and segmentation. Missing flow logs, overly permissive NACLs, absent VPC endpoint policies, or unrestricted peering connections allow unauthorized network access, unaudited traffic flows, or lateral movement between VPCs.\n",
-      "failure": "Network isolation failure. VPC boundaries are weakened, enabling unauthorized network access, lateral movement, or unaudited traffic flows.\n"
+      "failure": "Network isolation failure. VPC boundaries are weakened, enabling unauthorized network access, lateral movement, or unaudited traffic flows.\n",
+      "delta": [
+        {
+          "property_label": "VPC flow logging",
+          "property_path": "network.flow_log.enabled",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
     },
     {
       "finding_id": "sha256:686a676fcb4f9731",
@@ -968,7 +992,15 @@
       ],
       "defect": "The AWS root account has active access keys. Root access keys provide unrestricted programmatic access that cannot be scoped or constrained by IAM policies.\n",
       "infection": "Root access keys bypass all IAM controls — SCPs, permission boundaries, and session policies do not apply. A leaked root access key provides full, irrevocable programmatic control over the entire AWS account. Unlike IAM user keys, root keys cannot be restricted to specific services, resources, or conditions.\n",
-      "failure": "Unrestricted account compromise. A leaked root access key gives the attacker full control over every resource, identity, and billing configuration in the account.\n"
+      "failure": "Unrestricted account compromise. A leaked root access key gives the attacker full control over every resource, identity, and billing configuration in the account.\n",
+      "delta": [
+        {
+          "property_label": "root account access keys",
+          "property_path": "identity.root.has_access_keys",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
+      ]
     },
     {
       "finding_id": "sha256:d1659912ae8d6344",
@@ -1127,7 +1159,15 @@
       ],
       "defect": "The AWS root account does not have multi-factor authentication enabled. Root access is protected by password alone.\n",
       "infection": "The root account has unrestricted authority over every resource in the AWS account. Without MFA, a single compromised password — via phishing, credential stuffing, password reuse, or brute force — yields full account control. Root is the only AWS principal that cannot be restricted by IAM policies, SCPs, or permission boundaries.\n",
-      "failure": "Full account compromise via single-factor authentication. An attacker who obtains the root password has unrestricted access to the entire AWS account.\n"
+      "failure": "Full account compromise via single-factor authentication. An attacker who obtains the root password has unrestricted access to the entire AWS account.\n",
+      "delta": [
+        {
+          "property_label": "root account MFA",
+          "property_path": "identity.root.mfa_enabled",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
     },
     {
       "finding_id": "sha256:6d6e5d5f2078bd42",
@@ -1304,7 +1344,15 @@
       ],
       "defect": "Access publicly accessible is enabled.",
       "infection": "RDS misconfigurations expose database instances, snapshots, or credentials. Public accessibility, missing encryption at rest, absent automated backups, or unencrypted snapshots allow attackers to connect directly, read data from snapshots, or exploit database vulnerabilities from the internet.\n",
-      "failure": "Database exposure. RDS instances, their data, or their snapshots are accessible to unauthorized parties, enabling data theft or database compromise.\n"
+      "failure": "Database exposure. RDS instances, their data, or their snapshots are accessible to unauthorized parties, enabling data theft or database compromise.\n",
+      "delta": [
+        {
+          "property_label": "access publicly accessible",
+          "property_path": "database.access.publicly_accessible",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
+      ]
     },
     {
       "finding_id": "sha256:9ac53f47bd4f1f1b",
@@ -1454,7 +1502,15 @@
       ],
       "defect": "Database encryption at rest is not enabled.",
       "infection": "RDS misconfigurations expose database instances, snapshots, or credentials. Public accessibility, missing encryption at rest, absent automated backups, or unencrypted snapshots allow attackers to connect directly, read data from snapshots, or exploit database vulnerabilities from the internet.\n",
-      "failure": "Database exposure. RDS instances, their data, or their snapshots are accessible to unauthorized parties, enabling data theft or database compromise.\n"
+      "failure": "Database exposure. RDS instances, their data, or their snapshots are accessible to unauthorized parties, enabling data theft or database compromise.\n",
+      "delta": [
+        {
+          "property_label": "database encryption at rest",
+          "property_path": "database.encryption.storage_encrypted",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
     },
     {
       "finding_id": "sha256:81b8ce81c12cc518",
@@ -1590,7 +1646,15 @@
       ],
       "defect": "Encryption TLS enforced is not enabled.",
       "infection": "API Gateway misconfigurations expose backend services to unauthorized callers. Missing authentication, overly permissive authorization, or absent rate limiting allow attackers to enumerate, abuse, or overwhelm the API's backend resources.\n",
-      "failure": "Unauthorized API access. Backend services are reachable by unauthorized callers, enabling data exfiltration, abuse, or denial of service through the API layer.\n"
+      "failure": "Unauthorized API access. Backend services are reachable by unauthorized callers, enabling data exfiltration, abuse, or denial of service through the API layer.\n",
+      "delta": [
+        {
+          "property_label": "encryption TLS enforced",
+          "property_path": "api.encryption.tls_enforced",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
     },
     {
       "finding_id": "sha256:a52edc7322ea1dde",
@@ -1723,7 +1787,15 @@
       ],
       "defect": "Backup is not enabled.",
       "infection": "Backup misconfigurations leave recovery points unencrypted, unreplicated, or unprotected from deletion. An attacker who gains access to unencrypted backups reads the full dataset. Missing cross-region replication means a single region failure destroys all recovery capability.\n",
-      "failure": "Data recovery failure or backup data exposure. Backups are either inaccessible when needed or accessible to unauthorized parties.\n"
+      "failure": "Data recovery failure or backup data exposure. Backups are either inaccessible when needed or accessible to unauthorized parties.\n",
+      "delta": [
+        {
+          "property_label": "backup",
+          "property_path": "backup.has_backup",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
     },
     {
       "finding_id": "sha256:f237d540e872de4d",
@@ -1859,7 +1931,15 @@
       ],
       "defect": "Encryption is not enabled.",
       "infection": "CloudTrail misconfigurations create gaps in the audit trail. Missing trails, disabled logging, or absent log validation allow an attacker to operate without generating audit records — or to tamper with existing records without detection.\n",
-      "failure": "Audit trail gap. Security-relevant API activity is not recorded or recorded logs cannot be trusted, undermining incident investigation and compliance evidence.\n"
+      "failure": "Audit trail gap. Security-relevant API activity is not recorded or recorded logs cannot be trusted, undermining incident investigation and compliance evidence.\n",
+      "delta": [
+        {
+          "property_label": "encryption",
+          "property_path": "audit_trail.encryption.encrypted",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
     },
     {
       "finding_id": "sha256:1bb3180bd93c6975",
@@ -1998,7 +2078,15 @@
       ],
       "defect": "Log file validation is not enabled.",
       "infection": "CloudTrail misconfigurations create gaps in the audit trail. Missing trails, disabled logging, or absent log validation allow an attacker to operate without generating audit records — or to tamper with existing records without detection.\n",
-      "failure": "Audit trail gap. Security-relevant API activity is not recorded or recorded logs cannot be trusted, undermining incident investigation and compliance evidence.\n"
+      "failure": "Audit trail gap. Security-relevant API activity is not recorded or recorded logs cannot be trusted, undermining incident investigation and compliance evidence.\n",
+      "delta": [
+        {
+          "property_label": "log file validation",
+          "property_path": "audit_trail.log_file_validation_enabled",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
     },
     {
       "finding_id": "sha256:801f9bd87a66bd5f",
@@ -2129,7 +2217,15 @@
       ],
       "defect": "Retention policy is not enabled.",
       "infection": "Missing CloudWatch alarms and monitoring configurations mean security-relevant events go undetected. Unauthorized API calls, root account usage, configuration changes, and authentication failures occur without triggering alerts.\n",
-      "failure": "Detection blind spot. Security events that should trigger investigation occur silently, delaying incident response and allowing attackers to operate undetected.\n"
+      "failure": "Detection blind spot. Security events that should trigger investigation occur silently, delaying incident response and allowing attackers to operate undetected.\n",
+      "delta": [
+        {
+          "property_label": "retention policy",
+          "property_path": "log_group.has_retention_policy",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
     },
     {
       "finding_id": "sha256:a73625cd410ebe3c",
@@ -2263,7 +2359,15 @@
       ],
       "defect": "MFA enforcement is not enabled.",
       "infection": "Cognito misconfigurations weaken user authentication and identity management. Missing MFA enforcement, weak password policies, or insecure identity pool configurations allow attackers to compromise user accounts or obtain elevated AWS credentials.\n",
-      "failure": "User identity compromise. Weak authentication controls enable account takeover, credential theft, or unauthorized access to AWS resources through Cognito identity pools.\n"
+      "failure": "User identity compromise. Weak authentication controls enable account takeover, credential theft, or unauthorized access to AWS resources through Cognito identity pools.\n",
+      "delta": [
+        {
+          "property_label": "MFA enforcement",
+          "property_path": "identity.auth.mfa_enforced",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
     },
     {
       "finding_id": "sha256:57cf047d8c46d33b",
@@ -2396,7 +2500,15 @@
       ],
       "defect": "Encryption sse type is not \"KMS\".",
       "infection": "DynamoDB misconfigurations expose table data or weaken access controls. Missing encryption at rest, overly permissive IAM policies, or absent point-in-time recovery leave data vulnerable to unauthorized access and unrecoverable deletion.\n",
-      "failure": "Database data exposure or loss. DynamoDB table contents are accessible to unauthorized principals or unrecoverable after deletion.\n"
+      "failure": "Database data exposure or loss. DynamoDB table contents are accessible to unauthorized principals or unrecoverable after deletion.\n",
+      "delta": [
+        {
+          "property_label": "encryption sse type",
+          "property_path": "database.encryption.sse_type",
+          "current_value": "DEFAULT",
+          "fix_action": "set to KMS"
+        }
+      ]
     },
     {
       "finding_id": "sha256:6ecde267626a20de",
@@ -2535,7 +2647,15 @@
       ],
       "defect": "The EBS volume attached to this instance does not have encryption enabled. Data is stored in plaintext on the underlying storage hardware.\n",
       "infection": "Any process with read access to the volume — including attacker code running on the instance — can read data without a decryption key requirement. If the volume is snapshotted, the snapshot is also unencrypted and can be shared or copied across accounts without cryptographic controls.\n",
-      "failure": "Data-at-rest exposure. Sensitive data (application state, database files, credentials, logs) stored on this volume is accessible to anyone who can mount or snapshot it, violating encryption-at-rest compliance requirements.\n"
+      "failure": "Data-at-rest exposure. Sensitive data (application state, database files, credentials, logs) stored on this volume is accessible to anyone who can mount or snapshot it, violating encryption-at-rest compliance requirements.\n",
+      "delta": [
+        {
+          "property_label": "EBS volume encryption",
+          "property_path": "compute.encryption.ebs_encrypted",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
     },
     {
       "finding_id": "sha256:3a1554c5a78a5816",
@@ -2697,7 +2817,15 @@
       ],
       "defect": "The EC2 instance has a public IP address assigned, making it directly reachable from the internet without traversing a load balancer, NAT gateway, or other network boundary.\n",
       "infection": "The instance is exposed to the full spectrum of internet- originated attacks — port scanning, credential brute-forcing, vulnerability exploitation — on every port permitted by its security group. Any service listening on a permitted port is directly addressable. The attack surface includes not just the intended application but every daemon and listener on the instance.\n",
-      "failure": "Direct internet exposure. The instance is reachable from any internet address, bypassing network perimeter controls that would otherwise limit the blast radius of a successful exploit.\n"
+      "failure": "Direct internet exposure. The instance is reachable from any internet address, bypassing network perimeter controls that would otherwise limit the blast radius of a successful exploit.\n",
+      "delta": [
+        {
+          "property_label": "public IP address",
+          "property_path": "compute.network.has_public_ip",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
+      ]
     },
     {
       "finding_id": "sha256:9ba0b33d2248da3a",
@@ -2832,7 +2960,15 @@
       ],
       "defect": "Encryption in transit is not enabled.",
       "infection": "ElastiCache misconfigurations expose in-memory data stores to unauthorized access. Missing encryption in transit, absent authentication, or overly permissive security groups allow attackers to read cached data (sessions, credentials, application state) without authentication.\n",
-      "failure": "Cache data exposure. ElastiCache contents including session tokens, cached credentials, and application state are readable by unauthorized parties.\n"
+      "failure": "Cache data exposure. ElastiCache contents including session tokens, cached credentials, and application state are readable by unauthorized parties.\n",
+      "delta": [
+        {
+          "property_label": "encryption in transit",
+          "property_path": "cache.encryption.in_transit_enabled",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
     },
     {
       "finding_id": "sha256:571de1d96c48afd6",
@@ -2943,7 +3079,15 @@
       ],
       "defect": "Encryption HTTP to HTTPS redirect is not enabled.",
       "infection": "ELB misconfigurations weaken transport security or expose backend services. Insecure TLS policies, missing access logging, or absent security headers allow protocol downgrade attacks, untracked access, or client-side vulnerabilities on load-balanced endpoints.\n",
-      "failure": "Load balancer security gap. Transport security is degraded, access is unaudited, or backend services are exposed through the load balancer.\n"
+      "failure": "Load balancer security gap. Transport security is degraded, access is unaudited, or backend services are exposed through the load balancer.\n",
+      "delta": [
+        {
+          "property_label": "encryption HTTP to HTTPS redirect",
+          "property_path": "loadbalancer.encryption.http_to_https_redirect",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
     },
     {
       "finding_id": "sha256:45813734adb9d32e",
@@ -3055,7 +3199,15 @@
       ],
       "defect": "Encryption TLS 1 2 or higher is not enabled.",
       "infection": "ELB misconfigurations weaken transport security or expose backend services. Insecure TLS policies, missing access logging, or absent security headers allow protocol downgrade attacks, untracked access, or client-side vulnerabilities on load-balanced endpoints.\n",
-      "failure": "Load balancer security gap. Transport security is degraded, access is unaudited, or backend services are exposed through the load balancer.\n"
+      "failure": "Load balancer security gap. Transport security is degraded, access is unaudited, or backend services are exposed through the load balancer.\n",
+      "delta": [
+        {
+          "property_label": "encryption TLS 1 2 or higher",
+          "property_path": "loadbalancer.encryption.tls_1_2_or_higher",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
     },
     {
       "finding_id": "sha256:1e9883ff6455c056",
@@ -3193,7 +3345,15 @@
       ],
       "defect": "Policy has wildcard principal is enabled.",
       "infection": "KMS misconfigurations weaken the cryptographic protection of encrypted data. Overly permissive key policies, disabled key rotation, or broad grants allow unauthorized principals to decrypt data, schedule key deletion, or use keys for unauthorized encryption operations.\n",
-      "failure": "Cryptographic control failure. Encrypted data is decryptable by unauthorized principals, or key management operations are accessible to non-administrative identities.\n"
+      "failure": "Cryptographic control failure. Encrypted data is decryptable by unauthorized principals, or key management operations are accessible to non-administrative identities.\n",
+      "delta": [
+        {
+          "property_label": "policy has wildcard principal",
+          "property_path": "cryptography.policy.has_wildcard_principal",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
+      ]
     },
     {
       "finding_id": "sha256:d3c473c720840e6d",
@@ -3323,7 +3483,15 @@
       ],
       "defect": "Backup is not enabled.",
       "infection": "RDS misconfigurations expose database instances, snapshots, or credentials. Public accessibility, missing encryption at rest, absent automated backups, or unencrypted snapshots allow attackers to connect directly, read data from snapshots, or exploit database vulnerabilities from the internet.\n",
-      "failure": "Database exposure. RDS instances, their data, or their snapshots are accessible to unauthorized parties, enabling data theft or database compromise.\n"
+      "failure": "Database exposure. RDS instances, their data, or their snapshots are accessible to unauthorized parties, enabling data theft or database compromise.\n",
+      "delta": [
+        {
+          "property_label": "backup",
+          "property_path": "database.backup.enabled",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
     },
     {
       "finding_id": "sha256:4faec0c040d11d18",
@@ -3457,7 +3625,15 @@
       ],
       "defect": "Encryption customer managed key is not enabled.",
       "infection": "Secrets Manager misconfigurations weaken secret lifecycle management. Missing automatic rotation, overly permissive resource policies, or absent encryption allow secrets to become stale, broadly accessible, or stored without cryptographic protection.\n",
-      "failure": "Managed secret exposure. Secrets stored in Secrets Manager are accessible to unauthorized principals, not rotated on schedule, or stored without encryption.\n"
+      "failure": "Managed secret exposure. Secrets stored in Secrets Manager are accessible to unauthorized principals, not rotated on schedule, or stored without encryption.\n",
+      "delta": [
+        {
+          "property_label": "encryption customer managed key",
+          "property_path": "secret.encryption.customer_managed_key",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
     },
     {
       "finding_id": "sha256:284126ed74a244f3",
@@ -3587,7 +3763,15 @@
       ],
       "defect": "Encryption is not enabled.",
       "infection": "SNS misconfigurations expose notification topics or allow unauthorized publishing. Overly permissive topic policies, missing encryption, or absent access controls allow attackers to read notification contents, inject messages, or subscribe unauthorized endpoints.\n",
-      "failure": "Notification channel compromise. SNS topics are accessible to unauthorized publishers or subscribers, enabling message injection or data interception.\n"
+      "failure": "Notification channel compromise. SNS topics are accessible to unauthorized publishers or subscribers, enabling message injection or data interception.\n",
+      "delta": [
+        {
+          "property_label": "encryption",
+          "property_path": "messaging.encryption.encrypted",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
     },
     {
       "finding_id": "sha256:63bc7609a3b16aa7",
@@ -3717,7 +3901,15 @@
       ],
       "defect": "Encryption is not enabled.",
       "infection": "SQS misconfigurations expose message queues to unauthorized access. Overly permissive queue policies, missing encryption, or absent dead-letter queue configurations allow attackers to read, inject, or delete messages in processing pipelines.\n",
-      "failure": "Message queue compromise. SQS queue contents are accessible to unauthorized principals, enabling data interception, message injection, or processing disruption.\n"
+      "failure": "Message queue compromise. SQS queue contents are accessible to unauthorized principals, enabling data interception, message injection, or processing disruption.\n",
+      "delta": [
+        {
+          "property_label": "encryption",
+          "property_path": "messaging.encryption.encrypted",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
     },
     {
       "finding_id": "sha256:99ff439877cf27fd",
@@ -3848,7 +4040,15 @@
       ],
       "defect": "Multi az is not enabled.",
       "infection": "Backup misconfigurations leave recovery points unencrypted, unreplicated, or unprotected from deletion. An attacker who gains access to unencrypted backups reads the full dataset. Missing cross-region replication means a single region failure destroys all recovery capability.\n",
-      "failure": "Data recovery failure or backup data exposure. Backups are either inaccessible when needed or accessible to unauthorized parties.\n"
+      "failure": "Data recovery failure or backup data exposure. Backups are either inaccessible when needed or accessible to unauthorized parties.\n",
+      "delta": [
+        {
+          "property_label": "multi az",
+          "property_path": "availability.multi_az",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
     },
     {
       "finding_id": "sha256:826ab06811b86f5a",
@@ -3979,7 +4179,15 @@
       ],
       "defect": "Cross region is not enabled.",
       "infection": "Backup misconfigurations leave recovery points unencrypted, unreplicated, or unprotected from deletion. An attacker who gains access to unencrypted backups reads the full dataset. Missing cross-region replication means a single region failure destroys all recovery capability.\n",
-      "failure": "Data recovery failure or backup data exposure. Backups are either inaccessible when needed or accessible to unauthorized parties.\n"
+      "failure": "Data recovery failure or backup data exposure. Backups are either inaccessible when needed or accessible to unauthorized parties.\n",
+      "delta": [
+        {
+          "property_label": "cross region",
+          "property_path": "replication.cross_region_enabled",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
     },
     {
       "finding_id": "sha256:c2ed914d02c8ae20",
@@ -4114,7 +4322,15 @@
       ],
       "defect": "Active rules is not enabled.",
       "infection": "AWS Config misconfigurations mean configuration changes to resources go unrecorded. Without Config recording, there is no baseline to detect drift, no history to investigate incidents, and no evidence for compliance audits.\n",
-      "failure": "Configuration visibility gap. Resource changes are untracked, preventing drift detection, incident investigation, and compliance evidence collection.\n"
+      "failure": "Configuration visibility gap. Resource changes are untracked, preventing drift detection, incident investigation, and compliance evidence collection.\n",
+      "delta": [
+        {
+          "property_label": "active rules",
+          "property_path": "compliance.has_active_rules",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
     },
     {
       "finding_id": "sha256:0eea80a827ddcfa6",
@@ -4222,7 +4438,15 @@
       ],
       "defect": "Availability cross zone is not enabled.",
       "infection": "ELB misconfigurations weaken transport security or expose backend services. Insecure TLS policies, missing access logging, or absent security headers allow protocol downgrade attacks, untracked access, or client-side vulnerabilities on load-balanced endpoints.\n",
-      "failure": "Load balancer security gap. Transport security is degraded, access is unaudited, or backend services are exposed through the load balancer.\n"
+      "failure": "Load balancer security gap. Transport security is degraded, access is unaudited, or backend services are exposed through the load balancer.\n",
+      "delta": [
+        {
+          "property_label": "availability cross zone",
+          "property_path": "loadbalancer.availability.cross_zone_enabled",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
     },
     {
       "finding_id": "sha256:be85087768aeabce",
@@ -4328,7 +4552,15 @@
       ],
       "defect": "Logging access log is not enabled.",
       "infection": "ELB misconfigurations weaken transport security or expose backend services. Insecure TLS policies, missing access logging, or absent security headers allow protocol downgrade attacks, untracked access, or client-side vulnerabilities on load-balanced endpoints.\n",
-      "failure": "Load balancer security gap. Transport security is degraded, access is unaudited, or backend services are exposed through the load balancer.\n"
+      "failure": "Load balancer security gap. Transport security is degraded, access is unaudited, or backend services are exposed through the load balancer.\n",
+      "delta": [
+        {
+          "property_label": "logging access log",
+          "property_path": "loadbalancer.logging.access_log_enabled",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
     },
     {
       "finding_id": "sha256:2653bff61b751ad6",
@@ -4458,7 +4690,15 @@
       ],
       "defect": "Logging audit log is not enabled.",
       "infection": "RDS misconfigurations expose database instances, snapshots, or credentials. Public accessibility, missing encryption at rest, absent automated backups, or unencrypted snapshots allow attackers to connect directly, read data from snapshots, or exploit database vulnerabilities from the internet.\n",
-      "failure": "Database exposure. RDS instances, their data, or their snapshots are accessible to unauthorized parties, enabling data theft or database compromise.\n"
+      "failure": "Database exposure. RDS instances, their data, or their snapshots are accessible to unauthorized parties, enabling data theft or database compromise.\n",
+      "delta": [
+        {
+          "property_label": "logging audit log",
+          "property_path": "database.logging.audit_log_enabled",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
     },
     {
       "finding_id": "sha256:c215d91c260588c6",
@@ -4589,7 +4829,15 @@
       ],
       "defect": "Access multi az is not enabled.",
       "infection": "RDS misconfigurations expose database instances, snapshots, or credentials. Public accessibility, missing encryption at rest, absent automated backups, or unencrypted snapshots allow attackers to connect directly, read data from snapshots, or exploit database vulnerabilities from the internet.\n",
-      "failure": "Database exposure. RDS instances, their data, or their snapshots are accessible to unauthorized parties, enabling data theft or database compromise.\n"
+      "failure": "Database exposure. RDS instances, their data, or their snapshots are accessible to unauthorized parties, enabling data theft or database compromise.\n",
+      "delta": [
+        {
+          "property_label": "access multi az",
+          "property_path": "database.access.multi_az",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
     },
     {
       "finding_id": "sha256:7ea0b9680c5e0447",
@@ -4720,7 +4968,15 @@
       ],
       "defect": "Access rotation is not enabled.",
       "infection": "Secrets Manager misconfigurations weaken secret lifecycle management. Missing automatic rotation, overly permissive resource policies, or absent encryption allow secrets to become stale, broadly accessible, or stored without cryptographic protection.\n",
-      "failure": "Managed secret exposure. Secrets stored in Secrets Manager are accessible to unauthorized principals, not rotated on schedule, or stored without encryption.\n"
+      "failure": "Managed secret exposure. Secrets stored in Secrets Manager are accessible to unauthorized principals, not rotated on schedule, or stored without encryption.\n",
+      "delta": [
+        {
+          "property_label": "access rotation",
+          "property_path": "secret.access.rotation_enabled",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
     }
   ],
   "chain_findings": [

@@ -201,7 +201,15 @@
       ],
       "defect": "The bucket's access configuration grants read permission to the public — either via a bucket policy statement with Principal \"*\" or via an ACL grant to the AllUsers pseudo-group. The bucket is reachable without authentication from the public internet.\n",
       "infection": "Anyone on the internet can fetch objects from this bucket over anonymous HTTP/HTTPS. Search engines and automated scanners continuously enumerate publicly-indexed bucket names, meaning exposure is active from the moment the policy or ACL is in place — not hypothetical. Once the bucket name is known, every object whose key the caller can guess or enumerate is fetchable.\n",
-      "failure": "Unbounded data exposure. Every file stored in this bucket is readable by arbitrary internet callers, including potentially sensitive operational data, customer information, backup artifacts, or internal documentation that wasn't intended to reach the public surface.\n"
+      "failure": "Unbounded data exposure. Every file stored in this bucket is readable by arbitrary internet callers, including potentially sensitive operational data, customer information, backup artifacts, or internal documentation that wasn't intended to reach the public surface.\n",
+      "delta": [
+        {
+          "property_label": "public read access",
+          "property_path": "storage.access.public_read",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
+      ]
     },
     {
       "finding_id": "sha256:f6ac60f0d6c3d25c",
@@ -348,7 +356,15 @@
       ],
       "defect": "The bucket's access configuration grants read permission to the public — either via a bucket policy statement with Principal \"*\" or via an ACL grant to the AllUsers pseudo-group. The bucket is reachable without authentication from the public internet.\n",
       "infection": "Anyone on the internet can fetch objects from this bucket over anonymous HTTP/HTTPS. Search engines and automated scanners continuously enumerate publicly-indexed bucket names, meaning exposure is active from the moment the policy or ACL is in place — not hypothetical. Once the bucket name is known, every object whose key the caller can guess or enumerate is fetchable.\n",
-      "failure": "Unbounded data exposure. Every file stored in this bucket is readable by arbitrary internet callers, including potentially sensitive operational data, customer information, backup artifacts, or internal documentation that wasn't intended to reach the public surface.\n"
+      "failure": "Unbounded data exposure. Every file stored in this bucket is readable by arbitrary internet callers, including potentially sensitive operational data, customer information, backup artifacts, or internal documentation that wasn't intended to reach the public surface.\n",
+      "delta": [
+        {
+          "property_label": "public read access",
+          "property_path": "storage.access.public_read",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
+      ]
     },
     {
       "finding_id": "sha256:4c7e17b570d69026",
@@ -581,7 +597,39 @@
       ],
       "defect": "A bucket tagged with a sensitive-data classification (PHI, PII, or confidential) is exposed via public read or public list. The tag declares the data's sensitivity; the access state contradicts that declaration.\n",
       "infection": "Any internet caller can fetch the sensitive objects via anonymous GET or enumerate them via anonymous ListBucket. Search engines and compliance scanners specifically match data-classification tags against access state, so a single tagged-sensitive + public bucket becomes the highest-priority finding in most posture dashboards. Regulators treat the classification tag as evidence of awareness: the organization has labeled this data sensitive and nonetheless exposed it publicly, which weakens claims of accidental oversight.\n",
-      "failure": "Regulated-data breach. PHI exposure triggers HIPAA breach notification; PII exposure triggers GDPR/CCPA obligations; confidential data exposure typically triggers contractual disclosure and customer notification. Remediation scope is bounded by the exposure window — audit CloudTrail to bound who accessed during that window and produce the notification roster.\n"
+      "failure": "Regulated-data breach. PHI exposure triggers HIPAA breach notification; PII exposure triggers GDPR/CCPA obligations; confidential data exposure typically triggers contractual disclosure and customer notification. Remediation scope is bounded by the exposure window — audit CloudTrail to bound who accessed during that window and produce the notification roster.\n",
+      "delta": [
+        {
+          "property_label": "public list access",
+          "property_path": "storage.access.public_list",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        },
+        {
+          "property_label": "public read access",
+          "property_path": "storage.access.public_read",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        },
+        {
+          "property_label": "data classification tag",
+          "property_path": "storage.tags.data-classification",
+          "current_value": "phi",
+          "fix_action": "change from \"confidential\" to any other value, or remove"
+        },
+        {
+          "property_label": "data classification tag",
+          "property_path": "storage.tags.data-classification",
+          "current_value": "phi",
+          "fix_action": "change from \"phi\" to any other value, or remove"
+        },
+        {
+          "property_label": "data classification tag",
+          "property_path": "storage.tags.data-classification",
+          "current_value": "phi",
+          "fix_action": "change from \"pii\" to any other value, or remove"
+        }
+      ]
     }
   ],
   "issues": [
@@ -847,12 +895,8 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "8fddb4857c80faf46de90a635f56d2e0659353e8",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-s3-public-bucket/controls/CTL.S3.PUBLIC.001.yaml",
-        "stave/testdata/e2e/e2e-s3-public-bucket/controls/CTL.S3.PUBLIC.002.yaml"
-      ]
+      "head_commit": "8ef91f6c62fe209cbb9f3919ce7310666be52141",
+      "dirty": false
     }
   }
 }

@@ -203,6 +203,26 @@
         "s3",
         "sensitive-data",
         "hipaa"
+      ],
+      "delta": [
+        {
+          "property_label": "encryption algorithm",
+          "property_path": "storage.encryption.algorithm",
+          "current_value": "AES256",
+          "fix_action": "set to aws:kms"
+        },
+        {
+          "property_label": "encryption KMS key id",
+          "property_path": "storage.encryption.kms_key_id",
+          "current_value": "",
+          "fix_action": "change from \"\" to any other value, or remove"
+        },
+        {
+          "property_label": "data classification tag",
+          "property_path": "storage.tags.data-classification",
+          "current_value": "phi",
+          "fix_action": "change from \"phi\" to any other value, or remove"
+        }
       ]
     },
     {
@@ -362,6 +382,26 @@
         "s3",
         "sensitive-data",
         "hipaa"
+      ],
+      "delta": [
+        {
+          "property_label": "encryption algorithm",
+          "property_path": "storage.encryption.algorithm",
+          "current_value": "",
+          "fix_action": "set to aws:kms"
+        },
+        {
+          "property_label": "encryption KMS key id",
+          "property_path": "storage.encryption.kms_key_id",
+          "current_value": "",
+          "fix_action": "change from \"\" to any other value, or remove"
+        },
+        {
+          "property_label": "data classification tag",
+          "property_path": "storage.tags.data-classification",
+          "current_value": "phi",
+          "fix_action": "change from \"phi\" to any other value, or remove"
+        }
       ]
     }
   ],
@@ -560,7 +600,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "ab547939e47c809219c51ab1e17466440e85f3fa",
+      "head_commit": "8ef91f6c62fe209cbb9f3919ce7310666be52141",
       "dirty": false
     }
   }

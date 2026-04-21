@@ -173,6 +173,20 @@
       "scope_tags": [
         "aws",
         "s3"
+      ],
+      "delta": [
+        {
+          "property_label": "lifecycle rules",
+          "property_path": "storage.lifecycle.rules_configured",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        },
+        {
+          "property_label": "tags data-retention",
+          "property_path": "storage.tags.data-retention",
+          "current_value": "6-year",
+          "fix_action": "remove this property from the configuration"
+        }
       ]
     },
     {
@@ -324,6 +338,26 @@
       "scope_tags": [
         "aws",
         "s3"
+      ],
+      "delta": [
+        {
+          "property_label": "lifecycle has expiration",
+          "property_path": "storage.lifecycle.has_expiration",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        },
+        {
+          "property_label": "lifecycle min expiration days",
+          "property_path": "storage.lifecycle.min_expiration_days",
+          "current_value": "90",
+          "fix_action": "increase to params.min_retention_days or above"
+        },
+        {
+          "property_label": "data classification tag",
+          "property_path": "storage.tags.data-classification",
+          "current_value": "phi",
+          "fix_action": "change from \"phi\" to any other value, or remove"
+        }
       ]
     }
   ],
@@ -521,7 +555,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "ab547939e47c809219c51ab1e17466440e85f3fa",
+      "head_commit": "8ef91f6c62fe209cbb9f3919ce7310666be52141",
       "dirty": false
     }
   }

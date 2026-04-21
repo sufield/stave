@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **DELTA section on findings.** Mechanically derived fix paths computed
+  from the predicate and observed values. Each DeltaPath shows the
+  property label (from registry), current observed value, and the fix
+  action (operator inversion). For AND predicates, independent fix paths
+  shown with "any ONE eliminates this finding" header. Uses the same
+  property registry as defect derivation. Coverage: 672/675 controls.
+  Counterfactual verified: applying the delta's suggested change
+  eliminates the finding. Renders in both text and JSON output.
 - **Predicate-derived defect descriptions.** Controls without per-control
   defect overrides now get mechanically generated DEFECT text from their
   predicate tree. A property-path registry maps observation fields to

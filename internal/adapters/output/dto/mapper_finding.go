@@ -32,6 +32,7 @@ func FromFinding(f *remediation.Finding) FindingDTO {
 		Defect:             f.Defect,
 		Infection:          f.Infection,
 		Failure:            f.Failure,
+		Delta:              fromDeltaPaths(f.Delta),
 	}
 
 	if f.Source != nil {
@@ -246,6 +247,22 @@ func fromRemediationPlan(p evaluation.RemediationPlan) RemediationPlanDTO {
 		dto.Actions = mapSlice(p.Actions, func(a evaluation.RemediationAction) RemediationActionDTO { return fromRemediationAction(a) })
 	}
 	return dto
+}
+
+func fromDeltaPaths(ds []policy.DeltaPath) []DeltaPathDTO {
+	if len(ds) == 0 {
+		return nil
+	}
+	out := make([]DeltaPathDTO, len(ds))
+	for i, d := range ds {
+		out[i] = DeltaPathDTO{
+			PropertyLabel: d.PropertyLabel,
+			PropertyPath:  d.PropertyPath,
+			CurrentValue:  d.CurrentValue,
+			FixAction:     d.FixAction,
+		}
+	}
+	return out
 }
 
 func fromRemediationAction(a evaluation.RemediationAction) RemediationActionDTO {

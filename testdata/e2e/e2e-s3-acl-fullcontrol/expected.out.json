@@ -177,6 +177,20 @@
       "scope_tags": [
         "aws",
         "s3"
+      ],
+      "delta": [
+        {
+          "property_label": "access has full control authenticated",
+          "property_path": "storage.access.has_full_control_authenticated",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        },
+        {
+          "property_label": "access has full control public",
+          "property_path": "storage.access.has_full_control_public",
+          "current_value": "false",
+          "fix_action": "set to false (disable)"
+        }
       ]
     },
     {
@@ -310,6 +324,20 @@
       "scope_tags": [
         "aws",
         "s3"
+      ],
+      "delta": [
+        {
+          "property_label": "access has full control authenticated",
+          "property_path": "storage.access.has_full_control_authenticated",
+          "current_value": "false",
+          "fix_action": "set to false (disable)"
+        },
+        {
+          "property_label": "access has full control public",
+          "property_path": "storage.access.has_full_control_public",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
       ]
     }
   ],
@@ -504,7 +532,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "ab547939e47c809219c51ab1e17466440e85f3fa",
+      "head_commit": "8ef91f6c62fe209cbb9f3919ce7310666be52141",
       "dirty": false
     }
   }

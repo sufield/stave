@@ -169,6 +169,14 @@
       "scope_tags": [
         "aws",
         "rds"
+      ],
+      "delta": [
+        {
+          "property_label": "encryption require SSL",
+          "property_path": "database.encryption.require_ssl",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
       ]
     }
   ],
@@ -317,7 +325,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "ab547939e47c809219c51ab1e17466440e85f3fa",
+      "head_commit": "8ef91f6c62fe209cbb9f3919ce7310666be52141",
       "dirty": false
     }
   }

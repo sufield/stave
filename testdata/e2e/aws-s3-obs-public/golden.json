@@ -258,6 +258,14 @@
       "scope_tags": [
         "aws",
         "s3"
+      ],
+      "delta": [
+        {
+          "property_label": "public read access",
+          "property_path": "storage.access.public_read",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
       ]
     },
     {
@@ -990,6 +998,14 @@
       "scope_tags": [
         "aws",
         "s3"
+      ],
+      "delta": [
+        {
+          "property_label": "account-level S3 Public Access Block",
+          "property_path": "storage.controls.account_public_access_fully_blocked",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
       ]
     },
     {
@@ -1151,6 +1167,20 @@
       "scope_tags": [
         "aws",
         "s3"
+      ],
+      "delta": [
+        {
+          "property_label": "versioning",
+          "property_path": "storage.versioning.enabled",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        },
+        {
+          "property_label": "MFA delete",
+          "property_path": "storage.versioning.mfa_delete_enabled",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
       ]
     },
     {
@@ -1304,6 +1334,20 @@
       "scope_tags": [
         "aws",
         "s3"
+      ],
+      "delta": [
+        {
+          "property_label": "access has IP condition",
+          "property_path": "storage.access.has_ip_condition",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        },
+        {
+          "property_label": "access has VPC condition",
+          "property_path": "storage.access.has_vpc_condition",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
       ]
     },
     {
@@ -1463,6 +1507,20 @@
       "scope_tags": [
         "aws",
         "s3"
+      ],
+      "delta": [
+        {
+          "property_label": "object ownership rule",
+          "property_path": "storage.object_ownership.rule",
+          "current_value": "",
+          "fix_action": "populate this property in the configuration"
+        },
+        {
+          "property_label": "object ownership rule",
+          "property_path": "storage.object_ownership.rule",
+          "current_value": "",
+          "fix_action": "set to BucketOwnerEnforced"
+        }
       ]
     },
     {
@@ -1608,6 +1666,14 @@
       "scope_tags": [
         "aws",
         "s3"
+      ],
+      "delta": [
+        {
+          "property_label": "S3 BlockPublicAcls setting",
+          "property_path": "storage.controls.public_access_block.block_public_acls",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
       ]
     },
     {
@@ -1753,6 +1819,14 @@
       "scope_tags": [
         "aws",
         "s3"
+      ],
+      "delta": [
+        {
+          "property_label": "S3 BlockPublicPolicy setting",
+          "property_path": "storage.controls.public_access_block.block_public_policy",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
       ]
     },
     {
@@ -1898,6 +1972,14 @@
       "scope_tags": [
         "aws",
         "s3"
+      ],
+      "delta": [
+        {
+          "property_label": "S3 IgnorePublicAcls setting",
+          "property_path": "storage.controls.public_access_block.ignore_public_acls",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
       ]
     },
     {
@@ -2043,6 +2125,14 @@
       "scope_tags": [
         "aws",
         "s3"
+      ],
+      "delta": [
+        {
+          "property_label": "S3 RestrictPublicBuckets setting",
+          "property_path": "storage.controls.public_access_block.restrict_public_buckets",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
       ]
     }
   ],

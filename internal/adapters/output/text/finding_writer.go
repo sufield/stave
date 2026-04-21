@@ -237,6 +237,7 @@ func (w *FindingWriter) writeIsolatedFinding(d *drawer, num int, f *remediation.
 	writeFindingReasoning(d, f)
 	writeFindingTriage(d, f)
 	writeFindingObserved(d, f)
+	writeFindingDelta(d, f)
 	writeFindingRemediation(d, f)
 }
 
@@ -439,6 +440,32 @@ func writeFindingObserved(d *drawer, f *remediation.Finding) {
 	d.f("   Observed:\n")
 	for _, mc := range f.ReasoningTrace {
 		d.f("     %s = %s\n", mc.ObservationKey, formatObservedValue(mc.ObservedValue))
+	}
+}
+
+// writeFindingDelta renders the DELTA section — mechanically derived fix
+// paths from the predicate and observed values. Gated on triage presence
+// (same as OBSERVED).
+func writeFindingDelta(d *drawer, f *remediation.Finding) {
+	if f.Defect == "" && f.Infection == "" && f.Failure == "" {
+		return
+	}
+	if len(f.Delta) == 0 {
+		return
+	}
+	if len(f.Delta) == 1 {
+		dp := f.Delta[0]
+		d.f("   Delta:\n")
+		d.f("     Change: %s\n", dp.PropertyLabel)
+		d.f("     Current: %s\n", dp.CurrentValue)
+		d.f("     Fix: %s\n", dp.FixAction)
+	} else {
+		d.f("   Delta (any ONE eliminates this finding):\n")
+		for i, dp := range f.Delta {
+			d.f("     %d. %s\n", i+1, dp.PropertyLabel)
+			d.f("        Current: %s\n", dp.CurrentValue)
+			d.f("        Fix: %s\n", dp.FixAction)
+		}
 	}
 }
 

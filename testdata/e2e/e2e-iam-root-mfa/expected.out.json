@@ -173,6 +173,14 @@
       "scope_tags": [
         "aws",
         "iam"
+      ],
+      "delta": [
+        {
+          "property_label": "root account MFA",
+          "property_path": "identity.root.mfa_enabled",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
       ]
     }
   ],
@@ -320,7 +328,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "ab547939e47c809219c51ab1e17466440e85f3fa",
+      "head_commit": "8ef91f6c62fe209cbb9f3919ce7310666be52141",
       "dirty": false
     }
   }

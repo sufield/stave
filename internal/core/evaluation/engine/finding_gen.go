@@ -40,6 +40,7 @@ func CreateDurationFinding(in DurationFindingInput) *evaluation.Finding {
 		TemporalRisk:        in.ExposureLifecycle.FormatExposureSummary(in.Threshold, in.Now),
 	}
 	f.ReasoningTrace = evaluation.ReasoningTraceFromMisconfigurations(misconfigs)
+	f.Delta = policy.DeriveDeltas(misconfigs)
 	return f
 }
 

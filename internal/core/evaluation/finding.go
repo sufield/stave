@@ -85,6 +85,10 @@ type Finding struct {
 	Defect    string `json:"defect,omitempty"`
 	Infection string `json:"infection,omitempty"`
 	Failure   string `json:"failure,omitempty"`
+
+	// Delta is the mechanically-derived set of fix paths. Each
+	// DeltaPath is an independent change that eliminates this finding.
+	Delta []policy.DeltaPath `json:"delta,omitempty"`
 }
 
 // ReasoningTraceFromMisconfigurations converts a predicate-extracted

@@ -778,6 +778,20 @@
       "scope_tags": [
         "aws",
         "s3"
+      ],
+      "delta": [
+        {
+          "property_label": "object ownership rule",
+          "property_path": "storage.object_ownership.rule",
+          "current_value": "",
+          "fix_action": "populate this property in the configuration"
+        },
+        {
+          "property_label": "object ownership rule",
+          "property_path": "storage.object_ownership.rule",
+          "current_value": "",
+          "fix_action": "set to BucketOwnerEnforced"
+        }
       ]
     }
   ],

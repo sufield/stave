@@ -231,6 +231,20 @@
         "aws",
         "s3",
         "cloudfront"
+      ],
+      "delta": [
+        {
+          "property_label": "CDN access bucket policy grants cloudfront",
+          "property_path": "storage.cdn_access.bucket_policy_grants_cloudfront",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        },
+        {
+          "property_label": "S3 Public Access Block",
+          "property_path": "storage.controls.public_access_fully_blocked",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
       ]
     },
     {
@@ -357,6 +371,14 @@
         "aws",
         "s3",
         "cloudfront"
+      ],
+      "delta": [
+        {
+          "property_label": "CDN access cloudfront oai",
+          "property_path": "storage.cdn_access.cloudfront_oai.enabled",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
       ]
     }
   ],
@@ -578,7 +600,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "ab547939e47c809219c51ab1e17466440e85f3fa",
+      "head_commit": "8ef91f6c62fe209cbb9f3919ce7310666be52141",
       "dirty": false
     }
   }

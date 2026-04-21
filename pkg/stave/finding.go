@@ -70,6 +70,12 @@ type Finding struct {
 	Infection string
 	Failure   string
 
+	// Delta is the mechanically-derived set of fix paths. Each
+	// DeltaPath is an independent change that eliminates this
+	// finding. For AND predicates, any single path suffices. Nil
+	// when derivation is not possible.
+	Delta []DeltaPath
+
 	// ChainMembership lists the compound-risk chains this finding
 	// participates in. Empty when no chain's escalation threshold
 	// was met OR when the library was run without chain definitions
@@ -96,6 +102,14 @@ type Finding struct {
 // MatchedClause is one predicate leaf clause evaluated against a
 // snapshot. Aliased from the internal evaluation package.
 type MatchedClause = evaluation.MatchedClause
+
+// DeltaPath represents one independent fix that eliminates a finding.
+type DeltaPath struct {
+	PropertyLabel string // human-readable property name
+	PropertyPath  string // raw observation path
+	CurrentValue  string // observed value from snapshot
+	FixAction     string // change needed to eliminate finding
+}
 
 // Remediation is the catalog-authored remediation guidance for a
 // control. The fields are copied from the control's RemediationSpec

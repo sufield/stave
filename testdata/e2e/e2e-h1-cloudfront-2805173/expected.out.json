@@ -251,7 +251,15 @@
       ],
       "defect": "The Lambda function's execution role carries broader permissions than the function needs — typically an AWS-managed *FullAccess policy, a wildcard on a sensitive action, or a broadly-scoped inline policy left from development. IAM Access Analyzer would flag the role as over-privileged relative to observed call patterns.\n",
       "infection": "Any code the function executes — intentional, injected via a compromised dependency, or triggered via a public function URL — inherits the over-privileged role's access. Lambda's assume-role happens on every invocation, so the runtime's access is the full authority of the execution role, not some subset the function happens to use. If the function is publicly invokable or called from an internet-reachable resource, this single over-privileged role converts a function compromise into lateral movement across the account.\n",
-      "failure": "Account-wide lateral movement from a single function compromise. Attacker reach extends to every AWS resource the role can touch: S3 buckets, DynamoDB tables, Secrets Manager, other Lambda functions. In a chained exploit with a compromised dependency or a public URL, this is the pivot that turns a local code-execution bug into a full data-exfiltration incident.\n"
+      "failure": "Account-wide lateral movement from a single function compromise. Attacker reach extends to every AWS resource the role can touch: S3 buckets, DynamoDB tables, Secrets Manager, other Lambda functions. In a chained exploit with a compromised dependency or a public URL, this is the pivot that turns a local code-execution bug into a full data-exfiltration incident.\n",
+      "delta": [
+        {
+          "property_label": "execution role is overprivileged",
+          "property_path": "compute.execution_role.is_overprivileged",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
+      ]
     },
     {
       "finding_id": "sha256:3bd75724de9608f7",
@@ -388,7 +396,15 @@
       ],
       "defect": "The Lambda function's execution role carries broader permissions than the function needs — typically an AWS-managed *FullAccess policy, a wildcard on a sensitive action, or a broadly-scoped inline policy left from development. IAM Access Analyzer would flag the role as over-privileged relative to observed call patterns.\n",
       "infection": "Any code the function executes — intentional, injected via a compromised dependency, or triggered via a public function URL — inherits the over-privileged role's access. Lambda's assume-role happens on every invocation, so the runtime's access is the full authority of the execution role, not some subset the function happens to use. If the function is publicly invokable or called from an internet-reachable resource, this single over-privileged role converts a function compromise into lateral movement across the account.\n",
-      "failure": "Account-wide lateral movement from a single function compromise. Attacker reach extends to every AWS resource the role can touch: S3 buckets, DynamoDB tables, Secrets Manager, other Lambda functions. In a chained exploit with a compromised dependency or a public URL, this is the pivot that turns a local code-execution bug into a full data-exfiltration incident.\n"
+      "failure": "Account-wide lateral movement from a single function compromise. Attacker reach extends to every AWS resource the role can touch: S3 buckets, DynamoDB tables, Secrets Manager, other Lambda functions. In a chained exploit with a compromised dependency or a public URL, this is the pivot that turns a local code-execution bug into a full data-exfiltration incident.\n",
+      "delta": [
+        {
+          "property_label": "execution role is overprivileged",
+          "property_path": "compute.execution_role.is_overprivileged",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
+      ]
     },
     {
       "finding_id": "sha256:3589e399b5df2a40",
@@ -525,7 +541,15 @@
       ],
       "defect": "The Lambda function's execution role carries broader permissions than the function needs — typically an AWS-managed *FullAccess policy, a wildcard on a sensitive action, or a broadly-scoped inline policy left from development. IAM Access Analyzer would flag the role as over-privileged relative to observed call patterns.\n",
       "infection": "Any code the function executes — intentional, injected via a compromised dependency, or triggered via a public function URL — inherits the over-privileged role's access. Lambda's assume-role happens on every invocation, so the runtime's access is the full authority of the execution role, not some subset the function happens to use. If the function is publicly invokable or called from an internet-reachable resource, this single over-privileged role converts a function compromise into lateral movement across the account.\n",
-      "failure": "Account-wide lateral movement from a single function compromise. Attacker reach extends to every AWS resource the role can touch: S3 buckets, DynamoDB tables, Secrets Manager, other Lambda functions. In a chained exploit with a compromised dependency or a public URL, this is the pivot that turns a local code-execution bug into a full data-exfiltration incident.\n"
+      "failure": "Account-wide lateral movement from a single function compromise. Attacker reach extends to every AWS resource the role can touch: S3 buckets, DynamoDB tables, Secrets Manager, other Lambda functions. In a chained exploit with a compromised dependency or a public URL, this is the pivot that turns a local code-execution bug into a full data-exfiltration incident.\n",
+      "delta": [
+        {
+          "property_label": "execution role is overprivileged",
+          "property_path": "compute.execution_role.is_overprivileged",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
+      ]
     },
     {
       "finding_id": "sha256:da5eaa3c60700baa",
@@ -662,7 +686,15 @@
       ],
       "defect": "The Lambda function's execution role carries broader permissions than the function needs — typically an AWS-managed *FullAccess policy, a wildcard on a sensitive action, or a broadly-scoped inline policy left from development. IAM Access Analyzer would flag the role as over-privileged relative to observed call patterns.\n",
       "infection": "Any code the function executes — intentional, injected via a compromised dependency, or triggered via a public function URL — inherits the over-privileged role's access. Lambda's assume-role happens on every invocation, so the runtime's access is the full authority of the execution role, not some subset the function happens to use. If the function is publicly invokable or called from an internet-reachable resource, this single over-privileged role converts a function compromise into lateral movement across the account.\n",
-      "failure": "Account-wide lateral movement from a single function compromise. Attacker reach extends to every AWS resource the role can touch: S3 buckets, DynamoDB tables, Secrets Manager, other Lambda functions. In a chained exploit with a compromised dependency or a public URL, this is the pivot that turns a local code-execution bug into a full data-exfiltration incident.\n"
+      "failure": "Account-wide lateral movement from a single function compromise. Attacker reach extends to every AWS resource the role can touch: S3 buckets, DynamoDB tables, Secrets Manager, other Lambda functions. In a chained exploit with a compromised dependency or a public URL, this is the pivot that turns a local code-execution bug into a full data-exfiltration incident.\n",
+      "delta": [
+        {
+          "property_label": "execution role is overprivileged",
+          "property_path": "compute.execution_role.is_overprivileged",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
+      ]
     },
     {
       "finding_id": "sha256:e4433a0bee175ad8",
@@ -799,7 +831,15 @@
       ],
       "defect": "The Lambda function's execution role carries broader permissions than the function needs — typically an AWS-managed *FullAccess policy, a wildcard on a sensitive action, or a broadly-scoped inline policy left from development. IAM Access Analyzer would flag the role as over-privileged relative to observed call patterns.\n",
       "infection": "Any code the function executes — intentional, injected via a compromised dependency, or triggered via a public function URL — inherits the over-privileged role's access. Lambda's assume-role happens on every invocation, so the runtime's access is the full authority of the execution role, not some subset the function happens to use. If the function is publicly invokable or called from an internet-reachable resource, this single over-privileged role converts a function compromise into lateral movement across the account.\n",
-      "failure": "Account-wide lateral movement from a single function compromise. Attacker reach extends to every AWS resource the role can touch: S3 buckets, DynamoDB tables, Secrets Manager, other Lambda functions. In a chained exploit with a compromised dependency or a public URL, this is the pivot that turns a local code-execution bug into a full data-exfiltration incident.\n"
+      "failure": "Account-wide lateral movement from a single function compromise. Attacker reach extends to every AWS resource the role can touch: S3 buckets, DynamoDB tables, Secrets Manager, other Lambda functions. In a chained exploit with a compromised dependency or a public URL, this is the pivot that turns a local code-execution bug into a full data-exfiltration incident.\n",
+      "delta": [
+        {
+          "property_label": "execution role is overprivileged",
+          "property_path": "compute.execution_role.is_overprivileged",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
+      ]
     },
     {
       "finding_id": "sha256:4942c3d80f3e1e24",
@@ -936,7 +976,15 @@
       ],
       "defect": "The Lambda function's execution role carries broader permissions than the function needs — typically an AWS-managed *FullAccess policy, a wildcard on a sensitive action, or a broadly-scoped inline policy left from development. IAM Access Analyzer would flag the role as over-privileged relative to observed call patterns.\n",
       "infection": "Any code the function executes — intentional, injected via a compromised dependency, or triggered via a public function URL — inherits the over-privileged role's access. Lambda's assume-role happens on every invocation, so the runtime's access is the full authority of the execution role, not some subset the function happens to use. If the function is publicly invokable or called from an internet-reachable resource, this single over-privileged role converts a function compromise into lateral movement across the account.\n",
-      "failure": "Account-wide lateral movement from a single function compromise. Attacker reach extends to every AWS resource the role can touch: S3 buckets, DynamoDB tables, Secrets Manager, other Lambda functions. In a chained exploit with a compromised dependency or a public URL, this is the pivot that turns a local code-execution bug into a full data-exfiltration incident.\n"
+      "failure": "Account-wide lateral movement from a single function compromise. Attacker reach extends to every AWS resource the role can touch: S3 buckets, DynamoDB tables, Secrets Manager, other Lambda functions. In a chained exploit with a compromised dependency or a public URL, this is the pivot that turns a local code-execution bug into a full data-exfiltration incident.\n",
+      "delta": [
+        {
+          "property_label": "execution role is overprivileged",
+          "property_path": "compute.execution_role.is_overprivileged",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
+      ]
     },
     {
       "finding_id": "sha256:a3acb432af776825",
@@ -1046,7 +1094,15 @@
       ],
       "defect": "After resolving every policy layer (SCPs, permission boundaries, identity-based policies, explicit denies), this principal's net effective permissions include admin-equivalent actions such as iam:*, *:*, or a large set of high-impact actions that together equal administrative authority. The principal is not tagged as intentionally administrative.\n",
       "infection": "Any compromise of this principal — a leaked access key, a misconfigured assume-role chain, a captured session token — yields the full admin surface. The effective-permissions resolver has already confirmed that no SCP, boundary, or deny statement constrains the admin actions at runtime, so attackers do not have to bypass organizational controls. When combined with access paths from public-facing resources (public functions, exposed IAM roles in compromised containers), admin-equivalent NEP converts one foothold into full account compromise.\n",
-      "failure": "Account-wide compromise. The attacker has the same authority as a deliberate administrator: create users, remove logging, disable guardrails, exfiltrate any resource. Containment requires organizational-level rotation and recovery, not a scoped fix.\n"
+      "failure": "Account-wide compromise. The attacker has the same authority as a deliberate administrator: create users, remove logging, disable guardrails, exfiltrate any resource. Containment requires organizational-level rotation and recovery, not a scoped fix.\n",
+      "delta": [
+        {
+          "property_label": "nep is admin",
+          "property_path": "identity.nep.is_admin",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
+      ]
     },
     {
       "finding_id": "sha256:0d2f8798db3789f3",
@@ -1157,7 +1213,15 @@
       ],
       "defect": "The principal's resolved net effective permissions include at least one action that enables privilege escalation — for example iam:AttachRolePolicy, iam:CreateRole, iam:PassRole on an unscoped resource, or a transitive sts:AssumeRole path to a higher-privileged role. The escalation is present in the policy graph even if the individual statements don't look dangerous in isolation.\n",
       "infection": "Any compromise of this principal becomes a compromise of every privilege the escalation path can reach. An attacker with code execution in a service running under this identity (a Lambda, an EC2 instance, a CI runner, a human-assumed role) exercises the escalation primitive and mints themselves broader credentials in a single IAM call. For direct primitives, one API call crosses the privilege boundary. For transitive chains, a short sequence of assume-role calls does the same.\n",
-      "failure": "Credential-boundary collapse. The account's intended privilege separation (dev vs. prod, service vs. admin) no longer holds for any attacker who reaches this principal. Post-incident forensics typically show a single initial compromise expanding to admin- equivalent authority within minutes of discovery.\n"
+      "failure": "Credential-boundary collapse. The account's intended privilege separation (dev vs. prod, service vs. admin) no longer holds for any attacker who reaches this principal. Post-incident forensics typically show a single initial compromise expanding to admin- equivalent authority within minutes of discovery.\n",
+      "delta": [
+        {
+          "property_label": "nep has escalation path",
+          "property_path": "identity.nep.has_escalation_path",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
+      ]
     },
     {
       "finding_id": "sha256:c6ed7d32277555dd",
@@ -1268,7 +1332,15 @@
       ],
       "defect": "The principal's resolved net effective permissions include at least one action that enables privilege escalation — for example iam:AttachRolePolicy, iam:CreateRole, iam:PassRole on an unscoped resource, or a transitive sts:AssumeRole path to a higher-privileged role. The escalation is present in the policy graph even if the individual statements don't look dangerous in isolation.\n",
       "infection": "Any compromise of this principal becomes a compromise of every privilege the escalation path can reach. An attacker with code execution in a service running under this identity (a Lambda, an EC2 instance, a CI runner, a human-assumed role) exercises the escalation primitive and mints themselves broader credentials in a single IAM call. For direct primitives, one API call crosses the privilege boundary. For transitive chains, a short sequence of assume-role calls does the same.\n",
-      "failure": "Credential-boundary collapse. The account's intended privilege separation (dev vs. prod, service vs. admin) no longer holds for any attacker who reaches this principal. Post-incident forensics typically show a single initial compromise expanding to admin- equivalent authority within minutes of discovery.\n"
+      "failure": "Credential-boundary collapse. The account's intended privilege separation (dev vs. prod, service vs. admin) no longer holds for any attacker who reaches this principal. Post-incident forensics typically show a single initial compromise expanding to admin- equivalent authority within minutes of discovery.\n",
+      "delta": [
+        {
+          "property_label": "nep has escalation path",
+          "property_path": "identity.nep.has_escalation_path",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
+      ]
     }
   ],
   "issues": [
@@ -1748,12 +1820,8 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "8fddb4857c80faf46de90a635f56d2e0659353e8",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-h1-cloudfront-2805173/controls/CTL.IAM.NEP.ADMIN.001.yaml",
-        "stave/testdata/e2e/e2e-h1-cloudfront-2805173/controls/CTL.LAMBDA.ROLE.LEASTPRIV.001.yaml"
-      ]
+      "head_commit": "8ef91f6c62fe209cbb9f3919ce7310666be52141",
+      "dirty": false
     }
   }
 }

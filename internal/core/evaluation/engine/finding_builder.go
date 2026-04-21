@@ -25,6 +25,7 @@ func NewFinding(
 		TemporalRisk:      ctx.Reason,
 	}
 	f.ReasoningTrace = evaluation.ReasoningTraceFromMisconfigurations(ctx.Misconfigs)
+	f.Delta = policy.DeriveDeltas(ctx.Misconfigs)
 	return f
 }
 

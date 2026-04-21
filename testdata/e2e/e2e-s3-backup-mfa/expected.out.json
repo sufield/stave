@@ -159,6 +159,20 @@
       "scope_tags": [
         "aws",
         "s3"
+      ],
+      "delta": [
+        {
+          "property_label": "tags backup",
+          "property_path": "storage.tags.backup",
+          "current_value": "true",
+          "fix_action": "change from \"true\" to any other value, or remove"
+        },
+        {
+          "property_label": "MFA delete",
+          "property_path": "storage.versioning.mfa_delete_enabled",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
       ]
     }
   ],
@@ -308,7 +322,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "ab547939e47c809219c51ab1e17466440e85f3fa",
+      "head_commit": "8ef91f6c62fe209cbb9f3919ce7310666be52141",
       "dirty": false
     }
   }

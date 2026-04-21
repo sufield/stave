@@ -162,6 +162,14 @@
       "scope_tags": [
         "aws",
         "rds"
+      ],
+      "delta": [
+        {
+          "property_label": "access IAM authentication",
+          "property_path": "database.access.iam_authentication_enabled",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
       ]
     }
   ],
@@ -310,7 +318,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "ab547939e47c809219c51ab1e17466440e85f3fa",
+      "head_commit": "8ef91f6c62fe209cbb9f3919ce7310666be52141",
       "dirty": false
     }
   }

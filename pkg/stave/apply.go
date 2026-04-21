@@ -281,6 +281,7 @@ func convertFinding(f *evaluation.Finding) Finding {
 		Defect:            f.Defect,
 		Infection:         f.Infection,
 		Failure:           f.Failure,
+		Delta:             convertDelta(f.Delta),
 	}
 }
 
@@ -296,6 +297,22 @@ func chainBonusFromBreakdown(f *evaluation.Finding) float64 {
 		return 1.0
 	}
 	return f.ScoreBreakdown.ChainBonus
+}
+
+func convertDelta(ds []policy.DeltaPath) []DeltaPath {
+	if len(ds) == 0 {
+		return nil
+	}
+	out := make([]DeltaPath, len(ds))
+	for i, d := range ds {
+		out[i] = DeltaPath{
+			PropertyLabel: d.PropertyLabel,
+			PropertyPath:  d.PropertyPath,
+			CurrentValue:  d.CurrentValue,
+			FixAction:     d.FixAction,
+		}
+	}
+	return out
 }
 
 func convertCompliance(m policy.ComplianceMapping) map[string]string {

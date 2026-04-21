@@ -209,6 +209,20 @@
       "scope_tags": [
         "aws",
         "s3"
+      ],
+      "delta": [
+        {
+          "property_label": "object lock",
+          "property_path": "storage.object_lock.enabled",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        },
+        {
+          "property_label": "compliance tag",
+          "property_path": "storage.tags.compliance",
+          "current_value": "true",
+          "fix_action": "remove this property from the configuration"
+        }
       ]
     },
     {
@@ -358,6 +372,26 @@
       "scope_tags": [
         "aws",
         "s3"
+      ],
+      "delta": [
+        {
+          "property_label": "object lock",
+          "property_path": "storage.object_lock.enabled",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        },
+        {
+          "property_label": "object lock mode",
+          "property_path": "storage.object_lock.mode",
+          "current_value": "GOVERNANCE",
+          "fix_action": "set to COMPLIANCE"
+        },
+        {
+          "property_label": "data classification tag",
+          "property_path": "storage.tags.data-classification",
+          "current_value": "phi",
+          "fix_action": "change from \"phi\" to any other value, or remove"
+        }
       ]
     },
     {
@@ -507,6 +541,26 @@
       "scope_tags": [
         "aws",
         "s3"
+      ],
+      "delta": [
+        {
+          "property_label": "object lock",
+          "property_path": "storage.object_lock.enabled",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        },
+        {
+          "property_label": "object lock retention days",
+          "property_path": "storage.object_lock.retention_days",
+          "current_value": "365",
+          "fix_action": "increase to 2190 or above"
+        },
+        {
+          "property_label": "data classification tag",
+          "property_path": "storage.tags.data-classification",
+          "current_value": "phi",
+          "fix_action": "change from \"phi\" to any other value, or remove"
+        }
       ]
     }
   ],
@@ -752,7 +806,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "ab547939e47c809219c51ab1e17466440e85f3fa",
+      "head_commit": "8ef91f6c62fe209cbb9f3919ce7310666be52141",
       "dirty": false
     }
   }
