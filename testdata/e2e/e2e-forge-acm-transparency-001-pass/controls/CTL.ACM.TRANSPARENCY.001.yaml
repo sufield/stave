@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.ACM.TRANSPARENCY.001
+name: ACM Certificates Must Enable Certificate Transparency Logging
+description: >
+  ACM-issued certificates must have Certificate Transparency (CT)
+  logging enabled. CT logging publishes certificates to public logs,
+  enabling detection of unauthorized certificate issuance for the
+  domain.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-2"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-03"]
+scope_tags: [aws, acm]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: ACM certificate does not have transparency logging enabled.
+  action: Enable CT logging when requesting or renewing the certificate.
+  example: |
+    {"governance": {"kind": "acm_certificate", "certificate": {"transparency_logging_enabled": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: acm_certificate
+    - field: properties.governance.certificate.transparency_logging_enabled
+      op: eq
+      value: false

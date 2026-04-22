@@ -1,0 +1,328 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-15T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "e2783b3988f3f2765b58781fed2c79a205b882cfb56fa6a428bf03d0e1037672",
+        "2026-01-11T000000Z.json": "d40104209487aabf8ab4adab1e5db8545112c4cb5ef2e947e5c4b05e4e1ab610"
+      },
+      "overall": "84d912a4ce218f0147f51e7f2e260c28baa04f3be625aa399e3c6e34b3ad9f7d"
+    },
+    "policy_fingerprint": "c22d206d68a596d99f7471516ac942be5a926be9961dc62173736d7de7246a97",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.ROUTE53.DANGLING.001",
+      "asset_id": "Z1234/a.example.com",
+      "asset_type": "aws_route53_record",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -168,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:4bf03ea289ffdb0a",
+      "control_id": "CTL.ROUTE53.DANGLING.001",
+      "control_name": "Route53 A Records Must Not Point to Unassigned IP Addresses",
+      "control_description": "Route53 A records using literal IP addresses must point to IP addresses currently assigned to resources in the account. Dangling IPs enable subdomain takeover — an attacker claims the released IP and serves content under the organization's domain.\n",
+      "asset_id": "Z1234/a.example.com",
+      "asset_type": "aws_route53_record",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 336,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "network.dns.has_dangling_ip",
+            "actual_value": true,
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "network.kind",
+            "actual_value": "route53_record",
+            "operator": "eq",
+            "unsafe_value": "route53_record"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 336 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "nist_800_53_r5": "CM-8",
+        "soc2": "CC6.1"
+      },
+      "control_compliance_ccm_v4": [
+        "DSP-17"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Route53 A record points to an unassigned IP address.",
+        "action": "Remove the dangling record or reassign the IP.",
+        "example": "{\"network\": {\"kind\": \"route53_record\", \"dns\": {\"has_dangling_ip\": false}}}\n"
+      },
+      "fix_plan": {
+        "id": "fix-f57d8a761e3b52a7",
+        "target": {
+          "asset_id": "Z1234/a.example.com",
+          "asset_type": "aws_route53_record"
+        },
+        "action": "Remove the dangling record or reassign the IP."
+      },
+      "exposure_score": 75,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "network.dns.has_dangling_ip eq true",
+          "observation_key": "network.dns.has_dangling_ip",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": true
+        },
+        {
+          "predicate_expr": "network.kind eq \"route53_record\"",
+          "observation_key": "network.kind",
+          "operator": "eq",
+          "expected_value": "route53_record",
+          "observed_value": "route53_record"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "Z1234/a.example.com",
+          "type": "aws_route53_record",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.ROUTE53.DANGLING.001",
+          "control_name": "Route53 A Records Must Not Point to Unassigned IP Addresses",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "network.dns.has_dangling_ip = true",
+              "observation_key": "network.dns.has_dangling_ip",
+              "observed_value": true
+            },
+            {
+              "clause": "network.kind = \"route53_record\"",
+              "observation_key": "network.kind",
+              "observed_value": "route53_record"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "network.dns.has_dangling_ip",
+            "current_value": "true",
+            "required_value": "false",
+            "has_safe_default": true,
+            "description": "Set network.dns.has_dangling_ip to false"
+          },
+          {
+            "path": "network.kind",
+            "current_value": "route53_record",
+            "has_safe_default": false,
+            "description": "Change network.kind from route53_record"
+          }
+        ],
+        "action": "Remove the dangling record or reassign the IP."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "route53"
+      ],
+      "delta": [
+        {
+          "property_label": "DNS has dangling IP",
+          "property_path": "network.dns.has_dangling_ip",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:338a624602987ab2",
+      "asset_id": "Z1234/a.example.com",
+      "shared_keys": [
+        "network.dns",
+        "network.dns.has_dangling_ip",
+        "network.kind"
+      ],
+      "headline_finding_id": "sha256:4bf03ea289ffdb0a",
+      "member_finding_ids": [
+        "sha256:4bf03ea289ffdb0a"
+      ],
+      "consolidated_score": 75,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "Z1234/a.example.com",
+      "asset_type": "aws_route53_record",
+      "fix_plan": {
+        "id": "fix-f57d8a761e3b52a7",
+        "target": {
+          "asset_id": "Z1234/a.example.com",
+          "asset_type": "aws_route53_record"
+        },
+        "action": "Remove the dangling record or reassign the IP."
+      },
+      "contributing_controls": [
+        "CTL.ROUTE53.DANGLING.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.ROUTE53.DANGLING.001",
+      "asset_id": "Z1234/a.example.com",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-route53-dangling-001-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-route53-dangling-001-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "b1b510377c489795da3ab96117a10a64d28af056",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-route53-dangling-001-fail/controls/"
+      ]
+    }
+  }
+}

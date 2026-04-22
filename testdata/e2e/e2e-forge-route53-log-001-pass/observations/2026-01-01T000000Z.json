@@ -1,0 +1,20 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "Z1234",
+      "type": "aws_route53_hosted_zone",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "route53_hosted_zone",
+          "dns": {
+            "query_logging_enabled": true
+          }
+        }
+      }
+    }
+  ]
+}

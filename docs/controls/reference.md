@@ -3,25 +3,25 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 840
-**Pack hash:** `b19208a44594d9f2128d63f82b3ef5aa7f73bf336e6265fe08be1f2a34b9ba7c`
+**Total controls:** 855
+**Pack hash:** `8877c9c15f88fe028cd98303ea24e7f8d4c246fd1007b5d6bdb7027acd16280f`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 131 |
-| high | 364 |
+| critical | 132 |
+| high | 371 |
 | info | 16 |
 | low | 76 |
-| medium | 253 |
+| medium | 260 |
 
 | Domain | Count |
 |--------|-------|
 | audit | 20 |
 | detection | 2 |
-| encryption | 31 |
-| exposure | 548 |
+| encryption | 33 |
+| exposure | 561 |
 | governance | 19 |
 | identity | 177 |
 | network | 21 |
@@ -42,6 +42,36 @@
 SSL/TLS certificates imported into ACM must not be within 30 days of expiry or already expired. ACM automatically renews certificates it provisions (AMAZON_ISSUED) but does not renew imported certificates. Imported certificates expire silently on their expiry date with no enforcement mechanism — services continue serving traffic on an expired certificate until clients reject it. An expired certificate on a production load balancer or CloudFront distribution causes TLS negotiation failures for all clients that enforce certificate validity. For HIPAA and PCI-DSS environments, serving traffic on an expired certificate is a direct compliance violation. This control evaluates only IMPORTED certificates — AMAZON_ISSUED certificates are auto-renewed and out of scope.
 
 **Remediation:** Renew or replace the imported certificate. Import the new certificate into ACM via aws acm import-certificate. If the certificate was originally from a private CA, re-issue from the CA and re-import. Consider migrating to an ACM-managed certificate (AMAZON_ISSUED) for automatic renewal — ACM provisions free public certificates for domains validated via DNS or email. After importing the new certificate, verify the associated services (load balancers, CloudFront distributions, API Gateway domains) are serving the updated certificate.
+
+---
+
+### CTL.ACM.KEY.ALGORITHM.001
+
+**ACM Certificates Must Use Strong Key Algorithms**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** nist_800_53_r5: SC-13; soc2: CC6.7;
+
+ACM certificates must use RSA-2048+ or ECDSA P-256+ key algorithms. Weak algorithms (RSA-1024, ECDSA P-192) are vulnerable to factoring or discrete logarithm attacks.
+
+**Remediation:** Request a new certificate with RSA-2048 or ECDSA P-256.
+
+---
+
+### CTL.ACM.TRANSPARENCY.001
+
+**ACM Certificates Must Enable Certificate Transparency Logging**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AU-2; soc2: CC7.1;
+
+ACM-issued certificates must have Certificate Transparency (CT) logging enabled. CT logging publishes certificates to public logs, enabling detection of unauthorized certificate issuance for the domain.
+
+**Remediation:** Enable CT logging when requesting or renewing the certificate.
 
 ---
 
@@ -3118,6 +3148,96 @@ Safety mechanism integrity control. Checks that security guardrails are actively
 AWS Config must have active Config Rules to evaluate resource compliance. Recording without rules provides change history but no automated drift detection.
 
 **Remediation:** Deploy Config Rules for your compliance requirements. Start with AWS managed rules for common checks (encrypted-volumes, restricted-common-ports, etc).
+
+---
+
+### CTL.DMS.LOG.SOURCE.001
+
+**DMS Replication Tasks Must Enable Source Logging**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AU-2; soc2: CC7.1;
+
+DMS replication tasks must enable source logging (SOURCE_CAPTURE and SOURCE_UNLOAD) for auditability of data extraction from source databases.
+
+**Remediation:** Enable SOURCE_CAPTURE and SOURCE_UNLOAD logging.
+
+---
+
+### CTL.DMS.LOG.TARGET.001
+
+**DMS Replication Tasks Must Enable Target Logging**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AU-2; soc2: CC7.1;
+
+DMS replication tasks must enable target logging (TARGET_APPLY and TARGET_LOAD) for auditability of data loading to target databases.
+
+**Remediation:** Enable TARGET_APPLY and TARGET_LOAD logging.
+
+---
+
+### CTL.DMS.MULTIAZ.001
+
+**DMS Replication Instances Must Use Multi-AZ**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CP-10; soc2: A1.1;
+
+DMS replication instances must enable Multi-AZ for cross-AZ standby redundancy during database migration and ongoing replication.
+
+**Remediation:** Enable Multi-AZ on the replication instance.
+
+---
+
+### CTL.DMS.PUBLIC.001
+
+**DMS Replication Instances Must Not Be Publicly Accessible**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+DMS replication instances must not be publicly accessible. Public instances expose the migration pipeline to internet attacks, allowing data interception during database replication.
+
+**Remediation:** Set PubliclyAccessible to false on the replication instance.
+
+---
+
+### CTL.DMS.SSL.001
+
+**DMS Endpoints Must Enforce SSL/TLS**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** nist_800_53_r5: SC-8; soc2: CC6.7;
+
+DMS endpoints must use SSL/TLS (require, verify-ca, or verify-full) rather than none. Without SSL, data in transit between the replication instance and source/target databases is unencrypted.
+
+**Remediation:** Set SslMode to require, verify-ca, or verify-full.
+
+---
+
+### CTL.DMS.UPGRADE.001
+
+**DMS Replication Instances Must Enable Auto Minor Version Upgrade**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-2;
+
+DMS replication instances must enable automatic minor version upgrades to receive security patches during maintenance windows.
+
+**Remediation:** Enable auto_minor_version_upgrade.
 
 ---
 
@@ -9627,6 +9747,21 @@ Redshift clusters must use enhanced VPC routing to force all COPY and UNLOAD tra
 
 ---
 
+### CTL.ROUTE53.DANGLING.001
+
+**Route53 A Records Must Not Point to Unassigned IP Addresses**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-8; soc2: CC6.1;
+
+Route53 A records using literal IP addresses must point to IP addresses currently assigned to resources in the account. Dangling IPs enable subdomain takeover — an attacker claims the released IP and serves content under the organization's domain.
+
+**Remediation:** Remove the dangling record or reassign the IP.
+
+---
+
 ### CTL.ROUTE53.HEALTHCHECK.001
 
 **Route 53 Health Checks Must Be Configured**
@@ -9653,6 +9788,51 @@ Route 53 health checks must be configured for DNS records pointing to critical e
 The observation snapshot is missing required Route 53 properties.
 
 **Remediation:** Ensure the extractor calls aws route53 list-hosted-zones and list-health-checks.
+
+---
+
+### CTL.ROUTE53.LOG.001
+
+**Route53 Public Hosted Zones Must Enable Query Logging**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AU-2; soc2: CC7.1;
+
+Public hosted zones must have DNS query logging enabled to CloudWatch Logs. Without logging, DNS queries — including reconnaissance and potential DNS tunneling — go undetected.
+
+**Remediation:** Enable query logging to CloudWatch Logs.
+
+---
+
+### CTL.ROUTE53.PRIVACY.001
+
+**Route53 Domains Must Enable WHOIS Privacy Protection**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3;
+
+Registered domains must have WHOIS privacy protection enabled to redact registrant contact details from public queries.
+
+**Remediation:** Enable privacy protection on the domain registration.
+
+---
+
+### CTL.ROUTE53.TRANSFER.001
+
+**Route53 Domains Must Enable Transfer Lock**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+Registered domains must have transfer lock (clientTransferProhibited) enabled to prevent unauthorized domain transfers. Without transfer lock, an attacker who compromises registrar credentials can transfer the domain to another registrar.
+
+**Remediation:** Enable transfer lock on the domain registration.
 
 ---
 
@@ -11648,6 +11828,36 @@ SQS queue resource policies must not grant sqs:SendMessage, sqs:ReceiveMessage, 
 
 ---
 
+### CTL.SSM.DOCUMENT.PUBLIC.001
+
+**SSM Documents Must Not Be Publicly Shared**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+SSM documents must not be shared publicly or with untrusted accounts. Public documents expose internal automation procedures, infrastructure configuration, and potentially embedded credentials.
+
+**Remediation:** Remove public sharing from the document permissions.
+
+---
+
+### CTL.SSM.DOCUMENT.SECRETS.001
+
+**SSM Documents Must Not Contain Embedded Secrets**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: IA-5(7); soc2: CC6.1;
+
+SSM documents must not contain hardcoded passwords, access keys, tokens, or private keys. Use Secrets Manager or Parameter Store references instead.
+
+**Remediation:** Replace hardcoded credentials with Secrets Manager or Parameter Store references.
+
+---
+
 ### CTL.SSM.INVENTORY.RESTRICT.001
 
 **SSM Inventory Access Must Be Restricted**
@@ -11675,6 +11885,21 @@ SSM inventory data must not be publicly shared or broadly accessible. SSM invent
 SSM Parameter Store holds database passwords, API keys, certificates, and other secrets. ssm:GetParametersByPath allows bulk retrieval of all parameters under a path prefix in a single API call — collecting all secrets at once. ssm:DescribeParameters lists all parameter names and metadata — enabling an attacker to map all stored secrets before extracting them. These permissions should be scoped to specific parameter paths needed by each application, not granted broadly.
 
 **Remediation:** Replace ssm:GetParametersByPath with resource-scoped ssm:GetParameter grants on specific parameter ARNs. Restrict ssm:DescribeParameters to administrative roles.
+
+---
+
+### CTL.SSM.PATCH.COMPLIANCE.001
+
+**SSM Managed Instances Must Be Patch Compliant**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-2; soc2: CC7.1;
+
+SSM-managed instances must report patch compliance against defined baselines. Non-compliant instances are missing required security patches.
+
+**Remediation:** Apply missing patches via SSM Patch Manager.
 
 ---
 

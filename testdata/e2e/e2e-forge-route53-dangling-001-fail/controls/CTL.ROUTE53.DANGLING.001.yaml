@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.DANGLING.001
+name: Route53 A Records Must Not Point to Unassigned IP Addresses
+description: >
+  Route53 A records using literal IP addresses must point to IP
+  addresses currently assigned to resources in the account. Dangling
+  IPs enable subdomain takeover — an attacker claims the released
+  IP and serves content under the organization's domain.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "CM-8"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-17"]
+scope_tags: [aws, route53]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Route53 A record points to an unassigned IP address.
+  action: Remove the dangling record or reassign the IP.
+  example: |
+    {"network": {"kind": "route53_record", "dns": {"has_dangling_ip": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: route53_record
+    - field: properties.network.dns.has_dangling_ip
+      op: eq
+      value: true

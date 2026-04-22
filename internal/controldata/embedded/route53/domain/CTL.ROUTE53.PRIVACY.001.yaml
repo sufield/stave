@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.PRIVACY.001
+name: Route53 Domains Must Enable WHOIS Privacy Protection
+description: >
+  Registered domains must have WHOIS privacy protection enabled to
+  redact registrant contact details from public queries.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-3"
+  ccm_v4: ["DSP-17"]
+scope_tags: [aws, route53]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: discovery
+remediation:
+  description: Domain WHOIS privacy protection is disabled.
+  action: Enable privacy protection on the domain registration.
+  example: |
+    {"network": {"kind": "route53_domain", "domain": {"privacy_protection_enabled": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: route53_domain
+    - field: properties.network.domain.privacy_protection_enabled
+      op: eq
+      value: false

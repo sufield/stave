@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.DMS.MULTIAZ.001
+name: DMS Replication Instances Must Use Multi-AZ
+description: >
+  DMS replication instances must enable Multi-AZ for cross-AZ standby
+  redundancy during database migration and ongoing replication.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "CP-10"
+  soc2: "A1.1"
+  ccm_v4: ["BCR-08"]
+scope_tags: [aws, dms]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: DMS replication instance is not Multi-AZ.
+  action: Enable Multi-AZ on the replication instance.
+  example: |
+    {"database": {"kind": "dms_replication_instance", "availability": {"multi_az": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: dms_replication_instance
+    - field: properties.database.availability.multi_az
+      op: eq
+      value: false

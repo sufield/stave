@@ -1,0 +1,10 @@
+family: CTL.DMS
+infection: >
+  A misconfigured DMS replication instance exposes the database
+  migration pipeline — data in transit between source and target
+  databases, replication credentials, and the network path between
+  data stores. Replication instances process full database contents.
+failure: >
+  Migration data exposure. An attacker intercepts data flowing
+  between databases, accesses the replication instance directly, or
+  reads unencrypted replication data at rest.

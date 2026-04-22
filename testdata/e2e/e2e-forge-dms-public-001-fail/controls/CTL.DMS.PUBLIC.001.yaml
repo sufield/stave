@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.DMS.PUBLIC.001
+name: DMS Replication Instances Must Not Be Publicly Accessible
+description: >
+  DMS replication instances must not be publicly accessible.
+  Public instances expose the migration pipeline to internet
+  attacks, allowing data interception during database replication.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "IVS-04"]
+scope_tags: [aws, dms]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: DMS replication instance is publicly accessible.
+  action: Set PubliclyAccessible to false on the replication instance.
+  example: |
+    {"database": {"kind": "dms_replication_instance", "access": {"publicly_accessible": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: dms_replication_instance
+    - field: properties.database.access.publicly_accessible
+      op: eq
+      value: true

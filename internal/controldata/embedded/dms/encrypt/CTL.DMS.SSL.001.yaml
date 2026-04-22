@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.DMS.SSL.001
+name: DMS Endpoints Must Enforce SSL/TLS
+description: >
+  DMS endpoints must use SSL/TLS (require, verify-ca, or verify-full)
+  rather than none. Without SSL, data in transit between the
+  replication instance and source/target databases is unencrypted.
+domain: encryption
+severity: high
+compliance:
+  nist_800_53_r5: "SC-8"
+  soc2: "CC6.7"
+  ccm_v4: ["CEK-03", "IVS-03"]
+scope_tags: [aws, dms]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: collection
+remediation:
+  description: DMS endpoint does not enforce SSL/TLS.
+  action: Set SslMode to require, verify-ca, or verify-full.
+  example: |
+    {"database": {"kind": "dms_endpoint", "encryption": {"ssl_enforced": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: dms_endpoint
+    - field: properties.database.encryption.ssl_enforced
+      op: eq
+      value: false

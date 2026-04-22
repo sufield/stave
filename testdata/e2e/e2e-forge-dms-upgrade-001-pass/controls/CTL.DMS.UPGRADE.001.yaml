@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.DMS.UPGRADE.001
+name: DMS Replication Instances Must Enable Auto Minor Version Upgrade
+description: >
+  DMS replication instances must enable automatic minor version
+  upgrades to receive security patches during maintenance windows.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-2"
+  ccm_v4: ["TVM-02"]
+scope_tags: [aws, dms]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: DMS replication instance auto minor version upgrade is disabled.
+  action: Enable auto_minor_version_upgrade.
+  example: |
+    {"database": {"kind": "dms_replication_instance", "config": {"auto_minor_version_upgrade": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: dms_replication_instance
+    - field: properties.database.config.auto_minor_version_upgrade
+      op: eq
+      value: false

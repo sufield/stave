@@ -1,0 +1,20 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "example.com",
+      "type": "aws_route53_domain",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "route53_domain",
+          "domain": {
+            "privacy_protection_enabled": false
+          }
+        }
+      }
+    }
+  ]
+}

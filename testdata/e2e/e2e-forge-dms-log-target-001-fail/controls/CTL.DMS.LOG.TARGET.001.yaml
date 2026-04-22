@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.DMS.LOG.TARGET.001
+name: DMS Replication Tasks Must Enable Target Logging
+description: >
+  DMS replication tasks must enable target logging (TARGET_APPLY
+  and TARGET_LOAD) for auditability of data loading to target
+  databases.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-2"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-03"]
+scope_tags: [aws, dms]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: DMS replication task target logging is disabled.
+  action: Enable TARGET_APPLY and TARGET_LOAD logging.
+  example: |
+    {"database": {"kind": "dms_replication_task", "logging": {"target_logging_enabled": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: dms_replication_task
+    - field: properties.database.logging.target_logging_enabled
+      op: eq
+      value: false

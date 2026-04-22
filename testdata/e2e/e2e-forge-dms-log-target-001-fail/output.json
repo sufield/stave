@@ -1,0 +1,328 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-15T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "554b7fbd62e6df30afc7a07c2cd549b37c977ba01157cb58ce4800431b5e5cc8",
+        "2026-01-11T000000Z.json": "e12b9b67369679bdf443dbd966e64053652c37eab9f8393e8e8d087805ff7073"
+      },
+      "overall": "44aa3adcf3c38d88ba20e5a73adcf7eefdae4200fd86ff124949e707aa56f9fc"
+    },
+    "policy_fingerprint": "7f41d93e414a67efaa3060c134540005033087df5a094d55a92189741fcbd7a9",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.DMS.LOG.TARGET.001",
+      "asset_id": "dms-task-1",
+      "asset_type": "aws_dms_replication_task",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -168,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:7c090f07ccbbc279",
+      "control_id": "CTL.DMS.LOG.TARGET.001",
+      "control_name": "DMS Replication Tasks Must Enable Target Logging",
+      "control_description": "DMS replication tasks must enable target logging (TARGET_APPLY and TARGET_LOAD) for auditability of data loading to target databases.\n",
+      "asset_id": "dms-task-1",
+      "asset_type": "aws_dms_replication_task",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 336,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "database.kind",
+            "actual_value": "dms_replication_task",
+            "operator": "eq",
+            "unsafe_value": "dms_replication_task"
+          },
+          {
+            "property": "database.logging.target_logging_enabled",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 336 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "nist_800_53_r5": "AU-2",
+        "soc2": "CC7.1"
+      },
+      "control_compliance_ccm_v4": [
+        "LOG-03"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "DMS replication task target logging is disabled.",
+        "action": "Enable TARGET_APPLY and TARGET_LOAD logging.",
+        "example": "{\"database\": {\"kind\": \"dms_replication_task\", \"logging\": {\"target_logging_enabled\": true}}}\n"
+      },
+      "fix_plan": {
+        "id": "fix-2bd6d159893dfd23",
+        "target": {
+          "asset_id": "dms-task-1",
+          "asset_type": "aws_dms_replication_task"
+        },
+        "action": "Enable TARGET_APPLY and TARGET_LOAD logging."
+      },
+      "exposure_score": 50,
+      "score_breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "database.kind eq \"dms_replication_task\"",
+          "observation_key": "database.kind",
+          "operator": "eq",
+          "expected_value": "dms_replication_task",
+          "observed_value": "dms_replication_task"
+        },
+        {
+          "predicate_expr": "database.logging.target_logging_enabled eq false",
+          "observation_key": "database.logging.target_logging_enabled",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "dms-task-1",
+          "type": "aws_dms_replication_task",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.DMS.LOG.TARGET.001",
+          "control_name": "DMS Replication Tasks Must Enable Target Logging",
+          "severity": "medium",
+          "reasoning": [
+            {
+              "clause": "database.kind = \"dms_replication_task\"",
+              "observation_key": "database.kind",
+              "observed_value": "dms_replication_task"
+            },
+            {
+              "clause": "database.logging.target_logging_enabled = false",
+              "observation_key": "database.logging.target_logging_enabled",
+              "observed_value": false
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "database.kind",
+            "current_value": "dms_replication_task",
+            "has_safe_default": false,
+            "description": "Change database.kind from dms_replication_task"
+          },
+          {
+            "path": "database.logging.target_logging_enabled",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set database.logging.target_logging_enabled to true"
+          }
+        ],
+        "action": "Enable TARGET_APPLY and TARGET_LOAD logging."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "dms"
+      ],
+      "delta": [
+        {
+          "property_label": "logging target logging",
+          "property_path": "database.logging.target_logging_enabled",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:6b25aff338dda944",
+      "asset_id": "dms-task-1",
+      "shared_keys": [
+        "database.kind",
+        "database.logging",
+        "database.logging.target_logging_enabled"
+      ],
+      "headline_finding_id": "sha256:7c090f07ccbbc279",
+      "member_finding_ids": [
+        "sha256:7c090f07ccbbc279"
+      ],
+      "consolidated_score": 50,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "dms-task-1",
+      "asset_type": "aws_dms_replication_task",
+      "fix_plan": {
+        "id": "fix-2bd6d159893dfd23",
+        "target": {
+          "asset_id": "dms-task-1",
+          "asset_type": "aws_dms_replication_task"
+        },
+        "action": "Enable TARGET_APPLY and TARGET_LOAD logging."
+      },
+      "contributing_controls": [
+        "CTL.DMS.LOG.TARGET.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.DMS.LOG.TARGET.001",
+      "asset_id": "dms-task-1",
+      "exposure_score": 50,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-dms-log-target-001-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-dms-log-target-001-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "b1b510377c489795da3ab96117a10a64d28af056",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-dms-log-target-001-fail/controls/"
+      ]
+    }
+  }
+}

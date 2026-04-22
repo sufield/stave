@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.SSM.DOCUMENT.PUBLIC.001
+name: SSM Documents Must Not Be Publicly Shared
+description: >
+  SSM documents must not be shared publicly or with untrusted
+  accounts. Public documents expose internal automation procedures,
+  infrastructure configuration, and potentially embedded credentials.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-17"]
+scope_tags: [aws, ssm]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: discovery
+remediation:
+  description: SSM document is publicly shared.
+  action: Remove public sharing from the document permissions.
+  example: |
+    {"governance": {"kind": "ssm_document", "access": {"is_public": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: ssm_document
+    - field: properties.governance.access.is_public
+      op: eq
+      value: true

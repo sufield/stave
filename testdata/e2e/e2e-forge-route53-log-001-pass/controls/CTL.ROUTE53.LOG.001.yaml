@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.LOG.001
+name: Route53 Public Hosted Zones Must Enable Query Logging
+description: >
+  Public hosted zones must have DNS query logging enabled to
+  CloudWatch Logs. Without logging, DNS queries — including
+  reconnaissance and potential DNS tunneling — go undetected.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-2"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-03"]
+scope_tags: [aws, route53]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: Public hosted zone query logging is disabled.
+  action: Enable query logging to CloudWatch Logs.
+  example: |
+    {"network": {"kind": "route53_hosted_zone", "dns": {"query_logging_enabled": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: route53_hosted_zone
+    - field: properties.network.dns.query_logging_enabled
+      op: eq
+      value: false

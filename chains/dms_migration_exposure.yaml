@@ -1,0 +1,14 @@
+id: dms_migration_exposure
+description: >
+  Public DMS replication instance with no SSL enforcement. Migration
+  data is exposed to internet access and transmitted in plaintext
+  between the replication instance and databases.
+controls:
+  - CTL.DMS.PUBLIC.001
+  - CTL.DMS.SSL.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - rds_data_access

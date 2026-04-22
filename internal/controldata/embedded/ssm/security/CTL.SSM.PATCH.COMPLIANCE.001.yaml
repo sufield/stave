@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.SSM.PATCH.COMPLIANCE.001
+name: SSM Managed Instances Must Be Patch Compliant
+description: >
+  SSM-managed instances must report patch compliance against defined
+  baselines. Non-compliant instances are missing required security
+  patches.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SI-2"
+  soc2: "CC7.1"
+  ccm_v4: ["TVM-02"]
+scope_tags: [aws, ssm]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: SSM managed instance is not patch compliant.
+  action: Apply missing patches via SSM Patch Manager.
+  example: |
+    {"governance": {"kind": "ssm_managed_instance", "compliance": {"patch_compliant": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: ssm_managed_instance
+    - field: properties.governance.compliance.patch_compliant
+      op: eq
+      value: false

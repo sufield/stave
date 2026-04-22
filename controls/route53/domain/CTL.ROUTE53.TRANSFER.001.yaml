@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.TRANSFER.001
+name: Route53 Domains Must Enable Transfer Lock
+description: >
+  Registered domains must have transfer lock
+  (clientTransferProhibited) enabled to prevent unauthorized domain
+  transfers. Without transfer lock, an attacker who compromises
+  registrar credentials can transfer the domain to another registrar.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-17"]
+scope_tags: [aws, route53]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Domain transfer lock is disabled.
+  action: Enable transfer lock on the domain registration.
+  example: |
+    {"network": {"kind": "route53_domain", "domain": {"transfer_lock_enabled": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: route53_domain
+    - field: properties.network.domain.transfer_lock_enabled
+      op: eq
+      value: false

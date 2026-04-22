@@ -1,0 +1,331 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-15T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "417385e6016096e51df3c44557eb9557b432b1c43b1205281797522573a8e639",
+        "2026-01-11T000000Z.json": "b0dc662a322631673f63b5574a0aa5bd3c2bb4170f08dba19b281982932f346d"
+      },
+      "overall": "d3c40c079d84299f12ff9e9935d92a0c7a659f1e569e49ff6a12f17771d954e4"
+    },
+    "policy_fingerprint": "2dfabceb646340d1ef5b246922aa5845c7841d22bf12a5e3c2c72e738ddc0f72",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.SSM.DOCUMENT.SECRETS.001",
+      "asset_id": "arn:aws:ssm:us-east-1:111122223333:document/deploy",
+      "asset_type": "aws_ssm_document",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -168,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:acffa27013a4ad06",
+      "control_id": "CTL.SSM.DOCUMENT.SECRETS.001",
+      "control_name": "SSM Documents Must Not Contain Embedded Secrets",
+      "control_description": "SSM documents must not contain hardcoded passwords, access keys, tokens, or private keys. Use Secrets Manager or Parameter Store references instead.\n",
+      "asset_id": "arn:aws:ssm:us-east-1:111122223333:document/deploy",
+      "asset_type": "aws_ssm_document",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 336,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "governance.kind",
+            "actual_value": "ssm_document",
+            "operator": "eq",
+            "unsafe_value": "ssm_document"
+          },
+          {
+            "property": "governance.secrets.has_embedded_secrets",
+            "actual_value": true,
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 336 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "nist_800_53_r5": "IA-5(7)",
+        "soc2": "CC6.1"
+      },
+      "control_compliance_ccm_v4": [
+        "IAM-16",
+        "DSP-17"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "SSM document contains embedded secrets.",
+        "action": "Replace hardcoded credentials with Secrets Manager or Parameter Store references.",
+        "example": "{\"governance\": {\"kind\": \"ssm_document\", \"secrets\": {\"has_embedded_secrets\": false}}}\n"
+      },
+      "fix_plan": {
+        "id": "fix-07135056e2513e07",
+        "target": {
+          "asset_id": "arn:aws:ssm:us-east-1:111122223333:document/deploy",
+          "asset_type": "aws_ssm_document"
+        },
+        "action": "Replace hardcoded credentials with Secrets Manager or Parameter Store references."
+      },
+      "exposure_score": 75,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "governance.kind eq \"ssm_document\"",
+          "observation_key": "governance.kind",
+          "operator": "eq",
+          "expected_value": "ssm_document",
+          "observed_value": "ssm_document"
+        },
+        {
+          "predicate_expr": "governance.secrets.has_embedded_secrets eq true",
+          "observation_key": "governance.secrets.has_embedded_secrets",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": true
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "arn:aws:ssm:us-east-1:111122223333:document/deploy",
+          "type": "aws_ssm_document",
+          "vendor": "aws",
+          "arn": "arn:aws:ssm:us-east-1:111122223333:document/deploy",
+          "region": "us-east-1"
+        },
+        "violation": {
+          "control_id": "CTL.SSM.DOCUMENT.SECRETS.001",
+          "control_name": "SSM Documents Must Not Contain Embedded Secrets",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "governance.kind = \"ssm_document\"",
+              "observation_key": "governance.kind",
+              "observed_value": "ssm_document"
+            },
+            {
+              "clause": "governance.secrets.has_embedded_secrets = true",
+              "observation_key": "governance.secrets.has_embedded_secrets",
+              "observed_value": true
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "governance.kind",
+            "current_value": "ssm_document",
+            "has_safe_default": false,
+            "description": "Change governance.kind from ssm_document"
+          },
+          {
+            "path": "governance.secrets.has_embedded_secrets",
+            "current_value": "true",
+            "required_value": "false",
+            "has_safe_default": true,
+            "description": "Set governance.secrets.has_embedded_secrets to false"
+          }
+        ],
+        "action": "Replace hardcoded credentials with Secrets Manager or Parameter Store references."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "ssm"
+      ],
+      "delta": [
+        {
+          "property_label": "secrets has embedded secrets",
+          "property_path": "governance.secrets.has_embedded_secrets",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:3dd7ab6eda96462e",
+      "asset_id": "arn:aws:ssm:us-east-1:111122223333:document/deploy",
+      "shared_keys": [
+        "governance.kind",
+        "governance.secrets",
+        "governance.secrets.has_embedded_secrets"
+      ],
+      "headline_finding_id": "sha256:acffa27013a4ad06",
+      "member_finding_ids": [
+        "sha256:acffa27013a4ad06"
+      ],
+      "consolidated_score": 75,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "arn:aws:ssm:us-east-1:111122223333:document/deploy",
+      "asset_type": "aws_ssm_document",
+      "fix_plan": {
+        "id": "fix-07135056e2513e07",
+        "target": {
+          "asset_id": "arn:aws:ssm:us-east-1:111122223333:document/deploy",
+          "asset_type": "aws_ssm_document"
+        },
+        "action": "Replace hardcoded credentials with Secrets Manager or Parameter Store references."
+      },
+      "contributing_controls": [
+        "CTL.SSM.DOCUMENT.SECRETS.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.SSM.DOCUMENT.SECRETS.001",
+      "asset_id": "arn:aws:ssm:us-east-1:111122223333:document/deploy",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-ssm-document-secrets-001-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-ssm-document-secrets-001-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "b1b510377c489795da3ab96117a10a64d28af056",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-ssm-document-secrets-001-fail/controls/"
+      ]
+    }
+  }
+}
