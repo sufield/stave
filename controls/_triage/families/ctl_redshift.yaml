@@ -1,0 +1,13 @@
+family: CTL.REDSHIFT
+infection: >
+  A misconfigured Redshift cluster exposes data warehouse
+  contents — typically aggregated business data, analytics
+  datasets, and historical records. The data's analytical nature
+  means it is often more comprehensive than transactional
+  databases, covering longer time periods and more data sources.
+  Redshift clusters store the organization's business intelligence
+  layer.
+failure: >
+  Data warehouse compromise. Business intelligence data, historical
+  records, and aggregated datasets are exposed, modified, or
+  destroyed.

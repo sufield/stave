@@ -1,0 +1,20 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:redshift:us-east-1:123456789012:cluster:analytics-cluster",
+      "properties": {
+        "database": {
+          "kind": "redshift_cluster",
+          "config": {
+            "uses_default_dbname": false
+          }
+        }
+      },
+      "type": "aws_redshift_cluster",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

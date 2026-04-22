@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.REDSHIFT.ENCRYPT.REST.001
+name: Redshift Clusters Must Have Encryption at Rest Enabled
+description: Redshift clusters must have encryption at rest enabled with KMS.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: SC-28
+  soc2: CC6.7
+  pci_dss_v4.0: 3.4.1
+  ccm_v4:
+  - CEK-03
+scope_tags:
+- aws
+- redshift
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: Cluster not encrypted at rest.
+  action: Enable encryption. Requires creating a new encrypted cluster and
+    migrating data.
+unsafe_predicate:
+  all:
+  - field: properties.database.kind
+    op: eq
+    value: redshift_cluster
+  - field: properties.database.encryption.at_rest_enabled
+    op: eq
+    value: false

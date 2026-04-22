@@ -1,0 +1,28 @@
+dsl_version: ctrl.v1
+id: CTL.REDSHIFT.CONFIG.ADMIN.001
+name: Redshift Must Not Use Default Admin Username
+description: Redshift clusters must not use the default admin username (awsuser).
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: IA-5
+  ccm_v4:
+  - IAM-05
+scope_tags:
+- aws
+- redshift
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Cluster uses default admin username.
+  action: Create a new cluster with a non-default admin username.
+unsafe_predicate:
+  all:
+  - field: properties.database.kind
+    op: eq
+    value: redshift_cluster
+  - field: properties.database.config.uses_default_admin
+    op: eq
+    value: true

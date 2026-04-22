@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.REDSHIFT.VPC.ROUTING.001
+name: Redshift Must Use Enhanced VPC Routing
+description: Redshift clusters must use enhanced VPC routing to force all
+  COPY and UNLOAD traffic through the VPC.
+domain: network
+severity: high
+compliance:
+  nist_800_53_r5: SC-7
+  soc2: CC6.6
+  ccm_v4:
+  - IVS-03
+scope_tags:
+- aws
+- redshift
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: Enhanced VPC routing not enabled.
+  action: Enable enhanced VPC routing on the cluster.
+unsafe_predicate:
+  all:
+  - field: properties.database.kind
+    op: eq
+    value: redshift_cluster
+  - field: properties.database.network.enhanced_vpc_routing
+    op: eq
+    value: false

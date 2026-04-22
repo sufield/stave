@@ -1,0 +1,27 @@
+dsl_version: ctrl.v1
+id: CTL.REDSHIFT.CONFIG.DBNAME.001
+name: Redshift Must Not Use Default Database Name
+description: Redshift clusters should not use the default database name (dev).
+domain: identity
+severity: low
+compliance:
+  ccm_v4:
+  - DCS-06
+scope_tags:
+- aws
+- redshift
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Cluster uses default database name.
+  action: Create a new cluster with a descriptive database name.
+unsafe_predicate:
+  all:
+  - field: properties.database.kind
+    op: eq
+    value: redshift_cluster
+  - field: properties.database.config.uses_default_dbname
+    op: eq
+    value: true

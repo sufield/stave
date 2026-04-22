@@ -1,0 +1,7 @@
+control: CTL.REDSHIFT.PUBLIC.001
+defect: >
+  The Redshift cluster has PubliclyAccessible enabled, making the data warehouse endpoint reachable from the internet.
+infection: >
+  An attacker can connect directly to the cluster from any IP address. Combined with weak credentials or SQL injection through an application proxy, the entire data warehouse is accessible. Automated scanners continuously probe for publicly accessible Redshift endpoints.
+failure: >
+  Direct data warehouse compromise from the internet. Business intelligence data, historical records, and aggregated datasets are exposed.

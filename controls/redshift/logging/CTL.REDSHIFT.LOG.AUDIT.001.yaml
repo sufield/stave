@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.REDSHIFT.LOG.AUDIT.001
+name: Redshift Clusters Must Have Audit Logging Enabled
+description: Redshift audit logging must be enabled for connection, user,
+  and query activity.
+domain: audit
+severity: medium
+compliance:
+  nist_800_53_r5: AU-12
+  soc2: CC7.1
+  ccm_v4:
+  - LOG-03
+scope_tags:
+- aws
+- redshift
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: Audit logging not enabled.
+  action: Enable audit logging to S3 or CloudWatch.
+unsafe_predicate:
+  all:
+  - field: properties.database.kind
+    op: eq
+    value: redshift_cluster
+  - field: properties.database.logging.audit_logging_enabled
+    op: eq
+    value: false

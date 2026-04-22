@@ -1,0 +1,28 @@
+dsl_version: ctrl.v1
+id: CTL.REDSHIFT.UPGRADE.001
+name: Redshift Must Allow Automatic Version Upgrades
+description: Redshift clusters should have automatic version upgrades enabled.
+domain: exposure
+severity: low
+compliance:
+  nist_800_53_r5: SI-2
+  ccm_v4:
+  - CCC-04
+scope_tags:
+- aws
+- redshift
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Auto version upgrade disabled.
+  action: Enable AllowVersionUpgrade on the cluster.
+unsafe_predicate:
+  all:
+  - field: properties.database.kind
+    op: eq
+    value: redshift_cluster
+  - field: properties.database.config.allow_version_upgrade
+    op: eq
+    value: false

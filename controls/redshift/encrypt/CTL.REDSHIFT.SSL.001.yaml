@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.REDSHIFT.SSL.001
+name: Redshift Clusters Must Require SSL Connections
+description: Redshift parameter group must set require_ssl to true.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: SC-8
+  soc2: CC6.7
+  pci_dss_v4.0: 4.2.1
+  ccm_v4:
+  - CEK-03
+scope_tags:
+- aws
+- redshift
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: Cluster does not require SSL.
+  action: Set require_ssl=true in the cluster's parameter group.
+unsafe_predicate:
+  all:
+  - field: properties.database.kind
+    op: eq
+    value: redshift_cluster
+  - field: properties.database.ssl.require_ssl
+    op: eq
+    value: false
