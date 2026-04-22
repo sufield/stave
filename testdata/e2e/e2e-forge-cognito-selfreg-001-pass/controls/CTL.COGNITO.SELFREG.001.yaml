@@ -1,0 +1,39 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.SELFREG.001
+name: Cognito User Pools Must Disable Unrestricted Self-Registration
+description: >
+  Cognito user pools should require administrator-created accounts
+  (AllowAdminCreateUserOnly=true). Unrestricted self-registration
+  lets anyone create an account and potentially access resources
+  mapped through identity pools.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-2"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-04"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Cognito user pool allows unrestricted self-registration.
+  action: Set AllowAdminCreateUserOnly to true in AdminCreateUserConfig.
+  example: |
+    {
+      "identity": {
+        "kind": "user_pool",
+        "governance": { "self_registration_restricted": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user_pool
+    - field: properties.identity.governance.self_registration_restricted
+      op: eq
+      value: false

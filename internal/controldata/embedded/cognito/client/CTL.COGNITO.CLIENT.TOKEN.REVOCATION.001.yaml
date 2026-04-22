@@ -1,0 +1,39 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.CLIENT.TOKEN.REVOCATION.001
+name: Cognito App Clients Must Enable Token Revocation
+description: >
+  Cognito app clients must enable token revocation so revoked refresh
+  tokens and their derived access/ID tokens are immediately
+  invalidated. Without revocation, compromised tokens remain valid
+  until expiry.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "IA-5"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-16"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: Cognito app client does not have token revocation enabled.
+  action: Set EnableTokenRevocation to true on the app client.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_app_client",
+        "auth": { "token_revocation_enabled": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_app_client
+    - field: properties.identity.auth.token_revocation_enabled
+      op: eq
+      value: false

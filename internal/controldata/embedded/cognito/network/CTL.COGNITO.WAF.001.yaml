@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.WAF.001
+name: Cognito User Pools Must Have WAF ACL Attached
+description: >
+  Cognito user pools must be associated with an AWS WAFv2 web ACL
+  for rate limiting, bot protection, and IP filtering on the hosted
+  UI and public API endpoints. Without WAF, the authentication
+  endpoint is unprotected against credential stuffing and brute
+  force attacks.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Cognito user pool has no WAF ACL attached.
+  action: >
+    Associate a WAFv2 web ACL with the user pool. Configure rate
+    limiting and bot protection rules.
+  example: |
+    {
+      "identity": {
+        "kind": "user_pool",
+        "network": { "waf_acl_attached": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user_pool
+    - field: properties.identity.network.waf_acl_attached
+      op: eq
+      value: false

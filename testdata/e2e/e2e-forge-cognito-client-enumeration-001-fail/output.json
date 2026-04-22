@@ -1,0 +1,327 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-15T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "edfa3e6be75ee84bf28111cbb2d9a24e19fe64acac377052f2721a8966c1bcd0",
+        "2026-01-11T000000Z.json": "fc081063a0e77365bc75ba7acddeffba00b8dc07abf63e46c20859d5f88337ac"
+      },
+      "overall": "b9d9a03e9c669092752c7c2ca5ace129ebe65e5f4bccdd481b253a6708a04877"
+    },
+    "policy_fingerprint": "f50b90b6a37326d6a9d0e2afea5f5c2ebfb95212f39f55b3b7b2d16dd7b8b3fb",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.COGNITO.CLIENT.ENUMERATION.001",
+      "asset_id": "us-east-1_abc123|client_abc",
+      "asset_type": "aws_cognito_app_client",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -168,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:32e173ead5a7366e",
+      "control_id": "CTL.COGNITO.CLIENT.ENUMERATION.001",
+      "control_name": "Cognito App Clients Must Prevent User Existence Disclosure",
+      "control_description": "Cognito app clients must enable PreventUserExistenceErrors to suppress user-existence disclosures. Without this, authentication error messages reveal whether a username exists, enabling account enumeration attacks.\n",
+      "asset_id": "us-east-1_abc123|client_abc",
+      "asset_type": "aws_cognito_app_client",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 336,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "identity.kind",
+            "actual_value": "cognito_app_client",
+            "operator": "eq",
+            "unsafe_value": "cognito_app_client"
+          },
+          {
+            "property": "identity.security.prevent_user_existence_errors",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 336 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "nist_800_53_r5": "AC-3",
+        "soc2": "CC6.1"
+      },
+      "control_compliance_ccm_v4": [
+        "IAM-16"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Cognito app client reveals user existence in error messages.",
+        "action": "Set PreventUserExistenceErrors to ENABLED on the app client.",
+        "example": "{\n  \"identity\": {\n    \"kind\": \"cognito_app_client\",\n    \"security\": { \"prevent_user_existence_errors\": true }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-def4bd8f7c576d9e",
+        "target": {
+          "asset_id": "us-east-1_abc123|client_abc",
+          "asset_type": "aws_cognito_app_client"
+        },
+        "action": "Set PreventUserExistenceErrors to ENABLED on the app client."
+      },
+      "exposure_score": 50,
+      "score_breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "identity.kind eq \"cognito_app_client\"",
+          "observation_key": "identity.kind",
+          "operator": "eq",
+          "expected_value": "cognito_app_client",
+          "observed_value": "cognito_app_client"
+        },
+        {
+          "predicate_expr": "identity.security.prevent_user_existence_errors eq false",
+          "observation_key": "identity.security.prevent_user_existence_errors",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "us-east-1_abc123|client_abc",
+          "type": "aws_cognito_app_client",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.COGNITO.CLIENT.ENUMERATION.001",
+          "control_name": "Cognito App Clients Must Prevent User Existence Disclosure",
+          "severity": "medium",
+          "reasoning": [
+            {
+              "clause": "identity.kind = \"cognito_app_client\"",
+              "observation_key": "identity.kind",
+              "observed_value": "cognito_app_client"
+            },
+            {
+              "clause": "identity.security.prevent_user_existence_errors = false",
+              "observation_key": "identity.security.prevent_user_existence_errors",
+              "observed_value": false
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "identity.kind",
+            "current_value": "cognito_app_client",
+            "has_safe_default": false,
+            "description": "Change identity.kind from cognito_app_client"
+          },
+          {
+            "path": "identity.security.prevent_user_existence_errors",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set identity.security.prevent_user_existence_errors to true"
+          }
+        ],
+        "action": "Set PreventUserExistenceErrors to ENABLED on the app client."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "cognito"
+      ],
+      "delta": [
+        {
+          "property_label": "security prevent user existence errors",
+          "property_path": "identity.security.prevent_user_existence_errors",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:e4defaafda5b5cda",
+      "asset_id": "us-east-1_abc123|client_abc",
+      "shared_keys": [
+        "identity.security",
+        "identity.security.prevent_user_existence_errors"
+      ],
+      "headline_finding_id": "sha256:32e173ead5a7366e",
+      "member_finding_ids": [
+        "sha256:32e173ead5a7366e"
+      ],
+      "consolidated_score": 50,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "us-east-1_abc123|client_abc",
+      "asset_type": "aws_cognito_app_client",
+      "fix_plan": {
+        "id": "fix-def4bd8f7c576d9e",
+        "target": {
+          "asset_id": "us-east-1_abc123|client_abc",
+          "asset_type": "aws_cognito_app_client"
+        },
+        "action": "Set PreventUserExistenceErrors to ENABLED on the app client."
+      },
+      "contributing_controls": [
+        "CTL.COGNITO.CLIENT.ENUMERATION.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.COGNITO.CLIENT.ENUMERATION.001",
+      "asset_id": "us-east-1_abc123|client_abc",
+      "exposure_score": 50,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-cognito-client-enumeration-001-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-cognito-client-enumeration-001-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c5863837fe8f53a54cf87fe9d714a4204bce8f40",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-cognito-client-enumeration-001-fail/controls/"
+      ]
+    }
+  }
+}

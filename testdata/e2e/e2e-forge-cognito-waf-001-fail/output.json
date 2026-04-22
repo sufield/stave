@@ -1,0 +1,327 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-15T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "f74c65abad6008bf24c50cc5e2cb82de1f3064434ce17285b166748630805da4",
+        "2026-01-11T000000Z.json": "04cf767287a90a7a5aefe04871894b7b6042e2427aba4b21e803df2cb3f33994"
+      },
+      "overall": "9a925fd279ad26e29120310424b46f81f59280f1cdee8cd5b65f0c25c0772c91"
+    },
+    "policy_fingerprint": "87649c9fb3e920ebd42dd57ba99db52d7a0855bfd0a17dbb9830deab87fb9461",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.COGNITO.WAF.001",
+      "asset_id": "us-east-1_abc123",
+      "asset_type": "aws_cognito_user_pool",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -168,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:5708afb215ac45f8",
+      "control_id": "CTL.COGNITO.WAF.001",
+      "control_name": "Cognito User Pools Must Have WAF ACL Attached",
+      "control_description": "Cognito user pools must be associated with an AWS WAFv2 web ACL for rate limiting, bot protection, and IP filtering on the hosted UI and public API endpoints. Without WAF, the authentication endpoint is unprotected against credential stuffing and brute force attacks.\n",
+      "asset_id": "us-east-1_abc123",
+      "asset_type": "aws_cognito_user_pool",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 336,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "identity.kind",
+            "actual_value": "user_pool",
+            "operator": "eq",
+            "unsafe_value": "user_pool"
+          },
+          {
+            "property": "identity.network.waf_acl_attached",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 336 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "nist_800_53_r5": "SC-7",
+        "soc2": "CC6.6"
+      },
+      "control_compliance_ccm_v4": [
+        "IVS-03"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Cognito user pool has no WAF ACL attached.",
+        "action": "Associate a WAFv2 web ACL with the user pool. Configure rate limiting and bot protection rules.",
+        "example": "{\n  \"identity\": {\n    \"kind\": \"user_pool\",\n    \"network\": { \"waf_acl_attached\": true }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-b062827766d677c1",
+        "target": {
+          "asset_id": "us-east-1_abc123",
+          "asset_type": "aws_cognito_user_pool"
+        },
+        "action": "Associate a WAFv2 web ACL with the user pool. Configure rate limiting and bot protection rules."
+      },
+      "exposure_score": 50,
+      "score_breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "identity.kind eq \"user_pool\"",
+          "observation_key": "identity.kind",
+          "operator": "eq",
+          "expected_value": "user_pool",
+          "observed_value": "user_pool"
+        },
+        {
+          "predicate_expr": "identity.network.waf_acl_attached eq false",
+          "observation_key": "identity.network.waf_acl_attached",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "us-east-1_abc123",
+          "type": "aws_cognito_user_pool",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.COGNITO.WAF.001",
+          "control_name": "Cognito User Pools Must Have WAF ACL Attached",
+          "severity": "medium",
+          "reasoning": [
+            {
+              "clause": "identity.kind = \"user_pool\"",
+              "observation_key": "identity.kind",
+              "observed_value": "user_pool"
+            },
+            {
+              "clause": "identity.network.waf_acl_attached = false",
+              "observation_key": "identity.network.waf_acl_attached",
+              "observed_value": false
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "identity.kind",
+            "current_value": "user_pool",
+            "has_safe_default": false,
+            "description": "Change identity.kind from user_pool"
+          },
+          {
+            "path": "identity.network.waf_acl_attached",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set identity.network.waf_acl_attached to true"
+          }
+        ],
+        "action": "Associate a WAFv2 web ACL with the user pool. Configure rate limiting and bot protection rules."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "cognito"
+      ],
+      "delta": [
+        {
+          "property_label": "network WAF ACL",
+          "property_path": "identity.network.waf_acl_attached",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:eeb3deb7113876c6",
+      "asset_id": "us-east-1_abc123",
+      "shared_keys": [
+        "identity.network",
+        "identity.network.waf_acl_attached"
+      ],
+      "headline_finding_id": "sha256:5708afb215ac45f8",
+      "member_finding_ids": [
+        "sha256:5708afb215ac45f8"
+      ],
+      "consolidated_score": 50,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "us-east-1_abc123",
+      "asset_type": "aws_cognito_user_pool",
+      "fix_plan": {
+        "id": "fix-b062827766d677c1",
+        "target": {
+          "asset_id": "us-east-1_abc123",
+          "asset_type": "aws_cognito_user_pool"
+        },
+        "action": "Associate a WAFv2 web ACL with the user pool. Configure rate limiting and bot protection rules."
+      },
+      "contributing_controls": [
+        "CTL.COGNITO.WAF.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.COGNITO.WAF.001",
+      "asset_id": "us-east-1_abc123",
+      "exposure_score": 50,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-cognito-waf-001-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-cognito-waf-001-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c5863837fe8f53a54cf87fe9d714a4204bce8f40",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-cognito-waf-001-fail/controls/"
+      ]
+    }
+  }
+}

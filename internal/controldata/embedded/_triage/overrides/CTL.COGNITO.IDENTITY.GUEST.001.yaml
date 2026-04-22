@@ -1,0 +1,15 @@
+control: CTL.COGNITO.IDENTITY.GUEST.001
+defect: >
+  The Cognito identity pool allows unauthenticated (guest) identities.
+  Any client can obtain temporary AWS credentials without signing in.
+infection: >
+  An attacker calls GetId and GetCredentialsForIdentity without
+  authentication and receives temporary AWS credentials for the
+  unauthenticated IAM role. The attacker can then call any AWS API
+  the role permits — S3, DynamoDB, Lambda, or any other service.
+  The credentials are legitimate AWS STS tokens, indistinguishable
+  from authorized usage in CloudTrail.
+failure: >
+  Unauthenticated AWS access via Cognito. Any internet client obtains
+  IAM credentials without authentication, granting whatever
+  permissions the unauthenticated role allows.

@@ -1,0 +1,39 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.CLIENT.ENUMERATION.001
+name: Cognito App Clients Must Prevent User Existence Disclosure
+description: >
+  Cognito app clients must enable PreventUserExistenceErrors to
+  suppress user-existence disclosures. Without this, authentication
+  error messages reveal whether a username exists, enabling account
+  enumeration attacks.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-16"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: discovery
+remediation:
+  description: Cognito app client reveals user existence in error messages.
+  action: Set PreventUserExistenceErrors to ENABLED on the app client.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_app_client",
+        "security": { "prevent_user_existence_errors": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_app_client
+    - field: properties.identity.security.prevent_user_existence_errors
+      op: eq
+      value: false

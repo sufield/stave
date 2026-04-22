@@ -1,0 +1,20 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "us-east-1_abc123",
+      "type": "aws_cognito_user_pool",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user_pool",
+          "governance": {
+            "self_registration_restricted": false
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.DELETEPROT.001
+name: Cognito User Pools Must Have Deletion Protection Enabled
+description: >
+  Cognito user pools must have deletion protection set to ACTIVE.
+  Without protection, accidental or malicious deletion destroys the
+  user directory and all authentication state.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "CP-10"
+  soc2: "A1.1"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: Cognito user pool deletion protection is not active.
+  action: Set deletion protection to ACTIVE on the user pool.
+  example: |
+    {
+      "identity": {
+        "kind": "user_pool",
+        "governance": { "deletion_protection_enabled": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user_pool
+    - field: properties.identity.governance.deletion_protection_enabled
+      op: eq
+      value: false

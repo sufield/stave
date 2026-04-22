@@ -1,0 +1,17 @@
+id: cognito_account_takeover
+description: >
+  Cognito user pool without MFA enforcement, missing compromised
+  credentials detection, and no WAF protection. The authentication
+  endpoint is vulnerable to credential stuffing — attackers use
+  leaked credentials from other breaches without MFA blocking,
+  compromised credential checks, or rate limiting.
+controls:
+  - CTL.COGNITO.MFA.001
+  - CTL.COGNITO.COMPROMISED.CREDS.001
+  - CTL.COGNITO.WAF.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - iam_credential_theft

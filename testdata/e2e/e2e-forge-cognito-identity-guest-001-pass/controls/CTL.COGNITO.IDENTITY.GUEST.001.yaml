@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.IDENTITY.GUEST.001
+name: Cognito Identity Pools Must Not Allow Guest Access
+description: >
+  Cognito identity pools must disable unauthenticated (guest)
+  identities. When enabled, any client can obtain temporary AWS
+  credentials without signing in. The unauthenticated IAM role's
+  permissions become effectively public.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-16", "IVS-03"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Cognito identity pool allows unauthenticated access.
+  action: >
+    Disable unauthenticated identities on the identity pool. If
+    guest access is required, scope the unauthenticated role to
+    minimal permissions.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_identity_pool",
+        "access": { "allow_unauthenticated": false }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_identity_pool
+    - field: properties.identity.access.allow_unauthenticated
+      op: eq
+      value: true

@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.ADAPTIVE.AUTH.001
+name: Cognito Must Block Malicious Sign-In Attempts at All Risk Levels
+description: >
+  Cognito user pools with advanced security must block risky sign-in
+  attempts at low, medium, and high risk levels. Adaptive
+  authentication detects anomalous sign-in patterns (new device, new
+  location, impossible travel) and blocks them.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "IA-5"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-16"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+remediation:
+  description: Cognito does not block malicious sign-in attempts at all risk levels.
+  action: >
+    Set adaptive authentication to BLOCK for low, medium, and high
+    risk levels in the account-takeover risk configuration.
+  example: |
+    {
+      "identity": {
+        "kind": "user_pool",
+        "security": { "blocks_risky_sign_ins": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user_pool
+    - field: properties.identity.security.blocks_risky_sign_ins
+      op: eq
+      value: false

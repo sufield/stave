@@ -3,25 +3,25 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 823
-**Pack hash:** `d92246557082beae679800c8228c1717f816721b0e596fbde0a21ad5f3af4631`
+**Total controls:** 832
+**Pack hash:** `473a730aac1267210bf5d815cf6b298cf39ee65f7755649cb9d74638d2fb58ef`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 131 |
-| high | 361 |
+| high | 362 |
 | info | 16 |
-| low | 74 |
-| medium | 241 |
+| low | 75 |
+| medium | 248 |
 
 | Domain | Count |
 |--------|-------|
 | audit | 20 |
 | detection | 2 |
 | encryption | 30 |
-| exposure | 532 |
+| exposure | 541 |
 | governance | 19 |
 | identity | 177 |
 | network | 21 |
@@ -2703,6 +2703,21 @@ CodeCommit repositories must have approval rule templates configured on protecte
 
 ---
 
+### CTL.COGNITO.ADAPTIVE.AUTH.001
+
+**Cognito Must Block Malicious Sign-In Attempts at All Risk Levels**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: IA-5; soc2: CC6.1;
+
+Cognito user pools with advanced security must block risky sign-in attempts at low, medium, and high risk levels. Adaptive authentication detects anomalous sign-in patterns (new device, new location, impossible travel) and blocks them.
+
+**Remediation:** Set adaptive authentication to BLOCK for low, medium, and high risk levels in the account-takeover risk configuration.
+
+---
+
 ### CTL.COGNITO.ADVANCED.SECURITY.001
 
 **Cognito User Pools Must Have Advanced Security Features Enabled**
@@ -2715,6 +2730,81 @@ CodeCommit repositories must have approval rule templates configured on protecte
 Cognito Advanced Security Features detects and responds to compromised credentials, account takeover attempts, and unusual sign-in activity using adaptive authentication. It detects sign-ins from new devices, blocks credentials found in breach databases, and generates risk scores for authentication events. Without ASF, Cognito cannot detect credential stuffing using breached passwords.
 
 **Remediation:** aws cognito-idp update-user-pool --user-pool-id <id> --user-pool-add-ons AdvancedSecurityMode=ENFORCED
+
+---
+
+### CTL.COGNITO.CLIENT.ENUMERATION.001
+
+**Cognito App Clients Must Prevent User Existence Disclosure**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+Cognito app clients must enable PreventUserExistenceErrors to suppress user-existence disclosures. Without this, authentication error messages reveal whether a username exists, enabling account enumeration attacks.
+
+**Remediation:** Set PreventUserExistenceErrors to ENABLED on the app client.
+
+---
+
+### CTL.COGNITO.CLIENT.TOKEN.REVOCATION.001
+
+**Cognito App Clients Must Enable Token Revocation**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: IA-5; soc2: CC6.1;
+
+Cognito app clients must enable token revocation so revoked refresh tokens and their derived access/ID tokens are immediately invalidated. Without revocation, compromised tokens remain valid until expiry.
+
+**Remediation:** Set EnableTokenRevocation to true on the app client.
+
+---
+
+### CTL.COGNITO.COMPROMISED.CREDS.001
+
+**Cognito Must Block Sign-In with Compromised Credentials**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: IA-5; soc2: CC6.1;
+
+Cognito user pools with advanced security must block sign-in attempts using credentials detected in known breaches. Requires advanced security ENFORCED mode with compromised-credentials policy set to BLOCK on sign-in events.
+
+**Remediation:** Enable advanced security in ENFORCED mode and set the compromised-credentials policy to BLOCK for sign-in events.
+
+---
+
+### CTL.COGNITO.DELETEPROT.001
+
+**Cognito User Pools Must Have Deletion Protection Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CP-10; soc2: A1.1;
+
+Cognito user pools must have deletion protection set to ACTIVE. Without protection, accidental or malicious deletion destroys the user directory and all authentication state.
+
+**Remediation:** Set deletion protection to ACTIVE on the user pool.
+
+---
+
+### CTL.COGNITO.IDENTITY.GUEST.001
+
+**Cognito Identity Pools Must Not Allow Guest Access**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+Cognito identity pools must disable unauthenticated (guest) identities. When enabled, any client can obtain temporary AWS credentials without signing in. The unauthenticated IAM role's permissions become effectively public.
+
+**Remediation:** Disable unauthenticated identities on the identity pool. If guest access is required, scope the unauthenticated role to minimal permissions.
 
 ---
 
@@ -2789,6 +2879,51 @@ Cognito user pools must enforce a minimum password length of 12 characters and r
 Weak Cognito password policies enable brute force and dictionary attacks against user accounts. A minimum length of 12 characters with complexity requirements significantly increases the effort required for credential attacks. Temporary passwords with long validity windows allow attackers to reuse intercepted temporary passwords for extended periods.
 
 **Remediation:** aws cognito-idp update-user-pool --user-pool-id <id> --policies PasswordPolicy='{MinimumLength=12, RequireUppercase=true,RequireLowercase=true, RequireNumbers=true,RequireSymbols=true, TemporaryPasswordValidityDays=3}'
+
+---
+
+### CTL.COGNITO.SELFREG.001
+
+**Cognito User Pools Must Disable Unrestricted Self-Registration**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-2; soc2: CC6.1;
+
+Cognito user pools should require administrator-created accounts (AllowAdminCreateUserOnly=true). Unrestricted self-registration lets anyone create an account and potentially access resources mapped through identity pools.
+
+**Remediation:** Set AllowAdminCreateUserOnly to true in AdminCreateUserConfig.
+
+---
+
+### CTL.COGNITO.TEMPPASSWORD.001
+
+**Cognito Temporary Passwords Must Expire Within 7 Days**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: IA-5;
+
+Cognito user pool temporary password validity must not exceed 7 days. Long-lived temporary passwords increase the window for credential interception or misuse.
+
+**Remediation:** Set TemporaryPasswordValidityDays to 7 or less.
+
+---
+
+### CTL.COGNITO.WAF.001
+
+**Cognito User Pools Must Have WAF ACL Attached**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+Cognito user pools must be associated with an AWS WAFv2 web ACL for rate limiting, bot protection, and IP filtering on the hosted UI and public API endpoints. Without WAF, the authentication endpoint is unprotected against credential stuffing and brute force attacks.
+
+**Remediation:** Associate a WAFv2 web ACL with the user pool. Configure rate limiting and bot protection rules.
 
 ---
 
