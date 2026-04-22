@@ -1,0 +1,16 @@
+control: CTL.IAM.ESCALATE.CREATEINSTANCEPROFILE.001
+defect: >
+  The principal has iam:CreateInstanceProfile,
+  iam:AddRoleToInstanceProfile, and
+  ec2:AssociateIamInstanceProfile on a role whose permissions
+  exceed the principal's own.
+infection: >
+  The attacker creates a new instance profile, attaches a privileged
+  role, and associates it with an EC2 instance they control. The
+  instance's IMDS endpoint immediately serves credentials for the
+  attached role. Unlike RunInstances-based escalation, this vector
+  modifies an existing instance — no new instance creation needed.
+failure: >
+  Privilege escalation via instance profile manipulation. The
+  attacker gains IAM role credentials on an existing EC2 instance
+  without creating new resources or using iam:PassRole.

@@ -102,7 +102,10 @@ func runScore(ctx context.Context, stdout io.Writer, opts *options) error {
 	}
 
 	// Load chain definitions for accurate chain weight.
-	chains, _ := ctlyaml.LoadChains("chains")
+	chains, chainsErr := ctlyaml.LoadChains("chains")
+	if chainsErr != nil {
+		return fmt.Errorf("loading chains: %w", chainsErr)
+	}
 	chainDefs := len(chains)
 	maxChainWeight := appscore.ChainMaxWeight(chains)
 

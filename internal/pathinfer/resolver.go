@@ -6,6 +6,7 @@ package pathinfer
 import (
 	"fmt"
 	"io/fs"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"slices"
@@ -156,6 +157,7 @@ func relativePaths(base string, paths []string) []string {
 	for i, p := range paths {
 		rel, err := filepath.Rel(base, p)
 		if err != nil {
+			slog.Debug("cannot compute relative path, using absolute", "base", base, "path", p, "error", err)
 			out[i] = p
 			continue
 		}

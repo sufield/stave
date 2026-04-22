@@ -80,7 +80,10 @@ func runSimulate(stdout io.Writer, opts *options) error {
 		return &ui.UserError{Err: fmt.Errorf("parse assessment: %w", unmarshalErr)}
 	}
 
-	chains, _ := ctlyaml.LoadChains("chains")
+	chains, chainsErr := ctlyaml.LoadChains("chains")
+	if chainsErr != nil {
+		return fmt.Errorf("loading chains: %w", chainsErr)
+	}
 
 	result := appsim.Run(appsim.Input{
 		Findings:      assessment.Findings,

@@ -1,0 +1,49 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.PROFILE.SHARED.001
+name: EC2 Instances Must Use Per-Instance Instance Profiles
+description: >
+  Each EC2 instance should use a dedicated instance profile not
+  shared with other instances. Shared instance profiles grant every
+  instance using the profile the union of all instances' required
+  permissions, expanding blast radius. A compromise of one instance
+  gives the attacker credentials for every other instance sharing
+  the same profile. ECS (CTL.ECS.TASKROLE.SHARED.001) and Lambda
+  (CTL.LAMBDA.ROLE.SHARED.001) enforce the same principle.
+domain: identity
+severity: medium
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-6"
+  pci_dss_v4.0: "7.2.1"
+  ccm_v4: ["IAM-04", "IAM-05"]
+scope_tags:
+  - aws
+  - ec2
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: >
+    EC2 instance uses an instance profile shared with other instances.
+  action: >
+    Create a dedicated IAM instance profile per instance (or per
+    instance group with identical permission needs) scoped to only
+    the permissions that specific workload requires.
+  example: |
+    {
+      "compute": {
+        "kind": "instance",
+        "instance_profile": {
+          "is_shared": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: instance
+    - field: properties.compute.instance_profile.is_shared
+      op: eq
+      value: true

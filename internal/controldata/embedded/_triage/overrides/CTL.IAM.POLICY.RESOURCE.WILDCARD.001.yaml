@@ -1,0 +1,15 @@
+control: CTL.IAM.POLICY.RESOURCE.WILDCARD.001
+defect: >
+  The IAM policy grants sensitive actions with Resource "*". The
+  principal can perform the action on every resource in the account
+  rather than specific ARNs.
+infection: >
+  A principal with Resource "*" on sensitive actions has account-wide
+  scope. An s3:* grant with Resource "*" covers every bucket. A
+  kms:Decrypt grant with Resource "*" covers every key. The policy
+  vastly exceeds least privilege — the principal needs access to
+  specific resources but receives access to all.
+failure: >
+  Excessive permission scope. A compromise of this principal
+  exposes every resource in the account to the granted actions,
+  not just the resources the principal was intended to access.

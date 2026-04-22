@@ -3,27 +3,27 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 755
-**Pack hash:** `0cbbdd6831e1d1c32921776623755e0c12f43321ca22e5f4caf756c387bae848`
+**Total controls:** 760
+**Pack hash:** `167d1334a08fec4da8c28bbccf705ba07987d3b5b11cd13816c192c79fd6997c`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 125 |
-| high | 328 |
+| critical | 126 |
+| high | 330 |
 | info | 16 |
 | low | 68 |
-| medium | 218 |
+| medium | 220 |
 
 | Domain | Count |
 |--------|-------|
 | audit | 20 |
 | detection | 2 |
 | encryption | 9 |
-| exposure | 491 |
+| exposure | 494 |
 | governance | 19 |
-| identity | 171 |
+| identity | 173 |
 | network | 21 |
 | resilience | 14 |
 | storage | 8 |
@@ -3040,6 +3040,21 @@ EC2 instance profiles must not have AdministratorAccess or overly broad permissi
 
 ---
 
+### CTL.EC2.PROFILE.SHARED.001
+
+**EC2 Instances Must Use Per-Instance Instance Profiles**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+Each EC2 instance should use a dedicated instance profile not shared with other instances. Shared instance profiles grant every instance using the profile the union of all instances' required permissions, expanding blast radius. A compromise of one instance gives the attacker credentials for every other instance sharing the same profile. ECS (CTL.ECS.TASKROLE.SHARED.001) and Lambda (CTL.LAMBDA.ROLE.SHARED.001) enforce the same principle.
+
+**Remediation:** Create a dedicated IAM instance profile per instance (or per instance group with identical permission needs) scoped to only the permissions that specific workload requires.
+
+---
+
 ### CTL.EC2.PUBLIC.001
 
 **EC2 Instances Must Not Have Public IP Addresses**
@@ -4952,6 +4967,21 @@ A principal with `iam:CreateAccessKey` whose Resource field reaches another IAM 
 
 ---
 
+### CTL.IAM.ESCALATE.CREATEINSTANCEPROFILE.001
+
+**Principal Must Not Escalate via Instance Profile Creation and Association**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+Principals with iam:CreateInstanceProfile, iam:AddRoleToInstanceProfile, and ec2:AssociateIamInstanceProfile can escalate by creating a new instance profile, attaching a powerful role, and associating it with an EC2 instance they control. The instance then receives credentials for the powerful role via IMDS. This is distinct from the RunInstances vector (which creates a new instance with a profile) — this vector modifies an existing instance. No iam:PassRole is required for the iam:AddRoleToInstanceProfile step.
+
+**Remediation:** Remove iam:CreateInstanceProfile or ec2:AssociateIamInstanceProfile from the principal. If instance profile management is required, restrict the roles that can be added via IAM policy conditions on iam:AddRoleToInstanceProfile.
+
+---
+
 ### CTL.IAM.ESCALATE.CREATELOGINPROFILE.001
 
 **Principal Must Not Escalate via iam:CreateLoginProfile On Another User**
@@ -5628,6 +5658,21 @@ IAM users must not have inline policies attached directly. Inline policies are h
 
 ---
 
+### CTL.IAM.POLICY.INLINE.002
+
+**No Inline Policies on IAM Roles**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 1.16; nist_800_53_r5: AC-2; soc2: CC6.1;
+
+IAM roles must not have inline policies attached. Inline policies are embedded directly in the role and cannot be versioned, audited, or reused independently. They create shadow permission grants that are invisible to policy-listing tools that only enumerate managed policies. Use managed policies attached to the role instead. CTL.IAM.POLICY.INLINE.001 enforces this for users; this control enforces it for roles.
+
+**Remediation:** Convert inline policies to managed policies. Use aws iam list-role-policies to enumerate inline policies, then aws iam create-policy to create equivalent managed policies, attach them, and delete the inline policies.
+
+---
+
 ### CTL.IAM.POLICY.MFA.001
 
 **Destructive Actions Must Require MFA**
@@ -5670,6 +5715,21 @@ iam:PassRole permissions must be scoped to specific role ARNs, not wildcard reso
 IAM policies granting iam:PassRole must include an iam:PassedToService condition restricting which AWS service can receive the passed role. Without this condition, a principal can pass a role to any compute service — Lambda, EC2, Glue, CodeBuild, CloudFormation, SSM — regardless of Resource scope. A role scoped to specific ARNs but passable to any service still enables lateral movement: the principal picks whichever service gives the most convenient execution environment.
 
 **Remediation:** Add an iam:PassedToService condition to the PassRole statement. Example: "Condition": {"StringEquals": {"iam:PassedToService": "lambda.amazonaws.com"}}. Restrict to only the service(s) the principal legitimately uses.
+
+---
+
+### CTL.IAM.POLICY.RESOURCE.WILDCARD.001
+
+**Sensitive Actions Must Not Use Resource Wildcard**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-6; nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+IAM policies granting sensitive actions (s3:*, kms:Decrypt, dynamodb:*, secretsmanager:GetSecretValue, rds:*, ec2:*, lambda:InvokeFunction, sts:AssumeRole) must scope the Resource element to specific ARNs. Resource "*" on sensitive actions grants the action on every resource in the account, vastly exceeding least privilege. CTL.IAM.POLICY.PASSROLE.001 and CTL.IAM.POLICY.ASSUMEROLE.001 enforce resource scoping for PassRole and AssumeRole specifically; this control generalizes the pattern to all sensitive actions.
+
+**Remediation:** Scope the Resource element to specific ARNs or ARN patterns. For example, restrict s3:* to specific bucket ARNs, kms:Decrypt to specific key ARNs, and lambda:InvokeFunction to specific function ARNs.
 
 ---
 
@@ -10178,6 +10238,21 @@ Secrets Manager secrets must be encrypted with a customer-managed KMS key. The d
 The observation snapshot is missing required Secrets Manager properties. A safety assessment cannot be completed without secret configuration data.
 
 **Remediation:** Ensure the extractor calls aws secretsmanager describe-secret and maps the response to the secret observation properties.
+
+---
+
+### CTL.SECRETSMANAGER.POLICY.PUBLIC.001
+
+**Secrets Manager Secret Must Not Have Public Resource Policy**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(1); nist_800_53_r5: AC-3; pci_dss_v4.0: 3.4.1; soc2: CC6.1;
+
+Secrets Manager resource policies must not grant secretsmanager:GetSecretValue or secretsmanager:* to Principal "*" or to unauthenticated principals without scoping conditions. Public secret access allows any AWS principal to retrieve the secret value, which typically contains database credentials, API keys, or certificates.
+
+**Remediation:** Restrict the resource policy to specific IAM roles or accounts. Remove any statements with Principal "*". For cross-account access, add aws:PrincipalOrgID or aws:SourceAccount conditions.
 
 ---
 

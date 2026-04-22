@@ -1,0 +1,15 @@
+control: CTL.IAM.POLICY.INLINE.002
+defect: >
+  The IAM role has inline policies embedded directly in the role
+  definition. These policies are invisible to managed-policy
+  enumeration tools.
+infection: >
+  Inline policies create shadow permission grants that standard
+  auditing workflows miss. Tools listing managed policies see a
+  restricted role, but the inline policies silently grant additional
+  permissions. An attacker who discovers the inline policy gains
+  permissions that the security team believes don't exist.
+failure: >
+  Invisible permission grants. The role's effective permissions
+  exceed what managed-policy auditing reveals, creating blind spots
+  in permission reviews and least-privilege enforcement.

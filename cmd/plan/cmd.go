@@ -216,9 +216,12 @@ func writePerTeam(dir string, p *plan.Plan, format string) error {
 			Teams:       []plan.TeamPlan{*tp},
 		}
 		writeErr := writeFormat(f, single, format)
-		_ = f.Close()
+		closeErr := f.Close()
 		if writeErr != nil {
 			return writeErr
+		}
+		if closeErr != nil {
+			return closeErr
 		}
 	}
 	return nil

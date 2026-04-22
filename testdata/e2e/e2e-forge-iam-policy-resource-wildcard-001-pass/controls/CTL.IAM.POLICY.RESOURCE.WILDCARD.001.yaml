@@ -1,0 +1,51 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.POLICY.RESOURCE.WILDCARD.001
+name: Sensitive Actions Must Not Use Resource Wildcard
+description: >
+  IAM policies granting sensitive actions (s3:*, kms:Decrypt,
+  dynamodb:*, secretsmanager:GetSecretValue, rds:*, ec2:*,
+  lambda:InvokeFunction, sts:AssumeRole) must scope the Resource
+  element to specific ARNs. Resource "*" on sensitive actions grants
+  the action on every resource in the account, vastly exceeding
+  least privilege. CTL.IAM.POLICY.PASSROLE.001 and
+  CTL.IAM.POLICY.ASSUMEROLE.001 enforce resource scoping for
+  PassRole and AssumeRole specifically; this control generalizes
+  the pattern to all sensitive actions.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-6"
+  pci_dss_v4.0: "7.2.1"
+  fedramp_moderate: "AC-6"
+  ccm_v4: ["IAM-04", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    IAM policy grants sensitive actions with Resource "*". The
+    principal can perform the action on every resource in the account.
+  action: >
+    Scope the Resource element to specific ARNs or ARN patterns.
+    For example, restrict s3:* to specific bucket ARNs, kms:Decrypt
+    to specific key ARNs, and lambda:InvokeFunction to specific
+    function ARNs.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "policies": {
+          "has_resource_wildcard_on_sensitive": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.policies.has_resource_wildcard_on_sensitive
+      op: eq
+      value: true

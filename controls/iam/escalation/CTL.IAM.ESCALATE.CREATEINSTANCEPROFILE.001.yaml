@@ -1,0 +1,74 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.CREATEINSTANCEPROFILE.001
+name: Principal Must Not Escalate via Instance Profile Creation and Association
+description: >
+  Principals with iam:CreateInstanceProfile, iam:AddRoleToInstanceProfile,
+  and ec2:AssociateIamInstanceProfile can escalate by creating a new
+  instance profile, attaching a powerful role, and associating it with
+  an EC2 instance they control. The instance then receives credentials
+  for the powerful role via IMDS. This is distinct from the RunInstances
+  vector (which creates a new instance with a profile) — this vector
+  modifies an existing instance. No iam:PassRole is required for the
+  iam:AddRoleToInstanceProfile step.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-6(5)"
+  fedramp_moderate: "AC-6(5)"
+  iso_27001_2022: "A.8.3"
+  ccm_v4: ["IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+  - ec2
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  base_impact: 9
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+observation_fields:
+  - identity.kind
+  - identity.escalation.create_instance_profile.present
+  - identity.escalation.create_instance_profile.target_role
+  - identity.escalation.create_instance_profile.permission_delta
+remediation:
+  description: >
+    Principal can create an instance profile, attach a privileged role,
+    and associate it with an EC2 instance. The instance then receives
+    the role's credentials via IMDS.
+  action: >
+    Remove iam:CreateInstanceProfile or ec2:AssociateIamInstanceProfile
+    from the principal. If instance profile management is required,
+    restrict the roles that can be added via IAM policy conditions
+    on iam:AddRoleToInstanceProfile.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "escalation": {
+          "create_instance_profile": {
+            "present": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.escalation.create_instance_profile.present
+      op: eq
+      value: true
+alternatives:
+  - tool: prowler
+    check_id: iam_inline_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 26 per-technique controls covering the aggregated Prowler check.
+  - tool: prowler
+    check_id: iam_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 26 per-technique controls covering the aggregated Prowler check.

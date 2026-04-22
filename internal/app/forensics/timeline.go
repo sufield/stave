@@ -257,9 +257,12 @@ func computeExposureWindows(events []Event) []ExposureWindow {
 			lastTS = *w.remediated
 		}
 
-		first, _ := time.Parse(time.RFC3339, w.firstFailed)
-		last, _ := time.Parse(time.RFC3339, lastTS)
-		days := last.Sub(first).Hours() / 24
+		days := float64(-1)
+		first, firstErr := time.Parse(time.RFC3339, w.firstFailed)
+		last, lastErr := time.Parse(time.RFC3339, lastTS)
+		if firstErr == nil && lastErr == nil {
+			days = last.Sub(first).Hours() / 24
+		}
 
 		result = append(result, ExposureWindow{
 			ControlID:    ctlID,

@@ -1,7 +1,7 @@
 # IAM Permission Reasoning Coverage Audit
 
 Systematic verification of 7 areas of IAM permission reasoning
-against the Stave control catalog (735 controls, 47 domains).
+against the Stave control catalog (740 controls, 47 domains).
 
 **Method**: Every coverage claim verified against actual control
 YAML predicates. Every gap claim verified against observation
@@ -16,6 +16,8 @@ schema and engine capabilities.
 - **13 verified gaps** classified: 8 Gap A, 2 Gap B, 0 Gap C, 3 Gap E
 - **Priority 1 CLOSED** (4 gaps): Rhino parity (20/21, up from 18/21) + SQS/SNS resource policies
 - **KMS resource policies CLOSED** (4 controls): cross-account, admin-broad, conditions, pending deletion
+- **Priority 2+3 Gap A CLOSED** (5 controls): EC2 shared profile, instance profile escalation, inline on roles, Secrets Manager policy, resource wildcard
+- **Neo4j GDS export audit**: see `neo4j-export-completeness.md`
 
 ## Coverage by Area
 
@@ -228,7 +230,7 @@ managed policy attachment on users.
 | ECR | ~10 | CTL.ECR.POLICY.BROAD.001 (`policy.has_broad_cross_account`) | Full |
 | SQS | 5 | CTL.SQS.POLICY.PUBLIC.001 (`policy.has_public_access`) | Full |
 | SNS | 4 | CTL.SNS.POLICY.PUBLIC.001 (`policy.has_public_access`) | Full |
-| Secrets Manager | 6 | Rotation + encryption + blast radius | **No explicit policy controls** |
+| Secrets Manager | 7 | CTL.SECRETSMANAGER.POLICY.PUBLIC.001 + rotation + encryption + blast radius | Full |
 
 **Verified gaps**:
 
@@ -253,11 +255,11 @@ managed policy attachment on users.
 
 | # | Gap | Area | Classification | Rationale |
 |---|-----|------|----------------|-----------|
-| 4.1 | EC2 shared instance profile | 4 | Gap A | Blast radius concern. ECS and Lambda have shared-role controls; EC2 parity needed |
-| 5.4 | CreateInstanceProfile escalation | 5 | Gap A | Escalation vector distinct from RunInstances. Lower frequency but real |
-| 6.1 | Inline policies on roles/groups | 6 | Gap A | CTL.IAM.POLICY.INLINE.001 only checks users. Roles with inline policies are equally problematic |
-| 7.3 | Secrets Manager resource policy | 7 | Gap A | Cross-account blast radius exists but no explicit Principal check on resource policy |
-| 2.5 | Policy attachment counts | 2 | Gap A | Hygiene metric. Boolean exists but count-based detection would catch principals with excessive attachments |
+| 4.1 | ~~EC2 shared instance profile~~ | 4 | ~~Gap A~~ | **CLOSED** — CTL.EC2.PROFILE.SHARED.001 |
+| 5.4 | ~~CreateInstanceProfile escalation~~ | 5 | ~~Gap A~~ | **CLOSED** — CTL.IAM.ESCALATE.CREATEINSTANCEPROFILE.001 |
+| 6.1 | ~~Inline policies on roles/groups~~ | 6 | ~~Gap A~~ | **CLOSED** — CTL.IAM.POLICY.INLINE.002 (roles) |
+| 7.3 | ~~Secrets Manager resource policy~~ | 7 | ~~Gap A~~ | **CLOSED** — CTL.SECRETSMANAGER.POLICY.PUBLIC.001 |
+| 2.5 | Policy attachment counts | 2 | Gap A | Hygiene metric. Deferred — low security impact |
 
 ### Priority 3 — Valid Gaps, Higher Implementation Cost
 
@@ -265,7 +267,7 @@ managed policy attachment on users.
 |---|-----|------|----------------|-----------|
 | 1.1 | General condition block checking | 1 | Gap B | Requires new observation properties per sensitive action. High value but significant extractor work |
 | 1.2 | Explicit deny as guardrail | 1 | Gap B | Methodological check — "do you use deny?" Requires extractor to analyze deny statement presence |
-| 1.3 | Generic Resource:\* on sensitive actions | 1 | Gap A | Requires observation property `identity.policies.has_resource_wildcard_on_sensitive`. Broad but actionable |
+| 1.3 | ~~Generic Resource:\* on sensitive actions~~ | 1 | ~~Gap A~~ | **CLOSED** — CTL.IAM.POLICY.RESOURCE.WILDCARD.001 |
 
 ### Priority 4 — Architectural Gap
 

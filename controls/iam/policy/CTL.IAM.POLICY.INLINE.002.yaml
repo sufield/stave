@@ -1,0 +1,51 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.POLICY.INLINE.002
+name: No Inline Policies on IAM Roles
+description: >
+  IAM roles must not have inline policies attached. Inline policies
+  are embedded directly in the role and cannot be versioned, audited,
+  or reused independently. They create shadow permission grants that
+  are invisible to policy-listing tools that only enumerate managed
+  policies. Use managed policies attached to the role instead.
+  CTL.IAM.POLICY.INLINE.001 enforces this for users; this control
+  enforces it for roles.
+domain: exposure
+severity: medium
+compliance:
+  cis_aws_v3.0: "1.16"
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-2"
+  ccm_v4: ["IAM-04", "IAM-05"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    IAM role has inline policies. Permissions are embedded in the
+    role and invisible to managed-policy enumeration.
+  action: >
+    Convert inline policies to managed policies. Use
+    aws iam list-role-policies to enumerate inline policies, then
+    aws iam create-policy to create equivalent managed policies,
+    attach them, and delete the inline policies.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "policies": {
+          "has_inline_policies": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: role
+    - field: properties.identity.policies.has_inline_policies
+      op: eq
+      value: true

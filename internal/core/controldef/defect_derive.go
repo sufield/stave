@@ -97,7 +97,13 @@ func operatorPhrase(op predicate.Operator, value any) string {
 	case predicate.OpMissing:
 		return "is missing from the observation data"
 	case predicate.OpPresent:
-		if value == true {
+		if b, ok := value.(bool); ok {
+			if b {
+				return "is present"
+			}
+			return "is absent"
+		}
+		if value != nil {
 			return "is present"
 		}
 		return "is absent"

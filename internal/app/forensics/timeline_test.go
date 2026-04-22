@@ -124,3 +124,20 @@ func TestExposureWindowComputation(t *testing.T) {
 		t.Errorf("days = %f, want 4", windows[0].ExposureDays)
 	}
 }
+
+func TestExposureWindowMalformedTimestamp(t *testing.T) {
+	events := []Event{
+		{Timestamp: "not-a-timestamp", EventType: "control_verdict_change",
+			ControlID: "CTL.A", To: "fail"},
+		{Timestamp: "also-invalid", EventType: "control_verdict_change",
+			ControlID: "CTL.A", To: "pass"},
+	}
+
+	windows := computeExposureWindows(events)
+	if len(windows) != 1 {
+		t.Fatalf("windows = %d, want 1", len(windows))
+	}
+	if windows[0].ExposureDays != -1 {
+		t.Errorf("days = %f, want -1 for malformed timestamps", windows[0].ExposureDays)
+	}
+}

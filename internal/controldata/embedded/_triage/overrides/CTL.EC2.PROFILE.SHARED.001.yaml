@@ -1,0 +1,15 @@
+control: CTL.EC2.PROFILE.SHARED.001
+defect: >
+  The EC2 instance uses an instance profile shared with other
+  instances. Every instance sharing the profile receives the same
+  IAM credentials.
+infection: >
+  A compromise of any instance sharing the profile gives the attacker
+  credentials valid for every other instance using the same profile.
+  The blast radius expands from one instance to all instances sharing
+  the role — the attacker inherits the union of all workloads'
+  required permissions.
+failure: >
+  Lateral movement via shared credentials. An attacker compromising
+  one EC2 instance gains credentials usable across all instances
+  sharing the instance profile.

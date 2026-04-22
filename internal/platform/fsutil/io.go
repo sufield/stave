@@ -195,6 +195,9 @@ func SafeWriteFile(path string, data []byte, opts WriteOptions) error {
 	_, writeErr := f.Write(data)
 	closeErr := f.Close()
 	if writeErr != nil {
+		if closeErr != nil {
+			return errors.Join(writeErr, closeErr)
+		}
 		return writeErr
 	}
 	return closeErr
