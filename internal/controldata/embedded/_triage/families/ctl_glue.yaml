@@ -1,0 +1,14 @@
+family: CTL.GLUE
+infection: >
+  A misconfigured Glue resource exposes the ETL pipeline — data in
+  transit between sources and destinations, job scripts containing
+  business logic, connection credentials for data stores, and the
+  catalog metadata describing the organization's entire data
+  landscape. Glue jobs run with IAM roles that typically have broad
+  data access for ETL operations across S3, RDS, Redshift, and
+  DynamoDB.
+failure: >
+  Data pipeline compromise. An attacker gains access to data flowing
+  through the ETL pipeline, the credentials connecting to source
+  and destination data stores, or the catalog describing the
+  organization's data architecture.

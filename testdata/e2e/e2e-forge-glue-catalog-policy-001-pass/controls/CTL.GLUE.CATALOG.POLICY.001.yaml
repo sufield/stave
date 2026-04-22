@@ -1,0 +1,43 @@
+dsl_version: ctrl.v1
+id: CTL.GLUE.CATALOG.POLICY.001
+name: Glue Data Catalog Must Not Be Publicly Accessible
+description: >
+  The Glue Data Catalog resource policy must not grant access to
+  Principal "*" or unauthenticated principals. Public catalog access
+  allows unauthorized actors to enumerate table schemas, S3 data
+  locations, partition metadata, and database definitions — the
+  complete map of the organization's data architecture.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-17", "IVS-03"]
+scope_tags:
+  - aws
+  - glue
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    Glue Data Catalog resource policy allows public access.
+  action: >
+    Restrict the catalog resource policy to specific accounts or
+    roles. Remove any statements with Principal "*".
+  example: |
+    {
+      "governance": {
+        "kind": "glue_catalog",
+        "policy": { "has_public_access": false }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: glue_catalog
+    - field: properties.governance.policy.has_public_access
+      op: eq
+      value: true

@@ -1,0 +1,17 @@
+control: CTL.GLUE.CATALOG.POLICY.001
+defect: >
+  The Glue Data Catalog resource policy grants access to Principal
+  "*" or unauthenticated principals. Any AWS principal can query
+  the catalog.
+infection: >
+  An attacker enumerates the catalog to discover table schemas, S3
+  data locations, partition metadata, and database definitions. The
+  catalog is a complete map of the organization's data architecture
+  — knowing where data lives and how it's structured enables
+  targeted exfiltration. If write access is exposed, the attacker
+  can alter table definitions to redirect ETL jobs to attacker-
+  controlled destinations.
+failure: >
+  Data architecture exposure. An attacker gains a complete inventory
+  of the organization's data landscape and can use it to plan
+  targeted data theft from the most valuable sources.

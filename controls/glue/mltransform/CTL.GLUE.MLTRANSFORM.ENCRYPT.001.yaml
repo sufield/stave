@@ -1,0 +1,40 @@
+dsl_version: ctrl.v1
+id: CTL.GLUE.MLTRANSFORM.ENCRYPT.001
+name: Glue ML Transform Must Encrypt User Data At Rest
+description: >
+  Glue ML transforms must encrypt user data at rest using SSE-KMS.
+  Unencrypted transform artifacts, mappings, and sample datasets
+  may reveal schemas and data relationships.
+domain: encryption
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.7"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - glue
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: collection
+remediation:
+  description: Glue ML transform does not encrypt user data at rest.
+  action: >
+    Enable SSE-KMS encryption for the ML transform's user data
+    via the MlUserDataEncryption setting.
+  example: |
+    {
+      "compute": {
+        "kind": "glue_ml_transform",
+        "encryption": { "user_data_encrypted": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: glue_ml_transform
+    - field: properties.compute.encryption.user_data_encrypted
+      op: eq
+      value: false

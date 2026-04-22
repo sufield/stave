@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.GLUE.CONNECTION.SSL.001
+name: Glue Database Connections Must Enforce SSL
+description: >
+  Glue JDBC connections must enforce TLS/SSL via the
+  JDBC_ENFORCE_SSL connection property. Without TLS, JDBC traffic
+  between Glue jobs and data stores — including credentials,
+  queries, and results — can be intercepted in transit.
+domain: encryption
+severity: high
+compliance:
+  nist_800_53_r5: "SC-8"
+  soc2: "CC6.7"
+  ccm_v4: ["CEK-03", "IVS-03"]
+scope_tags:
+  - aws
+  - glue
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: collection
+remediation:
+  description: Glue connection does not enforce SSL for JDBC traffic.
+  action: >
+    Set the JDBC_ENFORCE_SSL connection property to true in the
+    Glue connection configuration.
+  example: |
+    {
+      "compute": {
+        "kind": "glue_connection",
+        "network": { "ssl_enforced": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: glue_connection
+    - field: properties.compute.network.ssl_enforced
+      op: eq
+      value: false

@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.GLUE.JOB.ENCRYPT.S3.001
+name: Glue ETL Jobs Must Encrypt S3 Data At Rest
+description: >
+  Glue ETL jobs must use a security configuration with S3 encryption
+  enabled (SSE-S3 or SSE-KMS). Without encryption, job outputs,
+  temporary data, and scripts stored in S3 are readable by anyone
+  with bucket access.
+domain: encryption
+severity: high
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.7"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - glue
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: Glue ETL job does not encrypt S3 data at rest.
+  action: >
+    Create a Glue security configuration with S3 encryption enabled
+    (SSE-KMS recommended) and attach it to the job.
+  example: |
+    {
+      "compute": {
+        "kind": "glue_job",
+        "encryption": { "s3_encrypted": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: glue_job
+    - field: properties.compute.encryption.s3_encrypted
+      op: eq
+      value: false

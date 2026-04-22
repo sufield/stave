@@ -1,0 +1,39 @@
+dsl_version: ctrl.v1
+id: CTL.GLUE.ENDPOINT.ENCRYPT.S3.001
+name: Glue Dev Endpoint Must Encrypt S3 Data At Rest
+description: >
+  Glue development endpoints must use a security configuration with
+  S3 encryption enabled. Note: AWS deprecated dev endpoints in
+  favor of interactive sessions.
+domain: encryption
+severity: low
+compliance:
+  nist_800_53_r5: "SC-28"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - glue
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: Glue dev endpoint does not encrypt S3 data at rest.
+  action: >
+    Attach a security configuration with S3 encryption to the
+    endpoint, or migrate to Glue interactive sessions.
+  example: |
+    {
+      "compute": {
+        "kind": "glue_dev_endpoint",
+        "encryption": { "s3_encrypted": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: glue_dev_endpoint
+    - field: properties.compute.encryption.s3_encrypted
+      op: eq
+      value: false

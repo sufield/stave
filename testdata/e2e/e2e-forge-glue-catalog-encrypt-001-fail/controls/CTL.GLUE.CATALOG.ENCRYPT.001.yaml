@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.GLUE.CATALOG.ENCRYPT.001
+name: Glue Data Catalog Metadata Must Be Encrypted At Rest
+description: >
+  The Glue Data Catalog must use SSE-KMS encryption for metadata at
+  rest. The catalog contains table schemas, partition information,
+  S3 data locations, and database definitions — a complete map of
+  the organization's data landscape. Unencrypted metadata enables
+  reconnaissance and targeted data access.
+domain: encryption
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.7"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - glue
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: collection
+remediation:
+  description: Glue Data Catalog metadata is not encrypted at rest.
+  action: >
+    Enable SSE-KMS encryption for the Data Catalog in the Glue
+    console or via aws glue put-data-catalog-encryption-settings.
+  example: |
+    {
+      "governance": {
+        "kind": "glue_catalog",
+        "encryption": { "metadata_encrypted": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: glue_catalog
+    - field: properties.governance.encryption.metadata_encrypted
+      op: eq
+      value: false

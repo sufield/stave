@@ -1,0 +1,39 @@
+dsl_version: ctrl.v1
+id: CTL.GLUE.ENDPOINT.ENCRYPT.BOOKMARKS.001
+name: Glue Dev Endpoint Must Encrypt Job Bookmarks
+description: >
+  Glue development endpoints must use a security configuration with
+  job bookmark encryption enabled (CSE-KMS). Note: AWS deprecated
+  dev endpoints in favor of interactive sessions.
+domain: encryption
+severity: low
+compliance:
+  nist_800_53_r5: "SC-28"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - glue
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: collection
+remediation:
+  description: Glue dev endpoint does not encrypt job bookmarks.
+  action: >
+    Attach a security configuration with job bookmark encryption
+    to the endpoint, or migrate to Glue interactive sessions.
+  example: |
+    {
+      "compute": {
+        "kind": "glue_dev_endpoint",
+        "encryption": { "bookmarks_encrypted": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: glue_dev_endpoint
+    - field: properties.compute.encryption.bookmarks_encrypted
+      op: eq
+      value: false
