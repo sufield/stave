@@ -1,0 +1,54 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.POLICY.CONDITION.001
+name: KMS Key Policy Must Include Protective Conditions
+description: >
+  KMS key policies granting usage actions (kms:Decrypt, kms:Encrypt,
+  kms:GenerateDataKey*, kms:ReEncrypt*) should include at least one
+  protective condition: kms:ViaService (restricts which AWS service
+  can use the key), kms:CallerAccount (restricts which account can
+  call through the service), or kms:EncryptionContext (restricts
+  the context in which the key can be used). Without conditions,
+  any principal granted by the policy can use the key for any
+  purpose from any service — the policy is authorization without
+  scope.
+domain: exposure
+severity: medium
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-3"
+  pci_dss_v4.0: "3.4.1"
+  ccm_v4: ["CEK-03", "IAM-16"]
+scope_tags:
+  - aws
+  - kms
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    KMS key policy grants usage actions without protective conditions.
+    Granted principals can use the key from any service and any context.
+  action: >
+    Add kms:ViaService to restrict the key to specific services
+    (e.g., "s3.us-east-1.amazonaws.com"). Add kms:CallerAccount
+    for cross-account scenarios. Add kms:EncryptionContext for
+    application-level scoping. At least one condition should be
+    present on every non-administrative usage statement.
+  example: |
+    {
+      "cryptography": {
+        "kind": "key",
+        "policy": {
+          "has_usage_conditions": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: key
+    - field: properties.cryptography.policy.has_usage_conditions
+      op: eq
+      value: false

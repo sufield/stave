@@ -3,25 +3,25 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 751
-**Pack hash:** `21d7cfa5f749e012fb4f6b87e98987e1139d5f8fba8ffb50985acc310397dd12`
+**Total controls:** 755
+**Pack hash:** `0cbbdd6831e1d1c32921776623755e0c12f43321ca22e5f4caf756c387bae848`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 125 |
-| high | 326 |
+| high | 328 |
 | info | 16 |
 | low | 68 |
-| medium | 216 |
+| medium | 218 |
 
 | Domain | Count |
 |--------|-------|
 | audit | 20 |
 | detection | 2 |
 | encryption | 9 |
-| exposure | 487 |
+| exposure | 491 |
 | governance | 19 |
 | identity | 171 |
 | network | 21 |
@@ -7230,6 +7230,21 @@ KMS keys protecting PHI or CDE data must not be shared with resources at a lower
 
 ---
 
+### CTL.KMS.PENDING.DELETION.001
+
+**KMS Key Must Not Be Pending Deletion While Resources Depend On It**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-12(1); nist_800_53_r5: SC-12(1); soc2: A1.1;
+
+KMS keys scheduled for deletion have a waiting period (7-30 days) before key material is permanently destroyed. Once deleted, all data encrypted by the key becomes permanently inaccessible — S3 objects, RDS snapshots, EBS volumes, Secrets Manager secrets, and any other resource encrypted by this key. This control detects keys pending deletion that still have dependent resources, giving operators time to cancel deletion or re-encrypt resources with a different key.
+
+**Remediation:** Cancel key deletion with aws kms cancel-key-deletion, then re-evaluate whether the key should be deleted. If deletion is intentional, first re-encrypt all dependent resources with a different key.
+
+---
+
 ### CTL.KMS.POLICY.001
 
 **KMS Key Policy Must Restrict Access to Specific Roles**
@@ -7242,6 +7257,51 @@ KMS keys protecting PHI or CDE data must not be shared with resources at a lower
 KMS key policies must not grant wildcard principal access. A key policy with Principal "*" allows any IAM entity in the account (or any account if conditions are missing) to use the key, defeating the purpose of customer-managed encryption.
 
 **Remediation:** Update the key policy to restrict Principal to specific IAM roles or accounts. Remove any statements with Principal "*".
+
+---
+
+### CTL.KMS.POLICY.ADMIN.BROAD.001
+
+**KMS Key Administration Must Be Restricted to Key Administrators**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.24; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 3.6.1; soc2: CC6.1;
+
+KMS key policies must not grant key administration actions (kms:Create*, kms:Put*, kms:Disable*, kms:ScheduleKeyDeletion, kms:EnableKey, kms:EnableKeyRotation, kms:UpdateKeyDescription) to principals beyond designated key administrators. Broad administrative access allows any granted principal to disable the key, schedule it for deletion, or modify its policy — disrupting every resource encrypted by the key.
+
+**Remediation:** Restrict key administration statements to designated key administrator roles. Separate key usage (Encrypt/Decrypt) from key administration (Create*/Put*/Disable*/Schedule*) in the key policy. Use separate statements with distinct principals for usage and administration.
+
+---
+
+### CTL.KMS.POLICY.CONDITION.001
+
+**KMS Key Policy Must Include Protective Conditions**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; pci_dss_v4.0: 3.4.1; soc2: CC6.1;
+
+KMS key policies granting usage actions (kms:Decrypt, kms:Encrypt, kms:GenerateDataKey*, kms:ReEncrypt*) should include at least one protective condition: kms:ViaService (restricts which AWS service can use the key), kms:CallerAccount (restricts which account can call through the service), or kms:EncryptionContext (restricts the context in which the key can be used). Without conditions, any principal granted by the policy can use the key for any purpose from any service — the policy is authorization without scope.
+
+**Remediation:** Add kms:ViaService to restrict the key to specific services (e.g., "s3.us-east-1.amazonaws.com"). Add kms:CallerAccount for cross-account scenarios. Add kms:EncryptionContext for application-level scoping. At least one condition should be present on every non-administrative usage statement.
+
+---
+
+### CTL.KMS.POLICY.CROSSACCOUNT.001
+
+**KMS Key Policy Must Not Grant Broad Cross-Account Access**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.8.24; nist_800_53_r5: AC-3; pci_dss_v4.0: 3.4.1; soc2: CC6.1;
+
+KMS key policies must not grant kms:Decrypt, kms:Encrypt, kms:GenerateDataKey, or kms:* to external account principals without restricting via kms:CallerAccount, kms:ViaService, or aws:PrincipalOrgID conditions. Unlike IAM policies, the key policy is the primary authorization mechanism — IAM policies alone cannot grant KMS access unless the key policy permits it. Broad cross-account key access allows external principals to decrypt every resource encrypted by this key.
+
+**Remediation:** Add kms:CallerAccount or aws:PrincipalOrgID conditions to cross-account statements. Restrict kms:ViaService to the specific services that require cross-account key access. Remove statements that grant broad cross-account access.
 
 ---
 

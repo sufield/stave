@@ -1,0 +1,53 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.PENDING.DELETION.001
+name: KMS Key Must Not Be Pending Deletion While Resources Depend On It
+description: >
+  KMS keys scheduled for deletion have a waiting period (7-30 days)
+  before key material is permanently destroyed. Once deleted, all
+  data encrypted by the key becomes permanently inaccessible — S3
+  objects, RDS snapshots, EBS volumes, Secrets Manager secrets, and
+  any other resource encrypted by this key. This control detects
+  keys pending deletion that still have dependent resources, giving
+  operators time to cancel deletion or re-encrypt resources with a
+  different key.
+domain: exposure
+severity: medium
+compliance:
+  soc2: "A1.1"
+  nist_800_53_r5: "SC-12(1)"
+  fedramp_moderate: "SC-12(1)"
+  ccm_v4: ["CEK-03", "BCR-08"]
+scope_tags:
+  - aws
+  - kms
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    KMS key is scheduled for deletion while resources still depend
+    on it for decryption. When the deletion completes, those resources
+    become permanently inaccessible.
+  action: >
+    Cancel key deletion with aws kms cancel-key-deletion, then
+    re-evaluate whether the key should be deleted. If deletion is
+    intentional, first re-encrypt all dependent resources with a
+    different key.
+  example: |
+    {
+      "cryptography": {
+        "kind": "key",
+        "lifecycle": {
+          "pending_deletion": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: key
+    - field: properties.cryptography.lifecycle.pending_deletion
+      op: eq
+      value: true

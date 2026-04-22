@@ -1,0 +1,17 @@
+control: CTL.KMS.PENDING.DELETION.001
+defect: >
+  The KMS key is scheduled for deletion while resources still depend
+  on it for encryption and decryption. The deletion waiting period
+  is counting down.
+infection: >
+  During the waiting period, resources encrypted by this key continue
+  to function normally — creating a false sense of safety. When
+  deletion completes, the key material is permanently destroyed.
+  There is no recovery mechanism. Every S3 object, RDS snapshot,
+  EBS volume, and Secrets Manager secret encrypted by this key
+  becomes permanently undecryptable.
+failure: >
+  Permanent data loss. Resources encrypted by the deleted key become
+  permanently inaccessible after the waiting period expires. This is
+  an availability failure, not a confidentiality failure — the data
+  is not exposed, but it is destroyed.

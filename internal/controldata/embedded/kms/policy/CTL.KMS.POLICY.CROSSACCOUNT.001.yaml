@@ -1,0 +1,54 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.POLICY.CROSSACCOUNT.001
+name: KMS Key Policy Must Not Grant Broad Cross-Account Access
+description: >
+  KMS key policies must not grant kms:Decrypt, kms:Encrypt,
+  kms:GenerateDataKey, or kms:* to external account principals
+  without restricting via kms:CallerAccount, kms:ViaService, or
+  aws:PrincipalOrgID conditions. Unlike IAM policies, the key
+  policy is the primary authorization mechanism — IAM policies
+  alone cannot grant KMS access unless the key policy permits it.
+  Broad cross-account key access allows external principals to
+  decrypt every resource encrypted by this key.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-3"
+  pci_dss_v4.0: "3.4.1"
+  fedramp_moderate: "AC-3"
+  iso_27001_2022: "A.8.24"
+  ccm_v4: ["CEK-03", "IAM-16"]
+scope_tags:
+  - aws
+  - kms
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    KMS key policy grants cross-account access without protective
+    conditions. External principals can use this key to decrypt data.
+  action: >
+    Add kms:CallerAccount or aws:PrincipalOrgID conditions to
+    cross-account statements. Restrict kms:ViaService to the
+    specific services that require cross-account key access.
+    Remove statements that grant broad cross-account access.
+  example: |
+    {
+      "cryptography": {
+        "kind": "key",
+        "policy": {
+          "has_broad_cross_account": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: key
+    - field: properties.cryptography.policy.has_broad_cross_account
+      op: eq
+      value: true

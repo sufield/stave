@@ -1,0 +1,18 @@
+control: CTL.KMS.POLICY.CONDITION.001
+defect: >
+  The KMS key policy grants usage actions (Decrypt, Encrypt,
+  GenerateDataKey, ReEncrypt) without protective conditions. No
+  kms:ViaService, kms:CallerAccount, or kms:EncryptionContext
+  condition limits how the key can be used.
+infection: >
+  A principal granted by the policy can use the key from any AWS
+  service, for any encryption context, from any caller path. Without
+  kms:ViaService, a principal intended to use the key through S3
+  can also use it through Lambda, EBS, or direct API calls. Without
+  kms:EncryptionContext, the principal can decrypt any ciphertext
+  encrypted by the key, not just their intended subset.
+failure: >
+  Unconstrained key usage. The key policy authorizes principals
+  without scoping how they use the key. A compromise of any
+  granted principal exposes all data encrypted by the key, not
+  just the data the principal was intended to access.

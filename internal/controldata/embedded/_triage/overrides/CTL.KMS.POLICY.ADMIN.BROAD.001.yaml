@@ -1,0 +1,19 @@
+control: CTL.KMS.POLICY.ADMIN.BROAD.001
+defect: >
+  The KMS key policy grants administrative actions (Disable*,
+  ScheduleKeyDeletion, PutKeyPolicy, Create*) to principals beyond
+  designated key administrators. Non-admin principals can modify
+  the key's configuration.
+infection: >
+  An attacker with any of these administrative actions can disable
+  the key (making all encrypted data temporarily inaccessible),
+  schedule it for permanent deletion (irreversible data loss after
+  the waiting period), or modify the key policy to grant themselves
+  or others full usage access. Key administration is the highest
+  privilege level for a KMS key.
+failure: >
+  Cryptographic control takeover. An unauthorized principal gains
+  administrative control over a KMS key, enabling key deletion
+  (denial of service against all encrypted resources), policy
+  modification (privilege escalation to decrypt all data), or key
+  disabling (operational disruption).

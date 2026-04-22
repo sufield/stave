@@ -1,7 +1,7 @@
 # IAM Permission Reasoning Coverage Audit
 
 Systematic verification of 7 areas of IAM permission reasoning
-against the Stave control catalog (731 controls, 47 domains).
+against the Stave control catalog (735 controls, 47 domains).
 
 **Method**: Every coverage claim verified against actual control
 YAML predicates. Every gap claim verified against observation
@@ -15,6 +15,7 @@ schema and engine capabilities.
 - **2 claimed gaps were false** (inline policy hygiene exists; effective permissions covered by NEP namespace)
 - **13 verified gaps** classified: 8 Gap A, 2 Gap B, 0 Gap C, 3 Gap E
 - **Priority 1 CLOSED** (4 gaps): Rhino parity (20/21, up from 18/21) + SQS/SNS resource policies
+- **KMS resource policies CLOSED** (4 controls): cross-account, admin-broad, conditions, pending deletion
 
 ## Coverage by Area
 
@@ -222,7 +223,7 @@ managed policy attachment on users.
 | Service | Controls | Policy Check | Status |
 |---------|----------|-------------|--------|
 | S3 | 98 | 39 policy-related, 4 dedicated policy controls | Full |
-| KMS | 7 | CTL.KMS.POLICY.001 (`has_wildcard_principal`) | Full |
+| KMS | 11 | POLICY.001 (wildcard), CROSSACCOUNT.001, ADMIN.BROAD.001, CONDITION.001, PENDING.DELETION.001 | Full |
 | Lambda | ~30 | CTL.LAMBDA.INVOKE.PUBLIC.001 (`policy.public_invoke`) | Full |
 | ECR | ~10 | CTL.ECR.POLICY.BROAD.001 (`policy.has_broad_cross_account`) | Full |
 | SQS | 5 | CTL.SQS.POLICY.PUBLIC.001 (`policy.has_public_access`) | Full |

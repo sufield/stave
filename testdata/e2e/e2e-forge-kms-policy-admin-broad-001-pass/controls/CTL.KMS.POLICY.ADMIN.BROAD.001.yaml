@@ -1,0 +1,59 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.POLICY.ADMIN.BROAD.001
+name: KMS Key Administration Must Be Restricted to Key Administrators
+description: >
+  KMS key policies must not grant key administration actions
+  (kms:Create*, kms:Put*, kms:Disable*, kms:ScheduleKeyDeletion,
+  kms:EnableKey, kms:EnableKeyRotation, kms:UpdateKeyDescription)
+  to principals beyond designated key administrators. Broad
+  administrative access allows any granted principal to disable the
+  key, schedule it for deletion, or modify its policy — disrupting
+  every resource encrypted by the key.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-6(5)"
+  pci_dss_v4.0: "3.6.1"
+  fedramp_moderate: "AC-6(5)"
+  iso_27001_2022: "A.8.24"
+  ccm_v4: ["CEK-03", "IAM-05"]
+scope_tags:
+  - aws
+  - kms
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    KMS key policy grants administrative actions to non-administrator
+    principals. Unauthorized principals can disable the key, schedule
+    deletion, or modify the key policy.
+  action: >
+    Restrict key administration statements to designated key
+    administrator roles. Separate key usage (Encrypt/Decrypt)
+    from key administration (Create*/Put*/Disable*/Schedule*) in
+    the key policy. Use separate statements with distinct principals
+    for usage and administration.
+  example: |
+    {
+      "cryptography": {
+        "kind": "key",
+        "policy": {
+          "admin_actions_broadly_granted": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: key
+    - field: properties.cryptography.policy.admin_actions_broadly_granted
+      op: eq
+      value: true

@@ -1,0 +1,18 @@
+control: CTL.KMS.POLICY.CROSSACCOUNT.001
+defect: >
+  The KMS key policy grants usage actions to external account
+  principals without kms:CallerAccount, kms:ViaService, or
+  aws:PrincipalOrgID conditions. Cross-account principals can use
+  the key without restriction.
+infection: >
+  An external principal decrypts data encrypted by this key —
+  S3 objects, RDS snapshots, EBS volumes, or any other resource
+  using this key for encryption. The key policy is the primary
+  authorization mechanism; IAM policies alone cannot grant access
+  if the key policy denies it, but a permissive key policy grants
+  access regardless of the resource's own access controls.
+failure: >
+  Cross-account data exposure through the encryption layer. An
+  external account can decrypt data that the resource-level policy
+  was designed to protect, bypassing S3 bucket policies, RDS
+  security groups, and other resource-level controls.
