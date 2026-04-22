@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.DELETEPROT.001
+name: EKS Clusters Must Have Deletion Protection Enabled
+description: >
+  EKS clusters must enable deletion protection to prevent accidental
+  or unauthorized cluster removal. Without protection, automation
+  errors or a compromised administrator can delete the cluster
+  control plane, causing immediate availability loss, orphaned node
+  groups, and data in etcd becoming permanently inaccessible.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "CP-10"
+  soc2: "A1.1"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: EKS cluster deletion protection is not enabled.
+  action: >
+    Enable deletion protection via aws eks update-cluster-config
+    --name <cluster> --deletion-protection.
+  example: |
+    {
+      "container": {
+        "kind": "eks_cluster",
+        "governance": { "deletion_protection_enabled": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: eks_cluster
+    - field: properties.container.governance.deletion_protection_enabled
+      op: eq
+      value: false

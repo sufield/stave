@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.ENDPOINT.PRIVATE.001
+name: EKS Clusters Must Enable Private Endpoint Access
+description: >
+  EKS clusters must enable private endpoint access so kubectl and
+  API traffic can use a VPC-resolved private endpoint. Without
+  private access, all control plane traffic traverses the public
+  internet, expanding the attack surface and adding an internet
+  dependency for cluster management.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "IVS-04"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: EKS cluster private endpoint access is not enabled.
+  action: >
+    Enable private endpoint access via aws eks update-cluster-config
+    --name <cluster> --resources-vpc-config endpointPrivateAccess=true.
+  example: |
+    {
+      "container": {
+        "kind": "eks_cluster",
+        "endpoint": { "private_access_enabled": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: eks_cluster
+    - field: properties.container.endpoint.private_access_enabled
+      op: eq
+      value: false

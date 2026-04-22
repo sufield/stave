@@ -3,15 +3,15 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 811
-**Pack hash:** `f95eab8e80d739402a28c9e0d6e09785d8a7152dde858fb77834573c83d7dfad`
+**Total controls:** 813
+**Pack hash:** `224f9c267b73c1f4b780471907fd7ad72a4fdda85cc88f23c273d09b122c9274`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 129 |
-| high | 356 |
+| high | 358 |
 | info | 16 |
 | low | 73 |
 | medium | 237 |
@@ -21,7 +21,7 @@
 | audit | 20 |
 | detection | 2 |
 | encryption | 27 |
-| exposure | 523 |
+| exposure | 525 |
 | governance | 19 |
 | identity | 177 |
 | network | 21 |
@@ -4204,6 +4204,36 @@ AWS supports each EKS Kubernetes minor version for approximately 14 months. Clus
 EKS audit logs record all Kubernetes API server requests — who called which API, with what arguments, and the result. Without audit logs delivered to CloudWatch, there is no record of kubectl exec sessions, Secret reads and writes, RBAC policy modifications, or ServiceAccount token creations. This control verifies audit log delivery to CloudWatch — logs enabled but not delivered are useless for incident response.
 
 **Remediation:** Enable audit logging: aws eks update-cluster-config --name <cluster> --logging '{"clusterLogging":[{"types":["audit"],"enabled":true}]}'. Verify the log group exists in CloudWatch.
+
+---
+
+### CTL.EKS.DELETEPROT.001
+
+**EKS Clusters Must Have Deletion Protection Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CP-10; soc2: A1.1;
+
+EKS clusters must enable deletion protection to prevent accidental or unauthorized cluster removal. Without protection, automation errors or a compromised administrator can delete the cluster control plane, causing immediate availability loss, orphaned node groups, and data in etcd becoming permanently inaccessible.
+
+**Remediation:** Enable deletion protection via aws eks update-cluster-config --name <cluster> --deletion-protection.
+
+---
+
+### CTL.EKS.ENDPOINT.PRIVATE.001
+
+**EKS Clusters Must Enable Private Endpoint Access**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+EKS clusters must enable private endpoint access so kubectl and API traffic can use a VPC-resolved private endpoint. Without private access, all control plane traffic traverses the public internet, expanding the attack surface and adding an internet dependency for cluster management.
+
+**Remediation:** Enable private endpoint access via aws eks update-cluster-config --name <cluster> --resources-vpc-config endpointPrivateAccess=true.
 
 ---
 

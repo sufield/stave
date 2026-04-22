@@ -1,0 +1,15 @@
+control: CTL.EKS.ENDPOINT.PRIVATE.001
+defect: >
+  The EKS cluster does not have private endpoint access enabled. All
+  API traffic must traverse the public internet.
+infection: >
+  kubectl commands, CI/CD deployments, and internal service
+  communications with the API server traverse the public internet.
+  An attacker on the network path can intercept or modify API
+  requests. The cluster also depends on internet connectivity
+  for management — a network outage or DNS hijack disrupts all
+  cluster operations.
+failure: >
+  Internet-dependent cluster management. API server traffic is
+  exposed to network-path threats and the cluster cannot be managed
+  during internet outages.

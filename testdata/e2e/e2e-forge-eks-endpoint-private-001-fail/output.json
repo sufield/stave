@@ -1,0 +1,330 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-15T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "9c1852445eb7c9861ed1d3b88eed2ba7fc7f408edf12cbe5287f79ddda76ab25",
+        "2026-01-11T000000Z.json": "b6278614dcfe3c359ba9e02294779f6faf09f8c3dcaa14d25f3314cba691387d"
+      },
+      "overall": "40bd89bd0cfb63594342844f030d6f30ebaa5a94ea9bf072872ea8f786a04717"
+    },
+    "policy_fingerprint": "5757327d0b4b0d70221fb7f4199c060fe5fb8a216ad5fa7ea75fd48a7218bd58",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.EKS.ENDPOINT.PRIVATE.001",
+      "asset_id": "arn:aws:eks:us-east-1:111122223333:cluster/prod",
+      "asset_type": "aws_eks_cluster",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -168,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:58b8cf20fec746da",
+      "control_id": "CTL.EKS.ENDPOINT.PRIVATE.001",
+      "control_name": "EKS Clusters Must Enable Private Endpoint Access",
+      "control_description": "EKS clusters must enable private endpoint access so kubectl and API traffic can use a VPC-resolved private endpoint. Without private access, all control plane traffic traverses the public internet, expanding the attack surface and adding an internet dependency for cluster management.\n",
+      "asset_id": "arn:aws:eks:us-east-1:111122223333:cluster/prod",
+      "asset_type": "aws_eks_cluster",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 336,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "container.endpoint.private_access_enabled",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "container.kind",
+            "actual_value": "eks_cluster",
+            "operator": "eq",
+            "unsafe_value": "eks_cluster"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 336 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "nist_800_53_r5": "SC-7",
+        "soc2": "CC6.6"
+      },
+      "control_compliance_ccm_v4": [
+        "IVS-03",
+        "IVS-04"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "EKS cluster private endpoint access is not enabled.",
+        "action": "Enable private endpoint access via aws eks update-cluster-config --name \u003ccluster\u003e --resources-vpc-config endpointPrivateAccess=true.",
+        "example": "{\n  \"container\": {\n    \"kind\": \"eks_cluster\",\n    \"endpoint\": { \"private_access_enabled\": true }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-b7f5e82c0025b5bf",
+        "target": {
+          "asset_id": "arn:aws:eks:us-east-1:111122223333:cluster/prod",
+          "asset_type": "aws_eks_cluster"
+        },
+        "action": "Enable private endpoint access via aws eks update-cluster-config --name prod --resources-vpc-config endpointPrivateAccess=true."
+      },
+      "exposure_score": 75,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "container.endpoint.private_access_enabled eq false",
+          "observation_key": "container.endpoint.private_access_enabled",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "container.kind eq \"eks_cluster\"",
+          "observation_key": "container.kind",
+          "operator": "eq",
+          "expected_value": "eks_cluster",
+          "observed_value": "eks_cluster"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "arn:aws:eks:us-east-1:111122223333:cluster/prod",
+          "type": "aws_eks_cluster",
+          "vendor": "aws",
+          "arn": "arn:aws:eks:us-east-1:111122223333:cluster/prod",
+          "region": "us-east-1"
+        },
+        "violation": {
+          "control_id": "CTL.EKS.ENDPOINT.PRIVATE.001",
+          "control_name": "EKS Clusters Must Enable Private Endpoint Access",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "container.endpoint.private_access_enabled = false",
+              "observation_key": "container.endpoint.private_access_enabled",
+              "observed_value": false
+            },
+            {
+              "clause": "container.kind = \"eks_cluster\"",
+              "observation_key": "container.kind",
+              "observed_value": "eks_cluster"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "container.endpoint.private_access_enabled",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set container.endpoint.private_access_enabled to true"
+          },
+          {
+            "path": "container.kind",
+            "current_value": "eks_cluster",
+            "has_safe_default": false,
+            "description": "Change container.kind from eks_cluster"
+          }
+        ],
+        "action": "Enable private endpoint access via aws eks update-cluster-config --name prod --resources-vpc-config endpointPrivateAccess=true."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "eks"
+      ],
+      "delta": [
+        {
+          "property_label": "endpoint private access",
+          "property_path": "container.endpoint.private_access_enabled",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:712faf24eb7e8d88",
+      "asset_id": "arn:aws:eks:us-east-1:111122223333:cluster/prod",
+      "shared_keys": [
+        "container.endpoint",
+        "container.endpoint.private_access_enabled"
+      ],
+      "headline_finding_id": "sha256:58b8cf20fec746da",
+      "member_finding_ids": [
+        "sha256:58b8cf20fec746da"
+      ],
+      "consolidated_score": 75,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "arn:aws:eks:us-east-1:111122223333:cluster/prod",
+      "asset_type": "aws_eks_cluster",
+      "fix_plan": {
+        "id": "fix-b7f5e82c0025b5bf",
+        "target": {
+          "asset_id": "arn:aws:eks:us-east-1:111122223333:cluster/prod",
+          "asset_type": "aws_eks_cluster"
+        },
+        "action": "Enable private endpoint access via aws eks update-cluster-config --name prod --resources-vpc-config endpointPrivateAccess=true."
+      },
+      "contributing_controls": [
+        "CTL.EKS.ENDPOINT.PRIVATE.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.EKS.ENDPOINT.PRIVATE.001",
+      "asset_id": "arn:aws:eks:us-east-1:111122223333:cluster/prod",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-eks-endpoint-private-001-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-eks-endpoint-private-001-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "e7f51152cc0f8923d85afae9604c5bcfe0deea8d",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-eks-endpoint-private-001-fail/controls/"
+      ]
+    }
+  }
+}

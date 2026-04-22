@@ -1,0 +1,14 @@
+control: CTL.EKS.DELETEPROT.001
+defect: >
+  The EKS cluster does not have deletion protection enabled.
+  The cluster can be deleted without disabling protection first.
+infection: >
+  An automation error, misconfigured IaC pipeline, or compromised
+  administrator deletes the cluster. The control plane is
+  immediately destroyed, etcd data (including secrets) becomes
+  inaccessible, and all workloads stop receiving scheduling and
+  service discovery. Node groups become orphaned.
+failure: >
+  Cluster destruction. The EKS control plane is permanently deleted,
+  causing immediate availability loss for all hosted workloads and
+  permanent loss of cluster state including Kubernetes secrets.
