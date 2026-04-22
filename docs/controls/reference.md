@@ -3,15 +3,15 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 881
-**Pack hash:** `2930b9f15f8c4234a89bd23829b05d7db2c9fea904d01bcd83e9d4eb8d1080cd`
+**Total controls:** 882
+**Pack hash:** `ca28babdef2f2450c67186d6dadd435881dba0a871cfda8eec858f85ca1bcc16`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 134 |
-| high | 385 |
+| high | 386 |
 | info | 16 |
 | low | 76 |
 | medium | 270 |
@@ -21,7 +21,7 @@
 | audit | 20 |
 | detection | 2 |
 | encryption | 35 |
-| exposure | 584 |
+| exposure | 585 |
 | governance | 20 |
 | identity | 177 |
 | network | 21 |
@@ -3952,6 +3952,21 @@ Security groups must not allow unrestricted inbound access on high-risk ports: R
 Security groups with no attached resources should be removed. Unused SGs with broad rules are latent risks — when accidentally attached, the broad rules take effect immediately.
 
 **Remediation:** Delete the unused security group, or if retention is needed, remove all ingress and egress rules to eliminate latent risk.
+
+---
+
+### CTL.EC2.SNAPSHOT.CROSSACCOUNT.001
+
+**EBS Snapshots Must Not Be Shared with External Accounts**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+EBS snapshots must not be shared with external AWS accounts unless the snapshot is encrypted and sharing is to a specific authorized account. Unencrypted cross-account snapshot sharing enables data exfiltration — an attacker with ec2:ModifySnapshotAttribute shares a snapshot to their account, then restores it in their environment. ATT&CK technique T1578.001 (Create Snapshot) uses this vector.
+
+**Remediation:** Remove cross-account sharing from the snapshot. If sharing is required, ensure the snapshot is encrypted with a KMS key and share only with specific authorized account IDs.
 
 ---
 
