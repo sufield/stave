@@ -1,0 +1,37 @@
+dsl_version: ctrl.v1
+id: CTL.MSK.VERSION.001
+name: MSK Clusters Must Run a Supported Kafka Version
+description: >
+  MSK clusters must run a supported Kafka version. Outdated versions
+  lack security patches and may have known vulnerabilities.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-2"
+  soc2: "CC7.1"
+  ccm_v4: ["TVM-02"]
+scope_tags:
+  - aws
+  - msk
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: MSK cluster runs an outdated Kafka version.
+  action: Upgrade the cluster to the latest supported Kafka version.
+  example: |
+    {
+      "streaming": {
+        "kind": "msk_cluster",
+        "config": { "version_current": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.streaming.kind
+      op: eq
+      value: msk_cluster
+    - field: properties.streaming.config.version_current
+      op: eq
+      value: false

@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.MSK.ENCRYPT.TRANSIT.001
+name: MSK Clusters Must Encrypt All Traffic in Transit
+description: >
+  MSK clusters must enforce TLS for both client-broker and
+  inter-broker traffic. Without TLS, Kafka messages — including
+  credentials, event data, and replication traffic — are transmitted
+  in plaintext.
+domain: encryption
+severity: high
+compliance:
+  nist_800_53_r5: "SC-8"
+  soc2: "CC6.7"
+  ccm_v4: ["CEK-03", "IVS-03"]
+scope_tags:
+  - aws
+  - msk
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: collection
+remediation:
+  description: MSK cluster does not enforce TLS for all traffic.
+  action: >
+    Set client-broker encryption to TLS only and enable inter-broker
+    encryption.
+  example: |
+    {
+      "streaming": {
+        "kind": "msk_cluster",
+        "encryption": { "in_transit_all_tls": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.streaming.kind
+      op: eq
+      value: msk_cluster
+    - field: properties.streaming.encryption.in_transit_all_tls
+      op: eq
+      value: false

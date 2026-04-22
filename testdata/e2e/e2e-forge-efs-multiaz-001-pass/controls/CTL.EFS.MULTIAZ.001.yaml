@@ -1,0 +1,40 @@
+dsl_version: ctrl.v1
+id: CTL.EFS.MULTIAZ.001
+name: EFS File System Must Use Multi-AZ Deployment
+description: >
+  EFS file systems must be Regional type (not One Zone) with mount
+  targets in multiple Availability Zones. Single-AZ concentration
+  means an AZ outage severs all client connectivity.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "CP-10"
+  soc2: "A1.1"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - efs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: EFS file system is not deployed across multiple AZs.
+  action: >
+    Use Regional storage class and create mount targets in multiple
+    AZs.
+  example: |
+    {
+      "filesystem": {
+        "kind": "efs_filesystem",
+        "resilience": { "multi_az": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.filesystem.kind
+      op: eq
+      value: efs_filesystem
+    - field: properties.filesystem.resilience.multi_az
+      op: eq
+      value: false

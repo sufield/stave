@@ -1,0 +1,14 @@
+control: CTL.MSK.AUTH.UNRESTRICTED.001
+defect: >
+  The MSK cluster allows unauthenticated client connections. Any
+  network-reachable client can connect without credentials.
+infection: >
+  An attacker connects to the cluster and enumerates topics, reads
+  message streams containing operational data (event records,
+  change data capture, application messages), and produces malicious
+  messages that downstream consumers process as legitimate. The
+  attacker needs only network access — no credentials, no IAM role.
+failure: >
+  Unauthenticated streaming access. An attacker reads and writes to
+  Kafka topics without credentials, enabling data exfiltration,
+  event injection, and stream disruption.

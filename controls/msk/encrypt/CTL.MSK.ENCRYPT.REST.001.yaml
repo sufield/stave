@@ -1,0 +1,39 @@
+dsl_version: ctrl.v1
+id: CTL.MSK.ENCRYPT.REST.001
+name: MSK Clusters Must Use Customer-Managed KMS Key for Encryption at Rest
+description: >
+  MSK clusters must use a customer-managed KMS key for data volume
+  encryption. Service-managed keys prevent granular key policies,
+  independent rotation, and crypto-shredding capability.
+domain: encryption
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.7"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - msk
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: MSK cluster uses default AWS-managed encryption key.
+  action: >
+    Specify a customer-managed KMS key via DataVolumeKMSKeyId.
+  example: |
+    {
+      "streaming": {
+        "kind": "msk_cluster",
+        "encryption": { "uses_cmk": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.streaming.kind
+      op: eq
+      value: msk_cluster
+    - field: properties.streaming.encryption.uses_cmk
+      op: eq
+      value: false

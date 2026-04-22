@@ -1,0 +1,14 @@
+control: CTL.MSK.PUBLIC.001
+defect: >
+  The MSK cluster broker endpoints are exposed to the public internet.
+infection: >
+  An attacker discovers the cluster through internet scanning,
+  connects to broker endpoints, and enumerates cluster metadata
+  (topics, partitions, consumer groups). If authentication is weak
+  or absent, the attacker reads all topic data. Even with
+  authentication, the public endpoint enables brute-force attacks
+  against credentials and protocol-level exploits.
+failure: >
+  Internet-accessible Kafka cluster. Broker endpoints are reachable
+  from the public internet, enabling unauthorized topic access,
+  metadata enumeration, and protocol-level attacks.

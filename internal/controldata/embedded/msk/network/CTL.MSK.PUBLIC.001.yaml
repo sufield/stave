@@ -1,0 +1,39 @@
+dsl_version: ctrl.v1
+id: CTL.MSK.PUBLIC.001
+name: MSK Clusters Must Not Be Publicly Accessible
+description: >
+  MSK cluster broker endpoints must not be exposed to the public
+  internet. Public brokers allow unauthorized consumers to read
+  topics, rogue producers to inject events, and internet-wide
+  scanning to enumerate cluster metadata.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "IVS-04"]
+scope_tags:
+  - aws
+  - msk
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: MSK cluster is publicly accessible.
+  action: Disable public access on the cluster configuration.
+  example: |
+    {
+      "streaming": {
+        "kind": "msk_cluster",
+        "access": { "publicly_accessible": false }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.streaming.kind
+      op: eq
+      value: msk_cluster
+    - field: properties.streaming.access.publicly_accessible
+      op: eq
+      value: true

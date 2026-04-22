@@ -1,0 +1,38 @@
+dsl_version: ctrl.v1
+id: CTL.MSK.MONITORING.001
+name: MSK Clusters Must Enable Enhanced Monitoring
+description: >
+  MSK clusters must use enhanced monitoring (PER_BROKER or higher).
+  Default monitoring provides insufficient metrics for detecting
+  broker health issues, replication lag, and consumer problems.
+domain: exposure
+severity: low
+compliance:
+  nist_800_53_r5: "AU-6"
+  ccm_v4: ["LOG-03"]
+scope_tags:
+  - aws
+  - msk
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: MSK cluster uses default monitoring level.
+  action: >
+    Set enhanced monitoring to PER_BROKER or PER_TOPIC_PER_BROKER.
+  example: |
+    {
+      "streaming": {
+        "kind": "msk_cluster",
+        "monitoring": { "enhanced_enabled": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.streaming.kind
+      op: eq
+      value: msk_cluster
+    - field: properties.streaming.monitoring.enhanced_enabled
+      op: eq
+      value: false

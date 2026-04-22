@@ -1,0 +1,38 @@
+dsl_version: ctrl.v1
+id: CTL.MSK.CONNECTOR.ENCRYPT.001
+name: MSK Connect Connectors Must Encrypt Traffic in Transit
+description: >
+  MSK Connect connectors must use TLS for in-transit encryption.
+  Without TLS, data streams between connectors and Kafka brokers
+  are transmitted in plaintext.
+domain: encryption
+severity: high
+compliance:
+  nist_800_53_r5: "SC-8"
+  soc2: "CC6.7"
+  ccm_v4: ["CEK-03", "IVS-03"]
+scope_tags:
+  - aws
+  - msk
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: collection
+remediation:
+  description: MSK Connect connector does not use TLS encryption.
+  action: Set connector EncryptionType to TLS.
+  example: |
+    {
+      "streaming": {
+        "kind": "msk_connector",
+        "encryption": { "in_transit_tls": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.streaming.kind
+      op: eq
+      value: msk_connector
+    - field: properties.streaming.encryption.in_transit_tls
+      op: eq
+      value: false

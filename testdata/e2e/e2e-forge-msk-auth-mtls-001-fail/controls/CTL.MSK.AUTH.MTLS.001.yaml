@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.MSK.AUTH.MTLS.001
+name: MSK Clusters Must Enforce Mutual TLS Authentication
+description: >
+  MSK clusters must enforce mutual TLS (mTLS) for client-broker
+  connections. Without mTLS, adversaries can impersonate clients,
+  intercept sessions, and connect unauthorized producers or
+  consumers.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "IA-5"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-16", "IVS-03"]
+scope_tags:
+  - aws
+  - msk
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: MSK cluster does not enforce mutual TLS authentication.
+  action: >
+    Enable mTLS with a certificate authority ARN in the cluster
+    authentication configuration.
+  example: |
+    {
+      "streaming": {
+        "kind": "msk_cluster",
+        "auth": { "mtls_enabled": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.streaming.kind
+      op: eq
+      value: msk_cluster
+    - field: properties.streaming.auth.mtls_enabled
+      op: eq
+      value: false

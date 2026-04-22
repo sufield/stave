@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.MSK.LOG.001
+name: MSK Clusters Must Have Broker Logging Enabled
+description: >
+  MSK clusters must have at least one logging destination configured
+  (CloudWatch Logs, S3, or Firehose) for broker logs. Without
+  logging, broker operations, authentication events, and access
+  patterns are invisible.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-2"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-03", "LOG-05"]
+scope_tags:
+  - aws
+  - msk
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: MSK cluster has no logging destinations configured.
+  action: >
+    Enable broker logging to CloudWatch Logs, S3, or Firehose in
+    the cluster logging configuration.
+  example: |
+    {
+      "streaming": {
+        "kind": "msk_cluster",
+        "logging": { "enabled": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.streaming.kind
+      op: eq
+      value: msk_cluster
+    - field: properties.streaming.logging.enabled
+      op: eq
+      value: false

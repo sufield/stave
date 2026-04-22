@@ -1,0 +1,20 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "fs-0abc123def456",
+      "type": "aws_efs_filesystem",
+      "vendor": "aws",
+      "properties": {
+        "filesystem": {
+          "kind": "efs_filesystem",
+          "resilience": {
+            "multi_az": true
+          }
+        }
+      }
+    }
+  ]
+}

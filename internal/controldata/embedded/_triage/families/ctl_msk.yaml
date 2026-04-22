@@ -1,0 +1,13 @@
+family: CTL.MSK
+infection: >
+  A misconfigured MSK cluster exposes the real-time data streaming
+  infrastructure — event streams, application messages, change data
+  capture feeds, and inter-service communication. Kafka brokers carry
+  operational data between producers and consumers. Without
+  authentication, any network-reachable client can produce or consume
+  messages.
+failure: >
+  Streaming data compromise. An attacker reads messages (data
+  exfiltration), injects messages (data poisoning), or disrupts the
+  stream (denial of service). Downstream consumers process
+  attacker-injected messages as legitimate data.

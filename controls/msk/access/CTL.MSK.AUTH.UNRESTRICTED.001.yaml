@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.MSK.AUTH.UNRESTRICTED.001
+name: MSK Clusters Must Not Allow Unauthenticated Access
+description: >
+  MSK clusters must not enable unauthenticated client access. Without
+  authentication, any network-reachable client can produce or consume
+  messages — reading sensitive data, injecting malicious events, or
+  disrupting the stream.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-16", "IVS-03"]
+scope_tags:
+  - aws
+  - msk
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: MSK cluster allows unauthenticated access.
+  action: >
+    Disable unauthenticated access and enable IAM, SASL, or mTLS
+    authentication.
+  example: |
+    {
+      "streaming": {
+        "kind": "msk_cluster",
+        "auth": { "unauthenticated_access": false }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.streaming.kind
+      op: eq
+      value: msk_cluster
+    - field: properties.streaming.auth.unauthenticated_access
+      op: eq
+      value: true
