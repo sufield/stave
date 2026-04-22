@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.CODEBUILD.LOG.001
+name: CodeBuild Projects Must Have Logging Enabled
+description: >
+  CodeBuild projects must have at least one log destination enabled
+  (CloudWatch Logs or S3). Without logging, build execution details,
+  errors, and security events are invisible — a compromised build
+  leaves no forensic trail.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-2"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-03", "LOG-05"]
+scope_tags:
+  - aws
+  - codebuild
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: CodeBuild project has no log destination configured.
+  action: >
+    Enable CloudWatch Logs or S3 log delivery in the project
+    configuration.
+  example: |
+    {
+      "compute": {
+        "kind": "codebuild_project",
+        "logging": { "enabled": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: codebuild_project
+    - field: properties.compute.logging.enabled
+      op: eq
+      value: false

@@ -1,0 +1,37 @@
+dsl_version: ctrl.v1
+id: CTL.CODEBUILD.ENCRYPT.S3LOGS.001
+name: CodeBuild S3 Build Logs Must Be Encrypted
+description: >
+  CodeBuild projects delivering logs to S3 must encrypt log objects
+  at rest. Unencrypted build logs can expose source structure,
+  dependency versions, test results, and secrets leaked during build.
+domain: encryption
+severity: low
+compliance:
+  nist_800_53_r5: "SC-28"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - codebuild
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: collection
+remediation:
+  description: CodeBuild S3 build logs are not encrypted at rest.
+  action: Enable encryption on S3 log delivery in the build project configuration.
+  example: |
+    {
+      "compute": {
+        "kind": "codebuild_project",
+        "encryption": { "s3_logs_encrypted": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: codebuild_project
+    - field: properties.compute.encryption.s3_logs_encrypted
+      op: eq
+      value: false

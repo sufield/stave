@@ -1,0 +1,16 @@
+control: CTL.CODEBUILD.WEBHOOK.ANCHORED.001
+defect: >
+  CodeBuild webhook filter patterns for ACTOR_ACCOUNT_ID, HEAD_REF,
+  or BASE_REF are not anchored with ^ and $. Substring matching
+  allows bypass.
+infection: >
+  An attacker creates a GitHub account whose numeric ID contains the
+  trusted account ID as a substring. The unanchored regex matches
+  the attacker's account, granting webhook-triggered builds under
+  the project's IAM role. This is the "CodeBreach" vulnerability
+  (Wiz Research) — the attacker triggers builds without being in
+  the trusted organization.
+failure: >
+  Unauthorized build execution via webhook bypass. An attacker
+  triggers builds under the project's IAM role by exploiting
+  unanchored regex patterns in webhook filters.

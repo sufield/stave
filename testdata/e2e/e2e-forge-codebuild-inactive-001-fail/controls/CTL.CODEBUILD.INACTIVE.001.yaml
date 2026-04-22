@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.CODEBUILD.INACTIVE.001
+name: CodeBuild Projects Must Not Be Inactive for Over 90 Days
+description: >
+  CodeBuild projects not invoked in over 90 days should be reviewed
+  and decommissioned. Inactive projects retain webhooks, source
+  credentials, and IAM roles — dormant attack surface with stale
+  permissions.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-8"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-04"]
+scope_tags:
+  - aws
+  - codebuild
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: CodeBuild project has not been invoked in over 90 days.
+  action: >
+    Review the project. If no longer needed, delete it and its
+    associated IAM role and webhooks. If still needed, document
+    the justification.
+  example: |
+    {
+      "compute": {
+        "kind": "codebuild_project",
+        "lifecycle": { "inactive_over_90_days": false }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: codebuild_project
+    - field: properties.compute.lifecycle.inactive_over_90_days
+      op: eq
+      value: true

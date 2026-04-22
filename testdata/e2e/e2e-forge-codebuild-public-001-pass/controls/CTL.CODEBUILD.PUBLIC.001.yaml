@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.CODEBUILD.PUBLIC.001
+name: CodeBuild Projects Must Not Be Publicly Accessible
+description: >
+  CodeBuild project visibility must be PRIVATE. Projects with
+  PUBLIC_READ visibility allow anyone to access build results,
+  logs, and artifacts — exposing source code structure, dependency
+  versions, deployment targets, and potentially secrets leaked in
+  build output.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-17", "IVS-03"]
+scope_tags:
+  - aws
+  - codebuild
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: discovery
+remediation:
+  description: CodeBuild project visibility is PUBLIC_READ.
+  action: >
+    Set project visibility to PRIVATE via aws codebuild
+    update-project-visibility.
+  example: |
+    {
+      "compute": {
+        "kind": "codebuild_project",
+        "access": { "is_public": false }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: codebuild_project
+    - field: properties.compute.access.is_public
+      op: eq
+      value: true

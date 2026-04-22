@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.CODEBUILD.WEBHOOK.ANCHORED.001
+name: CodeBuild Webhook Filters Must Use Anchored Regex Patterns
+description: >
+  CodeBuild webhook filters using ACTOR_ACCOUNT_ID, HEAD_REF, or
+  BASE_REF must anchor regex patterns with ^ and $ for exact
+  matching. Unanchored patterns allow substring bypass — an attacker
+  creates a GitHub account whose ID contains the trusted value as a
+  substring. This is the "CodeBreach" vulnerability disclosed by Wiz
+  Research.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["AIS-06", "IVS-03"]
+scope_tags:
+  - aws
+  - codebuild
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    CodeBuild webhook filter patterns are not anchored with ^ and $.
+  action: >
+    Update all ACTOR_ACCOUNT_ID, HEAD_REF, and BASE_REF filter
+    patterns to use ^ (start anchor) and $ (end anchor) for exact
+    matching. Example: change "12345" to "^12345$".
+  example: |
+    {
+      "compute": {
+        "kind": "codebuild_project",
+        "webhook": { "filters_anchored": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: codebuild_project
+    - field: properties.compute.webhook.filters_anchored
+      op: eq
+      value: false

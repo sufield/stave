@@ -1,0 +1,43 @@
+dsl_version: ctrl.v1
+id: CTL.CODEBUILD.PRIVILEGED.001
+name: CodeBuild Projects Must Not Use Docker Privileged Mode
+description: >
+  CodeBuild projects must not enable Docker privileged mode unless
+  building Docker images is required. Privileged mode grants the
+  build container full access to the host, enabling container escape.
+  A compromised build with privileged mode gains the build role's
+  permissions on the underlying host.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6(5)"
+  soc2: "CC6.1"
+  ccm_v4: ["IVS-03", "IAM-05"]
+scope_tags:
+  - aws
+  - codebuild
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: CodeBuild project uses Docker privileged mode.
+  action: >
+    Disable privileged mode unless building Docker images. If
+    Docker-in-Docker is required, use a dedicated project with
+    a narrowly scoped IAM role.
+  example: |
+    {
+      "compute": {
+        "kind": "codebuild_project",
+        "build": { "privileged_mode": false }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: codebuild_project
+    - field: properties.compute.build.privileged_mode
+      op: eq
+      value: true

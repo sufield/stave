@@ -1,0 +1,40 @@
+dsl_version: ctrl.v1
+id: CTL.CODEBUILD.ENCRYPT.REPORTS.001
+name: CodeBuild Report Group Exports Must Be Encrypted
+description: >
+  CodeBuild report groups exporting to S3 must encrypt exported test
+  results at rest with a KMS key. Unencrypted reports may contain
+  test data, code coverage metrics, and build artifacts.
+domain: encryption
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.7"
+  pci_dss_v4.0: "3.4.1"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - codebuild
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: collection
+remediation:
+  description: CodeBuild report group S3 export is not encrypted.
+  action: >
+    Enable KMS encryption on the report group S3 export configuration.
+  example: |
+    {
+      "compute": {
+        "kind": "codebuild_report_group",
+        "encryption": { "export_encrypted": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: codebuild_report_group
+    - field: properties.compute.encryption.export_encrypted
+      op: eq
+      value: false

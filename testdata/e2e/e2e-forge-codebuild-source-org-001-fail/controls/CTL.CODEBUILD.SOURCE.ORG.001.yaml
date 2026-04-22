@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.CODEBUILD.SOURCE.ORG.001
+name: CodeBuild GitHub Source Must Use Allowed Organizations
+description: >
+  CodeBuild projects sourcing from GitHub must reference repositories
+  in approved organizations. Repos from untrusted organizations can
+  let external contributors trigger builds that execute under the
+  project's IAM role.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SA-12"
+  soc2: "CC6.1"
+  ccm_v4: ["AIS-06", "STA-04"]
+scope_tags:
+  - aws
+  - codebuild
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    CodeBuild project sources from an unvetted GitHub organization.
+  action: >
+    Restrict source repositories to approved organizations. Configure
+    an organization allowlist and validate source URLs against it.
+  example: |
+    {
+      "compute": {
+        "kind": "codebuild_project",
+        "source": { "org_allowed": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: codebuild_project
+    - field: properties.compute.source.org_allowed
+      op: eq
+      value: false

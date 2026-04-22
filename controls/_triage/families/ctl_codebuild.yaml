@@ -1,0 +1,13 @@
+family: CTL.CODEBUILD
+infection: >
+  A misconfigured CodeBuild project compromises the CI/CD pipeline —
+  build scripts, source code access, artifact production, and
+  deployment credentials. Build environments run with IAM roles that
+  access source repositories, artifact stores, container registries,
+  and deployment targets. A compromised build injects malicious code
+  into every artifact the pipeline produces.
+failure: >
+  Supply chain compromise. An attacker controlling the build pipeline
+  can modify build output, inject backdoors into production artifacts,
+  exfiltrate source code and secrets, and pivot to deployment targets
+  using the build role's permissions.

@@ -1,0 +1,43 @@
+dsl_version: ctrl.v1
+id: CTL.CODEBUILD.SOURCE.CREDS.001
+name: CodeBuild Source Repository URLs Must Not Embed Credentials
+description: >
+  CodeBuild project source repository URLs must not contain embedded
+  authentication tokens or username:password patterns. Embedded
+  credentials in URLs are logged in CloudTrail, visible in the
+  console, and persist in project configuration.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "IA-5(7)"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-16", "DSP-17"]
+scope_tags:
+  - aws
+  - codebuild
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    CodeBuild source URL contains embedded credentials.
+  action: >
+    Remove credentials from the URL. Use CodeBuild source credentials
+    (OAuth, personal access token, or CodeConnections) configured
+    separately from the repository URL.
+  example: |
+    {
+      "compute": {
+        "kind": "codebuild_project",
+        "source": { "has_embedded_credentials": false }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: codebuild_project
+    - field: properties.compute.source.has_embedded_credentials
+      op: eq
+      value: true

@@ -1,0 +1,15 @@
+id: codebuild_build_escape
+description: >
+  CodeBuild project with Docker privileged mode and overprivileged
+  IAM role. A container escape from a privileged build grants the
+  build role's full permissions on the host, enabling secret
+  exfiltration, artifact poisoning, and production deployment.
+controls:
+  - CTL.CODEBUILD.PRIVILEGED.001
+  - CTL.CODEBUILD.ROLE.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ec2_code_execution
+postconditions:
+  - iam_credential_theft

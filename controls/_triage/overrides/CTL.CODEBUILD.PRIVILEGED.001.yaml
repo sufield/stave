@@ -1,0 +1,16 @@
+control: CTL.CODEBUILD.PRIVILEGED.001
+defect: >
+  The CodeBuild project enables Docker privileged mode, granting the
+  build container full access to the underlying host.
+infection: >
+  An attacker who compromises the build (via malicious source code,
+  poisoned dependencies, or build script injection) escapes the
+  container and gains host-level access. The host runs with the
+  project's IAM role credentials. Unlike production container
+  escapes, build environment escapes are more dangerous because
+  build roles typically have deployment credentials.
+failure: >
+  Container escape from CI/CD. An attacker gains the build role's
+  IAM permissions through a privileged container breakout, enabling
+  artifact poisoning, secret exfiltration, and deployment to
+  production targets.

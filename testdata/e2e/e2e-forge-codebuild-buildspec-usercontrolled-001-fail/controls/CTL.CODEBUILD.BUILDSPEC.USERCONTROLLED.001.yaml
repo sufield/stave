@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.CODEBUILD.BUILDSPEC.USERCONTROLLED.001
+name: CodeBuild Projects Must Not Use User-Controlled Buildspecs
+description: >
+  CodeBuild projects should use centrally managed buildspec
+  definitions, not user-controlled buildspec files from the source
+  repository. Repository-controlled buildspecs allow unreviewed pull
+  request changes to execute arbitrary commands in the CI environment
+  under the project's IAM role.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SA-12"
+  soc2: "CC8.1"
+  ccm_v4: ["AIS-06", "STA-04"]
+scope_tags:
+  - aws
+  - codebuild
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: execution
+remediation:
+  description: >
+    CodeBuild project uses a buildspec file from the source repository.
+  action: >
+    Use an inline buildspec or a buildspec stored in a separate,
+    access-controlled location. If repository buildspecs are
+    required, enforce branch protection and require approvals
+    before builds execute on PR changes.
+  example: |
+    {
+      "compute": {
+        "kind": "codebuild_project",
+        "config": { "buildspec_user_controlled": false }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: codebuild_project
+    - field: properties.compute.config.buildspec_user_controlled
+      op: eq
+      value: true

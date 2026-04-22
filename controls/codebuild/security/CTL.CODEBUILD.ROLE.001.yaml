@@ -1,0 +1,48 @@
+dsl_version: ctrl.v1
+id: CTL.CODEBUILD.ROLE.001
+name: CodeBuild Project Role Must Follow Least Privilege
+description: >
+  CodeBuild project service roles must be scoped to the minimum
+  permissions required for the build. Overprivileged build roles
+  allow a compromised build to access resources beyond what the
+  build needs — reading secrets, deploying to production, or
+  modifying IAM policies.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  ccm_v4: ["IAM-04", "IAM-05"]
+scope_tags:
+  - aws
+  - codebuild
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: CodeBuild project service role has overly broad permissions.
+  action: >
+    Scope the service role to the minimum permissions: source pull,
+    artifact push, log write. Remove permissions for services the
+    build does not interact with.
+  example: |
+    {
+      "compute": {
+        "kind": "codebuild_project",
+        "role": { "is_overprivileged": false }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: codebuild_project
+    - field: properties.compute.role.is_overprivileged
+      op: eq
+      value: true
