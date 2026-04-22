@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.APPSTREAM.INTERNET.001
+name: AppStream Fleets Must Disable Default Internet Access
+description: >
+  AppStream fleets must disable default internet access. Fleets with
+  default internet connectivity allow streaming sessions to reach
+  the internet directly, bypassing network controls.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03"]
+scope_tags: [aws, appstream]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: AppStream fleet has default internet access enabled.
+  action: Disable EnableDefaultInternetAccess and use VPC with NAT.
+  example: |
+    {"compute": {"kind": "appstream_fleet", "network": {"default_internet_access": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: appstream_fleet
+    - field: properties.compute.network.default_internet_access
+      op: eq
+      value: true

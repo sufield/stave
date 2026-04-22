@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.BEANSTALK.LOG.001
+name: Elastic Beanstalk Environments Must Stream Logs to CloudWatch
+description: >
+  Elastic Beanstalk environments must stream instance and proxy logs
+  to CloudWatch Logs for centralized monitoring.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AU-2"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-03"]
+scope_tags: [aws, elasticbeanstalk]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: Elastic Beanstalk environment does not stream logs to CloudWatch.
+  action: Enable CloudWatch Logs streaming in the environment configuration.
+  example: |
+    {"compute": {"kind": "beanstalk_environment", "logging": {"cloudwatch_enabled": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: beanstalk_environment
+    - field: properties.compute.logging.cloudwatch_enabled
+      op: eq
+      value: false

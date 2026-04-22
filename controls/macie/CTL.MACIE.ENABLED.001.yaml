@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.MACIE.ENABLED.001
+name: Amazon Macie Must Be Enabled for S3 Data Discovery
+description: >
+  Amazon Macie must be enabled for automated sensitive data discovery
+  in S3 buckets. Without Macie, PII and sensitive data in S3 goes
+  undetected.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "RA-5"
+  soc2: "CC7.1"
+  ccm_v4: ["DSP-17"]
+scope_tags: [aws, macie]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: discovery
+remediation:
+  description: Amazon Macie is not enabled.
+  action: Enable Macie in the account.
+  example: |
+    {"governance": {"kind": "macie_config", "scanner": {"enabled": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: macie_config
+    - field: properties.governance.scanner.enabled
+      op: eq
+      value: false

@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.WORKSPACES.ENCRYPT.001
+name: WorkSpaces Must Encrypt Volumes At Rest
+description: >
+  WorkSpaces root and user EBS volumes must be encrypted at rest.
+domain: encryption
+severity: high
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.7"
+  ccm_v4: ["CEK-03"]
+scope_tags: [aws, workspaces]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: WorkSpaces volumes are not encrypted.
+  action: Enable volume encryption on the workspace.
+  example: |
+    {"compute": {"kind": "workspace", "encryption": {"volumes_encrypted": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: workspace
+    - field: properties.compute.encryption.volumes_encrypted
+      op: eq
+      value: false

@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.ATHENA.ENCRYPT.001
+name: Athena Workgroups Must Encrypt Query Results
+description: >
+  Athena workgroups must encrypt query results at rest. Unencrypted
+  query results in S3 expose data extracted by SQL queries.
+domain: encryption
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.7"
+  ccm_v4: ["CEK-03"]
+scope_tags: [aws, athena]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: Athena workgroup does not encrypt query results.
+  action: Enable encryption in the workgroup result configuration.
+  example: |
+    {"database": {"kind": "athena_workgroup", "encryption": {"results_encrypted": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: athena_workgroup
+    - field: properties.database.encryption.results_encrypted
+      op: eq
+      value: false

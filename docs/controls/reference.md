@@ -3,25 +3,25 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 867
-**Pack hash:** `a2befdf7e9758ccc2e78795fe92f007fbb6b35cb80723296e8e59105a83af048`
+**Total controls:** 881
+**Pack hash:** `2930b9f15f8c4234a89bd23829b05d7db2c9fea904d01bcd83e9d4eb8d1080cd`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 132 |
-| high | 379 |
+| critical | 134 |
+| high | 385 |
 | info | 16 |
 | low | 76 |
-| medium | 264 |
+| medium | 270 |
 
 | Domain | Count |
 |--------|-------|
 | audit | 20 |
 | detection | 2 |
-| encryption | 33 |
-| exposure | 572 |
+| encryption | 35 |
+| exposure | 584 |
 | governance | 20 |
 | identity | 177 |
 | network | 21 |
@@ -914,6 +914,36 @@ API Gateway v2 HTTP API stages must configure access logging to capture request 
 
 ---
 
+### CTL.APPSTREAM.INTERNET.001
+
+**AppStream Fleets Must Disable Default Internet Access**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+AppStream fleets must disable default internet access. Fleets with default internet connectivity allow streaming sessions to reach the internet directly, bypassing network controls.
+
+**Remediation:** Disable EnableDefaultInternetAccess and use VPC with NAT.
+
+---
+
+### CTL.ATHENA.ENCRYPT.001
+
+**Athena Workgroups Must Encrypt Query Results**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** nist_800_53_r5: SC-28; soc2: CC6.7;
+
+Athena workgroups must encrypt query results at rest. Unencrypted query results in S3 expose data extracted by SQL queries.
+
+**Remediation:** Enable encryption in the workgroup result configuration.
+
+---
+
 ### CTL.AUTOSCALING.ELB.HEALTH.001
 
 **Auto Scaling Groups Must Use ELB Health Checks**
@@ -1104,6 +1134,36 @@ Data classified as critical or PHI must have cross-region replication configured
 AWS Backup vaults must have vault lock enabled to prevent deletion of recovery points. Without vault lock, an attacker with vault access can delete all backups before conducting a destructive attack — the ransomware pattern eliminates the recovery path before encrypting production data.
 
 **Remediation:** Enable vault lock with a retention policy.
+
+---
+
+### CTL.BEANSTALK.LOG.001
+
+**Elastic Beanstalk Environments Must Stream Logs to CloudWatch**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AU-2; soc2: CC7.1;
+
+Elastic Beanstalk environments must stream instance and proxy logs to CloudWatch Logs for centralized monitoring.
+
+**Remediation:** Enable CloudWatch Logs streaming in the environment configuration.
+
+---
+
+### CTL.BEANSTALK.UPDATES.001
+
+**Elastic Beanstalk Must Enable Managed Platform Updates**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-2; soc2: CC7.1;
+
+Elastic Beanstalk environments must enable managed platform updates to automatically apply security patches and minor updates.
+
+**Remediation:** Enable managed platform updates in the environment.
 
 ---
 
@@ -1751,6 +1811,21 @@ CloudFormation stacks must not have DisableRollback set to true. With rollback d
 
 ---
 
+### CTL.CLOUDFORMATION.SECRETS.001
+
+**CloudFormation Stack Outputs Must Not Contain Secrets**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: IA-5(7); soc2: CC6.1;
+
+CloudFormation stack outputs must not contain hardcoded secrets. Stack outputs are readable by anyone with cloudformation:DescribeStacks access, visible in the console, and logged in CloudTrail.
+
+**Remediation:** Remove secrets from outputs. Use Secrets Manager or Parameter Store with dynamic references.
+
+---
+
 ### CTL.CLOUDFORMATION.STACKSETS.RESTRICT.001
 
 **CloudFormation StackSets Must Require Administrator Approval**
@@ -1778,6 +1853,21 @@ CloudFormation StackSets deploy infrastructure across multiple AWS accounts and 
 Terraform state files must be stored in a versioned backend (S3 with versioning, Terraform Cloud, or equivalent). Unversioned state means a corrupted or accidentally deleted state file cannot be recovered, leaving infrastructure in an unmanaged state with no rollback path.
 
 **Remediation:** Configure an S3 backend with versioning enabled and DynamoDB state locking. Alternatively, use Terraform Cloud or an equivalent managed backend with built-in versioning.
+
+---
+
+### CTL.CLOUDFORMATION.TERMINATION.001
+
+**CloudFormation Stacks Must Have Termination Protection Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CP-10; soc2: A1.1;
+
+CloudFormation root stacks must enable termination protection to prevent accidental or unauthorized deletion of infrastructure.
+
+**Remediation:** Enable termination protection on the stack.
 
 ---
 
@@ -7337,6 +7427,21 @@ Service-to-service access must use short-lived credentials (STS temporary tokens
 
 ---
 
+### CTL.INSPECTOR.ENABLED.001
+
+**Amazon Inspector Must Be Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: RA-5; soc2: CC7.1;
+
+Amazon Inspector 2 must be enabled for vulnerability scanning of EC2, ECR, and Lambda resources. Without Inspector, known vulnerabilities in deployed software go undetected.
+
+**Remediation:** Enable Inspector 2 for EC2, ECR, and Lambda scanning.
+
+---
+
 ### CTL.K8S.APISERVER.ADM.CTRL.001
 
 **API Server Must Enable AlwaysPullImages Admission Controller**
@@ -8847,6 +8952,66 @@ Lambda functions tagged with data-classification phi or pii, or functions whose 
 Lambda functions configured to run in a VPC must use private subnets with no direct route to an internet gateway. A function in a public subnet retains direct internet egress despite VPC enrollment — negating the network isolation that VPC membership is intended to provide. This is the complement to CTL.LAMBDA.VPC.SENSITIVE.001: VPC enrollment plus private subnet enforcement together close the network isolation requirement.
 
 **Remediation:** Move the function to private subnets. Use a NAT gateway in a public subnet for outbound access.
+
+---
+
+### CTL.LIGHTSAIL.DB.PUBLIC.001
+
+**Lightsail Databases Must Not Be Publicly Accessible**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+Lightsail managed databases must not be publicly accessible.
+
+**Remediation:** Disable public mode on the database.
+
+---
+
+### CTL.LIGHTSAIL.INSTANCE.PUBLIC.001
+
+**Lightsail Instances Must Not Expose Public Ports Broadly**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+Lightsail instances with public IPs must not have firewall rules allowing broad public access to service ports.
+
+**Remediation:** Restrict firewall rules to specific CIDR ranges.
+
+---
+
+### CTL.MACIE.ENABLED.001
+
+**Amazon Macie Must Be Enabled for S3 Data Discovery**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: RA-5; soc2: CC7.1;
+
+Amazon Macie must be enabled for automated sensitive data discovery in S3 buckets. Without Macie, PII and sensitive data in S3 goes undetected.
+
+**Remediation:** Enable Macie in the account.
+
+---
+
+### CTL.MQ.PUBLIC.001
+
+**Amazon MQ Brokers Must Not Be Publicly Accessible**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+Amazon MQ brokers must not expose public endpoints. Public brokers allow unauthenticated or internet-based access to message queues.
+
+**Remediation:** Disable public accessibility on the broker.
 
 ---
 
@@ -12128,6 +12293,36 @@ AWS Systems Manager Parameter Store parameters that store values in String or St
 
 ---
 
+### CTL.STEPFUNCTIONS.LOG.001
+
+**Step Functions State Machines Must Have Logging Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AU-2; soc2: CC7.1;
+
+Step Functions state machines must emit execution logs to CloudWatch Logs. Without logging, workflow execution details and errors are invisible.
+
+**Remediation:** Enable execution logging to CloudWatch Logs.
+
+---
+
+### CTL.STEPFUNCTIONS.SECRETS.001
+
+**Step Functions State Machines Must Not Contain Secrets in Definitions**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: IA-5(7); soc2: CC6.1;
+
+Step Functions state machine definitions must not contain hardcoded secrets. Definition JSON is visible in the console, API responses, and CloudTrail logs.
+
+**Remediation:** Replace hardcoded secrets with Secrets Manager or Parameter Store references.
+
+---
+
 ### CTL.VPC.DEFAULT.001
 
 **Default VPC Must Not Be Used**
@@ -13068,6 +13263,21 @@ All WAF rules and rule groups must have their effective action set to BLOCK. A r
 WAF web ACLs must include the three core AWS managed rule groups that cover OWASP Top 10 attack categories: AWSManagedRulesCommonRuleSet (XSS, path traversal, HTTP violations), AWSManagedRulesSQLiRuleSet (SQL injection), and AWSManagedRulesKnownBadInputsRuleSet (Log4Shell, deserialization, known CVE payloads). All three groups must be attached and enforcing in BLOCK mode. A WAF with custom rules only, or with managed rule groups that cover IP reputation or bot management but not OWASP attack categories, provides incomplete coverage. This control differs from CTL.WAF.RULES.001 (which checks for any managed rules) by requiring the specific groups needed for baseline OWASP coverage. HackerOne report #382625 documents a stored XSS bypass against a production WAF that was active and blocking with custom rules but lacked AWSManagedRulesCommonRuleSet — the payload used a marquee element with an inline event handler, a known vector covered by the CrossSiteScripting_BODY rule in the common rule set.
 
 **Remediation:** Add the following AWS managed rule groups to the web ACL and ensure each is in BLOCK mode with no COUNT override at the group level or rule action override level: (1) AWSManagedRulesCommonRuleSet — covers XSS, path traversal, common exploits, (2) AWSManagedRulesSQLiRuleSet — covers SQL injection attack patterns, (3) AWSManagedRulesKnownBad InputsRuleSet — covers known CVE exploits including Log4j and Spring4Shell.
+
+---
+
+### CTL.WORKSPACES.ENCRYPT.001
+
+**WorkSpaces Must Encrypt Volumes At Rest**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** nist_800_53_r5: SC-28; soc2: CC6.7;
+
+WorkSpaces root and user EBS volumes must be encrypted at rest.
+
+**Remediation:** Enable volume encryption on the workspace.
 
 ---
 

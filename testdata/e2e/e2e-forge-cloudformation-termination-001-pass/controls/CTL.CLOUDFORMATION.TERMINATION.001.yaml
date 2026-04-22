@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFORMATION.TERMINATION.001
+name: CloudFormation Stacks Must Have Termination Protection Enabled
+description: >
+  CloudFormation root stacks must enable termination protection to
+  prevent accidental or unauthorized deletion of infrastructure.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "CP-10"
+  soc2: "A1.1"
+  ccm_v4: ["BCR-08"]
+scope_tags: [aws, cloudformation]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: CloudFormation stack termination protection is disabled.
+  action: Enable termination protection on the stack.
+  example: |
+    {"governance": {"kind": "cloudformation_stack", "config": {"termination_protection_enabled": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: cloudformation_stack
+    - field: properties.governance.config.termination_protection_enabled
+      op: eq
+      value: false

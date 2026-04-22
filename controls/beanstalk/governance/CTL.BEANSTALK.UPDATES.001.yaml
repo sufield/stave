@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.BEANSTALK.UPDATES.001
+name: Elastic Beanstalk Must Enable Managed Platform Updates
+description: >
+  Elastic Beanstalk environments must enable managed platform updates
+  to automatically apply security patches and minor updates.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SI-2"
+  soc2: "CC7.1"
+  ccm_v4: ["TVM-02"]
+scope_tags: [aws, elasticbeanstalk]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Elastic Beanstalk managed platform updates are disabled.
+  action: Enable managed platform updates in the environment.
+  example: |
+    {"compute": {"kind": "beanstalk_environment", "governance": {"managed_updates_enabled": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: beanstalk_environment
+    - field: properties.compute.governance.managed_updates_enabled
+      op: eq
+      value: false

@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.LOG.001
+name: Step Functions State Machines Must Have Logging Enabled
+description: >
+  Step Functions state machines must emit execution logs to CloudWatch
+  Logs. Without logging, workflow execution details and errors are
+  invisible.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-2"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-03"]
+scope_tags: [aws, stepfunctions]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: Step Functions state machine logging is disabled.
+  action: Enable execution logging to CloudWatch Logs.
+  example: |
+    {"compute": {"kind": "state_machine", "logging": {"enabled": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.logging.enabled
+      op: eq
+      value: false

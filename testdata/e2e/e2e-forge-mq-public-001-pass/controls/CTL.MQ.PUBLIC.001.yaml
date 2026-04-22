@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.MQ.PUBLIC.001
+name: Amazon MQ Brokers Must Not Be Publicly Accessible
+description: >
+  Amazon MQ brokers must not expose public endpoints. Public brokers
+  allow unauthenticated or internet-based access to message queues.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03"]
+scope_tags: [aws, mq]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Amazon MQ broker is publicly accessible.
+  action: Disable public accessibility on the broker.
+  example: |
+    {"messaging": {"kind": "mq_broker", "access": {"publicly_accessible": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: mq_broker
+    - field: properties.messaging.access.publicly_accessible
+      op: eq
+      value: true
