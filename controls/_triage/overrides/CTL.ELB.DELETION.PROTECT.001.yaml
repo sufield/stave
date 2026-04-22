@@ -1,0 +1,7 @@
+control: CTL.ELB.DELETION.PROTECT.001
+defect: >
+  The load balancer does not have deletion protection enabled. It can be deleted via a single API call.
+infection: >
+  Accidental deletion (operator error, misconfigured IaC, overly broad IAM policy) or malicious deletion results in immediate loss of all traffic routing to the backend.
+failure: >
+  Service outage from load balancer deletion. All traffic routing is lost immediately.

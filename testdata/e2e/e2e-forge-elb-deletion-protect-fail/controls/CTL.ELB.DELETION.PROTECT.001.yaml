@@ -1,0 +1,39 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.DELETION.PROTECT.001
+name: Load Balancer Must Have Deletion Protection Enabled
+description: Production load balancers must have deletion protection enabled.
+domain: resilience
+severity: medium
+compliance:
+  nist_800_53_r5: CP-10
+  soc2: CC6.1
+  ccm_v4:
+  - BCR-08
+scope_tags:
+- aws
+- elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+remediation:
+  description: LB lacks deletion protection.
+  action: Enable deletion protection.
+unsafe_predicate:
+  all:
+  - field: properties.loadbalancer.deletion_protection
+    op: eq
+    value: false
+defect: 'The load balancer does not have deletion protection enabled. It can
+  be deleted via a single API call.
+
+  '
+infection: 'Accidental deletion (operator error, misconfigured IaC, overly
+  broad IAM policy) or malicious deletion results in immediate loss of all
+  traffic routing to the backend.
+
+  '
+failure: 'Service outage from load balancer deletion. All traffic routing
+  is lost immediately.
+
+  '

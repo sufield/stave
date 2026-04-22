@@ -1,0 +1,48 @@
+dsl_version: ctrl.v1
+id: CTL.ELASTICACHE.ENCRYPT.REST.001
+name: ElastiCache Redis Must Have At-Rest Encryption Enabled
+description: 'ElastiCache Redis clusters must have at-rest encryption enabled
+  to protect cached data (sessions, credentials, application state) stored
+  on disk.
+
+  '
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: SC-28
+  soc2: CC6.7
+  pci_dss_v4.0: 3.4.1
+  ccm_v4:
+  - CEK-03
+scope_tags:
+- aws
+- elasticache
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: ElastiCache cluster does not have at-rest encryption.
+  action: Create a new cluster with at-rest encryption enabled (cannot be
+    changed on existing clusters).
+unsafe_predicate:
+  all:
+  - field: properties.cache.kind
+    op: eq
+    value: cluster
+  - field: properties.cache.encryption.at_rest_enabled
+    op: eq
+    value: false
+defect: 'ElastiCache Redis cluster does not have at-rest encryption enabled.
+  Cached data is stored in plaintext.
+
+  '
+infection: 'Session tokens, cached credentials, and application state stored
+  in the cluster are accessible without decryption to anyone who gains access
+  to the underlying storage or backup snapshots.
+
+  '
+failure: 'Cache data exposure. Sensitive data in ElastiCache is stored unencrypted
+  at rest.
+
+  '

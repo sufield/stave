@@ -1,0 +1,20 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:elasticloadbalancing:us-east-1:123456789012:loadbalancer/app/my-alb/abc123",
+      "properties": {
+        "loadbalancer": {
+          "kind": "application",
+          "waf": {
+            "acl_attached": true
+          }
+        }
+      },
+      "type": "aws_elbv2_loadbalancer",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

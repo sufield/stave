@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.AUTOSCALING.ELB.HEALTH.001
+name: Auto Scaling Groups Must Use ELB Health Checks
+description: ASGs with load balancers must use ELB health checks.
+domain: resilience
+severity: medium
+compliance:
+  nist_800_53_r5: CP-7
+  soc2: CC7.1
+  ccm_v4:
+  - BCR-08
+scope_tags:
+- aws
+- autoscaling
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+remediation:
+  description: ASG uses EC2 health checks only.
+  action: Switch to ELB health checks.
+unsafe_predicate:
+  all:
+  - field: properties.scaling.kind
+    op: eq
+    value: autoscaling_group
+  - field: properties.scaling.health_check.uses_elb
+    op: eq
+    value: false

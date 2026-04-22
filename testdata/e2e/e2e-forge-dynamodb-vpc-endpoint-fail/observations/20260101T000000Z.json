@@ -1,0 +1,18 @@
+{
+  "assets": [
+    {
+      "id": "vpc-0prod000main",
+      "properties": {
+        "network": {
+          "kind": "vpc",
+          "has_dynamodb_endpoint": false
+        }
+      },
+      "type": "aws_vpc",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

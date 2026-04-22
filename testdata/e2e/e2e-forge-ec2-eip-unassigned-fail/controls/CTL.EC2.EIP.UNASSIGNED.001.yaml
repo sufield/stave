@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.EIP.UNASSIGNED.001
+name: Elastic IPs Must Be Associated with Resources
+description: 'Unassigned Elastic IP addresses incur cost and represent unused
+  public IP allocations that should be released.
+
+  '
+domain: governance
+severity: low
+compliance:
+  ccm_v4:
+  - DCS-06
+scope_tags:
+- aws
+- ec2
+type: unsafe_state
+classification: state_assertion
+params: {}
+remediation:
+  description: Elastic IP is not associated with any resource.
+  action: Associate the EIP with an instance or release it.
+unsafe_predicate:
+  all:
+  - field: properties.compute.kind
+    op: eq
+    value: elastic_ip
+  - field: properties.compute.eip.is_associated
+    op: eq
+    value: false
+defect: 'An Elastic IP address is allocated but not associated with any resource.
+
+  '
+infection: 'Unassigned EIPs incur cost and represent unused public IP allocations.
+  If the EIP was previously associated with a resource, DNS records may still
+  point to it — creating a potential takeover vector if an attacker associates
+  it with their own instance.
+
+  '
+failure: 'Resource waste and potential IP takeover. An attacker who associates
+  the dangling EIP receives traffic intended for the original resource.
+
+  '

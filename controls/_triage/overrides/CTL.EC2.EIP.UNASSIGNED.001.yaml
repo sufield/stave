@@ -1,0 +1,7 @@
+control: CTL.EC2.EIP.UNASSIGNED.001
+defect: >
+  An Elastic IP address is allocated but not associated with any resource.
+infection: >
+  Unassigned EIPs incur cost and represent unused public IP allocations. If the EIP was previously associated with a resource, DNS records may still point to it — creating a potential takeover vector if an attacker associates it with their own instance.
+failure: >
+  Resource waste and potential IP takeover. An attacker who associates the dangling EIP receives traffic intended for the original resource.

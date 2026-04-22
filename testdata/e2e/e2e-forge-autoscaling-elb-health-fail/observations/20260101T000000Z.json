@@ -1,0 +1,20 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:autoscaling:us-east-1:123456789012:autoScalingGroup:my-asg",
+      "properties": {
+        "scaling": {
+          "kind": "autoscaling_group",
+          "health_check": {
+            "uses_elb": false
+          }
+        }
+      },
+      "type": "aws_autoscaling_group",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

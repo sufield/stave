@@ -1,0 +1,47 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.INSTANCE.AGE.001
+name: EC2 Instances Must Not Exceed Maximum Age
+description: 'EC2 instances running longer than the maximum age threshold
+  (default 180 days) accumulate unpatched vulnerabilities and configuration
+  drift.
+
+  '
+domain: exposure
+severity: low
+compliance:
+  nist_800_53_r5: SI-2
+  soc2: CC7.1
+  ccm_v4:
+  - CCC-04
+scope_tags:
+- aws
+- ec2
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: EC2 instance exceeds maximum age threshold.
+  action: Replace with a new instance launched from a current AMI.
+unsafe_predicate:
+  all:
+  - field: properties.compute.kind
+    op: eq
+    value: instance
+  - field: properties.compute.instance_age.exceeds_threshold
+    op: eq
+    value: true
+defect: 'The EC2 instance exceeds the maximum age threshold. The instance
+  has been running long enough to accumulate unpatched vulnerabilities and
+  configuration drift.
+
+  '
+infection: 'Long-running instances accumulate patch gaps as new CVEs are disclosed.
+  SSM Patch Manager patches the running OS but the instance''s baseline AMI
+  ages, and any replacement launches from the same stale base.
+
+  '
+failure: 'Vulnerability accumulation. The instance''s attack surface grows
+  with each missed patching cycle.
+
+  '

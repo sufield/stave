@@ -1,0 +1,7 @@
+control: CTL.ELB.WAF.001
+defect: >
+  The Application Load Balancer has no AWS WAF web ACL associated. Application-layer attacks reach the backend unfiltered.
+infection: >
+  SQL injection, XSS, and other OWASP Top 10 attacks pass through the ALB directly to the application without WAF rule evaluation. Automated attack tools continuously probe public ALB endpoints.
+failure: >
+  Unfiltered application-layer attacks. The ALB forwards malicious requests to the backend without inspection.

@@ -1,0 +1,28 @@
+dsl_version: ctrl.v1
+id: CTL.DYNAMODB.VPC.ENDPOINT.001
+name: VPC Must Have DynamoDB Gateway Endpoint
+description: VPCs accessing DynamoDB should have a gateway endpoint.
+domain: network
+severity: low
+compliance:
+  nist_800_53_r5: SC-7
+  ccm_v4:
+  - IVS-03
+scope_tags:
+- aws
+- dynamodb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: No DynamoDB endpoint.
+  action: Create a DynamoDB gateway endpoint.
+unsafe_predicate:
+  all:
+  - field: properties.network.kind
+    op: eq
+    value: vpc
+  - field: properties.network.has_dynamodb_endpoint
+    op: eq
+    value: false

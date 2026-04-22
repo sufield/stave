@@ -1,0 +1,43 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.WAF.001
+name: Application Load Balancer Must Have WAF Web ACL Associated
+description: Internet-facing ALBs must have an AWS WAF web ACL associated.
+domain: network
+severity: high
+compliance:
+  nist_800_53_r5: SC-7
+  soc2: CC6.6
+  ccm_v4:
+  - IVS-03
+  - IVS-04
+scope_tags:
+- aws
+- elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: ALB has no WAF web ACL.
+  action: Associate a WAF web ACL with the ALB.
+unsafe_predicate:
+  all:
+  - field: properties.loadbalancer.kind
+    op: eq
+    value: application
+  - field: properties.loadbalancer.waf.acl_attached
+    op: eq
+    value: false
+defect: 'The Application Load Balancer has no AWS WAF web ACL associated.
+  Application-layer attacks reach the backend unfiltered.
+
+  '
+infection: 'SQL injection, XSS, and other OWASP Top 10 attacks pass through
+  the ALB directly to the application without WAF rule evaluation. Automated
+  attack tools continuously probe public ALB endpoints.
+
+  '
+failure: 'Unfiltered application-layer attacks. The ALB forwards malicious
+  requests to the backend without inspection.
+
+  '

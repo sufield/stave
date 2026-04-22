@@ -1,0 +1,7 @@
+control: CTL.DYNAMODB.VPC.ENDPOINT.001
+defect: >
+  The VPC does not have a DynamoDB gateway endpoint. DynamoDB traffic from the VPC routes through NAT or the internet.
+infection: >
+  DynamoDB API calls leave the VPC and traverse the public internet, exposing traffic to potential interception and creating an exfiltration channel.
+failure: >
+  Data exposure in transit. DynamoDB traffic unnecessarily routes through the internet.

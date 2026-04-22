@@ -1,0 +1,7 @@
+control: CTL.EC2.INSTANCE.AGE.001
+defect: >
+  The EC2 instance exceeds the maximum age threshold. The instance has been running long enough to accumulate unpatched vulnerabilities and configuration drift.
+infection: >
+  Long-running instances accumulate patch gaps as new CVEs are disclosed. SSM Patch Manager patches the running OS but the instance's baseline AMI ages, and any replacement launches from the same stale base.
+failure: >
+  Vulnerability accumulation. The instance's attack surface grows with each missed patching cycle.

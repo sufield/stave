@@ -1,0 +1,7 @@
+control: CTL.DYNAMODB.BACKUP.001
+defect: >
+  The DynamoDB table has no backup plan configured. No AWS Backup plan includes this table and PITR may not be enabled.
+infection: >
+  Without backups, accidental or malicious deletion of the table or its items is unrecoverable. Ransomware attacks targeting DynamoDB tables have no recovery path.
+failure: >
+  Data loss. Table data is unrecoverable after deletion or corruption.
