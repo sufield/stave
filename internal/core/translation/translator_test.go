@@ -114,3 +114,30 @@ func TestRenderClause_GenericOperator(t *testing.T) {
 		t.Errorf("RenderClause(gte) = %q, expected expected-value 365", got)
 	}
 }
+
+func TestOperatorProse_KnownOperators(t *testing.T) {
+	tests := []struct {
+		op   string
+		want string
+	}{
+		{"eq", "equal"},
+		{"ne", "not equal"},
+		{"gt", "be greater than"},
+		{"missing", "be missing"},
+		{"present", "be set"},
+		{"contains", "contain"},
+	}
+	for _, tc := range tests {
+		got := OperatorProse(tc.op)
+		if got != tc.want {
+			t.Errorf("OperatorProse(%q) = %q, want %q", tc.op, got, tc.want)
+		}
+	}
+}
+
+func TestOperatorProse_UnknownFallback(t *testing.T) {
+	got := OperatorProse("unknown_op")
+	if got != "unknown_op" {
+		t.Errorf("OperatorProse(unknown) = %q, want raw op name", got)
+	}
+}

@@ -257,3 +257,56 @@ func TestBuildCoverageIndex_NoOpaqueToolNamePatterns(t *testing.T) {
 		t.Errorf("aggregation must treat tool names as opaque strings")
 	}
 }
+
+func TestCoverageIndex_ToolNames(t *testing.T) {
+	idx := coverage.CoverageIndex{
+		ByTool: map[string]map[string]coverage.DomainCoverage{
+			"prowler": {"s3": {Covered: 5, Total: 10}},
+			"awscli":  {"iam": {Covered: 3, Total: 5}},
+		},
+	}
+	names := idx.ToolNames()
+	if len(names) != 2 {
+		t.Fatalf("expected 2 tools, got %d", len(names))
+	}
+	if names[0] != "awscli" || names[1] != "prowler" {
+		t.Errorf("expected sorted [awscli, prowler], got %v", names)
+	}
+}
+
+func TestCoverageIndex_ToolNames_Empty(t *testing.T) {
+	idx := coverage.CoverageIndex{}
+	names := idx.ToolNames()
+	if len(names) != 0 {
+		t.Errorf("expected 0 tools for empty index, got %d", len(names))
+	}
+}
+
+func TestCoverageIndex_DomainsForTool(t *testing.T) {
+	idx := coverage.CoverageIndex{
+		ByTool: map[string]map[string]coverage.DomainCoverage{
+			"prowler": {
+				"s3":  {Covered: 5, Total: 10},
+				"iam": {Covered: 3, Total: 5},
+			},
+		},
+	}
+	domains := idx.DomainsForTool("prowler")
+	if len(domains) != 2 {
+		t.Fatalf("expected 2 domains, got %d", len(domains))
+	}
+	if domains[0] != "iam" || domains[1] != "s3" {
+		t.Errorf("expected sorted [iam, s3], got %v", domains)
+	}
+}
+
+func TestCoverageIndex_DomainsForTool_Unknown(t *testing.T) {
+	idx := coverage.CoverageIndex{ByTool: map[string]map[string]coverage.DomainCoverage{}}
+	domains := idx.DomainsForTool("nonexistent")
+	if domains == nil {
+		t.Fatal("expected non-nil empty slice for unknown tool")
+	}
+	if len(domains) != 0 {
+		t.Errorf("expected 0 domains, got %d", len(domains))
+	}
+}
