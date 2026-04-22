@@ -1,0 +1,20 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:network-firewall:us-east-1:111122223333:firewall/main",
+      "type": "aws_networkfirewall",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "network_firewall",
+          "firewall": {
+            "default_action_fragments_safe": false
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.NETFIREWALL.DEFAULT.FRAG.001
+name: Network Firewall Must Not Pass Fragmented Packets by Default
+description: >
+  Network Firewall stateless default action for fragmented packets
+  must be aws:drop or aws:forward_to_sfe. Fragmented packets are
+  a common evasion technique — passing them uninspected bypasses
+  deep packet inspection.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03"]
+scope_tags: [aws, networkfirewall]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: Network Firewall default action passes fragmented packets.
+  action: Set StatelessFragmentDefaultActions to aws:drop or aws:forward_to_sfe.
+  example: |
+    {"network": {"kind": "network_firewall", "firewall": {"default_action_fragments_safe": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: network_firewall
+    - field: properties.network.firewall.default_action_fragments_safe
+      op: eq
+      value: false

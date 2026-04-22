@@ -3,25 +3,25 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 861
-**Pack hash:** `6a221e1046bc459c2e7eb1fddab127dbed049fa8bb19831789507db2b2f0990e`
+**Total controls:** 867
+**Pack hash:** `a2befdf7e9758ccc2e78795fe92f007fbb6b35cb80723296e8e59105a83af048`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 132 |
-| high | 374 |
+| high | 379 |
 | info | 16 |
 | low | 76 |
-| medium | 263 |
+| medium | 264 |
 
 | Domain | Count |
 |--------|-------|
 | audit | 20 |
 | detection | 2 |
 | encryption | 33 |
-| exposure | 566 |
+| exposure | 572 |
 | governance | 20 |
 | identity | 177 |
 | network | 21 |
@@ -9132,6 +9132,96 @@ Neptune clusters must not be deployed in public subnets.
 Neptune instances must enable automatic minor version upgrades.
 
 **Remediation:** Enable auto minor version upgrade.
+
+---
+
+### CTL.NETFIREWALL.DEFAULT.FRAG.001
+
+**Network Firewall Must Not Pass Fragmented Packets by Default**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+Network Firewall stateless default action for fragmented packets must be aws:drop or aws:forward_to_sfe. Fragmented packets are a common evasion technique — passing them uninspected bypasses deep packet inspection.
+
+**Remediation:** Set StatelessFragmentDefaultActions to aws:drop or aws:forward_to_sfe.
+
+---
+
+### CTL.NETFIREWALL.DEFAULT.FULL.001
+
+**Network Firewall Must Not Pass Full Packets by Default**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+Network Firewall stateless default action for full packets must be aws:drop or aws:forward_to_sfe, not aws:pass. Default PASS means all traffic not matching stateless rules flows uninspected.
+
+**Remediation:** Set StatelessDefaultActions to aws:drop or aws:forward_to_sfe.
+
+---
+
+### CTL.NETFIREWALL.DELETEPROT.001
+
+**Network Firewall Must Have Deletion Protection Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CP-10; soc2: A1.1;
+
+Network Firewalls must enable deletion protection to prevent accidental or malicious removal. Deleting the firewall removes all traffic inspection from the VPC.
+
+**Remediation:** Enable deletion protection on the firewall.
+
+---
+
+### CTL.NETFIREWALL.LOG.001
+
+**Network Firewall Must Have Logging Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AU-2; soc2: CC7.1;
+
+Network Firewalls must have stateful engine logging configured with at least one log type (FLOW, ALERT, or TLS) and an active destination. Without logging, inspected traffic generates no audit trail.
+
+**Remediation:** Configure logging with FLOW, ALERT, or TLS log types.
+
+---
+
+### CTL.NETFIREWALL.MULTIAZ.001
+
+**Network Firewall Must Be Deployed Across Multiple AZs**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CP-10; soc2: A1.1;
+
+Network Firewalls must be deployed with subnet mappings in multiple Availability Zones. Single-AZ deployment means an AZ outage removes all traffic inspection.
+
+**Remediation:** Add subnet mappings in additional AZs.
+
+---
+
+### CTL.NETFIREWALL.POLICY.RULEGROUP.001
+
+**Network Firewall Policy Must Have Rule Groups Associated**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+Network Firewall policies must have at least one stateful or stateless rule group associated. An empty policy means the firewall sits in the network path without evaluating any rules — all traffic is handled by the default action alone.
+
+**Remediation:** Associate stateful and/or stateless rule groups with the policy.
 
 ---
 

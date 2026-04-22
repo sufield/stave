@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.NETFIREWALL.LOG.001
+name: Network Firewall Must Have Logging Enabled
+description: >
+  Network Firewalls must have stateful engine logging configured with
+  at least one log type (FLOW, ALERT, or TLS) and an active
+  destination. Without logging, inspected traffic generates no audit
+  trail.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AU-2"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-03", "LOG-05"]
+scope_tags: [aws, networkfirewall]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: Network Firewall logging is disabled.
+  action: Configure logging with FLOW, ALERT, or TLS log types.
+  example: |
+    {"network": {"kind": "network_firewall", "firewall": {"logging_enabled": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: network_firewall
+    - field: properties.network.firewall.logging_enabled
+      op: eq
+      value: false

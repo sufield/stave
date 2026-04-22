@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.NETFIREWALL.DELETEPROT.001
+name: Network Firewall Must Have Deletion Protection Enabled
+description: >
+  Network Firewalls must enable deletion protection to prevent
+  accidental or malicious removal. Deleting the firewall removes all
+  traffic inspection from the VPC.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "CP-10"
+  soc2: "A1.1"
+  ccm_v4: ["BCR-08"]
+scope_tags: [aws, networkfirewall]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: Network Firewall deletion protection is disabled.
+  action: Enable deletion protection on the firewall.
+  example: |
+    {"network": {"kind": "network_firewall", "firewall": {"deletion_protection_enabled": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: network_firewall
+    - field: properties.network.firewall.deletion_protection_enabled
+      op: eq
+      value: false

@@ -1,0 +1,12 @@
+family: CTL.NETFIREWALL
+infection: >
+  A misconfigured Network Firewall provides false security — deployed
+  but not inspecting traffic effectively. Without rule groups, no
+  rules are evaluated. With default action PASS, non-matching traffic
+  flows uninspected. The firewall exists in the network path but
+  doesn't protect it.
+failure: >
+  Network inspection bypass. Malicious traffic, command-and-control
+  communications, data exfiltration, and exploit payloads pass through
+  the firewall uninspected. The firewall's presence creates false
+  confidence in the security architecture.

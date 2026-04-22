@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.NETFIREWALL.POLICY.RULEGROUP.001
+name: Network Firewall Policy Must Have Rule Groups Associated
+description: >
+  Network Firewall policies must have at least one stateful or
+  stateless rule group associated. An empty policy means the firewall
+  sits in the network path without evaluating any rules — all traffic
+  is handled by the default action alone.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "IVS-04"]
+scope_tags: [aws, networkfirewall]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Network Firewall policy has no rule groups.
+  action: Associate stateful and/or stateless rule groups with the policy.
+  example: |
+    {"network": {"kind": "network_firewall", "firewall": {"policy_has_rule_groups": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: network_firewall
+    - field: properties.network.firewall.policy_has_rule_groups
+      op: eq
+      value: false

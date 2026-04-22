@@ -1,0 +1,16 @@
+control: CTL.NETFIREWALL.DEFAULT.FULL.001
+defect: >
+  The Network Firewall stateless default action for full packets is
+  aws:pass. All traffic not matching stateless rules flows through
+  uninspected.
+infection: >
+  An attacker's traffic bypasses inspection by not matching any
+  stateless rule — the default PASS action forwards it without
+  evaluation. Even if stateful rules exist, the stateless engine
+  handles traffic first. Default PASS at the stateless layer means
+  the firewall is a passthrough for any traffic pattern the rule
+  authors didn't explicitly anticipate.
+failure: >
+  Firewall bypass via default action. The firewall processes traffic
+  but passes anything it doesn't recognize. Novel attack patterns,
+  evasion techniques, and zero-day exploits flow through uninspected.

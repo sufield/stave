@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.NETFIREWALL.DEFAULT.FULL.001
+name: Network Firewall Must Not Pass Full Packets by Default
+description: >
+  Network Firewall stateless default action for full packets must be
+  aws:drop or aws:forward_to_sfe, not aws:pass. Default PASS means
+  all traffic not matching stateless rules flows uninspected.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03"]
+scope_tags: [aws, networkfirewall]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Network Firewall default action passes full packets.
+  action: Set StatelessDefaultActions to aws:drop or aws:forward_to_sfe.
+  example: |
+    {"network": {"kind": "network_firewall", "firewall": {"default_action_full_packets_safe": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: network_firewall
+    - field: properties.network.firewall.default_action_full_packets_safe
+      op: eq
+      value: false

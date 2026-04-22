@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.NETFIREWALL.MULTIAZ.001
+name: Network Firewall Must Be Deployed Across Multiple AZs
+description: >
+  Network Firewalls must be deployed with subnet mappings in multiple
+  Availability Zones. Single-AZ deployment means an AZ outage removes
+  all traffic inspection.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "CP-10"
+  soc2: "A1.1"
+  ccm_v4: ["BCR-08"]
+scope_tags: [aws, networkfirewall]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: Network Firewall is deployed in a single AZ.
+  action: Add subnet mappings in additional AZs.
+  example: |
+    {"network": {"kind": "network_firewall", "firewall": {"multi_az": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: network_firewall
+    - field: properties.network.firewall.multi_az
+      op: eq
+      value: false
