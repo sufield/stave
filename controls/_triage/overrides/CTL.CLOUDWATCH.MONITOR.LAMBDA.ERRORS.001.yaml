@@ -1,0 +1,14 @@
+control: CTL.CLOUDWATCH.MONITOR.LAMBDA.ERRORS.001
+defect: >
+  No CloudWatch alarms are configured to detect Lambda function
+  error spikes or permission failure events.
+infection: >
+  Lambda errors and permission failures are logged to CloudWatch
+  but not actively monitored. A compromised function probing IAM
+  permissions generates AccessDenied events that go unnoticed.
+  Application errors indicating exploitation accumulate without
+  alerting the security team.
+failure: >
+  Undetected function compromise or abuse. An attacker operating
+  through a compromised Lambda is not surfaced by automated
+  monitoring, extending the compromise window.

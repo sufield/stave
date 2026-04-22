@@ -1,0 +1,7 @@
+control: CTL.CLOUDTRAIL.INSIGHTS.001
+defect: >
+  CloudTrail Insights is not enabled on this trail. Anomalous API activity patterns are not detected.
+infection: >
+  An attacker performing automated reconnaissance — rapidly enumerating IAM roles, listing S3 buckets, probing service endpoints — generates a burst of API calls that differs from normal account activity. Without Insights, this anomalous pattern is visible only in raw log data that nobody is analyzing in real time.
+failure: >
+  Missed anomaly detection. Automated attack reconnaissance proceeds without triggering anomaly-based alerts.

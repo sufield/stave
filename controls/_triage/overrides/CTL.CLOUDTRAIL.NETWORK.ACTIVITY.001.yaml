@@ -1,0 +1,7 @@
+control: CTL.CLOUDTRAIL.NETWORK.ACTIVITY.001
+defect: >
+  CloudTrail Network Activity event logging is not enabled. VPC endpoint network-level events — including anonymous S3 requests — are not recorded.
+infection: >
+  AWS's April 2026 patch ensures anonymous S3 requests via VPC endpoints are logged as Network Activity events. But this logging only works if Network Activity events are enabled on the trail. Without it, the organization does not benefit from the patch — anonymous requests continue to evade logging.
+failure: >
+  Logging gap persists despite AWS patch. Anonymous S3 requests via VPC endpoints generate no log entries, matching the pre-patch Varonis vulnerability behavior.

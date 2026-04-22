@@ -1,0 +1,13 @@
+control: CTL.CLOUDTRAIL.ORG.001
+defect: >
+  The CloudTrail trail is configured for this account only, not as
+  an AWS Organizations trail covering all member accounts.
+infection: >
+  Attacker activity in other member accounts is not captured by this
+  trail. An attacker who compromises a member account and operates
+  within it generates no log entries in the centralized trail,
+  leaving their actions invisible to the security team monitoring
+  this account's logs.
+failure: >
+  Blind spots across the organization. Security monitoring covers
+  only one account while attackers operate undetected in others.

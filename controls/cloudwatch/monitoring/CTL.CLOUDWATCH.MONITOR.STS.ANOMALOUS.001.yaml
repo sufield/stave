@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.MONITOR.STS.ANOMALOUS.001
+name: Anomalous STS Credential Usage Must Be Monitored
+description: >
+  CloudWatch alarms must detect STS credential usage from unexpected
+  IP addresses or regions — indicating stolen instance role
+  credentials being used externally.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-12"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-03", "LOG-05"]
+scope_tags:
+  - aws
+  - cloudwatch
+  - iam
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: No alarms detect anomalous STS credential usage.
+  action: >
+    Create a CloudWatch metric filter matching STS API calls
+    where the source IP is outside the expected VPC CIDR range
+    or from unexpected regions. Alert on any match.
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.metric_filters.sts_anomalous_usage.exists
+      op: eq
+      value: false

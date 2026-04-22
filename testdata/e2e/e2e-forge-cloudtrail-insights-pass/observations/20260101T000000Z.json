@@ -1,0 +1,20 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:cloudtrail:us-east-1:123456789012:trail/main",
+      "properties": {
+        "audit_trail": {
+          "kind": "trail",
+          "insights": {
+            "enabled": true
+          }
+        }
+      },
+      "type": "aws_cloudtrail_trail",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

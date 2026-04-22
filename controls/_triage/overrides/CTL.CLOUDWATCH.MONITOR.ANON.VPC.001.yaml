@@ -1,0 +1,7 @@
+control: CTL.CLOUDWATCH.MONITOR.ANON.VPC.001
+defect: >
+  No CloudWatch alarms are configured to detect anonymous S3 requests transiting VPC endpoints.
+infection: >
+  Network Activity events log anonymous VPC endpoint requests, but without alarms these events accumulate in CloudWatch Logs unreviewed. An attacker exfiltrating data anonymously generates events that nobody sees until a manual log review.
+failure: >
+  Unalerted anonymous access. The logging exists but nobody is watching it. Detection depends on proactive log analysis rather than automated alerting.

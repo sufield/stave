@@ -1,0 +1,40 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.ORG.001
+name: CloudTrail Must Be Configured as Organization Trail
+description: >
+  CloudTrail trails must be configured as AWS Organizations trails
+  covering all member accounts. Account-level trails leave member
+  accounts without centralized logging.
+domain: audit
+severity: medium
+compliance:
+  cis_aws_v3.0: "3.1"
+  nist_800_53_r5: "AU-12"
+  soc2: "CC7.1"
+  fedramp_moderate: "AU-12"
+  ccm_v4: ["LOG-03", "LOG-05"]
+scope_tags:
+  - aws
+  - cloudtrail
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: Trail covers only this account, not the organization.
+  action: Convert to an organization trail via the management account.
+  example: |
+    {
+      "audit_trail": {
+        "kind": "trail",
+        "is_organization_trail": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.audit_trail.kind
+      op: eq
+      value: trail
+    - field: properties.audit_trail.is_organization_trail
+      op: eq
+      value: false

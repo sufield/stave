@@ -1,0 +1,7 @@
+control: CTL.CLOUDTRAIL.DATA.DYNAMODB.001
+defect: >
+  The CloudTrail trail does not log DynamoDB data events. Table-level operations (GetItem, PutItem, Query, Scan) are not recorded.
+infection: >
+  An attacker with DynamoDB access can read, modify, or exfiltrate table data without generating data-event log entries. Management events are logged, but the actual data operations — the ones that constitute the breach — are not.
+failure: >
+  Unlogged data exfiltration. An attacker reads sensitive data from DynamoDB tables with no forensic record of which items were accessed.

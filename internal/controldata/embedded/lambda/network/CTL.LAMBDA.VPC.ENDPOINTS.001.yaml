@@ -1,0 +1,49 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.VPC.ENDPOINTS.001
+name: VPC-Attached Lambda Functions Must Use VPC Endpoints for AWS Services
+description: >
+  Lambda functions attached to a VPC must use VPC endpoints for
+  AWS service access (S3, DynamoDB, STS, Secrets Manager) instead
+  of routing through NAT gateways or internet gateways. Traffic
+  through NAT leaves the VPC, traverses the public internet, and
+  creates an exfiltration channel.
+domain: network
+severity: low
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03"]
+scope_tags:
+  - aws
+  - lambda
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    VPC-attached Lambda function routes AWS service traffic through
+    NAT instead of VPC endpoints.
+  action: >
+    Create VPC endpoints (gateway or interface) for the AWS services
+    the function accesses: S3 (gateway), DynamoDB (gateway),
+    Secrets Manager (interface), STS (interface). Associate the
+    endpoints with the function's subnets.
+  example: |
+    {
+      "compute": {
+        "kind": "function",
+        "vpc": { "in_vpc": true, "uses_vpc_endpoints": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
+    - field: properties.compute.vpc.in_vpc
+      op: eq
+      value: true
+    - field: properties.compute.vpc.uses_vpc_endpoints
+      op: eq
+      value: false

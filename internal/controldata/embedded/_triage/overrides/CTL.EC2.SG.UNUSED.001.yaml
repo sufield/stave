@@ -1,0 +1,7 @@
+control: CTL.EC2.SG.UNUSED.001
+defect: >
+  The security group has no attached resources (zero network interfaces). Its rules are inactive but persist.
+infection: >
+  An unused security group with broad ingress rules is a latent risk. When attached to a new resource — through IaC misconfiguration or manual error — the broad rules take effect immediately without review. The resource inherits exposure the operator may not be aware of.
+failure: >
+  Accidental exposure. A resource attached to a dormant security group with broad rules becomes reachable from the internet without any deliberate change to the security group itself.

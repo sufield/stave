@@ -1,0 +1,49 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.ORIGIN.NOACCESS.001
+name: CloudFront S3 Origin Must Have Origin Access Control
+description: >
+  CloudFront distributions with S3 origins must have Origin Access
+  Control (OAC) or at minimum Origin Access Identity (OAI)
+  configured. Without either, CloudFront accesses the bucket via
+  its public endpoint, requiring the bucket to have a public or
+  permissive policy. This makes CloudFront's authentication, WAF,
+  and geo-restriction bypassable by hitting the S3 endpoint directly.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.6"
+  pci_dss_v4.0: "1.3.4"
+  nist_800_53_r5: "AC-3"
+  fedramp_moderate: "AC-3"
+  ccm_v4: ["DSP-17", "IVS-03"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    CloudFront distribution's S3 origin has no OAC or OAI. The
+    bucket must be public for CloudFront to read it.
+  action: >
+    Configure Origin Access Control (OAC) on the distribution.
+    Update the S3 bucket policy to grant access only to the
+    CloudFront distribution via the OAC principal. Remove any
+    public access from the bucket policy.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "origin": { "has_access_control": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.origin.has_access_control
+      op: eq
+      value: false

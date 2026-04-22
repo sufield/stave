@@ -1,0 +1,20 @@
+{
+  "assets": [
+    {
+      "id": "sg-0dead000unused",
+      "properties": {
+        "network": {
+          "kind": "security_group",
+          "security_group": {
+            "is_unused": false
+          }
+        }
+      },
+      "type": "aws_ec2_security_group",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

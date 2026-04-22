@@ -1,0 +1,14 @@
+control: CTL.CLOUDTRAIL.REPLICATION.001
+defect: >
+  CloudTrail logs are stored in a single account without cross-
+  account replication. No durable copy exists in a separate account.
+infection: >
+  An attacker who compromises the account hosting the trail bucket
+  can delete or modify log files. Without a replica in a separate
+  account, the evidence is destroyed with no recovery path. Even
+  with versioning and Object Lock, an attacker with sufficient
+  account-level access can disrupt the single storage location.
+failure: >
+  Evidence destruction. An attacker covers their tracks by
+  destroying the only copy of CloudTrail logs. Forensic
+  investigation has no log data to analyze.

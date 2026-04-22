@@ -1,0 +1,60 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.MONITOR.LAMBDA.ERRORS.001
+name: Lambda Error and Permission Failure Events Must Be Monitored
+description: 'CloudWatch alarms must be configured to detect Lambda function
+  error spikes, throttling events, and permission failure patterns. Without
+  monitoring, a compromised function probing IAM permissions generates AccessDenied
+  events nobody sees, and application errors indicating exploitation accumulate
+  without alerting.
+
+  '
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: AU-12
+  soc2: CC7.1
+  fedramp_moderate: AU-12
+  ccm_v4:
+  - LOG-03
+  - LOG-05
+scope_tags:
+- aws
+- cloudwatch
+- lambda
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: 'No CloudWatch alarms detect Lambda error spikes or permission
+    failure events.
+
+    '
+  action: 'Create CloudWatch alarms for: AWS/Lambda Errors metric exceeding
+    threshold, AWS/Lambda Throttles > 0, and CloudTrail AccessDenied/UnauthorizedAccess
+    events filtered to Lambda- sourced principals. Configure SNS notification
+    for each alarm.
+
+    '
+  example: "{\n  \"monitoring\": {\n    \"metric_filters\": {\n      \"lambda_error_alarms\"\
+    : { \"exists\": true }\n    }\n  }\n}\n"
+unsafe_predicate:
+  all:
+  - field: properties.monitoring.metric_filters.lambda_error_alarms.exists
+    op: eq
+    value: false
+defect: 'No CloudWatch alarms are configured to detect Lambda function error
+  spikes or permission failure events.
+
+  '
+infection: 'Lambda errors and permission failures are logged to CloudWatch
+  but not actively monitored. A compromised function probing IAM permissions
+  generates AccessDenied events that go unnoticed. Application errors indicating
+  exploitation accumulate without alerting the security team.
+
+  '
+failure: 'Undetected function compromise or abuse. An attacker operating through
+  a compromised Lambda is not surfaced by automated monitoring, extending
+  the compromise window.
+
+  '

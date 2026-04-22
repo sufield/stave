@@ -1,0 +1,51 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.ENDPOINT.BUCKET.RESTRICT.001
+name: VPC Endpoint Policy Must Restrict Target S3 Buckets
+description: 'VPC endpoint policies for S3 must restrict which buckets can
+  be accessed. Without Resource constraints, any S3 bucket globally — including
+  attacker-controlled buckets — is reachable through the organization''s endpoint.
+
+  '
+domain: network
+severity: high
+compliance:
+  nist_800_53_r5: AC-4
+  soc2: CC6.6
+  ccm_v4:
+  - IVS-03
+scope_tags:
+- aws
+- vpc
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: VPC endpoint policy allows access to any S3 bucket.
+  action: 'Add a Resource constraint to the endpoint policy listing only the
+    organization''s buckets. Deny all other bucket ARNs.
+
+    '
+unsafe_predicate:
+  all:
+  - field: properties.network.kind
+    op: eq
+    value: vpc_endpoint
+  - field: properties.network.endpoint_policy.restricts_target_buckets
+    op: eq
+    value: false
+defect: 'The VPC endpoint policy does not restrict which S3 buckets can be
+  accessed. Any S3 bucket — including external attacker-controlled buckets
+  — is reachable through this endpoint.
+
+  '
+infection: 'An attacker in the VPC can use this endpoint to connect to any
+  S3 bucket globally. They can upload exfiltrated data to their own bucket
+  or download malware and tools — all through the organization''s VPC endpoint.
+
+  '
+failure: 'Unrestricted S3 access via VPC endpoint. The endpoint serves as
+  a bidirectional channel to any S3 bucket, enabling data exfiltration and
+  tool staging.
+
+  '

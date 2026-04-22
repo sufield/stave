@@ -1,0 +1,38 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.SG.EGRESS.EXFIL.001
+name: Security Groups Must Restrict Egress on Data Exfiltration Ports
+description: >
+  Security groups must not allow unrestricted outbound traffic to
+  0.0.0.0/0 on ports commonly used for data exfiltration (443/HTTPS,
+  53/DNS, 80/HTTP) even when other ports are blocked. Exfiltration
+  traffic hides in standard web and DNS protocols.
+domain: network
+severity: low
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03"]
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    Security group allows egress to 0.0.0.0/0 on exfiltration ports.
+  action: >
+    Restrict egress to specific destination CIDRs where possible.
+    For DNS (53), route through a DNS firewall or VPC resolver
+    endpoint. For HTTPS (443), consider VPC endpoint routes instead
+    of internet egress. Note: blocking 443/53 outbound breaks most
+    applications — this control flags for awareness, not hard block.
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: security_group
+    - field: properties.network.security_group.egress.has_exfil_ports_open
+      op: eq
+      value: true

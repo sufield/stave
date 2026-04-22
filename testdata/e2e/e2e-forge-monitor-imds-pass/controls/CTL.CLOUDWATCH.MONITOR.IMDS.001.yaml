@@ -1,0 +1,50 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.MONITOR.IMDS.001
+name: IMDS Configuration Changes Must Be Monitored
+description: 'CloudWatch alarms must detect changes to EC2 instance metadata
+  options (ModifyInstanceMetadataOptions). Without monitoring, an attacker
+  can downgrade IMDSv2 to IMDSv1 silently.
+
+  '
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: AU-12
+  soc2: CC7.1
+  ccm_v4:
+  - LOG-03
+  - LOG-05
+scope_tags:
+- aws
+- cloudwatch
+- ec2
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: No alarms detect IMDS configuration changes.
+  action: 'Create a CloudWatch metric filter on CloudTrail events matching
+    ModifyInstanceMetadataOptions. Create an alarm with SNS notification for
+    any match.
+
+    '
+unsafe_predicate:
+  all:
+  - field: properties.monitoring.metric_filters.imds_config_changes.exists
+    op: eq
+    value: false
+defect: 'No CloudWatch alarms are configured to detect changes to EC2 instance
+  metadata options (ModifyInstanceMetadataOptions API calls).
+
+  '
+infection: 'An attacker with EC2 modify permissions can downgrade an instance''s
+  metadata configuration from IMDSv2 (HttpTokens=required) to IMDSv1 (HttpTokens=optional).
+  Without monitoring, the downgrade proceeds silently — the instance becomes
+  vulnerable to SSRF-based credential theft without any alert.
+
+  '
+failure: 'Silent IMDSv2 downgrade. An attacker removes IMDS protections without
+  detection, then exploits IMDSv1 to steal credentials.
+
+  '

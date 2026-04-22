@@ -1,0 +1,15 @@
+control: CTL.LAMBDA.VPC.ENDPOINTS.001
+defect: >
+  The Lambda function is attached to a VPC but routes AWS service
+  traffic through a NAT gateway or internet gateway instead of VPC
+  endpoints.
+infection: >
+  AWS API calls from the function (S3 operations, Secrets Manager
+  lookups, STS calls) leave the VPC and traverse the public
+  internet via NAT. This path exposes traffic to potential
+  interception and creates an exfiltration channel through the
+  NAT gateway that bypasses VPC-level monitoring.
+failure: >
+  Data exposure in transit and exfiltration risk. Service traffic
+  that could stay within the AWS network is unnecessarily routed
+  through the internet.

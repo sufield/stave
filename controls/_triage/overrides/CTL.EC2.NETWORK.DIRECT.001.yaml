@@ -1,0 +1,7 @@
+control: CTL.EC2.NETWORK.DIRECT.001
+defect: >
+  The EC2 instance has a public IP and receives internet traffic directly without a load balancer mediating incoming connections.
+infection: >
+  Direct internet-to-instance traffic bypasses the security benefits load balancers provide: DDoS absorption by AWS Shield, WAF rule evaluation, connection rate limiting, TLS termination with managed certificates, and request filtering. The instance handles raw internet traffic directly.
+failure: >
+  Unmediated internet exposure. The instance is directly reachable and must handle DDoS, malformed requests, and attack traffic without infrastructure-level protection.

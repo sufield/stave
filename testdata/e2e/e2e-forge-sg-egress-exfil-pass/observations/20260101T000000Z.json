@@ -1,0 +1,22 @@
+{
+  "assets": [
+    {
+      "id": "sg-0exfil000ports",
+      "properties": {
+        "network": {
+          "kind": "security_group",
+          "security_group": {
+            "egress": {
+              "has_exfil_ports_open": false
+            }
+          }
+        }
+      },
+      "type": "aws_ec2_security_group",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

@@ -1,0 +1,7 @@
+control: CTL.CLOUDWATCH.MONITOR.STS.ANOMALOUS.001
+defect: >
+  No CloudWatch alarms are configured to detect anomalous STS credential usage — instance role credentials being used from IP addresses outside the instance's VPC or from unexpected regions.
+infection: >
+  An attacker who steals IMDS credentials uses them from their own infrastructure — different IP, different region, different network. The API calls succeed (the credentials are valid) but originate from locations the instance would never call from. Without anomalous-usage monitoring, this pattern is invisible.
+failure: >
+  Undetected credential exfiltration. Stolen instance credentials are used externally without triggering any alert.

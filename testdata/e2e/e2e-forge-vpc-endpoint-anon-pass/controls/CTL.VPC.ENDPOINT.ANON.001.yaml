@@ -1,0 +1,53 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.ENDPOINT.ANON.001
+name: VPC Endpoint Policy Must Deny Anonymous Requests
+description: 'VPC endpoint policies must explicitly deny anonymous (unsigned)
+  requests. Without this, unauthenticated S3 requests can transit the endpoint
+  without identity information, evading CloudTrail logging and IAM policy
+  evaluation.
+
+  '
+domain: network
+severity: high
+compliance:
+  nist_800_53_r5: AC-3
+  soc2: CC6.6
+  ccm_v4:
+  - IVS-03
+  - IVS-04
+scope_tags:
+- aws
+- vpc
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: VPC endpoint policy does not deny anonymous requests.
+  action: 'Add a Deny statement to the endpoint policy for requests where
+    aws:PrincipalArn does not exist (anonymous/unsigned requests).
+
+    '
+unsafe_predicate:
+  all:
+  - field: properties.network.kind
+    op: eq
+    value: vpc_endpoint
+  - field: properties.network.endpoint_policy.denies_anonymous
+    op: eq
+    value: false
+defect: 'The VPC endpoint policy does not deny anonymous (unsigned) requests.
+  Unauthenticated S3 requests can transit the endpoint without identity information.
+
+  '
+infection: 'An attacker with access to any resource in the VPC can make anonymous
+  S3 requests through this endpoint. Anonymous requests evade identity-based
+  logging and bypass IAM policy evaluation — the request carries no principal
+  for CloudTrail to record.
+
+  '
+failure: 'Invisible data access. Anonymous requests to S3 via this endpoint
+  may not generate CloudTrail events, allowing data exfiltration or reconnaissance
+  without forensic evidence.
+
+  '

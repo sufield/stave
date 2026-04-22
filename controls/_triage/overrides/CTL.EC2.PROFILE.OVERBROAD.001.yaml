@@ -1,0 +1,7 @@
+control: CTL.EC2.PROFILE.OVERBROAD.001
+defect: >
+  The EC2 instance profile's IAM role has administrator-level or overly broad permissions beyond what the instance's workload requires.
+infection: >
+  Instance profile credentials are accessible via the Instance Metadata Service. Whether through IMDSv1 (direct SSRF) or IMDSv2 (token-based access), the credentials grant whatever permissions the profile's role has. An overprivileged role means stolen credentials provide broad AWS API access — S3 data reads, IAM modifications, or lateral movement to other services.
+failure: >
+  High-blast-radius credential theft. An attacker who obtains instance credentials gains excessive permissions, potentially including full account access.

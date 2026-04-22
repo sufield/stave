@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.SG.UNUSED.001
+name: Unused Security Groups Must Be Removed
+description: >
+  Security groups with no attached resources should be removed.
+  Unused SGs with broad rules are latent risks — when accidentally
+  attached, the broad rules take effect immediately.
+domain: network
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-7"
+  soc2: "CC6.1"
+  ccm_v4: ["IVS-03"]
+scope_tags:
+  - aws
+  - ec2
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Security group has no attached resources.
+  action: >
+    Delete the unused security group, or if retention is needed,
+    remove all ingress and egress rules to eliminate latent risk.
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: security_group
+    - field: properties.network.security_group.is_unused
+      op: eq
+      value: true

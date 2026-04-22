@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.MONITOR.LAMBDA.ERRORS.001
+name: Lambda Error and Permission Failure Events Must Be Monitored
+description: >
+  CloudWatch alarms must be configured to detect Lambda function
+  error spikes, throttling events, and permission failure patterns.
+  Without monitoring, a compromised function probing IAM permissions
+  generates AccessDenied events nobody sees, and application errors
+  indicating exploitation accumulate without alerting.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-12"
+  soc2: "CC7.1"
+  fedramp_moderate: "AU-12"
+  ccm_v4: ["LOG-03", "LOG-05"]
+scope_tags:
+  - aws
+  - cloudwatch
+  - lambda
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    No CloudWatch alarms detect Lambda error spikes or permission
+    failure events.
+  action: >
+    Create CloudWatch alarms for: AWS/Lambda Errors metric exceeding
+    threshold, AWS/Lambda Throttles > 0, and CloudTrail
+    AccessDenied/UnauthorizedAccess events filtered to Lambda-
+    sourced principals. Configure SNS notification for each alarm.
+  example: |
+    {
+      "monitoring": {
+        "metric_filters": {
+          "lambda_error_alarms": { "exists": true }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.metric_filters.lambda_error_alarms.exists
+      op: eq
+      value: false

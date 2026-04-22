@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.NETWORK.FIREWALL.001
+name: VPC Must Have AWS Network Firewall Deployed
+description: >
+  VPCs handling sensitive or production traffic should have AWS
+  Network Firewall deployed for stateful packet inspection beyond
+  SG/NACL L3/L4 rules.
+domain: network
+severity: low
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "IVS-04"]
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: VPC has no AWS Network Firewall deployed.
+  action: >
+    Deploy AWS Network Firewall with inspection rules for the
+    workload's traffic patterns.
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: vpc
+    - field: properties.network.vpc.has_network_firewall
+      op: eq
+      value: false

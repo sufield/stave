@@ -1,0 +1,34 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.MONITOR.TRAIL.ACCESS.001
+name: Unauthorized Access to CloudTrail Log Bucket Must Be Monitored
+description: >
+  CloudWatch alarms must detect access to the CloudTrail log bucket
+  by principals other than the CloudTrail service. An attacker who
+  reads log files can learn what's logged and plan evasion.
+domain: exposure
+severity: low
+compliance:
+  nist_800_53_r5: "AU-9"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-05"]
+scope_tags:
+  - aws
+  - cloudwatch
+  - cloudtrail
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    No alarms detect unauthorized access to the CloudTrail log bucket.
+  action: >
+    Create a CloudWatch metric filter on the CloudTrail log group
+    matching S3 GetObject/ListBucket events on the trail bucket
+    where the principal is not cloudtrail.amazonaws.com. Create
+    an alarm with SNS notification.
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.metric_filters.trail_bucket_access.exists
+      op: eq
+      value: false

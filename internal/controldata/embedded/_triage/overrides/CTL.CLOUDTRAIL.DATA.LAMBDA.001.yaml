@@ -1,0 +1,7 @@
+control: CTL.CLOUDTRAIL.DATA.LAMBDA.001
+defect: >
+  The CloudTrail trail does not log Lambda invocation data events. Lambda function invocations are not recorded.
+infection: >
+  An attacker who invokes Lambda functions — whether legitimate functions for reconnaissance or malicious functions created via privilege escalation — generates no CloudTrail entries for those invocations. The execution step of escalation chains is invisible.
+failure: >
+  Unlogged Lambda execution. Attacker activity through Lambda functions leaves no forensic trail for investigation.

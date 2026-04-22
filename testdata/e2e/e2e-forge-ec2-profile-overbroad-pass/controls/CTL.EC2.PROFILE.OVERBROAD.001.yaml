@@ -1,0 +1,56 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.PROFILE.OVERBROAD.001
+name: EC2 Instance Profile Must Follow Least Privilege
+description: 'EC2 instance profiles must not have AdministratorAccess or overly
+  broad permissions. Instance profile credentials are accessible via the metadata
+  service — overprivileged profiles increase the blast radius of credential
+  theft.
+
+  '
+domain: identity
+severity: medium
+compliance:
+  cis_aws_v3.0: '1.18'
+  nist_800_53_r5: AC-6
+  soc2: CC6.1
+  ccm_v4:
+  - IAM-04
+  - IAM-05
+scope_tags:
+- aws
+- ec2
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+remediation:
+  description: Instance profile has overly broad permissions.
+  action: 'Replace the instance profile''s role with a scoped policy granting
+    only the permissions the workload needs. Use IAM Access Analyzer to generate
+    a least-privilege policy from observed API activity.
+
+    '
+unsafe_predicate:
+  all:
+  - field: properties.compute.kind
+    op: eq
+    value: instance
+  - field: properties.compute.instance_profile.is_overprivileged
+    op: eq
+    value: true
+defect: 'The EC2 instance profile''s IAM role has administrator-level or overly
+  broad permissions beyond what the instance''s workload requires.
+
+  '
+infection: 'Instance profile credentials are accessible via the Instance Metadata
+  Service. Whether through IMDSv1 (direct SSRF) or IMDSv2 (token-based access),
+  the credentials grant whatever permissions the profile''s role has. An overprivileged
+  role means stolen credentials provide broad AWS API access — S3 data reads,
+  IAM modifications, or lateral movement to other services.
+
+  '
+failure: 'High-blast-radius credential theft. An attacker who obtains instance
+  credentials gains excessive permissions, potentially including full account
+  access.
+
+  '

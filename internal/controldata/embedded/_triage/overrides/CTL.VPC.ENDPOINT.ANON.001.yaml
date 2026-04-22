@@ -1,0 +1,7 @@
+control: CTL.VPC.ENDPOINT.ANON.001
+defect: >
+  The VPC endpoint policy does not deny anonymous (unsigned) requests. Unauthenticated S3 requests can transit the endpoint without identity information.
+infection: >
+  An attacker with access to any resource in the VPC can make anonymous S3 requests through this endpoint. Anonymous requests evade identity-based logging and bypass IAM policy evaluation — the request carries no principal for CloudTrail to record.
+failure: >
+  Invisible data access. Anonymous requests to S3 via this endpoint may not generate CloudTrail events, allowing data exfiltration or reconnaissance without forensic evidence.

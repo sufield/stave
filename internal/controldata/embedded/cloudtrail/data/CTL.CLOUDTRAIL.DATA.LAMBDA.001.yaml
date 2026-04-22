@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.DATA.LAMBDA.001
+name: CloudTrail Must Log Lambda Invocation Data Events
+description: >
+  CloudTrail trails must include Lambda data events to log function
+  invocations. Without this, attacker execution via Lambda is invisible.
+domain: audit
+severity: low
+compliance:
+  nist_800_53_r5: "AU-12"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-03", "LOG-05"]
+scope_tags:
+  - aws
+  - cloudtrail
+  - lambda
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: Trail does not log Lambda invocation data events.
+  action: >
+    Add Lambda data event selector to the trail: event category
+    Data, resource type AWS::Lambda::Function, read/write type All.
+unsafe_predicate:
+  all:
+    - field: properties.audit_trail.kind
+      op: eq
+      value: trail
+    - field: properties.audit_trail.data_events.lambda.enabled
+      op: eq
+      value: false

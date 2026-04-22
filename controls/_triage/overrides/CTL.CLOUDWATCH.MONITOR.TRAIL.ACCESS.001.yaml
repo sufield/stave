@@ -1,0 +1,7 @@
+control: CTL.CLOUDWATCH.MONITOR.TRAIL.ACCESS.001
+defect: >
+  No CloudWatch alarms are configured to detect unauthorized access to the CloudTrail log bucket by non-CloudTrail principals.
+infection: >
+  An attacker with S3 read access to the trail bucket can download log files to understand what's being logged, identify detection gaps, and plan evasion. The attacker reads the organization's forensic data without triggering any alert.
+failure: >
+  Attacker reconnaissance of logging coverage. The attacker learns which actions are logged and operates within the blind spots.

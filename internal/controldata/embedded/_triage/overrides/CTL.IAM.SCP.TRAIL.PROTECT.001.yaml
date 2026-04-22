@@ -1,0 +1,13 @@
+control: CTL.IAM.SCP.TRAIL.PROTECT.001
+defect: >
+  No Service Control Policy denies CloudTrail disruption actions
+  (StopLogging, DeleteTrail, UpdateTrail) to non-breakglass roles.
+infection: >
+  Any IAM principal with cloudtrail:StopLogging or
+  cloudtrail:DeleteTrail permissions can disable or remove logging.
+  Without SCP guardrails, the only protection is the IAM policy
+  itself — which an attacker who escalates privileges can modify.
+failure: >
+  Logging disruption. An attacker disables CloudTrail, performs
+  malicious actions unlogged, then optionally re-enables logging.
+  The gap in the log record covers the attack.

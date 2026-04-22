@@ -1,0 +1,40 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.NETWORK.DIRECT.001
+name: Public Instances Must Be Behind a Load Balancer
+description: >
+  EC2 instances with public IPs receiving internet traffic must be
+  behind an ALB or NLB. Direct internet-to-instance traffic bypasses
+  DDoS absorption, WAF evaluation, connection rate limiting, and
+  TLS termination that load balancers provide.
+domain: network
+severity: low
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03"]
+scope_tags:
+  - aws
+  - ec2
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    Public instance receives internet traffic directly without a
+    load balancer.
+  action: >
+    Place the instance behind an ALB or NLB. Remove the public IP
+    and route inbound traffic through the load balancer. Use
+    private subnets for the instance.
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: instance
+    - field: properties.compute.network.has_public_ip
+      op: eq
+      value: true
+    - field: properties.compute.network.has_load_balancer
+      op: eq
+      value: false

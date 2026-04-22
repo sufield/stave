@@ -1,0 +1,7 @@
+control: CTL.VPC.ENDPOINT.BUCKET.RESTRICT.001
+defect: >
+  The VPC endpoint policy does not restrict which S3 buckets can be accessed. Any S3 bucket — including external attacker-controlled buckets — is reachable through this endpoint.
+infection: >
+  An attacker in the VPC can use this endpoint to connect to any S3 bucket globally. They can upload exfiltrated data to their own bucket or download malware and tools — all through the organization's VPC endpoint.
+failure: >
+  Unrestricted S3 access via VPC endpoint. The endpoint serves as a bidirectional channel to any S3 bucket, enabling data exfiltration and tool staging.

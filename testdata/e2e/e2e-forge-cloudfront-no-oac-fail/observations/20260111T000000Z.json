@@ -1,0 +1,20 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:cloudfront::123456789012:distribution/E1NOACCESS",
+      "properties": {
+        "cdn": {
+          "kind": "distribution",
+          "origin": {
+            "has_access_control": false
+          }
+        }
+      },
+      "type": "aws_cloudfront_distribution",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

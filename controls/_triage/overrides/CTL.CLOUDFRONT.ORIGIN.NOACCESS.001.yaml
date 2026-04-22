@@ -1,0 +1,15 @@
+control: CTL.CLOUDFRONT.ORIGIN.NOACCESS.001
+defect: >
+  The CloudFront distribution's S3 origin has no Origin Access
+  Control (OAC) or Origin Access Identity (OAI) configured.
+  CloudFront accesses the bucket via its public endpoint.
+infection: >
+  Without OAC or OAI, the S3 bucket must have a public or
+  permissive bucket policy for CloudFront to read objects. This
+  means anyone — not just CloudFront — can access the bucket
+  directly. CloudFront's authentication, WAF rules, and geo-
+  restrictions are bypassable by hitting the S3 endpoint.
+failure: >
+  Origin bypass. Private content served through CloudFront with
+  authentication or WAF protection is accessible directly via the
+  S3 endpoint without any of those protections.

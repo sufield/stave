@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.MONITOR.ANON.VPC.001
+name: Anonymous S3 Requests via VPC Endpoints Must Be Monitored
+description: >
+  CloudWatch alarms must detect anonymous S3 requests transiting
+  VPC endpoints. Even with Network Activity logging enabled, events
+  must be actively monitored to surface anonymous access.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-12"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-03"]
+scope_tags:
+  - aws
+  - cloudwatch
+  - vpc
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: No alarms detect anonymous S3 requests via VPC endpoints.
+  action: >
+    Create a CloudWatch metric filter on Network Activity events
+    matching anonymous (unsigned) S3 requests through VPC endpoints.
+    Create an alarm with SNS notification.
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.metric_filters.anonymous_vpc_access.exists
+      op: eq
+      value: false

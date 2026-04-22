@@ -1,0 +1,17 @@
+{
+  "assets": [
+    {
+      "id": "org-scp-policy-set",
+      "properties": {
+        "scp": {
+          "denies_trail_disruption": false
+        }
+      },
+      "type": "aws_organizations_policy",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

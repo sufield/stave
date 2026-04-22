@@ -1,0 +1,56 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.REPLICATION.001
+name: CloudTrail Logs Must Be Replicated to a Separate Account
+description: 'CloudTrail log destination must have cross-account replication
+  configured to a separate logging account. Without replication, compromising
+  the trail-hosting account enables complete evidence destruction.
+
+  '
+domain: audit
+severity: medium
+compliance:
+  nist_800_53_r5: AU-9
+  soc2: CC7.1
+  fedramp_moderate: AU-9
+  ccm_v4:
+  - BCR-08
+  - LOG-05
+scope_tags:
+- aws
+- cloudtrail
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: CloudTrail logs stored without cross-account replication.
+  action: 'Configure S3 replication on the trail bucket targeting a bucket
+    in a separate logging account.
+
+    '
+  example: "{\n  \"audit_trail\": {\n    \"kind\": \"trail\",\n    \"has_cross_account_replication\"\
+    : true\n  }\n}\n"
+unsafe_predicate:
+  all:
+  - field: properties.audit_trail.kind
+    op: eq
+    value: trail
+  - field: properties.audit_trail.has_cross_account_replication
+    op: eq
+    value: false
+defect: 'CloudTrail logs are stored in a single account without cross- account
+  replication. No durable copy exists in a separate account.
+
+  '
+infection: 'An attacker who compromises the account hosting the trail bucket
+  can delete or modify log files. Without a replica in a separate account,
+  the evidence is destroyed with no recovery path. Even with versioning and
+  Object Lock, an attacker with sufficient account-level access can disrupt
+  the single storage location.
+
+  '
+failure: 'Evidence destruction. An attacker covers their tracks by destroying
+  the only copy of CloudTrail logs. Forensic investigation has no log data
+  to analyze.
+
+  '

@@ -1,0 +1,52 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.INSIGHTS.001
+name: CloudTrail Insights Must Be Enabled for Anomaly Detection
+description: 'CloudTrail Insights must be enabled to detect anomalous API
+  activity patterns — unusual call volumes or error rates that indicate automated
+  reconnaissance or attack.
+
+  '
+domain: audit
+severity: low
+compliance:
+  nist_800_53_r5: SI-4
+  soc2: CC7.1
+  ccm_v4:
+  - LOG-05
+  - TVM-01
+scope_tags:
+- aws
+- cloudtrail
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: CloudTrail Insights is not enabled on this trail.
+  action: 'Enable CloudTrail Insights (ApiCallRateInsight and ApiErrorRateInsight)
+    on the trail via the CloudTrail console or PutInsightSelectors API.
+
+    '
+unsafe_predicate:
+  all:
+  - field: properties.audit_trail.kind
+    op: eq
+    value: trail
+  - field: properties.audit_trail.insights.enabled
+    op: eq
+    value: false
+defect: 'CloudTrail Insights is not enabled on this trail. Anomalous API activity
+  patterns are not detected.
+
+  '
+infection: 'An attacker performing automated reconnaissance — rapidly enumerating
+  IAM roles, listing S3 buckets, probing service endpoints — generates a burst
+  of API calls that differs from normal account activity. Without Insights,
+  this anomalous pattern is visible only in raw log data that nobody is analyzing
+  in real time.
+
+  '
+failure: 'Missed anomaly detection. Automated attack reconnaissance proceeds
+  without triggering anomaly-based alerts.
+
+  '

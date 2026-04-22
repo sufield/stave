@@ -1,0 +1,7 @@
+control: CTL.VPC.ENDPOINT.IAM.CONDITION.001
+defect: >
+  The VPC endpoint policy does not require IAM conditions (aws:PrincipalArn, aws:PrincipalOrgID) on requests. Any principal can use the endpoint without identity verification.
+infection: >
+  Without IAM conditions, the endpoint policy does not verify who is making the request. A compromised instance or attacker-planted process can use the endpoint with any credentials (or no credentials) without the policy blocking the request.
+failure: >
+  Uncontrolled endpoint usage. The endpoint is usable by any principal in the VPC without identity verification at the endpoint policy layer.

@@ -1,0 +1,20 @@
+{
+  "assets": [
+    {
+      "id": "vpce-0123456789abcdef0",
+      "properties": {
+        "network": {
+          "kind": "vpc_endpoint",
+          "endpoint_policy": {
+            "requires_iam_conditions": false
+          }
+        }
+      },
+      "type": "aws_vpc_endpoint",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

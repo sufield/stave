@@ -1,0 +1,7 @@
+control: CTL.VPC.NETWORK.FIREWALL.001
+defect: >
+  The VPC has no AWS Network Firewall deployed. Traffic inspection is limited to security group and NACL rules (L3/L4 only).
+infection: >
+  Without Network Firewall, the VPC cannot inspect traffic at the application layer. Malicious payloads, protocol abuse, and sophisticated exfiltration techniques pass through SG and NACL rules that evaluate only IP addresses, ports, and protocols.
+failure: >
+  Limited traffic inspection. Application-layer attacks and sophisticated exfiltration techniques bypass the VPC's network controls.

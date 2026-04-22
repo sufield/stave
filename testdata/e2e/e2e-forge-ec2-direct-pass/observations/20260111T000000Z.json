@@ -1,0 +1,21 @@
+{
+  "assets": [
+    {
+      "id": "i-0direct000web",
+      "properties": {
+        "compute": {
+          "kind": "instance",
+          "network": {
+            "has_public_ip": true,
+            "has_load_balancer": true
+          }
+        }
+      },
+      "type": "aws_ec2_instance",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

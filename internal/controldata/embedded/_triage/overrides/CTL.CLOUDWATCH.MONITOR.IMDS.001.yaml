@@ -1,0 +1,7 @@
+control: CTL.CLOUDWATCH.MONITOR.IMDS.001
+defect: >
+  No CloudWatch alarms are configured to detect changes to EC2 instance metadata options (ModifyInstanceMetadataOptions API calls).
+infection: >
+  An attacker with EC2 modify permissions can downgrade an instance's metadata configuration from IMDSv2 (HttpTokens=required) to IMDSv1 (HttpTokens=optional). Without monitoring, the downgrade proceeds silently — the instance becomes vulnerable to SSRF-based credential theft without any alert.
+failure: >
+  Silent IMDSv2 downgrade. An attacker removes IMDS protections without detection, then exploits IMDSv1 to steal credentials.

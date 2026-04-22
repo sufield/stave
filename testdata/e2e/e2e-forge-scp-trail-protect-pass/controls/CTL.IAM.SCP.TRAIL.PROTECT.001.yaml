@@ -1,0 +1,56 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SCP.TRAIL.PROTECT.001
+name: SCPs Must Deny CloudTrail Disruption Actions
+description: 'Service Control Policies must deny cloudtrail:StopLogging, cloudtrail:DeleteTrail,
+  and cloudtrail:UpdateTrail to non- breakglass roles. Without these protective
+  denies, any IAM principal with sufficient permissions can disrupt logging.
+
+  '
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: AU-9
+  soc2: CC7.1
+  fedramp_moderate: AU-9
+  ccm_v4:
+  - CCC-04
+  - GRC-05
+scope_tags:
+- aws
+- scp
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: 'No SCP denies CloudTrail disruption actions to non-breakglass
+    roles.
+
+    '
+  action: 'Create an SCP with Effect Deny on cloudtrail:StopLogging, cloudtrail:DeleteTrail,
+    and cloudtrail:UpdateTrail. Add a Condition excluding the breakglass role
+    ARN.
+
+    '
+  example: "{\n  \"scp\": {\n    \"denies_trail_disruption\": true\n  }\n\
+    }\n"
+unsafe_predicate:
+  all:
+  - field: properties.scp.denies_trail_disruption
+    op: eq
+    value: false
+defect: 'No Service Control Policy denies CloudTrail disruption actions (StopLogging,
+  DeleteTrail, UpdateTrail) to non-breakglass roles.
+
+  '
+infection: 'Any IAM principal with cloudtrail:StopLogging or cloudtrail:DeleteTrail
+  permissions can disable or remove logging. Without SCP guardrails, the only
+  protection is the IAM policy itself — which an attacker who escalates privileges
+  can modify.
+
+  '
+failure: 'Logging disruption. An attacker disables CloudTrail, performs malicious
+  actions unlogged, then optionally re-enables logging. The gap in the log
+  record covers the attack.
+
+  '
