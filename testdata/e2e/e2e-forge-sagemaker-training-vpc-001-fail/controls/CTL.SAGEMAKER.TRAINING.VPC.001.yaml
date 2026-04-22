@@ -1,0 +1,38 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.TRAINING.VPC.001
+name: SageMaker Training Jobs Must Use VPC Configuration
+description: >
+  SageMaker training jobs must define VpcConfig with subnets so
+  training traffic uses private networking rather than the public
+  internet.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03"]
+scope_tags:
+  - aws
+  - sagemaker
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: SageMaker training job is not configured with VPC settings.
+  action: Define VpcConfig with subnets and security groups.
+  example: |
+    {
+      "compute": {
+        "kind": "sagemaker_training",
+        "network": { "in_vpc": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: sagemaker_training
+    - field: properties.compute.network.in_vpc
+      op: eq
+      value: false

@@ -3,25 +3,25 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 784
-**Pack hash:** `be1796dc19c0159e0d0be9e6ee707890293c14da2e5549e6a41011192dcf93c4`
+**Total controls:** 795
+**Pack hash:** `a2c3acbc64074574c8e6823d5e3a379d95410dbafcd8a240598d308eb86f02f3`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 129 |
-| high | 339 |
+| high | 346 |
 | info | 16 |
 | low | 73 |
-| medium | 227 |
+| medium | 231 |
 
 | Domain | Count |
 |--------|-------|
 | audit | 20 |
 | detection | 2 |
-| encryption | 21 |
-| exposure | 505 |
+| encryption | 24 |
+| exposure | 513 |
 | governance | 19 |
 | identity | 174 |
 | network | 21 |
@@ -10495,6 +10495,171 @@ Signed upload policies must restrict allowed content types. Unrestricted content
 Signed upload policies must restrict write permission to a single exact object key. Prefix-wide permissions (e.g., starts-with $key files/) enable arbitrary overwrite and cross-tenant tampering.
 
 **Remediation:** Change the signed upload policy to use an exact key condition (eq instead of starts-with) that binds each upload to a specific object path. Generate unique object keys server-side.
+
+---
+
+### CTL.SAGEMAKER.ENDPOINT.REDUNDANCY.001
+
+**SageMaker Endpoint Must Use Multiple Instances**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CP-10; soc2: A1.1;
+
+SageMaker endpoint configurations must use at least two instances per production variant for multi-AZ redundancy. Single-instance endpoints are single points of failure.
+
+**Remediation:** Set InitialInstanceCount to at least 2 per production variant.
+
+---
+
+### CTL.SAGEMAKER.MODEL.ISOLATION.001
+
+**SageMaker Models Must Enable Network Isolation**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+SageMaker model containers must enable network isolation to prevent outbound network calls during inference. Without isolation, a model container can exfiltrate inference data, training data cached in the model artifact, or model weights to external endpoints.
+
+**Remediation:** Set EnableNetworkIsolation to true on the model.
+
+---
+
+### CTL.SAGEMAKER.MODEL.VPC.001
+
+**SageMaker Models Must Use VPC Configuration**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+SageMaker models must define VpcConfig with subnets and security groups so inference containers communicate through a VPC rather than the public internet.
+
+**Remediation:** Define VpcConfig with subnets and security groups.
+
+---
+
+### CTL.SAGEMAKER.NOTEBOOK.ENCRYPT.001
+
+**SageMaker Notebook EBS Volume Must Be Encrypted**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** nist_800_53_r5: SC-28; soc2: CC6.7;
+
+SageMaker notebook instances must encrypt the ML storage volume at rest with KMS. Unencrypted volumes expose notebook code, datasets, model artifacts, and credentials cached locally.
+
+**Remediation:** Configure KmsKeyId on the notebook instance.
+
+---
+
+### CTL.SAGEMAKER.NOTEBOOK.INTERNET.001
+
+**SageMaker Notebook Must Not Have Direct Internet Access**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+SageMaker notebook instances must disable DirectInternetAccess, forcing VPC-only connectivity. An internet-accessible notebook is an interactive Jupyter environment reachable from the public internet with the attached IAM role's credentials available via IMDS.
+
+**Remediation:** Disable DirectInternetAccess and deploy the notebook in a VPC with NAT gateway for outbound connectivity.
+
+---
+
+### CTL.SAGEMAKER.NOTEBOOK.ROOT.001
+
+**SageMaker Notebook Must Disable Root Access**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-6(5); soc2: CC6.1;
+
+SageMaker notebook instances must disable root access. Root privileges allow users to install arbitrary packages, modify system configuration, and bypass security controls in the notebook environment.
+
+**Remediation:** Set RootAccess to Disabled on the notebook instance.
+
+---
+
+### CTL.SAGEMAKER.NOTEBOOK.VPC.001
+
+**SageMaker Notebook Must Be Deployed in VPC**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+SageMaker notebook instances must be deployed in a VPC with subnet and security group configuration for private networking.
+
+**Remediation:** Configure the notebook with a subnet_id and security groups.
+
+---
+
+### CTL.SAGEMAKER.TRAINING.ENCRYPT.INTERCONTAINER.001
+
+**SageMaker Training Must Encrypt Inter-Container Traffic**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** nist_800_53_r5: SC-8; soc2: CC6.7;
+
+SageMaker distributed training jobs must enable inter-container traffic encryption. Without it, data sent between training containers (gradients, model parameters, training samples) is transmitted in plaintext between nodes.
+
+**Remediation:** Set EnableInterContainerTrafficEncryption to true.
+
+---
+
+### CTL.SAGEMAKER.TRAINING.ENCRYPT.VOLUME.001
+
+**SageMaker Training Job Volumes Must Be Encrypted**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** nist_800_53_r5: SC-28; soc2: CC6.7;
+
+SageMaker training jobs must encrypt ML storage volumes at rest with KMS. Training volumes contain datasets, intermediate computations, and model checkpoints.
+
+**Remediation:** Set VolumeKmsKeyId in the training job ResourceConfig.
+
+---
+
+### CTL.SAGEMAKER.TRAINING.ISOLATION.001
+
+**SageMaker Training Jobs Must Enable Network Isolation**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+SageMaker training jobs must enable network isolation to prevent training containers from making inbound or outbound network calls. Without isolation, a compromised training container can exfiltrate training data or model artifacts to external endpoints.
+
+**Remediation:** Set EnableNetworkIsolation to true on the training job.
+
+---
+
+### CTL.SAGEMAKER.TRAINING.VPC.001
+
+**SageMaker Training Jobs Must Use VPC Configuration**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+SageMaker training jobs must define VpcConfig with subnets so training traffic uses private networking rather than the public internet.
+
+**Remediation:** Define VpcConfig with subnets and security groups.
 
 ---
 

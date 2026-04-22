@@ -1,0 +1,38 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.TRAINING.ENCRYPT.VOLUME.001
+name: SageMaker Training Job Volumes Must Be Encrypted
+description: >
+  SageMaker training jobs must encrypt ML storage volumes at rest
+  with KMS. Training volumes contain datasets, intermediate
+  computations, and model checkpoints.
+domain: encryption
+severity: high
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.7"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - sagemaker
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: SageMaker training job volume is not encrypted.
+  action: Set VolumeKmsKeyId in the training job ResourceConfig.
+  example: |
+    {
+      "compute": {
+        "kind": "sagemaker_training",
+        "encryption": { "volume_encrypted": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: sagemaker_training
+    - field: properties.compute.encryption.volume_encrypted
+      op: eq
+      value: false

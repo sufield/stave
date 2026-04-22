@@ -1,0 +1,39 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.TRAINING.ENCRYPT.INTERCONTAINER.001
+name: SageMaker Training Must Encrypt Inter-Container Traffic
+description: >
+  SageMaker distributed training jobs must enable inter-container
+  traffic encryption. Without it, data sent between training
+  containers (gradients, model parameters, training samples) is
+  transmitted in plaintext between nodes.
+domain: encryption
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-8"
+  soc2: "CC6.7"
+  ccm_v4: ["CEK-03", "IVS-03"]
+scope_tags:
+  - aws
+  - sagemaker
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: collection
+remediation:
+  description: SageMaker training inter-container encryption is disabled.
+  action: Set EnableInterContainerTrafficEncryption to true.
+  example: |
+    {
+      "compute": {
+        "kind": "sagemaker_training",
+        "encryption": { "inter_container_encrypted": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: sagemaker_training
+    - field: properties.compute.encryption.inter_container_encrypted
+      op: eq
+      value: false

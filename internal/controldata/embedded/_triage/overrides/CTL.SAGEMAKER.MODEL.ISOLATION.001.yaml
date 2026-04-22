@@ -1,0 +1,16 @@
+control: CTL.SAGEMAKER.MODEL.ISOLATION.001
+defect: >
+  The SageMaker model container does not have network isolation
+  enabled. The model can make outbound network calls during
+  inference.
+infection: >
+  A compromised or adversarial model container sends inference data,
+  cached training data, or model weights to an external endpoint
+  during prediction requests. The exfiltration is invisible in
+  standard monitoring because it occurs within the inference request
+  lifecycle — the model appears to be serving predictions normally.
+failure: >
+  Model-based data exfiltration. A model container without network
+  isolation can send any data it processes to an external endpoint,
+  including PII from inference requests, proprietary training data
+  cached in the model artifact, or the model weights themselves.

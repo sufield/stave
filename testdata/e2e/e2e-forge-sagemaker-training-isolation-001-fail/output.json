@@ -1,0 +1,330 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-15T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "760c805cd1164ed034278a3ffd82b79baefd78a277d1cfb214c210a48769c081",
+        "2026-01-11T000000Z.json": "cd9444c3efa13ebbccb51c2fbfbc10af867b26ed34bcb19599946356d3829f90"
+      },
+      "overall": "61698f488ee42c21802b8b47855cd3f68bbd115f38d115bda71793bd130378d9"
+    },
+    "policy_fingerprint": "fddb67cd6a44205836e40cefbad492784d4af5f7503dbfd53a61a91bd71aa8f3",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.SAGEMAKER.TRAINING.ISOLATION.001",
+      "asset_id": "arn:aws:sagemaker:us-east-1:111122223333:training-job/train-bert-v2",
+      "asset_type": "aws_sagemaker_training_job",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -168,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:2e82cf2e7e7fa97c",
+      "control_id": "CTL.SAGEMAKER.TRAINING.ISOLATION.001",
+      "control_name": "SageMaker Training Jobs Must Enable Network Isolation",
+      "control_description": "SageMaker training jobs must enable network isolation to prevent training containers from making inbound or outbound network calls. Without isolation, a compromised training container can exfiltrate training data or model artifacts to external endpoints.\n",
+      "asset_id": "arn:aws:sagemaker:us-east-1:111122223333:training-job/train-bert-v2",
+      "asset_type": "aws_sagemaker_training_job",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 336,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "compute.kind",
+            "actual_value": "sagemaker_training",
+            "operator": "eq",
+            "unsafe_value": "sagemaker_training"
+          },
+          {
+            "property": "compute.network.network_isolation_enabled",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 336 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "nist_800_53_r5": "SC-7",
+        "soc2": "CC6.6"
+      },
+      "control_compliance_ccm_v4": [
+        "IVS-03",
+        "IVS-04"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "SageMaker training job network isolation is disabled.",
+        "action": "Set EnableNetworkIsolation to true on the training job.",
+        "example": "{\n  \"compute\": {\n    \"kind\": \"sagemaker_training\",\n    \"network\": { \"network_isolation_enabled\": true }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-8e3688e7dfca111b",
+        "target": {
+          "asset_id": "arn:aws:sagemaker:us-east-1:111122223333:training-job/train-bert-v2",
+          "asset_type": "aws_sagemaker_training_job"
+        },
+        "action": "Set EnableNetworkIsolation to true on the training job."
+      },
+      "exposure_score": 75,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "compute.kind eq \"sagemaker_training\"",
+          "observation_key": "compute.kind",
+          "operator": "eq",
+          "expected_value": "sagemaker_training",
+          "observed_value": "sagemaker_training"
+        },
+        {
+          "predicate_expr": "compute.network.network_isolation_enabled eq false",
+          "observation_key": "compute.network.network_isolation_enabled",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "arn:aws:sagemaker:us-east-1:111122223333:training-job/train-bert-v2",
+          "type": "aws_sagemaker_training_job",
+          "vendor": "aws",
+          "arn": "arn:aws:sagemaker:us-east-1:111122223333:training-job/train-bert-v2",
+          "region": "us-east-1"
+        },
+        "violation": {
+          "control_id": "CTL.SAGEMAKER.TRAINING.ISOLATION.001",
+          "control_name": "SageMaker Training Jobs Must Enable Network Isolation",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "compute.kind = \"sagemaker_training\"",
+              "observation_key": "compute.kind",
+              "observed_value": "sagemaker_training"
+            },
+            {
+              "clause": "compute.network.network_isolation_enabled = false",
+              "observation_key": "compute.network.network_isolation_enabled",
+              "observed_value": false
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "compute.kind",
+            "current_value": "sagemaker_training",
+            "has_safe_default": false,
+            "description": "Change compute.kind from sagemaker_training"
+          },
+          {
+            "path": "compute.network.network_isolation_enabled",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set compute.network.network_isolation_enabled to true"
+          }
+        ],
+        "action": "Set EnableNetworkIsolation to true on the training job."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "sagemaker"
+      ],
+      "delta": [
+        {
+          "property_label": "network network isolation",
+          "property_path": "compute.network.network_isolation_enabled",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:9fdff285cdb46cf8",
+      "asset_id": "arn:aws:sagemaker:us-east-1:111122223333:training-job/train-bert-v2",
+      "shared_keys": [
+        "compute.network",
+        "compute.network.network_isolation_enabled"
+      ],
+      "headline_finding_id": "sha256:2e82cf2e7e7fa97c",
+      "member_finding_ids": [
+        "sha256:2e82cf2e7e7fa97c"
+      ],
+      "consolidated_score": 75,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "arn:aws:sagemaker:us-east-1:111122223333:training-job/train-bert-v2",
+      "asset_type": "aws_sagemaker_training_job",
+      "fix_plan": {
+        "id": "fix-8e3688e7dfca111b",
+        "target": {
+          "asset_id": "arn:aws:sagemaker:us-east-1:111122223333:training-job/train-bert-v2",
+          "asset_type": "aws_sagemaker_training_job"
+        },
+        "action": "Set EnableNetworkIsolation to true on the training job."
+      },
+      "contributing_controls": [
+        "CTL.SAGEMAKER.TRAINING.ISOLATION.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.SAGEMAKER.TRAINING.ISOLATION.001",
+      "asset_id": "arn:aws:sagemaker:us-east-1:111122223333:training-job/train-bert-v2",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-sagemaker-training-isolation-001-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-sagemaker-training-isolation-001-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "d2f40a53110b8788bc2d03b00b74978c81945397",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-sagemaker-training-isolation-001-fail/controls/"
+      ]
+    }
+  }
+}

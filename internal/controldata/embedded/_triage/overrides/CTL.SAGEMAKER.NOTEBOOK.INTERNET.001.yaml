@@ -1,0 +1,16 @@
+control: CTL.SAGEMAKER.NOTEBOOK.INTERNET.001
+defect: >
+  The SageMaker notebook instance has DirectInternetAccess enabled.
+  The Jupyter environment is reachable from the public internet.
+infection: >
+  An attacker accesses the notebook's Jupyter interface from the
+  internet. The notebook provides an interactive shell with the
+  attached IAM role's credentials available via IMDS. Unlike EC2
+  instances, notebooks are designed for interactive use — the
+  attacker gets a fully functional development environment with
+  pre-installed ML libraries, data access, and AWS SDK credentials.
+failure: >
+  Internet-accessible ML compute. An attacker gains interactive
+  shell access with the notebook's IAM role, enabling data
+  exfiltration, model theft, and lateral movement to other AWS
+  resources.

@@ -1,0 +1,38 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.ENDPOINT.REDUNDANCY.001
+name: SageMaker Endpoint Must Use Multiple Instances
+description: >
+  SageMaker endpoint configurations must use at least two instances
+  per production variant for multi-AZ redundancy. Single-instance
+  endpoints are single points of failure.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "CP-10"
+  soc2: "A1.1"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - sagemaker
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: SageMaker endpoint uses a single instance.
+  action: Set InitialInstanceCount to at least 2 per production variant.
+  example: |
+    {
+      "compute": {
+        "kind": "sagemaker_endpoint_config",
+        "resilience": { "multi_instance": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: sagemaker_endpoint_config
+    - field: properties.compute.resilience.multi_instance
+      op: eq
+      value: false

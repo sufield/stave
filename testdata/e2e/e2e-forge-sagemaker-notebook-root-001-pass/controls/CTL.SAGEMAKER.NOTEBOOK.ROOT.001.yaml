@@ -1,0 +1,39 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.NOTEBOOK.ROOT.001
+name: SageMaker Notebook Must Disable Root Access
+description: >
+  SageMaker notebook instances must disable root access. Root
+  privileges allow users to install arbitrary packages, modify
+  system configuration, and bypass security controls in the
+  notebook environment.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-6(5)"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - sagemaker
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: SageMaker notebook has root access enabled.
+  action: Set RootAccess to Disabled on the notebook instance.
+  example: |
+    {
+      "compute": {
+        "kind": "sagemaker_notebook",
+        "access": { "root_access_enabled": false }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: sagemaker_notebook
+    - field: properties.compute.access.root_access_enabled
+      op: eq
+      value: true

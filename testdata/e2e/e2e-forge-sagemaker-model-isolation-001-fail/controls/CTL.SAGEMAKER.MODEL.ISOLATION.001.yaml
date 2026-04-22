@@ -1,0 +1,39 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.MODEL.ISOLATION.001
+name: SageMaker Models Must Enable Network Isolation
+description: >
+  SageMaker model containers must enable network isolation to prevent
+  outbound network calls during inference. Without isolation, a model
+  container can exfiltrate inference data, training data cached in
+  the model artifact, or model weights to external endpoints.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "IVS-04"]
+scope_tags:
+  - aws
+  - sagemaker
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: SageMaker model network isolation is disabled.
+  action: Set EnableNetworkIsolation to true on the model.
+  example: |
+    {
+      "compute": {
+        "kind": "sagemaker_model",
+        "network": { "network_isolation_enabled": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: sagemaker_model
+    - field: properties.compute.network.network_isolation_enabled
+      op: eq
+      value: false

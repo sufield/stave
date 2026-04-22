@@ -1,0 +1,39 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.TRAINING.ISOLATION.001
+name: SageMaker Training Jobs Must Enable Network Isolation
+description: >
+  SageMaker training jobs must enable network isolation to prevent
+  training containers from making inbound or outbound network calls.
+  Without isolation, a compromised training container can exfiltrate
+  training data or model artifacts to external endpoints.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "IVS-04"]
+scope_tags:
+  - aws
+  - sagemaker
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: SageMaker training job network isolation is disabled.
+  action: Set EnableNetworkIsolation to true on the training job.
+  example: |
+    {
+      "compute": {
+        "kind": "sagemaker_training",
+        "network": { "network_isolation_enabled": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: sagemaker_training
+    - field: properties.compute.network.network_isolation_enabled
+      op: eq
+      value: false

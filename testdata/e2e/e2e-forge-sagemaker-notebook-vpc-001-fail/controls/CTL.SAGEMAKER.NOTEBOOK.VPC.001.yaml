@@ -1,0 +1,37 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.NOTEBOOK.VPC.001
+name: SageMaker Notebook Must Be Deployed in VPC
+description: >
+  SageMaker notebook instances must be deployed in a VPC with
+  subnet and security group configuration for private networking.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03"]
+scope_tags:
+  - aws
+  - sagemaker
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: SageMaker notebook is not deployed in a VPC.
+  action: Configure the notebook with a subnet_id and security groups.
+  example: |
+    {
+      "compute": {
+        "kind": "sagemaker_notebook",
+        "network": { "in_vpc": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: sagemaker_notebook
+    - field: properties.compute.network.in_vpc
+      op: eq
+      value: false

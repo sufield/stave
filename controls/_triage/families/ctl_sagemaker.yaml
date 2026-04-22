@@ -1,0 +1,14 @@
+family: CTL.SAGEMAKER
+infection: >
+  A misconfigured SageMaker resource exposes the ML pipeline —
+  training data, model weights, notebook code, and prediction
+  endpoints. ML workloads process proprietary datasets and produce
+  models that encode business logic and competitive advantage.
+  Notebook instances provide interactive shell access with the
+  attached IAM role's permissions.
+failure: >
+  ML pipeline compromise. An attacker gains access to training data
+  (potentially PII, financial records, or proprietary datasets),
+  model artifacts (business logic encoded in weights), notebook
+  environments (interactive compute with IAM credentials), or
+  prediction endpoints (model extraction or adversarial manipulation).

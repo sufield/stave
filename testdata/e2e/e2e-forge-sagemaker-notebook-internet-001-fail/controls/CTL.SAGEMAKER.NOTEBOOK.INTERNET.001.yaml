@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.NOTEBOOK.INTERNET.001
+name: SageMaker Notebook Must Not Have Direct Internet Access
+description: >
+  SageMaker notebook instances must disable DirectInternetAccess,
+  forcing VPC-only connectivity. An internet-accessible notebook
+  is an interactive Jupyter environment reachable from the public
+  internet with the attached IAM role's credentials available via
+  IMDS.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "IVS-04"]
+scope_tags:
+  - aws
+  - sagemaker
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: SageMaker notebook has direct internet access enabled.
+  action: >
+    Disable DirectInternetAccess and deploy the notebook in a VPC
+    with NAT gateway for outbound connectivity.
+  example: |
+    {
+      "compute": {
+        "kind": "sagemaker_notebook",
+        "network": { "direct_internet_access": false }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: sagemaker_notebook
+    - field: properties.compute.network.direct_internet_access
+      op: eq
+      value: true

@@ -1,0 +1,38 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.NOTEBOOK.ENCRYPT.001
+name: SageMaker Notebook EBS Volume Must Be Encrypted
+description: >
+  SageMaker notebook instances must encrypt the ML storage volume
+  at rest with KMS. Unencrypted volumes expose notebook code,
+  datasets, model artifacts, and credentials cached locally.
+domain: encryption
+severity: high
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.7"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - sagemaker
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: SageMaker notebook EBS volume is not encrypted.
+  action: Configure KmsKeyId on the notebook instance.
+  example: |
+    {
+      "compute": {
+        "kind": "sagemaker_notebook",
+        "encryption": { "volume_encrypted": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: sagemaker_notebook
+    - field: properties.compute.encryption.volume_encrypted
+      op: eq
+      value: false
