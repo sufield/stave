@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.ACCESS.FULLACCESS.001
+name: IAM Roles Must Not Use AmazonBedrockFullAccess Policy
+description: >
+  IAM roles (excluding service-linked roles) must not have the
+  AWS-managed AmazonBedrockFullAccess policy attached. This policy
+  grants unrestricted access to all Bedrock actions and resources.
+  If the role is compromised, an attacker can invoke any model,
+  modify guardrails and logging, and incur significant costs.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-04", "IAM-05"]
+scope_tags:
+  - aws
+  - bedrock
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: IAM role has AmazonBedrockFullAccess policy attached.
+  action: >
+    Replace AmazonBedrockFullAccess with a scoped policy granting
+    only required Bedrock actions on specific model ARNs.
+  example: |
+    {
+      "ai": {
+        "kind": "bedrock_access",
+        "access": { "has_full_access_policy": false }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: bedrock_access
+    - field: properties.ai.access.has_full_access_policy
+      op: eq
+      value: true

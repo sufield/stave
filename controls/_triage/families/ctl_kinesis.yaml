@@ -1,0 +1,10 @@
+family: CTL.KINESIS
+infection: >
+  A misconfigured Kinesis stream exposes real-time data in transit —
+  event streams, application logs, IoT telemetry, clickstream data,
+  and other continuous data feeds. Streams often carry operational
+  data that reveals system architecture and user behavior.
+failure: >
+  Real-time data interception. An attacker reads or injects records
+  in the stream, compromising data integrity and confidentiality for
+  all downstream consumers.

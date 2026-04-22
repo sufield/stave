@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.EMR.PUBLIC.BLOCK.001
+name: EMR Account Must Enable Block Public Access
+description: >
+  The EMR account-level Block Public Access setting must be enabled.
+  When enabled, clusters cannot use security groups with inbound
+  rules allowing public sources (0.0.0.0/0, ::/0) except on
+  explicitly permitted ports.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "IVS-04"]
+scope_tags:
+  - aws
+  - emr
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: EMR account-level Block Public Access is not enabled.
+  action: >
+    Enable Block Public Access in the EMR console or via
+    aws emr put-block-public-access-configuration.
+  example: |
+    {
+      "compute": {
+        "kind": "emr_account_config",
+        "network": { "block_public_access_enabled": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: emr_account_config
+    - field: properties.compute.network.block_public_access_enabled
+      op: eq
+      value: false

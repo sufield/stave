@@ -1,0 +1,20 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:iam::111122223333:role/ml-pipeline",
+      "type": "aws_bedrock_access",
+      "vendor": "aws",
+      "properties": {
+        "ai": {
+          "kind": "bedrock_access",
+          "access": {
+            "has_full_access_policy": false
+          }
+        }
+      }
+    }
+  ]
+}

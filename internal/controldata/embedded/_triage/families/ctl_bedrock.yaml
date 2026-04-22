@@ -1,0 +1,14 @@
+family: CTL.BEDROCK
+infection: >
+  A misconfigured Bedrock resource exposes the AI pipeline — user
+  prompts and responses, model invocation patterns, guardrail
+  configurations, and agent tool-calling capabilities. Prompts
+  frequently contain sensitive business data, PII, or confidential
+  queries. Without guardrails, models may surface training data
+  patterns, accept prompt injections, or generate harmful content.
+failure: >
+  AI platform compromise. An attacker gains access to user prompts
+  (revealing business intent and sensitive queries), model responses
+  (potentially containing PII or confidential analysis), or
+  manipulates guardrails to enable prompt injection, data
+  exfiltration, and uncontrolled model invocation.

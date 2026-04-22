@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.EMR.PUBLIC.SG.001
+name: EMR Cluster Security Groups Must Not Allow Public Inbound
+description: >
+  Security groups attached to EMR cluster nodes must not have
+  inbound rules allowing traffic from 0.0.0.0/0 or ::/0. Open
+  security groups expose Hadoop, Spark, and YARN interfaces to
+  the internet.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03"]
+scope_tags:
+  - aws
+  - emr
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: EMR cluster security groups allow public inbound traffic.
+  action: >
+    Restrict security group inbound rules to specific CIDR ranges
+    or security group IDs. Remove 0.0.0.0/0 and ::/0 rules.
+  example: |
+    {
+      "compute": {
+        "kind": "emr_cluster",
+        "network": { "security_groups_allow_public": false }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: emr_cluster
+    - field: properties.compute.network.security_groups_allow_public
+      op: eq
+      value: true

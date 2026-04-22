@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.GUARDRAIL.PROMPTATTACK.001
+name: Bedrock Guardrails Must Enable High-Strength Prompt Attack Filter
+description: >
+  Bedrock guardrails must configure the prompt attack filter at HIGH
+  strength. Without high-strength filtering, models are exposed to
+  prompt injection and jailbreak attacks that can coerce disclosure
+  of sensitive data, evade content policies, and trigger unintended
+  tool execution.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SI-10"
+  soc2: "CC6.1"
+  ccm_v4: ["AIS-06", "IVS-03"]
+scope_tags:
+  - aws
+  - bedrock
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: execution
+remediation:
+  description: Bedrock guardrail prompt attack filter is not at HIGH strength.
+  action: >
+    Update the guardrail to set the prompt attack filter strength
+    to HIGH via aws bedrock update-guardrail.
+  example: |
+    {
+      "ai": {
+        "kind": "bedrock_guardrail",
+        "guardrail": { "prompt_attack_filter_high": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: bedrock_guardrail
+    - field: properties.ai.guardrail.prompt_attack_filter_high
+      op: eq
+      value: false

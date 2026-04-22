@@ -1,0 +1,20 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:bedrock:us-east-1:111122223333:logging-config",
+      "type": "aws_bedrock_logging_config",
+      "vendor": "aws",
+      "properties": {
+        "ai": {
+          "kind": "bedrock_logging_config",
+          "logging": {
+            "invocation_logging_enabled": true
+          }
+        }
+      }
+    }
+  ]
+}

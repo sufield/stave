@@ -1,0 +1,17 @@
+control: CTL.BEDROCK.GUARDRAIL.PROMPTATTACK.001
+defect: >
+  The Bedrock guardrail does not have the prompt attack filter at
+  HIGH strength. The model is vulnerable to prompt injection and
+  jailbreak attacks.
+infection: >
+  An attacker crafts prompts that bypass the model's safety
+  instructions — extracting system prompts, coercing disclosure of
+  sensitive data from the model's context, or manipulating the model
+  into executing unintended tool calls. Agents without high-strength
+  prompt attack filtering can be hijacked to invoke APIs and tools
+  on the attacker's behalf.
+failure: >
+  Prompt injection enabling unauthorized actions. An attacker
+  controls the model's behavior through crafted prompts, bypassing
+  content policies and executing unintended tool calls through
+  connected agents.

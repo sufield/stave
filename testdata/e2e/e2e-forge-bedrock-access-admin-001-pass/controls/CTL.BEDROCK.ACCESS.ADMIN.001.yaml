@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.ACCESS.ADMIN.001
+name: Bedrock API Keys Must Not Have Administrative Privileges
+description: >
+  IAM users with Bedrock API keys must not have policies granting
+  bedrock:* or full administrative access. A compromised
+  overprivileged key can invoke models at scale, modify guardrails
+  and logging, and escalate IAM privileges.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-04", "IAM-05"]
+scope_tags:
+  - aws
+  - bedrock
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: Bedrock API key has administrative privileges.
+  action: >
+    Scope the IAM user's policies to only the Bedrock actions
+    required (e.g., bedrock:InvokeModel on specific models).
+  example: |
+    {
+      "ai": {
+        "kind": "bedrock_access",
+        "access": { "has_admin_privileges": false }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: bedrock_access
+    - field: properties.ai.access.has_admin_privileges
+      op: eq
+      value: true

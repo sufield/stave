@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.EMR.PUBLIC.IP.001
+name: EMR Cluster Nodes Must Not Have Public IP Addresses
+description: >
+  EMR cluster nodes (master and worker) must not have public IP
+  addresses assigned. Public IPs make cluster nodes directly
+  reachable from the internet, exposing Hadoop, Spark, and YARN
+  management interfaces.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03"]
+scope_tags:
+  - aws
+  - emr
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: EMR cluster nodes have public IP addresses.
+  action: >
+    Launch clusters in private subnets without public IP assignment.
+    Use a bastion host or VPN for administrative access.
+  example: |
+    {
+      "compute": {
+        "kind": "emr_cluster",
+        "network": { "nodes_have_public_ip": false }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: emr_cluster
+    - field: properties.compute.network.nodes_have_public_ip
+      op: eq
+      value: true

@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.ACCESS.LONGTERM.001
+name: Bedrock API Keys Must Not Be Long-Lived
+description: >
+  Bedrock API keys must have appropriate expiration dates. Long-lived
+  or non-expiring keys enable persistent access if compromised —
+  unauthorized inference, exposure of prompts/outputs, uncontrolled
+  cost, and inability to timely revoke credentials.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "IA-5"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-04", "IAM-16"]
+scope_tags:
+  - aws
+  - bedrock
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: Bedrock API key is long-lived or has no expiration.
+  action: >
+    Set an appropriate expiration on the API key. Rotate keys
+    regularly and use short-lived credentials where possible.
+  example: |
+    {
+      "ai": {
+        "kind": "bedrock_access",
+        "access": { "is_long_lived": false }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: bedrock_access
+    - field: properties.ai.access.is_long_lived
+      op: eq
+      value: true

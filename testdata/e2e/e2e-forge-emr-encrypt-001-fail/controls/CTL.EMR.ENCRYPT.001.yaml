@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.EMR.ENCRYPT.001
+name: EMR Clusters Must Use a Security Configuration for Encryption
+description: >
+  EMR clusters must have a security configuration enabling encryption
+  at rest (EMRFS S3, local disk) and in transit (TLS). Without a
+  security configuration, data processed by Spark and Hadoop jobs
+  is stored and transmitted in plaintext.
+domain: encryption
+severity: high
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.7"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - emr
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: EMR cluster does not have a security configuration for encryption.
+  action: >
+    Create an EMR security configuration with encryption enabled
+    for at-rest (S3 via EMRFS, local disk via LUKS) and in-transit
+    (TLS) and attach it to the cluster.
+  example: |
+    {
+      "compute": {
+        "kind": "emr_cluster",
+        "encryption": { "security_configuration_set": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: emr_cluster
+    - field: properties.compute.encryption.security_configuration_set
+      op: eq
+      value: false

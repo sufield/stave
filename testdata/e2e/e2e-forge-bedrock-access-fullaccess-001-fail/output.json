@@ -1,0 +1,330 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-15T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "99f81c3a4a789631b1e782299aaa0c22bde244d056f84a01ec9efbd06de490a6",
+        "2026-01-11T000000Z.json": "96ba16e75dd913afd4a6dc0a1fd9e3f924d7d1c1aafe7fb892abd945917f54dd"
+      },
+      "overall": "6db4af0d2b33a9b57941171a45b45ae59d752f330216f9fd426e52229bb50f75"
+    },
+    "policy_fingerprint": "0f0605c936e4ddbed0d70192fc1212ff464fa5e0feb186f3e5c4a6b1adf412bf",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.BEDROCK.ACCESS.FULLACCESS.001",
+      "asset_id": "arn:aws:iam::111122223333:role/ml-pipeline",
+      "asset_type": "aws_bedrock_access",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -168,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:803924c1a69cca50",
+      "control_id": "CTL.BEDROCK.ACCESS.FULLACCESS.001",
+      "control_name": "IAM Roles Must Not Use AmazonBedrockFullAccess Policy",
+      "control_description": "IAM roles (excluding service-linked roles) must not have the AWS-managed AmazonBedrockFullAccess policy attached. This policy grants unrestricted access to all Bedrock actions and resources. If the role is compromised, an attacker can invoke any model, modify guardrails and logging, and incur significant costs.\n",
+      "asset_id": "arn:aws:iam::111122223333:role/ml-pipeline",
+      "asset_type": "aws_bedrock_access",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 336,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "ai.access.has_full_access_policy",
+            "actual_value": true,
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "ai.kind",
+            "actual_value": "bedrock_access",
+            "operator": "eq",
+            "unsafe_value": "bedrock_access"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 336 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "nist_800_53_r5": "AC-6",
+        "soc2": "CC6.1"
+      },
+      "control_compliance_ccm_v4": [
+        "IAM-04",
+        "IAM-05"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "IAM role has AmazonBedrockFullAccess policy attached.",
+        "action": "Replace AmazonBedrockFullAccess with a scoped policy granting only required Bedrock actions on specific model ARNs.",
+        "example": "{\n  \"ai\": {\n    \"kind\": \"bedrock_access\",\n    \"access\": { \"has_full_access_policy\": false }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-ebb2bb13e25e5d39",
+        "target": {
+          "asset_id": "arn:aws:iam::111122223333:role/ml-pipeline",
+          "asset_type": "aws_bedrock_access"
+        },
+        "action": "Replace AmazonBedrockFullAccess with a scoped policy granting only required Bedrock actions on specific model ARNs."
+      },
+      "exposure_score": 75,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "ai.access.has_full_access_policy eq true",
+          "observation_key": "ai.access.has_full_access_policy",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": true
+        },
+        {
+          "predicate_expr": "ai.kind eq \"bedrock_access\"",
+          "observation_key": "ai.kind",
+          "operator": "eq",
+          "expected_value": "bedrock_access",
+          "observed_value": "bedrock_access"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "arn:aws:iam::111122223333:role/ml-pipeline",
+          "type": "aws_bedrock_access",
+          "vendor": "aws",
+          "arn": "arn:aws:iam::111122223333:role/ml-pipeline"
+        },
+        "violation": {
+          "control_id": "CTL.BEDROCK.ACCESS.FULLACCESS.001",
+          "control_name": "IAM Roles Must Not Use AmazonBedrockFullAccess Policy",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "ai.access.has_full_access_policy = true",
+              "observation_key": "ai.access.has_full_access_policy",
+              "observed_value": true
+            },
+            {
+              "clause": "ai.kind = \"bedrock_access\"",
+              "observation_key": "ai.kind",
+              "observed_value": "bedrock_access"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "ai.access.has_full_access_policy",
+            "current_value": "true",
+            "required_value": "false",
+            "has_safe_default": true,
+            "description": "Set ai.access.has_full_access_policy to false"
+          },
+          {
+            "path": "ai.kind",
+            "current_value": "bedrock_access",
+            "has_safe_default": false,
+            "description": "Change ai.kind from bedrock_access"
+          }
+        ],
+        "action": "Replace AmazonBedrockFullAccess with a scoped policy granting only required Bedrock actions on specific model ARNs."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "bedrock"
+      ],
+      "delta": [
+        {
+          "property_label": "access has full access policy",
+          "property_path": "ai.access.has_full_access_policy",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:60f3f8b64f38b322",
+      "asset_id": "arn:aws:iam::111122223333:role/ml-pipeline",
+      "shared_keys": [
+        "ai.access",
+        "ai.access.has_full_access_policy",
+        "ai.kind"
+      ],
+      "headline_finding_id": "sha256:803924c1a69cca50",
+      "member_finding_ids": [
+        "sha256:803924c1a69cca50"
+      ],
+      "consolidated_score": 75,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "arn:aws:iam::111122223333:role/ml-pipeline",
+      "asset_type": "aws_bedrock_access",
+      "fix_plan": {
+        "id": "fix-ebb2bb13e25e5d39",
+        "target": {
+          "asset_id": "arn:aws:iam::111122223333:role/ml-pipeline",
+          "asset_type": "aws_bedrock_access"
+        },
+        "action": "Replace AmazonBedrockFullAccess with a scoped policy granting only required Bedrock actions on specific model ARNs."
+      },
+      "contributing_controls": [
+        "CTL.BEDROCK.ACCESS.FULLACCESS.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.BEDROCK.ACCESS.FULLACCESS.001",
+      "asset_id": "arn:aws:iam::111122223333:role/ml-pipeline",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-bedrock-access-fullaccess-001-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-bedrock-access-fullaccess-001-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "87c85ecd370f6541d2b0b2baf12ac306e8432460",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-bedrock-access-fullaccess-001-fail/controls/"
+      ]
+    }
+  }
+}

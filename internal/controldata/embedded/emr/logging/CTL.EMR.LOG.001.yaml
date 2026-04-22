@@ -1,0 +1,40 @@
+dsl_version: ctrl.v1
+id: CTL.EMR.LOG.001
+name: EMR Clusters Must Have Logging Enabled
+description: >
+  EMR clusters must enable logging to S3 for cluster events, step
+  execution, and application logs. Without logging, job failures,
+  security events, and data access patterns are invisible.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-2"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-03", "LOG-05"]
+scope_tags:
+  - aws
+  - emr
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: EMR cluster logging is disabled.
+  action: >
+    Enable logging with an S3 log URI when creating or updating
+    the cluster.
+  example: |
+    {
+      "compute": {
+        "kind": "emr_cluster",
+        "logging": { "enabled": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: emr_cluster
+    - field: properties.compute.logging.enabled
+      op: eq
+      value: false

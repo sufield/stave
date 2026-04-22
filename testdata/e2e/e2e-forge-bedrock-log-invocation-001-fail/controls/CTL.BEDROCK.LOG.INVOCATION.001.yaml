@@ -1,0 +1,43 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.LOG.INVOCATION.001
+name: Bedrock Model Invocation Logging Must Be Enabled
+description: >
+  Bedrock model invocation logging must be enabled to capture
+  request/response data for Converse, InvokeModel, and streaming
+  calls. Without invocation logs, there is no audit trail for what
+  prompts were sent or what the model responded — credential misuse,
+  prompt injection, and data exfiltration go undetected.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-2"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-03", "LOG-05"]
+scope_tags:
+  - aws
+  - bedrock
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: Bedrock model invocation logging is not enabled.
+  action: >
+    Enable model invocation logging via aws bedrock
+    put-model-invocation-logging-configuration with S3 and/or
+    CloudWatch Logs destinations.
+  example: |
+    {
+      "ai": {
+        "kind": "bedrock_logging_config",
+        "logging": { "invocation_logging_enabled": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: bedrock_logging_config
+    - field: properties.ai.logging.invocation_logging_enabled
+      op: eq
+      value: false

@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.AGENT.GUARDRAIL.001
+name: Bedrock Agents Must Have an Associated Guardrail
+description: >
+  Bedrock agents must have a guardrail associated with their sessions.
+  Without guardrails, agent exchanges may expose PII or internal data,
+  accept prompt injections that manipulate tool calls, and produce
+  unsafe or out-of-scope responses. Agents can invoke tools and
+  APIs — an unguarded agent is an unguarded API caller.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SI-10"
+  soc2: "CC6.1"
+  ccm_v4: ["AIS-06", "IVS-03"]
+scope_tags:
+  - aws
+  - bedrock
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: execution
+remediation:
+  description: Bedrock agent does not have an associated guardrail.
+  action: >
+    Associate a guardrail with the agent via the guardrailConfiguration
+    setting in the agent definition.
+  example: |
+    {
+      "ai": {
+        "kind": "bedrock_agent",
+        "agent": { "guardrail_associated": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: bedrock_agent
+    - field: properties.ai.agent.guardrail_associated
+      op: eq
+      value: false

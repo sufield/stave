@@ -1,0 +1,331 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-15T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "7e399a5883622d0f56fd1805db37a8af381b15f9b7b61d339a5149ee0f629365",
+        "2026-01-11T000000Z.json": "9c8e74b912ef250fd30a70fb3eb88b8829f51e5543c387fb9e995590805bebc6"
+      },
+      "overall": "bb528ca4444cdd3fa6e78210831d33c5e87927998883efcf0c57a7e130068ac5"
+    },
+    "policy_fingerprint": "c3c584621c02efe3a6d08613d2a8c57271a0c88b97de2fa92b5cbff8c00faf79",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.BEDROCK.LOG.INVOCATION.001",
+      "asset_id": "arn:aws:bedrock:us-east-1:111122223333:logging-config",
+      "asset_type": "aws_bedrock_logging_config",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -168,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:7cce92782717b94e",
+      "control_id": "CTL.BEDROCK.LOG.INVOCATION.001",
+      "control_name": "Bedrock Model Invocation Logging Must Be Enabled",
+      "control_description": "Bedrock model invocation logging must be enabled to capture request/response data for Converse, InvokeModel, and streaming calls. Without invocation logs, there is no audit trail for what prompts were sent or what the model responded — credential misuse, prompt injection, and data exfiltration go undetected.\n",
+      "asset_id": "arn:aws:bedrock:us-east-1:111122223333:logging-config",
+      "asset_type": "aws_bedrock_logging_config",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 336,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "ai.kind",
+            "actual_value": "bedrock_logging_config",
+            "operator": "eq",
+            "unsafe_value": "bedrock_logging_config"
+          },
+          {
+            "property": "ai.logging.invocation_logging_enabled",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 336 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "nist_800_53_r5": "AU-2",
+        "soc2": "CC7.1"
+      },
+      "control_compliance_ccm_v4": [
+        "LOG-03",
+        "LOG-05"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Bedrock model invocation logging is not enabled.",
+        "action": "Enable model invocation logging via aws bedrock put-model-invocation-logging-configuration with S3 and/or CloudWatch Logs destinations.",
+        "example": "{\n  \"ai\": {\n    \"kind\": \"bedrock_logging_config\",\n    \"logging\": { \"invocation_logging_enabled\": true }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-fb9b7d828aa918be",
+        "target": {
+          "asset_id": "arn:aws:bedrock:us-east-1:111122223333:logging-config",
+          "asset_type": "aws_bedrock_logging_config"
+        },
+        "action": "Enable model invocation logging via aws bedrock put-model-invocation-logging-configuration with S3 and/or CloudWatch Logs destinations."
+      },
+      "exposure_score": 50,
+      "score_breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "ai.kind eq \"bedrock_logging_config\"",
+          "observation_key": "ai.kind",
+          "operator": "eq",
+          "expected_value": "bedrock_logging_config",
+          "observed_value": "bedrock_logging_config"
+        },
+        {
+          "predicate_expr": "ai.logging.invocation_logging_enabled eq false",
+          "observation_key": "ai.logging.invocation_logging_enabled",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "arn:aws:bedrock:us-east-1:111122223333:logging-config",
+          "type": "aws_bedrock_logging_config",
+          "vendor": "aws",
+          "arn": "arn:aws:bedrock:us-east-1:111122223333:logging-config",
+          "region": "us-east-1"
+        },
+        "violation": {
+          "control_id": "CTL.BEDROCK.LOG.INVOCATION.001",
+          "control_name": "Bedrock Model Invocation Logging Must Be Enabled",
+          "severity": "medium",
+          "reasoning": [
+            {
+              "clause": "ai.kind = \"bedrock_logging_config\"",
+              "observation_key": "ai.kind",
+              "observed_value": "bedrock_logging_config"
+            },
+            {
+              "clause": "ai.logging.invocation_logging_enabled = false",
+              "observation_key": "ai.logging.invocation_logging_enabled",
+              "observed_value": false
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "ai.kind",
+            "current_value": "bedrock_logging_config",
+            "has_safe_default": false,
+            "description": "Change ai.kind from bedrock_logging_config"
+          },
+          {
+            "path": "ai.logging.invocation_logging_enabled",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set ai.logging.invocation_logging_enabled to true"
+          }
+        ],
+        "action": "Enable model invocation logging via aws bedrock put-model-invocation-logging-configuration with S3 and/or CloudWatch Logs destinations."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "bedrock"
+      ],
+      "delta": [
+        {
+          "property_label": "logging invocation logging",
+          "property_path": "ai.logging.invocation_logging_enabled",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:ef8cf070c29635c2",
+      "asset_id": "arn:aws:bedrock:us-east-1:111122223333:logging-config",
+      "shared_keys": [
+        "ai.kind",
+        "ai.logging",
+        "ai.logging.invocation_logging_enabled"
+      ],
+      "headline_finding_id": "sha256:7cce92782717b94e",
+      "member_finding_ids": [
+        "sha256:7cce92782717b94e"
+      ],
+      "consolidated_score": 50,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "arn:aws:bedrock:us-east-1:111122223333:logging-config",
+      "asset_type": "aws_bedrock_logging_config",
+      "fix_plan": {
+        "id": "fix-fb9b7d828aa918be",
+        "target": {
+          "asset_id": "arn:aws:bedrock:us-east-1:111122223333:logging-config",
+          "asset_type": "aws_bedrock_logging_config"
+        },
+        "action": "Enable model invocation logging via aws bedrock put-model-invocation-logging-configuration with S3 and/or CloudWatch Logs destinations."
+      },
+      "contributing_controls": [
+        "CTL.BEDROCK.LOG.INVOCATION.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.BEDROCK.LOG.INVOCATION.001",
+      "asset_id": "arn:aws:bedrock:us-east-1:111122223333:logging-config",
+      "exposure_score": 50,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-bedrock-log-invocation-001-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-bedrock-log-invocation-001-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "87c85ecd370f6541d2b0b2baf12ac306e8432460",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-bedrock-log-invocation-001-fail/controls/"
+      ]
+    }
+  }
+}

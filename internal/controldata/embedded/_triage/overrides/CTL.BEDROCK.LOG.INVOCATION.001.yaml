@@ -1,0 +1,15 @@
+control: CTL.BEDROCK.LOG.INVOCATION.001
+defect: >
+  Bedrock model invocation logging is not enabled. No record exists
+  of what prompts were sent or what the model responded.
+infection: >
+  An attacker uses a compromised API key or role to invoke models
+  without detection. Prompt injection attempts, data exfiltration
+  through model queries, and unauthorized model usage generate no
+  audit trail. The AI equivalent of disabling CloudTrail — all
+  activity is invisible to security monitoring.
+failure: >
+  Unauditable AI usage. Model invocations — including sensitive
+  prompts, credential misuse, and prompt injection — occur without
+  forensic visibility. Incident response cannot determine what data
+  was queried or exposed.

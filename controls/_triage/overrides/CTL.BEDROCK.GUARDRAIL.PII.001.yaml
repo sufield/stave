@@ -1,0 +1,16 @@
+control: CTL.BEDROCK.GUARDRAIL.PII.001
+defect: >
+  The Bedrock guardrail does not have sensitive information filters
+  configured. PII and custom patterns in prompts and responses are
+  not blocked or masked.
+infection: >
+  Users submit prompts containing PII (SSNs, credit card numbers,
+  medical records) and the model processes and potentially echoes
+  this data in responses visible to other users or logged to
+  unencrypted destinations. LLMs may also surface PII from training
+  data patterns — without filtering, these are returned verbatim.
+failure: >
+  PII leakage through AI responses. Sensitive data flows through
+  the AI pipeline unfiltered — visible in responses, stored in
+  logs, and potentially surfaced to unauthorized users through
+  the model's learned patterns.

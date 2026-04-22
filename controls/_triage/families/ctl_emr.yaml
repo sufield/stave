@@ -1,0 +1,11 @@
+family: CTL.EMR
+infection: >
+  A misconfigured EMR cluster exposes the big data pipeline —
+  datasets processed by Spark and Hadoop jobs, intermediate
+  computation results, and the cluster's access to source and
+  destination data stores. EMR clusters run with IAM roles that
+  typically have broad S3 and database access for data processing.
+failure: >
+  Data processing pipeline compromise. An attacker gains access to
+  datasets flowing through the cluster, computation results, and the
+  cluster's credentials for accessing source data stores.

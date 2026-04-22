@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.LOG.ENCRYPT.001
+name: Bedrock Invocation Logs Must Be Encrypted
+description: >
+  Bedrock model invocation logs must be stored in encrypted
+  destinations — S3 with bucket encryption and CloudWatch Logs with
+  KMS. Invocation logs contain prompts and responses which frequently
+  include sensitive business data, PII, and confidential queries.
+domain: encryption
+severity: high
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.7"
+  hipaa: "164.312(a)(2)(iv)"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - bedrock
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: Bedrock invocation logs are stored in unencrypted destinations.
+  action: >
+    Enable KMS encryption on the CloudWatch Logs group and/or S3
+    bucket used for invocation log delivery.
+  example: |
+    {
+      "ai": {
+        "kind": "bedrock_logging_config",
+        "logging": { "encryption_enabled": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: bedrock_logging_config
+    - field: properties.ai.logging.encryption_enabled
+      op: eq
+      value: false

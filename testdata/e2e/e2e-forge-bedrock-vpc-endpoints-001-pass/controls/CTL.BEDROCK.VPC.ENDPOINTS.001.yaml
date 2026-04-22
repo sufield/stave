@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.VPC.ENDPOINTS.001
+name: VPC Must Have Bedrock Interface Endpoints Configured
+description: >
+  VPCs using Bedrock must have interface endpoints for all Bedrock
+  services (bedrock, bedrock-runtime, bedrock-agent,
+  bedrock-agent-runtime). Without private endpoints, API traffic
+  exits the VPC via internet gateway, exposing it to network-path
+  threats and adding an internet dependency.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "IVS-04"]
+scope_tags:
+  - aws
+  - bedrock
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: collection
+remediation:
+  description: VPC does not have Bedrock interface endpoints.
+  action: >
+    Create interface VPC endpoints for bedrock, bedrock-runtime,
+    bedrock-agent, and bedrock-agent-runtime services.
+  example: |
+    {
+      "ai": {
+        "kind": "bedrock_vpc_config",
+        "network": { "vpc_endpoints_configured": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: bedrock_vpc_config
+    - field: properties.ai.network.vpc_endpoints_configured
+      op: eq
+      value: false

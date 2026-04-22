@@ -3,27 +3,27 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 795
-**Pack hash:** `a2c3acbc64074574c8e6823d5e3a379d95410dbafcd8a240598d308eb86f02f3`
+**Total controls:** 811
+**Pack hash:** `f95eab8e80d739402a28c9e0d6e09785d8a7152dde858fb77834573c83d7dfad`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 129 |
-| high | 346 |
+| high | 356 |
 | info | 16 |
 | low | 73 |
-| medium | 231 |
+| medium | 237 |
 
 | Domain | Count |
 |--------|-------|
 | audit | 20 |
 | detection | 2 |
-| encryption | 24 |
-| exposure | 513 |
+| encryption | 27 |
+| exposure | 523 |
 | governance | 19 |
-| identity | 174 |
+| identity | 177 |
 | network | 21 |
 | resilience | 14 |
 | storage | 8 |
@@ -939,6 +939,141 @@ The principal that administers the source data must have separate permissions fr
 Data classified as critical or PHI must have cross-region replication configured for disaster recovery. Single-region data is vulnerable to regional outages and cannot meet recovery time objectives (RTO) for multi-region failover.
 
 **Remediation:** Configure cross-region replication: S3 CRR, RDS cross-region read replica, or AWS Backup cross-region copy rule.
+
+---
+
+### CTL.BEDROCK.ACCESS.ADMIN.001
+
+**Bedrock API Keys Must Not Have Administrative Privileges**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+IAM users with Bedrock API keys must not have policies granting bedrock:* or full administrative access. A compromised overprivileged key can invoke models at scale, modify guardrails and logging, and escalate IAM privileges.
+
+**Remediation:** Scope the IAM user's policies to only the Bedrock actions required (e.g., bedrock:InvokeModel on specific models).
+
+---
+
+### CTL.BEDROCK.ACCESS.FULLACCESS.001
+
+**IAM Roles Must Not Use AmazonBedrockFullAccess Policy**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+IAM roles (excluding service-linked roles) must not have the AWS-managed AmazonBedrockFullAccess policy attached. This policy grants unrestricted access to all Bedrock actions and resources. If the role is compromised, an attacker can invoke any model, modify guardrails and logging, and incur significant costs.
+
+**Remediation:** Replace AmazonBedrockFullAccess with a scoped policy granting only required Bedrock actions on specific model ARNs.
+
+---
+
+### CTL.BEDROCK.ACCESS.LONGTERM.001
+
+**Bedrock API Keys Must Not Be Long-Lived**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: IA-5; soc2: CC6.1;
+
+Bedrock API keys must have appropriate expiration dates. Long-lived or non-expiring keys enable persistent access if compromised — unauthorized inference, exposure of prompts/outputs, uncontrolled cost, and inability to timely revoke credentials.
+
+**Remediation:** Set an appropriate expiration on the API key. Rotate keys regularly and use short-lived credentials where possible.
+
+---
+
+### CTL.BEDROCK.AGENT.GUARDRAIL.001
+
+**Bedrock Agents Must Have an Associated Guardrail**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-10; soc2: CC6.1;
+
+Bedrock agents must have a guardrail associated with their sessions. Without guardrails, agent exchanges may expose PII or internal data, accept prompt injections that manipulate tool calls, and produce unsafe or out-of-scope responses. Agents can invoke tools and APIs — an unguarded agent is an unguarded API caller.
+
+**Remediation:** Associate a guardrail with the agent via the guardrailConfiguration setting in the agent definition.
+
+---
+
+### CTL.BEDROCK.GUARDRAIL.PII.001
+
+**Bedrock Guardrails Must Enable Sensitive Information Filter**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(1); nist_800_53_r5: SI-10; soc2: CC6.1;
+
+Bedrock guardrails must configure sensitive information filters to block or mask PII and custom patterns in prompts and responses. Without filtering, prompts or outputs can reveal PII, credentials, financial records, or other sensitive data. LLMs may echo sensitive data from prompts or training data in responses.
+
+**Remediation:** Configure sensitive information filters in the guardrail to block or mask PII types (SSN, credit card, email, etc.) and custom regex patterns.
+
+---
+
+### CTL.BEDROCK.GUARDRAIL.PROMPTATTACK.001
+
+**Bedrock Guardrails Must Enable High-Strength Prompt Attack Filter**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-10; soc2: CC6.1;
+
+Bedrock guardrails must configure the prompt attack filter at HIGH strength. Without high-strength filtering, models are exposed to prompt injection and jailbreak attacks that can coerce disclosure of sensitive data, evade content policies, and trigger unintended tool execution.
+
+**Remediation:** Update the guardrail to set the prompt attack filter strength to HIGH via aws bedrock update-guardrail.
+
+---
+
+### CTL.BEDROCK.LOG.ENCRYPT.001
+
+**Bedrock Invocation Logs Must Be Encrypted**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-28; soc2: CC6.7;
+
+Bedrock model invocation logs must be stored in encrypted destinations — S3 with bucket encryption and CloudWatch Logs with KMS. Invocation logs contain prompts and responses which frequently include sensitive business data, PII, and confidential queries.
+
+**Remediation:** Enable KMS encryption on the CloudWatch Logs group and/or S3 bucket used for invocation log delivery.
+
+---
+
+### CTL.BEDROCK.LOG.INVOCATION.001
+
+**Bedrock Model Invocation Logging Must Be Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AU-2; soc2: CC7.1;
+
+Bedrock model invocation logging must be enabled to capture request/response data for Converse, InvokeModel, and streaming calls. Without invocation logs, there is no audit trail for what prompts were sent or what the model responded — credential misuse, prompt injection, and data exfiltration go undetected.
+
+**Remediation:** Enable model invocation logging via aws bedrock put-model-invocation-logging-configuration with S3 and/or CloudWatch Logs destinations.
+
+---
+
+### CTL.BEDROCK.VPC.ENDPOINTS.001
+
+**VPC Must Have Bedrock Interface Endpoints Configured**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+VPCs using Bedrock must have interface endpoints for all Bedrock services (bedrock, bedrock-runtime, bedrock-agent, bedrock-agent-runtime). Without private endpoints, API traffic exits the VPC via internet gateway, exposing it to network-path threats and adding an internet dependency.
+
+**Remediation:** Create interface VPC endpoints for bedrock, bedrock-runtime, bedrock-agent, and bedrock-agent-runtime services.
 
 ---
 
@@ -4401,6 +4536,81 @@ Internet-facing ALBs must have an AWS WAF web ACL associated.
 
 ---
 
+### CTL.EMR.ENCRYPT.001
+
+**EMR Clusters Must Use a Security Configuration for Encryption**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** nist_800_53_r5: SC-28; soc2: CC6.7;
+
+EMR clusters must have a security configuration enabling encryption at rest (EMRFS S3, local disk) and in transit (TLS). Without a security configuration, data processed by Spark and Hadoop jobs is stored and transmitted in plaintext.
+
+**Remediation:** Create an EMR security configuration with encryption enabled for at-rest (S3 via EMRFS, local disk via LUKS) and in-transit (TLS) and attach it to the cluster.
+
+---
+
+### CTL.EMR.LOG.001
+
+**EMR Clusters Must Have Logging Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AU-2; soc2: CC7.1;
+
+EMR clusters must enable logging to S3 for cluster events, step execution, and application logs. Without logging, job failures, security events, and data access patterns are invisible.
+
+**Remediation:** Enable logging with an S3 log URI when creating or updating the cluster.
+
+---
+
+### CTL.EMR.PUBLIC.BLOCK.001
+
+**EMR Account Must Enable Block Public Access**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+The EMR account-level Block Public Access setting must be enabled. When enabled, clusters cannot use security groups with inbound rules allowing public sources (0.0.0.0/0, ::/0) except on explicitly permitted ports.
+
+**Remediation:** Enable Block Public Access in the EMR console or via aws emr put-block-public-access-configuration.
+
+---
+
+### CTL.EMR.PUBLIC.IP.001
+
+**EMR Cluster Nodes Must Not Have Public IP Addresses**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+EMR cluster nodes (master and worker) must not have public IP addresses assigned. Public IPs make cluster nodes directly reachable from the internet, exposing Hadoop, Spark, and YARN management interfaces.
+
+**Remediation:** Launch clusters in private subnets without public IP assignment. Use a bastion host or VPN for administrative access.
+
+---
+
+### CTL.EMR.PUBLIC.SG.001
+
+**EMR Cluster Security Groups Must Not Allow Public Inbound**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+Security groups attached to EMR cluster nodes must not have inbound rules allowing traffic from 0.0.0.0/0 or ::/0. Open security groups expose Hadoop, Spark, and YARN interfaces to the internet.
+
+**Remediation:** Restrict security group inbound rules to specific CIDR ranges or security group IDs. Remove 0.0.0.0/0 and ::/0 rules.
+
+---
+
 ### CTL.EXPOSURE.ANON.001
 
 **Sensitive Resources Must Not Be Reachable from Anonymous**
@@ -7573,6 +7783,36 @@ Kubernetes Secrets stored in etcd must be encrypted at rest. By default, Secrets
 Secrets should be mounted as files, not environment variables. Environment variables are visible in process listings, crash dumps, and container inspection output, increasing the risk of credential exposure.
 
 **Remediation:** Mount Secrets as volumes instead of environment variables. Use projected volumes with restrictive file permissions (0400).
+
+---
+
+### CTL.KINESIS.ENCRYPT.001
+
+**Kinesis Streams Must Be Encrypted At Rest with KMS**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** nist_800_53_r5: SC-28; soc2: CC6.7;
+
+Kinesis Data Streams must use server-side encryption with KMS to protect records at rest. Streams without KMS encryption store records in plaintext — readable by anyone with stream read permissions.
+
+**Remediation:** Enable server-side encryption on the stream with a KMS key via aws kinesis start-stream-encryption.
+
+---
+
+### CTL.KINESIS.RETENTION.001
+
+**Kinesis Streams Must Meet Minimum Data Retention Period**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AU-11; soc2: A1.1;
+
+Kinesis Data Streams must retain records for at least the required minimum duration (default 168 hours / 7 days). Short retention windows reduce forensic capability and prevent replay of missed events by downstream consumers.
+
+**Remediation:** Increase the stream retention period via aws kinesis increase-stream-retention-period.
 
 ---
 

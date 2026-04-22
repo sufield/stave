@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.GUARDRAIL.PII.001
+name: Bedrock Guardrails Must Enable Sensitive Information Filter
+description: >
+  Bedrock guardrails must configure sensitive information filters to
+  block or mask PII and custom patterns in prompts and responses.
+  Without filtering, prompts or outputs can reveal PII, credentials,
+  financial records, or other sensitive data. LLMs may echo sensitive
+  data from prompts or training data in responses.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SI-10"
+  soc2: "CC6.1"
+  hipaa: "164.312(a)(1)"
+  ccm_v4: ["DSP-17", "AIS-06"]
+scope_tags:
+  - aws
+  - bedrock
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    Bedrock guardrail does not have sensitive information filters
+    configured.
+  action: >
+    Configure sensitive information filters in the guardrail to
+    block or mask PII types (SSN, credit card, email, etc.) and
+    custom regex patterns.
+  example: |
+    {
+      "ai": {
+        "kind": "bedrock_guardrail",
+        "guardrail": { "sensitive_info_filter_enabled": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: bedrock_guardrail
+    - field: properties.ai.guardrail.sensitive_info_filter_enabled
+      op: eq
+      value: false

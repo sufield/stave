@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.KINESIS.ENCRYPT.001
+name: Kinesis Streams Must Be Encrypted At Rest with KMS
+description: >
+  Kinesis Data Streams must use server-side encryption with KMS to
+  protect records at rest. Streams without KMS encryption store
+  records in plaintext — readable by anyone with stream read
+  permissions.
+domain: encryption
+severity: high
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.7"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - kinesis
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: Kinesis stream is not encrypted at rest with KMS.
+  action: >
+    Enable server-side encryption on the stream with a KMS key via
+    aws kinesis start-stream-encryption.
+  example: |
+    {
+      "streaming": {
+        "kind": "kinesis_stream",
+        "encryption": { "at_rest_enabled": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.streaming.kind
+      op: eq
+      value: kinesis_stream
+    - field: properties.streaming.encryption.at_rest_enabled
+      op: eq
+      value: false

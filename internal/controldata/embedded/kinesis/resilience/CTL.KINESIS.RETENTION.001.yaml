@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.KINESIS.RETENTION.001
+name: Kinesis Streams Must Meet Minimum Data Retention Period
+description: >
+  Kinesis Data Streams must retain records for at least the required
+  minimum duration (default 168 hours / 7 days). Short retention
+  windows reduce forensic capability and prevent replay of missed
+  events by downstream consumers.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-11"
+  soc2: "A1.1"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - kinesis
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: Kinesis stream retention period is below the required minimum.
+  action: >
+    Increase the stream retention period via
+    aws kinesis increase-stream-retention-period.
+  example: |
+    {
+      "streaming": {
+        "kind": "kinesis_stream",
+        "retention": { "meets_minimum": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.streaming.kind
+      op: eq
+      value: kinesis_stream
+    - field: properties.streaming.retention.meets_minimum
+      op: eq
+      value: false

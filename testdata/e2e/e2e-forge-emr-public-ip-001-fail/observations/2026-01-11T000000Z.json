@@ -1,0 +1,20 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "j-1ABCDEFGH2IJK",
+      "type": "aws_emr_cluster",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "emr_cluster",
+          "network": {
+            "nodes_have_public_ip": true
+          }
+        }
+      }
+    }
+  ]
+}
