@@ -1,0 +1,20 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:config:us-east-1:111122223333:recorder",
+      "type": "aws_config_recorder",
+      "vendor": "aws",
+      "properties": {
+        "governance": {
+          "kind": "config_recorder",
+          "config": {
+            "uses_service_role": true
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.SCHEMA.PUBLIC.001
+name: EventBridge Schema Registry Must Not Allow Public or Cross-Account Access
+description: >
+  EventBridge schema registry resource policies must not grant public
+  or unrestricted cross-account access. Schema registries describe
+  event structure — public access reveals internal API contracts.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-17"]
+scope_tags: [aws, eventbridge]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: discovery
+remediation:
+  description: EventBridge schema registry allows public or cross-account access.
+  action: Restrict the registry resource policy.
+  example: |
+    {"governance": {"kind": "eventbridge_schema_registry", "events": {"registry_public": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_schema_registry
+    - field: properties.governance.events.registry_public
+      op: eq
+      value: true

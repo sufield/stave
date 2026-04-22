@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.BUS.PUBLIC.001
+name: EventBridge Event Bus Must Not Allow Public Access
+description: >
+  EventBridge event bus resource policies must not grant public access
+  (Principal "*"). Public access allows anyone to publish events that
+  trigger downstream Lambda, Step Functions, or other targets.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-17", "IVS-03"]
+scope_tags: [aws, eventbridge]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: execution
+remediation:
+  description: EventBridge event bus policy allows public access.
+  action: Restrict the resource policy to specific accounts or principals.
+  example: |
+    {"governance": {"kind": "eventbridge_bus", "events": {"bus_policy_public": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_bus
+    - field: properties.governance.events.bus_policy_public
+      op: eq
+      value: true

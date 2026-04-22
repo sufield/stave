@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.CONFIG.SERVICEROLE.001
+name: AWS Config Must Use the Service-Linked Role
+description: >
+  AWS Config recorders must use the AWS-managed service-linked role
+  AWSServiceRoleForConfig rather than a custom IAM role. Custom roles
+  may have excessive or insufficient permissions and are not
+  automatically updated when Config adds support for new resources.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-04"]
+scope_tags: [aws, config]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: Config recorder uses a custom IAM role.
+  action: Switch to the AWSServiceRoleForConfig service-linked role.
+  example: |
+    {"governance": {"kind": "config_recorder", "config": {"uses_service_role": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: config_recorder
+    - field: properties.governance.config.uses_service_role
+      op: eq
+      value: false

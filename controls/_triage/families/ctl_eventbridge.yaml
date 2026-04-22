@@ -1,0 +1,11 @@
+family: CTL.EVENTBRIDGE
+infection: >
+  A misconfigured EventBridge bus allows unauthorized event injection
+  or interception. Event buses route application events between
+  services. A broad access policy allows any account to put events
+  that trigger downstream Lambda functions, Step Functions, or other
+  targets. Injected events execute with the target's permissions.
+failure: >
+  Event injection or interception. An attacker injects events that
+  trigger downstream service actions, reads events containing
+  operational data, or manipulates event-driven workflows.

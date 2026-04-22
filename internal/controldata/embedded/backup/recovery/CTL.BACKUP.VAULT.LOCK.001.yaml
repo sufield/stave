@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.BACKUP.VAULT.LOCK.001
+name: Backup Vaults Must Have Vault Lock Enabled
+description: >
+  AWS Backup vaults must have vault lock enabled to prevent deletion
+  of recovery points. Without vault lock, an attacker with vault
+  access can delete all backups before conducting a destructive
+  attack — the ransomware pattern eliminates the recovery path
+  before encrypting production data.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "CP-9"
+  soc2: "A1.1"
+  ccm_v4: ["BCR-08"]
+scope_tags: [aws, backup]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: Backup vault lock is not enabled.
+  action: Enable vault lock with a retention policy.
+  example: |
+    {"governance": {"kind": "backup_vault", "backup": {"vault_lock_enabled": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: backup_vault
+    - field: properties.governance.backup.vault_lock_enabled
+      op: eq
+      value: false

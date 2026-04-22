@@ -1,0 +1,330 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-15T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "5155aae0578144301c9062bba6f1716e7d8906fae506513703b28ed34e951113",
+        "2026-01-11T000000Z.json": "c9bb44f2d8bfecc911f0bb0370ccb5ddd8a8da4830cc5d759f6a91aab7a0d8f1"
+      },
+      "overall": "055f3a522398f688eb08d9292eb79ae37e93f8851e4a1362b867b4c6019a59b5"
+    },
+    "policy_fingerprint": "d77ffd6a8b904047db3fc75eeb8ac21b8c8f5b46fef0ec678d5b52fb5f5c53a5",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.CONFIG.SERVICEROLE.001",
+      "asset_id": "arn:aws:config:us-east-1:111122223333:recorder",
+      "asset_type": "aws_config_recorder",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -168,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:c78f64e4bef87a4e",
+      "control_id": "CTL.CONFIG.SERVICEROLE.001",
+      "control_name": "AWS Config Must Use the Service-Linked Role",
+      "control_description": "AWS Config recorders must use the AWS-managed service-linked role AWSServiceRoleForConfig rather than a custom IAM role. Custom roles may have excessive or insufficient permissions and are not automatically updated when Config adds support for new resources.\n",
+      "asset_id": "arn:aws:config:us-east-1:111122223333:recorder",
+      "asset_type": "aws_config_recorder",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 336,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "governance.config.uses_service_role",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "governance.kind",
+            "actual_value": "config_recorder",
+            "operator": "eq",
+            "unsafe_value": "config_recorder"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 336 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "nist_800_53_r5": "AC-6",
+        "soc2": "CC6.1"
+      },
+      "control_compliance_ccm_v4": [
+        "IAM-04"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Config recorder uses a custom IAM role.",
+        "action": "Switch to the AWSServiceRoleForConfig service-linked role.",
+        "example": "{\"governance\": {\"kind\": \"config_recorder\", \"config\": {\"uses_service_role\": true}}}\n"
+      },
+      "fix_plan": {
+        "id": "fix-3d188c7bdfb87cd3",
+        "target": {
+          "asset_id": "arn:aws:config:us-east-1:111122223333:recorder",
+          "asset_type": "aws_config_recorder"
+        },
+        "action": "Switch to the AWSServiceRoleForConfig service-linked role."
+      },
+      "exposure_score": 50,
+      "score_breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "governance.config.uses_service_role eq false",
+          "observation_key": "governance.config.uses_service_role",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "governance.kind eq \"config_recorder\"",
+          "observation_key": "governance.kind",
+          "operator": "eq",
+          "expected_value": "config_recorder",
+          "observed_value": "config_recorder"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "arn:aws:config:us-east-1:111122223333:recorder",
+          "type": "aws_config_recorder",
+          "vendor": "aws",
+          "arn": "arn:aws:config:us-east-1:111122223333:recorder",
+          "region": "us-east-1"
+        },
+        "violation": {
+          "control_id": "CTL.CONFIG.SERVICEROLE.001",
+          "control_name": "AWS Config Must Use the Service-Linked Role",
+          "severity": "medium",
+          "reasoning": [
+            {
+              "clause": "governance.config.uses_service_role = false",
+              "observation_key": "governance.config.uses_service_role",
+              "observed_value": false
+            },
+            {
+              "clause": "governance.kind = \"config_recorder\"",
+              "observation_key": "governance.kind",
+              "observed_value": "config_recorder"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "governance.config.uses_service_role",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set governance.config.uses_service_role to true"
+          },
+          {
+            "path": "governance.kind",
+            "current_value": "config_recorder",
+            "has_safe_default": false,
+            "description": "Change governance.kind from config_recorder"
+          }
+        ],
+        "action": "Switch to the AWSServiceRoleForConfig service-linked role."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "config"
+      ],
+      "delta": [
+        {
+          "property_label": "config uses service role",
+          "property_path": "governance.config.uses_service_role",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:c4e55432360d414c",
+      "asset_id": "arn:aws:config:us-east-1:111122223333:recorder",
+      "shared_keys": [
+        "governance.config",
+        "governance.config.uses_service_role",
+        "governance.kind"
+      ],
+      "headline_finding_id": "sha256:c78f64e4bef87a4e",
+      "member_finding_ids": [
+        "sha256:c78f64e4bef87a4e"
+      ],
+      "consolidated_score": 50,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "arn:aws:config:us-east-1:111122223333:recorder",
+      "asset_type": "aws_config_recorder",
+      "fix_plan": {
+        "id": "fix-3d188c7bdfb87cd3",
+        "target": {
+          "asset_id": "arn:aws:config:us-east-1:111122223333:recorder",
+          "asset_type": "aws_config_recorder"
+        },
+        "action": "Switch to the AWSServiceRoleForConfig service-linked role."
+      },
+      "contributing_controls": [
+        "CTL.CONFIG.SERVICEROLE.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.CONFIG.SERVICEROLE.001",
+      "asset_id": "arn:aws:config:us-east-1:111122223333:recorder",
+      "exposure_score": 50,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-config-servicerole-001-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-config-servicerole-001-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "3aae4c7a360a5cc259dd59acb1e8b4cd826bde40",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-config-servicerole-001-fail/controls/"
+      ]
+    }
+  }
+}

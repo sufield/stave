@@ -3,26 +3,26 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 855
-**Pack hash:** `8877c9c15f88fe028cd98303ea24e7f8d4c246fd1007b5d6bdb7027acd16280f`
+**Total controls:** 861
+**Pack hash:** `6a221e1046bc459c2e7eb1fddab127dbed049fa8bb19831789507db2b2f0990e`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 132 |
-| high | 371 |
+| high | 374 |
 | info | 16 |
 | low | 76 |
-| medium | 260 |
+| medium | 263 |
 
 | Domain | Count |
 |--------|-------|
 | audit | 20 |
 | detection | 2 |
 | encryption | 33 |
-| exposure | 561 |
-| governance | 19 |
+| exposure | 566 |
+| governance | 20 |
 | identity | 177 |
 | network | 21 |
 | resilience | 14 |
@@ -1089,6 +1089,21 @@ The principal that administers the source data must have separate permissions fr
 Data classified as critical or PHI must have cross-region replication configured for disaster recovery. Single-region data is vulnerable to regional outages and cannot meet recovery time objectives (RTO) for multi-region failover.
 
 **Remediation:** Configure cross-region replication: S3 CRR, RDS cross-region read replica, or AWS Backup cross-region copy rule.
+
+---
+
+### CTL.BACKUP.VAULT.LOCK.001
+
+**Backup Vaults Must Have Vault Lock Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CP-9; soc2: A1.1;
+
+AWS Backup vaults must have vault lock enabled to prevent deletion of recovery points. Without vault lock, an attacker with vault access can delete all backups before conducting a destructive attack — the ransomware pattern eliminates the recovery path before encrypting production data.
+
+**Remediation:** Enable vault lock with a retention policy.
 
 ---
 
@@ -3151,6 +3166,21 @@ AWS Config must have active Config Rules to evaluate resource compliance. Record
 
 ---
 
+### CTL.CONFIG.SERVICEROLE.001
+
+**AWS Config Must Use the Service-Linked Role**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+AWS Config recorders must use the AWS-managed service-linked role AWSServiceRoleForConfig rather than a custom IAM role. Custom roles may have excessive or insufficient permissions and are not automatically updated when Config adds support for new resources.
+
+**Remediation:** Switch to the AWSServiceRoleForConfig service-linked role.
+
+---
+
 ### CTL.DMS.LOG.SOURCE.001
 
 **DMS Replication Tasks Must Enable Source Logging**
@@ -5028,6 +5058,66 @@ EMR cluster nodes (master and worker) must not have public IP addresses assigned
 Security groups attached to EMR cluster nodes must not have inbound rules allowing traffic from 0.0.0.0/0 or ::/0. Open security groups expose Hadoop, Spark, and YARN interfaces to the internet.
 
 **Remediation:** Restrict security group inbound rules to specific CIDR ranges or security group IDs. Remove 0.0.0.0/0 and ::/0 rules.
+
+---
+
+### CTL.EVENTBRIDGE.BUS.CROSSACCOUNT.001
+
+**EventBridge Event Bus Must Not Allow Unrestricted Cross-Account Access**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+EventBridge event bus resource policies must not grant event delivery to external accounts without conditions. Cross-account event injection allows external principals to trigger downstream service actions.
+
+**Remediation:** Restrict cross-account access with conditions or specific account IDs.
+
+---
+
+### CTL.EVENTBRIDGE.BUS.PUBLIC.001
+
+**EventBridge Event Bus Must Not Allow Public Access**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+EventBridge event bus resource policies must not grant public access (Principal "*"). Public access allows anyone to publish events that trigger downstream Lambda, Step Functions, or other targets.
+
+**Remediation:** Restrict the resource policy to specific accounts or principals.
+
+---
+
+### CTL.EVENTBRIDGE.REPLICATION.001
+
+**EventBridge Global Endpoints Must Enable Event Replication**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CP-10; soc2: A1.1;
+
+EventBridge global endpoints must have event replication enabled to replicate events to both primary and secondary regions for cross-region resilience.
+
+**Remediation:** Enable event replication on the global endpoint.
+
+---
+
+### CTL.EVENTBRIDGE.SCHEMA.PUBLIC.001
+
+**EventBridge Schema Registry Must Not Allow Public or Cross-Account Access**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+EventBridge schema registry resource policies must not grant public or unrestricted cross-account access. Schema registries describe event structure — public access reveals internal API contracts.
+
+**Remediation:** Restrict the registry resource policy.
 
 ---
 

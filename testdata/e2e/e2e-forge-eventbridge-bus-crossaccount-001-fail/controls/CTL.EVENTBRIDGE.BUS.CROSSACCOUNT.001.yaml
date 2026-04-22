@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.BUS.CROSSACCOUNT.001
+name: EventBridge Event Bus Must Not Allow Unrestricted Cross-Account Access
+description: >
+  EventBridge event bus resource policies must not grant event
+  delivery to external accounts without conditions. Cross-account
+  event injection allows external principals to trigger downstream
+  service actions.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-17"]
+scope_tags: [aws, eventbridge]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: execution
+remediation:
+  description: EventBridge event bus allows unrestricted cross-account access.
+  action: Restrict cross-account access with conditions or specific account IDs.
+  example: |
+    {"governance": {"kind": "eventbridge_bus", "events": {"bus_cross_account_unrestricted": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_bus
+    - field: properties.governance.events.bus_cross_account_unrestricted
+      op: eq
+      value: true

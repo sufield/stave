@@ -1,0 +1,13 @@
+control: CTL.BACKUP.VAULT.LOCK.001
+defect: >
+  The backup vault does not have vault lock enabled. Recovery points
+  in the vault can be deleted by anyone with vault access.
+infection: >
+  An attacker with backup vault access deletes all recovery points
+  before encrypting production data. The organization discovers the
+  ransomware attack but finds no backups to restore from — the
+  recovery path was eliminated before the destructive phase began.
+failure: >
+  Ransomware without recovery. Backup deletion followed by data
+  encryption leaves no recovery path. The organization pays the
+  ransom or accepts permanent data loss.

@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.REPLICATION.001
+name: EventBridge Global Endpoints Must Enable Event Replication
+description: >
+  EventBridge global endpoints must have event replication enabled to
+  replicate events to both primary and secondary regions for
+  cross-region resilience.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "CP-10"
+  soc2: "A1.1"
+  ccm_v4: ["BCR-08"]
+scope_tags: [aws, eventbridge]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: EventBridge global endpoint event replication is disabled.
+  action: Enable event replication on the global endpoint.
+  example: |
+    {"governance": {"kind": "eventbridge_global_endpoint", "events": {"replication_enabled": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_global_endpoint
+    - field: properties.governance.events.replication_enabled
+      op: eq
+      value: false

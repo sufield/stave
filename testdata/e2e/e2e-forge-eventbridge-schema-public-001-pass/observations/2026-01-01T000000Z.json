@@ -1,0 +1,20 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:schemas:us-east-1:111122223333:registry/app",
+      "type": "aws_eventbridge_schema_registry",
+      "vendor": "aws",
+      "properties": {
+        "governance": {
+          "kind": "eventbridge_schema_registry",
+          "events": {
+            "registry_public": false
+          }
+        }
+      }
+    }
+  ]
+}
