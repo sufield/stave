@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.NEPTUNE.AUTH.IAM.001
+name: Neptune Must Enable IAM Authentication
+description: Neptune clusters must enable IAM database authentication.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: IA-2
+  soc2: CC6.1
+  ccm_v4:
+  - IAM-05
+scope_tags:
+- aws
+- neptune
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Enable IAM authentication on the cluster..
+  action: Enable IAM authentication on the cluster.
+unsafe_predicate:
+  all:
+  - field: properties.database.kind
+    op: eq
+    value: neptune_cluster
+  - field: properties.database.auth.iam_authentication_enabled
+    op: eq
+    value: false

@@ -1,0 +1,109 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.UPDATEDEVENDPOINT.001
+name: Principal Must Not Escalate via Updating Existing Glue Dev Endpoint
+description: >
+  Principals with glue:UpdateDevEndpoint on an existing Glue
+  development endpoint can replace the SSH public key and connect to
+  the endpoint. The endpoint runs under its attached IAM role. If the
+  role's permissions exceed the principal's, this is a privilege
+  escalation path. Unlike PassRole-based Glue escalation (which
+  creates a new endpoint), this technique modifies an existing one —
+  no iam:PassRole required. Rhino Security Labs documents this as
+  "UpdateExistingGlueDevEndpoint". Note: AWS deprecated Glue dev
+  endpoints in favor of interactive sessions, but existing endpoints
+  remain operational.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-6(5)"
+  fedramp_moderate: "AC-6(5)"
+  iso_27001_2022: "A.8.3"
+  ccm_v4: ["IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+  - glue
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  base_impact: 9
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+observation_fields:
+  - identity.kind
+  - identity.escalation.updatedevendpoint.present
+  - identity.escalation.updatedevendpoint.target_endpoint
+  - identity.escalation.updatedevendpoint.target_role
+  - identity.escalation.updatedevendpoint.permission_delta
+remediation:
+  description: >
+    Principal has a Glue-mediated escalation path via endpoint
+    modification. It can update an existing Glue dev endpoint whose
+    IAM role exceeds the principal's permissions, replace the SSH key,
+    and connect to the endpoint with the role's authority.
+  action: >
+    Remove glue:UpdateDevEndpoint from the principal, or reduce the
+    endpoint's IAM role to least privilege. If the endpoint is no
+    longer needed, delete it — AWS deprecated Glue dev endpoints in
+    favor of interactive sessions. For active endpoints, restrict
+    glue:UpdateDevEndpoint via IAM policy conditions.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "escalation": {
+          "updatedevendpoint": {
+            "present": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.escalation.updatedevendpoint.present
+      op: eq
+      value: true
+tests:
+  - name: user with Glue endpoint update escalation path fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/data-engineer
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            updatedevendpoint:
+              present: true
+              target_endpoint: arn:aws:glue:us-east-1:111122223333:devEndpoint/etl-dev
+              target_role: arn:aws:iam::111122223333:role/glue-admin-role
+              permission_delta:
+                - s3:*
+                - dynamodb:*
+  - name: user without escalation path passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/alice
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            updatedevendpoint:
+              present: false
+alternatives:
+  - tool: prowler
+    check_id: iam_inline_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 24 per-technique controls covering the aggregated Prowler check.
+  - tool: prowler
+    check_id: iam_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 24 per-technique controls covering the aggregated Prowler check.

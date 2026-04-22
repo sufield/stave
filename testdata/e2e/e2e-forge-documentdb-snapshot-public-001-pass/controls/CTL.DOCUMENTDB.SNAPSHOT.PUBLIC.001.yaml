@@ -1,0 +1,36 @@
+dsl_version: ctrl.v1
+id: CTL.DOCUMENTDB.SNAPSHOT.PUBLIC.001
+name: DocumentDB Snapshots Must Not Be Public
+description: DocumentDB snapshots must not be publicly accessible.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: AC-3
+  soc2: CC6.6
+  ccm_v4:
+  - DSP-17
+scope_tags:
+- aws
+- documentdb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: Remove public access from the snapshot..
+  action: Remove public access from the snapshot.
+unsafe_predicate:
+  all:
+  - field: properties.database.kind
+    op: eq
+    value: documentdb_cluster
+  - field: properties.database.snapshot.is_public
+    op: eq
+    value: true
+defect: A DocumentDB cluster snapshot is publicly accessible. Any AWS account
+  can copy and restore the snapshot.
+infection: Any AWS account can copy the public snapshot, restore it as a new
+  cluster, and query all document collections — including nested data structures
+  and embedded documents.
+failure: Complete document data exposure. All collections, documents, and
+  nested data are accessible to any AWS account.

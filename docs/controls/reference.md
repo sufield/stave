@@ -3,29 +3,29 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 675
-**Pack hash:** `ebf3bb2a6bd19f809dc6d05dfb01f793d0a5b5ce6b6e0c444b2f0955c1246916`
+**Total controls:** 751
+**Pack hash:** `21d7cfa5f749e012fb4f6b87e98987e1139d5f8fba8ffb50985acc310397dd12`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 120 |
-| high | 303 |
+| critical | 125 |
+| high | 326 |
 | info | 16 |
-| low | 52 |
-| medium | 184 |
+| low | 68 |
+| medium | 216 |
 
 | Domain | Count |
 |--------|-------|
-| audit | 10 |
+| audit | 20 |
 | detection | 2 |
 | encryption | 9 |
-| exposure | 459 |
-| governance | 18 |
-| identity | 158 |
-| network | 7 |
-| resilience | 4 |
+| exposure | 487 |
+| governance | 19 |
+| identity | 171 |
+| network | 21 |
+| resilience | 14 |
 | storage | 8 |
 
 ## Controls
@@ -761,6 +761,21 @@ API Gateway stages must enforce TLS 1.2 or higher. Allowing older TLS versions e
 API Gateway REST APIs must have request validation configured. API Gateway can validate incoming requests against a defined schema — checking required parameters, parameter types and formats, and request body conformance to a JSON schema — before the request reaches the backend. Without validation, malformed and malicious inputs are forwarded to the backend uninspected. This is complementary to WAF protection: WAF managed rules detect known-malicious patterns (SQLi, XSS, known exploits), while request validation detects structural violations (missing fields, wrong types, malformed bodies). A backend that receives only structurally valid requests is harder to attack through injection because type confusion, null pointer paths, and unexpected field exploitation are blocked at the API boundary. Request validation is particularly valuable for APIs handling PHI or financial data where the backend may make trust assumptions about well-formed input.
 
 **Remediation:** Configure a request validator on the REST API via the API Gateway console or PutRestApi/UpdateMethod API. Define request models (JSON schemas) for endpoints that accept request bodies. Enable parameter validation for all methods. For REST APIs handling PHI or sensitive data, enable both parameter and body validation against defined model schemas.
+
+---
+
+### CTL.AUTOSCALING.ELB.HEALTH.001
+
+**Auto Scaling Groups Must Use ELB Health Checks**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** resilience
+- **Compliance:** nist_800_53_r5: CP-7; soc2: CC7.1;
+
+ASGs with load balancers must use ELB health checks.
+
+**Remediation:** Switch to ELB health checks.
 
 ---
 
@@ -1556,6 +1571,21 @@ CloudFront origin failover automatically routes requests to a secondary origin w
 
 ---
 
+### CTL.CLOUDFRONT.ORIGIN.NOACCESS.001
+
+**CloudFront S3 Origin Must Have Origin Access Control**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3; nist_800_53_r5: AC-3; pci_dss_v4.0: 1.3.4; soc2: CC6.6;
+
+CloudFront distributions with S3 origins must have Origin Access Control (OAC) or at minimum Origin Access Identity (OAI) configured. Without either, CloudFront accesses the bucket via its public endpoint, requiring the bucket to have a public or permissive policy. This makes CloudFront's authentication, WAF, and geo-restriction bypassable by hitting the S3 endpoint directly.
+
+**Remediation:** Configure Origin Access Control (OAC) on the distribution. Update the S3 bucket policy to grant access only to the CloudFront distribution via the OAC principal. Remove any public access from the bucket policy.
+
+---
+
 ### CTL.CLOUDFRONT.ORIGIN.SHIELD.001
 
 **High-Traffic CloudFront Distributions Should Have Origin Shield Enabled**
@@ -1628,6 +1658,36 @@ CloudFront distributions must have an AWS WAF Web ACL associated for layer-7 pro
 CloudTrail trails must be configured to deliver events to a CloudWatch Logs log group with active delivery. CloudTrail delivers events to S3 by default. CloudWatch Logs integration is a separate configuration that enables real-time metric filtering and alerting. Without it, all 17 CIS-required CloudWatch metric filter controls (CTL.CLOUDWATCH.MONITOR.*) evaluate an empty event stream — the filters exist, the alarms are configured, but nothing fires. This is a silent gap: all monitoring controls appear to pass individually while the event pipeline is broken. CTL.CLOUDTRAIL.ENABLED.001 verifies the trail is active. This control verifies the trail is delivering to CloudWatch Logs — the prerequisite for real-time monitoring.
 
 **Remediation:** Configure the trail to deliver to a CloudWatch Logs log group via the CloudTrail console or update-trail API. Create or specify a log group and grant CloudTrail the cloudwatch:PutLogEvents permission via an IAM role. Verify delivery is active after configuration.
+
+---
+
+### CTL.CLOUDTRAIL.DATA.DYNAMODB.001
+
+**CloudTrail Must Log DynamoDB Data Events**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** nist_800_53_r5: AU-12; soc2: CC7.1;
+
+CloudTrail trails must include DynamoDB data events to log table-level operations (GetItem, PutItem, Query, Scan). Without this, data exfiltration from DynamoDB is invisible.
+
+**Remediation:** Add DynamoDB data event selector to the trail: event category Data, resource type AWS::DynamoDB::Table, read/write type All.
+
+---
+
+### CTL.CLOUDTRAIL.DATA.LAMBDA.001
+
+**CloudTrail Must Log Lambda Invocation Data Events**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** nist_800_53_r5: AU-12; soc2: CC7.1;
+
+CloudTrail trails must include Lambda data events to log function invocations. Without this, attacker execution via Lambda is invisible.
+
+**Remediation:** Add Lambda data event selector to the trail: event category Data, resource type AWS::Lambda::Function, read/write type All.
 
 ---
 
@@ -1720,6 +1780,21 @@ The observation snapshot is missing required CloudTrail properties. A safety ass
 
 ---
 
+### CTL.CLOUDTRAIL.INSIGHTS.001
+
+**CloudTrail Insights Must Be Enabled for Anomaly Detection**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** nist_800_53_r5: SI-4; soc2: CC7.1;
+
+CloudTrail Insights must be enabled to detect anomalous API activity patterns — unusual call volumes or error rates that indicate automated reconnaissance or attack.
+
+**Remediation:** Enable CloudTrail Insights (ApiCallRateInsight and ApiErrorRateInsight) on the trail via the CloudTrail console or PutInsightSelectors API.
+
+---
+
 ### CTL.CLOUDTRAIL.LOG.VALIDATION.001
 
 **CloudTrail Log File Validation Must Be Enabled**
@@ -1747,6 +1822,51 @@ CloudTrail log file validation must be enabled to detect whether log files have 
 CloudTrail LookupEvents access must be restricted to security and administrative roles. Unrestricted LookupEvents access exposes 90 days of API activity patterns including which principals performed which actions, resource names, source IP addresses, and timestamps. Attackers use this to identify active service accounts, map API usage patterns, and time their actions to blend with normal activity.
 
 **Remediation:** Restrict cloudtrail:LookupEvents to security and administrative roles only. Apply conditions such as aws:PrincipalTag to limit access. Consider using CloudTrail Lake with fine-grained query permissions instead of LookupEvents for audit workflows.
+
+---
+
+### CTL.CLOUDTRAIL.NETWORK.ACTIVITY.001
+
+**CloudTrail Must Log Network Activity Events for VPC Endpoints**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** fedramp_moderate: AU-12; nist_800_53_r5: AU-12; soc2: CC7.1;
+
+CloudTrail Network Activity event logging must be enabled to capture VPC endpoint data-plane events including anonymous S3 requests. AWS's April 2026 patch logs anonymous requests as Network Activity events, but only if this event type is enabled.
+
+**Remediation:** Enable Network Activity events on the CloudTrail trail via PutEventSelectors with the networkActivity event category.
+
+---
+
+### CTL.CLOUDTRAIL.ORG.001
+
+**CloudTrail Must Be Configured as Organization Trail**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** cis_aws_v3.0: 3.1; fedramp_moderate: AU-12; nist_800_53_r5: AU-12; soc2: CC7.1;
+
+CloudTrail trails must be configured as AWS Organizations trails covering all member accounts. Account-level trails leave member accounts without centralized logging.
+
+**Remediation:** Convert to an organization trail via the management account.
+
+---
+
+### CTL.CLOUDTRAIL.REPLICATION.001
+
+**CloudTrail Logs Must Be Replicated to a Separate Account**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** fedramp_moderate: AU-9; nist_800_53_r5: AU-9; soc2: CC7.1;
+
+CloudTrail log destination must have cross-account replication configured to a separate logging account. Without replication, compromising the trail-hosting account enables complete evidence destruction.
+
+**Remediation:** Configure S3 replication on the trail bucket targeting a bucket in a separate logging account.
 
 ---
 
@@ -1869,6 +1989,21 @@ CloudWatch log groups for cardholder data environment audit logs must retain log
 
 ---
 
+### CTL.CLOUDWATCH.MONITOR.ANON.VPC.001
+
+**Anonymous S3 Requests via VPC Endpoints Must Be Monitored**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AU-12; soc2: CC7.1;
+
+CloudWatch alarms must detect anonymous S3 requests transiting VPC endpoints. Even with Network Activity logging enabled, events must be actively monitored to surface anonymous access.
+
+**Remediation:** Create a CloudWatch metric filter on Network Activity events matching anonymous (unsigned) S3 requests through VPC endpoints. Create an alarm with SNS notification.
+
+---
+
 ### CTL.CLOUDWATCH.MONITOR.AUTHFAIL.001
 
 **Console Authentication Failures Must Be Monitored**
@@ -1914,6 +2049,45 @@ A CloudWatch metric filter and alarm must monitor aws config changes. Changes to
 
 ---
 
+### CTL.CLOUDWATCH.MONITOR.CROSSACCOUNT.001
+
+**Cross-Account AssumeRole Events Must Be Monitored**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AU-12; nist_800_53_r5: AU-12; soc2: CC7.1;
+
+A CloudWatch metric filter and alarm must monitor sts:AssumeRole events from external accounts. Cross-account assumption is a normal operation for partner integrations and CI/CD pipelines, but unexpected external assumptions indicate compromised trust relationships or credential theft. The metric filter should match AssumeRole events where the source account is not in the organization's known account list.
+
+**Remediation:** Create a CloudWatch log metric filter on the CloudTrail log group matching sts:AssumeRole events where the source account differs from the target account. Create an alarm with SNS notification.
+
+---
+
+### CTL.CLOUDWATCH.MONITOR.ESCALATION.001
+
+**IAM Privilege Escalation Events Must Be Monitored**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 4.4; fedramp_moderate: AU-12; nist_800_53_r5: AU-12; soc2: CC7.1;
+
+A CloudWatch metric filter and alarm must monitor IAM privilege escalation API calls. These are the specific API actions that enable an attacker to elevate permissions after initial access: CreatePolicyVersion, SetDefaultPolicyVersion, AttachUserPolicy, AttachRolePolicy, AttachGroupPolicy, PutUserPolicy, PutRolePolicy, PutGroupPolicy, CreateAccessKey, CreateLoginProfile, UpdateLoginProfile, UpdateAssumeRolePolicy, and PassRole (as a parameter in RunInstances, CreateFunction, CreateStack, etc.). The existing iam_policy_changes metric filter (CIS 4.4) covers general policy modifications but does not specifically surface the escalation-enabling subset. This control verifies that a dedicated escalation-focused filter and alarm exist.
+
+**Remediation:** Create a CloudWatch log metric filter on the CloudTrail log group matching escalation-relevant API calls: { ($.eventName = CreatePolicyVersion) ||
+  ($.eventName = SetDefaultPolicyVersion) ||
+  ($.eventName = AttachUserPolicy) ||
+  ($.eventName = AttachRolePolicy) ||
+  ($.eventName = PutUserPolicy) ||
+  ($.eventName = PutRolePolicy) ||
+  ($.eventName = CreateAccessKey) ||
+  ($.eventName = CreateLoginProfile) ||
+  ($.eventName = UpdateAssumeRolePolicy) }.
+Then create a CloudWatch alarm with an SNS notification action.
+
+---
+
 ### CTL.CLOUDWATCH.MONITOR.GW.001
 
 **Network Gateway Changes Must Be Monitored**
@@ -1941,6 +2115,36 @@ A CloudWatch metric filter and alarm must monitor network gateway changes. Gatew
 A CloudWatch metric filter and alarm must monitor iam policy changes. IAM policy modifications (CreatePolicy, DeletePolicy, AttachRolePolicy) are a primary persistence mechanism for attackers.
 
 **Remediation:** Create a CloudWatch log metric filter on the CloudTrail log group matching the CIS-specified pattern for iam policy changes, then create an alarm with an SNS notification action.
+
+---
+
+### CTL.CLOUDWATCH.MONITOR.IMDS.001
+
+**IMDS Configuration Changes Must Be Monitored**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AU-12; soc2: CC7.1;
+
+CloudWatch alarms must detect changes to EC2 instance metadata options (ModifyInstanceMetadataOptions). Without monitoring, an attacker can downgrade IMDSv2 to IMDSv1 silently.
+
+**Remediation:** Create a CloudWatch metric filter on CloudTrail events matching ModifyInstanceMetadataOptions. Create an alarm with SNS notification for any match.
+
+---
+
+### CTL.CLOUDWATCH.MONITOR.LAMBDA.ERRORS.001
+
+**Lambda Error and Permission Failure Events Must Be Monitored**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AU-12; nist_800_53_r5: AU-12; soc2: CC7.1;
+
+CloudWatch alarms must be configured to detect Lambda function error spikes, throttling events, and permission failure patterns. Without monitoring, a compromised function probing IAM permissions generates AccessDenied events nobody sees, and application errors indicating exploitation accumulate without alerting.
+
+**Remediation:** Create CloudWatch alarms for: AWS/Lambda Errors metric exceeding threshold, AWS/Lambda Throttles > 0, and CloudTrail AccessDenied/UnauthorizedAccess events filtered to Lambda- sourced principals. Configure SNS notification for each alarm.
 
 ---
 
@@ -2064,6 +2268,21 @@ A CloudWatch metric filter and alarm must monitor security group changes. Securi
 
 ---
 
+### CTL.CLOUDWATCH.MONITOR.STS.ANOMALOUS.001
+
+**Anomalous STS Credential Usage Must Be Monitored**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AU-12; soc2: CC7.1;
+
+CloudWatch alarms must detect STS credential usage from unexpected IP addresses or regions — indicating stolen instance role credentials being used externally.
+
+**Remediation:** Create a CloudWatch metric filter matching STS API calls where the source IP is outside the expected VPC CIDR range or from unexpected regions. Alert on any match.
+
+---
+
 ### CTL.CLOUDWATCH.MONITOR.TRAIL.001
 
 **CloudTrail Configuration Changes Must Be Monitored**
@@ -2076,6 +2295,21 @@ A CloudWatch metric filter and alarm must monitor security group changes. Securi
 A CloudWatch metric filter and alarm must monitor cloudtrail configuration changes. Changes to CloudTrail (CreateTrail, UpdateTrail, DeleteTrail, StopLogging) are the first action in covering tracks after compromise.
 
 **Remediation:** Create a CloudWatch log metric filter on the CloudTrail log group matching the CIS-specified pattern for cloudtrail configuration changes, then create an alarm with an SNS notification action.
+
+---
+
+### CTL.CLOUDWATCH.MONITOR.TRAIL.ACCESS.001
+
+**Unauthorized Access to CloudTrail Log Bucket Must Be Monitored**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AU-9; soc2: CC7.1;
+
+CloudWatch alarms must detect access to the CloudTrail log bucket by principals other than the CloudTrail service. An attacker who reads log files can learn what's logged and plan evasion.
+
+**Remediation:** Create a CloudWatch metric filter on the CloudTrail log group matching S3 GetObject/ListBucket events on the trail bucket where the principal is not cloudtrail.amazonaws.com. Create an alarm with SNS notification.
 
 ---
 
@@ -2359,6 +2593,111 @@ DNS records or URLs that reference software distribution endpoints (package repo
 
 ---
 
+### CTL.DOCUMENTDB.BACKUP.001
+
+**DocumentDB Automated Backups Must Be Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** resilience
+- **Compliance:** nist_800_53_r5: CP-9; soc2: CC7.1;
+
+DocumentDB clusters must have automated backups.
+
+**Remediation:** Set backup retention period to at least 7 days.
+
+---
+
+### CTL.DOCUMENTDB.DELETEPROT.001
+
+**DocumentDB Must Have Deletion Protection**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** resilience
+- **Compliance:** nist_800_53_r5: CP-10; soc2: CC6.1;
+
+DocumentDB clusters must have deletion protection enabled.
+
+**Remediation:** Enable deletion protection.
+
+---
+
+### CTL.DOCUMENTDB.ENCRYPT.REST.001
+
+**DocumentDB Clusters Must Have Encryption at Rest**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-28; pci_dss_v4.0: 3.4.1; soc2: CC6.7;
+
+DocumentDB clusters must encrypt data at rest.
+
+**Remediation:** Enable encryption. Requires creating a new encrypted cluster.
+
+---
+
+### CTL.DOCUMENTDB.LOG.AUDIT.001
+
+**DocumentDB Must Export Logs to CloudWatch**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** nist_800_53_r5: AU-12; soc2: CC7.1;
+
+DocumentDB clusters must export audit logs to CloudWatch.
+
+**Remediation:** Enable CloudWatch log export.
+
+---
+
+### CTL.DOCUMENTDB.MULTIAZ.001
+
+**DocumentDB Must Use Multi-AZ**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** resilience
+- **Compliance:** nist_800_53_r5: CP-7; soc2: CC7.1;
+
+DocumentDB clusters must deploy across multiple availability zones.
+
+**Remediation:** Add read replicas in additional AZs.
+
+---
+
+### CTL.DOCUMENTDB.SNAPSHOT.PUBLIC.001
+
+**DocumentDB Snapshots Must Not Be Public**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.6;
+
+DocumentDB snapshots must not be publicly accessible.
+
+**Remediation:** Remove public access from the snapshot.
+
+---
+
+### CTL.DYNAMODB.BACKUP.001
+
+**DynamoDB Tables Must Have Backup Plan**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** resilience
+- **Compliance:** nist_800_53_r5: CP-9; soc2: CC7.1;
+
+DynamoDB tables must be included in a backup plan.
+
+**Remediation:** Add table to AWS Backup plan or enable PITR.
+
+---
+
 ### CTL.DYNAMODB.ENCRYPT.001
 
 **DynamoDB Must Use Customer-Managed KMS Encryption**
@@ -2400,6 +2739,21 @@ The observation snapshot is missing required DynamoDB properties.
 DynamoDB tables must have point-in-time recovery (PITR) enabled. Without PITR, accidental deletes, application bugs, or ransomware that corrupts table data cannot be recovered. PITR provides continuous backups with per-second granularity for the last 35 days.
 
 **Remediation:** Enable PITR using aws dynamodb update-continuous-backups --table-name TABLE --point-in-time-recovery-specification PointInTimeRecoveryEnabled=true.
+
+---
+
+### CTL.DYNAMODB.VPC.ENDPOINT.001
+
+**VPC Must Have DynamoDB Gateway Endpoint**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: SC-7;
+
+VPCs accessing DynamoDB should have a gateway endpoint.
+
+**Remediation:** Create a DynamoDB gateway endpoint.
 
 ---
 
@@ -2523,6 +2877,20 @@ Unencrypted EBS snapshots expose full disk contents if shared or made public. Ev
 
 ---
 
+### CTL.EC2.EIP.UNASSIGNED.001
+
+**Elastic IPs Must Be Associated with Resources**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+
+Unassigned Elastic IP addresses incur cost and represent unused public IP allocations that should be released.
+
+**Remediation:** Associate the EIP with an instance or release it.
+
+---
+
 ### CTL.EC2.IAMROLE.001
 
 **EC2 Instances Must Use IAM Instance Roles**
@@ -2582,6 +2950,21 @@ EC2 instance safety cannot be assessed when encryption status is missing from th
 
 ---
 
+### CTL.EC2.INSTANCE.AGE.001
+
+**EC2 Instances Must Not Exceed Maximum Age**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-2; soc2: CC7.1;
+
+EC2 instances running longer than the maximum age threshold (default 180 days) accumulate unpatched vulnerabilities and configuration drift.
+
+**Remediation:** Replace with a new instance launched from a current AMI.
+
+---
+
 ### CTL.EC2.INSTANCE.PROFILE.001
 
 **EC2 Instances Must Use Instance Profiles Instead of Access Keys**
@@ -2612,6 +2995,21 @@ Launch configurations are a legacy mechanism superseded by launch templates. Lau
 
 ---
 
+### CTL.EC2.NETWORK.DIRECT.001
+
+**Public Instances Must Be Behind a Load Balancer**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+EC2 instances with public IPs receiving internet traffic must be behind an ALB or NLB. Direct internet-to-instance traffic bypasses DDoS absorption, WAF evaluation, connection rate limiting, and TLS termination that load balancers provide.
+
+**Remediation:** Place the instance behind an ALB or NLB. Remove the public IP and route inbound traffic through the load balancer. Use private subnets for the instance.
+
+---
+
 ### CTL.EC2.NITRO.ENCLAVE.001
 
 **Sensitive Workloads Must Use Nitro Enclaves for Cryptographic Isolation**
@@ -2624,6 +3022,21 @@ Launch configurations are a legacy mechanism superseded by launch templates. Lau
 Nitro Enclaves provide an isolated execution environment with no persistent storage, no interactive access, and no external networking. Cryptographic operations performed inside an enclave are protected even if the parent instance is compromised. Applies only to instances tagged requires-enclave=true.
 
 **Remediation:** aws ec2 modify-instance-attribute --instance-id <id> --enclave-options Enabled=true. Requires an enclave-capable instance type (m5, c5, r5 or newer).
+
+---
+
+### CTL.EC2.PROFILE.OVERBROAD.001
+
+**EC2 Instance Profile Must Follow Least Privilege**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 1.18; nist_800_53_r5: AC-6; soc2: CC6.1;
+
+EC2 instance profiles must not have AdministratorAccess or overly broad permissions. Instance profile credentials are accessible via the metadata service — overprivileged profiles increase the blast radius of credential theft.
+
+**Remediation:** Replace the instance profile's role with a scoped policy granting only the permissions the workload needs. Use IAM Access Analyzer to generate a least-privilege policy from observed API activity.
 
 ---
 
@@ -2699,6 +3112,21 @@ Security groups with 0.0.0.0/0 inbound rules on ports other than 80/443 expose i
 Security groups must not allow unrestricted inbound access on high-risk ports: RDP (3389), Telnet (23), FTP (20/21), VNC (5900), database ports (3306/5432/1433/27017), Redis (6379), and Memcached (11211). Each of these has been the source of high-profile breaches when accidentally exposed to 0.0.0.0/0.
 
 **Remediation:** Remove or restrict rules opening these ports to the internet. Replace 0.0.0.0/0 with specific CIDR ranges (VPN exit IPs, bastion host SG references, or corporate NAT IPs). For database ports, use security group references. For RDP/VNC, use Systems Manager Session Manager instead of direct port exposure.
+
+---
+
+### CTL.EC2.SG.UNUSED.001
+
+**Unused Security Groups Must Be Removed**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: CM-7; soc2: CC6.1;
+
+Security groups with no attached resources should be removed. Unused SGs with broad rules are latent risks — when accidentally attached, the broad rules take effect immediately.
+
+**Remediation:** Delete the unused security group, or if retention is needed, remove all ingress and egress rules to eliminate latent risk.
 
 ---
 
@@ -2866,6 +3294,21 @@ ECR repositories must have a lifecycle policy to expire untagged and old images.
 
 ---
 
+### CTL.ECR.POLICY.BROAD.001
+
+**ECR Repository Policy Must Not Grant Broad Cross-Account Access**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+ECR repository policies must not grant ecr:GetDownloadUrlForLayer, ecr:BatchGetImage, or ecr:PutImage to external accounts without restricting to specific account IDs or aws:PrincipalOrgID. Broad cross-account access allows image theft (pull) or supply chain compromise (push) from any granted account.
+
+**Remediation:** Restrict the repository policy to specific account IDs or add an aws:PrincipalOrgID condition. For push access, restrict to CI/CD pipeline roles only.
+
+---
+
 ### CTL.ECR.PUBLIC.001
 
 **ECR Repository Must Not Be Public**
@@ -2956,6 +3399,21 @@ ECS Exec allows running interactive shell commands in running ECS containers via
 
 ---
 
+### CTL.ECS.EXECROLE.OVERBROAD.001
+
+**ECS Execution Role Must Not Have Admin or Overly Broad Permissions**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+The ECS execution role (used by the ECS agent for image pulls, log writes, and secret retrieval) must not have AdministratorAccess or overly broad policies. The execution role is distinct from the task role — it operates at the infrastructure level, not the application level.
+
+**Remediation:** Replace with a scoped execution role using the AmazonECSTaskExecutionRolePolicy managed policy. Add only the specific ECR, CloudWatch Logs, and Secrets Manager permissions the task requires.
+
+---
+
 ### CTL.ECS.FARGATE.VERSION.001
 
 **ECS Fargate Tasks Must Use Latest Platform Version**
@@ -2983,6 +3441,36 @@ ECS Fargate tasks must use the latest platform version. Fargate platform version
 ECS container images must use specific tags or digest references, not the latest tag. The latest tag is mutable — a compromised pipeline can push a malicious image that automatically deploys on next task restart. Pinned tags or digests provide immutable references for forensic reproducibility.
 
 **Remediation:** Pin container images to specific version tags or use digest references (@sha256:...) for immutability.
+
+---
+
+### CTL.ECS.IMAGE.DIGEST.001
+
+**ECS Container Images Must Be Referenced by Digest**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-7; soc2: CC6.1;
+
+ECS task definitions must reference container images by digest (repo@sha256:...) instead of mutable tags (repo:v1.2). Tags are mutable — the same tag can point to different images over time. Digest pinning ensures the exact image deployed is the one that was tested and approved.
+
+**Remediation:** Replace the tag reference with a digest reference. Example: 123456789012.dkr.ecr.us-east-1.amazonaws.com/app@sha256:abc123... Update CI/CD pipelines to output digest references after image push.
+
+---
+
+### CTL.ECS.IMAGE.UNTRUSTED.001
+
+**ECS Task Definitions Must Reference Images from Trusted Registries**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-7; pci_dss_v4.0: 6.3.2; soc2: CC6.1;
+
+ECS task definitions must reference container images from the organization's trusted registry set (typically the account's own ECR or a curated approved list). Images from Docker Hub, third- party registries, or unknown sources may contain vulnerabilities, backdoors, or cryptocurrency miners.
+
+**Remediation:** Mirror the required image into the organization's ECR and reference the ECR copy in the task definition. Enable image scanning on the ECR repository to detect vulnerabilities in mirrored images.
 
 ---
 
@@ -3027,6 +3515,21 @@ ECS essential containers must have a log driver configured. Without logging, con
 ECS task definitions must not use host network mode. Host networking removes network isolation between the container and the EC2 host — the container shares the host network namespace, can bind to any host port, and can access services on localhost including the ECS agent and metadata endpoint. Use awsvpc mode for per-task network isolation.
 
 **Remediation:** Switch to awsvpc network mode for per-task ENI with dedicated security group.
+
+---
+
+### CTL.ECS.NETWORK.PUBLIC.001
+
+**ECS Tasks Must Not Run in Public Subnets with Public IPs**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: SC-7; pci_dss_v4.0: 1.3.4; soc2: CC6.6;
+
+ECS tasks must not be placed in public subnets with public IP assignment. Public subnet placement makes the container directly reachable from the internet without traversing a load balancer.
+
+**Remediation:** Move the task to a private subnet. Use an ALB or API Gateway for inbound traffic and a NAT gateway for outbound.
 
 ---
 
@@ -3075,6 +3578,21 @@ ECS container definitions must not pass credentials as plaintext environment var
 
 ---
 
+### CTL.ECS.SECURITY.CAPABILITIES.001
+
+**ECS Containers Must Not Have Dangerous Linux Capabilities**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-7; soc2: CC6.1;
+
+ECS task definitions must not add dangerous Linux capabilities (SYS_ADMIN, NET_ADMIN, SYS_PTRACE, SYS_RAWIO, DAC_OVERRIDE, NET_RAW) and should drop all unnecessary capabilities. Dangerous capabilities grant kernel-level access enabling container escape.
+
+**Remediation:** Remove added capabilities from the task definition. Use linuxParameters.capabilities.drop = ["ALL"] and only add the specific capabilities the application requires.
+
+---
+
 ### CTL.ECS.TASK.NOEXEC.001
 
 **ECS Task Definitions Must Not Use Privileged Mode with Host Network**
@@ -3117,6 +3635,21 @@ ECS task definitions must not have over-privileged task IAM roles. The task meta
 ECS task definitions tagged with data-classification phi or pii must have task roles scoped exclusively to the services required for the task's declared function. For PHI workloads, the task role defines the blast radius of any SSRF exploit — a task processing PHI with a role granting broad S3 access is one SSRF vulnerability away from a HIPAA breach. The task metadata endpoint exposes credentials to every container in the task with no session-based protection. Cross-service access beyond the PHI data path increases the regulatory exposure from a credential theft without providing functional value.
 
 **Remediation:** Scope the task role to only the services in the PHI data path. Remove access to services the task does not require. For PHI tasks accessing S3, restrict to specific bucket ARNs. For tasks accessing DynamoDB, restrict to specific table ARNs. Ensure no wildcard resource ARNs exist on data-plane actions.
+
+---
+
+### CTL.ECS.TASKROLE.SHARED.001
+
+**ECS Task Definitions Must Use Per-Service Task Roles**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+Each ECS task definition should have its own dedicated IAM task role. Shared task roles grant every service using the role the union of all services' permissions, expanding blast radius.
+
+**Remediation:** Create a dedicated IAM role per task definition scoped to only the permissions that specific service needs.
 
 ---
 
@@ -3525,6 +4058,21 @@ ElastiCache Redis clusters must have an AUTH token configured. Without AUTH, any
 
 ---
 
+### CTL.ELASTICACHE.ENCRYPT.REST.001
+
+**ElastiCache Redis Must Have At-Rest Encryption Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-28; pci_dss_v4.0: 3.4.1; soc2: CC6.7;
+
+ElastiCache Redis clusters must have at-rest encryption enabled to protect cached data (sessions, credentials, application state) stored on disk.
+
+**Remediation:** Create a new cluster with at-rest encryption enabled (cannot be changed on existing clusters).
+
+---
+
 ### CTL.ELASTICACHE.INCOMPLETE.001
 
 **Complete Data Required for ElastiCache Assessment**
@@ -3566,6 +4114,21 @@ ElastiCache clusters must have in-transit encryption enabled. Without TLS, cache
 Load balancers must distribute traffic across all registered targets in all enabled Availability Zones. Without cross-zone balancing, uneven distribution can cause availability issues during AZ failures.
 
 **Remediation:** Enable cross-zone load balancing. Run: aws elbv2 modify-load-balancer-attributes --load-balancer-arn xxx --attributes Key=load_balancing.cross_zone.enabled,Value=true
+
+---
+
+### CTL.ELB.DELETION.PROTECT.001
+
+**Load Balancer Must Have Deletion Protection Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** resilience
+- **Compliance:** nist_800_53_r5: CP-10; soc2: CC6.1;
+
+Production load balancers must have deletion protection enabled.
+
+**Remediation:** Enable deletion protection.
 
 ---
 
@@ -3625,6 +4188,21 @@ Load balancer access logging must be enabled for audit and forensic analysis. Wi
 Application and Network Load Balancers must use TLS 1.2 or higher for HTTPS listeners. Older TLS versions have known vulnerabilities.
 
 **Remediation:** Update the HTTPS listener to use an ELBSecurityPolicy that enforces TLS 1.2 minimum (e.g., ELBSecurityPolicy-TLS-1-2-2017-01).
+
+---
+
+### CTL.ELB.WAF.001
+
+**Application Load Balancer Must Have WAF Web ACL Associated**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+Internet-facing ALBs must have an AWS WAF web ACL associated.
+
+**Remediation:** Associate a WAF web ACL with the ALB.
 
 ---
 
@@ -3890,6 +4468,21 @@ GCS buckets must use uniform bucket-level access. When disabled, both IAM polici
 GCS buckets must have object versioning enabled. Without versioning, deleted or overwritten objects cannot be recovered, and ransomware attacks that encrypt objects are irreversible.
 
 **Remediation:** Enable versioning. Run: gcloud storage buckets update gs://BUCKET --versioning
+
+---
+
+### CTL.GUARDDUTY.ECS.RUNTIME.001
+
+**GuardDuty ECS Runtime Monitoring Must Be Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SI-4; nist_800_53_r5: SI-4; soc2: CC7.1;
+
+GuardDuty ECS Runtime Monitoring must be enabled to detect runtime threats in containers — crypto mining, malware, reverse shells, and credential access. Without runtime monitoring, container compromise proceeds undetected at the process and network level.
+
+**Remediation:** Enable GuardDuty ECS Runtime Monitoring in the GuardDuty console or via API. Requires the GuardDuty agent deployed as a sidecar or managed add-on on ECS tasks.
 
 ---
 
@@ -4389,6 +4982,21 @@ A principal with both `iam:CreatePolicyVersion` and `iam:SetDefaultPolicyVersion
 
 ---
 
+### CTL.IAM.ESCALATE.EDITLAMBDA.001
+
+**Principal Must Not Escalate via Editing Existing Lambda Function**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+Principals with lambda:UpdateFunctionCode on a function whose execution role exceeds the principal's permissions can escalate by modifying the function's code. The modified code runs under the existing execution role on the next invocation. Unlike PassRole-based Lambda escalation, this technique does not require iam:PassRole — the powerful role is already attached. The attacker only changes what code the role executes. Rhino Security Labs documents this as "EditExistingLambdaFunctionWithRole" and Prowler's iam_policy_allows_privilege_escalation enumerates it.
+
+**Remediation:** Restrict lambda:UpdateFunctionCode to functions whose execution roles do not exceed the principal's permissions, or scope the function's execution role to least privilege. If broader UpdateFunctionCode is required for deployment workflows, add a Lambda resource-based policy denying UpdateFunctionCode from non-deployment principals, or use code signing (CTL.LAMBDA.CODESIGN.ENFORCE.001) to prevent unauthorized code changes.
+
+---
+
 ### CTL.IAM.ESCALATE.PASSROLE.CREATEDEVENDPOINT.001
 
 **Principal Must Not Escalate via Glue CreateDevEndpoint Role**
@@ -4553,6 +5161,21 @@ A principal with `iam:ResyncMFADevice` whose Resource field reaches another IAM 
 Principals with codebuild:StartBuild on project P, plus write access to P's source repository (CodeCommit push, S3 PutObject on source bucket, or external Git write) or the ability to override P's buildspec on invocation, can escalate to P's service role by injecting a malicious buildspec. The buildspec runs inside CodeBuild under P's service role and can perform any action the role is authorised for. This vector does not require iam:PassRole — the service role is already attached to the project; the attacker only needs to change what it executes.
 
 **Remediation:** Remove the principal's write access to the source that feeds the project, or remove codebuild:StartBuild from the principal, or reduce the project's service role to permissions that do not exceed the principal's. If source-write is intentional (as in developer workflows), scope the project's service role narrowly and rely on source-approval controls (e.g., CodeCommit approval rules) before a build can run.
+
+---
+
+### CTL.IAM.ESCALATE.UPDATEDEVENDPOINT.001
+
+**Principal Must Not Escalate via Updating Existing Glue Dev Endpoint**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+Principals with glue:UpdateDevEndpoint on an existing Glue development endpoint can replace the SSH public key and connect to the endpoint. The endpoint runs under its attached IAM role. If the role's permissions exceed the principal's, this is a privilege escalation path. Unlike PassRole-based Glue escalation (which creates a new endpoint), this technique modifies an existing one — no iam:PassRole required. Rhino Security Labs documents this as "UpdateExistingGlueDevEndpoint". Note: AWS deprecated Glue dev endpoints in favor of interactive sessions, but existing endpoints remain operational.
+
+**Remediation:** Remove glue:UpdateDevEndpoint from the principal, or reduce the endpoint's IAM role to least privilege. If the endpoint is no longer needed, delete it — AWS deprecated Glue dev endpoints in favor of interactive sessions. For active endpoints, restrict glue:UpdateDevEndpoint via IAM policy conditions.
 
 ---
 
@@ -5035,6 +5658,21 @@ iam:PassRole permissions must be scoped to specific role ARNs, not wildcard reso
 
 ---
 
+### CTL.IAM.POLICY.PASSROLE.CONDITION.001
+
+**PassRole Must Have iam:PassedToService Condition**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+IAM policies granting iam:PassRole must include an iam:PassedToService condition restricting which AWS service can receive the passed role. Without this condition, a principal can pass a role to any compute service — Lambda, EC2, Glue, CodeBuild, CloudFormation, SSM — regardless of Resource scope. A role scoped to specific ARNs but passable to any service still enables lateral movement: the principal picks whichever service gives the most convenient execution environment.
+
+**Remediation:** Add an iam:PassedToService condition to the PassRole statement. Example: "Condition": {"StringEquals": {"iam:PassedToService": "lambda.amazonaws.com"}}. Restrict to only the service(s) the principal legitimately uses.
+
+---
+
 ### CTL.IAM.POLICY.SERVICEWILDCARD.001
 
 **No Service-Wildcard Grants on Denied Services**
@@ -5334,6 +5972,21 @@ Safety mechanism integrity control. Checks that security guardrails are actively
 
 ---
 
+### CTL.IAM.SCP.TRAIL.PROTECT.001
+
+**SCPs Must Deny CloudTrail Disruption Actions**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AU-9; nist_800_53_r5: AU-9; soc2: CC7.1;
+
+Service Control Policies must deny cloudtrail:StopLogging, cloudtrail:DeleteTrail, and cloudtrail:UpdateTrail to non- breakglass roles. Without these protective denies, any IAM principal with sufficient permissions can disrupt logging.
+
+**Remediation:** Create an SCP with Effect Deny on cloudtrail:StopLogging, cloudtrail:DeleteTrail, and cloudtrail:UpdateTrail. Add a Condition excluding the breakglass role ARN.
+
+---
+
 ### CTL.IAM.SUPPORT.001
 
 **AWS Support Role Must Exist**
@@ -5424,6 +6077,36 @@ IAM roles assumed via OIDC federation (CI/CD pipelines) must have scoped permiss
 
 ---
 
+### CTL.IAM.TRUST.ORGBOUNDARY.001
+
+**Cross-Account Trust Must Restrict to Organization via PrincipalOrgID**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.8.3; nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+IAM roles with cross-account trust policies must include an aws:PrincipalOrgID condition restricting assumption to principals within the AWS Organization. Without this condition, any external AWS account — including attacker-controlled accounts — can attempt role assumption. PrincipalOrgID is the broadest safe boundary for multi-account organizations: it permits all org members while denying all outsiders.
+
+**Remediation:** Add an aws:PrincipalOrgID condition to the trust policy: "Condition": {"StringEquals": {"aws:PrincipalOrgID": "o-xxxxxxxxxxxx"}}. This restricts assumption to principals within the organization.
+
+---
+
+### CTL.IAM.TRUST.SESSION.001
+
+**Cross-Account Trust Must Have Session-Limiting Conditions**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-3; nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+IAM roles with cross-account trust policies must include at least one session-limiting condition beyond principal identity binding. Without constraints on session duration, source network, or MFA, an assumed-role session is usable from any IP address, without MFA, for the maximum default duration (up to 12 hours). Existing controls verify principal binding (ExternalId, SourceArn, ConfusedDeputy). This control verifies that the trust policy also constrains the assumption context — how long, from where, and with what authentication strength.
+
+**Remediation:** Add at least one of the following conditions to the trust policy: aws:MultiFactorAuthPresent (require MFA), aws:SourceIp or aws:SourceVpc (restrict network origin), or set MaxSessionDuration on the role to limit session lifetime. For cross-account CI/CD roles, combine OIDC subject scoping (covered by CTL.IAM.TRUST.OIDC.*) with a short MaxSessionDuration.
+
+---
+
 ### CTL.IAM.TRUST.SOURCEARN.001
 
 **AWS Service Principal Trust Must Have SourceArn or SourceAccount Condition**
@@ -5436,6 +6119,21 @@ IAM roles assumed via OIDC federation (CI/CD pipelines) must have scoped permiss
 IAM roles trusted by AWS service principals (*.amazonaws.com) must include aws:SourceArn or aws:SourceAccount conditions. Without these conditions, the service can assume the role when acting on behalf of any resource in any account — including attacker-controlled resources. AWS Lambda execution roles without aws:SourceArn allow any Lambda function in any account to assume the role. SNS/S3 notification roles without SourceArn allow any bucket or topic in any account to trigger the role assumption.
 
 **Remediation:** Add aws:SourceArn scoped to the specific resource ARN that should trigger the role assumption. If the resource ARN is not known at deploy time, add aws:SourceAccount scoped to your account ID.
+
+---
+
+### CTL.IAM.TRUST.WILDCARD.001
+
+**Trust Policy Must Not Use Wildcard Principal**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.8.3; nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+IAM role trust policies must not use Principal "*" or Principal: {AWS: "*"}. A wildcard principal allows any AWS principal in any account to attempt role assumption. This is the most dangerous trust configuration — the role is effectively public to the entire AWS ecosystem.
+
+**Remediation:** Replace Principal "*" with specific account ARNs or role ARNs. Add aws:PrincipalOrgID to restrict to the organization. Add sts:ExternalId for third-party integrations.
 
 ---
 
@@ -6682,6 +7380,21 @@ All Lambda layers referenced by a function must have ARNs whose account IDs are 
 
 ---
 
+### CTL.LAMBDA.LAYER.SECRETS.001
+
+**Lambda Layers Must Not Contain Embedded Secrets**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: IA-5; pci_dss_v4.0: 8.3.4; soc2: CC6.1;
+
+Lambda layers must not contain embedded secrets (API keys, database credentials, certificates, private keys). Unlike environment variables (detectable via ENV.SECRETS.001), layer contents are opaque archives accessible to anyone with lambda:GetLayerVersion permission. Secrets in layers persist across function versions and are not encrypted by KMS.
+
+**Remediation:** Remove secrets from layer contents. Use Secrets Manager or SSM Parameter Store for credentials retrieved at runtime. Republish the layer without sensitive files.
+
+---
+
 ### CTL.LAMBDA.LIST.RESTRICT.001
 
 **Lambda Function List Permissions Must Be Restricted**
@@ -6862,6 +7575,21 @@ Lambda function URLs can attach a Cors block whose AllowOrigins and AllowCredent
 
 ---
 
+### CTL.LAMBDA.VPC.ENDPOINTS.001
+
+**VPC-Attached Lambda Functions Must Use VPC Endpoints for AWS Services**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+Lambda functions attached to a VPC must use VPC endpoints for AWS service access (S3, DynamoDB, STS, Secrets Manager) instead of routing through NAT gateways or internet gateways. Traffic through NAT leaves the VPC, traverses the public internet, and creates an exfiltration channel.
+
+**Remediation:** Create VPC endpoints (gateway or interface) for the AWS services the function accesses: S3 (gateway), DynamoDB (gateway), Secrets Manager (interface), STS (interface). Associate the endpoints with the function's subnets.
+
+---
+
 ### CTL.LAMBDA.VPC.SENSITIVE.001
 
 **Lambda Functions Accessing Sensitive Data Must Be in VPC**
@@ -6889,6 +7617,156 @@ Lambda functions tagged with data-classification phi or pii, or functions whose 
 Lambda functions configured to run in a VPC must use private subnets with no direct route to an internet gateway. A function in a public subnet retains direct internet egress despite VPC enrollment — negating the network isolation that VPC membership is intended to provide. This is the complement to CTL.LAMBDA.VPC.SENSITIVE.001: VPC enrollment plus private subnet enforcement together close the network isolation requirement.
 
 **Remediation:** Move the function to private subnets. Use a NAT gateway in a public subnet for outbound access.
+
+---
+
+### CTL.NEPTUNE.AUTH.IAM.001
+
+**Neptune Must Enable IAM Authentication**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: IA-2; soc2: CC6.1;
+
+Neptune clusters must enable IAM database authentication.
+
+**Remediation:** Enable IAM authentication on the cluster.
+
+---
+
+### CTL.NEPTUNE.BACKUP.001
+
+**Neptune Automated Backups Must Be Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** resilience
+- **Compliance:** nist_800_53_r5: CP-9; soc2: CC7.1;
+
+Neptune clusters must have automated backups with adequate retention.
+
+**Remediation:** Set backup retention period to at least 7 days.
+
+---
+
+### CTL.NEPTUNE.DELETEPROT.001
+
+**Neptune Must Have Deletion Protection**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** resilience
+- **Compliance:** nist_800_53_r5: CP-10; soc2: CC6.1;
+
+Neptune clusters must have deletion protection enabled.
+
+**Remediation:** Enable deletion protection on the cluster.
+
+---
+
+### CTL.NEPTUNE.ENCRYPT.REST.001
+
+**Neptune Clusters Must Have Encryption at Rest**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-28; pci_dss_v4.0: 3.4.1; soc2: CC6.7;
+
+Neptune clusters must encrypt data at rest with KMS.
+
+**Remediation:** Enable encryption. Requires creating a new encrypted cluster.
+
+---
+
+### CTL.NEPTUNE.LOG.AUDIT.001
+
+**Neptune Must Export Logs to CloudWatch**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** nist_800_53_r5: AU-12; soc2: CC7.1;
+
+Neptune clusters must export audit logs to CloudWatch Logs.
+
+**Remediation:** Enable CloudWatch log export on the cluster.
+
+---
+
+### CTL.NEPTUNE.MULTIAZ.001
+
+**Neptune Clusters Must Use Multi-AZ**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** resilience
+- **Compliance:** nist_800_53_r5: CP-7; soc2: CC7.1;
+
+Neptune clusters must deploy across multiple availability zones.
+
+**Remediation:** Add read replicas in additional availability zones.
+
+---
+
+### CTL.NEPTUNE.SNAPSHOT.ENCRYPT.001
+
+**Neptune Snapshots Must Be Encrypted**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-28; soc2: CC6.7;
+
+Neptune cluster snapshots must be encrypted.
+
+**Remediation:** Copy snapshots with encryption enabled.
+
+---
+
+### CTL.NEPTUNE.SNAPSHOT.PUBLIC.001
+
+**Neptune Snapshots Must Not Be Public**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.6;
+
+Neptune snapshots must not be publicly accessible.
+
+**Remediation:** Remove public access from the snapshot.
+
+---
+
+### CTL.NEPTUNE.SUBNET.PUBLIC.001
+
+**Neptune Must Not Use Public Subnets**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+Neptune clusters must not be deployed in public subnets.
+
+**Remediation:** Move the cluster to private subnets.
+
+---
+
+### CTL.NEPTUNE.UPGRADE.001
+
+**Neptune Must Enable Auto Minor Version Upgrade**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-2;
+
+Neptune instances must enable automatic minor version upgrades.
+
+**Remediation:** Enable auto minor version upgrade.
 
 ---
 
@@ -7355,6 +8233,21 @@ RDS instances must not have public accessibility enabled. A publicly accessible 
 
 ---
 
+### CTL.RDS.SG.BROAD.001
+
+**RDS Security Group Must Not Allow Broad Ingress on Database Ports**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** fedramp_moderate: SC-7; iso_27001_2022: A.8.20; nist_800_53_r5: SC-7; pci_dss_v4.0: 1.3.4; soc2: CC6.6;
+
+The RDS instance's associated security group must not allow 0.0.0.0/0 ingress on the database port. Broad ingress makes the database reachable from any IP address on the internet. Combined with PubliclyAccessible=true (CTL.RDS.PUBLIC.001), this creates direct internet exposure. Even with PubliclyAccessible=false, a broad SG allows access from anywhere within the VPC — defeating network segmentation if the VPC has a compromised instance.
+
+**Remediation:** Replace the broad 0.0.0.0/0 rule with specific CIDR ranges (application server IPs, VPN exit IPs, or security group references for application-tier instances).
+
+---
+
 ### CTL.RDS.SNAPSHOT.ENCRYPT.001
 
 **RDS Automated Snapshots Must Be Encrypted**
@@ -7427,6 +8320,155 @@ RDS instances must enforce SSL/TLS for all client connections. Without require_s
 RDS connections without SSL/TLS transmit database credentials and query results in plaintext over the network. In a VPC, any compromised instance with network access can capture database passwords and sensitive data via passive network monitoring. SSL enforcement is configured via parameter group (require_secure_transport for MySQL, rds.force_ssl for PostgreSQL/SQL Server).
 
 **Remediation:** Set the appropriate SSL parameter in the parameter group: MySQL: require_secure_transport=ON. PostgreSQL: rds.force_ssl=1. SQL Server: rds.force_ssl=1.
+
+---
+
+### CTL.REDSHIFT.BACKUP.001
+
+**Redshift Automated Snapshots Must Be Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** resilience
+- **Compliance:** nist_800_53_r5: CP-9; soc2: CC7.1;
+
+Redshift clusters must have automated snapshots enabled with adequate retention.
+
+**Remediation:** Set automated snapshot retention period to at least 7 days.
+
+---
+
+### CTL.REDSHIFT.CONFIG.ADMIN.001
+
+**Redshift Must Not Use Default Admin Username**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: IA-5;
+
+Redshift clusters must not use the default admin username (awsuser).
+
+**Remediation:** Create a new cluster with a non-default admin username.
+
+---
+
+### CTL.REDSHIFT.CONFIG.DBNAME.001
+
+**Redshift Must Not Use Default Database Name**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** identity
+
+Redshift clusters should not use the default database name (dev).
+
+**Remediation:** Create a new cluster with a descriptive database name.
+
+---
+
+### CTL.REDSHIFT.ENCRYPT.REST.001
+
+**Redshift Clusters Must Have Encryption at Rest Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-28; pci_dss_v4.0: 3.4.1; soc2: CC6.7;
+
+Redshift clusters must have encryption at rest enabled with KMS.
+
+**Remediation:** Enable encryption. Requires creating a new encrypted cluster and migrating data.
+
+---
+
+### CTL.REDSHIFT.LOG.ACTIVITY.001
+
+**Redshift Must Log User Activity**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** nist_800_53_r5: AU-12; soc2: CC7.1;
+
+Redshift user activity logging must be enabled to record SQL statements.
+
+**Remediation:** Enable user activity logging in the parameter group.
+
+---
+
+### CTL.REDSHIFT.LOG.AUDIT.001
+
+**Redshift Clusters Must Have Audit Logging Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** nist_800_53_r5: AU-12; soc2: CC7.1;
+
+Redshift audit logging must be enabled for connection, user, and query activity.
+
+**Remediation:** Enable audit logging to S3 or CloudWatch.
+
+---
+
+### CTL.REDSHIFT.PUBLIC.001
+
+**Redshift Clusters Must Not Be Publicly Accessible**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; pci_dss_v4.0: 1.3.4; soc2: CC6.6;
+
+Redshift clusters must not have the publicly accessible setting enabled.
+
+**Remediation:** Disable public accessibility and place the cluster in a private subnet.
+
+---
+
+### CTL.REDSHIFT.SSL.001
+
+**Redshift Clusters Must Require SSL Connections**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-8; pci_dss_v4.0: 4.2.1; soc2: CC6.7;
+
+Redshift parameter group must set require_ssl to true.
+
+**Remediation:** Set require_ssl=true in the cluster's parameter group.
+
+---
+
+### CTL.REDSHIFT.UPGRADE.001
+
+**Redshift Must Allow Automatic Version Upgrades**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-2;
+
+Redshift clusters should have automatic version upgrades enabled.
+
+**Remediation:** Enable AllowVersionUpgrade on the cluster.
+
+---
+
+### CTL.REDSHIFT.VPC.ROUTING.001
+
+**Redshift Must Use Enhanced VPC Routing**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+Redshift clusters must use enhanced VPC routing to force all COPY and UNLOAD traffic through the VPC.
+
+**Remediation:** Enable enhanced VPC routing on the cluster.
 
 ---
 
@@ -9182,6 +10224,21 @@ The observation snapshot is missing required SNS topic properties.
 
 ---
 
+### CTL.SNS.POLICY.PUBLIC.001
+
+**SNS Topic Policy Must Not Allow Public Access**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** aws_security_hub: SNS.1; nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+SNS topic resource policies must not grant sns:Subscribe, sns:Publish, or sns:* to Principal "*" or to unauthenticated principals without restricting via aws:SourceArn, aws:SourceAccount, or aws:PrincipalOrgID conditions. Public topic access allows unauthorized subscription (receiving all published messages) or publishing (injecting messages that reach all subscribers, potentially triggering downstream Lambda functions, SQS queues, or HTTP endpoints).
+
+**Remediation:** Restrict the topic policy to specific account IDs, source ARNs, or add an aws:PrincipalOrgID condition. For cross-service integration (e.g., S3 event → SNS), restrict via aws:SourceArn to the specific source ARN.
+
+---
+
 ### CTL.SQS.DLQ.001
 
 **SQS Queues Must Have Dead-Letter Queue Configured**
@@ -9238,6 +10295,21 @@ SQS queues without server-side encryption store messages in plaintext. An attack
 The observation snapshot is missing required SQS queue properties.
 
 **Remediation:** Ensure the extractor calls aws sqs get-queue-attributes and maps the KmsMasterKeyId to the messaging.encryption observation properties.
+
+---
+
+### CTL.SQS.POLICY.PUBLIC.001
+
+**SQS Queue Policy Must Not Allow Public Access**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** aws_security_hub: SQS.1; nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+SQS queue resource policies must not grant sqs:SendMessage, sqs:ReceiveMessage, sqs:DeleteMessage, or sqs:* to Principal "*" or to unauthenticated principals without restricting via aws:SourceArn, aws:SourceAccount, or aws:PrincipalOrgID conditions. Public queue access allows unauthorized message injection (sending malicious payloads to downstream consumers) or message interception (reading messages meant for internal services).
+
+**Remediation:** Restrict the queue policy to specific account IDs, source ARNs, or add an aws:PrincipalOrgID condition. For cross-service integration (e.g., SNS → SQS), restrict via aws:SourceArn to the specific topic ARN.
 
 ---
 
@@ -9346,6 +10418,51 @@ The default VPC must not have an internet gateway route in its route tables. AWS
 
 ---
 
+### CTL.VPC.ENDPOINT.ANON.001
+
+**VPC Endpoint Policy Must Deny Anonymous Requests**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.6;
+
+VPC endpoint policies must explicitly deny anonymous (unsigned) requests. Without this, unauthenticated S3 requests can transit the endpoint without identity information, evading CloudTrail logging and IAM policy evaluation.
+
+**Remediation:** Add a Deny statement to the endpoint policy for requests where aws:PrincipalArn does not exist (anonymous/unsigned requests).
+
+---
+
+### CTL.VPC.ENDPOINT.BUCKET.RESTRICT.001
+
+**VPC Endpoint Policy Must Restrict Target S3 Buckets**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: AC-4; soc2: CC6.6;
+
+VPC endpoint policies for S3 must restrict which buckets can be accessed. Without Resource constraints, any S3 bucket globally — including attacker-controlled buckets — is reachable through the organization's endpoint.
+
+**Remediation:** Add a Resource constraint to the endpoint policy listing only the organization's buckets. Deny all other bucket ARNs.
+
+---
+
+### CTL.VPC.ENDPOINT.IAM.CONDITION.001
+
+**VPC Endpoint Policy Must Require IAM Conditions**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+VPC endpoint policies must include IAM conditions (aws:PrincipalArn, aws:PrincipalOrgID) to verify the identity of requesters. Without these, any principal in the VPC can use the endpoint without identity verification at the policy layer.
+
+**Remediation:** Add aws:PrincipalArn or aws:PrincipalOrgID conditions to the endpoint policy to restrict which principals can use it.
+
+---
+
 ### CTL.VPC.ENDPOINT.S3.001
 
 **VPCs Must Have an S3 Gateway Endpoint**
@@ -9435,6 +10552,21 @@ Network ACLs must not allow inbound traffic from 0.0.0.0/0 or ::/0 to SSH (22) o
 
 ---
 
+### CTL.VPC.NETWORK.FIREWALL.001
+
+**VPC Must Have AWS Network Firewall Deployed**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+VPCs handling sensitive or production traffic should have AWS Network Firewall deployed for stateful packet inspection beyond SG/NACL L3/L4 rules.
+
+**Remediation:** Deploy AWS Network Firewall with inspection rules for the workload's traffic patterns.
+
+---
+
 ### CTL.VPC.PEERING.ROUTES.001
 
 **VPC Peering Route Tables Must Follow Least Access**
@@ -9492,6 +10624,21 @@ Security groups on private resources must not allow inbound traffic on applicati
 Security groups must not allow all outbound traffic to 0.0.0.0/0 on all ports. Unrestricted egress enables data exfiltration, command-and-control communication, and lateral movement to external attacker infrastructure. While most organizations currently allow all egress by default, restricting outbound traffic to required ports and destinations is a critical APT hardening measure.
 
 **Remediation:** Replace the default allow-all egress rule with specific outbound rules for required ports (443 for HTTPS, 53 for DNS, etc.) and destinations. Use VPC endpoints for AWS service traffic to avoid internet egress entirely.
+
+---
+
+### CTL.VPC.SG.EGRESS.EXFIL.001
+
+**Security Groups Must Restrict Egress on Data Exfiltration Ports**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+Security groups must not allow unrestricted outbound traffic to 0.0.0.0/0 on ports commonly used for data exfiltration (443/HTTPS, 53/DNS, 80/HTTP) even when other ports are blocked. Exfiltration traffic hides in standard web and DNS protocols.
+
+**Remediation:** Restrict egress to specific destination CIDRs where possible. For DNS (53), route through a DNS firewall or VPC resolver endpoint. For HTTPS (443), consider VPC endpoint routes instead of internet egress. Note: blocking 443/53 outbound breaks most applications — this control flags for awareness, not hard block.
 
 ---
 

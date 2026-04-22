@@ -1,0 +1,20 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:documentdb:us-east-1:123456789012:cluster/main",
+      "properties": {
+        "database": {
+          "kind": "documentdb_cluster",
+          "availability": {
+            "multi_az": true
+          }
+        }
+      },
+      "type": "aws_documentdb_cluster",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

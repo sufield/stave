@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.NEPTUNE.SUBNET.PUBLIC.001
+name: Neptune Must Not Use Public Subnets
+description: Neptune clusters must not be deployed in public subnets.
+domain: network
+severity: high
+compliance:
+  nist_800_53_r5: SC-7
+  soc2: CC6.6
+  ccm_v4:
+  - IVS-03
+scope_tags:
+- aws
+- neptune
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Move the cluster to private subnets..
+  action: Move the cluster to private subnets.
+unsafe_predicate:
+  all:
+  - field: properties.database.kind
+    op: eq
+    value: neptune_cluster
+  - field: properties.database.network.uses_public_subnet
+    op: eq
+    value: true

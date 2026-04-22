@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.NEPTUNE.MULTIAZ.001
+name: Neptune Clusters Must Use Multi-AZ
+description: Neptune clusters must deploy across multiple availability zones.
+domain: resilience
+severity: medium
+compliance:
+  nist_800_53_r5: CP-7
+  soc2: CC7.1
+  ccm_v4:
+  - BCR-08
+scope_tags:
+- aws
+- neptune
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+remediation:
+  description: Add read replicas in additional availability zones..
+  action: Add read replicas in additional availability zones.
+unsafe_predicate:
+  all:
+  - field: properties.database.kind
+    op: eq
+    value: neptune_cluster
+  - field: properties.database.availability.multi_az
+    op: eq
+    value: false

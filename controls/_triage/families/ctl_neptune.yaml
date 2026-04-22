@@ -1,0 +1,5 @@
+family: CTL.NEPTUNE
+infection: >
+  A misconfigured Neptune cluster exposes graph database contents — entity relationships, traversal paths, connection patterns, and linked data structures. Graph data reveals organizational relationships, dependency chains, and network topologies that flat databases don't capture.
+failure: >
+  Graph database compromise. Entity relationships, connection patterns, and traversal paths are exposed, enabling attackers to map organizational structures and dependencies.

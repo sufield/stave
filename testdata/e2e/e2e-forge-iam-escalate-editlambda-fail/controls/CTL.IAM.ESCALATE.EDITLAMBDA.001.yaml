@@ -1,0 +1,113 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.EDITLAMBDA.001
+name: Principal Must Not Escalate via Editing Existing Lambda Function
+description: >
+  Principals with lambda:UpdateFunctionCode on a function whose
+  execution role exceeds the principal's permissions can escalate by
+  modifying the function's code. The modified code runs under the
+  existing execution role on the next invocation. Unlike PassRole-based
+  Lambda escalation, this technique does not require iam:PassRole — the
+  powerful role is already attached. The attacker only changes what code
+  the role executes. Rhino Security Labs documents this as
+  "EditExistingLambdaFunctionWithRole" and Prowler's
+  iam_policy_allows_privilege_escalation enumerates it.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-6(5)"
+  fedramp_moderate: "AC-6(5)"
+  iso_27001_2022: "A.8.3"
+  ccm_v4: ["IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+  - lambda
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  base_impact: 9
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+observation_fields:
+  - identity.kind
+  - identity.escalation.editlambda.present
+  - identity.escalation.editlambda.target_function
+  - identity.escalation.editlambda.target_role
+  - identity.escalation.editlambda.permission_delta
+remediation:
+  description: >
+    Principal has a Lambda-mediated escalation path via code
+    modification. It can update the code of an existing Lambda function
+    whose execution role exceeds the principal's own permissions. The
+    modified code runs with the execution role's full authority on the
+    next invocation.
+  action: >
+    Restrict lambda:UpdateFunctionCode to functions whose execution
+    roles do not exceed the principal's permissions, or scope the
+    function's execution role to least privilege. If broader
+    UpdateFunctionCode is required for deployment workflows, add a
+    Lambda resource-based policy denying UpdateFunctionCode from
+    non-deployment principals, or use code signing
+    (CTL.LAMBDA.CODESIGN.ENFORCE.001) to prevent unauthorized code
+    changes.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "escalation": {
+          "editlambda": {
+            "present": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.escalation.editlambda.present
+      op: eq
+      value: true
+tests:
+  - name: user with Lambda code-edit escalation path fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/developer
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            editlambda:
+              present: true
+              target_function: arn:aws:lambda:us-east-1:111122223333:function/admin-processor
+              target_role: arn:aws:iam::111122223333:role/admin-lambda-role
+              permission_delta:
+                - iam:PutUserPolicy
+                - s3:*
+                - secretsmanager:GetSecretValue
+  - name: user without escalation path passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/alice
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            editlambda:
+              present: false
+alternatives:
+  - tool: prowler
+    check_id: iam_inline_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 24 per-technique controls covering the aggregated Prowler check.
+  - tool: prowler
+    check_id: iam_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 24 per-technique controls covering the aggregated Prowler check.

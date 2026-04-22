@@ -1,0 +1,17 @@
+control: CTL.SQS.POLICY.PUBLIC.001
+defect: >
+  The SQS queue resource policy grants access to Principal "*" or
+  unauthenticated principals without scoping conditions. Any AWS
+  principal can interact with the queue.
+infection: >
+  An attacker sends malicious messages that downstream consumers
+  process as legitimate, or reads messages containing application
+  data, event payloads, task parameters, or credentials passed
+  between services. Queue messages are transient but often carry
+  operational data that reveals system architecture and sensitive
+  values.
+failure: >
+  Message interception or injection. An attacker reads messages meant
+  for internal consumers, injects malicious messages that trigger
+  downstream processing, or deletes messages to disrupt service
+  operations.

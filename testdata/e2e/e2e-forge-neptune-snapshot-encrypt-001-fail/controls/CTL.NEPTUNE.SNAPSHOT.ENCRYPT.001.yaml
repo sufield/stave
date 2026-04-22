@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.NEPTUNE.SNAPSHOT.ENCRYPT.001
+name: Neptune Snapshots Must Be Encrypted
+description: Neptune cluster snapshots must be encrypted.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: SC-28
+  soc2: CC6.7
+  ccm_v4:
+  - CEK-03
+scope_tags:
+- aws
+- neptune
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: Copy snapshots with encryption enabled..
+  action: Copy snapshots with encryption enabled.
+unsafe_predicate:
+  all:
+  - field: properties.database.kind
+    op: eq
+    value: neptune_cluster
+  - field: properties.database.snapshot.is_encrypted
+    op: eq
+    value: false

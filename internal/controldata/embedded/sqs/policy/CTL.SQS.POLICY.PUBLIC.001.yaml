@@ -1,0 +1,53 @@
+dsl_version: ctrl.v1
+id: CTL.SQS.POLICY.PUBLIC.001
+name: SQS Queue Policy Must Not Allow Public Access
+description: >
+  SQS queue resource policies must not grant sqs:SendMessage,
+  sqs:ReceiveMessage, sqs:DeleteMessage, or sqs:* to Principal "*"
+  or to unauthenticated principals without restricting via
+  aws:SourceArn, aws:SourceAccount, or aws:PrincipalOrgID conditions.
+  Public queue access allows unauthorized message injection (sending
+  malicious payloads to downstream consumers) or message interception
+  (reading messages meant for internal services).
+domain: exposure
+severity: critical
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-3"
+  pci_dss_v4.0: "7.2.1"
+  aws_security_hub: "SQS.1"
+  ccm_v4: ["DSP-17", "IVS-03"]
+scope_tags:
+  - aws
+  - sqs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    SQS queue policy grants public or broadly scoped access. Any
+    AWS principal — or unauthenticated caller in some configurations —
+    can send or receive messages.
+  action: >
+    Restrict the queue policy to specific account IDs, source ARNs,
+    or add an aws:PrincipalOrgID condition. For cross-service
+    integration (e.g., SNS → SQS), restrict via aws:SourceArn to
+    the specific topic ARN.
+  example: |
+    {
+      "messaging": {
+        "kind": "queue",
+        "policy": {
+          "has_public_access": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: queue
+    - field: properties.messaging.policy.has_public_access
+      op: eq
+      value: true

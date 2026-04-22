@@ -1,0 +1,28 @@
+dsl_version: ctrl.v1
+id: CTL.NEPTUNE.UPGRADE.001
+name: Neptune Must Enable Auto Minor Version Upgrade
+description: Neptune instances must enable automatic minor version upgrades.
+domain: exposure
+severity: low
+compliance:
+  nist_800_53_r5: SI-2
+  ccm_v4:
+  - CCC-04
+scope_tags:
+- aws
+- neptune
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Enable auto minor version upgrade..
+  action: Enable auto minor version upgrade.
+unsafe_predicate:
+  all:
+  - field: properties.database.kind
+    op: eq
+    value: neptune_cluster
+  - field: properties.database.config.auto_minor_version_upgrade
+    op: eq
+    value: false

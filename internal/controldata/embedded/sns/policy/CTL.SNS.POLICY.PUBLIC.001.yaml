@@ -1,0 +1,54 @@
+dsl_version: ctrl.v1
+id: CTL.SNS.POLICY.PUBLIC.001
+name: SNS Topic Policy Must Not Allow Public Access
+description: >
+  SNS topic resource policies must not grant sns:Subscribe,
+  sns:Publish, or sns:* to Principal "*" or to unauthenticated
+  principals without restricting via aws:SourceArn,
+  aws:SourceAccount, or aws:PrincipalOrgID conditions. Public topic
+  access allows unauthorized subscription (receiving all published
+  messages) or publishing (injecting messages that reach all
+  subscribers, potentially triggering downstream Lambda functions,
+  SQS queues, or HTTP endpoints).
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-3"
+  pci_dss_v4.0: "7.2.1"
+  aws_security_hub: "SNS.1"
+  ccm_v4: ["DSP-17", "IVS-03"]
+scope_tags:
+  - aws
+  - sns
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    SNS topic policy grants public or broadly scoped access. Any
+    AWS principal can subscribe to receive messages or publish to
+    inject messages.
+  action: >
+    Restrict the topic policy to specific account IDs, source ARNs,
+    or add an aws:PrincipalOrgID condition. For cross-service
+    integration (e.g., S3 event → SNS), restrict via aws:SourceArn
+    to the specific source ARN.
+  example: |
+    {
+      "messaging": {
+        "kind": "topic",
+        "policy": {
+          "has_public_access": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: topic
+    - field: properties.messaging.policy.has_public_access
+      op: eq
+      value: true

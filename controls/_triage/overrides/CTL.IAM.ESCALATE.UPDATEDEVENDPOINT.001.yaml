@@ -1,0 +1,18 @@
+control: CTL.IAM.ESCALATE.UPDATEDEVENDPOINT.001
+defect: >
+  The principal has glue:UpdateDevEndpoint on an existing Glue
+  development endpoint whose IAM role exceeds the principal's
+  permissions. No iam:PassRole is required — the powerful role is
+  already attached to the endpoint.
+infection: >
+  The attacker replaces the SSH public key on the endpoint, connects
+  via SSH, and operates with the endpoint's IAM role permissions. The
+  role typically has broad data access for ETL operations (S3, DynamoDB,
+  Redshift). The endpoint provides a persistent interactive environment
+  — not a one-shot invocation — with full network access to VPC
+  resources.
+failure: >
+  Privilege escalation via Glue endpoint hijacking. The attacker gains
+  an interactive shell running under a role whose permissions exceed
+  their own. AWS deprecated Glue dev endpoints in favor of interactive
+  sessions, but existing endpoints remain operational and exploitable.

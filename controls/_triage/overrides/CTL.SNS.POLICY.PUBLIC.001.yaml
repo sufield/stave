@@ -1,0 +1,16 @@
+control: CTL.SNS.POLICY.PUBLIC.001
+defect: >
+  The SNS topic resource policy grants access to Principal "*" or
+  unauthenticated principals without scoping conditions. Any AWS
+  principal can subscribe or publish to the topic.
+infection: >
+  An attacker subscribes to receive all published messages — which
+  may include alerts, deployment triggers, operational events, and
+  sensitive notification payloads. Or the attacker publishes false
+  notifications that reach all subscribers, triggering downstream
+  Lambda functions, SQS queues, or HTTP endpoints.
+failure: >
+  Message interception or injection. An attacker receives sensitive
+  notifications meant for internal subscribers or publishes false
+  notifications that trigger downstream actions across the
+  notification architecture.

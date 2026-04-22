@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.NEPTUNE.DELETEPROT.001
+name: Neptune Must Have Deletion Protection
+description: Neptune clusters must have deletion protection enabled.
+domain: resilience
+severity: medium
+compliance:
+  nist_800_53_r5: CP-10
+  soc2: CC6.1
+  ccm_v4:
+  - BCR-08
+scope_tags:
+- aws
+- neptune
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+remediation:
+  description: Enable deletion protection on the cluster..
+  action: Enable deletion protection on the cluster.
+unsafe_predicate:
+  all:
+  - field: properties.database.kind
+    op: eq
+    value: neptune_cluster
+  - field: properties.database.config.deletion_protection
+    op: eq
+    value: false

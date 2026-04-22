@@ -1,0 +1,29 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:iam::111122223333:user/developer",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "escalation": {
+            "editlambda": {
+              "present": true,
+              "target_function": "arn:aws:lambda:us-east-1:111122223333:function/admin-processor",
+              "target_role": "arn:aws:iam::111122223333:role/admin-lambda-role",
+              "permission_delta": [
+                "iam:PutUserPolicy",
+                "s3:*",
+                "secretsmanager:GetSecretValue"
+              ]
+            }
+          }
+        }
+      }
+    }
+  ]
+}

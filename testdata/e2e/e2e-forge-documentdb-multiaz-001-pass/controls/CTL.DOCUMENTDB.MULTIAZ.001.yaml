@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.DOCUMENTDB.MULTIAZ.001
+name: DocumentDB Must Use Multi-AZ
+description: DocumentDB clusters must deploy across multiple availability
+  zones.
+domain: resilience
+severity: medium
+compliance:
+  nist_800_53_r5: CP-7
+  soc2: CC7.1
+  ccm_v4:
+  - BCR-08
+scope_tags:
+- aws
+- documentdb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+remediation:
+  description: Add read replicas in additional AZs..
+  action: Add read replicas in additional AZs.
+unsafe_predicate:
+  all:
+  - field: properties.database.kind
+    op: eq
+    value: documentdb_cluster
+  - field: properties.database.availability.multi_az
+    op: eq
+    value: false

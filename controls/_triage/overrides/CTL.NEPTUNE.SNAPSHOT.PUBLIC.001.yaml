@@ -1,0 +1,7 @@
+control: CTL.NEPTUNE.SNAPSHOT.PUBLIC.001
+defect: >
+  A Neptune cluster snapshot is publicly accessible. Any AWS account can copy and restore the snapshot.
+infection: >
+  Any AWS account can copy the public snapshot, restore it as a new cluster, and query all graph data — relationships, entities, traversal paths — without the source account's knowledge.
+failure: >
+  Complete graph data exposure. Entity relationships, connection patterns, and traversal paths in the graph database are accessible to any AWS account.

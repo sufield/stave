@@ -1,0 +1,5 @@
+family: CTL.DOCUMENTDB
+infection: >
+  A misconfigured DocumentDB cluster exposes document collections — nested data structures, embedded documents, and MongoDB-compatible queries. DocumentDB's flexible schema means collections may contain heterogeneous sensitive data within single documents.
+failure: >
+  Document database compromise. Collections, documents, and nested data structures are exposed, modified, or destroyed.

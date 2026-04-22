@@ -1,0 +1,18 @@
+control: CTL.IAM.ESCALATE.EDITLAMBDA.001
+defect: >
+  The principal has lambda:UpdateFunctionCode on a Lambda function
+  whose execution role exceeds the principal's permissions. No
+  iam:PassRole is required — the powerful role is already attached
+  to the function.
+infection: >
+  The attacker modifies the function's code to perform actions using
+  the execution role's permissions — reading secrets, accessing
+  databases, escalating further. The modified code executes on the
+  next invocation with the role's full permissions. Unlike
+  CreateFunction-based escalation, no new resources are created —
+  the attacker hijacks an existing function's authority.
+failure: >
+  Privilege escalation via Lambda code injection. The attacker gains
+  the execution role's permissions without creating new resources or
+  passing roles, through a function commonly trusted in production
+  workflows.

@@ -1,0 +1,7 @@
+control: CTL.DOCUMENTDB.SNAPSHOT.PUBLIC.001
+defect: >
+  A DocumentDB cluster snapshot is publicly accessible. Any AWS account can copy and restore the snapshot.
+infection: >
+  Any AWS account can copy the public snapshot, restore it as a new cluster, and query all document collections — including nested data structures and embedded documents.
+failure: >
+  Complete document data exposure. All collections, documents, and nested data are accessible to any AWS account.
