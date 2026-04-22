@@ -1,0 +1,10 @@
+family: CTL.APIGW2
+infection: >
+  A misconfigured HTTP API exposes backend services to unauthorized
+  access. HTTP APIs route traffic to Lambda, ECS, and other backends.
+  Without authorization or logging, any client can invoke backend
+  services without authentication and without audit trail.
+failure: >
+  Backend service exposure via HTTP API. An attacker invokes backend
+  services without authentication through the unprotected API
+  endpoint.

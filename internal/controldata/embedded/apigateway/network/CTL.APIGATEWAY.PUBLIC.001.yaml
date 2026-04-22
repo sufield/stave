@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.PUBLIC.001
+name: REST APIs Should Use Private Endpoints When Possible
+description: >
+  REST APIs using EDGE or REGIONAL endpoint types are
+  internet-accessible. APIs that serve only internal consumers
+  should use PRIVATE endpoint type (VPC-only via PrivateLink) to
+  reduce attack surface.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: REST API uses a public endpoint type.
+  action: >
+    Convert to PRIVATE endpoint type if the API serves only
+    VPC consumers. If public access is required, ensure WAF and
+    authorizers are configured.
+  example: |
+    {
+      "api": {
+        "kind": "rest_api",
+        "network": { "is_public": false }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: rest_api
+    - field: properties.api.network.is_public
+      op: eq
+      value: true

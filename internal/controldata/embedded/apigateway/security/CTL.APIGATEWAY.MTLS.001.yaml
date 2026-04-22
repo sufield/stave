@@ -1,0 +1,39 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.MTLS.001
+name: REST API Stages Must Use Client Certificates
+description: >
+  API Gateway REST API stages should configure a client certificate
+  for mutual TLS with backend integrations. Without client
+  authentication, backends cannot verify requests originate from
+  API Gateway.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "IA-5"
+  soc2: "CC6.1"
+  ccm_v4: ["IVS-03"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: REST API stage has no client certificate for backend mTLS.
+  action: Generate and attach a client certificate to the stage.
+  example: |
+    {
+      "api": {
+        "kind": "rest_api",
+        "security": { "client_certificate_enabled": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: rest_api
+    - field: properties.api.security.client_certificate_enabled
+      op: eq
+      value: false

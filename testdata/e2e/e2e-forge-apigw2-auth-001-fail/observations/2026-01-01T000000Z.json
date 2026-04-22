@@ -1,0 +1,20 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:apigateway:us-east-1::/apis/def456",
+      "type": "aws_apigateway_http_api",
+      "vendor": "aws",
+      "properties": {
+        "api": {
+          "kind": "http_api",
+          "auth": {
+            "has_authorizer": false
+          }
+        }
+      }
+    }
+  ]
+}

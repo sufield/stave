@@ -1,0 +1,36 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.TRACING.001
+name: REST API Stages Should Enable X-Ray Tracing
+description: >
+  API Gateway REST API stages should enable X-Ray active tracing
+  for distributed request tracing across connected services.
+domain: exposure
+severity: low
+compliance:
+  nist_800_53_r5: "AU-12"
+  ccm_v4: ["LOG-03"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: REST API stage does not have X-Ray tracing enabled.
+  action: Enable active tracing on the stage.
+  example: |
+    {
+      "api": {
+        "kind": "rest_api",
+        "tracing": { "xray_enabled": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: rest_api
+    - field: properties.api.tracing.xray_enabled
+      op: eq
+      value: false

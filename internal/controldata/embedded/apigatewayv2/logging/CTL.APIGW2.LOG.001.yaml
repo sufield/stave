@@ -1,0 +1,38 @@
+dsl_version: ctrl.v1
+id: CTL.APIGW2.LOG.001
+name: HTTP API Stages Must Have Access Logging Enabled
+description: >
+  API Gateway v2 HTTP API stages must configure access logging to
+  capture request details. Without logging, API calls lack
+  traceability for detecting abuse and supporting incident response.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-2"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-03", "LOG-05"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: HTTP API stage has no access logging configured.
+  action: Configure access logging with a CloudWatch Logs destination.
+  example: |
+    {
+      "api": {
+        "kind": "http_api",
+        "logging": { "access_log_enabled": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: http_api
+    - field: properties.api.logging.access_log_enabled
+      op: eq
+      value: false

@@ -1,0 +1,16 @@
+id: apigw_unprotected_endpoint
+description: >
+  REST API without WAF protection, with logging disabled, and using
+  a public endpoint. The API is internet-accessible, unfiltered, and
+  unmonitored — backend services are fully exposed through the API
+  layer.
+controls:
+  - CTL.APIGATEWAY.WAF.001
+  - CTL.APIGATEWAY.LOG.001
+  - CTL.APIGATEWAY.PUBLIC.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - ec2_code_execution

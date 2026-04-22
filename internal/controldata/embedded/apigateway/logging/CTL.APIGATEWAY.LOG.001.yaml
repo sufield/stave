@@ -1,0 +1,38 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.LOG.001
+name: REST API Stages Must Have Logging Enabled
+description: >
+  API Gateway REST API stages must have execution or access logging
+  enabled to CloudWatch. Without logging, API activity lacks
+  visibility for detecting abuse and supporting incident response.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-2"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-03", "LOG-05"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: REST API stage has no logging configured.
+  action: Enable execution logging or access logging on the stage.
+  example: |
+    {
+      "api": {
+        "kind": "rest_api",
+        "logging": { "enabled": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: rest_api
+    - field: properties.api.logging.enabled
+      op: eq
+      value: false

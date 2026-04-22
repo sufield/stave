@@ -3,25 +3,25 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 832
-**Pack hash:** `473a730aac1267210bf5d815cf6b298cf39ee65f7755649cb9d74638d2fb58ef`
+**Total controls:** 840
+**Pack hash:** `b19208a44594d9f2128d63f82b3ef5aa7f73bf336e6265fe08be1f2a34b9ba7c`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 131 |
-| high | 362 |
+| high | 364 |
 | info | 16 |
-| low | 75 |
-| medium | 248 |
+| low | 76 |
+| medium | 253 |
 
 | Domain | Count |
 |--------|-------|
 | audit | 20 |
 | detection | 2 |
-| encryption | 30 |
-| exposure | 541 |
+| encryption | 31 |
+| exposure | 548 |
 | governance | 19 |
 | identity | 177 |
 | network | 21 |
@@ -660,6 +660,21 @@ API Gateway routes and methods must have an authorizer configured (Cognito, Lamb
 
 ---
 
+### CTL.APIGATEWAY.CACHE.ENCRYPT.001
+
+**REST API Cache Must Be Encrypted**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** nist_800_53_r5: SC-28; soc2: CC6.7;
+
+API Gateway REST API stages with caching enabled must encrypt cached responses at rest. Unencrypted cache can expose response payloads, tokens, and PII.
+
+**Remediation:** Enable cache encryption on the stage.
+
+---
+
 ### CTL.APIGATEWAY.CORS.001
 
 **HTTP APIs Must Not Combine Wildcard Origin With Credentials**
@@ -701,6 +716,51 @@ API Gateway custom domain names must enforce a minimum TLS version of 1.2. TLS 1
 The observation snapshot is missing required API Gateway properties.
 
 **Remediation:** Ensure the extractor calls aws apigateway get-rest-apis and aws apigateway get-domain-names and maps security policy to the api observation properties.
+
+---
+
+### CTL.APIGATEWAY.LOG.001
+
+**REST API Stages Must Have Logging Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AU-2; soc2: CC7.1;
+
+API Gateway REST API stages must have execution or access logging enabled to CloudWatch. Without logging, API activity lacks visibility for detecting abuse and supporting incident response.
+
+**Remediation:** Enable execution logging or access logging on the stage.
+
+---
+
+### CTL.APIGATEWAY.MTLS.001
+
+**REST API Stages Must Use Client Certificates**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: IA-5; soc2: CC6.1;
+
+API Gateway REST API stages should configure a client certificate for mutual TLS with backend integrations. Without client authentication, backends cannot verify requests originate from API Gateway.
+
+**Remediation:** Generate and attach a client certificate to the stage.
+
+---
+
+### CTL.APIGATEWAY.PUBLIC.001
+
+**REST APIs Should Use Private Endpoints When Possible**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+REST APIs using EDGE or REGIONAL endpoint types are internet-accessible. APIs that serve only internal consumers should use PRIVATE endpoint type (VPC-only via PrivateLink) to reduce attack surface.
+
+**Remediation:** Convert to PRIVATE endpoint type if the API serves only VPC consumers. If public access is required, ensure WAF and authorizers are configured.
 
 ---
 
@@ -749,6 +809,21 @@ API Gateway stages must enforce TLS 1.2 or higher. Allowing older TLS versions e
 
 ---
 
+### CTL.APIGATEWAY.TRACING.001
+
+**REST API Stages Should Enable X-Ray Tracing**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AU-12;
+
+API Gateway REST API stages should enable X-Ray active tracing for distributed request tracing across connected services.
+
+**Remediation:** Enable active tracing on the stage.
+
+---
+
 ### CTL.APIGATEWAY.VALIDATION.001
 
 **API Gateway Must Have Request Validation Enabled**
@@ -761,6 +836,51 @@ API Gateway stages must enforce TLS 1.2 or higher. Allowing older TLS versions e
 API Gateway REST APIs must have request validation configured. API Gateway can validate incoming requests against a defined schema — checking required parameters, parameter types and formats, and request body conformance to a JSON schema — before the request reaches the backend. Without validation, malformed and malicious inputs are forwarded to the backend uninspected. This is complementary to WAF protection: WAF managed rules detect known-malicious patterns (SQLi, XSS, known exploits), while request validation detects structural violations (missing fields, wrong types, malformed bodies). A backend that receives only structurally valid requests is harder to attack through injection because type confusion, null pointer paths, and unexpected field exploitation are blocked at the API boundary. Request validation is particularly valuable for APIs handling PHI or financial data where the backend may make trust assumptions about well-formed input.
 
 **Remediation:** Configure a request validator on the REST API via the API Gateway console or PutRestApi/UpdateMethod API. Define request models (JSON schemas) for endpoints that accept request bodies. Enable parameter validation for all methods. For REST APIs handling PHI or sensitive data, enable both parameter and body validation against defined model schemas.
+
+---
+
+### CTL.APIGATEWAY.WAF.001
+
+**REST API Stages Must Have WAF ACL Attached**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+API Gateway REST API stages must have an AWS WAF web ACL associated for application-layer filtering. Without WAF, APIs are exposed to injection attacks, parameter tampering, L7 floods, and bot abuse.
+
+**Remediation:** Associate a WAFv2 web ACL with the API stage.
+
+---
+
+### CTL.APIGW2.AUTH.001
+
+**HTTP APIs Must Have Authorizers Configured**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+API Gateway v2 HTTP APIs must have an authorizer (JWT, Cognito, or Lambda) configured to authenticate requests. Without an authorizer, any client can invoke API routes without authentication.
+
+**Remediation:** Configure a JWT, Cognito, or Lambda authorizer on the API routes.
+
+---
+
+### CTL.APIGW2.LOG.001
+
+**HTTP API Stages Must Have Access Logging Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AU-2; soc2: CC7.1;
+
+API Gateway v2 HTTP API stages must configure access logging to capture request details. Without logging, API calls lack traceability for detecting abuse and supporting incident response.
+
+**Remediation:** Configure access logging with a CloudWatch Logs destination.
 
 ---
 

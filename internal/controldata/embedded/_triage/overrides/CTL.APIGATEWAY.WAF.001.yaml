@@ -1,0 +1,14 @@
+control: CTL.APIGATEWAY.WAF.001
+defect: >
+  The REST API stage has no WAF web ACL attached. The API endpoint
+  accepts all requests without application-layer filtering.
+infection: >
+  An attacker sends injection payloads, parameter tampering attempts,
+  and automated enumeration requests directly to the API without
+  rate limiting or request filtering. The API processes every
+  request regardless of content — SQL injection, command injection,
+  and path traversal payloads reach the backend integration.
+failure: >
+  Unfiltered API exposure. The API endpoint processes all traffic
+  without application-layer protection, enabling injection attacks,
+  automated abuse, and L7 DDoS against backend services.

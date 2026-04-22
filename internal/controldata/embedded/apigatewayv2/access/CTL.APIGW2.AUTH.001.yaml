@@ -1,0 +1,40 @@
+dsl_version: ctrl.v1
+id: CTL.APIGW2.AUTH.001
+name: HTTP APIs Must Have Authorizers Configured
+description: >
+  API Gateway v2 HTTP APIs must have an authorizer (JWT, Cognito,
+  or Lambda) configured to authenticate requests. Without an
+  authorizer, any client can invoke API routes without
+  authentication.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-16", "IVS-03"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: HTTP API has no authorizer configured.
+  action: >
+    Configure a JWT, Cognito, or Lambda authorizer on the API routes.
+  example: |
+    {
+      "api": {
+        "kind": "http_api",
+        "auth": { "has_authorizer": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: http_api
+    - field: properties.api.auth.has_authorizer
+      op: eq
+      value: false

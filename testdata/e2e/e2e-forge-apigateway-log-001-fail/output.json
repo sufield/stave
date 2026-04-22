@@ -1,0 +1,331 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-15T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "7a3ee9e426d66559a41dfcc8b737739ce2264c4dc9208017945b2d51884b8b59",
+        "2026-01-11T000000Z.json": "71a361c8d987e3989af27dfe118e406f977d801c69cf4970a7f72f20e0245c60"
+      },
+      "overall": "a83d2a35b3c615f2d442b820feacd325f168129e1b01241390bf6ff725404fc8"
+    },
+    "policy_fingerprint": "7125d2f032ddb1c41590c285329b22fc7ad7b6c103f8f58cc0b0bad374f4779c",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.APIGATEWAY.LOG.001",
+      "asset_id": "arn:aws:apigateway:us-east-1::/restapis/abc123",
+      "asset_type": "aws_apigateway_rest_api",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -168,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:73df9ddc13130248",
+      "control_id": "CTL.APIGATEWAY.LOG.001",
+      "control_name": "REST API Stages Must Have Logging Enabled",
+      "control_description": "API Gateway REST API stages must have execution or access logging enabled to CloudWatch. Without logging, API activity lacks visibility for detecting abuse and supporting incident response.\n",
+      "asset_id": "arn:aws:apigateway:us-east-1::/restapis/abc123",
+      "asset_type": "aws_apigateway_rest_api",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 336,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "api.kind",
+            "actual_value": "rest_api",
+            "operator": "eq",
+            "unsafe_value": "rest_api"
+          },
+          {
+            "property": "api.logging.enabled",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 336 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "nist_800_53_r5": "AU-2",
+        "soc2": "CC7.1"
+      },
+      "control_compliance_ccm_v4": [
+        "LOG-03",
+        "LOG-05"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "REST API stage has no logging configured.",
+        "action": "Enable execution logging or access logging on the stage.",
+        "example": "{\n  \"api\": {\n    \"kind\": \"rest_api\",\n    \"logging\": { \"enabled\": true }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-23a730aa49e6ae1d",
+        "target": {
+          "asset_id": "arn:aws:apigateway:us-east-1::/restapis/abc123",
+          "asset_type": "aws_apigateway_rest_api"
+        },
+        "action": "Enable execution logging or access logging on the stage."
+      },
+      "exposure_score": 50,
+      "score_breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "api.kind eq \"rest_api\"",
+          "observation_key": "api.kind",
+          "operator": "eq",
+          "expected_value": "rest_api",
+          "observed_value": "rest_api"
+        },
+        {
+          "predicate_expr": "api.logging.enabled eq false",
+          "observation_key": "api.logging.enabled",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "arn:aws:apigateway:us-east-1::/restapis/abc123",
+          "type": "aws_apigateway_rest_api",
+          "vendor": "aws",
+          "arn": "arn:aws:apigateway:us-east-1::/restapis/abc123",
+          "region": "us-east-1"
+        },
+        "violation": {
+          "control_id": "CTL.APIGATEWAY.LOG.001",
+          "control_name": "REST API Stages Must Have Logging Enabled",
+          "severity": "medium",
+          "reasoning": [
+            {
+              "clause": "api.kind = \"rest_api\"",
+              "observation_key": "api.kind",
+              "observed_value": "rest_api"
+            },
+            {
+              "clause": "api.logging.enabled = false",
+              "observation_key": "api.logging.enabled",
+              "observed_value": false
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "api.kind",
+            "current_value": "rest_api",
+            "has_safe_default": false,
+            "description": "Change api.kind from rest_api"
+          },
+          {
+            "path": "api.logging.enabled",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set api.logging.enabled to true"
+          }
+        ],
+        "action": "Enable execution logging or access logging on the stage."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "apigateway"
+      ],
+      "delta": [
+        {
+          "property_label": "logging",
+          "property_path": "api.logging.enabled",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:4c11b10d983d82e6",
+      "asset_id": "arn:aws:apigateway:us-east-1::/restapis/abc123",
+      "shared_keys": [
+        "api.kind",
+        "api.logging",
+        "api.logging.enabled"
+      ],
+      "headline_finding_id": "sha256:73df9ddc13130248",
+      "member_finding_ids": [
+        "sha256:73df9ddc13130248"
+      ],
+      "consolidated_score": 50,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "arn:aws:apigateway:us-east-1::/restapis/abc123",
+      "asset_type": "aws_apigateway_rest_api",
+      "fix_plan": {
+        "id": "fix-23a730aa49e6ae1d",
+        "target": {
+          "asset_id": "arn:aws:apigateway:us-east-1::/restapis/abc123",
+          "asset_type": "aws_apigateway_rest_api"
+        },
+        "action": "Enable execution logging or access logging on the stage."
+      },
+      "contributing_controls": [
+        "CTL.APIGATEWAY.LOG.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.APIGATEWAY.LOG.001",
+      "asset_id": "arn:aws:apigateway:us-east-1::/restapis/abc123",
+      "exposure_score": 50,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-apigateway-log-001-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-apigateway-log-001-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "9ca8e797299a0d24f6b73e66ffc9ed29808c56f4",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-apigateway-log-001-fail/controls/"
+      ]
+    }
+  }
+}
