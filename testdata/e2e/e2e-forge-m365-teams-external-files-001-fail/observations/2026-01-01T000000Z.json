@@ -1,0 +1,36 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "teams-cfg",
+      "type": "m365_teams_config",
+      "vendor": "m365",
+      "properties": {
+        "m365": {
+          "collaboration": {
+            "kind": "teams_config",
+            "teams": {
+              "anon_join_enabled": false,
+              "anon_start_enabled": false,
+              "anon_chat_enabled": false,
+              "external_chat_in_meeting": false,
+              "external_control_enabled": false,
+              "external_lobby_bypass": false,
+              "dialin_lobby_bypass": false,
+              "presenters_restricted": true,
+              "recording_auto_enabled": false,
+              "security_reporting": true,
+              "external_domains_restricted": true,
+              "external_file_sharing_restricted": false,
+              "external_users_can_start_conversations": false,
+              "email_to_channel_enabled": false,
+              "unmanaged_communication_enabled": false
+            }
+          }
+        }
+      }
+    }
+  ]
+}

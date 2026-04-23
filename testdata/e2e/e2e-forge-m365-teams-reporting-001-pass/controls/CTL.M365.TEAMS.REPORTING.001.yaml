@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.M365.TEAMS.REPORTING.001
+name: Security Reporting Not Enabled
+description: >
+  Users cannot report suspicious Teams messages. No in-app
+  mechanism for Teams-based phishing reports.
+domain: detection
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-4"
+  soc2: "CC7.1"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Security Reporting Not Enabled — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"collaboration": {"kind": "teams_config", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.collaboration.kind
+      op: eq
+      value: teams_config
+    - field: properties.m365.collaboration.teams.security_reporting
+      op: eq
+      value: false

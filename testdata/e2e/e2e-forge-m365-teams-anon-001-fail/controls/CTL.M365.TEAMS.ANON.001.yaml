@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.M365.TEAMS.ANON.001
+name: Teams Meetings Allow Anonymous Users
+description: >
+  Anonymous users can join, start, or chat in meetings without
+  authenticating. Not subject to tenant policies or audit.
+domain: exposure
+severity: high
+compliance:
+  cis_m365_v4: "12.1"
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Teams Meetings Allow Anonymous Users — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"collaboration": {"kind": "teams_config", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.collaboration.kind
+      op: eq
+      value: teams_config
+    - field: properties.m365.collaboration.teams.anon_join_enabled
+      op: eq
+      value: true

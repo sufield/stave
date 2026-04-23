@@ -1,0 +1,13 @@
+control: CTL.M365.TEAMS.EXTERNAL.DOMAINS.001
+defect: >
+  Teams allows communication with all external domains.
+infection: >
+  Unrestricted external domain access means any Teams user from any
+  organization worldwide can initiate communication. An attacker
+  creates a free Microsoft account or uses a compromised tenant to
+  send messages to targeted users. These messages appear in Teams
+  as external communications. Malicious links, social engineering,
+  and credential phishing via Teams chat exploit this open channel.
+failure: >
+  Phishing via Teams. An attacker from any external organization
+  sends malicious messages to users via Teams chat.

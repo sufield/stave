@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.M365.TEAMS.MEETING.RECORDING.001
+name: Meeting Recording Auto-Enabled
+description: >
+  Recording unrestricted or auto-enabled. Sensitive discussions
+  and screen shares recorded without controls.
+domain: exposure
+severity: medium
+compliance:
+  cis_m365_v4: "12.5"
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Meeting Recording Auto-Enabled — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"collaboration": {"kind": "teams_config", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.collaboration.kind
+      op: eq
+      value: teams_config
+    - field: properties.m365.collaboration.teams.recording_auto_enabled
+      op: eq
+      value: true

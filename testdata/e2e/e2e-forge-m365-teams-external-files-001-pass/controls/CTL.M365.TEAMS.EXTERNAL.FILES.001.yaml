@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.M365.TEAMS.EXTERNAL.FILES.001
+name: External File Sharing Not Restricted
+description: >
+  External users can share files in Teams. Files from external
+  sources bypass organizational DLP controls.
+domain: exposure
+severity: high
+compliance:
+  cis_m365_v4: "12.7"
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: External File Sharing Not Restricted — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"collaboration": {"kind": "teams_config", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.collaboration.kind
+      op: eq
+      value: teams_config
+    - field: properties.m365.collaboration.teams.external_file_sharing_restricted
+      op: eq
+      value: false

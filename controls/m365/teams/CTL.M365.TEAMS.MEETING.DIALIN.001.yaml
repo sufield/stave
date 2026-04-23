@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.M365.TEAMS.MEETING.DIALIN.001
+name: Dial-In Users Bypass Meeting Lobby
+description: >
+  PSTN dial-in users bypass lobby and join directly. Unverified
+  audio participants join without host approval.
+domain: exposure
+severity: medium
+compliance:
+  cis_m365_v4: "12.3"
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Dial-In Users Bypass Meeting Lobby — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"collaboration": {"kind": "teams_config", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.collaboration.kind
+      op: eq
+      value: teams_config
+    - field: properties.m365.collaboration.teams.dialin_lobby_bypass
+      op: eq
+      value: true

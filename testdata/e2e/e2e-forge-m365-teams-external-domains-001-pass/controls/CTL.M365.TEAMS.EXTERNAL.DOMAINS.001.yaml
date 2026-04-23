@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.M365.TEAMS.EXTERNAL.DOMAINS.001
+name: External Domain Access Not Restricted
+description: >
+  Communication allowed with all external domains. Any Teams
+  user worldwide can message internal users.
+domain: exposure
+severity: high
+compliance:
+  cis_m365_v4: "12.6"
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: External Domain Access Not Restricted — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"collaboration": {"kind": "teams_config", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.collaboration.kind
+      op: eq
+      value: teams_config
+    - field: properties.m365.collaboration.teams.external_domains_restricted
+      op: eq
+      value: false

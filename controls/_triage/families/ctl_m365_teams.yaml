@@ -1,0 +1,11 @@
+family: CTL.M365.TEAMS
+infection: >
+  Microsoft Teams is the real-time collaboration layer. Anonymous
+  meeting access, unrestricted external domains, and external file
+  sharing create paths for phishing, social engineering, and malware
+  delivery that bypass email security controls. Teams chat phishing
+  exploits user trust in the collaboration platform.
+failure: >
+  Collaboration compromise. An attacker reaches internal users via
+  Teams chat or meetings, delivers malware via file sharing, or
+  conducts social engineering through meeting participation.

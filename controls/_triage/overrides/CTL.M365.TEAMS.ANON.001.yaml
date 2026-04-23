@@ -1,0 +1,16 @@
+control: CTL.M365.TEAMS.ANON.001
+defect: >
+  Teams meeting policy allows anonymous user participation.
+infection: >
+  Anonymous users are unidentified participants who join meetings
+  without authenticating. They are not subject to tenant policies,
+  Conditional Access, or DLP controls. If anonymous users can join,
+  anyone with a meeting link participates without identity
+  verification. If they can start meetings, they initiate sessions
+  appearing to come from the organization. If they can chat, they
+  send messages and potentially malicious links to authenticated
+  participants.
+failure: >
+  Unidentified meeting participants. Anyone with a meeting link
+  participates without identity verification, policy enforcement,
+  or audit attribution.

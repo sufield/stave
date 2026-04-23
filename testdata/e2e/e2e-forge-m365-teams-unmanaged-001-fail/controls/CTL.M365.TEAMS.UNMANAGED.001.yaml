@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.M365.TEAMS.UNMANAGED.001
+name: Unmanaged Communication Enabled
+description: >
+  Users communicate with personal/unmanaged Teams accounts.
+  Unmanaged accounts not subject to organizational policies.
+domain: exposure
+severity: medium
+compliance:
+  cis_m365_v4: "12.10"
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Unmanaged Communication Enabled — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"collaboration": {"kind": "teams_config", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.collaboration.kind
+      op: eq
+      value: teams_config
+    - field: properties.m365.collaboration.teams.unmanaged_communication_enabled
+      op: eq
+      value: true

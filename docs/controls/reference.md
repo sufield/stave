@@ -3,25 +3,25 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1223
-**Pack hash:** `a51786b46d9494612c292c9365efafc09eb07ad33742319fdf3dae0137fb34b0`
+**Total controls:** 1234
+**Pack hash:** `800e3f31ea9e22fc97f3c97c3527370300afca64d805cba7a0a8f4cece0d98cf`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 165 |
-| high | 542 |
+| high | 545 |
 | info | 16 |
 | low | 92 |
-| medium | 408 |
+| medium | 416 |
 
 | Domain | Count |
 |--------|-------|
 | audit | 20 |
-| detection | 30 |
+| detection | 31 |
 | encryption | 75 |
-| exposure | 765 |
+| exposure | 775 |
 | governance | 24 |
 | identity | 266 |
 | network | 21 |
@@ -13990,6 +13990,171 @@ Transport rules forward email externally. Organization-wide admin-level email ex
 - **Compliance:** cis_m365_v4: 10.9; nist_800_53_r5: SI-3; soc2: CC6.8;
 
 Transport rules whitelist senders/domains, bypassing ALL filtering including malware. Higher severity than spam bypass.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.TEAMS.ANON.001
+
+**Teams Meetings Allow Anonymous Users**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_m365_v4: 12.1; nist_800_53_r5: AC-3; soc2: CC6.1;
+
+Anonymous users can join, start, or chat in meetings without authenticating. Not subject to tenant policies or audit.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.TEAMS.EMAIL.CHANNEL.001
+
+**Email Sending to Channel Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_m365_v4: 12.9; nist_800_53_r5: SC-7; soc2: CC6.6;
+
+Email sent directly to Teams channels. An attacker who discovers the channel address sends phishing alongside legitimate content.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.TEAMS.EXTERNAL.CONVERSATIONS.001
+
+**External Users Can Start Conversations**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_m365_v4: 12.8; nist_800_53_r5: AC-3; soc2: CC6.1;
+
+External users initiate new conversations with internal users directly. Unsolicited external outreach via Teams.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.TEAMS.EXTERNAL.DOMAINS.001
+
+**External Domain Access Not Restricted**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_m365_v4: 12.6; nist_800_53_r5: SC-7; soc2: CC6.6;
+
+Communication allowed with all external domains. Any Teams user worldwide can message internal users.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.TEAMS.EXTERNAL.FILES.001
+
+**External File Sharing Not Restricted**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_m365_v4: 12.7; nist_800_53_r5: SC-7; soc2: CC6.6;
+
+External users can share files in Teams. Files from external sources bypass organizational DLP controls.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.TEAMS.MEETING.DIALIN.001
+
+**Dial-In Users Bypass Meeting Lobby**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_m365_v4: 12.3; nist_800_53_r5: AC-3; soc2: CC6.1;
+
+PSTN dial-in users bypass lobby and join directly. Unverified audio participants join without host approval.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.TEAMS.MEETING.EXTERNAL.001
+
+**External Users Have Elevated Meeting Privileges**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_m365_v4: 12.2; nist_800_53_r5: AC-3; soc2: CC6.1;
+
+External users can chat, take control, or bypass lobby in meetings. One or more elevated privileges enabled.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.TEAMS.MEETING.PRESENTERS.001
+
+**Meeting Presenters Not Restricted**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_m365_v4: 12.4; nist_800_53_r5: AC-3; soc2: CC6.1;
+
+Any participant can present by default. Unrestricted screen sharing and content control.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.TEAMS.MEETING.RECORDING.001
+
+**Meeting Recording Auto-Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_m365_v4: 12.5; nist_800_53_r5: AC-3; soc2: CC6.1;
+
+Recording unrestricted or auto-enabled. Sensitive discussions and screen shares recorded without controls.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.TEAMS.REPORTING.001
+
+**Security Reporting Not Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** nist_800_53_r5: SI-4; soc2: CC7.1;
+
+Users cannot report suspicious Teams messages. No in-app mechanism for Teams-based phishing reports.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.TEAMS.UNMANAGED.001
+
+**Unmanaged Communication Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_m365_v4: 12.10; nist_800_53_r5: AC-3; soc2: CC6.1;
+
+Users communicate with personal/unmanaged Teams accounts. Unmanaged accounts not subject to organizational policies.
 
 **Remediation:** Remediate per control description.
 

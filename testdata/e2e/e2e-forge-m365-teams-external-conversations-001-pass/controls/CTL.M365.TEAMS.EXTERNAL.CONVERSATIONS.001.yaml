@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.M365.TEAMS.EXTERNAL.CONVERSATIONS.001
+name: External Users Can Start Conversations
+description: >
+  External users initiate new conversations with internal users
+  directly. Unsolicited external outreach via Teams.
+domain: exposure
+severity: medium
+compliance:
+  cis_m365_v4: "12.8"
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: External Users Can Start Conversations — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"collaboration": {"kind": "teams_config", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.collaboration.kind
+      op: eq
+      value: teams_config
+    - field: properties.m365.collaboration.teams.external_users_can_start_conversations
+      op: eq
+      value: true

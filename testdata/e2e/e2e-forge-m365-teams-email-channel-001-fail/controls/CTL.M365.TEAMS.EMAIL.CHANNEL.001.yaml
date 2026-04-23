@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.M365.TEAMS.EMAIL.CHANNEL.001
+name: Email Sending to Channel Enabled
+description: >
+  Email sent directly to Teams channels. An attacker who discovers
+  the channel address sends phishing alongside legitimate content.
+domain: exposure
+severity: medium
+compliance:
+  cis_m365_v4: "12.9"
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Email Sending to Channel Enabled — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"collaboration": {"kind": "teams_config", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.collaboration.kind
+      op: eq
+      value: teams_config
+    - field: properties.m365.collaboration.teams.email_to_channel_enabled
+      op: eq
+      value: true
