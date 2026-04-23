@@ -1,0 +1,17 @@
+control: CTL.AZURE.MONITOR.ALERTS.CIS.001
+defect: >
+  Azure subscription does not have Activity Log alerts configured
+  for one or more CIS-required administrative operations.
+infection: >
+  CIS Azure Foundations Benchmark requires real-time alerts for
+  administrative operations that modify security controls — NSG
+  rules, SQL firewall rules, security solutions, and policy
+  assignments. Without these alerts, an attacker who modifies
+  network security rules, disables security solutions, or changes
+  SQL firewall rules operates without generating real-time
+  notifications. The Activity Log records the operations but nobody
+  is alerted in real time.
+failure: >
+  No real-time detection of security control modifications. NSG
+  rules, SQL firewall rules, and security solutions are changed
+  without generating alerts.

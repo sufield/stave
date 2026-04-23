@@ -1,0 +1,15 @@
+id: azure_backup_ransomware
+description: >
+  Recovery vault without soft delete AND without CMK encryption.
+  Backups are permanently deletable and encrypted with platform-
+  managed keys. An attacker can destroy backups and read backup
+  contents — the ransomware pattern applied to Azure backups.
+controls:
+  - CTL.AZURE.RECOVERY.SOFTDELETE.001
+  - CTL.AZURE.RECOVERY.ENCRYPT.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - ec2_code_execution

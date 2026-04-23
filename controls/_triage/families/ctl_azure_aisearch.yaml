@@ -1,0 +1,10 @@
+family: CTL.AZURE.AISEARCH
+infection: >
+  Azure AI Search indexes may contain sensitive data extracted from
+  documents and databases. Public access exposes search queries and
+  indexed content. Missing managed identity forces use of stored
+  credentials for data source access.
+failure: >
+  Search data exposure. An attacker queries the search index or
+  accesses indexed sensitive content through unrestricted network
+  access.

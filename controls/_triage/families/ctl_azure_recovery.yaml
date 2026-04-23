@@ -1,0 +1,11 @@
+family: CTL.AZURE.RECOVERY
+infection: >
+  Recovery Services vaults store backup data for VMs, databases,
+  and file shares. Vault misconfigurations expose backup data or
+  allow permanent backup deletion. An attacker targets backups
+  before conducting a destructive attack to eliminate recovery
+  options.
+failure: >
+  Backup compromise. An attacker accesses backup contents or
+  permanently deletes backups, eliminating the organization's
+  recovery capability.

@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.AISEARCH.NETWORK.001
+name: AI Search Public Network Access Unrestricted
+description: >
+  Azure AI Search service accessible from the public internet.
+  Search indexes may contain sensitive data extracted from
+  documents and databases.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: AI Search Public Network Access Unrestricted — finding detected.
+  action: Restrict public network access and use private endpoints.
+  example: |
+    {"azure": {"search": {"kind": "ai_search", "public_network_access": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.search.kind
+      op: eq
+      value: ai_search
+    - field: properties.azure.search.public_network_access
+      op: eq
+      value: true

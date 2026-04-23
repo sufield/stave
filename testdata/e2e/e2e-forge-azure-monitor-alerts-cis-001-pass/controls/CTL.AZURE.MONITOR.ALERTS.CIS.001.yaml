@@ -1,0 +1,35 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.MONITOR.ALERTS.CIS.001
+name: CIS-Required Activity Log Alerts Not Configured
+description: >
+  One or more CIS Azure Benchmark-required Activity Log alerts are
+  missing. Required operations: Create Policy Assignment,
+  Create/Update/Delete NSG, Create/Update/Delete NSG Rule,
+  Create/Update/Delete Security Solution, Create/Update/Delete SQL
+  Server Firewall Rule.
+domain: detection
+severity: high
+compliance:
+  cis_azure_v2: "5.2.1"
+  nist_800_53_r5: "AU-6"
+  hipaa: "164.308(a)(1)(ii)(D)"
+  pci_dss_v4: "10.2"
+  soc2: "CC7.2"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: defense_evasion
+remediation:
+  description: CIS-Required Activity Log Alerts Not Configured — finding detected.
+  action: Configure Activity Log alerts for all CIS-required operations.
+  example: |
+    {"azure": {"monitoring": {"kind": "alert_config", "alerts": {"cis_required_alerts_configured": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.monitoring.kind
+      op: eq
+      value: alert_config
+    - field: properties.azure.monitoring.alerts.cis_required_alerts_configured
+      op: eq
+      value: false

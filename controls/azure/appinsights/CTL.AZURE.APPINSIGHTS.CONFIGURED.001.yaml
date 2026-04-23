@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.APPINSIGHTS.CONFIGURED.001
+name: Application Insights Not Configured for Web App
+description: >
+  Application Insights not configured. No application performance
+  monitoring, request tracing, or dependency failure detection.
+domain: exposure
+severity: low
+compliance:
+  nist_800_53_r5: "AU-6"
+  soc2: "CC7.2"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Application Insights Not Configured — finding detected.
+  action: Configure Application Insights for the web application.
+  example: |
+    {"azure": {"monitoring": {"kind": "app_insights", "appinsights": {"configured": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.monitoring.kind
+      op: eq
+      value: app_insights
+    - field: properties.azure.monitoring.appinsights.configured
+      op: eq
+      value: false

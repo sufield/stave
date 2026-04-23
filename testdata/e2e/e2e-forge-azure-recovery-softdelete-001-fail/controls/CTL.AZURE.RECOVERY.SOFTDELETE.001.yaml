@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.RECOVERY.SOFTDELETE.001
+name: Recovery Services Vault Soft Delete Not Enabled
+description: >
+  Soft delete not enabled for backup items. Deleted backups are
+  permanently lost. An attacker who gains vault access can destroy
+  all backups before a destructive attack.
+domain: exposure
+severity: high
+compliance:
+  cis_azure_v2: "7.6"
+  nist_800_53_r5: "CP-9"
+  soc2: "CC7.2"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: defense_evasion
+remediation:
+  description: Recovery Services Vault Soft Delete Not Enabled — finding detected.
+  action: Enable soft delete for backup items.
+  example: |
+    {"azure": {"governance": {"kind": "recovery_vault", "recovery": {"soft_delete_enabled": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.governance.kind
+      op: eq
+      value: recovery_vault
+    - field: properties.azure.governance.recovery.soft_delete_enabled
+      op: eq
+      value: false

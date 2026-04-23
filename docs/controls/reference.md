@@ -3,27 +3,27 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1042
-**Pack hash:** `283e8fd6c9664029cf885f8ae595ff621381e9852acae653caf518705e76c406`
+**Total controls:** 1049
+**Pack hash:** `f1b235183a2d4cfed089734a736897a65fbe544e634cf850eb67a25b678594f2`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 144 |
-| high | 467 |
+| high | 469 |
 | info | 16 |
-| low | 80 |
-| medium | 335 |
+| low | 82 |
+| medium | 338 |
 
 | Domain | Count |
 |--------|-------|
 | audit | 20 |
-| detection | 8 |
-| encryption | 58 |
-| exposure | 680 |
+| detection | 9 |
+| encryption | 59 |
+| exposure | 684 |
 | governance | 24 |
-| identity | 209 |
+| identity | 210 |
 | network | 21 |
 | resilience | 14 |
 | storage | 8 |
@@ -1093,6 +1093,36 @@ Activity Log exported but retention under 365 days. Compliance frameworks requir
 
 ---
 
+### CTL.AZURE.AISEARCH.IDENTITY.001
+
+**AI Search Without Managed Identity**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: IA-5; soc2: CC6.1;
+
+No managed identity configured. The search service must use stored credentials to access data sources.
+
+**Remediation:** Configure a managed identity for the search service.
+
+---
+
+### CTL.AZURE.AISEARCH.NETWORK.001
+
+**AI Search Public Network Access Unrestricted**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+Azure AI Search service accessible from the public internet. Search indexes may contain sensitive data extracted from documents and databases.
+
+**Remediation:** Restrict public network access and use private endpoints.
+
+---
+
 ### CTL.AZURE.AKS.NETWORK.001
 
 **AKS Must Use Azure CNI Network Plugin**
@@ -1420,6 +1450,21 @@ App Service accepts TLS 1.0 or 1.1 connections with known vulnerabilities (BEAST
 App Service not integrated with a VNet. Cannot access VNet resources over private connections.
 
 **Remediation:** Configure VNet integration.
+
+---
+
+### CTL.AZURE.APPINSIGHTS.CONFIGURED.001
+
+**Application Insights Not Configured for Web App**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AU-6; soc2: CC7.2;
+
+Application Insights not configured. No application performance monitoring, request tracing, or dependency failure detection.
+
+**Remediation:** Configure Application Insights for the web application.
 
 ---
 
@@ -2128,6 +2173,21 @@ No Log Analytics workspace in the subscription. Monitoring data is fragmented wi
 
 ---
 
+### CTL.AZURE.LOGANALYTICS.ACCESS.001
+
+**Log Analytics Workspace Allows Internet Ingestion or Query**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_azure_v2: 5.1.4; nist_800_53_r5: AC-4; soc2: CC6.6;
+
+Log Analytics workspace allows data ingestion or query access from the public internet. Security logs are queryable from outside the organization's network.
+
+**Remediation:** Disable internet ingestion and query access; use private link.
+
+---
+
 ### CTL.AZURE.MONITOR.ALERTS.001
 
 **No Alerts Configured for Critical Admin Operations**
@@ -2140,6 +2200,21 @@ No Log Analytics workspace in the subscription. Monitoring data is fragmented wi
 No Azure Monitor alert rules for critical admin operations. Role assignments, policy changes, and security resource modifications do not generate real-time alerts.
 
 **Remediation:** Remediate per control description.
+
+---
+
+### CTL.AZURE.MONITOR.ALERTS.CIS.001
+
+**CIS-Required Activity Log Alerts Not Configured**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_azure_v2: 5.2.1; hipaa: 164.308(a)(1)(ii)(D); nist_800_53_r5: AU-6; pci_dss_v4: 10.2; soc2: CC7.2;
+
+One or more CIS Azure Benchmark-required Activity Log alerts are missing. Required operations: Create Policy Assignment, Create/Update/Delete NSG, Create/Update/Delete NSG Rule, Create/Update/Delete Security Solution, Create/Update/Delete SQL Server Firewall Rule.
+
+**Remediation:** Configure Activity Log alerts for all CIS-required operations.
 
 ---
 
@@ -2440,6 +2515,36 @@ The Owner role grants full control including the ability to assign roles to othe
 Contributor, User Access Administrator, and custom write roles should be assigned at resource group scope, not subscription scope. Subscription-scoped assignments grant permissions across all resource groups.
 
 **Remediation:** Reassign at resource group scope with specific resource group targets.
+
+---
+
+### CTL.AZURE.RECOVERY.ENCRYPT.001
+
+**Recovery Services Vault Not Using CMK**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** nist_800_53_r5: SC-28; soc2: CC6.1;
+
+Recovery Services vault uses platform-managed encryption. No revocation, no custom rotation, no access audit via Key Vault.
+
+**Remediation:** Configure customer-managed key encryption via Key Vault.
+
+---
+
+### CTL.AZURE.RECOVERY.SOFTDELETE.001
+
+**Recovery Services Vault Soft Delete Not Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_azure_v2: 7.6; nist_800_53_r5: CP-9; soc2: CC7.2;
+
+Soft delete not enabled for backup items. Deleted backups are permanently lost. An attacker who gains vault access can destroy all backups before a destructive attack.
+
+**Remediation:** Enable soft delete for backup items.
 
 ---
 

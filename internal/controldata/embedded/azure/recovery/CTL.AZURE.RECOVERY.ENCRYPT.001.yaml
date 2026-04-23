@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.RECOVERY.ENCRYPT.001
+name: Recovery Services Vault Not Using CMK
+description: >
+  Recovery Services vault uses platform-managed encryption. No
+  revocation, no custom rotation, no access audit via Key Vault.
+domain: encryption
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.1"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Recovery Services Vault Not Using CMK — finding detected.
+  action: Configure customer-managed key encryption via Key Vault.
+  example: |
+    {"azure": {"governance": {"kind": "recovery_vault", "recovery": {"uses_cmk": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.governance.kind
+      op: eq
+      value: recovery_vault
+    - field: properties.azure.governance.recovery.uses_cmk
+      op: eq
+      value: false

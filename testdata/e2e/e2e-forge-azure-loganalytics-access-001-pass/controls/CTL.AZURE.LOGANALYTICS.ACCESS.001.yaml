@@ -1,0 +1,35 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.LOGANALYTICS.ACCESS.001
+name: Log Analytics Workspace Allows Internet Ingestion or Query
+description: >
+  Log Analytics workspace allows data ingestion or query access
+  from the public internet. Security logs are queryable from
+  outside the organization's network.
+domain: exposure
+severity: medium
+compliance:
+  cis_azure_v2: "5.1.4"
+  nist_800_53_r5: "AC-4"
+  soc2: "CC6.6"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Log Analytics Workspace Allows Internet Access — finding detected.
+  action: Disable internet ingestion and query access; use private link.
+  example: |
+    {"azure": {"monitoring": {"kind": "log_analytics", "loganalytics": {"internet_ingestion_enabled": false, "internet_query_enabled": false}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.monitoring.kind
+      op: eq
+      value: log_analytics
+    - any:
+        - field: properties.azure.monitoring.loganalytics.internet_ingestion_enabled
+          op: eq
+          value: true
+        - field: properties.azure.monitoring.loganalytics.internet_query_enabled
+          op: eq
+          value: true

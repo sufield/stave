@@ -1,0 +1,23 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "sub-alerts",
+      "type": "azure_monitor_config",
+      "vendor": "azure",
+      "properties": {
+        "azure": {
+          "monitoring": {
+            "kind": "alert_config",
+            "alerts": {
+              "cis_required_alerts_configured": true,
+              "missing_alerts": []
+            }
+          }
+        }
+      }
+    }
+  ]
+}

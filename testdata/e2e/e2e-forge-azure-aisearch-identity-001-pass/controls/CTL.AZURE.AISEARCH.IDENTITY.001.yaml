@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.AISEARCH.IDENTITY.001
+name: AI Search Without Managed Identity
+description: >
+  No managed identity configured. The search service must use
+  stored credentials to access data sources.
+domain: identity
+severity: low
+compliance:
+  nist_800_53_r5: "IA-5"
+  soc2: "CC6.1"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: AI Search Without Managed Identity — finding detected.
+  action: Configure a managed identity for the search service.
+  example: |
+    {"azure": {"search": {"kind": "ai_search", "managed_identity_type": "SystemAssigned"}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.search.kind
+      op: eq
+      value: ai_search
+    - field: properties.azure.search.managed_identity_type
+      op: eq
+      value: None

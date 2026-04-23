@@ -1,0 +1,15 @@
+control: CTL.AZURE.RECOVERY.SOFTDELETE.001
+defect: >
+  Recovery Services vault does not have soft delete enabled.
+  Deleted backup items are permanently lost.
+infection: >
+  Without soft delete, an attacker who compromises the vault can
+  permanently delete all backup items. If the attacker then encrypts
+  or destroys production data, the organization has no recovery path.
+  This is the ransomware pattern: destroy backups first, then destroy
+  production. Soft delete retains deleted items for 14 days, providing
+  a recovery window even after backup deletion.
+failure: >
+  Backup destruction. An attacker permanently deletes all backups.
+  The organization has no recovery path when production data is
+  subsequently destroyed.
