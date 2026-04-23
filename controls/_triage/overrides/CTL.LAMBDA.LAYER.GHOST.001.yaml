@@ -1,0 +1,13 @@
+control: CTL.LAMBDA.LAYER.GHOST.001
+defect: >
+  Lambda function references a layer version that has been deleted.
+  The function runs without the expected dependency.
+infection: >
+  If the layer provided shared libraries, security middleware, or
+  runtime dependencies, the function operates without them. A layer
+  providing a custom TLS certificate bundle, an encryption library,
+  or authentication middleware leaves the function running without
+  that security component.
+failure: >
+  Missing dependency. The function operates without the expected layer
+  contents, potentially losing security-relevant dependencies silently.

@@ -1,0 +1,34 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.IMAGE.GHOST.001
+name: ECS Task Definitions Must Not Reference Deleted Container Images
+description: >
+  ECS task definitions must not reference container images that don't
+  exist in the ECR inventory. A deleted image with a tag-based
+  reference is reclaimable — an attacker who pushes an image with the
+  matching tag controls what code runs in the container with the task
+  role's full IAM permissions.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SI-7"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "6.3.2"
+  ccm_v4: ["AIS-06", "STA-04"]
+scope_tags: [aws, ecs]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: ECS task definition references a container image that does not exist.
+  action: Update the task definition to reference an existing image. Use digest-pinned references for immutable images.
+  example: |
+    {"container": {"kind": "task_definition", "image": {"has_ghost_reference": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: task_definition
+    - field: properties.container.image.has_ghost_reference
+      op: eq
+      value: true

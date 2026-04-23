@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.LAYER.GHOST.001
+name: Lambda Functions Must Not Reference Deleted Layer Versions
+description: >
+  Lambda functions must not reference layer versions that have been
+  deleted. A missing layer means the function runs without the
+  expected dependency — potentially losing security-relevant libraries,
+  encryption modules, or authentication middleware.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-7"
+  soc2: "CC6.1"
+  ccm_v4: ["AIS-06"]
+scope_tags: [aws, lambda]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: execution
+remediation:
+  description: Lambda function references a deleted layer version.
+  action: Update the function to reference an existing layer version or remove the layer.
+  example: |
+    {"compute": {"kind": "function", "layers": {"has_ghost_reference": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
+    - field: properties.compute.layers.has_ghost_reference
+      op: eq
+      value: true

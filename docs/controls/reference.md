@@ -3,25 +3,25 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 896
-**Pack hash:** `516e26af63e3f69d0c5a3442bfd2ef879594046b9949bcfa0ae4965315f3b111`
+**Total controls:** 900
+**Pack hash:** `3a9839f1b5a83400dc71e9842c11ec8fe386a7a670d5c4cfa84cce7d5a472414`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 137 |
-| high | 396 |
+| high | 398 |
 | info | 16 |
 | low | 76 |
-| medium | 271 |
+| medium | 273 |
 
 | Domain | Count |
 |--------|-------|
 | audit | 20 |
 | detection | 6 |
 | encryption | 35 |
-| exposure | 595 |
+| exposure | 599 |
 | governance | 20 |
 | identity | 177 |
 | network | 21 |
@@ -3597,6 +3597,21 @@ EC2 instances must not run on AMIs that are deprecated by AWS or the AMI owner, 
 
 ---
 
+### CTL.EC2.AMI.GHOST.001
+
+**Launch Templates Must Not Reference Deregistered AMIs**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CP-2; soc2: A1.2;
+
+EC2 launch templates must not reference AMIs that have been deregistered. Instance launches using the template fail. Auto Scaling groups using the template cannot scale out during incidents.
+
+**Remediation:** Update the launch template to reference an available AMI.
+
+---
+
 ### CTL.EC2.AMI.PUBLIC.001
 
 **Custom AMIs Must Not Be Publicly Shared**
@@ -4329,6 +4344,21 @@ ECS task definitions must reference container images by digest (repo@sha256:...)
 
 ---
 
+### CTL.ECS.IMAGE.GHOST.001
+
+**ECS Task Definitions Must Not Reference Deleted Container Images**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-7; pci_dss_v4.0: 6.3.2; soc2: CC6.1;
+
+ECS task definitions must not reference container images that don't exist in the ECR inventory. A deleted image with a tag-based reference is reclaimable — an attacker who pushes an image with the matching tag controls what code runs in the container with the task role's full IAM permissions.
+
+**Remediation:** Update the task definition to reference an existing image. Use digest-pinned references for immutable images.
+
+---
+
 ### CTL.ECS.IMAGE.UNTRUSTED.001
 
 **ECS Task Definitions Must Reference Images from Trusted Registries**
@@ -4445,6 +4475,21 @@ ECS container definitions must not enable privileged mode. A privileged containe
 ECS containers must set the user field to a non-root UID. An empty user field means the container runs as whatever user the image defines — frequently root. Running as root inside a container means a process breakout gives root access to the host.
 
 **Remediation:** Set the user field to a non-root UID in the container definition. Build images with a non-root USER directive.
+
+---
+
+### CTL.ECS.SECRET.GHOST.001
+
+**ECS Task Definitions Must Not Reference Deleted Secrets**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(d); nist_800_53_r5: IA-5; soc2: CC6.1;
+
+ECS task definitions must not inject secrets from Secrets Manager that have been deleted. A missing secret causes either container startup failure or silent fallback to insecure defaults — hardcoded credentials, unauthenticated connections, or disabled TLS.
+
+**Remediation:** Recreate the secret or update the task definition to reference an active secret.
 
 ---
 
@@ -8847,6 +8892,21 @@ Lambda function environment variables must not contain plaintext secrets such as
 Lambda resource-based policies must not grant lambda:InvokeFunction to "*" (all principals). A publicly invokable Lambda function allows any AWS account or unauthenticated caller to trigger execution — the function runs with its full IAM execution role, providing code execution and credential access to any internet user. This is MITRE ATT&CK T1648 (Serverless Execution).
 
 **Remediation:** Remove the public invoke permission from the function policy: aws lambda remove-permission --function-name <name> --statement-id <sid>
+
+---
+
+### CTL.LAMBDA.LAYER.GHOST.001
+
+**Lambda Functions Must Not Reference Deleted Layer Versions**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-7; soc2: CC6.1;
+
+Lambda functions must not reference layer versions that have been deleted. A missing layer means the function runs without the expected dependency — potentially losing security-relevant libraries, encryption modules, or authentication middleware.
+
+**Remediation:** Update the function to reference an existing layer version or remove the layer.
 
 ---
 

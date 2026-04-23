@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.AMI.GHOST.001
+name: Launch Templates Must Not Reference Deregistered AMIs
+description: >
+  EC2 launch templates must not reference AMIs that have been
+  deregistered. Instance launches using the template fail. Auto
+  Scaling groups using the template cannot scale out during incidents.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "CP-2"
+  soc2: "A1.2"
+  ccm_v4: ["BCR-08"]
+scope_tags: [aws, ec2]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: Launch template references a deregistered AMI.
+  action: Update the launch template to reference an available AMI.
+  example: |
+    {"compute": {"kind": "launch_template", "ami": {"has_ghost_reference": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: launch_template
+    - field: properties.compute.ami.has_ghost_reference
+      op: eq
+      value: true

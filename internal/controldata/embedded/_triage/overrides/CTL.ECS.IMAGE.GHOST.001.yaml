@@ -1,0 +1,14 @@
+control: CTL.ECS.IMAGE.GHOST.001
+defect: >
+  ECS task definition references a container image that does not exist
+  in the ECR inventory. The image tag is reclaimable.
+infection: >
+  If the image reference points to a public registry or external source,
+  an attacker who pushes an image with the matching name and tag controls
+  what code runs in the container. The malicious image executes with the
+  task role's full IAM permissions. If the reference points to a private
+  ECR, the image deletion causes deployment failures.
+failure: >
+  Supply chain compromise or deployment failure. Attacker-controlled code
+  executes in the container with the task role's permissions, or the
+  service loses the ability to deploy and scale.

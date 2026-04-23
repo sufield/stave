@@ -1,0 +1,12 @@
+control: CTL.EC2.AMI.GHOST.001
+defect: >
+  Launch template references an AMI that has been deregistered. Instance
+  launches using this template will fail.
+infection: >
+  Auto Scaling groups using this launch template cannot launch new
+  instances. During traffic spikes, security incidents, or failover
+  scenarios, the scaling group's response capacity is zero. Any instance
+  termination reduces capacity permanently until the AMI is replaced.
+failure: >
+  Scaling failure. The Auto Scaling group cannot respond to demand or
+  incidents. Capacity is fixed at current running instances.
