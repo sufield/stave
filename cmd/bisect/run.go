@@ -92,7 +92,10 @@ func runBisect(ctx context.Context, in Input) error {
 	)
 
 	// Parse mode.
-	modeInt, _ := parseMode(opts.Mode)
+	modeInt, modeErr := parseMode(opts.Mode)
+	if modeErr != nil {
+		return fmt.Errorf("invalid bisect mode %q: %w", opts.Mode, modeErr)
+	}
 	mode := appbisect.Mode(modeInt)
 
 	// Run.

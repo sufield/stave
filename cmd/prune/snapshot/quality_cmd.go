@@ -91,8 +91,14 @@ Exit Codes:
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			gf := cliflags.GetGlobalFlags(cmd)
 
-			staleDur, _ := cliflags.ParseDurationFlag(opts.MaxStaleness, "--max-staleness")
-			gapDur, _ := cliflags.ParseDurationFlag(opts.MaxGap, "--max-gap")
+			staleDur, staleErr := cliflags.ParseDurationFlag(opts.MaxStaleness, "--max-staleness")
+			if staleErr != nil {
+				return fmt.Errorf("invalid max-staleness: %w", staleErr)
+			}
+			gapDur, gapErr := cliflags.ParseDurationFlag(opts.MaxGap, "--max-gap")
+			if gapErr != nil {
+				return fmt.Errorf("invalid max-gap: %w", gapErr)
+			}
 			now, err := compose.ResolveNow(opts.NowRaw)
 			if err != nil {
 				return err

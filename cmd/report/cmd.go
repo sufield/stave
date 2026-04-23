@@ -127,7 +127,10 @@ func runReport(ctx context.Context, stdout io.Writer, opts *options) error {
 	}
 
 	// Load snapshot for coverage count.
-	snapshots, _ := observations.LoadBundle(opts.SnapshotPath)
+	snapshots, snapshotErr := observations.LoadBundle(opts.SnapshotPath)
+	if snapshotErr != nil {
+		return fmt.Errorf("loading snapshots for report: %w", snapshotErr)
+	}
 	assetCount := 0
 	for _, s := range snapshots {
 		assetCount += len(s.Assets)

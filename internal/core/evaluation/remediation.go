@@ -65,6 +65,9 @@ type RemediationAction struct {
 
 // CanonicalKey returns a deterministic string representation for hashing.
 func (a RemediationAction) CanonicalKey() string {
-	val, _ := json.Marshal(a.Value)
+	val, err := json.Marshal(a.Value)
+	if err != nil {
+		val = []byte(fmt.Sprintf("%v", a.Value))
+	}
 	return fmt.Sprintf("%s|%s|%s", a.ActionType, a.Path.String(), val)
 }

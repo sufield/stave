@@ -4,6 +4,7 @@ package cliflags
 
 import (
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -174,12 +175,18 @@ func ParseRFC3339(raw, flag string) (time.Time, error) {
 // --- Internal Utilities ---
 
 func getStr(fs *pflag.FlagSet, name string) string {
-	val, _ := fs.GetString(name)
+	val, err := fs.GetString(name)
+	if err != nil {
+		slog.Error("flag access failed", "flag", name, "error", err)
+	}
 	return val
 }
 
 func getBool(fs *pflag.FlagSet, name string) bool {
-	val, _ := fs.GetBool(name)
+	val, err := fs.GetBool(name)
+	if err != nil {
+		slog.Error("flag access failed", "flag", name, "error", err)
+	}
 	return val
 }
 

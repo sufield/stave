@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"strings"
 
@@ -96,7 +97,10 @@ func runExplainNarrative(stdout io.Writer, opts *explainNarrativeOpts) error {
 
 	// Load controls for metadata.
 	store := builtinctl.NewControlStore(controldata.FS, ".")
-	controls, _ := store.All()
+	controls, ctlErr := store.All()
+	if ctlErr != nil {
+		slog.Warn("control metadata unavailable for narrative", "error", ctlErr)
+	}
 	controlMap := make(map[kernel.ControlID]*policy.ControlDefinition, len(controls))
 	for i := range controls {
 		controlMap[controls[i].ID] = &controls[i]

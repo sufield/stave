@@ -165,7 +165,10 @@ func (o *options) logEnvironment() {
 	if err != nil {
 		return
 	}
-	_, cfgPath, _ := projconfig.FindProjectConfigWithPath("")
+	_, cfgPath, cfgErr := projconfig.FindProjectConfigWithPath("")
+	if cfgErr != nil {
+		slog.Debug("unexpected error finding project config", "error", cfgErr)
+	}
 
 	ctxName := "none"
 	if sc, scErr := resolver.ResolveSelected(); scErr == nil && sc.Active && strings.TrimSpace(sc.Name) != "" {
