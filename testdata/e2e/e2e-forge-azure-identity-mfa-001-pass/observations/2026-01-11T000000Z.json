@@ -1,0 +1,20 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "user-admin@contoso.com",
+      "type": "azure_entra_user",
+      "vendor": "azure",
+      "properties": {
+        "azure": {
+          "identity": {
+            "kind": "entra_user",
+            "mfa_enforced_for_privileged": true
+          }
+        }
+      }
+    }
+  ]
+}

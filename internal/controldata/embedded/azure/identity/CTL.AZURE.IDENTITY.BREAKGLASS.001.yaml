@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.IDENTITY.BREAKGLASS.001
+name: Break-Glass Account Must Be Configured
+description: >
+  At least one break-glass (emergency access) account must exist
+  with Global Administrator role, excluded from Conditional Access
+  policies, and monitored for usage. Without a break-glass account,
+  a Conditional Access misconfiguration or MFA outage can lock out
+  all administrators.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-2"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-04"]
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: No break-glass account is configured.
+  action: Create a break-glass account per Microsoft guidance.
+  example: |
+    {"azure": {"identity": {"kind": "entra_tenant", "break_glass_configured": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.identity.kind
+      op: eq
+      value: entra_tenant
+    - field: properties.azure.identity.break_glass_configured
+      op: eq
+      value: false

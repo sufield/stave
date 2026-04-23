@@ -1,0 +1,14 @@
+id: azure_guest_escalation
+description: >
+  Guest user with privileged role at broad scope. External identity
+  with excessive permissions — the hosting organization cannot enforce
+  security controls on the guest's credentials.
+controls:
+  - CTL.AZURE.IDENTITY.GUEST.001
+  - CTL.AZURE.RBAC.SCOPE.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - iam_credential_theft

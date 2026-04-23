@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.IDENTITY.GUEST.001
+name: Guest Users Must Not Have Privileged Role Assignments
+description: >
+  External guest users in Entra ID must not be assigned privileged
+  roles (Owner, Contributor, User Access Administrator). Guest
+  accounts are managed outside the organization's directory.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6(5)"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05"]
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: Guest user has privileged role assignment.
+  action: Remove privileged roles from guest accounts. Use scoped Reader or custom roles.
+  example: |
+    {"azure": {"identity": {"kind": "entra_user", "guest_has_privileged_role": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.identity.kind
+      op: eq
+      value: entra_user
+    - field: properties.azure.identity.guest_has_privileged_role
+      op: eq
+      value: true

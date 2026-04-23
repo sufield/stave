@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.RBAC.SCOPE.001
+name: Privileged Roles Must Not Be Assigned at Subscription Scope
+description: >
+  Contributor, User Access Administrator, and custom write roles
+  should be assigned at resource group scope, not subscription scope.
+  Subscription-scoped assignments grant permissions across all
+  resource groups.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-04"]
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: Privileged role assigned at subscription scope.
+  action: Reassign at resource group scope with specific resource group targets.
+  example: |
+    {"azure": {"rbac": {"kind": "role_assignment", "subscription_scope_privileged": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.rbac.kind
+      op: eq
+      value: role_assignment
+    - field: properties.azure.rbac.subscription_scope_privileged
+      op: eq
+      value: true

@@ -1,0 +1,327 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-15T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "87ce0fd94014379fc8d3cbd3c8cf54c688b42c39592db3fcb11aeed28c83ad69",
+        "2026-01-11T000000Z.json": "6ba90ddd86c00fad9b90266307ca91df087b94afe6186ec418919d6a8cf009b1"
+      },
+      "overall": "9c87f58ced914ff6736764a3af730ef94f717ffcc4deb8fee66bc8cedda20381"
+    },
+    "policy_fingerprint": "8c6e8ba016f369b34bbb72143b0286e883fb86bc5d8804ff518c917cc3ec3762",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.AZURE.IDENTITY.CONDITIONAL.001",
+      "asset_id": "tenant-contoso/ca-config",
+      "asset_type": "azure_conditional_access",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -168,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:bfa50e07e0e3e6b3",
+      "control_id": "CTL.AZURE.IDENTITY.CONDITIONAL.001",
+      "control_name": "Privileged Roles Must Have Conditional Access Policy",
+      "control_description": "All privileged Entra ID roles must be covered by a Conditional Access policy enforcing MFA, compliant device, and trusted location requirements. Without Conditional Access, privileged authentication has no context-based restrictions.\n",
+      "asset_id": "tenant-contoso/ca-config",
+      "asset_type": "azure_conditional_access",
+      "asset_vendor": "azure",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 336,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "azure.identity.covers_privileged_roles",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "azure.identity.kind",
+            "actual_value": "conditional_access_config",
+            "operator": "eq",
+            "unsafe_value": "conditional_access_config"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 336 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "nist_800_53_r5": "AC-3",
+        "soc2": "CC6.1"
+      },
+      "control_compliance_ccm_v4": [
+        "IAM-16"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "No Conditional Access policy covers privileged roles.",
+        "action": "Create a Conditional Access policy targeting privileged directory roles.",
+        "example": "{\"azure\": {\"identity\": {\"kind\": \"conditional_access_config\", \"covers_privileged_roles\": true}}}\n"
+      },
+      "fix_plan": {
+        "id": "fix-84acfe55bc01485a",
+        "target": {
+          "asset_id": "tenant-contoso/ca-config",
+          "asset_type": "azure_conditional_access"
+        },
+        "action": "Create a Conditional Access policy targeting privileged directory roles."
+      },
+      "exposure_score": 75,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "azure.identity.covers_privileged_roles eq false",
+          "observation_key": "azure.identity.covers_privileged_roles",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "azure.identity.kind eq \"conditional_access_config\"",
+          "observation_key": "azure.identity.kind",
+          "operator": "eq",
+          "expected_value": "conditional_access_config",
+          "observed_value": "conditional_access_config"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "tenant-contoso/ca-config",
+          "type": "azure_conditional_access",
+          "vendor": "azure"
+        },
+        "violation": {
+          "control_id": "CTL.AZURE.IDENTITY.CONDITIONAL.001",
+          "control_name": "Privileged Roles Must Have Conditional Access Policy",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "azure.identity.covers_privileged_roles = false",
+              "observation_key": "azure.identity.covers_privileged_roles",
+              "observed_value": false
+            },
+            {
+              "clause": "azure.identity.kind = \"conditional_access_config\"",
+              "observation_key": "azure.identity.kind",
+              "observed_value": "conditional_access_config"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "azure.identity.covers_privileged_roles",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set azure.identity.covers_privileged_roles to true"
+          },
+          {
+            "path": "azure.identity.kind",
+            "current_value": "conditional_access_config",
+            "has_safe_default": false,
+            "description": "Change azure.identity.kind from conditional_access_config"
+          }
+        ],
+        "action": "Create a Conditional Access policy targeting privileged directory roles."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "azure"
+      ],
+      "delta": [
+        {
+          "property_label": "identity covers privileged roles",
+          "property_path": "azure.identity.covers_privileged_roles",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:e7eff56dbb355bfb",
+      "asset_id": "tenant-contoso/ca-config",
+      "shared_keys": [
+        "azure.identity",
+        "azure.identity.covers_privileged_roles",
+        "azure.identity.kind"
+      ],
+      "headline_finding_id": "sha256:bfa50e07e0e3e6b3",
+      "member_finding_ids": [
+        "sha256:bfa50e07e0e3e6b3"
+      ],
+      "consolidated_score": 75,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "tenant-contoso/ca-config",
+      "asset_type": "azure_conditional_access",
+      "fix_plan": {
+        "id": "fix-84acfe55bc01485a",
+        "target": {
+          "asset_id": "tenant-contoso/ca-config",
+          "asset_type": "azure_conditional_access"
+        },
+        "action": "Create a Conditional Access policy targeting privileged directory roles."
+      },
+      "contributing_controls": [
+        "CTL.AZURE.IDENTITY.CONDITIONAL.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.AZURE.IDENTITY.CONDITIONAL.001",
+      "asset_id": "tenant-contoso/ca-config",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-azure-identity-conditional-001-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-azure-identity-conditional-001-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "b9ffb86fa84452e30aa54258292ab0e369c31652",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-azure-identity-conditional-001-fail/controls/"
+      ]
+    }
+  }
+}

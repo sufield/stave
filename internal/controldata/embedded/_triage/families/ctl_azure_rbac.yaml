@@ -1,0 +1,11 @@
+family: CTL.AZURE.RBAC
+infection: >
+  Overprivileged Azure RBAC assignments grant broad access across
+  subscriptions and resource groups. Owner and Contributor roles at
+  subscription scope give full control over every resource. A
+  compromised principal with broad RBAC inherits permissions across
+  the entire subscription.
+failure: >
+  Privilege escalation via RBAC. An attacker with a compromised
+  identity operates with broad Azure permissions — modifying
+  resources, accessing data, and assigning roles to other principals.

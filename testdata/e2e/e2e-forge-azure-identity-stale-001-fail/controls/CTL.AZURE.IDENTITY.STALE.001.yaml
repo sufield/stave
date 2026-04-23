@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.IDENTITY.STALE.001
+name: Inactive Users Must Not Have Active Role Assignments
+description: >
+  Users inactive for over 90 days must not retain active RBAC role
+  assignments. Dormant accounts with active permissions are
+  exploitation targets — the account owner isn't monitoring activity.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-2"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-04"]
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: Inactive user has active role assignments.
+  action: Remove role assignments from inactive accounts or disable the accounts.
+  example: |
+    {"azure": {"identity": {"kind": "entra_user", "stale_with_active_roles": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.identity.kind
+      op: eq
+      value: entra_user
+    - field: properties.azure.identity.stale_with_active_roles
+      op: eq
+      value: true

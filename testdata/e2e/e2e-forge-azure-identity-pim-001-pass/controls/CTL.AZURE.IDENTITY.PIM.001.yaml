@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.IDENTITY.PIM.001
+name: Admin Roles Must Use Privileged Identity Management
+description: >
+  Privileged Entra ID roles must use PIM for just-in-time activation
+  rather than permanent assignment. Permanent admin assignments create
+  always-active high-privilege accounts.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-6(5)"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05"]
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: Admin role is permanently assigned instead of using PIM.
+  action: Convert permanent assignments to PIM eligible assignments.
+  example: |
+    {"azure": {"identity": {"kind": "entra_role_assignment", "uses_pim": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.identity.kind
+      op: eq
+      value: entra_role_assignment
+    - field: properties.azure.identity.uses_pim
+      op: eq
+      value: false

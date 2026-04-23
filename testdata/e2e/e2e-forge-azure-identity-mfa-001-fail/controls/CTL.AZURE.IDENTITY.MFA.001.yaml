@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.IDENTITY.MFA.001
+name: MFA Must Be Enforced for Privileged Users
+description: >
+  All users with privileged Entra ID roles (Global Administrator,
+  Security Administrator, Privileged Role Administrator) must have
+  MFA enforced. Without MFA, credential stuffing or phishing
+  compromises the most powerful accounts.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "IA-2(1)"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "8.4.1"
+  ccm_v4: ["IAM-16"]
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+remediation:
+  description: Privileged user does not have MFA enforced.
+  action: Enable MFA via Conditional Access policy or per-user MFA settings.
+  example: |
+    {"azure": {"identity": {"kind": "entra_user", "mfa_enforced_for_privileged": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.identity.kind
+      op: eq
+      value: entra_user
+    - field: properties.azure.identity.mfa_enforced_for_privileged
+      op: eq
+      value: false

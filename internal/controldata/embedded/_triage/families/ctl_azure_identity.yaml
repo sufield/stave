@@ -1,0 +1,11 @@
+family: CTL.AZURE.IDENTITY
+infection: >
+  Misconfigured Entra ID identities weaken the authentication and
+  authorization boundary. Missing MFA, guest users with privileged
+  roles, stale accounts with active permissions, and service
+  principals with leaked secrets all create entry points for
+  unauthorized access.
+failure: >
+  Identity compromise. An attacker gains access through weak
+  authentication, compromised credentials, or dormant accounts and
+  operates with the identity's Azure permissions.

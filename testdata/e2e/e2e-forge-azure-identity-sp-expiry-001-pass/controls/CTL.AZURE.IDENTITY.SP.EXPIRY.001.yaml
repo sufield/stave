@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.IDENTITY.SP.EXPIRY.001
+name: Service Principal Credentials Must Not Be Near Expiry
+description: >
+  Service principal credentials (certificates or secrets) must not
+  be approaching expiration. Expired credentials cause authentication
+  failures for automated services.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "IA-5"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-16"]
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: Service principal credential is approaching expiry.
+  action: Rotate the credential before expiration.
+  example: |
+    {"azure": {"identity": {"kind": "service_principal", "credential_expiring_soon": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.identity.kind
+      op: eq
+      value: service_principal
+    - field: properties.azure.identity.credential_expiring_soon
+      op: eq
+      value: true

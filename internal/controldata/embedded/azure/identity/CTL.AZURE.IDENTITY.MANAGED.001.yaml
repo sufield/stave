@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.IDENTITY.MANAGED.001
+name: User-Assigned Managed Identity Must Not Be Shared Across Services
+description: >
+  User-assigned managed identities shared across multiple services
+  expand blast radius. A compromise of any service grants the
+  identity's permissions to the attacker across all services sharing it.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-04"]
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: Managed identity is shared across multiple services.
+  action: Create dedicated managed identities per service with scoped permissions.
+  example: |
+    {"azure": {"identity": {"kind": "managed_identity", "is_shared": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.identity.kind
+      op: eq
+      value: managed_identity
+    - field: properties.azure.identity.is_shared
+      op: eq
+      value: true

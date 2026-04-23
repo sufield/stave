@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.IDENTITY.CONDITIONAL.001
+name: Privileged Roles Must Have Conditional Access Policy
+description: >
+  All privileged Entra ID roles must be covered by a Conditional
+  Access policy enforcing MFA, compliant device, and trusted location
+  requirements. Without Conditional Access, privileged authentication
+  has no context-based restrictions.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-16"]
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: No Conditional Access policy covers privileged roles.
+  action: Create a Conditional Access policy targeting privileged directory roles.
+  example: |
+    {"azure": {"identity": {"kind": "conditional_access_config", "covers_privileged_roles": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.identity.kind
+      op: eq
+      value: conditional_access_config
+    - field: properties.azure.identity.covers_privileged_roles
+      op: eq
+      value: false

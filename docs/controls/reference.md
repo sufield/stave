@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 915
-**Pack hash:** `531fbcc7ca54f7aa103fd2fa48539b03381b350623d260449825c8cb0c0652f2`
+**Total controls:** 927
+**Pack hash:** `808d1f3af277ec0cda34f8890694a9deca79f7cccf9c657692ccad602d58f85a`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 138 |
-| high | 406 |
+| critical | 139 |
+| high | 412 |
 | info | 16 |
 | low | 77 |
-| medium | 278 |
+| medium | 283 |
 
 | Domain | Count |
 |--------|-------|
@@ -23,7 +23,7 @@
 | encryption | 38 |
 | exposure | 605 |
 | governance | 23 |
-| identity | 180 |
+| identity | 192 |
 | network | 21 |
 | resilience | 14 |
 | storage | 8 |
@@ -985,6 +985,186 @@ The observation snapshot is missing required Auto Scaling properties.
 Auto Scaling groups must be configured across multiple AZs. A single-AZ ASG has a single point of failure during AZ outages.
 
 **Remediation:** Update the ASG: aws autoscaling update-auto-scaling-group --auto-scaling-group-name <name> --availability-zones us-east-1a us-east-1b
+
+---
+
+### CTL.AZURE.IDENTITY.BREAKGLASS.001
+
+**Break-Glass Account Must Be Configured**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-2; soc2: CC6.1;
+
+At least one break-glass (emergency access) account must exist with Global Administrator role, excluded from Conditional Access policies, and monitored for usage. Without a break-glass account, a Conditional Access misconfiguration or MFA outage can lock out all administrators.
+
+**Remediation:** Create a break-glass account per Microsoft guidance.
+
+---
+
+### CTL.AZURE.IDENTITY.CONDITIONAL.001
+
+**Privileged Roles Must Have Conditional Access Policy**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+All privileged Entra ID roles must be covered by a Conditional Access policy enforcing MFA, compliant device, and trusted location requirements. Without Conditional Access, privileged authentication has no context-based restrictions.
+
+**Remediation:** Create a Conditional Access policy targeting privileged directory roles.
+
+---
+
+### CTL.AZURE.IDENTITY.GUEST.001
+
+**Guest Users Must Not Have Privileged Role Assignments**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(5); soc2: CC6.1;
+
+External guest users in Entra ID must not be assigned privileged roles (Owner, Contributor, User Access Administrator). Guest accounts are managed outside the organization's directory.
+
+**Remediation:** Remove privileged roles from guest accounts. Use scoped Reader or custom roles.
+
+---
+
+### CTL.AZURE.IDENTITY.MANAGED.001
+
+**User-Assigned Managed Identity Must Not Be Shared Across Services**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+User-assigned managed identities shared across multiple services expand blast radius. A compromise of any service grants the identity's permissions to the attacker across all services sharing it.
+
+**Remediation:** Create dedicated managed identities per service with scoped permissions.
+
+---
+
+### CTL.AZURE.IDENTITY.MFA.001
+
+**MFA Must Be Enforced for Privileged Users**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: IA-2(1); pci_dss_v4.0: 8.4.1; soc2: CC6.1;
+
+All users with privileged Entra ID roles (Global Administrator, Security Administrator, Privileged Role Administrator) must have MFA enforced. Without MFA, credential stuffing or phishing compromises the most powerful accounts.
+
+**Remediation:** Enable MFA via Conditional Access policy or per-user MFA settings.
+
+---
+
+### CTL.AZURE.IDENTITY.PIM.001
+
+**Admin Roles Must Use Privileged Identity Management**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(5); soc2: CC6.1;
+
+Privileged Entra ID roles must use PIM for just-in-time activation rather than permanent assignment. Permanent admin assignments create always-active high-privilege accounts.
+
+**Remediation:** Convert permanent assignments to PIM eligible assignments.
+
+---
+
+### CTL.AZURE.IDENTITY.SP.EXPIRY.001
+
+**Service Principal Credentials Must Not Be Near Expiry**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: IA-5; soc2: CC6.1;
+
+Service principal credentials (certificates or secrets) must not be approaching expiration. Expired credentials cause authentication failures for automated services.
+
+**Remediation:** Rotate the credential before expiration.
+
+---
+
+### CTL.AZURE.IDENTITY.SP.SECRET.001
+
+**Service Principals Must Use Certificate Credentials**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: IA-5; soc2: CC6.1;
+
+Service principals must use certificate-based credentials instead of client secrets. Client secrets are long-lived strings that can be leaked in logs, config files, or source code.
+
+**Remediation:** Replace client secret with certificate credential from Key Vault.
+
+---
+
+### CTL.AZURE.IDENTITY.STALE.001
+
+**Inactive Users Must Not Have Active Role Assignments**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-2; soc2: CC6.1;
+
+Users inactive for over 90 days must not retain active RBAC role assignments. Dormant accounts with active permissions are exploitation targets — the account owner isn't monitoring activity.
+
+**Remediation:** Remove role assignments from inactive accounts or disable the accounts.
+
+---
+
+### CTL.AZURE.RBAC.CUSTOM.001
+
+**Custom Role Definitions Must Follow Least Privilege**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+Custom Azure RBAC role definitions must not grant overly broad permissions (actions: * or dataActions: *). Custom roles should scope to specific resource types and operations.
+
+**Remediation:** Scope actions and dataActions to specific resource providers and operations.
+
+---
+
+### CTL.AZURE.RBAC.OWNER.001
+
+**Owner Role Must Not Be Broadly Assigned**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+The Owner role grants full control including the ability to assign roles to others. Excessive Owner assignments at subscription or management group scope expand the blast radius of any compromised principal.
+
+**Remediation:** Replace Owner with Contributor or custom roles scoped to specific resource groups.
+
+---
+
+### CTL.AZURE.RBAC.SCOPE.001
+
+**Privileged Roles Must Not Be Assigned at Subscription Scope**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+Contributor, User Access Administrator, and custom write roles should be assigned at resource group scope, not subscription scope. Subscription-scoped assignments grant permissions across all resource groups.
+
+**Remediation:** Reassign at resource group scope with specific resource group targets.
 
 ---
 

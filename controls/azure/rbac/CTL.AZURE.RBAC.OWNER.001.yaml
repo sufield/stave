@@ -1,0 +1,37 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.RBAC.OWNER.001
+name: Owner Role Must Not Be Broadly Assigned
+description: >
+  The Owner role grants full control including the ability to assign
+  roles to others. Excessive Owner assignments at subscription or
+  management group scope expand the blast radius of any compromised
+  principal.
+domain: identity
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-6(5)"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  ccm_v4: ["IAM-04", "IAM-05"]
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: Excessive Owner role assignments detected.
+  action: Replace Owner with Contributor or custom roles scoped to specific resource groups.
+  example: |
+    {"azure": {"rbac": {"kind": "role_assignment", "excessive_owner_assignments": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.rbac.kind
+      op: eq
+      value: role_assignment
+    - field: properties.azure.rbac.excessive_owner_assignments
+      op: eq
+      value: true

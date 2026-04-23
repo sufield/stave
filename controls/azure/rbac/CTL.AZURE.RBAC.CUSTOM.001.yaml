@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.RBAC.CUSTOM.001
+name: Custom Role Definitions Must Follow Least Privilege
+description: >
+  Custom Azure RBAC role definitions must not grant overly broad
+  permissions (actions: * or dataActions: *). Custom roles should
+  scope to specific resource types and operations.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-04"]
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: Custom role definition has overly broad permissions.
+  action: Scope actions and dataActions to specific resource providers and operations.
+  example: |
+    {"azure": {"rbac": {"kind": "custom_role", "is_overprivileged": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.rbac.kind
+      op: eq
+      value: custom_role
+    - field: properties.azure.rbac.is_overprivileged
+      op: eq
+      value: true
