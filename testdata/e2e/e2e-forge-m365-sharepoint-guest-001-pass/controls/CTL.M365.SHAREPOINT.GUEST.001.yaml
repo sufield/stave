@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.M365.SHAREPOINT.GUEST.001
+name: SharePoint Guest Sharing Not Restricted
+description: >
+  Guest sharing permissions not appropriately restricted.
+  Guests may have broader access than intended.
+domain: exposure
+severity: medium
+compliance:
+  cis_m365_v4: "14.2"
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: SharePoint Guest Sharing Not Restricted — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"placeholder": true}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.collaboration.kind
+      op: eq
+      value: sharepoint_config
+    - field: properties.m365.collaboration.sharepoint.guest_sharing_restricted
+      op: eq
+      value: false

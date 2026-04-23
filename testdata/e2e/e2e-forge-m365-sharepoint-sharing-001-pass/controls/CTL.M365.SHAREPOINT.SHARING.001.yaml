@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.M365.SHAREPOINT.SHARING.001
+name: SharePoint External Sharing Not Restricted
+description: >
+  External sharing set to "Anyone" — anonymous links require
+  no authentication. Anyone with the link accesses content.
+domain: exposure
+severity: high
+compliance:
+  cis_m365_v4: "14.1"
+  nist_800_53_r5: "AC-3"
+  hipaa: "164.312(a)(1)"
+  soc2: "CC6.1"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: SharePoint External Sharing Not Restricted — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"placeholder": true}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.collaboration.kind
+      op: eq
+      value: sharepoint_config
+    - field: properties.m365.collaboration.sharepoint.external_sharing_managed
+      op: eq
+      value: false

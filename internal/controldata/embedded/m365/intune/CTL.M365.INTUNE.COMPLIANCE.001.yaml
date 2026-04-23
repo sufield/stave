@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.M365.INTUNE.COMPLIANCE.001
+name: Unassigned Devices Default to Compliant
+description: >
+  Devices without compliance policy treated as compliant. Unknown
+  devices bypass CA device compliance requirements.
+domain: identity
+severity: high
+compliance:
+  cis_m365_v4: "16.1"
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Unassigned Devices Default to Compliant — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"placeholder": true}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.admin.kind
+      op: eq
+      value: intune_config
+    - field: properties.m365.admin.intune.unassigned_devices_noncompliant
+      op: eq
+      value: false

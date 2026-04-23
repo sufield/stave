@@ -1,0 +1,13 @@
+control: CTL.M365.PURVIEW.AUDIT.001
+defect: >
+  Microsoft Purview unified audit log search is not enabled.
+infection: >
+  Unified audit logging captures all M365 activity — email access,
+  file sharing, Teams messages, admin actions, sign-ins, policy
+  changes. When disabled, none of this activity is searchable. An
+  attacker who compromises an account operates without any audit
+  trail. This is the M365 equivalent of disabling CloudTrail —
+  complete forensic blindness.
+failure: >
+  No M365 audit trail. All attacker activity in the tenant is
+  invisible to investigation.

@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.M365.PURVIEW.AUDIT.001
+name: Unified Audit Log Search Not Enabled
+description: >
+  No M365 activity searchable for investigation. Exchange,
+  SharePoint, Teams, Entra ID, OneDrive — complete forensic blindness.
+domain: detection
+severity: critical
+compliance:
+  cis_m365_v4: "17.1"
+  nist_800_53_r5: "AU-2"
+  hipaa: "164.312(b)"
+  pci_dss_v4: "10.1"
+  soc2: "CC7.2"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: defense_evasion
+remediation:
+  description: Unified Audit Log Search Not Enabled — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"placeholder": true}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.admin.kind
+      op: eq
+      value: purview_config
+    - field: properties.m365.admin.purview.audit_log_search_enabled
+      op: eq
+      value: false

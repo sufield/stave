@@ -1,0 +1,13 @@
+control: CTL.M365.INTUNE.COMPLIANCE.001
+defect: >
+  Intune treats devices without compliance policy as compliant.
+infection: >
+  Conditional Access policies requiring device compliance check
+  Intune's status. If unassigned devices default to "compliant,"
+  any device not enrolled in Intune passes compliance checks.
+  Personal devices, unmanaged devices, and unknown devices bypass
+  device requirements. The CA policy appears to enforce device
+  trust but the Intune default undermines it.
+failure: >
+  Device compliance bypass. Unmanaged devices pass compliance
+  checks because the default is "compliant."

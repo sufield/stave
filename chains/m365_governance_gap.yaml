@@ -1,0 +1,15 @@
+id: m365_governance_gap
+description: >
+  Audit logging disabled plus either no Customer Lockbox or device
+  compliance defaulting to compliant. No forensic visibility AND
+  either uncontrolled vendor access or ineffective device trust.
+controls:
+  - CTL.M365.PURVIEW.AUDIT.001
+  - CTL.M365.ADMIN.LOCKBOX.001
+  - CTL.M365.INTUNE.COMPLIANCE.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - iam_credential_theft

@@ -1,0 +1,12 @@
+control: CTL.M365.SHAREPOINT.SHARING.001
+defect: >
+  SharePoint external sharing allows anonymous "Anyone" links.
+infection: >
+  When external sharing is set to "Anyone," users create sharing
+  links requiring no authentication. These links can be forwarded,
+  posted publicly, or discovered via URL enumeration. Anyone who
+  obtains the link accesses the document — no sign-in, no identity
+  recorded, no Conditional Access enforced.
+failure: >
+  Anonymous document access. Sensitive SharePoint documents
+  accessible via links that require no authentication.

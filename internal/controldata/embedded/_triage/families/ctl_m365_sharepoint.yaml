@@ -1,0 +1,9 @@
+family: CTL.M365.SHAREPOINT
+infection: >
+  SharePoint and OneDrive store organizational documents. Anonymous
+  sharing links expose documents without authentication. Unmanaged
+  device sync copies files outside organizational control. Legacy
+  auth access bypasses MFA and Conditional Access.
+failure: >
+  Document exposure. Sensitive documents accessible via anonymous
+  links, synced to unmanaged devices, or accessed via legacy auth.

@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.M365.SHAREPOINT.SYNC.001
+name: OneDrive Sync Not Restricted on Unmanaged Devices
+description: >
+  OneDrive sync allowed on unmanaged devices. Organizational
+  files copied to devices without encryption or remote wipe.
+domain: exposure
+severity: high
+compliance:
+  cis_m365_v4: "14.4"
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: OneDrive Sync Not Restricted on Unmanaged Devices — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"placeholder": true}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.collaboration.kind
+      op: eq
+      value: sharepoint_config
+    - field: properties.m365.collaboration.sharepoint.onedrive_sync_restricted
+      op: eq
+      value: false

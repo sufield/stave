@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.M365.ADMIN.LOCKBOX.001
+name: Customer Lockbox Not Enabled
+description: >
+  Microsoft support accesses tenant data without customer
+  approval. No visibility or control over vendor access.
+domain: exposure
+severity: high
+compliance:
+  cis_m365_v4: "15.1"
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Customer Lockbox Not Enabled — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"placeholder": true}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.admin.kind
+      op: eq
+      value: admincenter_config
+    - field: properties.m365.admin.customer_lockbox_enabled
+      op: eq
+      value: false

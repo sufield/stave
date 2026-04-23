@@ -3,27 +3,27 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1234
-**Pack hash:** `800e3f31ea9e22fc97f3c97c3527370300afca64d805cba7a0a8f4cece0d98cf`
+**Total controls:** 1245
+**Pack hash:** `376ab656936595187c26a5fe62e534edb25c164284e7d0709e5eb12b43fde138`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 165 |
-| high | 545 |
+| critical | 166 |
+| high | 551 |
 | info | 16 |
 | low | 92 |
-| medium | 416 |
+| medium | 420 |
 
 | Domain | Count |
 |--------|-------|
 | audit | 20 |
-| detection | 31 |
+| detection | 32 |
 | encryption | 75 |
-| exposure | 775 |
+| exposure | 781 |
 | governance | 24 |
-| identity | 266 |
+| identity | 270 |
 | network | 21 |
 | resilience | 14 |
 | storage | 8 |
@@ -13245,6 +13245,81 @@ Lightsail instances with public IPs must not have firewall rules allowing broad 
 
 ---
 
+### CTL.M365.ADMIN.CALENDAR.001
+
+**External Calendar Sharing Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_m365_v4: 15.4; nist_800_53_r5: SC-7; soc2: CC6.6;
+
+Calendar details (subjects, attendees, availability) shared with external recipients.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.ADMIN.GLOBALADMIN.001
+
+**Global Admin Count Not Within Safe Range**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_m365_v4: 15.2; nist_800_53_r5: AC-2; soc2: CC6.1;
+
+Fewer than 2 or more than 4 global admins. Single point of failure or excessive attack surface.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.ADMIN.GROUPS.001
+
+**M365 Groups Have Public Visibility**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_m365_v4: 15.5; nist_800_53_r5: AC-3; soc2: CC6.1;
+
+All users can discover all groups, membership, and purpose. Enables internal reconnaissance.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.ADMIN.LOCKBOX.001
+
+**Customer Lockbox Not Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_m365_v4: 15.1; nist_800_53_r5: AC-3; soc2: CC6.1;
+
+Microsoft support accesses tenant data without customer approval. No visibility or control over vendor access.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.ADMIN.PASSWORD.001
+
+**Passwords Set to Never Expire**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_m365_v4: 15.3; nist_800_53_r5: IA-5; soc2: CC6.1;
+
+Passwords never expire. Acceptable only with active breach detection (user risk policy). Without it, compromised credentials persist indefinitely.
+
+**Remediation:** Remediate per control description.
+
+---
+
 ### CTL.M365.DEFENDER.ANTIPHISHING.001
 
 **Anti-Phishing Policy Not Configured**
@@ -13990,6 +14065,96 @@ Transport rules forward email externally. Organization-wide admin-level email ex
 - **Compliance:** cis_m365_v4: 10.9; nist_800_53_r5: SI-3; soc2: CC6.8;
 
 Transport rules whitelist senders/domains, bypassing ALL filtering including malware. Higher severity than spam bypass.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.INTUNE.COMPLIANCE.001
+
+**Unassigned Devices Default to Compliant**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_m365_v4: 16.1; nist_800_53_r5: AC-3; soc2: CC6.1;
+
+Devices without compliance policy treated as compliant. Unknown devices bypass CA device compliance requirements.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.PURVIEW.AUDIT.001
+
+**Unified Audit Log Search Not Enabled**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_m365_v4: 17.1; hipaa: 164.312(b); nist_800_53_r5: AU-2; pci_dss_v4: 10.1; soc2: CC7.2;
+
+No M365 activity searchable for investigation. Exchange, SharePoint, Teams, Entra ID, OneDrive — complete forensic blindness.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.SHAREPOINT.GUEST.001
+
+**SharePoint Guest Sharing Not Restricted**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_m365_v4: 14.2; nist_800_53_r5: AC-3; soc2: CC6.1;
+
+Guest sharing permissions not appropriately restricted. Guests may have broader access than intended.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.SHAREPOINT.MODERNAUTH.001
+
+**SharePoint Modern Authentication Not Required**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_m365_v4: 14.3; nist_800_53_r5: IA-2; soc2: CC6.1;
+
+Legacy auth clients access SharePoint without MFA or Conditional Access.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.SHAREPOINT.SHARING.001
+
+**SharePoint External Sharing Not Restricted**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_m365_v4: 14.1; hipaa: 164.312(a)(1); nist_800_53_r5: AC-3; soc2: CC6.1;
+
+External sharing set to "Anyone" — anonymous links require no authentication. Anyone with the link accesses content.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.SHAREPOINT.SYNC.001
+
+**OneDrive Sync Not Restricted on Unmanaged Devices**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_m365_v4: 14.4; nist_800_53_r5: SC-7; soc2: CC6.6;
+
+OneDrive sync allowed on unmanaged devices. Organizational files copied to devices without encryption or remote wipe.
 
 **Remediation:** Remediate per control description.
 

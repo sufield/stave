@@ -1,0 +1,22 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "purview-cfg",
+      "type": "m365_purview_config",
+      "vendor": "m365",
+      "properties": {
+        "m365": {
+          "admin": {
+            "kind": "purview_config",
+            "purview": {
+              "audit_log_search_enabled": true
+            }
+          }
+        }
+      }
+    }
+  ]
+}

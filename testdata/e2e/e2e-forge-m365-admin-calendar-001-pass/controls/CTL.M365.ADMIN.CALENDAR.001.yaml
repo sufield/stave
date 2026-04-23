@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.M365.ADMIN.CALENDAR.001
+name: External Calendar Sharing Enabled
+description: >
+  Calendar details (subjects, attendees, availability) shared
+  with external recipients.
+domain: exposure
+severity: medium
+compliance:
+  cis_m365_v4: "15.4"
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: External Calendar Sharing Enabled — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"placeholder": true}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.admin.kind
+      op: eq
+      value: admincenter_config
+    - field: properties.m365.admin.calendar_sharing_disabled
+      op: eq
+      value: false

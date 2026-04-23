@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.M365.SHAREPOINT.MODERNAUTH.001
+name: SharePoint Modern Authentication Not Required
+description: >
+  Legacy auth clients access SharePoint without MFA or
+  Conditional Access.
+domain: identity
+severity: high
+compliance:
+  cis_m365_v4: "14.3"
+  nist_800_53_r5: "IA-2"
+  soc2: "CC6.1"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: SharePoint Modern Authentication Not Required — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"placeholder": true}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.collaboration.kind
+      op: eq
+      value: sharepoint_config
+    - field: properties.m365.collaboration.sharepoint.modern_auth_required
+      op: eq
+      value: false

@@ -1,0 +1,22 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "intune-cfg",
+      "type": "m365_intune_config",
+      "vendor": "m365",
+      "properties": {
+        "m365": {
+          "admin": {
+            "kind": "intune_config",
+            "intune": {
+              "unassigned_devices_noncompliant": false
+            }
+          }
+        }
+      }
+    }
+  ]
+}
