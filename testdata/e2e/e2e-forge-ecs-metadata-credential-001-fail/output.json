@@ -1,0 +1,333 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-15T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "20260101T000000Z.json": "cf5e355ffd57fc25f59d8f7d2238ebde84bc58e19ff7049f05130bc2f60af938",
+        "20260111T000000Z.json": "5f2e5feaa0a563fed52238a185c474f2ecaa06d439f76fe9cac7c2ca1d73be0a"
+      },
+      "overall": "44b205e6ccf7a3090ec7d82d841694446a8312bd90e7cb4126c0c420e40e4130"
+    },
+    "policy_fingerprint": "55f5e85198a10f2c66cfa12bbc09c8be0982a1a02f66644e2924829e937c976c",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.ECS.METADATA.CREDENTIAL.001",
+      "asset_id": "arn:aws:ecs:us-east-1:111122223333:task-definition/api:5",
+      "asset_type": "aws_ecs_task_definition",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -168,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:c46c43476ac95aa3",
+      "control_id": "CTL.ECS.METADATA.CREDENTIAL.001",
+      "control_name": "ECS Tasks Must Restrict Credential Endpoint Access to Required Containers",
+      "control_description": "ECS task definitions must restrict task metadata credential endpoint access (169.254.170.2) to only the containers that require AWS API access. Sidecar containers, init containers, and utility containers that do not call AWS APIs should not have credential endpoint access. Without scoping, every container in the task — including those vulnerable to SSRF — can retrieve the task role's IAM credentials from the metadata endpoint. This is the same attack class as EC2 IMDSv1 credential theft (Capital One) but on containers. Unlike EC2 IMDS which has IMDSv2 token requirements, ECS task metadata has no equivalent token mechanism — the mitigation is restricting which containers can reach the endpoint.\n",
+      "asset_id": "arn:aws:ecs:us-east-1:111122223333:task-definition/api:5",
+      "asset_type": "aws_ecs_task_definition",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 336,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "container.kind",
+            "actual_value": "task_definition",
+            "operator": "eq",
+            "unsafe_value": "task_definition"
+          },
+          {
+            "property": "container.metadata.credential_scoping_enabled",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 336 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "fedramp_moderate": "AC-6(5)",
+        "hipaa": "164.312(a)(1)",
+        "nist_800_53_r5": "AC-6(5)",
+        "pci_dss_v4.0": "7.2.1",
+        "soc2": "CC6.1"
+      },
+      "control_compliance_ccm_v4": [
+        "IAM-05",
+        "IVS-03"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "ECS task definition does not restrict credential endpoint access. All containers in the task can retrieve task role credentials from the metadata endpoint.",
+        "action": "Configure container-level credential scoping in the task definition. Set credentialSpecs or use task role credential isolation to restrict which containers can access the credential endpoint. Sidecar and utility containers that do not require AWS API access should not have credential endpoint access.",
+        "example": "{\n  \"container\": {\n    \"kind\": \"task_definition\",\n    \"metadata\": {\n      \"credential_scoping_enabled\": true\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-6692101a5c7bf4f1",
+        "target": {
+          "asset_id": "arn:aws:ecs:us-east-1:111122223333:task-definition/api:5",
+          "asset_type": "aws_ecs_task_definition"
+        },
+        "action": "Configure container-level credential scoping in the task definition. Set credentialSpecs or use task role credential isolation to restrict which containers can access the credential endpoint. Sidecar and utility containers that do not require AWS API access should not have credential endpoint access."
+      },
+      "exposure_score": 150,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 2,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "container.kind eq \"task_definition\"",
+          "observation_key": "container.kind",
+          "operator": "eq",
+          "expected_value": "task_definition",
+          "observed_value": "task_definition"
+        },
+        {
+          "predicate_expr": "container.metadata.credential_scoping_enabled eq false",
+          "observation_key": "container.metadata.credential_scoping_enabled",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "arn:aws:ecs:us-east-1:111122223333:task-definition/api:5",
+          "type": "aws_ecs_task_definition",
+          "vendor": "aws",
+          "arn": "arn:aws:ecs:us-east-1:111122223333:task-definition/api:5",
+          "region": "us-east-1"
+        },
+        "violation": {
+          "control_id": "CTL.ECS.METADATA.CREDENTIAL.001",
+          "control_name": "ECS Tasks Must Restrict Credential Endpoint Access to Required Containers",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "container.kind = \"task_definition\"",
+              "observation_key": "container.kind",
+              "observed_value": "task_definition"
+            },
+            {
+              "clause": "container.metadata.credential_scoping_enabled = false",
+              "observation_key": "container.metadata.credential_scoping_enabled",
+              "observed_value": false
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "container.kind",
+            "current_value": "task_definition",
+            "has_safe_default": false,
+            "description": "Change container.kind from task_definition"
+          },
+          {
+            "path": "container.metadata.credential_scoping_enabled",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set container.metadata.credential_scoping_enabled to true"
+          }
+        ],
+        "action": "Configure container-level credential scoping in the task definition. Set credentialSpecs or use task role credential isolation to restrict which containers can access the credential endpoint. Sidecar and utility containers that do not require AWS API access should not have credential endpoint access."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "ecs"
+      ],
+      "delta": [
+        {
+          "property_label": "metadata credential scoping",
+          "property_path": "container.metadata.credential_scoping_enabled",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:79aadd34f6c5ce0e",
+      "asset_id": "arn:aws:ecs:us-east-1:111122223333:task-definition/api:5",
+      "shared_keys": [
+        "container.metadata",
+        "container.metadata.credential_scoping_enabled"
+      ],
+      "headline_finding_id": "sha256:c46c43476ac95aa3",
+      "member_finding_ids": [
+        "sha256:c46c43476ac95aa3"
+      ],
+      "consolidated_score": 150,
+      "consolidated_blast_radius": 2
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "arn:aws:ecs:us-east-1:111122223333:task-definition/api:5",
+      "asset_type": "aws_ecs_task_definition",
+      "fix_plan": {
+        "id": "fix-6692101a5c7bf4f1",
+        "target": {
+          "asset_id": "arn:aws:ecs:us-east-1:111122223333:task-definition/api:5",
+          "asset_type": "aws_ecs_task_definition"
+        },
+        "action": "Configure container-level credential scoping in the task definition. Set credentialSpecs or use task role credential isolation to restrict which containers can access the credential endpoint. Sidecar and utility containers that do not require AWS API access should not have credential endpoint access."
+      },
+      "contributing_controls": [
+        "CTL.ECS.METADATA.CREDENTIAL.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.ECS.METADATA.CREDENTIAL.001",
+      "asset_id": "arn:aws:ecs:us-east-1:111122223333:task-definition/api:5",
+      "exposure_score": 150,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 2,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-ecs-metadata-credential-001-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-ecs-metadata-credential-001-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "217b2174b053ed5d4ae6462771d5c6d3cd5dc2fc",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-ecs-metadata-credential-001-fail/controls/"
+      ]
+    }
+  }
+}

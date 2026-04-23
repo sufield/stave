@@ -1,0 +1,362 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-15T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "20260101T000000Z.json": "5d40e8a63a80de6840522509a9bde9ab44fb505510ce3ee1f7dbbf8e92e86993",
+        "20260111T000000Z.json": "db136835af1d57034d4b29c413008a995a4b63078910a8a51afef6249e8d0177"
+      },
+      "overall": "9a1377815694580f9e47ba9494f019174372b5b2b70383575aebb19c857ae965"
+    },
+    "policy_fingerprint": "5e937eee6653410db45bd0353d83ff91e94244e5c69f11c4b6c2560c8b07676a",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.ECS.EXEC.AUDIT.001",
+      "asset_id": "arn:aws:ecs:us-east-1:111122223333:service/prod/api",
+      "asset_type": "aws_ecs_service",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -168,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:be43de2559a507a8",
+      "control_id": "CTL.ECS.EXEC.AUDIT.001",
+      "control_name": "ECS Exec Must Have Audit Logging Enabled",
+      "control_description": "When ECS Exec is enabled, audit logging must be configured to capture all Exec sessions. ECS Exec provides interactive shell access to running containers, including access to the task metadata credential endpoint. Without audit logging, an operator or attacker using Exec leaves no trace of commands executed or credentials accessed.\n",
+      "asset_id": "arn:aws:ecs:us-east-1:111122223333:service/prod/api",
+      "asset_type": "aws_ecs_service",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 336,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "container.exec.audit_logging_enabled",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "container.exec.enabled_in_production",
+            "actual_value": true,
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "container.kind",
+            "actual_value": "ecs_service",
+            "operator": "eq",
+            "unsafe_value": "ecs_service"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 336 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "nist_800_53_r5": "AU-2",
+        "soc2": "CC7.1"
+      },
+      "control_compliance_ccm_v4": [
+        "LOG-03",
+        "LOG-05"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "ECS Exec is enabled but audit logging is not configured. Exec sessions — including credential access — are not recorded.",
+        "action": "Configure ECS Exec audit logging to CloudWatch Logs or S3. Enable session logging in the cluster Execute Command configuration.",
+        "example": "{\n  \"container\": {\n    \"kind\": \"ecs_service\",\n    \"exec\": {\n      \"audit_logging_enabled\": true\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-a17169f046c36520",
+        "target": {
+          "asset_id": "arn:aws:ecs:us-east-1:111122223333:service/prod/api",
+          "asset_type": "aws_ecs_service"
+        },
+        "action": "Configure ECS Exec audit logging to CloudWatch Logs or S3. Enable session logging in the cluster Execute Command configuration."
+      },
+      "exposure_score": 50,
+      "score_breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "container.exec.audit_logging_enabled eq false",
+          "observation_key": "container.exec.audit_logging_enabled",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "container.exec.enabled_in_production eq true",
+          "observation_key": "container.exec.enabled_in_production",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": true
+        },
+        {
+          "predicate_expr": "container.kind eq \"ecs_service\"",
+          "observation_key": "container.kind",
+          "operator": "eq",
+          "expected_value": "ecs_service",
+          "observed_value": "ecs_service"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "arn:aws:ecs:us-east-1:111122223333:service/prod/api",
+          "type": "aws_ecs_service",
+          "vendor": "aws",
+          "arn": "arn:aws:ecs:us-east-1:111122223333:service/prod/api",
+          "region": "us-east-1"
+        },
+        "violation": {
+          "control_id": "CTL.ECS.EXEC.AUDIT.001",
+          "control_name": "ECS Exec Must Have Audit Logging Enabled",
+          "severity": "medium",
+          "reasoning": [
+            {
+              "clause": "container.exec.audit_logging_enabled = false",
+              "observation_key": "container.exec.audit_logging_enabled",
+              "observed_value": false
+            },
+            {
+              "clause": "container.exec.enabled_in_production = true",
+              "observation_key": "container.exec.enabled_in_production",
+              "observed_value": true
+            },
+            {
+              "clause": "container.kind = \"ecs_service\"",
+              "observation_key": "container.kind",
+              "observed_value": "ecs_service"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "container.exec.audit_logging_enabled",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set container.exec.audit_logging_enabled to true"
+          },
+          {
+            "path": "container.exec.enabled_in_production",
+            "current_value": "true",
+            "required_value": "false",
+            "has_safe_default": true,
+            "description": "Set container.exec.enabled_in_production to false"
+          },
+          {
+            "path": "container.kind",
+            "current_value": "ecs_service",
+            "has_safe_default": false,
+            "description": "Change container.kind from ecs_service"
+          }
+        ],
+        "action": "Configure ECS Exec audit logging to CloudWatch Logs or S3. Enable session logging in the cluster Execute Command configuration."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "ecs"
+      ],
+      "delta": [
+        {
+          "property_label": "exec audit logging",
+          "property_path": "container.exec.audit_logging_enabled",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        },
+        {
+          "property_label": "exec enabled in production",
+          "property_path": "container.exec.enabled_in_production",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:c4e51fa6cafa1698",
+      "asset_id": "arn:aws:ecs:us-east-1:111122223333:service/prod/api",
+      "shared_keys": [
+        "container.exec",
+        "container.exec.audit_logging_enabled",
+        "container.exec.enabled_in_production"
+      ],
+      "headline_finding_id": "sha256:be43de2559a507a8",
+      "member_finding_ids": [
+        "sha256:be43de2559a507a8"
+      ],
+      "consolidated_score": 50,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "arn:aws:ecs:us-east-1:111122223333:service/prod/api",
+      "asset_type": "aws_ecs_service",
+      "fix_plan": {
+        "id": "fix-a17169f046c36520",
+        "target": {
+          "asset_id": "arn:aws:ecs:us-east-1:111122223333:service/prod/api",
+          "asset_type": "aws_ecs_service"
+        },
+        "action": "Configure ECS Exec audit logging to CloudWatch Logs or S3. Enable session logging in the cluster Execute Command configuration."
+      },
+      "contributing_controls": [
+        "CTL.ECS.EXEC.AUDIT.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.ECS.EXEC.AUDIT.001",
+      "asset_id": "arn:aws:ecs:us-east-1:111122223333:service/prod/api",
+      "exposure_score": 50,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-ecs-exec-audit-001-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-ecs-exec-audit-001-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "217b2174b053ed5d4ae6462771d5c6d3cd5dc2fc",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-ecs-exec-audit-001-fail/controls/"
+      ]
+    }
+  }
+}

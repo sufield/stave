@@ -1,0 +1,15 @@
+control: CTL.ECS.EXEC.AUDIT.001
+defect: >
+  ECS Exec is enabled but audit logging is not configured. Interactive
+  shell sessions — including commands that access the task metadata
+  credential endpoint — are not recorded.
+infection: >
+  An attacker or rogue operator uses ECS Exec to access a running
+  container, retrieves task role credentials from the metadata
+  endpoint, and executes commands with no audit trail. Without Exec
+  audit logging, the organization cannot determine what commands were
+  run, what data was accessed, or whether credentials were exfiltrated.
+failure: >
+  Unauditable container access. Interactive shell sessions occur
+  without forensic visibility. Credential theft, data access, and
+  lateral movement via ECS Exec leave no trace.

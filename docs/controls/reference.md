@@ -3,25 +3,25 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 882
-**Pack hash:** `ca28babdef2f2450c67186d6dadd435881dba0a871cfda8eec858f85ca1bcc16`
+**Total controls:** 884
+**Pack hash:** `3ad0531e37978380301e2031a4ab220f70cc63b02f80a201ff8211d977405393`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 134 |
-| high | 386 |
+| high | 387 |
 | info | 16 |
 | low | 76 |
-| medium | 270 |
+| medium | 271 |
 
 | Domain | Count |
 |--------|-------|
 | audit | 20 |
 | detection | 2 |
 | encryption | 35 |
-| exposure | 585 |
+| exposure | 587 |
 | governance | 20 |
 | identity | 177 |
 | network | 21 |
@@ -4224,6 +4224,21 @@ ECS services in production environments must not have enableExecuteCommand: true
 
 ---
 
+### CTL.ECS.EXEC.AUDIT.001
+
+**ECS Exec Must Have Audit Logging Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AU-2; soc2: CC7.1;
+
+When ECS Exec is enabled, audit logging must be configured to capture all Exec sessions. ECS Exec provides interactive shell access to running containers, including access to the task metadata credential endpoint. Without audit logging, an operator or attacker using Exec leaves no trace of commands executed or credentials accessed.
+
+**Remediation:** Configure ECS Exec audit logging to CloudWatch Logs or S3. Enable session logging in the cluster Execute Command configuration.
+
+---
+
 ### CTL.ECS.EXEC.RESTRICT.001
 
 **ECS Exec Must Be Disabled on Production Services**
@@ -4340,6 +4355,21 @@ ECS task definition or service configuration is missing required properties for 
 ECS essential containers must have a log driver configured. Without logging, container stdout and stderr are discarded — invocations, errors, and execution output leave no audit trail. A compromised container generating no logs is forensically invisible.
 
 **Remediation:** Configure the awslogs log driver for all essential containers in the task definition.
+
+---
+
+### CTL.ECS.METADATA.CREDENTIAL.001
+
+**ECS Tasks Must Restrict Credential Endpoint Access to Required Containers**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-6(5); hipaa: 164.312(a)(1); nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+ECS task definitions must restrict task metadata credential endpoint access (169.254.170.2) to only the containers that require AWS API access. Sidecar containers, init containers, and utility containers that do not call AWS APIs should not have credential endpoint access. Without scoping, every container in the task — including those vulnerable to SSRF — can retrieve the task role's IAM credentials from the metadata endpoint. This is the same attack class as EC2 IMDSv1 credential theft (Capital One) but on containers. Unlike EC2 IMDS which has IMDSv2 token requirements, ECS task metadata has no equivalent token mechanism — the mitigation is restricting which containers can reach the endpoint.
+
+**Remediation:** Configure container-level credential scoping in the task definition. Set credentialSpecs or use task role credential isolation to restrict which containers can access the credential endpoint. Sidecar and utility containers that do not require AWS API access should not have credential endpoint access.
 
 ---
 

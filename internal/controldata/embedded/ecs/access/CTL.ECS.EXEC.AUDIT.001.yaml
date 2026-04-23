@@ -1,0 +1,51 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.EXEC.AUDIT.001
+name: ECS Exec Must Have Audit Logging Enabled
+description: >
+  When ECS Exec is enabled, audit logging must be configured to
+  capture all Exec sessions. ECS Exec provides interactive shell
+  access to running containers, including access to the task metadata
+  credential endpoint. Without audit logging, an operator or attacker
+  using Exec leaves no trace of commands executed or credentials
+  accessed.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-2"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-03", "LOG-05"]
+scope_tags:
+  - aws
+  - ecs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    ECS Exec is enabled but audit logging is not configured. Exec
+    sessions — including credential access — are not recorded.
+  action: >
+    Configure ECS Exec audit logging to CloudWatch Logs or S3.
+    Enable session logging in the cluster Execute Command
+    configuration.
+  example: |
+    {
+      "container": {
+        "kind": "ecs_service",
+        "exec": {
+          "audit_logging_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: ecs_service
+    - field: properties.container.exec.enabled_in_production
+      op: eq
+      value: true
+    - field: properties.container.exec.audit_logging_enabled
+      op: eq
+      value: false
