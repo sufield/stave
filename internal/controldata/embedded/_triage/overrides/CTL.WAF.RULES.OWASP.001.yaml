@@ -1,0 +1,18 @@
+control: CTL.WAF.RULES.OWASP.001
+defect: >
+  The WAF Web ACL does not have all three required OWASP-coverage
+  managed rule groups attached and enforcing. Missing or COUNT-mode
+  groups leave attack categories unblocked.
+infection: >
+  Without managed rule group coverage, the WAF does not block common
+  web attack patterns. XSS payloads, SQL injection, and known CVE
+  exploits (Log4j, Spring4Shell) pass through the WAF unblocked.
+  Custom blacklist rules provide incomplete coverage — the Semrush
+  WAF bypass (HackerOne #382625) demonstrated that a blacklist-based
+  WAF was bypassed using a known XSS vector that managed rules cover
+  explicitly.
+failure: >
+  WAF bypass via incomplete rule coverage. The WAF is active and
+  appears to provide protection, but attack categories in the OWASP
+  Top 10 are unblocked. An attacker uses standard XSS, SQLi, or
+  known CVE payloads that the WAF does not inspect.

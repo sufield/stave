@@ -1,0 +1,11 @@
+version: "1.0"
+required_groups:
+  - name: AWSManagedRulesCommonRuleSet
+    description: OWASP common web exploits including XSS and path traversal
+    owasp_categories: [A03, A05, A07]
+  - name: AWSManagedRulesSQLiRuleSet
+    description: SQL injection attack patterns
+    owasp_categories: [A03]
+  - name: AWSManagedRulesKnownBadInputsRuleSet
+    description: Known CVE exploit payloads including Log4j and Spring4Shell
+    owasp_categories: [A06]

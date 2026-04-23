@@ -9,10 +9,10 @@
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2026-01-01T000000Z.json": "89cc6082a65b5f5eaa238e2f4fd93a2622e3d8b66f15b30eabb4810514c172d9",
-        "2026-01-11T000000Z.json": "c7c3b9cb4fb15fc74c27ed7faeef6c9439ee4c7e8473484d68507b9a24135026"
+        "2026-01-01T000000Z.json": "17d91cae610a8930abb87993e5dc7cb762b3c0e4a15aae017d8d1d65f2b6d412",
+        "2026-01-11T000000Z.json": "1ba66ddccf73f9789551024a143c5b47b2e0774e07b4772b4d57b0eb325983c4"
       },
-      "overall": "f341c4acdd0abc22b934a7944c1519d299fce1864e4c1d5932b3f19532ddf9f4"
+      "overall": "351575a40e0eb240a68c745185b41adc62c3b14e849805edc9a3e01373aacacb"
     },
     "policy_fingerprint": "a959d26df1c434a29ae1892a949bef7418fb5577cf618610579c288aebe0a69e",
     "evaluated_state": "deployed"
@@ -26,7 +26,7 @@
   "risk_signals": [
     {
       "control_id": "CTL.WAF.RULES.OWASP.001",
-      "asset_id": "arn:aws:wafv2::123:webacl/prod-api",
+      "asset_id": "arn:aws:wafv2::123456789012:webacl/prod-api",
       "asset_type": "aws_wafv2_web_acl",
       "status": "OVERDUE",
       "due_at": "2026-01-08T00:00:00Z",
@@ -37,11 +37,11 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:b56c5f93179e2915",
+      "finding_id": "sha256:1bd9c67a7638cc88",
       "control_id": "CTL.WAF.RULES.OWASP.001",
       "control_name": "WAF Must Have OWASP Core Rule Coverage",
       "control_description": "WAF web ACLs must include the three core AWS managed rule groups that cover OWASP Top 10 attack categories: AWSManagedRulesCommonRuleSet (XSS, path traversal, HTTP violations), AWSManagedRulesSQLiRuleSet (SQL injection), and AWSManagedRulesKnownBadInputsRuleSet (Log4Shell, deserialization, known CVE payloads). All three groups must be attached and enforcing in BLOCK mode. A WAF with custom rules only, or with managed rule groups that cover IP reputation or bot management but not OWASP attack categories, provides incomplete coverage. This control differs from CTL.WAF.RULES.001 (which checks for any managed rules) by requiring the specific groups needed for baseline OWASP coverage. HackerOne report #382625 documents a stored XSS bypass against a production WAF that was active and blocking with custom rules but lacked AWSManagedRulesCommonRuleSet — the payload used a marquee element with an inline event handler, a known vector covered by the CrossSiteScripting_BODY rule in the common rule set.\n",
-      "asset_id": "arn:aws:wafv2::123:webacl/prod-api",
+      "asset_id": "arn:aws:wafv2::123456789012:webacl/prod-api",
       "asset_type": "aws_wafv2_web_acl",
       "asset_vendor": "aws",
       "evidence": {
@@ -90,9 +90,9 @@
         "example": "{\n  \"waf\": {\n    \"kind\": \"web_acl\",\n    \"rules\": {\n      \"has_owasp_coverage\": true\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-29cba9a50b1d26e9",
+        "id": "fix-b6ed249cd83eb0f0",
         "target": {
-          "asset_id": "arn:aws:wafv2::123:webacl/prod-api",
+          "asset_id": "arn:aws:wafv2::123456789012:webacl/prod-api",
           "asset_type": "aws_wafv2_web_acl"
         },
         "action": "Add the following AWS managed rule groups to the web ACL and ensure each is in BLOCK mode with no COUNT override at the group level or rule action override level: (1) AWSManagedRulesCommonRuleSet — covers XSS, path traversal, common exploits, (2) AWSManagedRulesSQLiRuleSet — covers SQL injection attack patterns, (3) AWSManagedRulesKnownBad InputsRuleSet — covers known CVE exploits including Log4j and Spring4Shell."
@@ -124,10 +124,10 @@
       ],
       "remediation_context": {
         "asset": {
-          "id": "arn:aws:wafv2::123:webacl/prod-api",
+          "id": "arn:aws:wafv2::123456789012:webacl/prod-api",
           "type": "aws_wafv2_web_acl",
           "vendor": "aws",
-          "arn": "arn:aws:wafv2::123:webacl/prod-api"
+          "arn": "arn:aws:wafv2::123456789012:webacl/prod-api"
         },
         "violation": {
           "control_id": "CTL.WAF.RULES.OWASP.001",
@@ -180,16 +180,16 @@
   ],
   "issues": [
     {
-      "issue_id": "sha256:f2fd36ddc6525611",
-      "asset_id": "arn:aws:wafv2::123:webacl/prod-api",
+      "issue_id": "sha256:cd25336349e37764",
+      "asset_id": "arn:aws:wafv2::123456789012:webacl/prod-api",
       "shared_keys": [
         "waf.kind",
         "waf.rules",
         "waf.rules.has_owasp_coverage"
       ],
-      "headline_finding_id": "sha256:b56c5f93179e2915",
+      "headline_finding_id": "sha256:1bd9c67a7638cc88",
       "member_finding_ids": [
-        "sha256:b56c5f93179e2915"
+        "sha256:1bd9c67a7638cc88"
       ],
       "consolidated_score": 112.5,
       "consolidated_blast_radius": 1.5
@@ -197,12 +197,12 @@
   ],
   "remediation_groups": [
     {
-      "asset_id": "arn:aws:wafv2::123:webacl/prod-api",
+      "asset_id": "arn:aws:wafv2::123456789012:webacl/prod-api",
       "asset_type": "aws_wafv2_web_acl",
       "fix_plan": {
-        "id": "fix-29cba9a50b1d26e9",
+        "id": "fix-b6ed249cd83eb0f0",
         "target": {
-          "asset_id": "arn:aws:wafv2::123:webacl/prod-api",
+          "asset_id": "arn:aws:wafv2::123456789012:webacl/prod-api",
           "asset_type": "aws_wafv2_web_acl"
         },
         "action": "Add the following AWS managed rule groups to the web ACL and ensure each is in BLOCK mode with no COUNT override at the group level or rule action override level: (1) AWSManagedRulesCommonRuleSet — covers XSS, path traversal, common exploits, (2) AWSManagedRulesSQLiRuleSet — covers SQL injection attack patterns, (3) AWSManagedRulesKnownBad InputsRuleSet — covers known CVE exploits including Log4j and Spring4Shell."
@@ -217,7 +217,7 @@
     {
       "finding_index": 0,
       "control_id": "CTL.WAF.RULES.OWASP.001",
-      "asset_id": "arn:aws:wafv2::123:webacl/prod-api",
+      "asset_id": "arn:aws:wafv2::123456789012:webacl/prod-api",
       "exposure_score": 112.5,
       "breakdown": {
         "base_score": 75,
@@ -318,13 +318,16 @@
     "selected_controls_source": "dir",
     "context_name": "stave",
     "resolved_paths": {
-      "controls": "testdata/e2e/e2e-forge-waf-rules-owasp-fail/controls",
-      "observations": "testdata/e2e/e2e-forge-waf-rules-owasp-fail/observations"
+      "controls": "testdata/e2e/e2e-forge-waf-rules-owasp-count-mode-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-waf-rules-owasp-count-mode-fail/observations"
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
       "head_commit": "38f1719276e8671abc59b56a69dff5d0830a2ff1",
-      "dirty": false
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-waf-rules-owasp-count-mode-fail/controls/CTL.WAF.RULES.OWASP.001.yaml"
+      ]
     }
   }
 }
