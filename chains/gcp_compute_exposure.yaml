@@ -1,0 +1,15 @@
+id: gcp_compute_exposure
+description: >
+  Instance with external IP plus default SA or open SSH. Publicly
+  reachable compute with either Editor-level permissions or direct
+  management access from the internet.
+controls:
+  - CTL.GCP.COMPUTE.PUBLIC.001
+  - CTL.GCP.COMPUTE.DEFAULTSA.001
+  - CTL.GCP.COMPUTE.FIREWALL.SSH.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - ec2_code_execution

@@ -1,0 +1,13 @@
+control: CTL.GCP.COMPUTE.DEFAULTSA.001
+defect: >
+  Compute instance uses the default Compute Engine service account.
+infection: >
+  The default Compute Engine service account has Editor-level
+  permissions on the project by default. An attacker who gains code
+  execution on this instance — via SSRF, application vulnerability,
+  or compromised credentials — inherits Editor access to almost
+  every GCP service in the project. Custom service accounts with
+  least-privilege roles eliminate this broad default access.
+failure: >
+  Over-privileged compute. The attacker gains Editor-level access
+  to the project via the instance's default service account.

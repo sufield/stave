@@ -1,0 +1,13 @@
+family: CTL.GCP.COMPUTE
+infection: >
+  Compute Engine instances are the primary workload runtime on GCP.
+  External IPs, default service accounts with Editor permissions,
+  open firewall rules, and disabled Shielded VM features expose
+  instances to direct internet access, over-privileged compromise,
+  and boot-level persistence. Network misconfigurations (default
+  VPC, missing flow logs, open SSH/RDP) weaken the perimeter.
+failure: >
+  Compute compromise. An attacker gains access to instances through
+  open management ports, over-privileged service accounts, or
+  network misconfiguration. Editor-level default SA permissions
+  enable lateral movement across the project.

@@ -1,0 +1,13 @@
+control: CTL.GCP.COMPUTE.FIREWALL.SSH.001
+defect: >
+  Firewall rule allows TCP port 22 (SSH) from 0.0.0.0/0.
+infection: >
+  SSH is directly accessible from any IP on the internet. Automated
+  scanners continuously probe port 22 across all cloud IP ranges.
+  Brute-force attacks against SSH are constant. Combined with weak
+  credentials, default passwords, or known vulnerabilities in SSH
+  implementations, an open port 22 is the most common entry point
+  for cloud compute compromise.
+failure: >
+  Direct SSH access from the internet. An attacker brute-forces
+  credentials or exploits an SSH vulnerability to gain shell access.

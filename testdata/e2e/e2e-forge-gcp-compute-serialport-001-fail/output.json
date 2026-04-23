@@ -1,0 +1,326 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-15T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "4c66f0a372516618dbc78aaa8c3f0a6b00470435756dc99ed5bad2470e057b15",
+        "2026-01-11T000000Z.json": "34ef75478103d55f9d061f0cdd10b0aadf1182634629fbd23ab3842f267cd467"
+      },
+      "overall": "c56cada9132c4f28f043e30b4ce3b6a00e500a5f08fb669bd71b8dea60946b1e"
+    },
+    "policy_fingerprint": "dc50c5a4c92fbc6ab847e8d2b37e2731dbb92b5ab8d9005723e7e0930989132c",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.GCP.COMPUTE.SERIALPORT.001",
+      "asset_id": "vm-prod",
+      "asset_type": "gcp_compute_instance",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -168,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:f113c737c42b1cde",
+      "control_id": "CTL.GCP.COMPUTE.SERIALPORT.001",
+      "control_name": "Serial Port Access Enabled",
+      "control_description": "Interactive serial port access enabled. Provides console-level access bypassing network security controls and SSH authentication.\n",
+      "asset_id": "vm-prod",
+      "asset_type": "gcp_compute_instance",
+      "asset_vendor": "gcp",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 336,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "gcp.compute.instance.serial_port_enabled",
+            "actual_value": true,
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "gcp.compute.kind",
+            "actual_value": "compute_instance",
+            "operator": "eq",
+            "unsafe_value": "compute_instance"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 336 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "cis_gcp_v3": "4.5",
+        "nist_800_53_r5": "CM-7",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Serial Port Access Enabled — finding detected.",
+        "action": "Disable serial port access.",
+        "example": "{\"gcp\": {\"compute\": {\"kind\": \"compute_instance\", \"instance\": {\"serial_port_enabled\": false}}}}\n"
+      },
+      "fix_plan": {
+        "id": "fix-b7b43a7e78fd7ed7",
+        "target": {
+          "asset_id": "vm-prod",
+          "asset_type": "gcp_compute_instance"
+        },
+        "action": "Disable serial port access."
+      },
+      "exposure_score": 50,
+      "score_breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "gcp.compute.instance.serial_port_enabled eq true",
+          "observation_key": "gcp.compute.instance.serial_port_enabled",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": true
+        },
+        {
+          "predicate_expr": "gcp.compute.kind eq \"compute_instance\"",
+          "observation_key": "gcp.compute.kind",
+          "operator": "eq",
+          "expected_value": "compute_instance",
+          "observed_value": "compute_instance"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "vm-prod",
+          "type": "gcp_compute_instance",
+          "vendor": "gcp"
+        },
+        "violation": {
+          "control_id": "CTL.GCP.COMPUTE.SERIALPORT.001",
+          "control_name": "Serial Port Access Enabled",
+          "severity": "medium",
+          "reasoning": [
+            {
+              "clause": "gcp.compute.instance.serial_port_enabled = true",
+              "observation_key": "gcp.compute.instance.serial_port_enabled",
+              "observed_value": true
+            },
+            {
+              "clause": "gcp.compute.kind = \"compute_instance\"",
+              "observation_key": "gcp.compute.kind",
+              "observed_value": "compute_instance"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "gcp.compute.instance.serial_port_enabled",
+            "current_value": "true",
+            "required_value": "false",
+            "has_safe_default": true,
+            "description": "Set gcp.compute.instance.serial_port_enabled to false"
+          },
+          {
+            "path": "gcp.compute.kind",
+            "current_value": "compute_instance",
+            "has_safe_default": false,
+            "description": "Change gcp.compute.kind from compute_instance"
+          }
+        ],
+        "action": "Disable serial port access."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "gcp"
+      ],
+      "delta": [
+        {
+          "property_label": "compute instance serial port",
+          "property_path": "gcp.compute.instance.serial_port_enabled",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:2283572dbe96a984",
+      "asset_id": "vm-prod",
+      "shared_keys": [
+        "gcp.compute",
+        "gcp.compute.instance",
+        "gcp.compute.instance.serial_port_enabled",
+        "gcp.compute.kind"
+      ],
+      "headline_finding_id": "sha256:f113c737c42b1cde",
+      "member_finding_ids": [
+        "sha256:f113c737c42b1cde"
+      ],
+      "consolidated_score": 50,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "vm-prod",
+      "asset_type": "gcp_compute_instance",
+      "fix_plan": {
+        "id": "fix-b7b43a7e78fd7ed7",
+        "target": {
+          "asset_id": "vm-prod",
+          "asset_type": "gcp_compute_instance"
+        },
+        "action": "Disable serial port access."
+      },
+      "contributing_controls": [
+        "CTL.GCP.COMPUTE.SERIALPORT.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.GCP.COMPUTE.SERIALPORT.001",
+      "asset_id": "vm-prod",
+      "exposure_score": 50,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-gcp-compute-serialport-001-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-gcp-compute-serialport-001-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "54e3939788c59440bd046159fccd0aa9bd03518c",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-gcp-compute-serialport-001-fail/controls/"
+      ]
+    }
+  }
+}

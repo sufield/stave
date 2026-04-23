@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.COMPUTE.OSLOGIN.001
+name: OS Login Not Enabled
+description: >
+  OS Login not enabled. SSH access managed via per-instance metadata
+  keys rather than centralized IAM-based access with 2FA support.
+domain: identity
+severity: medium
+compliance:
+  cis_gcp_v3: "4.4"
+  nist_800_53_r5: "IA-2"
+  soc2: "CC6.1"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: OS Login Not Enabled — finding detected.
+  action: Enable OS Login at the project or instance level.
+  example: |
+    {"gcp": {"compute": {"kind": "compute_instance", "instance": {"os_login_enabled": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.compute.kind
+      op: eq
+      value: compute_instance
+    - field: properties.gcp.compute.instance.os_login_enabled
+      op: eq
+      value: false

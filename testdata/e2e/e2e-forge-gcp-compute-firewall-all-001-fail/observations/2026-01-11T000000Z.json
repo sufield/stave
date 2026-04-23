@@ -1,0 +1,29 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "fw-all",
+      "type": "gcp_compute_firewall",
+      "vendor": "gcp",
+      "properties": {
+        "gcp": {
+          "compute": {
+            "kind": "firewall_rule",
+            "firewall": {
+              "name": "allow-all",
+              "direction": "INGRESS",
+              "source_ranges": [
+                "0.0.0.0/0"
+              ],
+              "allows_all_from_internet": true,
+              "allows_ssh_from_internet": true,
+              "allows_rdp_from_internet": true
+            }
+          }
+        }
+      }
+    }
+  ]
+}

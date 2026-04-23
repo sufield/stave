@@ -1,0 +1,34 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "vm-prod",
+      "type": "gcp_compute_instance",
+      "vendor": "gcp",
+      "properties": {
+        "gcp": {
+          "compute": {
+            "kind": "compute_instance",
+            "instance": {
+              "name": "vm-prod",
+              "zone": "us-central1-a",
+              "has_external_ip": false,
+              "is_default_sa": true,
+              "service_account_email": "123456-compute@developer.gserviceaccount.com",
+              "os_login_enabled": true,
+              "serial_port_enabled": false,
+              "shielded_secure_boot": true,
+              "shielded_vtpm": true,
+              "shielded_integrity": true,
+              "disk_cmek_encrypted": true,
+              "ip_forwarding": false,
+              "block_project_ssh_keys": true
+            }
+          }
+        }
+      }
+    }
+  ]
+}

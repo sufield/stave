@@ -1,0 +1,37 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.COMPUTE.SHIELDED.001
+name: Shielded VM Features Not Enabled
+description: >
+  One or more Shielded VM features disabled: Secure Boot, vTPM,
+  or Integrity Monitoring. Boot-level malware persists undetected.
+domain: exposure
+severity: medium
+compliance:
+  cis_gcp_v3: "4.8"
+  nist_800_53_r5: "SI-7"
+  soc2: "CC6.1"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: Shielded VM Features Not Enabled — finding detected.
+  action: Enable Secure Boot, vTPM, and Integrity Monitoring.
+  example: |
+    {"gcp": {"compute": {"kind": "compute_instance", "instance": {"shielded_secure_boot": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.compute.kind
+      op: eq
+      value: compute_instance
+    - any:
+        - field: properties.gcp.compute.instance.shielded_secure_boot
+          op: eq
+          value: false
+        - field: properties.gcp.compute.instance.shielded_vtpm
+          op: eq
+          value: false
+        - field: properties.gcp.compute.instance.shielded_integrity
+          op: eq
+          value: false

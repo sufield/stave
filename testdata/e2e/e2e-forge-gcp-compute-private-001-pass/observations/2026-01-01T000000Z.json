@@ -1,0 +1,24 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "subnet-prod",
+      "type": "gcp_compute_subnet",
+      "vendor": "gcp",
+      "properties": {
+        "gcp": {
+          "compute": {
+            "kind": "subnet",
+            "subnet": {
+              "name": "prod-subnet",
+              "region": "us-central1",
+              "private_google_access": true
+            }
+          }
+        }
+      }
+    }
+  ]
+}

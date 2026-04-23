@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.COMPUTE.SSHKEYS.001
+name: Project-Wide SSH Keys Not Blocked
+description: >
+  Instance does not block project-wide SSH keys. Any SSH key added
+  at the project level grants access to this instance.
+domain: identity
+severity: medium
+compliance:
+  cis_gcp_v3: "4.3"
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Project-Wide SSH Keys Not Blocked — finding detected.
+  action: Block project-wide SSH keys and use OS Login or per-instance keys.
+  example: |
+    {"gcp": {"compute": {"kind": "compute_instance", "instance": {"block_project_ssh_keys": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.compute.kind
+      op: eq
+      value: compute_instance
+    - field: properties.gcp.compute.instance.block_project_ssh_keys
+      op: eq
+      value: false

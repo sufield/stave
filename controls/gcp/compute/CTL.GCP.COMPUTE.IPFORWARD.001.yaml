@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.COMPUTE.IPFORWARD.001
+name: IP Forwarding Enabled on Instance
+description: >
+  IP forwarding enabled. The instance can forward packets between
+  networks unless intentionally configured as a NAT gateway.
+domain: exposure
+severity: medium
+compliance:
+  cis_gcp_v3: "4.6"
+  nist_800_53_r5: "CM-6"
+  soc2: "CC6.1"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: IP Forwarding Enabled — finding detected.
+  action: Disable IP forwarding unless the instance is a network appliance.
+  example: |
+    {"gcp": {"compute": {"kind": "compute_instance", "instance": {"ip_forwarding": false}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.compute.kind
+      op: eq
+      value: compute_instance
+    - field: properties.gcp.compute.instance.ip_forwarding
+      op: eq
+      value: true

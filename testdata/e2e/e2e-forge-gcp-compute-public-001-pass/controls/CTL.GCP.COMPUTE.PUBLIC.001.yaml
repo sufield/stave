@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.COMPUTE.PUBLIC.001
+name: Compute Instance Has External IP
+description: >
+  Instance has a public IP address. Directly reachable from the
+  internet without IAP or VPN.
+domain: exposure
+severity: high
+compliance:
+  cis_gcp_v3: "4.9"
+  nist_800_53_r5: "AC-4"
+  pci_dss_v4: "1.3"
+  soc2: "CC6.6"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Compute Instance Has External IP — finding detected.
+  action: Remove external IP and use IAP for SSH access.
+  example: |
+    {"gcp": {"compute": {"kind": "compute_instance", "instance": {"has_external_ip": false}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.compute.kind
+      op: eq
+      value: compute_instance
+    - field: properties.gcp.compute.instance.has_external_ip
+      op: eq
+      value: true

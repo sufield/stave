@@ -1,0 +1,24 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "net-default",
+      "type": "gcp_compute_network",
+      "vendor": "gcp",
+      "properties": {
+        "gcp": {
+          "compute": {
+            "kind": "vpc_network",
+            "network": {
+              "name": "default",
+              "is_default": true,
+              "auto_create_subnets": true
+            }
+          }
+        }
+      }
+    }
+  ]
+}

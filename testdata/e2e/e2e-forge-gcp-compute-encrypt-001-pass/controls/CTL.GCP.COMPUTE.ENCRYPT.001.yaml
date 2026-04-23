@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.COMPUTE.ENCRYPT.001
+name: Compute Disk Not Encrypted with CMEK
+description: >
+  Disk uses Google-managed encryption. CMEK via Cloud KMS provides
+  key revocation, custom rotation, and access audit.
+domain: encryption
+severity: high
+compliance:
+  cis_gcp_v3: "4.7"
+  nist_800_53_r5: "SC-28"
+  pci_dss_v4: "3.4"
+  soc2: "CC6.1"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Compute Disk Not Encrypted with CMEK — finding detected.
+  action: Recreate the disk with a Cloud KMS CMEK.
+  example: |
+    {"gcp": {"compute": {"kind": "compute_instance", "instance": {"disk_cmek_encrypted": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.compute.kind
+      op: eq
+      value: compute_instance
+    - field: properties.gcp.compute.instance.disk_cmek_encrypted
+      op: eq
+      value: false

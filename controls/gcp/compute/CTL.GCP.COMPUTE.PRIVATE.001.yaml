@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.COMPUTE.PRIVATE.001
+name: Subnet Without Private Google Access
+description: >
+  Private Google Access not enabled. Instances with only internal
+  IPs cannot reach Google APIs without NAT or external IP.
+domain: exposure
+severity: medium
+compliance:
+  cis_gcp_v3: "3.5"
+  nist_800_53_r5: "AC-4"
+  soc2: "CC6.6"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Subnet Without Private Google Access — finding detected.
+  action: Enable Private Google Access on the subnet.
+  example: |
+    {"gcp": {"compute": {"kind": "subnet", "subnet": {"private_google_access": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.compute.kind
+      op: eq
+      value: subnet
+    - field: properties.gcp.compute.subnet.private_google_access
+      op: eq
+      value: false

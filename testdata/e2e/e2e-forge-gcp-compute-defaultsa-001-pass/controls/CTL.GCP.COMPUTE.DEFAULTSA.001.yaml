@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.COMPUTE.DEFAULTSA.001
+name: Compute Instance Using Default Service Account
+description: >
+  Instance runs with the default Compute Engine service account
+  which has Editor-level permissions by default.
+domain: identity
+severity: high
+compliance:
+  cis_gcp_v3: "4.1"
+  nist_800_53_r5: "AC-6"
+  pci_dss_v4: "7.2.1"
+  soc2: "CC6.1"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Compute Instance Using Default SA — finding detected.
+  action: Create a custom SA with least-privilege roles.
+  example: |
+    {"gcp": {"compute": {"kind": "compute_instance", "instance": {"is_default_sa": false}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.compute.kind
+      op: eq
+      value: compute_instance
+    - field: properties.gcp.compute.instance.is_default_sa
+      op: eq
+      value: true

@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.COMPUTE.NETWORK.DEFAULT.001
+name: Default VPC Network Exists
+description: >
+  Default VPC network not deleted. Includes pre-configured firewall
+  rules allowing SSH and RDP from 0.0.0.0/0.
+domain: exposure
+severity: medium
+compliance:
+  cis_gcp_v3: "3.1"
+  nist_800_53_r5: "CM-6"
+  soc2: "CC6.1"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Default VPC Network Exists — finding detected.
+  action: Delete the default network and create custom networks.
+  example: |
+    {"gcp": {"compute": {"kind": "vpc_network", "network": {"is_default": false}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.compute.kind
+      op: eq
+      value: vpc_network
+    - field: properties.gcp.compute.network.is_default
+      op: eq
+      value: true

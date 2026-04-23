@@ -3,27 +3,27 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1067
-**Pack hash:** `1d6769246a8819475d31efc4697ab3b485941727adf893fbd43f07750be2e329`
+**Total controls:** 1082
+**Pack hash:** `73540ae86e163a043d7a1269964da9ae0827f72380e7a1c1cd66f6006ce0eb59`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 147 |
-| high | 476 |
+| critical | 150 |
+| high | 481 |
 | info | 16 |
 | low | 82 |
-| medium | 346 |
+| medium | 353 |
 
 | Domain | Count |
 |--------|-------|
 | audit | 20 |
 | detection | 9 |
-| encryption | 60 |
-| exposure | 690 |
+| encryption | 62 |
+| exposure | 700 |
 | governance | 24 |
-| identity | 221 |
+| identity | 224 |
 | network | 21 |
 | resilience | 14 |
 | storage | 8 |
@@ -7604,6 +7604,231 @@ Resources containing sensitive data (PHI, PII, confidential) in a specific juris
 Sovereignty assessment requires the cross_border_access_detected field. The extractor could not determine whether the resource is accessible from outside its jurisdiction.
 
 **Remediation:** Re-run the sovereignty extractor with permissions to enumerate IAM principals, their account regions, and resource-based policies for all sensitive resources.
+
+---
+
+### CTL.GCP.COMPUTE.DEFAULTSA.001
+
+**Compute Instance Using Default Service Account**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_gcp_v3: 4.1; nist_800_53_r5: AC-6; pci_dss_v4: 7.2.1; soc2: CC6.1;
+
+Instance runs with the default Compute Engine service account which has Editor-level permissions by default.
+
+**Remediation:** Create a custom SA with least-privilege roles.
+
+---
+
+### CTL.GCP.COMPUTE.ENCRYPT.001
+
+**Compute Disk Not Encrypted with CMEK**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** cis_gcp_v3: 4.7; nist_800_53_r5: SC-28; pci_dss_v4: 3.4; soc2: CC6.1;
+
+Disk uses Google-managed encryption. CMEK via Cloud KMS provides key revocation, custom rotation, and access audit.
+
+**Remediation:** Recreate the disk with a Cloud KMS CMEK.
+
+---
+
+### CTL.GCP.COMPUTE.FIREWALL.ALL.001
+
+**Firewall Rule Allows All Traffic from the Internet**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_gcp_v3: 3.8; hipaa: 164.312(a)(1); nist_800_53_r5: SC-7; pci_dss_v4: 1.3; soc2: CC6.6;
+
+Firewall rule allows all protocols/ports from 0.0.0.0/0. The entire instance is exposed on every port.
+
+**Remediation:** Remove the rule and create specific allow rules.
+
+---
+
+### CTL.GCP.COMPUTE.FIREWALL.RDP.001
+
+**Firewall Rule Allows RDP from the Internet**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_gcp_v3: 3.7; nist_800_53_r5: SC-7; pci_dss_v4: 1.3; soc2: CC6.6;
+
+Firewall rule allows TCP port 3389 from 0.0.0.0/0. RDP directly accessible from any IP on the internet.
+
+**Remediation:** Restrict source ranges to specific IPs or use IAP.
+
+---
+
+### CTL.GCP.COMPUTE.FIREWALL.SSH.001
+
+**Firewall Rule Allows SSH from the Internet**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_gcp_v3: 3.6; hipaa: 164.312(a)(1); nist_800_53_r5: SC-7; pci_dss_v4: 1.3; soc2: CC6.6;
+
+Firewall rule allows TCP port 22 from 0.0.0.0/0. SSH directly accessible from any IP on the internet.
+
+**Remediation:** Restrict source ranges to specific IPs or use IAP for SSH.
+
+---
+
+### CTL.GCP.COMPUTE.FLOWLOGS.001
+
+**VPC Subnet Flow Logs Not Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_gcp_v3: 3.9; hipaa: 164.312(b); nist_800_53_r5: AU-12; pci_dss_v4: 10.2; soc2: CC7.2;
+
+VPC flow logs not enabled on the subnet. Network traffic to and from instances is not recorded for forensic investigation.
+
+**Remediation:** Enable VPC flow logs on the subnet.
+
+---
+
+### CTL.GCP.COMPUTE.IPFORWARD.001
+
+**IP Forwarding Enabled on Instance**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_gcp_v3: 4.6; nist_800_53_r5: CM-6; soc2: CC6.1;
+
+IP forwarding enabled. The instance can forward packets between networks unless intentionally configured as a NAT gateway.
+
+**Remediation:** Disable IP forwarding unless the instance is a network appliance.
+
+---
+
+### CTL.GCP.COMPUTE.NETWORK.DEFAULT.001
+
+**Default VPC Network Exists**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_gcp_v3: 3.1; nist_800_53_r5: CM-6; soc2: CC6.1;
+
+Default VPC network not deleted. Includes pre-configured firewall rules allowing SSH and RDP from 0.0.0.0/0.
+
+**Remediation:** Delete the default network and create custom networks.
+
+---
+
+### CTL.GCP.COMPUTE.OSLOGIN.001
+
+**OS Login Not Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_gcp_v3: 4.4; nist_800_53_r5: IA-2; soc2: CC6.1;
+
+OS Login not enabled. SSH access managed via per-instance metadata keys rather than centralized IAM-based access with 2FA support.
+
+**Remediation:** Enable OS Login at the project or instance level.
+
+---
+
+### CTL.GCP.COMPUTE.PRIVATE.001
+
+**Subnet Without Private Google Access**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_gcp_v3: 3.5; nist_800_53_r5: AC-4; soc2: CC6.6;
+
+Private Google Access not enabled. Instances with only internal IPs cannot reach Google APIs without NAT or external IP.
+
+**Remediation:** Enable Private Google Access on the subnet.
+
+---
+
+### CTL.GCP.COMPUTE.PUBLIC.001
+
+**Compute Instance Has External IP**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_gcp_v3: 4.9; nist_800_53_r5: AC-4; pci_dss_v4: 1.3; soc2: CC6.6;
+
+Instance has a public IP address. Directly reachable from the internet without IAP or VPN.
+
+**Remediation:** Remove external IP and use IAP for SSH access.
+
+---
+
+### CTL.GCP.COMPUTE.SERIALPORT.001
+
+**Serial Port Access Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_gcp_v3: 4.5; nist_800_53_r5: CM-7; soc2: CC6.1;
+
+Interactive serial port access enabled. Provides console-level access bypassing network security controls and SSH authentication.
+
+**Remediation:** Disable serial port access.
+
+---
+
+### CTL.GCP.COMPUTE.SHIELDED.001
+
+**Shielded VM Features Not Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_gcp_v3: 4.8; nist_800_53_r5: SI-7; soc2: CC6.1;
+
+One or more Shielded VM features disabled: Secure Boot, vTPM, or Integrity Monitoring. Boot-level malware persists undetected.
+
+**Remediation:** Enable Secure Boot, vTPM, and Integrity Monitoring.
+
+---
+
+### CTL.GCP.COMPUTE.SSHKEYS.001
+
+**Project-Wide SSH Keys Not Blocked**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_gcp_v3: 4.3; nist_800_53_r5: AC-6; soc2: CC6.1;
+
+Instance does not block project-wide SSH keys. Any SSH key added at the project level grants access to this instance.
+
+**Remediation:** Block project-wide SSH keys and use OS Login or per-instance keys.
+
+---
+
+### CTL.GCP.COMPUTE.SSL.001
+
+**SSL Policy Allows TLS Below 1.2**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** cis_gcp_v3: 3.10; nist_800_53_r5: SC-8; pci_dss_v4: 4.1; soc2: CC6.1;
+
+SSL policy allows TLS 1.0 or 1.1 with known vulnerabilities (BEAST, POODLE, CRIME).
+
+**Remediation:** Set minimum TLS version to 1.2.
 
 ---
 

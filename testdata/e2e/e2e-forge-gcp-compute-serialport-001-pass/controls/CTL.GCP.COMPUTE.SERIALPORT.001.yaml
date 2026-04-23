@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.COMPUTE.SERIALPORT.001
+name: Serial Port Access Enabled
+description: >
+  Interactive serial port access enabled. Provides console-level
+  access bypassing network security controls and SSH authentication.
+domain: exposure
+severity: medium
+compliance:
+  cis_gcp_v3: "4.5"
+  nist_800_53_r5: "CM-7"
+  soc2: "CC6.1"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Serial Port Access Enabled — finding detected.
+  action: Disable serial port access.
+  example: |
+    {"gcp": {"compute": {"kind": "compute_instance", "instance": {"serial_port_enabled": false}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.compute.kind
+      op: eq
+      value: compute_instance
+    - field: properties.gcp.compute.instance.serial_port_enabled
+      op: eq
+      value: true

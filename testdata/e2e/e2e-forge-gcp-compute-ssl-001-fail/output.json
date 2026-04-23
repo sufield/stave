@@ -1,0 +1,326 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-15T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "107435bb8e0a56d27e0d663c05d53fc27714b8a33ccec799abd01351696f47a8",
+        "2026-01-11T000000Z.json": "9f9086147e705728ca5a162ba5dd510086235b0d591df7175993d47b367411b0"
+      },
+      "overall": "d91c56ec877553ad086f5dc2c139b4b24f7d30744f2d6febbc5dbd7ea3ce77ad"
+    },
+    "policy_fingerprint": "ece210743edcbad3b56a473ea69105706318b46916c2df7ffae70de414924232",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.GCP.COMPUTE.SSL.001",
+      "asset_id": "ssl-compat",
+      "asset_type": "gcp_compute_ssl_policy",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -168,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:a6359a9188128687",
+      "control_id": "CTL.GCP.COMPUTE.SSL.001",
+      "control_name": "SSL Policy Allows TLS Below 1.2",
+      "control_description": "SSL policy allows TLS 1.0 or 1.1 with known vulnerabilities (BEAST, POODLE, CRIME).\n",
+      "asset_id": "ssl-compat",
+      "asset_type": "gcp_compute_ssl_policy",
+      "asset_vendor": "gcp",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 336,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "gcp.compute.kind",
+            "actual_value": "ssl_policy",
+            "operator": "eq",
+            "unsafe_value": "ssl_policy"
+          },
+          {
+            "property": "gcp.compute.ssl.min_tls_version",
+            "actual_value": "TLS_1_0",
+            "operator": "lt",
+            "unsafe_value": "TLS_1_2"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 336 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_gcp_v3": "3.10",
+        "nist_800_53_r5": "SC-8",
+        "pci_dss_v4": "4.1",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "SSL Policy Allows TLS Below 1.2 — finding detected.",
+        "action": "Set minimum TLS version to 1.2.",
+        "example": "{\"gcp\": {\"compute\": {\"kind\": \"ssl_policy\", \"ssl\": {\"min_tls_version\": \"TLS_1_2\"}}}}\n"
+      },
+      "fix_plan": {
+        "id": "fix-583b39ab4acd01ed",
+        "target": {
+          "asset_id": "ssl-compat",
+          "asset_type": "gcp_compute_ssl_policy"
+        },
+        "action": "Set minimum TLS version to 1.2."
+      },
+      "exposure_score": 75,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "gcp.compute.kind eq \"ssl_policy\"",
+          "observation_key": "gcp.compute.kind",
+          "operator": "eq",
+          "expected_value": "ssl_policy",
+          "observed_value": "ssl_policy"
+        },
+        {
+          "predicate_expr": "gcp.compute.ssl.min_tls_version lt \"TLS_1_2\"",
+          "observation_key": "gcp.compute.ssl.min_tls_version",
+          "operator": "lt",
+          "expected_value": "TLS_1_2",
+          "observed_value": "TLS_1_0"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "ssl-compat",
+          "type": "gcp_compute_ssl_policy",
+          "vendor": "gcp"
+        },
+        "violation": {
+          "control_id": "CTL.GCP.COMPUTE.SSL.001",
+          "control_name": "SSL Policy Allows TLS Below 1.2",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "gcp.compute.kind = \"ssl_policy\"",
+              "observation_key": "gcp.compute.kind",
+              "observed_value": "ssl_policy"
+            },
+            {
+              "clause": "gcp.compute.ssl.min_tls_version be less than \"TLS_1_2\" (observed: \"TLS_1_0\")",
+              "observation_key": "gcp.compute.ssl.min_tls_version",
+              "observed_value": "TLS_1_0"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "gcp.compute.kind",
+            "current_value": "ssl_policy",
+            "has_safe_default": false,
+            "description": "Change gcp.compute.kind from ssl_policy"
+          },
+          {
+            "path": "gcp.compute.ssl.min_tls_version",
+            "current_value": "TLS_1_0",
+            "has_safe_default": false,
+            "description": "Change gcp.compute.ssl.min_tls_version from TLS_1_0"
+          }
+        ],
+        "action": "Set minimum TLS version to 1.2."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "gcp"
+      ],
+      "delta": [
+        {
+          "property_label": "compute SSL min TLS version",
+          "property_path": "gcp.compute.ssl.min_tls_version",
+          "current_value": "TLS_1_0",
+          "fix_action": "increase to TLS_1_2 or above"
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:84bf644fcea0a0f7",
+      "asset_id": "ssl-compat",
+      "shared_keys": [
+        "gcp.compute",
+        "gcp.compute.kind",
+        "gcp.compute.ssl",
+        "gcp.compute.ssl.min_tls_version"
+      ],
+      "headline_finding_id": "sha256:a6359a9188128687",
+      "member_finding_ids": [
+        "sha256:a6359a9188128687"
+      ],
+      "consolidated_score": 75,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "ssl-compat",
+      "asset_type": "gcp_compute_ssl_policy",
+      "fix_plan": {
+        "id": "fix-583b39ab4acd01ed",
+        "target": {
+          "asset_id": "ssl-compat",
+          "asset_type": "gcp_compute_ssl_policy"
+        },
+        "action": "Set minimum TLS version to 1.2."
+      },
+      "contributing_controls": [
+        "CTL.GCP.COMPUTE.SSL.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.GCP.COMPUTE.SSL.001",
+      "asset_id": "ssl-compat",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-gcp-compute-ssl-001-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-gcp-compute-ssl-001-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "54e3939788c59440bd046159fccd0aa9bd03518c",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-gcp-compute-ssl-001-fail/controls/"
+      ]
+    }
+  }
+}

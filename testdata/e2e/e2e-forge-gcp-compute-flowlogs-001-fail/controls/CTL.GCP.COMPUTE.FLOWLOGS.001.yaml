@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.COMPUTE.FLOWLOGS.001
+name: VPC Subnet Flow Logs Not Enabled
+description: >
+  VPC flow logs not enabled on the subnet. Network traffic to and
+  from instances is not recorded for forensic investigation.
+domain: exposure
+severity: high
+compliance:
+  cis_gcp_v3: "3.9"
+  nist_800_53_r5: "AU-12"
+  hipaa: "164.312(b)"
+  pci_dss_v4: "10.2"
+  soc2: "CC7.2"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: VPC Subnet Flow Logs Not Enabled — finding detected.
+  action: Enable VPC flow logs on the subnet.
+  example: |
+    {"gcp": {"compute": {"kind": "subnet", "subnet": {"flow_logs_enabled": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.compute.kind
+      op: eq
+      value: subnet
+    - field: properties.gcp.compute.subnet.flow_logs_enabled
+      op: eq
+      value: false

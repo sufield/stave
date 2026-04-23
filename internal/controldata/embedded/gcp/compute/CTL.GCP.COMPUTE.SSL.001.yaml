@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.COMPUTE.SSL.001
+name: SSL Policy Allows TLS Below 1.2
+description: >
+  SSL policy allows TLS 1.0 or 1.1 with known vulnerabilities
+  (BEAST, POODLE, CRIME).
+domain: encryption
+severity: high
+compliance:
+  cis_gcp_v3: "3.10"
+  nist_800_53_r5: "SC-8"
+  pci_dss_v4: "4.1"
+  soc2: "CC6.1"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: SSL Policy Allows TLS Below 1.2 — finding detected.
+  action: Set minimum TLS version to 1.2.
+  example: |
+    {"gcp": {"compute": {"kind": "ssl_policy", "ssl": {"min_tls_version": "TLS_1_2"}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.compute.kind
+      op: eq
+      value: ssl_policy
+    - field: properties.gcp.compute.ssl.min_tls_version
+      op: lt
+      value: "TLS_1_2"
