@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.STORAGE.SOFTDELETE.001
+name: Azure Storage Must Have Soft Delete Enabled
+description: >
+  Azure Storage accounts must enable soft delete for blobs to protect
+  against accidental or malicious deletion. Without soft delete,
+  deleted data is immediately and permanently lost.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "CP-9"
+  soc2: "A1.1"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - azure
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: Azure Storage soft delete is disabled.
+  action: Enable blob soft delete with a retention period of at least 7 days.
+  example: |
+    {"azure": {"storage": {"kind": "azure_blob_storage", "soft_delete": {"enabled": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.storage.kind
+      op: eq
+      value: azure_blob_storage
+    - field: properties.azure.storage.soft_delete.enabled
+      op: eq
+      value: false

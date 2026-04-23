@@ -13,6 +13,6 @@ controls:
 escalation_threshold: 3
 compound_severity: critical
 preconditions:
-  - public_internet_access
+  - internet_access
 postconditions:
   - cdn_bypass_data_access

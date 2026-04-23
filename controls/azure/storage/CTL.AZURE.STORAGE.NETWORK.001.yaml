@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.STORAGE.NETWORK.001
+name: Azure Storage Must Restrict Network Access
+description: >
+  Azure Storage accounts must set the default network action to Deny,
+  allowing access only from specified VNets and IP ranges. Default
+  Allow exposes the storage account to all Azure and internet traffic.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03"]
+scope_tags:
+  - azure
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Azure Storage default network action is Allow.
+  action: Set networkRuleSet.defaultAction to Deny and add VNet/IP rules.
+  example: |
+    {"azure": {"storage": {"kind": "azure_blob_storage", "network": {"default_action_deny": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.storage.kind
+      op: eq
+      value: azure_blob_storage
+    - field: properties.azure.storage.network.default_action_deny
+      op: eq
+      value: false

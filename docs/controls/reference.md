@@ -3,25 +3,25 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 908
-**Pack hash:** `bd83f6c7f06f20cc308d031467138c42c225898ef6ef1907927bb0f1cbb8293d`
+**Total controls:** 915
+**Pack hash:** `531fbcc7ca54f7aa103fd2fa48539b03381b350623d260449825c8cb0c0652f2`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 137 |
-| high | 403 |
+| critical | 138 |
+| high | 406 |
 | info | 16 |
 | low | 77 |
-| medium | 275 |
+| medium | 278 |
 
 | Domain | Count |
 |--------|-------|
 | audit | 20 |
 | detection | 6 |
-| encryption | 35 |
-| exposure | 601 |
+| encryption | 38 |
+| exposure | 605 |
 | governance | 23 |
 | identity | 180 |
 | network | 21 |
@@ -985,6 +985,111 @@ The observation snapshot is missing required Auto Scaling properties.
 Auto Scaling groups must be configured across multiple AZs. A single-AZ ASG has a single point of failure during AZ outages.
 
 **Remediation:** Update the ASG: aws autoscaling update-auto-scaling-group --auto-scaling-group-name <name> --availability-zones us-east-1a us-east-1b
+
+---
+
+### CTL.AZURE.STORAGE.ENCRYPT.001
+
+**Azure Storage Must Use Customer-Managed Key for Encryption**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** nist_800_53_r5: SC-28; soc2: CC6.7;
+
+Azure Storage accounts must use a customer-managed key (CMK) from Azure Key Vault for encryption at rest. Microsoft-managed keys provide no revocation capability and no access audit trail.
+
+**Remediation:** Configure customer-managed key from Azure Key Vault.
+
+---
+
+### CTL.AZURE.STORAGE.HTTPS.001
+
+**Azure Storage Must Require HTTPS**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** nist_800_53_r5: SC-8; soc2: CC6.7;
+
+Azure Storage accounts must enforce HTTPS-only access. Allowing HTTP exposes data in transit to interception.
+
+**Remediation:** Set supportsHttpsTrafficOnly to true.
+
+---
+
+### CTL.AZURE.STORAGE.LOG.001
+
+**Azure Storage Must Have Diagnostic Logging Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AU-2; soc2: CC7.1;
+
+Azure Storage accounts must have diagnostic logging enabled for read, write, and delete operations. Without logging, data access patterns are invisible.
+
+**Remediation:** Enable diagnostic logging for read, write, and delete operations.
+
+---
+
+### CTL.AZURE.STORAGE.NETWORK.001
+
+**Azure Storage Must Restrict Network Access**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+Azure Storage accounts must set the default network action to Deny, allowing access only from specified VNets and IP ranges. Default Allow exposes the storage account to all Azure and internet traffic.
+
+**Remediation:** Set networkRuleSet.defaultAction to Deny and add VNet/IP rules.
+
+---
+
+### CTL.AZURE.STORAGE.PUBLIC.001
+
+**Azure Storage Account Must Not Allow Public Blob Access**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+Azure Storage accounts must have AllowBlobPublicAccess disabled. When enabled, individual containers can be set to public access, exposing blobs to unauthenticated internet access.
+
+**Remediation:** Set AllowBlobPublicAccess to false on the storage account.
+
+---
+
+### CTL.AZURE.STORAGE.SOFTDELETE.001
+
+**Azure Storage Must Have Soft Delete Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CP-9; soc2: A1.1;
+
+Azure Storage accounts must enable soft delete for blobs to protect against accidental or malicious deletion. Without soft delete, deleted data is immediately and permanently lost.
+
+**Remediation:** Enable blob soft delete with a retention period of at least 7 days.
+
+---
+
+### CTL.AZURE.STORAGE.TLS.001
+
+**Azure Storage Must Enforce TLS 1.2 Minimum**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** nist_800_53_r5: SC-8; soc2: CC6.7;
+
+Azure Storage accounts must set the minimum TLS version to 1.2. Older TLS versions have known vulnerabilities.
+
+**Remediation:** Set minimumTlsVersion to TLS1_2.
 
 ---
 

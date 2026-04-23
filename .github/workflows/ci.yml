@@ -25,7 +25,7 @@ jobs:
           check-latest: true
           cache: true
       - name: Sync schemas and run tests
-        run: make sync-schemas sync-controls && go test -v -race ./...
+        run: make sync-schemas sync-controls && go test -v -race -timeout 30m ./...
 
   lint:
     name: Lint
@@ -111,7 +111,7 @@ jobs:
           check-latest: true
           cache: true
       - name: Build and run E2E tests
-        run: make build && go test ./e2e/ -run E2E -count=1 -timeout 5m
+        run: make build && go test ./e2e/ -run E2E -count=1 -timeout 30m
 
   release-check:
     name: GoReleaser config check

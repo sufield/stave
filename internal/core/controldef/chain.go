@@ -70,6 +70,12 @@ var ValidCapabilities = map[string]bool{
 	"cloudtrail_data_access":    true,
 	"data_destruction":          true,
 	"audit_trail_destroyed":     true,
+	"cdn_bypass_data_access":    true,
+	"data_access":               true,
+	"database_compromise":       true,
+	"data_warehouse_compromise": true,
+	"invisible_data_exfiltration": true,
+	"vpc_instance_compromise":   true,
 }
 
 // IsValidCapability returns true if the capability string is in the closed vocabulary.

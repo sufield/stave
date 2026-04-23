@@ -1,0 +1,10 @@
+family: CTL.AZURE.STORAGE
+infection: >
+  A misconfigured Azure Storage account exposes blob data to
+  unauthorized access. Storage accounts hold application data,
+  backups, logs, and uploaded content. Public blob access, weak
+  network rules, or missing encryption expose data to any internet
+  client or any Azure service in the same region.
+failure: >
+  Storage data exposure. An attacker accesses blob data through
+  public endpoints, weak network rules, or unencrypted channels.

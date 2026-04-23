@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.STORAGE.ENCRYPT.001
+name: Azure Storage Must Use Customer-Managed Key for Encryption
+description: >
+  Azure Storage accounts must use a customer-managed key (CMK) from
+  Azure Key Vault for encryption at rest. Microsoft-managed keys
+  provide no revocation capability and no access audit trail.
+domain: encryption
+severity: high
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.7"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - azure
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: Azure Storage uses Microsoft-managed encryption key.
+  action: Configure customer-managed key from Azure Key Vault.
+  example: |
+    {"azure": {"storage": {"kind": "azure_blob_storage", "encryption": {"key_source": "Microsoft.Keyvault"}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.storage.kind
+      op: eq
+      value: azure_blob_storage
+    - field: properties.azure.storage.encryption.uses_cmk
+      op: eq
+      value: false

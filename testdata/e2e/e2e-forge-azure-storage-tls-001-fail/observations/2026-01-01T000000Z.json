@@ -1,0 +1,20 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "subscriptions/abc-123/resourceGroups/rg-prod/providers/Microsoft.Storage/storageAccounts/proddata",
+      "type": "azure_storage_account",
+      "vendor": "azure",
+      "properties": {
+        "azure": {
+          "storage": {
+            "kind": "azure_blob_storage",
+            "tls_minimum_version_met": false
+          }
+        }
+      }
+    }
+  ]
+}

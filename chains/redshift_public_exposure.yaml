@@ -11,6 +11,6 @@ controls:
 escalation_threshold: 3
 compound_severity: critical
 preconditions:
-  - public_internet_access
+  - internet_access
 postconditions:
   - data_warehouse_compromise

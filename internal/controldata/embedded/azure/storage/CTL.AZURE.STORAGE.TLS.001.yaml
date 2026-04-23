@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.STORAGE.TLS.001
+name: Azure Storage Must Enforce TLS 1.2 Minimum
+description: >
+  Azure Storage accounts must set the minimum TLS version to 1.2.
+  Older TLS versions have known vulnerabilities.
+domain: encryption
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-8"
+  soc2: "CC6.7"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - azure
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: collection
+remediation:
+  description: Azure Storage allows TLS versions below 1.2.
+  action: Set minimumTlsVersion to TLS1_2.
+  example: |
+    {"azure": {"storage": {"kind": "azure_blob_storage", "tls_minimum_version_met": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.storage.kind
+      op: eq
+      value: azure_blob_storage
+    - field: properties.azure.storage.tls_minimum_version_met
+      op: eq
+      value: false

@@ -435,13 +435,23 @@
         },
         "action": "Update the trail to enable multi-region logging. Run: aws cloudtrail update-trail --name xxx --is-multi-region-trail"
       },
-      "exposure_score": 250,
+      "chain_membership": [
+        {
+          "chain_id": "detection_blindness",
+          "chain_severity": "critical",
+          "stage_span": [
+            "detection_evasion"
+          ],
+          "narrative": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n"
+        }
+      ],
+      "exposure_score": 375,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 2.5,
         "exposure_multiplier": 1,
-        "chain_bonus": 1,
+        "chain_bonus": 1.5,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -584,13 +594,23 @@
         },
         "action": "Enable the Config recorder with all resource types. Run: aws configservice put-configuration-recorder --configuration-recorder name=default,roleARN=arn:...,recordingGroup={allSupported=true}"
       },
-      "exposure_score": 187.5,
+      "chain_membership": [
+        {
+          "chain_id": "detection_blindness",
+          "chain_severity": "critical",
+          "stage_span": [
+            "detection_evasion"
+          ],
+          "narrative": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n"
+        }
+      ],
+      "exposure_score": 281.25,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 2.5,
         "exposure_multiplier": 1,
-        "chain_bonus": 1,
+        "chain_bonus": 1.5,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -727,13 +747,23 @@
         },
         "action": "Enable VPC flow logs to CloudWatch Logs or S3. Run: aws ec2 create-flow-logs --resource-type VPC --resource-ids vpc-xxx --traffic-type ALL --log-destination-type cloud-watch-logs"
       },
-      "exposure_score": 150,
+      "chain_membership": [
+        {
+          "chain_id": "detection_blindness",
+          "chain_severity": "critical",
+          "stage_span": [
+            "detection_evasion"
+          ],
+          "narrative": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n"
+        }
+      ],
+      "exposure_score": 225,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 2,
         "exposure_multiplier": 1,
-        "chain_bonus": 1,
+        "chain_bonus": 1.5,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -872,13 +902,23 @@
         },
         "action": "Delete the root access keys. Create IAM users or roles with least-privilege policies for programmatic access."
       },
-      "exposure_score": 100,
+      "chain_membership": [
+        {
+          "chain_id": "root_compromise_path",
+          "chain_severity": "critical",
+          "stage_span": [
+            "credential_access"
+          ],
+          "narrative": "Root account lacks fundamental protections. Without MFA, with active access keys, and with admin policies attached — a single credential theft gives unrestricted account control. This is the highest-impact identity chain.\n"
+        }
+      ],
+      "exposure_score": 150,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
-        "chain_bonus": 1,
+        "chain_bonus": 1.5,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -1029,13 +1069,23 @@
         },
         "action": "Enable MFA on the root account using a hardware MFA device or virtual MFA app. Navigate to IAM \u003e Security credentials \u003e MFA."
       },
-      "exposure_score": 100,
+      "chain_membership": [
+        {
+          "chain_id": "root_compromise_path",
+          "chain_severity": "critical",
+          "stage_span": [
+            "credential_access"
+          ],
+          "narrative": "Root account lacks fundamental protections. Without MFA, with active access keys, and with admin policies attached — a single credential theft gives unrestricted account control. This is the highest-impact identity chain.\n"
+        }
+      ],
+      "exposure_score": 150,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
-        "chain_bonus": 1,
+        "chain_bonus": 1.5,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -1211,13 +1261,24 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Modify the instance to disable public accessibility. Run: aws rds modify-db-instance --db-instance-identifier xxx --no-publicly-accessible --apply-immediately"
       },
-      "exposure_score": 100,
+      "chain_membership": [
+        {
+          "chain_id": "eol_database_phi_exposure",
+          "chain_severity": "critical",
+          "stage_span": [
+            "initial_access",
+            "exfiltration"
+          ],
+          "narrative": "RDS instance is running an EOL database engine with no security patches available. The instance is either unencrypted, publicly accessible, or both. An unpatched database engine with known CVEs is exposed through the public network or unencrypted storage. For PHI workloads this constitutes a direct compliance failure across multiple requirements.\n"
+        }
+      ],
+      "exposure_score": 150,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
-        "chain_bonus": 1,
+        "chain_bonus": 1.5,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -1290,6 +1351,164 @@
           "property_path": "database.access.publicly_accessible",
           "current_value": "true",
           "fix_action": "set to false (disable)"
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:9ac53f47bd4f1f1b",
+      "control_id": "CTL.RDS.ENCRYPT.001",
+      "control_name": "RDS Storage Encryption Must Be Enabled",
+      "control_description": "RDS instances must have storage encryption enabled. Unencrypted database storage exposes data at rest to unauthorized access if the underlying storage is compromised.\n",
+      "asset_id": "phi-database",
+      "asset_type": "aws_rds_instance",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
+        "unsafe_duration_hours": 120,
+        "misconfigurations": [
+          {
+            "property": "database.encryption.storage_encrypted",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "database.kind",
+            "actual_value": "instance",
+            "operator": "eq",
+            "unsafe_value": "instance"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_aws_v1.4.0": "2.3.1",
+        "cis_aws_v3.0": "2.3.1",
+        "fedramp_moderate": "SC-28",
+        "ffiec": "ISH-4",
+        "gdpr": "Art.32",
+        "hipaa": "164.312(a)(2)(iv)",
+        "iso_27001_2022": "A.8.24",
+        "nist_800_53_r5": "SC-28",
+        "nist_csf_2.0": "PR.DS",
+        "pci_dss_v4.0": "3.4.1",
+        "soc2": "CC6.7"
+      },
+      "control_compliance_ccm_v4": [
+        "CEK-03"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "RDS instance does not have storage encryption enabled. Database contents are stored in plaintext on the underlying EBS volumes.",
+        "action": "Storage encryption can only be enabled at creation time. Create a snapshot, copy it with encryption enabled, then restore to a new encrypted instance. Enable encryption by default for new instances.",
+        "example": "{\n  \"database\": {\n    \"kind\": \"instance\",\n    \"encryption\": {\n      \"storage_encrypted\": true\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-4233e63a00340e1b",
+        "target": {
+          "asset_id": "phi-database",
+          "asset_type": "aws_rds_instance"
+        },
+        "action": "Storage encryption can only be enabled at creation time. Create a snapshot, copy it with encryption enabled, then restore to a new encrypted instance. Enable encryption by default for new instances."
+      },
+      "chain_membership": [
+        {
+          "chain_id": "eol_database_phi_exposure",
+          "chain_severity": "critical",
+          "stage_span": [
+            "initial_access",
+            "exfiltration"
+          ],
+          "narrative": "RDS instance is running an EOL database engine with no security patches available. The instance is either unencrypted, publicly accessible, or both. An unpatched database engine with known CVEs is exposed through the public network or unencrypted storage. For PHI workloads this constitutes a direct compliance failure across multiple requirements.\n"
+        }
+      ],
+      "exposure_score": 112.5,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1.5,
+        "days_blind": 5
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "database.encryption.storage_encrypted eq false",
+          "observation_key": "database.encryption.storage_encrypted",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "database.kind eq \"instance\"",
+          "observation_key": "database.kind",
+          "operator": "eq",
+          "expected_value": "instance",
+          "observed_value": "instance"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "phi-database",
+          "type": "aws_rds_instance",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.RDS.ENCRYPT.001",
+          "control_name": "RDS Storage Encryption Must Be Enabled",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "storage-at-rest encryption is enabled on the database = false",
+              "observation_key": "database.encryption.storage_encrypted",
+              "observed_value": false
+            },
+            {
+              "clause": "database.kind = \"instance\"",
+              "observation_key": "database.kind",
+              "observed_value": "instance"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "database.encryption.storage_encrypted",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set database.encryption.storage_encrypted to true"
+          },
+          {
+            "path": "database.kind",
+            "current_value": "instance",
+            "has_safe_default": false,
+            "description": "Change database.kind from instance"
+          }
+        ],
+        "action": "Storage encryption can only be enabled at creation time. Create a snapshot, copy it with encryption enabled, then restore to a new encrypted instance. Enable encryption by default for new instances."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "rds"
+      ],
+      "defect": "Database encryption at rest is not enabled.",
+      "infection": "RDS misconfigurations expose database instances, snapshots, or credentials. Public accessibility, missing encryption at rest, absent automated backups, or unencrypted snapshots allow attackers to connect directly, read data from snapshots, or exploit database vulnerabilities from the internet.\n",
+      "failure": "Database exposure. RDS instances, their data, or their snapshots are accessible to unauthorized parties, enabling data theft or database compromise.\n",
+      "delta": [
+        {
+          "property_label": "database encryption at rest",
+          "property_path": "database.encryption.storage_encrypted",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
         }
       ]
     },
@@ -3275,153 +3494,6 @@
       ]
     },
     {
-      "finding_id": "sha256:9ac53f47bd4f1f1b",
-      "control_id": "CTL.RDS.ENCRYPT.001",
-      "control_name": "RDS Storage Encryption Must Be Enabled",
-      "control_description": "RDS instances must have storage encryption enabled. Unencrypted database storage exposes data at rest to unauthorized access if the underlying storage is compromised.\n",
-      "asset_id": "phi-database",
-      "asset_type": "aws_rds_instance",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2026-01-10T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
-        "unsafe_duration_hours": 120,
-        "misconfigurations": [
-          {
-            "property": "database.encryption.storage_encrypted",
-            "actual_value": false,
-            "operator": "eq",
-            "unsafe_value": false
-          },
-          {
-            "property": "database.kind",
-            "actual_value": "instance",
-            "operator": "eq",
-            "unsafe_value": "instance"
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
-      },
-      "control_severity": "high",
-      "control_compliance": {
-        "cis_aws_v1.4.0": "2.3.1",
-        "cis_aws_v3.0": "2.3.1",
-        "fedramp_moderate": "SC-28",
-        "ffiec": "ISH-4",
-        "gdpr": "Art.32",
-        "hipaa": "164.312(a)(2)(iv)",
-        "iso_27001_2022": "A.8.24",
-        "nist_800_53_r5": "SC-28",
-        "nist_csf_2.0": "PR.DS",
-        "pci_dss_v4.0": "3.4.1",
-        "soc2": "CC6.7"
-      },
-      "control_compliance_ccm_v4": [
-        "CEK-03"
-      ],
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "RDS instance does not have storage encryption enabled. Database contents are stored in plaintext on the underlying EBS volumes.",
-        "action": "Storage encryption can only be enabled at creation time. Create a snapshot, copy it with encryption enabled, then restore to a new encrypted instance. Enable encryption by default for new instances.",
-        "example": "{\n  \"database\": {\n    \"kind\": \"instance\",\n    \"encryption\": {\n      \"storage_encrypted\": true\n    }\n  }\n}\n"
-      },
-      "fix_plan": {
-        "id": "fix-4233e63a00340e1b",
-        "target": {
-          "asset_id": "phi-database",
-          "asset_type": "aws_rds_instance"
-        },
-        "action": "Storage encryption can only be enabled at creation time. Create a snapshot, copy it with encryption enabled, then restore to a new encrypted instance. Enable encryption by default for new instances."
-      },
-      "exposure_score": 75,
-      "score_breakdown": {
-        "base_score": 75,
-        "duration_factor": 1,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 1,
-        "chain_bonus": 1,
-        "days_blind": 5
-      },
-      "reasoning_trace": [
-        {
-          "predicate_expr": "database.encryption.storage_encrypted eq false",
-          "observation_key": "database.encryption.storage_encrypted",
-          "operator": "eq",
-          "expected_value": false,
-          "observed_value": false
-        },
-        {
-          "predicate_expr": "database.kind eq \"instance\"",
-          "observation_key": "database.kind",
-          "operator": "eq",
-          "expected_value": "instance",
-          "observed_value": "instance"
-        }
-      ],
-      "remediation_context": {
-        "asset": {
-          "id": "phi-database",
-          "type": "aws_rds_instance",
-          "vendor": "aws"
-        },
-        "violation": {
-          "control_id": "CTL.RDS.ENCRYPT.001",
-          "control_name": "RDS Storage Encryption Must Be Enabled",
-          "severity": "high",
-          "reasoning": [
-            {
-              "clause": "storage-at-rest encryption is enabled on the database = false",
-              "observation_key": "database.encryption.storage_encrypted",
-              "observed_value": false
-            },
-            {
-              "clause": "database.kind = \"instance\"",
-              "observation_key": "database.kind",
-              "observed_value": "instance"
-            }
-          ]
-        },
-        "changes": [
-          {
-            "path": "database.encryption.storage_encrypted",
-            "current_value": "false",
-            "required_value": "true",
-            "has_safe_default": true,
-            "description": "Set database.encryption.storage_encrypted to true"
-          },
-          {
-            "path": "database.kind",
-            "current_value": "instance",
-            "has_safe_default": false,
-            "description": "Change database.kind from instance"
-          }
-        ],
-        "action": "Storage encryption can only be enabled at creation time. Create a snapshot, copy it with encryption enabled, then restore to a new encrypted instance. Enable encryption by default for new instances."
-      },
-      "classification": "state_assertion",
-      "scope_tags": [
-        "aws",
-        "rds"
-      ],
-      "defect": "Database encryption at rest is not enabled.",
-      "infection": "RDS misconfigurations expose database instances, snapshots, or credentials. Public accessibility, missing encryption at rest, absent automated backups, or unencrypted snapshots allow attackers to connect directly, read data from snapshots, or exploit database vulnerabilities from the internet.\n",
-      "failure": "Database exposure. RDS instances, their data, or their snapshots are accessible to unauthorized parties, enabling data theft or database compromise.\n",
-      "delta": [
-        {
-          "property_label": "database encryption at rest",
-          "property_path": "database.encryption.storage_encrypted",
-          "current_value": "false",
-          "fix_action": "set to true (enable)"
-        }
-      ]
-    },
-    {
       "finding_id": "sha256:4faec0c040d11d18",
       "control_id": "CTL.SECRETSMANAGER.ENCRYPT.001",
       "control_name": "Secrets Must Be Encrypted with Customer-Managed KMS Key",
@@ -4907,6 +4979,62 @@
       ]
     }
   ],
+  "chain_findings": [
+    {
+      "chain": "detection_blindness",
+      "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n",
+      "controls_failing": [
+        "CTL.CLOUDTRAIL.ENABLED.001",
+        "CTL.CONFIG.ENABLED.001",
+        "CTL.VPC.FLOWLOG.001"
+      ],
+      "missing_safeguards": [
+        "CTL.GUARDDUTY.ENABLED.001"
+      ],
+      "compound_score": 100,
+      "severity": "critical",
+      "narrative": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n Failing: CTL.CLOUDTRAIL.ENABLED.001, CTL.CONFIG.ENABLED.001, CTL.VPC.FLOWLOG.001.",
+      "attack_stages": [
+        "detection_evasion"
+      ]
+    },
+    {
+      "chain": "eol_database_phi_exposure",
+      "description": "RDS instance is running an EOL database engine with no security patches available. The instance is either unencrypted, publicly accessible, or both. An unpatched database engine with known CVEs is exposed through the public network or unencrypted storage. For PHI workloads this constitutes a direct compliance failure across multiple requirements.\n",
+      "controls_failing": [
+        "CTL.RDS.ENCRYPT.001",
+        "CTL.RDS.PUBLIC.001"
+      ],
+      "missing_safeguards": [
+        "CTL.RDS.ENGINE.EOL.001"
+      ],
+      "compound_score": 100,
+      "severity": "critical",
+      "narrative": "RDS instance is running an EOL database engine with no security patches available. The instance is either unencrypted, publicly accessible, or both. An unpatched database engine with known CVEs is exposed through the public network or unencrypted storage. For PHI workloads this constitutes a direct compliance failure across multiple requirements.\n Failing: CTL.RDS.ENCRYPT.001, CTL.RDS.PUBLIC.001.",
+      "attack_stages": [
+        "exfiltration",
+        "initial_access"
+      ]
+    },
+    {
+      "chain": "root_compromise_path",
+      "description": "Root account lacks fundamental protections. Without MFA, with active access keys, and with admin policies attached — a single credential theft gives unrestricted account control. This is the highest-impact identity chain.\n",
+      "controls_failing": [
+        "CTL.IAM.ROOT.MFA.001",
+        "CTL.IAM.ROOT.ACCESSKEY.001"
+      ],
+      "missing_safeguards": [
+        "CTL.IAM.POLICY.ADMIN.001",
+        "CTL.IAM.ROOT.HWMFA.001"
+      ],
+      "compound_score": 100,
+      "severity": "critical",
+      "narrative": "Root account lacks fundamental protections. Without MFA, with active access keys, and with admin policies attached — a single credential theft gives unrestricted account control. This is the highest-impact identity chain.\n Failing: CTL.IAM.ROOT.MFA.001, CTL.IAM.ROOT.ACCESSKEY.001.",
+      "attack_stages": [
+        "credential_access"
+      ]
+    }
+  ],
   "issues": [
     {
       "issue_id": "sha256:fdc3b4aaddddd41b",
@@ -4924,7 +5052,7 @@
         "sha256:4b8c49734af61142",
         "sha256:f237d540e872de4d"
       ],
-      "consolidated_score": 250,
+      "consolidated_score": 375,
       "consolidated_blast_radius": 2.5
     },
     {
@@ -4940,7 +5068,7 @@
         "sha256:aa66250e8a1dc01c",
         "sha256:c2ed914d02c8ae20"
       ],
-      "consolidated_score": 187.5,
+      "consolidated_score": 281.25,
       "consolidated_blast_radius": 2.5
     },
     {
@@ -4955,7 +5083,7 @@
       "member_finding_ids": [
         "sha256:81f43f35236b5e56"
       ],
-      "consolidated_score": 150,
+      "consolidated_score": 225,
       "consolidated_blast_radius": 2
     },
     {
@@ -4971,7 +5099,7 @@
         "sha256:686a676fcb4f9731",
         "sha256:d1659912ae8d6344"
       ],
-      "consolidated_score": 100,
+      "consolidated_score": 150,
       "consolidated_blast_radius": 1
     },
     {
@@ -4997,7 +5125,7 @@
         "sha256:c215d91c260588c6",
         "sha256:d3c473c720840e6d"
       ],
-      "consolidated_score": 100,
+      "consolidated_score": 150,
       "consolidated_blast_radius": 1
     },
     {
@@ -5504,7 +5632,7 @@
           "asset_id": "phi-database",
           "asset_type": "aws_rds_instance"
         },
-        "action": "Enable automated backups with at least 7 days retention. Run: aws rds modify-db-instance --db-instance-identifier xxx --backup-retention-period 7 --apply-immediately"
+        "action": "Storage encryption can only be enabled at creation time. Create a snapshot, copy it with encryption enabled, then restore to a new encrypted instance. Enable encryption by default for new instances."
       },
       "contributing_controls": [
         "CTL.RDS.BACKUP.001",
@@ -5627,13 +5755,13 @@
       "finding_index": 4,
       "control_id": "CTL.CLOUDTRAIL.ENABLED.001",
       "asset_id": "main-trail",
-      "exposure_score": 250,
+      "exposure_score": 375,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 2.5,
         "exposure_multiplier": 1,
-        "chain_bonus": 1,
+        "chain_bonus": 1.5,
         "days_blind": 5
       },
       "silent_killer": false
@@ -5642,13 +5770,13 @@
       "finding_index": 9,
       "control_id": "CTL.CONFIG.ENABLED.001",
       "asset_id": "config-recorder",
-      "exposure_score": 187.5,
+      "exposure_score": 281.25,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 2.5,
         "exposure_multiplier": 1,
-        "chain_bonus": 1,
+        "chain_bonus": 1.5,
         "days_blind": 5
       },
       "silent_killer": false
@@ -5657,13 +5785,13 @@
       "finding_index": 31,
       "control_id": "CTL.VPC.FLOWLOG.001",
       "asset_id": "vpc-prod-001",
-      "exposure_score": 150,
+      "exposure_score": 225,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 2,
         "exposure_multiplier": 1,
-        "chain_bonus": 1,
+        "chain_bonus": 1.5,
         "days_blind": 5
       },
       "silent_killer": false
@@ -5672,13 +5800,13 @@
       "finding_index": 19,
       "control_id": "CTL.IAM.ROOT.ACCESSKEY.001",
       "asset_id": "aws-account-root",
-      "exposure_score": 100,
+      "exposure_score": 150,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
-        "chain_bonus": 1,
+        "chain_bonus": 1.5,
         "days_blind": 5
       },
       "silent_killer": false
@@ -5687,13 +5815,13 @@
       "finding_index": 20,
       "control_id": "CTL.IAM.ROOT.MFA.001",
       "asset_id": "aws-account-root",
-      "exposure_score": 100,
+      "exposure_score": 150,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
-        "chain_bonus": 1,
+        "chain_bonus": 1.5,
         "days_blind": 5
       },
       "silent_killer": false
@@ -5702,13 +5830,28 @@
       "finding_index": 26,
       "control_id": "CTL.RDS.PUBLIC.001",
       "asset_id": "phi-database",
-      "exposure_score": 100,
+      "exposure_score": 150,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
-        "chain_bonus": 1,
+        "chain_bonus": 1.5,
+        "days_blind": 5
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 23,
+      "control_id": "CTL.RDS.ENCRYPT.001",
+      "asset_id": "phi-database",
+      "exposure_score": 112.5,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1.5,
         "days_blind": 5
       },
       "silent_killer": false
@@ -5911,21 +6054,6 @@
     {
       "finding_index": 22,
       "control_id": "CTL.RDS.BACKUP.001",
-      "asset_id": "phi-database",
-      "exposure_score": 75,
-      "breakdown": {
-        "base_score": 75,
-        "duration_factor": 1,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 1,
-        "chain_bonus": 1,
-        "days_blind": 5
-      },
-      "silent_killer": false
-    },
-    {
-      "finding_index": 23,
-      "control_id": "CTL.RDS.ENCRYPT.001",
       "asset_id": "phi-database",
       "exposure_score": 75,
       "breakdown": {

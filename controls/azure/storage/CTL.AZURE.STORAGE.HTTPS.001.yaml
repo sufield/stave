@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.STORAGE.HTTPS.001
+name: Azure Storage Must Require HTTPS
+description: >
+  Azure Storage accounts must enforce HTTPS-only access. Allowing
+  HTTP exposes data in transit to interception.
+domain: encryption
+severity: high
+compliance:
+  nist_800_53_r5: "SC-8"
+  soc2: "CC6.7"
+  ccm_v4: ["CEK-03", "IVS-03"]
+scope_tags:
+  - azure
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: collection
+remediation:
+  description: Azure Storage allows HTTP access.
+  action: Set supportsHttpsTrafficOnly to true.
+  example: |
+    {"azure": {"storage": {"kind": "azure_blob_storage", "https_only": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.storage.kind
+      op: eq
+      value: azure_blob_storage
+    - field: properties.azure.storage.https_only
+      op: eq
+      value: false
