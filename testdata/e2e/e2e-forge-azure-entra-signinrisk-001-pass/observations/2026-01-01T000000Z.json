@@ -1,0 +1,20 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "entra-risk",
+      "type": "azure_entra_config",
+      "vendor": "azure",
+      "properties": {
+        "azure": {
+          "identity": {
+            "kind": "risk_policy",
+            "signin_risk_policy_configured": true
+          }
+        }
+      }
+    }
+  ]
+}

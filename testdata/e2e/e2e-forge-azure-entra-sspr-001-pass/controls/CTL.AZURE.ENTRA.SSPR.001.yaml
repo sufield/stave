@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.ENTRA.SSPR.001
+name: Self-Service Password Reset Not Configured
+description: >
+  Self-service password reset not enabled. Users must contact IT,
+  leading to insecure workarounds.
+domain: identity
+severity: low
+compliance:
+  cis_azure_v2: "1.6"
+  nist_800_53_r5: "IA-5"
+  soc2: "CC6.1"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Self-Service Password Reset Not Configured — finding detected.
+  action: Enable self-service password reset for all users.
+  example: |
+    {"azure": {"identity": {"kind": "tenant_policy", "sspr_enabled": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.identity.kind
+      op: eq
+      value: tenant_policy
+    - field: properties.azure.identity.sspr_enabled
+      op: eq
+      value: false

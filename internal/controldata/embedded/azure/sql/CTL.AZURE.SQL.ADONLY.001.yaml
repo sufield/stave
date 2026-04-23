@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.SQL.ADONLY.001
+name: SQL Server Allows SQL Authentication
+description: >
+  SQL authentication enabled alongside Entra ID. SQL credentials
+  bypass MFA, Conditional Access, and centralized audit. Entra
+  ID-only authentication eliminates this identity bypass.
+domain: identity
+severity: high
+compliance:
+  cis_azure_v2: "4.1.4"
+  nist_800_53_r5: "AC-3"
+  hipaa: "164.312(d)"
+  soc2: "CC6.1"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: SQL Server Allows SQL Authentication — finding detected.
+  action: Enable Entra ID-only authentication.
+  example: |
+    {"azure": {"database": {"kind": "sql_server", "sql": {"ad_only_auth": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.database.kind
+      op: eq
+      value: sql_server
+    - field: properties.azure.database.sql.ad_only_auth
+      op: eq
+      value: false

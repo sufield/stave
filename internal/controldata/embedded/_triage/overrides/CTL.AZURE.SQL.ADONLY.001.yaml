@@ -1,0 +1,14 @@
+control: CTL.AZURE.SQL.ADONLY.001
+defect: >
+  Azure SQL server allows SQL authentication. Connections can
+  authenticate with username/password without Entra ID.
+infection: >
+  SQL authentication credentials are managed outside the identity
+  provider. They don't require MFA. They aren't subject to
+  Conditional Access policies. They don't expire automatically.
+  A compromised SQL password gives database access that bypasses
+  every identity security control configured in Entra ID.
+failure: >
+  Identity bypass. An attacker authenticates to the database with
+  a stolen SQL password, bypassing MFA, Conditional Access, and
+  Entra ID session controls.

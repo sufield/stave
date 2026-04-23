@@ -1,0 +1,16 @@
+id: azure_sql_identity_bypass
+description: >
+  SQL authentication enabled (Entra ID bypassed) plus either weak
+  TLS or no audit. Database accessible with credentials outside
+  the identity provider, over a potentially insecure connection,
+  without an audit trail.
+controls:
+  - CTL.AZURE.SQL.ADONLY.001
+  - CTL.AZURE.SQL.TLS.001
+  - CTL.AZURE.SQL.AUDIT.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - ec2_code_execution

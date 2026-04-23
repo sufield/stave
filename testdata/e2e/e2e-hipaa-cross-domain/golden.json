@@ -7,7 +7,7 @@
     "now": "2026-01-15T00:00:00Z",
     "sla_threshold": "0h",
     "snapshots": 2,
-    "policy_fingerprint": "21a5780a96d0bba061a5a39cf4fa836b2b0c8b03734eddff043696413c60b383",
+    "policy_fingerprint": "0ab002ea56fe9126a8ad112c5eb965818e32275f0f0318ff4af1feb1da8510bb",
     "evaluated_state": "deployed"
   },
   "summary": {

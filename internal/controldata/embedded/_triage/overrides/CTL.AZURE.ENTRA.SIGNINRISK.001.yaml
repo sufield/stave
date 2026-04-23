@@ -1,0 +1,16 @@
+control: CTL.AZURE.ENTRA.SIGNINRISK.001
+defect: >
+  Entra ID does not have a sign-in risk policy configured. Risky
+  sign-in events do not trigger additional authentication requirements.
+infection: >
+  Entra ID Identity Protection detects risky sign-ins using
+  Microsoft's threat intelligence — impossible travel (login from
+  two distant locations within minutes), anonymous IP proxies,
+  malware-linked IP addresses, and credential stuffing patterns.
+  Without a sign-in risk policy, these detections generate alerts
+  but do not block or challenge the sign-in. The attacker's login
+  succeeds despite being flagged as risky.
+failure: >
+  Risky sign-in succeeds. An attacker using stolen credentials
+  from an anomalous location signs in without being blocked or
+  challenged, despite the sign-in being classified as risky.

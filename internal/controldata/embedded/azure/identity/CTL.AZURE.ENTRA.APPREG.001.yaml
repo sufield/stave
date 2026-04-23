@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.ENTRA.APPREG.001
+name: Entra ID App Registrations Not Restricted
+description: >
+  Any user can register applications in Entra ID. App registrations
+  create service principals with credentials outside the normal
+  provisioning process.
+domain: identity
+severity: medium
+compliance:
+  cis_azure_v2: "1.11"
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: Entra ID App Registrations Not Restricted — finding detected.
+  action: Restrict app registrations to administrators.
+  example: |
+    {"azure": {"identity": {"kind": "tenant_policy", "app_registration_restricted": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.identity.kind
+      op: eq
+      value: tenant_policy
+    - field: properties.azure.identity.app_registration_restricted
+      op: eq
+      value: false

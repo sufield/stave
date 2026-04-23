@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.SQL.AUDIT.RETENTION.001
+name: SQL Auditing Retention Below 90 Days
+description: >
+  Audit logs retained fewer than 90 days. Investigation of
+  incidents older than the retention period loses database evidence.
+domain: exposure
+severity: medium
+compliance:
+  cis_azure_v2: "4.1.6"
+  nist_800_53_r5: "AU-12"
+  soc2: "CC7.2"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: SQL Auditing Retention Below 90 Days — finding detected.
+  action: Increase audit log retention to at least 90 days.
+  example: |
+    {"azure": {"database": {"kind": "sql_server", "sql": {"auditing_retention_days": 90}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.database.kind
+      op: eq
+      value: sql_server
+    - field: properties.azure.database.sql.auditing_retention_days
+      op: lt
+      value: 90

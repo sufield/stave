@@ -1,0 +1,20 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "entra-tenant",
+      "type": "azure_entra_config",
+      "vendor": "azure",
+      "properties": {
+        "azure": {
+          "identity": {
+            "kind": "tenant_policy",
+            "sspr_enabled": false
+          }
+        }
+      }
+    }
+  ]
+}

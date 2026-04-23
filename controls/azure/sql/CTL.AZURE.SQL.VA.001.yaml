@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.SQL.VA.001
+name: SQL Vulnerability Assessment Not Enabled
+description: >
+  SQL vulnerability assessment not configured. No automated
+  scanning for misconfigurations, excessive permissions, or
+  sensitive data exposure.
+domain: exposure
+severity: medium
+compliance:
+  cis_azure_v2: "4.2.1"
+  nist_800_53_r5: "RA-5"
+  soc2: "CC7.1"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: SQL Vulnerability Assessment Not Enabled — finding detected.
+  action: Enable SQL vulnerability assessment with periodic scanning.
+  example: |
+    {"azure": {"database": {"kind": "sql_server", "sql": {"vulnerability_assessment_enabled": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.database.kind
+      op: eq
+      value: sql_server
+    - field: properties.azure.database.sql.vulnerability_assessment_enabled
+      op: eq
+      value: false

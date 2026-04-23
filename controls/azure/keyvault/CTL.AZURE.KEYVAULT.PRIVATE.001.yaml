@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.KEYVAULT.PRIVATE.001
+name: Key Vault Without Private Endpoint
+description: >
+  No private endpoint configured. Key Vault traffic traverses
+  the public internet.
+domain: exposure
+severity: medium
+compliance:
+  cis_azure_v2: "8.6"
+  nist_800_53_r5: "AC-4"
+  soc2: "CC6.6"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Key Vault Without Private Endpoint — finding detected.
+  action: Configure a private endpoint for the Key Vault.
+  example: |
+    {"azure": {"security": {"kind": "keyvault", "keyvault": {"private_endpoint_enabled": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.security.kind
+      op: eq
+      value: keyvault
+    - field: properties.azure.security.keyvault.private_endpoint_enabled
+      op: eq
+      value: false

@@ -3,27 +3,27 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1015
-**Pack hash:** `ce3787bf6ab9c8b2c29a980802351de8270ce3f2a22c8d07d60641b9a799d808`
+**Total controls:** 1031
+**Pack hash:** `ce43ba653ef0f9e677851f2872b044f5f97dcdf90ed36faf69cbebbafac9696c`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 144 |
-| high | 455 |
+| high | 461 |
 | info | 16 |
-| low | 79 |
-| medium | 321 |
+| low | 80 |
+| medium | 330 |
 
 | Domain | Count |
 |--------|-------|
 | audit | 20 |
 | detection | 8 |
-| encryption | 52 |
-| exposure | 669 |
+| encryption | 57 |
+| exposure | 672 |
 | governance | 24 |
-| identity | 199 |
+| identity | 207 |
 | network | 21 |
 | resilience | 14 |
 | storage | 8 |
@@ -1528,6 +1528,81 @@ Critical resource types lack diagnostic settings. Resource-level logs and metric
 
 ---
 
+### CTL.AZURE.ENTRA.APPREG.001
+
+**Entra ID App Registrations Not Restricted**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_azure_v2: 1.11; nist_800_53_r5: AC-6; soc2: CC6.1;
+
+Any user can register applications in Entra ID. App registrations create service principals with credentials outside the normal provisioning process.
+
+**Remediation:** Restrict app registrations to administrators.
+
+---
+
+### CTL.AZURE.ENTRA.PASSWORDBAN.001
+
+**Entra ID Custom Banned Password List Not Configured**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_azure_v2: 1.7; nist_800_53_r5: IA-5; soc2: CC6.1;
+
+No custom banned password list. Users can set passwords containing company name, product names, or common organizational terms.
+
+**Remediation:** Configure a custom banned password list in Entra ID.
+
+---
+
+### CTL.AZURE.ENTRA.SIGNINRISK.001
+
+**Entra ID Sign-In Risk Policy Not Configured**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_azure_v2: 1.2.6; nist_800_53_r5: AC-7; soc2: CC6.1;
+
+No sign-in risk policy. Risky sign-ins (impossible travel, anonymous IP, malware-linked IP) are not blocked or challenged with MFA. Requires Entra ID P2 license.
+
+**Remediation:** Configure a sign-in risk policy in Entra ID Identity Protection.
+
+---
+
+### CTL.AZURE.ENTRA.SSPR.001
+
+**Self-Service Password Reset Not Configured**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_azure_v2: 1.6; nist_800_53_r5: IA-5; soc2: CC6.1;
+
+Self-service password reset not enabled. Users must contact IT, leading to insecure workarounds.
+
+**Remediation:** Enable self-service password reset for all users.
+
+---
+
+### CTL.AZURE.ENTRA.USERRISK.001
+
+**Entra ID User Risk Policy Not Configured**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_azure_v2: 1.2.7; nist_800_53_r5: AC-7; soc2: CC6.1;
+
+No user risk policy. Users flagged as compromised (leaked credentials, anomalous behavior) are not forced to change password or blocked. Requires Entra ID P2 license.
+
+**Remediation:** Configure a user risk policy in Entra ID Identity Protection.
+
+---
+
 ### CTL.AZURE.FIREWALL.LOG.001
 
 **Azure Firewall Must Have Diagnostic Logging Enabled**
@@ -1738,6 +1813,36 @@ Key Vault access policy grants key, secret, or certificate permissions to a prin
 
 ---
 
+### CTL.AZURE.KEYVAULT.KEY.EXPIRY.001
+
+**Key Vault Keys Without Expiration Date**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** cis_azure_v2: 8.1; nist_800_53_r5: SC-12; soc2: CC6.1;
+
+Keys without expiration dates persist indefinitely. No forced rotation — a compromised key remains valid forever.
+
+**Remediation:** Set expiration dates on all keys.
+
+---
+
+### CTL.AZURE.KEYVAULT.KEYSIZE.001
+
+**Key Vault RSA Key Below Minimum Size**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** cis_azure_v2: 8.7; nist_800_53_r5: SC-12; soc2: CC6.1;
+
+RSA key size below 2048 bits. Keys below this threshold are considered cryptographically weak by current standards.
+
+**Remediation:** Generate new keys with RSA 2048 or higher.
+
+---
+
 ### CTL.AZURE.KEYVAULT.NETWORK.001
 
 **Key Vault Must Not Be Accessible from Public Network**
@@ -1753,6 +1858,21 @@ Azure Key Vault network default action must be Deny. Key Vault stores encryption
 
 ---
 
+### CTL.AZURE.KEYVAULT.PRIVATE.001
+
+**Key Vault Without Private Endpoint**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_azure_v2: 8.6; nist_800_53_r5: AC-4; soc2: CC6.6;
+
+No private endpoint configured. Key Vault traffic traverses the public internet.
+
+**Remediation:** Configure a private endpoint for the Key Vault.
+
+---
+
 ### CTL.AZURE.KEYVAULT.PURGE.001
 
 **Key Vault Keys and Secrets Must Have Expiry Dates**
@@ -1765,6 +1885,51 @@ Azure Key Vault network default action must be Deny. Key Vault stores encryption
 Keys and secrets stored in Key Vault must have expiry dates set. Non-expiring credentials remain valid indefinitely if compromised.
 
 **Remediation:** Set expiry dates on all keys and secrets.
+
+---
+
+### CTL.AZURE.KEYVAULT.RBAC.001
+
+**Key Vault Using Access Policies Instead of RBAC**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_azure_v2: 8.4; nist_800_53_r5: AC-3; soc2: CC6.1;
+
+Key Vault uses vault access policies instead of Azure RBAC. Access policies are per-vault and don't integrate with Conditional Access or PIM. RBAC provides centralized, auditable, policy-enforced access control.
+
+**Remediation:** Switch to Azure RBAC authorization model.
+
+---
+
+### CTL.AZURE.KEYVAULT.ROTATION.001
+
+**Key Vault Key Rotation Policy Not Configured**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** cis_azure_v2: 8.3; nist_800_53_r5: SC-12; soc2: CC6.1;
+
+No automated key rotation policy. Keys must be rotated manually — manual processes are forgotten and keys accumulate age.
+
+**Remediation:** Configure an automated key rotation policy.
+
+---
+
+### CTL.AZURE.KEYVAULT.SECRET.EXPIRY.001
+
+**Key Vault Secrets Without Expiration Date**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** cis_azure_v2: 8.2; nist_800_53_r5: SC-12; soc2: CC6.1;
+
+Secrets (passwords, API keys, connection strings) without expiration persist indefinitely without forced rotation.
+
+**Remediation:** Set expiration dates on all secrets.
 
 ---
 
@@ -2113,6 +2278,36 @@ Contributor, User Access Administrator, and custom write roles should be assigne
 
 ---
 
+### CTL.AZURE.SQL.ADADMIN.001
+
+**SQL Server Entra ID Admin Not Configured**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_azure_v2: 4.1.3; nist_800_53_r5: AC-3; soc2: CC6.1;
+
+No Entra ID administrator set. Entra ID authentication is not possible without an admin configured.
+
+**Remediation:** Configure an Entra ID administrator for the SQL server.
+
+---
+
+### CTL.AZURE.SQL.ADONLY.001
+
+**SQL Server Allows SQL Authentication**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_azure_v2: 4.1.4; hipaa: 164.312(d); nist_800_53_r5: AC-3; soc2: CC6.1;
+
+SQL authentication enabled alongside Entra ID. SQL credentials bypass MFA, Conditional Access, and centralized audit. Entra ID-only authentication eliminates this identity bypass.
+
+**Remediation:** Enable Entra ID-only authentication.
+
+---
+
 ### CTL.AZURE.SQL.AUDIT.001
 
 **Azure SQL Auditing Must Be Enabled**
@@ -2125,6 +2320,21 @@ Contributor, User Access Administrator, and custom write roles should be assigne
 SQL auditing not configured. Database operations are not recorded.
 
 **Remediation:** Remediate per control description.
+
+---
+
+### CTL.AZURE.SQL.AUDIT.RETENTION.001
+
+**SQL Auditing Retention Below 90 Days**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_azure_v2: 4.1.6; nist_800_53_r5: AU-12; soc2: CC7.2;
+
+Audit logs retained fewer than 90 days. Investigation of incidents older than the retention period loses database evidence.
+
+**Remediation:** Increase audit log retention to at least 90 days.
 
 ---
 
@@ -2185,6 +2395,36 @@ Allow Azure services permits connections from ANY Azure IP globally.
 SQL server accepts connections from the public internet.
 
 **Remediation:** Remediate per control description.
+
+---
+
+### CTL.AZURE.SQL.TLS.001
+
+**SQL Server TLS Minimum Version Below 1.2**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** cis_azure_v2: 4.1.5; nist_800_53_r5: SC-8; pci_dss_v4: 4.1; soc2: CC6.1;
+
+SQL server accepts TLS 1.0 or 1.1 connections with known vulnerabilities (BEAST, POODLE, CRIME).
+
+**Remediation:** Set minimum TLS version to 1.2.
+
+---
+
+### CTL.AZURE.SQL.VA.001
+
+**SQL Vulnerability Assessment Not Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_azure_v2: 4.2.1; nist_800_53_r5: RA-5; soc2: CC7.1;
+
+SQL vulnerability assessment not configured. No automated scanning for misconfigurations, excessive permissions, or sensitive data exposure.
+
+**Remediation:** Enable SQL vulnerability assessment with periodic scanning.
 
 ---
 

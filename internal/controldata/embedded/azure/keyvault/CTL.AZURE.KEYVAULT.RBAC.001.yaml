@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.KEYVAULT.RBAC.001
+name: Key Vault Using Access Policies Instead of RBAC
+description: >
+  Key Vault uses vault access policies instead of Azure RBAC.
+  Access policies are per-vault and don't integrate with
+  Conditional Access or PIM. RBAC provides centralized,
+  auditable, policy-enforced access control.
+domain: identity
+severity: medium
+compliance:
+  cis_azure_v2: "8.4"
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Key Vault Using Access Policies Instead of RBAC — finding detected.
+  action: Switch to Azure RBAC authorization model.
+  example: |
+    {"azure": {"security": {"kind": "keyvault", "keyvault": {"rbac_authorization": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.security.kind
+      op: eq
+      value: keyvault
+    - field: properties.azure.security.keyvault.rbac_authorization
+      op: eq
+      value: false

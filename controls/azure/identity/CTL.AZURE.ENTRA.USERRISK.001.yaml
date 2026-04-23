@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.ENTRA.USERRISK.001
+name: Entra ID User Risk Policy Not Configured
+description: >
+  No user risk policy. Users flagged as compromised (leaked
+  credentials, anomalous behavior) are not forced to change
+  password or blocked. Requires Entra ID P2 license.
+domain: identity
+severity: high
+compliance:
+  cis_azure_v2: "1.2.7"
+  nist_800_53_r5: "AC-7"
+  soc2: "CC6.1"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Entra ID User Risk Policy Not Configured — finding detected.
+  action: Configure a user risk policy in Entra ID Identity Protection.
+  example: |
+    {"azure": {"identity": {"kind": "risk_policy", "user_risk_policy_configured": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.identity.kind
+      op: eq
+      value: risk_policy
+    - field: properties.azure.identity.user_risk_policy_configured
+      op: eq
+      value: false

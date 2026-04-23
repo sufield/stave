@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.KEYVAULT.KEYSIZE.001
+name: Key Vault RSA Key Below Minimum Size
+description: >
+  RSA key size below 2048 bits. Keys below this threshold are
+  considered cryptographically weak by current standards.
+domain: encryption
+severity: medium
+compliance:
+  cis_azure_v2: "8.7"
+  nist_800_53_r5: "SC-12"
+  soc2: "CC6.1"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Key Vault RSA Key Below Minimum Size — finding detected.
+  action: Generate new keys with RSA 2048 or higher.
+  example: |
+    {"azure": {"security": {"kind": "keyvault", "keyvault": {"min_rsa_key_size_met": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.security.kind
+      op: eq
+      value: keyvault
+    - field: properties.azure.security.keyvault.min_rsa_key_size_met
+      op: eq
+      value: false

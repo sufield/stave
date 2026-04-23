@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.KEYVAULT.ROTATION.001
+name: Key Vault Key Rotation Policy Not Configured
+description: >
+  No automated key rotation policy. Keys must be rotated manually
+  — manual processes are forgotten and keys accumulate age.
+domain: encryption
+severity: medium
+compliance:
+  cis_azure_v2: "8.3"
+  nist_800_53_r5: "SC-12"
+  soc2: "CC6.1"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: Key Vault Key Rotation Policy Not Configured — finding detected.
+  action: Configure an automated key rotation policy.
+  example: |
+    {"azure": {"security": {"kind": "keyvault", "keyvault": {"rotation_policy_configured": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.security.kind
+      op: eq
+      value: keyvault
+    - field: properties.azure.security.keyvault.rotation_policy_configured
+      op: eq
+      value: false
