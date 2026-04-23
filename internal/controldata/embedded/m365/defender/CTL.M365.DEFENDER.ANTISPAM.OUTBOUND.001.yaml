@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.M365.DEFENDER.ANTISPAM.OUTBOUND.001
+name: Outbound Anti-Spam Policy Not Configured
+description: >
+  No outbound anti-spam policy. Compromised accounts sending
+  spam are not rate-limited or blocked.
+domain: detection
+severity: medium
+compliance:
+  cis_m365_v4: "8.4"
+  nist_800_53_r5: "SI-8"
+  soc2: "CC6.8"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Outbound Anti-Spam Policy Not Configured — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"security": {"kind": "defender_config", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.security.kind
+      op: eq
+      value: defender_config
+    - field: properties.m365.security.defender.antispam_outbound_configured
+      op: eq
+      value: false

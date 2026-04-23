@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.M365.ENTRA.CA.MOBILE.001
+name: No CA Policy for Approved Mobile Client App
+description: >
+  No CA policy requires approved client apps or app protection
+  on mobile. M365 data accessible from any mobile app.
+domain: identity
+severity: medium
+compliance:
+  cis_m365_v4: "5.2"
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: No CA Policy for Approved Mobile Client App — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"identity": {"kind": "conditional_access_policy", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.identity.kind
+      op: eq
+      value: conditional_access_policy
+    - field: properties.m365.identity.ca.requires_approved_client_app
+      op: eq
+      value: false

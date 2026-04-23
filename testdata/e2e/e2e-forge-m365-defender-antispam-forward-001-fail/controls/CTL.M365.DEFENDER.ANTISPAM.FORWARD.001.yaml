@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.M365.DEFENDER.ANTISPAM.FORWARD.001
+name: Outbound Email Forwarding Not Disabled
+description: >
+  Automatic forwarding not disabled. Compromised accounts silently
+  exfiltrate all incoming email to external addresses.
+domain: exposure
+severity: high
+compliance:
+  cis_m365_v4: "8.3"
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.8"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: Outbound Email Forwarding Not Disabled — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"security": {"kind": "defender_config", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.security.kind
+      op: eq
+      value: defender_config
+    - field: properties.m365.security.defender.antispam_forwarding_disabled
+      op: eq
+      value: false

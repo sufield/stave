@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.M365.ENTRA.TENANT.CREATE.001
+name: Users Can Create Tenants
+description: >
+  Default users can create Azure AD tenants. Shadow IT risk —
+  data moves to unmanaged tenants.
+domain: identity
+severity: medium
+compliance:
+  cis_m365_v4: "7.3"
+  nist_800_53_r5: "CM-6"
+  soc2: "CC6.1"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Users Can Create Tenants — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"identity": {"kind": "entra_config", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.identity.kind
+      op: eq
+      value: entra_config
+    - field: properties.m365.identity.tenant.user_cannot_create_tenants
+      op: eq
+      value: false

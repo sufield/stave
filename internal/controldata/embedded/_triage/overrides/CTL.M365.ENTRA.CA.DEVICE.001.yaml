@@ -1,0 +1,13 @@
+control: CTL.M365.ENTRA.CA.DEVICE.001
+defect: >
+  No Conditional Access policy requires device compliance or hybrid
+  Azure AD join for M365 access.
+infection: >
+  Without device compliance requirements, users access M365 resources
+  from any device regardless of security posture. Unmanaged devices
+  may lack disk encryption, endpoint protection, OS updates, or
+  screen lock. Data downloaded to an unmanaged device is outside
+  organizational control.
+failure: >
+  Data exposure on unmanaged devices. M365 data accessed and stored
+  on devices without organizational security controls.

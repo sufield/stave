@@ -1,0 +1,34 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "def-config",
+      "type": "m365_defender_config",
+      "vendor": "m365",
+      "properties": {
+        "m365": {
+          "security": {
+            "kind": "defender_config",
+            "defender": {
+              "antiphishing_configured": true,
+              "antispam_no_allowed_domains": false,
+              "antispam_ip_allowlist_empty": true,
+              "antispam_safe_list_off": true,
+              "antispam_forwarding_disabled": true,
+              "antispam_outbound_configured": true,
+              "malware_comprehensive_filter": true,
+              "malware_common_filter": true,
+              "safe_attachments_enabled": true,
+              "safe_links_enabled": true,
+              "dkim_enabled": true,
+              "zap_teams_enabled": true,
+              "chat_report_policy": true
+            }
+          }
+        }
+      }
+    }
+  ]
+}

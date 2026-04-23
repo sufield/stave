@@ -3,27 +3,27 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1188
-**Pack hash:** `739bd32488c97aed73d549f3c1611a362f5c5e7396039280524feff5d21dafb6`
+**Total controls:** 1213
+**Pack hash:** `7af0e16339e6663a02c2a15955d6b319b0af5a56009e116e2f4c384548af324f`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 162 |
-| high | 527 |
+| critical | 164 |
+| high | 537 |
 | info | 16 |
-| low | 90 |
-| medium | 393 |
+| low | 91 |
+| medium | 405 |
 
 | Domain | Count |
 |--------|-------|
 | audit | 20 |
-| detection | 18 |
+| detection | 28 |
 | encryption | 75 |
-| exposure | 758 |
+| exposure | 760 |
 | governance | 24 |
-| identity | 250 |
+| identity | 263 |
 | network | 21 |
 | resilience | 14 |
 | storage | 8 |
@@ -13245,6 +13245,171 @@ Lightsail instances with public IPs must not have firewall rules allowing broad 
 
 ---
 
+### CTL.M365.DEFENDER.ANTIPHISHING.001
+
+**Anti-Phishing Policy Not Configured**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_m365_v4: 8.1; hipaa: 164.308(a)(5)(ii)(B); nist_800_53_r5: SI-8; pci_dss_v4: 5.1; soc2: CC6.8;
+
+No anti-phishing policy. Impersonation emails, spoofed domains, and BEC attacks not detected or filtered.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.DEFENDER.ANTISPAM.BYPASS.001
+
+**Anti-Spam Filter Has Bypass Configurations**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_m365_v4: 8.2; nist_800_53_r5: SI-8; soc2: CC6.8;
+
+Spam filter bypasses active: IP allowlist, safe list, or allowed domains. Malicious email arrives via trusted paths.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.DEFENDER.ANTISPAM.FORWARD.001
+
+**Outbound Email Forwarding Not Disabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_m365_v4: 8.3; nist_800_53_r5: SC-7; soc2: CC6.8;
+
+Automatic forwarding not disabled. Compromised accounts silently exfiltrate all incoming email to external addresses.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.DEFENDER.ANTISPAM.OUTBOUND.001
+
+**Outbound Anti-Spam Policy Not Configured**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_m365_v4: 8.4; nist_800_53_r5: SI-8; soc2: CC6.8;
+
+No outbound anti-spam policy. Compromised accounts sending spam are not rate-limited or blocked.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.DEFENDER.DKIM.001
+
+**DKIM Not Enabled for Domain**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_m365_v4: 8.8; nist_800_53_r5: SC-7; soc2: CC6.8;
+
+DKIM signing not enabled in M365. Outgoing email not cryptographically signed for integrity verification.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.DEFENDER.MALWARE.001
+
+**Malware Attachment Filtering Not Comprehensive**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_m365_v4: 8.5; nist_800_53_r5: SI-3; pci_dss_v4: 5.2; soc2: CC7.1;
+
+Common dangerous attachment types (exe, bat, js, ps1) not filtered. Executable attachments reach user inboxes.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.DEFENDER.REPORT.001
+
+**Chat Report Policy Not Configured**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** nist_800_53_r5: SI-4; soc2: CC7.1;
+
+Users cannot report suspicious Teams messages. No user-facing reporting mechanism for threats in chat.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.DEFENDER.SAFEATTACH.001
+
+**Safe Attachments Not Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_m365_v4: 8.6; nist_800_53_r5: SI-3; pci_dss_v4: 5.2; soc2: CC7.1;
+
+Attachments not detonated in sandbox. Zero-day malware in documents and archives reaches inboxes without behavioral analysis.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.DEFENDER.SAFELINKS.001
+
+**Safe Links Not Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_m365_v4: 8.7; nist_800_53_r5: SI-3; soc2: CC7.1;
+
+URLs not rewritten or checked at click time. Malicious links that become weaponized after delivery not caught.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.DEFENDER.ZAP.001
+
+**Zero-Hour Auto Purge Not Enabled for Teams**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_m365_v4: 8.9; nist_800_53_r5: SI-3; soc2: CC7.1;
+
+ZAP for Teams disabled. Malicious content detected after delivery not automatically purged from conversations.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.DEFENDERID.HEALTH.001
+
+**Defender for Identity Has Open Health Issues**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** nist_800_53_r5: SI-4; soc2: CC7.1;
+
+Open health issues. Sensors may be misconfigured or offline. Identity threat detection has coverage gaps.
+
+**Remediation:** Remediate per control description.
+
+---
+
 ### CTL.M365.ENTRA.ADMIN.CLOUDONLY.001
 
 **Admin Accounts Not Cloud-Only**
@@ -13320,6 +13485,51 @@ Admin sessions have no sign-in frequency limit. Stolen session tokens persist in
 
 ---
 
+### CTL.M365.ENTRA.APP.CONSENT.001
+
+**User Consent for Apps Not Restricted**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_m365_v4: 6.1; nist_800_53_r5: AC-3; soc2: CC6.1;
+
+Users consent to third-party app permissions without admin approval. Consent phishing grants apps persistent access.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.ENTRA.APP.PRIVILEGED.001
+
+**App Registrations with Unused Privileged Permissions**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_m365_v4: 6.3; nist_800_53_r5: AC-6; soc2: CC6.1;
+
+App registrations have privileged API permissions not being used. Overprivileged apps increase compromise blast radius.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.ENTRA.APP.THIRDPARTY.001
+
+**Third-Party Integrated Apps Allowed**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_m365_v4: 6.2; nist_800_53_r5: CM-6; soc2: CC6.1;
+
+Third-party integrated apps allowed without approval.
+
+**Remediation:** Remediate per control description.
+
+---
+
 ### CTL.M365.ENTRA.BREAKGLASS.001
 
 **Break Glass Account Not Properly Configured**
@@ -13350,6 +13560,21 @@ Not all applications covered by CA policies. Uncovered apps allow auth without M
 
 ---
 
+### CTL.M365.ENTRA.CA.DEVICE.001
+
+**No CA Policy Requiring Device Compliance**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_m365_v4: 5.1; nist_800_53_r5: AC-3; soc2: CC6.1;
+
+No CA policy requires device compliance or hybrid join. Users access M365 from any unmanaged device.
+
+**Remediation:** Remediate per control description.
+
+---
+
 ### CTL.M365.ENTRA.CA.DEVICECODE.001
 
 **Device Code Flow Not Blocked**
@@ -13360,6 +13585,36 @@ Not all applications covered by CA policies. Uncovered apps allow auth without M
 - **Compliance:** cis_m365_v4: 3.4; nist_800_53_r5: IA-2; soc2: CC6.1;
 
 Device code authentication not blocked. Attacker generates code, victim enters it on legitimate Microsoft login, attacker gets session.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.ENTRA.CA.DEVICEREG.001
+
+**MFA Not Required for Device Registration**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_m365_v4: 5.5; nist_800_53_r5: IA-2; soc2: CC6.1;
+
+MFA not required for device registration. An attacker registers a controlled device with a stolen password.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.ENTRA.CA.DIRSYNC.001
+
+**Directory Sync Account Not Excluded from CA**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_m365_v4: 5.7; nist_800_53_r5: AC-3; soc2: CC6.1;
+
+Sync service accounts not excluded from CA. CA policies may break AD synchronization.
 
 **Remediation:** Remediate per control description.
 
@@ -13380,6 +13635,21 @@ External/guest users not required to use MFA when accessing shared resources.
 
 ---
 
+### CTL.M365.ENTRA.CA.INSIDERRISK.O365.001
+
+**O365 Not Blocked for Elevated Insider Risk**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_m365_v4: 5.6; nist_800_53_r5: AC-3; soc2: CC6.1;
+
+No CA policy blocks O365 access for elevated insider risk users.
+
+**Remediation:** Remediate per control description.
+
+---
+
 ### CTL.M365.ENTRA.CA.MGMTAPI.001
 
 **MFA Not Required for Azure Management API**
@@ -13390,6 +13660,81 @@ External/guest users not required to use MFA when accessing shared resources.
 - **Compliance:** cis_m365_v4: 3.2; nist_800_53_r5: IA-2; soc2: CC6.1;
 
 Azure Management API accessible without MFA. Infrastructure changes with password-only authentication.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.ENTRA.CA.MOBILE.001
+
+**No CA Policy for Approved Mobile Client App**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_m365_v4: 5.2; nist_800_53_r5: AC-3; soc2: CC6.1;
+
+No CA policy requires approved client apps or app protection on mobile. M365 data accessible from any mobile app.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.ENTRA.CA.PLATFORMS.001
+
+**Unknown Device Platforms Not Blocked**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_m365_v4: 5.3; nist_800_53_r5: AC-3; soc2: CC6.1;
+
+Sign-ins from unknown device platforms not blocked. Only known platforms (Windows, macOS, iOS, Android) should be allowed.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.ENTRA.CA.SIGNINFREQ.001
+
+**Sign-In Frequency Not Enforced**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_m365_v4: 5.4; nist_800_53_r5: AC-11; soc2: CC6.1;
+
+No sign-in frequency on corporate devices or Intune enrollment. Sessions persist indefinitely without reauthentication.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.ENTRA.GUEST.ACCESS.001
+
+**Guest User Access Not Restricted**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_m365_v4: 7.2; nist_800_53_r5: AC-3; soc2: CC6.2;
+
+Guest users have same access as members by default. Guests should have restricted directory access.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.ENTRA.GUEST.INVITE.001
+
+**Guest Invitations Not Restricted to Admins**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_m365_v4: 7.1; nist_800_53_r5: AC-2; soc2: CC6.2;
+
+Any user can invite guest users. Unrestricted invitations expand the tenant identity perimeter.
 
 **Remediation:** Remediate per control description.
 
@@ -13440,6 +13785,21 @@ Risky sign-ins (impossible travel, anonymous IP) not blocked or challenged with 
 
 ---
 
+### CTL.M365.ENTRA.TENANT.CREATE.001
+
+**Users Can Create Tenants**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_m365_v4: 7.3; nist_800_53_r5: CM-6; soc2: CC6.1;
+
+Default users can create Azure AD tenants. Shadow IT risk — data moves to unmanaged tenants.
+
+**Remediation:** Remediate per control description.
+
+---
+
 ### CTL.M365.ENTRA.USERRISK.001
 
 **User Risk Policy Not Enabled**
@@ -13480,6 +13840,21 @@ Not all users have MFA enabled. Any account without MFA is a credential-stuffing
 - **Compliance:** cis_m365_v4: 2.4; nist_800_53_r5: IA-5; soc2: CC6.1;
 
 SMS and voice MFA enabled. SMS vulnerable to SIM swapping. Voice vulnerable to social engineering.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.XDR.CREDENTIALS.001
+
+**Privileged User Exposed Credentials Detected**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** nist_800_53_r5: IA-5; soc2: CC6.1;
+
+Defender XDR detected exposed credentials for privileged users. Active threat requiring immediate credential rotation.
 
 **Remediation:** Remediate per control description.
 

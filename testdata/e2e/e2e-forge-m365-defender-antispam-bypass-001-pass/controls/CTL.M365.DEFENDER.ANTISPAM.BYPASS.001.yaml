@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.M365.DEFENDER.ANTISPAM.BYPASS.001
+name: Anti-Spam Filter Has Bypass Configurations
+description: >
+  Spam filter bypasses active: IP allowlist, safe list, or allowed
+  domains. Malicious email arrives via trusted paths.
+domain: detection
+severity: high
+compliance:
+  cis_m365_v4: "8.2"
+  nist_800_53_r5: "SI-8"
+  soc2: "CC6.8"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Anti-Spam Filter Has Bypass Configurations — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"security": {"kind": "defender_config", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.security.kind
+      op: eq
+      value: defender_config
+    - field: properties.m365.security.defender.antispam_no_allowed_domains
+      op: eq
+      value: false

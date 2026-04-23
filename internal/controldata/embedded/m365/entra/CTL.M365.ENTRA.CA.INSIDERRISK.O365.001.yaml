@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.M365.ENTRA.CA.INSIDERRISK.O365.001
+name: O365 Not Blocked for Elevated Insider Risk
+description: >
+  No CA policy blocks O365 access for elevated insider risk users.
+domain: identity
+severity: medium
+compliance:
+  cis_m365_v4: "5.6"
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: O365 Not Blocked for Elevated Insider Risk — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"identity": {"kind": "conditional_access_policy", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.identity.kind
+      op: eq
+      value: conditional_access_policy
+    - field: properties.m365.identity.ca.blocks_o365_insider_risk
+      op: eq
+      value: false

@@ -1,0 +1,12 @@
+control: CTL.M365.DEFENDER.ANTIPHISHING.001
+defect: >
+  M365 tenant does not have an anti-phishing policy configured.
+infection: >
+  Without anti-phishing, Defender does not evaluate inbound email
+  for impersonation attacks (executive spoofing, domain lookalikes),
+  spoofed sender addresses, or mailbox intelligence anomalies.
+  Business email compromise — the most financially damaging email
+  attack — relies on impersonation that anti-phishing detects.
+failure: >
+  Unfiltered phishing. Impersonation emails reach inboxes. Business
+  email compromise succeeds because executive spoofing is not flagged.

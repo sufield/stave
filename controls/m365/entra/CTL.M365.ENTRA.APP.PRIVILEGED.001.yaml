@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.M365.ENTRA.APP.PRIVILEGED.001
+name: App Registrations with Unused Privileged Permissions
+description: >
+  App registrations have privileged API permissions not being
+  used. Overprivileged apps increase compromise blast radius.
+domain: identity
+severity: high
+compliance:
+  cis_m365_v4: "6.3"
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: App Registrations with Unused Privileged Permissions — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"identity": {"kind": "entra_config", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.identity.kind
+      op: eq
+      value: entra_config
+    - field: properties.m365.identity.app.unused_privileged_permissions
+      op: eq
+      value: true

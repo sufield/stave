@@ -1,0 +1,15 @@
+id: m365_unmanaged_access
+description: >
+  No device compliance plus either no mobile app control or unknown
+  platforms allowed. M365 data accessible from any device on any
+  platform without organizational controls.
+controls:
+  - CTL.M365.ENTRA.CA.DEVICE.001
+  - CTL.M365.ENTRA.CA.MOBILE.001
+  - CTL.M365.ENTRA.CA.PLATFORMS.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - iam_credential_theft

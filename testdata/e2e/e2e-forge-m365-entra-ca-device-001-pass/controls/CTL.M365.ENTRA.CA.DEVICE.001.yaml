@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.M365.ENTRA.CA.DEVICE.001
+name: No CA Policy Requiring Device Compliance
+description: >
+  No CA policy requires device compliance or hybrid join. Users
+  access M365 from any unmanaged device.
+domain: identity
+severity: high
+compliance:
+  cis_m365_v4: "5.1"
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: No CA Policy Requiring Device Compliance — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"identity": {"kind": "conditional_access_policy", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.identity.kind
+      op: eq
+      value: conditional_access_policy
+    - field: properties.m365.identity.ca.requires_compliant_device
+      op: eq
+      value: false

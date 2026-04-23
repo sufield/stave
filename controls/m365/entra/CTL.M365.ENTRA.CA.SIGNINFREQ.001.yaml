@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.M365.ENTRA.CA.SIGNINFREQ.001
+name: Sign-In Frequency Not Enforced
+description: >
+  No sign-in frequency on corporate devices or Intune enrollment.
+  Sessions persist indefinitely without reauthentication.
+domain: identity
+severity: medium
+compliance:
+  cis_m365_v4: "5.4"
+  nist_800_53_r5: "AC-11"
+  soc2: "CC6.1"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Sign-In Frequency Not Enforced — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"identity": {"kind": "conditional_access_policy", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.identity.kind
+      op: eq
+      value: conditional_access_policy
+    - field: properties.m365.identity.ca.enforces_sign_in_frequency
+      op: eq
+      value: false

@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.M365.DEFENDER.SAFELINKS.001
+name: Safe Links Not Enabled
+description: >
+  URLs not rewritten or checked at click time. Malicious links
+  that become weaponized after delivery not caught.
+domain: detection
+severity: high
+compliance:
+  cis_m365_v4: "8.7"
+  nist_800_53_r5: "SI-3"
+  soc2: "CC7.1"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Safe Links Not Enabled — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"security": {"kind": "defender_config", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.security.kind
+      op: eq
+      value: defender_config
+    - field: properties.m365.security.defender.safe_links_enabled
+      op: eq
+      value: false

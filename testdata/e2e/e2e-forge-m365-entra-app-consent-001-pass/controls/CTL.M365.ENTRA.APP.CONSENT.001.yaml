@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.M365.ENTRA.APP.CONSENT.001
+name: User Consent for Apps Not Restricted
+description: >
+  Users consent to third-party app permissions without admin
+  approval. Consent phishing grants apps persistent access.
+domain: identity
+severity: high
+compliance:
+  cis_m365_v4: "6.1"
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: User Consent for Apps Not Restricted — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"identity": {"kind": "entra_config", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.identity.kind
+      op: eq
+      value: entra_config
+    - field: properties.m365.identity.app.user_consent_restricted
+      op: eq
+      value: false

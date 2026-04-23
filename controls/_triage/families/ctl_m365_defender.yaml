@@ -1,0 +1,10 @@
+family: CTL.M365.DEFENDER
+infection: >
+  Defender for Office 365 is the email threat protection layer.
+  Missing anti-phishing, spam filter bypasses, disabled Safe
+  Attachments/Links, and incomplete malware filtering each allow
+  different attack types through the email gateway. Email is the
+  #1 initial access vector for enterprise compromise.
+failure: >
+  Email-based compromise. Phishing, malware attachments, and
+  malicious URLs reach user inboxes without detection or filtering.

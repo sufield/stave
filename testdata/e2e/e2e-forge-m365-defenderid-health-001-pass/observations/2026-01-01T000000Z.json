@@ -1,0 +1,23 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "def-id",
+      "type": "m365_defender_identity",
+      "vendor": "m365",
+      "properties": {
+        "m365": {
+          "security": {
+            "kind": "defender_identity",
+            "defenderid": {
+              "health_issues_open": false,
+              "open_issue_count": 0
+            }
+          }
+        }
+      }
+    }
+  ]
+}

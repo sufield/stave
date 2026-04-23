@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.M365.DEFENDER.ANTIPHISHING.001
+name: Anti-Phishing Policy Not Configured
+description: >
+  No anti-phishing policy. Impersonation emails, spoofed domains,
+  and BEC attacks not detected or filtered.
+domain: detection
+severity: critical
+compliance:
+  cis_m365_v4: "8.1"
+  nist_800_53_r5: "SI-8"
+  hipaa: "164.308(a)(5)(ii)(B)"
+  pci_dss_v4: "5.1"
+  soc2: "CC6.8"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Anti-Phishing Policy Not Configured — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"security": {"kind": "defender_config", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.security.kind
+      op: eq
+      value: defender_config
+    - field: properties.m365.security.defender.antiphishing_configured
+      op: eq
+      value: false

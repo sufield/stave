@@ -1,0 +1,31 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "tenant-apps",
+      "type": "m365_entra_config",
+      "vendor": "m365",
+      "properties": {
+        "m365": {
+          "identity": {
+            "kind": "entra_config",
+            "app": {
+              "user_consent_restricted": true,
+              "thirdparty_apps_blocked": true,
+              "unused_privileged_permissions": true
+            },
+            "guest": {
+              "invite_restricted_to_admins": true,
+              "access_restricted": true
+            },
+            "tenant": {
+              "user_cannot_create_tenants": true
+            }
+          }
+        }
+      }
+    }
+  ]
+}

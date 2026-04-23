@@ -1,0 +1,22 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "xdr-config",
+      "type": "m365_defender_xdr",
+      "vendor": "m365",
+      "properties": {
+        "m365": {
+          "security": {
+            "kind": "defender_xdr",
+            "xdr": {
+              "privileged_user_exposed_creds": false
+            }
+          }
+        }
+      }
+    }
+  ]
+}

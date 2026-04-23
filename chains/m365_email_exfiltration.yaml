@@ -1,0 +1,15 @@
+id: m365_email_exfiltration
+description: >
+  Outbound forwarding not disabled plus either spam bypass or legacy
+  auth enabled. Compromised accounts exfiltrate email via forwarding
+  AND inbound email bypasses filters or accounts are compromisable.
+controls:
+  - CTL.M365.DEFENDER.ANTISPAM.FORWARD.001
+  - CTL.M365.DEFENDER.ANTISPAM.BYPASS.001
+  - CTL.M365.ENTRA.LEGACYAUTH.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - ec2_code_execution

@@ -1,0 +1,31 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "ca-platforms",
+      "type": "m365_conditional_access_policy",
+      "vendor": "m365",
+      "properties": {
+        "m365": {
+          "identity": {
+            "kind": "conditional_access_policy",
+            "ca": {
+              "name": "Device-Trust",
+              "state": "enabled",
+              "requires_compliant_device": true,
+              "requires_approved_client_app": true,
+              "blocks_unknown_platforms": false,
+              "enforces_sign_in_frequency": true,
+              "sign_in_frequency_hours": 12,
+              "requires_mfa_for_device_reg": true,
+              "blocks_o365_insider_risk": true,
+              "dir_sync_excluded": true
+            }
+          }
+        }
+      }
+    }
+  ]
+}

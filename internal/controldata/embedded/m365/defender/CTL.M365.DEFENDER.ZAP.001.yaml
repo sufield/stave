@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.M365.DEFENDER.ZAP.001
+name: Zero-Hour Auto Purge Not Enabled for Teams
+description: >
+  ZAP for Teams disabled. Malicious content detected after
+  delivery not automatically purged from conversations.
+domain: detection
+severity: medium
+compliance:
+  cis_m365_v4: "8.9"
+  nist_800_53_r5: "SI-3"
+  soc2: "CC7.1"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Zero-Hour Auto Purge Not Enabled for Teams — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"security": {"kind": "defender_config", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.security.kind
+      op: eq
+      value: defender_config
+    - field: properties.m365.security.defender.zap_teams_enabled
+      op: eq
+      value: false

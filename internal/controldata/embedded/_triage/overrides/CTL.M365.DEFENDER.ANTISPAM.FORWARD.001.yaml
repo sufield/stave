@@ -1,0 +1,13 @@
+control: CTL.M365.DEFENDER.ANTISPAM.FORWARD.001
+defect: >
+  Outbound anti-spam policy does not disable automatic forwarding.
+infection: >
+  An attacker who compromises a user account configures automatic
+  forwarding to an external address. Every incoming email is copied
+  silently — the user receives email normally while the attacker
+  reads everything. The attacker intercepts password resets, monitors
+  business communications, and exfiltrates data from an external
+  mailbox.
+failure: >
+  Silent email exfiltration. Every incoming email to a compromised
+  account is forwarded to an attacker-controlled mailbox.

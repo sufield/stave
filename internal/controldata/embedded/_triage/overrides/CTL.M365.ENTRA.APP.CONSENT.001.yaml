@@ -1,0 +1,16 @@
+control: CTL.M365.ENTRA.APP.CONSENT.001
+defect: >
+  M365 tenant allows users to consent to third-party application
+  permissions without admin approval.
+infection: >
+  Consent phishing (illicit consent grant) is an OAuth-based attack
+  where the attacker creates a malicious application and tricks users
+  into granting it permissions. The user clicks 'Accept' on a consent
+  prompt and the app receives delegated permissions — read mail,
+  access files, send email as the user. The app retains these
+  permissions until revoked. Restricting user consent requires admin
+  review before any app receives permissions.
+failure: >
+  Illicit consent grant. A malicious app receives delegated
+  permissions to read email, access files, and act as the user —
+  persisting until manually revoked.

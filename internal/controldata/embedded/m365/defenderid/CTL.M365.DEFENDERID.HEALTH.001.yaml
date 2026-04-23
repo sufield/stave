@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.M365.DEFENDERID.HEALTH.001
+name: Defender for Identity Has Open Health Issues
+description: >
+  Open health issues. Sensors may be misconfigured or offline.
+  Identity threat detection has coverage gaps.
+domain: detection
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-4"
+  soc2: "CC7.1"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Defender for Identity Has Open Health Issues — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"security": {"kind": "defender_identity", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.security.kind
+      op: eq
+      value: defender_identity
+    - field: properties.m365.security.defenderid.health_issues_open
+      op: eq
+      value: true

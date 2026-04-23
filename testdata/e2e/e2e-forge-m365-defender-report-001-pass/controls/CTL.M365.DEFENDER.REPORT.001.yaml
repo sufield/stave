@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.M365.DEFENDER.REPORT.001
+name: Chat Report Policy Not Configured
+description: >
+  Users cannot report suspicious Teams messages. No user-facing
+  reporting mechanism for threats in chat.
+domain: detection
+severity: low
+compliance:
+  nist_800_53_r5: "SI-4"
+  soc2: "CC7.1"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Chat Report Policy Not Configured — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"security": {"kind": "defender_config", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.security.kind
+      op: eq
+      value: defender_config
+    - field: properties.m365.security.defender.chat_report_policy
+      op: eq
+      value: false

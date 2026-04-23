@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.M365.DEFENDER.DKIM.001
+name: DKIM Not Enabled for Domain
+description: >
+  DKIM signing not enabled in M365. Outgoing email not
+  cryptographically signed for integrity verification.
+domain: exposure
+severity: high
+compliance:
+  cis_m365_v4: "8.8"
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.8"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: DKIM Not Enabled for Domain — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"security": {"kind": "defender_config", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.security.kind
+      op: eq
+      value: defender_config
+    - field: properties.m365.security.defender.dkim_enabled
+      op: eq
+      value: false
