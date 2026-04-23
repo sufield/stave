@@ -1,0 +1,11 @@
+family: CTL.AZURE.POSTGRESQL
+infection: >
+  Azure Database for PostgreSQL stores application data including
+  potentially sensitive records. Database misconfigurations expose
+  data at rest, in transit, and through authentication weaknesses.
+  Public network access, disabled SSL, and incomplete logging each
+  weaken the security boundary around database data.
+failure: >
+  Database exposure. An attacker accesses the PostgreSQL server
+  through unrestricted network access, intercepts plaintext
+  connections, or exploits unaudited operations.

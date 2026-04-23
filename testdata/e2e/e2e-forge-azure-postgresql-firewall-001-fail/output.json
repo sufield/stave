@@ -1,0 +1,326 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-15T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "c3f86ec20d43e3c7f480de50fcded65627be5c4965a65d9bbc6915e85596fc58",
+        "2026-01-11T000000Z.json": "f3b3e1dd7e20c1cd69ae18f73b032d65fa6dabd6047d39101fde2e83a7f31278"
+      },
+      "overall": "3c6b89a943c036202027d9dd67e1262cc9aed88f4417942b307d9d32d9255789"
+    },
+    "policy_fingerprint": "b346b02d6622e1e7544205c000911fc0878a50ce1b3f91c9dbb7f3c80bfcec5a",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.AZURE.POSTGRESQL.FIREWALL.001",
+      "asset_id": "pg-prod",
+      "asset_type": "azure_postgresql_server",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -168,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:735eed8c03824769",
+      "control_id": "CTL.AZURE.POSTGRESQL.FIREWALL.001",
+      "control_name": "PostgreSQL Firewall Allows All Azure IPs",
+      "control_description": "Firewall rule allows 0.0.0.0-255.255.255.255 or AllowAllAzureIps. Permits connections from ANY Azure IP globally, not just the organization's resources.\n",
+      "asset_id": "pg-prod",
+      "asset_type": "azure_postgresql_server",
+      "asset_vendor": "azure",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 336,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "azure.database.kind",
+            "actual_value": "postgresql_server",
+            "operator": "eq",
+            "unsafe_value": "postgresql_server"
+          },
+          {
+            "property": "azure.database.postgresql.firewall_allow_all",
+            "actual_value": true,
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 336 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_azure_v2": "4.3.8",
+        "nist_800_53_r5": "AC-4",
+        "soc2": "CC6.6"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "PostgreSQL Firewall Allows All Azure IPs — finding detected.",
+        "action": "Remove the allow-all rule and configure specific IP ranges.",
+        "example": "{\"azure\": {\"database\": {\"kind\": \"postgresql_server\", \"postgresql\": {\"firewall_allow_all\": false}}}}\n"
+      },
+      "fix_plan": {
+        "id": "fix-773c5e943cc3a3dd",
+        "target": {
+          "asset_id": "pg-prod",
+          "asset_type": "azure_postgresql_server"
+        },
+        "action": "Remove the allow-all rule and configure specific IP ranges."
+      },
+      "exposure_score": 75,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "azure.database.kind eq \"postgresql_server\"",
+          "observation_key": "azure.database.kind",
+          "operator": "eq",
+          "expected_value": "postgresql_server",
+          "observed_value": "postgresql_server"
+        },
+        {
+          "predicate_expr": "azure.database.postgresql.firewall_allow_all eq true",
+          "observation_key": "azure.database.postgresql.firewall_allow_all",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": true
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "pg-prod",
+          "type": "azure_postgresql_server",
+          "vendor": "azure"
+        },
+        "violation": {
+          "control_id": "CTL.AZURE.POSTGRESQL.FIREWALL.001",
+          "control_name": "PostgreSQL Firewall Allows All Azure IPs",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "azure.database.kind = \"postgresql_server\"",
+              "observation_key": "azure.database.kind",
+              "observed_value": "postgresql_server"
+            },
+            {
+              "clause": "azure.database.postgresql.firewall_allow_all = true",
+              "observation_key": "azure.database.postgresql.firewall_allow_all",
+              "observed_value": true
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "azure.database.kind",
+            "current_value": "postgresql_server",
+            "has_safe_default": false,
+            "description": "Change azure.database.kind from postgresql_server"
+          },
+          {
+            "path": "azure.database.postgresql.firewall_allow_all",
+            "current_value": "true",
+            "required_value": "false",
+            "has_safe_default": true,
+            "description": "Set azure.database.postgresql.firewall_allow_all to false"
+          }
+        ],
+        "action": "Remove the allow-all rule and configure specific IP ranges."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "azure"
+      ],
+      "delta": [
+        {
+          "property_label": "database postgresql firewall allow all",
+          "property_path": "azure.database.postgresql.firewall_allow_all",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:0062e0d1a4b4a641",
+      "asset_id": "pg-prod",
+      "shared_keys": [
+        "azure.database",
+        "azure.database.kind",
+        "azure.database.postgresql",
+        "azure.database.postgresql.firewall_allow_all"
+      ],
+      "headline_finding_id": "sha256:735eed8c03824769",
+      "member_finding_ids": [
+        "sha256:735eed8c03824769"
+      ],
+      "consolidated_score": 75,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "pg-prod",
+      "asset_type": "azure_postgresql_server",
+      "fix_plan": {
+        "id": "fix-773c5e943cc3a3dd",
+        "target": {
+          "asset_id": "pg-prod",
+          "asset_type": "azure_postgresql_server"
+        },
+        "action": "Remove the allow-all rule and configure specific IP ranges."
+      },
+      "contributing_controls": [
+        "CTL.AZURE.POSTGRESQL.FIREWALL.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.AZURE.POSTGRESQL.FIREWALL.001",
+      "asset_id": "pg-prod",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-azure-postgresql-firewall-001-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-azure-postgresql-firewall-001-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "02212035b23c02fbd4f58526015c9bcd9a892024",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-azure-postgresql-firewall-001-fail/controls/"
+      ]
+    }
+  }
+}

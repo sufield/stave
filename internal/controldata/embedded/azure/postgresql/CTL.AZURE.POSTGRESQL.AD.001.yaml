@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.POSTGRESQL.AD.001
+name: PostgreSQL Entra ID Admin Not Configured
+description: >
+  No Entra ID administrator configured. Authentication relies solely
+  on native PostgreSQL credentials — no centralized identity, no
+  Conditional Access, no SSO.
+domain: identity
+severity: medium
+compliance:
+  cis_azure_v2: "4.3.5"
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: PostgreSQL Entra ID Admin Not Configured — finding detected.
+  action: Configure an Entra ID administrator for the PostgreSQL server.
+  example: |
+    {"azure": {"database": {"kind": "postgresql_server", "postgresql": {"ad_admin_configured": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.database.kind
+      op: eq
+      value: postgresql_server
+    - field: properties.azure.database.postgresql.ad_admin_configured
+      op: eq
+      value: false

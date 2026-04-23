@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.MYSQL.AUDIT.001
+name: MySQL Audit Log Not Enabled
+description: >
+  Audit logging not enabled. Database operations are not recorded
+  for forensic investigation or compliance.
+domain: exposure
+severity: medium
+compliance:
+  cis_azure_v2: "4.4.4"
+  nist_800_53_r5: "AU-2"
+  hipaa: "164.312(b)"
+  pci_dss_v4: "10.2"
+  soc2: "CC7.1"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: MySQL Audit Log Not Enabled — finding detected.
+  action: Enable audit logging on the MySQL server.
+  example: |
+    {"azure": {"database": {"kind": "mysql_server", "mysql": {"audit_log_enabled": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.database.kind
+      op: eq
+      value: mysql_server
+    - field: properties.azure.database.mysql.audit_log_enabled
+      op: eq
+      value: false

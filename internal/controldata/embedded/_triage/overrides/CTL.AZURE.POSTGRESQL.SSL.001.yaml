@@ -1,0 +1,13 @@
+control: CTL.AZURE.POSTGRESQL.SSL.001
+defect: >
+  Azure PostgreSQL server does not enforce SSL connections.
+infection: >
+  Database connections without SSL transmit credentials and query
+  data in plaintext. An attacker on the network path between the
+  application and the database can intercept authentication
+  credentials and read query results. Even within Azure's network,
+  encrypted connections prevent credential capture during lateral
+  movement.
+failure: >
+  Credential theft via network interception. An attacker captures
+  database credentials and gains direct database access.

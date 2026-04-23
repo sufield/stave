@@ -1,0 +1,16 @@
+control: CTL.AZURE.POSTGRESQL.LOG.001
+defect: >
+  Azure PostgreSQL server has incomplete logging configuration.
+  One or more recommended parameters disabled.
+infection: >
+  PostgreSQL server parameters control what database activity is
+  recorded. log_checkpoints records database checkpoint activity.
+  log_connections and log_disconnections record session lifecycle.
+  log_duration records query execution times (useful for detecting
+  anomalous long-running queries). connection_throttling rate-limits
+  failed authentication attempts. Each disabled parameter is a
+  forensic gap — specific categories of database activity are not
+  recorded.
+failure: >
+  Incomplete database forensics. Incident investigation cannot
+  reconstruct the full picture of database activity.

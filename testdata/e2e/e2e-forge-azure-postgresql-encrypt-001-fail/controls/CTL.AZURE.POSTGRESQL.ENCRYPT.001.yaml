@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.POSTGRESQL.ENCRYPT.001
+name: PostgreSQL Infrastructure Encryption Not Enabled
+description: >
+  Infrastructure-level double encryption not enabled. Data encrypted
+  at the storage layer only — no second encryption layer with a
+  different key.
+domain: encryption
+severity: medium
+compliance:
+  cis_azure_v2: "4.3.6"
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.1"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: PostgreSQL Infrastructure Encryption Not Enabled — finding detected.
+  action: Enable infrastructure encryption on the PostgreSQL server.
+  example: |
+    {"azure": {"database": {"kind": "postgresql_server", "postgresql": {"infrastructure_encryption": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.database.kind
+      op: eq
+      value: postgresql_server
+    - field: properties.azure.database.postgresql.infrastructure_encryption
+      op: eq
+      value: false

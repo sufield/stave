@@ -1,0 +1,47 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.POSTGRESQL.LOG.001
+name: PostgreSQL Server Logging Not Fully Enabled
+description: >
+  One or more recommended logging parameters disabled:
+  log_checkpoints, log_connections, log_disconnections,
+  log_duration, or connection_throttling. Database activity
+  forensics are incomplete.
+domain: exposure
+severity: medium
+compliance:
+  cis_azure_v2: "4.3.2"
+  nist_800_53_r5: "AU-2"
+  hipaa: "164.312(b)"
+  pci_dss_v4: "10.2"
+  soc2: "CC7.1"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: PostgreSQL Server Logging Not Fully Enabled — finding detected.
+  action: Enable all recommended logging parameters.
+  example: |
+    {"azure": {"database": {"kind": "postgresql_server", "postgresql": {"log_checkpoints": true, "log_connections": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.database.kind
+      op: eq
+      value: postgresql_server
+    - any:
+        - field: properties.azure.database.postgresql.log_checkpoints
+          op: eq
+          value: false
+        - field: properties.azure.database.postgresql.log_connections
+          op: eq
+          value: false
+        - field: properties.azure.database.postgresql.log_disconnections
+          op: eq
+          value: false
+        - field: properties.azure.database.postgresql.log_duration
+          op: eq
+          value: false
+        - field: properties.azure.database.postgresql.connection_throttling
+          op: eq
+          value: false

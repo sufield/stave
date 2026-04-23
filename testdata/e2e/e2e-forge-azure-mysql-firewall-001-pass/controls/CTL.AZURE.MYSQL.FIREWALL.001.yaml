@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.MYSQL.FIREWALL.001
+name: MySQL Firewall Allows All Azure IPs
+description: >
+  Firewall rule allows 0.0.0.0-255.255.255.255 or AllowAllAzureIps.
+  Permits connections from ANY Azure IP globally, not just the
+  organization's resources.
+domain: exposure
+severity: high
+compliance:
+  cis_azure_v2: "4.4.3"
+  nist_800_53_r5: "AC-4"
+  soc2: "CC6.6"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: MySQL Firewall Allows All Azure IPs — finding detected.
+  action: Remove the allow-all rule and configure specific IP ranges.
+  example: |
+    {"azure": {"database": {"kind": "mysql_server", "mysql": {"firewall_allow_all": false}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.database.kind
+      op: eq
+      value: mysql_server
+    - field: properties.azure.database.mysql.firewall_allow_all
+      op: eq
+      value: true

@@ -1,0 +1,11 @@
+family: CTL.AZURE.MYSQL
+infection: >
+  Azure Database for MySQL stores application data including
+  potentially sensitive records. Database misconfigurations expose
+  data at rest, in transit, and through authentication weaknesses.
+  Public network access, disabled SSL, and missing audit logging
+  each weaken the security boundary around database data.
+failure: >
+  Database exposure. An attacker accesses the MySQL server through
+  unrestricted network access, intercepts plaintext connections,
+  or exploits unaudited operations.

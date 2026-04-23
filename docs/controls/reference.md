@@ -3,27 +3,27 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1003
-**Pack hash:** `9ccd92ee60159ee008d8368169c44d2d26851789363127b59103c76da6d53780`
+**Total controls:** 1015
+**Pack hash:** `ce3787bf6ab9c8b2c29a980802351de8270ce3f2a22c8d07d60641b9a799d808`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 144 |
-| high | 448 |
+| high | 455 |
 | info | 16 |
 | low | 79 |
-| medium | 316 |
+| medium | 321 |
 
 | Domain | Count |
 |--------|-------|
 | audit | 20 |
 | detection | 8 |
-| encryption | 47 |
-| exposure | 663 |
+| encryption | 52 |
+| exposure | 669 |
 | governance | 24 |
-| identity | 198 |
+| identity | 199 |
 | network | 21 |
 | resilience | 14 |
 | storage | 8 |
@@ -1813,6 +1813,96 @@ No Azure Monitor alert rules for critical admin operations. Role assignments, po
 
 ---
 
+### CTL.AZURE.MYSQL.AUDIT.001
+
+**MySQL Audit Log Not Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_azure_v2: 4.4.4; hipaa: 164.312(b); nist_800_53_r5: AU-2; pci_dss_v4: 10.2; soc2: CC7.1;
+
+Audit logging not enabled. Database operations are not recorded for forensic investigation or compliance.
+
+**Remediation:** Enable audit logging on the MySQL server.
+
+---
+
+### CTL.AZURE.MYSQL.ENCRYPT.001
+
+**MySQL Infrastructure Encryption Not Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** cis_azure_v2: 4.4.6; nist_800_53_r5: SC-28; soc2: CC6.1;
+
+Infrastructure-level double encryption not enabled. Data encrypted at the storage layer only — no second encryption layer.
+
+**Remediation:** Enable infrastructure encryption on the MySQL server.
+
+---
+
+### CTL.AZURE.MYSQL.FIREWALL.001
+
+**MySQL Firewall Allows All Azure IPs**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_azure_v2: 4.4.3; nist_800_53_r5: AC-4; soc2: CC6.6;
+
+Firewall rule allows 0.0.0.0-255.255.255.255 or AllowAllAzureIps. Permits connections from ANY Azure IP globally, not just the organization's resources.
+
+**Remediation:** Remove the allow-all rule and configure specific IP ranges.
+
+---
+
+### CTL.AZURE.MYSQL.PUBLIC.001
+
+**MySQL Public Network Access Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_azure_v2: 4.4.2; hipaa: 164.312(a)(1); nist_800_53_r5: AC-4; pci_dss_v4: 1.3; soc2: CC6.6;
+
+Server accepts connections from the public internet. Database is directly reachable without VNet or private endpoint restriction.
+
+**Remediation:** Disable public network access and use private endpoints.
+
+---
+
+### CTL.AZURE.MYSQL.SSL.001
+
+**MySQL SSL Enforcement Not Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** cis_azure_v2: 4.4.1; hipaa: 164.312(e)(1); nist_800_53_r5: SC-8; pci_dss_v4: 4.1; soc2: CC6.7;
+
+SSL enforcement disabled. Connections to the database can be unencrypted — credentials and query data transmitted in plaintext.
+
+**Remediation:** Enable SSL enforcement on the MySQL server.
+
+---
+
+### CTL.AZURE.MYSQL.TLS.001
+
+**MySQL TLS Minimum Version Below 1.2**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** cis_azure_v2: 4.4.5; nist_800_53_r5: SC-8; pci_dss_v4: 4.1; soc2: CC6.1;
+
+MySQL accepts TLS 1.0 or 1.1 connections with known vulnerabilities (BEAST, POODLE, CRIME).
+
+**Remediation:** Set minimum TLS version to 1.2.
+
+---
+
 ### CTL.AZURE.NSG.DEFAULT.001
 
 **NSG Must Have Custom Rules Beyond Defaults**
@@ -1870,6 +1960,96 @@ Azure NSGs must not have inbound Allow rules permitting traffic from any source 
 Azure Policy assignments show non-compliant resources. Intended configuration state is not enforced.
 
 **Remediation:** Remediate per control description.
+
+---
+
+### CTL.AZURE.POSTGRESQL.AD.001
+
+**PostgreSQL Entra ID Admin Not Configured**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_azure_v2: 4.3.5; nist_800_53_r5: AC-3; soc2: CC6.1;
+
+No Entra ID administrator configured. Authentication relies solely on native PostgreSQL credentials — no centralized identity, no Conditional Access, no SSO.
+
+**Remediation:** Configure an Entra ID administrator for the PostgreSQL server.
+
+---
+
+### CTL.AZURE.POSTGRESQL.ENCRYPT.001
+
+**PostgreSQL Infrastructure Encryption Not Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** cis_azure_v2: 4.3.6; nist_800_53_r5: SC-28; soc2: CC6.1;
+
+Infrastructure-level double encryption not enabled. Data encrypted at the storage layer only — no second encryption layer with a different key.
+
+**Remediation:** Enable infrastructure encryption on the PostgreSQL server.
+
+---
+
+### CTL.AZURE.POSTGRESQL.FIREWALL.001
+
+**PostgreSQL Firewall Allows All Azure IPs**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_azure_v2: 4.3.8; nist_800_53_r5: AC-4; soc2: CC6.6;
+
+Firewall rule allows 0.0.0.0-255.255.255.255 or AllowAllAzureIps. Permits connections from ANY Azure IP globally, not just the organization's resources.
+
+**Remediation:** Remove the allow-all rule and configure specific IP ranges.
+
+---
+
+### CTL.AZURE.POSTGRESQL.LOG.001
+
+**PostgreSQL Server Logging Not Fully Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_azure_v2: 4.3.2; hipaa: 164.312(b); nist_800_53_r5: AU-2; pci_dss_v4: 10.2; soc2: CC7.1;
+
+One or more recommended logging parameters disabled: log_checkpoints, log_connections, log_disconnections, log_duration, or connection_throttling. Database activity forensics are incomplete.
+
+**Remediation:** Enable all recommended logging parameters.
+
+---
+
+### CTL.AZURE.POSTGRESQL.PUBLIC.001
+
+**PostgreSQL Public Network Access Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_azure_v2: 4.3.7; hipaa: 164.312(a)(1); nist_800_53_r5: AC-4; pci_dss_v4: 1.3; soc2: CC6.6;
+
+Server accepts connections from the public internet. Database is directly reachable without VNet or private endpoint restriction.
+
+**Remediation:** Disable public network access and use private endpoints.
+
+---
+
+### CTL.AZURE.POSTGRESQL.SSL.001
+
+**PostgreSQL SSL Enforcement Not Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** cis_azure_v2: 4.3.1; hipaa: 164.312(e)(1); nist_800_53_r5: SC-8; pci_dss_v4: 4.1; soc2: CC6.7;
+
+SSL enforcement disabled. Connections to the database can be unencrypted — credentials and query data transmitted in plaintext.
+
+**Remediation:** Enable SSL enforcement on the PostgreSQL server.
 
 ---
 

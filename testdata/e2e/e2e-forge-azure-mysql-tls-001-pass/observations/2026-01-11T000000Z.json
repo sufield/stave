@@ -1,0 +1,22 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "mysql-prod",
+      "type": "azure_mysql_server",
+      "vendor": "azure",
+      "properties": {
+        "azure": {
+          "database": {
+            "kind": "mysql_server",
+            "mysql": {
+              "tls_min_version": "1.2"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

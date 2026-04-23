@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.MYSQL.TLS.001
+name: MySQL TLS Minimum Version Below 1.2
+description: >
+  MySQL accepts TLS 1.0 or 1.1 connections with known
+  vulnerabilities (BEAST, POODLE, CRIME).
+domain: encryption
+severity: high
+compliance:
+  cis_azure_v2: "4.4.5"
+  nist_800_53_r5: "SC-8"
+  pci_dss_v4: "4.1"
+  soc2: "CC6.1"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: MySQL TLS Minimum Version Below 1.2 — finding detected.
+  action: Set minimum TLS version to 1.2.
+  example: |
+    {"azure": {"database": {"kind": "mysql_server", "mysql": {"tls_min_version": "1.2"}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.database.kind
+      op: eq
+      value: mysql_server
+    - field: properties.azure.database.mysql.tls_min_version
+      op: lt
+      value: "1.2"

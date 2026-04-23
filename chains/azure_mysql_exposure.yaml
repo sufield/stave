@@ -1,0 +1,15 @@
+id: azure_mysql_exposure
+description: >
+  MySQL server with public access plus either no SSL or no audit
+  logging. Database accessible from the internet with either
+  plaintext connections or no operation audit trail.
+controls:
+  - CTL.AZURE.MYSQL.PUBLIC.001
+  - CTL.AZURE.MYSQL.SSL.001
+  - CTL.AZURE.MYSQL.AUDIT.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - ec2_code_execution

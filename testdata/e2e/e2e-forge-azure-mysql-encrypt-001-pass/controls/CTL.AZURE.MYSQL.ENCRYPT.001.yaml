@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.MYSQL.ENCRYPT.001
+name: MySQL Infrastructure Encryption Not Enabled
+description: >
+  Infrastructure-level double encryption not enabled. Data encrypted
+  at the storage layer only — no second encryption layer.
+domain: encryption
+severity: medium
+compliance:
+  cis_azure_v2: "4.4.6"
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.1"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: MySQL Infrastructure Encryption Not Enabled — finding detected.
+  action: Enable infrastructure encryption on the MySQL server.
+  example: |
+    {"azure": {"database": {"kind": "mysql_server", "mysql": {"infrastructure_encryption": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.database.kind
+      op: eq
+      value: mysql_server
+    - field: properties.azure.database.mysql.infrastructure_encryption
+      op: eq
+      value: false

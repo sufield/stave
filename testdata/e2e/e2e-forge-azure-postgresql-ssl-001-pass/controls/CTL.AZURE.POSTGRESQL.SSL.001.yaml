@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.POSTGRESQL.SSL.001
+name: PostgreSQL SSL Enforcement Not Enabled
+description: >
+  SSL enforcement disabled. Connections to the database can be
+  unencrypted — credentials and query data transmitted in plaintext.
+domain: encryption
+severity: high
+compliance:
+  cis_azure_v2: "4.3.1"
+  nist_800_53_r5: "SC-8"
+  hipaa: "164.312(e)(1)"
+  pci_dss_v4: "4.1"
+  soc2: "CC6.7"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: PostgreSQL SSL Enforcement Not Enabled — finding detected.
+  action: Enable SSL enforcement on the PostgreSQL server.
+  example: |
+    {"azure": {"database": {"kind": "postgresql_server", "postgresql": {"ssl_enforcement": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.database.kind
+      op: eq
+      value: postgresql_server
+    - field: properties.azure.database.postgresql.ssl_enforcement
+      op: eq
+      value: false
