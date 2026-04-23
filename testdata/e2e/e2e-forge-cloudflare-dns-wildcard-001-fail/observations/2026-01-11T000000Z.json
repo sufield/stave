@@ -1,0 +1,27 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "wildcard",
+      "type": "cloudflare_dns_record",
+      "vendor": "cloudflare",
+      "properties": {
+        "cloudflare": {
+          "dns": {
+            "kind": "dns_record",
+            "name": "*.example.com",
+            "type": "A",
+            "content": "198.51.100.1",
+            "proxied": true,
+            "is_wildcard": true,
+            "exposes_internal_ip": false,
+            "cname_target_dangling": false,
+            "cname_target_valid": true
+          }
+        }
+      }
+    }
+  ]
+}

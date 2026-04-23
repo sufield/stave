@@ -1,0 +1,11 @@
+family: CTL.CLOUDFLARE.ZONE
+infection: >
+  Cloudflare zones control the edge security layer for all traffic
+  to the domain. SSL mode determines end-to-end encryption. WAF
+  rules filter application-layer attacks. HSTS prevents HTTPS
+  downgrade. Email security records prevent domain spoofing.
+  Misconfigurations at the edge expose every service behind it.
+failure: >
+  Edge security bypass. An attacker exploits weak TLS, bypasses
+  WAF, downgrades HTTPS, or spoofs the organization's domain
+  for phishing.

@@ -1,0 +1,13 @@
+control: CTL.CLOUDFLARE.DNS.DANGLING.001
+defect: >
+  DNS CNAME record points to a target that does not resolve.
+infection: >
+  A CNAME pointing to an unresolvable target is a subdomain takeover
+  candidate. If the target was a hosting provider, CDN, or SaaS
+  platform, an attacker can register the target resource and serve
+  content under the organization's domain. This enables phishing
+  under a trusted domain, cookie manipulation, CSP bypass, and
+  credential theft.
+failure: >
+  Subdomain takeover. An attacker serves malicious content under
+  the organization's trusted domain.

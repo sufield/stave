@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFLARE.ZONE.WAF.OWASP.001
+name: Cloudflare OWASP Managed Ruleset Not Enabled
+description: >
+  WAF enabled but OWASP managed ruleset not active. No coverage
+  for OWASP Top 10 attack categories.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  pci_dss_v4: "6.5"
+  soc2: "CC6.6"
+scope_tags: [cloudflare]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Cloudflare OWASP Managed Ruleset Not Enabled — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"cloudflare": {"zone": {"kind": "zone_config", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.cloudflare.zone.kind
+      op: eq
+      value: zone_config
+    - field: properties.cloudflare.zone.waf_owasp_ruleset_enabled
+      op: eq
+      value: false

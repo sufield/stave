@@ -1,0 +1,28 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFLARE.ZONE.CAA.001
+name: Cloudflare Zone Missing CAA Record
+description: >
+  No CAA record. Any CA can issue certificates for this domain.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-12"
+  soc2: "CC6.1"
+scope_tags: [cloudflare]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Cloudflare Zone Missing CAA Record — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"cloudflare": {"zone": {"kind": "zone_config", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.cloudflare.zone.kind
+      op: eq
+      value: zone_config
+    - field: properties.cloudflare.zone.has_caa_record
+      op: eq
+      value: false

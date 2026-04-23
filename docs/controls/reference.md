@@ -3,25 +3,25 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1143
-**Pack hash:** `06741f7b739c403385958e51be0402937f6d52b97117cef60a336c0f3f501fa6`
+**Total controls:** 1161
+**Pack hash:** `c9647c82dd50cfcaff237c0aacee2f9cafd072e7b3d82d2b697b57bb9f91a8c2`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 158 |
-| high | 506 |
+| critical | 159 |
+| high | 516 |
 | info | 16 |
 | low | 86 |
-| medium | 377 |
+| medium | 384 |
 
 | Domain | Count |
 |--------|-------|
 | audit | 20 |
 | detection | 18 |
-| encryption | 69 |
-| exposure | 735 |
+| encryption | 75 |
+| exposure | 747 |
 | governance | 24 |
 | identity | 234 |
 | network | 21 |
@@ -3879,6 +3879,276 @@ Cisco IOS devices must have UDP small servers disabled. UDP small servers includ
 Unicast Reverse Path Forwarding must be enabled on Cisco IOS devices. Without uRPF, the device accepts packets with spoofed source IP addresses. IP spoofing enables denial-of-service amplification attacks, TCP session hijacking, and evasion of IP-based access controls. uRPF verifies that the source address of each incoming packet is reachable via the interface it arrived on, dropping packets that fail this check. This is a fundamental anti-spoofing control recommended by BCP 38 (RFC 2827).
 
 **Remediation:** Enable uRPF on all external-facing interfaces. Run: interface <interface> ip verify unicast source reachable-via rx Use "rx" (strict mode) on interfaces with a single path, or "any" (loose mode) on interfaces with asymmetric routing. Verify with: show ip verify unicast source
+
+---
+
+### CTL.CLOUDFLARE.DNS.DANGLING.001
+
+**DNS CNAME Record Points to Invalid Target**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-20; soc2: CC6.6;
+
+CNAME record points to a target that doesn't resolve. Subdomain takeover candidate — an attacker registers the target and serves content under the organization's domain.
+
+**Remediation:** Remove the dangling CNAME or re-provision the target resource.
+
+---
+
+### CTL.CLOUDFLARE.DNS.INTERNALIP.001
+
+**DNS Record Exposes Internal IP Address**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+DNS record contains an RFC1918 private IP address. Exposes internal network topology to anyone who queries DNS.
+
+**Remediation:** Remove the internal IP from the DNS record or proxy through Cloudflare.
+
+---
+
+### CTL.CLOUDFLARE.DNS.PROXY.001
+
+**DNS Record Not Proxied Through Cloudflare**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+DNS record not proxied (grey cloud). Traffic goes directly to the origin, bypassing WAF, DDoS protection, and bot management. Origin IP exposed in DNS.
+
+**Remediation:** Enable Cloudflare proxy (orange cloud) on the DNS record.
+
+---
+
+### CTL.CLOUDFLARE.DNS.WILDCARD.001
+
+**Wildcard DNS Record Configured**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+Wildcard record (*.example.com) resolves any subdomain. Increases subdomain takeover surface and enables enumeration.
+
+**Remediation:** Remove the wildcard record and create explicit records.
+
+---
+
+### CTL.CLOUDFLARE.ZONE.CAA.001
+
+**Cloudflare Zone Missing CAA Record**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-12; soc2: CC6.1;
+
+No CAA record. Any CA can issue certificates for this domain.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.CLOUDFLARE.ZONE.DKIM.001
+
+**Cloudflare Zone Missing DKIM Record**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-13; soc2: CC6.1;
+
+No DKIM record. Outgoing email not cryptographically signed.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.CLOUDFLARE.ZONE.DMARC.001
+
+**Cloudflare Zone Missing DMARC Record**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+No DMARC record. Email spoofing for this domain is not detectable by receiving mail servers.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.CLOUDFLARE.ZONE.DNSSEC.001
+
+**Cloudflare Zone DNSSEC Not Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-20; soc2: CC6.6;
+
+DNSSEC not enabled. DNS responses can be spoofed.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.CLOUDFLARE.ZONE.FIREWALL.001
+
+**Cloudflare Zone Has No Firewall Blocking Rules**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+No custom firewall rules in block mode. Zone has no custom filtering beyond managed rulesets.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.CLOUDFLARE.ZONE.HSTS.001
+
+**Cloudflare Zone HSTS Not Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** nist_800_53_r5: SC-8; soc2: CC6.7;
+
+HTTP Strict Transport Security not enabled. Browsers allow downgrade to HTTP via man-in-the-middle.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.CLOUDFLARE.ZONE.HTTPS.001
+
+**Cloudflare Zone HTTPS Redirect Not Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** nist_800_53_r5: SC-8; pci_dss_v4: 4.1; soc2: CC6.7;
+
+Automatic HTTPS redirect not enabled. HTTP requests served without redirecting to HTTPS.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.CLOUDFLARE.ZONE.SPF.001
+
+**Cloudflare Zone Missing SPF Record**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+No SPF record. Any mail server can send email claiming to be from this domain.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.CLOUDFLARE.ZONE.SSL.001
+
+**Cloudflare SSL Mode Not Full (Strict)**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** hipaa: 164.312(e)(1); nist_800_53_r5: SC-8; pci_dss_v4: 4.1; soc2: CC6.7;
+
+SSL mode is Off, Flexible, or Full instead of Full (Strict). Flexible encrypts client-to-Cloudflare but sends plaintext to origin — false HTTPS.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.CLOUDFLARE.ZONE.TLS.001
+
+**Cloudflare Zone Minimum TLS Version Below 1.2**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** nist_800_53_r5: SC-8; pci_dss_v4: 4.1; soc2: CC6.1;
+
+Zone accepts TLS 1.0 or 1.1 with known vulnerabilities.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.CLOUDFLARE.ZONE.TLS13.001
+
+**Cloudflare Zone TLS 1.3 Not Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** nist_800_53_r5: SC-8; soc2: CC6.1;
+
+TLS 1.3 not enabled. Improved security and performance unavailable.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.CLOUDFLARE.ZONE.UNIVERSALSSL.001
+
+**Cloudflare Universal SSL Not Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** nist_800_53_r5: SC-8; soc2: CC6.1;
+
+Universal SSL not active. Subdomains may not have SSL certificates.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.CLOUDFLARE.ZONE.WAF.001
+
+**Cloudflare Zone WAF Not Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; pci_dss_v4: 6.4; soc2: CC6.6;
+
+WAF not enabled. No application-layer inspection. All traffic passes to origin unfiltered.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.CLOUDFLARE.ZONE.WAF.OWASP.001
+
+**Cloudflare OWASP Managed Ruleset Not Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; pci_dss_v4: 6.5; soc2: CC6.6;
+
+WAF enabled but OWASP managed ruleset not active. No coverage for OWASP Top 10 attack categories.
+
+**Remediation:** Remediate per control description.
 
 ---
 

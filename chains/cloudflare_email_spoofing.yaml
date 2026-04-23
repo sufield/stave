@@ -1,0 +1,15 @@
+id: cloudflare_email_spoofing
+description: >
+  Missing SPF plus either no DMARC or no DKIM. Email from this
+  domain is not authenticated — phishing emails spoofing the
+  domain are indistinguishable from legitimate email.
+controls:
+  - CTL.CLOUDFLARE.ZONE.SPF.001
+  - CTL.CLOUDFLARE.ZONE.DMARC.001
+  - CTL.CLOUDFLARE.ZONE.DKIM.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - iam_credential_theft

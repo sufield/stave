@@ -1,0 +1,27 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "old-cname",
+      "type": "cloudflare_dns_record",
+      "vendor": "cloudflare",
+      "properties": {
+        "cloudflare": {
+          "dns": {
+            "kind": "dns_record",
+            "name": "old.example.com",
+            "type": "CNAME",
+            "content": "old-app.herokuapp.com",
+            "proxied": true,
+            "is_wildcard": false,
+            "exposes_internal_ip": false,
+            "cname_target_dangling": true,
+            "cname_target_valid": false
+          }
+        }
+      }
+    }
+  ]
+}

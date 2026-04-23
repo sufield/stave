@@ -1,0 +1,324 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-15T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "e63fd42b40ffe273abf7eeae30200d235cd8872f54f78800b07b0ebc02e03a73",
+        "2026-01-11T000000Z.json": "592876d8810a6d793c80ef9d015d0e0f34a721d2aff98758d1c6bd2b98f3284e"
+      },
+      "overall": "ad04cd17cbf8caa48cb73fcbbc202249bbace511a76f56a2a284605d42d301b8"
+    },
+    "policy_fingerprint": "38ce560d9dbcec1da060c04687ce13e6f9487dbe03d0f0a18620f4ba0f46ec29",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.CLOUDFLARE.ZONE.FIREWALL.001",
+      "asset_id": "example-zone",
+      "asset_type": "cloudflare_zone",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -168,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:33d1bd62f7be43f9",
+      "control_id": "CTL.CLOUDFLARE.ZONE.FIREWALL.001",
+      "control_name": "Cloudflare Zone Has No Firewall Blocking Rules",
+      "control_description": "No custom firewall rules in block mode. Zone has no custom filtering beyond managed rulesets.\n",
+      "asset_id": "example-zone",
+      "asset_type": "cloudflare_zone",
+      "asset_vendor": "cloudflare",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 336,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "cloudflare.zone.firewall_blocking_rules",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "cloudflare.zone.kind",
+            "actual_value": "zone_config",
+            "operator": "eq",
+            "unsafe_value": "zone_config"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 336 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "nist_800_53_r5": "SC-7",
+        "soc2": "CC6.6"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Cloudflare Zone Has No Firewall Blocking Rules — finding detected.",
+        "action": "Remediate per control description.",
+        "example": "{\"cloudflare\": {\"zone\": {\"kind\": \"zone_config\", \"placeholder\": true}}}\n"
+      },
+      "fix_plan": {
+        "id": "fix-fdf844ea890ad5d5",
+        "target": {
+          "asset_id": "example-zone",
+          "asset_type": "cloudflare_zone"
+        },
+        "action": "Remediate per control description."
+      },
+      "exposure_score": 50,
+      "score_breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "cloudflare.zone.firewall_blocking_rules eq false",
+          "observation_key": "cloudflare.zone.firewall_blocking_rules",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "cloudflare.zone.kind eq \"zone_config\"",
+          "observation_key": "cloudflare.zone.kind",
+          "operator": "eq",
+          "expected_value": "zone_config",
+          "observed_value": "zone_config"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "example-zone",
+          "type": "cloudflare_zone",
+          "vendor": "cloudflare"
+        },
+        "violation": {
+          "control_id": "CTL.CLOUDFLARE.ZONE.FIREWALL.001",
+          "control_name": "Cloudflare Zone Has No Firewall Blocking Rules",
+          "severity": "medium",
+          "reasoning": [
+            {
+              "clause": "cloudflare.zone.firewall_blocking_rules = false",
+              "observation_key": "cloudflare.zone.firewall_blocking_rules",
+              "observed_value": false
+            },
+            {
+              "clause": "cloudflare.zone.kind = \"zone_config\"",
+              "observation_key": "cloudflare.zone.kind",
+              "observed_value": "zone_config"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "cloudflare.zone.firewall_blocking_rules",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set cloudflare.zone.firewall_blocking_rules to true"
+          },
+          {
+            "path": "cloudflare.zone.kind",
+            "current_value": "zone_config",
+            "has_safe_default": false,
+            "description": "Change cloudflare.zone.kind from zone_config"
+          }
+        ],
+        "action": "Remediate per control description."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "cloudflare"
+      ],
+      "delta": [
+        {
+          "property_label": "zone firewall blocking rules",
+          "property_path": "cloudflare.zone.firewall_blocking_rules",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:184317ebc5aa5995",
+      "asset_id": "example-zone",
+      "shared_keys": [
+        "cloudflare.zone",
+        "cloudflare.zone.firewall_blocking_rules",
+        "cloudflare.zone.kind"
+      ],
+      "headline_finding_id": "sha256:33d1bd62f7be43f9",
+      "member_finding_ids": [
+        "sha256:33d1bd62f7be43f9"
+      ],
+      "consolidated_score": 50,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "example-zone",
+      "asset_type": "cloudflare_zone",
+      "fix_plan": {
+        "id": "fix-fdf844ea890ad5d5",
+        "target": {
+          "asset_id": "example-zone",
+          "asset_type": "cloudflare_zone"
+        },
+        "action": "Remediate per control description."
+      },
+      "contributing_controls": [
+        "CTL.CLOUDFLARE.ZONE.FIREWALL.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.CLOUDFLARE.ZONE.FIREWALL.001",
+      "asset_id": "example-zone",
+      "exposure_score": 50,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-cloudflare-zone-firewall-001-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-cloudflare-zone-firewall-001-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "78d2fe0cc9c1b69582429048c902415cdf9a21b2",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-cloudflare-zone-firewall-001-fail/controls/"
+      ]
+    }
+  }
+}

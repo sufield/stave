@@ -1,0 +1,10 @@
+family: CTL.CLOUDFLARE.DNS
+infection: >
+  Cloudflare DNS records map domains to origins. Non-proxied records
+  expose origin IPs. Dangling CNAMEs enable subdomain takeover.
+  Internal IPs leak network topology. Wildcard records expand the
+  attack surface.
+failure: >
+  Origin exposure or subdomain takeover. An attacker discovers the
+  origin IP to bypass Cloudflare, or claims a dangling subdomain
+  to serve malicious content under the organization's domain.

@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFLARE.ZONE.SPF.001
+name: Cloudflare Zone Missing SPF Record
+description: >
+  No SPF record. Any mail server can send email claiming to be
+  from this domain.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+scope_tags: [cloudflare]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Cloudflare Zone Missing SPF Record — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"cloudflare": {"zone": {"kind": "zone_config", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.cloudflare.zone.kind
+      op: eq
+      value: zone_config
+    - field: properties.cloudflare.zone.has_spf_record
+      op: eq
+      value: false

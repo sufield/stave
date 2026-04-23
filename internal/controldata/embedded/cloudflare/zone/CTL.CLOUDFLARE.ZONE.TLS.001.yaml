@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFLARE.ZONE.TLS.001
+name: Cloudflare Zone Minimum TLS Version Below 1.2
+description: >
+  Zone accepts TLS 1.0 or 1.1 with known vulnerabilities.
+domain: encryption
+severity: high
+compliance:
+  nist_800_53_r5: "SC-8"
+  pci_dss_v4: "4.1"
+  soc2: "CC6.1"
+scope_tags: [cloudflare]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Cloudflare Zone Minimum TLS Version Below 1.2 — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"cloudflare": {"zone": {"kind": "zone_config", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.cloudflare.zone.kind
+      op: eq
+      value: zone_config
+    - field: properties.cloudflare.zone.min_tls_version
+      op: lt
+      value: "1.2"

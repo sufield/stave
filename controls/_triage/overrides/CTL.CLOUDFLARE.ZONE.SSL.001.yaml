@@ -1,0 +1,14 @@
+control: CTL.CLOUDFLARE.ZONE.SSL.001
+defect: >
+  Cloudflare zone SSL mode is not Full (Strict).
+infection: >
+  Flexible mode is the most dangerous configuration because it
+  appears secure to users — the browser shows HTTPS and the padlock
+  icon. But the connection between Cloudflare and the origin server
+  is plaintext HTTP. Any attacker on the network path between
+  Cloudflare and the origin can intercept credentials, session
+  tokens, and data. The user has no indication that the backend
+  connection is unencrypted.
+failure: >
+  False HTTPS. Users see a secure connection indicator while the
+  backend connection is unencrypted or unvalidated.

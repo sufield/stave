@@ -1,0 +1,41 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "example-zone",
+      "type": "cloudflare_zone",
+      "vendor": "cloudflare",
+      "properties": {
+        "cloudflare": {
+          "zone": {
+            "kind": "zone_config",
+            "name": "example.com",
+            "ssl_mode": "flexible",
+            "ssl_mode_is_strict": false,
+            "min_tls_version": "1.2",
+            "tls_1_3_enabled": true,
+            "universal_ssl_enabled": true,
+            "https_redirect_enabled": true,
+            "automatic_https_rewrites": true,
+            "waf_enabled": true,
+            "waf_owasp_ruleset_enabled": true,
+            "firewall_blocking_rules": true,
+            "firewall_rule_count": 5,
+            "dnssec_enabled": true,
+            "dnssec_status": "active",
+            "hsts_enabled": true,
+            "hsts_max_age": 31536000,
+            "hsts_include_subdomains": true,
+            "hsts_preload": true,
+            "has_caa_record": true,
+            "has_dmarc_record": true,
+            "has_dkim_record": true,
+            "has_spf_record": true
+          }
+        }
+      }
+    }
+  ]
+}

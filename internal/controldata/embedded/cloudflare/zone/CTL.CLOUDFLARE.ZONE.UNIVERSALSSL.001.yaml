@@ -1,0 +1,28 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFLARE.ZONE.UNIVERSALSSL.001
+name: Cloudflare Universal SSL Not Enabled
+description: >
+  Universal SSL not active. Subdomains may not have SSL certificates.
+domain: encryption
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-8"
+  soc2: "CC6.1"
+scope_tags: [cloudflare]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Cloudflare Universal SSL Not Enabled — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"cloudflare": {"zone": {"kind": "zone_config", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.cloudflare.zone.kind
+      op: eq
+      value: zone_config
+    - field: properties.cloudflare.zone.universal_ssl_enabled
+      op: eq
+      value: false

@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFLARE.DNS.DANGLING.001
+name: DNS CNAME Record Points to Invalid Target
+description: >
+  CNAME record points to a target that doesn't resolve. Subdomain
+  takeover candidate — an attacker registers the target and serves
+  content under the organization's domain.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-20"
+  soc2: "CC6.6"
+scope_tags: [cloudflare]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: DNS CNAME Points to Invalid Target — finding detected.
+  action: Remove the dangling CNAME or re-provision the target resource.
+  example: |
+    {"cloudflare": {"dns": {"kind": "dns_record", "cname_target_dangling": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.cloudflare.dns.kind
+      op: eq
+      value: dns_record
+    - field: properties.cloudflare.dns.cname_target_dangling
+      op: eq
+      value: true

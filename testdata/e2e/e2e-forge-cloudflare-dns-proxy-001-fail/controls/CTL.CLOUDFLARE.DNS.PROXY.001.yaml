@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFLARE.DNS.PROXY.001
+name: DNS Record Not Proxied Through Cloudflare
+description: >
+  DNS record not proxied (grey cloud). Traffic goes directly to the
+  origin, bypassing WAF, DDoS protection, and bot management. Origin
+  IP exposed in DNS.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+scope_tags: [cloudflare]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: DNS Record Not Proxied — finding detected.
+  action: Enable Cloudflare proxy (orange cloud) on the DNS record.
+  example: |
+    {"cloudflare": {"dns": {"kind": "dns_record", "proxied": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.cloudflare.dns.kind
+      op: eq
+      value: dns_record
+    - field: properties.cloudflare.dns.proxied
+      op: eq
+      value: false

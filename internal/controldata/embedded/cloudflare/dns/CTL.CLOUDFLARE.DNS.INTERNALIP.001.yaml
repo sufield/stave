@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFLARE.DNS.INTERNALIP.001
+name: DNS Record Exposes Internal IP Address
+description: >
+  DNS record contains an RFC1918 private IP address. Exposes
+  internal network topology to anyone who queries DNS.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+scope_tags: [cloudflare]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: DNS Record Exposes Internal IP — finding detected.
+  action: Remove the internal IP from the DNS record or proxy through Cloudflare.
+  example: |
+    {"cloudflare": {"dns": {"kind": "dns_record", "exposes_internal_ip": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.cloudflare.dns.kind
+      op: eq
+      value: dns_record
+    - field: properties.cloudflare.dns.exposes_internal_ip
+      op: eq
+      value: true

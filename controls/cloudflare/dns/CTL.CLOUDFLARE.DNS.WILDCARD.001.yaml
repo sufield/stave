@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFLARE.DNS.WILDCARD.001
+name: Wildcard DNS Record Configured
+description: >
+  Wildcard record (*.example.com) resolves any subdomain. Increases
+  subdomain takeover surface and enables enumeration.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+scope_tags: [cloudflare]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Wildcard DNS Record Configured — finding detected.
+  action: Remove the wildcard record and create explicit records.
+  example: |
+    {"cloudflare": {"dns": {"kind": "dns_record", "is_wildcard": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.cloudflare.dns.kind
+      op: eq
+      value: dns_record
+    - field: properties.cloudflare.dns.is_wildcard
+      op: eq
+      value: true
