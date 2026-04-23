@@ -1,0 +1,18 @@
+control: CTL.EKS.VERSION.001
+defect: >
+  The EKS cluster runs a Kubernetes version that has reached AWS
+  end-of-support. No security patches are available for the control
+  plane or EKS-managed components.
+infection: >
+  Kubernetes has a high CVE rate with frequent critical vulnerabilities
+  affecting the API server, kubelet, container runtime, and networking
+  components. A cluster running an unsupported version has every
+  published CVE for that version permanently exploitable. AWS does not
+  backport patches to EOL versions. An attacker exploiting a known
+  Kubernetes CVE gains cluster-level access — container escape,
+  privilege escalation, or control plane compromise depending on the
+  specific vulnerability.
+failure: >
+  Unpatched Kubernetes cluster. Known CVEs are permanently exploitable
+  with no fix path. The cluster must be upgraded to a supported version
+  to receive security patches.

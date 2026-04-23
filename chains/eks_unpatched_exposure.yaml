@@ -1,0 +1,16 @@
+id: eks_unpatched_exposure
+description: >
+  EKS cluster running a deprecated Kubernetes version with a public API
+  endpoint. The attacker can reach the cluster API server from the
+  internet AND exploit unpatched Kubernetes CVEs on the control plane.
+  A public endpoint on a supported version is risky. A public endpoint
+  on an EOL version is exploitable.
+controls:
+  - CTL.EKS.VERSION.001
+  - CTL.EKS.PUBLIC.ENDPOINT.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - k8s_cluster_admin
