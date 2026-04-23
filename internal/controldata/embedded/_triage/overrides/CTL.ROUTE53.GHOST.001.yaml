@@ -1,0 +1,14 @@
+control: CTL.ROUTE53.GHOST.001
+defect: >
+  Route53 record points to an AWS resource that has been deleted. The
+  DNS record persists while the target is gone.
+infection: >
+  For reclaimable resource types (released Elastic IPs, deleted S3
+  bucket names), an attacker claims the target and serves content
+  under the organization's domain name. For non-reclaimable resources
+  (deleted ELBs, CloudFront distributions), the record returns DNS
+  errors causing service degradation.
+failure: >
+  DNS-routed traffic hijacking or service failure. An attacker serves
+  malicious content under the organization's domain, or the dangling
+  record causes availability loss.

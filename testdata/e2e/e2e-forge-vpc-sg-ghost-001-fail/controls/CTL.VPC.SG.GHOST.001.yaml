@@ -1,0 +1,34 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.SG.GHOST.001
+name: Security Group Rules Must Not Reference Deleted Security Groups
+description: >
+  Security group inbound and outbound rules must not reference other
+  security groups that have been deleted. Orphaned SG references
+  clutter the rule set, confuse security audits, and mask the
+  effective rule set. SG IDs are system-generated and not reusable,
+  so the rule effectively permits nothing — this is a governance
+  finding, not an exploitable vulnerability.
+domain: governance
+severity: low
+compliance:
+  nist_800_53_r5: "CM-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IVS-03"]
+scope_tags: [aws, ec2]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: Security group has rules referencing deleted security groups.
+  action: Remove orphaned rules referencing non-existent security group IDs.
+  example: |
+    {"network": {"kind": "security_group", "rules": {"has_ghost_sg_reference": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: security_group
+    - field: properties.network.rules.has_ghost_sg_reference
+      op: eq
+      value: true

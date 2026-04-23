@@ -1,0 +1,15 @@
+control: CTL.VPC.ENDPOINT.GHOST.001
+defect: >
+  VPC endpoint policy grants access to a resource ARN that does not
+  exist. Traffic routed through the endpoint targets an unclaimed
+  resource name.
+infection: >
+  For globally reclaimable names (S3 buckets), an attacker registers
+  the name and receives all traffic the VPC endpoint routes to it.
+  Data sent from the VPC through this endpoint arrives at the
+  attacker's resource. For account-scoped names, an attacker with
+  limited account access recreates the resource and receives traffic.
+failure: >
+  Data exfiltration via VPC endpoint ghost. Traffic intended for an
+  internal resource is routed to an attacker-controlled resource
+  through the organization's own VPC endpoint.

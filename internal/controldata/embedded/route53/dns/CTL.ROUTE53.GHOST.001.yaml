@@ -1,0 +1,36 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.GHOST.001
+name: Route53 Records Must Not Point to Deleted AWS Resources
+description: >
+  Route53 records (A, AAAA, CNAME, Alias) must not point to AWS
+  resources that have been deleted — ELBs, CloudFront distributions,
+  S3 website endpoints, Elastic IPs, or API Gateways. For reclaimable
+  resources (released EIPs, deleted S3 bucket names), an attacker
+  claims the target and receives all traffic the DNS record directs.
+  This extends CTL.ROUTE53.DANGLING.001 (dangling IPs) and
+  CTL.DNS.DANGLING.001-003 (external hosting takeover) to cover
+  deleted AWS resources specifically.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "CM-8"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-17"]
+scope_tags: [aws, route53]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Route53 record points to a deleted AWS resource.
+  action: Remove or update the DNS record to point to an existing resource.
+  example: |
+    {"network": {"kind": "route53_record", "dns": {"has_ghost_aws_target": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: route53_record
+    - field: properties.network.dns.has_ghost_aws_target
+      op: eq
+      value: true

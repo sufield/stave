@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.ENDPOINT.GHOST.001
+name: VPC Endpoint Policy Must Not Reference Deleted Resources
+description: >
+  VPC endpoint policies must not grant access to resources by ARN
+  when those resources no longer exist. For S3 bucket ARNs (globally
+  reclaimable), traffic routed through the endpoint reaches whoever
+  claims the bucket name. For account-scoped resources, an attacker
+  with limited access can recreate the resource.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IVS-03", "DSP-17"]
+scope_tags: [aws, vpc]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: VPC endpoint policy references a deleted resource.
+  action: Remove the ghost resource ARN from the endpoint policy.
+  example: |
+    {"network": {"kind": "vpc_endpoint", "endpoint_policy": {"has_ghost_resource": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: vpc_endpoint
+    - field: properties.network.endpoint_policy.has_ghost_resource
+      op: eq
+      value: true

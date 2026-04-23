@@ -3,17 +3,17 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 900
-**Pack hash:** `3a9839f1b5a83400dc71e9842c11ec8fe386a7a670d5c4cfa84cce7d5a472414`
+**Total controls:** 903
+**Pack hash:** `db8bf6deed09b082471b50ab9a9bf9b1a592a26d170ac53d7c4201b4547ff136`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 137 |
-| high | 398 |
+| high | 400 |
 | info | 16 |
-| low | 76 |
+| low | 77 |
 | medium | 273 |
 
 | Domain | Count |
@@ -21,8 +21,8 @@
 | audit | 20 |
 | detection | 6 |
 | encryption | 35 |
-| exposure | 599 |
-| governance | 20 |
+| exposure | 601 |
+| governance | 21 |
 | identity | 177 |
 | network | 21 |
 | resilience | 14 |
@@ -10332,6 +10332,21 @@ Route53 A records using literal IP addresses must point to IP addresses currentl
 
 ---
 
+### CTL.ROUTE53.GHOST.001
+
+**Route53 Records Must Not Point to Deleted AWS Resources**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-8; soc2: CC6.1;
+
+Route53 records (A, AAAA, CNAME, Alias) must not point to AWS resources that have been deleted — ELBs, CloudFront distributions, S3 website endpoints, Elastic IPs, or API Gateways. For reclaimable resources (released EIPs, deleted S3 bucket names), an attacker claims the target and receives all traffic the DNS record directs. This extends CTL.ROUTE53.DANGLING.001 (dangling IPs) and CTL.DNS.DANGLING.001-003 (external hosting takeover) to cover deleted AWS resources specifically.
+
+**Remediation:** Remove or update the DNS record to point to an existing resource.
+
+---
+
 ### CTL.ROUTE53.HEALTHCHECK.001
 
 **Route 53 Health Checks Must Be Configured**
@@ -12668,6 +12683,21 @@ VPC endpoint policies for S3 must restrict which buckets can be accessed. Withou
 
 ---
 
+### CTL.VPC.ENDPOINT.GHOST.001
+
+**VPC Endpoint Policy Must Not Reference Deleted Resources**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+VPC endpoint policies must not grant access to resources by ARN when those resources no longer exist. For S3 bucket ARNs (globally reclaimable), traffic routed through the endpoint reaches whoever claims the bucket name. For account-scoped resources, an attacker with limited access can recreate the resource.
+
+**Remediation:** Remove the ghost resource ARN from the endpoint policy.
+
+---
+
 ### CTL.VPC.ENDPOINT.IAM.CONDITION.001
 
 **VPC Endpoint Policy Must Require IAM Conditions**
@@ -12859,6 +12889,21 @@ Security groups must not allow all outbound traffic to 0.0.0.0/0 on all ports. U
 Security groups must not allow unrestricted outbound traffic to 0.0.0.0/0 on ports commonly used for data exfiltration (443/HTTPS, 53/DNS, 80/HTTP) even when other ports are blocked. Exfiltration traffic hides in standard web and DNS protocols.
 
 **Remediation:** Restrict egress to specific destination CIDRs where possible. For DNS (53), route through a DNS firewall or VPC resolver endpoint. For HTTPS (443), consider VPC endpoint routes instead of internet egress. Note: blocking 443/53 outbound breaks most applications — this control flags for awareness, not hard block.
+
+---
+
+### CTL.VPC.SG.GHOST.001
+
+**Security Group Rules Must Not Reference Deleted Security Groups**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-6; soc2: CC6.1;
+
+Security group inbound and outbound rules must not reference other security groups that have been deleted. Orphaned SG references clutter the rule set, confuse security audits, and mask the effective rule set. SG IDs are system-generated and not reusable, so the rule effectively permits nothing — this is a governance finding, not an exploitable vulnerability.
+
+**Remediation:** Remove orphaned rules referencing non-existent security group IDs.
 
 ---
 
