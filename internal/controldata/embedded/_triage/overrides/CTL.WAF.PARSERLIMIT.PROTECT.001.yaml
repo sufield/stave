@@ -1,0 +1,22 @@
+control: CTL.WAF.PARSERLIMIT.PROTECT.001
+defect: >
+  The WAF Web ACL does not have a parser limit protection rule at
+  highest priority in BLOCK mode. Requests that exceed the WAF's
+  internal parser limits bypass all rule evaluation — the WAF
+  evaluates only the portion of the request it successfully parsed
+  and allows the remainder through uninspected.
+infection: >
+  An attacker sends a request with enough HTTP headers, oversized
+  cookies, or an oversized body to exceed the WAF's parser limit.
+  The WAF stops rule evaluation at the parser limit boundary.
+  Malicious content placed after the boundary — XSS payloads, SQL
+  injection, command injection — passes through every WAF rule
+  uninspected. The WAF reports the request as clean because it never
+  saw the malicious portion. This technique bypassed all WAF rules,
+  cache evaluation, and cache rules in a disclosed Cloudflare
+  vulnerability (HackerOne, 2025-11-18, High severity, $1,250).
+failure: >
+  Complete WAF bypass. All managed rule groups, all OWASP coverage,
+  all custom rules are neutralized for any request crafted to exceed
+  the parser limit. The WAF provides zero protection while appearing
+  fully operational.

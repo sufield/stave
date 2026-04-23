@@ -9,10 +9,10 @@
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2026-01-01T000000Z.json": "28ae071312e0b58b681b67e0e8ac00179998894bc4c5a53f79ffd685fc48f9bc",
-        "2026-01-11T000000Z.json": "88cee4dd159e23f2c2b674238271611e3291cb35294f90bfabd7f98f683cc01c"
+        "20260101T000000Z.json": "36a8c287ccd262634221312067810646ef6f0553ef23d1e84bbe76f0924d9d95",
+        "20260111T000000Z.json": "e092911ba87c6b65a53d49cf1de52f3b59a5e92104affa01eed86c4484f36f32"
       },
-      "overall": "91ec1c64d1ade2f76a6de789561ed4a187c57b376ada977b51c8b23be696609d"
+      "overall": "11e6105d356d3bcd27bc093a3ddf7895831e996d1c3e443b3c0d5eff73d91b9c"
     },
     "policy_fingerprint": "c18d570eb063bd06d2a89c71ddd5c93bdaae6c552ac82db4d3ac2a98f36df953",
     "evaluated_state": "deployed"
@@ -112,13 +112,16 @@
     "selected_controls_source": "dir",
     "context_name": "stave",
     "resolved_paths": {
-      "controls": "testdata/e2e/e2e-forge-waf-parserlimit-protect-pass/controls",
-      "observations": "testdata/e2e/e2e-forge-waf-parserlimit-protect-pass/observations"
+      "controls": "testdata/e2e/e2e-forge-waf-parserlimit-protect-incomplete/controls",
+      "observations": "testdata/e2e/e2e-forge-waf-parserlimit-protect-incomplete/observations"
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
       "head_commit": "9dacb52ec150fee0e8b183cd5339f62ded12b196",
-      "dirty": false
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-waf-parserlimit-protect-incomplete/controls/"
+      ]
     }
   }
 }

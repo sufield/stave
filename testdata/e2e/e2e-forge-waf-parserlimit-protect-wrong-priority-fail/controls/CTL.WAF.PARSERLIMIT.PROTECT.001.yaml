@@ -1,0 +1,74 @@
+dsl_version: ctrl.v1
+id: CTL.WAF.PARSERLIMIT.PROTECT.001
+name: WAF Must Block Requests That Exceed Parser Limits
+description: >
+  WAF Web ACLs must contain a highest-priority rule that detects when the
+  WAF's internal parser limits have been exceeded and blocks the request.
+  Every WAF has parser limits — maximum header count, maximum header size,
+  maximum body size, maximum cookie count. When a request exceeds these
+  limits, rule evaluation silently stops at the truncation point. Rules
+  configured to inspect content beyond the limit never fire. The request
+  passes through as if clean. A Cloudflare HackerOne report (High severity,
+  $1,250 bounty, 2025-11-18) documented this: 94+ HTTP headers caused all
+  WAF rules, cache key evaluation, and cache rules to bypass simultaneously.
+  Cloudflare's mitigation: a rule checking http.request.headers.truncated
+  at highest priority in BLOCK mode. This vulnerability class applies to
+  every WAF vendor — the invariant is vendor-neutral. The parser limit
+  protection rule must execute before all other rules. A rule at lower
+  priority allows other rules to evaluate truncated content before the
+  overflow is detected, creating a race condition attackers can exploit.
+  This control is the prerequisite for all other WAF rule controls — if
+  the parser can be overflowed, managed rules, OWASP coverage, and custom
+  rules are irrelevant for any request designed to exceed the limit.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "SI-10"
+  fedramp_moderate: "SI-10"
+  pci_dss_v4.0: "6.4.1"
+  soc2: "CC6.6"
+  hipaa: "164.312(e)(1)"
+  ccm_v4: ["CCC-04", "GRC-05"]
+scope_tags:
+  - aws
+  - waf
+type: unsafe_state
+classification: state_assertion
+params:
+  base_impact: 10
+  attack_stage: initial_access
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    WAF Web ACL does not have a parser limit protection rule, or the rule
+    is not at the highest priority or is not in BLOCK mode. Requests that
+    exceed parser limits bypass all subsequent rule evaluation silently.
+  action: >
+    Add a rule at the highest priority position (priority 0 or the lowest
+    numeric value) that detects parser overflow and blocks the request.
+    For Cloudflare, check http.request.headers.truncated == true. For AWS
+    WAF, use a size constraint rule checking header count or total header
+    size against the documented parser limit. The rule must be in BLOCK
+    mode — COUNT mode detects but does not prevent the bypass. Verify
+    the rule has higher priority than all managed rule groups and custom
+    rules in the Web ACL.
+  example: |
+    {
+      "waf": {
+        "kind": "web_acl",
+        "parser_limit_protection": {
+          "enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.waf.kind
+      op: eq
+      value: web_acl
+    - field: properties.waf.parser_limit_protection.enabled
+      op: eq
+      value: false

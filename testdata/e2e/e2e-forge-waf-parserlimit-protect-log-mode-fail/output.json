@@ -9,10 +9,10 @@
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2026-01-01T000000Z.json": "98753dac5103008dc365b33a7f439732c18978d1edc9d4c99c206790fcdd1f92",
-        "2026-01-11T000000Z.json": "3256c795e658385db3156930247167a2f1374edec15d90f51f4b9527e697d1a2"
+        "20260101T000000Z.json": "ec96668bca30ecdb566cfd7001d41abd5cb90735e729a7a37696eb53b5fc7f02",
+        "20260111T000000Z.json": "aae390e7e7bd8e37c9b9fa87f48e9b354e5c017dcd212e5a4ff9e8e4b9336d1d"
       },
-      "overall": "1bf2f9768d154713b6f18aaea1cf25356b6e0099bb1cff7d747a450e31c0ebf7"
+      "overall": "72630e490c5e86819034ed21d671f1958dfc74b3bf0ed9fe3191fc34fc5216b2"
     },
     "policy_fingerprint": "c18d570eb063bd06d2a89c71ddd5c93bdaae6c552ac82db4d3ac2a98f36df953",
     "evaluated_state": "deployed"
@@ -26,7 +26,7 @@
   "risk_signals": [
     {
       "control_id": "CTL.WAF.PARSERLIMIT.PROTECT.001",
-      "asset_id": "arn:aws:wafv2::123:webacl/prod-api",
+      "asset_id": "arn:aws:wafv2::123456789012:webacl/prod-api",
       "asset_type": "aws_wafv2_web_acl",
       "status": "OVERDUE",
       "due_at": "2026-01-08T00:00:00Z",
@@ -37,11 +37,11 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:eee32234e7296688",
+      "finding_id": "sha256:35da763e3df0060b",
       "control_id": "CTL.WAF.PARSERLIMIT.PROTECT.001",
       "control_name": "WAF Must Block Requests That Exceed Parser Limits",
       "control_description": "WAF Web ACLs must contain a highest-priority rule that detects when the WAF's internal parser limits have been exceeded and blocks the request. Every WAF has parser limits — maximum header count, maximum header size, maximum body size, maximum cookie count. When a request exceeds these limits, rule evaluation silently stops at the truncation point. Rules configured to inspect content beyond the limit never fire. The request passes through as if clean. A Cloudflare HackerOne report (High severity, $1,250 bounty, 2025-11-18) documented this: 94+ HTTP headers caused all WAF rules, cache key evaluation, and cache rules to bypass simultaneously. Cloudflare's mitigation: a rule checking http.request.headers.truncated at highest priority in BLOCK mode. This vulnerability class applies to every WAF vendor — the invariant is vendor-neutral. The parser limit protection rule must execute before all other rules. A rule at lower priority allows other rules to evaluate truncated content before the overflow is detected, creating a race condition attackers can exploit. This control is the prerequisite for all other WAF rule controls — if the parser can be overflowed, managed rules, OWASP coverage, and custom rules are irrelevant for any request designed to exceed the limit.\n",
-      "asset_id": "arn:aws:wafv2::123:webacl/prod-api",
+      "asset_id": "arn:aws:wafv2::123456789012:webacl/prod-api",
       "asset_type": "aws_wafv2_web_acl",
       "asset_vendor": "aws",
       "evidence": {
@@ -90,9 +90,9 @@
         "example": "{\n  \"waf\": {\n    \"kind\": \"web_acl\",\n    \"parser_limit_protection\": {\n      \"enabled\": true\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-29cba9a50b1d26e9",
+        "id": "fix-b6ed249cd83eb0f0",
         "target": {
-          "asset_id": "arn:aws:wafv2::123:webacl/prod-api",
+          "asset_id": "arn:aws:wafv2::123456789012:webacl/prod-api",
           "asset_type": "aws_wafv2_web_acl"
         },
         "action": "Add a rule at the highest priority position (priority 0 or the lowest numeric value) that detects parser overflow and blocks the request. For Cloudflare, check http.request.headers.truncated == true. For AWS WAF, use a size constraint rule checking header count or total header size against the documented parser limit. The rule must be in BLOCK mode — COUNT mode detects but does not prevent the bypass. Verify the rule has higher priority than all managed rule groups and custom rules in the Web ACL."
@@ -124,10 +124,10 @@
       ],
       "remediation_context": {
         "asset": {
-          "id": "arn:aws:wafv2::123:webacl/prod-api",
+          "id": "arn:aws:wafv2::123456789012:webacl/prod-api",
           "type": "aws_wafv2_web_acl",
           "vendor": "aws",
-          "arn": "arn:aws:wafv2::123:webacl/prod-api"
+          "arn": "arn:aws:wafv2::123456789012:webacl/prod-api"
         },
         "violation": {
           "control_id": "CTL.WAF.PARSERLIMIT.PROTECT.001",
@@ -180,16 +180,16 @@
   ],
   "issues": [
     {
-      "issue_id": "sha256:f7f6c0ff2e1c541d",
-      "asset_id": "arn:aws:wafv2::123:webacl/prod-api",
+      "issue_id": "sha256:f2ac69d0e923c963",
+      "asset_id": "arn:aws:wafv2::123456789012:webacl/prod-api",
       "shared_keys": [
         "waf.kind",
         "waf.parser_limit_protection",
         "waf.parser_limit_protection.enabled"
       ],
-      "headline_finding_id": "sha256:eee32234e7296688",
+      "headline_finding_id": "sha256:35da763e3df0060b",
       "member_finding_ids": [
-        "sha256:eee32234e7296688"
+        "sha256:35da763e3df0060b"
       ],
       "consolidated_score": 250,
       "consolidated_blast_radius": 2.5
@@ -197,12 +197,12 @@
   ],
   "remediation_groups": [
     {
-      "asset_id": "arn:aws:wafv2::123:webacl/prod-api",
+      "asset_id": "arn:aws:wafv2::123456789012:webacl/prod-api",
       "asset_type": "aws_wafv2_web_acl",
       "fix_plan": {
-        "id": "fix-29cba9a50b1d26e9",
+        "id": "fix-b6ed249cd83eb0f0",
         "target": {
-          "asset_id": "arn:aws:wafv2::123:webacl/prod-api",
+          "asset_id": "arn:aws:wafv2::123456789012:webacl/prod-api",
           "asset_type": "aws_wafv2_web_acl"
         },
         "action": "Add a rule at the highest priority position (priority 0 or the lowest numeric value) that detects parser overflow and blocks the request. For Cloudflare, check http.request.headers.truncated == true. For AWS WAF, use a size constraint rule checking header count or total header size against the documented parser limit. The rule must be in BLOCK mode — COUNT mode detects but does not prevent the bypass. Verify the rule has higher priority than all managed rule groups and custom rules in the Web ACL."
@@ -217,7 +217,7 @@
     {
       "finding_index": 0,
       "control_id": "CTL.WAF.PARSERLIMIT.PROTECT.001",
-      "asset_id": "arn:aws:wafv2::123:webacl/prod-api",
+      "asset_id": "arn:aws:wafv2::123456789012:webacl/prod-api",
       "exposure_score": 250,
       "breakdown": {
         "base_score": 100,
@@ -318,13 +318,16 @@
     "selected_controls_source": "dir",
     "context_name": "stave",
     "resolved_paths": {
-      "controls": "testdata/e2e/e2e-forge-waf-parserlimit-protect-fail/controls",
-      "observations": "testdata/e2e/e2e-forge-waf-parserlimit-protect-fail/observations"
+      "controls": "testdata/e2e/e2e-forge-waf-parserlimit-protect-log-mode-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-waf-parserlimit-protect-log-mode-fail/observations"
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
       "head_commit": "9dacb52ec150fee0e8b183cd5339f62ded12b196",
-      "dirty": false
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-waf-parserlimit-protect-log-mode-fail/controls/"
+      ]
     }
   }
 }
