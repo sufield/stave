@@ -1,0 +1,13 @@
+control: CTL.S3.NOTIFICATION.GHOST.001
+defect: >
+  S3 bucket event notification targets a deleted resource. Object
+  events are not delivered.
+infection: >
+  The bucket continues generating object events but the notification
+  pipeline is broken. If the notification triggers security functions
+  — malware scanning, data classification, access logging to a SIEM —
+  those functions have stopped receiving events. Objects can be uploaded,
+  modified, or deleted without triggering the security pipeline.
+failure: >
+  Security monitoring blind spot. Object-level events on this bucket
+  are not delivered to the configured security function.

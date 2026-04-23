@@ -1,0 +1,16 @@
+id: silent_monitoring_collapse
+description: >
+  Multiple monitoring and alerting pipelines have ghost targets
+  simultaneously. Alarms fire without notifying. Events match without
+  delivering. Object events go unprocessed. The monitoring infrastructure
+  appears active but is non-functional across multiple channels.
+controls:
+  - CTL.CLOUDWATCH.ALARM.GHOST.001
+  - CTL.EVENTBRIDGE.TARGET.GHOST.001
+  - CTL.S3.NOTIFICATION.GHOST.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - audit_trail_destroyed

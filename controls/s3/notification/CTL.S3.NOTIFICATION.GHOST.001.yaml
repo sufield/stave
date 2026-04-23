@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.S3.NOTIFICATION.GHOST.001
+name: S3 Event Notifications Must Not Target Deleted Resources
+description: >
+  S3 bucket event notification configurations must not target deleted
+  SNS topics, SQS queues, or Lambda functions. Object events
+  (PutObject, DeleteObject) go undelivered when the target is absent.
+  If notifications feed security monitoring, the monitoring stops.
+domain: detection
+severity: high
+compliance:
+  nist_800_53_r5: "SI-4"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-03"]
+scope_tags: [aws, s3]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: S3 event notification targets a deleted resource.
+  action: Update the notification configuration to reference existing resources.
+  example: |
+    {"storage": {"kind": "bucket", "notification": {"has_ghost_target": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.notification.has_ghost_target
+      op: eq
+      value: true

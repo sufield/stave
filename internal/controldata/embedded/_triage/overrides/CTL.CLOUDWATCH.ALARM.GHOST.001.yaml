@@ -1,0 +1,16 @@
+control: CTL.CLOUDWATCH.ALARM.GHOST.001
+defect: >
+  CloudWatch alarm action targets a deleted SNS topic. When the alarm
+  fires, no notification is delivered.
+infection: >
+  The alarm continues to evaluate its metric and transition between
+  states. When the metric breaches the threshold, the alarm enters
+  ALARM state but the notification action fails silently. The security
+  team does not receive the alert. The CloudWatch dashboard shows the
+  alarm exists and is configured. Nothing indicates that notifications
+  are broken.
+failure: >
+  Silent alerting failure. Security-critical metrics breach thresholds
+  without generating notifications. The security team discovers the
+  breach during routine review — hours or days later — instead of
+  through real-time alerting.

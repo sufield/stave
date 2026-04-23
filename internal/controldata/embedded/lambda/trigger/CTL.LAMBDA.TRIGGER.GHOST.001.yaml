@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.TRIGGER.GHOST.001
+name: Lambda Event Source Mappings Must Not Reference Deleted Sources
+description: >
+  Lambda event source mappings must not reference deleted SQS queues,
+  DynamoDB streams, or Kinesis streams. The mapping enters an error
+  state but the failure is surfaced only in the Lambda console. If the
+  function processes security events, that processing stops silently.
+domain: detection
+severity: high
+compliance:
+  nist_800_53_r5: "SI-4"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-03"]
+scope_tags: [aws, lambda]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: Lambda event source mapping references a deleted source.
+  action: Update or remove the event source mapping.
+  example: |
+    {"compute": {"kind": "function", "event_source": {"has_ghost_source": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
+    - field: properties.compute.event_source.has_ghost_source
+      op: eq
+      value: true

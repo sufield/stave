@@ -1,0 +1,20 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:cloudwatch:us-east-1:111122223333:alarm:cpu-high",
+      "type": "aws_cloudwatch_alarm",
+      "vendor": "aws",
+      "properties": {
+        "monitoring": {
+          "kind": "cloudwatch_alarm",
+          "alarm": {
+            "has_ghost_action": true
+          }
+        }
+      }
+    }
+  ]
+}

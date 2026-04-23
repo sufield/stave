@@ -1,0 +1,14 @@
+control: CTL.LAMBDA.TRIGGER.GHOST.001
+defect: >
+  Lambda event source mapping references a deleted source resource.
+  The mapping is in error or disabled state.
+infection: >
+  The Lambda function is not receiving events from the deleted source.
+  If the function processes security-relevant events — SQS messages
+  from a security pipeline, DynamoDB stream records for audit, Kinesis
+  events for real-time detection — that processing has stopped. The
+  function exists and appears configured. The source does not.
+failure: >
+  Event processing failure. Security-relevant events from the deleted
+  source are not processed. The Lambda function's security automation
+  is non-functional.

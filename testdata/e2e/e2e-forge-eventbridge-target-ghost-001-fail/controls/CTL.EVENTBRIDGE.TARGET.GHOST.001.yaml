@@ -1,0 +1,37 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.TARGET.GHOST.001
+name: EventBridge Rule Must Not Target Deleted Resources
+description: >
+  EventBridge rules must not target Lambda functions, SQS queues, or
+  other resources that no longer exist. Events matching the rule are
+  silently dropped. If the rule triggers security automation, that
+  automation stops functioning while appearing active.
+domain: detection
+severity: critical
+compliance:
+  nist_800_53_r5: "SI-4"
+  fedramp_moderate: "SI-4"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-03", "LOG-05"]
+scope_tags: [aws, eventbridge]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: EventBridge rule targets a resource that no longer exists.
+  action: Update the rule target to an existing resource or disable the rule.
+  example: |
+    {"governance": {"kind": "eventbridge_rule", "events": {"has_ghost_target": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_rule
+    - field: properties.governance.events.has_ghost_target
+      op: eq
+      value: true

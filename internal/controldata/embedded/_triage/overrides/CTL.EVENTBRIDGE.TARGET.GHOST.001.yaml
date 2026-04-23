@@ -1,0 +1,15 @@
+control: CTL.EVENTBRIDGE.TARGET.GHOST.001
+defect: >
+  EventBridge rule targets a resource that no longer exists. Events
+  matching the rule pattern are silently dropped.
+infection: >
+  The rule continues to match events but cannot deliver them. If this
+  rule triggers security automation — incident response Lambda functions,
+  remediation workflows, SIEM event ingestion — that automation has
+  silently stopped executing. The rule appears active in the console.
+  No error is surfaced. Events accumulate and are discarded.
+failure: >
+  Silent security automation failure. Security events that should
+  trigger automated response are silently dropped. Attackers operate
+  without triggering the automated defenses the organization believes
+  are active.

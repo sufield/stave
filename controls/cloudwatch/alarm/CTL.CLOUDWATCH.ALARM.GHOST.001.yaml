@@ -1,0 +1,38 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.ALARM.GHOST.001
+name: CloudWatch Alarm Actions Must Not Target Deleted SNS Topics
+description: >
+  CloudWatch alarm notification actions must not reference deleted SNS
+  topics. When the alarm fires, the notification goes nowhere. The
+  security team is not alerted. The alarm appears configured and active
+  in the console while notifications are silently broken.
+domain: detection
+severity: critical
+compliance:
+  nist_800_53_r5: "AU-5"
+  fedramp_moderate: "AU-5"
+  soc2: "CC7.1"
+  hipaa: "164.312(b)"
+  ccm_v4: ["LOG-03", "LOG-05"]
+scope_tags: [aws, cloudwatch]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: CloudWatch alarm action targets a deleted SNS topic.
+  action: Update the alarm action to reference an existing SNS topic.
+  example: |
+    {"monitoring": {"kind": "cloudwatch_alarm", "alarm": {"has_ghost_action": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.kind
+      op: eq
+      value: cloudwatch_alarm
+    - field: properties.monitoring.alarm.has_ghost_action
+      op: eq
+      value: true

@@ -3,15 +3,15 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 892
-**Pack hash:** `3c0ae53cfab9205e87b15bfa581f6e0c4b69e23f93dd2b57d7e5e0f5c016fccb`
+**Total controls:** 896
+**Pack hash:** `516e26af63e3f69d0c5a3442bfd2ef879594046b9949bcfa0ae4965315f3b111`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 135 |
-| high | 394 |
+| critical | 137 |
+| high | 396 |
 | info | 16 |
 | low | 76 |
 | medium | 271 |
@@ -19,7 +19,7 @@
 | Domain | Count |
 |--------|-------|
 | audit | 20 |
-| detection | 2 |
+| detection | 6 |
 | encryption | 35 |
 | exposure | 595 |
 | governance | 20 |
@@ -2317,6 +2317,21 @@ CloudTrail must be actively logging and configured as a multi-region trail. Stop
 CloudTrail must have log file integrity validation enabled. Without validation, an attacker who gains access to the log bucket can modify or delete log entries to cover their tracks.
 
 **Remediation:** Enable log file validation on the trail. Run: aws cloudtrail update-trail --name xxx --enable-log-file-validation
+
+---
+
+### CTL.CLOUDWATCH.ALARM.GHOST.001
+
+**CloudWatch Alarm Actions Must Not Target Deleted SNS Topics**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** fedramp_moderate: AU-5; hipaa: 164.312(b); nist_800_53_r5: AU-5; soc2: CC7.1;
+
+CloudWatch alarm notification actions must not reference deleted SNS topics. When the alarm fires, the notification goes nowhere. The security team is not alerted. The alarm appears configured and active in the console while notifications are silently broken.
+
+**Remediation:** Update the alarm action to reference an existing SNS topic.
 
 ---
 
@@ -5253,6 +5268,21 @@ EventBridge global endpoints must have event replication enabled to replicate ev
 EventBridge schema registry resource policies must not grant public or unrestricted cross-account access. Schema registries describe event structure — public access reveals internal API contracts.
 
 **Remediation:** Restrict the registry resource policy.
+
+---
+
+### CTL.EVENTBRIDGE.TARGET.GHOST.001
+
+**EventBridge Rule Must Not Target Deleted Resources**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** fedramp_moderate: SI-4; nist_800_53_r5: SI-4; soc2: CC7.1;
+
+EventBridge rules must not target Lambda functions, SQS queues, or other resources that no longer exist. Events matching the rule are silently dropped. If the rule triggers security automation, that automation stops functioning while appearing active.
+
+**Remediation:** Update the rule target to an existing resource or disable the rule.
 
 ---
 
@@ -8985,6 +9015,21 @@ Lambda functions must have X-Ray tracing set to Active, not PassThrough. Active 
 
 ---
 
+### CTL.LAMBDA.TRIGGER.GHOST.001
+
+**Lambda Event Source Mappings Must Not Reference Deleted Sources**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** nist_800_53_r5: SI-4; soc2: CC7.1;
+
+Lambda event source mappings must not reference deleted SQS queues, DynamoDB streams, or Kinesis streams. The mapping enters an error state but the failure is surfaced only in the Lambda console. If the function processes security events, that processing stops silently.
+
+**Remediation:** Update or remove the event source mapping.
+
+---
+
 ### CTL.LAMBDA.UPDATECODE.SCOPE.001
 
 **lambda:UpdateFunctionCode Must Not Be Broadly Granted**
@@ -11310,6 +11355,21 @@ VPC endpoint policy must be attached and must not be the default full-access pol
 S3 bucket access must be restricted by a VPC endpoint condition (aws:SourceVpce) or an IP address condition (aws:SourceIp) in the bucket policy. Without network-level restrictions, the bucket is reachable from any network path. This control enforces transmission security for PHI workloads.
 
 **Remediation:** Add a VPC gateway endpoint for S3 and route bucket traffic through it, or add an IP condition (aws:SourceIp) to the bucket policy to restrict access to known CIDR ranges.
+
+---
+
+### CTL.S3.NOTIFICATION.GHOST.001
+
+**S3 Event Notifications Must Not Target Deleted Resources**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** nist_800_53_r5: SI-4; soc2: CC7.1;
+
+S3 bucket event notification configurations must not target deleted SNS topics, SQS queues, or Lambda functions. Object events (PutObject, DeleteObject) go undelivered when the target is absent. If notifications feed security monitoring, the monitoring stops.
+
+**Remediation:** Update the notification configuration to reference existing resources.
 
 ---
 
