@@ -1,0 +1,14 @@
+control: CTL.GCP.KMS.GHOST.001
+defect: >
+  Cloud KMS key IAM binding grants cryptographic access to a
+  deleted member.
+infection: >
+  The deleted member has encrypt/decrypt access to the KMS key.
+  If the deleted member is a service account, creating a new SA
+  with the same email inherits decrypt access — all data encrypted
+  by this key becomes decryptable by the reclaimed identity. This
+  is the most critical ghost reference because KMS access determines
+  the encryption trust boundary.
+failure: >
+  Encryption trust bypass. A reclaimable identity can decrypt all
+  data encrypted by this key.

@@ -1,0 +1,13 @@
+control: CTL.GCP.ALERT.GHOST.001
+defect: >
+  Alerting policy references a notification channel that does not
+  exist. When the alert fires, no notification is delivered.
+infection: >
+  The alerting policy continues to evaluate its condition. When the
+  threshold is breached, the alert fires but the notification channel
+  is gone. No email, no SMS, no PagerDuty, no webhook. The alert
+  appears active in the Cloud Monitoring console. Nothing indicates
+  notifications are broken.
+failure: >
+  Silent alerting failure. Security-critical metrics breach
+  thresholds without generating notifications.

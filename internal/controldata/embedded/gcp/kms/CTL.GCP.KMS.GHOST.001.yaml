@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.KMS.GHOST.001
+name: Cloud KMS Key IAM Binding References Deleted Member
+description: >
+  KMS key IAM binding grants cryptographic access (encrypt/decrypt)
+  to a deleted member. A reclaimable SA email can decrypt all data
+  encrypted by this key.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: KMS Key IAM Binding References Deleted Member — finding detected.
+  action: Remove the ghost IAM binding from the KMS key.
+  example: |
+    {"gcp": {"security": {"kind": "kms_key", "kms": {"has_ghost_binding": false}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.security.kind
+      op: eq
+      value: kms_key
+    - field: properties.gcp.security.kms.has_ghost_binding
+      op: eq
+      value: true

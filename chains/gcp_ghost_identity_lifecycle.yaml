@@ -1,0 +1,16 @@
+id: gcp_ghost_identity_lifecycle
+description: >
+  Multiple resources have ghost IAM bindings to deleted members.
+  Identity decommissioning is systematically incomplete. Deleted
+  service accounts can be reclaimed to inherit permissions across
+  storage and encryption.
+controls:
+  - CTL.GCP.IAM.GHOST.001
+  - CTL.GCP.STORAGE.GHOST.001
+  - CTL.GCP.KMS.GHOST.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - ec2_code_execution

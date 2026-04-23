@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.STORAGE.GHOST.001
+name: Cloud Storage IAM Binding References Deleted Member
+description: >
+  Bucket IAM binding grants storage access to a deleted member.
+  A reclaimable SA email inherits object read/write access.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: Storage IAM Binding References Deleted Member — finding detected.
+  action: Remove the ghost IAM binding from the bucket.
+  example: |
+    {"gcp": {"storage": {"kind": "storage_bucket", "has_ghost_binding": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.storage.kind
+      op: eq
+      value: storage_bucket
+    - field: properties.gcp.storage.has_ghost_binding
+      op: eq
+      value: true

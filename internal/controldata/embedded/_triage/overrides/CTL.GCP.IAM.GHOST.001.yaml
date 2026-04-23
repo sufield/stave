@@ -1,0 +1,16 @@
+control: CTL.GCP.IAM.GHOST.001
+defect: >
+  IAM binding grants role to a deleted member. The member was
+  deleted but the binding persists with "deleted:" prefix.
+infection: >
+  GCP service account email addresses are reusable within the same
+  project. If the deleted member is a service account, creating a
+  new SA with the same email inherits this IAM binding's role grant.
+  An attacker with iam.serviceAccounts.create permission can reclaim
+  the identity and inherit the role. For deleted users and groups,
+  the risk is configuration drift — the binding consumes the 1,500
+  binding limit and complicates auditing.
+failure: >
+  Identity reclaim via ghost binding. An attacker creates a service
+  account matching the deleted member's email and inherits the role
+  grant without being explicitly authorized.

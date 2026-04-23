@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.ALERT.GHOST.001
+name: Alerting Policy References Deleted Notification Channel
+description: >
+  Alerting policy references a deleted notification channel. The
+  alert fires but notifications go nowhere. The system appears
+  active but delivery is silently broken.
+domain: detection
+severity: critical
+compliance:
+  nist_800_53_r5: "AU-5"
+  soc2: "CC7.2"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: defense_evasion
+remediation:
+  description: Alerting Policy References Deleted Channel — finding detected.
+  action: Update the alerting policy to reference a valid notification channel.
+  example: |
+    {"gcp": {"monitoring": {"kind": "alert_policy", "alert": {"has_ghost_channel": false}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.monitoring.kind
+      op: eq
+      value: alert_policy
+    - field: properties.gcp.monitoring.alert.has_ghost_channel
+      op: eq
+      value: true

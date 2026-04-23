@@ -1,0 +1,15 @@
+id: gcp_logging_erasure
+description: >
+  Log bucket unlocked (retention reducible) AND either audit logging
+  incomplete or alerting broken. An attacker can manipulate log
+  retention while operating without complete coverage or alerts.
+controls:
+  - CTL.GCP.LOGGING.BUCKET.LOCK.001
+  - CTL.GCP.LOGGING.AUDIT.001
+  - CTL.GCP.ALERT.GHOST.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - ec2_code_execution

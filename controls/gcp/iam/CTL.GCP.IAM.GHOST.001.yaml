@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.IAM.GHOST.001
+name: IAM Binding References Deleted Member
+description: >
+  IAM binding grants a role to a deleted member (deleted:serviceAccount:,
+  deleted:user:, deleted:group:). GCP SA emails are reusable — a new
+  SA with the same email inherits the binding's role grant.
+domain: identity
+severity: high
+compliance:
+  cis_gcp_v3: "1.16"
+  nist_800_53_r5: "AC-2"
+  soc2: "CC6.2"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: IAM Binding References Deleted Member — finding detected.
+  action: Remove the ghost IAM binding.
+  example: |
+    {"gcp": {"identity": {"kind": "iam_binding", "binding": {"has_deleted_member": false}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.identity.kind
+      op: eq
+      value: iam_binding
+    - field: properties.gcp.identity.binding.has_deleted_member
+      op: eq
+      value: true

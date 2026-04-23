@@ -1,0 +1,16 @@
+id: gcp_full_exposure
+description: >
+  Multiple GCP services publicly accessible — storage, database,
+  data warehouse, or compute. Systemic public access across the
+  project, not isolated misconfigurations.
+controls:
+  - CTL.GCP.STORAGE.PUBLIC.001
+  - CTL.GCP.CLOUDSQL.PUBLIC.001
+  - CTL.GCP.BIGQUERY.PUBLIC.001
+  - CTL.GCP.COMPUTE.FIREWALL.ALL.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - ec2_code_execution

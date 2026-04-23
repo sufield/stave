@@ -3,15 +3,15 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1117
-**Pack hash:** `2aa1766bbfaea91420806d813f3361251750fbb9b49c807dca5d44d33f2db56b`
+**Total controls:** 1121
+**Pack hash:** `5b87bfed690038e8c4b036135c4c5153a89e19624a8604d1862570f235951857`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 153 |
-| high | 495 |
+| critical | 155 |
+| high | 497 |
 | info | 16 |
 | low | 84 |
 | medium | 369 |
@@ -19,11 +19,11 @@
 | Domain | Count |
 |--------|-------|
 | audit | 20 |
-| detection | 17 |
+| detection | 18 |
 | encryption | 69 |
-| exposure | 718 |
+| exposure | 720 |
 | governance | 24 |
-| identity | 226 |
+| identity | 227 |
 | network | 21 |
 | resilience | 14 |
 | storage | 8 |
@@ -7622,6 +7622,21 @@ No VPC Service Controls perimeter configured. GCP services are accessible from a
 
 ---
 
+### CTL.GCP.ALERT.GHOST.001
+
+**Alerting Policy References Deleted Notification Channel**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** nist_800_53_r5: AU-5; soc2: CC7.2;
+
+Alerting policy references a deleted notification channel. The alert fires but notifications go nowhere. The system appears active but delivery is silently broken.
+
+**Remediation:** Update the alerting policy to reference a valid notification channel.
+
+---
+
 ### CTL.GCP.ARTIFACT.SCAN.001
 
 **Artifact Registry Vulnerability Scanning Not Enabled**
@@ -8267,6 +8282,21 @@ API key older than 90 days. Unrotated keys accumulate risk.
 
 ---
 
+### CTL.GCP.IAM.GHOST.001
+
+**IAM Binding References Deleted Member**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_gcp_v3: 1.16; nist_800_53_r5: AC-2; soc2: CC6.2;
+
+IAM binding grants a role to a deleted member (deleted:serviceAccount:, deleted:user:, deleted:group:). GCP SA emails are reusable — a new SA with the same email inherits the binding's role grant.
+
+**Remediation:** Remove the ghost IAM binding.
+
+---
+
 ### CTL.GCP.IAM.KMS.SEPARATION.001
 
 **KMS Encrypter and Decrypter Roles on Same Principal**
@@ -8384,6 +8414,21 @@ Service account key older than 90 days. Unrotated keys accumulate risk — a lea
 Same principal has both iam.serviceAccountAdmin and iam.serviceAccountUser roles. Can create SAs and impersonate them — effectively self-granting any permission.
 
 **Remediation:** Separate SA Admin and SA User roles across different principals.
+
+---
+
+### CTL.GCP.KMS.GHOST.001
+
+**Cloud KMS Key IAM Binding References Deleted Member**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+KMS key IAM binding grants cryptographic access (encrypt/decrypt) to a deleted member. A reclaimable SA email can decrypt all data encrypted by this key.
+
+**Remediation:** Remove the ghost IAM binding from the KMS key.
 
 ---
 
@@ -8549,6 +8594,21 @@ Organization policy does not restrict IAM sharing to the organization's domain. 
 Bucket uses Google-managed encryption. CMEK via Cloud KMS provides key revocation, custom rotation, and access audit.
 
 **Remediation:** Configure a Cloud KMS key for bucket encryption.
+
+---
+
+### CTL.GCP.STORAGE.GHOST.001
+
+**Cloud Storage IAM Binding References Deleted Member**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+Bucket IAM binding grants storage access to a deleted member. A reclaimable SA email inherits object read/write access.
+
+**Remediation:** Remove the ghost IAM binding from the bucket.
 
 ---
 

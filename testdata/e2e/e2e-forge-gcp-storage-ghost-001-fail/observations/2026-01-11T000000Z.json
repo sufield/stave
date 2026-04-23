@@ -1,0 +1,23 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "bucket-ghost",
+      "type": "gcp_storage_bucket",
+      "vendor": "gcp",
+      "properties": {
+        "gcp": {
+          "storage": {
+            "kind": "storage_bucket",
+            "name": "ghost-bucket",
+            "has_ghost_binding": true,
+            "ghost_member": "deleted:serviceAccount:deploy@proj.iam.gserviceaccount.com?uid=789",
+            "ghost_role": "roles/storage.objectAdmin"
+          }
+        }
+      }
+    }
+  ]
+}
