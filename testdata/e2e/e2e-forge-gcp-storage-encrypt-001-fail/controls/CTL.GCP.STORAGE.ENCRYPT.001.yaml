@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.STORAGE.ENCRYPT.001
+name: Cloud Storage Bucket Not Using Customer-Managed Encryption Key
+description: >
+  Bucket uses Google-managed encryption. CMEK via Cloud KMS provides
+  key revocation, custom rotation, and access audit.
+domain: encryption
+severity: high
+compliance:
+  cis_gcp_v3: "5.3"
+  nist_800_53_r5: "SC-28"
+  hipaa: "164.312(e)(2)(ii)"
+  pci_dss_v4: "3.4"
+  soc2: "CC6.1"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Cloud Storage Bucket Not Using CMEK — finding detected.
+  action: Configure a Cloud KMS key for bucket encryption.
+  example: |
+    {"gcp": {"storage": {"kind": "storage_bucket", "encryption_type": "CMEK"}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.storage.kind
+      op: eq
+      value: storage_bucket
+    - field: properties.gcp.storage.encryption_type
+      op: eq
+      value: Google-managed

@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.IAM.PRIMITIVE.001
+name: Primitive Role (Owner/Editor) Assigned at Project Level
+description: >
+  Owner or Editor primitive role assigned at project level. These
+  legacy roles grant broad, non-granular permissions across almost
+  every GCP service.
+domain: identity
+severity: critical
+compliance:
+  cis_gcp_v3: "1.1"
+  nist_800_53_r5: "AC-6"
+  hipaa: "164.312(a)(1)"
+  pci_dss_v4: "7.2.1"
+  soc2: "CC6.1"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Primitive Role Assigned at Project Level — finding detected.
+  action: Replace primitive roles with predefined or custom roles.
+  example: |
+    {"gcp": {"identity": {"kind": "iam_binding", "binding": {"is_primitive_role": false}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.identity.kind
+      op: eq
+      value: iam_binding
+    - field: properties.gcp.identity.binding.is_primitive_role
+      op: eq
+      value: true

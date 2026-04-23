@@ -1,0 +1,11 @@
+family: CTL.GCP.IAM
+infection: >
+  GCP IAM controls access to all cloud resources. Primitive roles
+  grant near-complete project access. User-managed service account
+  keys are exportable credentials commonly leaked in git repos and
+  CI/CD configurations. Default service accounts have Editor-level
+  permissions. Unrestricted API keys expose every enabled API.
+failure: >
+  Identity compromise. An attacker gains broad access through
+  over-privileged roles, leaked service account keys, default
+  service account abuse, or unrestricted API keys.

@@ -1,0 +1,23 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "org-policy-domain",
+      "type": "gcp_org_policy",
+      "vendor": "gcp",
+      "properties": {
+        "gcp": {
+          "identity": {
+            "kind": "org_policy",
+            "orgpolicy": {
+              "constraint": "iam.allowedPolicyMemberDomains",
+              "domain_restricted_sharing": false
+            }
+          }
+        }
+      }
+    }
+  ]
+}

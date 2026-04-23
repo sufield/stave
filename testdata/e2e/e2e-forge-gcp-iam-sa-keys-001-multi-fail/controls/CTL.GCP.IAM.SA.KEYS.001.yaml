@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.IAM.SA.KEYS.001
+name: Service Account Has User-Managed Keys
+description: >
+  Service account has user-managed JSON key files. Long-lived,
+  exportable credentials — the #1 source of GCP credential leaks.
+  Workload Identity eliminates key files entirely.
+domain: identity
+severity: high
+compliance:
+  cis_gcp_v3: "1.4"
+  nist_800_53_r5: "IA-5"
+  hipaa: "164.312(d)"
+  pci_dss_v4: "8.2"
+  soc2: "CC6.1"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: Service Account Has User-Managed Keys — finding detected.
+  action: Delete user-managed keys and use Workload Identity instead.
+  example: |
+    {"gcp": {"identity": {"kind": "service_account", "sa": {"has_user_managed_keys": false}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.identity.kind
+      op: eq
+      value: service_account
+    - field: properties.gcp.identity.sa.has_user_managed_keys
+      op: eq
+      value: true

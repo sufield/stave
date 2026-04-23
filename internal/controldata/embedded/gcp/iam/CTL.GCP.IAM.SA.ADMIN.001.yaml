@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.IAM.SA.ADMIN.001
+name: Service Account Has Admin-Level Roles
+description: >
+  Service account has roles granting admin-level permissions
+  (roles/owner, roles/editor, roles/iam.admin, or service-specific
+  admin roles). High-value non-human target.
+domain: identity
+severity: high
+compliance:
+  cis_gcp_v3: "1.6"
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: Service Account Has Admin-Level Roles — finding detected.
+  action: Replace admin roles with least-privilege predefined roles.
+  example: |
+    {"gcp": {"identity": {"kind": "service_account", "sa": {"has_admin_role": false}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.identity.kind
+      op: eq
+      value: service_account
+    - field: properties.gcp.identity.sa.has_admin_role
+      op: eq
+      value: true

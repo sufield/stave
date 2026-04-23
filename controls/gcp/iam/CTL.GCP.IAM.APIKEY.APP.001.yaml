@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.IAM.APIKEY.APP.001
+name: API Key Not Restricted to Specific Applications
+description: >
+  API key has no application restrictions (HTTP referrers, IP
+  addresses, Android/iOS). Key usable from any source.
+domain: identity
+severity: medium
+compliance:
+  cis_gcp_v3: "1.13"
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: API Key Not Restricted to Specific Applications — finding detected.
+  action: Add application restrictions (IP, referrer, or platform).
+  example: |
+    {"gcp": {"identity": {"kind": "api_key", "apikey": {"has_app_restriction": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.identity.kind
+      op: eq
+      value: api_key
+    - field: properties.gcp.identity.apikey.has_app_restriction
+      op: eq
+      value: false

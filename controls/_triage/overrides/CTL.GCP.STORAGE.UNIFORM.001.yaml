@@ -1,0 +1,14 @@
+control: CTL.GCP.STORAGE.UNIFORM.001
+defect: >
+  Cloud Storage bucket does not have uniform bucket-level access
+  enabled. Legacy ACLs are active.
+infection: >
+  Legacy ACLs allow per-object access control that bypasses IAM
+  policies. An object can have an ACL granting public access even
+  if the bucket's IAM policy is restrictive. This creates a split
+  access control model — some permissions enforced via IAM, others
+  via ACLs. The effective access is the union of both, which is
+  difficult to audit and easy to misconfigure.
+failure: >
+  Access control bypass via ACLs. An object with a permissive ACL
+  is accessible despite restrictive bucket-level IAM policies.

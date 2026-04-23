@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.IAM.APIKEY.ROTATION.001
+name: API Key Not Rotated
+description: >
+  API key older than 90 days. Unrotated keys accumulate risk.
+domain: identity
+severity: medium
+compliance:
+  cis_gcp_v3: "1.14"
+  nist_800_53_r5: "IA-5"
+  soc2: "CC6.1"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: API Key Not Rotated — finding detected.
+  action: Rotate the API key or replace with a service account.
+  example: |
+    {"gcp": {"identity": {"kind": "api_key", "apikey": {"rotated": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.identity.kind
+      op: eq
+      value: api_key
+    - field: properties.gcp.identity.apikey.rotated
+      op: eq
+      value: false

@@ -1,0 +1,14 @@
+control: CTL.GCP.IAM.PUBLIC.001
+defect: >
+  Project/folder/org IAM binding grants a role to allUsers or
+  allAuthenticatedUsers.
+infection: >
+  allUsers means no authentication — any person, any script, any
+  scanner on the internet can access every resource in the project.
+  allAuthenticatedUsers means any Google account — personal Gmail,
+  competitor's Workspace, any Google identity. This is NOT restricted
+  to the organization's users. Project-level public access is broader
+  than resource-level — every resource inherits the binding.
+failure: >
+  Project-wide public access. Every resource in the project is
+  accessible to the internet or any Google account holder.

@@ -1,0 +1,27 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "binding-editor",
+      "type": "gcp_iam_binding",
+      "vendor": "gcp",
+      "properties": {
+        "gcp": {
+          "identity": {
+            "kind": "iam_binding",
+            "binding": {
+              "resource": "projects/my-project",
+              "role": "roles/compute.admin",
+              "member": "user:dev@example.com",
+              "is_primitive_role": false,
+              "is_public": false,
+              "scope_level": "project"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

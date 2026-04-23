@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.STORAGE.RETENTION.001
+name: Cloud Storage Bucket Without Retention Policy
+description: >
+  No retention policy configured. Objects can be deleted at any
+  time. An unlocked policy can be reduced to zero — a locked
+  policy provides true WORM protection.
+domain: exposure
+severity: medium
+compliance:
+  cis_gcp_v3: "5.6"
+  nist_800_53_r5: "AU-9"
+  soc2: "CC6.1"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: defense_evasion
+remediation:
+  description: Cloud Storage Bucket Without Retention Policy — finding detected.
+  action: Configure and lock a retention policy.
+  example: |
+    {"gcp": {"storage": {"kind": "storage_bucket", "retention_policy_enabled": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.storage.kind
+      op: eq
+      value: storage_bucket
+    - field: properties.gcp.storage.retention_policy_enabled
+      op: eq
+      value: false

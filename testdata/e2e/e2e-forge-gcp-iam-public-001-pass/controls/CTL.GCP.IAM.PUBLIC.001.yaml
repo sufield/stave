@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.IAM.PUBLIC.001
+name: IAM Binding Grants Access to allUsers or allAuthenticatedUsers
+description: >
+  Project/folder/org IAM binding grants a role to allUsers or
+  allAuthenticatedUsers. Project-wide public access — every
+  resource in the project is accessible.
+domain: exposure
+severity: critical
+compliance:
+  cis_gcp_v3: "1.2"
+  nist_800_53_r5: "AC-3"
+  hipaa: "164.312(a)(1)"
+  pci_dss_v4: "7.2.1"
+  soc2: "CC6.1"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: IAM Binding Grants Public Access — finding detected.
+  action: Remove allUsers and allAuthenticatedUsers from IAM bindings.
+  example: |
+    {"gcp": {"identity": {"kind": "iam_binding", "binding": {"is_public": false}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.identity.kind
+      op: eq
+      value: iam_binding
+    - field: properties.gcp.identity.binding.is_public
+      op: eq
+      value: true

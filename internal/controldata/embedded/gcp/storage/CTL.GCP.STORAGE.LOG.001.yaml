@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.STORAGE.LOG.001
+name: Cloud Storage Bucket Access Logging Not Enabled
+description: >
+  Access logging not enabled. Read and write operations on the
+  bucket are not recorded for forensic investigation.
+domain: exposure
+severity: medium
+compliance:
+  cis_gcp_v3: "5.4"
+  nist_800_53_r5: "AU-12"
+  soc2: "CC7.2"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Cloud Storage Bucket Access Logging Not Enabled — finding detected.
+  action: Enable access logging and specify a log bucket.
+  example: |
+    {"gcp": {"storage": {"kind": "storage_bucket", "logging_enabled": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.storage.kind
+      op: eq
+      value: storage_bucket
+    - field: properties.gcp.storage.logging_enabled
+      op: eq
+      value: false

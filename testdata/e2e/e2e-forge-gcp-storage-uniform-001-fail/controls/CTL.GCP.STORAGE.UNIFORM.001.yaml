@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.STORAGE.UNIFORM.001
+name: Cloud Storage Bucket Not Using Uniform Bucket-Level Access
+description: >
+  Uniform bucket-level access not enabled. Legacy ACLs allow
+  per-object access control that bypasses IAM policies.
+domain: exposure
+severity: high
+compliance:
+  cis_gcp_v3: "5.2"
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Cloud Storage Bucket Not Using Uniform Access — finding detected.
+  action: Enable uniform bucket-level access to disable legacy ACLs.
+  example: |
+    {"gcp": {"storage": {"kind": "storage_bucket", "uniform_access": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.storage.kind
+      op: eq
+      value: storage_bucket
+    - field: properties.gcp.storage.uniform_access
+      op: eq
+      value: false

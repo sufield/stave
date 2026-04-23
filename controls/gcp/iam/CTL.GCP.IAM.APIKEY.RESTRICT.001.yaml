@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.IAM.APIKEY.RESTRICT.001
+name: API Key Not Restricted to Specific APIs
+description: >
+  API key has no API restrictions — usable to call any GCP API.
+  A leaked unrestricted key gives access to every enabled API
+  in the project.
+domain: identity
+severity: high
+compliance:
+  cis_gcp_v3: "1.12"
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: API Key Not Restricted to Specific APIs — finding detected.
+  action: Add API restrictions to the key or replace with a service account.
+  example: |
+    {"gcp": {"identity": {"kind": "api_key", "apikey": {"has_api_restriction": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.identity.kind
+      op: eq
+      value: api_key
+    - field: properties.gcp.identity.apikey.has_api_restriction
+      op: eq
+      value: false

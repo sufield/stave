@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.IAM.SA.SEPARATION.001
+name: Service Account Admin and User Roles on Same Principal
+description: >
+  Same principal has both iam.serviceAccountAdmin and
+  iam.serviceAccountUser roles. Can create SAs and impersonate
+  them — effectively self-granting any permission.
+domain: identity
+severity: high
+compliance:
+  cis_gcp_v3: "1.7"
+  nist_800_53_r5: "AC-5"
+  soc2: "CC6.1"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: SA Admin and User Roles on Same Principal — finding detected.
+  action: Separate SA Admin and SA User roles across different principals.
+  example: |
+    {"gcp": {"identity": {"kind": "service_account", "sa": {"has_sa_admin_and_user": false}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.identity.kind
+      op: eq
+      value: service_account
+    - field: properties.gcp.identity.sa.has_sa_admin_and_user
+      op: eq
+      value: true

@@ -1,0 +1,35 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "my-bucket",
+      "type": "gcp_storage_bucket",
+      "vendor": "gcp",
+      "properties": {
+        "gcp": {
+          "storage": {
+            "kind": "storage_bucket",
+            "name": "my-bucket",
+            "project": "my-project",
+            "location": "US",
+            "storage_class": "STANDARD",
+            "uniform_access": false,
+            "public_access": false,
+            "public_prevention": "enforced",
+            "encryption_type": "CMEK",
+            "kms_key_name": "projects/my-project/locations/us/keyRings/kr/cryptoKeys/key",
+            "versioning_enabled": true,
+            "logging_enabled": true,
+            "log_bucket": "my-log-bucket",
+            "retention_policy_enabled": true,
+            "retention_period_seconds": 31536000,
+            "retention_locked": true,
+            "lifecycle_rules_configured": true
+          }
+        }
+      }
+    }
+  ]
+}

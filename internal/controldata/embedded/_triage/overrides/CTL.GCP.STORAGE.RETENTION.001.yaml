@@ -1,0 +1,15 @@
+control: CTL.GCP.STORAGE.RETENTION.001
+defect: >
+  Cloud Storage bucket does not have a retention policy configured.
+  Objects can be deleted at any time.
+infection: >
+  Without a retention policy, an attacker with sufficient permissions
+  can delete all objects immediately. For audit logs, compliance
+  evidence, or backup data, this means permanent data loss. A locked
+  retention policy prevents deletion until the retention period
+  expires — even the bucket owner cannot delete objects during the
+  retention period. Without locking, the retention period can be
+  reduced to zero, effectively disabling it.
+failure: >
+  Unprotected data. Objects are deletable at any time by any
+  principal with sufficient permissions. No retention barrier exists.

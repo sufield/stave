@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.STORAGE.VERSIONING.001
+name: Cloud Storage Bucket Versioning Not Enabled
+description: >
+  Object versioning not enabled. Overwritten or deleted objects
+  have no previous version to recover.
+domain: exposure
+severity: medium
+compliance:
+  cis_gcp_v3: "5.5"
+  nist_800_53_r5: "CP-9"
+  soc2: "CC7.2"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Cloud Storage Bucket Versioning Not Enabled — finding detected.
+  action: Enable object versioning on the bucket.
+  example: |
+    {"gcp": {"storage": {"kind": "storage_bucket", "versioning_enabled": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.storage.kind
+      op: eq
+      value: storage_bucket
+    - field: properties.gcp.storage.versioning_enabled
+      op: eq
+      value: false

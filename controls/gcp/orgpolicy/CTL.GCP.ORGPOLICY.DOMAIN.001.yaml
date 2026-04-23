@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.ORGPOLICY.DOMAIN.001
+name: Domain Restricted Sharing Not Enforced
+description: >
+  Organization policy does not restrict IAM sharing to the
+  organization's domain. Resources can be shared with any Google
+  account including personal Gmail.
+domain: identity
+severity: medium
+compliance:
+  cis_gcp_v3: "1.15"
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Domain Restricted Sharing Not Enforced — finding detected.
+  action: Enable the iam.allowedPolicyMemberDomains organization policy constraint.
+  example: |
+    {"gcp": {"identity": {"kind": "org_policy", "orgpolicy": {"domain_restricted_sharing": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.identity.kind
+      op: eq
+      value: org_policy
+    - field: properties.gcp.identity.orgpolicy.domain_restricted_sharing
+      op: eq
+      value: false

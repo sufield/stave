@@ -1,0 +1,15 @@
+control: CTL.GCP.IAM.PRIMITIVE.001
+defect: >
+  IAM binding grants primitive role (Owner/Editor) at project level.
+infection: >
+  Primitive roles (Owner, Editor) are legacy GCP roles with the
+  broadest possible permissions. Editor grants write access to almost
+  every GCP service — Compute, Storage, BigQuery, Cloud SQL, KMS,
+  and more. Owner adds the ability to modify IAM bindings — granting
+  any role to any member. These roles predate GCP's predefined and
+  custom roles which provide granular, service-specific permissions.
+  No production workload should use primitive roles.
+failure: >
+  Over-privileged access. The member has broad write access across
+  the entire project. Compromise of this member's credentials gives
+  the attacker near-complete control.

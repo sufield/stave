@@ -1,0 +1,11 @@
+family: CTL.GCP.STORAGE
+infection: >
+  Cloud Storage buckets store application data, backups, logs, and
+  configuration files. Misconfigurations expose bucket contents to
+  the public internet or any Google account holder via allUsers or
+  allAuthenticatedUsers IAM bindings. Legacy ACLs create a split
+  access control model that bypasses IAM policies. Google-managed
+  encryption provides no key revocation or access audit.
+failure: >
+  Data exposure. An attacker accesses bucket contents through
+  public IAM bindings, ACL bypasses, or unaudited access patterns.

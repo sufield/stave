@@ -1,0 +1,15 @@
+id: gcp_storage_exposure
+description: >
+  Public bucket plus either no logging or no retention. Data exposed
+  to the internet with either no forensic trail or no deletion
+  protection.
+controls:
+  - CTL.GCP.STORAGE.PUBLIC.001
+  - CTL.GCP.STORAGE.LOG.001
+  - CTL.GCP.STORAGE.RETENTION.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - ec2_code_execution

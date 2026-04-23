@@ -1,0 +1,16 @@
+control: CTL.GCP.IAM.SA.KEYS.001
+defect: >
+  Service account has user-managed key files.
+infection: >
+  User-managed service account keys are JSON files containing a
+  private key. They are long-lived (no automatic expiration by
+  default), exportable (anyone with the file can authenticate), and
+  unauditable per-use (the key authenticates as the SA regardless
+  of who possesses the file). They are commonly found in git
+  repositories, CI/CD configurations, developer laptops, and shared
+  documentation. Workload Identity (automatic SA authentication
+  without key files) eliminates this risk entirely.
+failure: >
+  Credential theft via key file. An attacker obtains the JSON key
+  file and authenticates as the service account from anywhere, with
+  all the SA's permissions, for as long as the key exists.

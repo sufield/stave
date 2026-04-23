@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.STORAGE.PUBLIC.001
+name: Cloud Storage Bucket Publicly Accessible
+description: >
+  Bucket IAM binding includes allUsers or allAuthenticatedUsers.
+  allUsers requires no authentication. allAuthenticatedUsers means
+  any Google account — not organizational users.
+domain: exposure
+severity: critical
+compliance:
+  cis_gcp_v3: "5.1"
+  nist_800_53_r5: "AC-3"
+  hipaa: "164.312(a)(1)"
+  pci_dss_v4: "7.2.1"
+  soc2: "CC6.1"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Cloud Storage Bucket Publicly Accessible — finding detected.
+  action: Remove allUsers and allAuthenticatedUsers from IAM bindings.
+  example: |
+    {"gcp": {"storage": {"kind": "storage_bucket", "public_access": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.storage.kind
+      op: eq
+      value: storage_bucket
+    - field: properties.gcp.storage.public_access
+      op: eq
+      value: true

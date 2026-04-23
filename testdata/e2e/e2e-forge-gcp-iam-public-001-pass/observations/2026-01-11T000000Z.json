@@ -1,0 +1,26 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "binding-public",
+      "type": "gcp_iam_binding",
+      "vendor": "gcp",
+      "properties": {
+        "gcp": {
+          "identity": {
+            "kind": "iam_binding",
+            "binding": {
+              "resource": "projects/my-project",
+              "role": "roles/viewer",
+              "member": "group:team@example.com",
+              "is_public": false,
+              "scope_level": "project"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

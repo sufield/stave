@@ -3,27 +3,27 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1049
-**Pack hash:** `f1b235183a2d4cfed089734a736897a65fbe544e634cf850eb67a25b678594f2`
+**Total controls:** 1067
+**Pack hash:** `1d6769246a8819475d31efc4697ab3b485941727adf893fbd43f07750be2e329`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 144 |
-| high | 469 |
+| critical | 147 |
+| high | 476 |
 | info | 16 |
 | low | 82 |
-| medium | 338 |
+| medium | 346 |
 
 | Domain | Count |
 |--------|-------|
 | audit | 20 |
 | detection | 9 |
-| encryption | 59 |
-| exposure | 684 |
+| encryption | 60 |
+| exposure | 690 |
 | governance | 24 |
-| identity | 210 |
+| identity | 221 |
 | network | 21 |
 | resilience | 14 |
 | storage | 8 |
@@ -7604,6 +7604,276 @@ Resources containing sensitive data (PHI, PII, confidential) in a specific juris
 Sovereignty assessment requires the cross_border_access_detected field. The extractor could not determine whether the resource is accessible from outside its jurisdiction.
 
 **Remediation:** Re-run the sovereignty extractor with permissions to enumerate IAM principals, their account regions, and resource-based policies for all sensitive resources.
+
+---
+
+### CTL.GCP.IAM.APIKEY.APP.001
+
+**API Key Not Restricted to Specific Applications**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_gcp_v3: 1.13; nist_800_53_r5: AC-6; soc2: CC6.1;
+
+API key has no application restrictions (HTTP referrers, IP addresses, Android/iOS). Key usable from any source.
+
+**Remediation:** Add application restrictions (IP, referrer, or platform).
+
+---
+
+### CTL.GCP.IAM.APIKEY.RESTRICT.001
+
+**API Key Not Restricted to Specific APIs**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_gcp_v3: 1.12; nist_800_53_r5: AC-6; soc2: CC6.1;
+
+API key has no API restrictions — usable to call any GCP API. A leaked unrestricted key gives access to every enabled API in the project.
+
+**Remediation:** Add API restrictions to the key or replace with a service account.
+
+---
+
+### CTL.GCP.IAM.APIKEY.ROTATION.001
+
+**API Key Not Rotated**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_gcp_v3: 1.14; nist_800_53_r5: IA-5; soc2: CC6.1;
+
+API key older than 90 days. Unrotated keys accumulate risk.
+
+**Remediation:** Rotate the API key or replace with a service account.
+
+---
+
+### CTL.GCP.IAM.KMS.SEPARATION.001
+
+**KMS Encrypter and Decrypter Roles on Same Principal**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_gcp_v3: 1.8; nist_800_53_r5: AC-5; soc2: CC6.1;
+
+Same principal has both cloudkms.cryptoKeyEncrypter and cloudkms.cryptoKeyDecrypter roles. Combined roles allow a single compromised identity to both encrypt (ransomware) and decrypt (exfiltration).
+
+**Remediation:** Separate encrypter and decrypter roles across different principals.
+
+---
+
+### CTL.GCP.IAM.PRIMITIVE.001
+
+**Primitive Role (Owner/Editor) Assigned at Project Level**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_gcp_v3: 1.1; hipaa: 164.312(a)(1); nist_800_53_r5: AC-6; pci_dss_v4: 7.2.1; soc2: CC6.1;
+
+Owner or Editor primitive role assigned at project level. These legacy roles grant broad, non-granular permissions across almost every GCP service.
+
+**Remediation:** Replace primitive roles with predefined or custom roles.
+
+---
+
+### CTL.GCP.IAM.PUBLIC.001
+
+**IAM Binding Grants Access to allUsers or allAuthenticatedUsers**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_gcp_v3: 1.2; hipaa: 164.312(a)(1); nist_800_53_r5: AC-3; pci_dss_v4: 7.2.1; soc2: CC6.1;
+
+Project/folder/org IAM binding grants a role to allUsers or allAuthenticatedUsers. Project-wide public access — every resource in the project is accessible.
+
+**Remediation:** Remove allUsers and allAuthenticatedUsers from IAM bindings.
+
+---
+
+### CTL.GCP.IAM.SA.ADMIN.001
+
+**Service Account Has Admin-Level Roles**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_gcp_v3: 1.6; nist_800_53_r5: AC-6; soc2: CC6.1;
+
+Service account has roles granting admin-level permissions (roles/owner, roles/editor, roles/iam.admin, or service-specific admin roles). High-value non-human target.
+
+**Remediation:** Replace admin roles with least-privilege predefined roles.
+
+---
+
+### CTL.GCP.IAM.SA.DEFAULT.001
+
+**Default Service Account Used**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_gcp_v3: 1.3; nist_800_53_r5: AC-6; pci_dss_v4: 7.2.1; soc2: CC6.1;
+
+Default Compute Engine or App Engine service account in use. Default SAs have Editor-level permissions by default — far broader than any workload needs.
+
+**Remediation:** Create a custom SA with least-privilege roles.
+
+---
+
+### CTL.GCP.IAM.SA.KEYS.001
+
+**Service Account Has User-Managed Keys**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_gcp_v3: 1.4; hipaa: 164.312(d); nist_800_53_r5: IA-5; pci_dss_v4: 8.2; soc2: CC6.1;
+
+Service account has user-managed JSON key files. Long-lived, exportable credentials — the #1 source of GCP credential leaks. Workload Identity eliminates key files entirely.
+
+**Remediation:** Delete user-managed keys and use Workload Identity instead.
+
+---
+
+### CTL.GCP.IAM.SA.ROTATION.001
+
+**Service Account Key Not Rotated**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_gcp_v3: 1.5; nist_800_53_r5: IA-5; soc2: CC6.1;
+
+Service account key older than 90 days. Unrotated keys accumulate risk — a leaked key remains valid indefinitely if not rotated.
+
+**Remediation:** Rotate the key or migrate to Workload Identity.
+
+---
+
+### CTL.GCP.IAM.SA.SEPARATION.001
+
+**Service Account Admin and User Roles on Same Principal**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_gcp_v3: 1.7; nist_800_53_r5: AC-5; soc2: CC6.1;
+
+Same principal has both iam.serviceAccountAdmin and iam.serviceAccountUser roles. Can create SAs and impersonate them — effectively self-granting any permission.
+
+**Remediation:** Separate SA Admin and SA User roles across different principals.
+
+---
+
+### CTL.GCP.ORGPOLICY.DOMAIN.001
+
+**Domain Restricted Sharing Not Enforced**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_gcp_v3: 1.15; nist_800_53_r5: AC-3; soc2: CC6.1;
+
+Organization policy does not restrict IAM sharing to the organization's domain. Resources can be shared with any Google account including personal Gmail.
+
+**Remediation:** Enable the iam.allowedPolicyMemberDomains organization policy constraint.
+
+---
+
+### CTL.GCP.STORAGE.ENCRYPT.001
+
+**Cloud Storage Bucket Not Using Customer-Managed Encryption Key**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** cis_gcp_v3: 5.3; hipaa: 164.312(e)(2)(ii); nist_800_53_r5: SC-28; pci_dss_v4: 3.4; soc2: CC6.1;
+
+Bucket uses Google-managed encryption. CMEK via Cloud KMS provides key revocation, custom rotation, and access audit.
+
+**Remediation:** Configure a Cloud KMS key for bucket encryption.
+
+---
+
+### CTL.GCP.STORAGE.LOG.001
+
+**Cloud Storage Bucket Access Logging Not Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_gcp_v3: 5.4; nist_800_53_r5: AU-12; soc2: CC7.2;
+
+Access logging not enabled. Read and write operations on the bucket are not recorded for forensic investigation.
+
+**Remediation:** Enable access logging and specify a log bucket.
+
+---
+
+### CTL.GCP.STORAGE.PUBLIC.001
+
+**Cloud Storage Bucket Publicly Accessible**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_gcp_v3: 5.1; hipaa: 164.312(a)(1); nist_800_53_r5: AC-3; pci_dss_v4: 7.2.1; soc2: CC6.1;
+
+Bucket IAM binding includes allUsers or allAuthenticatedUsers. allUsers requires no authentication. allAuthenticatedUsers means any Google account — not organizational users.
+
+**Remediation:** Remove allUsers and allAuthenticatedUsers from IAM bindings.
+
+---
+
+### CTL.GCP.STORAGE.RETENTION.001
+
+**Cloud Storage Bucket Without Retention Policy**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_gcp_v3: 5.6; nist_800_53_r5: AU-9; soc2: CC6.1;
+
+No retention policy configured. Objects can be deleted at any time. An unlocked policy can be reduced to zero — a locked policy provides true WORM protection.
+
+**Remediation:** Configure and lock a retention policy.
+
+---
+
+### CTL.GCP.STORAGE.UNIFORM.001
+
+**Cloud Storage Bucket Not Using Uniform Bucket-Level Access**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_gcp_v3: 5.2; nist_800_53_r5: AC-6; soc2: CC6.1;
+
+Uniform bucket-level access not enabled. Legacy ACLs allow per-object access control that bypasses IAM policies.
+
+**Remediation:** Enable uniform bucket-level access to disable legacy ACLs.
+
+---
+
+### CTL.GCP.STORAGE.VERSIONING.001
+
+**Cloud Storage Bucket Versioning Not Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_gcp_v3: 5.5; nist_800_53_r5: CP-9; soc2: CC7.2;
+
+Object versioning not enabled. Overwritten or deleted objects have no previous version to recover.
+
+**Remediation:** Enable object versioning on the bucket.
 
 ---
 

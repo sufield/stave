@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.IAM.SA.ROTATION.001
+name: Service Account Key Not Rotated
+description: >
+  Service account key older than 90 days. Unrotated keys accumulate
+  risk — a leaked key remains valid indefinitely if not rotated.
+domain: identity
+severity: medium
+compliance:
+  cis_gcp_v3: "1.5"
+  nist_800_53_r5: "IA-5"
+  soc2: "CC6.1"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: Service Account Key Not Rotated — finding detected.
+  action: Rotate the key or migrate to Workload Identity.
+  example: |
+    {"gcp": {"identity": {"kind": "service_account", "sa": {"keys_rotated": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.identity.kind
+      op: eq
+      value: service_account
+    - field: properties.gcp.identity.sa.has_user_managed_keys
+      op: eq
+      value: true
+    - field: properties.gcp.identity.sa.keys_rotated
+      op: eq
+      value: false

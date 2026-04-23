@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.IAM.KMS.SEPARATION.001
+name: KMS Encrypter and Decrypter Roles on Same Principal
+description: >
+  Same principal has both cloudkms.cryptoKeyEncrypter and
+  cloudkms.cryptoKeyDecrypter roles. Combined roles allow a single
+  compromised identity to both encrypt (ransomware) and decrypt
+  (exfiltration).
+domain: identity
+severity: medium
+compliance:
+  cis_gcp_v3: "1.8"
+  nist_800_53_r5: "AC-5"
+  soc2: "CC6.1"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: KMS Encrypter and Decrypter on Same Principal — finding detected.
+  action: Separate encrypter and decrypter roles across different principals.
+  example: |
+    {"gcp": {"identity": {"kind": "iam_binding", "binding": {"has_kms_encrypter_decrypter": false}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.identity.kind
+      op: eq
+      value: iam_binding
+    - field: properties.gcp.identity.binding.has_kms_encrypter_decrypter
+      op: eq
+      value: true

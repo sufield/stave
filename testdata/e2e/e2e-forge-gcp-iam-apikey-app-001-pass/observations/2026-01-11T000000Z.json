@@ -1,0 +1,24 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "apikey-no-app",
+      "type": "gcp_api_key",
+      "vendor": "gcp",
+      "properties": {
+        "gcp": {
+          "identity": {
+            "kind": "api_key",
+            "apikey": {
+              "name": "my-key",
+              "has_app_restriction": true,
+              "app_restrictions_type": "ip_addresses"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

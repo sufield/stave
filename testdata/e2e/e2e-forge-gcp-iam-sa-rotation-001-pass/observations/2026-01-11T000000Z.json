@@ -1,0 +1,26 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "sa-deploy",
+      "type": "gcp_service_account",
+      "vendor": "gcp",
+      "properties": {
+        "gcp": {
+          "identity": {
+            "kind": "service_account",
+            "sa": {
+              "email": "deploy@my-project.iam.gserviceaccount.com",
+              "has_user_managed_keys": true,
+              "key_count": 1,
+              "oldest_key_age_days": 30,
+              "keys_rotated": true
+            }
+          }
+        }
+      }
+    }
+  ]
+}

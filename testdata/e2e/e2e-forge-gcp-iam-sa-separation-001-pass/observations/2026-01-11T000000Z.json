@@ -1,0 +1,23 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "sa-dual-role",
+      "type": "gcp_service_account",
+      "vendor": "gcp",
+      "properties": {
+        "gcp": {
+          "identity": {
+            "kind": "service_account",
+            "sa": {
+              "email": "admin-only@my-project.iam.gserviceaccount.com",
+              "has_sa_admin_and_user": false
+            }
+          }
+        }
+      }
+    }
+  ]
+}

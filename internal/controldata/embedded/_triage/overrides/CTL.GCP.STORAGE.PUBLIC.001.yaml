@@ -1,0 +1,17 @@
+control: CTL.GCP.STORAGE.PUBLIC.001
+defect: >
+  Cloud Storage bucket is publicly accessible. IAM binding includes
+  allUsers or allAuthenticatedUsers.
+infection: >
+  For allUsers: no authentication required. Any browser, any script,
+  any scanner can read the bucket's contents. For allAuthenticatedUsers:
+  any person with any Google account — personal Gmail, competitor's
+  Workspace, any Google identity — can access the bucket. This is
+  NOT restricted to the organization's users. allAuthenticatedUsers
+  is the most common GCP security misconception — teams think
+  "authenticated" means "our users." It means "anyone with a Google
+  account."
+failure: >
+  Public data exposure. Bucket contents — application data, logs,
+  backups, configuration files — are accessible to the public
+  internet or any Google account holder.

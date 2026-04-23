@@ -1,0 +1,26 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "apikey-unrestricted",
+      "type": "gcp_api_key",
+      "vendor": "gcp",
+      "properties": {
+        "gcp": {
+          "identity": {
+            "kind": "api_key",
+            "apikey": {
+              "name": "my-key",
+              "has_api_restriction": false,
+              "has_app_restriction": false,
+              "age_days": 30,
+              "rotated": true
+            }
+          }
+        }
+      }
+    }
+  ]
+}
