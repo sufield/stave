@@ -1,0 +1,325 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-15T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "042a466d9ca549c88d13299212ba85fb59444c864aae766f99edf79c90a090de",
+        "2026-01-11T000000Z.json": "fefc460a514b2f13c243eee6b33af4458830e14bc0d9f0e71ce8efea1a703b42"
+      },
+      "overall": "b585298cbd6604ddf6023117cd76175ef3ffa5b853ef7db218f6e42f8ffc208c"
+    },
+    "policy_fingerprint": "e95033556e01dc858f1b154098433c9fad1c7be5e48d90305a2a7a6df9f148b5",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.AZURE.APP.IDENTITY.001",
+      "asset_id": "app-prod",
+      "asset_type": "azure_app_service",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -168,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:1e666c293d87755f",
+      "control_id": "CTL.AZURE.APP.IDENTITY.001",
+      "control_name": "App Service Without Managed Identity",
+      "control_description": "No managed identity configured. The application uses stored credentials instead of automatic credential rotation.\n",
+      "asset_id": "app-prod",
+      "asset_type": "azure_app_service",
+      "asset_vendor": "azure",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 336,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "azure.compute.app.managed_identity_type",
+            "actual_value": "None",
+            "operator": "eq",
+            "unsafe_value": "None"
+          },
+          {
+            "property": "azure.compute.kind",
+            "actual_value": "app_service",
+            "operator": "eq",
+            "unsafe_value": "app_service"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 336 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "cis_azure_v2": "9.10",
+        "nist_800_53_r5": "IA-5",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "App Service Without Managed Identity — finding detected.",
+        "action": "Configure a system-assigned or user-assigned managed identity.",
+        "example": "{\"azure\": {\"compute\": {\"kind\": \"app_service\", \"app\": {\"managed_identity_type\": \"SystemAssigned\"}}}}\n"
+      },
+      "fix_plan": {
+        "id": "fix-4235df032af7cb75",
+        "target": {
+          "asset_id": "app-prod",
+          "asset_type": "azure_app_service"
+        },
+        "action": "Configure a system-assigned or user-assigned managed identity."
+      },
+      "exposure_score": 50,
+      "score_breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "azure.compute.app.managed_identity_type eq \"None\"",
+          "observation_key": "azure.compute.app.managed_identity_type",
+          "operator": "eq",
+          "expected_value": "None",
+          "observed_value": "None"
+        },
+        {
+          "predicate_expr": "azure.compute.kind eq \"app_service\"",
+          "observation_key": "azure.compute.kind",
+          "operator": "eq",
+          "expected_value": "app_service",
+          "observed_value": "app_service"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "app-prod",
+          "type": "azure_app_service",
+          "vendor": "azure"
+        },
+        "violation": {
+          "control_id": "CTL.AZURE.APP.IDENTITY.001",
+          "control_name": "App Service Without Managed Identity",
+          "severity": "medium",
+          "reasoning": [
+            {
+              "clause": "azure.compute.app.managed_identity_type = \"None\"",
+              "observation_key": "azure.compute.app.managed_identity_type",
+              "observed_value": "None"
+            },
+            {
+              "clause": "azure.compute.kind = \"app_service\"",
+              "observation_key": "azure.compute.kind",
+              "observed_value": "app_service"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "azure.compute.app.managed_identity_type",
+            "current_value": "None",
+            "has_safe_default": false,
+            "description": "Change azure.compute.app.managed_identity_type from None"
+          },
+          {
+            "path": "azure.compute.kind",
+            "current_value": "app_service",
+            "has_safe_default": false,
+            "description": "Change azure.compute.kind from app_service"
+          }
+        ],
+        "action": "Configure a system-assigned or user-assigned managed identity."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "azure"
+      ],
+      "delta": [
+        {
+          "property_label": "compute app managed identity type",
+          "property_path": "azure.compute.app.managed_identity_type",
+          "current_value": "None",
+          "fix_action": "change from \"None\" to any other value, or remove"
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:e3cb0111c2d4353f",
+      "asset_id": "app-prod",
+      "shared_keys": [
+        "azure.compute",
+        "azure.compute.app",
+        "azure.compute.app.managed_identity_type",
+        "azure.compute.kind"
+      ],
+      "headline_finding_id": "sha256:1e666c293d87755f",
+      "member_finding_ids": [
+        "sha256:1e666c293d87755f"
+      ],
+      "consolidated_score": 50,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "app-prod",
+      "asset_type": "azure_app_service",
+      "fix_plan": {
+        "id": "fix-4235df032af7cb75",
+        "target": {
+          "asset_id": "app-prod",
+          "asset_type": "azure_app_service"
+        },
+        "action": "Configure a system-assigned or user-assigned managed identity."
+      },
+      "contributing_controls": [
+        "CTL.AZURE.APP.IDENTITY.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.AZURE.APP.IDENTITY.001",
+      "asset_id": "app-prod",
+      "exposure_score": 50,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-azure-app-identity-001-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-azure-app-identity-001-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "f686e77569736a1f0bf55f10b654122ed15dc844",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-azure-app-identity-001-fail/controls/"
+      ]
+    }
+  }
+}

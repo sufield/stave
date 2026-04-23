@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.APP.VNET.001
+name: App Service Not Integrated with VNet
+description: >
+  App Service not integrated with a VNet. Cannot access VNet
+  resources over private connections.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-4"
+  soc2: "CC6.6"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: App Service Not Integrated with VNet — finding detected.
+  action: Configure VNet integration.
+  example: |
+    {"azure": {"compute": {"kind": "app_service", "app": {"vnet_integrated": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.compute.kind
+      op: eq
+      value: app_service
+    - field: properties.azure.compute.app.vnet_integrated
+      op: eq
+      value: false

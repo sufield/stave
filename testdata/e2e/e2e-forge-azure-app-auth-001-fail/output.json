@@ -1,0 +1,328 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-15T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "97a93ca0d5f54422f175561b92e492fcdfcd6b7ef0c8e83127b89b2c6785209f",
+        "2026-01-11T000000Z.json": "c8c5a2f9d76265045ba89d632f0192e38a0a3584d2de4435fc432483f239ae06"
+      },
+      "overall": "0f1eb2574b7be149ef71417830a2b4f1fef5c4cbd94b08ef8a6a61874f7b7b86"
+    },
+    "policy_fingerprint": "4a7abbc9307486943399aab2f6a7e5becb83ba2285cf216d140327f77e111026",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.AZURE.APP.AUTH.001",
+      "asset_id": "app-prod",
+      "asset_type": "azure_app_service",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -168,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:77bc1e244cccb879",
+      "control_id": "CTL.AZURE.APP.AUTH.001",
+      "control_name": "App Service Authentication Not Enabled",
+      "control_description": "App Service has no authentication configured (EasyAuth). The application is accessible without identity verification.\n",
+      "asset_id": "app-prod",
+      "asset_type": "azure_app_service",
+      "asset_vendor": "azure",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 336,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "azure.compute.app.auth_enabled",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "azure.compute.kind",
+            "actual_value": "app_service",
+            "operator": "eq",
+            "unsafe_value": "app_service"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 336 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance": {
+        "cis_azure_v2": "9.1",
+        "hipaa": "164.312(d)",
+        "nist_800_53_r5": "AC-3",
+        "pci_dss_v4": "7.2.1",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "App Service Authentication Not Enabled — finding detected.",
+        "action": "Enable App Service Authentication (EasyAuth) with an identity provider.",
+        "example": "{\"azure\": {\"compute\": {\"kind\": \"app_service\", \"app\": {\"auth_enabled\": true}}}}\n"
+      },
+      "fix_plan": {
+        "id": "fix-4235df032af7cb75",
+        "target": {
+          "asset_id": "app-prod",
+          "asset_type": "azure_app_service"
+        },
+        "action": "Enable App Service Authentication (EasyAuth) with an identity provider."
+      },
+      "exposure_score": 100,
+      "score_breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "azure.compute.app.auth_enabled eq false",
+          "observation_key": "azure.compute.app.auth_enabled",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "azure.compute.kind eq \"app_service\"",
+          "observation_key": "azure.compute.kind",
+          "operator": "eq",
+          "expected_value": "app_service",
+          "observed_value": "app_service"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "app-prod",
+          "type": "azure_app_service",
+          "vendor": "azure"
+        },
+        "violation": {
+          "control_id": "CTL.AZURE.APP.AUTH.001",
+          "control_name": "App Service Authentication Not Enabled",
+          "severity": "critical",
+          "reasoning": [
+            {
+              "clause": "azure.compute.app.auth_enabled = false",
+              "observation_key": "azure.compute.app.auth_enabled",
+              "observed_value": false
+            },
+            {
+              "clause": "azure.compute.kind = \"app_service\"",
+              "observation_key": "azure.compute.kind",
+              "observed_value": "app_service"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "azure.compute.app.auth_enabled",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set azure.compute.app.auth_enabled to true"
+          },
+          {
+            "path": "azure.compute.kind",
+            "current_value": "app_service",
+            "has_safe_default": false,
+            "description": "Change azure.compute.kind from app_service"
+          }
+        ],
+        "action": "Enable App Service Authentication (EasyAuth) with an identity provider."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "azure"
+      ],
+      "delta": [
+        {
+          "property_label": "compute app auth",
+          "property_path": "azure.compute.app.auth_enabled",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:a32d5ff10cabd7e1",
+      "asset_id": "app-prod",
+      "shared_keys": [
+        "azure.compute",
+        "azure.compute.app",
+        "azure.compute.app.auth_enabled",
+        "azure.compute.kind"
+      ],
+      "headline_finding_id": "sha256:77bc1e244cccb879",
+      "member_finding_ids": [
+        "sha256:77bc1e244cccb879"
+      ],
+      "consolidated_score": 100,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "app-prod",
+      "asset_type": "azure_app_service",
+      "fix_plan": {
+        "id": "fix-4235df032af7cb75",
+        "target": {
+          "asset_id": "app-prod",
+          "asset_type": "azure_app_service"
+        },
+        "action": "Enable App Service Authentication (EasyAuth) with an identity provider."
+      },
+      "contributing_controls": [
+        "CTL.AZURE.APP.AUTH.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.AZURE.APP.AUTH.001",
+      "asset_id": "app-prod",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-azure-app-auth-001-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-azure-app-auth-001-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "f686e77569736a1f0bf55f10b654122ed15dc844",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-azure-app-auth-001-fail/controls/"
+      ]
+    }
+  }
+}

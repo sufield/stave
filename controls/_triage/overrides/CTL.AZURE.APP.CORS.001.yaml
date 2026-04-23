@@ -1,0 +1,16 @@
+control: CTL.AZURE.APP.CORS.001
+defect: >
+  App Service CORS configured to allow all origins (*). Any website
+  can make cross-origin requests.
+infection: >
+  An attacker hosts a malicious website that makes AJAX requests to
+  this App Service. If a user with an active session visits the
+  attacker's site, the browser sends the request with the user's
+  cookies and authentication headers. The wildcard CORS policy permits
+  this — the browser does not block the cross-origin request. The
+  attacker's site can read the response, exfiltrating data or
+  performing actions as the authenticated user.
+failure: >
+  Cross-origin data theft. An attacker makes authenticated API calls
+  to the application from their own website using a victim's active
+  session.

@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.DEFENDER.CONTACT.001
+name: Defender Security Contact Not Configured
+description: >
+  No email contact for Defender alerts. Security alerts generated
+  but not delivered to the security team.
+domain: exposure
+severity: medium
+compliance:
+  cis_azure_v2: "2.1.19"
+  nist_800_53_r5: "AU-6"
+  soc2: "CC7.3"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Defender Security Contact Not Configured — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"azure": {"monitoring": {"kind": "defender_setting", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.monitoring.kind
+      op: eq
+      value: defender_setting
+    - field: properties.azure.monitoring.defender.email_notifications
+      op: eq
+      value: false

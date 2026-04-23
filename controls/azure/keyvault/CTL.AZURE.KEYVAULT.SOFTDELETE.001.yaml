@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.KEYVAULT.SOFTDELETE.001
+name: Key Vault Must Have Soft Delete and Purge Protection
+description: >
+  Azure Key Vault must have both soft delete and purge protection
+  enabled. Without these, deleted keys, secrets, and certificates
+  are permanently lost with no recovery window.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "CP-9"
+  soc2: "A1.1"
+  ccm_v4: ["BCR-08", "CEK-03"]
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: Key Vault soft delete or purge protection is not enabled.
+  action: Enable soft delete and purge protection on the Key Vault.
+  example: |
+    {"azure": {"security": {"kind": "keyvault", "keyvault": {"purge_protection_enabled": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.security.kind
+      op: eq
+      value: keyvault
+    - field: properties.azure.security.keyvault.purge_protection_enabled
+      op: eq
+      value: false

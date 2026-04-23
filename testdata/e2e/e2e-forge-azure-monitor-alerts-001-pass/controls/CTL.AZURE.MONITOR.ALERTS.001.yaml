@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.MONITOR.ALERTS.001
+name: No Alerts Configured for Critical Admin Operations
+description: >
+  No Azure Monitor alert rules for critical admin operations.
+  Role assignments, policy changes, and security resource
+  modifications do not generate real-time alerts.
+domain: exposure
+severity: high
+compliance:
+  cis_azure_v2: "5.2.1"
+  nist_800_53_r5: "AU-6"
+  hipaa: "164.308(a)(1)(ii)(D)"
+  pci_dss_v4: "10.2"
+  soc2: "CC7.2"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: No Alerts Configured for Critical Admin Operations — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"azure": {"monitoring": {"kind": "alert_rule", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.monitoring.kind
+      op: eq
+      value: alert_rule
+    - field: properties.azure.monitoring.alert.enabled
+      op: eq
+      value: false

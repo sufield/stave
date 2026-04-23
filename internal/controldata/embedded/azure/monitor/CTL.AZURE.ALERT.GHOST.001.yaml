@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.ALERT.GHOST.001
+name: Alert Rule Targets Deleted Action Group
+description: >
+  Azure Monitor alert rule references a deleted action group.
+  The alert fires but notifications go nowhere. The system appears
+  active — the alert exists, the condition evaluates — but delivery
+  is silently broken.
+domain: detection
+severity: critical
+compliance:
+  nist_800_53_r5: "AU-5"
+  soc2: "CC7.2"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: defense_evasion
+remediation:
+  description: Alert Rule Targets Deleted Action Group — finding detected.
+  action: Update the alert rule to reference a valid action group.
+  example: |
+    {"azure": {"monitoring": {"kind": "alert_rule", "alert": {"has_ghost_action_group": false}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.monitoring.kind
+      op: eq
+      value: alert_rule
+    - field: properties.azure.monitoring.alert.has_ghost_action_group
+      op: eq
+      value: true

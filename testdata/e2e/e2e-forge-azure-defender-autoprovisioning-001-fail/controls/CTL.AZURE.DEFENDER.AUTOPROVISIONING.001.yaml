@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.DEFENDER.AUTOPROVISIONING.001
+name: Defender Auto-Provisioning Not Enabled
+description: >
+  Auto-provisioning disabled. New VMs and resources are not
+  automatically enrolled in Defender monitoring.
+domain: exposure
+severity: medium
+compliance:
+  cis_azure_v2: "2.1.15"
+  nist_800_53_r5: "SI-4"
+  soc2: "CC7.1"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Defender Auto-Provisioning Not Enabled — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"azure": {"monitoring": {"kind": "defender_setting", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.monitoring.kind
+      op: eq
+      value: defender_setting
+    - field: properties.azure.monitoring.defender.auto_provisioning
+      op: eq
+      value: false

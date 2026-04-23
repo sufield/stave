@@ -1,0 +1,44 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "app-prod",
+      "type": "azure_app_service",
+      "vendor": "azure",
+      "properties": {
+        "azure": {
+          "compute": {
+            "kind": "app_service",
+            "app": {
+              "name": "app-prod",
+              "auth_enabled": true,
+              "auth_provider": "AzureAD",
+              "https_only": true,
+              "tls_min_version": "1.2",
+              "ftp_state": "Disabled",
+              "remote_debugging_enabled": false,
+              "client_cert_enabled": true,
+              "client_cert_mode": "Required",
+              "managed_identity_type": "SystemAssigned",
+              "http2_enabled": true,
+              "vnet_integrated": true,
+              "private_endpoint_enabled": true,
+              "public_network_access": false,
+              "cors_allow_all_origins": false,
+              "ip_restrictions_configured": true,
+              "ip_restriction_count": 3,
+              "diagnostic_logging_enabled": true,
+              "app_insights_enabled": true,
+              "always_on": true,
+              "runtime_stack": "python",
+              "runtime_version": "3.7",
+              "runtime_deprecated": true
+            }
+          }
+        }
+      }
+    }
+  ]
+}

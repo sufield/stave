@@ -1,0 +1,36 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.DEFENDER.ENABLED.001
+name: Microsoft Defender for Cloud Not Enabled
+description: >
+  Defender not enabled or on Free tier. No threat detection
+  or advanced security capabilities active for this resource type.
+domain: exposure
+severity: high
+compliance:
+  cis_azure_v2: "2.1.1"
+  nist_800_53_r5: "SI-4"
+  hipaa: "164.308(a)(1)(ii)(D)"
+  pci_dss_v4: "10.1"
+  soc2: "CC7.1"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Microsoft Defender for Cloud Not Enabled — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"azure": {"monitoring": {"kind": "defender_setting", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.monitoring.kind
+      op: eq
+      value: defender_setting
+    - any:
+        - field: properties.azure.monitoring.defender.enabled
+          op: eq
+          value: false
+        - field: properties.azure.monitoring.defender.pricing_tier
+          op: eq
+          value: Free

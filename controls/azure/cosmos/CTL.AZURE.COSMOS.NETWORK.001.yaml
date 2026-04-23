@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.COSMOS.NETWORK.001
+name: Cosmos DB Must Not Allow Public Network Access
+description: >
+  Cosmos DB accepts public internet connections without restrictions.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.1"
+  ccm_v4: ["IVS-03"]
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Cosmos DB Must Not Allow Public Network Access — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"azure": {"database": {"kind": "cosmosdb_account", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.database.kind
+      op: eq
+      value: cosmosdb_account
+    - field: properties.azure.database.cosmos.public_network_access
+      op: eq
+      value: true

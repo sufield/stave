@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.SQL.DEFENDER.001
+name: Azure SQL Must Enable Advanced Threat Protection
+description: >
+  Microsoft Defender for SQL not enabled for anomaly detection.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-4"
+  soc2: "CC6.1"
+  ccm_v4: ["TVM-02"]
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Azure SQL Must Enable Advanced Threat Protection — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"azure": {"database": {"kind": "sql_server", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.database.kind
+      op: eq
+      value: sql_server
+    - field: properties.azure.database.sql.defender_enabled
+      op: eq
+      value: false

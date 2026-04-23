@@ -1,0 +1,4 @@
+control: CTL.AZURE.DEFENDER.ENABLED.001
+defect: >
+  Microsoft Defender for Cloud is not enabled (or on Free tier).
+  No threat detection or advanced security capabilities are active.

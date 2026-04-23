@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.SQL.ENCRYPT.001
+name: Azure SQL TDE Must Use Customer-Managed Key
+description: >
+  TDE uses service-managed keys without revocation or access audit.
+domain: encryption
+severity: high
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.1"
+  ccm_v4: ["CEK-03"]
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Azure SQL TDE Must Use Customer-Managed Key — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"azure": {"database": {"kind": "sql_server", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.database.kind
+      op: eq
+      value: sql_server
+    - field: properties.azure.database.sql.tde_uses_cmk
+      op: eq
+      value: false

@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.KEYVAULT.PURGE.001
+name: Key Vault Keys and Secrets Must Have Expiry Dates
+description: >
+  Keys and secrets stored in Key Vault must have expiry dates set.
+  Non-expiring credentials remain valid indefinitely if compromised.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "IA-5"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-16"]
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: Key Vault keys or secrets do not have expiry dates configured.
+  action: Set expiry dates on all keys and secrets.
+  example: |
+    {"azure": {"security": {"kind": "keyvault", "keyvault": {"all_items_have_expiry": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.security.kind
+      op: eq
+      value: keyvault
+    - field: properties.azure.security.keyvault.all_items_have_expiry
+      op: eq
+      value: false

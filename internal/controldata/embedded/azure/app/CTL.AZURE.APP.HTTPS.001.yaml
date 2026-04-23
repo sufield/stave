@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.APP.HTTPS.001
+name: App Service Does Not Enforce HTTPS
+description: >
+  App Service accepts HTTP connections. Traffic between clients
+  and the application is not encrypted.
+domain: encryption
+severity: high
+compliance:
+  cis_azure_v2: "9.2"
+  nist_800_53_r5: "SC-8"
+  hipaa: "164.312(e)(1)"
+  pci_dss_v4: "4.2.1"
+  soc2: "CC6.1"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: App Service Does Not Enforce HTTPS — finding detected.
+  action: Enable HTTPS Only in App Service configuration.
+  example: |
+    {"azure": {"compute": {"kind": "app_service", "app": {"https_only": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.compute.kind
+      op: eq
+      value: app_service
+    - field: properties.azure.compute.app.https_only
+      op: eq
+      value: false

@@ -1,0 +1,37 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.KEYVAULT.NETWORK.001
+name: Key Vault Must Not Be Accessible from Public Network
+description: >
+  Azure Key Vault network default action must be Deny. Key Vault
+  stores encryption keys, secrets, and certificates — the trust
+  anchor for all Azure encryption. Public access exposes the key
+  store to any internet host.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "3.4.1"
+  ccm_v4: ["CEK-03", "IVS-03"]
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: Key Vault is accessible from the public internet.
+  action: Set network default action to Deny and configure VNet rules or private endpoints.
+  example: |
+    {"azure": {"security": {"kind": "keyvault", "keyvault": {"public_network_restricted": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.security.kind
+      op: eq
+      value: keyvault
+    - field: properties.azure.security.keyvault.public_network_restricted
+      op: eq
+      value: false

@@ -1,0 +1,13 @@
+control: CTL.AZURE.STORAGE.GHOST.001
+defect: >
+  Storage account has an access configuration referencing a principal
+  that no longer exists in Entra ID.
+infection: >
+  The storage account's access configuration includes a deleted
+  principal. The access grant serves no legitimate consumer. If the
+  access was via a managed identity that was shared across services,
+  other services may also have orphaned references to the same
+  deleted identity.
+failure: >
+  Orphaned storage access grant. Configuration drift between the
+  identity lifecycle and the storage access configuration.

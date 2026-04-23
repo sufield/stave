@@ -1,0 +1,11 @@
+family: CTL.AZURE.LOG
+infection: >
+  Without a central Log Analytics workspace, monitoring data is
+  scattered across individual resource diagnostic settings.
+  Cross-resource investigation requires querying each resource
+  independently. Correlation between Activity Log events, Defender
+  alerts, and resource-level logs is not possible.
+failure: >
+  Fragmented monitoring. No central query or correlation capability.
+  Individual resource logs exist but cannot be queried together for
+  cross-resource investigation.

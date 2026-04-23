@@ -1,0 +1,5 @@
+control: CTL.AZURE.MONITOR.ALERTS.001
+defect: >
+  No Azure Monitor alert rules target critical administrative
+  operations. Role assignments, policy changes, and security-relevant
+  resource modifications do not generate real-time alerts.

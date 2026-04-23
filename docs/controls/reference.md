@@ -3,27 +3,27 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 947
-**Pack hash:** `1713ffa78923d510e09c28ed7578096438ee80d7a3dd9a6565b5e099616f6168`
+**Total controls:** 984
+**Pack hash:** `b419feceb673d402c20b6a66a5254c6208e82d3c6eaa75213139ffc7b0d35b14`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 141 |
-| high | 423 |
+| critical | 144 |
+| high | 442 |
 | info | 16 |
-| low | 78 |
-| medium | 289 |
+| low | 79 |
+| medium | 303 |
 
 | Domain | Count |
 |--------|-------|
 | audit | 20 |
-| detection | 6 |
-| encryption | 39 |
-| exposure | 622 |
+| detection | 7 |
+| encryption | 45 |
+| exposure | 649 |
 | governance | 24 |
-| identity | 193 |
+| identity | 196 |
 | network | 21 |
 | resilience | 14 |
 | storage | 8 |
@@ -988,6 +988,36 @@ Auto Scaling groups must be configured across multiple AZs. A single-AZ ASG has 
 
 ---
 
+### CTL.AZURE.ACTIVITYLOG.EXPORT.001
+
+**Activity Log Not Exported to Storage or Log Analytics**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_azure_v2: 5.1.2; hipaa: 164.312(b); nist_800_53_r5: AU-6; pci_dss_v4: 10.2; soc2: CC7.2;
+
+Activity Log data retained only in portal (90-day default). Without export, historical audit data is permanently lost.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.AZURE.ACTIVITYLOG.RETENTION.001
+
+**Activity Log Retention Below 365 Days**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_azure_v2: 5.1.3; hipaa: 164.312(b); nist_800_53_r5: AU-12; pci_dss_v4: 10.7; soc2: CC7.2;
+
+Activity Log exported but retention under 365 days. Compliance frameworks require one-year minimum audit log retention.
+
+**Remediation:** Remediate per control description.
+
+---
+
 ### CTL.AZURE.AKS.NETWORK.001
 
 **AKS Must Use Azure CNI Network Plugin**
@@ -1048,6 +1078,261 @@ AKS clusters must run a Kubernetes version within the Azure-supported window. Un
 
 ---
 
+### CTL.AZURE.ALERT.GHOST.001
+
+**Alert Rule Targets Deleted Action Group**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** nist_800_53_r5: AU-5; soc2: CC7.2;
+
+Azure Monitor alert rule references a deleted action group. The alert fires but notifications go nowhere. The system appears active — the alert exists, the condition evaluates — but delivery is silently broken.
+
+**Remediation:** Update the alert rule to reference a valid action group.
+
+---
+
+### CTL.AZURE.APP.AUTH.001
+
+**App Service Authentication Not Enabled**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_azure_v2: 9.1; hipaa: 164.312(d); nist_800_53_r5: AC-3; pci_dss_v4: 7.2.1; soc2: CC6.1;
+
+App Service has no authentication configured (EasyAuth). The application is accessible without identity verification.
+
+**Remediation:** Enable App Service Authentication (EasyAuth) with an identity provider.
+
+---
+
+### CTL.AZURE.APP.CLIENTCERT.001
+
+**App Service Client Certificates Not Required**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** cis_azure_v2: 9.9; nist_800_53_r5: IA-3; soc2: CC6.1;
+
+Client certificates not enabled or not set to Required mode. No mTLS verification of connecting clients.
+
+**Remediation:** Enable client certificates in Required mode.
+
+---
+
+### CTL.AZURE.APP.CORS.001
+
+**App Service CORS Allows All Origins**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_azure_v2: 9.6; nist_800_53_r5: AC-4; soc2: CC6.1;
+
+CORS configuration allows requests from any origin (*). Cross-origin requests from any website are permitted.
+
+**Remediation:** Replace wildcard (*) with specific trusted origins.
+
+---
+
+### CTL.AZURE.APP.DEBUG.001
+
+**App Service Remote Debugging Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_azure_v2: 9.5; nist_800_53_r5: CM-7; soc2: CC6.1;
+
+Remote debugging enabled in production. The debugging endpoint provides code-level access to the running application.
+
+**Remediation:** Disable remote debugging.
+
+---
+
+### CTL.AZURE.APP.FTP.001
+
+**App Service FTP Not Disabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** cis_azure_v2: 9.4; nist_800_53_r5: SC-8; soc2: CC6.1;
+
+Unencrypted FTP permitted (state AllAllowed). Deployment credentials and packages transmitted in plaintext.
+
+**Remediation:** Set FTP state to Disabled or FtpsOnly.
+
+---
+
+### CTL.AZURE.APP.HTTPS.001
+
+**App Service Does Not Enforce HTTPS**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** cis_azure_v2: 9.2; hipaa: 164.312(e)(1); nist_800_53_r5: SC-8; pci_dss_v4: 4.2.1; soc2: CC6.1;
+
+App Service accepts HTTP connections. Traffic between clients and the application is not encrypted.
+
+**Remediation:** Enable HTTPS Only in App Service configuration.
+
+---
+
+### CTL.AZURE.APP.IDENTITY.001
+
+**App Service Without Managed Identity**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_azure_v2: 9.10; nist_800_53_r5: IA-5; soc2: CC6.1;
+
+No managed identity configured. The application uses stored credentials instead of automatic credential rotation.
+
+**Remediation:** Configure a system-assigned or user-assigned managed identity.
+
+---
+
+### CTL.AZURE.APP.INSIGHTS.001
+
+**App Service Without Application Insights**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AU-6; soc2: CC7.2;
+
+Application Insights not configured. No application performance monitoring, request tracing, or dependency tracking.
+
+**Remediation:** Configure Application Insights.
+
+---
+
+### CTL.AZURE.APP.LOG.001
+
+**App Service Diagnostic Logging Disabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_azure_v2: 9.11; nist_800_53_r5: AU-2; soc2: CC7.2;
+
+Diagnostic logging not enabled. Application errors, request logs, and platform events are not captured for investigation.
+
+**Remediation:** Enable diagnostic logging.
+
+---
+
+### CTL.AZURE.APP.NETWORK.001
+
+**App Service Public Network Access Without Restrictions**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_azure_v2: 9.7; nist_800_53_r5: AC-4; soc2: CC6.6;
+
+Public network access enabled with no IP restrictions or VNet integration. The application accepts connections from any IP.
+
+**Remediation:** Configure IP restrictions, VNet integration, or private endpoints.
+
+---
+
+### CTL.AZURE.APP.PRIVATE.001
+
+**App Service Without Private Endpoint**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_azure_v2: 9.8; nist_800_53_r5: AC-4; soc2: CC6.6;
+
+No private endpoint configured. Traffic between the VNet and the application traverses the public internet.
+
+**Remediation:** Configure a private endpoint for the App Service.
+
+---
+
+### CTL.AZURE.APP.RUNTIME.001
+
+**App Service Running Deprecated Runtime Version**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_azure_v2: 9.12; nist_800_53_r5: SI-2; soc2: CC7.1;
+
+App Service runs a deprecated runtime version that receives no security patches.
+
+**Remediation:** Upgrade to a supported runtime version.
+
+---
+
+### CTL.AZURE.APP.TLS.001
+
+**App Service TLS Minimum Version Below 1.2**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** cis_azure_v2: 9.3; nist_800_53_r5: SC-8; pci_dss_v4: 4.2.1; soc2: CC6.1;
+
+App Service accepts TLS 1.0 or 1.1 connections with known vulnerabilities (BEAST, POODLE, CRIME).
+
+**Remediation:** Set minimum TLS version to 1.2.
+
+---
+
+### CTL.AZURE.APP.VNET.001
+
+**App Service Not Integrated with VNet**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-4; soc2: CC6.6;
+
+App Service not integrated with a VNet. Cannot access VNet resources over private connections.
+
+**Remediation:** Configure VNet integration.
+
+---
+
+### CTL.AZURE.COSMOS.ENCRYPT.001
+
+**Cosmos DB Must Use Customer-Managed Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** nist_800_53_r5: SC-28; soc2: CC6.1;
+
+Cosmos DB uses service-managed encryption without Key Vault integration.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.AZURE.COSMOS.NETWORK.001
+
+**Cosmos DB Must Not Allow Public Network Access**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.1;
+
+Cosmos DB accepts public internet connections without restrictions.
+
+**Remediation:** Remediate per control description.
+
+---
+
 ### CTL.AZURE.DDOS.001
 
 **VNet Must Have DDoS Protection Standard Enabled**
@@ -1060,6 +1345,66 @@ AKS clusters must run a Kubernetes version within the Azure-supported window. Un
 Azure VNets must have DDoS Protection Standard enabled. Basic protection provides limited mitigation for volumetric attacks only.
 
 **Remediation:** Enable DDoS Protection Standard on the VNet.
+
+---
+
+### CTL.AZURE.DEFENDER.AUTOPROVISIONING.001
+
+**Defender Auto-Provisioning Not Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_azure_v2: 2.1.15; nist_800_53_r5: SI-4; soc2: CC7.1;
+
+Auto-provisioning disabled. New VMs and resources are not automatically enrolled in Defender monitoring.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.AZURE.DEFENDER.CONTACT.001
+
+**Defender Security Contact Not Configured**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_azure_v2: 2.1.19; nist_800_53_r5: AU-6; soc2: CC7.3;
+
+No email contact for Defender alerts. Security alerts generated but not delivered to the security team.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.AZURE.DEFENDER.ENABLED.001
+
+**Microsoft Defender for Cloud Not Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_azure_v2: 2.1.1; hipaa: 164.308(a)(1)(ii)(D); nist_800_53_r5: SI-4; pci_dss_v4: 10.1; soc2: CC7.1;
+
+Defender not enabled or on Free tier. No threat detection or advanced security capabilities active for this resource type.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.AZURE.DIAGNOSTIC.001
+
+**Diagnostic Settings Not Configured on Key Resources**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_azure_v2: 5.1.5; nist_800_53_r5: AU-2; pci_dss_v4: 10.3; soc2: CC7.2;
+
+Critical resource types lack diagnostic settings. Resource-level logs and metrics are not captured for investigation or alerting.
+
+**Remediation:** Remediate per control description.
 
 ---
 
@@ -1258,6 +1603,96 @@ Users inactive for over 90 days must not retain active RBAC role assignments. Do
 
 ---
 
+### CTL.AZURE.KEYVAULT.GHOST.001
+
+**Key Vault Access Policy References Deleted Principal**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_azure_v2: 8.5; hipaa: 164.312(a)(1); nist_800_53_r5: AC-3; soc2: CC6.1;
+
+Key Vault access policy grants key, secret, or certificate permissions to a principal that no longer exists in Entra ID.
+
+**Remediation:** Remove the orphaned access policy.
+
+---
+
+### CTL.AZURE.KEYVAULT.NETWORK.001
+
+**Key Vault Must Not Be Accessible from Public Network**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; pci_dss_v4.0: 3.4.1; soc2: CC6.1;
+
+Azure Key Vault network default action must be Deny. Key Vault stores encryption keys, secrets, and certificates — the trust anchor for all Azure encryption. Public access exposes the key store to any internet host.
+
+**Remediation:** Set network default action to Deny and configure VNet rules or private endpoints.
+
+---
+
+### CTL.AZURE.KEYVAULT.PURGE.001
+
+**Key Vault Keys and Secrets Must Have Expiry Dates**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: IA-5; soc2: CC6.1;
+
+Keys and secrets stored in Key Vault must have expiry dates set. Non-expiring credentials remain valid indefinitely if compromised.
+
+**Remediation:** Set expiry dates on all keys and secrets.
+
+---
+
+### CTL.AZURE.KEYVAULT.SOFTDELETE.001
+
+**Key Vault Must Have Soft Delete and Purge Protection**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CP-9; soc2: A1.1;
+
+Azure Key Vault must have both soft delete and purge protection enabled. Without these, deleted keys, secrets, and certificates are permanently lost with no recovery window.
+
+**Remediation:** Enable soft delete and purge protection on the Key Vault.
+
+---
+
+### CTL.AZURE.LOG.ANALYTICS.001
+
+**No Log Analytics Workspace Configured**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_azure_v2: 5.1.1; hipaa: 164.312(b); nist_800_53_r5: AU-6; pci_dss_v4: 10.3; soc2: CC7.2;
+
+No Log Analytics workspace in the subscription. Monitoring data is fragmented with no central query or correlation capability.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.AZURE.MONITOR.ALERTS.001
+
+**No Alerts Configured for Critical Admin Operations**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_azure_v2: 5.2.1; hipaa: 164.308(a)(1)(ii)(D); nist_800_53_r5: AU-6; pci_dss_v4: 10.2; soc2: CC7.2;
+
+No Azure Monitor alert rules for critical admin operations. Role assignments, policy changes, and security resource modifications do not generate real-time alerts.
+
+**Remediation:** Remediate per control description.
+
+---
+
 ### CTL.AZURE.NSG.DEFAULT.001
 
 **NSG Must Have Custom Rules Beyond Defaults**
@@ -1303,6 +1738,21 @@ Azure NSGs must not have inbound Allow rules permitting traffic from any source 
 
 ---
 
+### CTL.AZURE.POLICY.COMPLIANCE.001
+
+**Non-Compliant Azure Policy Assignments**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_azure_v2: 7.4; nist_800_53_r5: AU-6; soc2: CC7.1;
+
+Azure Policy assignments show non-compliant resources. Intended configuration state is not enforced.
+
+**Remediation:** Remediate per control description.
+
+---
+
 ### CTL.AZURE.RBAC.CUSTOM.001
 
 **Custom Role Definitions Must Follow Least Privilege**
@@ -1315,6 +1765,21 @@ Azure NSGs must not have inbound Allow rules permitting traffic from any source 
 Custom Azure RBAC role definitions must not grant overly broad permissions (actions: * or dataActions: *). Custom roles should scope to specific resource types and operations.
 
 **Remediation:** Scope actions and dataActions to specific resource providers and operations.
+
+---
+
+### CTL.AZURE.RBAC.GHOST.001
+
+**RBAC Role Assignment References Deleted Principal**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_azure_v2: 1.21; hipaa: 164.312(a)(1); nist_800_53_r5: AC-2; soc2: CC6.2;
+
+RBAC assignment grants permissions to a principal that no longer exists in Entra ID. The assignment persists as an "Unknown" entry.
+
+**Remediation:** Remove the orphaned role assignment.
 
 ---
 
@@ -1348,6 +1813,81 @@ Contributor, User Access Administrator, and custom write roles should be assigne
 
 ---
 
+### CTL.AZURE.SQL.AUDIT.001
+
+**Azure SQL Auditing Must Be Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AU-2; soc2: CC6.1;
+
+SQL auditing not configured. Database operations are not recorded.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.AZURE.SQL.DEFENDER.001
+
+**Azure SQL Must Enable Advanced Threat Protection**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-4; soc2: CC6.1;
+
+Microsoft Defender for SQL not enabled for anomaly detection.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.AZURE.SQL.ENCRYPT.001
+
+**Azure SQL TDE Must Use Customer-Managed Key**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** nist_800_53_r5: SC-28; soc2: CC6.1;
+
+TDE uses service-managed keys without revocation or access audit.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.AZURE.SQL.FIREWALL.001
+
+**Azure SQL Must Not Allow All Azure Services**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.1;
+
+Allow Azure services permits connections from ANY Azure IP globally.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.AZURE.SQL.PUBLIC.001
+
+**Azure SQL Must Not Allow Public Network Access**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.1;
+
+SQL server accepts connections from the public internet.
+
+**Remediation:** Remediate per control description.
+
+---
+
 ### CTL.AZURE.STORAGE.ENCRYPT.001
 
 **Azure Storage Must Use Customer-Managed Key for Encryption**
@@ -1360,6 +1900,21 @@ Contributor, User Access Administrator, and custom write roles should be assigne
 Azure Storage accounts must use a customer-managed key (CMK) from Azure Key Vault for encryption at rest. Microsoft-managed keys provide no revocation capability and no access audit trail.
 
 **Remediation:** Configure customer-managed key from Azure Key Vault.
+
+---
+
+### CTL.AZURE.STORAGE.GHOST.001
+
+**Storage Account Access References Deleted Identity**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-2; soc2: CC6.2;
+
+Storage account RBAC assignment or shared access policy references a deleted managed identity or service principal.
+
+**Remediation:** Remove the orphaned access configuration.
 
 ---
 

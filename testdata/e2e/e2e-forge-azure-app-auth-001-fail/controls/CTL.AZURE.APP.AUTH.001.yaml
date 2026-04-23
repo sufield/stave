@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.APP.AUTH.001
+name: App Service Authentication Not Enabled
+description: >
+  App Service has no authentication configured (EasyAuth).
+  The application is accessible without identity verification.
+domain: exposure
+severity: critical
+compliance:
+  cis_azure_v2: "9.1"
+  nist_800_53_r5: "AC-3"
+  hipaa: "164.312(d)"
+  pci_dss_v4: "7.2.1"
+  soc2: "CC6.1"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: App Service Authentication Not Enabled — finding detected.
+  action: Enable App Service Authentication (EasyAuth) with an identity provider.
+  example: |
+    {"azure": {"compute": {"kind": "app_service", "app": {"auth_enabled": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.compute.kind
+      op: eq
+      value: app_service
+    - field: properties.azure.compute.app.auth_enabled
+      op: eq
+      value: false

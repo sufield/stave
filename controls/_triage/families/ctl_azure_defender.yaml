@@ -1,0 +1,11 @@
+family: CTL.AZURE.DEFENDER
+infection: >
+  Without Defender, there is no automated threat detection for Azure
+  resources. Anomalous API calls, brute-force attacks, suspicious VM
+  behavior, SQL injection attempts, and container runtime threats are
+  not detected. The organization relies entirely on manual log review
+  to identify attacks.
+failure: >
+  No automated threat detection. Attacks against Azure resources are
+  not detected in real time. The security team discovers incidents
+  through manual investigation or external notification.

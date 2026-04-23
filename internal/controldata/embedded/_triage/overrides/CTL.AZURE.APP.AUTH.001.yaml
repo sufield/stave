@@ -1,0 +1,16 @@
+control: CTL.AZURE.APP.AUTH.001
+defect: >
+  App Service does not have authentication enabled (EasyAuth).
+  The application is accessible without identity verification.
+infection: >
+  Any internet-connected client can access the application without
+  authenticating. App Service Authentication (EasyAuth) provides
+  built-in integration with Entra ID, Microsoft Account, Google,
+  and custom OpenID Connect providers. Without it, the application
+  handles its own authentication — or doesn't. For APIs and backend
+  services, missing authentication means any client can call any
+  endpoint.
+failure: >
+  Unauthenticated application access. An attacker accesses the
+  application, its data, and its backend service connections without
+  credentials.

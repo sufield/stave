@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.LOG.ANALYTICS.001
+name: No Log Analytics Workspace Configured
+description: >
+  No Log Analytics workspace in the subscription. Monitoring data
+  is fragmented with no central query or correlation capability.
+domain: exposure
+severity: high
+compliance:
+  cis_azure_v2: "5.1.1"
+  nist_800_53_r5: "AU-6"
+  hipaa: "164.312(b)"
+  pci_dss_v4: "10.3"
+  soc2: "CC7.2"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: No Log Analytics Workspace Configured — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"azure": {"monitoring": {"kind": "log_analytics", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.monitoring.kind
+      op: eq
+      value: log_analytics
+    - field: properties.azure.monitoring.loganalytics.retention_days
+      op: lt
+      value: 30

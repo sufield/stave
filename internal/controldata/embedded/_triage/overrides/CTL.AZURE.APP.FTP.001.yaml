@@ -1,0 +1,14 @@
+control: CTL.AZURE.APP.FTP.001
+defect: >
+  App Service allows unencrypted FTP connections (FTP state:
+  AllAllowed).
+infection: >
+  FTP transmits credentials and file contents in plaintext. An
+  attacker on the network path can intercept deployment credentials
+  and application code. FTP credentials for App Service are often
+  long-lived and not rotated. A single intercepted credential
+  provides persistent access to deploy arbitrary code.
+failure: >
+  Deployment credential theft via plaintext FTP. An attacker
+  intercepts credentials and deploys malicious code to the
+  production application.

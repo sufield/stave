@@ -1,0 +1,17 @@
+id: azure_full_exposure
+description: >
+  Multiple Azure resources are publicly accessible simultaneously —
+  storage, network, key vault, or database. The network perimeter
+  has multiple open entry points across different resource types.
+  Two or more together indicate a systemic network security gap.
+controls:
+  - CTL.AZURE.STORAGE.PUBLIC.001
+  - CTL.AZURE.NSG.UNRESTRICTED.001
+  - CTL.AZURE.KEYVAULT.NETWORK.001
+  - CTL.AZURE.SQL.PUBLIC.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - ec2_code_execution

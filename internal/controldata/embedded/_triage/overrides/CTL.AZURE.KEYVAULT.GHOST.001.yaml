@@ -1,0 +1,16 @@
+control: CTL.AZURE.KEYVAULT.GHOST.001
+defect: >
+  Key Vault has an access policy granting permissions to a principal
+  that no longer exists in Entra ID.
+infection: >
+  The access policy grants permissions to a deleted principal. While
+  the deleted principal cannot exercise these permissions, the policy
+  represents a historical access grant to encryption keys, secrets,
+  or certificates. The orphaned entry inflates the effective access
+  list, complicates auditing, and may indicate that the decommissioning
+  process for this principal was incomplete — other references (RBAC
+  assignments, resource delegations) may also be orphaned.
+failure: >
+  Orphaned Key Vault access policy. Permissions to sensitive key
+  material are granted to a non-existent principal. The access
+  configuration does not reflect the actual set of authorized consumers.

@@ -1,0 +1,11 @@
+family: CTL.AZURE.KEYVAULT
+infection: >
+  A misconfigured Key Vault exposes the trust anchor for all Azure
+  encryption. Keys, secrets, and certificates stored in Key Vault
+  protect data across storage accounts, SQL databases, VMs, and
+  applications. Public access or missing protection weakens every
+  resource the Key Vault protects.
+failure: >
+  Key store compromise. An attacker accesses encryption keys and
+  secrets, undermining the encryption of every resource that depends
+  on this Key Vault.

@@ -1,0 +1,24 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "diag-keyvault",
+      "type": "azure_diagnostic_setting",
+      "vendor": "azure",
+      "properties": {
+        "azure": {
+          "monitoring": {
+            "kind": "diagnostic_setting",
+            "diagnostic": {
+              "resource_type": "KeyVault",
+              "logs_enabled": false,
+              "metrics_enabled": false
+            }
+          }
+        }
+      }
+    }
+  ]
+}

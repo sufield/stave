@@ -1,0 +1,11 @@
+family: CTL.AZURE.ACTIVITYLOG
+infection: >
+  Activity Log records all control plane operations — resource
+  creation, deletion, modification, role assignments, policy changes.
+  Without proper export and retention, an attacker who operates
+  slowly has their activity aged out of default retention. Incident
+  investigations that span months lose the earliest evidence.
+failure: >
+  Audit trail loss. Control plane activity beyond the default
+  retention window is permanently unavailable for investigation,
+  compliance audit, or forensic analysis.

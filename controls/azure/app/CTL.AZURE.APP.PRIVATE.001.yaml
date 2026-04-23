@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.APP.PRIVATE.001
+name: App Service Without Private Endpoint
+description: >
+  No private endpoint configured. Traffic between the VNet and
+  the application traverses the public internet.
+domain: exposure
+severity: medium
+compliance:
+  cis_azure_v2: "9.8"
+  nist_800_53_r5: "AC-4"
+  soc2: "CC6.6"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: App Service Without Private Endpoint — finding detected.
+  action: Configure a private endpoint for the App Service.
+  example: |
+    {"azure": {"compute": {"kind": "app_service", "app": {"private_endpoint_enabled": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.compute.kind
+      op: eq
+      value: app_service
+    - field: properties.azure.compute.app.private_endpoint_enabled
+      op: eq
+      value: false

@@ -1,0 +1,10 @@
+family: CTL.AZURE.MONITOR
+infection: >
+  An attacker who gains privileged access can modify role assignments,
+  disable policies, delete resources, and access Key Vault secrets
+  without triggering any alert. The Activity Log records the operations
+  but nobody is notified in real time.
+failure: >
+  No real-time detection of admin operations. Privileged actions
+  execute without generating alerts. The security team is not notified
+  until the next manual log review.

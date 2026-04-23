@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.SQL.FIREWALL.001
+name: Azure SQL Must Not Allow All Azure Services
+description: >
+  Allow Azure services permits connections from ANY Azure IP globally.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.1"
+  ccm_v4: ["IVS-03"]
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Azure SQL Must Not Allow All Azure Services — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"azure": {"database": {"kind": "sql_server", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.database.kind
+      op: eq
+      value: sql_server
+    - field: properties.azure.database.sql.allow_azure_services
+      op: eq
+      value: true

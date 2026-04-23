@@ -1,0 +1,17 @@
+control: CTL.AZURE.ALERT.GHOST.001
+defect: >
+  Azure Monitor alert rule targets an action group that does not
+  exist. When the alert fires, no notification is delivered.
+infection: >
+  The alert rule continues to evaluate its condition and fire when
+  the threshold is breached. The notification action fails silently
+  — no email, no SMS, no webhook, no ITSM ticket. The alert appears
+  configured and active in the Azure portal. The dashboard shows the
+  alert exists. Nothing indicates that notifications are broken. If
+  multiple alert rules reference the same deleted action group, all
+  are silently disabled.
+failure: >
+  Silent alerting failure. Security-critical metrics breach thresholds
+  without generating notifications. The security team discovers
+  incidents through other channels — hours or days later — instead
+  of through the alerting system they configured and monitor.

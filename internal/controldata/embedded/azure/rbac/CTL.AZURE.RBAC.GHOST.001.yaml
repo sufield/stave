@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.RBAC.GHOST.001
+name: RBAC Role Assignment References Deleted Principal
+description: >
+  RBAC assignment grants permissions to a principal that no longer
+  exists in Entra ID. The assignment persists as an "Unknown" entry.
+domain: identity
+severity: high
+compliance:
+  cis_azure_v2: "1.21"
+  nist_800_53_r5: "AC-2"
+  hipaa: "164.312(a)(1)"
+  soc2: "CC6.2"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: RBAC Role Assignment References Deleted Principal — finding detected.
+  action: Remove the orphaned role assignment.
+  example: |
+    {"azure": {"rbac": {"kind": "role_assignment", "has_ghost_principal": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.rbac.kind
+      op: eq
+      value: role_assignment
+    - field: properties.azure.rbac.has_ghost_principal
+      op: eq
+      value: true

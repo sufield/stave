@@ -67,7 +67,7 @@ type RemediationAction struct {
 func (a RemediationAction) CanonicalKey() string {
 	val, err := json.Marshal(a.Value)
 	if err != nil {
-		val = []byte(fmt.Sprintf("%v", a.Value))
+		val = fmt.Appendf(nil, "%v", a.Value)
 	}
 	return fmt.Sprintf("%s|%s|%s", a.ActionType, a.Path.String(), val)
 }

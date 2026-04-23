@@ -1,0 +1,25 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "actlog-sub1",
+      "type": "azure_activity_log_profile",
+      "vendor": "azure",
+      "properties": {
+        "azure": {
+          "monitoring": {
+            "kind": "activity_log",
+            "activitylog": {
+              "exported": true,
+              "export_destination": "log_analytics",
+              "retention_days": 365,
+              "retention_sufficient": true
+            }
+          }
+        }
+      }
+    }
+  ]
+}

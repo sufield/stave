@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.KEYVAULT.GHOST.001
+name: Key Vault Access Policy References Deleted Principal
+description: >
+  Key Vault access policy grants key, secret, or certificate
+  permissions to a principal that no longer exists in Entra ID.
+domain: exposure
+severity: high
+compliance:
+  cis_azure_v2: "8.5"
+  nist_800_53_r5: "AC-3"
+  hipaa: "164.312(a)(1)"
+  soc2: "CC6.1"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: Key Vault Access Policy References Deleted Principal — finding detected.
+  action: Remove the orphaned access policy.
+  example: |
+    {"azure": {"security": {"kind": "keyvault", "keyvault": {"has_ghost_principal": false}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.security.kind
+      op: eq
+      value: keyvault
+    - field: properties.azure.security.keyvault.has_ghost_principal
+      op: eq
+      value: true

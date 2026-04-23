@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.APP.DEBUG.001
+name: App Service Remote Debugging Enabled
+description: >
+  Remote debugging enabled in production. The debugging endpoint
+  provides code-level access to the running application.
+domain: exposure
+severity: high
+compliance:
+  cis_azure_v2: "9.5"
+  nist_800_53_r5: "CM-7"
+  soc2: "CC6.1"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: App Service Remote Debugging Enabled — finding detected.
+  action: Disable remote debugging.
+  example: |
+    {"azure": {"compute": {"kind": "app_service", "app": {"remote_debugging_enabled": false}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.compute.kind
+      op: eq
+      value: app_service
+    - field: properties.azure.compute.app.remote_debugging_enabled
+      op: eq
+      value: true

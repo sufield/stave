@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.POLICY.COMPLIANCE.001
+name: Non-Compliant Azure Policy Assignments
+description: >
+  Azure Policy assignments show non-compliant resources.
+  Intended configuration state is not enforced.
+domain: exposure
+severity: medium
+compliance:
+  cis_azure_v2: "7.4"
+  nist_800_53_r5: "AU-6"
+  soc2: "CC7.1"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Non-Compliant Azure Policy Assignments — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"azure": {"monitoring": {"kind": "policy_assignment", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.monitoring.kind
+      op: eq
+      value: policy_assignment
+    - field: properties.azure.monitoring.policy.compliance_state
+      op: eq
+      value: NonCompliant

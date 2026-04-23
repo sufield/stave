@@ -1,0 +1,4 @@
+control: CTL.AZURE.ACTIVITYLOG.EXPORT.001
+defect: >
+  Azure Activity Log is not exported to a Storage Account or Log
+  Analytics workspace. Audit data beyond 90 days is not retained.

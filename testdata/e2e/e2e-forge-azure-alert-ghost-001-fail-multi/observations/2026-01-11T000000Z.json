@@ -1,0 +1,25 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "alert-keyvault-access",
+      "type": "azure_monitor_alert_rule",
+      "vendor": "azure",
+      "properties": {
+        "azure": {
+          "monitoring": {
+            "kind": "alert_rule",
+            "alert": {
+              "name": "Key Vault secret access",
+              "enabled": true,
+              "has_ghost_action_group": true,
+              "ghost_action_group_id": "/subscriptions/sub-1/resourceGroups/rg-monitoring/providers/microsoft.insights/actionGroups/ag-deleted"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

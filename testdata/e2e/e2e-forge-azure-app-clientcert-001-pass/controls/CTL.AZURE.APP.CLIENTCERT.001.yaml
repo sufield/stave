@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.APP.CLIENTCERT.001
+name: App Service Client Certificates Not Required
+description: >
+  Client certificates not enabled or not set to Required mode.
+  No mTLS verification of connecting clients.
+domain: encryption
+severity: medium
+compliance:
+  cis_azure_v2: "9.9"
+  nist_800_53_r5: "IA-3"
+  soc2: "CC6.1"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: App Service Client Certificates Not Required — finding detected.
+  action: Enable client certificates in Required mode.
+  example: |
+    {"azure": {"compute": {"kind": "app_service", "app": {"client_cert_enabled": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.compute.kind
+      op: eq
+      value: app_service
+    - field: properties.azure.compute.app.client_cert_enabled
+      op: eq
+      value: false

@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.APP.RUNTIME.001
+name: App Service Running Deprecated Runtime Version
+description: >
+  App Service runs a deprecated runtime version that receives
+  no security patches.
+domain: exposure
+severity: high
+compliance:
+  cis_azure_v2: "9.12"
+  nist_800_53_r5: "SI-2"
+  soc2: "CC7.1"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: App Service Running Deprecated Runtime Version — finding detected.
+  action: Upgrade to a supported runtime version.
+  example: |
+    {"azure": {"compute": {"kind": "app_service", "app": {"runtime_deprecated": false}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.compute.kind
+      op: eq
+      value: app_service
+    - field: properties.azure.compute.app.runtime_deprecated
+      op: eq
+      value: true

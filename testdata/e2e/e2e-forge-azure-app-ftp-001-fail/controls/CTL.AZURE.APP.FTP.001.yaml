@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.APP.FTP.001
+name: App Service FTP Not Disabled
+description: >
+  Unencrypted FTP permitted (state AllAllowed). Deployment
+  credentials and packages transmitted in plaintext.
+domain: encryption
+severity: high
+compliance:
+  cis_azure_v2: "9.4"
+  nist_800_53_r5: "SC-8"
+  soc2: "CC6.1"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: App Service FTP Not Disabled — finding detected.
+  action: Set FTP state to Disabled or FtpsOnly.
+  example: |
+    {"azure": {"compute": {"kind": "app_service", "app": {"ftp_state": "Disabled"}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.compute.kind
+      op: eq
+      value: app_service
+    - field: properties.azure.compute.app.ftp_state
+      op: eq
+      value: AllAllowed

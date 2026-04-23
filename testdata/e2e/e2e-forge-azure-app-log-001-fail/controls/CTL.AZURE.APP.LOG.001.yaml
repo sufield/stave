@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.APP.LOG.001
+name: App Service Diagnostic Logging Disabled
+description: >
+  Diagnostic logging not enabled. Application errors, request logs,
+  and platform events are not captured for investigation.
+domain: exposure
+severity: medium
+compliance:
+  cis_azure_v2: "9.11"
+  nist_800_53_r5: "AU-2"
+  soc2: "CC7.2"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: App Service Diagnostic Logging Disabled — finding detected.
+  action: Enable diagnostic logging.
+  example: |
+    {"azure": {"compute": {"kind": "app_service", "app": {"diagnostic_logging_enabled": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.compute.kind
+      op: eq
+      value: app_service
+    - field: properties.azure.compute.app.diagnostic_logging_enabled
+      op: eq
+      value: false

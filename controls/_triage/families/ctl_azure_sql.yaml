@@ -1,0 +1,8 @@
+family: CTL.AZURE.SQL
+infection: >
+  Misconfigured Azure SQL servers expose database infrastructure.
+  Public network access, broad firewall rules, and service-managed
+  encryption weaken the security boundary around database data.
+failure: >
+  Database exposure. An attacker accesses the SQL server through
+  unrestricted network access or exploits unaudited operations.

@@ -1,0 +1,15 @@
+id: azure_app_client_attack
+description: >
+  Weak client-facing security — wildcard CORS plus either HTTP
+  allowed or weak TLS. Cross-origin attacks are possible and the
+  transport layer is insecure.
+controls:
+  - CTL.AZURE.APP.CORS.001
+  - CTL.AZURE.APP.HTTPS.001
+  - CTL.AZURE.APP.TLS.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - iam_credential_theft

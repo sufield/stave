@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.APP.IDENTITY.001
+name: App Service Without Managed Identity
+description: >
+  No managed identity configured. The application uses stored
+  credentials instead of automatic credential rotation.
+domain: identity
+severity: medium
+compliance:
+  cis_azure_v2: "9.10"
+  nist_800_53_r5: "IA-5"
+  soc2: "CC6.1"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: App Service Without Managed Identity — finding detected.
+  action: Configure a system-assigned or user-assigned managed identity.
+  example: |
+    {"azure": {"compute": {"kind": "app_service", "app": {"managed_identity_type": "SystemAssigned"}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.compute.kind
+      op: eq
+      value: app_service
+    - field: properties.azure.compute.app.managed_identity_type
+      op: eq
+      value: None

@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.SQL.AUDIT.001
+name: Azure SQL Auditing Must Be Enabled
+description: >
+  SQL auditing not configured. Database operations are not recorded.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AU-2"
+  soc2: "CC6.1"
+  ccm_v4: ["LOG-03"]
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Azure SQL Auditing Must Be Enabled — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"azure": {"database": {"kind": "sql_server", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.database.kind
+      op: eq
+      value: sql_server
+    - field: properties.azure.database.sql.auditing_enabled
+      op: eq
+      value: false

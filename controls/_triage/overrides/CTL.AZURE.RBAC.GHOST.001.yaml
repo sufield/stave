@@ -1,0 +1,16 @@
+control: CTL.AZURE.RBAC.GHOST.001
+defect: >
+  RBAC role assignment grants permissions to a principal that no
+  longer exists in Entra ID. The assignment persists as an "Unknown"
+  entry in the authorization configuration.
+infection: >
+  The orphaned assignment occupies one of the limited RBAC assignment
+  slots at this scope. The assignment represents permissions that
+  were intentionally granted to a specific principal — that principal
+  no longer exists, so the permissions have no legitimate consumer.
+  The assignment clutters RBAC configuration, complicates security
+  audits, and may mask the effective permission surface.
+failure: >
+  Orphaned RBAC assignment. Permissions granted to a deleted principal
+  persist in the authorization configuration. The assignment serves
+  no purpose and creates audit noise.

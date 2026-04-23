@@ -1,0 +1,25 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "alert-nsg-change",
+      "type": "azure_monitor_alert_rule",
+      "vendor": "azure",
+      "properties": {
+        "azure": {
+          "monitoring": {
+            "kind": "alert_rule",
+            "alert": {
+              "name": "NSG modification",
+              "enabled": true,
+              "has_ghost_action_group": true,
+              "ghost_action_group_id": "/subscriptions/sub-1/resourceGroups/rg-monitoring/providers/microsoft.insights/actionGroups/ag-deleted"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

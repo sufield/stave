@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.APP.INSIGHTS.001
+name: App Service Without Application Insights
+description: >
+  Application Insights not configured. No application performance
+  monitoring, request tracing, or dependency tracking.
+domain: exposure
+severity: low
+compliance:
+  nist_800_53_r5: "AU-6"
+  soc2: "CC7.2"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: App Service Without Application Insights — finding detected.
+  action: Configure Application Insights.
+  example: |
+    {"azure": {"compute": {"kind": "app_service", "app": {"app_insights_enabled": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.compute.kind
+      op: eq
+      value: app_service
+    - field: properties.azure.compute.app.app_insights_enabled
+      op: eq
+      value: false

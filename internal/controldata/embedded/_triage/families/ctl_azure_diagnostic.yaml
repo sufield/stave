@@ -1,0 +1,11 @@
+family: CTL.AZURE.DIAGNOSTIC
+infection: >
+  Without diagnostic settings, resource-level operations are not
+  logged. Key Vault access, SQL queries, storage account reads, and
+  AKS cluster events are invisible. An attacker interacts with
+  resources without generating the detailed logs needed for
+  investigation.
+failure: >
+  Resource-level audit gap. Operations against critical resources
+  are not recorded. Forensic investigation cannot determine what
+  data was accessed or modified.

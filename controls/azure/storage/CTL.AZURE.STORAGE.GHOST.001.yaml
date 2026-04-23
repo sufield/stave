@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.STORAGE.GHOST.001
+name: Storage Account Access References Deleted Identity
+description: >
+  Storage account RBAC assignment or shared access policy references
+  a deleted managed identity or service principal.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-2"
+  soc2: "CC6.2"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: Storage Account Access References Deleted Identity — finding detected.
+  action: Remove the orphaned access configuration.
+  example: |
+    {"azure": {"storage": {"kind": "storage_account", "has_ghost_principal": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.storage.kind
+      op: eq
+      value: storage_account
+    - field: properties.azure.storage.has_ghost_principal
+      op: eq
+      value: true

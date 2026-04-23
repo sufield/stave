@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.APP.CORS.001
+name: App Service CORS Allows All Origins
+description: >
+  CORS configuration allows requests from any origin (*).
+  Cross-origin requests from any website are permitted.
+domain: exposure
+severity: high
+compliance:
+  cis_azure_v2: "9.6"
+  nist_800_53_r5: "AC-4"
+  soc2: "CC6.1"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: App Service CORS Allows All Origins — finding detected.
+  action: Replace wildcard (*) with specific trusted origins.
+  example: |
+    {"azure": {"compute": {"kind": "app_service", "app": {"cors_allow_all_origins": false}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.compute.kind
+      op: eq
+      value: app_service
+    - field: properties.azure.compute.app.cors_allow_all_origins
+      op: eq
+      value: true

@@ -1,0 +1,11 @@
+family: CTL.AZURE.POLICY
+infection: >
+  Non-compliant resources deviate from the organization's intended
+  configuration state. Policy violations may include missing
+  encryption, unrestricted network access, or absent diagnostic
+  settings. Each non-compliant resource is a potential attack surface
+  that the organization has already identified but not remediated.
+failure: >
+  Configuration drift. Resources do not match the intended security
+  posture defined by Azure Policy. Known deviations persist without
+  remediation.

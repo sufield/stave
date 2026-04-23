@@ -1,0 +1,15 @@
+id: azure_app_deployment_risk
+description: >
+  Insecure deployment configuration — plaintext FTP or remote
+  debugging enabled, combined with deprecated runtime. The deployment
+  pipeline is insecure and the runtime is unpatched.
+controls:
+  - CTL.AZURE.APP.FTP.001
+  - CTL.AZURE.APP.DEBUG.001
+  - CTL.AZURE.APP.RUNTIME.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - ec2_code_execution

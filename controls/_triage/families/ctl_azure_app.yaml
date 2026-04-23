@@ -1,0 +1,11 @@
+family: CTL.AZURE.APP
+infection: >
+  App Service hosts web applications, REST APIs, and mobile backends
+  directly accessible from the internet. Misconfiguration exposes
+  the application and its backend connections. The application's
+  position at the network edge makes it the primary attack surface
+  for the hosted workload.
+failure: >
+  Application exposure. An attacker accesses the application,
+  its data, or its backend service connections through misconfigured
+  authentication, network, or transport settings.

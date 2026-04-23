@@ -1,0 +1,16 @@
+id: azure_compute_unprotected
+description: >
+  Multiple compute services are publicly accessible without adequate
+  protection — unauthenticated function app, public AKS API server,
+  or VM with public IP and no JIT. The compute layer has multiple
+  exposed entry points.
+controls:
+  - CTL.AZURE.FUNCTION.AUTH.001
+  - CTL.AZURE.AKS.PRIVATE.001
+  - CTL.AZURE.VM.PUBLIC.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - ec2_code_execution
