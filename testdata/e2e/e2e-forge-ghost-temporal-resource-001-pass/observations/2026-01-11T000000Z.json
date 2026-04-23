@@ -1,0 +1,20 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "temporal-analysis-account",
+      "type": "aws_temporal_analysis",
+      "vendor": "aws",
+      "properties": {
+        "governance": {
+          "kind": "temporal_analysis",
+          "ghost": {
+            "has_temporal_ghost": false
+          }
+        }
+      }
+    }
+  ]
+}

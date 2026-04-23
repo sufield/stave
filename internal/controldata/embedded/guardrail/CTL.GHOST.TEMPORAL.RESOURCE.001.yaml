@@ -1,0 +1,37 @@
+dsl_version: ctrl.v1
+id: CTL.GHOST.TEMPORAL.RESOURCE.001
+name: Resources Deleted Between Snapshots Must Not Have Persisting References
+description: >
+  When a resource is present in snapshot N-1 but absent in snapshot N,
+  all references to that resource's ARN must also be removed in
+  snapshot N. A resource confirmed deleted by two independent
+  observations (present then absent) with persisting references is
+  the highest-confidence ghost finding — not an extractor gap but a
+  verified deletion with orphaned references. The severity inherits
+  from the reference type: write permissions to reclaimable resources
+  are critical, monitoring targets are critical, read permissions
+  are high, and configuration references are medium.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "CM-8"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-17"]
+scope_tags: [aws]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: A resource observed in the previous snapshot has been deleted while references persist in the current snapshot.
+  action: Remove all references to the deleted resource's ARN from policies, triggers, configurations, and compute definitions.
+  example: |
+    {"governance": {"kind": "temporal_analysis", "ghost": {"has_temporal_ghost": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: temporal_analysis
+    - field: properties.governance.ghost.has_temporal_ghost
+      op: eq
+      value: true

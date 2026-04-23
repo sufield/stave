@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 906
-**Pack hash:** `4c9d579cfb8f77c71932916334ec2e1dfe580a988489d2af6272b67cf1b08293`
+**Total controls:** 908
+**Pack hash:** `bd83f6c7f06f20cc308d031467138c42c225898ef6ef1907927bb0f1cbb8293d`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 137 |
-| high | 402 |
+| high | 403 |
 | info | 16 |
 | low | 77 |
-| medium | 274 |
+| medium | 275 |
 
 | Domain | Count |
 |--------|-------|
@@ -22,7 +22,7 @@
 | detection | 6 |
 | encryption | 35 |
 | exposure | 601 |
-| governance | 21 |
+| governance | 23 |
 | identity | 180 |
 | network | 21 |
 | resilience | 14 |
@@ -5593,6 +5593,36 @@ GCS buckets must use uniform bucket-level access. When disabled, both IAM polici
 GCS buckets must have object versioning enabled. Without versioning, deleted or overwritten objects cannot be recovered, and ransomware attacks that encrypt objects are irreversible.
 
 **Remediation:** Enable versioning. Run: gcloud storage buckets update gs://BUCKET --versioning
+
+---
+
+### CTL.GHOST.TEMPORAL.PERMISSION.001
+
+**Permission Scope Must Not Widen After Resource Deletion**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+When a policy's Resource pattern changes from a specific ARN to a broader wildcard pattern between snapshots, and a resource deletion occurred in the same window, this indicates a ghost reference was "fixed" by widening permissions. The result is broader access than before the deletion — a scope expansion disguised as cleanup.
+
+**Remediation:** Replace the wildcard pattern with specific ARNs for the intended resources. Do not widen permissions to fix dangling references.
+
+---
+
+### CTL.GHOST.TEMPORAL.RESOURCE.001
+
+**Resources Deleted Between Snapshots Must Not Have Persisting References**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-8; soc2: CC6.1;
+
+When a resource is present in snapshot N-1 but absent in snapshot N, all references to that resource's ARN must also be removed in snapshot N. A resource confirmed deleted by two independent observations (present then absent) with persisting references is the highest-confidence ghost finding — not an extractor gap but a verified deletion with orphaned references. The severity inherits from the reference type: write permissions to reclaimable resources are critical, monitoring targets are critical, read permissions are high, and configuration references are medium.
+
+**Remediation:** Remove all references to the deleted resource's ARN from policies, triggers, configurations, and compute definitions.
 
 ---
 

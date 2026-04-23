@@ -1,0 +1,19 @@
+control: CTL.GHOST.TEMPORAL.RESOURCE.001
+defect: >
+  Resource was present in the previous observation snapshot and is
+  absent in the current snapshot. Active references to this resource
+  persist in the current configuration.
+infection: >
+  This is a confirmed deletion, not an extractor gap — the resource
+  was previously observed and is now gone. The ghost references are
+  exploitable according to the reference type: write permissions to
+  reclaimable resources enable data exfiltration, monitoring target
+  ghosts silence alerting, compute dependency ghosts break
+  deployments or enable supply chain attacks. The time window since
+  deletion is the exposure window during which ghost references are
+  exploitable.
+failure: >
+  Confirmed ghost resource. A resource that previously existed has
+  been deleted while active references persist. The deletion is
+  verified by two independent observations. This is the highest-
+  confidence ghost finding in the family.

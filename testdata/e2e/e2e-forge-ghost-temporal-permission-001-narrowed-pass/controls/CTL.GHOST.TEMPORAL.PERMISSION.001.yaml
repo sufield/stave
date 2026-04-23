@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.GHOST.TEMPORAL.PERMISSION.001
+name: Permission Scope Must Not Widen After Resource Deletion
+description: >
+  When a policy's Resource pattern changes from a specific ARN to a
+  broader wildcard pattern between snapshots, and a resource deletion
+  occurred in the same window, this indicates a ghost reference was
+  "fixed" by widening permissions. The result is broader access than
+  before the deletion — a scope expansion disguised as cleanup.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-04"]
+scope_tags: [aws, iam]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: Policy Resource pattern broadened between snapshots, coinciding with a resource deletion.
+  action: Replace the wildcard pattern with specific ARNs for the intended resources. Do not widen permissions to fix dangling references.
+  example: |
+    {"identity": {"kind": "role", "policy": {"has_broadened_scope": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: role
+    - field: properties.identity.policy.has_broadened_scope
+      op: eq
+      value: true

@@ -1,0 +1,16 @@
+control: CTL.GHOST.TEMPORAL.PERMISSION.001
+defect: >
+  IAM policy Resource pattern broadened from a specific ARN to a
+  wildcard pattern between observation snapshots. A resource
+  deletion occurred in the same time window.
+infection: >
+  The permission broadening may have been intended to fix a dangling
+  reference to a deleted resource by widening the pattern. The result
+  is that the policy now grants access to more resources than it did
+  when the specific resource existed. If the original policy targeted
+  one bucket, the wildcard now targets every bucket matching the
+  pattern — a scope expansion disguised as a cleanup.
+failure: >
+  Permission scope creep via ghost reference cleanup. The fix for a
+  dangling reference created a broader permission than the original.
+  The blast radius of this policy has expanded.

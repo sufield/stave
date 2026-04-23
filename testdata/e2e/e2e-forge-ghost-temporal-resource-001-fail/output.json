@@ -1,0 +1,327 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-15T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "2ed60ff32f705f54ec90c80acbe8f1b1bf43d362d8dab230c1074b79f629f96f",
+        "2026-01-11T000000Z.json": "8ea9849a26bdbf5c26eb59a8a48b9a896db718b942943842e0aeae8d8fef5dea"
+      },
+      "overall": "c095b22353477b2a6d1240735184ffc426fc6d644a0f4acd6e23185255108892"
+    },
+    "policy_fingerprint": "875bc55da5e9f8d2714533a75ce49aab3cf2bd4994da1b22f649684e9fc812d8",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.GHOST.TEMPORAL.RESOURCE.001",
+      "asset_id": "temporal-analysis-account",
+      "asset_type": "aws_temporal_analysis",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -168,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:55d5ee745e7f0828",
+      "control_id": "CTL.GHOST.TEMPORAL.RESOURCE.001",
+      "control_name": "Resources Deleted Between Snapshots Must Not Have Persisting References",
+      "control_description": "When a resource is present in snapshot N-1 but absent in snapshot N, all references to that resource's ARN must also be removed in snapshot N. A resource confirmed deleted by two independent observations (present then absent) with persisting references is the highest-confidence ghost finding — not an extractor gap but a verified deletion with orphaned references. The severity inherits from the reference type: write permissions to reclaimable resources are critical, monitoring targets are critical, read permissions are high, and configuration references are medium.\n",
+      "asset_id": "temporal-analysis-account",
+      "asset_type": "aws_temporal_analysis",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 336,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "governance.ghost.has_temporal_ghost",
+            "actual_value": true,
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "governance.kind",
+            "actual_value": "temporal_analysis",
+            "operator": "eq",
+            "unsafe_value": "temporal_analysis"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 336 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "nist_800_53_r5": "CM-8",
+        "soc2": "CC6.1"
+      },
+      "control_compliance_ccm_v4": [
+        "DSP-17"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "A resource observed in the previous snapshot has been deleted while references persist in the current snapshot.",
+        "action": "Remove all references to the deleted resource's ARN from policies, triggers, configurations, and compute definitions.",
+        "example": "{\"governance\": {\"kind\": \"temporal_analysis\", \"ghost\": {\"has_temporal_ghost\": false}}}\n"
+      },
+      "fix_plan": {
+        "id": "fix-9d1cc591bc8d88cb",
+        "target": {
+          "asset_id": "temporal-analysis-account",
+          "asset_type": "aws_temporal_analysis"
+        },
+        "action": "Remove all references to the deleted resource's ARN from policies, triggers, configurations, and compute definitions."
+      },
+      "exposure_score": 75,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "governance.ghost.has_temporal_ghost eq true",
+          "observation_key": "governance.ghost.has_temporal_ghost",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": true
+        },
+        {
+          "predicate_expr": "governance.kind eq \"temporal_analysis\"",
+          "observation_key": "governance.kind",
+          "operator": "eq",
+          "expected_value": "temporal_analysis",
+          "observed_value": "temporal_analysis"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "temporal-analysis-account",
+          "type": "aws_temporal_analysis",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.GHOST.TEMPORAL.RESOURCE.001",
+          "control_name": "Resources Deleted Between Snapshots Must Not Have Persisting References",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "governance.ghost.has_temporal_ghost = true",
+              "observation_key": "governance.ghost.has_temporal_ghost",
+              "observed_value": true
+            },
+            {
+              "clause": "governance.kind = \"temporal_analysis\"",
+              "observation_key": "governance.kind",
+              "observed_value": "temporal_analysis"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "governance.ghost.has_temporal_ghost",
+            "current_value": "true",
+            "required_value": "false",
+            "has_safe_default": true,
+            "description": "Set governance.ghost.has_temporal_ghost to false"
+          },
+          {
+            "path": "governance.kind",
+            "current_value": "temporal_analysis",
+            "has_safe_default": false,
+            "description": "Change governance.kind from temporal_analysis"
+          }
+        ],
+        "action": "Remove all references to the deleted resource's ARN from policies, triggers, configurations, and compute definitions."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws"
+      ],
+      "delta": [
+        {
+          "property_label": "ghost has temporal ghost",
+          "property_path": "governance.ghost.has_temporal_ghost",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:51b8d8f7e5187468",
+      "asset_id": "temporal-analysis-account",
+      "shared_keys": [
+        "governance.ghost",
+        "governance.ghost.has_temporal_ghost",
+        "governance.kind"
+      ],
+      "headline_finding_id": "sha256:55d5ee745e7f0828",
+      "member_finding_ids": [
+        "sha256:55d5ee745e7f0828"
+      ],
+      "consolidated_score": 75,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "temporal-analysis-account",
+      "asset_type": "aws_temporal_analysis",
+      "fix_plan": {
+        "id": "fix-9d1cc591bc8d88cb",
+        "target": {
+          "asset_id": "temporal-analysis-account",
+          "asset_type": "aws_temporal_analysis"
+        },
+        "action": "Remove all references to the deleted resource's ARN from policies, triggers, configurations, and compute definitions."
+      },
+      "contributing_controls": [
+        "CTL.GHOST.TEMPORAL.RESOURCE.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.GHOST.TEMPORAL.RESOURCE.001",
+      "asset_id": "temporal-analysis-account",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-ghost-temporal-resource-001-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-ghost-temporal-resource-001-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "6d3825a56b5cc1e32bcb89898ec79897866d19c4",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-ghost-temporal-resource-001-fail/controls/"
+      ]
+    }
+  }
+}
