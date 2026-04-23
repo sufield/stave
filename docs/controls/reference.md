@@ -3,27 +3,27 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1031
-**Pack hash:** `ce43ba653ef0f9e677851f2872b044f5f97dcdf90ed36faf69cbebbafac9696c`
+**Total controls:** 1042
+**Pack hash:** `283e8fd6c9664029cf885f8ae595ff621381e9852acae653caf518705e76c406`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 144 |
-| high | 461 |
+| high | 467 |
 | info | 16 |
 | low | 80 |
-| medium | 330 |
+| medium | 335 |
 
 | Domain | Count |
 |--------|-------|
 | audit | 20 |
 | detection | 8 |
-| encryption | 57 |
-| exposure | 672 |
+| encryption | 58 |
+| exposure | 680 |
 | governance | 24 |
-| identity | 207 |
+| identity | 209 |
 | network | 21 |
 | resilience | 14 |
 | storage | 8 |
@@ -988,6 +988,81 @@ Auto Scaling groups must be configured across multiple AZs. A single-AZ ASG has 
 
 ---
 
+### CTL.AZURE.ACR.ADMIN.001
+
+**Container Registry Admin User Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_azure_v2: 9.15; nist_800_53_r5: AC-6; soc2: CC6.1;
+
+Admin user provides a single shared credential with full push/pull access to all repositories. Not scoped, not auditable per-user, not integrated with RBAC.
+
+**Remediation:** Disable admin user and use RBAC with Entra ID.
+
+---
+
+### CTL.AZURE.ACR.ANON.001
+
+**Container Registry Anonymous Pull Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_azure_v2: 9.16; nist_800_53_r5: AC-3; soc2: CC6.1;
+
+Anonymous pull allows any unauthenticated client to pull images. Application code, configuration, and potentially embedded secrets are publicly accessible.
+
+**Remediation:** Disable anonymous pull.
+
+---
+
+### CTL.AZURE.ACR.NETWORK.001
+
+**Container Registry Public Network Access Unrestricted**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_azure_v2: 9.17; nist_800_53_r5: SC-7; soc2: CC6.6;
+
+Public network access enabled with default Allow action. Registry accessible from any IP without firewall rules.
+
+**Remediation:** Set network default action to Deny and configure firewall rules or private endpoints.
+
+---
+
+### CTL.AZURE.ACR.SCAN.001
+
+**Container Registry Image Scanning Not Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-2; soc2: CC7.1;
+
+Image vulnerability scanning not enabled. Pushed images are not scanned for known CVEs before deployment.
+
+**Remediation:** Enable Defender for Container Registries or integrate image scanning.
+
+---
+
+### CTL.AZURE.ACR.TRUST.001
+
+**Container Registry Content Trust Not Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-7; soc2: CC7.1;
+
+Content trust (Docker Content Trust / Notary) not enabled. Images are not signed — no verification that pushed images come from trusted publishers. Requires Premium SKU.
+
+**Remediation:** Enable content trust (requires Premium SKU).
+
+---
+
 ### CTL.AZURE.ACTIVITYLOG.EXPORT.001
 
 **Activity Log Not Exported to Storage or Log Analytics**
@@ -1090,6 +1165,51 @@ AKS clusters must run a Kubernetes version within the Azure-supported window. Un
 Azure Monitor alert rule references a deleted action group. The alert fires but notifications go nowhere. The system appears active — the alert exists, the condition evaluates — but delivery is silently broken.
 
 **Remediation:** Update the alert rule to reference a valid action group.
+
+---
+
+### CTL.AZURE.APIM.HTTPS.001
+
+**API Management Backend Not HTTPS-Only**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** cis_azure_v2: 9.20; nist_800_53_r5: SC-8; pci_dss_v4: 4.1; soc2: CC6.7;
+
+APIM forwards requests to backend services over HTTP. Traffic between APIM and the backend is unencrypted even when the client-to-APIM connection uses HTTPS.
+
+**Remediation:** Enforce HTTPS for all backend connections.
+
+---
+
+### CTL.AZURE.APIM.IDENTITY.001
+
+**API Management Without Managed Identity**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: IA-5; soc2: CC6.1;
+
+No managed identity configured. APIM must use stored credentials to access backend services and Azure resources.
+
+**Remediation:** Configure a system-assigned or user-assigned managed identity.
+
+---
+
+### CTL.AZURE.APIM.MANAGEMENT.001
+
+**API Management Management API Publicly Accessible**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-4; soc2: CC6.6;
+
+Management API publicly accessible. An attacker with management credentials can modify API configurations, add data-exfiltrating policies, or redirect traffic.
+
+**Remediation:** Restrict management API access to VNet or private endpoint.
 
 ---
 
@@ -1330,6 +1450,51 @@ Cosmos DB uses service-managed encryption without Key Vault integration.
 Cosmos DB accepts public internet connections without restrictions.
 
 **Remediation:** Remediate per control description.
+
+---
+
+### CTL.AZURE.DATABRICKS.NOIP.001
+
+**Databricks Clusters Without No-Public-IP**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+Cluster nodes have public IP addresses. Nodes are directly addressable from the internet. No-public-IP mode restricts nodes to private IPs only.
+
+**Remediation:** Enable no-public-IP mode for Databricks clusters.
+
+---
+
+### CTL.AZURE.DATABRICKS.PUBLIC.001
+
+**Databricks Workspace Public Network Access Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-4; soc2: CC6.6;
+
+Public network access allows connections from any IP. Notebook UI, REST API, and cluster management are internet-accessible.
+
+**Remediation:** Disable public network access.
+
+---
+
+### CTL.AZURE.DATABRICKS.VNET.001
+
+**Databricks Workspace Not VNet Injected**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+Workspace not deployed into a customer VNet. No control over network security groups, route tables, or private endpoints for the workspace's compute.
+
+**Remediation:** Deploy the workspace into a customer VNet.
 
 ---
 

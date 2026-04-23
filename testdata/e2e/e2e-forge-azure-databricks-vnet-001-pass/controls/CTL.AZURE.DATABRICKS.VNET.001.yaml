@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.DATABRICKS.VNET.001
+name: Databricks Workspace Not VNet Injected
+description: >
+  Workspace not deployed into a customer VNet. No control over
+  network security groups, route tables, or private endpoints
+  for the workspace's compute.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Databricks Workspace Not VNet Injected — finding detected.
+  action: Deploy the workspace into a customer VNet.
+  example: |
+    {"azure": {"compute": {"kind": "databricks_workspace", "databricks": {"vnet_injected": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.compute.kind
+      op: eq
+      value: databricks_workspace
+    - field: properties.azure.compute.databricks.vnet_injected
+      op: eq
+      value: false

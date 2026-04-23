@@ -1,0 +1,326 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-15T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "75ba91aa726c14aa93b2ff04a73a8b39b9f2295f7a37eeb7e614a350b8f2bcf3",
+        "2026-01-11T000000Z.json": "63d974f7a481ac25e5d23dadc304636689cd33aca232ae7e00bdc5f7bb98e0ce"
+      },
+      "overall": "716e8aa330929a2bcb19d64aaee4b3895918fe33645e85a994c947fe018ab50f"
+    },
+    "policy_fingerprint": "e0131844eae520fe8e04b383286d33d315f16e1dce2f4d007e7b9f3cd1e9c4d1",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.AZURE.ACR.ADMIN.001",
+      "asset_id": "acr-prod",
+      "asset_type": "azure_container_registry",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -168,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:d3c6fc58c8878528",
+      "control_id": "CTL.AZURE.ACR.ADMIN.001",
+      "control_name": "Container Registry Admin User Enabled",
+      "control_description": "Admin user provides a single shared credential with full push/pull access to all repositories. Not scoped, not auditable per-user, not integrated with RBAC.\n",
+      "asset_id": "acr-prod",
+      "asset_type": "azure_container_registry",
+      "asset_vendor": "azure",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 336,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "azure.compute.acr.admin_user_enabled",
+            "actual_value": true,
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "azure.compute.kind",
+            "actual_value": "container_registry",
+            "operator": "eq",
+            "unsafe_value": "container_registry"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 336 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_azure_v2": "9.15",
+        "nist_800_53_r5": "AC-6",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Container Registry Admin User Enabled — finding detected.",
+        "action": "Disable admin user and use RBAC with Entra ID.",
+        "example": "{\"azure\": {\"compute\": {\"kind\": \"container_registry\", \"acr\": {\"admin_user_enabled\": false}}}}\n"
+      },
+      "fix_plan": {
+        "id": "fix-edad3204e8e79c49",
+        "target": {
+          "asset_id": "acr-prod",
+          "asset_type": "azure_container_registry"
+        },
+        "action": "Disable admin user and use RBAC with Entra ID."
+      },
+      "exposure_score": 75,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "azure.compute.acr.admin_user_enabled eq true",
+          "observation_key": "azure.compute.acr.admin_user_enabled",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": true
+        },
+        {
+          "predicate_expr": "azure.compute.kind eq \"container_registry\"",
+          "observation_key": "azure.compute.kind",
+          "operator": "eq",
+          "expected_value": "container_registry",
+          "observed_value": "container_registry"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "acr-prod",
+          "type": "azure_container_registry",
+          "vendor": "azure"
+        },
+        "violation": {
+          "control_id": "CTL.AZURE.ACR.ADMIN.001",
+          "control_name": "Container Registry Admin User Enabled",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "azure.compute.acr.admin_user_enabled = true",
+              "observation_key": "azure.compute.acr.admin_user_enabled",
+              "observed_value": true
+            },
+            {
+              "clause": "azure.compute.kind = \"container_registry\"",
+              "observation_key": "azure.compute.kind",
+              "observed_value": "container_registry"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "azure.compute.acr.admin_user_enabled",
+            "current_value": "true",
+            "required_value": "false",
+            "has_safe_default": true,
+            "description": "Set azure.compute.acr.admin_user_enabled to false"
+          },
+          {
+            "path": "azure.compute.kind",
+            "current_value": "container_registry",
+            "has_safe_default": false,
+            "description": "Change azure.compute.kind from container_registry"
+          }
+        ],
+        "action": "Disable admin user and use RBAC with Entra ID."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "azure"
+      ],
+      "delta": [
+        {
+          "property_label": "compute acr admin user",
+          "property_path": "azure.compute.acr.admin_user_enabled",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:16dc83250f6bc338",
+      "asset_id": "acr-prod",
+      "shared_keys": [
+        "azure.compute",
+        "azure.compute.acr",
+        "azure.compute.acr.admin_user_enabled",
+        "azure.compute.kind"
+      ],
+      "headline_finding_id": "sha256:d3c6fc58c8878528",
+      "member_finding_ids": [
+        "sha256:d3c6fc58c8878528"
+      ],
+      "consolidated_score": 75,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "acr-prod",
+      "asset_type": "azure_container_registry",
+      "fix_plan": {
+        "id": "fix-edad3204e8e79c49",
+        "target": {
+          "asset_id": "acr-prod",
+          "asset_type": "azure_container_registry"
+        },
+        "action": "Disable admin user and use RBAC with Entra ID."
+      },
+      "contributing_controls": [
+        "CTL.AZURE.ACR.ADMIN.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.AZURE.ACR.ADMIN.001",
+      "asset_id": "acr-prod",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-azure-acr-admin-001-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-azure-acr-admin-001-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "47f3287f6f3eab6c0cb6e70c821374530ff52964",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-azure-acr-admin-001-fail/controls/"
+      ]
+    }
+  }
+}

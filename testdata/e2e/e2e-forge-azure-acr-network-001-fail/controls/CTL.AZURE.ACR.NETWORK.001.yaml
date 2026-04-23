@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.ACR.NETWORK.001
+name: Container Registry Public Network Access Unrestricted
+description: >
+  Public network access enabled with default Allow action. Registry
+  accessible from any IP without firewall rules.
+domain: exposure
+severity: medium
+compliance:
+  cis_azure_v2: "9.17"
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Container Registry Public Network Access Unrestricted — finding detected.
+  action: Set network default action to Deny and configure firewall rules or private endpoints.
+  example: |
+    {"azure": {"compute": {"kind": "container_registry", "acr": {"public_network_access": false}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.compute.kind
+      op: eq
+      value: container_registry
+    - field: properties.azure.compute.acr.public_network_access
+      op: eq
+      value: true

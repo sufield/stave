@@ -1,0 +1,10 @@
+family: CTL.AZURE.DATABRICKS
+infection: >
+  Databricks workspaces process sensitive data through notebooks
+  and jobs. Without network controls, data traverses Databricks-
+  managed infrastructure outside the organization's network
+  perimeter. Public access exposes the notebook UI and REST API.
+failure: >
+  Data processing environment exposure. An attacker accesses the
+  Databricks workspace, executes notebooks, or exfiltrates data
+  through unrestricted egress.

@@ -1,0 +1,23 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "dbx-prod",
+      "type": "azure_databricks_workspace",
+      "vendor": "azure",
+      "properties": {
+        "azure": {
+          "compute": {
+            "kind": "databricks_workspace",
+            "databricks": {
+              "vnet_injected": true,
+              "sku": "Premium"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.APIM.IDENTITY.001
+name: API Management Without Managed Identity
+description: >
+  No managed identity configured. APIM must use stored credentials
+  to access backend services and Azure resources.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "IA-5"
+  soc2: "CC6.1"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: API Management Without Managed Identity — finding detected.
+  action: Configure a system-assigned or user-assigned managed identity.
+  example: |
+    {"azure": {"api": {"kind": "apim_service", "apim": {"managed_identity_type": "SystemAssigned"}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.api.kind
+      op: eq
+      value: apim_service
+    - field: properties.azure.api.apim.managed_identity_type
+      op: eq
+      value: None

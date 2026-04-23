@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.DATABRICKS.NOIP.001
+name: Databricks Clusters Without No-Public-IP
+description: >
+  Cluster nodes have public IP addresses. Nodes are directly
+  addressable from the internet. No-public-IP mode restricts
+  nodes to private IPs only.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Databricks Clusters Without No-Public-IP — finding detected.
+  action: Enable no-public-IP mode for Databricks clusters.
+  example: |
+    {"azure": {"compute": {"kind": "databricks_workspace", "databricks": {"no_public_ip": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.compute.kind
+      op: eq
+      value: databricks_workspace
+    - field: properties.azure.compute.databricks.no_public_ip
+      op: eq
+      value: false

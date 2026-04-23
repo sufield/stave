@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.ACR.ANON.001
+name: Container Registry Anonymous Pull Enabled
+description: >
+  Anonymous pull allows any unauthenticated client to pull images.
+  Application code, configuration, and potentially embedded secrets
+  are publicly accessible.
+domain: exposure
+severity: high
+compliance:
+  cis_azure_v2: "9.16"
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Container Registry Anonymous Pull Enabled — finding detected.
+  action: Disable anonymous pull.
+  example: |
+    {"azure": {"compute": {"kind": "container_registry", "acr": {"anonymous_pull_enabled": false}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.compute.kind
+      op: eq
+      value: container_registry
+    - field: properties.azure.compute.acr.anonymous_pull_enabled
+      op: eq
+      value: true

@@ -1,0 +1,14 @@
+control: CTL.AZURE.DATABRICKS.VNET.001
+defect: >
+  Databricks workspace is not deployed into a customer VNet.
+infection: >
+  Without VNet injection, Databricks compute clusters run in
+  Databricks-managed infrastructure. The organization cannot apply
+  NSG rules, configure private endpoints for data sources, or
+  control egress traffic from notebooks and jobs. Data processed
+  in the workspace traverses Databricks-managed networking outside
+  the organization's network perimeter.
+failure: >
+  No network control over data processing. Sensitive data processed
+  in Databricks clusters traverses networks outside organizational
+  control. Egress cannot be restricted.

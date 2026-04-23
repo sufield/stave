@@ -1,0 +1,16 @@
+id: azure_acr_supply_chain
+description: >
+  Container registry with admin user or anonymous pull enabled plus
+  no content trust. Images accessible without proper authentication
+  and not verified for integrity. Supply chain compromise — attacker
+  pushes malicious images that workloads pull and execute.
+controls:
+  - CTL.AZURE.ACR.ADMIN.001
+  - CTL.AZURE.ACR.ANON.001
+  - CTL.AZURE.ACR.TRUST.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - ec2_code_execution

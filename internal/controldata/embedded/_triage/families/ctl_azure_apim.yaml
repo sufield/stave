@@ -1,0 +1,11 @@
+family: CTL.AZURE.APIM
+infection: >
+  API Management is the gateway between clients and backend services.
+  Misconfigurations expose backend traffic, management operations,
+  or service-to-service credentials. APIM terminates client
+  connections — insecure backend connections create a false sense
+  of end-to-end encryption.
+failure: >
+  API gateway compromise. An attacker intercepts backend traffic,
+  modifies API configurations, or accesses backend services through
+  exposed management interfaces.

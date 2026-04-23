@@ -1,0 +1,14 @@
+id: azure_databricks_data_exposure
+description: >
+  Databricks workspace not VNet injected AND publicly accessible.
+  Data processing environment has no network controls and is
+  reachable from the internet.
+controls:
+  - CTL.AZURE.DATABRICKS.VNET.001
+  - CTL.AZURE.DATABRICKS.PUBLIC.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - ec2_code_execution

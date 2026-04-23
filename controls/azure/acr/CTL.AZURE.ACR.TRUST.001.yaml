@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.ACR.TRUST.001
+name: Container Registry Content Trust Not Enabled
+description: >
+  Content trust (Docker Content Trust / Notary) not enabled. Images
+  are not signed — no verification that pushed images come from
+  trusted publishers. Requires Premium SKU.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-7"
+  soc2: "CC7.1"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Container Registry Content Trust Not Enabled — finding detected.
+  action: Enable content trust (requires Premium SKU).
+  example: |
+    {"azure": {"compute": {"kind": "container_registry", "acr": {"content_trust_enabled": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.compute.kind
+      op: eq
+      value: container_registry
+    - field: properties.azure.compute.acr.content_trust_enabled
+      op: eq
+      value: false

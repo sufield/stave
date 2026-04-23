@@ -1,0 +1,11 @@
+family: CTL.AZURE.ACR
+infection: >
+  Azure Container Registry stores container images deployed to AKS,
+  Container Instances, and App Service. Registry misconfigurations
+  expose application images — including embedded code, configuration,
+  and potentially secrets — and enable supply chain attacks through
+  unsigned or malicious image pushes.
+failure: >
+  Container supply chain compromise. An attacker accesses registry
+  images or pushes malicious images that downstream workloads pull
+  and execute.

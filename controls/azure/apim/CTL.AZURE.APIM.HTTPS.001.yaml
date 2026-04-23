@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.APIM.HTTPS.001
+name: API Management Backend Not HTTPS-Only
+description: >
+  APIM forwards requests to backend services over HTTP. Traffic
+  between APIM and the backend is unencrypted even when the
+  client-to-APIM connection uses HTTPS.
+domain: encryption
+severity: high
+compliance:
+  cis_azure_v2: "9.20"
+  nist_800_53_r5: "SC-8"
+  pci_dss_v4: "4.1"
+  soc2: "CC6.7"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: API Management Backend Not HTTPS-Only — finding detected.
+  action: Enforce HTTPS for all backend connections.
+  example: |
+    {"azure": {"api": {"kind": "apim_service", "apim": {"https_backend_only": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.api.kind
+      op: eq
+      value: apim_service
+    - field: properties.azure.api.apim.https_backend_only
+      op: eq
+      value: false

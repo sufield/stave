@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.ACR.SCAN.001
+name: Container Registry Image Scanning Not Enabled
+description: >
+  Image vulnerability scanning not enabled. Pushed images are not
+  scanned for known CVEs before deployment.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-2"
+  soc2: "CC7.1"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Container Registry Image Scanning Not Enabled — finding detected.
+  action: Enable Defender for Container Registries or integrate image scanning.
+  example: |
+    {"azure": {"compute": {"kind": "container_registry", "acr": {"image_scanning_enabled": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.compute.kind
+      op: eq
+      value: container_registry
+    - field: properties.azure.compute.acr.image_scanning_enabled
+      op: eq
+      value: false

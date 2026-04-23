@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.APIM.MANAGEMENT.001
+name: API Management Management API Publicly Accessible
+description: >
+  Management API publicly accessible. An attacker with management
+  credentials can modify API configurations, add data-exfiltrating
+  policies, or redirect traffic.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-4"
+  soc2: "CC6.6"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: API Management Management API Publicly Accessible — finding detected.
+  action: Restrict management API access to VNet or private endpoint.
+  example: |
+    {"azure": {"api": {"kind": "apim_service", "apim": {"management_api_public": false}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.api.kind
+      op: eq
+      value: apim_service
+    - field: properties.azure.api.apim.management_api_public
+      op: eq
+      value: true

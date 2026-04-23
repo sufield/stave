@@ -1,0 +1,16 @@
+control: CTL.AZURE.ACR.ADMIN.001
+defect: >
+  Azure Container Registry has the admin user enabled. A single
+  shared credential grants full access to all repositories.
+infection: >
+  The admin user credential is a shared username/password pair with
+  full push and pull access. It cannot be scoped to specific
+  repositories. It is not subject to Conditional Access or MFA. It
+  does not identify which person or service performed an operation.
+  If leaked — in a CI/CD config, documentation, or environment
+  variable — anyone with the credential can push malicious images
+  or pull any image in the registry.
+failure: >
+  Registry compromise via shared credential. An attacker pushes
+  malicious images to the registry. Downstream workloads pull and
+  execute the attacker's images.

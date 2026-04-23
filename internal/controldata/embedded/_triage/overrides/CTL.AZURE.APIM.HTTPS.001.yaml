@@ -1,0 +1,15 @@
+control: CTL.AZURE.APIM.HTTPS.001
+defect: >
+  API Management service does not enforce HTTPS for backend
+  connections.
+infection: >
+  API Management terminates the client's HTTPS connection and
+  forwards requests to backend services. If the backend connection
+  is HTTP, the request and response — including authentication
+  headers, request bodies, and response data — are transmitted in
+  plaintext between APIM and the backend. An attacker on the
+  internal network can intercept this traffic.
+failure: >
+  Internal traffic interception. An attacker captures API traffic
+  between APIM and backend services, including authentication
+  credentials and data payloads.

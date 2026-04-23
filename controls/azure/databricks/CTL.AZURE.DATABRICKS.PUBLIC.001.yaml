@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.DATABRICKS.PUBLIC.001
+name: Databricks Workspace Public Network Access Enabled
+description: >
+  Public network access allows connections from any IP. Notebook UI,
+  REST API, and cluster management are internet-accessible.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-4"
+  soc2: "CC6.6"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Databricks Workspace Public Network Access Enabled — finding detected.
+  action: Disable public network access.
+  example: |
+    {"azure": {"compute": {"kind": "databricks_workspace", "databricks": {"public_network_access": false}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.compute.kind
+      op: eq
+      value: databricks_workspace
+    - field: properties.azure.compute.databricks.public_network_access
+      op: eq
+      value: true
