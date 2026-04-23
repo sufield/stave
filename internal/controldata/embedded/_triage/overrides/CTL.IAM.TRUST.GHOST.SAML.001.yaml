@@ -1,0 +1,17 @@
+control: CTL.IAM.TRUST.GHOST.SAML.001
+defect: >
+  IAM SAML or OIDC provider references an identity provider endpoint
+  that is decommissioned, unreachable, or unrecognized. The
+  federation trust is stale.
+infection: >
+  If the provider's endpoint domain is reclaimable (expired domain,
+  abandoned subdomain, decommissioned service), an attacker who
+  claims the domain can stand up a malicious identity provider at
+  that URL. AWS validates federation tokens against the configured
+  provider endpoint. Tokens issued by the attacker's provider are
+  accepted as valid federation credentials. The attacker gains
+  federated access to every role that trusts this provider.
+failure: >
+  Identity provider hijacking. An attacker issues federation tokens
+  accepted by AWS, gaining access to roles that trust the stale
+  provider. This is the identity equivalent of subdomain takeover.

@@ -1,0 +1,328 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-15T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "b088a717ff8a9278e88d86e6773018650223a0ab6e229a7469ebfd4bbc5ce3e3",
+        "2026-01-11T000000Z.json": "5820be1e1aea9e01d04891b22f261016d8eedc387b9445ce0d52e6119dd708a7"
+      },
+      "overall": "da0bef3112b2e76a3b34a23cc1a4df2e9b4464fc711959351f3e72caf286f93d"
+    },
+    "policy_fingerprint": "76d0ec8386587d1b3aab6c1035b7763f1ebe8a2397f62194561bdd068ce28288",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.IAM.TRUST.GHOST.ORG.001",
+      "asset_id": "arn:aws:iam::111122223333:role/org-role",
+      "asset_type": "aws_iam_role",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -168,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:dfeee3bfe202c865",
+      "control_id": "CTL.IAM.TRUST.GHOST.ORG.001",
+      "control_name": "Trust Policy Conditions Must Not Reference Removed OUs",
+      "control_description": "Trust policies and SCPs using aws:PrincipalOrgPaths conditions must not reference Organizational Units that have been removed from the AWS Organization. A condition referencing a non-existent OU produces unpredictable access behavior — either blocking all access (availability failure) or broadening access (security failure).\n",
+      "asset_id": "arn:aws:iam::111122223333:role/org-role",
+      "asset_type": "aws_iam_role",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 336,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "identity.kind",
+            "actual_value": "role",
+            "operator": "eq",
+            "unsafe_value": "role"
+          },
+          {
+            "property": "identity.trust_policy.has_ghost_ou_reference",
+            "actual_value": true,
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 336 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "nist_800_53_r5": "AC-3",
+        "soc2": "CC6.1"
+      },
+      "control_compliance_ccm_v4": [
+        "IAM-16"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Trust policy condition references a removed Organizational Unit.",
+        "action": "Update the condition to reference active OUs in the organization.",
+        "example": "{\"identity\": {\"kind\": \"role\", \"trust_policy\": {\"has_ghost_ou_reference\": false}}}\n"
+      },
+      "fix_plan": {
+        "id": "fix-bf51e2cc24a5e41f",
+        "target": {
+          "asset_id": "arn:aws:iam::111122223333:role/org-role",
+          "asset_type": "aws_iam_role"
+        },
+        "action": "Update the condition to reference active OUs in the organization."
+      },
+      "exposure_score": 50,
+      "score_breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "identity.kind eq \"role\"",
+          "observation_key": "identity.kind",
+          "operator": "eq",
+          "expected_value": "role",
+          "observed_value": "role"
+        },
+        {
+          "predicate_expr": "identity.trust_policy.has_ghost_ou_reference eq true",
+          "observation_key": "identity.trust_policy.has_ghost_ou_reference",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": true
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "arn:aws:iam::111122223333:role/org-role",
+          "type": "aws_iam_role",
+          "vendor": "aws",
+          "arn": "arn:aws:iam::111122223333:role/org-role"
+        },
+        "violation": {
+          "control_id": "CTL.IAM.TRUST.GHOST.ORG.001",
+          "control_name": "Trust Policy Conditions Must Not Reference Removed OUs",
+          "severity": "medium",
+          "reasoning": [
+            {
+              "clause": "identity.kind = \"role\"",
+              "observation_key": "identity.kind",
+              "observed_value": "role"
+            },
+            {
+              "clause": "identity.trust_policy.has_ghost_ou_reference = true",
+              "observation_key": "identity.trust_policy.has_ghost_ou_reference",
+              "observed_value": true
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "identity.kind",
+            "current_value": "role",
+            "has_safe_default": false,
+            "description": "Change identity.kind from role"
+          },
+          {
+            "path": "identity.trust_policy.has_ghost_ou_reference",
+            "current_value": "true",
+            "required_value": "false",
+            "has_safe_default": true,
+            "description": "Set identity.trust_policy.has_ghost_ou_reference to false"
+          }
+        ],
+        "action": "Update the condition to reference active OUs in the organization."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "iam"
+      ],
+      "delta": [
+        {
+          "property_label": "trust policy has ghost OU reference",
+          "property_path": "identity.trust_policy.has_ghost_ou_reference",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:48e92a231be6a5ae",
+      "asset_id": "arn:aws:iam::111122223333:role/org-role",
+      "shared_keys": [
+        "identity.trust_policy",
+        "identity.trust_policy.has_ghost_ou_reference"
+      ],
+      "headline_finding_id": "sha256:dfeee3bfe202c865",
+      "member_finding_ids": [
+        "sha256:dfeee3bfe202c865"
+      ],
+      "consolidated_score": 50,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "arn:aws:iam::111122223333:role/org-role",
+      "asset_type": "aws_iam_role",
+      "fix_plan": {
+        "id": "fix-bf51e2cc24a5e41f",
+        "target": {
+          "asset_id": "arn:aws:iam::111122223333:role/org-role",
+          "asset_type": "aws_iam_role"
+        },
+        "action": "Update the condition to reference active OUs in the organization."
+      },
+      "contributing_controls": [
+        "CTL.IAM.TRUST.GHOST.ORG.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.IAM.TRUST.GHOST.ORG.001",
+      "asset_id": "arn:aws:iam::111122223333:role/org-role",
+      "exposure_score": 50,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-trust-ghost-org-001-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-trust-ghost-org-001-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "4be67f8f3024fed6469d47034acad930bae17933",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-iam-trust-ghost-org-001-fail/controls/"
+      ]
+    }
+  }
+}

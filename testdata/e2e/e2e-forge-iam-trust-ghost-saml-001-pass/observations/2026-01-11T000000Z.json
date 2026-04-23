@@ -1,0 +1,19 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:iam::111122223333:saml-provider/Okta",
+      "type": "aws_iam_saml_provider",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "federation": {
+            "has_stale_provider": false
+          }
+        }
+      }
+    }
+  ]
+}

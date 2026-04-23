@@ -1,0 +1,16 @@
+control: CTL.IAM.TRUST.GHOST.ACCOUNT.001
+defect: >
+  IAM role trust policy allows assumption by a principal in an
+  external AWS account that is not recognized as a known trusted
+  partner or organization member.
+infection: >
+  Trust relationships with unknown external accounts create lateral
+  access paths outside the organization's control. If the external
+  account is decommissioned, sold, or compromised, any principal in
+  that account can assume this role. AWS does not notify the trusting
+  account when the trusted account changes ownership. The trust
+  persists indefinitely until explicitly removed.
+failure: >
+  Unauthorized cross-account access via orphaned trust. A principal
+  in an uncontrolled external account assumes the role and operates
+  with its permissions inside the organization's account.

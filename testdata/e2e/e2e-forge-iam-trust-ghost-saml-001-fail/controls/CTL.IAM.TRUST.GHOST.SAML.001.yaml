@@ -1,0 +1,37 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.TRUST.GHOST.SAML.001
+name: SAML/OIDC Trust Must Not Reference Stale Identity Providers
+description: >
+  IAM SAML and OIDC provider configurations must not reference
+  identity provider endpoints that are decommissioned, unreachable,
+  or unrecognized. If the provider's endpoint domain is reclaimable
+  (expired domain, abandoned subdomain), an attacker who claims the
+  domain can issue federation tokens accepted by AWS — gaining
+  access to every role trusting the provider. This is the identity
+  equivalent of subdomain takeover.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "IA-5"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  ccm_v4: ["IAM-16", "IVS-03"]
+scope_tags: [aws, iam]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: SAML/OIDC provider references a stale identity provider endpoint.
+  action: Verify the provider endpoint is still active and controlled by the organization. Remove or update the provider if the endpoint is decommissioned.
+  example: |
+    {"identity": {"kind": "saml_provider", "federation": {"has_stale_provider": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.identity.federation.has_stale_provider
+      op: eq
+      value: true

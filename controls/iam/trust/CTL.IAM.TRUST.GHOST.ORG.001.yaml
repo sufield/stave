@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.TRUST.GHOST.ORG.001
+name: Trust Policy Conditions Must Not Reference Removed OUs
+description: >
+  Trust policies and SCPs using aws:PrincipalOrgPaths conditions must
+  not reference Organizational Units that have been removed from the
+  AWS Organization. A condition referencing a non-existent OU produces
+  unpredictable access behavior — either blocking all access
+  (availability failure) or broadening access (security failure).
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-16"]
+scope_tags: [aws, iam]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: Trust policy condition references a removed Organizational Unit.
+  action: Update the condition to reference active OUs in the organization.
+  example: |
+    {"identity": {"kind": "role", "trust_policy": {"has_ghost_ou_reference": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: role
+    - field: properties.identity.trust_policy.has_ghost_ou_reference
+      op: eq
+      value: true

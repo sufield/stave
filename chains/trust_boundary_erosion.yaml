@@ -1,0 +1,16 @@
+id: trust_boundary_erosion
+description: >
+  Multiple trust boundary controls failing simultaneously — unknown
+  external accounts trusted AND stale identity providers configured
+  or wildcard trust active. The organization's trust perimeter has
+  multiple uncontrolled entry points.
+controls:
+  - CTL.IAM.TRUST.GHOST.ACCOUNT.001
+  - CTL.IAM.TRUST.GHOST.SAML.001
+  - CTL.IAM.TRUST.WILDCARD.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - iam_credential_theft

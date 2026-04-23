@@ -1,0 +1,35 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.TRUST.GHOST.ACCOUNT.001
+name: IAM Trust Must Not Reference Unknown External Accounts
+description: >
+  IAM role trust policies must not allow assumption by principals in
+  external AWS accounts that are not recognized as known partners or
+  organization members. Unknown external trust creates lateral access
+  paths outside the organization's control. AWS does not notify the
+  trusting account when a trusted account changes ownership,
+  is decommissioned, or is compromised.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  ccm_v4: ["IAM-16", "IVS-03"]
+scope_tags: [aws, iam]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: IAM trust policy references an unrecognized external account.
+  action: Verify the external account relationship. Remove trust if the account is no longer a partner. Add the account to the known-partners configuration if trust is intentional.
+  example: |
+    {"identity": {"kind": "role", "trust_policy": {"has_unknown_external_account": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: role
+    - field: properties.identity.trust_policy.has_unknown_external_account
+      op: eq
+      value: true

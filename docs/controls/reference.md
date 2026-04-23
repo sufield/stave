@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 903
-**Pack hash:** `db8bf6deed09b082471b50ab9a9bf9b1a592a26d170ac53d7c4201b4547ff136`
+**Total controls:** 906
+**Pack hash:** `4c9d579cfb8f77c71932916334ec2e1dfe580a988489d2af6272b67cf1b08293`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 137 |
-| high | 400 |
+| high | 402 |
 | info | 16 |
 | low | 77 |
-| medium | 273 |
+| medium | 274 |
 
 | Domain | Count |
 |--------|-------|
@@ -23,7 +23,7 @@
 | encryption | 35 |
 | exposure | 601 |
 | governance | 21 |
-| identity | 177 |
+| identity | 180 |
 | network | 21 |
 | resilience | 14 |
 | storage | 8 |
@@ -7379,6 +7379,51 @@ IAM roles trusted by third-party AWS accounts (accounts outside your organizatio
 IAM roles with cross-account trust policies must include an sts:ExternalId condition. Without an external ID, any principal in the trusted account can assume the role — including compromised service accounts, OAuth applications, or test tenants. The Microsoft Midnight Blizzard 2024 breach exploited a legacy test OAuth app to assume a role with full_access_as_app permissions, pivoting from a test tenant to production Exchange mailboxes.
 
 **Remediation:** Add an sts:ExternalId condition to the role trust policy. Generate a unique external ID per trust relationship. Verify the assuming application passes the correct external ID.
+
+---
+
+### CTL.IAM.TRUST.GHOST.ACCOUNT.001
+
+**IAM Trust Must Not Reference Unknown External Accounts**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+IAM role trust policies must not allow assumption by principals in external AWS accounts that are not recognized as known partners or organization members. Unknown external trust creates lateral access paths outside the organization's control. AWS does not notify the trusting account when a trusted account changes ownership, is decommissioned, or is compromised.
+
+**Remediation:** Verify the external account relationship. Remove trust if the account is no longer a partner. Add the account to the known-partners configuration if trust is intentional.
+
+---
+
+### CTL.IAM.TRUST.GHOST.ORG.001
+
+**Trust Policy Conditions Must Not Reference Removed OUs**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+Trust policies and SCPs using aws:PrincipalOrgPaths conditions must not reference Organizational Units that have been removed from the AWS Organization. A condition referencing a non-existent OU produces unpredictable access behavior — either blocking all access (availability failure) or broadening access (security failure).
+
+**Remediation:** Update the condition to reference active OUs in the organization.
+
+---
+
+### CTL.IAM.TRUST.GHOST.SAML.001
+
+**SAML/OIDC Trust Must Not Reference Stale Identity Providers**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: IA-5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+IAM SAML and OIDC provider configurations must not reference identity provider endpoints that are decommissioned, unreachable, or unrecognized. If the provider's endpoint domain is reclaimable (expired domain, abandoned subdomain), an attacker who claims the domain can issue federation tokens accepted by AWS — gaining access to every role trusting the provider. This is the identity equivalent of subdomain takeover.
+
+**Remediation:** Verify the provider endpoint is still active and controlled by the organization. Remove or update the provider if the endpoint is decommissioned.
 
 ---
 
