@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.VM.MANAGEDDISK.001
+name: VM Using Unmanaged Disks
+description: >
+  Unmanaged disks lack built-in encryption, RBAC integration,
+  and snapshot management that managed disks provide.
+domain: exposure
+severity: medium
+compliance:
+  cis_azure_v2: "7.2"
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.1"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: VM Using Unmanaged Disks — finding detected.
+  action: Migrate to managed disks.
+  example: |
+    {"azure": {"compute": {"kind": "virtual_machine", "vm": {"uses_managed_disks": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.compute.kind
+      op: eq
+      value: virtual_machine
+    - field: properties.azure.compute.vm.uses_managed_disks
+      op: eq
+      value: false

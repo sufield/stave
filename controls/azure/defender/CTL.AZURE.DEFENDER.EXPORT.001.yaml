@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.DEFENDER.EXPORT.001
+name: Defender Continuous Export Not Configured
+description: >
+  Defender findings not exported to Log Analytics or Event Hub.
+  Findings exist only in the portal with no SIEM integration or
+  automated response capability.
+domain: exposure
+severity: medium
+compliance:
+  cis_azure_v2: "2.1.20"
+  nist_800_53_r5: "AU-6"
+  soc2: "CC7.2"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Defender Continuous Export Not Configured — finding detected.
+  action: Configure continuous export to Log Analytics or Event Hub.
+  example: |
+    {"azure": {"monitoring": {"kind": "defender_setting", "defender": {"continuous_export_enabled": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.monitoring.kind
+      op: eq
+      value: defender_setting
+    - field: properties.azure.monitoring.defender.continuous_export_enabled
+      op: eq
+      value: false

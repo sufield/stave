@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.STORAGE.IMMUTABILITY.001
+name: Storage Container Without Immutability Policy
+description: >
+  No immutability policy on blob containers. Objects can be modified
+  or deleted with no WORM protection.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-9"
+  soc2: "CC6.1"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: defense_evasion
+remediation:
+  description: Storage Container Without Immutability Policy — finding detected.
+  action: Configure an immutability policy on the container.
+  example: |
+    {"azure": {"storage": {"kind": "storage_account", "immutability_policy_enabled": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.storage.kind
+      op: eq
+      value: storage_account
+    - field: properties.azure.storage.immutability_policy_enabled
+      op: eq
+      value: false

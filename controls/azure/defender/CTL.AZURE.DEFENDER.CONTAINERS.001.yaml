@@ -1,0 +1,37 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.DEFENDER.CONTAINERS.001
+name: Defender for Containers Not Enabled
+description: >
+  Defender for Containers not enabled. No container image
+  vulnerability scanning, no runtime threat detection for AKS.
+domain: exposure
+severity: high
+compliance:
+  cis_azure_v2: "2.1.5"
+  nist_800_53_r5: "SI-4"
+  soc2: "CC7.1"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Defender for Containers Not Enabled — finding detected.
+  action: Enable Defender for Containers at Standard tier.
+  example: |
+    {"azure": {"monitoring": {"kind": "defender_setting", "defender": {"plan": "Containers", "pricing_tier": "Standard"}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.monitoring.kind
+      op: eq
+      value: defender_setting
+    - field: properties.azure.monitoring.defender.plan
+      op: eq
+      value: Containers
+    - any:
+        - field: properties.azure.monitoring.defender.enabled
+          op: eq
+          value: false
+        - field: properties.azure.monitoring.defender.pricing_tier
+          op: eq
+          value: Free

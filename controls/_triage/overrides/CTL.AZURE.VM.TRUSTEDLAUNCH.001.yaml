@@ -1,0 +1,16 @@
+control: CTL.AZURE.VM.TRUSTEDLAUNCH.001
+defect: >
+  Trusted Launch with Secure Boot and vTPM is not enabled on the VM.
+  No hardware-rooted boot integrity verification.
+infection: >
+  Without Trusted Launch, the VM has no boot integrity verification.
+  Secure Boot ensures only signed bootloaders and kernels execute.
+  vTPM provides measured boot and remote attestation. Without these,
+  a rootkit or bootkit that modifies the boot chain persists across
+  reboots and is invisible to the operating system. The malware
+  loads before the OS and security agents, making it undetectable
+  by host-based security tools.
+failure: >
+  Boot integrity gap. Rootkits and bootkits persist undetected
+  across VM reboots. Host-based security tools cannot detect
+  malware that loads before the operating system.

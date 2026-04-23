@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.STORAGE.PRIVATEENDPOINT.001
+name: Storage Account Without Private Endpoint
+description: >
+  No private endpoint configured. Traffic to storage traverses
+  the public internet.
+domain: exposure
+severity: medium
+compliance:
+  cis_azure_v2: "3.10"
+  nist_800_53_r5: "AC-4"
+  soc2: "CC6.6"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Storage Account Without Private Endpoint — finding detected.
+  action: Configure a private endpoint for the storage account.
+  example: |
+    {"azure": {"storage": {"kind": "storage_account", "private_endpoint_enabled": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.storage.kind
+      op: eq
+      value: storage_account
+    - field: properties.azure.storage.private_endpoint_enabled
+      op: eq
+      value: false

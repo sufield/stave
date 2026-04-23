@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.VM.BACKUP.001
+name: VM Backup Not Enabled
+description: >
+  VM not enrolled in Azure Backup. No recovery point exists.
+  Data loss on VM failure is permanent.
+domain: exposure
+severity: medium
+compliance:
+  cis_azure_v2: "7.1"
+  nist_800_53_r5: "CP-9"
+  soc2: "CC7.2"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: VM Backup Not Enabled — finding detected.
+  action: Enable Azure Backup for the VM.
+  example: |
+    {"azure": {"compute": {"kind": "virtual_machine", "vm": {"backup_enabled": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.compute.kind
+      op: eq
+      value: virtual_machine
+    - field: properties.azure.compute.vm.backup_enabled
+      op: eq
+      value: false

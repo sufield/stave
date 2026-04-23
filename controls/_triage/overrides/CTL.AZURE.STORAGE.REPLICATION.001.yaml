@@ -1,0 +1,14 @@
+control: CTL.AZURE.STORAGE.REPLICATION.001
+defect: >
+  Cross-tenant replication is enabled on the storage account.
+  Data can be replicated to storage accounts in other Azure tenants.
+infection: >
+  Cross-tenant replication allows data to leave the organizational
+  boundary. A storage account in another tenant is outside the
+  organization's RBAC, audit logging, and security controls. If
+  the destination tenant is compromised or controlled by an
+  adversary, the replicated data is accessible without any
+  organizational oversight.
+failure: >
+  Data exfiltration via replication. Storage account data is
+  replicated to a tenant outside organizational control.

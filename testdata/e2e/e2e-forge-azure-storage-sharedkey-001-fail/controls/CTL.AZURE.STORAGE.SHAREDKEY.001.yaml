@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.STORAGE.SHAREDKEY.001
+name: Storage Account Shared Key Access Not Disabled
+description: >
+  Shared key access enabled. Shared keys are long-lived bearer
+  tokens with no identity attribution. Entra ID authorization
+  provides identity-based access with audit logging.
+domain: identity
+severity: medium
+compliance:
+  cis_azure_v2: "3.3"
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: Storage Account Shared Key Access Not Disabled — finding detected.
+  action: Disable shared key access and use Entra ID authorization.
+  example: |
+    {"azure": {"storage": {"kind": "storage_account", "shared_key_access_enabled": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.storage.kind
+      op: eq
+      value: storage_account
+    - field: properties.azure.storage.shared_key_access_enabled
+      op: eq
+      value: true

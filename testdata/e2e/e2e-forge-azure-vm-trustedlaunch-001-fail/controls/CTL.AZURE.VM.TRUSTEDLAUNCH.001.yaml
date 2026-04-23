@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.VM.TRUSTEDLAUNCH.001
+name: VM Secure Boot Not Enabled (Trusted Launch)
+description: >
+  Trusted Launch with Secure Boot and vTPM not enabled. No boot
+  integrity verification — rootkits and bootkits can persist
+  undetected across reboots.
+domain: exposure
+severity: medium
+compliance:
+  cis_azure_v2: "7.5"
+  nist_800_53_r5: "SI-7"
+  soc2: "CC6.1"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: VM Secure Boot Not Enabled — finding detected.
+  action: Enable Trusted Launch with Secure Boot and vTPM.
+  example: |
+    {"azure": {"compute": {"kind": "virtual_machine", "vm": {"secure_boot_enabled": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.compute.kind
+      op: eq
+      value: virtual_machine
+    - field: properties.azure.compute.vm.secure_boot_enabled
+      op: eq
+      value: false

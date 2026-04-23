@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.VM.UNATTACHEDDISK.001
+name: Unattached Disk Not Encrypted
+description: >
+  A disk not attached to any VM is unencrypted. Unattached disks
+  may contain data from previous workloads — anyone with disk
+  read access can read the data.
+domain: encryption
+severity: medium
+compliance:
+  cis_azure_v2: "7.4"
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.1"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Unattached Disk Not Encrypted — finding detected.
+  action: Encrypt the disk or delete it if no longer needed.
+  example: |
+    {"azure": {"compute": {"kind": "unattached_disk", "disk": {"encrypted": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.compute.kind
+      op: eq
+      value: unattached_disk
+    - field: properties.azure.compute.disk.encrypted
+      op: eq
+      value: false

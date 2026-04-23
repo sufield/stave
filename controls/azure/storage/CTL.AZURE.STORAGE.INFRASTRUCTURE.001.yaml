@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.STORAGE.INFRASTRUCTURE.001
+name: Storage Account Infrastructure Encryption Not Enabled
+description: >
+  Double encryption (infrastructure + service layer) not enabled.
+  Single layer is default — infrastructure encryption adds a second
+  layer with a different algorithm.
+domain: encryption
+severity: medium
+compliance:
+  cis_azure_v2: "3.12"
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.1"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Storage Account Infrastructure Encryption Not Enabled — finding detected.
+  action: Enable infrastructure encryption on the storage account.
+  example: |
+    {"azure": {"storage": {"kind": "storage_account", "infrastructure_encryption_enabled": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.storage.kind
+      op: eq
+      value: storage_account
+    - field: properties.azure.storage.infrastructure_encryption_enabled
+      op: eq
+      value: false

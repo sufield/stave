@@ -1,0 +1,388 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-15T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "a9f9db6645856e6e5fd002b1b6454728fb4bf67027de9efd88820b054ca7a319",
+        "2026-01-11T000000Z.json": "80d67e9ad6f894f63e72545f3427c869ac0705ae50cdef65145ed4ada5d73c66"
+      },
+      "overall": "c0ff1291f4e6c2c0253b890e23fe9a2a62bb7e072371eb5d8264f3a388c9da16"
+    },
+    "policy_fingerprint": "1373c3499103fe38e6897b13883c9e7f2e2ee96f89e2ff1d30a6db2a5a4753ed",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.AZURE.DEFENDER.ARM.001",
+      "asset_id": "defender-arm",
+      "asset_type": "azure_defender_setting",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -168,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:b29d06a4970ac41d",
+      "control_id": "CTL.AZURE.DEFENDER.ARM.001",
+      "control_name": "Defender for ARM Not Enabled",
+      "control_description": "Defender for Azure Resource Manager not enabled. No detection of anomalous ARM operations (mass deletions, suspicious deployments, lateral movement).\n",
+      "asset_id": "defender-arm",
+      "asset_type": "azure_defender_setting",
+      "asset_vendor": "azure",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 336,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "azure.monitoring.defender.enabled",
+            "actual_value": true,
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "azure.monitoring.defender.plan",
+            "actual_value": "Arm",
+            "operator": "eq",
+            "unsafe_value": "Arm"
+          },
+          {
+            "property": "azure.monitoring.defender.pricing_tier",
+            "actual_value": "Free",
+            "operator": "eq",
+            "unsafe_value": "Free"
+          },
+          {
+            "property": "azure.monitoring.kind",
+            "actual_value": "defender_setting",
+            "operator": "eq",
+            "unsafe_value": "defender_setting"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 336 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "cis_azure_v2": "2.1.7",
+        "nist_800_53_r5": "SI-4",
+        "soc2": "CC7.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Defender for ARM Not Enabled — finding detected.",
+        "action": "Enable Defender for ARM at Standard tier.",
+        "example": "{\"azure\": {\"monitoring\": {\"kind\": \"defender_setting\", \"defender\": {\"plan\": \"Arm\", \"pricing_tier\": \"Standard\"}}}}\n"
+      },
+      "fix_plan": {
+        "id": "fix-2c65d4f8d8216f5d",
+        "target": {
+          "asset_id": "defender-arm",
+          "asset_type": "azure_defender_setting"
+        },
+        "action": "Enable Defender for ARM at Standard tier."
+      },
+      "exposure_score": 50,
+      "score_breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "azure.monitoring.defender.enabled eq false",
+          "observation_key": "azure.monitoring.defender.enabled",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": true
+        },
+        {
+          "predicate_expr": "azure.monitoring.defender.plan eq \"Arm\"",
+          "observation_key": "azure.monitoring.defender.plan",
+          "operator": "eq",
+          "expected_value": "Arm",
+          "observed_value": "Arm"
+        },
+        {
+          "predicate_expr": "azure.monitoring.defender.pricing_tier eq \"Free\"",
+          "observation_key": "azure.monitoring.defender.pricing_tier",
+          "operator": "eq",
+          "expected_value": "Free",
+          "observed_value": "Free"
+        },
+        {
+          "predicate_expr": "azure.monitoring.kind eq \"defender_setting\"",
+          "observation_key": "azure.monitoring.kind",
+          "operator": "eq",
+          "expected_value": "defender_setting",
+          "observed_value": "defender_setting"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "defender-arm",
+          "type": "azure_defender_setting",
+          "vendor": "azure"
+        },
+        "violation": {
+          "control_id": "CTL.AZURE.DEFENDER.ARM.001",
+          "control_name": "Defender for ARM Not Enabled",
+          "severity": "medium",
+          "reasoning": [
+            {
+              "clause": "azure.monitoring.defender.enabled = true",
+              "observation_key": "azure.monitoring.defender.enabled",
+              "observed_value": true
+            },
+            {
+              "clause": "azure.monitoring.defender.plan = \"Arm\"",
+              "observation_key": "azure.monitoring.defender.plan",
+              "observed_value": "Arm"
+            },
+            {
+              "clause": "azure.monitoring.defender.pricing_tier = \"Free\"",
+              "observation_key": "azure.monitoring.defender.pricing_tier",
+              "observed_value": "Free"
+            },
+            {
+              "clause": "azure.monitoring.kind = \"defender_setting\"",
+              "observation_key": "azure.monitoring.kind",
+              "observed_value": "defender_setting"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "azure.monitoring.defender.enabled",
+            "current_value": "true",
+            "required_value": "false",
+            "has_safe_default": true,
+            "description": "Set azure.monitoring.defender.enabled to false"
+          },
+          {
+            "path": "azure.monitoring.defender.plan",
+            "current_value": "Arm",
+            "has_safe_default": false,
+            "description": "Change azure.monitoring.defender.plan from Arm"
+          },
+          {
+            "path": "azure.monitoring.defender.pricing_tier",
+            "current_value": "Free",
+            "has_safe_default": false,
+            "description": "Change azure.monitoring.defender.pricing_tier from Free"
+          },
+          {
+            "path": "azure.monitoring.kind",
+            "current_value": "defender_setting",
+            "has_safe_default": false,
+            "description": "Change azure.monitoring.kind from defender_setting"
+          }
+        ],
+        "action": "Enable Defender for ARM at Standard tier."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "azure"
+      ],
+      "delta": [
+        {
+          "property_label": "monitoring defender",
+          "property_path": "azure.monitoring.defender.enabled",
+          "current_value": "true",
+          "fix_action": "set to true (enable)"
+        },
+        {
+          "property_label": "monitoring defender plan",
+          "property_path": "azure.monitoring.defender.plan",
+          "current_value": "Arm",
+          "fix_action": "change from \"Arm\" to any other value, or remove"
+        },
+        {
+          "property_label": "monitoring defender pricing tier",
+          "property_path": "azure.monitoring.defender.pricing_tier",
+          "current_value": "Free",
+          "fix_action": "change from \"Free\" to any other value, or remove"
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:ce59b7bd9b4377a2",
+      "asset_id": "defender-arm",
+      "shared_keys": [
+        "azure.monitoring",
+        "azure.monitoring.defender",
+        "azure.monitoring.defender.enabled",
+        "azure.monitoring.defender.plan",
+        "azure.monitoring.defender.pricing_tier",
+        "azure.monitoring.kind"
+      ],
+      "headline_finding_id": "sha256:b29d06a4970ac41d",
+      "member_finding_ids": [
+        "sha256:b29d06a4970ac41d"
+      ],
+      "consolidated_score": 50,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "defender-arm",
+      "asset_type": "azure_defender_setting",
+      "fix_plan": {
+        "id": "fix-2c65d4f8d8216f5d",
+        "target": {
+          "asset_id": "defender-arm",
+          "asset_type": "azure_defender_setting"
+        },
+        "action": "Enable Defender for ARM at Standard tier."
+      },
+      "contributing_controls": [
+        "CTL.AZURE.DEFENDER.ARM.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.AZURE.DEFENDER.ARM.001",
+      "asset_id": "defender-arm",
+      "exposure_score": 50,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-azure-defender-arm-001-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-azure-defender-arm-001-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "8e6605f6d9f1da5bc050bce62f57a4acc451e2fc",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-azure-defender-arm-001-fail/controls/"
+      ]
+    }
+  }
+}

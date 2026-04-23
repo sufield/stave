@@ -1,0 +1,37 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.DEFENDER.STORAGE.001
+name: Defender for Storage Not Enabled
+description: >
+  Defender for Storage not enabled. No malware scanning for
+  uploaded blobs, no anomalous access detection.
+domain: exposure
+severity: medium
+compliance:
+  cis_azure_v2: "2.1.4"
+  nist_800_53_r5: "SI-4"
+  soc2: "CC7.1"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Defender for Storage Not Enabled — finding detected.
+  action: Enable Defender for Storage at Standard tier.
+  example: |
+    {"azure": {"monitoring": {"kind": "defender_setting", "defender": {"plan": "StorageAccounts", "pricing_tier": "Standard"}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.monitoring.kind
+      op: eq
+      value: defender_setting
+    - field: properties.azure.monitoring.defender.plan
+      op: eq
+      value: StorageAccounts
+    - any:
+        - field: properties.azure.monitoring.defender.enabled
+          op: eq
+          value: false
+        - field: properties.azure.monitoring.defender.pricing_tier
+          op: eq
+          value: Free

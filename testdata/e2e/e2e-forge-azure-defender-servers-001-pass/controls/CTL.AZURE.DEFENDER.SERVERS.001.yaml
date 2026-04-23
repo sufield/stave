@@ -1,0 +1,38 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.DEFENDER.SERVERS.001
+name: Defender for Servers Not Enabled
+description: >
+  Defender Standard for Servers not enabled. No vulnerability
+  assessment, file integrity monitoring, or adaptive application
+  controls on VMs.
+domain: exposure
+severity: high
+compliance:
+  cis_azure_v2: "2.1.2"
+  nist_800_53_r5: "SI-4"
+  soc2: "CC7.1"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Defender for Servers Not Enabled — finding detected.
+  action: Enable Defender for Servers at Standard tier.
+  example: |
+    {"azure": {"monitoring": {"kind": "defender_setting", "defender": {"plan": "Servers", "pricing_tier": "Standard"}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.monitoring.kind
+      op: eq
+      value: defender_setting
+    - field: properties.azure.monitoring.defender.plan
+      op: eq
+      value: Servers
+    - any:
+        - field: properties.azure.monitoring.defender.enabled
+          op: eq
+          value: false
+        - field: properties.azure.monitoring.defender.pricing_tier
+          op: eq
+          value: Free

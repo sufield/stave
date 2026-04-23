@@ -3,27 +3,27 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 984
-**Pack hash:** `b419feceb673d402c20b6a66a5254c6208e82d3c6eaa75213139ffc7b0d35b14`
+**Total controls:** 1003
+**Pack hash:** `9ccd92ee60159ee008d8368169c44d2d26851789363127b59103c76da6d53780`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 144 |
-| high | 442 |
+| high | 448 |
 | info | 16 |
 | low | 79 |
-| medium | 303 |
+| medium | 316 |
 
 | Domain | Count |
 |--------|-------|
 | audit | 20 |
-| detection | 7 |
-| encryption | 45 |
-| exposure | 649 |
+| detection | 8 |
+| encryption | 47 |
+| exposure | 663 |
 | governance | 24 |
-| identity | 196 |
+| identity | 198 |
 | network | 21 |
 | resilience | 14 |
 | storage | 8 |
@@ -1348,6 +1348,21 @@ Azure VNets must have DDoS Protection Standard enabled. Basic protection provide
 
 ---
 
+### CTL.AZURE.DEFENDER.ARM.001
+
+**Defender for ARM Not Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_azure_v2: 2.1.7; nist_800_53_r5: SI-4; soc2: CC7.1;
+
+Defender for Azure Resource Manager not enabled. No detection of anomalous ARM operations (mass deletions, suspicious deployments, lateral movement).
+
+**Remediation:** Enable Defender for ARM at Standard tier.
+
+---
+
 ### CTL.AZURE.DEFENDER.AUTOPROVISIONING.001
 
 **Defender Auto-Provisioning Not Enabled**
@@ -1378,6 +1393,21 @@ No email contact for Defender alerts. Security alerts generated but not delivere
 
 ---
 
+### CTL.AZURE.DEFENDER.CONTAINERS.001
+
+**Defender for Containers Not Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_azure_v2: 2.1.5; nist_800_53_r5: SI-4; soc2: CC7.1;
+
+Defender for Containers not enabled. No container image vulnerability scanning, no runtime threat detection for AKS.
+
+**Remediation:** Enable Defender for Containers at Standard tier.
+
+---
+
 ### CTL.AZURE.DEFENDER.ENABLED.001
 
 **Microsoft Defender for Cloud Not Enabled**
@@ -1390,6 +1420,96 @@ No email contact for Defender alerts. Security alerts generated but not delivere
 Defender not enabled or on Free tier. No threat detection or advanced security capabilities active for this resource type.
 
 **Remediation:** Remediate per control description.
+
+---
+
+### CTL.AZURE.DEFENDER.EXPORT.001
+
+**Defender Continuous Export Not Configured**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_azure_v2: 2.1.20; nist_800_53_r5: AU-6; soc2: CC7.2;
+
+Defender findings not exported to Log Analytics or Event Hub. Findings exist only in the portal with no SIEM integration or automated response capability.
+
+**Remediation:** Configure continuous export to Log Analytics or Event Hub.
+
+---
+
+### CTL.AZURE.DEFENDER.KEYVAULT.001
+
+**Defender for Key Vault Not Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_azure_v2: 2.1.6; nist_800_53_r5: SI-4; soc2: CC7.1;
+
+Defender for Key Vault not enabled. No detection of anomalous key access patterns, unusual secret retrieval, or suspicious management operations.
+
+**Remediation:** Enable Defender for Key Vault at Standard tier.
+
+---
+
+### CTL.AZURE.DEFENDER.SERVERS.001
+
+**Defender for Servers Not Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_azure_v2: 2.1.2; nist_800_53_r5: SI-4; soc2: CC7.1;
+
+Defender Standard for Servers not enabled. No vulnerability assessment, file integrity monitoring, or adaptive application controls on VMs.
+
+**Remediation:** Enable Defender for Servers at Standard tier.
+
+---
+
+### CTL.AZURE.DEFENDER.SQL.001
+
+**Defender for SQL Not Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_azure_v2: 2.1.3; nist_800_53_r5: SI-4; soc2: CC7.1;
+
+Defender for SQL Servers not enabled. No SQL threat detection for injection attempts, anomalous access, or brute force.
+
+**Remediation:** Enable Defender for SQL Servers at Standard tier.
+
+---
+
+### CTL.AZURE.DEFENDER.STORAGE.001
+
+**Defender for Storage Not Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_azure_v2: 2.1.4; nist_800_53_r5: SI-4; soc2: CC7.1;
+
+Defender for Storage not enabled. No malware scanning for uploaded blobs, no anomalous access detection.
+
+**Remediation:** Enable Defender for Storage at Standard tier.
+
+---
+
+### CTL.AZURE.DEFENDER.SUPPRESSION.001
+
+**Defender Alert Suppression Rules Overly Broad**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** nist_800_53_r5: SI-4; soc2: CC7.2;
+
+Alert suppression rules silence security alerts. Findings are generated but suppressed before reaching the security team.
+
+**Remediation:** Review and narrow suppression rules.
 
 ---
 
@@ -1933,6 +2053,51 @@ Azure Storage accounts must enforce HTTPS-only access. Allowing HTTP exposes dat
 
 ---
 
+### CTL.AZURE.STORAGE.IMMUTABILITY.001
+
+**Storage Container Without Immutability Policy**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AU-9; soc2: CC6.1;
+
+No immutability policy on blob containers. Objects can be modified or deleted with no WORM protection.
+
+**Remediation:** Configure an immutability policy on the container.
+
+---
+
+### CTL.AZURE.STORAGE.INFRASTRUCTURE.001
+
+**Storage Account Infrastructure Encryption Not Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** cis_azure_v2: 3.12; nist_800_53_r5: SC-28; soc2: CC6.1;
+
+Double encryption (infrastructure + service layer) not enabled. Single layer is default — infrastructure encryption adds a second layer with a different algorithm.
+
+**Remediation:** Enable infrastructure encryption on the storage account.
+
+---
+
+### CTL.AZURE.STORAGE.KEYROTATION.001
+
+**Storage Account Key Not Rotated**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_azure_v2: 3.2; nist_800_53_r5: IA-5; soc2: CC6.1;
+
+Access keys not rotated within 90 days. Long-lived keys increase the window of compromise if a key is leaked.
+
+**Remediation:** Rotate storage account access keys.
+
+---
+
 ### CTL.AZURE.STORAGE.LOG.001
 
 **Azure Storage Must Have Diagnostic Logging Enabled**
@@ -1963,6 +2128,21 @@ Azure Storage accounts must set the default network action to Deny, allowing acc
 
 ---
 
+### CTL.AZURE.STORAGE.PRIVATEENDPOINT.001
+
+**Storage Account Without Private Endpoint**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_azure_v2: 3.10; nist_800_53_r5: AC-4; soc2: CC6.6;
+
+No private endpoint configured. Traffic to storage traverses the public internet.
+
+**Remediation:** Configure a private endpoint for the storage account.
+
+---
+
 ### CTL.AZURE.STORAGE.PUBLIC.001
 
 **Azure Storage Account Must Not Allow Public Blob Access**
@@ -1975,6 +2155,36 @@ Azure Storage accounts must set the default network action to Deny, allowing acc
 Azure Storage accounts must have AllowBlobPublicAccess disabled. When enabled, individual containers can be set to public access, exposing blobs to unauthenticated internet access.
 
 **Remediation:** Set AllowBlobPublicAccess to false on the storage account.
+
+---
+
+### CTL.AZURE.STORAGE.REPLICATION.001
+
+**Cross-Tenant Replication Not Disabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-4; soc2: CC6.6;
+
+Cross-tenant replication allows data to be replicated to storage accounts in other Azure tenants. Data replicated outside the organization is beyond organizational control.
+
+**Remediation:** Disable cross-tenant replication on the storage account.
+
+---
+
+### CTL.AZURE.STORAGE.SHAREDKEY.001
+
+**Storage Account Shared Key Access Not Disabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_azure_v2: 3.3; nist_800_53_r5: AC-3; soc2: CC6.1;
+
+Shared key access enabled. Shared keys are long-lived bearer tokens with no identity attribution. Entra ID authorization provides identity-based access with audit logging.
+
+**Remediation:** Disable shared key access and use Entra ID authorization.
 
 ---
 
@@ -2005,6 +2215,36 @@ Azure Storage accounts must enable soft delete for blobs to protect against acci
 Azure Storage accounts must set the minimum TLS version to 1.2. Older TLS versions have known vulnerabilities.
 
 **Remediation:** Set minimumTlsVersion to TLS1_2.
+
+---
+
+### CTL.AZURE.VM.AUTOUPDATE.001
+
+**VM Automatic OS Updates Not Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_azure_v2: 7.3; nist_800_53_r5: SI-2; soc2: CC7.1;
+
+Automatic guest OS updates not enabled. VM accumulates unpatched vulnerabilities over time.
+
+**Remediation:** Enable automatic guest OS updates.
+
+---
+
+### CTL.AZURE.VM.BACKUP.001
+
+**VM Backup Not Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_azure_v2: 7.1; nist_800_53_r5: CP-9; soc2: CC7.2;
+
+VM not enrolled in Azure Backup. No recovery point exists. Data loss on VM failure is permanent.
+
+**Remediation:** Enable Azure Backup for the VM.
 
 ---
 
@@ -2053,6 +2293,21 @@ VMs must not have extensions beyond the approved baseline. Extensions execute wi
 
 ---
 
+### CTL.AZURE.VM.MANAGEDDISK.001
+
+**VM Using Unmanaged Disks**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_azure_v2: 7.2; nist_800_53_r5: SC-28; soc2: CC6.1;
+
+Unmanaged disks lack built-in encryption, RBAC integration, and snapshot management that managed disks provide.
+
+**Remediation:** Migrate to managed disks.
+
+---
+
 ### CTL.AZURE.VM.PUBLIC.001
 
 **VM With Public IP Must Have JIT Access Enabled**
@@ -2065,6 +2320,36 @@ VMs must not have extensions beyond the approved baseline. Extensions execute wi
 VMs with public IPs must enable Just-In-Time access to reduce permanent exposure. Without JIT the VM is reachable 24/7.
 
 **Remediation:** Remediate per control description.
+
+---
+
+### CTL.AZURE.VM.TRUSTEDLAUNCH.001
+
+**VM Secure Boot Not Enabled (Trusted Launch)**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_azure_v2: 7.5; nist_800_53_r5: SI-7; soc2: CC6.1;
+
+Trusted Launch with Secure Boot and vTPM not enabled. No boot integrity verification — rootkits and bootkits can persist undetected across reboots.
+
+**Remediation:** Enable Trusted Launch with Secure Boot and vTPM.
+
+---
+
+### CTL.AZURE.VM.UNATTACHEDDISK.001
+
+**Unattached Disk Not Encrypted**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** cis_azure_v2: 7.4; nist_800_53_r5: SC-28; soc2: CC6.1;
+
+A disk not attached to any VM is unencrypted. Unattached disks may contain data from previous workloads — anyone with disk read access can read the data.
+
+**Remediation:** Encrypt the disk or delete it if no longer needed.
 
 ---
 

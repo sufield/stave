@@ -1,0 +1,21 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "sa-prod",
+      "type": "azure_storage_account",
+      "vendor": "azure",
+      "properties": {
+        "azure": {
+          "storage": {
+            "kind": "storage_account",
+            "key_rotation_overdue": true,
+            "key_last_rotated_days": 120
+          }
+        }
+      }
+    }
+  ]
+}

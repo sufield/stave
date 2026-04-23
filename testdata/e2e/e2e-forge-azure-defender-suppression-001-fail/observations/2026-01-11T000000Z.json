@@ -1,0 +1,23 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "defender-suppression",
+      "type": "azure_defender_setting",
+      "vendor": "azure",
+      "properties": {
+        "azure": {
+          "monitoring": {
+            "kind": "defender_setting",
+            "defender": {
+              "has_broad_suppression_rules": true,
+              "suppression_rule_count": 5
+            }
+          }
+        }
+      }
+    }
+  ]
+}

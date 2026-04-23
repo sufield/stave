@@ -1,0 +1,325 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-15T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "818cebbc14cf90520a94f343e3fae81a56294fe8ce78a5cd2d33bf46cc937b23",
+        "2026-01-11T000000Z.json": "264cf59404b65751b3f28b29b047aad34237b37c82c4fd8c6d1c2efbbabf2355"
+      },
+      "overall": "4d1c842d3fe6a1eac4bb75dd342d56316443d9548caf865b0da14c2b7cba00ce"
+    },
+    "policy_fingerprint": "fa231aafbb6a284259cfbcc3b8804ecedff9fec54e7896a295a2ea5136ff118e",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.AZURE.STORAGE.PRIVATEENDPOINT.001",
+      "asset_id": "sa-prod",
+      "asset_type": "azure_storage_account",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -168,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:18179d3f2aa503c3",
+      "control_id": "CTL.AZURE.STORAGE.PRIVATEENDPOINT.001",
+      "control_name": "Storage Account Without Private Endpoint",
+      "control_description": "No private endpoint configured. Traffic to storage traverses the public internet.\n",
+      "asset_id": "sa-prod",
+      "asset_type": "azure_storage_account",
+      "asset_vendor": "azure",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 336,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "azure.storage.kind",
+            "actual_value": "storage_account",
+            "operator": "eq",
+            "unsafe_value": "storage_account"
+          },
+          {
+            "property": "azure.storage.private_endpoint_enabled",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 336 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "cis_azure_v2": "3.10",
+        "nist_800_53_r5": "AC-4",
+        "soc2": "CC6.6"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Storage Account Without Private Endpoint — finding detected.",
+        "action": "Configure a private endpoint for the storage account.",
+        "example": "{\"azure\": {\"storage\": {\"kind\": \"storage_account\", \"private_endpoint_enabled\": true}}}\n"
+      },
+      "fix_plan": {
+        "id": "fix-dd982a0606a97f5a",
+        "target": {
+          "asset_id": "sa-prod",
+          "asset_type": "azure_storage_account"
+        },
+        "action": "Configure a private endpoint for the storage account."
+      },
+      "exposure_score": 50,
+      "score_breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "azure.storage.kind eq \"storage_account\"",
+          "observation_key": "azure.storage.kind",
+          "operator": "eq",
+          "expected_value": "storage_account",
+          "observed_value": "storage_account"
+        },
+        {
+          "predicate_expr": "azure.storage.private_endpoint_enabled eq false",
+          "observation_key": "azure.storage.private_endpoint_enabled",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "sa-prod",
+          "type": "azure_storage_account",
+          "vendor": "azure"
+        },
+        "violation": {
+          "control_id": "CTL.AZURE.STORAGE.PRIVATEENDPOINT.001",
+          "control_name": "Storage Account Without Private Endpoint",
+          "severity": "medium",
+          "reasoning": [
+            {
+              "clause": "azure.storage.kind = \"storage_account\"",
+              "observation_key": "azure.storage.kind",
+              "observed_value": "storage_account"
+            },
+            {
+              "clause": "azure.storage.private_endpoint_enabled = false",
+              "observation_key": "azure.storage.private_endpoint_enabled",
+              "observed_value": false
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "azure.storage.kind",
+            "current_value": "storage_account",
+            "has_safe_default": false,
+            "description": "Change azure.storage.kind from storage_account"
+          },
+          {
+            "path": "azure.storage.private_endpoint_enabled",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set azure.storage.private_endpoint_enabled to true"
+          }
+        ],
+        "action": "Configure a private endpoint for the storage account."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "azure"
+      ],
+      "delta": [
+        {
+          "property_label": "storage private endpoint",
+          "property_path": "azure.storage.private_endpoint_enabled",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:130cc472031452b8",
+      "asset_id": "sa-prod",
+      "shared_keys": [
+        "azure.storage",
+        "azure.storage.kind",
+        "azure.storage.private_endpoint_enabled"
+      ],
+      "headline_finding_id": "sha256:18179d3f2aa503c3",
+      "member_finding_ids": [
+        "sha256:18179d3f2aa503c3"
+      ],
+      "consolidated_score": 50,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "sa-prod",
+      "asset_type": "azure_storage_account",
+      "fix_plan": {
+        "id": "fix-dd982a0606a97f5a",
+        "target": {
+          "asset_id": "sa-prod",
+          "asset_type": "azure_storage_account"
+        },
+        "action": "Configure a private endpoint for the storage account."
+      },
+      "contributing_controls": [
+        "CTL.AZURE.STORAGE.PRIVATEENDPOINT.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.AZURE.STORAGE.PRIVATEENDPOINT.001",
+      "asset_id": "sa-prod",
+      "exposure_score": 50,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-azure-storage-privateendpoint-001-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-azure-storage-privateendpoint-001-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "8e6605f6d9f1da5bc050bce62f57a4acc451e2fc",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-azure-storage-privateendpoint-001-fail/controls/"
+      ]
+    }
+  }
+}

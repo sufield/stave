@@ -1,0 +1,16 @@
+control: CTL.AZURE.DEFENDER.SUPPRESSION.001
+defect: >
+  Defender alert suppression rules are silencing security alerts.
+  Findings are generated but suppressed before reaching the security
+  team.
+infection: >
+  Suppression rules hide Defender alerts from view. The alerts
+  continue to fire — the conditions are detected — but the
+  suppression prevents them from reaching the security team.
+  Overly broad rules can silence entire alert categories. An
+  attacker whose activity triggers a suppressed alert type
+  operates without detection despite Defender being enabled.
+failure: >
+  Silent alert suppression. Security-relevant Defender findings
+  are generated but never seen. The security team believes
+  Defender is providing coverage when findings are being discarded.

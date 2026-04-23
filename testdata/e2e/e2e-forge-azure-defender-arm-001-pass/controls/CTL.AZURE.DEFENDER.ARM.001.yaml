@@ -1,0 +1,38 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.DEFENDER.ARM.001
+name: Defender for ARM Not Enabled
+description: >
+  Defender for Azure Resource Manager not enabled. No detection
+  of anomalous ARM operations (mass deletions, suspicious
+  deployments, lateral movement).
+domain: exposure
+severity: medium
+compliance:
+  cis_azure_v2: "2.1.7"
+  nist_800_53_r5: "SI-4"
+  soc2: "CC7.1"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Defender for ARM Not Enabled — finding detected.
+  action: Enable Defender for ARM at Standard tier.
+  example: |
+    {"azure": {"monitoring": {"kind": "defender_setting", "defender": {"plan": "Arm", "pricing_tier": "Standard"}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.monitoring.kind
+      op: eq
+      value: defender_setting
+    - field: properties.azure.monitoring.defender.plan
+      op: eq
+      value: Arm
+    - any:
+        - field: properties.azure.monitoring.defender.enabled
+          op: eq
+          value: false
+        - field: properties.azure.monitoring.defender.pricing_tier
+          op: eq
+          value: Free

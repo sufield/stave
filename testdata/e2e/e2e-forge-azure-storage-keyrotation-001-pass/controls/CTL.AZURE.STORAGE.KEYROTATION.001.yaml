@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.STORAGE.KEYROTATION.001
+name: Storage Account Key Not Rotated
+description: >
+  Access keys not rotated within 90 days. Long-lived keys increase
+  the window of compromise if a key is leaked.
+domain: identity
+severity: medium
+compliance:
+  cis_azure_v2: "3.2"
+  nist_800_53_r5: "IA-5"
+  soc2: "CC6.1"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: Storage Account Key Not Rotated — finding detected.
+  action: Rotate storage account access keys.
+  example: |
+    {"azure": {"storage": {"kind": "storage_account", "key_rotation_overdue": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.storage.kind
+      op: eq
+      value: storage_account
+    - field: properties.azure.storage.key_rotation_overdue
+      op: eq
+      value: true

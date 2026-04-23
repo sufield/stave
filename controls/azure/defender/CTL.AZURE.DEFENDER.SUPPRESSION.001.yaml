@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.DEFENDER.SUPPRESSION.001
+name: Defender Alert Suppression Rules Overly Broad
+description: >
+  Alert suppression rules silence security alerts. Findings are
+  generated but suppressed before reaching the security team.
+domain: detection
+severity: high
+compliance:
+  nist_800_53_r5: "SI-4"
+  soc2: "CC7.2"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: defense_evasion
+remediation:
+  description: Defender Alert Suppression Rules Overly Broad — finding detected.
+  action: Review and narrow suppression rules.
+  example: |
+    {"azure": {"monitoring": {"kind": "defender_setting", "defender": {"has_broad_suppression_rules": false}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.monitoring.kind
+      op: eq
+      value: defender_setting
+    - field: properties.azure.monitoring.defender.has_broad_suppression_rules
+      op: eq
+      value: true

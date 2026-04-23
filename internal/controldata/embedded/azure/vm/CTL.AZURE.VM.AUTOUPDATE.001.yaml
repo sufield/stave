@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.VM.AUTOUPDATE.001
+name: VM Automatic OS Updates Not Enabled
+description: >
+  Automatic guest OS updates not enabled. VM accumulates
+  unpatched vulnerabilities over time.
+domain: exposure
+severity: medium
+compliance:
+  cis_azure_v2: "7.3"
+  nist_800_53_r5: "SI-2"
+  soc2: "CC7.1"
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: VM Automatic OS Updates Not Enabled — finding detected.
+  action: Enable automatic guest OS updates.
+  example: |
+    {"azure": {"compute": {"kind": "virtual_machine", "vm": {"auto_updates_enabled": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.compute.kind
+      op: eq
+      value: virtual_machine
+    - field: properties.azure.compute.vm.auto_updates_enabled
+      op: eq
+      value: false
