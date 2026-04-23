@@ -3,25 +3,25 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1082
-**Pack hash:** `73540ae86e163a043d7a1269964da9ae0827f72380e7a1c1cd66f6006ce0eb59`
+**Total controls:** 1094
+**Pack hash:** `625a36f08328d136f3ac82bc8afec2a488e71a74e22402cef8d1adb5d87b7373`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 150 |
-| high | 481 |
+| critical | 151 |
+| high | 486 |
 | info | 16 |
-| low | 82 |
-| medium | 353 |
+| low | 83 |
+| medium | 358 |
 
 | Domain | Count |
 |--------|-------|
 | audit | 20 |
 | detection | 9 |
-| encryption | 62 |
-| exposure | 700 |
+| encryption | 64 |
+| exposure | 710 |
 | governance | 24 |
 | identity | 224 |
 | network | 21 |
@@ -7604,6 +7604,186 @@ Resources containing sensitive data (PHI, PII, confidential) in a specific juris
 Sovereignty assessment requires the cross_border_access_detected field. The extractor could not determine whether the resource is accessible from outside its jurisdiction.
 
 **Remediation:** Re-run the sovereignty extractor with permissions to enumerate IAM principals, their account regions, and resource-based policies for all sensitive resources.
+
+---
+
+### CTL.GCP.CLOUDSQL.BACKUP.001
+
+**Cloud SQL Automated Backups Not Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_gcp_v3: 6.7; hipaa: 164.308(a)(7); nist_800_53_r5: CP-9; soc2: A1.2;
+
+Automated backups disabled. No recovery point exists. Data loss on instance failure is permanent.
+
+**Remediation:** Enable automated backups.
+
+---
+
+### CTL.GCP.CLOUDSQL.ENCRYPT.001
+
+**Cloud SQL Not Encrypted with CMEK**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** cis_gcp_v3: 6.6; nist_800_53_r5: SC-28; pci_dss_v4: 3.4; soc2: CC6.1;
+
+Instance uses Google-managed encryption. CMEK via Cloud KMS provides key revocation, custom rotation, and access audit.
+
+**Remediation:** Recreate instance with a Cloud KMS CMEK.
+
+---
+
+### CTL.GCP.CLOUDSQL.HA.001
+
+**Cloud SQL High Availability Not Configured**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CP-10; soc2: A1.2;
+
+No high availability configuration. Instance runs in a single zone. Zone failure causes database outage.
+
+**Remediation:** Enable high availability (regional instance).
+
+---
+
+### CTL.GCP.CLOUDSQL.MYSQL.LOCALINFILE.001
+
+**Cloud SQL MySQL local_infile Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_gcp_v3: 6.3.1; nist_800_53_r5: CM-6; pci_dss_v4: 6.2; soc2: CC6.1;
+
+local_infile enabled. LOAD DATA LOCAL INFILE can read arbitrary files from the server filesystem. Known exploitation technique.
+
+**Remediation:** Disable local_infile flag.
+
+---
+
+### CTL.GCP.CLOUDSQL.MYSQL.SHOWDB.001
+
+**Cloud SQL MySQL skip_show_database Not Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_gcp_v3: 6.3.2; nist_800_53_r5: AC-3; soc2: CC6.1;
+
+skip_show_database not set. Any authenticated user can enumerate all databases, providing reconnaissance information.
+
+**Remediation:** Enable skip_show_database flag.
+
+---
+
+### CTL.GCP.CLOUDSQL.PG.LOG.001
+
+**Cloud SQL PostgreSQL Logging Flags Not Fully Configured**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_gcp_v3: 6.2.1; hipaa: 164.312(b); nist_800_53_r5: AU-2; pci_dss_v4: 10.2; soc2: CC7.1;
+
+One or more CIS-recommended PostgreSQL logging flags disabled. Consolidates: log_checkpoints, log_connections, log_disconnections, log_lock_waits, log_min_duration_statement, log_temp_files, pgaudit.
+
+**Remediation:** Enable all recommended PostgreSQL logging flags.
+
+---
+
+### CTL.GCP.CLOUDSQL.PG.MESSAGES.001
+
+**Cloud SQL PostgreSQL Log Level Below WARNING**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_gcp_v3: 6.2.6; nist_800_53_r5: AU-2; soc2: CC7.1;
+
+log_min_messages set above WARNING. WARNING-level messages indicating emerging problems may not be captured.
+
+**Remediation:** Set log_min_messages to WARNING or lower.
+
+---
+
+### CTL.GCP.CLOUDSQL.PITR.001
+
+**Cloud SQL Point-in-Time Recovery Not Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_gcp_v3: 6.8; nist_800_53_r5: CP-9; soc2: A1.2;
+
+PITR not enabled. Recovery limited to the last automated backup. Data changes between the last backup and failure are lost.
+
+**Remediation:** Enable point-in-time recovery.
+
+---
+
+### CTL.GCP.CLOUDSQL.PRIVATE.001
+
+**Cloud SQL Instance Not Using Private IP Only**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_gcp_v3: 6.2; nist_800_53_r5: AC-4; soc2: CC6.6;
+
+Instance has a public IP assigned. Even with restricted authorized networks, the database endpoint is exposed to the internet. Private IP only ensures VPC-only reachability.
+
+**Remediation:** Configure private IP only and remove public IP.
+
+---
+
+### CTL.GCP.CLOUDSQL.PUBLIC.001
+
+**Cloud SQL Instance Publicly Accessible**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_gcp_v3: 6.5; hipaa: 164.312(a)(1); nist_800_53_r5: AC-4; pci_dss_v4: 1.3; soc2: CC6.6;
+
+Instance has a public IP and/or authorized networks includes 0.0.0.0/0. Database reachable from the internet.
+
+**Remediation:** Remove 0.0.0.0/0 from authorized networks and use private IP.
+
+---
+
+### CTL.GCP.CLOUDSQL.SQLSERVER.CROSSDB.001
+
+**Cloud SQL SQL Server Cross-Database Ownership Chaining Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_gcp_v3: 6.3.7; nist_800_53_r5: AC-3; soc2: CC6.1;
+
+cross_db_ownership_chaining enabled. Objects in one database can reference objects in another without explicit permissions — cross-database privilege escalation risk.
+
+**Remediation:** Disable cross_db_ownership_chaining flag.
+
+---
+
+### CTL.GCP.CLOUDSQL.SSL.001
+
+**Cloud SQL SSL Connections Not Required**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** cis_gcp_v3: 6.4; hipaa: 164.312(e)(1); nist_800_53_r5: SC-8; pci_dss_v4: 4.1; soc2: CC6.7;
+
+SSL not required. Database connections can be unencrypted — credentials and query data transmitted in plaintext.
+
+**Remediation:** Enable SSL requirement on the Cloud SQL instance.
 
 ---
 

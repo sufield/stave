@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.CLOUDSQL.BACKUP.001
+name: Cloud SQL Automated Backups Not Enabled
+description: >
+  Automated backups disabled. No recovery point exists. Data loss
+  on instance failure is permanent.
+domain: exposure
+severity: high
+compliance:
+  cis_gcp_v3: "6.7"
+  nist_800_53_r5: "CP-9"
+  hipaa: "164.308(a)(7)"
+  soc2: "A1.2"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Cloud SQL Automated Backups Not Enabled — finding detected.
+  action: Enable automated backups.
+  example: |
+    {"gcp": {"database": {"kind": "cloudsql_instance", "cloudsql": {"backup_enabled": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.database.kind
+      op: eq
+      value: cloudsql_instance
+    - field: properties.gcp.database.cloudsql.backup_enabled
+      op: eq
+      value: false

@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.CLOUDSQL.ENCRYPT.001
+name: Cloud SQL Not Encrypted with CMEK
+description: >
+  Instance uses Google-managed encryption. CMEK via Cloud KMS
+  provides key revocation, custom rotation, and access audit.
+domain: encryption
+severity: high
+compliance:
+  cis_gcp_v3: "6.6"
+  nist_800_53_r5: "SC-28"
+  pci_dss_v4: "3.4"
+  soc2: "CC6.1"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Cloud SQL Not Encrypted with CMEK — finding detected.
+  action: Recreate instance with a Cloud KMS CMEK.
+  example: |
+    {"gcp": {"database": {"kind": "cloudsql_instance", "cloudsql": {"cmek_encrypted": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.database.kind
+      op: eq
+      value: cloudsql_instance
+    - field: properties.gcp.database.cloudsql.cmek_encrypted
+      op: eq
+      value: false

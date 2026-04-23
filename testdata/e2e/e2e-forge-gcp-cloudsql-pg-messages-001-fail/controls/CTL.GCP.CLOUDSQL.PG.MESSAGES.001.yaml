@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.CLOUDSQL.PG.MESSAGES.001
+name: Cloud SQL PostgreSQL Log Level Below WARNING
+description: >
+  log_min_messages set above WARNING. WARNING-level messages
+  indicating emerging problems may not be captured.
+domain: exposure
+severity: low
+compliance:
+  cis_gcp_v3: "6.2.6"
+  nist_800_53_r5: "AU-2"
+  soc2: "CC7.1"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: PostgreSQL Log Level Below WARNING — finding detected.
+  action: Set log_min_messages to WARNING or lower.
+  example: |
+    {"gcp": {"database": {"kind": "cloudsql_instance", "cloudsql": {"pg": {"log_min_messages": "WARNING"}}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.database.kind
+      op: eq
+      value: cloudsql_instance
+    - field: properties.gcp.database.cloudsql.engine
+      op: eq
+      value: POSTGRES
+    - field: properties.gcp.database.cloudsql.pg.log_min_messages
+      op: eq
+      value: ERROR

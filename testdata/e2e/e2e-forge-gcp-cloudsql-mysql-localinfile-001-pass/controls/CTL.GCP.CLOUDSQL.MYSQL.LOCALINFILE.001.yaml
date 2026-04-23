@@ -1,0 +1,34 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.CLOUDSQL.MYSQL.LOCALINFILE.001
+name: Cloud SQL MySQL local_infile Enabled
+description: >
+  local_infile enabled. LOAD DATA LOCAL INFILE can read arbitrary
+  files from the server filesystem. Known exploitation technique.
+domain: exposure
+severity: high
+compliance:
+  cis_gcp_v3: "6.3.1"
+  nist_800_53_r5: "CM-6"
+  pci_dss_v4: "6.2"
+  soc2: "CC6.1"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Cloud SQL MySQL local_infile Enabled — finding detected.
+  action: Disable local_infile flag.
+  example: |
+    {"gcp": {"database": {"kind": "cloudsql_instance", "cloudsql": {"mysql": {"local_infile_off": true}}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.database.kind
+      op: eq
+      value: cloudsql_instance
+    - field: properties.gcp.database.cloudsql.engine
+      op: eq
+      value: MYSQL
+    - field: properties.gcp.database.cloudsql.mysql.local_infile_off
+      op: eq
+      value: false

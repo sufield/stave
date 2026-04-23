@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.CLOUDSQL.SSL.001
+name: Cloud SQL SSL Connections Not Required
+description: >
+  SSL not required. Database connections can be unencrypted —
+  credentials and query data transmitted in plaintext.
+domain: encryption
+severity: high
+compliance:
+  cis_gcp_v3: "6.4"
+  nist_800_53_r5: "SC-8"
+  hipaa: "164.312(e)(1)"
+  pci_dss_v4: "4.1"
+  soc2: "CC6.7"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Cloud SQL SSL Not Required — finding detected.
+  action: Enable SSL requirement on the Cloud SQL instance.
+  example: |
+    {"gcp": {"database": {"kind": "cloudsql_instance", "cloudsql": {"ssl_required": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.database.kind
+      op: eq
+      value: cloudsql_instance
+    - field: properties.gcp.database.cloudsql.ssl_required
+      op: eq
+      value: false

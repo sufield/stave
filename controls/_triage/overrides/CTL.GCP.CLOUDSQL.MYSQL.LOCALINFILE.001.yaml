@@ -1,0 +1,13 @@
+control: CTL.GCP.CLOUDSQL.MYSQL.LOCALINFILE.001
+defect: >
+  Cloud SQL MySQL instance has local_infile enabled.
+infection: >
+  The LOAD DATA LOCAL INFILE statement allows reading files from the
+  client machine or server filesystem into the database. An attacker
+  who gains SQL access can use this to read sensitive files —
+  configuration files, credential files, or other data accessible
+  to the MySQL process. This is a well-known MySQL exploitation
+  technique that CIS explicitly requires to be disabled.
+failure: >
+  File system read via SQL. An attacker reads arbitrary files from
+  the database server using LOAD DATA LOCAL INFILE.

@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.CLOUDSQL.MYSQL.SHOWDB.001
+name: Cloud SQL MySQL skip_show_database Not Enabled
+description: >
+  skip_show_database not set. Any authenticated user can enumerate
+  all databases, providing reconnaissance information.
+domain: exposure
+severity: medium
+compliance:
+  cis_gcp_v3: "6.3.2"
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: MySQL skip_show_database Not Enabled — finding detected.
+  action: Enable skip_show_database flag.
+  example: |
+    {"gcp": {"database": {"kind": "cloudsql_instance", "cloudsql": {"mysql": {"skip_show_database": true}}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.database.kind
+      op: eq
+      value: cloudsql_instance
+    - field: properties.gcp.database.cloudsql.engine
+      op: eq
+      value: MYSQL
+    - field: properties.gcp.database.cloudsql.mysql.skip_show_database
+      op: eq
+      value: false

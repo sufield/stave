@@ -1,0 +1,14 @@
+control: CTL.GCP.CLOUDSQL.PUBLIC.001
+defect: >
+  Cloud SQL instance is publicly accessible. Authorized networks
+  includes 0.0.0.0/0 or instance has a public IP.
+infection: >
+  The database accepts connections from the public internet. An
+  attacker can attempt authentication from any IP address. Cloud SQL
+  instances with weak passwords, default credentials, or known CVEs
+  are directly exploitable. Even with strong authentication, a
+  publicly accessible database is subject to continuous brute-force
+  attempts and vulnerability scanning.
+failure: >
+  Direct database access from the internet. An attacker connects
+  to the database and extracts, modifies, or destroys data.

@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.CLOUDSQL.PRIVATE.001
+name: Cloud SQL Instance Not Using Private IP Only
+description: >
+  Instance has a public IP assigned. Even with restricted authorized
+  networks, the database endpoint is exposed to the internet.
+  Private IP only ensures VPC-only reachability.
+domain: exposure
+severity: high
+compliance:
+  cis_gcp_v3: "6.2"
+  nist_800_53_r5: "AC-4"
+  soc2: "CC6.6"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Cloud SQL Not Using Private IP Only — finding detected.
+  action: Configure private IP only and remove public IP.
+  example: |
+    {"gcp": {"database": {"kind": "cloudsql_instance", "cloudsql": {"private_ip_only": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.database.kind
+      op: eq
+      value: cloudsql_instance
+    - field: properties.gcp.database.cloudsql.private_ip_only
+      op: eq
+      value: false

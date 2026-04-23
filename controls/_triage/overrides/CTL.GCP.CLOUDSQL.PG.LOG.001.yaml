@@ -1,0 +1,14 @@
+control: CTL.GCP.CLOUDSQL.PG.LOG.001
+defect: >
+  Cloud SQL PostgreSQL instance has incomplete logging configuration.
+infection: >
+  CIS GCP Benchmark requires specific PostgreSQL database flags for
+  comprehensive audit logging. Each disabled flag is a forensic gap:
+  log_checkpoints records database recovery points, log_connections/
+  disconnections tracks session lifecycle, log_lock_waits identifies
+  contention and potential denial-of-service, log_min_duration_statement
+  catches slow queries, log_temp_files identifies expensive operations,
+  and pgaudit provides detailed audit logging of SQL statements.
+failure: >
+  Incomplete database forensics. Specific categories of database
+  activity are not recorded for incident investigation.

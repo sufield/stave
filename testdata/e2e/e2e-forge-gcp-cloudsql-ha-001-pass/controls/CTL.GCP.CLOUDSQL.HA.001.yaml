@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.CLOUDSQL.HA.001
+name: Cloud SQL High Availability Not Configured
+description: >
+  No high availability configuration. Instance runs in a single
+  zone. Zone failure causes database outage.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "CP-10"
+  soc2: "A1.2"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Cloud SQL HA Not Configured — finding detected.
+  action: Enable high availability (regional instance).
+  example: |
+    {"gcp": {"database": {"kind": "cloudsql_instance", "cloudsql": {"ha_enabled": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.database.kind
+      op: eq
+      value: cloudsql_instance
+    - field: properties.gcp.database.cloudsql.ha_enabled
+      op: eq
+      value: false

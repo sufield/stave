@@ -1,0 +1,36 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.CLOUDSQL.PG.LOG.001
+name: Cloud SQL PostgreSQL Logging Flags Not Fully Configured
+description: >
+  One or more CIS-recommended PostgreSQL logging flags disabled.
+  Consolidates: log_checkpoints, log_connections, log_disconnections,
+  log_lock_waits, log_min_duration_statement, log_temp_files, pgaudit.
+domain: exposure
+severity: medium
+compliance:
+  cis_gcp_v3: "6.2.1"
+  nist_800_53_r5: "AU-2"
+  hipaa: "164.312(b)"
+  pci_dss_v4: "10.2"
+  soc2: "CC7.1"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Cloud SQL PostgreSQL Logging Flags Not Configured — finding detected.
+  action: Enable all recommended PostgreSQL logging flags.
+  example: |
+    {"gcp": {"database": {"kind": "cloudsql_instance", "cloudsql": {"pg": {"all_logging_enabled": true}}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.database.kind
+      op: eq
+      value: cloudsql_instance
+    - field: properties.gcp.database.cloudsql.engine
+      op: eq
+      value: POSTGRES
+    - field: properties.gcp.database.cloudsql.pg.all_logging_enabled
+      op: eq
+      value: false

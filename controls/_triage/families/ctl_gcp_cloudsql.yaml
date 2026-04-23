@@ -1,0 +1,11 @@
+family: CTL.GCP.CLOUDSQL
+infection: >
+  Cloud SQL instances store application data across PostgreSQL,
+  MySQL, and SQL Server engines. Public IP exposure, missing SSL,
+  disabled backups, and insecure database flags weaken the security
+  boundary. Engine-specific flags control logging completeness,
+  file system access, and cross-database isolation.
+failure: >
+  Database compromise. An attacker accesses the database through
+  public exposure, exploits insecure flags for file system access
+  or privilege escalation, or destroys data without recovery path.

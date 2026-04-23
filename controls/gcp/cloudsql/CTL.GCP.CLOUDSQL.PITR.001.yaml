@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.CLOUDSQL.PITR.001
+name: Cloud SQL Point-in-Time Recovery Not Enabled
+description: >
+  PITR not enabled. Recovery limited to the last automated backup.
+  Data changes between the last backup and failure are lost.
+domain: exposure
+severity: medium
+compliance:
+  cis_gcp_v3: "6.8"
+  nist_800_53_r5: "CP-9"
+  soc2: "A1.2"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Cloud SQL PITR Not Enabled — finding detected.
+  action: Enable point-in-time recovery.
+  example: |
+    {"gcp": {"database": {"kind": "cloudsql_instance", "cloudsql": {"pitr_enabled": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.database.kind
+      op: eq
+      value: cloudsql_instance
+    - field: properties.gcp.database.cloudsql.pitr_enabled
+      op: eq
+      value: false

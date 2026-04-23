@@ -1,0 +1,32 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "db-prod",
+      "type": "gcp_cloudsql_instance",
+      "vendor": "gcp",
+      "properties": {
+        "gcp": {
+          "database": {
+            "kind": "cloudsql_instance",
+            "cloudsql": {
+              "name": "db-prod",
+              "region": "us-central1",
+              "engine": "POSTGRES",
+              "has_public_ip": true,
+              "authorized_networks_public": true,
+              "ssl_required": true,
+              "backup_enabled": true,
+              "pitr_enabled": true,
+              "ha_enabled": true,
+              "cmek_encrypted": true,
+              "private_ip_only": true
+            }
+          }
+        }
+      }
+    }
+  ]
+}

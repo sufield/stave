@@ -1,0 +1,34 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.CLOUDSQL.SQLSERVER.CROSSDB.001
+name: Cloud SQL SQL Server Cross-Database Ownership Chaining Enabled
+description: >
+  cross_db_ownership_chaining enabled. Objects in one database can
+  reference objects in another without explicit permissions —
+  cross-database privilege escalation risk.
+domain: exposure
+severity: medium
+compliance:
+  cis_gcp_v3: "6.3.7"
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: SQL Server Cross-DB Ownership Chaining Enabled — finding detected.
+  action: Disable cross_db_ownership_chaining flag.
+  example: |
+    {"gcp": {"database": {"kind": "cloudsql_instance", "cloudsql": {"sqlserver": {"cross_db_ownership_off": true}}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.database.kind
+      op: eq
+      value: cloudsql_instance
+    - field: properties.gcp.database.cloudsql.engine
+      op: eq
+      value: SQLSERVER
+    - field: properties.gcp.database.cloudsql.sqlserver.cross_db_ownership_off
+      op: eq
+      value: false
