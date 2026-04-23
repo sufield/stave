@@ -1,0 +1,24 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "kms-key",
+      "type": "gcp_kms_key",
+      "vendor": "gcp",
+      "properties": {
+        "gcp": {
+          "security": {
+            "kind": "kms_key",
+            "kms": {
+              "name": "my-key",
+              "key_ring": "my-keyring",
+              "rotation_configured": false
+            }
+          }
+        }
+      }
+    }
+  ]
+}

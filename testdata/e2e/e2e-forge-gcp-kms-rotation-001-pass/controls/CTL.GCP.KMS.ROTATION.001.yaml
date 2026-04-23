@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.KMS.ROTATION.001
+name: KMS Key Rotation Not Configured
+description: >
+  Cloud KMS key does not have automatic rotation configured. CIS
+  requires rotation period of 365 days or less.
+domain: encryption
+severity: medium
+compliance:
+  cis_gcp_v3: "1.10"
+  nist_800_53_r5: "SC-12"
+  soc2: "CC6.1"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: KMS Key Rotation Not Configured — finding detected.
+  action: Configure automatic key rotation with period <= 365 days.
+  example: |
+    {"gcp": {"security": {"kind": "kms_key", "kms": {"rotation_configured": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.security.kind
+      op: eq
+      value: kms_key
+    - field: properties.gcp.security.kms.rotation_configured
+      op: eq
+      value: false

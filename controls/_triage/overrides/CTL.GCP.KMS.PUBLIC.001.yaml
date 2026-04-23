@@ -1,0 +1,14 @@
+control: CTL.GCP.KMS.PUBLIC.001
+defect: >
+  Cloud KMS key IAM binding includes allUsers or allAuthenticatedUsers.
+  The key is publicly accessible.
+infection: >
+  Any person on the internet (allUsers) or any Google account holder
+  (allAuthenticatedUsers) can perform cryptographic operations with
+  this key. kms:decrypt access means any data encrypted by this key
+  is decryptable by anyone. This is the most critical possible KMS
+  misconfiguration — the encryption key that protects data is public.
+  All data encrypted by this key should be considered compromised.
+failure: >
+  Encryption rendered meaningless. Data encrypted with a publicly
+  accessible key is effectively unencrypted — anyone can decrypt it.

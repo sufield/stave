@@ -1,0 +1,14 @@
+id: gcp_kms_compromise
+description: >
+  KMS key publicly accessible AND not rotated. Encryption key
+  available to anyone and never rotated — all encrypted data
+  is compromised.
+controls:
+  - CTL.GCP.KMS.PUBLIC.001
+  - CTL.GCP.KMS.ROTATION.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - ec2_code_execution

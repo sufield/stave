@@ -1,0 +1,24 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "log-bucket",
+      "type": "gcp_logging_bucket",
+      "vendor": "gcp",
+      "properties": {
+        "gcp": {
+          "monitoring": {
+            "kind": "log_bucket",
+            "bucket": {
+              "name": "_Default",
+              "retention_days": 365,
+              "retention_locked": true
+            }
+          }
+        }
+      }
+    }
+  ]
+}

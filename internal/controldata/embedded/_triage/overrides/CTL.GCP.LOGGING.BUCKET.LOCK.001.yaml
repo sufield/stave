@@ -1,0 +1,15 @@
+control: CTL.GCP.LOGGING.BUCKET.LOCK.001
+defect: >
+  Log bucket retention policy is not locked. The retention period
+  can be reduced or removed.
+infection: >
+  An attacker who gains log admin permissions can reduce the log
+  bucket's retention period. If the retention is reduced below the
+  age of existing logs, those logs are deleted by the retention
+  enforcement. This is log tampering via configuration change — the
+  attacker doesn't delete logs directly. They change the retention
+  policy (one admin operation) and the system deletes the logs
+  automatically. A locked retention policy prevents this.
+failure: >
+  Log destruction via retention manipulation. An attacker deletes
+  historical audit logs by reducing the retention period.

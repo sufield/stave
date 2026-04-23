@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.LOGGING.BUCKET.RETENTION.001
+name: Log Bucket Retention Below 365 Days
+description: >
+  Log bucket retention period less than 365 days. Compliance
+  frameworks require one year minimum audit log retention.
+domain: exposure
+severity: medium
+compliance:
+  cis_gcp_v3: "2.3"
+  nist_800_53_r5: "AU-12"
+  pci_dss_v4: "10.7"
+  soc2: "CC7.2"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Log Bucket Retention Below 365 Days — finding detected.
+  action: Increase retention to at least 365 days.
+  example: |
+    {"gcp": {"monitoring": {"kind": "log_bucket", "bucket": {"retention_days": 365}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.monitoring.kind
+      op: eq
+      value: log_bucket
+    - field: properties.gcp.monitoring.bucket.retention_days
+      op: lt
+      value: 365

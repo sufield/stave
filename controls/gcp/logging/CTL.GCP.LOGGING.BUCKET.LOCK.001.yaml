@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.LOGGING.BUCKET.LOCK.001
+name: Log Bucket Retention Not Locked
+description: >
+  Log bucket retention policy not locked. An attacker can reduce
+  the retention period — the system deletes old logs automatically.
+  Log tampering via configuration change.
+domain: detection
+severity: high
+compliance:
+  cis_gcp_v3: "2.4"
+  nist_800_53_r5: "AU-9"
+  soc2: "CC7.2"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: defense_evasion
+remediation:
+  description: Log Bucket Retention Not Locked — finding detected.
+  action: Lock the log bucket retention policy.
+  example: |
+    {"gcp": {"monitoring": {"kind": "log_bucket", "bucket": {"retention_locked": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.monitoring.kind
+      op: eq
+      value: log_bucket
+    - field: properties.gcp.monitoring.bucket.retention_locked
+      op: eq
+      value: false

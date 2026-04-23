@@ -1,0 +1,9 @@
+family: CTL.GCP.KMS
+infection: >
+  Cloud KMS keys protect data encrypted across GCP services —
+  Storage, Compute, Cloud SQL, BigQuery. A publicly accessible key
+  renders all encryption meaningless. Missing rotation means a
+  compromised key remains valid indefinitely.
+failure: >
+  Encryption compromise. An attacker decrypts data protected by
+  a publicly accessible or compromised key.

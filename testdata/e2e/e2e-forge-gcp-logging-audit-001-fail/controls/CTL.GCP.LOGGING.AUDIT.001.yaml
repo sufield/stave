@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.LOGGING.AUDIT.001
+name: Cloud Audit Logging Not Enabled for All Services
+description: >
+  Data Access audit logs not enabled for all services. Admin Activity
+  logs are always on but Data Access logs (who accessed what data)
+  must be explicitly enabled per service.
+domain: detection
+severity: high
+compliance:
+  cis_gcp_v3: "2.1"
+  nist_800_53_r5: "AU-2"
+  hipaa: "164.312(b)"
+  pci_dss_v4: "10.2"
+  soc2: "CC7.2"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: defense_evasion
+remediation:
+  description: Cloud Audit Logging Not Enabled for All Services — finding detected.
+  action: Enable Data Access audit logs for all services.
+  example: |
+    {"gcp": {"monitoring": {"kind": "audit_log_config", "audit": {"all_services_enabled": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.monitoring.kind
+      op: eq
+      value: audit_log_config
+    - field: properties.gcp.monitoring.audit.all_services_enabled
+      op: eq
+      value: false

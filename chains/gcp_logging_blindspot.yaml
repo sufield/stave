@@ -1,0 +1,15 @@
+id: gcp_logging_blindspot
+description: >
+  Audit logging incomplete AND either log bucket unlocked or CIS
+  metric filters missing. Audit trail has gaps and is either
+  tamperable or unmonitored.
+controls:
+  - CTL.GCP.LOGGING.AUDIT.001
+  - CTL.GCP.LOGGING.BUCKET.LOCK.001
+  - CTL.GCP.LOGGING.METRICS.CIS.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - iam_credential_theft

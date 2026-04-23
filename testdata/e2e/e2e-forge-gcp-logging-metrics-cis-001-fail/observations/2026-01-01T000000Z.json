@@ -1,0 +1,28 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "project-metrics",
+      "type": "gcp_logging_metric",
+      "vendor": "gcp",
+      "properties": {
+        "gcp": {
+          "monitoring": {
+            "kind": "log_metric",
+            "cis": {
+              "all_filters_configured": false,
+              "vpc_network_changes": true,
+              "firewall_rule_changes": false,
+              "iam_policy_changes": true,
+              "storage_iam_changes": false,
+              "sql_config_changes": false,
+              "custom_role_changes": true
+            }
+          }
+        }
+      }
+    }
+  ]
+}

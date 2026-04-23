@@ -1,0 +1,12 @@
+family: CTL.GCP.LOGGING
+infection: >
+  Cloud Logging is the audit trail for all GCP operations. Admin
+  Activity logs record configuration changes. Data Access logs record
+  who accessed what data — but are off by default. Unlocked log bucket
+  retention enables log tampering via retention reduction. Missing
+  metric filters mean security control changes go undetected.
+failure: >
+  Audit trail compromise. An attacker operates without generating
+  complete audit records, tampers with existing logs via retention
+  manipulation, or modifies security controls without triggering
+  real-time alerts.

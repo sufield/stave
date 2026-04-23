@@ -1,0 +1,326 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-15T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "1f1637a1e69863b202d456a9f13953aee427c75f0f0c439c64aa87ad42f433a3",
+        "2026-01-11T000000Z.json": "15b3825566834dbaf5042dafc5d7b8cc7843f140c856b6170870bcfba13e9c4e"
+      },
+      "overall": "6693ec1a838a62c0c74354f9f229024df780f97a98dfc674f909a7c6353dff5c"
+    },
+    "policy_fingerprint": "2da6171efaf10959cfee290ebe5e663cdcd28a27edf614d2625184f2fb536441",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.GCP.LOGGING.BUCKET.LOCK.001",
+      "asset_id": "log-bucket",
+      "asset_type": "gcp_logging_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -168,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:a3b20b9adfcbc524",
+      "control_id": "CTL.GCP.LOGGING.BUCKET.LOCK.001",
+      "control_name": "Log Bucket Retention Not Locked",
+      "control_description": "Log bucket retention policy not locked. An attacker can reduce the retention period — the system deletes old logs automatically. Log tampering via configuration change.\n",
+      "asset_id": "log-bucket",
+      "asset_type": "gcp_logging_bucket",
+      "asset_vendor": "gcp",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 336,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "gcp.monitoring.bucket.retention_locked",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "gcp.monitoring.kind",
+            "actual_value": "log_bucket",
+            "operator": "eq",
+            "unsafe_value": "log_bucket"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 336 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_gcp_v3": "2.4",
+        "nist_800_53_r5": "AU-9",
+        "soc2": "CC7.2"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Log Bucket Retention Not Locked — finding detected.",
+        "action": "Lock the log bucket retention policy.",
+        "example": "{\"gcp\": {\"monitoring\": {\"kind\": \"log_bucket\", \"bucket\": {\"retention_locked\": true}}}}\n"
+      },
+      "fix_plan": {
+        "id": "fix-e1f6ebc26e59763e",
+        "target": {
+          "asset_id": "log-bucket",
+          "asset_type": "gcp_logging_bucket"
+        },
+        "action": "Lock the log bucket retention policy."
+      },
+      "exposure_score": 75,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "gcp.monitoring.bucket.retention_locked eq false",
+          "observation_key": "gcp.monitoring.bucket.retention_locked",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "gcp.monitoring.kind eq \"log_bucket\"",
+          "observation_key": "gcp.monitoring.kind",
+          "operator": "eq",
+          "expected_value": "log_bucket",
+          "observed_value": "log_bucket"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "log-bucket",
+          "type": "gcp_logging_bucket",
+          "vendor": "gcp"
+        },
+        "violation": {
+          "control_id": "CTL.GCP.LOGGING.BUCKET.LOCK.001",
+          "control_name": "Log Bucket Retention Not Locked",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "gcp.monitoring.bucket.retention_locked = false",
+              "observation_key": "gcp.monitoring.bucket.retention_locked",
+              "observed_value": false
+            },
+            {
+              "clause": "gcp.monitoring.kind = \"log_bucket\"",
+              "observation_key": "gcp.monitoring.kind",
+              "observed_value": "log_bucket"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "gcp.monitoring.bucket.retention_locked",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set gcp.monitoring.bucket.retention_locked to true"
+          },
+          {
+            "path": "gcp.monitoring.kind",
+            "current_value": "log_bucket",
+            "has_safe_default": false,
+            "description": "Change gcp.monitoring.kind from log_bucket"
+          }
+        ],
+        "action": "Lock the log bucket retention policy."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "gcp"
+      ],
+      "delta": [
+        {
+          "property_label": "monitoring bucket retention locked",
+          "property_path": "gcp.monitoring.bucket.retention_locked",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:e4052761d2411f29",
+      "asset_id": "log-bucket",
+      "shared_keys": [
+        "gcp.monitoring",
+        "gcp.monitoring.bucket",
+        "gcp.monitoring.bucket.retention_locked",
+        "gcp.monitoring.kind"
+      ],
+      "headline_finding_id": "sha256:a3b20b9adfcbc524",
+      "member_finding_ids": [
+        "sha256:a3b20b9adfcbc524"
+      ],
+      "consolidated_score": 75,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "log-bucket",
+      "asset_type": "gcp_logging_bucket",
+      "fix_plan": {
+        "id": "fix-e1f6ebc26e59763e",
+        "target": {
+          "asset_id": "log-bucket",
+          "asset_type": "gcp_logging_bucket"
+        },
+        "action": "Lock the log bucket retention policy."
+      },
+      "contributing_controls": [
+        "CTL.GCP.LOGGING.BUCKET.LOCK.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.GCP.LOGGING.BUCKET.LOCK.001",
+      "asset_id": "log-bucket",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-gcp-logging-bucket-lock-001-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-gcp-logging-bucket-lock-001-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "fdf741bfe3085242f8e5970d1b8421d646f13396",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-gcp-logging-bucket-lock-001-fail/controls/"
+      ]
+    }
+  }
+}

@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.MONITORING.ALERTS.001
+name: Metric Filters Without Alert Policies
+description: >
+  Log-based metric filters exist but have no corresponding alert
+  policies. Metrics collected but no alerts fire on thresholds.
+domain: detection
+severity: medium
+compliance:
+  cis_gcp_v3: "2.6"
+  nist_800_53_r5: "AU-6"
+  soc2: "CC7.2"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: defense_evasion
+remediation:
+  description: Metric Filters Without Alert Policies — finding detected.
+  action: Create alert policies for all metric filters.
+  example: |
+    {"gcp": {"monitoring": {"kind": "alert_policy", "alert": {"enabled": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.monitoring.kind
+      op: eq
+      value: alert_policy
+    - field: properties.gcp.monitoring.alert.enabled
+      op: eq
+      value: false

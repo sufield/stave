@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.KMS.PUBLIC.001
+name: KMS Key Publicly Accessible
+description: >
+  KMS key IAM binding includes allUsers or allAuthenticatedUsers.
+  Anyone can perform cryptographic operations — encryption rendered
+  meaningless.
+domain: encryption
+severity: critical
+compliance:
+  cis_gcp_v3: "1.11"
+  nist_800_53_r5: "SC-12"
+  soc2: "CC6.1"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: KMS Key Publicly Accessible — finding detected.
+  action: Remove allUsers and allAuthenticatedUsers from key IAM bindings.
+  example: |
+    {"gcp": {"security": {"kind": "kms_key", "kms": {"publicly_accessible": false}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.security.kind
+      op: eq
+      value: kms_key
+    - field: properties.gcp.security.kms.publicly_accessible
+      op: eq
+      value: true

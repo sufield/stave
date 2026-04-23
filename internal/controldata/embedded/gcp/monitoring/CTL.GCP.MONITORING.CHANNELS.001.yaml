@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.MONITORING.CHANNELS.001
+name: No Notification Channels Configured
+description: >
+  No notification channels configured for alert policies. Alerts
+  fire but notifications go nowhere.
+domain: detection
+severity: medium
+compliance:
+  cis_gcp_v3: "2.7"
+  nist_800_53_r5: "AU-5"
+  soc2: "CC7.3"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: defense_evasion
+remediation:
+  description: No Notification Channels Configured — finding detected.
+  action: Configure notification channels (email, SMS, PagerDuty, webhook).
+  example: |
+    {"gcp": {"monitoring": {"kind": "alert_policy", "alert": {"has_notification_channel": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.monitoring.kind
+      op: eq
+      value: alert_policy
+    - field: properties.gcp.monitoring.alert.has_notification_channel
+      op: eq
+      value: false

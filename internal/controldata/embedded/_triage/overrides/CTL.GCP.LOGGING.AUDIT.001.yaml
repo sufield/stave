@@ -1,0 +1,16 @@
+control: CTL.GCP.LOGGING.AUDIT.001
+defect: >
+  Cloud Audit Logging is not enabled for all services. Data Access
+  logs are not configured.
+infection: >
+  Admin Activity logs record configuration changes — who created,
+  modified, or deleted resources. These are always on. Data Access
+  logs record data read and write operations — who accessed what data
+  and when. These are off by default and must be explicitly enabled.
+  Without Data Access logs, an attacker who reads sensitive data
+  (Storage objects, BigQuery tables, Cloud SQL records) leaves no
+  audit trail.
+failure: >
+  No data access forensics. An attacker reads sensitive data without
+  generating audit records. Investigation can determine what access
+  the attacker had but not what data they actually accessed.

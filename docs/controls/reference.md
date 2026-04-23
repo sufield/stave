@@ -3,25 +3,25 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1094
-**Pack hash:** `625a36f08328d136f3ac82bc8afec2a488e71a74e22402cef8d1adb5d87b7373`
+**Total controls:** 1103
+**Pack hash:** `126cbe9b7bb69fb2c6538cd84b434c8b0635ebdcd4785067ba720f678e36b422`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 151 |
-| high | 486 |
+| critical | 152 |
+| high | 489 |
 | info | 16 |
 | low | 83 |
-| medium | 358 |
+| medium | 363 |
 
 | Domain | Count |
 |--------|-------|
 | audit | 20 |
-| detection | 9 |
-| encryption | 64 |
-| exposure | 710 |
+| detection | 14 |
+| encryption | 66 |
+| exposure | 712 |
 | governance | 24 |
 | identity | 224 |
 | network | 21 |
@@ -8174,6 +8174,141 @@ Service account key older than 90 days. Unrotated keys accumulate risk — a lea
 Same principal has both iam.serviceAccountAdmin and iam.serviceAccountUser roles. Can create SAs and impersonate them — effectively self-granting any permission.
 
 **Remediation:** Separate SA Admin and SA User roles across different principals.
+
+---
+
+### CTL.GCP.KMS.PUBLIC.001
+
+**KMS Key Publicly Accessible**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** cis_gcp_v3: 1.11; nist_800_53_r5: SC-12; soc2: CC6.1;
+
+KMS key IAM binding includes allUsers or allAuthenticatedUsers. Anyone can perform cryptographic operations — encryption rendered meaningless.
+
+**Remediation:** Remove allUsers and allAuthenticatedUsers from key IAM bindings.
+
+---
+
+### CTL.GCP.KMS.ROTATION.001
+
+**KMS Key Rotation Not Configured**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** cis_gcp_v3: 1.10; nist_800_53_r5: SC-12; soc2: CC6.1;
+
+Cloud KMS key does not have automatic rotation configured. CIS requires rotation period of 365 days or less.
+
+**Remediation:** Configure automatic key rotation with period <= 365 days.
+
+---
+
+### CTL.GCP.LOGGING.AUDIT.001
+
+**Cloud Audit Logging Not Enabled for All Services**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_gcp_v3: 2.1; hipaa: 164.312(b); nist_800_53_r5: AU-2; pci_dss_v4: 10.2; soc2: CC7.2;
+
+Data Access audit logs not enabled for all services. Admin Activity logs are always on but Data Access logs (who accessed what data) must be explicitly enabled per service.
+
+**Remediation:** Enable Data Access audit logs for all services.
+
+---
+
+### CTL.GCP.LOGGING.BUCKET.LOCK.001
+
+**Log Bucket Retention Not Locked**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_gcp_v3: 2.4; nist_800_53_r5: AU-9; soc2: CC7.2;
+
+Log bucket retention policy not locked. An attacker can reduce the retention period — the system deletes old logs automatically. Log tampering via configuration change.
+
+**Remediation:** Lock the log bucket retention policy.
+
+---
+
+### CTL.GCP.LOGGING.BUCKET.RETENTION.001
+
+**Log Bucket Retention Below 365 Days**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_gcp_v3: 2.3; nist_800_53_r5: AU-12; pci_dss_v4: 10.7; soc2: CC7.2;
+
+Log bucket retention period less than 365 days. Compliance frameworks require one year minimum audit log retention.
+
+**Remediation:** Increase retention to at least 365 days.
+
+---
+
+### CTL.GCP.LOGGING.METRICS.CIS.001
+
+**CIS-Required Log Metric Filters Not Configured**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_gcp_v3: 2.5; hipaa: 164.308(a)(1)(ii)(D); nist_800_53_r5: AU-6; pci_dss_v4: 10.2; soc2: CC7.2;
+
+One or more CIS-required log metric filters missing. Required: VPC network changes, firewall rule changes, IAM policy changes, Storage IAM changes, SQL config changes, custom role changes.
+
+**Remediation:** Configure metric filters for all CIS-required operations.
+
+---
+
+### CTL.GCP.LOGGING.SINK.001
+
+**No Log Sink Configured for Export**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_gcp_v3: 2.2; nist_800_53_r5: AU-6; soc2: CC7.2;
+
+No log sink configured. Logs exist only in Cloud Logging with no export to Storage, BigQuery, or Pub/Sub for SIEM integration.
+
+**Remediation:** Configure a log sink to export logs.
+
+---
+
+### CTL.GCP.MONITORING.ALERTS.001
+
+**Metric Filters Without Alert Policies**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_gcp_v3: 2.6; nist_800_53_r5: AU-6; soc2: CC7.2;
+
+Log-based metric filters exist but have no corresponding alert policies. Metrics collected but no alerts fire on thresholds.
+
+**Remediation:** Create alert policies for all metric filters.
+
+---
+
+### CTL.GCP.MONITORING.CHANNELS.001
+
+**No Notification Channels Configured**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_gcp_v3: 2.7; nist_800_53_r5: AU-5; soc2: CC7.3;
+
+No notification channels configured for alert policies. Alerts fire but notifications go nowhere.
+
+**Remediation:** Configure notification channels (email, SMS, PagerDuty, webhook).
 
 ---
 

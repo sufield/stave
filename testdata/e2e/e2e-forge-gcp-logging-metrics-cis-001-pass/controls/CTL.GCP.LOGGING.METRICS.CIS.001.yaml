@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.LOGGING.METRICS.CIS.001
+name: CIS-Required Log Metric Filters Not Configured
+description: >
+  One or more CIS-required log metric filters missing. Required:
+  VPC network changes, firewall rule changes, IAM policy changes,
+  Storage IAM changes, SQL config changes, custom role changes.
+domain: detection
+severity: high
+compliance:
+  cis_gcp_v3: "2.5"
+  nist_800_53_r5: "AU-6"
+  hipaa: "164.308(a)(1)(ii)(D)"
+  pci_dss_v4: "10.2"
+  soc2: "CC7.2"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: defense_evasion
+remediation:
+  description: CIS-Required Log Metric Filters Not Configured — finding detected.
+  action: Configure metric filters for all CIS-required operations.
+  example: |
+    {"gcp": {"monitoring": {"kind": "log_metric", "cis": {"all_filters_configured": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.monitoring.kind
+      op: eq
+      value: log_metric
+    - field: properties.gcp.monitoring.cis.all_filters_configured
+      op: eq
+      value: false

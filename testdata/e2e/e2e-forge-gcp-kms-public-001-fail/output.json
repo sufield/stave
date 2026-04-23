@@ -1,0 +1,380 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-15T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "1f8cfed2ed84205eb8cb6d52d1f06bae58b42695d1f658e0e9a2da2d17280aa4",
+        "2026-01-11T000000Z.json": "b12bb430cb4340e0f3544391568789f409527bbcc59b81ef025c569e71993867"
+      },
+      "overall": "dae253087e69697cdaa78d255739c529c41928e0ee48f916dd7725ea30e05d7f"
+    },
+    "policy_fingerprint": "8f4e046e5dcfb906f05e9c92fe64b4d195920a83f606fdfd7ff107e3ce413798",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.GCP.KMS.PUBLIC.001",
+      "asset_id": "kms-key",
+      "asset_type": "gcp_kms_key",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -168,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:7014fd1d007deea7",
+      "control_id": "CTL.GCP.KMS.PUBLIC.001",
+      "control_name": "KMS Key Publicly Accessible",
+      "control_description": "KMS key IAM binding includes allUsers or allAuthenticatedUsers. Anyone can perform cryptographic operations — encryption rendered meaningless.\n",
+      "asset_id": "kms-key",
+      "asset_type": "gcp_kms_key",
+      "asset_vendor": "gcp",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 336,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "gcp.security.kind",
+            "actual_value": "kms_key",
+            "operator": "eq",
+            "unsafe_value": "kms_key"
+          },
+          {
+            "property": "gcp.security.kms.publicly_accessible",
+            "actual_value": true,
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 336 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance": {
+        "cis_gcp_v3": "1.11",
+        "nist_800_53_r5": "SC-12",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "KMS Key Publicly Accessible — finding detected.",
+        "action": "Remove allUsers and allAuthenticatedUsers from key IAM bindings.",
+        "example": "{\"gcp\": {\"security\": {\"kind\": \"kms_key\", \"kms\": {\"publicly_accessible\": false}}}}\n"
+      },
+      "fix_plan": {
+        "id": "fix-73ab1213dfe9a5f4",
+        "target": {
+          "asset_id": "kms-key",
+          "asset_type": "gcp_kms_key"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "action": "Remove allUsers and allAuthenticatedUsers from key IAM bindings."
+      },
+      "exposure_score": 100,
+      "score_breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "gcp.security.kind eq \"kms_key\"",
+          "observation_key": "gcp.security.kind",
+          "operator": "eq",
+          "expected_value": "kms_key",
+          "observed_value": "kms_key"
+        },
+        {
+          "predicate_expr": "gcp.security.kms.publicly_accessible eq true",
+          "observation_key": "gcp.security.kms.publicly_accessible",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": true
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "kms-key",
+          "type": "gcp_kms_key",
+          "vendor": "gcp"
+        },
+        "violation": {
+          "control_id": "CTL.GCP.KMS.PUBLIC.001",
+          "control_name": "KMS Key Publicly Accessible",
+          "severity": "critical",
+          "reasoning": [
+            {
+              "clause": "gcp.security.kind = \"kms_key\"",
+              "observation_key": "gcp.security.kind",
+              "observed_value": "kms_key"
+            },
+            {
+              "clause": "gcp.security.kms.publicly_accessible = true",
+              "observation_key": "gcp.security.kms.publicly_accessible",
+              "observed_value": true
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "gcp.security.kind",
+            "current_value": "kms_key",
+            "has_safe_default": false,
+            "description": "Change gcp.security.kind from kms_key"
+          },
+          {
+            "path": "gcp.security.kms.publicly_accessible",
+            "current_value": "true",
+            "required_value": "false",
+            "has_safe_default": true,
+            "description": "Set gcp.security.kms.publicly_accessible to false"
+          }
+        ],
+        "action": "Remove allUsers and allAuthenticatedUsers from key IAM bindings."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "gcp"
+      ],
+      "delta": [
+        {
+          "property_label": "security KMS publicly accessible",
+          "property_path": "gcp.security.kms.publicly_accessible",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:7ed305f05592f02b",
+      "asset_id": "kms-key",
+      "shared_keys": [
+        "gcp.security",
+        "gcp.security.kind",
+        "gcp.security.kms",
+        "gcp.security.kms.publicly_accessible"
+      ],
+      "headline_finding_id": "sha256:7014fd1d007deea7",
+      "member_finding_ids": [
+        "sha256:7014fd1d007deea7"
+      ],
+      "consolidated_score": 100,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "kms-key",
+      "asset_type": "gcp_kms_key",
+      "fix_plan": {
+        "id": "fix-73ab1213dfe9a5f4",
+        "target": {
+          "asset_id": "kms-key",
+          "asset_type": "gcp_kms_key"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "action": "Remove allUsers and allAuthenticatedUsers from key IAM bindings."
+      },
+      "contributing_controls": [
+        "CTL.GCP.KMS.PUBLIC.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.GCP.KMS.PUBLIC.001",
+      "asset_id": "kms-key",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-gcp-kms-public-001-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-gcp-kms-public-001-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "fdf741bfe3085242f8e5970d1b8421d646f13396",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-gcp-kms-public-001-fail/controls/"
+      ]
+    }
+  }
+}
