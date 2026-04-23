@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.GEMINI.LOG.001
+name: Gemini Code Assist Logging Not Enabled
+description: >
+  Gemini Code Assist logging not enabled. AI assistant interactions
+  and code suggestions are not recorded for audit.
+domain: detection
+severity: low
+compliance:
+  nist_800_53_r5: "AU-2"
+  soc2: "CC7.2"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Gemini Code Assist Logging Not Enabled — finding detected.
+  action: Enable Gemini Code Assist logging.
+  example: |
+    {"gcp": {"ai": {"kind": "gemini_config", "gemini": {"code_assist_logging": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.ai.kind
+      op: eq
+      value: gemini_config
+    - field: properties.gcp.ai.gemini.code_assist_logging
+      op: eq
+      value: false

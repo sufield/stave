@@ -1,0 +1,22 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "gemini-config",
+      "type": "gcp_gemini_config",
+      "vendor": "gcp",
+      "properties": {
+        "gcp": {
+          "ai": {
+            "kind": "gemini_config",
+            "gemini": {
+              "code_assist_logging": true
+            }
+          }
+        }
+      }
+    }
+  ]
+}

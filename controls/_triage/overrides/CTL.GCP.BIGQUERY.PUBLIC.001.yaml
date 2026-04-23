@@ -1,0 +1,14 @@
+control: CTL.GCP.BIGQUERY.PUBLIC.001
+defect: >
+  BigQuery dataset is publicly accessible. IAM binding includes
+  allUsers or allAuthenticatedUsers.
+infection: >
+  Any person on the internet (allUsers) or any Google account holder
+  (allAuthenticatedUsers) can run SQL queries against this dataset's
+  tables. BigQuery datasets commonly contain business analytics, user
+  data, financial records, and application logs. Public access means
+  any SQL query — SELECT *, JOINs across tables, data export via
+  EXTRACT — can be executed by anyone without authentication.
+failure: >
+  Public data warehouse. An attacker queries and exports all data
+  from the dataset using standard SQL.

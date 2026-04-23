@@ -3,25 +3,25 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1111
-**Pack hash:** `affb92af5b54a3f4f7abf2f7055606b46e7d1384ecf3962726a10bc46a0a680c`
+**Total controls:** 1117
+**Pack hash:** `2aa1766bbfaea91420806d813f3361251750fbb9b49c807dca5d44d33f2db56b`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 152 |
+| critical | 153 |
 | high | 495 |
 | info | 16 |
-| low | 83 |
-| medium | 365 |
+| low | 84 |
+| medium | 369 |
 
 | Domain | Count |
 |--------|-------|
 | audit | 20 |
-| detection | 15 |
-| encryption | 67 |
-| exposure | 716 |
+| detection | 17 |
+| encryption | 69 |
+| exposure | 718 |
 | governance | 24 |
 | identity | 226 |
 | network | 21 |
@@ -7607,6 +7607,21 @@ Sovereignty assessment requires the cross_border_access_detected field. The extr
 
 ---
 
+### CTL.GCP.ACCESSCONTEXT.PERIMETER.001
+
+**VPC Service Controls Perimeter Not Configured**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_gcp_v3: 3.11; nist_800_53_r5: SC-7; soc2: CC6.6;
+
+No VPC Service Controls perimeter configured. GCP services are accessible from any network — no exfiltration boundary restricts API access to specific VPCs, IPs, or identity attributes.
+
+**Remediation:** Configure a VPC Service Controls perimeter.
+
+---
+
 ### CTL.GCP.ARTIFACT.SCAN.001
 
 **Artifact Registry Vulnerability Scanning Not Enabled**
@@ -7619,6 +7634,51 @@ Sovereignty assessment requires the cross_border_access_detected field. The extr
 Vulnerability scanning not enabled. Pushed container images are not scanned for known CVEs before deployment.
 
 **Remediation:** Enable vulnerability scanning on the repository.
+
+---
+
+### CTL.GCP.BIGQUERY.ENCRYPT.001
+
+**BigQuery Dataset Not Encrypted with CMEK**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** cis_gcp_v3: 7.2; nist_800_53_r5: SC-28; pci_dss_v4: 3.4; soc2: CC6.1;
+
+Dataset uses Google-managed encryption. CMEK via Cloud KMS provides key revocation, custom rotation, and access audit.
+
+**Remediation:** Configure a Cloud KMS CMEK for the dataset.
+
+---
+
+### CTL.GCP.BIGQUERY.LOG.001
+
+**BigQuery Data Access Logging Not Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_gcp_v3: 7.3; hipaa: 164.312(b); nist_800_53_r5: AU-2; soc2: CC7.2;
+
+Data Access audit logs not enabled for BigQuery. Query execution, table reads, and data exports are not recorded.
+
+**Remediation:** Enable Data Access audit logs for BigQuery.
+
+---
+
+### CTL.GCP.BIGQUERY.PUBLIC.001
+
+**BigQuery Dataset Publicly Accessible**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_gcp_v3: 7.1; hipaa: 164.312(a)(1); nist_800_53_r5: AC-3; pci_dss_v4: 7.2.1; soc2: CC6.1;
+
+Dataset IAM binding includes allUsers or allAuthenticatedUsers. Anyone can query the dataset's tables via standard SQL.
+
+**Remediation:** Remove allUsers and allAuthenticatedUsers from dataset IAM bindings.
 
 ---
 
@@ -8027,6 +8087,21 @@ SSL policy allows TLS 1.0 or 1.1 with known vulnerabilities (BEAST, POODLE, CRIM
 
 ---
 
+### CTL.GCP.DATAPROC.ENCRYPT.001
+
+**Dataproc Cluster Not Encrypted with CMEK**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** cis_gcp_v3: 7.4; nist_800_53_r5: SC-28; soc2: CC6.1;
+
+Dataproc cluster disk encryption uses Google-managed keys. CMEK provides key revocation and access audit for data processing workloads.
+
+**Remediation:** Configure CMEK encryption for the Dataproc cluster.
+
+---
+
 ### CTL.GCP.DNS.ALGORITHM.001
 
 **Cloud DNS DNSSEC Using Weak Key Algorithm**
@@ -8084,6 +8159,21 @@ DNS query logging not enabled. DNS-based reconnaissance, data exfiltration via D
 GCR's underlying storage bucket grants allUsers or allAuthenticatedUsers read access. All container images are publicly pullable — application code and potentially embedded secrets exposed.
 
 **Remediation:** Remove allUsers/allAuthenticatedUsers from the GCR storage bucket IAM.
+
+---
+
+### CTL.GCP.GEMINI.LOG.001
+
+**Gemini Code Assist Logging Not Enabled**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** nist_800_53_r5: AU-2; soc2: CC7.2;
+
+Gemini Code Assist logging not enabled. AI assistant interactions and code suggestions are not recorded for audit.
+
+**Remediation:** Enable Gemini Code Assist logging.
 
 ---
 

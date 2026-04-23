@@ -1,0 +1,24 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "bq-analytics",
+      "type": "gcp_bigquery_dataset",
+      "vendor": "gcp",
+      "properties": {
+        "gcp": {
+          "data": {
+            "kind": "bigquery_dataset",
+            "bigquery": {
+              "dataset_id": "analytics",
+              "project": "my-project",
+              "publicly_accessible": false
+            }
+          }
+        }
+      }
+    }
+  ]
+}

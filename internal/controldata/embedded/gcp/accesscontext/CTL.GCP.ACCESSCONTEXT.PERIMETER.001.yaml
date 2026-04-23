@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.ACCESSCONTEXT.PERIMETER.001
+name: VPC Service Controls Perimeter Not Configured
+description: >
+  No VPC Service Controls perimeter configured. GCP services are
+  accessible from any network — no exfiltration boundary restricts
+  API access to specific VPCs, IPs, or identity attributes.
+domain: exposure
+severity: medium
+compliance:
+  cis_gcp_v3: "3.11"
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: VPC Service Controls Perimeter Not Configured — finding detected.
+  action: Configure a VPC Service Controls perimeter.
+  example: |
+    {"gcp": {"security": {"kind": "access_context", "accesscontext": {"perimeter_configured": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.security.kind
+      op: eq
+      value: access_context
+    - field: properties.gcp.security.accesscontext.perimeter_configured
+      op: eq
+      value: false

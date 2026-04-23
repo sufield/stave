@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.DATAPROC.ENCRYPT.001
+name: Dataproc Cluster Not Encrypted with CMEK
+description: >
+  Dataproc cluster disk encryption uses Google-managed keys. CMEK
+  provides key revocation and access audit for data processing
+  workloads.
+domain: encryption
+severity: medium
+compliance:
+  cis_gcp_v3: "7.4"
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.1"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Dataproc Cluster Not Encrypted with CMEK — finding detected.
+  action: Configure CMEK encryption for the Dataproc cluster.
+  example: |
+    {"gcp": {"compute": {"kind": "dataproc_cluster", "dataproc": {"cmek_encrypted": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.compute.kind
+      op: eq
+      value: dataproc_cluster
+    - field: properties.gcp.compute.dataproc.cmek_encrypted
+      op: eq
+      value: false

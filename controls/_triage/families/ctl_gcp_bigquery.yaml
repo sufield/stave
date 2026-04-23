@@ -1,0 +1,10 @@
+family: CTL.GCP.BIGQUERY
+infection: >
+  BigQuery datasets contain aggregated business analytics, user
+  data, financial records, and application logs queryable via SQL.
+  Public access exposes the entire dataset to SQL queries from
+  anyone. Google-managed encryption provides no key revocation.
+  Missing Data Access logs leave no record of who queried what.
+failure: >
+  Data warehouse exposure. An attacker queries and exports all
+  data from the dataset using standard SQL.

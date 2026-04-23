@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.BIGQUERY.PUBLIC.001
+name: BigQuery Dataset Publicly Accessible
+description: >
+  Dataset IAM binding includes allUsers or allAuthenticatedUsers.
+  Anyone can query the dataset's tables via standard SQL.
+domain: exposure
+severity: critical
+compliance:
+  cis_gcp_v3: "7.1"
+  nist_800_53_r5: "AC-3"
+  hipaa: "164.312(a)(1)"
+  pci_dss_v4: "7.2.1"
+  soc2: "CC6.1"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: BigQuery Dataset Publicly Accessible — finding detected.
+  action: Remove allUsers and allAuthenticatedUsers from dataset IAM bindings.
+  example: |
+    {"gcp": {"data": {"kind": "bigquery_dataset", "bigquery": {"publicly_accessible": false}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.data.kind
+      op: eq
+      value: bigquery_dataset
+    - field: properties.gcp.data.bigquery.publicly_accessible
+      op: eq
+      value: true

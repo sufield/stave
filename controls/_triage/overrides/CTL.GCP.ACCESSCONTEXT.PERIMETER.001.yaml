@@ -1,0 +1,17 @@
+control: CTL.GCP.ACCESSCONTEXT.PERIMETER.001
+defect: >
+  No VPC Service Controls perimeter is configured for this project
+  or organization.
+infection: >
+  VPC Service Controls create a security perimeter around GCP
+  services. Without a perimeter, API calls to protected services
+  (BigQuery, Cloud Storage, Cloud SQL) are allowed from any network
+  location. An attacker with valid credentials can exfiltrate data
+  from outside the organization's network — from a personal device,
+  a compromised VM in another cloud, or any internet-connected
+  system. VPC Service Controls block API calls from outside the
+  perimeter regardless of IAM permissions.
+failure: >
+  No data exfiltration boundary. Valid credentials can be used from
+  any network location to access and exfiltrate data from GCP
+  services.

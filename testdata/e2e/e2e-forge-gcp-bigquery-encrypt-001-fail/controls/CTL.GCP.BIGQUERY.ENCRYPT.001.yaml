@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.BIGQUERY.ENCRYPT.001
+name: BigQuery Dataset Not Encrypted with CMEK
+description: >
+  Dataset uses Google-managed encryption. CMEK via Cloud KMS
+  provides key revocation, custom rotation, and access audit.
+domain: encryption
+severity: medium
+compliance:
+  cis_gcp_v3: "7.2"
+  nist_800_53_r5: "SC-28"
+  pci_dss_v4: "3.4"
+  soc2: "CC6.1"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: BigQuery Dataset Not Encrypted with CMEK — finding detected.
+  action: Configure a Cloud KMS CMEK for the dataset.
+  example: |
+    {"gcp": {"data": {"kind": "bigquery_dataset", "bigquery": {"cmek_encrypted": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.data.kind
+      op: eq
+      value: bigquery_dataset
+    - field: properties.gcp.data.bigquery.cmek_encrypted
+      op: eq
+      value: false
