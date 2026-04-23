@@ -1,0 +1,15 @@
+id: github_supply_chain_full
+description: >
+  Mutable releases plus either no dependency scanning or no branch
+  protection. Code pushed without review, dependencies not scanned,
+  and published releases can be tampered with.
+controls:
+  - CTL.GITHUB.REPO.IMMUTABLE.001
+  - CTL.GITHUB.REPO.DEPSCAN.001
+  - CTL.GITHUB.REPO.BRANCHPROT.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - ec2_code_execution

@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.GITHUB.REPO.INACTIVE.001
+name: Inactive Repository Not Archived
+description: >
+  No commits in 90+ days and not archived. Dependencies accumulate
+  CVEs, secrets remain unrotated, and the codebase drifts from
+  current security practices.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-3"
+  soc2: "CC8.1"
+scope_tags: [github]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Inactive Repository Not Archived — finding detected.
+  action: Archive the repository or resume active maintenance.
+  example: |
+    {"github": {"repo": {"kind": "repository", "is_archived": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.github.repo.kind
+      op: eq
+      value: repository
+    - field: properties.github.repo.is_inactive
+      op: eq
+      value: true
+    - field: properties.github.repo.is_archived
+      op: eq
+      value: false

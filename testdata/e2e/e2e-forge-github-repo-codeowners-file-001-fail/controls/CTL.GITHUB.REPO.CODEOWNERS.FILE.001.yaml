@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.GITHUB.REPO.CODEOWNERS.FILE.001
+name: Repository Missing CODEOWNERS File
+description: >
+  No CODEOWNERS file. No defined ownership of code paths — any
+  reviewer can approve changes to security-critical files.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-5"
+  nist_ssdf: "PO.3"
+  soc2: "CC8.1"
+scope_tags: [github]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Repository Missing CODEOWNERS File — finding detected.
+  action: Create a CODEOWNERS file defining ownership of critical paths.
+  example: |
+    {"github": {"repo": {"kind": "repository", "has_codeowners_file": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.github.repo.kind
+      op: eq
+      value: repository
+    - field: properties.github.repo.has_codeowners_file
+      op: eq
+      value: false

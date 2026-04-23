@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.GITHUB.REPO.LINEARHISTORY.001
+name: Default Branch Does Not Require Linear History
+description: >
+  Merge commits allowed. Linear history (rebase/squash only) makes
+  git history easier to audit and harder to hide malicious commits.
+domain: exposure
+severity: low
+compliance:
+  nist_800_53_r5: "CM-3"
+  soc2: "CC8.1"
+scope_tags: [github]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: defense_evasion
+remediation:
+  description: Linear History Not Required — finding detected.
+  action: Enable "Require linear history" in branch protection.
+  example: |
+    {"github": {"repo": {"kind": "repository", "branch_protection": {"requires_linear_history": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.github.repo.kind
+      op: eq
+      value: repository
+    - field: properties.github.repo.branch_protection.requires_linear_history
+      op: eq
+      value: false

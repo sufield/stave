@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.GITHUB.REPO.DEPSCAN.001
+name: Repository Dependency Scanning Not Enabled
+description: >
+  Dependabot vulnerability scanning not enabled. Known CVEs in
+  dependencies (Log4j, Spring4Shell, polyfill.io) are not detected.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SI-2"
+  nist_ssdf: "PW.4"
+  pci_dss_v4: "6.2"
+  soc2: "CC8.1"
+scope_tags: [github]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Dependency Scanning Not Enabled — finding detected.
+  action: Enable Dependabot alerts and security updates.
+  example: |
+    {"github": {"repo": {"kind": "repository", "dependency_scanning_enabled": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.github.repo.kind
+      op: eq
+      value: repository
+    - field: properties.github.repo.dependency_scanning_enabled
+      op: eq
+      value: false

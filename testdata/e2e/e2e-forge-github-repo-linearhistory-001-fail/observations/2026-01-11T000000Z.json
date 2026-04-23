@@ -1,0 +1,38 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "api-svc",
+      "type": "github_repository",
+      "vendor": "github",
+      "properties": {
+        "github": {
+          "repo": {
+            "kind": "repository",
+            "name": "api-service",
+            "full_name": "acme-corp/api-service",
+            "visibility": "private",
+            "default_branch": "main",
+            "secret_scanning_enabled": true,
+            "secret_scanning_push_protection": true,
+            "dependency_scanning_enabled": true,
+            "has_codeowners_file": true,
+            "has_security_md": true,
+            "is_inactive": false,
+            "is_archived": false,
+            "immutable_releases": true,
+            "branch_protection": {
+              "enabled": true,
+              "requires_linear_history": false
+            },
+            "codeowners": {
+              "has_ghost_owner": false
+            }
+          }
+        }
+      }
+    }
+  ]
+}

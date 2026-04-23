@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.GITHUB.REPO.IMMUTABLE.001
+name: Repository Immutable Releases Not Enabled
+description: >
+  Published releases can be modified after publication. An attacker
+  can replace release artifacts with malicious versions under the
+  same version identifier.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SI-7"
+  nist_ssdf: "PS.2"
+  soc2: "CC8.1"
+  slsa: "Level 3"
+scope_tags: [github]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: defense_evasion
+remediation:
+  description: Immutable Releases Not Enabled — finding detected.
+  action: Enable immutable releases (tag protection + release locking).
+  example: |
+    {"github": {"repo": {"kind": "repository", "immutable_releases": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.github.repo.kind
+      op: eq
+      value: repository
+    - field: properties.github.repo.immutable_releases
+      op: eq
+      value: false

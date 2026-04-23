@@ -1,0 +1,14 @@
+control: CTL.GITHUB.REPO.IMMUTABLE.001
+defect: >
+  Repository does not have immutable releases enabled. Published
+  releases can be modified.
+infection: >
+  Without immutable releases, an attacker who compromises a
+  maintainer's account can modify existing releases. The release
+  tag, version number, and URL remain the same — only the artifacts
+  change. Downstream consumers who download by version receive the
+  attacker's artifacts. The supply chain attack is invisible because
+  the version identifier hasn't changed.
+failure: >
+  Supply chain compromise via release tampering. Downstream consumers
+  install attacker-modified artifacts under the original version.

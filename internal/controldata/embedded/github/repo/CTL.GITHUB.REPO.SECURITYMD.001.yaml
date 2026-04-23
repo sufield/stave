@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.GITHUB.REPO.SECURITYMD.001
+name: Public Repository Missing SECURITY.md File
+description: >
+  Public repository has no SECURITY.md. No vulnerability disclosure
+  process defined for security researchers.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SA-11"
+  nist_ssdf: "RV.1"
+  soc2: "CC8.1"
+scope_tags: [github]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Public Repository Missing SECURITY.md — finding detected.
+  action: Create a SECURITY.md file with vulnerability reporting instructions.
+  example: |
+    {"github": {"repo": {"kind": "repository", "has_security_md": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.github.repo.kind
+      op: eq
+      value: repository
+    - field: properties.github.repo.visibility
+      op: eq
+      value: public
+    - field: properties.github.repo.has_security_md
+      op: eq
+      value: false
