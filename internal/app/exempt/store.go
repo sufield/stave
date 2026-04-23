@@ -110,8 +110,11 @@ func (f *AcceptanceFile) AddAcknowledgment(entry AcknowledgmentEntry, timestamp 
 	if err != nil {
 		return fmt.Errorf("invalid expiry_date %q: expected YYYY-MM-DD", entry.ExpiryDate)
 	}
-	ts, _ := time.Parse(time.RFC3339, timestamp)
-	if !ts.IsZero() && expiry.Before(ts.Truncate(24*time.Hour)) {
+	ts, tsErr := time.Parse(time.RFC3339, timestamp)
+	if tsErr != nil {
+		return fmt.Errorf("cannot validate expiry: invalid timestamp %q: %w", timestamp, tsErr)
+	}
+	if expiry.Before(ts.Truncate(24 * time.Hour)) {
 		return fmt.Errorf("expiry_date %s is in the past", entry.ExpiryDate)
 	}
 

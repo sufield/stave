@@ -115,7 +115,10 @@ func (b *Builder) Build(ctx context.Context, plan *appeval.EvaluationPlan) (*app
 
 	// Auto-discover chain definitions from chains/ directory at project root,
 	// independent of --controls path.
-	chains, _ := ctlyaml.LoadChains("chains")
+	chains, chainsErr := ctlyaml.LoadChains("chains")
+	if chainsErr != nil {
+		return nil, fmt.Errorf("loading chains: %w", chainsErr)
+	}
 
 	// Load SLA policy — file takes precedence over embedded.
 	var slaCfg *evaluation.SLAConfig

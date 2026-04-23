@@ -121,7 +121,10 @@ func runReport(ctx context.Context, stdout io.Writer, opts *options) error {
 	latest := assessments[len(assessments)-1]
 
 	// Load chains and controls for ATT&CK.
-	chains, _ := ctlyaml.LoadChains(opts.ChainsDir)
+	chains, chainsErr := ctlyaml.LoadChains(opts.ChainsDir)
+	if chainsErr != nil {
+		return fmt.Errorf("loading chains: %w", chainsErr)
+	}
 
 	// Load snapshot for coverage count.
 	snapshots, _ := observations.LoadBundle(opts.SnapshotPath)

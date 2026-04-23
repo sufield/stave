@@ -103,7 +103,10 @@ func runExplainNarrative(stdout io.Writer, opts *explainNarrativeOpts) error {
 	}
 
 	// Load chains.
-	chains, _ := ctlyaml.LoadChains(opts.ChainsDir)
+	chains, chainsErr := ctlyaml.LoadChains(opts.ChainsDir)
+	if chainsErr != nil {
+		return fmt.Errorf("loading chains: %w", chainsErr)
+	}
 
 	// Filter findings.
 	var selected []int

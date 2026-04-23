@@ -23,7 +23,10 @@ type DurationFindingInput struct {
 // CreateDurationFinding generates a violation finding specifically for duration-based controls.
 func CreateDurationFinding(in DurationFindingInput) *evaluation.Finding {
 	a := in.ExposureLifecycle.Asset()
-	duration, _ := in.ExposureLifecycle.ExposureDuration(in.Now)
+	duration, durationErr := in.ExposureLifecycle.ExposureDuration(in.Now)
+	if durationErr != nil {
+		duration = -1
+	}
 	ctx := policy.NewAssetEvalContext(a, in.Control.Params, in.PredicateParser, in.Identities...)
 	misconfigs := policy.ExtractMisconfigurations(&in.Control.UnsafePredicate, ctx)
 	causes := DeriveRootCauses(misconfigs)

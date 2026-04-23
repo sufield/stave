@@ -45,14 +45,21 @@ Every score is a **deterministic, traceable reasoning chain**. Compound scores s
 
 ## Features
 
-- **882 built-in controls** across 67 domains (S3, IAM, VPC, EC2, RDS, ELB, K8s, CloudTrail, CloudWatch, KMS, and [57 more](docs/controls/reference.md))
+- **882 built-in controls across 67 domains** — S3, IAM, VPC, EC2, RDS, Lambda, ECS, ECR, EKS, CloudTrail, CloudWatch, KMS, OpenSearch, Redshift, Neptune, DocumentDB, Glue, CodeBuild, SageMaker, Bedrock, Cognito, API Gateway, EMR, Kinesis, MSK, EFS, Route53, DMS, SSM, ACM, WAF, Shield, Network Firewall, EventBridge, Config, Backup, and [31 more](docs/controls/reference.md)
+- **23 ghost reference controls** — cross-inventory reasoning detects dangling references to deleted resources across IAM policies, resource policies, event triggers, compute dependencies, network infrastructure, cross-account trust, and temporal confirmation. Detection no per-resource scanner can perform.
+- **30+ compound chain definitions** — detect multi-step attack paths across data protection, identity, detection, recovery, sovereignty, supply chain, cryptographic concentration, WAF safety envelope, ghost resource exfiltration, and silent monitoring collapse
+- **7-control WAF safety envelope** — presence, enforcement, OWASP coverage, logging, origin lockdown, parser overflow protection, evasion observability
+- **Full OWASP Top 10 coverage** — all categories at Full across P1 and P2 priorities
+- **15/15 ATT&CK cloud technique coverage** — configuration preconditions for 100% of AWS ATT&CK techniques tested by Atomic Red Team
+- **20/21 Rhino Security Labs escalation techniques** — 26 ESCALATE controls covering privilege escalation preconditions (1 remaining is AWS-deprecated)
 - **10 compliance profiles** — HIPAA, CIS AWS v3.0, SOC 2, PCI-DSS v4.0, NIST 800-53, FedRAMP, GDPR, FFIEC, ISO 27001, NIST CSF 2.0
 - **Risk reasoning engine** — compound risk scoring across co-failing controls, MITRE-aligned attack stage summary, blast radius multipliers
-- **Safety chains** — 15 built-in chain definitions detect compound failures across data protection, identity, detection, recovery, sovereignty, supply chain, and cryptographic concentration
+- **Full triage output per finding** — DEFECT (what's wrong), INFECTION (how it enables attack), FAILURE (worst case), OBSERVED (what the engine consulted), DELTA (mechanically verified fix)
 - **Remediation ranking** — `stave rank` produces a prioritized remediation roadmap with SLA urgency, risk impact percentages, and remediation bundles
 - **Drift detection** — `stave drift` compares two snapshots and treats configuration changes as violations, exit code 3 for CI/CD gating
 - **Continuous monitoring** — `stave watch` monitors observation directories for new snapshots, detects regressions in real time, emits alerts to stdout or JSONL file sinks
 - **Unsafe duration tracking** — detects how long assets remain misconfigured across snapshots
+- **Graph export** — `stave path` exports nodes and edges in JSON, DOT, and CSV for Neo4j GDS centrality analysis, choke point identification, and effective permission reasoning
 - **Custom controls** — YAML with `unsafe_predicate` for any asset type, no code changes
 - **Evidence bundling** — `stave bundle` produces signed, portable evidence archives for air-gap GRC integration (ASFF compatible)
 - **CI/CD ready** — exit codes, SARIF output, baseline tracking, policy gating

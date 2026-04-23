@@ -103,7 +103,10 @@ func runMonitor(ctx context.Context, stdout, _ io.Writer, opts *options) error {
 		if len(assessments) == 0 {
 			return nil, fmt.Errorf("no assessment files in %s", opts.HistoryDir)
 		}
-		chains, _ := ctlyaml.LoadChains("chains")
+		chains, chainsErr := ctlyaml.LoadChains("chains")
+	if chainsErr != nil {
+		return nil, fmt.Errorf("loading chains: %w", chainsErr)
+	}
 		var slaDeadlines map[string]float64
 		if opts.SLAFile != "" {
 			if pol, slaErr := infraSLA.LoadFromFile(opts.SLAFile); slaErr == nil {

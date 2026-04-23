@@ -166,7 +166,10 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 
 	// Load chain definitions for risk reasoning.
 	chainsDir := filepath.Join(getControlsBaseDir(), "..", "chains")
-	chains, _ := ctlyaml.LoadChains(chainsDir)
+	chains, chainsErr := ctlyaml.LoadChains(chainsDir)
+	if chainsErr != nil {
+		return fmt.Errorf("loading chains: %w", chainsErr)
+	}
 
 	done := r.UI.BeginProgress("apply profile observations")
 	defer done()

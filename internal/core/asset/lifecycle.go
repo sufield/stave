@@ -193,7 +193,12 @@ func (l *ExposureLifecycle) FormatExposureSummary(threshold time.Duration, now t
 		return "Asset is currently in a non-compliant state."
 	}
 
-	d, _ := l.ExposureDuration(now)
+	d, dErr := l.ExposureDuration(now)
+	if dErr != nil {
+		return fmt.Sprintf(
+			"Asset non-compliant (duration unavailable). Exposed since %s.",
+			l.FirstExposedAt().Format(time.RFC3339))
+	}
 	return fmt.Sprintf(
 		"Asset non-compliant for %d hours (SLA: %d hours). Exposed since %s.",
 		int(math.Round(d.Hours())),

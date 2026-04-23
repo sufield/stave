@@ -439,8 +439,10 @@ func renderUpcoming(w io.Writer, r upcomingResult) error {
 	}
 	for i := range r.Entries {
 		a := &r.Entries[i]
-		expiry, _ := time.Parse("2006-01-02", a.ExpiryDate)
-		daysLeft := int(time.Until(expiry).Hours() / 24)
+		daysLeft := -1
+		if expiry, parseErr := time.Parse("2006-01-02", a.ExpiryDate); parseErr == nil {
+			daysLeft = int(time.Until(expiry).Hours() / 24)
+		}
 		if _, err := fmt.Fprintf(w, "  %-40s  %s  %d days  %s\n",
 			a.ID, a.ExpiryDate, daysLeft, a.Approver); err != nil {
 			return err

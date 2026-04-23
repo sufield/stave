@@ -69,7 +69,10 @@ func runTrend(ctx context.Context, w io.Writer, opts *trendOptions) error {
 	slaTrend := computeSLATrend(assessments)
 
 	// Load chain definitions for accurate chain weight.
-	chains, _ := ctlyaml.LoadChains("chains")
+	chains, chainsErr := ctlyaml.LoadChains("chains")
+	if chainsErr != nil {
+		return fmt.Errorf("loading chains: %w", chainsErr)
+	}
 	chainDefs := len(chains)
 	maxChainWeight := appscore.ChainMaxWeight(chains)
 

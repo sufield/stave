@@ -121,7 +121,10 @@ func run(stdout, stderr io.Writer, opts *options) error {
 		return fmt.Errorf("load controls: %w", err)
 	}
 	chainsDir := "chains"
-	chains, _ := ctlyaml.LoadChains(chainsDir)
+	chains, chainsErr := ctlyaml.LoadChains(chainsDir)
+	if chainsErr != nil {
+		return fmt.Errorf("loading chains: %w", chainsErr)
+	}
 
 	// Load SLA config — file takes precedence.
 	var slaCfg *evaluation.SLAConfig

@@ -174,7 +174,10 @@ func runCollect(stdout, stderr io.Writer, opts *options) error {
 	}
 
 	// Load chains.
-	chains, _ := ctlyaml.LoadChains("chains")
+	chains, chainsErr := ctlyaml.LoadChains("chains")
+	if chainsErr != nil {
+		return fmt.Errorf("loading chains: %w", chainsErr)
+	}
 
 	// CEL evaluator.
 	celEval, err := stavecel.NewPredicateEval()
