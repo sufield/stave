@@ -9,12 +9,12 @@
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2026-01-01T000000Z.json": "bbade8d8c8fc159147f081e004f7aebb5d19c7970995fc937e4ca60b2593b686",
-        "2026-01-11T000000Z.json": "b62fe71c4be59128c2fae5a71f1f96a2ce193160d442c41bab6de0346f5c012e"
+        "20260101T000000Z.json": "fe6e72311803e2d30e1ad2b74e648288297f20536170a0a683d62fc5d2a96b4e",
+        "20260111T000000Z.json": "42710bc8ca8b165df582764b7854d0c61c503c7912f5ed6183387aeff545ced3"
       },
-      "overall": "ab8be0fbf6114355fd1b2143c3ecb3e6354ac726d99e1fea2dc2b8e9742de151"
+      "overall": "ea8eff65609a81a04e203da17e4b4dee4eb3e441a6aa3939cc54395a07395e61"
     },
-    "policy_fingerprint": "f52172bae7d090fd1cea57b31e2a11301bc266a4a6ed6fef3e88bc62741571b1",
+    "policy_fingerprint": "9fec4a43ce158556991751d6cf8e24304668f02fb7495e1a759ecf00c1b3b6eb",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -112,13 +112,16 @@
     "selected_controls_source": "dir",
     "context_name": "stave",
     "resolved_paths": {
-      "controls": "testdata/e2e/e2e-forge-iam-policy-ghostref-pass/controls",
-      "observations": "testdata/e2e/e2e-forge-iam-policy-ghostref-pass/observations"
+      "controls": "testdata/e2e/e2e-forge-ghostref-003-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-ghostref-003-pass/observations"
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
       "head_commit": "f77b0ddd94c710e158c2cd0135da5725406ea242",
-      "dirty": false
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-ghostref-003-pass/controls/"
+      ]
     }
   }
 }

@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.POLICY.GHOSTREF.003
+name: Dangling KMS Key References Must Not Exist in Active Policies
+description: >
+  IAM policies granting KMS permissions must only reference KMS key ARNs in enabled status. A policy referencing a pending-deletion or deleted KMS key means systems depending on that policy for encrypt/decrypt operations will fail silently — data integrity violations for PHI workloads. KMS key ARNs include the account ID and a random key ID so they cannot be claimed cross-account, but the operational impact of referencing a non-functional key is a direct compliance failure.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-12"
+  fedramp_moderate: "SC-12"
+  hipaa: "164.312(a)(2)(iv)"
+  pci_dss_v4.0: "3.6.1"
+  soc2: "CC6.7"
+  ccm_v4: ["CCC-04", "GRC-05"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    IAM policy references a KMS key that is pending deletion or deleted.
+  action: >
+    Cancel the key deletion if the key is still needed, or remove the KMS permissions from the policy. If a replacement key exists, update the policy to reference the new key ARN.
+unsafe_predicate:
+  all:
+    - field: properties.identity.policy.has_dangling_kms_refs
+      op: eq
+      value: true

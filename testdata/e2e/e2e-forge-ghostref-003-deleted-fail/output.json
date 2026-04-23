@@ -9,12 +9,12 @@
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2026-01-01T000000Z.json": "7b1f79a74ee3ddf32b53a0075dfe00b2fd70bc8e7913a744f3d173084459ab45",
-        "2026-01-11T000000Z.json": "d0e62b5a529ee5cd9e8a0b2ed2059357cbe779df00d714519953c973f2568c7e"
+        "20260101T000000Z.json": "f34a7869fa3a74676d0a6724c1b35f3f4b02416453f794994161193b436557e0",
+        "20260111T000000Z.json": "986f507c8fab791032e9f2f33617fcfd1b3c60ec81071e86dcf930f7bef8409f"
       },
-      "overall": "6781e1ad93287a67b9027dac6f1e36741484d9694db48078bd8d11245bee6e9e"
+      "overall": "53abbd33f4f2380d4bcff4c388eca529cb5f1c965ee62e2e5b111ec82ad53c47"
     },
-    "policy_fingerprint": "f52172bae7d090fd1cea57b31e2a11301bc266a4a6ed6fef3e88bc62741571b1",
+    "policy_fingerprint": "9fec4a43ce158556991751d6cf8e24304668f02fb7495e1a759ecf00c1b3b6eb",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -26,8 +26,8 @@
   "risk_signals": [
     {
       "control_id": "CTL.IAM.POLICY.GHOSTREF.003",
-      "asset_id": "test-iam-policy",
-      "asset_type": "aws_iam_policy",
+      "asset_id": "arn:aws:iam::111122223333:role/decrypt-role",
+      "asset_type": "aws_iam_role",
       "status": "OVERDUE",
       "due_at": "2026-01-08T00:00:00Z",
       "remaining_hours": -168,
@@ -37,12 +37,12 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:a5b9d9194785fe32",
+      "finding_id": "sha256:df39e95da9e7a12f",
       "control_id": "CTL.IAM.POLICY.GHOSTREF.003",
       "control_name": "Dangling KMS Key References Must Not Exist in Active Policies",
       "control_description": "IAM policies granting KMS permissions must only reference KMS key ARNs in enabled status. A policy referencing a pending-deletion or deleted KMS key means systems depending on that policy for encrypt/decrypt operations will fail silently — data integrity violations for PHI workloads. KMS key ARNs include the account ID and a random key ID so they cannot be claimed cross-account, but the operational impact of referencing a non-functional key is a direct compliance failure.\n",
-      "asset_id": "test-iam-policy",
-      "asset_type": "aws_iam_policy",
+      "asset_id": "arn:aws:iam::111122223333:role/decrypt-role",
+      "asset_type": "aws_iam_role",
       "asset_vendor": "aws",
       "evidence": {
         "first_unsafe_at": "2026-01-01T00:00:00Z",
@@ -83,10 +83,10 @@
         "action": "Cancel the key deletion if the key is still needed, or remove the KMS permissions from the policy. If a replacement key exists, update the policy to reference the new key ARN."
       },
       "fix_plan": {
-        "id": "fix-c1e5e7a0cee2ef40",
+        "id": "fix-50d75eb9e000078b",
         "target": {
-          "asset_id": "test-iam-policy",
-          "asset_type": "aws_iam_policy"
+          "asset_id": "arn:aws:iam::111122223333:role/decrypt-role",
+          "asset_type": "aws_iam_role"
         },
         "action": "Cancel the key deletion if the key is still needed, or remove the KMS permissions from the policy. If a replacement key exists, update the policy to reference the new key ARN."
       },
@@ -110,9 +110,10 @@
       ],
       "remediation_context": {
         "asset": {
-          "id": "test-iam-policy",
-          "type": "aws_iam_policy",
-          "vendor": "aws"
+          "id": "arn:aws:iam::111122223333:role/decrypt-role",
+          "type": "aws_iam_role",
+          "vendor": "aws",
+          "arn": "arn:aws:iam::111122223333:role/decrypt-role"
         },
         "violation": {
           "control_id": "CTL.IAM.POLICY.GHOSTREF.003",
@@ -154,15 +155,15 @@
   ],
   "issues": [
     {
-      "issue_id": "sha256:b421c33bee2fc1c8",
-      "asset_id": "test-iam-policy",
+      "issue_id": "sha256:c4e4c2ab33ac3a7f",
+      "asset_id": "arn:aws:iam::111122223333:role/decrypt-role",
       "shared_keys": [
         "identity.policy",
         "identity.policy.has_dangling_kms_refs"
       ],
-      "headline_finding_id": "sha256:a5b9d9194785fe32",
+      "headline_finding_id": "sha256:df39e95da9e7a12f",
       "member_finding_ids": [
-        "sha256:a5b9d9194785fe32"
+        "sha256:df39e95da9e7a12f"
       ],
       "consolidated_score": 75,
       "consolidated_blast_radius": 1
@@ -170,13 +171,13 @@
   ],
   "remediation_groups": [
     {
-      "asset_id": "test-iam-policy",
-      "asset_type": "aws_iam_policy",
+      "asset_id": "arn:aws:iam::111122223333:role/decrypt-role",
+      "asset_type": "aws_iam_role",
       "fix_plan": {
-        "id": "fix-c1e5e7a0cee2ef40",
+        "id": "fix-50d75eb9e000078b",
         "target": {
-          "asset_id": "test-iam-policy",
-          "asset_type": "aws_iam_policy"
+          "asset_id": "arn:aws:iam::111122223333:role/decrypt-role",
+          "asset_type": "aws_iam_role"
         },
         "action": "Cancel the key deletion if the key is still needed, or remove the KMS permissions from the policy. If a replacement key exists, update the policy to reference the new key ARN."
       },
@@ -190,7 +191,7 @@
     {
       "finding_index": 0,
       "control_id": "CTL.IAM.POLICY.GHOSTREF.003",
-      "asset_id": "test-iam-policy",
+      "asset_id": "arn:aws:iam::111122223333:role/decrypt-role",
       "exposure_score": 75,
       "breakdown": {
         "base_score": 75,
@@ -291,13 +292,16 @@
     "selected_controls_source": "dir",
     "context_name": "stave",
     "resolved_paths": {
-      "controls": "testdata/e2e/e2e-forge-iam-policy-ghostref-fail/controls",
-      "observations": "testdata/e2e/e2e-forge-iam-policy-ghostref-fail/observations"
+      "controls": "testdata/e2e/e2e-forge-ghostref-003-deleted-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-ghostref-003-deleted-fail/observations"
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
       "head_commit": "f77b0ddd94c710e158c2cd0135da5725406ea242",
-      "dirty": false
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-ghostref-003-deleted-fail/controls/"
+      ]
     }
   }
 }
