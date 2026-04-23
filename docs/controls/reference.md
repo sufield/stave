@@ -3,27 +3,27 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1106
-**Pack hash:** `bec6bd5153458cbc2cead7d1bde3df5e56b1d72f11b5659caec1306a471a2ac9`
+**Total controls:** 1111
+**Pack hash:** `affb92af5b54a3f4f7abf2f7055606b46e7d1384ecf3962726a10bc46a0a680c`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 152 |
-| high | 491 |
+| high | 495 |
 | info | 16 |
 | low | 83 |
-| medium | 364 |
+| medium | 365 |
 
 | Domain | Count |
 |--------|-------|
 | audit | 20 |
 | detection | 15 |
 | encryption | 67 |
-| exposure | 713 |
+| exposure | 716 |
 | governance | 24 |
-| identity | 224 |
+| identity | 226 |
 | network | 21 |
 | resilience | 14 |
 | storage | 8 |
@@ -7607,6 +7607,21 @@ Sovereignty assessment requires the cross_border_access_detected field. The extr
 
 ---
 
+### CTL.GCP.ARTIFACT.SCAN.001
+
+**Artifact Registry Vulnerability Scanning Not Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-2; soc2: CC7.1;
+
+Vulnerability scanning not enabled. Pushed container images are not scanned for known CVEs before deployment.
+
+**Remediation:** Enable vulnerability scanning on the repository.
+
+---
+
 ### CTL.GCP.CLOUDSQL.BACKUP.001
 
 **Cloud SQL Automated Backups Not Enabled**
@@ -8054,6 +8069,66 @@ DNSSEC not enabled on public managed zone. DNS responses can be spoofed — an a
 DNS query logging not enabled. DNS-based reconnaissance, data exfiltration via DNS tunneling, and anomalous query patterns go undetected.
 
 **Remediation:** Enable DNS query logging on the managed zone.
+
+---
+
+### CTL.GCP.GCR.PUBLIC.001
+
+**Container Registry Publicly Accessible**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_gcp_v3: 7.4; nist_800_53_r5: AC-3; soc2: CC6.1;
+
+GCR's underlying storage bucket grants allUsers or allAuthenticatedUsers read access. All container images are publicly pullable — application code and potentially embedded secrets exposed.
+
+**Remediation:** Remove allUsers/allAuthenticatedUsers from the GCR storage bucket IAM.
+
+---
+
+### CTL.GCP.GKE.ABAC.001
+
+**GKE Cluster Using Legacy ABAC**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_gcp_v3: 7.3; nist_800_53_r5: AC-3; soc2: CC6.1;
+
+Legacy Attribute-Based Access Control enabled instead of RBAC. ABAC provides coarser authorization without namespace-scoped fine-grained control.
+
+**Remediation:** Disable legacy ABAC and use RBAC.
+
+---
+
+### CTL.GCP.GKE.PRIVATE.001
+
+**GKE Cluster API Server Publicly Accessible**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_gcp_v3: 7.1; nist_800_53_r5: AC-4; pci_dss_v4: 1.3; soc2: CC6.6;
+
+GKE API server accessible from the public internet. No private endpoint or master authorized networks configured.
+
+**Remediation:** Enable private endpoint and master authorized networks.
+
+---
+
+### CTL.GCP.GKE.WORKLOAD.001
+
+**GKE Workload Identity Not Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_gcp_v3: 7.2; nist_800_53_r5: AC-6; pci_dss_v4: 7.2.1; soc2: CC6.1;
+
+Workload Identity not enabled. Pods use the node's service account via the metadata server — all pods on a node share the same GCP credentials. Compromise of any pod exposes the node SA.
+
+**Remediation:** Enable Workload Identity for per-pod GCP credential scoping.
 
 ---
 

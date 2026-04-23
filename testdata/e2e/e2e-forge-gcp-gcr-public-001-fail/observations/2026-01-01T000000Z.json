@@ -1,0 +1,23 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "gcr-prod",
+      "type": "gcp_container_registry",
+      "vendor": "gcp",
+      "properties": {
+        "gcp": {
+          "compute": {
+            "kind": "container_registry",
+            "gcr": {
+              "project": "my-project",
+              "publicly_accessible": true
+            }
+          }
+        }
+      }
+    }
+  ]
+}

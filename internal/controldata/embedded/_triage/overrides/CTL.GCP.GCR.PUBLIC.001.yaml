@@ -1,0 +1,14 @@
+control: CTL.GCP.GCR.PUBLIC.001
+defect: >
+  Container Registry in the project is publicly accessible. The
+  underlying storage bucket grants public read access.
+infection: >
+  Any person on the internet (allUsers) or any Google account holder
+  (allAuthenticatedUsers) can pull all container images. Container
+  images contain application source code, compiled binaries,
+  configuration files, and potentially embedded secrets. A publicly
+  accessible registry exposes the entire application supply chain.
+failure: >
+  Application supply chain exposure. Container images containing
+  source code and potentially embedded secrets are publicly
+  downloadable.

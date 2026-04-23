@@ -1,0 +1,24 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "ar-docker",
+      "type": "gcp_artifact_registry",
+      "vendor": "gcp",
+      "properties": {
+        "gcp": {
+          "compute": {
+            "kind": "artifact_registry",
+            "artifact": {
+              "name": "docker-repo",
+              "format": "DOCKER",
+              "vulnerability_scanning": false
+            }
+          }
+        }
+      }
+    }
+  ]
+}

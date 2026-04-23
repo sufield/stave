@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.GKE.ABAC.001
+name: GKE Cluster Using Legacy ABAC
+description: >
+  Legacy Attribute-Based Access Control enabled instead of RBAC.
+  ABAC provides coarser authorization without namespace-scoped
+  fine-grained control.
+domain: identity
+severity: high
+compliance:
+  cis_gcp_v3: "7.3"
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: GKE Cluster Using Legacy ABAC — finding detected.
+  action: Disable legacy ABAC and use RBAC.
+  example: |
+    {"gcp": {"compute": {"kind": "gke_cluster", "gke": {"legacy_abac_enabled": false}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.compute.kind
+      op: eq
+      value: gke_cluster
+    - field: properties.gcp.compute.gke.legacy_abac_enabled
+      op: eq
+      value: true

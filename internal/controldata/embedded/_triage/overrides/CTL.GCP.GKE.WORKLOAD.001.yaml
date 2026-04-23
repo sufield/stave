@@ -1,0 +1,17 @@
+control: CTL.GCP.GKE.WORKLOAD.001
+defect: >
+  GKE cluster does not have Workload Identity enabled. Pods use
+  the node's service account for GCP API access.
+infection: >
+  Without Workload Identity, every pod on a node shares the node's
+  GCP service account credentials via the metadata server at
+  169.254.169.254. An attacker who compromises any pod — via
+  application vulnerability, container escape, or SSRF — can query
+  the metadata server and obtain the node SA's credentials. These
+  credentials provide access to every GCP service the node SA has
+  permissions for. Workload Identity replaces this with per-pod
+  identity — each pod gets only the GCP permissions its specific
+  Kubernetes service account maps to.
+failure: >
+  Shared credential exposure. Compromise of any pod on the node
+  exposes GCP credentials shared by all pods.

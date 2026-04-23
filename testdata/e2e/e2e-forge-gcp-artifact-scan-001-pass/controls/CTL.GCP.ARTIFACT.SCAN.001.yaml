@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.ARTIFACT.SCAN.001
+name: Artifact Registry Vulnerability Scanning Not Enabled
+description: >
+  Vulnerability scanning not enabled. Pushed container images are
+  not scanned for known CVEs before deployment.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-2"
+  soc2: "CC7.1"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Artifact Registry Scanning Not Enabled — finding detected.
+  action: Enable vulnerability scanning on the repository.
+  example: |
+    {"gcp": {"compute": {"kind": "artifact_registry", "artifact": {"vulnerability_scanning": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.compute.kind
+      op: eq
+      value: artifact_registry
+    - field: properties.gcp.compute.artifact.vulnerability_scanning
+      op: eq
+      value: false

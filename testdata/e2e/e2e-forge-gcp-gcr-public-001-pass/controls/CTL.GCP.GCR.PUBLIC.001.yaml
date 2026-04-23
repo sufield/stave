@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.GCR.PUBLIC.001
+name: Container Registry Publicly Accessible
+description: >
+  GCR's underlying storage bucket grants allUsers or
+  allAuthenticatedUsers read access. All container images are
+  publicly pullable — application code and potentially embedded
+  secrets exposed.
+domain: exposure
+severity: high
+compliance:
+  cis_gcp_v3: "7.4"
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Container Registry Publicly Accessible — finding detected.
+  action: Remove allUsers/allAuthenticatedUsers from the GCR storage bucket IAM.
+  example: |
+    {"gcp": {"compute": {"kind": "container_registry", "gcr": {"publicly_accessible": false}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.compute.kind
+      op: eq
+      value: container_registry
+    - field: properties.gcp.compute.gcr.publicly_accessible
+      op: eq
+      value: true
