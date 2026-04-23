@@ -1,0 +1,10 @@
+family: CTL.GCP.DNS
+infection: >
+  Cloud DNS resolves domain names to IP addresses for all services
+  and users. Without DNSSEC, responses can be forged to redirect
+  traffic. Weak signing algorithms undermine DNSSEC protection.
+  Missing query logging leaves DNS-based attacks (tunneling,
+  reconnaissance, exfiltration) undetected.
+failure: >
+  DNS compromise. An attacker redirects traffic via DNS spoofing
+  or uses DNS as a covert channel without detection.

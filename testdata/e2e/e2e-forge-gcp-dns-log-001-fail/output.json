@@ -1,0 +1,326 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-15T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "67ddba60be22f0891670790a1be75435a7266c1e7069959b9e5afa48f84d12eb",
+        "2026-01-11T000000Z.json": "be1421d00011b368d472c8cca9b6ac2b8bed3f183e54f4824ea2bf7c0f93cefa"
+      },
+      "overall": "90abaae411ddd5fce6544cd338c53fa7f75a15e66f1afcfd6781e143af2e20d2"
+    },
+    "policy_fingerprint": "c632f270a374c5d424c953e602ec3f610756bc257d6daaa847d4b49990c314a4",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.GCP.DNS.LOG.001",
+      "asset_id": "zone-example",
+      "asset_type": "gcp_dns_managed_zone",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -168,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:b1035321a5bfb2b3",
+      "control_id": "CTL.GCP.DNS.LOG.001",
+      "control_name": "Cloud DNS Query Logging Not Enabled",
+      "control_description": "DNS query logging not enabled. DNS-based reconnaissance, data exfiltration via DNS tunneling, and anomalous query patterns go undetected.\n",
+      "asset_id": "zone-example",
+      "asset_type": "gcp_dns_managed_zone",
+      "asset_vendor": "gcp",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 336,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "gcp.network.dns.query_logging_enabled",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "gcp.network.kind",
+            "actual_value": "dns_managed_zone",
+            "operator": "eq",
+            "unsafe_value": "dns_managed_zone"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 336 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "cis_gcp_v3": "3.5",
+        "nist_800_53_r5": "AU-12",
+        "soc2": "CC7.2"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Cloud DNS Query Logging Not Enabled — finding detected.",
+        "action": "Enable DNS query logging on the managed zone.",
+        "example": "{\"gcp\": {\"network\": {\"kind\": \"dns_managed_zone\", \"dns\": {\"query_logging_enabled\": true}}}}\n"
+      },
+      "fix_plan": {
+        "id": "fix-6bc25876315c92a2",
+        "target": {
+          "asset_id": "zone-example",
+          "asset_type": "gcp_dns_managed_zone"
+        },
+        "action": "Enable DNS query logging on the managed zone."
+      },
+      "exposure_score": 50,
+      "score_breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "gcp.network.dns.query_logging_enabled eq false",
+          "observation_key": "gcp.network.dns.query_logging_enabled",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "gcp.network.kind eq \"dns_managed_zone\"",
+          "observation_key": "gcp.network.kind",
+          "operator": "eq",
+          "expected_value": "dns_managed_zone",
+          "observed_value": "dns_managed_zone"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "zone-example",
+          "type": "gcp_dns_managed_zone",
+          "vendor": "gcp"
+        },
+        "violation": {
+          "control_id": "CTL.GCP.DNS.LOG.001",
+          "control_name": "Cloud DNS Query Logging Not Enabled",
+          "severity": "medium",
+          "reasoning": [
+            {
+              "clause": "gcp.network.dns.query_logging_enabled = false",
+              "observation_key": "gcp.network.dns.query_logging_enabled",
+              "observed_value": false
+            },
+            {
+              "clause": "gcp.network.kind = \"dns_managed_zone\"",
+              "observation_key": "gcp.network.kind",
+              "observed_value": "dns_managed_zone"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "gcp.network.dns.query_logging_enabled",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set gcp.network.dns.query_logging_enabled to true"
+          },
+          {
+            "path": "gcp.network.kind",
+            "current_value": "dns_managed_zone",
+            "has_safe_default": false,
+            "description": "Change gcp.network.kind from dns_managed_zone"
+          }
+        ],
+        "action": "Enable DNS query logging on the managed zone."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "gcp"
+      ],
+      "delta": [
+        {
+          "property_label": "network DNS query logging",
+          "property_path": "gcp.network.dns.query_logging_enabled",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:ca134e1e1aa23fb1",
+      "asset_id": "zone-example",
+      "shared_keys": [
+        "gcp.network",
+        "gcp.network.dns",
+        "gcp.network.dns.query_logging_enabled",
+        "gcp.network.kind"
+      ],
+      "headline_finding_id": "sha256:b1035321a5bfb2b3",
+      "member_finding_ids": [
+        "sha256:b1035321a5bfb2b3"
+      ],
+      "consolidated_score": 50,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "zone-example",
+      "asset_type": "gcp_dns_managed_zone",
+      "fix_plan": {
+        "id": "fix-6bc25876315c92a2",
+        "target": {
+          "asset_id": "zone-example",
+          "asset_type": "gcp_dns_managed_zone"
+        },
+        "action": "Enable DNS query logging on the managed zone."
+      },
+      "contributing_controls": [
+        "CTL.GCP.DNS.LOG.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.GCP.DNS.LOG.001",
+      "asset_id": "zone-example",
+      "exposure_score": 50,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-gcp-dns-log-001-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-gcp-dns-log-001-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "c5118b549119cda039ae11d4bdbbfef452e4ffd4",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-gcp-dns-log-001-fail/controls/"
+      ]
+    }
+  }
+}

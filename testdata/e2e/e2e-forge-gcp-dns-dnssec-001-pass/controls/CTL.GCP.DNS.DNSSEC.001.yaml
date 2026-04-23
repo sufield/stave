@@ -1,0 +1,34 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.DNS.DNSSEC.001
+name: Cloud DNS DNSSEC Not Enabled
+description: >
+  DNSSEC not enabled on public managed zone. DNS responses can be
+  spoofed — an attacker can redirect traffic by forging responses.
+domain: exposure
+severity: high
+compliance:
+  cis_gcp_v3: "3.3"
+  nist_800_53_r5: "SC-20"
+  pci_dss_v4: "1.3"
+  soc2: "CC6.6"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Cloud DNS DNSSEC Not Enabled — finding detected.
+  action: Enable DNSSEC with a strong key algorithm.
+  example: |
+    {"gcp": {"network": {"kind": "dns_managed_zone", "dns": {"dnssec_enabled": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.network.kind
+      op: eq
+      value: dns_managed_zone
+    - field: properties.gcp.network.dns.visibility
+      op: eq
+      value: public
+    - field: properties.gcp.network.dns.dnssec_enabled
+      op: eq
+      value: false

@@ -1,0 +1,14 @@
+control: CTL.GCP.DNS.DNSSEC.001
+defect: >
+  Cloud DNS managed zone does not have DNSSEC enabled.
+infection: >
+  Without DNSSEC, DNS responses for this domain are not
+  cryptographically signed. An attacker who can intercept or forge
+  DNS responses (via cache poisoning, BGP hijacking, or
+  man-in-the-middle) can redirect traffic intended for this domain
+  to attacker-controlled infrastructure. Users and services
+  resolving this domain receive forged IP addresses without any
+  indication of tampering.
+failure: >
+  DNS spoofing. Traffic intended for the domain is redirected to
+  attacker-controlled infrastructure via forged DNS responses.

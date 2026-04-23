@@ -3,25 +3,25 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1103
-**Pack hash:** `126cbe9b7bb69fb2c6538cd84b434c8b0635ebdcd4785067ba720f678e36b422`
+**Total controls:** 1106
+**Pack hash:** `bec6bd5153458cbc2cead7d1bde3df5e56b1d72f11b5659caec1306a471a2ac9`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 152 |
-| high | 489 |
+| high | 491 |
 | info | 16 |
 | low | 83 |
-| medium | 363 |
+| medium | 364 |
 
 | Domain | Count |
 |--------|-------|
 | audit | 20 |
-| detection | 14 |
-| encryption | 66 |
-| exposure | 712 |
+| detection | 15 |
+| encryption | 67 |
+| exposure | 713 |
 | governance | 24 |
 | identity | 224 |
 | network | 21 |
@@ -8009,6 +8009,51 @@ Instance does not block project-wide SSH keys. Any SSH key added at the project 
 SSL policy allows TLS 1.0 or 1.1 with known vulnerabilities (BEAST, POODLE, CRIME).
 
 **Remediation:** Set minimum TLS version to 1.2.
+
+---
+
+### CTL.GCP.DNS.ALGORITHM.001
+
+**Cloud DNS DNSSEC Using Weak Key Algorithm**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** cis_gcp_v3: 3.4; nist_800_53_r5: SC-21; soc2: CC6.1;
+
+DNSSEC enabled but uses RSASHA1. SHA-1 has known collision vulnerabilities. RSASHA256 or ECDSAP256SHA256 should be used.
+
+**Remediation:** Change DNSSEC key algorithm to RSASHA256 or ECDSAP256SHA256.
+
+---
+
+### CTL.GCP.DNS.DNSSEC.001
+
+**Cloud DNS DNSSEC Not Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_gcp_v3: 3.3; nist_800_53_r5: SC-20; pci_dss_v4: 1.3; soc2: CC6.6;
+
+DNSSEC not enabled on public managed zone. DNS responses can be spoofed — an attacker can redirect traffic by forging responses.
+
+**Remediation:** Enable DNSSEC with a strong key algorithm.
+
+---
+
+### CTL.GCP.DNS.LOG.001
+
+**Cloud DNS Query Logging Not Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_gcp_v3: 3.5; nist_800_53_r5: AU-12; soc2: CC7.2;
+
+DNS query logging not enabled. DNS-based reconnaissance, data exfiltration via DNS tunneling, and anomalous query patterns go undetected.
+
+**Remediation:** Enable DNS query logging on the managed zone.
 
 ---
 

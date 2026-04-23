@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.DNS.LOG.001
+name: Cloud DNS Query Logging Not Enabled
+description: >
+  DNS query logging not enabled. DNS-based reconnaissance, data
+  exfiltration via DNS tunneling, and anomalous query patterns
+  go undetected.
+domain: detection
+severity: medium
+compliance:
+  cis_gcp_v3: "3.5"
+  nist_800_53_r5: "AU-12"
+  soc2: "CC7.2"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: defense_evasion
+remediation:
+  description: Cloud DNS Query Logging Not Enabled — finding detected.
+  action: Enable DNS query logging on the managed zone.
+  example: |
+    {"gcp": {"network": {"kind": "dns_managed_zone", "dns": {"query_logging_enabled": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.network.kind
+      op: eq
+      value: dns_managed_zone
+    - field: properties.gcp.network.dns.query_logging_enabled
+      op: eq
+      value: false

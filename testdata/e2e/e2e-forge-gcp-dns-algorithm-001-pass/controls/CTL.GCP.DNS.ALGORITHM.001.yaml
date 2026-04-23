@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.GCP.DNS.ALGORITHM.001
+name: Cloud DNS DNSSEC Using Weak Key Algorithm
+description: >
+  DNSSEC enabled but uses RSASHA1. SHA-1 has known collision
+  vulnerabilities. RSASHA256 or ECDSAP256SHA256 should be used.
+domain: encryption
+severity: high
+compliance:
+  cis_gcp_v3: "3.4"
+  nist_800_53_r5: "SC-21"
+  soc2: "CC6.1"
+scope_tags: [gcp]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Cloud DNS DNSSEC Using Weak Algorithm — finding detected.
+  action: Change DNSSEC key algorithm to RSASHA256 or ECDSAP256SHA256.
+  example: |
+    {"gcp": {"network": {"kind": "dns_managed_zone", "dns": {"dnssec_uses_weak_algorithm": false}}}}
+unsafe_predicate:
+  all:
+    - field: properties.gcp.network.kind
+      op: eq
+      value: dns_managed_zone
+    - field: properties.gcp.network.dns.dnssec_enabled
+      op: eq
+      value: true
+    - field: properties.gcp.network.dns.dnssec_uses_weak_algorithm
+      op: eq
+      value: true
