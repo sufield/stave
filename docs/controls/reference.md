@@ -3,27 +3,27 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1121
-**Pack hash:** `5b87bfed690038e8c4b036135c4c5153a89e19624a8604d1862570f235951857`
+**Total controls:** 1134
+**Pack hash:** `4d4f8e7e1385c550135e63d11e2a381cf624c39b03e8f8d82d583c68088dab86`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 155 |
-| high | 497 |
+| critical | 157 |
+| high | 503 |
 | info | 16 |
-| low | 84 |
-| medium | 369 |
+| low | 85 |
+| medium | 373 |
 
 | Domain | Count |
 |--------|-------|
 | audit | 20 |
 | detection | 18 |
 | encryption | 69 |
-| exposure | 720 |
+| exposure | 727 |
 | governance | 24 |
-| identity | 227 |
+| identity | 233 |
 | network | 21 |
 | resilience | 14 |
 | storage | 8 |
@@ -8818,6 +8818,201 @@ When a policy's Resource pattern changes from a specific ARN to a broader wildca
 When a resource is present in snapshot N-1 but absent in snapshot N, all references to that resource's ARN must also be removed in snapshot N. A resource confirmed deleted by two independent observations (present then absent) with persisting references is the highest-confidence ghost finding — not an extractor gap but a verified deletion with orphaned references. The severity inherits from the reference type: write permissions to reclaimable resources are critical, monitoring targets are critical, read permissions are high, and configuration references are medium.
 
 **Remediation:** Remove all references to the deleted resource's ARN from policies, triggers, configurations, and compute definitions.
+
+---
+
+### CTL.GITHUB.ORG.MFA.001
+
+**GitHub Organization MFA Not Required**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: IA-2; nist_ssdf: PO.1; pci_dss_v4: 8.3; soc2: CC6.1;
+
+MFA not required for organization members. Compromised passwords give direct access to source code, CI/CD pipelines, and deployment workflows.
+
+**Remediation:** Enable "Require two-factor authentication" in organization settings.
+
+---
+
+### CTL.GITHUB.ORG.PERMISSION.001
+
+**Organization Default Repository Permission Too Broad**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; nist_ssdf: PO.1; soc2: CC6.1;
+
+Default repository permission is "write" or "admin." Every member automatically gets write access to every new repository.
+
+**Remediation:** Set default repository permission to "read" or "none."
+
+---
+
+### CTL.GITHUB.ORG.REPOCREATE.001
+
+**Organization Allows All Members to Create Repositories**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: CM-5; soc2: CC6.1;
+
+Any member can create repositories. Uncontrolled repository creation leads to sprawl and shadow repositories.
+
+**Remediation:** Restrict repository creation to administrators.
+
+---
+
+### CTL.GITHUB.ORG.REPODELETE.001
+
+**Organization Allows All Members to Delete Repositories**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-5; soc2: CC6.1;
+
+Any member can delete repositories. A compromised account can destroy source code, CI/CD history, and release artifacts.
+
+**Remediation:** Restrict repository deletion to administrators.
+
+---
+
+### CTL.GITHUB.ORG.VERIFIED.001
+
+**Organization Domain Not Verified**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: IA-9; soc2: CC6.1;
+
+Organization domain not verified. GitHub cannot confirm the organization controls the domain it claims.
+
+**Remediation:** Verify the organization's domain in GitHub settings.
+
+---
+
+### CTL.GITHUB.REPO.ADMINENFORCE.001
+
+**Branch Protection Does Not Apply to Admins**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; nist_ssdf: PO.1; soc2: CC6.1;
+
+Administrators exempt from branch protection. Admins can push directly, merge without approvals, and bypass status checks. Admin accounts are the highest-value targets.
+
+**Remediation:** Enable "Do not allow bypassing the above settings" (include administrators).
+
+---
+
+### CTL.GITHUB.REPO.APPROVALS.001
+
+**Default Branch Does Not Require Multiple Approvals**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-3; nist_ssdf: PW.1; slsa: Level 3; soc2: CC8.1;
+
+Branch protection requires fewer than 2 approvals. A single approval is a single point of failure in the review process.
+
+**Remediation:** Set required approving reviews to 2 or more.
+
+---
+
+### CTL.GITHUB.REPO.BRANCHPROT.001
+
+**Default Branch Protection Not Enabled**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-3; nist_ssdf: PW.1; pci_dss_v4: 6.3; slsa: Level 2; soc2: CC8.1;
+
+No branch protection rules on the default branch. Anyone with write access can push directly — no code review, no CI checks, no approval required.
+
+**Remediation:** Enable branch protection rules on the default branch.
+
+---
+
+### CTL.GITHUB.REPO.CODEOWNERS.001
+
+**Default Branch Does Not Require CODEOWNERS Review**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-5; soc2: CC8.1;
+
+CODEOWNERS review not required. Changes to critical files can be approved by any reviewer, not the designated code owners.
+
+**Remediation:** Enable "Require review from Code Owners" in branch protection.
+
+---
+
+### CTL.GITHUB.REPO.FORCEPUSH.001
+
+**Default Branch Allows Force Push**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-5; nist_ssdf: PS.1; soc2: CC8.1;
+
+Force push allowed on the default branch. Force push rewrites git history — an attacker can remove evidence of previous commits and replace branch content entirely.
+
+**Remediation:** Disable force push on the default branch in branch protection.
+
+---
+
+### CTL.GITHUB.REPO.SIGNED.001
+
+**Default Branch Does Not Require Signed Commits**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: SI-7; nist_ssdf: PS.1; soc2: CC8.1;
+
+Commits not required to be GPG or SSH signed. Commit authorship can be spoofed — an attacker can create commits appearing to come from a trusted developer.
+
+**Remediation:** Enable "Require signed commits" in branch protection.
+
+---
+
+### CTL.GITHUB.REPO.STALEREVIEWS.001
+
+**Default Branch Does Not Dismiss Stale Reviews**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-3; nist_ssdf: PW.1; soc2: CC8.1;
+
+Approvals not dismissed when new commits are pushed. An attacker can get a benign PR approved, then push malicious commits after approval. The PR merges with stale approval covering different code.
+
+**Remediation:** Enable "Dismiss stale pull request approvals when new commits are pushed."
+
+---
+
+### CTL.GITHUB.REPO.STATUSCHECKS.001
+
+**Default Branch Does Not Require Status Checks**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SA-11; nist_ssdf: PW.1; pci_dss_v4: 6.5; soc2: CC8.1;
+
+CI status checks not required before merging. Code merges even when tests fail, security scans flag issues, or linting detects problems.
+
+**Remediation:** Enable "Require status checks to pass before merging."
 
 ---
 

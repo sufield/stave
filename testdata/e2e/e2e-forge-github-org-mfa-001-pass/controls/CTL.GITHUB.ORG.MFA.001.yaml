@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.GITHUB.ORG.MFA.001
+name: GitHub Organization MFA Not Required
+description: >
+  MFA not required for organization members. Compromised passwords
+  give direct access to source code, CI/CD pipelines, and
+  deployment workflows.
+domain: identity
+severity: critical
+compliance:
+  nist_800_53_r5: "IA-2"
+  nist_ssdf: "PO.1"
+  pci_dss_v4: "8.3"
+  soc2: "CC6.1"
+scope_tags: [github]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: GitHub Organization MFA Not Required — finding detected.
+  action: Enable "Require two-factor authentication" in organization settings.
+  example: |
+    {"github": {"org": {"kind": "organization", "mfa_required": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.github.org.kind
+      op: eq
+      value: organization
+    - field: properties.github.org.mfa_required
+      op: eq
+      value: false

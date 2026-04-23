@@ -1,0 +1,34 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "api-service",
+      "type": "github_repository",
+      "vendor": "github",
+      "properties": {
+        "github": {
+          "repo": {
+            "kind": "repository",
+            "name": "api-service",
+            "full_name": "acme-corp/api-service",
+            "visibility": "private",
+            "default_branch": "main",
+            "branch_protection": {
+              "enabled": true,
+              "required_approvals": 2,
+              "dismisses_stale_reviews": true,
+              "requires_codeowner_review": false,
+              "requires_signed_commits": true,
+              "requires_status_checks": true,
+              "enforced_for_admins": true,
+              "allows_force_push": false,
+              "allows_deletion": false
+            }
+          }
+        }
+      }
+    }
+  ]
+}

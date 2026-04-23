@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.GITHUB.REPO.ADMINENFORCE.001
+name: Branch Protection Does Not Apply to Admins
+description: >
+  Administrators exempt from branch protection. Admins can push
+  directly, merge without approvals, and bypass status checks.
+  Admin accounts are the highest-value targets.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6"
+  nist_ssdf: "PO.1"
+  soc2: "CC6.1"
+scope_tags: [github]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: Branch Protection Does Not Apply to Admins — finding detected.
+  action: Enable "Do not allow bypassing the above settings" (include administrators).
+  example: |
+    {"github": {"repo": {"kind": "repository", "branch_protection": {"enforced_for_admins": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.github.repo.kind
+      op: eq
+      value: repository
+    - field: properties.github.repo.branch_protection.enforced_for_admins
+      op: eq
+      value: false

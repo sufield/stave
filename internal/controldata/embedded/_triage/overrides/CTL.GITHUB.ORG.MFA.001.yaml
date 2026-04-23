@@ -1,0 +1,16 @@
+control: CTL.GITHUB.ORG.MFA.001
+defect: >
+  GitHub organization does not require MFA for members. Members
+  can authenticate with password only.
+infection: >
+  GitHub organizations host source code, CI/CD pipelines, deployment
+  credentials, and infrastructure-as-code. A single compromised
+  member account gives an attacker access to repositories, the
+  ability to modify code, trigger deployments, and read secrets
+  stored in GitHub Actions. Without MFA, a compromised password is
+  sufficient. Credential stuffing attacks succeed against any member
+  who reuses passwords.
+failure: >
+  Source code and CI/CD compromise via credential theft. An attacker
+  authenticates as an organization member and accesses repositories,
+  modifies code, reads secrets, and triggers deployments.

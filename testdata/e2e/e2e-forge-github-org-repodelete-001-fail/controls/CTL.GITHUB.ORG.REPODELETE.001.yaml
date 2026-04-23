@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.GITHUB.ORG.REPODELETE.001
+name: Organization Allows All Members to Delete Repositories
+description: >
+  Any member can delete repositories. A compromised account can
+  destroy source code, CI/CD history, and release artifacts.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-5"
+  soc2: "CC6.1"
+scope_tags: [github]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: defense_evasion
+remediation:
+  description: Organization Allows All Members to Delete Repos — finding detected.
+  action: Restrict repository deletion to administrators.
+  example: |
+    {"github": {"org": {"kind": "organization", "members_can_delete_repos": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.github.org.kind
+      op: eq
+      value: organization
+    - field: properties.github.org.members_can_delete_repos
+      op: eq
+      value: true

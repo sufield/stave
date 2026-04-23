@@ -1,0 +1,11 @@
+family: CTL.GITHUB.ORG
+infection: >
+  GitHub organizations host source code, CI/CD pipelines, deployment
+  credentials, and infrastructure-as-code. Missing MFA, overly broad
+  default permissions, and uncontrolled repository lifecycle expose
+  the software supply chain. A compromised member account accesses
+  repositories, modifies code, reads secrets, and triggers deployments.
+failure: >
+  Supply chain compromise. An attacker authenticates as an
+  organization member and gains access to source code, CI/CD
+  pipelines, and deployment workflows.

@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.GITHUB.REPO.STATUSCHECKS.001
+name: Default Branch Does Not Require Status Checks
+description: >
+  CI status checks not required before merging. Code merges even
+  when tests fail, security scans flag issues, or linting detects
+  problems.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SA-11"
+  nist_ssdf: "PW.1"
+  pci_dss_v4: "6.5"
+  soc2: "CC8.1"
+scope_tags: [github]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Default Branch Does Not Require Status Checks — finding detected.
+  action: Enable "Require status checks to pass before merging."
+  example: |
+    {"github": {"repo": {"kind": "repository", "branch_protection": {"requires_status_checks": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.github.repo.kind
+      op: eq
+      value: repository
+    - field: properties.github.repo.branch_protection.requires_status_checks
+      op: eq
+      value: false

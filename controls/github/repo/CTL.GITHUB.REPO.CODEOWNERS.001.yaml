@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.GITHUB.REPO.CODEOWNERS.001
+name: Default Branch Does Not Require CODEOWNERS Review
+description: >
+  CODEOWNERS review not required. Changes to critical files can be
+  approved by any reviewer, not the designated code owners.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-5"
+  soc2: "CC8.1"
+scope_tags: [github]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Default Branch Does Not Require CODEOWNERS Review — finding detected.
+  action: Enable "Require review from Code Owners" in branch protection.
+  example: |
+    {"github": {"repo": {"kind": "repository", "branch_protection": {"requires_codeowner_review": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.github.repo.kind
+      op: eq
+      value: repository
+    - field: properties.github.repo.branch_protection.requires_codeowner_review
+      op: eq
+      value: false

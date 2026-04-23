@@ -1,0 +1,34 @@
+dsl_version: ctrl.v1
+id: CTL.GITHUB.ORG.PERMISSION.001
+name: Organization Default Repository Permission Too Broad
+description: >
+  Default repository permission is "write" or "admin." Every member
+  automatically gets write access to every new repository.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6"
+  nist_ssdf: "PO.1"
+  soc2: "CC6.1"
+scope_tags: [github]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Organization Default Permission Too Broad — finding detected.
+  action: Set default repository permission to "read" or "none."
+  example: |
+    {"github": {"org": {"kind": "organization", "default_repo_permission": "read"}}}
+unsafe_predicate:
+  all:
+    - field: properties.github.org.kind
+      op: eq
+      value: organization
+    - any:
+        - field: properties.github.org.default_repo_permission
+          op: eq
+          value: write
+        - field: properties.github.org.default_repo_permission
+          op: eq
+          value: admin

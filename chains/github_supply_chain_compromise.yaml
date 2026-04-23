@@ -1,0 +1,16 @@
+id: github_supply_chain_compromise
+description: >
+  Organization without MFA plus either no branch protection or
+  overly broad default permissions. A compromised password gives
+  write access to unprotected repositories — the complete supply
+  chain attack path.
+controls:
+  - CTL.GITHUB.ORG.MFA.001
+  - CTL.GITHUB.REPO.BRANCHPROT.001
+  - CTL.GITHUB.ORG.PERMISSION.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - ec2_code_execution

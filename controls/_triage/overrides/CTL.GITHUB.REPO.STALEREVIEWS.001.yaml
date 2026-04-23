@@ -1,0 +1,14 @@
+control: CTL.GITHUB.REPO.STALEREVIEWS.001
+defect: >
+  Repository does not dismiss stale reviews when new commits are
+  pushed after approval.
+infection: >
+  An attacker submits a benign pull request that passes code review.
+  After receiving approval, the attacker pushes additional commits
+  containing malicious code. The original approval remains valid
+  because stale review dismissal is disabled. The PR merges with
+  the malicious commits — the reviewer approved a different version
+  of the code than what was merged.
+failure: >
+  Post-approval code injection. Malicious code is merged under the
+  cover of an approval that was granted for different code.

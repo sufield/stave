@@ -1,0 +1,13 @@
+control: CTL.GITHUB.REPO.BRANCHPROT.001
+defect: >
+  Repository has no branch protection rules on the default branch.
+infection: >
+  Without branch protection, any member with write access can push
+  code directly to the default branch. No pull request required. No
+  code review. No CI status checks. No approval. For repositories
+  that deploy on merge to main — the standard CI/CD pattern — a
+  direct push triggers a production deployment of unreviewed code.
+failure: >
+  Unreviewed code in production. A backdoor, malicious dependency,
+  or vulnerable code is pushed directly to the default branch and
+  deployed without any review gate.

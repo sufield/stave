@@ -1,0 +1,13 @@
+control: CTL.GITHUB.REPO.ADMINENFORCE.001
+defect: >
+  Branch protection does not enforce rules for administrators.
+infection: >
+  Administrators can bypass all branch protection — push directly,
+  merge without approval, skip status checks. Admin accounts are the
+  highest-privilege accounts. If compromised, the attacker has
+  unrestricted access to modify the default branch. Branch protection
+  that doesn't apply to admins protects against compromised regular
+  members but not compromised admins — the highest-risk scenario.
+failure: >
+  Admin bypass of all review gates. A compromised admin pushes
+  malicious code directly to the default branch.

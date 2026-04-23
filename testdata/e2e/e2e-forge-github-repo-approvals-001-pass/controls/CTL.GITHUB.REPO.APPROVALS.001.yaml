@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.GITHUB.REPO.APPROVALS.001
+name: Default Branch Does Not Require Multiple Approvals
+description: >
+  Branch protection requires fewer than 2 approvals. A single
+  approval is a single point of failure in the review process.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "CM-3"
+  nist_ssdf: "PW.1"
+  soc2: "CC8.1"
+  slsa: "Level 3"
+scope_tags: [github]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Default Branch Does Not Require Multiple Approvals — finding detected.
+  action: Set required approving reviews to 2 or more.
+  example: |
+    {"github": {"repo": {"kind": "repository", "branch_protection": {"required_approvals": 2}}}}
+unsafe_predicate:
+  all:
+    - field: properties.github.repo.kind
+      op: eq
+      value: repository
+    - field: properties.github.repo.branch_protection.required_approvals
+      op: lt
+      value: 2

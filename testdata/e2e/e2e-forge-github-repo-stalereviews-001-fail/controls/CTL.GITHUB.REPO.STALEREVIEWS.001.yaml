@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.GITHUB.REPO.STALEREVIEWS.001
+name: Default Branch Does Not Dismiss Stale Reviews
+description: >
+  Approvals not dismissed when new commits are pushed. An attacker
+  can get a benign PR approved, then push malicious commits after
+  approval. The PR merges with stale approval covering different code.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "CM-3"
+  nist_ssdf: "PW.1"
+  soc2: "CC8.1"
+scope_tags: [github]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: defense_evasion
+remediation:
+  description: Default Branch Does Not Dismiss Stale Reviews — finding detected.
+  action: Enable "Dismiss stale pull request approvals when new commits are pushed."
+  example: |
+    {"github": {"repo": {"kind": "repository", "branch_protection": {"dismisses_stale_reviews": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.github.repo.kind
+      op: eq
+      value: repository
+    - field: properties.github.repo.branch_protection.dismisses_stale_reviews
+      op: eq
+      value: false

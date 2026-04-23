@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.GITHUB.ORG.REPOCREATE.001
+name: Organization Allows All Members to Create Repositories
+description: >
+  Any member can create repositories. Uncontrolled repository
+  creation leads to sprawl and shadow repositories.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-5"
+  soc2: "CC6.1"
+scope_tags: [github]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Organization Allows All Members to Create Repos — finding detected.
+  action: Restrict repository creation to administrators.
+  example: |
+    {"github": {"org": {"kind": "organization", "members_can_create_repos": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.github.org.kind
+      op: eq
+      value: organization
+    - field: properties.github.org.members_can_create_repos
+      op: eq
+      value: true

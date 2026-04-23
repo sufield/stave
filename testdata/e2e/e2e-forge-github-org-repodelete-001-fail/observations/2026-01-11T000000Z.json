@@ -1,0 +1,27 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "acme-org",
+      "type": "github_organization",
+      "vendor": "github",
+      "properties": {
+        "github": {
+          "org": {
+            "kind": "organization",
+            "name": "acme-corp",
+            "mfa_required": true,
+            "default_repo_permission": "read",
+            "members_can_create_repos": false,
+            "members_can_delete_repos": true,
+            "domain_verified": true,
+            "member_count": 50,
+            "admin_count": 3
+          }
+        }
+      }
+    }
+  ]
+}

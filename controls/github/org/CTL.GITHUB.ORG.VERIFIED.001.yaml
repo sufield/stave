@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.GITHUB.ORG.VERIFIED.001
+name: Organization Domain Not Verified
+description: >
+  Organization domain not verified. GitHub cannot confirm the
+  organization controls the domain it claims.
+domain: identity
+severity: low
+compliance:
+  nist_800_53_r5: "IA-9"
+  soc2: "CC6.1"
+scope_tags: [github]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Organization Domain Not Verified — finding detected.
+  action: Verify the organization's domain in GitHub settings.
+  example: |
+    {"github": {"org": {"kind": "organization", "domain_verified": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.github.org.kind
+      op: eq
+      value: organization
+    - field: properties.github.org.domain_verified
+      op: eq
+      value: false

@@ -1,0 +1,12 @@
+family: CTL.GITHUB.REPO
+infection: >
+  Branch protection rules are the code review and CI/CD gate for
+  the default branch. Missing or misconfigured protection allows
+  unreviewed code to reach the default branch — the deployment
+  trigger in most CI/CD workflows. Stale review dismissal gaps,
+  admin exemptions, and force push permissions each create
+  distinct bypass paths.
+failure: >
+  Unreviewed code in production. Malicious or vulnerable code
+  reaches the default branch and deploys without passing through
+  the review and CI/CD gate.
