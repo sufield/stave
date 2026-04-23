@@ -1,0 +1,69 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.URL.AUTH.001
+name: Lambda Function URLs Must Require Authentication
+description: >
+  Lambda function URLs must not be configured with AuthType NONE. A
+  function URL with no authentication creates a publicly invocable HTTPS
+  endpoint — no API Gateway, no Cognito, no IAM signature, no network
+  boundary. Any person on the internet can invoke the function with no
+  credentials. The function executes with its full IAM execution role
+  permissions and generates costs for every invocation including
+  attacker-driven invocations. Function URLs bypass every network
+  perimeter control — VPC, security groups, NACLs — that would otherwise
+  restrict access to Lambda invocation. This is distinct from public
+  invocation via the Lambda resource-based policy: a function with a
+  restrictive resource policy can still be publicly invocable if it has
+  a function URL with AuthType NONE. The Denial of Wallet risk is
+  significant — Lambda pricing is per invocation and an unauthenticated
+  endpoint allows unlimited invocations with no cost ceiling.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-3"
+  fedramp_moderate: "AC-3"
+  pci_dss_v4.0: "7.2.1"
+  soc2: "CC6.1"
+  hipaa: "164.312(a)(1)"
+  ccm_v4: ["DSP-17", "IVS-03"]
+scope_tags:
+  - aws
+  - lambda
+type: unsafe_state
+classification: state_assertion
+params:
+  base_impact: 10
+  attack_stage: initial_access
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    Lambda function URL is configured with AuthType NONE. The function
+    is publicly invocable from any source on the internet with no
+    authentication. The function's IAM execution role permissions are
+    available to any caller. Invocation costs are unbounded.
+  action: >
+    Set the function URL AuthType to AWS_IAM to require IAM signature
+    authentication for all invocations. If the function URL is not
+    needed, remove it entirely via aws lambda delete-function-url-config.
+    Note that Lambda resource-based policy restrictions do not apply to
+    function URL invocations — AuthType is the only authentication gate
+    for function URLs.
+  example: |
+    {
+      "compute": {
+        "kind": "function",
+        "function_url": {
+          "auth_type_none": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
+    - field: properties.compute.function_url.auth_type_none
+      op: eq
+      value: true

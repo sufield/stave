@@ -9,10 +9,10 @@
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2026-01-01T000000Z.json": "1fc0659c416cf220d422de49fb3d7d2d88460d5c2e50a1c6852ec7599fbc0e92",
-        "2026-01-11T000000Z.json": "fb0f4defc41c15282bfc4ac47b4716fc4f0dc99a072d6f81983fbb55d8fa718a"
+        "20260101T000000Z.json": "970d784defc3d2739ea67c97c69b0cab3b68882db83dba2cb0a6cbf2994a2643",
+        "20260111T000000Z.json": "070f7bc57751b46dbd902849bd8a5f2d4ecc162dfd8e1373896e9a1756822307"
       },
-      "overall": "0479df87388c3b2f7aa34ae03ec025c18aeca44311434e72686428070d4c2458"
+      "overall": "1869216b7a57236bf73663a9ab6dbd838db91b4400cec9db77b511b3cfcb9776"
     },
     "policy_fingerprint": "b747c2ab90d39bd652e970e3c6a8e32212de11f4e8b0cddef239d018b15bbb0e",
     "evaluated_state": "deployed"
@@ -112,13 +112,16 @@
     "selected_controls_source": "dir",
     "context_name": "stave",
     "resolved_paths": {
-      "controls": "testdata/e2e/e2e-forge-lambda-url-auth-pass/controls",
-      "observations": "testdata/e2e/e2e-forge-lambda-url-auth-pass/observations"
+      "controls": "testdata/e2e/e2e-forge-lambda-url-auth-no-url-pass/controls",
+      "observations": "testdata/e2e/e2e-forge-lambda-url-auth-no-url-pass/observations"
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
       "head_commit": "b4ab4623e5753082f42bcebf7adcce6d2d8b945b",
-      "dirty": false
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-lambda-url-auth-no-url-pass/controls/"
+      ]
     }
   }
 }

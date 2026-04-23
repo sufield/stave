@@ -1,0 +1,22 @@
+control: CTL.LAMBDA.URL.AUTH.001
+defect: >
+  The Lambda function has a function URL configured with AuthType
+  NONE. The function is publicly invocable over HTTPS without any
+  authentication — no IAM signature, no API key, no Cognito token.
+  Any person on the internet can invoke the function.
+infection: >
+  An attacker who discovers the function URL can invoke the function
+  unlimited times with no credentials. The function executes with its
+  IAM execution role permissions — if the role is overprivileged, the
+  attacker gains those permissions indirectly through function
+  invocation. Additionally, Lambda pricing is per invocation. An
+  unauthenticated function URL with no rate limiting enables Denial
+  of Wallet attacks — millions of invocations generating unbounded
+  AWS costs with no authentication gate.
+failure: >
+  Unauthenticated public compute. An attacker invokes the function
+  to access data, modify resources, or exfiltrate information using
+  the function's execution role permissions. Or the attacker invokes
+  the function millions of times to generate unbounded AWS costs
+  (Denial of Wallet). Both attacks require zero credentials and zero
+  sophistication.
