@@ -9,10 +9,10 @@
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2026-01-01T000000Z.json": "6130249e3273bd925c13bb825c7090f5b44b5b48efcccab71d01901132e963d4",
-        "2026-01-11T000000Z.json": "01600d711b815547a0071db0c47738d5334b7218dc75a911b7a40ba574d667de"
+        "20260101T000000Z.json": "9b094e3e6bfad0d8ad3a987c91c65198e46b2633966c831771bbd7c502ef5774",
+        "20260111T000000Z.json": "209cc1062107e7e3a244187092c0be5bffa33ee3a95b556df25c0f766f597935"
       },
-      "overall": "2b64324075afb75588e4621a1e5945e727560036bb94c64ce3728387268b25a5"
+      "overall": "a714d93cc4f7add1127a878dbe8834861aaef6b2cef2994289d658cb72ff3a08"
     },
     "policy_fingerprint": "a76792c3c92af0e6cef0835a6f774fad8276dcba4fc0103dff1e10c2b1f6a40a",
     "evaluated_state": "deployed"
@@ -26,7 +26,7 @@
   "risk_signals": [
     {
       "control_id": "CTL.WAF.EVASION.OBSERVE.001",
-      "asset_id": "arn:aws:wafv2::123:webacl/prod-api",
+      "asset_id": "arn:aws:wafv2::123456789012:webacl/prod-api",
       "asset_type": "aws_wafv2_web_acl",
       "status": "OVERDUE",
       "due_at": "2026-01-08T00:00:00Z",
@@ -37,11 +37,11 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:3bcf161d87c4b370",
+      "finding_id": "sha256:84459e3af5d23f0b",
       "control_id": "CTL.WAF.EVASION.OBSERVE.001",
       "control_name": "WAF Must Have Full Body Inspection and Request Sampling Enabled",
       "control_description": "WAF Web ACLs must have full request body inspection enabled and sampled allowed-request logging active. Signature-based WAF rules can be evaded through encoding techniques such as CRLF injection, Unicode surrogate pairs, and HTML parser confusion. HackerOne report #2921905 documents a WAF bypass using CRLF and HTML attribute confusion that evaded Cloudflare rule matching entirely. Prevention of encoding evasion is a vendor responsibility, but the organization must ensure that when evasion occurs it is observable. Without full body inspection, payloads in POST bodies, JSON fields, and multipart uploads are invisible to all WAF rules. Without sampled allowed-request logging, successful bypass attempts leave no forensic trace — the organization cannot distinguish between no attacks and undetected attacks. This control differs from CTL.WAF.LOGGING.001 (which checks logging is enabled) by verifying the logging and inspection configuration captures enough detail to detect evasion patterns.\n",
-      "asset_id": "arn:aws:wafv2::123:webacl/prod-api",
+      "asset_id": "arn:aws:wafv2::123456789012:webacl/prod-api",
       "asset_type": "aws_wafv2_web_acl",
       "asset_vendor": "aws",
       "evidence": {
@@ -90,9 +90,9 @@
         "example": "{\n  \"waf\": {\n    \"kind\": \"web_acl\",\n    \"evasion_observability\": {\n      \"enabled\": true\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-29cba9a50b1d26e9",
+        "id": "fix-b6ed249cd83eb0f0",
         "target": {
-          "asset_id": "arn:aws:wafv2::123:webacl/prod-api",
+          "asset_id": "arn:aws:wafv2::123456789012:webacl/prod-api",
           "asset_type": "aws_wafv2_web_acl"
         },
         "action": "Enable full request body inspection on the Web ACL and increase the body size inspection limit beyond the default 8KB to cover modern API payloads. Enable sampled request logging for allowed requests — not only blocked requests. For AWS WAF, configure the Web ACL body inspection to inspect the full body and enable request sampling via the AWS WAF console or UpdateWebACL API. Reference: HackerOne report #2921905 documents a WAF bypass via CRLF injection that would be detectable with full body inspection and request sampling."
@@ -124,10 +124,10 @@
       ],
       "remediation_context": {
         "asset": {
-          "id": "arn:aws:wafv2::123:webacl/prod-api",
+          "id": "arn:aws:wafv2::123456789012:webacl/prod-api",
           "type": "aws_wafv2_web_acl",
           "vendor": "aws",
-          "arn": "arn:aws:wafv2::123:webacl/prod-api"
+          "arn": "arn:aws:wafv2::123456789012:webacl/prod-api"
         },
         "violation": {
           "control_id": "CTL.WAF.EVASION.OBSERVE.001",
@@ -180,16 +180,16 @@
   ],
   "issues": [
     {
-      "issue_id": "sha256:8a53d89fa0dbaf4d",
-      "asset_id": "arn:aws:wafv2::123:webacl/prod-api",
+      "issue_id": "sha256:5a77951a7e4c9fb1",
+      "asset_id": "arn:aws:wafv2::123456789012:webacl/prod-api",
       "shared_keys": [
         "waf.evasion_observability",
         "waf.evasion_observability.enabled",
         "waf.kind"
       ],
-      "headline_finding_id": "sha256:3bcf161d87c4b370",
+      "headline_finding_id": "sha256:84459e3af5d23f0b",
       "member_finding_ids": [
-        "sha256:3bcf161d87c4b370"
+        "sha256:84459e3af5d23f0b"
       ],
       "consolidated_score": 112.5,
       "consolidated_blast_radius": 1.5
@@ -197,12 +197,12 @@
   ],
   "remediation_groups": [
     {
-      "asset_id": "arn:aws:wafv2::123:webacl/prod-api",
+      "asset_id": "arn:aws:wafv2::123456789012:webacl/prod-api",
       "asset_type": "aws_wafv2_web_acl",
       "fix_plan": {
-        "id": "fix-29cba9a50b1d26e9",
+        "id": "fix-b6ed249cd83eb0f0",
         "target": {
-          "asset_id": "arn:aws:wafv2::123:webacl/prod-api",
+          "asset_id": "arn:aws:wafv2::123456789012:webacl/prod-api",
           "asset_type": "aws_wafv2_web_acl"
         },
         "action": "Enable full request body inspection on the Web ACL and increase the body size inspection limit beyond the default 8KB to cover modern API payloads. Enable sampled request logging for allowed requests — not only blocked requests. For AWS WAF, configure the Web ACL body inspection to inspect the full body and enable request sampling via the AWS WAF console or UpdateWebACL API. Reference: HackerOne report #2921905 documents a WAF bypass via CRLF injection that would be detectable with full body inspection and request sampling."
@@ -217,7 +217,7 @@
     {
       "finding_index": 0,
       "control_id": "CTL.WAF.EVASION.OBSERVE.001",
-      "asset_id": "arn:aws:wafv2::123:webacl/prod-api",
+      "asset_id": "arn:aws:wafv2::123456789012:webacl/prod-api",
       "exposure_score": 112.5,
       "breakdown": {
         "base_score": 75,
@@ -318,13 +318,16 @@
     "selected_controls_source": "dir",
     "context_name": "stave",
     "resolved_paths": {
-      "controls": "testdata/e2e/e2e-forge-waf-evasion-observe-fail/controls",
-      "observations": "testdata/e2e/e2e-forge-waf-evasion-observe-fail/observations"
+      "controls": "testdata/e2e/e2e-forge-waf-evasion-observe-body-disabled-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-waf-evasion-observe-body-disabled-fail/observations"
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
       "head_commit": "141175c4a50833d93e0b6c4c4efd2fb534c8b030",
-      "dirty": false
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-waf-evasion-observe-body-disabled-fail/controls/"
+      ]
     }
   }
 }

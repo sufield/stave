@@ -1,0 +1,24 @@
+control: CTL.WAF.EVASION.OBSERVE.001
+defect: >
+  The WAF Web ACL is not configured for full evasion observability.
+  Body inspection is disabled or limited to the default 8KB threshold,
+  and/or sampled request logging does not capture allowed-through
+  requests. WAF bypass attempts using encoding evasion, parser
+  confusion, or body-embedded payloads are invisible.
+infection: >
+  An attacker uses encoding techniques (CRLF injection, Unicode
+  surrogates, HTML parser confusion) to craft payloads that bypass
+  WAF signature matching. Without full body inspection, payloads in
+  POST bodies and JSON fields are never evaluated by WAF rules.
+  Without sampled logging of allowed requests, the bypass produces
+  no log entry — the organization sees only blocked requests and
+  concludes the WAF is working. The evasion is invisible from
+  detection through investigation. HackerOne report #2921905
+  documents a WAF bypass via CRLF injection that would be detectable
+  with full body inspection and request sampling.
+failure: >
+  Undetectable WAF bypass. An attacker operates through the WAF using
+  evasion techniques with no observable signal. No WAF log entry for
+  the evasion. No body content captured for forensic analysis. The
+  organization cannot determine whether bypass attempts are occurring,
+  succeeding, or escalating.

@@ -9,10 +9,10 @@
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2026-01-01T000000Z.json": "0f9ef2d0d7930ccf18114c16cb8ba73dfc8c4cb05e06b630301ff105dcb08d53",
-        "2026-01-11T000000Z.json": "de9e2e1465344e1ce720dfc48f29ad0f8e96c3020a12560541dc7fd423b9472e"
+        "20260101T000000Z.json": "36a8c287ccd262634221312067810646ef6f0553ef23d1e84bbe76f0924d9d95",
+        "20260111T000000Z.json": "e092911ba87c6b65a53d49cf1de52f3b59a5e92104affa01eed86c4484f36f32"
       },
-      "overall": "f72945a7295a26d1e88795c1fcb640597ee6b1b53af501bd5125b1ad3031e1c5"
+      "overall": "11e6105d356d3bcd27bc093a3ddf7895831e996d1c3e443b3c0d5eff73d91b9c"
     },
     "policy_fingerprint": "a76792c3c92af0e6cef0835a6f774fad8276dcba4fc0103dff1e10c2b1f6a40a",
     "evaluated_state": "deployed"
@@ -112,13 +112,16 @@
     "selected_controls_source": "dir",
     "context_name": "stave",
     "resolved_paths": {
-      "controls": "testdata/e2e/e2e-forge-waf-evasion-observe-pass/controls",
-      "observations": "testdata/e2e/e2e-forge-waf-evasion-observe-pass/observations"
+      "controls": "testdata/e2e/e2e-forge-waf-evasion-observe-incomplete/controls",
+      "observations": "testdata/e2e/e2e-forge-waf-evasion-observe-incomplete/observations"
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
       "head_commit": "141175c4a50833d93e0b6c4c4efd2fb534c8b030",
-      "dirty": false
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-waf-evasion-observe-incomplete/controls/"
+      ]
     }
   }
 }
