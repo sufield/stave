@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.M365.EXCHANGE.TRANSPORT.FORWARD.001
+name: Transport Rules Allow External Forwarding
+description: >
+  Transport rules forward email externally. Organization-wide
+  admin-level email exfiltration — forwards ALL matching email.
+domain: exposure
+severity: high
+compliance:
+  cis_m365_v4: "10.8"
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.8"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: Transport Rules Allow External Forwarding — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"exchange": {"kind": "exchange_org", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.exchange.kind
+      op: eq
+      value: exchange_org
+    - field: properties.m365.exchange.transport_forwarding_disabled
+      op: eq
+      value: false

@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.M365.EXCHANGE.ADDINS.001
+name: Users Can Install Mail Add-Ins
+description: >
+  Outlook add-in installation unrestricted. Malicious add-ins
+  read email, access attachments, and exfiltrate data.
+domain: exposure
+severity: medium
+compliance:
+  cis_m365_v4: "10.6"
+  nist_800_53_r5: "CM-6"
+  soc2: "CC6.1"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Users Can Install Mail Add-Ins — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"exchange": {"kind": "exchange_org", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.exchange.kind
+      op: eq
+      value: exchange_org
+    - field: properties.m365.exchange.addins_disabled
+      op: eq
+      value: false

@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.M365.EXCHANGE.MODERNAUTH.001
+name: Modern Authentication Not Enabled
+description: >
+  Basic authentication active. Does not support MFA, Conditional
+  Access, or token revocation. Credentials sent in Base64.
+domain: identity
+severity: critical
+compliance:
+  cis_m365_v4: "10.1"
+  nist_800_53_r5: "IA-2"
+  hipaa: "164.312(e)(1)"
+  soc2: "CC6.1"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Modern Authentication Not Enabled — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"exchange": {"kind": "exchange_org", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.exchange.kind
+      op: eq
+      value: exchange_org
+    - field: properties.m365.exchange.modern_auth_enabled
+      op: eq
+      value: false

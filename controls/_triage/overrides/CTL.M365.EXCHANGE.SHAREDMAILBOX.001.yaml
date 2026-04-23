@@ -1,0 +1,13 @@
+control: CTL.M365.EXCHANGE.SHAREDMAILBOX.001
+defect: >
+  Shared mailboxes allow direct sign-in with credentials.
+infection: >
+  Shared mailboxes are intended for delegation access, not direct
+  authentication. When direct sign-in is enabled, the shared mailbox
+  has its own password — often shared among team members or stored
+  in plaintext. Shared mailboxes typically don't have MFA because
+  they're "not a person." An attacker who obtains the password
+  authenticates directly without MFA.
+failure: >
+  MFA bypass via shared mailbox. An attacker authenticates directly
+  to a shared mailbox with a stolen password — no MFA required.

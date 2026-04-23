@@ -1,0 +1,12 @@
+control: CTL.M365.EXCHANGE.AUDIT.001
+defect: >
+  Exchange Online mailbox auditing is not fully enabled.
+infection: >
+  Mailbox auditing records email operations — message access,
+  deletion, send-as, folder permission changes, and mailbox
+  sign-ins. Without auditing, a compromised account's email activity
+  is invisible. Audit bypass is worse — specific accounts are
+  explicitly excluded from auditing, creating targeted blind spots.
+failure: >
+  No email forensics. An attacker's email activity in a compromised
+  mailbox is not recorded.

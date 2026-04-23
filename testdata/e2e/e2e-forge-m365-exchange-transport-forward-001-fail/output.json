@@ -1,0 +1,325 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-15T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "92b8140ab3c29b3399365a325b17f4349b55494341a952a4ddcf501aab8a769e",
+        "2026-01-11T000000Z.json": "20e4538a2e2156525076a78c9d8b0ba58dec473437f8ca6061f9b706c66d54c2"
+      },
+      "overall": "f1024e0c9be4f54d1ebd08d50c7b948cb48d38e0ccc381c1b1d51a7f023bcf70"
+    },
+    "policy_fingerprint": "3baca891d445fadebc21ec1262d03ecb725446671f51322b4fcda2e2b699ecd0",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.M365.EXCHANGE.TRANSPORT.FORWARD.001",
+      "asset_id": "exch-org",
+      "asset_type": "m365_exchange_org",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -168,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:9ebde756b2dffd82",
+      "control_id": "CTL.M365.EXCHANGE.TRANSPORT.FORWARD.001",
+      "control_name": "Transport Rules Allow External Forwarding",
+      "control_description": "Transport rules forward email externally. Organization-wide admin-level email exfiltration — forwards ALL matching email.\n",
+      "asset_id": "exch-org",
+      "asset_type": "m365_exchange_org",
+      "asset_vendor": "m365",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 336,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "m365.exchange.kind",
+            "actual_value": "exchange_org",
+            "operator": "eq",
+            "unsafe_value": "exchange_org"
+          },
+          {
+            "property": "m365.exchange.transport_forwarding_disabled",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 336 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_m365_v4": "10.8",
+        "nist_800_53_r5": "SC-7",
+        "soc2": "CC6.8"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Transport Rules Allow External Forwarding — finding detected.",
+        "action": "Remediate per control description.",
+        "example": "{\"m365\": {\"exchange\": {\"kind\": \"exchange_org\", \"placeholder\": true}}}\n"
+      },
+      "fix_plan": {
+        "id": "fix-555dfa267cc07320",
+        "target": {
+          "asset_id": "exch-org",
+          "asset_type": "m365_exchange_org"
+        },
+        "action": "Remediate per control description."
+      },
+      "exposure_score": 75,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "m365.exchange.kind eq \"exchange_org\"",
+          "observation_key": "m365.exchange.kind",
+          "operator": "eq",
+          "expected_value": "exchange_org",
+          "observed_value": "exchange_org"
+        },
+        {
+          "predicate_expr": "m365.exchange.transport_forwarding_disabled eq false",
+          "observation_key": "m365.exchange.transport_forwarding_disabled",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "exch-org",
+          "type": "m365_exchange_org",
+          "vendor": "m365"
+        },
+        "violation": {
+          "control_id": "CTL.M365.EXCHANGE.TRANSPORT.FORWARD.001",
+          "control_name": "Transport Rules Allow External Forwarding",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "m365.exchange.kind = \"exchange_org\"",
+              "observation_key": "m365.exchange.kind",
+              "observed_value": "exchange_org"
+            },
+            {
+              "clause": "m365.exchange.transport_forwarding_disabled = false",
+              "observation_key": "m365.exchange.transport_forwarding_disabled",
+              "observed_value": false
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "m365.exchange.kind",
+            "current_value": "exchange_org",
+            "has_safe_default": false,
+            "description": "Change m365.exchange.kind from exchange_org"
+          },
+          {
+            "path": "m365.exchange.transport_forwarding_disabled",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set m365.exchange.transport_forwarding_disabled to true"
+          }
+        ],
+        "action": "Remediate per control description."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "m365"
+      ],
+      "delta": [
+        {
+          "property_label": "exchange transport forwarding",
+          "property_path": "m365.exchange.transport_forwarding_disabled",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:999f6b15c318b86a",
+      "asset_id": "exch-org",
+      "shared_keys": [
+        "m365.exchange",
+        "m365.exchange.kind",
+        "m365.exchange.transport_forwarding_disabled"
+      ],
+      "headline_finding_id": "sha256:9ebde756b2dffd82",
+      "member_finding_ids": [
+        "sha256:9ebde756b2dffd82"
+      ],
+      "consolidated_score": 75,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "exch-org",
+      "asset_type": "m365_exchange_org",
+      "fix_plan": {
+        "id": "fix-555dfa267cc07320",
+        "target": {
+          "asset_id": "exch-org",
+          "asset_type": "m365_exchange_org"
+        },
+        "action": "Remediate per control description."
+      },
+      "contributing_controls": [
+        "CTL.M365.EXCHANGE.TRANSPORT.FORWARD.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.M365.EXCHANGE.TRANSPORT.FORWARD.001",
+      "asset_id": "exch-org",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-m365-exchange-transport-forward-001-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-m365-exchange-transport-forward-001-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "e75c6b10f5a38ae9575c64710ed47a658e9c2900",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-m365-exchange-transport-forward-001-fail/controls/"
+      ]
+    }
+  }
+}

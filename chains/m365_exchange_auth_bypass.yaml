@@ -1,0 +1,15 @@
+id: m365_exchange_auth_bypass
+description: >
+  Basic auth enabled plus either SMTP AUTH active or shared mailbox
+  sign-in allowed. Multiple authentication bypass paths — legacy
+  protocols skip MFA, shared mailboxes lack MFA.
+controls:
+  - CTL.M365.EXCHANGE.MODERNAUTH.001
+  - CTL.M365.EXCHANGE.SMTPAUTH.001
+  - CTL.M365.EXCHANGE.SHAREDMAILBOX.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - iam_credential_theft

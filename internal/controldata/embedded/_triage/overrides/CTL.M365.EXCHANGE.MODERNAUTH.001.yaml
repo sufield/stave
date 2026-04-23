@@ -1,0 +1,15 @@
+control: CTL.M365.EXCHANGE.MODERNAUTH.001
+defect: >
+  Exchange Online does not have modern authentication enabled.
+  Basic authentication is active.
+infection: >
+  Basic authentication sends credentials in Base64 (effectively
+  plaintext) with every request. It does not support MFA, Conditional
+  Access, or token revocation. Any MFA enforcement in Entra ID is
+  bypassed by basic auth clients. Modern authentication (OAuth)
+  provides MFA support, Conditional Access integration, and
+  token-based access with revocation.
+failure: >
+  MFA and Conditional Access bypass via basic authentication. An
+  attacker authenticates to Exchange with a stolen password,
+  bypassing all identity security controls.

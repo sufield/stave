@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.M365.EXCHANGE.SMTPAUTH.001
+name: SMTP AUTH Not Disabled
+description: >
+  SMTP AUTH enabled globally. Legacy sending protocol that
+  bypasses MFA. Used by attackers for spam from compromised accounts.
+domain: identity
+severity: high
+compliance:
+  cis_m365_v4: "10.2"
+  nist_800_53_r5: "IA-2"
+  soc2: "CC6.1"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: SMTP AUTH Not Disabled — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"exchange": {"kind": "exchange_org", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.exchange.kind
+      op: eq
+      value: exchange_org
+    - field: properties.m365.exchange.smtp_auth_disabled
+      op: eq
+      value: false

@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.M365.EXCHANGE.STORAGE.001
+name: Additional Storage Providers Not Restricted
+description: >
+  Users can connect Google Drive, Dropbox to Outlook. Data flows
+  to unmanaged cloud storage outside organizational control.
+domain: exposure
+severity: medium
+compliance:
+  cis_m365_v4: "10.5"
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: Additional Storage Providers Not Restricted — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"exchange": {"kind": "exchange_org", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.exchange.kind
+      op: eq
+      value: exchange_org
+    - field: properties.m365.exchange.additional_storage_restricted
+      op: eq
+      value: false

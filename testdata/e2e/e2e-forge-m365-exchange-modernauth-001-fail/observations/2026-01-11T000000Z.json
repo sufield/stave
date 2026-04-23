@@ -1,0 +1,32 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "exch-org",
+      "type": "m365_exchange_org",
+      "vendor": "m365",
+      "properties": {
+        "m365": {
+          "exchange": {
+            "kind": "exchange_org",
+            "modern_auth_enabled": false,
+            "smtp_auth_disabled": true,
+            "org_mailbox_auditing": true,
+            "user_mailbox_auditing": true,
+            "audit_bypass_disabled": true,
+            "external_tagging_enabled": true,
+            "mailtips_enabled": true,
+            "delicensing_resiliency": true,
+            "additional_storage_restricted": true,
+            "addins_disabled": true,
+            "shared_mailbox_signin_disabled": true,
+            "transport_forwarding_disabled": true,
+            "transport_whitelist_disabled": true
+          }
+        }
+      }
+    }
+  ]
+}

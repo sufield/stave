@@ -1,0 +1,11 @@
+family: CTL.M365.EXCHANGE
+infection: >
+  Exchange Online is the email backbone. Basic authentication
+  bypasses all identity controls. Disabled auditing hides email
+  activity. Transport rules can silently forward or whitelist email
+  at the organization level. Shared mailboxes with direct sign-in
+  are MFA-free entry points.
+failure: >
+  Email compromise. An attacker authenticates via basic auth or
+  shared mailbox, accesses email without audit trail, and exfiltrates
+  data via transport rules or forwarding.

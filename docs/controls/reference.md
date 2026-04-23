@@ -3,27 +3,27 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1213
-**Pack hash:** `7af0e16339e6663a02c2a15955d6b319b0af5a56009e116e2f4c384548af324f`
+**Total controls:** 1223
+**Pack hash:** `a51786b46d9494612c292c9365efafc09eb07ad33742319fdf3dae0137fb34b0`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 164 |
-| high | 537 |
+| critical | 165 |
+| high | 542 |
 | info | 16 |
-| low | 91 |
-| medium | 405 |
+| low | 92 |
+| medium | 408 |
 
 | Domain | Count |
 |--------|-------|
 | audit | 20 |
-| detection | 28 |
+| detection | 30 |
 | encryption | 75 |
-| exposure | 760 |
+| exposure | 765 |
 | governance | 24 |
-| identity | 263 |
+| identity | 266 |
 | network | 21 |
 | resilience | 14 |
 | storage | 8 |
@@ -13840,6 +13840,156 @@ Not all users have MFA enabled. Any account without MFA is a credential-stuffing
 - **Compliance:** cis_m365_v4: 2.4; nist_800_53_r5: IA-5; soc2: CC6.1;
 
 SMS and voice MFA enabled. SMS vulnerable to SIM swapping. Voice vulnerable to social engineering.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.EXCHANGE.ADDINS.001
+
+**Users Can Install Mail Add-Ins**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_m365_v4: 10.6; nist_800_53_r5: CM-6; soc2: CC6.1;
+
+Outlook add-in installation unrestricted. Malicious add-ins read email, access attachments, and exfiltrate data.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.EXCHANGE.AUDIT.001
+
+**Mailbox Auditing Not Fully Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_m365_v4: 10.3; hipaa: 164.312(b); nist_800_53_r5: AU-2; pci_dss_v4: 10.2; soc2: CC7.2;
+
+Org-wide or per-user auditing disabled, or audit bypass active. Email access, deletion, and send-as not recorded.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.EXCHANGE.EXTERNAL.001
+
+**External Email Tagging Not Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_m365_v4: 10.4; nist_800_53_r5: SI-4; soc2: CC7.1;
+
+Inbound external email not tagged with [External] indicator. Impersonation emails appear identical to internal messages.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.EXCHANGE.MAILTIPS.001
+
+**MailTips Not Enabled**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-4; soc2: CC7.1;
+
+Users don't receive warnings when sending to external recipients or large distribution lists.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.EXCHANGE.MODERNAUTH.001
+
+**Modern Authentication Not Enabled**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_m365_v4: 10.1; hipaa: 164.312(e)(1); nist_800_53_r5: IA-2; soc2: CC6.1;
+
+Basic authentication active. Does not support MFA, Conditional Access, or token revocation. Credentials sent in Base64.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.EXCHANGE.SHAREDMAILBOX.001
+
+**Shared Mailbox Direct Sign-In Not Disabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_m365_v4: 10.7; nist_800_53_r5: IA-2; soc2: CC6.1;
+
+Shared mailboxes allow direct sign-in with credentials. Shared mailboxes often have passwords but no MFA — well-known MFA bypass.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.EXCHANGE.SMTPAUTH.001
+
+**SMTP AUTH Not Disabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_m365_v4: 10.2; nist_800_53_r5: IA-2; soc2: CC6.1;
+
+SMTP AUTH enabled globally. Legacy sending protocol that bypasses MFA. Used by attackers for spam from compromised accounts.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.EXCHANGE.STORAGE.001
+
+**Additional Storage Providers Not Restricted**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_m365_v4: 10.5; nist_800_53_r5: SC-7; soc2: CC6.6;
+
+Users can connect Google Drive, Dropbox to Outlook. Data flows to unmanaged cloud storage outside organizational control.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.EXCHANGE.TRANSPORT.FORWARD.001
+
+**Transport Rules Allow External Forwarding**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_m365_v4: 10.8; nist_800_53_r5: SC-7; soc2: CC6.8;
+
+Transport rules forward email externally. Organization-wide admin-level email exfiltration — forwards ALL matching email.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.EXCHANGE.TRANSPORT.WHITELIST.001
+
+**Transport Rules Whitelist Bypasses Filtering**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_m365_v4: 10.9; nist_800_53_r5: SI-3; soc2: CC6.8;
+
+Transport rules whitelist senders/domains, bypassing ALL filtering including malware. Higher severity than spam bypass.
 
 **Remediation:** Remediate per control description.
 

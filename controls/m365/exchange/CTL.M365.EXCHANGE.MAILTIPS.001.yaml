@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.M365.EXCHANGE.MAILTIPS.001
+name: MailTips Not Enabled
+description: >
+  Users don't receive warnings when sending to external recipients
+  or large distribution lists.
+domain: exposure
+severity: low
+compliance:
+  nist_800_53_r5: "SI-4"
+  soc2: "CC7.1"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: MailTips Not Enabled — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"exchange": {"kind": "exchange_org", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.exchange.kind
+      op: eq
+      value: exchange_org
+    - field: properties.m365.exchange.mailtips_enabled
+      op: eq
+      value: false
