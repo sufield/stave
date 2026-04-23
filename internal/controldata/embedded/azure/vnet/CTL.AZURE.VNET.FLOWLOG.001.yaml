@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.VNET.FLOWLOG.001
+name: NSG Flow Logs Must Be Enabled
+description: >
+  NSGs associated with VNets must have flow logs enabled for network
+  forensics. Without flow logs, network traffic is not recorded and
+  incident investigation has no network-level data.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AU-12"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-03", "LOG-05"]
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: NSG flow logs are not enabled.
+  action: Enable NSG flow logs to a Storage Account or Log Analytics workspace.
+  example: |
+    {"azure": {"network": {"kind": "nsg", "nsg": {"flow_logs_enabled": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.network.kind
+      op: eq
+      value: nsg
+    - field: properties.azure.network.nsg.flow_logs_enabled
+      op: eq
+      value: false

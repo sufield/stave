@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.VM.ENDPOINT.001
+name: VM Must Have Endpoint Protection Installed
+description: >
+  VMs must have endpoint protection (Microsoft Defender or equivalent) for malware detection and behavioral monitoring.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IVS-03"]
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: VM Must Have Endpoint Protection Installed — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"azure": {"compute": {"kind": "virtual_machine", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.compute.kind
+      op: eq
+      value: virtual_machine
+    - field: properties.azure.compute.vm.endpoint_protection_installed
+      op: eq
+      value: false

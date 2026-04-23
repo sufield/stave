@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.WAF.POLICY.001
+name: Application Gateway Must Have WAF Enabled
+description: >
+  Azure Application Gateways must have WAF enabled. Without WAF, the
+  gateway routes traffic to backends without application-layer inspection.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03"]
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Application Gateway does not have WAF enabled.
+  action: Enable WAF on the Application Gateway (requires WAF_v2 SKU).
+  example: |
+    {"azure": {"network": {"kind": "application_gateway", "appgw": {"waf_enabled": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.network.kind
+      op: eq
+      value: application_gateway
+    - field: properties.azure.network.appgw.waf_enabled
+      op: eq
+      value: false

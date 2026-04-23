@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.AKS.PRIVATE.001
+name: AKS API Server Must Not Be Publicly Accessible
+description: >
+  AKS cluster API server must not be accessible from the public internet without authorized IP range restrictions.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.1"
+  ccm_v4: ["IVS-03"]
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: AKS API Server Must Not Be Publicly Accessible — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"azure": {"compute": {"kind": "aks_cluster", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.compute.kind
+      op: eq
+      value: aks_cluster
+    - field: properties.azure.compute.aks.api_server_public
+      op: eq
+      value: true

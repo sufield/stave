@@ -1,0 +1,11 @@
+family: CTL.AZURE.NSG
+infection: >
+  Misconfigured Azure NSGs expose resources to unauthorized network
+  access. NSG rules are priority-ordered — an unrestricted Allow rule
+  at a low priority number overrides restrictive Deny rules with
+  higher numbers. Open NSGs expose VMs, databases, and services to
+  internet-sourced attacks.
+failure: >
+  Direct network exposure. An attacker connects to resources through
+  unrestricted NSG rules without traversing any network security
+  boundary.

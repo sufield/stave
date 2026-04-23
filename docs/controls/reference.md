@@ -3,27 +3,27 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 927
-**Pack hash:** `808d1f3af277ec0cda34f8890694a9deca79f7cccf9c657692ccad602d58f85a`
+**Total controls:** 947
+**Pack hash:** `1713ffa78923d510e09c28ed7578096438ee80d7a3dd9a6565b5e099616f6168`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 139 |
-| high | 412 |
+| critical | 141 |
+| high | 423 |
 | info | 16 |
-| low | 77 |
-| medium | 283 |
+| low | 78 |
+| medium | 289 |
 
 | Domain | Count |
 |--------|-------|
 | audit | 20 |
 | detection | 6 |
-| encryption | 38 |
-| exposure | 605 |
-| governance | 23 |
-| identity | 192 |
+| encryption | 39 |
+| exposure | 622 |
+| governance | 24 |
+| identity | 193 |
 | network | 21 |
 | resilience | 14 |
 | storage | 8 |
@@ -988,6 +988,141 @@ Auto Scaling groups must be configured across multiple AZs. A single-AZ ASG has 
 
 ---
 
+### CTL.AZURE.AKS.NETWORK.001
+
+**AKS Must Use Azure CNI Network Plugin**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.1;
+
+AKS clusters should use Azure CNI for VNet-native pod networking enabling NSG rules and network policies on pods.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.AZURE.AKS.PRIVATE.001
+
+**AKS API Server Must Not Be Publicly Accessible**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.1;
+
+AKS cluster API server must not be accessible from the public internet without authorized IP range restrictions.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.AZURE.AKS.RBAC.001
+
+**AKS Must Integrate with Entra ID for RBAC**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+AKS clusters must integrate with Entra ID for centralized identity and Conditional Access enforcement on cluster access.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.AZURE.AKS.VERSION.001
+
+**AKS Must Run a Supported Kubernetes Version**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-2; soc2: CC6.1;
+
+AKS clusters must run a Kubernetes version within the Azure-supported window. Unsupported versions receive no security patches.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.AZURE.DDOS.001
+
+**VNet Must Have DDoS Protection Standard Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-5; soc2: A1.1;
+
+Azure VNets must have DDoS Protection Standard enabled. Basic protection provides limited mitigation for volumetric attacks only.
+
+**Remediation:** Enable DDoS Protection Standard on the VNet.
+
+---
+
+### CTL.AZURE.FIREWALL.LOG.001
+
+**Azure Firewall Must Have Diagnostic Logging Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AU-2; soc2: CC7.1;
+
+Azure Firewall must have diagnostic logging enabled. Without logging, inspected traffic produces no audit trail.
+
+**Remediation:** Enable diagnostic settings for AzureFirewallApplicationRule and AzureFirewallNetworkRule logs.
+
+---
+
+### CTL.AZURE.FIREWALL.POLICY.001
+
+**Azure Firewall Must Have Policy with Rules**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+Azure Firewall must have a firewall policy attached with configured rules. A firewall without a policy or with an empty policy sits in the network path but inspects nothing.
+
+**Remediation:** Attach a firewall policy with network and application rules.
+
+---
+
+### CTL.AZURE.FUNCTION.AUTH.001
+
+**Azure Function App Must Have Authentication Enabled**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+Azure Function apps must have authentication (App Service Auth) enabled. Without authentication, the function is publicly invocable without credentials — the Azure equivalent of AWS Lambda function URLs with AuthType NONE.
+
+**Remediation:** Enable App Service Authentication (EasyAuth) with an identity provider.
+
+---
+
+### CTL.AZURE.FUNCTION.RUNTIME.001
+
+**Azure Function App Must Not Run Deprecated Runtime**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-2; soc2: CC7.1;
+
+Azure Function apps must run a supported runtime version. Deprecated runtimes receive no security patches.
+
+**Remediation:** Upgrade to a supported runtime version.
+
+---
+
 ### CTL.AZURE.IDENTITY.BREAKGLASS.001
 
 **Break-Glass Account Must Be Configured**
@@ -1120,6 +1255,51 @@ Service principals must use certificate-based credentials instead of client secr
 Users inactive for over 90 days must not retain active RBAC role assignments. Dormant accounts with active permissions are exploitation targets — the account owner isn't monitoring activity.
 
 **Remediation:** Remove role assignments from inactive accounts or disable the accounts.
+
+---
+
+### CTL.AZURE.NSG.DEFAULT.001
+
+**NSG Must Have Custom Rules Beyond Defaults**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+Azure NSGs must have custom security rules configured beyond the default rules. Default-only NSGs provide minimal network segmentation.
+
+**Remediation:** Add custom inbound and outbound rules for your workload.
+
+---
+
+### CTL.AZURE.NSG.UNASSOCIATED.001
+
+**NSG Must Be Associated with a Subnet or NIC**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-6;
+
+Azure NSGs must be associated with at least one subnet or network interface. Unassociated NSGs contain rules that protect nothing.
+
+**Remediation:** Associate the NSG with a subnet or delete it if unused.
+
+---
+
+### CTL.AZURE.NSG.UNRESTRICTED.001
+
+**NSG Must Not Allow Unrestricted Inbound on Sensitive Ports**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; pci_dss_v4.0: 1.3.1; soc2: CC6.6;
+
+Azure NSGs must not have inbound Allow rules permitting traffic from any source (0.0.0.0/0 or *) on sensitive ports (SSH 22, RDP 3389, SQL 1433/3306/5432, or all ports). NSG rules are priority-ordered — an unrestricted Allow at a low priority number overrides restrictive Deny rules with higher numbers.
+
+**Remediation:** Restrict source addresses to specific CIDR ranges or service tags.
 
 ---
 
@@ -1270,6 +1450,126 @@ Azure Storage accounts must enable soft delete for blobs to protect against acci
 Azure Storage accounts must set the minimum TLS version to 1.2. Older TLS versions have known vulnerabilities.
 
 **Remediation:** Set minimumTlsVersion to TLS1_2.
+
+---
+
+### CTL.AZURE.VM.ENCRYPT.001
+
+**VM Disks Must Use Customer-Managed Key Encryption**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** nist_800_53_r5: SC-28; soc2: CC6.1;
+
+OS and data disks must use customer-managed keys or encryption at host.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.AZURE.VM.ENDPOINT.001
+
+**VM Must Have Endpoint Protection Installed**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-3; soc2: CC6.1;
+
+VMs must have endpoint protection (Microsoft Defender or equivalent) for malware detection and behavioral monitoring.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.AZURE.VM.EXTENSION.001
+
+**VM Must Not Have Unauthorized Extensions**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-7; soc2: CC6.1;
+
+VMs must not have extensions beyond the approved baseline. Extensions execute with system privileges and survive restarts.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.AZURE.VM.PUBLIC.001
+
+**VM With Public IP Must Have JIT Access Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.1;
+
+VMs with public IPs must enable Just-In-Time access to reduce permanent exposure. Without JIT the VM is reachable 24/7.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.AZURE.VNET.FLOWLOG.001
+
+**NSG Flow Logs Must Be Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AU-12; soc2: CC7.1;
+
+NSGs associated with VNets must have flow logs enabled for network forensics. Without flow logs, network traffic is not recorded and incident investigation has no network-level data.
+
+**Remediation:** Enable NSG flow logs to a Storage Account or Log Analytics workspace.
+
+---
+
+### CTL.AZURE.VNET.PEERING.001
+
+**VNet Peering Must Have NSG Filtering**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+Peered VNets must have NSGs applied to peered subnets to filter cross-VNet traffic. Azure VNet peering allows all traffic between peered VNets by default — NSGs must be explicitly applied.
+
+**Remediation:** Apply NSGs to subnets in both peered VNets.
+
+---
+
+### CTL.AZURE.WAF.MODE.001
+
+**Application Gateway WAF Must Be in Prevention Mode**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-3; soc2: CC6.6;
+
+Azure Application Gateway WAF must be in Prevention mode, not Detection mode. Detection mode logs attacks without blocking them — the WAF observes attacks without stopping them.
+
+**Remediation:** Switch WAF mode from Detection to Prevention.
+
+---
+
+### CTL.AZURE.WAF.POLICY.001
+
+**Application Gateway Must Have WAF Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+Azure Application Gateways must have WAF enabled. Without WAF, the gateway routes traffic to backends without application-layer inspection.
+
+**Remediation:** Enable WAF on the Application Gateway (requires WAF_v2 SKU).
 
 ---
 

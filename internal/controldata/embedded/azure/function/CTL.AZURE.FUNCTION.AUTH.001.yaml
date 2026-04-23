@@ -1,0 +1,37 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.FUNCTION.AUTH.001
+name: Azure Function App Must Have Authentication Enabled
+description: >
+  Azure Function apps must have authentication (App Service Auth)
+  enabled. Without authentication, the function is publicly invocable
+  without credentials — the Azure equivalent of AWS Lambda function
+  URLs with AuthType NONE.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  ccm_v4: ["IAM-16", "IVS-03"]
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: Function app does not have authentication enabled.
+  action: Enable App Service Authentication (EasyAuth) with an identity provider.
+  example: |
+    {"azure": {"compute": {"kind": "function_app", "function": {"auth_enabled": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.compute.kind
+      op: eq
+      value: function_app
+    - field: properties.azure.compute.function.auth_enabled
+      op: eq
+      value: false

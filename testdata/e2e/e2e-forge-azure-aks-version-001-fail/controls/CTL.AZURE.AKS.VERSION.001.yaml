@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.AKS.VERSION.001
+name: AKS Must Run a Supported Kubernetes Version
+description: >
+  AKS clusters must run a Kubernetes version within the Azure-supported window. Unsupported versions receive no security patches.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SI-2"
+  soc2: "CC6.1"
+  ccm_v4: ["TVM-02"]
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: AKS Must Run a Supported Kubernetes Version — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"azure": {"compute": {"kind": "aks_cluster", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.compute.kind
+      op: eq
+      value: aks_cluster
+    - field: properties.azure.compute.aks.version_supported
+      op: eq
+      value: false

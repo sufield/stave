@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.WAF.MODE.001
+name: Application Gateway WAF Must Be in Prevention Mode
+description: >
+  Azure Application Gateway WAF must be in Prevention mode, not
+  Detection mode. Detection mode logs attacks without blocking them —
+  the WAF observes attacks without stopping them.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SI-3"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03"]
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Application Gateway WAF is in Detection mode.
+  action: Switch WAF mode from Detection to Prevention.
+  example: |
+    {"azure": {"network": {"kind": "application_gateway", "appgw": {"waf_mode_prevention": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.network.kind
+      op: eq
+      value: application_gateway
+    - field: properties.azure.network.appgw.waf_mode_prevention
+      op: eq
+      value: false

@@ -1,0 +1,13 @@
+id: azure_function_unprotected
+description: >
+  Unauthenticated function on deprecated runtime. Publicly invocable
+  compute with unpatched vulnerabilities.
+controls:
+  - CTL.AZURE.FUNCTION.AUTH.001
+  - CTL.AZURE.FUNCTION.RUNTIME.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - ec2_code_execution

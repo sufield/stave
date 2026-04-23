@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.AKS.NETWORK.001
+name: AKS Must Use Azure CNI Network Plugin
+description: >
+  AKS clusters should use Azure CNI for VNet-native pod networking enabling NSG rules and network policies on pods.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.1"
+  ccm_v4: ["IVS-03"]
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: AKS Must Use Azure CNI Network Plugin — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"azure": {"compute": {"kind": "aks_cluster", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.compute.kind
+      op: eq
+      value: aks_cluster
+    - field: properties.azure.compute.aks.network_plugin_azure
+      op: eq
+      value: false

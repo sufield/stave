@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.VM.PUBLIC.001
+name: VM With Public IP Must Have JIT Access Enabled
+description: >
+  VMs with public IPs must enable Just-In-Time access to reduce permanent exposure. Without JIT the VM is reachable 24/7.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.1"
+  ccm_v4: ["IVS-03"]
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: VM With Public IP Must Have JIT Access Enabled — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"azure": {"compute": {"kind": "virtual_machine", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.compute.kind
+      op: eq
+      value: virtual_machine
+    - field: properties.azure.compute.vm.public_without_jit
+      op: eq
+      value: true

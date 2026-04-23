@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.NSG.UNASSOCIATED.001
+name: NSG Must Be Associated with a Subnet or NIC
+description: >
+  Azure NSGs must be associated with at least one subnet or network
+  interface. Unassociated NSGs contain rules that protect nothing.
+domain: governance
+severity: low
+compliance:
+  nist_800_53_r5: "CM-6"
+  ccm_v4: ["IVS-03"]
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: NSG is not associated with any subnet or NIC.
+  action: Associate the NSG with a subnet or delete it if unused.
+  example: |
+    {"azure": {"network": {"kind": "nsg", "nsg": {"is_unassociated": false}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.network.kind
+      op: eq
+      value: nsg
+    - field: properties.azure.network.nsg.is_unassociated
+      op: eq
+      value: true

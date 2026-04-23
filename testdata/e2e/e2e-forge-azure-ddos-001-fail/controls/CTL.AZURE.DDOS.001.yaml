@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.DDOS.001
+name: VNet Must Have DDoS Protection Standard Enabled
+description: >
+  Azure VNets must have DDoS Protection Standard enabled. Basic
+  protection provides limited mitigation for volumetric attacks only.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-5"
+  soc2: "A1.1"
+  ccm_v4: ["IVS-03"]
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: VNet does not have DDoS Protection Standard enabled.
+  action: Enable DDoS Protection Standard on the VNet.
+  example: |
+    {"azure": {"network": {"kind": "vnet", "vnet": {"ddos_protection_enabled": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.network.kind
+      op: eq
+      value: vnet
+    - field: properties.azure.network.vnet.ddos_protection_enabled
+      op: eq
+      value: false

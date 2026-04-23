@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.FIREWALL.POLICY.001
+name: Azure Firewall Must Have Policy with Rules
+description: >
+  Azure Firewall must have a firewall policy attached with configured
+  rules. A firewall without a policy or with an empty policy sits in
+  the network path but inspects nothing.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03"]
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Azure Firewall has no policy or empty policy.
+  action: Attach a firewall policy with network and application rules.
+  example: |
+    {"azure": {"network": {"kind": "azure_firewall", "firewall": {"policy_has_rules": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.network.kind
+      op: eq
+      value: azure_firewall
+    - field: properties.azure.network.firewall.policy_has_rules
+      op: eq
+      value: false

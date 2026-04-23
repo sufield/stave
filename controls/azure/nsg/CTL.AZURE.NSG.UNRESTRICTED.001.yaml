@@ -1,0 +1,34 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.NSG.UNRESTRICTED.001
+name: NSG Must Not Allow Unrestricted Inbound on Sensitive Ports
+description: >
+  Azure NSGs must not have inbound Allow rules permitting traffic from
+  any source (0.0.0.0/0 or *) on sensitive ports (SSH 22, RDP 3389,
+  SQL 1433/3306/5432, or all ports). NSG rules are priority-ordered —
+  an unrestricted Allow at a low priority number overrides restrictive
+  Deny rules with higher numbers.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  pci_dss_v4.0: "1.3.1"
+  ccm_v4: ["IVS-03", "IVS-04"]
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: NSG allows unrestricted inbound on sensitive ports.
+  action: Restrict source addresses to specific CIDR ranges or service tags.
+  example: |
+    {"azure": {"network": {"kind": "nsg", "nsg": {"has_unrestricted_inbound": false}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.network.kind
+      op: eq
+      value: nsg
+    - field: properties.azure.network.nsg.has_unrestricted_inbound
+      op: eq
+      value: true

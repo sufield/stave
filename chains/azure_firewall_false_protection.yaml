@@ -1,0 +1,15 @@
+id: azure_firewall_false_protection
+description: >
+  Firewall or WAF deployed but not providing protection — no rules,
+  Detection mode, or no logging. Security infrastructure present but
+  non-functional.
+controls:
+  - CTL.AZURE.FIREWALL.POLICY.001
+  - CTL.AZURE.FIREWALL.LOG.001
+  - CTL.AZURE.WAF.MODE.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - network_access_vpc

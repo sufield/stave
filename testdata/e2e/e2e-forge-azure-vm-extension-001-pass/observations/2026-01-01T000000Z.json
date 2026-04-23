@@ -1,0 +1,22 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "vm-prod-01",
+      "type": "azure_vm",
+      "vendor": "azure",
+      "properties": {
+        "azure": {
+          "compute": {
+            "kind": "virtual_machine",
+            "vm": {
+              "has_unauthorized_extensions": false
+            }
+          }
+        }
+      }
+    }
+  ]
+}

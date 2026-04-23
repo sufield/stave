@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.VM.ENCRYPT.001
+name: VM Disks Must Use Customer-Managed Key Encryption
+description: >
+  OS and data disks must use customer-managed keys or encryption at host.
+domain: encryption
+severity: high
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.1"
+  ccm_v4: ["CEK-03"]
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: VM Disks Must Use Customer-Managed Key Encryption — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"azure": {"compute": {"kind": "virtual_machine", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.compute.kind
+      op: eq
+      value: virtual_machine
+    - field: properties.azure.compute.vm.uses_cmk_encryption
+      op: eq
+      value: false

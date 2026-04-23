@@ -1,0 +1,10 @@
+family: CTL.AZURE.VM
+infection: >
+  Misconfigured Azure VMs expose compute resources to unauthorized
+  access and data theft. Public IPs without JIT, platform-managed
+  encryption, and missing endpoint protection leave VMs permanently
+  exposed with reduced security controls.
+failure: >
+  VM compromise. An attacker gains access through permanently exposed
+  management ports or exploits unpatched vulnerabilities with no
+  endpoint detection.

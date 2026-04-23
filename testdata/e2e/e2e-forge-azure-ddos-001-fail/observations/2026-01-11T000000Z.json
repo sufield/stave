@@ -1,0 +1,22 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "vnet-prod",
+      "type": "azure_vnet",
+      "vendor": "azure",
+      "properties": {
+        "azure": {
+          "network": {
+            "kind": "vnet",
+            "vnet": {
+              "ddos_protection_enabled": false
+            }
+          }
+        }
+      }
+    }
+  ]
+}

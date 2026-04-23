@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.NSG.DEFAULT.001
+name: NSG Must Have Custom Rules Beyond Defaults
+description: >
+  Azure NSGs must have custom security rules configured beyond the
+  default rules. Default-only NSGs provide minimal network segmentation.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03"]
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: NSG has only default rules.
+  action: Add custom inbound and outbound rules for your workload.
+  example: |
+    {"azure": {"network": {"kind": "nsg", "nsg": {"has_custom_rules": true}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.network.kind
+      op: eq
+      value: nsg
+    - field: properties.azure.network.nsg.has_custom_rules
+      op: eq
+      value: false

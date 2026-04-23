@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.AKS.RBAC.001
+name: AKS Must Integrate with Entra ID for RBAC
+description: >
+  AKS clusters must integrate with Entra ID for centralized identity and Conditional Access enforcement on cluster access.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-16"]
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: AKS Must Integrate with Entra ID for RBAC — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"azure": {"compute": {"kind": "aks_cluster", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.compute.kind
+      op: eq
+      value: aks_cluster
+    - field: properties.azure.compute.aks.azure_ad_integration
+      op: eq
+      value: false

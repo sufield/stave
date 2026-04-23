@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.AZURE.VNET.PEERING.001
+name: VNet Peering Must Have NSG Filtering
+description: >
+  Peered VNets must have NSGs applied to peered subnets to filter
+  cross-VNet traffic. Azure VNet peering allows all traffic between
+  peered VNets by default — NSGs must be explicitly applied.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03"]
+scope_tags: [azure]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: VNet peering has no NSG filtering between peered subnets.
+  action: Apply NSGs to subnets in both peered VNets.
+  example: |
+    {"azure": {"network": {"kind": "vnet", "vnet": {"has_unrestricted_peering": false}}}}
+unsafe_predicate:
+  all:
+    - field: properties.azure.network.kind
+      op: eq
+      value: vnet
+    - field: properties.azure.network.vnet.has_unrestricted_peering
+      op: eq
+      value: true

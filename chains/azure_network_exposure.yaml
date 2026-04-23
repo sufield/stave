@@ -1,0 +1,15 @@
+id: azure_network_exposure
+description: >
+  Unrestricted NSG combined with no WAF or no flow logs. Network is
+  open, application layer is unprotected, and no forensic record of
+  traffic exists.
+controls:
+  - CTL.AZURE.NSG.UNRESTRICTED.001
+  - CTL.AZURE.WAF.POLICY.001
+  - CTL.AZURE.VNET.FLOWLOG.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - network_access_vpc

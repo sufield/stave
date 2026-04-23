@@ -1,0 +1,10 @@
+family: CTL.AZURE.AKS
+infection: >
+  Misconfigured AKS clusters expose the Kubernetes control plane and
+  workload infrastructure. Public API servers, missing Entra ID
+  integration, and unsupported versions weaken cluster security at
+  the Azure management layer.
+failure: >
+  Kubernetes cluster compromise via Azure configuration. An attacker
+  gains control plane access through the public API server or exploits
+  unpatched Kubernetes vulnerabilities on an unsupported version.

@@ -1,0 +1,9 @@
+family: CTL.AZURE.FIREWALL
+infection: >
+  A misconfigured Azure Firewall provides false security — deployed
+  in the network path but not inspecting traffic effectively. Without
+  a policy or rules, the firewall is a passthrough.
+failure: >
+  Network inspection bypass. Traffic passes through the firewall
+  uninspected while the security architecture shows a firewall is
+  deployed.

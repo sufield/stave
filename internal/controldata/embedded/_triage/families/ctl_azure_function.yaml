@@ -1,0 +1,10 @@
+family: CTL.AZURE.FUNCTION
+infection: >
+  Misconfigured Azure Functions expose serverless compute to
+  unauthorized invocation. Functions without authentication are
+  publicly invocable — any internet client can trigger execution
+  and generate costs.
+failure: >
+  Unauthenticated public compute. An attacker invokes the function
+  to access data, trigger downstream services, or generate unbounded
+  costs via consumption-based pricing.
