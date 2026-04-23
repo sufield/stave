@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.POD.HOSTIPC.001
+name: Pods Must Not Share the Host IPC Namespace
+description: >
+  Pods must not enable hostIPC which shares the host's IPC namespace.
+  Shared IPC allows containers to access shared memory segments of
+  other processes on the host, enabling cross-process data access
+  and manipulation.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  cis_kubernetes: "5.2.3"
+  ccm_v4: ["IVS-03"]
+scope_tags: [kubernetes]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: Pod shares the host IPC namespace.
+  action: Set hostIPC to false in the pod spec.
+  example: |
+    {"k8s": {"kind": "pod", "pod_security": {"host_ipc": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.k8s.kind
+      op: eq
+      value: pod
+    - field: properties.k8s.pod_security.host_ipc
+      op: eq
+      value: true

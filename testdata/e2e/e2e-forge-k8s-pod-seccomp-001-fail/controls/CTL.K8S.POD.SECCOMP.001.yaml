@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.POD.SECCOMP.001
+name: Pods Must Use RuntimeDefault or Localhost Seccomp Profile
+description: >
+  Pods must have a seccomp profile set to RuntimeDefault or Localhost
+  at the pod or container level. Without a seccomp profile, containers
+  run with the full set of available syscalls, increasing the kernel
+  attack surface for container escape.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  cis_kubernetes: "5.7.2"
+  ccm_v4: ["IVS-03"]
+scope_tags: [kubernetes]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: Pod has no seccomp profile configured.
+  action: Set securityContext.seccompProfile.type to RuntimeDefault.
+  example: |
+    {"k8s": {"kind": "pod", "pod_security": {"seccomp_profile_set": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.k8s.kind
+      op: eq
+      value: pod
+    - field: properties.k8s.pod_security.seccomp_profile_set
+      op: eq
+      value: false

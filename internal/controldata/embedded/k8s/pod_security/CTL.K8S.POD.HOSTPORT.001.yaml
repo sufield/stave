@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.POD.HOSTPORT.001
+name: Containers Must Not Use Host Ports
+description: >
+  Containers must not declare hostPort, which binds directly to the
+  node's network stack. HostPort bypasses Kubernetes service
+  abstractions and network policies, exposing the container's port
+  on the node's IP address.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  cis_kubernetes: "5.2.6"
+  ccm_v4: ["IVS-03"]
+scope_tags: [kubernetes]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Container uses hostPort binding.
+  action: Remove hostPort from container spec. Use Kubernetes Services for port exposure.
+  example: |
+    {"k8s": {"kind": "pod", "pod_security": {"uses_host_port": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.k8s.kind
+      op: eq
+      value: pod
+    - field: properties.k8s.pod_security.uses_host_port
+      op: eq
+      value: true

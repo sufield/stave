@@ -3,15 +3,15 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 884
-**Pack hash:** `3ad0531e37978380301e2031a4ab220f70cc63b02f80a201ff8211d977405393`
+**Total controls:** 892
+**Pack hash:** `3c0ae53cfab9205e87b15bfa581f6e0c4b69e23f93dd2b57d7e5e0f5c016fccb`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 134 |
-| high | 387 |
+| critical | 135 |
+| high | 394 |
 | info | 16 |
 | low | 76 |
 | medium | 271 |
@@ -21,7 +21,7 @@
 | audit | 20 |
 | detection | 2 |
 | encryption | 35 |
-| exposure | 587 |
+| exposure | 595 |
 | governance | 20 |
 | identity | 177 |
 | network | 21 |
@@ -8281,6 +8281,21 @@ Containers must drop the NET_RAW capability. NET_RAW allows crafting raw network
 
 ---
 
+### CTL.K8S.POD.HOSTIPC.001
+
+**Pods Must Not Share the Host IPC Namespace**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_kubernetes: 5.2.3; nist_800_53_r5: SC-7;
+
+Pods must not enable hostIPC which shares the host's IPC namespace. Shared IPC allows containers to access shared memory segments of other processes on the host, enabling cross-process data access and manipulation.
+
+**Remediation:** Set hostIPC to false in the pod spec.
+
+---
+
 ### CTL.K8S.POD.HOSTNET.001
 
 **Pods Must Not Share the Host Network Namespace**
@@ -8311,6 +8326,21 @@ Pods must not share the host PID namespace. Sharing the host PID namespace allow
 
 ---
 
+### CTL.K8S.POD.HOSTPORT.001
+
+**Containers Must Not Use Host Ports**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_kubernetes: 5.2.6; nist_800_53_r5: SC-7;
+
+Containers must not declare hostPort, which binds directly to the node's network stack. HostPort bypasses Kubernetes service abstractions and network policies, exposing the container's port on the node's IP address.
+
+**Remediation:** Remove hostPort from container spec. Use Kubernetes Services for port exposure.
+
+---
+
 ### CTL.K8S.POD.PRIVILEGED.001
 
 **Containers Must Not Run in Privileged Mode**
@@ -8338,6 +8368,21 @@ Pods must not run privileged containers. Privileged containers have full access 
 Containers must not run as the root user. Running as root inside a container increases the impact of container breakout vulnerabilities and grants unnecessary privileges for filesystem and process operations.
 
 **Remediation:** Set securityContext.runAsNonRoot=true and specify a non-root runAsUser in the pod or container security context.
+
+---
+
+### CTL.K8S.POD.SECCOMP.001
+
+**Pods Must Use RuntimeDefault or Localhost Seccomp Profile**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_kubernetes: 5.7.2; nist_800_53_r5: SC-7;
+
+Pods must have a seccomp profile set to RuntimeDefault or Localhost at the pod or container level. Without a seccomp profile, containers run with the full set of available syscalls, increasing the kernel attack surface for container escape.
+
+**Remediation:** Set securityContext.seccompProfile.type to RuntimeDefault.
 
 ---
 
@@ -8383,6 +8428,21 @@ Service account tokens must not be automatically mounted into pods unless explic
 The default service account in each namespace should not have auto-mounted tokens. Pods using the default service account inherit permissions that may allow unintended API access.
 
 **Remediation:** Set automountServiceAccountToken to false on the default service account in every namespace. Create dedicated service accounts with minimal permissions for workloads that need API access.
+
+---
+
+### CTL.K8S.RBAC.WEBHOOK.001
+
+**RBAC Must Restrict Admission Webhook Configuration Access**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_kubernetes: 5.1.4; nist_800_53_r5: AC-6(5);
+
+Roles and ClusterRoles must not grant create, update, or delete on mutatingwebhookconfigurations or validatingwebhookconfigurations. Admission webhooks intercept every API request — an attacker with webhook configuration access can inject a mutating webhook that modifies all pod specs, secrets, or deployments passing through the API server.
+
+**Remediation:** Restrict webhook configuration write access to cluster administrators only.
 
 ---
 
@@ -8622,6 +8682,21 @@ KMS key policies granting usage actions (kms:Decrypt, kms:Encrypt, kms:GenerateD
 KMS key policies must not grant kms:Decrypt, kms:Encrypt, kms:GenerateDataKey, or kms:* to external account principals without restricting via kms:CallerAccount, kms:ViaService, or aws:PrincipalOrgID conditions. Unlike IAM policies, the key policy is the primary authorization mechanism — IAM policies alone cannot grant KMS access unless the key policy permits it. Broad cross-account key access allows external principals to decrypt every resource encrypted by this key.
 
 **Remediation:** Add kms:CallerAccount or aws:PrincipalOrgID conditions to cross-account statements. Restrict kms:ViaService to the specific services that require cross-account key access. Remove statements that grant broad cross-account access.
+
+---
+
+### CTL.KMS.POLICY.GHOSTREF.001
+
+**KMS Key Policy Must Not Reference Deleted Principals**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3; hipaa: 164.312(a)(1); nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+KMS key policies must not grant cryptographic permissions to principal ARNs that don't exist in the IAM inventory. A ghost principal in a key policy inherits decrypt access to every resource encrypted by that key — S3 objects, RDS snapshots, EBS volumes, Secrets Manager secrets. KMS keys are the trust anchor for encryption. Resource-based policies (including key policies) evaluate ARN strings, not unique IDs. An attacker who creates a role matching the ghost principal's name inherits the key's full permission scope.
+
+**Remediation:** Remove the ghost principal ARN from the key policy. Audit which resources use this key for encryption.
 
 ---
 
@@ -11349,6 +11424,21 @@ S3 buckets must have an explicit resource-based bucket policy. Without a policy,
 
 ---
 
+### CTL.S3.POLICY.GHOSTREF.001
+
+**S3 Bucket Policy Must Not Reference Deleted Principals**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+S3 bucket policies must not grant access to principal ARNs that don't exist in the IAM inventory. Unlike IAM trust policies (which replace deleted ARNs with unique IDs), resource-based policies evaluate ARN strings directly. A new entity created with the same name as a deleted principal inherits every permission the bucket policy grants. An attacker with iam:CreateRole can claim the deleted principal's name and gain bucket access.
+
+**Remediation:** Remove the ghost principal ARN from the bucket policy or recreate the intended principal.
+
+---
+
 ### CTL.S3.POLICY.OBJECTSCOPED.001
 
 **Public Read Grants Must Not Target Specific Objects**
@@ -12129,6 +12219,21 @@ The observation snapshot is missing required SNS topic properties.
 
 ---
 
+### CTL.SNS.POLICY.GHOSTREF.001
+
+**SNS Topic Policy Must Not Reference Deleted Principals**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+SNS topic policies must not grant access to principal ARNs that don't exist in the IAM inventory. A recreated principal matching the ghost ARN inherits Publish (injection) or Subscribe (interception) access. Resource-based policies evaluate ARN strings, not unique IDs.
+
+**Remediation:** Remove the ghost principal ARN from the topic policy.
+
+---
+
 ### CTL.SNS.POLICY.PUBLIC.001
 
 **SNS Topic Policy Must Not Allow Public Access**
@@ -12200,6 +12305,21 @@ SQS queues without server-side encryption store messages in plaintext. An attack
 The observation snapshot is missing required SQS queue properties.
 
 **Remediation:** Ensure the extractor calls aws sqs get-queue-attributes and maps the KmsMasterKeyId to the messaging.encryption observation properties.
+
+---
+
+### CTL.SQS.POLICY.GHOSTREF.001
+
+**SQS Queue Policy Must Not Reference Deleted Principals**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+SQS queue policies must not grant access to principal ARNs that don't exist in the IAM inventory. A recreated principal matching the ghost ARN inherits SendMessage (injection) or ReceiveMessage (interception) access. Resource-based policies evaluate ARN strings, not unique IDs.
+
+**Remediation:** Remove the ghost principal ARN from the queue policy.
 
 ---
 

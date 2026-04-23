@@ -1,0 +1,20 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "system:controller",
+      "type": "k8s_cluster_role",
+      "vendor": "kubernetes",
+      "properties": {
+        "k8s": {
+          "kind": "cluster_role",
+          "rbac": {
+            "has_webhook_config_access": false
+          }
+        }
+      }
+    }
+  ]
+}

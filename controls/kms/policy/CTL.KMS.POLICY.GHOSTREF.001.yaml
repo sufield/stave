@@ -1,0 +1,43 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.POLICY.GHOSTREF.001
+name: KMS Key Policy Must Not Reference Deleted Principals
+description: >
+  KMS key policies must not grant cryptographic permissions to
+  principal ARNs that don't exist in the IAM inventory. A ghost
+  principal in a key policy inherits decrypt access to every resource
+  encrypted by that key — S3 objects, RDS snapshots, EBS volumes,
+  Secrets Manager secrets. KMS keys are the trust anchor for
+  encryption. Resource-based policies (including key policies) evaluate
+  ARN strings, not unique IDs. An attacker who creates a role matching
+  the ghost principal's name inherits the key's full permission scope.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-3"
+  fedramp_moderate: "AC-3"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  hipaa: "164.312(a)(1)"
+  ccm_v4: ["CEK-03", "IAM-16"]
+scope_tags: [aws, kms]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: KMS key policy references a principal that no longer exists.
+  action: Remove the ghost principal ARN from the key policy. Audit which resources use this key for encryption.
+  example: |
+    {"cryptography": {"kind": "key", "policy": {"has_ghost_principal": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: key
+    - field: properties.cryptography.policy.has_ghost_principal
+      op: eq
+      value: true

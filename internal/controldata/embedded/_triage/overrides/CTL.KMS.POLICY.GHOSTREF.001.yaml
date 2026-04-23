@@ -1,0 +1,7 @@
+control: CTL.KMS.POLICY.GHOSTREF.001
+defect: >
+  KMS key policy grants cryptographic permissions to a principal ARN that does not exist in the IAM inventory. The key protects encrypted data across multiple resources.
+infection: >
+  An attacker who creates a role matching the ghost principal name inherits the key policy permissions. kms:Decrypt access means the attacker can decrypt any data encrypted by this key — S3 objects, RDS snapshots, EBS volumes, Secrets Manager secrets. The key is the trust anchor; compromising the key policy compromises every resource the key protects.
+failure: >
+  Encryption bypass via key policy ghost. An attacker gains decrypt access to all data encrypted by this key by creating a role matching the deleted principal name.

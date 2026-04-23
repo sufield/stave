@@ -1,0 +1,7 @@
+control: CTL.S3.POLICY.GHOSTREF.001
+defect: >
+  S3 bucket policy on the bucket grants access to a principal ARN that does not exist in the IAM inventory.
+infection: >
+  An attacker with iam:CreateRole creates a new role matching the ghost principal name. The new role automatically inherits every permission the bucket policy grants — the policy evaluates the ARN string, not the internal unique ID. Unlike IAM trust policies which replace deleted ARNs with unique principal IDs, resource-based policies have no such protection.
+failure: >
+  Unauthorized bucket access via name reclaim. An attacker creates a role matching the ghost principal name and inherits read, write, or delete access to the bucket contents.

@@ -1,0 +1,20 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "test-pod",
+      "type": "k8s_pod",
+      "vendor": "kubernetes",
+      "properties": {
+        "k8s": {
+          "kind": "pod",
+          "pod_security": {
+            "seccomp_profile_set": true
+          }
+        }
+      }
+    }
+  ]
+}

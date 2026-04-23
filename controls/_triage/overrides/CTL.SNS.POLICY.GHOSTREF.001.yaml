@@ -1,0 +1,7 @@
+control: CTL.SNS.POLICY.GHOSTREF.001
+defect: >
+  SNS topic policy grants access to a principal ARN that does not exist in the IAM inventory.
+infection: >
+  A recreated principal matching the ghost ARN inherits topic access. Publish permission allows notification injection — subscribers receive attacker-crafted messages that may trigger downstream Lambda functions, SQS queues, or HTTP endpoints. Subscribe permission allows the attacker to receive all notifications.
+failure: >
+  Notification injection or interception via topic policy ghost. An attacker publishes false notifications or subscribes to receive sensitive notifications.

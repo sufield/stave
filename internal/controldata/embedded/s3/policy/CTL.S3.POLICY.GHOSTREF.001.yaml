@@ -1,0 +1,43 @@
+dsl_version: ctrl.v1
+id: CTL.S3.POLICY.GHOSTREF.001
+name: S3 Bucket Policy Must Not Reference Deleted Principals
+description: >
+  S3 bucket policies must not grant access to principal ARNs that
+  don't exist in the IAM inventory. Unlike IAM trust policies (which
+  replace deleted ARNs with unique IDs), resource-based policies
+  evaluate ARN strings directly. A new entity created with the same
+  name as a deleted principal inherits every permission the bucket
+  policy grants. An attacker with iam:CreateRole can claim the
+  deleted principal's name and gain bucket access.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  ccm_v4: ["IAM-16", "DSP-17"]
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: S3 bucket policy references a principal that no longer exists.
+  action: Remove the ghost principal ARN from the bucket policy or recreate the intended principal.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "policy": { "has_ghost_principal": false }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.policy.has_ghost_principal
+      op: eq
+      value: true

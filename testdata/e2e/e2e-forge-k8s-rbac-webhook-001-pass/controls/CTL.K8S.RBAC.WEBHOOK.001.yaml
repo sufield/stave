@@ -1,0 +1,34 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.RBAC.WEBHOOK.001
+name: RBAC Must Restrict Admission Webhook Configuration Access
+description: >
+  Roles and ClusterRoles must not grant create, update, or delete
+  on mutatingwebhookconfigurations or validatingwebhookconfigurations.
+  Admission webhooks intercept every API request — an attacker with
+  webhook configuration access can inject a mutating webhook that
+  modifies all pod specs, secrets, or deployments passing through
+  the API server.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6(5)"
+  cis_kubernetes: "5.1.4"
+  ccm_v4: ["IAM-05"]
+scope_tags: [kubernetes]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: RBAC grants webhook configuration access to non-admin subjects.
+  action: Restrict webhook configuration write access to cluster administrators only.
+  example: |
+    {"k8s": {"kind": "cluster_role", "rbac": {"has_webhook_config_access": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.k8s.kind
+      op: eq
+      value: cluster_role
+    - field: properties.k8s.rbac.has_webhook_config_access
+      op: eq
+      value: true

@@ -1,0 +1,7 @@
+control: CTL.SQS.POLICY.GHOSTREF.001
+defect: >
+  SQS queue policy grants access to a principal ARN that does not exist in the IAM inventory.
+infection: >
+  A recreated principal matching the ghost ARN inherits queue access. SendMessage permission allows message injection — downstream consumers process attacker-injected messages as legitimate. ReceiveMessage permission allows message interception.
+failure: >
+  Message injection or interception via queue policy ghost. An attacker manipulates or reads queue messages by claiming the deleted principal name.
