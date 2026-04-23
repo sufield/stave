@@ -1,0 +1,15 @@
+id: cloudflare_production_misconfiguration
+description: >
+  Development mode enabled plus either SSL not strict or no HSTS.
+  Security features degraded by dev mode AND TLS configuration
+  is weak. Zone in debugging state with production traffic.
+controls:
+  - CTL.CLOUDFLARE.ZONE.DEVMODE.001
+  - CTL.CLOUDFLARE.ZONE.SSL.001
+  - CTL.CLOUDFLARE.ZONE.HSTS.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - iam_credential_theft

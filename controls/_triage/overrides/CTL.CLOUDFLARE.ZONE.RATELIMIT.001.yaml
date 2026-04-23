@@ -1,0 +1,12 @@
+control: CTL.CLOUDFLARE.ZONE.RATELIMIT.001
+defect: >
+  Cloudflare zone has no rate limiting rules configured.
+infection: >
+  Without rate limiting, there is no upper bound on requests per IP
+  or per session. An attacker can send unlimited login attempts
+  (brute force), unlimited API calls (abuse or data scraping), or
+  unlimited requests (resource exhaustion). Rate limiting is the
+  primary defense against volumetric abuse at the application layer.
+failure: >
+  Unlimited request volume. Brute force, credential stuffing, and
+  API abuse operate without throttling.

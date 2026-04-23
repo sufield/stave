@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFLARE.DNS.GHOST.001
+name: DNS Record References Non-Existent Origin
+description: >
+  DNS A/AAAA record points to an IP not associated with any known
+  origin in the organization's cloud inventory. The IP may have
+  been released — traffic hijacking risk.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+scope_tags: [cloudflare]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: DNS Record References Non-Existent Origin — finding detected.
+  action: Update the DNS record to point to a valid origin or remove it.
+  example: |
+    {"cloudflare": {"dns": {"kind": "dns_record", "target_ip_in_inventory": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.cloudflare.dns.kind
+      op: eq
+      value: dns_record
+    - field: properties.cloudflare.dns.target_ip_in_inventory
+      op: eq
+      value: false

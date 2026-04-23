@@ -1,0 +1,24 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "ghost-a",
+      "type": "cloudflare_dns_record",
+      "vendor": "cloudflare",
+      "properties": {
+        "cloudflare": {
+          "dns": {
+            "kind": "dns_record",
+            "name": "app.example.com",
+            "type": "A",
+            "content": "52.4.5.6",
+            "target_ip_in_inventory": true,
+            "target_ip_cloud_provider": "aws"
+          }
+        }
+      }
+    }
+  ]
+}

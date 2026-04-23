@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFLARE.ZONE.BOT.001
+name: Bot Fight Mode Not Enabled
+description: >
+  Bot Fight Mode not enabled. Automated bot traffic not detected
+  or challenged.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-4"
+  soc2: "CC7.1"
+scope_tags: [cloudflare]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Bot Fight Mode Not Enabled — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"cloudflare": {"zone": {"kind": "zone_config", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.cloudflare.zone.kind
+      op: eq
+      value: zone_config
+    - field: properties.cloudflare.zone.bot_fight_mode
+      op: eq
+      value: false

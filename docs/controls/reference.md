@@ -3,25 +3,25 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1161
-**Pack hash:** `c9647c82dd50cfcaff237c0aacee2f9cafd072e7b3d82d2b697b57bb9f91a8c2`
+**Total controls:** 1172
+**Pack hash:** `80cef8900ffb4a9fc7cf8d735976bb0cb751fb94ded301da57ee4ea2aad12481`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 159 |
-| high | 516 |
+| high | 519 |
 | info | 16 |
-| low | 86 |
-| medium | 384 |
+| low | 90 |
+| medium | 388 |
 
 | Domain | Count |
 |--------|-------|
 | audit | 20 |
 | detection | 18 |
 | encryption | 75 |
-| exposure | 747 |
+| exposure | 758 |
 | governance | 24 |
 | identity | 234 |
 | network | 21 |
@@ -3897,6 +3897,21 @@ CNAME record points to a target that doesn't resolve. Subdomain takeover candida
 
 ---
 
+### CTL.CLOUDFLARE.DNS.GHOST.001
+
+**DNS Record References Non-Existent Origin**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+DNS A/AAAA record points to an IP not associated with any known origin in the organization's cloud inventory. The IP may have been released — traffic hijacking risk.
+
+**Remediation:** Update the DNS record to point to a valid origin or remove it.
+
+---
+
 ### CTL.CLOUDFLARE.DNS.INTERNALIP.001
 
 **DNS Record Exposes Internal IP Address**
@@ -3942,6 +3957,51 @@ Wildcard record (*.example.com) resolves any subdomain. Increases subdomain take
 
 ---
 
+### CTL.CLOUDFLARE.ZONE.ALWAYSONLINE.001
+
+**Always Online Mode Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-6; soc2: CC6.1;
+
+Always Online serves stale cached pages when origin is down. May serve outdated security content.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.CLOUDFLARE.ZONE.BOT.001
+
+**Bot Fight Mode Not Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-4; soc2: CC7.1;
+
+Bot Fight Mode not enabled. Automated bot traffic not detected or challenged.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.CLOUDFLARE.ZONE.BROWSERCHECK.001
+
+**Browser Integrity Check Not Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-4; soc2: CC7.1;
+
+Browser integrity check not enabled. HTTP headers not inspected for common bot signatures.
+
+**Remediation:** Remediate per control description.
+
+---
+
 ### CTL.CLOUDFLARE.ZONE.CAA.001
 
 **Cloudflare Zone Missing CAA Record**
@@ -3952,6 +4012,36 @@ Wildcard record (*.example.com) resolves any subdomain. Increases subdomain take
 - **Compliance:** nist_800_53_r5: SC-12; soc2: CC6.1;
 
 No CAA record. Any CA can issue certificates for this domain.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.CLOUDFLARE.ZONE.CHALLENGE.001
+
+**Challenge Passage TTL Not Configured**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-4; soc2: CC7.1;
+
+Challenge passage TTL at default. Solved challenges remain valid too long — bots operate unchallenged.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.CLOUDFLARE.ZONE.DEVMODE.001
+
+**Development Mode Enabled in Production**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-6; soc2: CC6.1;
+
+Development mode enabled. Disables caching and may bypass security features. Never for production zones.
 
 **Remediation:** Remediate per control description.
 
@@ -4002,6 +4092,21 @@ DNSSEC not enabled. DNS responses can be spoofed.
 
 ---
 
+### CTL.CLOUDFLARE.ZONE.EMAILOBFUSCATION.001
+
+**Email Obfuscation Not Enabled**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+Email addresses in HTML not obfuscated. Email scrapers can harvest addresses for spam and phishing.
+
+**Remediation:** Remediate per control description.
+
+---
+
 ### CTL.CLOUDFLARE.ZONE.FIREWALL.001
 
 **Cloudflare Zone Has No Firewall Blocking Rules**
@@ -4012,6 +4117,36 @@ DNSSEC not enabled. DNS responses can be spoofed.
 - **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
 
 No custom firewall rules in block mode. Zone has no custom filtering beyond managed rulesets.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.CLOUDFLARE.ZONE.GEOLOCATION.001
+
+**IP Geolocation Not Enabled**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+CF-IPCountry header not added. Origin cannot implement geographic access controls.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.CLOUDFLARE.ZONE.HOTLINK.001
+
+**Hotlink Protection Not Enabled**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+Other websites can embed images and assets from this domain. Bandwidth theft and content association risk.
 
 **Remediation:** Remediate per control description.
 
@@ -4042,6 +4177,21 @@ HTTP Strict Transport Security not enabled. Browsers allow downgrade to HTTP via
 - **Compliance:** nist_800_53_r5: SC-8; pci_dss_v4: 4.1; soc2: CC6.7;
 
 Automatic HTTPS redirect not enabled. HTTP requests served without redirecting to HTTPS.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.CLOUDFLARE.ZONE.RATELIMIT.001
+
+**Rate Limiting Not Configured**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-5; pci_dss_v4: 6.5; soc2: CC6.6;
+
+No rate limiting rules. Brute force, credential stuffing, and API abuse operate without throttling.
 
 **Remediation:** Remediate per control description.
 
@@ -4102,6 +4252,21 @@ Zone accepts TLS 1.0 or 1.1 with known vulnerabilities.
 - **Compliance:** nist_800_53_r5: SC-8; soc2: CC6.1;
 
 TLS 1.3 not enabled. Improved security and performance unavailable.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.CLOUDFLARE.ZONE.UNDERATTACK.001
+
+**Under Attack Mode Permanently Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-6; soc2: CC6.1;
+
+Under Attack mode permanently enabled without active DDoS. Degrades user experience and interferes with legitimate automation.
 
 **Remediation:** Remediate per control description.
 

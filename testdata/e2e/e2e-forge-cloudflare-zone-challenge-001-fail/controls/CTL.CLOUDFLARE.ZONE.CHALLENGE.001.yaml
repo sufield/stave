@@ -1,0 +1,29 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFLARE.ZONE.CHALLENGE.001
+name: Challenge Passage TTL Not Configured
+description: >
+  Challenge passage TTL at default. Solved challenges remain
+  valid too long — bots operate unchallenged.
+domain: exposure
+severity: low
+compliance:
+  nist_800_53_r5: "SI-4"
+  soc2: "CC7.1"
+scope_tags: [cloudflare]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Challenge Passage TTL Not Configured — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"cloudflare": {"zone": {"kind": "zone_config", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.cloudflare.zone.kind
+      op: eq
+      value: zone_config
+    - field: properties.cloudflare.zone.challenge_passage_configured
+      op: eq
+      value: false

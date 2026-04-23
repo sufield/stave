@@ -1,0 +1,12 @@
+control: CTL.CLOUDFLARE.ZONE.DEVMODE.001
+defect: >
+  Cloudflare zone has development mode enabled.
+infection: >
+  Development mode is intended for temporary debugging. When enabled,
+  it disables Cloudflare's caching layer and may bypass security
+  features that depend on cached responses. In production, every
+  request hits the origin directly without cache acceleration, and
+  some security evaluations may be skipped.
+failure: >
+  Security feature bypass in production. Caching disabled and some
+  security evaluations may be skipped.
