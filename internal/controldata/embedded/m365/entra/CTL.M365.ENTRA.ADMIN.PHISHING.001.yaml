@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.M365.ENTRA.ADMIN.PHISHING.001
+name: Admin Users Without Phishing-Resistant MFA
+description: >
+  Admin MFA is standard (push/SMS), not phishing-resistant (FIDO2).
+  Real-time phishing proxies (Evilginx) bypass standard MFA.
+domain: identity
+severity: high
+compliance:
+  cis_m365_v4: "1.2"
+  nist_800_53_r5: "IA-2"
+  soc2: "CC6.1"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Admin Users Without Phishing-Resistant MFA — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"identity": {"kind": "entra_config", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.identity.kind
+      op: eq
+      value: entra_config
+    - field: properties.m365.identity.admin_phishing_resistant_mfa
+      op: eq
+      value: false

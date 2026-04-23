@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.M365.ENTRA.CA.MGMTAPI.001
+name: MFA Not Required for Azure Management API
+description: >
+  Azure Management API accessible without MFA. Infrastructure
+  changes with password-only authentication.
+domain: identity
+severity: high
+compliance:
+  cis_m365_v4: "3.2"
+  nist_800_53_r5: "IA-2"
+  soc2: "CC6.1"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: MFA Not Required for Azure Management API — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"identity": {"kind": "conditional_access_policy", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.identity.kind
+      op: eq
+      value: conditional_access_policy
+    - field: properties.m365.identity.ca.requires_mfa_for_management_api
+      op: eq
+      value: false

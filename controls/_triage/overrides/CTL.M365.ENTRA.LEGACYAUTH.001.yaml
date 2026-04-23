@@ -1,0 +1,14 @@
+control: CTL.M365.ENTRA.LEGACYAUTH.001
+defect: >
+  M365 tenant does not block legacy authentication protocols.
+infection: >
+  Legacy protocols (POP3, IMAP, SMTP basic auth) do not support
+  modern authentication or MFA. An attacker who obtains a user's
+  password can authenticate via these protocols without triggering
+  any MFA challenge. Every MFA enforcement in the tenant is bypassed
+  by legacy protocol authentication. Blocking legacy auth via
+  Conditional Access closes this bypass.
+failure: >
+  MFA bypass via legacy protocols. An attacker authenticates to
+  Exchange mailboxes using IMAP/POP3 with a stolen password,
+  bypassing all MFA enforcement.

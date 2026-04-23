@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.M365.ENTRA.ADMIN.PORTAL.001
+name: Admin Portal Access Not Restricted
+description: >
+  Admin portals accessible from any network, device, or location
+  without Conditional Access restrictions.
+domain: identity
+severity: medium
+compliance:
+  cis_m365_v4: "1.5"
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Admin Portal Access Not Restricted — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"identity": {"kind": "entra_config", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.identity.kind
+      op: eq
+      value: entra_config
+    - field: properties.m365.identity.admin_portal_restricted
+      op: eq
+      value: false

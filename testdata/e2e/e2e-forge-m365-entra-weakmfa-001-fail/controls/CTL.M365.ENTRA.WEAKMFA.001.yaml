@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.M365.ENTRA.WEAKMFA.001
+name: Weak MFA Methods (SMS/Voice) Not Disabled
+description: >
+  SMS and voice MFA enabled. SMS vulnerable to SIM swapping.
+  Voice vulnerable to social engineering.
+domain: identity
+severity: medium
+compliance:
+  cis_m365_v4: "2.4"
+  nist_800_53_r5: "IA-5"
+  soc2: "CC6.1"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Weak MFA Methods (SMS/Voice) Not Disabled — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"identity": {"kind": "entra_config", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.identity.kind
+      op: eq
+      value: entra_config
+    - field: properties.m365.identity.sms_voice_auth_disabled
+      op: eq
+      value: false

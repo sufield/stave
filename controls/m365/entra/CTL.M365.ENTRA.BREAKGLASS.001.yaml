@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.M365.ENTRA.BREAKGLASS.001
+name: Break Glass Account Not Properly Configured
+description: >
+  Emergency access accounts not excluded from CA policies or not
+  registered with FIDO2 keys.
+domain: identity
+severity: medium
+compliance:
+  cis_m365_v4: "4.1"
+  nist_800_53_r5: "AC-2"
+  soc2: "CC6.1"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Break Glass Account Not Properly Configured — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"identity": {"kind": "entra_config", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.identity.kind
+      op: eq
+      value: entra_config
+    - field: properties.m365.identity.break_glass_fido2_registered
+      op: eq
+      value: false

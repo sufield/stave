@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1172
-**Pack hash:** `80cef8900ffb4a9fc7cf8d735976bb0cb751fb94ded301da57ee4ea2aad12481`
+**Total controls:** 1188
+**Pack hash:** `739bd32488c97aed73d549f3c1611a362f5c5e7396039280524feff5d21dafb6`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 159 |
-| high | 519 |
+| critical | 162 |
+| high | 527 |
 | info | 16 |
 | low | 90 |
-| medium | 388 |
+| medium | 393 |
 
 | Domain | Count |
 |--------|-------|
@@ -23,7 +23,7 @@
 | encryption | 75 |
 | exposure | 758 |
 | governance | 24 |
-| identity | 234 |
+| identity | 250 |
 | network | 21 |
 | resilience | 14 |
 | storage | 8 |
@@ -13242,6 +13242,246 @@ Lightsail managed databases must not be publicly accessible.
 Lightsail instances with public IPs must not have firewall rules allowing broad public access to service ports.
 
 **Remediation:** Restrict firewall rules to specific CIDR ranges.
+
+---
+
+### CTL.M365.ENTRA.ADMIN.CLOUDONLY.001
+
+**Admin Accounts Not Cloud-Only**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_m365_v4: 1.3; nist_800_53_r5: AC-2; soc2: CC6.1;
+
+Admin accounts synced from on-prem AD. On-prem compromise (Kerberoasting, DCSync) grants cloud admin access.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.ENTRA.ADMIN.MFA.001
+
+**M365 Admin Users MFA Not Enabled**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_m365_v4: 1.1; hipaa: 164.312(d); nist_800_53_r5: IA-2; pci_dss_v4: 8.3; soc2: CC6.1;
+
+Admin accounts without MFA. Complete tenant control via password alone.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.ENTRA.ADMIN.PHISHING.001
+
+**Admin Users Without Phishing-Resistant MFA**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_m365_v4: 1.2; nist_800_53_r5: IA-2; soc2: CC6.1;
+
+Admin MFA is standard (push/SMS), not phishing-resistant (FIDO2). Real-time phishing proxies (Evilginx) bypass standard MFA.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.ENTRA.ADMIN.PORTAL.001
+
+**Admin Portal Access Not Restricted**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_m365_v4: 1.5; nist_800_53_r5: AC-3; soc2: CC6.1;
+
+Admin portals accessible from any network, device, or location without Conditional Access restrictions.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.ENTRA.ADMIN.SIGNIN.001
+
+**Admin Sign-In Frequency Not Enforced**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_m365_v4: 1.4; nist_800_53_r5: AC-11; soc2: CC6.1;
+
+Admin sessions have no sign-in frequency limit. Stolen session tokens persist indefinitely.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.ENTRA.BREAKGLASS.001
+
+**Break Glass Account Not Properly Configured**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_m365_v4: 4.1; nist_800_53_r5: AC-2; soc2: CC6.1;
+
+Emergency access accounts not excluded from CA policies or not registered with FIDO2 keys.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.ENTRA.CA.COVERAGE.001
+
+**Conditional Access Does Not Cover All Apps**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_m365_v4: 3.1; nist_800_53_r5: AC-3; soc2: CC6.1;
+
+Not all applications covered by CA policies. Uncovered apps allow auth without MFA, device compliance, or location checks.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.ENTRA.CA.DEVICECODE.001
+
+**Device Code Flow Not Blocked**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_m365_v4: 3.4; nist_800_53_r5: IA-2; soc2: CC6.1;
+
+Device code authentication not blocked. Attacker generates code, victim enters it on legitimate Microsoft login, attacker gets session.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.ENTRA.CA.GUESTS.001
+
+**MFA Not Enforced for Guest Users**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_m365_v4: 3.3; nist_800_53_r5: IA-2; soc2: CC6.2;
+
+External/guest users not required to use MFA when accessing shared resources.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.ENTRA.CA.MGMTAPI.001
+
+**MFA Not Required for Azure Management API**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_m365_v4: 3.2; nist_800_53_r5: IA-2; soc2: CC6.1;
+
+Azure Management API accessible without MFA. Infrastructure changes with password-only authentication.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.ENTRA.LEGACYAUTH.001
+
+**Legacy Authentication Not Blocked**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_m365_v4: 2.3; hipaa: 164.312(d); nist_800_53_r5: IA-2; pci_dss_v4: 8.4; soc2: CC6.1;
+
+Legacy protocols (POP3, IMAP, SMTP basic) not blocked. These bypass all MFA enforcement — password-only access.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.ENTRA.PWHASHSYNC.001
+
+**Password Hash Sync Not Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_m365_v4: 4.2; nist_800_53_r5: CP-9; soc2: CC7.2;
+
+No fallback authentication path if ADFS fails. Cloud auth depends entirely on federation services.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.ENTRA.SIGNINRISK.001
+
+**Sign-In Risk Policy Not Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_m365_v4: 2.1; nist_800_53_r5: AC-7; soc2: CC6.1;
+
+Risky sign-ins (impossible travel, anonymous IP) not blocked or challenged with MFA.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.ENTRA.USERRISK.001
+
+**User Risk Policy Not Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_m365_v4: 2.2; nist_800_53_r5: AC-7; soc2: CC6.1;
+
+Compromised users not forced to change password or blocked.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.ENTRA.USERS.MFA.001
+
+**Users MFA Not Enabled**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_m365_v4: 1.6; hipaa: 164.312(d); nist_800_53_r5: IA-2; pci_dss_v4: 8.3; soc2: CC6.1;
+
+Not all users have MFA enabled. Any account without MFA is a credential-stuffing target.
+
+**Remediation:** Remediate per control description.
+
+---
+
+### CTL.M365.ENTRA.WEAKMFA.001
+
+**Weak MFA Methods (SMS/Voice) Not Disabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_m365_v4: 2.4; nist_800_53_r5: IA-5; soc2: CC6.1;
+
+SMS and voice MFA enabled. SMS vulnerable to SIM swapping. Voice vulnerable to social engineering.
+
+**Remediation:** Remediate per control description.
 
 ---
 

@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.M365.ENTRA.ADMIN.MFA.001
+name: M365 Admin Users MFA Not Enabled
+description: >
+  Admin accounts without MFA. Complete tenant control via password alone.
+domain: identity
+severity: critical
+compliance:
+  cis_m365_v4: "1.1"
+  nist_800_53_r5: "IA-2"
+  hipaa: "164.312(d)"
+  pci_dss_v4: "8.3"
+  soc2: "CC6.1"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: M365 Admin Users MFA Not Enabled — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"identity": {"kind": "entra_config", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.identity.kind
+      op: eq
+      value: entra_config
+    - field: properties.m365.identity.admin_mfa_enabled
+      op: eq
+      value: false

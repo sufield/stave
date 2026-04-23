@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.M365.ENTRA.CA.DEVICECODE.001
+name: Device Code Flow Not Blocked
+description: >
+  Device code authentication not blocked. Attacker generates code,
+  victim enters it on legitimate Microsoft login, attacker gets session.
+domain: identity
+severity: high
+compliance:
+  cis_m365_v4: "3.4"
+  nist_800_53_r5: "IA-2"
+  soc2: "CC6.1"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Device Code Flow Not Blocked — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"identity": {"kind": "conditional_access_policy", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.identity.kind
+      op: eq
+      value: conditional_access_policy
+    - field: properties.m365.identity.ca.blocks_device_code_flow
+      op: eq
+      value: false

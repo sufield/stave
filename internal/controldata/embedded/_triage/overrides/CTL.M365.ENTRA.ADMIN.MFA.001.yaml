@@ -1,0 +1,14 @@
+control: CTL.M365.ENTRA.ADMIN.MFA.001
+defect: >
+  M365 tenant admin accounts do not have MFA enforced.
+infection: >
+  Admin accounts have the highest privilege — they manage users,
+  configure security policies, access all email and documents, and
+  control the identity infrastructure. Without MFA, a compromised
+  admin password is sufficient for complete tenant takeover.
+  Credential stuffing, phishing, and password spray attacks target
+  admin accounts specifically.
+failure: >
+  Complete M365 tenant compromise. An attacker authenticates as
+  a global admin with a stolen password and gains control of email,
+  documents, identity, and security configuration.

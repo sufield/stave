@@ -1,0 +1,33 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "tenant-config",
+      "type": "m365_entra_config",
+      "vendor": "m365",
+      "properties": {
+        "m365": {
+          "identity": {
+            "kind": "entra_config",
+            "admin_mfa_enabled": false,
+            "admin_phishing_resistant_mfa": true,
+            "admin_cloud_only": true,
+            "admin_sign_in_frequency_enabled": true,
+            "admin_portal_restricted": true,
+            "users_mfa_enabled": true,
+            "users_mfa_capable": true,
+            "sign_in_risk_policy_enabled": true,
+            "user_risk_policy_enabled": true,
+            "legacy_auth_blocked": true,
+            "sms_voice_auth_disabled": true,
+            "break_glass_excluded_from_ca": true,
+            "break_glass_fido2_registered": true,
+            "password_hash_sync_enabled": true
+          }
+        }
+      }
+    }
+  ]
+}

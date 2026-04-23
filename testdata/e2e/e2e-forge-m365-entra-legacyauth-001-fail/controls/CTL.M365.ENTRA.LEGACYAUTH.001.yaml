@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.M365.ENTRA.LEGACYAUTH.001
+name: Legacy Authentication Not Blocked
+description: >
+  Legacy protocols (POP3, IMAP, SMTP basic) not blocked. These
+  bypass all MFA enforcement — password-only access.
+domain: identity
+severity: critical
+compliance:
+  cis_m365_v4: "2.3"
+  nist_800_53_r5: "IA-2"
+  hipaa: "164.312(d)"
+  pci_dss_v4: "8.4"
+  soc2: "CC6.1"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Legacy Authentication Not Blocked — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"identity": {"kind": "entra_config", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.identity.kind
+      op: eq
+      value: entra_config
+    - field: properties.m365.identity.legacy_auth_blocked
+      op: eq
+      value: false

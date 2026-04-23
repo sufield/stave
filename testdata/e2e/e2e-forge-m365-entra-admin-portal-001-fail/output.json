@@ -1,0 +1,325 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-15T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "5e12cba68040d67d4a19c01d6d9bad34736dc8f541d0dd3eb89a92931395f5f4",
+        "2026-01-11T000000Z.json": "3e300ca49332aef52913e0e84a60b695d8ac38f0ce02553b9e0ddcb062bf6bd2"
+      },
+      "overall": "4d56e48fe706c2c6220b79e8ea3f19f624a51637187cc5845a23abfadeaa55c2"
+    },
+    "policy_fingerprint": "d818967e925c4d5946410d804b53a288f16c4dc157a5a241c975ba4e598e1540",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.M365.ENTRA.ADMIN.PORTAL.001",
+      "asset_id": "tenant-config",
+      "asset_type": "m365_entra_config",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -168,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:142064839c970911",
+      "control_id": "CTL.M365.ENTRA.ADMIN.PORTAL.001",
+      "control_name": "Admin Portal Access Not Restricted",
+      "control_description": "Admin portals accessible from any network, device, or location without Conditional Access restrictions.\n",
+      "asset_id": "tenant-config",
+      "asset_type": "m365_entra_config",
+      "asset_vendor": "m365",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 336,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "m365.identity.admin_portal_restricted",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "m365.identity.kind",
+            "actual_value": "entra_config",
+            "operator": "eq",
+            "unsafe_value": "entra_config"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 336 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "cis_m365_v4": "1.5",
+        "nist_800_53_r5": "AC-3",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Admin Portal Access Not Restricted — finding detected.",
+        "action": "Remediate per control description.",
+        "example": "{\"m365\": {\"identity\": {\"kind\": \"entra_config\", \"placeholder\": true}}}\n"
+      },
+      "fix_plan": {
+        "id": "fix-d74401274e8d5892",
+        "target": {
+          "asset_id": "tenant-config",
+          "asset_type": "m365_entra_config"
+        },
+        "action": "Remediate per control description."
+      },
+      "exposure_score": 50,
+      "score_breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "m365.identity.admin_portal_restricted eq false",
+          "observation_key": "m365.identity.admin_portal_restricted",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "m365.identity.kind eq \"entra_config\"",
+          "observation_key": "m365.identity.kind",
+          "operator": "eq",
+          "expected_value": "entra_config",
+          "observed_value": "entra_config"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "tenant-config",
+          "type": "m365_entra_config",
+          "vendor": "m365"
+        },
+        "violation": {
+          "control_id": "CTL.M365.ENTRA.ADMIN.PORTAL.001",
+          "control_name": "Admin Portal Access Not Restricted",
+          "severity": "medium",
+          "reasoning": [
+            {
+              "clause": "m365.identity.admin_portal_restricted = false",
+              "observation_key": "m365.identity.admin_portal_restricted",
+              "observed_value": false
+            },
+            {
+              "clause": "m365.identity.kind = \"entra_config\"",
+              "observation_key": "m365.identity.kind",
+              "observed_value": "entra_config"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "m365.identity.admin_portal_restricted",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set m365.identity.admin_portal_restricted to true"
+          },
+          {
+            "path": "m365.identity.kind",
+            "current_value": "entra_config",
+            "has_safe_default": false,
+            "description": "Change m365.identity.kind from entra_config"
+          }
+        ],
+        "action": "Remediate per control description."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "m365"
+      ],
+      "delta": [
+        {
+          "property_label": "identity admin portal restricted",
+          "property_path": "m365.identity.admin_portal_restricted",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:c2c2607536ad990b",
+      "asset_id": "tenant-config",
+      "shared_keys": [
+        "m365.identity",
+        "m365.identity.admin_portal_restricted",
+        "m365.identity.kind"
+      ],
+      "headline_finding_id": "sha256:142064839c970911",
+      "member_finding_ids": [
+        "sha256:142064839c970911"
+      ],
+      "consolidated_score": 50,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "tenant-config",
+      "asset_type": "m365_entra_config",
+      "fix_plan": {
+        "id": "fix-d74401274e8d5892",
+        "target": {
+          "asset_id": "tenant-config",
+          "asset_type": "m365_entra_config"
+        },
+        "action": "Remediate per control description."
+      },
+      "contributing_controls": [
+        "CTL.M365.ENTRA.ADMIN.PORTAL.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.M365.ENTRA.ADMIN.PORTAL.001",
+      "asset_id": "tenant-config",
+      "exposure_score": 50,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 14
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-m365-entra-admin-portal-001-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-m365-entra-admin-portal-001-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "5099745d6f5d0f219ed9ba0e7079a03860733f29",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-m365-entra-admin-portal-001-fail/controls/"
+      ]
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "ca-devicecode",
+      "type": "m365_conditional_access_policy",
+      "vendor": "m365",
+      "properties": {
+        "m365": {
+          "identity": {
+            "kind": "conditional_access_policy",
+            "ca": {
+              "name": "Baseline",
+              "state": "enabled",
+              "all_apps_covered": true,
+              "requires_mfa_for_management_api": true,
+              "requires_mfa_for_guests": true,
+              "blocks_device_code_flow": false
+            }
+          }
+        }
+      }
+    }
+  ]
+}

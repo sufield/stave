@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.M365.ENTRA.PWHASHSYNC.001
+name: Password Hash Sync Not Enabled
+description: >
+  No fallback authentication path if ADFS fails. Cloud auth
+  depends entirely on federation services.
+domain: identity
+severity: medium
+compliance:
+  cis_m365_v4: "4.2"
+  nist_800_53_r5: "CP-9"
+  soc2: "CC7.2"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Password Hash Sync Not Enabled — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"identity": {"kind": "entra_config", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.identity.kind
+      op: eq
+      value: entra_config
+    - field: properties.m365.identity.password_hash_sync_enabled
+      op: eq
+      value: false

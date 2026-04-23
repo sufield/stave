@@ -1,0 +1,14 @@
+control: CTL.M365.ENTRA.ADMIN.PHISHING.001
+defect: >
+  M365 admin accounts use standard MFA, not phishing-resistant
+  MFA (FIDO2/Windows Hello).
+infection: >
+  Real-time phishing proxy tools (Evilginx, Modlishka, EvilProxy)
+  intercept the full authentication flow including the MFA challenge.
+  The user enters their password on the phishing site, receives a
+  legitimate MFA push, approves it, and the proxy captures the
+  session token. FIDO2 keys bind authentication to the legitimate
+  domain — the hardware key refuses to sign for the wrong domain.
+failure: >
+  Admin account compromised via MFA phishing proxy. The attacker
+  captures a valid session token despite MFA being enabled.

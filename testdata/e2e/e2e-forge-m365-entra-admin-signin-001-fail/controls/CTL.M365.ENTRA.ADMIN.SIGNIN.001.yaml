@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.M365.ENTRA.ADMIN.SIGNIN.001
+name: Admin Sign-In Frequency Not Enforced
+description: >
+  Admin sessions have no sign-in frequency limit. Stolen session
+  tokens persist indefinitely.
+domain: identity
+severity: medium
+compliance:
+  cis_m365_v4: "1.4"
+  nist_800_53_r5: "AC-11"
+  soc2: "CC6.1"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Admin Sign-In Frequency Not Enforced — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"identity": {"kind": "entra_config", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.identity.kind
+      op: eq
+      value: entra_config
+    - field: properties.m365.identity.admin_sign_in_frequency_enabled
+      op: eq
+      value: false

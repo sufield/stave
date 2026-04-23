@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.M365.ENTRA.CA.COVERAGE.001
+name: Conditional Access Does Not Cover All Apps
+description: >
+  Not all applications covered by CA policies. Uncovered apps
+  allow auth without MFA, device compliance, or location checks.
+domain: identity
+severity: high
+compliance:
+  cis_m365_v4: "3.1"
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Conditional Access Does Not Cover All Apps — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"identity": {"kind": "conditional_access_policy", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.identity.kind
+      op: eq
+      value: conditional_access_policy
+    - field: properties.m365.identity.ca.all_apps_covered
+      op: eq
+      value: false

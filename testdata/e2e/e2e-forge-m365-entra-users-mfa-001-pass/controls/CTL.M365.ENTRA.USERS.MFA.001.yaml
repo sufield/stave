@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.M365.ENTRA.USERS.MFA.001
+name: Users MFA Not Enabled
+description: >
+  Not all users have MFA enabled. Any account without MFA is a
+  credential-stuffing target.
+domain: identity
+severity: critical
+compliance:
+  cis_m365_v4: "1.6"
+  nist_800_53_r5: "IA-2"
+  hipaa: "164.312(d)"
+  pci_dss_v4: "8.3"
+  soc2: "CC6.1"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Users MFA Not Enabled — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"identity": {"kind": "entra_config", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.identity.kind
+      op: eq
+      value: entra_config
+    - field: properties.m365.identity.users_mfa_enabled
+      op: eq
+      value: false

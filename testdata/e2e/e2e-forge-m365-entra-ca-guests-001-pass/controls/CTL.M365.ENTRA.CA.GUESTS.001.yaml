@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.M365.ENTRA.CA.GUESTS.001
+name: MFA Not Enforced for Guest Users
+description: >
+  External/guest users not required to use MFA when accessing
+  shared resources.
+domain: identity
+severity: high
+compliance:
+  cis_m365_v4: "3.3"
+  nist_800_53_r5: "IA-2"
+  soc2: "CC6.2"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: MFA Not Enforced for Guest Users — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"identity": {"kind": "conditional_access_policy", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.identity.kind
+      op: eq
+      value: conditional_access_policy
+    - field: properties.m365.identity.ca.requires_mfa_for_guests
+      op: eq
+      value: false

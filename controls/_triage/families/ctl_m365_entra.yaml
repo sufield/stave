@@ -1,0 +1,11 @@
+family: CTL.M365.ENTRA
+infection: >
+  M365 Entra ID controls access to the entire collaboration platform
+  — Exchange email, SharePoint documents, Teams, and the identity
+  infrastructure. Missing admin MFA, unblocked legacy authentication,
+  incomplete Conditional Access, and phishable MFA methods each
+  create distinct compromise paths to the tenant.
+failure: >
+  M365 tenant compromise. An attacker gains access to email,
+  documents, meetings, and identity configuration through weak
+  authentication controls.

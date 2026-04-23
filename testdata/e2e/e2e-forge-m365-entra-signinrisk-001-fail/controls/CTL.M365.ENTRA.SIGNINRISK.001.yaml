@@ -1,0 +1,30 @@
+dsl_version: ctrl.v1
+id: CTL.M365.ENTRA.SIGNINRISK.001
+name: Sign-In Risk Policy Not Enabled
+description: >
+  Risky sign-ins (impossible travel, anonymous IP) not blocked
+  or challenged with MFA.
+domain: identity
+severity: high
+compliance:
+  cis_m365_v4: "2.1"
+  nist_800_53_r5: "AC-7"
+  soc2: "CC6.1"
+scope_tags: [m365]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Sign-In Risk Policy Not Enabled — finding detected.
+  action: Remediate per control description.
+  example: |
+    {"m365": {"identity": {"kind": "entra_config", "placeholder": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.m365.identity.kind
+      op: eq
+      value: entra_config
+    - field: properties.m365.identity.sign_in_risk_policy_enabled
+      op: eq
+      value: false
