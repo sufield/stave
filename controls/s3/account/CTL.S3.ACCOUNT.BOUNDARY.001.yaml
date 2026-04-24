@@ -1,0 +1,73 @@
+dsl_version: ctrl.v1
+id: CTL.S3.ACCOUNT.BOUNDARY.001
+name: "S3 Bucket Owned by Account Not in Organization"
+description: >
+  S3 bucket is owned by an AWS account that is not a member of the
+  organization. The bucket is outside organizational governance — no
+  SCPs apply, no centralized logging, no CloudTrail. The bucket may
+  belong to a former employee's personal account, a retired project
+  account, or an account moved to a different organization.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "AC-2"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-04"]
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+observation_fields:
+  - storage.kind
+  - storage.account.in_organization
+remediation:
+  description: >
+    S3 bucket is owned by an account outside the expected organization.
+  action: >
+    Move the bucket to an account within the organization, or migrate
+    the data and decommission the external bucket. Ensure all
+    data-bearing buckets are in accounts governed by organizational SCPs
+    and centralized logging.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "account": {
+          "in_organization": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.account.in_organization
+      op: eq
+      value: false
+tests:
+  - name: bucket owned by account outside organization fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:s3:::prod-data-primary
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          account:
+            in_organization: false
+  - name: bucket owned by account in organization passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:s3:::prod-data-safe
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          account:
+            in_organization: true

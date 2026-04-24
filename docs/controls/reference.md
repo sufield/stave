@@ -3,27 +3,27 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1245
-**Pack hash:** `376ab656936595187c26a5fe62e534edb25c164284e7d0709e5eb12b43fde138`
+**Total controls:** 1264
+**Pack hash:** `98a8c3040c07380ff4f6b00cdc67ad1ba6f09ca0ccc4719c8a415e3b4cc483ef`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 166 |
-| high | 551 |
+| critical | 168 |
+| high | 561 |
 | info | 16 |
 | low | 92 |
-| medium | 420 |
+| medium | 427 |
 
 | Domain | Count |
 |--------|-------|
 | audit | 20 |
 | detection | 32 |
 | encryption | 75 |
-| exposure | 781 |
-| governance | 24 |
-| identity | 270 |
+| exposure | 788 |
+| governance | 27 |
+| identity | 279 |
 | network | 21 |
 | resilience | 14 |
 | storage | 8 |
@@ -10307,6 +10307,21 @@ Principals with lambda:UpdateFunctionCode on a function whose execution role exc
 
 ---
 
+### CTL.IAM.ESCALATE.PASSROLE.AUTOSCALING.001
+
+**Principal Must Not Escalate via Auto Scaling Launch Configuration with PassRole**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+Principals with iam:PassRole on a role R plus autoscaling:CreateLaunchConfiguration and autoscaling:CreateAutoScalingGroup can escalate to R's permissions even when ec2:RunInstances is explicitly denied. The principal creates a launch configuration specifying R as the instance profile, then creates an auto scaling group with min-size 1. The AWSServiceRoleForAutoScaling service-linked role launches the EC2 instance on the principal's behalf, bypassing any ec2:RunInstances deny. The principal gains shell access via user-data reverse shell, SSH key, or vulnerable AMI, then reads IMDS credentials for R. This technique was documented in the 2022 EC2 Auto Scaling privilege escalation research and is detected by PMapper.
+
+**Remediation:** Scope iam:PassRole to a role whose effective permissions do not exceed the principal's, or remove autoscaling:CreateLaunchConfiguration and autoscaling:CreateAutoScalingGroup. If auto scaling capability is required, enforce an instance-profile allowlist via a Condition on iam:PassRole (Condition.StringEquals: iam:PassedToService == ec2.amazonaws.com together with a narrowly-scoped Resource ARN).
+
+---
+
 ### CTL.IAM.ESCALATE.PASSROLE.CREATEDEVENDPOINT.001
 
 **Principal Must Not Escalate via Glue CreateDevEndpoint Role**
@@ -10725,6 +10740,21 @@ After resolving all policy layers including transitive role assumption chains, n
 For each resource tagged data-classification: phi, the complete set of principals with resolved effective access — via identity-based policies AND resource-based policies — must be limited to principals designated as PHI-authorized. A non-designated principal with effective read access to PHI data is a breach path regardless of how it was granted. This control resolves the complete multi-layer access picture including identity policies, SCPs, permission boundaries, and resource policies simultaneously. Cross-account resource policy grants on PHI are the highest-severity variant.
 
 **Remediation:** Review the access path. For identity-based grants: restrict the principal's policies or add an SCP denying PHI resource access for non-designated principals. For resource policy grants: update the resource policy to restrict the Principal list to designated role ARNs. For public policies: remove the Principal: * statement.
+
+---
+
+### CTL.IAM.ORG.DELEGATED.001
+
+**Delegated Administrator Has Excessive Permissions**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+A delegated administrator account for an AWS service has permissions beyond what the delegated service requires. Delegated administrators manage AWS services across the organization. If the delegated admin account has excessive permissions, compromising the account gives the attacker organizational control beyond the intended delegation scope.
+
+**Remediation:** Scope the delegated administrator account permissions to only the actions required by the delegated service. Remove AdministratorAccess or broad cross-account role assumption permissions.
 
 ---
 
@@ -11252,6 +11282,36 @@ The root account must not be used for day-to-day operations. Root activity shoul
 
 ---
 
+### CTL.IAM.SCP.CLOUDTRAIL.001
+
+**SCP Does Not Protect CloudTrail**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AU-2; soc2: CC6.1;
+
+SCP does not deny CloudTrail modification or deletion in member accounts. A member account admin or attacker with admin access can stop logging, delete trails, or modify trail configuration. Without SCP protection, the audit trail can be destroyed and subsequent attacker actions go unrecorded.
+
+**Remediation:** Add an SCP that denies cloudtrail:StopLogging, cloudtrail:DeleteTrail, and cloudtrail:UpdateTrail for all principals in member accounts.
+
+---
+
+### CTL.IAM.SCP.CONFIG.001
+
+**SCP Does Not Protect AWS Config**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AU-2; soc2: CC6.1;
+
+SCP does not deny AWS Config modification or deletion in member accounts. AWS Config records resource configuration changes. Without SCP protection, a compromised admin can stop Config recording and modify resources without configuration change history.
+
+**Remediation:** Add an SCP that denies config:StopConfigurationRecorder, config:DeleteConfigurationRecorder, and config:DeleteDeliveryChannel for all principals in member accounts.
+
+---
+
 ### CTL.IAM.SCP.CREATEACCOUNT.001
 
 **SCPs Must Restrict Unauthorized IAM User and Account Creation**
@@ -11297,6 +11357,51 @@ AWS Organizations must have restrictive Service Control Policies beyond the defa
 
 ---
 
+### CTL.IAM.SCP.GUARDDUTY.001
+
+**SCP Does Not Protect GuardDuty**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: SI-4; soc2: CC6.6;
+
+SCP does not deny GuardDuty disablement in member accounts. A compromised account admin can disable GuardDuty threat detection, eliminating runtime threat monitoring. Without SCP protection, the attacker can disable GuardDuty and operate without threat alerts.
+
+**Remediation:** Add an SCP that denies guardduty:DeleteDetector, guardduty:DisassociateFromMasterAccount, and guardduty:UpdateDetector for all principals in member accounts.
+
+---
+
+### CTL.IAM.SCP.IAM.001
+
+**SCP Does Not Restrict Critical IAM Actions**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+SCP does not deny known privilege escalation actions in member accounts. Actions like iam:CreatePolicyVersion, iam:AttachRolePolicy, iam:PutRolePolicy, and iam:UpdateAssumeRolePolicy are the core escalation primitives. SCPs are the only control that prevents an account admin from self-escalating — IAM policies can be modified by anyone with iam:*, and permission boundaries can be removed.
+
+**Remediation:** Add an SCP that denies iam:CreatePolicyVersion, iam:AttachRolePolicy, iam:PutRolePolicy, and iam:UpdateAssumeRolePolicy for non-admin principals in member accounts. Use condition keys to exempt designated break-glass roles.
+
+---
+
+### CTL.IAM.SCP.LEAVEORG.001
+
+**SCP Does Not Deny organizations:LeaveOrganization**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+Member accounts can exit the organization via organizations:LeaveOrganization. When an account leaves, ALL SCPs are immediately removed — every organizational guardrail drops instantly. The account becomes completely ungoverned with no region restrictions, no service restrictions, and no escalation prevention. An attacker who compromises a member account admin can remove every organizational control with one API call.
+
+**Remediation:** Add an SCP that denies organizations:LeaveOrganization for all principals in member accounts. Apply it to the organization root or all OUs.
+
+---
+
 ### CTL.IAM.SCP.OU.COVERAGE.001
 
 **Production OUs Must Have Restrictive SCPs**
@@ -11309,6 +11414,36 @@ AWS Organizations must have restrictive Service Control Policies beyond the defa
 Safety mechanism integrity control. Checks that security guardrails are actively enforcing, not just present.
 
 **Remediation:** Review the specific guardrail identified in this finding and restore it to an enforcing state.
+
+---
+
+### CTL.IAM.SCP.REGIONS.001
+
+**SCP Does Not Restrict AWS Regions**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+SCP does not restrict which AWS regions member accounts can use. Resources can be created in any region including regions without organizational monitoring, CloudTrail, or Config. An attacker deploys resources in an unmonitored region to evade detection.
+
+**Remediation:** Add an SCP with an aws:RequestedRegion condition that denies all actions in non-approved regions. Allow only the regions where organizational monitoring is deployed.
+
+---
+
+### CTL.IAM.SCP.ROOT.001
+
+**SCP Does Not Deny Root Access Key Creation**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+SCP does not deny iam:CreateAccessKey for root users in member accounts. Root access keys provide unrestricted API access to the entire AWS account — every service, every resource, every action. They bypass IAM policies and permission boundaries. Once created, root access keys persist until explicitly deleted.
+
+**Remediation:** Add an SCP that denies iam:CreateAccessKey when the principal is root. Apply via condition aws:PrincipalArn matching the root ARN pattern.
 
 ---
 
@@ -15679,6 +15814,21 @@ S3 buckets tagged with data-classification=phi must have access restricted to ex
 
 ---
 
+### CTL.S3.ACCOUNT.BOUNDARY.001
+
+**S3 Bucket Owned by Account Not in Organization**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-2; soc2: CC6.1;
+
+S3 bucket is owned by an AWS account that is not a member of the organization. The bucket is outside organizational governance — no SCPs apply, no centralized logging, no CloudTrail. The bucket may belong to a former employee's personal account, a retired project account, or an account moved to a different organization.
+
+**Remediation:** Move the bucket to an account within the organization, or migrate the data and decommission the external bucket. Ensure all data-bearing buckets are in accounts governed by organizational SCPs and centralized logging.
+
+---
+
 ### CTL.S3.ACCOUNT.PAB.001
 
 **Account-Level Block Public Access Must Be Enabled**
@@ -15691,6 +15841,21 @@ S3 buckets tagged with data-classification=phi must have access restricted to ex
 The AWS account must have S3 Block Public Access enabled at the account level. Account-level PAB overrides all bucket and object settings, providing a hard ceiling that prevents any S3 resource in the account from being made public regardless of bucket policies, ACLs, or access point policies. Without account-level PAB, each bucket's public access depends on its own settings, and a single misconfigured bucket or object ACL can expose data. Account-level PAB is the strongest single defense against accidental public exposure.
 
 **Remediation:** Enable all four S3 Block Public Access settings at the account level using aws s3control put-public-access-block with the --account-id parameter. This blocks public access for all current and future buckets in the account. If specific buckets require public access, use CloudFront with Origin Access Control instead of making buckets directly public.
+
+---
+
+### CTL.S3.ACCOUNT.SCP.001
+
+**S3 Bucket Account SCP Does Not Restrict S3 Public Access**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+The account's Service Control Policy does not include restrictions on S3 public access configuration changes. Without an S3-restrictive SCP, account-level Public Access Block settings can be changed by any account administrator, undermining organization-level security guardrails.
+
+**Remediation:** Add an SCP to the organization that denies s3:PutBucketPublicAccessBlock and s3:PutBucketPolicy actions that would weaken public access restrictions. This prevents account administrators from overriding account-level PAB settings.
 
 ---
 
@@ -16043,6 +16208,21 @@ When S3 objects are served via CloudFront, Origin Access Control (OAC) should be
 
 ---
 
+### CTL.S3.CDN.TRANSPORT.001
+
+**CloudFront to S3 Origin Uses HTTP**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(e)(1); nist_800_53_r5: SC-8; pci_dss_v4.0: 4.2.1; soc2: CC6.1;
+
+CloudFront distribution fetches objects from S3 via HTTP, not HTTPS. Traffic between CloudFront and S3 is unencrypted. The user sees HTTPS in the browser but the backend fetch is plaintext — the same false-HTTPS pattern as Cloudflare Flexible SSL mode.
+
+**Remediation:** Configure the CloudFront distribution origin to use HTTPS-only or match-viewer with HTTPS. Set the S3 origin protocol policy to https-only in the CloudFront distribution configuration.
+
+---
+
 ### CTL.S3.CLASSIFY.COVERAGE.001
 
 **All S3 Buckets Must Have a Data Classification Tag**
@@ -16206,6 +16386,66 @@ S3 buckets with any non-public data classification must use SSE-KMS encryption w
 
 ---
 
+### CTL.S3.ENCRYPT.KMS.OWNERSHIP.001
+
+**S3 Bucket Encrypted with External Account KMS Key**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-12; pci_dss_v4.0: 3.5.1; soc2: CC6.1;
+
+S3 bucket uses a KMS key owned by a different AWS account. The external account controls the key — they can revoke access, disable the key, or modify the key policy at any time. Data encrypted with an externally-owned key is accessible only as long as the external account permits. This is a supply chain risk for encryption.
+
+**Remediation:** Use a KMS key owned by the same account as the bucket. If cross-account key usage is required, ensure the key policy grants only the minimum necessary permissions and the key owner is within the organization.
+
+---
+
+### CTL.S3.ENCRYPT.KMS.POLICY.001
+
+**KMS Key Policy for S3 Encryption Is Overly Broad**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-13; pci_dss_v4.0: 3.6.1; soc2: CC6.1;
+
+The KMS key used for S3 encryption has an overly broad key policy — kms:* to root, or kms:Decrypt to principals beyond the intended S3 service. An overly broad KMS key policy undermines encryption. If the key policy grants kms:Decrypt to many principals, the encryption is nominal — anyone with decrypt access can read the data regardless of S3 bucket policies.
+
+**Remediation:** Scope the KMS key policy to the specific principals and services that need access. Use kms:ViaService condition to restrict usage to s3.amazonaws.com. Remove kms:* grants and limit kms:Decrypt to authorized principals.
+
+---
+
+### CTL.S3.GLACIER.RESTORE.POLICY.001
+
+**Glacier Restore Creates Temporarily Accessible Copy**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(1); nist_800_53_r5: AC-3; soc2: A1.2;
+
+Glacier-archived objects that are restored inherit the bucket's access policy without additional restrictions. If the bucket policy allows broad access, the restored copy is accessible to anyone the bucket policy permits during the restore window. Glacier archival is often treated as a security boundary but restored objects become standard S3 objects for the duration of the restore window.
+
+**Remediation:** Add a bucket policy condition restricting access to restored objects. Use s3:ExistingObjectTag or scoped IAM policies to limit who can read restored Glacier objects during the restore window.
+
+---
+
+### CTL.S3.GLACIER.RESTORE.WINDOW.001
+
+**Glacier Restore Window Exceeds Acceptable Duration**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; soc2: A1.2;
+
+Glacier restore window exceeds 7 days. Extended restore windows leave formerly-archived data in a standard-accessible state longer than necessary. The restore window should be the minimum duration required for the restore purpose.
+
+**Remediation:** Reduce the Glacier restore window to the minimum duration required. Use 1-3 day restore windows for operational restores. Extended restore windows leave archived data in a standard-accessible state unnecessarily.
+
+---
+
 ### CTL.S3.GOVERNANCE.001
 
 **Data Classification Tag Required**
@@ -16351,6 +16591,21 @@ S3 buckets tagged with data-classification=phi that have Object Lock enabled mus
 S3 buckets tagged with data-classification=phi that have Object Lock enabled must have a default retention period of at least 2190 days (6 years) to meet HIPAA minimum retention requirements. Shorter retention periods risk premature expiration of WORM protection, allowing deletion or modification of PHI data before the regulatory retention period has elapsed.
 
 **Remediation:** Increase the Object Lock default retention period to at least 2190 days. Use aws s3api put-object-lock-configuration to update the default retention settings.
+
+---
+
+### CTL.S3.LOCK.LEGALHOLD.001
+
+**S3 Object Lock Without Legal Hold Capability**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** hipaa: 164.530(j); soc2: CC7.4;
+
+S3 Object Lock is enabled but no objects have legal hold applied. For organizations subject to litigation hold requirements, legal hold prevents object deletion or modification regardless of retention period. Without legal hold, objects can be deleted after the retention period expires — even if a litigation hold requires indefinite preservation.
+
+**Remediation:** Apply legal hold to objects that must be preserved for litigation, regulatory investigation, or eDiscovery obligations. Use s3:PutObjectLegalHold to apply legal hold to specific objects or object prefixes.
 
 ---
 
@@ -16995,6 +17250,36 @@ S3 buckets tagged with data-classification=phi that have replication enabled mus
 When S3 replication is enabled, the destination bucket must have server-side encryption configured. Replicating data to an unencrypted destination creates a shadow copy that bypasses the source bucket's encryption controls. This is especially dangerous for sensitive data where the source meets encryption requirements but the replica does not.
 
 **Remediation:** Configure default encryption on the destination bucket using SSE-S3 or SSE-KMS. For replication of encrypted objects, add a ReplicaKmsKeyID to the replication rule so objects are re-encrypted with a key in the destination region.
+
+---
+
+### CTL.S3.REPLICATION.DEST.DELETE.001
+
+**Replication Delete Marker Replication Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-28; soc2: A1.2;
+
+Delete marker replication is enabled. When objects are deleted in the source, the deletion replicates to the destination. An attacker who gains delete access to the source can destroy both copies simultaneously — the destination is not an independent backup, it is a synchronized mirror that replicates deletions.
+
+**Remediation:** Disable DeleteMarkerReplication in the replication rule unless both copies are intentionally synchronized. For disaster recovery, the destination should retain objects independently of source deletions.
+
+---
+
+### CTL.S3.REPLICATION.DEST.PUBLIC.001
+
+**Replication Destination Bucket Allows Public Access**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(e); nist_800_53_r5: SC-28; pci_dss_v4.0: 3.4.1; soc2: CC6.1;
+
+S3 replication is configured to a destination bucket that has public access enabled or weaker Public Access Block settings than the source. Data replicated from a private, locked-down source bucket arrives at a publicly accessible destination. Replication copies objects — it does not copy the source bucket's access controls, Public Access Block settings, or encryption configuration.
+
+**Remediation:** Verify the destination bucket has Public Access Block fully enabled and no public bucket policy. Apply the same PAB settings as the source bucket to the destination.
 
 ---
 

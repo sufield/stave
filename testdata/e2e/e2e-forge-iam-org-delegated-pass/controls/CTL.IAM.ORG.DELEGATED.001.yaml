@@ -1,0 +1,74 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ORG.DELEGATED.001
+name: "Delegated Administrator Has Excessive Permissions"
+description: >
+  A delegated administrator account for an AWS service has permissions
+  beyond what the delegated service requires. Delegated administrators
+  manage AWS services across the organization. If the delegated admin
+  account has excessive permissions, compromising the account gives the
+  attacker organizational control beyond the intended delegation scope.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+observation_fields:
+  - identity.kind
+  - identity.delegated.account_permissions_excessive
+remediation:
+  description: >
+    Delegated administrator account has excessive permissions beyond
+    the delegated service scope.
+  action: >
+    Scope the delegated administrator account permissions to only the
+    actions required by the delegated service. Remove
+    AdministratorAccess or broad cross-account role assumption
+    permissions.
+  example: |
+    {
+      "identity": {
+        "kind": "delegated_admin",
+        "delegated": {
+          "account_permissions_excessive": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: delegated_admin
+    - field: properties.identity.delegated.account_permissions_excessive
+      op: eq
+      value: true
+tests:
+  - name: "delegated admin with excessive permissions fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:account/o-abc123/222233334444"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: delegated_admin
+          delegated:
+            account_permissions_excessive: true
+  - name: "delegated admin with scoped permissions passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:account/o-abc123/555566667777"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: delegated_admin
+          delegated:
+            account_permissions_excessive: false

@@ -1,0 +1,76 @@
+dsl_version: ctrl.v1
+id: CTL.S3.REPLICATION.DEST.PUBLIC.001
+name: "Replication Destination Bucket Allows Public Access"
+description: >
+  S3 replication is configured to a destination bucket that has public
+  access enabled or weaker Public Access Block settings than the source.
+  Data replicated from a private, locked-down source bucket arrives at a
+  publicly accessible destination. Replication copies objects — it does
+  not copy the source bucket's access controls, Public Access Block
+  settings, or encryption configuration.
+domain: exposure
+severity: critical
+compliance:
+  hipaa: "164.312(e)"
+  nist_800_53_r5: "SC-28"
+  pci_dss_v4.0: "3.4.1"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-17"]
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: collection
+observation_fields:
+  - storage.kind
+  - storage.replication.destination_public
+remediation:
+  description: >
+    S3 bucket replicates to a destination bucket with public access
+    enabled or weaker PAB settings than the source.
+  action: >
+    Verify the destination bucket has Public Access Block fully enabled
+    and no public bucket policy. Apply the same PAB settings as the
+    source bucket to the destination.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "replication": {
+          "destination_public": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.replication.destination_public
+      op: eq
+      value: true
+tests:
+  - name: replication destination with public access fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:s3:::prod-data-primary
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          replication:
+            destination_public: true
+  - name: replication destination without public access passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:s3:::prod-data-safe
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          replication:
+            destination_public: false

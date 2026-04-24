@@ -1,0 +1,75 @@
+dsl_version: ctrl.v1
+id: CTL.S3.ENCRYPT.KMS.OWNERSHIP.001
+name: "S3 Bucket Encrypted with External Account KMS Key"
+description: >
+  S3 bucket uses a KMS key owned by a different AWS account. The
+  external account controls the key — they can revoke access, disable
+  the key, or modify the key policy at any time. Data encrypted with an
+  externally-owned key is accessible only as long as the external
+  account permits. This is a supply chain risk for encryption.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-12"
+  pci_dss_v4.0: "3.5.1"
+  soc2: "CC6.1"
+  ccm_v4: ["CEK-01"]
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+observation_fields:
+  - storage.kind
+  - storage.encryption.kms_key_external
+remediation:
+  description: >
+    S3 bucket is encrypted with a KMS key owned by a different AWS
+    account.
+  action: >
+    Use a KMS key owned by the same account as the bucket. If
+    cross-account key usage is required, ensure the key policy grants
+    only the minimum necessary permissions and the key owner is within
+    the organization.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "encryption": {
+          "kms_key_external": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.encryption.kms_key_external
+      op: eq
+      value: true
+tests:
+  - name: bucket with external KMS key fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:s3:::prod-data-primary
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          encryption:
+            kms_key_external: true
+  - name: bucket with same-account KMS key passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:s3:::prod-data-safe
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          encryption:
+            kms_key_external: false

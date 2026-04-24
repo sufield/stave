@@ -1,0 +1,328 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "5d8dad4e2ff5740ea27fbbc655e8b85f09da4374450551d3f7218a6fc33e4166",
+        "2026-01-11T000000Z.json": "da55262884b646b26a43935c20a4bdc711067de8749fee75975153527db6a252"
+      },
+      "overall": "4b434ec9a12b9e70506d24fa833df91854d686e4b4917ce3ee6f9ba9e3cf890b"
+    },
+    "policy_fingerprint": "32796905d35e2d96bccb10445627e43e7fcb02df0596fc9a6ef5be21b7d06a17",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.S3.ACCOUNT.BOUNDARY.001",
+      "asset_id": "arn:aws:s3:::prod-data-primary",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:cddf16507611f024",
+      "control_id": "CTL.S3.ACCOUNT.BOUNDARY.001",
+      "control_name": "S3 Bucket Owned by Account Not in Organization",
+      "control_description": "S3 bucket is owned by an AWS account that is not a member of the organization. The bucket is outside organizational governance — no SCPs apply, no centralized logging, no CloudTrail. The bucket may belong to a former employee's personal account, a retired project account, or an account moved to a different organization.\n",
+      "asset_id": "arn:aws:s3:::prod-data-primary",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "storage.account.in_organization",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "storage.kind",
+            "actual_value": "bucket",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "nist_800_53_r5": "AC-2",
+        "soc2": "CC6.1"
+      },
+      "control_compliance_ccm_v4": [
+        "IAM-04"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "S3 bucket is owned by an account outside the expected organization.",
+        "action": "Move the bucket to an account within the organization, or migrate the data and decommission the external bucket. Ensure all data-bearing buckets are in accounts governed by organizational SCPs and centralized logging.",
+        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"account\": {\n      \"in_organization\": true\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-b2035c8006efcf78",
+        "target": {
+          "asset_id": "arn:aws:s3:::prod-data-primary",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Move the bucket to an account within the organization, or migrate the data and decommission the external bucket. Ensure all data-bearing buckets are in accounts governed by organizational SCPs and centralized logging."
+      },
+      "exposure_score": 75,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 10
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "storage.account.in_organization eq false",
+          "observation_key": "storage.account.in_organization",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "storage.kind eq \"bucket\"",
+          "observation_key": "storage.kind",
+          "operator": "eq",
+          "expected_value": "bucket",
+          "observed_value": "bucket"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "arn:aws:s3:::prod-data-primary",
+          "type": "aws_s3_bucket",
+          "vendor": "aws",
+          "arn": "arn:aws:s3:::prod-data-primary"
+        },
+        "violation": {
+          "control_id": "CTL.S3.ACCOUNT.BOUNDARY.001",
+          "control_name": "S3 Bucket Owned by Account Not in Organization",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "storage.account.in_organization = false",
+              "observation_key": "storage.account.in_organization",
+              "observed_value": false
+            },
+            {
+              "clause": "storage.kind = \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.account.in_organization",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set storage.account.in_organization to true"
+          },
+          {
+            "path": "storage.kind",
+            "current_value": "bucket",
+            "has_safe_default": false,
+            "description": "Change storage.kind from bucket"
+          }
+        ],
+        "action": "Move the bucket to an account within the organization, or migrate the data and decommission the external bucket. Ensure all data-bearing buckets are in accounts governed by organizational SCPs and centralized logging."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ],
+      "delta": [
+        {
+          "property_label": "account in organization",
+          "property_path": "storage.account.in_organization",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:a92faf11a64e58c0",
+      "asset_id": "arn:aws:s3:::prod-data-primary",
+      "shared_keys": [
+        "storage.account",
+        "storage.account.in_organization"
+      ],
+      "headline_finding_id": "sha256:cddf16507611f024",
+      "member_finding_ids": [
+        "sha256:cddf16507611f024"
+      ],
+      "consolidated_score": 75,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "arn:aws:s3:::prod-data-primary",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-b2035c8006efcf78",
+        "target": {
+          "asset_id": "arn:aws:s3:::prod-data-primary",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Move the bucket to an account within the organization, or migrate the data and decommission the external bucket. Ensure all data-bearing buckets are in accounts governed by organizational SCPs and centralized logging."
+      },
+      "contributing_controls": [
+        "CTL.S3.ACCOUNT.BOUNDARY.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.S3.ACCOUNT.BOUNDARY.001",
+      "asset_id": "arn:aws:s3:::prod-data-primary",
+      "exposure_score": 75,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-s3-account-boundary-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-s3-account-boundary-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "0854a5adb322ccdb81ca8bf3330ef3e05a2e4c3d",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-s3-account-boundary-fail/controls/"
+      ]
+    }
+  }
+}

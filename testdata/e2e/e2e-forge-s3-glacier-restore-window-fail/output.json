@@ -1,0 +1,328 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "9ef41c774e24f1bf9f810488c5614d9f2bc2838ff8c5c0cdd73998063078bd6a",
+        "2026-01-11T000000Z.json": "e666c12a0ebbc2f2e58eb02117a5294fbebf3d340b2ec57a8a507cb800e32e94"
+      },
+      "overall": "8cf3595c109886a2f4d849ba4f9c4cf62facb464d25d32ae1c7d736a6e8f8e31"
+    },
+    "policy_fingerprint": "fe0401fdef9f069b9ee8c7ee035ed74af751d70e3429b335caa4dd7ec60f304f",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.S3.GLACIER.RESTORE.WINDOW.001",
+      "asset_id": "arn:aws:s3:::prod-archive-primary",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:a87f9aecfb759c6b",
+      "control_id": "CTL.S3.GLACIER.RESTORE.WINDOW.001",
+      "control_name": "Glacier Restore Window Exceeds Acceptable Duration",
+      "control_description": "Glacier restore window exceeds 7 days. Extended restore windows leave formerly-archived data in a standard-accessible state longer than necessary. The restore window should be the minimum duration required for the restore purpose.\n",
+      "asset_id": "arn:aws:s3:::prod-archive-primary",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "storage.glacier.restore_window_excessive",
+            "actual_value": true,
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "storage.kind",
+            "actual_value": "bucket",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "nist_800_53_r5": "AC-3",
+        "soc2": "A1.2"
+      },
+      "control_compliance_ccm_v4": [
+        "DSP-17"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Glacier restore window is longer than 7 days, leaving archived data accessible longer than necessary.",
+        "action": "Reduce the Glacier restore window to the minimum duration required. Use 1-3 day restore windows for operational restores. Extended restore windows leave archived data in a standard-accessible state unnecessarily.",
+        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"glacier\": {\n      \"restore_window_excessive\": false\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-6964b9d8f8630fef",
+        "target": {
+          "asset_id": "arn:aws:s3:::prod-archive-primary",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Reduce the Glacier restore window to the minimum duration required. Use 1-3 day restore windows for operational restores. Extended restore windows leave archived data in a standard-accessible state unnecessarily."
+      },
+      "exposure_score": 50,
+      "score_breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 10
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "storage.glacier.restore_window_excessive eq true",
+          "observation_key": "storage.glacier.restore_window_excessive",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": true
+        },
+        {
+          "predicate_expr": "storage.kind eq \"bucket\"",
+          "observation_key": "storage.kind",
+          "operator": "eq",
+          "expected_value": "bucket",
+          "observed_value": "bucket"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "arn:aws:s3:::prod-archive-primary",
+          "type": "aws_s3_bucket",
+          "vendor": "aws",
+          "arn": "arn:aws:s3:::prod-archive-primary"
+        },
+        "violation": {
+          "control_id": "CTL.S3.GLACIER.RESTORE.WINDOW.001",
+          "control_name": "Glacier Restore Window Exceeds Acceptable Duration",
+          "severity": "medium",
+          "reasoning": [
+            {
+              "clause": "storage.glacier.restore_window_excessive = true",
+              "observation_key": "storage.glacier.restore_window_excessive",
+              "observed_value": true
+            },
+            {
+              "clause": "storage.kind = \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.glacier.restore_window_excessive",
+            "current_value": "true",
+            "required_value": "false",
+            "has_safe_default": true,
+            "description": "Set storage.glacier.restore_window_excessive to false"
+          },
+          {
+            "path": "storage.kind",
+            "current_value": "bucket",
+            "has_safe_default": false,
+            "description": "Change storage.kind from bucket"
+          }
+        ],
+        "action": "Reduce the Glacier restore window to the minimum duration required. Use 1-3 day restore windows for operational restores. Extended restore windows leave archived data in a standard-accessible state unnecessarily."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ],
+      "delta": [
+        {
+          "property_label": "glacier restore window excessive",
+          "property_path": "storage.glacier.restore_window_excessive",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:5a33dc71d9e302fa",
+      "asset_id": "arn:aws:s3:::prod-archive-primary",
+      "shared_keys": [
+        "storage.glacier",
+        "storage.glacier.restore_window_excessive"
+      ],
+      "headline_finding_id": "sha256:a87f9aecfb759c6b",
+      "member_finding_ids": [
+        "sha256:a87f9aecfb759c6b"
+      ],
+      "consolidated_score": 50,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "arn:aws:s3:::prod-archive-primary",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-6964b9d8f8630fef",
+        "target": {
+          "asset_id": "arn:aws:s3:::prod-archive-primary",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Reduce the Glacier restore window to the minimum duration required. Use 1-3 day restore windows for operational restores. Extended restore windows leave archived data in a standard-accessible state unnecessarily."
+      },
+      "contributing_controls": [
+        "CTL.S3.GLACIER.RESTORE.WINDOW.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.S3.GLACIER.RESTORE.WINDOW.001",
+      "asset_id": "arn:aws:s3:::prod-archive-primary",
+      "exposure_score": 50,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-s3-glacier-restore-window-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-s3-glacier-restore-window-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "0854a5adb322ccdb81ca8bf3330ef3e05a2e4c3d",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-s3-glacier-restore-window-fail/controls/"
+      ]
+    }
+  }
+}

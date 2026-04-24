@@ -1,0 +1,20 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:organizations::111122223333:account/o-abc123/222233334444",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "delegated_admin",
+          "delegated": {
+            "account_permissions_excessive": true
+          }
+        }
+      }
+    }
+  ]
+}

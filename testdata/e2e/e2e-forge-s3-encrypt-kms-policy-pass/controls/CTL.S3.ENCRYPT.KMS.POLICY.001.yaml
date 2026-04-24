@@ -1,0 +1,75 @@
+dsl_version: ctrl.v1
+id: CTL.S3.ENCRYPT.KMS.POLICY.001
+name: "KMS Key Policy for S3 Encryption Is Overly Broad"
+description: >
+  The KMS key used for S3 encryption has an overly broad key policy —
+  kms:* to root, or kms:Decrypt to principals beyond the intended S3
+  service. An overly broad KMS key policy undermines encryption. If the
+  key policy grants kms:Decrypt to many principals, the encryption is
+  nominal — anyone with decrypt access can read the data regardless of
+  S3 bucket policies.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-13"
+  pci_dss_v4.0: "3.6.1"
+  soc2: "CC6.1"
+  ccm_v4: ["CEK-01"]
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: collection
+observation_fields:
+  - storage.kind
+  - storage.encryption.kms_key_policy_broad
+remediation:
+  description: >
+    KMS key used for S3 encryption has an overly broad key policy.
+  action: >
+    Scope the KMS key policy to the specific principals and services
+    that need access. Use kms:ViaService condition to restrict usage to
+    s3.amazonaws.com. Remove kms:* grants and limit kms:Decrypt to
+    authorized principals.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "encryption": {
+          "kms_key_policy_broad": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.encryption.kms_key_policy_broad
+      op: eq
+      value: true
+tests:
+  - name: bucket with overly broad KMS key policy fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:s3:::prod-data-primary
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          encryption:
+            kms_key_policy_broad: true
+  - name: bucket with scoped KMS key policy passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:s3:::prod-data-safe
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          encryption:
+            kms_key_policy_broad: false

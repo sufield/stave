@@ -1,0 +1,75 @@
+dsl_version: ctrl.v1
+id: CTL.S3.GLACIER.RESTORE.POLICY.001
+name: "Glacier Restore Creates Temporarily Accessible Copy"
+description: >
+  Glacier-archived objects that are restored inherit the bucket's access
+  policy without additional restrictions. If the bucket policy allows
+  broad access, the restored copy is accessible to anyone the bucket
+  policy permits during the restore window. Glacier archival is often
+  treated as a security boundary but restored objects become standard S3
+  objects for the duration of the restore window.
+domain: exposure
+severity: high
+compliance:
+  hipaa: "164.312(a)(1)"
+  soc2: "A1.2"
+  nist_800_53_r5: "AC-3"
+  ccm_v4: ["DSP-17"]
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: collection
+observation_fields:
+  - storage.kind
+  - storage.glacier.restore_access_unrestricted
+remediation:
+  description: >
+    S3 bucket has active Glacier restores with no additional access
+    restrictions on restored objects.
+  action: >
+    Add a bucket policy condition restricting access to restored objects.
+    Use s3:ExistingObjectTag or scoped IAM policies to limit who can
+    read restored Glacier objects during the restore window.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "glacier": {
+          "restore_access_unrestricted": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.glacier.restore_access_unrestricted
+      op: eq
+      value: true
+tests:
+  - name: bucket with unrestricted glacier restore access fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:s3:::prod-archive-primary
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          glacier:
+            restore_access_unrestricted: true
+  - name: bucket with restricted glacier restore access passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:s3:::prod-archive-safe
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          glacier:
+            restore_access_unrestricted: false

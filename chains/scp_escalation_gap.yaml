@@ -1,0 +1,17 @@
+id: scp_escalation_gap
+description: >
+  SCP does not restrict IAM escalation actions AND either root key
+  creation is allowed or regions are unrestricted. The attacker can
+  escalate privileges in a member account AND either create
+  persistent root credentials or deploy resources in unmonitored
+  regions.
+controls:
+  - CTL.IAM.SCP.IAM.001
+  - CTL.IAM.SCP.ROOT.001
+  - CTL.IAM.SCP.REGIONS.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - scp_governance_configured
+postconditions:
+  - ungoverned_operation

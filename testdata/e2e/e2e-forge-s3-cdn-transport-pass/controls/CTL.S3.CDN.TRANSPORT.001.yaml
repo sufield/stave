@@ -1,0 +1,75 @@
+dsl_version: ctrl.v1
+id: CTL.S3.CDN.TRANSPORT.001
+name: "CloudFront to S3 Origin Uses HTTP"
+description: >
+  CloudFront distribution fetches objects from S3 via HTTP, not HTTPS.
+  Traffic between CloudFront and S3 is unencrypted. The user sees HTTPS
+  in the browser but the backend fetch is plaintext — the same
+  false-HTTPS pattern as Cloudflare Flexible SSL mode.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-8"
+  pci_dss_v4.0: "4.2.1"
+  hipaa: "164.312(e)(1)"
+  soc2: "CC6.1"
+  ccm_v4: ["IVS-03"]
+scope_tags:
+  - aws
+  - s3
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: collection
+observation_fields:
+  - storage.kind
+  - storage.cdn_access.origin_uses_http
+remediation:
+  description: >
+    CloudFront distribution fetches from S3 origin using HTTP, not
+    HTTPS.
+  action: >
+    Configure the CloudFront distribution origin to use HTTPS-only or
+    match-viewer with HTTPS. Set the S3 origin protocol policy to
+    https-only in the CloudFront distribution configuration.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "cdn_access": {
+          "origin_uses_http": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.cdn_access.origin_uses_http
+      op: eq
+      value: true
+tests:
+  - name: bucket with CloudFront HTTP origin fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:s3:::prod-static-primary
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          cdn_access:
+            origin_uses_http: true
+  - name: bucket with CloudFront HTTPS origin passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:s3:::prod-static-safe
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          cdn_access:
+            origin_uses_http: false

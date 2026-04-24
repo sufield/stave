@@ -1,0 +1,72 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SCP.CONFIG.001
+name: "SCP Does Not Protect AWS Config"
+description: >
+  SCP does not deny AWS Config modification or deletion in member
+  accounts. AWS Config records resource configuration changes. Without
+  SCP protection, a compromised admin can stop Config recording and
+  modify resources without configuration change history.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-2"
+  soc2: "CC6.1"
+  ccm_v4: ["LOG-01"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: defense_evasion
+observation_fields:
+  - identity.kind
+  - identity.scp.denies_config_modify
+remediation:
+  description: >
+    Organization SCPs do not deny AWS Config modification or deletion
+    in member accounts.
+  action: >
+    Add an SCP that denies config:StopConfigurationRecorder,
+    config:DeleteConfigurationRecorder, and
+    config:DeleteDeliveryChannel for all principals in member accounts.
+  example: |
+    {
+      "identity": {
+        "kind": "organization",
+        "scp": {
+          "denies_config_modify": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.identity.scp.denies_config_modify
+      op: eq
+      value: false
+tests:
+  - name: "organization without Config protection fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_config_modify: false
+  - name: "organization with Config protection passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::444455556666:organization/o-def456"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_config_modify: true

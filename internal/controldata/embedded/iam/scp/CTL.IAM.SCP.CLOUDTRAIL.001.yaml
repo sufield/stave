@@ -1,0 +1,72 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SCP.CLOUDTRAIL.001
+name: "SCP Does Not Protect CloudTrail"
+description: >
+  SCP does not deny CloudTrail modification or deletion in member
+  accounts. A member account admin or attacker with admin access can
+  stop logging, delete trails, or modify trail configuration. Without
+  SCP protection, the audit trail can be destroyed and subsequent
+  attacker actions go unrecorded.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AU-2"
+  soc2: "CC6.1"
+  ccm_v4: ["LOG-01"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: defense_evasion
+observation_fields:
+  - identity.kind
+  - identity.scp.denies_cloudtrail_modify
+remediation:
+  description: >
+    Organization SCPs do not deny CloudTrail modification or deletion
+    in member accounts.
+  action: >
+    Add an SCP that denies cloudtrail:StopLogging, cloudtrail:DeleteTrail,
+    and cloudtrail:UpdateTrail for all principals in member accounts.
+  example: |
+    {
+      "identity": {
+        "kind": "organization",
+        "scp": {
+          "denies_cloudtrail_modify": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.identity.scp.denies_cloudtrail_modify
+      op: eq
+      value: false
+tests:
+  - name: "organization without CloudTrail protection fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_cloudtrail_modify: false
+  - name: "organization with CloudTrail protection passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::444455556666:organization/o-def456"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_cloudtrail_modify: true

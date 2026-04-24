@@ -1,0 +1,74 @@
+dsl_version: ctrl.v1
+id: CTL.S3.ACCOUNT.SCP.001
+name: "S3 Bucket Account SCP Does Not Restrict S3 Public Access"
+description: >
+  The account's Service Control Policy does not include restrictions on
+  S3 public access configuration changes. Without an S3-restrictive
+  SCP, account-level Public Access Block settings can be changed by any
+  account administrator, undermining organization-level security
+  guardrails.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-04"]
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: defense_evasion
+observation_fields:
+  - storage.kind
+  - storage.account.scp_restricts_s3_public
+remediation:
+  description: >
+    S3 bucket account SCP does not restrict public access configuration
+    changes.
+  action: >
+    Add an SCP to the organization that denies
+    s3:PutBucketPublicAccessBlock and s3:PutBucketPolicy actions that
+    would weaken public access restrictions. This prevents account
+    administrators from overriding account-level PAB settings.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "account": {
+          "scp_restricts_s3_public": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.account.scp_restricts_s3_public
+      op: eq
+      value: false
+tests:
+  - name: bucket account without S3 public access SCP fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:s3:::prod-data-primary
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          account:
+            scp_restricts_s3_public: false
+  - name: bucket account with S3 public access SCP passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:s3:::prod-data-safe
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          account:
+            scp_restricts_s3_public: true

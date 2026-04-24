@@ -1,0 +1,75 @@
+dsl_version: ctrl.v1
+id: CTL.S3.LOCK.LEGALHOLD.001
+name: "S3 Object Lock Without Legal Hold Capability"
+description: >
+  S3 Object Lock is enabled but no objects have legal hold applied. For
+  organizations subject to litigation hold requirements, legal hold
+  prevents object deletion or modification regardless of retention
+  period. Without legal hold, objects can be deleted after the retention
+  period expires — even if a litigation hold requires indefinite
+  preservation.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC7.4"
+  hipaa: "164.530(j)"
+  ccm_v4: ["GRC-01"]
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+observation_fields:
+  - storage.kind
+  - storage.object_lock.legal_hold_applied
+remediation:
+  description: >
+    S3 bucket has Object Lock enabled but no legal hold is applied to
+    any objects.
+  action: >
+    Apply legal hold to objects that must be preserved for litigation,
+    regulatory investigation, or eDiscovery obligations. Use
+    s3:PutObjectLegalHold to apply legal hold to specific objects or
+    object prefixes.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "object_lock": {
+          "legal_hold_applied": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.object_lock.legal_hold_applied
+      op: eq
+      value: false
+tests:
+  - name: bucket with Object Lock but no legal hold fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:s3:::prod-compliance-primary
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          object_lock:
+            legal_hold_applied: false
+  - name: bucket with legal hold applied passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:s3:::prod-compliance-safe
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          object_lock:
+            legal_hold_applied: true

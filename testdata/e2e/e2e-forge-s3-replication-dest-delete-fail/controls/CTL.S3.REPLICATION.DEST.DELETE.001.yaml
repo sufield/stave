@@ -1,0 +1,73 @@
+dsl_version: ctrl.v1
+id: CTL.S3.REPLICATION.DEST.DELETE.001
+name: "Replication Delete Marker Replication Enabled"
+description: >
+  Delete marker replication is enabled. When objects are deleted in the
+  source, the deletion replicates to the destination. An attacker who
+  gains delete access to the source can destroy both copies
+  simultaneously — the destination is not an independent backup, it is
+  a synchronized mirror that replicates deletions.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "A1.2"
+  ccm_v4: ["BCR-11"]
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+observation_fields:
+  - storage.kind
+  - storage.replication.delete_marker_replication
+remediation:
+  description: >
+    S3 bucket has delete marker replication enabled. Deletions in the
+    source propagate to the destination.
+  action: >
+    Disable DeleteMarkerReplication in the replication rule unless both
+    copies are intentionally synchronized. For disaster recovery, the
+    destination should retain objects independently of source deletions.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "replication": {
+          "delete_marker_replication": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.replication.delete_marker_replication
+      op: eq
+      value: true
+tests:
+  - name: bucket with delete marker replication enabled fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:s3:::prod-data-primary
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          replication:
+            delete_marker_replication: true
+  - name: bucket with delete marker replication disabled passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:s3:::prod-data-safe
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          replication:
+            delete_marker_replication: false
