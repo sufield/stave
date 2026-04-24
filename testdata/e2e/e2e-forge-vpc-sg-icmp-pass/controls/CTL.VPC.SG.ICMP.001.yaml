@@ -1,0 +1,81 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.SG.ICMP.001
+name: Security Group Allows All ICMP from Internet
+description: >
+  Security group allows all ICMP types from 0.0.0.0/0. ICMP includes
+  not just ping (type 8) but also redirect (type 5 — route
+  manipulation), timestamp (type 13 — system fingerprinting), and
+  address mask (type 17 — network mapping). Allowing all ICMP types
+  enables network reconnaissance and potential route manipulation.
+domain: exposure
+severity: medium
+compliance:
+  soc2: "CC6.6"
+  nist_800_53_r5: "SC-7"
+  pci_dss_v4.0: "1.3.1"
+  ccm_v4: ["IVS-03"]
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+classification: state_assertion
+defect: >
+  Security group allows all ICMP types from 0.0.0.0/0.
+infection: >
+  ICMP includes redirect (type 5 — can manipulate routing tables),
+  timestamp (type 13 — reveals system clock for fingerprinting), and
+  address mask (type 17 — maps network topology). Allowing all ICMP
+  types provides reconnaissance data (which hosts respond, their OS
+  fingerprint, network layout) and potential route manipulation. Only
+  type 8 (echo request) is needed for ping.
+failure: >
+  Network reconnaissance via ICMP. An attacker fingerprints systems,
+  maps the network, or manipulates routing via unrestricted ICMP types.
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    All ICMP types allowed from the internet.
+  action: >
+    Restrict ICMP to type 8 (echo request) only if ping is needed.
+    Remove rules allowing all ICMP types from 0.0.0.0/0.
+  example: |
+    {
+      "network": {
+        "kind": "security_group",
+        "security_group": {
+          "icmp_all_types_from_internet": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: security_group
+    - field: properties.network.security_group.icmp_all_types_from_internet
+      op: eq
+      value: true
+tests:
+  - name: SG with all ICMP types fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "sg-icmp-all"
+      asset_type: aws_security_group
+      vendor: aws
+      properties:
+        network:
+          kind: security_group
+          security_group:
+            icmp_all_types_from_internet: true
+  - name: SG with ping only passes
+    verdict: PASS
+    asset:
+      asset_id: "sg-icmp-ping"
+      asset_type: aws_security_group
+      vendor: aws
+      properties:
+        network:
+          kind: security_group
+          security_group:
+            icmp_all_types_from_internet: false

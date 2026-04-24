@@ -1,0 +1,17 @@
+control: CTL.VPC.TGW.ATTACHMENT.ISOLATED.001
+defect: >
+  A VPC whose tags or name signal network isolation is attached to a
+  Transit Gateway.
+infection: >
+  "Isolated", "sandbox", and "quarantine" are statements about intended
+  blast-radius containment. A VPC tagged that way was created on the
+  assumption that it would not share a network with other workloads.
+  Attaching it to a TGW provides a network path that negates the
+  isolation claim regardless of how restrictive the TGW route tables
+  are — the attachment itself means routing decisions can be changed to
+  allow traffic. Metadata that no longer reflects posture misleads
+  operators and auditors.
+failure: >
+  Mismatched posture claim. A VPC that security reviews treat as
+  isolated is in fact reachable via the TGW, breaking the assumptions
+  downstream controls rely on.

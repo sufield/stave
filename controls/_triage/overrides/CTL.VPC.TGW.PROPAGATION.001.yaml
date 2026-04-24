@@ -1,0 +1,16 @@
+control: CTL.VPC.TGW.PROPAGATION.001
+defect: >
+  Transit Gateway accepts route propagation from VPN or Direct Connect
+  attachments.
+infection: >
+  Route propagation accepts BGP advertisements from on-premises or
+  external networks and installs them automatically in the TGW route
+  table. A compromised or misconfigured on-premises router can announce
+  arbitrary CIDRs — including AWS service IPs or internal VPC ranges —
+  and redirect traffic through attacker-controlled infrastructure.
+  Unlike static routes (which require explicit operator action to
+  change), propagated routes install automatically whenever BGP updates
+  arrive.
+failure: >
+  BGP route injection. External networks divert AWS traffic through
+  attacker infrastructure for interception or modification.

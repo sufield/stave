@@ -1,0 +1,18 @@
+id: vpc_tgw_segmentation_failure
+description: >
+  Transit Gateway routes permit all-to-all inter-VPC communication AND
+  either flow logs are disabled or an isolated VPC is attached. The TGW
+  provides unrestricted lateral movement between VPCs at the network
+  layer, and either the traffic is unmonitored or workloads that were
+  meant to stand apart are reachable over the hub. Segmentation is both
+  collapsed and either blind or violated at the VPC level.
+controls:
+  - CTL.VPC.TGW.ROUTING.ALLTOALL.001
+  - CTL.VPC.TGW.FLOWLOGS.001
+  - CTL.VPC.TGW.ATTACHMENT.ISOLATED.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - network_access_vpc
+postconditions:
+  - network_access_ec2

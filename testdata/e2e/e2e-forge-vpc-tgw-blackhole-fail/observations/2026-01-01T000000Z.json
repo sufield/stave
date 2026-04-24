@@ -1,0 +1,33 @@
+{
+  "assets": [
+    {
+      "id": "tgw-rtb-with-blackholes",
+      "properties": {
+        "network": {
+          "kind": "transit_gateway_route_table",
+          "tgw": {
+            "id": "tgw-0bhbad00000000001",
+            "route_table_id": "tgw-rtb-0bhole0001",
+            "has_blackhole_routes": true,
+            "blackhole_route_count": 3,
+            "blackhole_routes": [
+              {"cidr": "10.20.0.0/16", "state": "blackhole"},
+              {"cidr": "10.40.0.0/16", "state": "blackhole"},
+              {"cidr": "172.31.0.0/16", "state": "blackhole"}
+            ]
+          }
+        }
+      },
+      "type": "aws_ec2_transit_gateway_route_table",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

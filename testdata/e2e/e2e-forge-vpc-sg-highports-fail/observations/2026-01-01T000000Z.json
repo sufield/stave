@@ -1,0 +1,29 @@
+{
+  "assets": [
+    {
+      "id": "sg-highrisk-open",
+      "properties": {
+        "network": {
+          "kind": "security_group",
+          "security_group": {
+            "high_risk_port_list": [
+              445,
+              6379
+            ],
+            "high_risk_ports_exposed": true
+          }
+        }
+      },
+      "type": "aws_security_group",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

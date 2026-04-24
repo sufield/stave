@@ -1,0 +1,60 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.TGW.PROPAGATION.001
+name: Transit Gateway Route Propagation From VPN or Direct Connect
+description: >
+  Transit Gateway has route propagation enabled from VPN or Direct Connect
+  attachments. Routes from on-premises or external networks are
+  automatically propagated into TGW route tables. An on-premises network
+  that is compromised or misconfigured can announce routes for arbitrary
+  CIDRs — including AWS service IP ranges — and redirect traffic through
+  attacker-controlled infrastructure. BGP route injection is the attack
+  path. Static routes constrained to known on-premises CIDRs are the
+  safe pattern.
+domain: exposure
+severity: medium
+compliance:
+  cis_aws_v3.0: "5.5"
+  nist_800_53_r5: "SC-7"
+  fedramp_moderate: "SC-7"
+  pci_dss_v4.0: "1.3.2"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "IVS-06"]
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+observation_fields:
+  - network.kind
+  - network.tgw.id
+  - network.tgw.propagation_enabled
+  - network.tgw.propagation_sources
+  - network.tgw.propagated_route_count
+remediation:
+  description: >
+    Transit Gateway accepts propagated routes from VPN or Direct Connect
+    attachments. External networks can inject routes into AWS routing.
+  action: >
+    Disable route propagation from VPN/Direct Connect attachments on the
+    TGW route table. Configure static routes with explicit destination
+    CIDRs for the on-premises networks you need to reach. Audit existing
+    propagated routes before removal to identify any that are relied on.
+  example: |
+    {
+      "network": {
+        "kind": "transit_gateway_route_table",
+        "tgw": {
+          "propagation_enabled": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: transit_gateway_route_table
+    - field: properties.network.tgw.propagation_enabled
+      op: eq
+      value: true

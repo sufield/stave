@@ -1,0 +1,16 @@
+control: CTL.VPC.PEERING.PENDING.001
+defect: >
+  VPC peering connection is in pending-acceptance state and has aged
+  beyond the window where the original request context is still known.
+infection: >
+  A pending peering connection is dormant — no traffic flows until the
+  other side accepts. But the request persists indefinitely, and anyone
+  with VPC admin rights in the peer account can accept it at any time.
+  When accepted, the connection activates with whatever routing was
+  configured when the request was made. The organization no longer
+  remembers why the request exists, what access it was meant to grant,
+  or whether the peer account is still trusted.
+failure: >
+  Forgotten connection activates unexpectedly. A peer account accepts
+  the stale request and a network path opens without any current review
+  of the use case.

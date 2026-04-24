@@ -8,6 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **VPC-2 — peering and Transit Gateway controls (9 controls, 3 chains).**
+  Closes the largest remaining cluster in the VPC taxonomy: cross-VPC
+  connectivity. Peering coverage adds `CROSSACCOUNT` (peer outside the
+  organization, high), `BIDIRECTIONAL` (return routes not required by the
+  use case, medium), `PENDING` (stale pending-acceptance request, medium),
+  and `DNS` (resolution disabled, low). Transit Gateway coverage adds
+  `ROUTING.ALLTOALL` (segmentation collapse, high), `FLOWLOGS` (central
+  hub unlogged, high), `PROPAGATION` (VPN/DX route injection risk,
+  medium), `BLACKHOLE` (silent traffic loss, medium), and
+  `ATTACHMENT.ISOLATED` (isolated VPC attached to a shared hub, medium).
+  Chains: `vpc_peering_exposure` (cross-account peer + broad routing),
+  `vpc_tgw_segmentation_failure` (all-to-all + unlogged or isolated
+  attachment), `vpc_transit_ghost` (blackhole routes + endpoint ghost
+  refs). Skipped `PEERING.ROUTING.BROAD` — duplicates the existing
+  `CTL.VPC.PEERING.ROUTES.001` (same field, same check). 18 e2e fixtures,
+  9 triage overrides, docs and README regenerated (1337 controls).
 - **DELTA section on findings.** Mechanically derived fix paths computed
   from the predicate and observed values. Each DeltaPath shows the
   property label (from registry), current observed value, and the fix

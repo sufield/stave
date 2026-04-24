@@ -1,0 +1,87 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.SG.IPV6.PARITY.001
+name: Security Group Has IPv4 Restrictions But Missing IPv6 Equivalents
+description: >
+  Security group has inbound rules restricting IPv4 access (specific
+  CIDRs, not 0.0.0.0/0) but no equivalent IPv6 restrictions — or has
+  ::/0 (all IPv6) allowed on the same ports. IPv6 addresses are
+  publicly routable by default and the missing IPv6 rules mean the
+  IPv4 restriction is incomplete.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.6"
+  nist_800_53_r5: "SC-7"
+  pci_dss_v4.0: "1.3.2"
+  ccm_v4: ["IVS-03", "IVS-09"]
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+classification: state_assertion
+defect: >
+  Security group restricts IPv4 access but allows ::/0 (all IPv6) on
+  the same ports.
+infection: >
+  IPv6 addresses are publicly routable by default — there is no NAT
+  in standard IPv6 deployments. If the VPC has an IPv6 CIDR block and
+  instances have IPv6 addresses, an open ::/0 rule means any
+  IPv6-capable host on the internet can reach the instance on the
+  specified ports. The IPv4 restrictions are meaningless if the same
+  ports are open on IPv6. This is the most commonly missed dual-stack
+  security gap — teams configure IPv4 rules and forget IPv6 exists.
+failure: >
+  IPv4 restriction bypass via IPv6. An attacker connects via IPv6 to
+  ports that are restricted on IPv4.
+params:
+  attack_stage: initial_access
+observation_fields:
+  - network.kind
+  - network.security_group.has_ipv6_parity
+remediation:
+  description: >
+    IPv4 access is restricted but IPv6 is open on the same ports.
+  action: >
+    Add IPv6 rules that match the IPv4 restrictions. For every IPv4
+    CIDR restriction, add an equivalent IPv6 rule or explicitly deny
+    ::/0.
+  example: |
+    {
+      "network": {
+        "kind": "security_group",
+        "security_group": {
+          "has_ipv6_parity": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: security_group
+    - field: properties.network.security_group.has_ipv6_parity
+      op: eq
+      value: false
+tests:
+  - name: SG without IPv6 parity fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "sg-no-ipv6-parity"
+      asset_type: aws_security_group
+      vendor: aws
+      properties:
+        network:
+          kind: security_group
+          security_group:
+            has_ipv6_parity: false
+  - name: SG with IPv6 parity passes
+    verdict: PASS
+    asset:
+      asset_id: "sg-ipv6-parity"
+      asset_type: aws_security_group
+      vendor: aws
+      properties:
+        network:
+          kind: security_group
+          security_group:
+            has_ipv6_parity: true

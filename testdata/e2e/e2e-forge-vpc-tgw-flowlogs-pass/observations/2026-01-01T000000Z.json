@@ -1,0 +1,27 @@
+{
+  "assets": [
+    {
+      "id": "tgw-with-flowlogs",
+      "properties": {
+        "network": {
+          "kind": "transit_gateway",
+          "tgw": {
+            "id": "tgw-0logsgood00000001",
+            "flow_logs_enabled": true,
+            "flow_log_destination": "arn:aws:logs:us-east-1:111122223333:log-group:/aws/tgw/flow"
+          }
+        }
+      },
+      "type": "aws_ec2_transit_gateway",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

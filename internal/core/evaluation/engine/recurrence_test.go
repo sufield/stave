@@ -187,8 +187,9 @@ func TestCreateRecurrenceFinding_Fields(t *testing.T) {
 	}
 }
 
-func TestRecurrence_ExactlyAtLimitShouldNotFire(t *testing.T) {
-	// A limit of 3 means "more than 3 times". Exactly 3 should NOT fire.
+func TestRecurrence_ExactlyAtLimitFires(t *testing.T) {
+	// `recurrence_limit: N` means "N occurrences is already too many".
+	// count == limit fires; only count < limit is compliant.
 	ctl := recurrenceControl("CTL.RECUR.BOUNDARY.001", 3, 90)
 	now := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
 
@@ -199,7 +200,7 @@ func TestRecurrence_ExactlyAtLimitShouldNotFire(t *testing.T) {
 	})
 
 	findings := EvaluateRecurrenceForControl(lc, ctl, now)
-	if len(findings) != 0 {
-		t.Errorf("limit=3 with count=3 should NOT fire (more than 3, not >= 3), got %d findings", len(findings))
+	if len(findings) != 1 {
+		t.Errorf("limit=3 with count=3 should fire (count >= limit), got %d findings", len(findings))
 	}
 }

@@ -1,0 +1,77 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.SG.IPV6.EGRESS.001
+name: Security Group Has IPv6 Egress to All Destinations
+description: >
+  Security group allows all IPv6 egress to ::/0. If IPv4 egress is
+  restricted but IPv6 egress is open, data exfiltration routes through
+  IPv6 — bypassing IPv4 egress controls entirely.
+domain: exposure
+severity: medium
+compliance:
+  soc2: "CC6.6"
+  nist_800_53_r5: "SC-7"
+  ccm_v4: ["IVS-03"]
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+classification: state_assertion
+defect: >
+  Security group allows all IPv6 egress to ::/0.
+infection: >
+  IPv6 egress to ::/0 permits outbound traffic to any IPv6 destination.
+  If IPv4 egress is restricted to specific destinations but IPv6 egress
+  is unrestricted, an attacker routes exfiltration through IPv6. Many
+  network monitoring tools focus on IPv4 — IPv6 exfiltration may not
+  appear in dashboards or alerts configured for IPv4 addresses.
+failure: >
+  IPv4 egress bypass via IPv6. Data exfiltration routes through
+  unrestricted IPv6 egress.
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    IPv6 egress is unrestricted while IPv4 egress may be restricted.
+  action: >
+    Restrict IPv6 egress to required destinations. If IPv4 egress is
+    restricted, ensure IPv6 egress has equivalent restrictions.
+  example: |
+    {
+      "network": {
+        "kind": "security_group",
+        "egress": {
+          "has_unrestricted_ipv6_egress": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: security_group
+    - field: properties.network.egress.has_unrestricted_ipv6_egress
+      op: eq
+      value: true
+tests:
+  - name: SG with unrestricted IPv6 egress fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "sg-ipv6-egress-open"
+      asset_type: aws_security_group
+      vendor: aws
+      properties:
+        network:
+          kind: security_group
+          egress:
+            has_unrestricted_ipv6_egress: true
+  - name: SG with restricted IPv6 egress passes
+    verdict: PASS
+    asset:
+      asset_id: "sg-ipv6-egress-restricted"
+      asset_type: aws_security_group
+      vendor: aws
+      properties:
+        network:
+          kind: security_group
+          egress:
+            has_unrestricted_ipv6_egress: false

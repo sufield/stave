@@ -1,0 +1,28 @@
+{
+  "assets": [
+    {
+      "id": "tgw-attach-prod-workloads",
+      "properties": {
+        "network": {
+          "kind": "transit_gateway_attachment",
+          "tgw": {
+            "attachment_vpc_id": "vpc-0prod00000000001",
+            "attachment_vpc_name": "prod-workloads-useast1",
+            "attachment_vpc_tags": {"Env": "prod", "Tier": "application"},
+            "attachment_appears_isolated": false
+          }
+        }
+      },
+      "type": "aws_ec2_transit_gateway_vpc_attachment",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

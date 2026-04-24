@@ -1,0 +1,25 @@
+{
+  "assets": [
+    {
+      "id": "sg-icmp-ping",
+      "properties": {
+        "network": {
+          "kind": "security_group",
+          "security_group": {
+            "icmp_all_types_from_internet": false
+          }
+        }
+      },
+      "type": "aws_security_group",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

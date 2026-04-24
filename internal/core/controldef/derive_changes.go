@@ -35,6 +35,10 @@ func DeriveChanges(misconfigs []Misconfiguration) []PropertyChange {
 			pc.RequiredValue = "absent"
 			pc.HasSafeDefault = false
 			pc.Description = "Remove " + m.DisplayProperty()
+		case m.Operator == predicate.OpNe:
+			pc.RequiredValue = formatValue(m.UnsafeValue)
+			pc.HasSafeDefault = false
+			pc.Description = fmt.Sprintf("Set %s to %s", m.DisplayProperty(), pc.RequiredValue)
 		default:
 			pc.HasSafeDefault = false
 			pc.Description = fmt.Sprintf("Change %s from %s", m.DisplayProperty(), pc.CurrentValue)
@@ -63,13 +67,9 @@ func isBooleanInversion(m *Misconfiguration) bool {
 	if m.Operator != predicate.OpEq {
 		return false
 	}
-	if _, ok := m.UnsafeValue.(bool); ok {
-		return true
-	}
-	if _, ok := m.ActualValue.(bool); ok {
-		return true
-	}
-	return false
+	_, unsafeOK := m.UnsafeValue.(bool)
+	_, actualOK := m.ActualValue.(bool)
+	return unsafeOK && actualOK
 }
 
 func invertBool(v any) string {

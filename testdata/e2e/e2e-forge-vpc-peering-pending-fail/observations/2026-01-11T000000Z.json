@@ -1,0 +1,29 @@
+{
+  "assets": [
+    {
+      "id": "pcx-stale-pending",
+      "properties": {
+        "network": {
+          "kind": "peering_connection",
+          "peering": {
+            "id": "pcx-0pending000000001",
+            "status": "pending-acceptance",
+            "status_pending": true,
+            "creation_date": "2025-10-03T00:00:00Z",
+            "age_days": 90
+          }
+        }
+      },
+      "type": "aws_vpc_peering_connection",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

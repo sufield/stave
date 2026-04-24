@@ -1,0 +1,26 @@
+{
+  "assets": [
+    {
+      "id": "sg-broad-range",
+      "properties": {
+        "network": {
+          "kind": "security_group",
+          "security_group": {
+            "broadest_range_size": 64512,
+            "has_broad_port_range": true
+          }
+        }
+      },
+      "type": "aws_security_group",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

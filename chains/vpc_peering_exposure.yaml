@@ -1,0 +1,16 @@
+id: vpc_peering_exposure
+description: >
+  VPC peering terminates in an account outside the organization AND the
+  peering route table targets the full peer VPC CIDR. External-account
+  connectivity is combined with overly broad routing — the untrusted
+  peer has network access to every subnet in the local VPC. Maximum
+  exposure via untrusted peering.
+controls:
+  - CTL.VPC.PEERING.CROSSACCOUNT.001
+  - CTL.VPC.PEERING.ROUTES.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - network_access_vpc
+postconditions:
+  - network_access_ec2

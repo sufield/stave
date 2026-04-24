@@ -1,0 +1,10 @@
+control: CTL.VPC.SG.DEFAULT.INUSE.001
+defect: >
+  Default security group is attached to resources.
+infection: >
+  The default SG allows all traffic between attached resources and all
+  outbound traffic. An attacker who compromises one resource can reach all
+  others attached to the default SG without restriction.
+failure: >
+  Flat network within default SG. Lateral movement between all resources
+  attached to the default security group.

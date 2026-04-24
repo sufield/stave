@@ -1,0 +1,61 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.TGW.BLACKHOLE.001
+name: Transit Gateway Has Blackhole Routes
+description: >
+  Transit Gateway route table contains blackhole routes — destinations
+  where traffic is silently dropped with no error returned. Blackhole
+  routes typically arise when a VPC attachment is deleted but the route
+  persists, or when a route is intentionally added to block a CIDR.
+  Unintentional blackholes follow the "everything appears to work"
+  failure pattern: applications experience timeouts rather than errors,
+  no ICMP unreachable is returned, nothing is logged for the dropped
+  traffic. Troubleshooting is difficult because the network layer reports
+  no failure.
+domain: hygiene
+severity: medium
+compliance:
+  cis_aws_v3.0: "5.5"
+  nist_800_53_r5: "CM-6"
+  fedramp_moderate: "CM-6"
+  soc2: "CC7.1"
+  ccm_v4: ["IVS-03"]
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+observation_fields:
+  - network.kind
+  - network.tgw.id
+  - network.tgw.has_blackhole_routes
+  - network.tgw.blackhole_route_count
+remediation:
+  description: >
+    Transit Gateway route table has blackhole routes. Traffic to the
+    blackholed CIDRs is silently dropped.
+  action: >
+    Audit each blackhole route. For routes that reference deleted
+    attachments, delete the stale route so traffic falls through to the
+    correct next hop (or returns a routing error, which is
+    troubleshootable). For intentional blocks, document the reason and
+    consider moving the block to a security group or Network Firewall
+    rule where it will produce a log entry.
+  example: |
+    {
+      "network": {
+        "kind": "transit_gateway_route_table",
+        "tgw": {
+          "has_blackhole_routes": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: transit_gateway_route_table
+    - field: properties.network.tgw.has_blackhole_routes
+      op: eq
+      value: true

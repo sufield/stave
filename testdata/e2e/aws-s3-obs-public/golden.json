@@ -1489,8 +1489,9 @@
           {
             "path": "storage.object_ownership.rule",
             "current_value": "",
+            "required_value": "BucketOwnerEnforced",
             "has_safe_default": false,
-            "description": "Change storage.object_ownership.rule from "
+            "description": "Set storage.object_ownership.rule to BucketOwnerEnforced"
           }
         ],
         "action": "Set Object Ownership to BucketOwnerEnforced using aws s3api put-bucket-ownership-controls. This disables all ACLs on the bucket. Before enabling, audit existing ACL grants and migrate any legitimate access to bucket policies or IAM policies. All existing ACL-based access will stop working once BucketOwnerEnforced is set."

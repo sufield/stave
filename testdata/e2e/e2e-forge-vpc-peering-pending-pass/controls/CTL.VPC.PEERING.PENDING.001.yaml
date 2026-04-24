@@ -1,0 +1,57 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.PEERING.PENDING.001
+name: VPC Peering Connection in Pending State
+description: >
+  VPC peering connection is in pending-acceptance state. The peering
+  request was sent but never accepted or rejected. Pending connections
+  indicate forgotten requests — the connection was initiated for a
+  purpose that may no longer exist. If accepted later (by anyone with
+  VPC admin rights in the peer account), the connection activates with
+  whatever routing was configured at creation time, potentially opening
+  a network path no one remembers authorizing.
+domain: hygiene
+severity: medium
+compliance:
+  cis_aws_v3.0: "5.5"
+  nist_800_53_r5: "CM-6"
+  fedramp_moderate: "CM-6"
+  soc2: "CC7.1"
+  ccm_v4: ["IVS-03"]
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+observation_fields:
+  - network.kind
+  - network.peering.status
+  - network.peering.status_pending
+  - network.peering.age_days
+remediation:
+  description: >
+    Peering connection is in pending-acceptance and has aged beyond the
+    window in which the original request would still be remembered or
+    relevant.
+  action: >
+    Reject the pending peering request. If the connection is still
+    needed, create a fresh request with current routing requirements
+    and document the use case before accepting.
+  example: |
+    {
+      "network": {
+        "kind": "peering_connection",
+        "peering": {
+          "status_pending": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: peering_connection
+    - field: properties.network.peering.status_pending
+      op: eq
+      value: true

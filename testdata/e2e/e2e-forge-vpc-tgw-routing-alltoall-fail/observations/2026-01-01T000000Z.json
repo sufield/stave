@@ -1,0 +1,29 @@
+{
+  "assets": [
+    {
+      "id": "tgw-rtb-flat",
+      "properties": {
+        "network": {
+          "kind": "transit_gateway_route_table",
+          "tgw": {
+            "id": "tgw-0hub000000000002",
+            "route_table_id": "tgw-rtb-0flat00000001",
+            "all_to_all_routing": true,
+            "attached_vpc_count": 5,
+            "route_count": 20
+          }
+        }
+      },
+      "type": "aws_ec2_transit_gateway_route_table",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

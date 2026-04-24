@@ -1,0 +1,29 @@
+{
+  "assets": [
+    {
+      "id": "tgw-rtb-static-only",
+      "properties": {
+        "network": {
+          "kind": "transit_gateway_route_table",
+          "tgw": {
+            "id": "tgw-0propgood00000001",
+            "route_table_id": "tgw-rtb-0static0001",
+            "propagation_enabled": false,
+            "propagation_sources": [],
+            "propagated_route_count": 0
+          }
+        }
+      },
+      "type": "aws_ec2_transit_gateway_route_table",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

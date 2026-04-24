@@ -9,7 +9,7 @@ description: >
   all egress by default, restricting outbound traffic to required
   ports and destinations is a critical APT hardening measure.
 domain: exposure
-severity: medium
+severity: high
 compliance:
   soc2: "CC6.6"
   nist_800_53_r5: "SC-7"

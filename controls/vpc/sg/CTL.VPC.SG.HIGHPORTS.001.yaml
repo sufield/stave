@@ -1,0 +1,97 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.SG.HIGHPORTS.001
+name: Security Group Allows High-Risk Service Ports from Internet
+description: >
+  Security group allows inbound traffic from 0.0.0.0/0 on ports
+  associated with high-risk services that should never be internet-
+  exposed: 445 (SMB), 135 (RPC), 139 (NetBIOS), 1900 (SSDP),
+  11211 (Memcached), 9200/9300 (Elasticsearch), 6379 (Redis),
+  27017 (MongoDB), 5601 (Kibana), 2375/2376 (Docker), 10250 (Kubelet).
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.6"
+  nist_800_53_r5: "SC-7"
+  pci_dss_v4.0: "1.3.1"
+  hipaa: "164.312(e)(1)"
+  ccm_v4: ["IVS-03", "IVS-09"]
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+classification: state_assertion
+defect: >
+  Security group allows internet access on high-risk service ports.
+infection: >
+  These ports are associated with services that have well-documented
+  exploitation paths and should never be directly exposed to the
+  internet. SMB (445) was the vector for WannaCry and NotPetya — the
+  most destructive cyberattacks in history. Elasticsearch (9200) and
+  MongoDB (27017) are the most commonly exposed databases in
+  internet-wide scans. Docker daemon (2375) gives an attacker complete
+  host control. Each exposed port is a directly exploitable attack
+  surface.
+failure: >
+  High-risk service exposed to internet. An attacker exploits a
+  known-vulnerable service directly from the internet.
+params:
+  attack_stage: initial_access
+  base_impact: 9
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+observation_fields:
+  - network.kind
+  - network.security_group.high_risk_ports_exposed
+  - network.security_group.high_risk_port_list
+remediation:
+  description: >
+    High-risk service ports are exposed to the internet.
+  action: >
+    Remove inbound rules allowing internet access on high-risk ports
+    (445, 135, 139, 6379, 9200, 27017, 2375, 10250, 5601, 11211,
+    1900). These services should never be internet-exposed.
+  example: |
+    {
+      "network": {
+        "kind": "security_group",
+        "security_group": {
+          "high_risk_ports_exposed": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: security_group
+    - field: properties.network.security_group.high_risk_ports_exposed
+      op: eq
+      value: true
+tests:
+  - name: SG with high-risk ports exposed fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "sg-highrisk-open"
+      asset_type: aws_security_group
+      vendor: aws
+      properties:
+        network:
+          kind: security_group
+          security_group:
+            high_risk_ports_exposed: true
+            high_risk_port_list:
+              - 445
+              - 6379
+  - name: SG without high-risk ports passes
+    verdict: PASS
+    asset:
+      asset_id: "sg-highrisk-closed"
+      asset_type: aws_security_group
+      vendor: aws
+      properties:
+        network:
+          kind: security_group
+          security_group:
+            high_risk_ports_exposed: false

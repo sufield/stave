@@ -1,0 +1,53 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.PEERING.DNS.001
+name: VPC Peering Without DNS Resolution Enabled
+description: >
+  VPC peering connection does not have DNS resolution enabled. Resources
+  in the peer VPC cannot resolve private DNS names — forcing use of raw
+  IP addresses. Applications that hard-code IPs break when instances are
+  replaced and new IPs are assigned. Low severity — this is an
+  operational/hygiene concern, not a direct security risk — but it
+  signals that the peering connection was configured without attention
+  to its intended use pattern.
+domain: hygiene
+severity: low
+compliance:
+  nist_800_53_r5: "CM-6"
+  fedramp_moderate: "CM-6"
+  soc2: "CC7.1"
+  ccm_v4: ["IVS-03"]
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: none
+observation_fields:
+  - network.kind
+  - network.peering.dns_resolution_enabled
+remediation:
+  description: >
+    Peering connection has DNS resolution disabled. Peer VPC private
+    DNS names cannot be resolved across the connection.
+  action: >
+    Enable DNS resolution on the peering connection for both VPCs so
+    private DNS names resolve correctly across the boundary. Applications
+    can then reference hosts by DNS name rather than by IP address.
+  example: |
+    {
+      "network": {
+        "kind": "peering_connection",
+        "peering": {
+          "dns_resolution_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: peering_connection
+    - field: properties.network.peering.dns_resolution_enabled
+      op: eq
+      value: false

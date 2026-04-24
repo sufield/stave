@@ -1,0 +1,29 @@
+{
+  "assets": [
+    {
+      "id": "tgw-rtb-clean",
+      "properties": {
+        "network": {
+          "kind": "transit_gateway_route_table",
+          "tgw": {
+            "id": "tgw-0bhgood0000000001",
+            "route_table_id": "tgw-rtb-0clean00001",
+            "has_blackhole_routes": false,
+            "blackhole_route_count": 0,
+            "blackhole_routes": []
+          }
+        }
+      },
+      "type": "aws_ec2_transit_gateway_route_table",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

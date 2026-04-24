@@ -1,0 +1,15 @@
+control: CTL.VPC.TGW.FLOWLOGS.001
+defect: >
+  Transit Gateway has no flow logs configured. Cross-VPC traffic
+  transiting the TGW is not recorded.
+infection: >
+  The TGW is the central hub for inter-VPC traffic. Per-VPC flow logs
+  capture ingress and egress at individual VPC boundaries, but they do
+  not show TGW-internal routing decisions or flows that traverse multiple
+  VPCs via the TGW. Without TGW flow logs, the most security-relevant
+  traffic — lateral movement between VPCs — is the traffic that is not
+  logged. Forensics, anomaly detection, and incident response on
+  cross-VPC flows become impossible.
+failure: >
+  Blind spot on lateral movement. Cross-VPC traffic is not recorded,
+  so an attacker moving between VPCs leaves no audit trail at the hub.

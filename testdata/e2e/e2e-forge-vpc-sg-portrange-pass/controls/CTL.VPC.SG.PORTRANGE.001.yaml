@@ -1,0 +1,86 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.SG.PORTRANGE.001
+name: Security Group Rule Uses Broad Port Range
+description: >
+  Security group rule allows a range of more than 100 ports (e.g.,
+  1024-65535, 8000-9000) instead of a specific port. Broad port ranges
+  expose more services than intended — the range may include ports for
+  services the team does not know are running on the instance.
+domain: exposure
+severity: medium
+compliance:
+  soc2: "CC6.6"
+  nist_800_53_r5: "AC-4"
+  pci_dss_v4.0: "1.2.1"
+  ccm_v4: ["IVS-03"]
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+classification: state_assertion
+defect: >
+  Security group has a rule allowing a broad port range.
+infection: >
+  A port range exposes every service listening on any port in that
+  range. The team may intend to expose port 8080 for their application
+  — but the range 8000-9000 also exposes 8443, 8888, 9090, and any
+  other service that happens to be listening. On a server with multiple
+  services, the broad range exposes all of them. A specific port rule
+  exposes exactly one service.
+failure: >
+  Unintended service exposure. Services the team did not intend to
+  expose are reachable because the port range includes their ports.
+params:
+  attack_stage: initial_access
+observation_fields:
+  - network.kind
+  - network.security_group.has_broad_port_range
+  - network.security_group.broadest_range_size
+remediation:
+  description: >
+    Security group uses a broad port range exposing many services.
+  action: >
+    Replace broad port ranges with specific port rules. A rule for
+    port 8080 is safer than a range 8000-9000 which exposes all
+    services in that range.
+  example: |
+    {
+      "network": {
+        "kind": "security_group",
+        "security_group": {
+          "has_broad_port_range": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: security_group
+    - field: properties.network.security_group.has_broad_port_range
+      op: eq
+      value: true
+tests:
+  - name: SG with broad port range fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "sg-broad-range"
+      asset_type: aws_security_group
+      vendor: aws
+      properties:
+        network:
+          kind: security_group
+          security_group:
+            has_broad_port_range: true
+            broadest_range_size: 64512
+  - name: SG with specific ports passes
+    verdict: PASS
+    asset:
+      asset_id: "sg-specific-port"
+      asset_type: aws_security_group
+      vendor: aws
+      properties:
+        network:
+          kind: security_group
+          security_group:
+            has_broad_port_range: false

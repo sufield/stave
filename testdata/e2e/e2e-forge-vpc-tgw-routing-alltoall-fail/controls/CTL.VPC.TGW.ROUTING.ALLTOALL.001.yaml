@@ -1,0 +1,64 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.TGW.ROUTING.ALLTOALL.001
+name: Transit Gateway Route Table Allows All-to-All Communication
+description: >
+  Transit Gateway route table has routes that allow every attached VPC
+  to communicate with every other attached VPC. The TGW becomes a flat
+  network bridge — no segmentation between workloads. Production,
+  development, staging, and shared services VPCs all reach each other
+  at the network layer. A compromised instance in any attached VPC has
+  a direct path to every other attached VPC, defeating the blast-radius
+  isolation that separate VPCs were created to enforce. Segmented TGW
+  route tables (one per security zone, associated only with the VPCs
+  in that zone) are the correct pattern.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "5.5"
+  nist_800_53_r5: "SC-7"
+  fedramp_moderate: "SC-7"
+  pci_dss_v4.0: "1.2.1"
+  soc2: "CC6.6"
+  hipaa: "164.312(e)(1)"
+  ccm_v4: ["IVS-03", "IVS-06"]
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+observation_fields:
+  - network.kind
+  - network.tgw.id
+  - network.tgw.route_table_id
+  - network.tgw.all_to_all_routing
+  - network.tgw.attached_vpc_count
+remediation:
+  description: >
+    Transit Gateway route table permits every attached VPC to reach
+    every other attached VPC. Network segmentation between workloads
+    has collapsed at the TGW layer.
+  action: >
+    Replace the single shared route table with per-zone route tables.
+    Associate each VPC attachment with the route table for its zone
+    and configure propagation only between attachments that must
+    communicate. Audit existing traffic to identify which flows are
+    legitimate before enforcing new segmentation.
+  example: |
+    {
+      "network": {
+        "kind": "transit_gateway_route_table",
+        "tgw": {
+          "all_to_all_routing": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: transit_gateway_route_table
+    - field: properties.network.tgw.all_to_all_routing
+      op: eq
+      value: true

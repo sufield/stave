@@ -1,0 +1,63 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.PEERING.CROSSACCOUNT.001
+name: VPC Peering with Non-Organization Account
+description: >
+  VPC peering connection is established with an AWS account that is not a
+  member of the organization. Network traffic flows at the IP layer between
+  the organization's VPC and an external account's VPC — subject only to
+  security groups and NACLs. The external account's security posture
+  (resources, policies, compromises) is outside organizational control.
+  A compromised external account has direct network access to internal
+  resources via the peering connection. Differs from CTL.RAM.EXTERNAL.001
+  (resource-level sharing) — peering extends the network boundary itself.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "5.5"
+  nist_800_53_r5: "AC-4"
+  fedramp_moderate: "AC-4"
+  pci_dss_v4.0: "1.3.1"
+  soc2: "CC6.6"
+  hipaa: "164.312(e)(1)"
+  ccm_v4: ["IVS-03", "IVS-09"]
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+observation_fields:
+  - network.kind
+  - network.peering.id
+  - network.peering.peer_account_id
+  - network.peering.peer_account_in_org
+  - network.peering.peer_vpc_id
+remediation:
+  description: >
+    VPC peering connection terminates in an AWS account outside the
+    organization. The external account's security posture is not
+    governed by organizational SCPs, logging, or incident response.
+  action: >
+    Delete the peering connection unless a documented business need
+    requires external connectivity. If required, route traffic through
+    an inspection point (Network Firewall, third-party IDS) rather
+    than direct peering, and apply restrictive security groups on
+    subnets reachable via the peering connection.
+  example: |
+    {
+      "network": {
+        "kind": "peering_connection",
+        "peering": {
+          "peer_account_in_org": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: peering_connection
+    - field: properties.network.peering.peer_account_in_org
+      op: eq
+      value: false

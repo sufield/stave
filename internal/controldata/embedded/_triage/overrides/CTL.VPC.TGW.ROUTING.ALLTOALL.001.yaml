@@ -1,0 +1,15 @@
+control: CTL.VPC.TGW.ROUTING.ALLTOALL.001
+defect: >
+  Transit Gateway route table permits every attached VPC to communicate
+  with every other attached VPC.
+infection: >
+  All-to-all TGW routing collapses the segmentation that separate VPCs
+  were created to enforce. Production, development, staging, and shared
+  services VPCs all reach each other at the network layer. A compromised
+  instance in a low-trust VPC (development, sandbox, build agents) has a
+  direct network path to high-trust VPCs (production databases, internal
+  APIs, secrets stores). The purpose of multi-VPC architecture — blast
+  radius containment — is defeated entirely.
+failure: >
+  Network segmentation collapse. A compromise in any attached VPC
+  directly reaches resources in every other attached VPC.

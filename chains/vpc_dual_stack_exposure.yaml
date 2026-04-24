@@ -1,0 +1,15 @@
+id: vpc_dual_stack_exposure
+description: >
+  IPv6 exposure on either inbound or egress. IPv4 restrictions are
+  bypassed via IPv6. Either alone creates the bypass path — inbound
+  means external attackers reach resources via IPv6, egress means
+  data exfiltration routes through IPv6.
+controls:
+  - CTL.VPC.SG.IPV6.PARITY.001
+  - CTL.VPC.SG.IPV6.EGRESS.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - network_access_ec2

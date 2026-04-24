@@ -1,0 +1,12 @@
+control: CTL.VPC.SG.IPV6.PARITY.001
+defect: >
+  Security group restricts IPv4 access but allows ::/0 (all IPv6) on the
+  same ports.
+infection: >
+  IPv6 addresses are publicly routable by default. If instances have IPv6
+  addresses, an open ::/0 rule means any IPv6-capable host can reach the
+  instance. The IPv4 restrictions are meaningless if the same ports are
+  open on IPv6.
+failure: >
+  IPv4 restriction bypass via IPv6. An attacker connects via IPv6 to ports
+  restricted on IPv4.

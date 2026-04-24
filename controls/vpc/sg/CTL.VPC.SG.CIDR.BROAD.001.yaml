@@ -1,0 +1,87 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.SG.CIDR.BROAD.001
+name: Security Group Rule Uses Overly Broad CIDR
+description: >
+  Security group inbound rule uses a CIDR block broader than /16
+  (65,536 addresses) that is not 0.0.0.0/0 (caught by existing
+  controls). A /8 CIDR includes approximately 16 million IP addresses.
+  Unless the rule references a known AWS service CIDR or organizational
+  network, the range is broader than needed.
+domain: exposure
+severity: medium
+compliance:
+  soc2: "CC6.6"
+  nist_800_53_r5: "AC-4"
+  pci_dss_v4.0: "1.2.1"
+  ccm_v4: ["IVS-03"]
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+classification: state_assertion
+defect: >
+  Security group has an inbound rule with a CIDR broader than /16.
+infection: >
+  A /8 CIDR range includes approximately 16 million IP addresses. A
+  /16 includes 65,536. Unless this CIDR corresponds to a known network
+  (corporate office, AWS service range, VPN pool), the rule is broader
+  than intended. The team may have intended to allow traffic from a
+  specific subnet (/24 = 256 addresses) but specified a broader range.
+  The broader the CIDR, the more IP addresses can reach the resource.
+failure: >
+  Over-broad source range. Millions of IP addresses can reach the
+  resource when only hundreds should be able to.
+params:
+  attack_stage: initial_access
+observation_fields:
+  - network.kind
+  - network.security_group.has_broad_cidr
+  - network.security_group.broadest_cidr_prefix
+remediation:
+  description: >
+    Security group has a CIDR broader than /16 on an inbound rule.
+  action: >
+    Replace broad CIDR ranges with specific subnets. A /24 (256
+    addresses) is precise. A /8 (16M addresses) is almost certainly
+    too broad.
+  example: |
+    {
+      "network": {
+        "kind": "security_group",
+        "security_group": {
+          "has_broad_cidr": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: security_group
+    - field: properties.network.security_group.has_broad_cidr
+      op: eq
+      value: true
+tests:
+  - name: SG with broad CIDR fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "sg-broad-cidr"
+      asset_type: aws_security_group
+      vendor: aws
+      properties:
+        network:
+          kind: security_group
+          security_group:
+            has_broad_cidr: true
+            broadest_cidr_prefix: 8
+  - name: SG with specific CIDR passes
+    verdict: PASS
+    asset:
+      asset_id: "sg-specific-cidr"
+      asset_type: aws_security_group
+      vendor: aws
+      properties:
+        network:
+          kind: security_group
+          security_group:
+            has_broad_cidr: false

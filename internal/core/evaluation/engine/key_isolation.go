@@ -102,10 +102,12 @@ func EnrichKeyIsolation(snapshots []asset.Snapshot) []asset.Snapshot {
 	for i, snap := range snapshots {
 		idx := buildKeyUsageIndexForSnapshot(snap)
 		enriched[i] = snap
+		assets := make([]asset.Asset, len(snap.Assets))
 		if len(idx) == 0 {
+			copy(assets, snap.Assets)
+			enriched[i].Assets = assets
 			continue
 		}
-		assets := make([]asset.Asset, len(snap.Assets))
 		for j, a := range snap.Assets {
 			assets[j] = enrichAssetIsolation(a, idx)
 		}

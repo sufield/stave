@@ -1,0 +1,10 @@
+control: CTL.VPC.SG.PORTRANGE.001
+defect: >
+  Security group has a rule allowing a broad port range.
+infection: >
+  A port range exposes every service listening on any port in that range.
+  A range of 8000-9000 exposes 8443, 8888, 9090, and any other service.
+  A specific port rule exposes exactly one service.
+failure: >
+  Unintended service exposure. Services the team did not intend to expose
+  are reachable via the broad port range.

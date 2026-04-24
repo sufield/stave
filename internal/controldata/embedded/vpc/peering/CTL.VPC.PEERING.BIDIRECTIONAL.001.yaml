@@ -1,0 +1,57 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.PEERING.BIDIRECTIONAL.001
+name: VPC Peering Routes Allow Bidirectional Traffic When Unidirectional Intended
+description: >
+  Both VPCs in the peering connection have route table entries pointing to
+  each other. For many peering use cases (shared services, centralized
+  logging, consumer→producer patterns) only one direction is required —
+  the consumer VPC routes to the shared services VPC, not the reverse.
+  Bidirectional routing doubles the attack surface: a compromise in the
+  shared services VPC can reach into consumer VPCs, and vice versa.
+domain: exposure
+severity: medium
+compliance:
+  cis_aws_v3.0: "5.5"
+  nist_800_53_r5: "SC-7"
+  fedramp_moderate: "SC-7"
+  pci_dss_v4.0: "1.3.2"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "IVS-06"]
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+observation_fields:
+  - network.kind
+  - network.peering.routes_bidirectional
+  - network.peering.local_routes_to_peer
+  - network.peering.peer_routes_to_local
+remediation:
+  description: >
+    Peering connection has route table entries in both directions when the
+    use case only requires one direction.
+  action: >
+    Review the peering use case. Remove route entries from the side that
+    does not need to initiate connections. If bidirectional traffic is
+    required, document the specific source→destination flows and constrain
+    each side's routes to the specific subnet CIDRs needed.
+  example: |
+    {
+      "network": {
+        "kind": "peering_connection",
+        "peering": {
+          "routes_bidirectional": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: peering_connection
+    - field: properties.network.peering.routes_bidirectional
+      op: eq
+      value: true

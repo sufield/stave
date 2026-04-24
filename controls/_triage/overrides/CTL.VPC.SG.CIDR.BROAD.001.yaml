@@ -1,0 +1,9 @@
+control: CTL.VPC.SG.CIDR.BROAD.001
+defect: >
+  Security group has an inbound rule with a CIDR broader than /16.
+infection: >
+  A /8 CIDR includes approximately 16 million IP addresses. Unless this
+  corresponds to a known network, the rule is broader than intended.
+failure: >
+  Over-broad source range. Millions of IP addresses can reach the
+  resource when only hundreds should be able to.

@@ -1,0 +1,10 @@
+control: CTL.VPC.SG.IPV6.EGRESS.001
+defect: >
+  Security group allows all IPv6 egress to ::/0.
+infection: >
+  If IPv4 egress is restricted but IPv6 is unrestricted, an attacker
+  routes exfiltration through IPv6. Many monitoring tools focus on IPv4 —
+  IPv6 exfiltration may not appear in dashboards.
+failure: >
+  IPv4 egress bypass via IPv6. Data exfiltration routes through
+  unrestricted IPv6 egress.

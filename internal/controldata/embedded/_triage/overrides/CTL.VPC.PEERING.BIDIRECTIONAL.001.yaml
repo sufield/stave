@@ -1,0 +1,14 @@
+control: CTL.VPC.PEERING.BIDIRECTIONAL.001
+defect: >
+  VPC peering connection has route table entries in both directions when
+  the use case calls for unidirectional traffic.
+infection: >
+  Shared-service peering patterns (central logging, shared CI, central
+  DNS) only need the consumer VPC to initiate connections. Adding return
+  routes on the shared-services side doubles the attack surface — a
+  compromise on the shared-services side can now reach consumer VPCs.
+  The peering route tables advertise the full set of allowed paths;
+  anything routable is reachable by default.
+failure: >
+  Lateral movement surface doubled. A compromise on either side of the
+  peering can reach the other side without further pivoting.

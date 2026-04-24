@@ -1,0 +1,26 @@
+{
+  "assets": [
+    {
+      "id": "sg-broad-cidr",
+      "properties": {
+        "network": {
+          "kind": "security_group",
+          "security_group": {
+            "broadest_cidr_prefix": 8,
+            "has_broad_cidr": true
+          }
+        }
+      },
+      "type": "aws_security_group",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

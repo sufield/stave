@@ -1,0 +1,14 @@
+control: CTL.VPC.PEERING.DNS.001
+defect: >
+  VPC peering connection has DNS resolution disabled.
+infection: >
+  Without DNS resolution on the peering connection, applications in one
+  VPC cannot resolve private DNS names in the peer VPC. Operators fall
+  back to hard-coded IP addresses, which become stale when instances are
+  replaced and new IPs are assigned. This is an operational hygiene
+  issue — it signals that the peering connection was configured without
+  attention to its intended use and breeds brittleness that compounds
+  later changes.
+failure: >
+  Operational brittleness. Applications break unpredictably when peer
+  VPC instance IPs change.

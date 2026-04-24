@@ -1,0 +1,11 @@
+control: CTL.VPC.SG.HIGHPORTS.001
+defect: >
+  Security group allows internet access on high-risk service ports.
+infection: >
+  These ports have well-documented exploitation paths. SMB (445) was the
+  vector for WannaCry and NotPetya. Elasticsearch (9200) and MongoDB
+  (27017) are the most commonly exposed databases. Docker daemon (2375)
+  gives complete host control.
+failure: >
+  High-risk service exposed to internet. An attacker exploits a
+  known-vulnerable service directly from the internet.

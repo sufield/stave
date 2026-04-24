@@ -3,26 +3,27 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1320
-**Pack hash:** `3b2087f40553e55da739427f16101912707ebf993d16078341a4405892c9e553`
+**Total controls:** 1337
+**Pack hash:** `39872662bfe9a62a3410dd50c9cb29d0560976a9f509d00bd67f3fa9c5785519`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 170 |
-| high | 593 |
+| high | 599 |
 | info | 16 |
-| low | 93 |
-| medium | 448 |
+| low | 94 |
+| medium | 458 |
 
 | Domain | Count |
 |--------|-------|
-| audit | 20 |
+| audit | 21 |
 | detection | 32 |
 | encryption | 75 |
-| exposure | 798 |
+| exposure | 811 |
 | governance | 27 |
+| hygiene | 3 |
 | identity | 325 |
 | network | 21 |
 | resilience | 14 |
@@ -19072,6 +19073,66 @@ VPCs handling sensitive or production traffic should have AWS Network Firewall d
 
 ---
 
+### CTL.VPC.PEERING.BIDIRECTIONAL.001
+
+**VPC Peering Routes Allow Bidirectional Traffic When Unidirectional Intended**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 5.5; fedramp_moderate: SC-7; nist_800_53_r5: SC-7; pci_dss_v4.0: 1.3.2; soc2: CC6.6;
+
+Both VPCs in the peering connection have route table entries pointing to each other. For many peering use cases (shared services, centralized logging, consumer→producer patterns) only one direction is required — the consumer VPC routes to the shared services VPC, not the reverse. Bidirectional routing doubles the attack surface: a compromise in the shared services VPC can reach into consumer VPCs, and vice versa.
+
+**Remediation:** Review the peering use case. Remove route entries from the side that does not need to initiate connections. If bidirectional traffic is required, document the specific source→destination flows and constrain each side's routes to the specific subnet CIDRs needed.
+
+---
+
+### CTL.VPC.PEERING.CROSSACCOUNT.001
+
+**VPC Peering with Non-Organization Account**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 5.5; fedramp_moderate: AC-4; hipaa: 164.312(e)(1); nist_800_53_r5: AC-4; pci_dss_v4.0: 1.3.1; soc2: CC6.6;
+
+VPC peering connection is established with an AWS account that is not a member of the organization. Network traffic flows at the IP layer between the organization's VPC and an external account's VPC — subject only to security groups and NACLs. The external account's security posture (resources, policies, compromises) is outside organizational control. A compromised external account has direct network access to internal resources via the peering connection. Differs from CTL.RAM.EXTERNAL.001 (resource-level sharing) — peering extends the network boundary itself.
+
+**Remediation:** Delete the peering connection unless a documented business need requires external connectivity. If required, route traffic through an inspection point (Network Firewall, third-party IDS) rather than direct peering, and apply restrictive security groups on subnets reachable via the peering connection.
+
+---
+
+### CTL.VPC.PEERING.DNS.001
+
+**VPC Peering Without DNS Resolution Enabled**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** hygiene
+- **Compliance:** fedramp_moderate: CM-6; nist_800_53_r5: CM-6; soc2: CC7.1;
+
+VPC peering connection does not have DNS resolution enabled. Resources in the peer VPC cannot resolve private DNS names — forcing use of raw IP addresses. Applications that hard-code IPs break when instances are replaced and new IPs are assigned. Low severity — this is an operational/hygiene concern, not a direct security risk — but it signals that the peering connection was configured without attention to its intended use pattern.
+
+**Remediation:** Enable DNS resolution on the peering connection for both VPCs so private DNS names resolve correctly across the boundary. Applications can then reference hosts by DNS name rather than by IP address.
+
+---
+
+### CTL.VPC.PEERING.PENDING.001
+
+**VPC Peering Connection in Pending State**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** hygiene
+- **Compliance:** cis_aws_v3.0: 5.5; fedramp_moderate: CM-6; nist_800_53_r5: CM-6; soc2: CC7.1;
+
+VPC peering connection is in pending-acceptance state. The peering request was sent but never accepted or rejected. Pending connections indicate forgotten requests — the connection was initiated for a purpose that may no longer exist. If accepted later (by anyone with VPC admin rights in the peer account), the connection activates with whatever routing was configured at creation time, potentially opening a network path no one remembers authorizing.
+
+**Remediation:** Reject the pending peering request. If the connection is still needed, create a fresh request with current routing requirements and document the use case before accepting.
+
+---
+
 ### CTL.VPC.PEERING.ROUTES.001
 
 **VPC Peering Route Tables Must Follow Least Access**
@@ -19087,6 +19148,21 @@ Route table entries for VPC peering connections must reference specific subnet C
 
 ---
 
+### CTL.VPC.SG.CIDR.BROAD.001
+
+**Security Group Rule Uses Overly Broad CIDR**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-4; pci_dss_v4.0: 1.2.1; soc2: CC6.6;
+
+Security group inbound rule uses a CIDR block broader than /16 (65,536 addresses) that is not 0.0.0.0/0 (caught by existing controls). A /8 CIDR includes approximately 16 million IP addresses. Unless the rule references a known AWS service CIDR or organizational network, the range is broader than needed.
+
+**Remediation:** Replace broad CIDR ranges with specific subnets. A /24 (256 addresses) is precise. A /8 (16M addresses) is almost certainly too broad.
+
+---
+
 ### CTL.VPC.SG.DEFAULT.001
 
 **Default Security Group Must Restrict All Traffic**
@@ -19099,6 +19175,21 @@ Route table entries for VPC peering connections must reference specific subnet C
 The default VPC security group should not allow any inbound or outbound traffic. Resources should use custom security groups with explicit rules instead of relying on the default group.
 
 **Remediation:** Remove all inbound and outbound rules from the default security group. Assign custom security groups to all resources.
+
+---
+
+### CTL.VPC.SG.DEFAULT.INUSE.001
+
+**Default Security Group Attached to Resources**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 5.4; nist_800_53_r5: SC-7; soc2: CC6.6;
+
+The VPC default security group is attached to one or more resources. The default SG allows all traffic between resources attached to it (inbound from same SG) and all outbound traffic. Resources should use purpose-built security groups with explicit rules. Strengthens CTL.VPC.SG.DEFAULT.001 which checks whether the default SG has rules — this control checks whether it is actually attached.
+
+**Remediation:** Move resources to purpose-built security groups with explicit rules. The default SG should have no attached resources.
 
 ---
 
@@ -19121,7 +19212,7 @@ Security groups on private resources must not allow inbound traffic on applicati
 
 **Security Groups Must Not Allow Unrestricted Egress**
 
-- **Severity:** medium
+- **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
 - **Compliance:** fedramp_moderate: SC-7; nist_800_53_r5: SC-7; soc2: CC6.6;
@@ -19129,6 +19220,21 @@ Security groups on private resources must not allow inbound traffic on applicati
 Security groups must not allow all outbound traffic to 0.0.0.0/0 on all ports. Unrestricted egress enables data exfiltration, command-and-control communication, and lateral movement to external attacker infrastructure. While most organizations currently allow all egress by default, restricting outbound traffic to required ports and destinations is a critical APT hardening measure.
 
 **Remediation:** Replace the default allow-all egress rule with specific outbound rules for required ports (443 for HTTPS, 53 for DNS, etc.) and destinations. Use VPC endpoints for AWS service traffic to avoid internet egress entirely.
+
+---
+
+### CTL.VPC.SG.EGRESS.DNS.001
+
+**Security Group Allows DNS Egress to Internet**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; pci_dss_v4.0: 1.3.1; soc2: CC6.6;
+
+Security group allows UDP/TCP port 53 outbound to 0.0.0.0/0 instead of restricting DNS to internal resolvers or VPC DNS (169.254.169.253). Unrestricted DNS egress enables DNS tunneling — data exfiltration encoded in DNS queries to attacker-controlled domains.
+
+**Remediation:** Restrict DNS egress to the VPC DNS resolver (169.254.169.253) or Route53 Resolver endpoints. Remove rules allowing port 53 to 0.0.0.0/0.
 
 ---
 
@@ -19162,6 +19268,36 @@ Security group inbound and outbound rules must not reference other security grou
 
 ---
 
+### CTL.VPC.SG.HIGHPORTS.001
+
+**Security Group Allows High-Risk Service Ports from Internet**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(e)(1); nist_800_53_r5: SC-7; pci_dss_v4.0: 1.3.1; soc2: CC6.6;
+
+Security group allows inbound traffic from 0.0.0.0/0 on ports associated with high-risk services that should never be internet- exposed: 445 (SMB), 135 (RPC), 139 (NetBIOS), 1900 (SSDP), 11211 (Memcached), 9200/9300 (Elasticsearch), 6379 (Redis), 27017 (MongoDB), 5601 (Kibana), 2375/2376 (Docker), 10250 (Kubelet).
+
+**Remediation:** Remove inbound rules allowing internet access on high-risk ports (445, 135, 139, 6379, 9200, 27017, 2375, 10250, 5601, 11211, 1900). These services should never be internet-exposed.
+
+---
+
+### CTL.VPC.SG.ICMP.001
+
+**Security Group Allows All ICMP from Internet**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; pci_dss_v4.0: 1.3.1; soc2: CC6.6;
+
+Security group allows all ICMP types from 0.0.0.0/0. ICMP includes not just ping (type 8) but also redirect (type 5 — route manipulation), timestamp (type 13 — system fingerprinting), and address mask (type 17 — network mapping). Allowing all ICMP types enables network reconnaissance and potential route manipulation.
+
+**Remediation:** Restrict ICMP to type 8 (echo request) only if ping is needed. Remove rules allowing all ICMP types from 0.0.0.0/0.
+
+---
+
 ### CTL.VPC.SG.IPV6.001
 
 **No Security Group Ingress from ::/0 to Admin Ports**
@@ -19174,6 +19310,51 @@ Security group inbound and outbound rules must not reference other security grou
 Security groups must not allow inbound SSH (22) or RDP (3389) from ::/0 (IPv6 any). IPv6 open admin ports are equally dangerous as IPv4 and are often overlooked during security reviews.
 
 **Remediation:** Revoke the IPv6 ingress rule: aws ec2 revoke-security-group-ingress --group-id <sg-id> --ip-permissions IpProtocol=tcp,FromPort=22,ToPort=22,Ipv6Ranges=[{CidrIpv6=::/0}]
+
+---
+
+### CTL.VPC.SG.IPV6.EGRESS.001
+
+**Security Group Has IPv6 Egress to All Destinations**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+Security group allows all IPv6 egress to ::/0. If IPv4 egress is restricted but IPv6 egress is open, data exfiltration routes through IPv6 — bypassing IPv4 egress controls entirely.
+
+**Remediation:** Restrict IPv6 egress to required destinations. If IPv4 egress is restricted, ensure IPv6 egress has equivalent restrictions.
+
+---
+
+### CTL.VPC.SG.IPV6.PARITY.001
+
+**Security Group Has IPv4 Restrictions But Missing IPv6 Equivalents**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; pci_dss_v4.0: 1.3.2; soc2: CC6.6;
+
+Security group has inbound rules restricting IPv4 access (specific CIDRs, not 0.0.0.0/0) but no equivalent IPv6 restrictions — or has ::/0 (all IPv6) allowed on the same ports. IPv6 addresses are publicly routable by default and the missing IPv6 rules mean the IPv4 restriction is incomplete.
+
+**Remediation:** Add IPv6 rules that match the IPv4 restrictions. For every IPv4 CIDR restriction, add an equivalent IPv6 rule or explicitly deny ::/0.
+
+---
+
+### CTL.VPC.SG.PORTRANGE.001
+
+**Security Group Rule Uses Broad Port Range**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-4; pci_dss_v4.0: 1.2.1; soc2: CC6.6;
+
+Security group rule allows a range of more than 100 ports (e.g., 1024-65535, 8000-9000) instead of a specific port. Broad port ranges expose more services than intended — the range may include ports for services the team does not know are running on the instance.
+
+**Remediation:** Replace broad port ranges with specific port rules. A rule for port 8080 is safer than a range 8000-9000 which exposes all services in that range.
 
 ---
 
@@ -19204,6 +19385,81 @@ Security group has had unrestricted ingress (0.0.0.0/0 or ::/0) added, removed, 
 Security group rules must not allow ingress from 0.0.0.0/0 on sensitive ports (SSH, RDP, database). Unrestricted ingress exposes services to the entire internet.
 
 **Remediation:** Restrict ingress rules to specific CIDR blocks or security group references. Remove 0.0.0.0/0 and ::/0 from ingress rules on ports 22 (SSH), 3389 (RDP), 3306 (MySQL), 5432 (PostgreSQL).
+
+---
+
+### CTL.VPC.TGW.ATTACHMENT.ISOLATED.001
+
+**Transit Gateway Has Attachment From Isolated VPC**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 5.5; fedramp_moderate: SC-7; nist_800_53_r5: SC-7; soc2: CC6.6;
+
+A VPC whose tags or name signal network isolation (keywords such as "isolated", "sandbox", "quarantine", "restricted") is attached to the Transit Gateway. The TGW provides a network path to and from a VPC that was intended to stand apart. Isolation is a statement about blast-radius containment — attaching the VPC to a shared hub negates that statement regardless of route-table configuration. The keyword list is a heuristic and is configurable per deployment.
+
+**Remediation:** Detach the isolated VPC from the Transit Gateway. If connectivity is actually required, remove the "isolated"/"sandbox"/"quarantine" markers from the VPC's tags and name and document the connection rationale — the markers should reflect actual posture. Do not leave mismatched metadata in place.
+
+---
+
+### CTL.VPC.TGW.BLACKHOLE.001
+
+**Transit Gateway Has Blackhole Routes**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** hygiene
+- **Compliance:** cis_aws_v3.0: 5.5; fedramp_moderate: CM-6; nist_800_53_r5: CM-6; soc2: CC7.1;
+
+Transit Gateway route table contains blackhole routes — destinations where traffic is silently dropped with no error returned. Blackhole routes typically arise when a VPC attachment is deleted but the route persists, or when a route is intentionally added to block a CIDR. Unintentional blackholes follow the "everything appears to work" failure pattern: applications experience timeouts rather than errors, no ICMP unreachable is returned, nothing is logged for the dropped traffic. Troubleshooting is difficult because the network layer reports no failure.
+
+**Remediation:** Audit each blackhole route. For routes that reference deleted attachments, delete the stale route so traffic falls through to the correct next hop (or returns a routing error, which is troubleshootable). For intentional blocks, document the reason and consider moving the block to a security group or Network Firewall rule where it will produce a log entry.
+
+---
+
+### CTL.VPC.TGW.FLOWLOGS.001
+
+**Transit Gateway Flow Logs Not Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** cis_aws_v3.0: 3.9; fedramp_moderate: AU-12; hipaa: 164.312(b); nist_800_53_r5: AU-12; pci_dss_v4.0: 10.2.1; soc2: CC7.2;
+
+Transit Gateway flow logs are not enabled. Cross-VPC traffic transiting through the TGW is not recorded. The TGW is the central hub for inter-VPC traffic — if flow logs are enabled on individual VPCs but not on the TGW itself, lateral-movement traffic between VPCs is invisible. Per-VPC flow logs capture traffic that enters and exits a VPC, but they do not show the TGW-internal routing decisions or traffic that traverses multiple VPCs via the TGW. Flow logs at the hub are required for forensics, anomaly detection, and incident response on cross-VPC flows.
+
+**Remediation:** Enable flow logs on the Transit Gateway, sending records to a CloudWatch Logs group or S3 bucket in a logging-dedicated account. Retain logs per your incident response and compliance requirements (typically 1 year minimum). Correlate TGW flow logs with VPC flow logs to trace cross-VPC traffic end to end.
+
+---
+
+### CTL.VPC.TGW.PROPAGATION.001
+
+**Transit Gateway Route Propagation From VPN or Direct Connect**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 5.5; fedramp_moderate: SC-7; nist_800_53_r5: SC-7; pci_dss_v4.0: 1.3.2; soc2: CC6.6;
+
+Transit Gateway has route propagation enabled from VPN or Direct Connect attachments. Routes from on-premises or external networks are automatically propagated into TGW route tables. An on-premises network that is compromised or misconfigured can announce routes for arbitrary CIDRs — including AWS service IP ranges — and redirect traffic through attacker-controlled infrastructure. BGP route injection is the attack path. Static routes constrained to known on-premises CIDRs are the safe pattern.
+
+**Remediation:** Disable route propagation from VPN/Direct Connect attachments on the TGW route table. Configure static routes with explicit destination CIDRs for the on-premises networks you need to reach. Audit existing propagated routes before removal to identify any that are relied on.
+
+---
+
+### CTL.VPC.TGW.ROUTING.ALLTOALL.001
+
+**Transit Gateway Route Table Allows All-to-All Communication**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 5.5; fedramp_moderate: SC-7; hipaa: 164.312(e)(1); nist_800_53_r5: SC-7; pci_dss_v4.0: 1.2.1; soc2: CC6.6;
+
+Transit Gateway route table has routes that allow every attached VPC to communicate with every other attached VPC. The TGW becomes a flat network bridge — no segmentation between workloads. Production, development, staging, and shared services VPCs all reach each other at the network layer. A compromised instance in any attached VPC has a direct path to every other attached VPC, defeating the blast-radius isolation that separate VPCs were created to enforce. Segmented TGW route tables (one per security zone, associated only with the VPCs in that zone) are the correct pattern.
+
+**Remediation:** Replace the single shared route table with per-zone route tables. Associate each VPC attachment with the route table for its zone and configure propagation only between attachments that must communicate. Audit existing traffic to identify which flows are legitimate before enforcing new segmentation.
 
 ---
 

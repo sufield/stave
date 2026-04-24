@@ -1,0 +1,10 @@
+control: CTL.VPC.SG.ICMP.001
+defect: >
+  Security group allows all ICMP types from 0.0.0.0/0.
+infection: >
+  ICMP includes redirect (type 5 — route manipulation), timestamp
+  (type 13 — system fingerprinting), and address mask (type 17 — network
+  mapping). Only type 8 (echo request) is needed for ping.
+failure: >
+  Network reconnaissance via ICMP. An attacker fingerprints systems or
+  maps the network via unrestricted ICMP types.

@@ -1,0 +1,58 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.TGW.ATTACHMENT.ISOLATED.001
+name: Transit Gateway Has Attachment From Isolated VPC
+description: >
+  A VPC whose tags or name signal network isolation (keywords such as
+  "isolated", "sandbox", "quarantine", "restricted") is attached to the
+  Transit Gateway. The TGW provides a network path to and from a VPC
+  that was intended to stand apart. Isolation is a statement about
+  blast-radius containment — attaching the VPC to a shared hub negates
+  that statement regardless of route-table configuration. The keyword
+  list is a heuristic and is configurable per deployment.
+domain: exposure
+severity: medium
+compliance:
+  cis_aws_v3.0: "5.5"
+  nist_800_53_r5: "SC-7"
+  fedramp_moderate: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "IVS-06"]
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+observation_fields:
+  - network.kind
+  - network.tgw.attachment_vpc_id
+  - network.tgw.attachment_vpc_name
+  - network.tgw.attachment_appears_isolated
+remediation:
+  description: >
+    VPC whose metadata indicates it should be network-isolated is
+    attached to a Transit Gateway.
+  action: >
+    Detach the isolated VPC from the Transit Gateway. If connectivity
+    is actually required, remove the "isolated"/"sandbox"/"quarantine"
+    markers from the VPC's tags and name and document the connection
+    rationale — the markers should reflect actual posture. Do not
+    leave mismatched metadata in place.
+  example: |
+    {
+      "network": {
+        "kind": "transit_gateway_attachment",
+        "tgw": {
+          "attachment_appears_isolated": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: transit_gateway_attachment
+    - field: properties.network.tgw.attachment_appears_isolated
+      op: eq
+      value: true

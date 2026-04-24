@@ -1,0 +1,16 @@
+control: CTL.VPC.PEERING.CROSSACCOUNT.001
+defect: >
+  VPC peering connection terminates in an AWS account that is not a
+  member of the organization.
+infection: >
+  VPC peering creates a direct network path at the IP layer between two
+  VPCs. Traffic flows subject only to security groups and NACLs — any
+  resource in one VPC can potentially reach any resource in the other.
+  When the peer VPC lives in an external account, the organization has
+  no visibility into or control over that account's resources, policies,
+  or compromises. A compromised external account is equivalent to an
+  attacker with direct network access to the organization's VPC.
+failure: >
+  Network boundary extension to an untrusted account. A compromise in
+  the peer account yields direct network access to internal resources
+  via the peering connection.

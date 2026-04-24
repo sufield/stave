@@ -1,0 +1,16 @@
+control: CTL.VPC.TGW.BLACKHOLE.001
+defect: >
+  Transit Gateway route table contains blackhole routes — destinations
+  where traffic is silently dropped.
+infection: >
+  Blackhole routes silently discard traffic: no error returned to the
+  sender, no ICMP unreachable, no log entry for the dropped packets.
+  Applications fail with timeouts rather than errors, making
+  troubleshooting slow and confusing. Blackholes most commonly arise
+  when a VPC attachment is deleted but the route persists — the ghost
+  reference points at nothing and traffic disappears. Intentional
+  blackholes used as security blocks hide incidents that should have
+  produced audit evidence.
+failure: >
+  Silent traffic loss. Applications timeout without explanation; when
+  used as a block, the event produces no record for investigation.
