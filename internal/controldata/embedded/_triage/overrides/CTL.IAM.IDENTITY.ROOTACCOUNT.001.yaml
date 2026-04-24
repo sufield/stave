@@ -1,0 +1,11 @@
+control: CTL.IAM.IDENTITY.ROOTACCOUNT.001
+defect: >
+  Management account has IAM users beyond break-glass accounts.
+infection: >
+  The management account controls the organization — SCPs, account
+  creation, consolidated billing. IAM users in the management account
+  can access organizational controls. If credentials are compromised,
+  the attacker gains access to the most privileged account.
+failure: >
+  Management account compromise. IAM user credentials are stolen,
+  giving the attacker access to organizational controls.

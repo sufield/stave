@@ -1,0 +1,91 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ROLE.UNUSED.001
+name: IAM Role Not Assumed in 90+ Days
+description: >
+  IAM role has not been assumed in 90 or more days. The role exists
+  with attached permissions but serves no active purpose. Unused roles
+  are a latent attack surface — if compromised, their permissions are
+  available but not being monitored for anomalous usage because nobody
+  uses them normally.
+domain: identity
+severity: medium
+compliance:
+  cis_aws_v3.0: "1.21"
+  nist_800_53_r5: "AC-2(3)"
+  soc2: "CC6.2"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+classification: state_assertion
+defect: >
+  IAM role has not been assumed in 90 or more days.
+infection: >
+  An unused role with attached policies is a dormant permission set.
+  Normal access patterns do not include this role, so anomalous usage
+  is invisible — there is no baseline to compare against. An attacker
+  who discovers an unused role with broad permissions can assume it
+  without triggering behavioral anomaly detection. The role's permissions
+  may have been appropriate when it was active but are now excessive
+  relative to current needs.
+failure: >
+  Latent attack surface. An attacker assumes an unused role with
+  stale permissions that are invisible to behavioral monitoring.
+params:
+  attack_stage: privilege_escalation
+observation_fields:
+  - identity.kind
+  - identity.role.last_assumed_days
+  - identity.role.is_unused
+  - identity.role.policy_count
+remediation:
+  description: >
+    IAM role has not been assumed in 90+ days. The role's permissions
+    are a dormant attack surface.
+  action: >
+    Review and delete unused IAM roles. If the role is needed for
+    disaster recovery, document the justification and reduce its
+    permissions to minimum required.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "role": {
+          "is_unused": false,
+          "last_assumed_days": 5
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.role.is_unused
+      op: eq
+      value: true
+tests:
+  - name: role unused for 200 days fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/legacy-data-role"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          role:
+            is_unused: true
+            last_assumed_days: 200
+            policy_count: 4
+  - name: recently used role passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/active-role"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          role:
+            is_unused: false
+            last_assumed_days: 10
+            policy_count: 2

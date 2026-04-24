@@ -1,0 +1,64 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.MONITOR.TRUST.001
+name: Trust Policy Modifications Must Be Monitored
+description: >
+  No CloudWatch metric filter and alarm for iam:UpdateAssumeRolePolicy
+  events. Trust policy modification changes who can assume a role — an
+  attacker who modifies a trust policy adds themselves as a trusted
+  principal. This is Rhino technique #14 (UpdateAssumeRolePolicy).
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "4.4"
+  nist_800_53_r5: "SI-4"
+  soc2: "CC7.2"
+  ccm_v4: ["LOG-03", "LOG-05"]
+scope_tags:
+  - aws
+  - cloudwatch
+  - iam
+type: unsafe_state
+classification: state_assertion
+defect: >
+  No CloudWatch alarm for iam:UpdateAssumeRolePolicy events.
+infection: >
+  iam:UpdateAssumeRolePolicy modifies who can assume an IAM role. An
+  attacker who modifies a trust policy adds their own principal (user
+  ARN, role ARN, or account root) as a trusted entity. They can then
+  assume the role and inherit all its permissions. Without an alarm,
+  trust policy modifications are recorded in CloudTrail but not surfaced
+  in real time. The attacker modifies the trust policy and assumes the
+  role before anyone reviews CloudTrail.
+failure: >
+  Undetected trust expansion. The attacker adds themselves to a role's
+  trust policy and assumes the role without triggering an alert.
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    No metric filter or alarm detects trust policy modifications.
+  action: >
+    Create a CloudWatch log metric filter on the CloudTrail log group
+    matching iam:UpdateAssumeRolePolicy events, then create an alarm
+    with an SNS notification action.
+  example: |
+    {
+      "monitoring": {
+        "metric_filters": {
+          "trust_policy_change": {
+            "exists": true
+          }
+        },
+        "alarms": {
+          "trust_policy_change": {
+            "exists": true,
+            "sns_topic_arn": "arn:aws:sns:us-east-1:123456789012:security-alerts"
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.metric_filters.trust_policy_change.exists
+      op: eq
+      value: false

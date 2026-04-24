@@ -1,0 +1,26 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:iam::111122223333:role/self-admin-role",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "role": {
+            "can_modify_own_boundary": true,
+            "boundary_self_modifiable": true
+          }
+        }
+      },
+      "type": "aws_iam_role",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

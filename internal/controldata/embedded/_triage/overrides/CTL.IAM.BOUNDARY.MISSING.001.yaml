@@ -1,0 +1,12 @@
+control: CTL.IAM.BOUNDARY.MISSING.001
+defect: >
+  IAM role can create new IAM principals without requiring a permission
+  boundary on the created principals.
+infection: >
+  A delegated admin role that can create new principals without boundary
+  requirements can create principals with any permissions. The delegated
+  admin can escalate beyond their own boundary by creating a new principal
+  without one.
+failure: >
+  Boundary escape via principal creation. The delegated admin creates a
+  new role without a boundary and assumes it — bypassing their own.

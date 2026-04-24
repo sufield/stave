@@ -1,0 +1,93 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.BOUNDARY.ESCAPE.001
+name: Principal Can Delete Own Permission Boundary
+description: >
+  An IAM principal has iam:DeleteRolePermissionsBoundary or
+  iam:PutRolePermissionsBoundary on its own role ARN. The principal
+  can remove or replace its own boundary — instantly expanding its
+  effective permissions to whatever its IAM policies allow without
+  boundary constraint. This is the most direct bypass of boundary-based
+  delegation models.
+domain: identity
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-6(1)"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+classification: state_assertion
+defect: >
+  IAM role can delete or modify its own permission boundary.
+infection: >
+  A permission boundary is only effective if the bounded principal
+  cannot modify it. If the principal can call
+  iam:DeleteRolePermissionsBoundary on its own role, the boundary is
+  advisory — not enforced. The principal calls
+  DeleteRolePermissionsBoundary, the boundary is removed, and all IAM
+  policy permissions become effective without constraint. This is the
+  permission boundary escape — the most direct bypass of boundary-based
+  delegation models.
+failure: >
+  Permission boundary bypass. The principal removes its own boundary
+  and gains full policy permissions without constraint.
+params:
+  attack_stage: privilege_escalation
+  base_impact: 10
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.5
+observation_fields:
+  - identity.kind
+  - identity.role.can_modify_own_boundary
+  - identity.role.boundary_self_modifiable
+remediation:
+  description: >
+    Principal can delete or replace its own permission boundary.
+  action: >
+    Remove iam:DeleteRolePermissionsBoundary and
+    iam:PutRolePermissionsBoundary permissions from the principal for
+    its own role ARN. Boundaries must be managed by a separate admin
+    principal.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "role": {
+          "can_modify_own_boundary": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.role.can_modify_own_boundary
+      op: eq
+      value: true
+tests:
+  - name: role that can modify own boundary fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/self-admin-role"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          role:
+            can_modify_own_boundary: true
+            boundary_self_modifiable: true
+  - name: role that cannot modify own boundary passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/bounded-role"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          role:
+            can_modify_own_boundary: false

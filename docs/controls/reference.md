@@ -3,27 +3,27 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1308
-**Pack hash:** `6f5b436e68289802c741288158c60a0f1bb96949deb03ae33a3d28073b445d8c`
+**Total controls:** 1320
+**Pack hash:** `3b2087f40553e55da739427f16101912707ebf993d16078341a4405892c9e553`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 169 |
-| high | 586 |
+| critical | 170 |
+| high | 593 |
 | info | 16 |
 | low | 93 |
-| medium | 444 |
+| medium | 448 |
 
 | Domain | Count |
 |--------|-------|
 | audit | 20 |
 | detection | 32 |
 | encryption | 75 |
-| exposure | 792 |
+| exposure | 798 |
 | governance | 27 |
-| identity | 319 |
+| identity | 325 |
 | network | 21 |
 | resilience | 14 |
 | storage | 8 |
@@ -4944,6 +4944,21 @@ CloudWatch log groups for cardholder data environment audit logs must retain log
 
 ---
 
+### CTL.CLOUDWATCH.MONITOR.ACCESSKEY.001
+
+**Access Key Creation Must Be Monitored**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 4.4; nist_800_53_r5: AU-6; soc2: CC7.2;
+
+No CloudWatch metric filter and alarm for iam:CreateAccessKey events. Access key creation is a persistence mechanism — an attacker who creates access keys establishes long-lived credentials that survive password resets and session revocation.
+
+**Remediation:** Create a CloudWatch log metric filter on the CloudTrail log group matching iam:CreateAccessKey events, then create an alarm with an SNS notification action.
+
+---
+
 ### CTL.CLOUDWATCH.MONITOR.ANON.VPC.001
 
 **Anonymous S3 Requests via VPC Endpoints Must Be Monitored**
@@ -4959,6 +4974,21 @@ CloudWatch alarms must detect anonymous S3 requests transiting VPC endpoints. Ev
 
 ---
 
+### CTL.CLOUDWATCH.MONITOR.ASSUMEROLE.001
+
+**Cross-Account Role Assumption Must Be Monitored**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 4.4; nist_800_53_r5: SI-4; soc2: CC7.2;
+
+No CloudWatch metric filter and alarm for sts:AssumeRole events from external accounts. Cross-account role assumption is the entry point for lateral movement between accounts. Without an alarm, an external account assuming a role in this account goes unnoticed in real time.
+
+**Remediation:** Create a CloudWatch log metric filter on the CloudTrail log group matching sts:AssumeRole events where the source account differs from the local account, then create an alarm with an SNS notification action.
+
+---
+
 ### CTL.CLOUDWATCH.MONITOR.AUTHFAIL.001
 
 **Console Authentication Failures Must Be Monitored**
@@ -4971,6 +5001,21 @@ CloudWatch alarms must detect anonymous S3 requests transiting VPC endpoints. Ev
 A CloudWatch metric filter and alarm must monitor console authentication failures. Failed console authentication attempts indicate brute force attacks against IAM user passwords.
 
 **Remediation:** Create a CloudWatch log metric filter on the CloudTrail log group matching the CIS-specified pattern for console authentication failures, then create an alarm with an SNS notification action.
+
+---
+
+### CTL.CLOUDWATCH.MONITOR.BOUNDARY.001
+
+**Permission Boundary Changes Must Be Monitored**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 4.4; nist_800_53_r5: AU-6; soc2: CC7.2;
+
+No CloudWatch metric filter and alarm for iam:DeleteRolePermissionsBoundary or iam:PutRolePermissionsBoundary events. Permission boundary removal expands a role's effective permissions instantly — the boundary that constrained the role is gone, all policy permissions become effective.
+
+**Remediation:** Create a CloudWatch log metric filter on the CloudTrail log group matching iam:DeleteRolePermissionsBoundary and iam:PutRolePermissionsBoundary events, then create an alarm with an SNS notification action.
 
 ---
 
@@ -5163,6 +5208,21 @@ A CloudWatch metric filter and alarm must monitor aws organizations changes. Org
 
 ---
 
+### CTL.CLOUDWATCH.MONITOR.PASSROLE.001
+
+**iam:PassRole Invocations Must Be Monitored**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 4.4; nist_800_53_r5: SI-4; soc2: CC7.2;
+
+No CloudWatch metric filter and alarm for iam:PassRole events. PassRole is the gateway to every compute-based privilege escalation path — EC2, Lambda, Glue, SageMaker, ECS, CodeBuild, auto-scaling. Every PassRole invocation should generate an alert because it means a principal is assigning IAM permissions to a compute resource.
+
+**Remediation:** Create a CloudWatch log metric filter on the CloudTrail log group matching iam:PassRole events, then create an alarm with an SNS notification action.
+
+---
+
 ### CTL.CLOUDWATCH.MONITOR.ROOT.001
 
 **Root Account Usage Must Be Monitored**
@@ -5205,6 +5265,21 @@ A CloudWatch metric filter and alarm must monitor route table changes. Route tab
 A CloudWatch metric filter and alarm must monitor s3 bucket policy changes. S3 bucket policy changes (PutBucketPolicy, PutBucketAcl) can make private buckets public.
 
 **Remediation:** Create a CloudWatch log metric filter on the CloudTrail log group matching the CIS-specified pattern for s3 bucket policy changes, then create an alarm with an SNS notification action.
+
+---
+
+### CTL.CLOUDWATCH.MONITOR.SCP.001
+
+**SCP Modifications Must Be Monitored**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 4.15; nist_800_53_r5: SI-4; soc2: CC7.2;
+
+No CloudWatch metric filter and alarm for organizations:UpdatePolicy, DetachPolicy, and DeletePolicy events on Service Control Policies. SCP modifications change the organizational guardrails — an attacker who modifies an SCP can remove region restrictions, escalation prevention, or service protections. Requires CloudTrail organization-level trail in the management account.
+
+**Remediation:** Create a CloudWatch log metric filter on the CloudTrail log group matching organizations:UpdatePolicy, organizations:DetachPolicy, and organizations:DeletePolicy events, then create an alarm with an SNS notification action. Requires an organization-level CloudTrail trail.
 
 ---
 
@@ -5265,6 +5340,21 @@ A CloudWatch metric filter and alarm must monitor cloudtrail configuration chang
 CloudWatch alarms must detect access to the CloudTrail log bucket by principals other than the CloudTrail service. An attacker who reads log files can learn what's logged and plan evasion.
 
 **Remediation:** Create a CloudWatch metric filter on the CloudTrail log group matching S3 GetObject/ListBucket events on the trail bucket where the principal is not cloudtrail.amazonaws.com. Create an alarm with SNS notification.
+
+---
+
+### CTL.CLOUDWATCH.MONITOR.TRUST.001
+
+**Trust Policy Modifications Must Be Monitored**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 4.4; nist_800_53_r5: SI-4; soc2: CC7.2;
+
+No CloudWatch metric filter and alarm for iam:UpdateAssumeRolePolicy events. Trust policy modification changes who can assume a role — an attacker who modifies a trust policy adds themselves as a trusted principal. This is Rhino technique #14 (UpdateAssumeRolePolicy).
+
+**Remediation:** Create a CloudWatch log metric filter on the CloudTrail log group matching iam:UpdateAssumeRolePolicy events, then create an alarm with an SNS notification action.
 
 ---
 
@@ -9944,6 +10034,51 @@ IAM roles must have a permissions boundary attached. A permissions boundary sets
 
 ---
 
+### CTL.IAM.BOUNDARY.ESCAPE.001
+
+**Principal Can Delete Own Permission Boundary**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(1); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+An IAM principal has iam:DeleteRolePermissionsBoundary or iam:PutRolePermissionsBoundary on its own role ARN. The principal can remove or replace its own boundary — instantly expanding its effective permissions to whatever its IAM policies allow without boundary constraint. This is the most direct bypass of boundary-based delegation models.
+
+**Remediation:** Remove iam:DeleteRolePermissionsBoundary and iam:PutRolePermissionsBoundary permissions from the principal for its own role ARN. Boundaries must be managed by a separate admin principal.
+
+---
+
+### CTL.IAM.BOUNDARY.MISSING.001
+
+**Delegated Admin Role Can Create Unbounded Principals**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.2; soc2: CC6.3;
+
+An IAM role with iam:CreateRole or iam:CreateUser permission does not have a permission boundary that requires setting a boundary on created principals. The role can create new IAM roles and users without any boundary constraint — the created principals have no upper bound on their effective permissions.
+
+**Remediation:** Add a permission boundary condition to the delegated admin role that requires iam:PermissionsBoundary on CreateRole and CreateUser calls.
+
+---
+
+### CTL.IAM.BOUNDARY.WILDCARD.001
+
+**Permission Boundary Uses Wildcard Actions**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.2; soc2: CC6.3;
+
+A permission boundary includes Action * or Action service:* — the boundary does not actually constrain the principal's actions. A boundary with Action * on Resource * is equivalent to no boundary. The boundary exists in the IAM configuration but provides no effective restriction.
+
+**Remediation:** Replace wildcard actions in the permission boundary with specific service actions that the bounded principal requires. A boundary with Action * is equivalent to no boundary.
+
+---
+
 ### CTL.IAM.CERT.EXPIRED.001
 
 **Remove Expired IAM Server Certificates**
@@ -11014,6 +11149,36 @@ IAM users must have access to fewer than 20 resources classified as sensitive (P
 
 ---
 
+### CTL.IAM.IDENTITY.ROOTACCOUNT.001
+
+**IAM Users Created in Management Account**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 1.1; nist_800_53_r5: AC-6(5); soc2: CC6.1;
+
+IAM users exist in the AWS management (root) account of the organization. The management account should have minimal IAM users — ideally only break-glass accounts. Day-to-day access should be through SSO to member accounts. IAM users in the management account have access to organizational controls (SCPs, account creation, billing).
+
+**Remediation:** Remove non-break-glass IAM users from the management account. Use SSO to member accounts for day-to-day access. Keep only emergency break-glass accounts in the management account.
+
+---
+
+### CTL.IAM.IDENTITY.USERS.EXCESSIVE.001
+
+**Excessive IAM Users in Account**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 1.16; nist_800_53_r5: AC-2; soc2: CC6.1;
+
+More than 20 IAM users in the account. Large numbers of IAM users indicate that human access is managed through IAM users instead of federation (SSO/SAML/OIDC). IAM users require individual credential management, individual MFA enrollment, and individual access key rotation. Federation centralizes all of this in the identity provider.
+
+**Remediation:** Migrate IAM users to AWS IAM Identity Center (SSO) federation. Use IAM roles for service-to-service access. Target fewer than 20 IAM users per account.
+
+---
+
 ### CTL.IAM.INCOMPLETE.001
 
 **Complete Data Required for IAM Assessment**
@@ -11714,6 +11879,21 @@ Lambda execution role trust policy allows lambda.amazonaws.com without a conditi
 IAM roles must not retain access to services that have never been used or were last used more than 90 days ago, when the role itself has been active for more than 90 days. A role with 30 accessible services where 25 are never used has accumulated permissions far beyond its operational scope. An attacker who compromises this role has access to 30 services but the legitimate owner only uses 5. The unused 25 are the hidden blast radius. Access Advisor data from AWS provides exact timestamps of last permission use — this is an operational fact, not a security assertion.
 
 **Remediation:** Review the unused service namespaces listed in this finding. Remove permissions for services that are no longer needed. For services that are intentionally retained for emergency use, set the stave/permission-drift-threshold tag on the role to document the justified exception (e.g., stave/permission-drift-threshold=0.40).
+
+---
+
+### CTL.IAM.ROLE.UNUSED.001
+
+**IAM Role Not Assumed in 90+ Days**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 1.21; nist_800_53_r5: AC-2(3); soc2: CC6.2;
+
+IAM role has not been assumed in 90 or more days. The role exists with attached permissions but serves no active purpose. Unused roles are a latent attack surface — if compromised, their permissions are available but not being monitored for anomalous usage because nobody uses them normally.
+
+**Remediation:** Review and delete unused IAM roles. If the role is needed for disaster recovery, document the justification and reduce its permissions to minimum required.
 
 ---
 

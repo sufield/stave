@@ -1,0 +1,63 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.MONITOR.ACCESSKEY.001
+name: Access Key Creation Must Be Monitored
+description: >
+  No CloudWatch metric filter and alarm for iam:CreateAccessKey events.
+  Access key creation is a persistence mechanism — an attacker who creates
+  access keys establishes long-lived credentials that survive password
+  resets and session revocation.
+domain: exposure
+severity: medium
+compliance:
+  cis_aws_v3.0: "4.4"
+  nist_800_53_r5: "AU-6"
+  soc2: "CC7.2"
+  ccm_v4: ["LOG-03"]
+scope_tags:
+  - aws
+  - cloudwatch
+  - iam
+type: unsafe_state
+classification: state_assertion
+defect: >
+  No CloudWatch alarm for IAM access key creation events.
+infection: >
+  Access key creation is a persistence technique. An attacker who
+  compromises an account creates access keys for themselves or for a
+  less-monitored user. These keys survive password resets, MFA changes,
+  and session revocation. Without an alarm, key creation events exist
+  in CloudTrail but nobody is notified in real time. The attacker
+  establishes persistent API access without triggering any alert.
+failure: >
+  Undetected credential creation. The attacker creates long-lived
+  access keys without triggering a real-time alert.
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    No metric filter or alarm detects IAM access key creation.
+  action: >
+    Create a CloudWatch log metric filter on the CloudTrail log group
+    matching iam:CreateAccessKey events, then create an alarm with an
+    SNS notification action.
+  example: |
+    {
+      "monitoring": {
+        "metric_filters": {
+          "accesskey_creation": {
+            "exists": true
+          }
+        },
+        "alarms": {
+          "accesskey_creation": {
+            "exists": true,
+            "sns_topic_arn": "arn:aws:sns:us-east-1:123456789012:security-alerts"
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.metric_filters.accesskey_creation.exists
+      op: eq
+      value: false

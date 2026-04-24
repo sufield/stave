@@ -1,0 +1,67 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.MONITOR.BOUNDARY.001
+name: Permission Boundary Changes Must Be Monitored
+description: >
+  No CloudWatch metric filter and alarm for
+  iam:DeleteRolePermissionsBoundary or iam:PutRolePermissionsBoundary
+  events. Permission boundary removal expands a role's effective
+  permissions instantly — the boundary that constrained the role is
+  gone, all policy permissions become effective.
+domain: exposure
+severity: medium
+compliance:
+  cis_aws_v3.0: "4.4"
+  nist_800_53_r5: "AU-6"
+  soc2: "CC7.2"
+  ccm_v4: ["LOG-03"]
+scope_tags:
+  - aws
+  - cloudwatch
+  - iam
+type: unsafe_state
+classification: state_assertion
+defect: >
+  No CloudWatch alarm for permission boundary change events.
+infection: >
+  Permission boundary removal expands a role's effective permissions
+  instantly. The boundary constrained the intersection of the role's
+  IAM policies and the boundary policy. When the boundary is removed,
+  all IAM policy permissions become effective without constraint. An
+  alarm on boundary changes detects both legitimate admin operations
+  and attacker-initiated boundary removal. Combined with
+  CTL.IAM.BOUNDARY.ESCAPE.001, this provides detection when the
+  prevention control fires.
+failure: >
+  Undetected boundary removal. A role's permission boundary is deleted
+  and its effective permissions expand without real-time notification.
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    No metric filter or alarm detects permission boundary changes.
+  action: >
+    Create a CloudWatch log metric filter on the CloudTrail log group
+    matching iam:DeleteRolePermissionsBoundary and
+    iam:PutRolePermissionsBoundary events, then create an alarm with
+    an SNS notification action.
+  example: |
+    {
+      "monitoring": {
+        "metric_filters": {
+          "boundary_change": {
+            "exists": true
+          }
+        },
+        "alarms": {
+          "boundary_change": {
+            "exists": true,
+            "sns_topic_arn": "arn:aws:sns:us-east-1:123456789012:security-alerts"
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.metric_filters.boundary_change.exists
+      op: eq
+      value: false

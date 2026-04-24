@@ -1,0 +1,11 @@
+control: CTL.CLOUDWATCH.MONITOR.SCP.001
+defect: >
+  No CloudWatch alarm for SCP modification events.
+infection: >
+  SCP modifications change organizational guardrails. An attacker who
+  detaches or modifies an SCP can remove region restrictions or lift
+  escalation prevention. SCP events are only in the management account
+  trail — without an alarm, weakening proceeds without notification.
+failure: >
+  Undetected organizational guardrail weakening. SCPs are modified or
+  removed without triggering a real-time alert.

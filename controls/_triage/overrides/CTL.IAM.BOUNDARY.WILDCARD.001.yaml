@@ -1,0 +1,12 @@
+control: CTL.IAM.BOUNDARY.WILDCARD.001
+defect: >
+  Permission boundary includes wildcard actions — equivalent to no
+  boundary.
+infection: >
+  If the boundary allows Action * on Resource *, the intersection is the
+  full IAM policy — the boundary adds no constraint. The boundary
+  appears in IAM configuration but provides no effective security
+  restriction.
+failure: >
+  False boundary protection. The boundary exists but provides no
+  effective constraint on the principal's permissions.

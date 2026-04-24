@@ -1,0 +1,16 @@
+id: iam_management_account_risk
+description: >
+  IAM users in management account plus either LeaveOrganization not
+  denied or no SCP modification alarm. The management account has
+  direct users AND organizational controls are either escapable or
+  unmonitored.
+controls:
+  - CTL.IAM.IDENTITY.ROOTACCOUNT.001
+  - CTL.IAM.SCP.LEAVEORG.001
+  - CTL.CLOUDWATCH.MONITOR.SCP.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - ungoverned_operation

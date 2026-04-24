@@ -1,0 +1,11 @@
+control: CTL.CLOUDWATCH.MONITOR.ASSUMEROLE.001
+defect: >
+  No CloudWatch alarm for cross-account sts:AssumeRole events.
+infection: >
+  Cross-account role assumption is how principals from one AWS account
+  access resources in another. Without a metric filter and alarm, anomalous
+  cross-account assumption exists in CloudTrail but is not surfaced in
+  real time.
+failure: >
+  Undetected cross-account access. An external account assumes a role
+  without real-time notification.

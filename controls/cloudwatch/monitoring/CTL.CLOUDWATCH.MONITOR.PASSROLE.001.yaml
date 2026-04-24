@@ -1,0 +1,66 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.MONITOR.PASSROLE.001
+name: "iam:PassRole Invocations Must Be Monitored"
+description: >
+  No CloudWatch metric filter and alarm for iam:PassRole events. PassRole
+  is the gateway to every compute-based privilege escalation path — EC2,
+  Lambda, Glue, SageMaker, ECS, CodeBuild, auto-scaling. Every PassRole
+  invocation should generate an alert because it means a principal is
+  assigning IAM permissions to a compute resource.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "4.4"
+  nist_800_53_r5: "SI-4"
+  soc2: "CC7.2"
+  ccm_v4: ["LOG-03", "LOG-05"]
+scope_tags:
+  - aws
+  - cloudwatch
+  - iam
+type: unsafe_state
+classification: state_assertion
+defect: >
+  No CloudWatch alarm for iam:PassRole events.
+infection: >
+  iam:PassRole is the single most important IAM action to monitor. It is
+  the prerequisite for every compute-based privilege escalation: PassRole
+  + RunInstances, PassRole + CreateFunction, PassRole +
+  CreateDevEndpoint, PassRole + CreateLaunchConfiguration. Every one of
+  Stave's 12 PassRole escalation controls requires PassRole as the first
+  step. An alarm on PassRole provides real-time detection of the
+  escalation attempt at its earliest stage — before the compute resource
+  is created.
+failure: >
+  Undetected escalation attempt. PassRole is invoked — the first step
+  in a privilege escalation chain — without triggering a real-time alert.
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    No metric filter or alarm detects iam:PassRole invocations.
+  action: >
+    Create a CloudWatch log metric filter on the CloudTrail log group
+    matching iam:PassRole events, then create an alarm with an SNS
+    notification action.
+  example: |
+    {
+      "monitoring": {
+        "metric_filters": {
+          "passrole_invocations": {
+            "exists": true
+          }
+        },
+        "alarms": {
+          "passrole_invocations": {
+            "exists": true,
+            "sns_topic_arn": "arn:aws:sns:us-east-1:123456789012:security-alerts"
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.metric_filters.passrole_invocations.exists
+      op: eq
+      value: false

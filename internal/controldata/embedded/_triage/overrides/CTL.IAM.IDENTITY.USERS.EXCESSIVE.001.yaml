@@ -1,0 +1,13 @@
+control: CTL.IAM.IDENTITY.USERS.EXCESSIVE.001
+defect: >
+  AWS account has excessive IAM users. Threshold: 20.
+infection: >
+  Each IAM user is an independently managed identity with its own
+  password, MFA device, and access keys. At scale, IAM user management
+  becomes error-prone — users miss MFA enrollment, passwords are not
+  rotated, access keys accumulate, and offboarding requires individual
+  user deletion.
+failure: >
+  Identity management at scale without centralized governance. Each
+  IAM user is a separately managed credential that can be missed
+  during audits and offboarding.

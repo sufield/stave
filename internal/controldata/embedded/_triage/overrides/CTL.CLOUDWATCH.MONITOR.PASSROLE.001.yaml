@@ -1,0 +1,11 @@
+control: CTL.CLOUDWATCH.MONITOR.PASSROLE.001
+defect: >
+  No CloudWatch alarm for iam:PassRole events.
+infection: >
+  iam:PassRole is the single most important IAM action to monitor. It is
+  the prerequisite for every compute-based privilege escalation. An alarm
+  on PassRole provides real-time detection of the escalation attempt at
+  its earliest stage — before the compute resource is created.
+failure: >
+  Undetected escalation attempt. PassRole is invoked without triggering
+  a real-time alert.

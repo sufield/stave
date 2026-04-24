@@ -1,0 +1,10 @@
+control: CTL.CLOUDWATCH.MONITOR.TRUST.001
+defect: >
+  No CloudWatch alarm for iam:UpdateAssumeRolePolicy events.
+infection: >
+  An attacker who modifies a trust policy adds their own principal as a
+  trusted entity. Without an alarm, trust policy modifications are
+  recorded in CloudTrail but not surfaced in real time.
+failure: >
+  Undetected trust expansion. The attacker adds themselves to a role's
+  trust policy and assumes the role without triggering an alert.

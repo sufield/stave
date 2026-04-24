@@ -1,0 +1,81 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.IDENTITY.USERS.EXCESSIVE.001
+name: Excessive IAM Users in Account
+description: >
+  More than 20 IAM users in the account. Large numbers of IAM users
+  indicate that human access is managed through IAM users instead of
+  federation (SSO/SAML/OIDC). IAM users require individual credential
+  management, individual MFA enrollment, and individual access key
+  rotation. Federation centralizes all of this in the identity provider.
+domain: identity
+severity: medium
+compliance:
+  cis_aws_v3.0: "1.16"
+  nist_800_53_r5: "AC-2"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-02"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+classification: state_assertion
+defect: >
+  AWS account has excessive IAM users. Threshold: 20.
+infection: >
+  Each IAM user is an independently managed identity with its own
+  password, MFA device, and access keys. At scale, IAM user management
+  becomes error-prone — users miss MFA enrollment, passwords are not
+  rotated, access keys accumulate, and offboarding requires individual
+  user deletion. Federation centralizes authentication in the identity
+  provider — one MFA policy, one password policy, one offboarding
+  process that immediately revokes all AWS access.
+failure: >
+  Identity management at scale without centralized governance. Each
+  IAM user is a separately managed credential that can be missed
+  during audits and offboarding.
+params:
+  attack_stage: initial_access
+observation_fields:
+  - identity.user_count
+  - identity.user_count_excessive
+remediation:
+  description: >
+    Account has more than 20 IAM users. User management is not
+    centralized through federation.
+  action: >
+    Migrate IAM users to AWS IAM Identity Center (SSO) federation.
+    Use IAM roles for service-to-service access. Target fewer than
+    20 IAM users per account.
+  example: |
+    {
+      "identity": {
+        "user_count": 5,
+        "user_count_excessive": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.user_count_excessive
+      op: eq
+      value: true
+tests:
+  - name: account with excessive users fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:root"
+      asset_type: aws_account_summary
+      vendor: aws
+      properties:
+        identity:
+          user_count: 35
+          user_count_excessive: true
+  - name: account with few users passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::444455556666:root"
+      asset_type: aws_account_summary
+      vendor: aws
+      properties:
+        identity:
+          user_count: 8
+          user_count_excessive: false

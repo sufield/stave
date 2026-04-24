@@ -1,0 +1,12 @@
+control: CTL.CLOUDWATCH.MONITOR.ACCESSKEY.001
+defect: >
+  No CloudWatch alarm for IAM access key creation events.
+infection: >
+  Access key creation is a persistence technique. An attacker who
+  compromises an account creates access keys for themselves or for a
+  less-monitored user. These keys survive password resets, MFA changes,
+  and session revocation. Without an alarm, key creation events exist
+  in CloudTrail but nobody is notified in real time.
+failure: >
+  Undetected credential creation. The attacker creates long-lived
+  access keys without triggering a real-time alert.

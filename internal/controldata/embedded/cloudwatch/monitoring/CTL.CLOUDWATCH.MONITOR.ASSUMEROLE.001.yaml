@@ -1,0 +1,66 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.MONITOR.ASSUMEROLE.001
+name: Cross-Account Role Assumption Must Be Monitored
+description: >
+  No CloudWatch metric filter and alarm for sts:AssumeRole events from
+  external accounts. Cross-account role assumption is the entry point
+  for lateral movement between accounts. Without an alarm, an external
+  account assuming a role in this account goes unnoticed in real time.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "4.4"
+  nist_800_53_r5: "SI-4"
+  soc2: "CC7.2"
+  ccm_v4: ["LOG-03", "LOG-05"]
+scope_tags:
+  - aws
+  - cloudwatch
+  - iam
+type: unsafe_state
+classification: state_assertion
+defect: >
+  No CloudWatch alarm for cross-account sts:AssumeRole events.
+infection: >
+  Cross-account role assumption is how principals from one AWS account
+  access resources in another. Legitimate cross-account access follows
+  predictable patterns — specific roles assumed by specific accounts at
+  predictable times. Anomalous cross-account assumption — unexpected
+  source accounts, unusual times, roles not normally assumed cross-
+  account — indicates compromise or unauthorized access. Without a
+  metric filter and alarm, these anomalies exist in CloudTrail but are
+  not surfaced in real time.
+failure: >
+  Undetected cross-account access. An external account assumes a role
+  without real-time notification.
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    No metric filter or alarm detects cross-account role assumption.
+  action: >
+    Create a CloudWatch log metric filter on the CloudTrail log group
+    matching sts:AssumeRole events where the source account differs
+    from the local account, then create an alarm with an SNS
+    notification action.
+  example: |
+    {
+      "monitoring": {
+        "metric_filters": {
+          "cross_account_assume": {
+            "exists": true
+          }
+        },
+        "alarms": {
+          "cross_account_assume": {
+            "exists": true,
+            "sns_topic_arn": "arn:aws:sns:us-east-1:123456789012:security-alerts"
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.metric_filters.cross_account_assume.exists
+      op: eq
+      value: false

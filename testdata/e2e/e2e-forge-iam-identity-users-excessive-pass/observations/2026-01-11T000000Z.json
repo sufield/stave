@@ -1,0 +1,23 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:iam::111122223333:root",
+      "properties": {
+        "identity": {
+          "user_count": 8,
+          "user_count_excessive": false
+        }
+      },
+      "type": "aws_account_summary",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

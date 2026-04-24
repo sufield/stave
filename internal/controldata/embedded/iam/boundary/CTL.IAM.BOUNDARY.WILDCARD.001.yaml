@@ -1,0 +1,89 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.BOUNDARY.WILDCARD.001
+name: Permission Boundary Uses Wildcard Actions
+description: >
+  A permission boundary includes Action * or Action service:* — the
+  boundary does not actually constrain the principal's actions. A
+  boundary with Action * on Resource * is equivalent to no boundary.
+  The boundary exists in the IAM configuration but provides no
+  effective restriction.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.3"
+  pci_dss_v4.0: "7.2.2"
+  ccm_v4: ["IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+classification: state_assertion
+defect: >
+  Permission boundary includes wildcard actions — equivalent to no
+  boundary.
+infection: >
+  A permission boundary constrains the intersection of IAM policies
+  and the boundary policy. If the boundary allows Action * on
+  Resource *, the intersection is the full IAM policy — the boundary
+  adds no constraint. The boundary appears in IAM configuration and
+  may satisfy audit checklists, but provides no effective security
+  restriction. Any IAM policy permission the principal has is fully
+  effective despite the boundary's presence.
+failure: >
+  False boundary protection. The boundary exists in IAM configuration
+  but provides no effective constraint on the principal's permissions.
+params:
+  attack_stage: privilege_escalation
+observation_fields:
+  - identity.kind
+  - identity.role.boundary_has_wildcard
+  - identity.role.boundary_action_pattern
+remediation:
+  description: >
+    Permission boundary uses wildcard actions, providing no effective
+    constraint.
+  action: >
+    Replace wildcard actions in the permission boundary with specific
+    service actions that the bounded principal requires. A boundary
+    with Action * is equivalent to no boundary.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "role": {
+          "boundary_has_wildcard": false,
+          "boundary_action_pattern": "s3:*,dynamodb:*"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.role.boundary_has_wildcard
+      op: eq
+      value: true
+tests:
+  - name: boundary with wildcard actions fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/wildcard-bounded-role"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          role:
+            boundary_has_wildcard: true
+            boundary_action_pattern: "*"
+  - name: boundary with scoped actions passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/scoped-bounded-role"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          role:
+            boundary_has_wildcard: false
+            boundary_action_pattern: "s3:GetObject,dynamodb:Query"

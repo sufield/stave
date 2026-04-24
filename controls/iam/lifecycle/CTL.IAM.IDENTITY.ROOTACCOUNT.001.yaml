@@ -1,0 +1,90 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.IDENTITY.ROOTACCOUNT.001
+name: IAM Users Created in Management Account
+description: >
+  IAM users exist in the AWS management (root) account of the
+  organization. The management account should have minimal IAM users —
+  ideally only break-glass accounts. Day-to-day access should be
+  through SSO to member accounts. IAM users in the management account
+  have access to organizational controls (SCPs, account creation,
+  billing).
+domain: identity
+severity: high
+compliance:
+  cis_aws_v3.0: "1.1"
+  nist_800_53_r5: "AC-6(5)"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-02", "IAM-05"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+classification: state_assertion
+defect: >
+  Management account has IAM users beyond break-glass accounts.
+infection: >
+  The management account controls the organization — SCPs, account
+  creation, consolidated billing, organizational policies. IAM users
+  in the management account can potentially access these organizational
+  controls. If an IAM user's credentials are compromised, the attacker
+  gains access to the management account — the most privileged account
+  in the organization. Day-to-day access should use SSO to member
+  accounts, not IAM users in the management account.
+failure: >
+  Management account compromise. IAM user credentials in the management
+  account are stolen, giving the attacker access to organizational
+  controls.
+params:
+  attack_stage: initial_access
+observation_fields:
+  - identity.account.is_management
+  - identity.account.iam_user_count
+  - identity.account.has_iam_users_in_management
+remediation:
+  description: >
+    Management account has non-break-glass IAM users with direct
+    access to organizational controls.
+  action: >
+    Remove non-break-glass IAM users from the management account. Use
+    SSO to member accounts for day-to-day access. Keep only emergency
+    break-glass accounts in the management account.
+  example: |
+    {
+      "identity": {
+        "account": {
+          "is_management": true,
+          "has_iam_users_in_management": false,
+          "iam_user_count": 1
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.account.has_iam_users_in_management
+      op: eq
+      value: true
+tests:
+  - name: management account with users fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:root"
+      asset_type: aws_account_summary
+      vendor: aws
+      properties:
+        identity:
+          account:
+            is_management: true
+            has_iam_users_in_management: true
+            iam_user_count: 8
+  - name: management account without users passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::444455556666:root"
+      asset_type: aws_account_summary
+      vendor: aws
+      properties:
+        identity:
+          account:
+            is_management: true
+            has_iam_users_in_management: false
+            iam_user_count: 1

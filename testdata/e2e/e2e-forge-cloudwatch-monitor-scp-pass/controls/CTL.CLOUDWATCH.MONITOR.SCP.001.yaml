@@ -1,0 +1,69 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.MONITOR.SCP.001
+name: SCP Modifications Must Be Monitored
+description: >
+  No CloudWatch metric filter and alarm for organizations:UpdatePolicy,
+  DetachPolicy, and DeletePolicy events on Service Control Policies. SCP
+  modifications change the organizational guardrails — an attacker who
+  modifies an SCP can remove region restrictions, escalation prevention,
+  or service protections. Requires CloudTrail organization-level trail
+  in the management account.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "4.15"
+  nist_800_53_r5: "SI-4"
+  soc2: "CC7.2"
+  ccm_v4: ["LOG-03", "LOG-05"]
+scope_tags:
+  - aws
+  - cloudwatch
+  - iam
+type: unsafe_state
+classification: state_assertion
+defect: >
+  No CloudWatch alarm for SCP modification events.
+infection: >
+  Service Control Policies are the organizational guardrails. An
+  attacker who detaches or modifies an SCP can remove region
+  restrictions, disable service protections, or lift escalation
+  prevention rules. SCP events are recorded in CloudTrail but only in
+  the management account's trail. Without a metric filter and alarm,
+  SCP weakening proceeds without real-time notification. Combined with
+  CTL.IAM.SCP.* controls, this provides detection of SCP changes that
+  the prevention controls would flag.
+failure: >
+  Undetected organizational guardrail weakening. SCPs are modified or
+  removed without triggering a real-time alert.
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    No metric filter or alarm detects SCP modification events.
+  action: >
+    Create a CloudWatch log metric filter on the CloudTrail log group
+    matching organizations:UpdatePolicy, organizations:DetachPolicy,
+    and organizations:DeletePolicy events, then create an alarm with
+    an SNS notification action. Requires an organization-level
+    CloudTrail trail.
+  example: |
+    {
+      "monitoring": {
+        "metric_filters": {
+          "scp_modification": {
+            "exists": true
+          }
+        },
+        "alarms": {
+          "scp_modification": {
+            "exists": true,
+            "sns_topic_arn": "arn:aws:sns:us-east-1:123456789012:security-alerts"
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.metric_filters.scp_modification.exists
+      op: eq
+      value: false

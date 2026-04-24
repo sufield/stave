@@ -1,0 +1,11 @@
+control: CTL.IAM.ROLE.UNUSED.001
+defect: >
+  IAM role has not been assumed in 90 or more days.
+infection: >
+  An unused role with attached policies is a dormant permission set.
+  Normal access patterns do not include this role, so anomalous usage
+  is invisible. An attacker who discovers it can assume it without
+  triggering behavioral anomaly detection.
+failure: >
+  Latent attack surface. An attacker assumes an unused role with
+  stale permissions invisible to behavioral monitoring.

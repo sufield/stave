@@ -1,0 +1,16 @@
+id: iam_boundary_governance_failure
+description: >
+  ANY boundary failure — self-modifiable, missing on delegated roles,
+  or wildcard actions. Each independently defeats the permission
+  boundary model. Threshold 1 because any single failure makes
+  boundaries ineffective as a security control.
+controls:
+  - CTL.IAM.BOUNDARY.ESCAPE.001
+  - CTL.IAM.BOUNDARY.MISSING.001
+  - CTL.IAM.BOUNDARY.WILDCARD.001
+escalation_threshold: 1
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - shadow_admin_access

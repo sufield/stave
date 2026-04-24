@@ -1,0 +1,10 @@
+control: CTL.CLOUDWATCH.MONITOR.BOUNDARY.001
+defect: >
+  No CloudWatch alarm for permission boundary change events.
+infection: >
+  Permission boundary removal expands a role's effective permissions
+  instantly. Without an alarm, boundary changes proceed without real-time
+  notification.
+failure: >
+  Undetected boundary removal. A role's permission boundary is deleted
+  and its effective permissions expand without notification.

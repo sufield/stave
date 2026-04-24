@@ -1,0 +1,11 @@
+control: CTL.IAM.BOUNDARY.ESCAPE.001
+defect: >
+  IAM role can delete or modify its own permission boundary.
+infection: >
+  A permission boundary is only effective if the bounded principal cannot
+  modify it. The principal calls DeleteRolePermissionsBoundary, the
+  boundary is removed, and all IAM policy permissions become effective
+  without constraint.
+failure: >
+  Permission boundary bypass. The principal removes its own boundary
+  and gains full policy permissions without constraint.
