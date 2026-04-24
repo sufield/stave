@@ -1135,7 +1135,7 @@
         "CTL.S3.PUBLIC.001",
         "CTL.CLOUDTRAIL.DATAREAD.001"
       ],
-      "compound_score": 90,
+      "compound_score": 100,
       "severity": "critical",
       "narrative": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n Failing: CTL.S3.ENCRYPT.001, CTL.S3.LOG.001.",
       "attack_stages": [
@@ -1585,7 +1585,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "aabcd333748e0bc5c6e2e11ebb2f0bcc01fcc099",
+      "head_commit": "bc55a3bae9add65db3bbae53eab0a94626c24a18",
       "dirty": false
     }
   }

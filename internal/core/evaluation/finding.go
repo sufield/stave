@@ -206,7 +206,7 @@ func SortFindings(fs []Finding) {
 			// Tiebreaker: deterministic alphabetical ordering.
 			cmp.Compare(a.ControlID, b.ControlID),
 			cmp.Compare(a.AssetID, b.AssetID),
-			cmp.Compare(a.Evidence.TemporalRisk, b.Evidence.TemporalRisk),
+			cmp.Compare(a.FindingID, b.FindingID),
 			cmp.Compare(a.ControlName, b.ControlName),
 			cmp.Compare(a.AssetType, b.AssetType),
 		)

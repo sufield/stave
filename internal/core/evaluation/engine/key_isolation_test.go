@@ -111,8 +111,7 @@ func TestEnrichKeyIsolation_SetsProperty(t *testing.T) {
 			makeKMSAsset("dev-bucket", "arn:aws:kms:key-D", "dev"),
 		},
 	}}
-	idx := BuildKeyUsageIndex(snapshots)
-	enriched := EnrichKeyIsolation(snapshots, idx)
+	enriched := EnrichKeyIsolation(snapshots)
 
 	a := enriched[0].Assets[0]
 	crypto, ok := a.Properties["cryptography"].(map[string]any)
@@ -138,8 +137,7 @@ func TestEnrichKeyIsolation_DoesNotMutateOriginal(t *testing.T) {
 			makeKMSAsset("dev-bucket", "arn:aws:kms:key-E", "dev"),
 		},
 	}}
-	idx := BuildKeyUsageIndex(original)
-	_ = EnrichKeyIsolation(original, idx)
+	_ = EnrichKeyIsolation(original)
 
 	// Original should not have key_isolation.
 	crypto, ok := original[0].Assets[0].Properties["cryptography"].(map[string]any)
@@ -155,7 +153,7 @@ func TestEnrichKeyIsolation_NilIndex(t *testing.T) {
 	snapshots := []asset.Snapshot{{
 		Assets: []asset.Asset{makeKMSAsset("bucket", "key", "phi")},
 	}}
-	result := EnrichKeyIsolation(snapshots, nil)
+	result := EnrichKeyIsolation(snapshots)
 	if len(result) != 1 || len(result[0].Assets) != 1 {
 		t.Fatal("nil index should return snapshots unchanged")
 	}

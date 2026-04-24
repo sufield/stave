@@ -28,7 +28,10 @@ type ScoreBreakdown struct {
 	BlastMultiplier    float64 `json:"blast_multiplier"`
 	ExposureMultiplier float64 `json:"exposure_multiplier"`
 	ChainBonus         float64 `json:"chain_bonus"`
-	DaysBlind          float64 `json:"days_blind"`
+	// DaysBlind is informational context, not a score multiplier.
+	// Duration is already captured in the score via DurationFactor.
+	// DaysBlind is used for SilentKiller classification and priority insights.
+	DaysBlind float64 `json:"days_blind"`
 }
 
 // RankInput carries the data needed to score one finding without

@@ -49,12 +49,16 @@ func (c *AcknowledgmentConfig) FindRule(controlID kernel.ControlID, assetID asse
 		return nil
 	}
 	c.once.Do(c.prepare)
+	var wildcard *AcknowledgmentRule
 	for _, r := range c.index[controlID] {
-		if r.AssetID == assetID || string(r.AssetID) == "*" {
+		if r.AssetID == assetID {
 			return r
 		}
+		if wildcard == nil && string(r.AssetID) == "*" {
+			wildcard = r
+		}
 	}
-	return nil
+	return wildcard
 }
 
 // IsExpired returns true if the rule has an expiry date that has passed.
@@ -66,7 +70,8 @@ func (r *AcknowledgmentRule) IsExpired(now time.Time) bool {
 	if err != nil {
 		return false // unparseable = permanent
 	}
-	return now.After(expiry.Add(24 * time.Hour)) // expires at end of day
+	expiryBoundary := expiry.AddDate(0, 0, 1)
+	return !now.Before(expiryBoundary)
 }
 
 // CompensatingControlStatus reports whether a compensating control is passing.

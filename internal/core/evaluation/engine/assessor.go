@@ -153,8 +153,7 @@ func (a *Assessor) Assess(snapshots []asset.Snapshot, opts ...AssessmentOptions)
 	// Pre-pass: derive cross-resource properties (e.g., KMS key isolation).
 	// This enriches asset properties with derived fields before control
 	// evaluation, enabling cross-resource reasoning via standard predicates.
-	keyIdx := BuildKeyUsageIndex(sequenced)
-	sequenced = EnrichKeyIsolation(sequenced, keyIdx)
+	sequenced = EnrichKeyIsolation(sequenced)
 
 	lifecycles, err := BuildLifecyclesPerControl(a.Controls, sequenced, a.PredicateEval)
 	if err != nil {

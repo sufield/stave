@@ -97,7 +97,7 @@ func BuildKeyUsageIndex(snapshots []asset.Snapshot) KeyUsageIndex {
 // EnrichKeyIsolation injects derived key isolation properties into each
 // asset's properties map. Each snapshot uses its OWN key sharing state
 // to avoid retroactively applying future key sharing to historical data.
-func EnrichKeyIsolation(snapshots []asset.Snapshot, _ KeyUsageIndex) []asset.Snapshot {
+func EnrichKeyIsolation(snapshots []asset.Snapshot) []asset.Snapshot {
 	enriched := make([]asset.Snapshot, len(snapshots))
 	for i, snap := range snapshots {
 		idx := buildKeyUsageIndexForSnapshot(snap)

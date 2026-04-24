@@ -116,11 +116,11 @@ func baseScoreFromMembers(
 	case policy.SeverityCritical:
 		return float64(ScoreCritical) // 90
 	case policy.SeverityHigh:
-		return float64(ScoreWarning) // 40
+		return 75
 	case policy.SeverityMedium:
-		return float64(ScoreInfo) // 10
+		return 50
 	default:
-		return float64(ScoreInfo) // 10 floor for any chain
+		return float64(ScoreInfo)
 	}
 }
 

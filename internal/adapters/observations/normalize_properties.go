@@ -26,8 +26,11 @@ func normalizeProperties(m map[string]any) {
 func normalizeValue(v any) any {
 	switch val := v.(type) {
 	case map[string]any:
-		normalizeProperties(val)
-		return val
+		cloned := make(map[string]any, len(val))
+		for k, v := range val {
+			cloned[k] = normalizeValue(v)
+		}
+		return cloned
 	case []any:
 		out := make([]any, len(val))
 		for i, elem := range val {
