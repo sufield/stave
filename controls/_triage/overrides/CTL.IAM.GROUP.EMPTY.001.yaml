@@ -1,0 +1,15 @@
+control: CTL.IAM.GROUP.EMPTY.001
+defect: >
+  IAM group has attached policies but zero members.
+infection: >
+  An empty group with attached policies is a dormant permission set.
+  Any principal with iam:AddUserToGroup permission can add themselves
+  or another user to the group, immediately inheriting all attached
+  policies. Empty groups are often remnants of decommissioned teams
+  or projects — their policies may be stale but still grant active
+  permissions. The group is invisible in normal access reviews because
+  it has no members to audit.
+failure: >
+  Latent privilege escalation. An attacker with AddUserToGroup
+  permission gains the group's full policy set by adding themselves
+  as a member.

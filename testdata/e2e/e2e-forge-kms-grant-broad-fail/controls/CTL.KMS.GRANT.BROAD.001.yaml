@@ -1,0 +1,97 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.GRANT.BROAD.001
+name: KMS Grant Has Overly Broad Operations
+description: >
+  A KMS grant includes multiple sensitive operations (Decrypt,
+  Encrypt, GenerateDataKey, ReEncryptFrom, ReEncryptTo) for a single
+  grantee. Grants should follow least privilege — a grantee that
+  needs to encrypt should not also have decrypt. Broad grants
+  effectively give full cryptographic access to the key.
+domain: exposure
+severity: medium
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-6"
+  pci_dss_v4.0: "7.2.1"
+  fedramp_moderate: "AC-6"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - kms
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - cryptography.kind
+  - cryptography.grant_operations
+  - cryptography.grant_operations_excessive
+  - cryptography.grant_count
+remediation:
+  description: >
+    KMS grant includes an excessive number of cryptographic
+    operations for a single grantee.
+  action: >
+    Restrict KMS grants to the minimum required operations. A
+    grantee that needs Encrypt should not also have Decrypt. Use
+    separate grants for distinct operational needs. Review grants
+    with aws kms list-grants --key-id KEY.
+  example: |
+    {
+      "cryptography": {
+        "kind": "key",
+        "grant_operations_excessive": false,
+        "grant_operations": ["Encrypt"]
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: key
+    - field: properties.cryptography.grant_operations_excessive
+      op: eq
+      value: true
+defect: >
+  KMS grant includes multiple sensitive cryptographic operations for
+  a single grantee.
+infection: >
+  KMS grants are an alternative access mechanism to key policies —
+  they delegate specific cryptographic operations to a grantee
+  principal without modifying the key policy. A grant with Decrypt,
+  Encrypt, GenerateDataKey, and ReEncrypt operations gives the
+  grantee full cryptographic access to the key. Grants are harder
+  to audit than key policies because they are not visible in the
+  key policy document — they require a separate ListGrants API call.
+failure: >
+  Excessive KMS grant scope. A single grantee has full cryptographic
+  access to the key through an overly broad grant.
+tests:
+  - name: key with broad grant operations fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-grant123"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          grant_operations_excessive: true
+          grant_operations:
+            - "Decrypt"
+            - "Encrypt"
+            - "GenerateDataKey"
+          grant_count: 3
+  - name: key with scoped grant passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-grant456"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          grant_operations_excessive: false
+          grant_operations:
+            - "Encrypt"
+          grant_count: 1

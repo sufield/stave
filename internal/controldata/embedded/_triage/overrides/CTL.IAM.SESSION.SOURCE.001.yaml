@@ -1,0 +1,14 @@
+control: CTL.IAM.SESSION.SOURCE.001
+defect: >
+  IAM role trust policy does not require sts:SourceIdentity.
+infection: >
+  When roles are chained (principal assumes Role A, then Role A
+  assumes Role B), CloudTrail for Role B's actions shows Role A as
+  the caller — not the original principal. If Role A is assumed by
+  50 different users, CloudTrail cannot determine which user's chain
+  reached Role B. sts:SourceIdentity propagates the original identity
+  through the chain. Once set, it cannot be changed — every
+  subsequent AssumeRole in the chain carries the original identity.
+failure: >
+  Lost identity in role chain. CloudTrail cannot trace actions back
+  to the original caller through chained role assumptions.

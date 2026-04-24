@@ -1,0 +1,26 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:s3:us-east-1:111122223333:accesspoint/scoped-ap",
+      "properties": {
+        "storage": {
+          "accesspoint": {
+            "name": "scoped-ap",
+            "policy_broader_than_bucket": false,
+            "network_origin": "VPC"
+          }
+        }
+      },
+      "type": "aws_s3_access_point",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "source": "deployed"
+}

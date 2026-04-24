@@ -1,0 +1,26 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:kms:us-east-1:111122223333:key/mrk-abc123",
+      "properties": {
+        "cryptography": {
+          "kind": "key",
+          "principal_has_admin_and_usage": true,
+          "dual_role_principals": [
+            "arn:aws:iam::111122223333:role/combined-kms-role"
+          ]
+        }
+      },
+      "type": "aws_kms_key",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "source": "deployed"
+}

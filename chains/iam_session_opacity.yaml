@@ -1,0 +1,18 @@
+id: iam_session_opacity
+description: >
+  Unattributable sessions plus either lost chain identity or long
+  duration. Sessions are unattributable in CloudTrail AND either role
+  chains lose the original caller or credentials persist for hours.
+  Together these create an investigation dead zone — incident
+  responders cannot attribute who assumed a role, cannot trace through
+  role chains, and stolen credentials remain valid long after detection.
+controls:
+  - CTL.IAM.SESSION.NAME.001
+  - CTL.IAM.SESSION.SOURCE.001
+  - CTL.IAM.SESSION.DURATION.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - shadow_admin_access

@@ -1,0 +1,28 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:iam::111122223333:group/legacy-admins",
+      "properties": {
+        "identity": {
+          "group": {
+            "name": "legacy-admins",
+            "has_policies_no_members": true,
+            "member_count": 0,
+            "policy_count": 3,
+            "has_admin_policy": true
+          }
+        }
+      },
+      "type": "aws_iam_group",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "source": "deployed"
+}

@@ -1,0 +1,28 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:ram:us-east-1:111122223333:resource-share/rs-org456",
+      "properties": {
+        "governance": {
+          "ram": {
+            "share_name": "internal-share",
+            "has_external_principals": false,
+            "shared_resource_types": [
+              "ec2:Subnet"
+            ]
+          }
+        }
+      },
+      "type": "aws_ram_share",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "source": "deployed"
+}

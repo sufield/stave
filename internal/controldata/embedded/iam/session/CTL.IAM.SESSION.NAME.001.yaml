@@ -1,0 +1,97 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SESSION.NAME.001
+name: Trust Policy Does Not Require RoleSessionName
+description: >
+  Role trust policy does not include a condition on
+  sts:RoleSessionName. Assumed sessions have generic,
+  unattributable names in CloudTrail (e.g.,
+  botocore-session-1234567890). When multiple principals can assume
+  the same role, CloudTrail cannot distinguish who assumed it.
+  RoleSessionName appears in the assumed role ARN:
+  arn:aws:sts::ACCOUNT:assumed-role/ROLE/SESSION_NAME.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC7.2"
+  nist_800_53_r5: "AU-3"
+  pci_dss_v4.0: "10.2.1"
+  fedramp_moderate: "AU-3"
+  ccm_v4: ["LOG-03", "IAM-05"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: defense_evasion
+observation_fields:
+  - identity.kind
+  - identity.trust_policy.requires_session_name
+  - identity.trust_policy.session_name_condition
+remediation:
+  description: >
+    Trust policy allows role assumption without a required
+    RoleSessionName. CloudTrail cannot attribute which principal
+    assumed the role.
+  action: >
+    Add a StringLike or StringEquals condition on
+    sts:RoleSessionName in the trust policy to require callers to
+    provide a meaningful session name (e.g., the caller's username
+    or pipeline ID).
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "trust_policy": {
+          "requires_session_name": true,
+          "session_name_condition": "StringEquals"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: role
+    - field: properties.identity.trust_policy.requires_session_name
+      op: eq
+      value: false
+defect: >
+  IAM role trust policy does not require a specific
+  sts:RoleSessionName.
+infection: >
+  When a principal assumes a role, the RoleSessionName appears in
+  CloudTrail as part of the assumed role ARN. Without a required
+  session name, callers can use any name — or the SDK default
+  (botocore-session-TIMESTAMP). If multiple principals (users,
+  other roles, CI/CD pipelines) can assume the same role,
+  CloudTrail shows the role was assumed but cannot attribute which
+  principal did it. Requiring a meaningful session name makes every
+  assumption attributable.
+failure: >
+  Unattributable role assumption. CloudTrail shows the role was
+  assumed but cannot identify which principal assumed it.
+tests:
+  - name: role without RoleSessionName condition fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/shared-role"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          trust_policy:
+            requires_session_name: false
+  - name: role with RoleSessionName condition passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/attributed-role"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          trust_policy:
+            requires_session_name: true
+            session_name_condition: "StringEquals"

@@ -1,0 +1,16 @@
+control: CTL.IAM.SESSION.NAME.001
+defect: >
+  IAM role trust policy does not require a specific
+  sts:RoleSessionName.
+infection: >
+  When a principal assumes a role, the RoleSessionName appears in
+  CloudTrail as part of the assumed role ARN. Without a required
+  session name, callers can use any name — or the SDK default
+  (botocore-session-TIMESTAMP). If multiple principals (users,
+  other roles, CI/CD pipelines) can assume the same role,
+  CloudTrail shows the role was assumed but cannot attribute which
+  principal did it. Requiring a meaningful session name makes every
+  assumption attributable.
+failure: >
+  Unattributable role assumption. CloudTrail shows the role was
+  assumed but cannot identify which principal assumed it.

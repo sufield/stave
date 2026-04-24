@@ -1,0 +1,27 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:kms:us-east-1:111122223333:key/mrk-grant456",
+      "properties": {
+        "cryptography": {
+          "kind": "key",
+          "grant_operations_excessive": false,
+          "grant_operations": [
+            "Encrypt"
+          ],
+          "grant_count": 1
+        }
+      },
+      "type": "aws_kms_key",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "source": "deployed"
+}

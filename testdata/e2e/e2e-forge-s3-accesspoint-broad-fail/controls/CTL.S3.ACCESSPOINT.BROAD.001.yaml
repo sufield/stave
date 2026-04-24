@@ -1,0 +1,96 @@
+dsl_version: ctrl.v1
+id: CTL.S3.ACCESSPOINT.BROAD.001
+name: S3 Access Point Policy Overly Broad
+description: >
+  S3 access point has a policy that grants broader access than the
+  bucket policy. Access points are intended to scope access for
+  specific use cases — a broad access point policy defeats this
+  purpose and may grant access that the bucket policy restricts.
+  Access points with Internet network origin and broad policies are
+  effectively public endpoints.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-3"
+  pci_dss_v4.0: "7.2.1"
+  fedramp_moderate: "AC-3"
+  ccm_v4: ["DSP-13", "IAM-16"]
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - storage.accesspoint.name
+  - storage.accesspoint.policy_broader_than_bucket
+  - storage.accesspoint.public_access
+  - storage.accesspoint.network_origin
+remediation:
+  description: >
+    S3 access point policy grants broader access than the bucket
+    policy. The access point may expose data that the bucket policy
+    restricts.
+  action: >
+    Restrict the access point policy to the specific principals and
+    operations required for its use case. Access points should scope
+    access narrower than the bucket policy, not broader. Set network
+    origin to VPC if internet access is not required.
+  example: |
+    {
+      "storage": {
+        "accesspoint": {
+          "policy_broader_than_bucket": false,
+          "network_origin": "VPC"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.accesspoint.policy_broader_than_bucket
+      op: eq
+      value: true
+defect: >
+  S3 access point policy grants broader access than the parent bucket
+  policy.
+infection: >
+  S3 access points are named network endpoints attached to buckets.
+  Each access point has its own policy, DNS name, and network origin
+  setting. When an access point policy is broader than the bucket
+  policy, it creates an access path that bypasses the bucket policy's
+  restrictions. An access point with Internet network origin and a
+  broad policy is effectively a public endpoint to data the bucket
+  policy intended to restrict. Access point policies are often
+  overlooked in audits because they are separate from the bucket
+  policy.
+failure: >
+  Data exposure via access point. Bucket data accessible through an
+  access point that bypasses the bucket policy's restrictions.
+tests:
+  - name: access point broader than bucket fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:s3:us-east-1:111122223333:accesspoint/broad-ap"
+      asset_type: aws_s3_access_point
+      vendor: aws
+      properties:
+        storage:
+          accesspoint:
+            name: "broad-ap"
+            policy_broader_than_bucket: true
+            public_access: false
+            network_origin: "Internet"
+  - name: access point scoped narrower passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:us-east-1:111122223333:accesspoint/scoped-ap"
+      asset_type: aws_s3_access_point
+      vendor: aws
+      properties:
+        storage:
+          accesspoint:
+            name: "scoped-ap"
+            policy_broader_than_bucket: false
+            network_origin: "VPC"

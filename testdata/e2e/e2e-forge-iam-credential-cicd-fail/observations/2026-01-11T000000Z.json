@@ -1,0 +1,26 @@
+{
+  "assets": [
+    {
+      "id": "cicd:github-actions:org/repo",
+      "properties": {
+        "identity": {
+          "cicd": {
+            "uses_long_lived_keys": true,
+            "oidc_provider_configured": false,
+            "key_age_days": 200
+          }
+        }
+      },
+      "type": "aws_cicd_integration",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "source": "deployed"
+}

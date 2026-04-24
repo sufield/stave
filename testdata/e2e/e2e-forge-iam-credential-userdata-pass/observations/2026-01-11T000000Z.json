@@ -1,0 +1,22 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:ec2:us-east-1:111122223333:instance/i-0def456abc789",
+      "properties": {
+        "compute": {
+          "userdata_contains_credentials": false
+        }
+      },
+      "type": "aws_ec2_instance",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "source": "deployed"
+}

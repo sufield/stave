@@ -1,0 +1,15 @@
+control: CTL.KMS.IMPORTED.EXPIRY.001
+defect: >
+  Imported KMS key material has no expiration date configured.
+infection: >
+  AWS-managed key material supports automatic annual rotation. Imported
+  key material does not — the only rotation mechanism is manual
+  re-import. Without an expiration date, imported key material persists
+  indefinitely. If the original key material source is compromised
+  (HSM breach, backup theft), the KMS key remains usable with the
+  compromised material. Expiration forces periodic re-import, creating
+  natural checkpoints for key material review and source verification.
+failure: >
+  Indefinite key material persistence. Compromised key material
+  remains active in KMS indefinitely with no forced rotation or
+  re-import.

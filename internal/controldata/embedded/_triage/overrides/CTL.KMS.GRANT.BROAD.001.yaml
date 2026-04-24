@@ -1,0 +1,15 @@
+control: CTL.KMS.GRANT.BROAD.001
+defect: >
+  KMS grant includes multiple sensitive cryptographic operations for
+  a single grantee.
+infection: >
+  KMS grants are an alternative access mechanism to key policies —
+  they delegate specific cryptographic operations to a grantee
+  principal without modifying the key policy. A grant with Decrypt,
+  Encrypt, GenerateDataKey, and ReEncrypt operations gives the
+  grantee full cryptographic access to the key. Grants are harder
+  to audit than key policies because they are not visible in the
+  key policy document — they require a separate ListGrants API call.
+failure: >
+  Excessive KMS grant scope. A single grantee has full cryptographic
+  access to the key through an overly broad grant.

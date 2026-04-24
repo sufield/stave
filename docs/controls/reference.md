@@ -3,27 +3,27 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1296
-**Pack hash:** `cf82bc3619aed0c37f59144f351c36e932c2fec2894ec93f29ca375c844fee1b`
+**Total controls:** 1308
+**Pack hash:** `6f5b436e68289802c741288158c60a0f1bb96949deb03ae33a3d28073b445d8c`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 169 |
-| high | 581 |
+| high | 586 |
 | info | 16 |
-| low | 92 |
-| medium | 438 |
+| low | 93 |
+| medium | 444 |
 
 | Domain | Count |
 |--------|-------|
 | audit | 20 |
 | detection | 32 |
 | encryption | 75 |
-| exposure | 788 |
+| exposure | 792 |
 | governance | 27 |
-| identity | 311 |
+| identity | 319 |
 | network | 21 |
 | resilience | 14 |
 | storage | 8 |
@@ -10079,6 +10079,51 @@ IAM credentials (passwords and access keys) unused for 45 or more days must be d
 
 ---
 
+### CTL.IAM.CREDENTIAL.CFN.001
+
+**CloudFormation Stack Contains Embedded Credentials**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: IA-5(7); nist_800_53_r5: IA-5(7); pci_dss_v4.0: 8.6.2; soc2: CC6.1;
+
+CloudFormation stack parameters, resources, or outputs contain AWS access keys, secret keys, or hardcoded passwords. Stack parameters marked as NoEcho are still visible in the template source. Stack history retains parameter values across updates — credentials embedded in any historical version remain retrievable.
+
+**Remediation:** Replace hardcoded credentials in CloudFormation with dynamic references to Secrets Manager or SSM Parameter Store SecureString. Use NoEcho for sensitive parameters and rotate any exposed credentials immediately.
+
+---
+
+### CTL.IAM.CREDENTIAL.CICD.001
+
+**CI/CD Uses Long-Lived Access Keys Instead of OIDC Federation**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: IA-5(1); nist_800_53_r5: IA-5(1); pci_dss_v4.0: 8.3.6; soc2: CC6.1;
+
+CI/CD pipelines (GitHub Actions, GitLab CI, Bitbucket Pipelines) authenticate to AWS using long-lived IAM access keys stored as CI/CD secrets instead of OIDC federation. OIDC federation provides short-lived credentials scoped to specific repositories and workflows — no long-lived secrets to leak, no keys to rotate.
+
+**Remediation:** Replace long-lived IAM access keys with OIDC federation. Configure an IAM OIDC provider for your CI/CD platform and create a role with a trust policy scoped to specific repositories and workflows.
+
+---
+
+### CTL.IAM.CREDENTIAL.USERDATA.001
+
+**EC2 User Data Contains AWS Credentials**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: IA-5(7); hipaa: 164.312(a)(1); nist_800_53_r5: IA-5(7); pci_dss_v4.0: 8.6.2; soc2: CC6.1;
+
+EC2 instance user data contains AWS access keys, secret keys, or session tokens. User data is retrievable via the instance metadata service (169.254.169.254/latest/user-data) and visible in the EC2 console, API responses, and CloudFormation stack history. Credentials in user data are exposed to anyone with EC2 describe permissions or metadata access — four separate attack surfaces.
+
+**Remediation:** Remove hardcoded credentials from user data. Use IAM instance profiles for EC2 access to AWS services. For bootstrap secrets use Secrets Manager or SSM Parameter Store SecureString.
+
+---
+
 ### CTL.IAM.CROSS.ENV.001
 
 **Non-Production Must Not Access Production Resources**
@@ -10864,6 +10909,21 @@ Federated role trust policy does not require session tags. Without session tags,
 
 ---
 
+### CTL.IAM.GROUP.EMPTY.001
+
+**IAM Group Has Policies But No Members**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-2(3); nist_800_53_r5: AC-2(3); soc2: CC6.3;
+
+An IAM group has attached policies (managed or inline) but no members. The group's permissions serve no operational purpose. If the group has admin-level policies, adding a user to it grants admin — the orphaned group is a latent escalation path via AddUserToGroup (technique #13 in the Stave escalation catalog).
+
+**Remediation:** Remove policies from empty groups or delete the group. Empty groups with admin-level policies are latent escalation paths via AddUserToGroup.
+
+---
+
 ### CTL.IAM.IDENTITY.BLASTRADIUS.001
 
 **Role Blast Radius Must Not Exceed Resource Threshold**
@@ -11627,6 +11687,21 @@ All IAM roles must have a role-type tag with a value from the defined taxonomy (
 
 ---
 
+### CTL.IAM.ROLE.LAMBDA.SCOPING.001
+
+**Lambda Execution Role Assumable by Any Function**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(1); nist_800_53_r5: AC-6(1); pci_dss_v4.0: 7.2.2; soc2: CC6.3;
+
+Lambda execution role trust policy allows lambda.amazonaws.com without a condition restricting which Lambda functions can assume it. Any Lambda function in the account can assume this role. If the role has database access, any function — including one an attacker creates — gets database access by assuming this role.
+
+**Remediation:** Add a condition on aws:SourceFunctionArn or lambda:FunctionArn in the trust policy to restrict which Lambda functions can assume this role.
+
+---
+
 ### CTL.IAM.ROLE.PERMISSIONDRIFT.001
 
 **Roles Must Not Accumulate Unused Permissions**
@@ -11894,6 +11969,51 @@ SCP does not deny iam:CreateAccessKey for root users in member accounts. Root ac
 Service Control Policies must deny cloudtrail:StopLogging, cloudtrail:DeleteTrail, and cloudtrail:UpdateTrail to non- breakglass roles. Without these protective denies, any IAM principal with sufficient permissions can disrupt logging.
 
 **Remediation:** Create an SCP with Effect Deny on cloudtrail:StopLogging, cloudtrail:DeleteTrail, and cloudtrail:UpdateTrail. Add a Condition excluding the breakglass role ARN.
+
+---
+
+### CTL.IAM.SESSION.DURATION.001
+
+**Role MaxSessionDuration Exceeds 4 Hours**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-12; nist_800_53_r5: AC-12; pci_dss_v4.0: 8.2.8; soc2: CC6.1;
+
+IAM role allows sessions up to 12 hours (the AWS maximum). For most roles, 1-4 hours is sufficient. Long sessions persist after credential compromise is detected — revocation requires waiting for session expiry or deleting the role entirely. MaxSessionDuration controls the upper bound of temporary credentials issued via AssumeRole.
+
+**Remediation:** Set MaxSessionDuration to 14400 seconds (4 hours) or less via aws iam update-role --role-name ROLE --max-session-duration 14400. For CI/CD and automation roles, use 3600 seconds (1 hour).
+
+---
+
+### CTL.IAM.SESSION.NAME.001
+
+**Trust Policy Does Not Require RoleSessionName**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AU-3; nist_800_53_r5: AU-3; pci_dss_v4.0: 10.2.1; soc2: CC7.2;
+
+Role trust policy does not include a condition on sts:RoleSessionName. Assumed sessions have generic, unattributable names in CloudTrail (e.g., botocore-session-1234567890). When multiple principals can assume the same role, CloudTrail cannot distinguish who assumed it. RoleSessionName appears in the assumed role ARN: arn:aws:sts::ACCOUNT:assumed-role/ROLE/SESSION_NAME.
+
+**Remediation:** Add a StringLike or StringEquals condition on sts:RoleSessionName in the trust policy to require callers to provide a meaningful session name (e.g., the caller's username or pipeline ID).
+
+---
+
+### CTL.IAM.SESSION.SOURCE.001
+
+**Trust Policy Does Not Set SourceIdentity**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AU-3(1); nist_800_53_r5: AU-3(1); pci_dss_v4.0: 10.2.1; soc2: CC7.2;
+
+Role trust policy does not require sts:SourceIdentity. In role chaining (A assumes B assumes C), the original caller's identity is lost at each hop. SourceIdentity propagates the original caller through the entire chain — CloudTrail shows who started the chain, not just the last role in it. Once set, SourceIdentity cannot be changed by subsequent AssumeRole calls.
+
+**Remediation:** Add a condition on sts:SourceIdentity in the trust policy to require callers to set a source identity that propagates through role chains. The condition should require a non-empty value matching the caller's identity.
 
 ---
 
@@ -13306,6 +13426,36 @@ KMS keys must have AWS_KMS origin, confirming they are generated and stored in F
 
 ---
 
+### CTL.KMS.GRANT.BROAD.001
+
+**KMS Grant Has Overly Broad Operations**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-6; nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+A KMS grant includes multiple sensitive operations (Decrypt, Encrypt, GenerateDataKey, ReEncryptFrom, ReEncryptTo) for a single grantee. Grants should follow least privilege — a grantee that needs to encrypt should not also have decrypt. Broad grants effectively give full cryptographic access to the key.
+
+**Remediation:** Restrict KMS grants to the minimum required operations. A grantee that needs Encrypt should not also have Decrypt. Use separate grants for distinct operational needs. Review grants with aws kms list-grants --key-id KEY.
+
+---
+
+### CTL.KMS.IMPORTED.EXPIRY.001
+
+**Imported KMS Key Material Without Expiration**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: SC-12(1); nist_800_53_r5: SC-12(1); pci_dss_v4.0: 3.6.1.2; soc2: CC6.1;
+
+Imported key material has no expiration date set. Imported keys persist indefinitely without forced rotation. Unlike AWS-generated key material (which supports automatic rotation), imported material must be manually re-imported. Without expiration, there is no mechanism forcing re-import and periodic review of the key material source.
+
+**Remediation:** Re-import the key material with an expiration date set. Use aws kms import-key-material with --valid-to to set an expiration that forces periodic re-import and review.
+
+---
+
 ### CTL.KMS.INCOMPLETE.001
 
 **Complete Data Required for KMS Assessment**
@@ -13437,6 +13587,21 @@ KMS key policies must not grant cryptographic permissions to principal ARNs that
 Customer-created symmetric KMS keys must have automatic key rotation enabled. Key rotation limits the amount of data encrypted with a single key version, reducing the blast radius of key compromise.
 
 **Remediation:** Enable key rotation: aws kms enable-key-rotation --key-id <key-id>
+
+---
+
+### CTL.KMS.SEPARATION.001
+
+**KMS Key Admin and Key User on Same Principal**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-5; hipaa: 164.312(a)(1); nist_800_53_r5: AC-5; pci_dss_v4.0: 7.2.2; soc2: CC6.3;
+
+Same IAM principal has both key administration permissions (kms:Create*, kms:Delete*, kms:Enable*, kms:Disable*, kms:Put*) and key usage permissions (kms:Encrypt, kms:Decrypt, kms:GenerateDataKey). No separation of duties — the principal who manages the key also uses it for cryptographic operations. A compromised principal can both modify the key's security configuration and decrypt all protected data.
+
+**Remediation:** Separate key administration and key usage into distinct IAM principals. Key administrators should not have Encrypt, Decrypt, or GenerateDataKey permissions. Key users should not have Create*, Delete*, Enable*, Disable*, or Put* permissions.
 
 ---
 
@@ -16291,6 +16456,21 @@ When S3 Access Grants are enabled, IAM Identity Center should be attached to the
 S3 buckets tagged with data-classification=phi must have access restricted to explicitly named principals and prefixes. Broad bucket-level access (wildcard principals, unrestricted actions) on PHI data violates the HIPAA minimum necessary standard (§164.502(b)). Access must be narrowed to the exact IAM roles, account IDs, and object prefixes required for each authorized workflow.
 
 **Remediation:** Restrict bucket policy to named IAM role ARNs and specific object prefixes. Remove wildcard principals and broad s3:* actions. Use IAM Access Analyzer to identify unused permissions and generate least-privilege policies from CloudTrail activity.
+
+---
+
+### CTL.S3.ACCESSPOINT.BROAD.001
+
+**S3 Access Point Policy Overly Broad**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3; nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+S3 access point has a policy that grants broader access than the bucket policy. Access points are intended to scope access for specific use cases — a broad access point policy defeats this purpose and may grant access that the bucket policy restricts. Access points with Internet network origin and broad policies are effectively public endpoints.
+
+**Remediation:** Restrict the access point policy to the specific principals and operations required for its use case. Access points should scope access narrower than the bucket policy, not broader. Set network origin to VPC if internet access is not required.
 
 ---
 

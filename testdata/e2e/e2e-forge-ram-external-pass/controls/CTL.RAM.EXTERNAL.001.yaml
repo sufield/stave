@@ -1,0 +1,98 @@
+dsl_version: ctrl.v1
+id: CTL.RAM.EXTERNAL.001
+name: RAM Resource Share Includes External Accounts
+description: >
+  AWS Resource Access Manager (RAM) shares resources (subnets,
+  Transit Gateways, Route53 Resolver rules) with accounts outside
+  the organization. Shared resources are accessible to the external
+  account's principals — extending the network and resource boundary
+  beyond organizational control. Unlike IAM trust policies, RAM
+  shares operate at the resource level and can expose network
+  infrastructure.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.6"
+  nist_800_53_r5: "AC-4"
+  pci_dss_v4.0: "1.3.1"
+  fedramp_moderate: "AC-4"
+  ccm_v4: ["IVS-09", "DSP-13"]
+scope_tags:
+  - aws
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+observation_fields:
+  - governance.ram.share_name
+  - governance.ram.has_external_principals
+  - governance.ram.external_accounts
+  - governance.ram.shared_resource_types
+remediation:
+  description: >
+    RAM resource share includes principals from accounts outside the
+    organization. Network and resource boundaries extend beyond
+    organizational control.
+  action: >
+    Remove external account principals from the RAM resource share.
+    If external sharing is required, restrict to specific account IDs
+    and resource types. Use AWS Organizations for internal sharing.
+  example: |
+    {
+      "governance": {
+        "ram": {
+          "has_external_principals": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.ram.has_external_principals
+      op: eq
+      value: true
+defect: >
+  RAM resource share includes accounts outside the AWS organization.
+infection: >
+  RAM shares network infrastructure (subnets, Transit Gateways,
+  Route53 Resolver rules) and service resources (License Manager
+  configurations, Outposts) with other accounts. When external
+  accounts are included, their principals can access shared resources
+  directly. A shared subnet means external accounts can launch EC2
+  instances in your VPC. A shared Transit Gateway means external
+  accounts can route traffic through your network. Unlike IAM cross-
+  account trust (which grants API permissions), RAM sharing extends
+  the network and resource boundary itself.
+failure: >
+  Network boundary extension. External accounts can launch resources
+  in shared subnets, route traffic through shared Transit Gateways,
+  or access shared service resources.
+tests:
+  - name: share with external accounts fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ram:us-east-1:111122223333:resource-share/rs-ext123"
+      asset_type: aws_ram_share
+      vendor: aws
+      properties:
+        governance:
+          ram:
+            share_name: "cross-org-share"
+            has_external_principals: true
+            external_accounts:
+              - "999988887777"
+            shared_resource_types:
+              - "ec2:Subnet"
+              - "ec2:TransitGateway"
+  - name: share within organization passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ram:us-east-1:111122223333:resource-share/rs-org456"
+      asset_type: aws_ram_share
+      vendor: aws
+      properties:
+        governance:
+          ram:
+            share_name: "internal-share"
+            has_external_principals: false
+            shared_resource_types:
+              - "ec2:Subnet"

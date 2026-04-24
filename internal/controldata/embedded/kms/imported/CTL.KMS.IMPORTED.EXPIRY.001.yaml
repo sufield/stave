@@ -1,0 +1,87 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.IMPORTED.EXPIRY.001
+name: Imported KMS Key Material Without Expiration
+description: >
+  Imported key material has no expiration date set. Imported keys
+  persist indefinitely without forced rotation. Unlike AWS-generated
+  key material (which supports automatic rotation), imported material
+  must be manually re-imported. Without expiration, there is no
+  mechanism forcing re-import and periodic review of the key material
+  source.
+domain: identity
+severity: medium
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "SC-12(1)"
+  pci_dss_v4.0: "3.6.1.2"
+  fedramp_moderate: "SC-12(1)"
+  ccm_v4: ["CEK-04"]
+scope_tags:
+  - aws
+  - kms
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+observation_fields:
+  - cryptography.kind
+  - cryptography.imported_material_no_expiry
+remediation:
+  description: >
+    Imported KMS key material has no expiration date. The key
+    material persists indefinitely without forced rotation or
+    re-import.
+  action: >
+    Re-import the key material with an expiration date set. Use
+    aws kms import-key-material with --valid-to to set an expiration
+    that forces periodic re-import and review.
+  example: |
+    {
+      "cryptography": {
+        "kind": "key",
+        "imported_material_no_expiry": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: key
+    - field: properties.cryptography.imported_material_no_expiry
+      op: eq
+      value: true
+defect: >
+  Imported KMS key material has no expiration date configured.
+infection: >
+  AWS-managed key material supports automatic annual rotation. Imported
+  key material does not — the only rotation mechanism is manual
+  re-import. Without an expiration date, imported key material persists
+  indefinitely. If the original key material source is compromised
+  (HSM breach, backup theft), the KMS key remains usable with the
+  compromised material. Expiration forces periodic re-import, creating
+  natural checkpoints for key material review and source verification.
+failure: >
+  Indefinite key material persistence. Compromised key material
+  remains active in KMS indefinitely with no forced rotation or
+  re-import.
+tests:
+  - name: imported key without expiration fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-imported123"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          imported_material_no_expiry: true
+  - name: imported key with expiration passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-imported456"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          imported_material_no_expiry: false

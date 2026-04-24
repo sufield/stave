@@ -1,0 +1,14 @@
+control: CTL.IAM.SESSION.DURATION.001
+defect: >
+  IAM role MaxSessionDuration set above 4-hour threshold.
+infection: >
+  When a principal assumes this role, the temporary credentials are
+  valid for up to the MaxSessionDuration. A 12-hour session means
+  stolen credentials remain valid for 12 hours regardless of any
+  response action. The organization cannot revoke a specific STS
+  session — they must either delete the role (breaking all consumers)
+  or wait for expiry. Shorter MaxSessionDuration limits the window
+  during which stolen credentials are usable.
+failure: >
+  Extended credential validity. Stolen session credentials remain
+  valid for hours after theft, regardless of detection or response.

@@ -1,0 +1,17 @@
+control: CTL.RAM.EXTERNAL.001
+defect: >
+  RAM resource share includes accounts outside the AWS organization.
+infection: >
+  RAM shares network infrastructure (subnets, Transit Gateways,
+  Route53 Resolver rules) and service resources (License Manager
+  configurations, Outposts) with other accounts. When external
+  accounts are included, their principals can access shared resources
+  directly. A shared subnet means external accounts can launch EC2
+  instances in your VPC. A shared Transit Gateway means external
+  accounts can route traffic through your network. Unlike IAM cross-
+  account trust (which grants API permissions), RAM sharing extends
+  the network and resource boundary itself.
+failure: >
+  Network boundary extension. External accounts can launch resources
+  in shared subnets, route traffic through shared Transit Gateways,
+  or access shared service resources.

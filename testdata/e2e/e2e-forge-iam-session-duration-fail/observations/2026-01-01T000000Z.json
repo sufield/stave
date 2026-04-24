@@ -1,0 +1,26 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:iam::111122223333:role/long-session-role",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "role": {
+            "max_session_duration": 43200,
+            "session_duration_excessive": true
+          }
+        }
+      },
+      "type": "aws_iam_role",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "source": "deployed"
+}

@@ -1,0 +1,17 @@
+control: CTL.S3.ACCESSPOINT.BROAD.001
+defect: >
+  S3 access point policy grants broader access than the parent bucket
+  policy.
+infection: >
+  S3 access points are named network endpoints attached to buckets.
+  Each access point has its own policy, DNS name, and network origin
+  setting. When an access point policy is broader than the bucket
+  policy, it creates an access path that bypasses the bucket policy's
+  restrictions. An access point with Internet network origin and a
+  broad policy is effectively a public endpoint to data the bucket
+  policy intended to restrict. Access point policies are often
+  overlooked in audits because they are separate from the bucket
+  policy.
+failure: >
+  Data exposure via access point. Bucket data accessible through an
+  access point that bypasses the bucket policy's restrictions.

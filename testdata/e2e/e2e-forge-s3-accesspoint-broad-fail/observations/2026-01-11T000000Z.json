@@ -1,0 +1,27 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:s3:us-east-1:111122223333:accesspoint/broad-ap",
+      "properties": {
+        "storage": {
+          "accesspoint": {
+            "name": "broad-ap",
+            "policy_broader_than_bucket": true,
+            "public_access": false,
+            "network_origin": "Internet"
+          }
+        }
+      },
+      "type": "aws_s3_access_point",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "source": "deployed"
+}

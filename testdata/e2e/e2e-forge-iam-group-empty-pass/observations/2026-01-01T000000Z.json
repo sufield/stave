@@ -1,0 +1,28 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:iam::111122223333:group/active-devs",
+      "properties": {
+        "identity": {
+          "group": {
+            "name": "active-devs",
+            "has_policies_no_members": false,
+            "member_count": 5,
+            "policy_count": 2,
+            "has_admin_policy": false
+          }
+        }
+      },
+      "type": "aws_iam_group",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "source": "deployed"
+}

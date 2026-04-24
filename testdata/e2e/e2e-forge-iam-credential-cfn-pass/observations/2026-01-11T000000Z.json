@@ -1,0 +1,24 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:cloudformation:us-east-1:111122223333:stack/modern-app/def456",
+      "properties": {
+        "governance": {
+          "cfn": {
+            "contains_credentials": false
+          }
+        }
+      },
+      "type": "aws_cloudformation_stack",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "source": "deployed"
+}

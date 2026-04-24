@@ -1,0 +1,90 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SESSION.SOURCE.001
+name: Trust Policy Does Not Set SourceIdentity
+description: >
+  Role trust policy does not require sts:SourceIdentity. In role
+  chaining (A assumes B assumes C), the original caller's identity
+  is lost at each hop. SourceIdentity propagates the original caller
+  through the entire chain — CloudTrail shows who started the chain,
+  not just the last role in it. Once set, SourceIdentity cannot be
+  changed by subsequent AssumeRole calls.
+domain: identity
+severity: medium
+compliance:
+  soc2: "CC7.2"
+  nist_800_53_r5: "AU-3(1)"
+  pci_dss_v4.0: "10.2.1"
+  fedramp_moderate: "AU-3(1)"
+  ccm_v4: ["LOG-03"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: defense_evasion
+observation_fields:
+  - identity.kind
+  - identity.trust_policy.requires_source_identity
+remediation:
+  description: >
+    Trust policy does not require sts:SourceIdentity. Role chains
+    lose the original caller's identity at each hop.
+  action: >
+    Add a condition on sts:SourceIdentity in the trust policy to
+    require callers to set a source identity that propagates through
+    role chains. The condition should require a non-empty value
+    matching the caller's identity.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "trust_policy": {
+          "requires_source_identity": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: role
+    - field: properties.identity.trust_policy.requires_source_identity
+      op: eq
+      value: false
+defect: >
+  IAM role trust policy does not require sts:SourceIdentity.
+infection: >
+  When roles are chained (principal assumes Role A, then Role A
+  assumes Role B), CloudTrail for Role B's actions shows Role A as
+  the caller — not the original principal. If Role A is assumed by
+  50 different users, CloudTrail cannot determine which user's chain
+  reached Role B. sts:SourceIdentity propagates the original identity
+  through the chain. Once set, it cannot be changed — every
+  subsequent AssumeRole in the chain carries the original identity.
+failure: >
+  Lost identity in role chain. CloudTrail cannot trace actions back
+  to the original caller through chained role assumptions.
+tests:
+  - name: role without SourceIdentity requirement fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/chainable-role"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          trust_policy:
+            requires_source_identity: false
+  - name: role with SourceIdentity requirement passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/traceable-role"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          trust_policy:
+            requires_source_identity: true

@@ -1,0 +1,15 @@
+control: CTL.KMS.SEPARATION.001
+defect: >
+  Same principal has both KMS key administration and key usage
+  permissions.
+infection: >
+  Separation of duties for KMS requires that key administrators
+  (who create, enable, disable, and rotate keys) are different from
+  key users (who encrypt, decrypt, and generate data keys). Combined
+  roles mean a compromised principal can both modify the key's
+  security configuration (disable rotation, change key policy,
+  schedule deletion) and use the key to decrypt all protected data.
+  The attack surface is the union of management and data operations.
+failure: >
+  Full KMS control. A compromised principal manages the key lifecycle
+  AND decrypts all data the key protects.

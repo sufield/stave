@@ -1,0 +1,94 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.GROUP.EMPTY.001
+name: IAM Group Has Policies But No Members
+description: >
+  An IAM group has attached policies (managed or inline) but no
+  members. The group's permissions serve no operational purpose. If
+  the group has admin-level policies, adding a user to it grants
+  admin — the orphaned group is a latent escalation path via
+  AddUserToGroup (technique #13 in the Stave escalation catalog).
+domain: identity
+severity: low
+compliance:
+  soc2: "CC6.3"
+  nist_800_53_r5: "AC-2(3)"
+  fedramp_moderate: "AC-2(3)"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+observation_fields:
+  - identity.group.name
+  - identity.group.member_count
+  - identity.group.policy_count
+  - identity.group.has_admin_policy
+remediation:
+  description: >
+    IAM group has policies attached but no members. The group is a
+    latent escalation path if it has privileged policies.
+  action: >
+    Remove policies from empty groups or delete the group. Empty
+    groups with admin-level policies are latent escalation paths
+    via AddUserToGroup.
+  example: |
+    {
+      "identity": {
+        "group": {
+          "has_policies_no_members": false,
+          "member_count": 3,
+          "policy_count": 2
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.group.has_policies_no_members
+      op: eq
+      value: true
+defect: >
+  IAM group has attached policies but zero members.
+infection: >
+  An empty group with attached policies is a dormant permission set.
+  Any principal with iam:AddUserToGroup permission can add themselves
+  or another user to the group, immediately inheriting all attached
+  policies. Empty groups are often remnants of decommissioned teams
+  or projects — their policies may be stale but still grant active
+  permissions. The group is invisible in normal access reviews because
+  it has no members to audit.
+failure: >
+  Latent privilege escalation. An attacker with AddUserToGroup
+  permission gains the group's full policy set by adding themselves
+  as a member.
+tests:
+  - name: group with policies but no members fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:group/legacy-admins"
+      asset_type: aws_iam_group
+      vendor: aws
+      properties:
+        identity:
+          group:
+            name: "legacy-admins"
+            has_policies_no_members: true
+            member_count: 0
+            policy_count: 3
+            has_admin_policy: true
+  - name: group with policies and members passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:group/active-devs"
+      asset_type: aws_iam_group
+      vendor: aws
+      properties:
+        identity:
+          group:
+            name: "active-devs"
+            has_policies_no_members: false
+            member_count: 5
+            policy_count: 2
+            has_admin_policy: false

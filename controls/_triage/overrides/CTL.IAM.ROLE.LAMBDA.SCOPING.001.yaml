@@ -1,0 +1,16 @@
+control: CTL.IAM.ROLE.LAMBDA.SCOPING.001
+defect: >
+  Lambda execution role trust policy allows any Lambda function in
+  the account to assume it.
+infection: >
+  Lambda functions assume their execution role via the Lambda service.
+  When the trust policy only constrains the service principal
+  (lambda.amazonaws.com) without a source function condition, any
+  function in the account can assume the role. An attacker who can
+  create a Lambda function (lambda:CreateFunction + iam:PassRole) can
+  create a function that assumes this role and inherits its full
+  permission set. If the role has RDS, DynamoDB, or S3 access, the
+  attacker's function gets that access.
+failure: >
+  Unscoped execution role. Any Lambda function in the account can
+  assume this role and inherit its full permission set.
