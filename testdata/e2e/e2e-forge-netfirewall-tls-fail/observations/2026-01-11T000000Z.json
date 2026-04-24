@@ -1,0 +1,27 @@
+{
+  "assets": [
+    {
+      "id": "anfw-tls-off",
+      "properties": {
+        "network": {
+          "kind": "network_firewall",
+          "firewall": {
+            "firewall_id": "anfw-tlsoff-000001",
+            "tls_inspection_enabled": false,
+            "tls_certificate_arn": ""
+          }
+        }
+      },
+      "type": "aws_network_firewall",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

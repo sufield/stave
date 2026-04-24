@@ -1,0 +1,29 @@
+{
+  "assets": [
+    {
+      "id": "anfw-stateless-only",
+      "properties": {
+        "network": {
+          "kind": "network_firewall",
+          "firewall": {
+            "firewall_id": "anfw-stateless-001",
+            "stateful_rule_count": 0,
+            "stateless_rule_count": 14,
+            "has_stateful_rules": false,
+            "rule_group_names": ["legacy-stateless-filters"]
+          }
+        }
+      },
+      "type": "aws_network_firewall",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

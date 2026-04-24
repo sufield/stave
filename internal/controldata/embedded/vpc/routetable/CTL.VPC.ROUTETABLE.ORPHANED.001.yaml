@@ -1,0 +1,55 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.ROUTETABLE.ORPHANED.001
+name: Route Table Not Associated with Any Subnet
+description: >
+  Route table exists but is not associated with any subnet, implicit
+  or explicit. The table's routes are inert. Orphaned route tables
+  are a lifecycle signal — the subnet that used this table was
+  deleted but the table itself was left behind. Hygiene accumulation
+  in the VPC layer usually tracks with accumulation in other layers
+  (stale security groups, stale IAM policies).
+domain: hygiene
+severity: low
+compliance:
+  cis_aws_v3.0: "5.1"
+  nist_800_53_r5: "CM-8"
+  fedramp_moderate: "CM-8"
+  soc2: "CC7.1"
+  ccm_v4: ["CCC-03"]
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: none
+observation_fields:
+  - network.kind
+  - network.routetable.association_count
+  - network.routetable.is_orphaned
+remediation:
+  description: >
+    Route table has zero subnet associations.
+  action: >
+    Delete the orphaned route table. Add an association-count check
+    to periodic VPC housekeeping so route tables that sit
+    unassociated for longer than a defined threshold are reported
+    and removed. Review neighboring resources (security groups,
+    EIPs) for matching staleness.
+  example: |
+    {
+      "network": {
+        "kind": "route_table",
+        "routetable": {
+          "is_orphaned": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: route_table
+    - field: properties.network.routetable.is_orphaned
+      op: eq
+      value: true

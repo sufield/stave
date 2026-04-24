@@ -1,0 +1,25 @@
+control: CTL.NETFIREWALL.ROUTING.001
+defect: >
+  Network Firewall is deployed but route tables do not direct
+  traffic through its endpoints. No packets reach the firewall for
+  inspection.
+infection: >
+  AWS Network Firewall only inspects traffic that is routed to it.
+  The firewall is deployed as endpoints in dedicated subnets; other
+  subnets' route tables must explicitly route default traffic (or
+  specific CIDR traffic) to those endpoints. When that routing is
+  missing, the firewall appears deployed — the console shows it as
+  active, its policy has rule groups, its logging configuration
+  looks correct — but no packets reach it. Logs may show zero
+  events, which can be misread as "no threats detected" rather than
+  "no traffic inspected." This is the network security equivalent
+  of a smoke detector installed on a wall but never connected to
+  power: it is visible, it is documented as deployed, and it
+  detects nothing. False confidence compounds the risk: teams
+  relying on the firewall for compliance or defense-in-depth
+  assume inspection is happening when it is not.
+failure: >
+  Inspection bypass with false confidence. Traffic flows around
+  the firewall while dashboards show it as active. Packet-level
+  threats — IDS/IPS detections, protocol anomalies, known-bad
+  destinations — pass through untouched.

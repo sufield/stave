@@ -1,0 +1,29 @@
+{
+  "assets": [
+    {
+      "id": "subnet-autopublic",
+      "properties": {
+        "network": {
+          "kind": "subnet",
+          "subnet": {
+            "id": "subnet-0autopub0000001",
+            "az": "us-east-1a",
+            "map_public_ip": true,
+            "cidr": "10.0.2.0/24",
+            "name": "mixed-1a"
+          }
+        }
+      },
+      "type": "aws_subnet",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

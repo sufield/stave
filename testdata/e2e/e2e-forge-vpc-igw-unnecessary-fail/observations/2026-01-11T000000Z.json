@@ -1,0 +1,29 @@
+{
+  "assets": [
+    {
+      "id": "vpc-igw-dormant",
+      "properties": {
+        "network": {
+          "kind": "vpc",
+          "vpc": {
+            "has_igw": true,
+            "igw_id": "igw-0dormant00000001",
+            "public_ip_count": 0,
+            "public_subnet_count": 0,
+            "igw_appears_unnecessary": true
+          }
+        }
+      },
+      "type": "aws_vpc",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

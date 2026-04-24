@@ -1,0 +1,35 @@
+{
+  "assets": [
+    {
+      "id": "anfw-catch-all",
+      "properties": {
+        "network": {
+          "kind": "network_firewall",
+          "firewall": {
+            "firewall_id": "anfw-catchall-0001",
+            "has_allow_all_rule": true,
+            "permissive_rules": [
+              {
+                "rule_group": "misconfigured-catch-all",
+                "action": "pass",
+                "protocol": "any",
+                "source": "any",
+                "destination": "any"
+              }
+            ]
+          }
+        }
+      },
+      "type": "aws_network_firewall",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

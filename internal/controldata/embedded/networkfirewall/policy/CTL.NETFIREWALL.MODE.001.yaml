@@ -1,0 +1,61 @@
+dsl_version: ctrl.v1
+id: CTL.NETFIREWALL.MODE.001
+name: Network Firewall Stateful Rules in Alert-Only Mode
+description: >
+  Network Firewall stateful engine default action is configured as
+  ALERT (or the default rule order has stateful rules producing
+  alert-only matches). The firewall detects threats, logs them, and
+  lets the traffic through. Alert-only mode is appropriate during
+  initial rule validation — typically one to two weeks while
+  tuning false positives — but persistence beyond that window
+  represents a deployment that was never completed. In production
+  configurations, stateful default action should be DROP or REJECT
+  so that rule matches block traffic, not merely record it.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  fedramp_moderate: "SC-7"
+  pci_dss_v4.0: "1.2.1"
+  soc2: "CC6.6"
+  hipaa: "164.312(c)(1)"
+  ccm_v4: ["IVS-03", "IVS-04"]
+scope_tags:
+  - aws
+  - networkfirewall
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - network.kind
+  - network.firewall.default_action
+  - network.firewall.alert_only
+remediation:
+  description: >
+    Network Firewall stateful default action is ALERT. The firewall
+    detects rule matches and logs them but does not block traffic.
+  action: >
+    Switch the stateful engine's default action from ALERT to DROP
+    (or REJECT where TCP RST is appropriate). If rule validation is
+    still in progress, set an explicit deadline — record the date
+    when the alert-mode deployment began and commit to transitioning
+    to DROP within two weeks. Alert-mode dashboards and runbooks
+    should clearly label the deployment as pre-enforcement.
+  example: |
+    {
+      "network": {
+        "kind": "network_firewall",
+        "firewall": {
+          "alert_only": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: network_firewall
+    - field: properties.network.firewall.alert_only
+      op: eq
+      value: true

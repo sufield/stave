@@ -1,0 +1,16 @@
+control: CTL.VPC.NAT.LOGGING.001
+defect: >
+  NAT gateway ENI has no flow log configuration. Outbound traffic
+  through the NAT is not recorded.
+infection: >
+  The NAT gateway is the egress choke point for every private subnet
+  that routes through it. Without NAT flow logs, outbound traffic
+  patterns are invisible — data exfiltration, command-and-control
+  beacons, and unauthorized outbound connections leave no record.
+  Per-subnet VPC flow logs capture ENI-level traffic, but NAT logs
+  give the unified egress view that ties private-source workloads
+  to their internet destinations. Detection and forensics for
+  outbound-initiated attacks depend on this data.
+failure: >
+  Invisible egress. Exfiltration and C2 traffic from private
+  workloads leave no audit trail at the network boundary.

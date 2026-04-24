@@ -1,0 +1,26 @@
+{
+  "assets": [
+    {
+      "id": "rtb-orphaned",
+      "properties": {
+        "network": {
+          "kind": "route_table",
+          "routetable": {
+            "association_count": 0,
+            "is_orphaned": true
+          }
+        }
+      },
+      "type": "aws_route_table",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

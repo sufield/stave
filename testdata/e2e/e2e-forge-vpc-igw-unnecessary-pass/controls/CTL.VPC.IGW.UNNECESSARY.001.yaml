@@ -1,0 +1,65 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.IGW.UNNECESSARY.001
+name: Internet Gateway Attached to VPC Without Internet Requirement
+description: >
+  VPC has an Internet Gateway attached but no resources have public IP
+  addresses and no subnets have routes pointing to the IGW. The IGW
+  provides internet connectivity that nothing uses — residual from
+  initial setup, or attached for a purpose that no longer exists. An
+  unattached-but-present IGW is a latent attack surface: one route
+  table change (adding 0.0.0.0/0 → IGW to a subnet) or one public IP
+  assignment converts any instance in the VPC from private to
+  internet-facing. For VPCs intended to have no internet connectivity
+  (data processing, database, internal services), the IGW should be
+  detached.
+domain: hygiene
+severity: medium
+compliance:
+  cis_aws_v3.0: "5.1"
+  nist_800_53_r5: "SC-7"
+  fedramp_moderate: "SC-7"
+  pci_dss_v4.0: "1.2.1"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03"]
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+observation_fields:
+  - network.kind
+  - network.vpc.has_igw
+  - network.vpc.igw_id
+  - network.vpc.public_ip_count
+  - network.vpc.public_subnet_count
+  - network.vpc.igw_appears_unnecessary
+remediation:
+  description: >
+    VPC has an Internet Gateway attached but no resources or subnets
+    appear to use internet connectivity.
+  action: >
+    Detach and delete the Internet Gateway if this VPC is not intended
+    to have internet connectivity. If the IGW is kept for future use,
+    document the reason and recheck before each audit cycle. If
+    internet connectivity is required, add at least one public subnet
+    with an IGW route and a public-facing resource so the attachment
+    reflects actual use.
+  example: |
+    {
+      "network": {
+        "kind": "vpc",
+        "vpc": {
+          "igw_appears_unnecessary": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: vpc
+    - field: properties.network.vpc.igw_appears_unnecessary
+      op: eq
+      value: true

@@ -1,0 +1,28 @@
+{
+  "assets": [
+    {
+      "id": "eip-attached",
+      "properties": {
+        "network": {
+          "kind": "elastic_ip",
+          "eip": {
+            "allocation_id": "eipalloc-0used0000000001",
+            "public_ip": "203.0.113.10",
+            "associated": true,
+            "association_id": "eipassoc-0live000000001"
+          }
+        }
+      },
+      "type": "aws_elastic_ip",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

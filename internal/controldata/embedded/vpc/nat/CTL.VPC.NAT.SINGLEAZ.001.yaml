@@ -1,0 +1,61 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.NAT.SINGLEAZ.001
+name: NAT Gateway Deployed in Single Availability Zone
+description: >
+  NAT gateways for this VPC exist in only one AZ while private subnets
+  exist in multiple AZs. If the NAT's AZ fails, all private subnet
+  instances in other AZs lose outbound internet connectivity — no
+  software updates, no AWS API calls via public endpoints, no
+  outbound communication. Security-critical updates and log shipping
+  stop. Production workloads should have a NAT gateway in each AZ
+  that contains private subnets.
+domain: availability
+severity: medium
+compliance:
+  cis_aws_v3.0: "5.1"
+  nist_800_53_r5: "CP-7"
+  fedramp_moderate: "CP-7"
+  soc2: "A1.2"
+  ccm_v4: ["BCR-09", "IVS-03"]
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+observation_fields:
+  - network.kind
+  - network.nat.gateway_id
+  - network.nat.az
+  - network.nat.az_count
+  - network.nat.single_az
+  - network.nat.private_subnet_az_count
+remediation:
+  description: >
+    NAT gateway coverage does not match private subnet AZ spread. An
+    AZ failure will cut outbound internet connectivity for private
+    subnets in the unaffected AZs.
+  action: >
+    Deploy one NAT gateway in each AZ that contains private subnets.
+    Update route tables so each private subnet's default route points
+    to the NAT gateway in its own AZ (not a cross-AZ NAT). Using a
+    single shared NAT across AZs also incurs cross-AZ data transfer
+    charges on every outbound connection.
+  example: |
+    {
+      "network": {
+        "kind": "nat_gateway",
+        "nat": {
+          "single_az": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: nat_gateway
+    - field: properties.network.nat.single_az
+      op: eq
+      value: true

@@ -1,0 +1,30 @@
+{
+  "assets": [
+    {
+      "id": "anfw-alert-suricata",
+      "properties": {
+        "network": {
+          "kind": "network_firewall",
+          "firewall": {
+            "firewall_id": "anfw-suricata-alert",
+            "default_action": "alert",
+            "alert_only": true,
+            "stateful_rule_count": 1247,
+            "has_stateful_rules": true,
+            "rule_group_names": ["ThreatSignaturesEmergingThreats", "ThreatSignaturesBotnet", "ThreatSignaturesMalware"]
+          }
+        }
+      },
+      "type": "aws_network_firewall",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

@@ -51,8 +51,9 @@ func compareGoldenJSON(t *testing.T, goldenFile string, stdout []byte) {
 	}
 }
 
-// stripStaveVersion removes run.tool_version from a parsed JSON value so that
-// golden comparisons are not sensitive to the build version.
+// stripStaveVersion removes run.tool_version and run.policy_fingerprint
+// from a parsed JSON value so that golden comparisons are not sensitive
+// to the build version or catalog churn unrelated to the case under test.
 func stripStaveVersion(v any) {
 	m, ok := v.(map[string]any)
 	if !ok {
@@ -60,6 +61,7 @@ func stripStaveVersion(v any) {
 	}
 	if run, ok := m["run"].(map[string]any); ok {
 		delete(run, "tool_version")
+		delete(run, "policy_fingerprint")
 	}
 }
 

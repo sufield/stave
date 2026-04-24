@@ -1,0 +1,29 @@
+{
+  "assets": [
+    {
+      "id": "vpc-igw-in-use",
+      "properties": {
+        "network": {
+          "kind": "vpc",
+          "vpc": {
+            "has_igw": true,
+            "igw_id": "igw-0useful0000000001",
+            "public_ip_count": 3,
+            "public_subnet_count": 2,
+            "igw_appears_unnecessary": false
+          }
+        }
+      },
+      "type": "aws_vpc",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

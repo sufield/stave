@@ -1,0 +1,15 @@
+control: CTL.VPC.EIP.ORPHANED.001
+defect: >
+  Elastic IP allocation is not attached to any resource.
+infection: >
+  An orphaned EIP is a lifecycle signal more than a direct security
+  risk. The IP address remains reserved to the account, accrues
+  cost, and occupies a slot against the per-region limit. More
+  importantly, it indicates that the resource the EIP was attached
+  to was deleted but the surrounding configuration was not. Stale
+  EIPs usually travel with stale security group references, stale
+  route table entries, and stale IAM policies that named the IP.
+  The cleanup gap rarely stops at one resource.
+failure: >
+  Hygiene drift. The account accumulates stale network artifacts
+  whose relationships to live infrastructure are no longer audited.

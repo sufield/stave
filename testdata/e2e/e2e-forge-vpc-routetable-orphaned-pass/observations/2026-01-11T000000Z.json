@@ -1,0 +1,26 @@
+{
+  "assets": [
+    {
+      "id": "rtb-in-use",
+      "properties": {
+        "network": {
+          "kind": "route_table",
+          "routetable": {
+            "association_count": 2,
+            "is_orphaned": false
+          }
+        }
+      },
+      "type": "aws_route_table",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

@@ -1,0 +1,29 @@
+{
+  "assets": [
+    {
+      "id": "anfw-bypassed",
+      "properties": {
+        "network": {
+          "kind": "network_firewall",
+          "firewall": {
+            "firewall_id": "anfw-bypassed-00001",
+            "in_traffic_path": false,
+            "route_table_references": 0,
+            "endpoint_ids": ["vpce-0nfwbypass001", "vpce-0nfwbypass002"],
+            "routes_configured": false
+          }
+        }
+      },
+      "type": "aws_network_firewall",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

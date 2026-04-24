@@ -1,0 +1,18 @@
+control: CTL.VPC.SUBNET.PRIVATEDB.001
+defect: >
+  Subnet contains database resources and its route table has a
+  route to an Internet Gateway.
+infection: >
+  A subnet with a route to an IGW is a public subnet by definition
+  — resources in it CAN have internet connectivity. Databases in
+  public subnets are one security group change from direct internet
+  access. Current-state safety depends entirely on SG rules
+  restricting the network path that the routing layer allows. A
+  single 0.0.0.0/0 rule on port 3306 (or 5432, or 6379) exposes
+  the database directly. Databases belong in subnets where the
+  internet route does not exist at all, so the exposure path is
+  structurally impossible rather than merely unconfigured.
+failure: >
+  Database one-rule-away from the internet. A security group
+  change makes the database directly reachable from any internet
+  host.

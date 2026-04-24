@@ -1,0 +1,21 @@
+control: CTL.NETFIREWALL.RULES.STATEFUL.001
+defect: >
+  Network Firewall policy has no stateful rule groups. All
+  associated rule groups are stateless.
+infection: >
+  Stateless rules evaluate each packet independently. They cannot
+  track TCP session state, reassemble fragmented streams, detect
+  port scans (which require correlating multiple connection
+  attempts), or inspect application-layer content. Stateful rules
+  add all of these capabilities — connection tracking, Suricata-
+  style IDS/IPS signatures, protocol anomaly detection, domain
+  allowlisting. A Network Firewall with only stateless rules is
+  more expressive than a NACL but still operates at layers 3-4;
+  the stateful engine is what moves inspection into layer 7. AWS
+  managed threat-signature rule groups are themselves stateful;
+  using stateless only means these threat intelligence feeds are
+  unused.
+failure: >
+  No connection-aware or content-aware inspection. The firewall
+  filters by IP/port/protocol only and misses every threat that
+  requires session or content visibility.

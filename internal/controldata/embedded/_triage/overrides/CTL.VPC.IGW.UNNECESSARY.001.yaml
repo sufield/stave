@@ -1,0 +1,18 @@
+control: CTL.VPC.IGW.UNNECESSARY.001
+defect: >
+  VPC has an Internet Gateway attached but no resources hold public
+  IPs and no subnets route to the IGW.
+infection: >
+  An Internet Gateway that is present but unused is a latent attack
+  surface. The gap between "private VPC" and "internet-connected
+  VPC" is one route table entry (adding 0.0.0.0/0 → IGW to any
+  subnet) or one public IP assignment. Operators who inherit the
+  VPC assume the IGW's presence implies internet use is intended,
+  and may configure new resources accordingly. For VPCs that should
+  stay private by design (data processing, internal services,
+  database tiers), an absent IGW is a structural guarantee — a
+  mere-convenience-or-forgotten IGW is not.
+failure: >
+  Latent internet exposure. A single route-table or IP-assignment
+  change converts private resources into internet-facing ones with
+  no further configuration required.

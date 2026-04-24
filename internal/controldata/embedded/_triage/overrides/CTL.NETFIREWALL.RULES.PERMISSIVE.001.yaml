@@ -1,0 +1,18 @@
+control: CTL.NETFIREWALL.RULES.PERMISSIVE.001
+defect: >
+  One or more Network Firewall rule groups contain a rule that
+  passes any traffic — any protocol, any source, any destination.
+infection: >
+  An allow-any rule inside a rule group short-circuits inspection
+  for every packet it matches. If placed near the top of the rule
+  group, it bypasses all subsequent rules in that group. If the
+  group is evaluated before more specific groups, it bypasses
+  those too. The firewall evaluates packets, matches the pass-any
+  rule, and forwards them without further inspection. Downstream
+  rules — including threat signatures, protocol anomalies, and
+  denylists — never fire. The rule group's presence creates the
+  appearance of protection while the allow-any rule removes the
+  substance.
+failure: >
+  Rule-group inspection nullified. Every packet reaching the rule
+  group bypasses downstream filters via the allow-any rule.

@@ -1,0 +1,28 @@
+{
+  "assets": [
+    {
+      "id": "default-vpc-empty",
+      "properties": {
+        "network": {
+          "kind": "vpc",
+          "vpc": {
+            "is_default": true,
+            "resource_count": 0,
+            "resource_types": [],
+            "has_active_resources": false
+          }
+        }
+      },
+      "type": "aws_vpc",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

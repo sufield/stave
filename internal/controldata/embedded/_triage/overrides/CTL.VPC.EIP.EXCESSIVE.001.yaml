@@ -1,0 +1,17 @@
+control: CTL.VPC.EIP.EXCESSIVE.001
+defect: >
+  EC2 instance has more than one Elastic IP attached.
+infection: >
+  Multiple public addresses on one instance broaden the attack
+  surface without increasing functionality for most workloads.
+  Each additional IP is a separate DNS name, a separate scanning
+  target for internet-wide probes, and an additional path for
+  security group rules to cover. Monitoring and alerting typically
+  key on primary IPs; secondary addresses often slip through
+  coverage. Legitimate use cases (multi-tenant ingress, licensed
+  software bound to a specific IP) exist but are unusual and
+  should be documented explicitly rather than appearing by default.
+failure: >
+  Over-exposure and monitoring gap. The instance is reachable at
+  multiple addresses, some of which are outside the normal
+  coverage of firewall rules and intrusion detection.

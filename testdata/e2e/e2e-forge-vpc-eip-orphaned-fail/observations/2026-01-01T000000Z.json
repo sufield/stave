@@ -1,0 +1,28 @@
+{
+  "assets": [
+    {
+      "id": "eip-orphaned",
+      "properties": {
+        "network": {
+          "kind": "elastic_ip",
+          "eip": {
+            "allocation_id": "eipalloc-0orphan000000001",
+            "public_ip": "203.0.113.20",
+            "associated": false,
+            "association_id": ""
+          }
+        }
+      },
+      "type": "aws_elastic_ip",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

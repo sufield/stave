@@ -1,0 +1,29 @@
+{
+  "assets": [
+    {
+      "id": "subnet-db-private",
+      "properties": {
+        "network": {
+          "kind": "subnet",
+          "subnet": {
+            "id": "subnet-0dbgood0000001",
+            "has_database_resources": true,
+            "database_resource_types": ["rds_instance"],
+            "route_to_igw": false,
+            "is_effectively_public": false
+          }
+        }
+      },
+      "type": "aws_subnet",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

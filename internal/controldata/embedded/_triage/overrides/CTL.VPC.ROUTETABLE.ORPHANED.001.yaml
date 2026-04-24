@@ -1,0 +1,15 @@
+control: CTL.VPC.ROUTETABLE.ORPHANED.001
+defect: >
+  Route table has zero subnet associations.
+infection: >
+  An orphaned route table does nothing by itself — its routes are
+  inert without a subnet association. The finding is a lifecycle
+  signal: the subnet this table belonged to was deleted but the
+  table was not. Accumulation of orphaned routing artifacts
+  correlates with accumulation in other layers (stale security
+  groups, stale IAM policies, stale DNS records). Each individual
+  orphan is cheap to delete; the pattern of orphans being left
+  behind is expensive when it grows.
+failure: >
+  Hygiene accumulation. VPC artifacts pile up without review and
+  obscure the current shape of the network.

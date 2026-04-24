@@ -1,0 +1,29 @@
+{
+  "assets": [
+    {
+      "id": "subnet-private-default",
+      "properties": {
+        "network": {
+          "kind": "subnet",
+          "subnet": {
+            "id": "subnet-0private00000001",
+            "az": "us-east-1a",
+            "map_public_ip": false,
+            "cidr": "10.0.1.0/24",
+            "name": "private-app-1a"
+          }
+        }
+      },
+      "type": "aws_subnet",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

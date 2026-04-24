@@ -1,0 +1,27 @@
+{
+  "assets": [
+    {
+      "id": "eip-many",
+      "properties": {
+        "network": {
+          "kind": "elastic_ip",
+          "eip": {
+            "instance_id": "i-0manyips000000001",
+            "instance_eip_count": 3,
+            "instance_has_multiple": true
+          }
+        }
+      },
+      "type": "aws_elastic_ip",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

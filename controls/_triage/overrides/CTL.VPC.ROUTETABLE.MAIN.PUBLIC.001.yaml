@@ -1,0 +1,18 @@
+control: CTL.VPC.ROUTETABLE.MAIN.PUBLIC.001
+defect: >
+  VPC's main route table has a default route pointing to the
+  Internet Gateway.
+infection: >
+  The main route table is the implicit default for every new
+  subnet. A subnet created without an explicit custom-route-table
+  association inherits the main route table and all of its routes.
+  When the main route table has an IGW default, every new subnet
+  is public by default. The operator creating the subnet must
+  remember to associate a private route table; omission produces
+  an internet-facing subnet silently. The safe pattern inverts
+  the default: main route table has no IGW route, and subnets are
+  explicitly associated with a public route table when (and only
+  when) they need to be public.
+failure: >
+  Public-by-default subnets. Any new subnet created without
+  explicit route-table association is internet-facing.

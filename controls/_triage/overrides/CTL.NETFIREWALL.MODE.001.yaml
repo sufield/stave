@@ -1,0 +1,22 @@
+control: CTL.NETFIREWALL.MODE.001
+defect: >
+  Network Firewall stateful engine default action is ALERT. Rule
+  matches produce log entries but do not block traffic.
+infection: >
+  Alert-only mode is a validation stance, not an enforcement stance.
+  During initial deployment, operators run in ALERT to surface
+  false positives without impacting production. The transition to
+  DROP is the step that converts a monitoring tool into a
+  preventive control. When ALERT persists past the validation
+  window, the firewall has Suricata-style signatures, domain
+  allowlists, and protocol anomaly detectors — and each of them
+  fires on real malicious traffic while the traffic reaches its
+  destination. The log entries accumulate as evidence of what was
+  not blocked. Teams relying on the firewall for compliance
+  controls (PCI segmentation, HIPAA safeguards) often interpret
+  "alerts generated" as "threats handled" when the actual effect
+  is a detailed record of successful attacks.
+failure: >
+  Detection without prevention. Known-malicious traffic is logged
+  and forwarded; attackers reach their targets while the firewall
+  documents the path they took.

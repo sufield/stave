@@ -1,0 +1,29 @@
+{
+  "assets": [
+    {
+      "id": "nat-single-az",
+      "properties": {
+        "network": {
+          "kind": "nat_gateway",
+          "nat": {
+            "gateway_id": "nat-0single00000001",
+            "az": "us-east-1a",
+            "az_count": 1,
+            "single_az": true,
+            "private_subnet_az_count": 3
+          }
+        }
+      },
+      "type": "aws_nat_gateway",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

@@ -8,6 +8,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **VPC-5 — AWS Network Firewall deepening (5 controls, 3 chains).**
+  Closes the Network Firewall gap cluster in category 10. Prompt
+  spec asked for 8 controls; three turned out to duplicate existing
+  ones (`CTL.VPC.NETWORK.FIREWALL.001` covered ENABLED,
+  `CTL.NETFIREWALL.MULTIAZ.001` covered SINGLEAZ, `CTL.NETFIREWALL.LOG.001`
+  covered LOGGING), so shipped 5 distinct additions. New controls:
+  `ROUTING` (firewall deployed but route tables bypass it — the
+  "smoke detector not connected to power" pattern, critical),
+  `RULES.STATEFUL` (no stateful rule groups — packet filter, not
+  connection-aware firewall, high), `RULES.PERMISSIVE` (allow-any
+  rule inside a rule group short-circuits inspection, high),
+  `MODE` (stateful default is ALERT — detection without
+  prevention, high), `TLS` (no TLS inspection — HTTPS content
+  bypass, medium). Chains: `netfirewall_ineffective`
+  (routing-bypass + alert-mode or no-logging — security theater),
+  `netfirewall_content_blind` (no TLS + no stateful = blind to
+  both content and context), `vpc_no_inspection` (no firewall +
+  no flow logs or unrestricted egress). 12 e2e fixtures (10 base
+  + two worst-case variants: routing-silent with configured-looking
+  rules, mode-suricata with 1247 stateful rules still in alert).
+  5 triage overrides. Docs and README regenerated (1361 controls).
+- **VPC-4 — internet connectivity and subnet architecture controls
+  (10 controls, 3 chains).** Closes the category-4 internet-connectivity
+  gaps and subnet-architecture gaps from category 3. Covers the
+  "public-by-default" failure mode (main route table with IGW route +
+  subnet `MapPublicIpOnLaunch`) and the database-in-public-subnet
+  pattern. New controls: `IGW.UNNECESSARY` (latent IGW attachment,
+  medium), `NAT.SINGLEAZ` (single-AZ egress bottleneck, medium),
+  `NAT.LOGGING` (egress choke-point unlogged, medium), `EIP.ORPHANED`
+  (unassociated Elastic IP, low), `EIP.EXCESSIVE` (multiple EIPs on
+  one instance, medium), `SUBNET.AUTOPUBLIC` (`MapPublicIpOnLaunch`
+  subnet default, high), `SUBNET.PRIVATEDB` (database subnet has IGW
+  route, high), `ROUTETABLE.MAIN.PUBLIC` (main route table has IGW
+  route, high), `ROUTETABLE.ORPHANED` (unassociated route table,
+  low), `DEFAULT.RESOURCES` (workloads in default VPC, high). Chains:
+  `vpc_default_exposure` (resources in default VPC + auto-public-IP
+  or default SG in use), `vpc_public_by_default` (main-RT IGW route +
+  subnet auto-public), `vpc_database_exposure` (database in public
+  subnet OR `CTL.RDS.PUBLIC.001`). 20 e2e fixtures, 10 triage
+  overrides, docs and README regenerated (1356 controls).
 - **VPC-3 — VPN, Client VPN, and Direct Connect controls (8 controls, 3
   chains).** Closes the hybrid-connectivity gap cluster in the VPC
   taxonomy. Site-to-site VPN: `ENCRYPTION.WEAK` (sub-AES-256 cipher

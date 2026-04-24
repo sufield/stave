@@ -1,0 +1,18 @@
+id: netfirewall_content_blind
+description: >
+  Network Firewall has no TLS inspection AND no stateful rule
+  groups. Most modern traffic is HTTPS, so the firewall cannot see
+  encrypted payloads; and without stateful rules it cannot track
+  sessions, reassemble streams, or match Suricata-style threat
+  signatures. The firewall is present at the network layer but
+  effectively blind to both content (no TLS inspection) and
+  context (no stateful state).
+controls:
+  - CTL.NETFIREWALL.TLS.001
+  - CTL.NETFIREWALL.RULES.STATEFUL.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - network_access_vpc
+postconditions:
+  - invisible_data_exfiltration

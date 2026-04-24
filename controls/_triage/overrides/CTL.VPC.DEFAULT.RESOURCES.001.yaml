@@ -1,0 +1,18 @@
+control: CTL.VPC.DEFAULT.RESOURCES.001
+defect: >
+  Default VPC contains active workload resources.
+infection: >
+  The default VPC is AWS's pre-configured demo network: public
+  subnets in every AZ, `MapPublicIpOnLaunch` enabled, a default
+  security group that permits all intra-VPC traffic, and an
+  Internet Gateway. Every one of those defaults is inappropriate
+  for production. Resources deployed into the default VPC inherit
+  all of them — the developer making the deployment usually does
+  not know they are inheriting the wrong defaults. The default
+  VPC is useful for learning and for throwaway experiments; it is
+  not a foundation for production workloads.
+failure: >
+  Production workloads inherit demo-grade defaults. Public subnets
+  plus permissive default security group plus auto-assign public
+  IP plus internet gateway produces exposure that is not the
+  explicit choice of the deployer.

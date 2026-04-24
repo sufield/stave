@@ -1,0 +1,66 @@
+dsl_version: ctrl.v1
+id: CTL.NETFIREWALL.RULES.STATEFUL.001
+name: Network Firewall Has No Stateful Rule Groups
+description: >
+  Network Firewall's associated policy has only stateless rules (or
+  no rules at all). Stateless rules evaluate each packet in isolation
+  — no connection tracking, no TCP session awareness, no stream
+  reassembly, no application-layer visibility. Stateful rules add
+  connection state, session lifecycle awareness, and Suricata-style
+  content inspection (protocol anomaly detection, IDS/IPS
+  signatures). A firewall with only stateless rules is a packet
+  filter with richer syntax, not a connection-aware firewall.
+  Complements `CTL.NETFIREWALL.POLICY.RULEGROUP.001` (which checks
+  that at least one rule group of any type is associated); this
+  control checks for stateful coverage specifically.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  fedramp_moderate: "SC-7"
+  pci_dss_v4.0: "1.2.1"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "IVS-04"]
+scope_tags:
+  - aws
+  - networkfirewall
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - network.kind
+  - network.firewall.stateful_rule_count
+  - network.firewall.stateless_rule_count
+  - network.firewall.has_stateful_rules
+  - network.firewall.rule_group_names
+remediation:
+  description: >
+    Network Firewall policy has no stateful rule groups associated.
+    The firewall cannot perform connection-aware inspection.
+  action: >
+    Associate at least one stateful rule group with the firewall
+    policy. Start with AWS managed threat-signature rule groups
+    (ThreatSignaturesEmergingThreats, ThreatSignaturesBotnet,
+    ThreatSignaturesMalware) and add domain-allowlist or -denylist
+    stateful rules for your workload's traffic pattern. Keep
+    stateless rules for high-volume allow/deny of well-known
+    traffic; use stateful rules for everything that requires
+    session or content awareness.
+  example: |
+    {
+      "network": {
+        "kind": "network_firewall",
+        "firewall": {
+          "has_stateful_rules": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: network_firewall
+    - field: properties.network.firewall.has_stateful_rules
+      op: eq
+      value: false

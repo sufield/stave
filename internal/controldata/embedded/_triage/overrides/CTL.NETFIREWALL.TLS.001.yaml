@@ -1,0 +1,24 @@
+control: CTL.NETFIREWALL.TLS.001
+defect: >
+  Network Firewall does not have TLS inspection configured.
+  Encrypted traffic passes through with only connection-metadata
+  visibility.
+infection: >
+  Most production traffic is HTTPS. Without TLS inspection, the
+  firewall sees TCP connections, destination IPs, ports, and SNI
+  hostnames — but nothing inside the TLS stream. URL paths,
+  request bodies, uploaded files, response payloads, and cookies
+  are invisible. Attackers who deliver malware over HTTPS, who
+  exfiltrate data via HTTPS POST, or who run command-and-control
+  channels inside TLS, bypass content inspection entirely.
+  Connection-level threat intelligence (known-bad destination IPs
+  and SNI patterns) still fires, but the content dimension is
+  gone. TLS inspection is a defense-in-depth measure with
+  operational tradeoffs — certificate management, added latency,
+  compliance and privacy implications of decrypting user traffic
+  — so not every environment should enable it, but every
+  environment should document the decision and the compensating
+  controls if it is not enabled.
+failure: >
+  Encrypted traffic content bypass. Malware delivery, C2 channels,
+  and exfiltration inside HTTPS escape content inspection.

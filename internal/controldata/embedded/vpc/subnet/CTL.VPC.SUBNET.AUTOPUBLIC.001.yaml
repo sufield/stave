@@ -1,0 +1,66 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.SUBNET.AUTOPUBLIC.001
+name: Subnet Auto-Assigns Public IP Addresses
+description: >
+  Subnet has `MapPublicIpOnLaunch` enabled. Every resource launched
+  in this subnet automatically receives a public IP address — without
+  the launcher explicitly requesting one. A developer launching an
+  EC2 instance, an ECS task, or a Lambda ENI in this subnet may not
+  know it becomes internet-facing. Combined with a subnet route to
+  an Internet Gateway and a permissive security group (often the
+  default), resources become reachable from the internet without
+  any explicit decision to make them public.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "5.1"
+  nist_800_53_r5: "SC-7"
+  fedramp_moderate: "SC-7"
+  pci_dss_v4.0: "1.2.1"
+  soc2: "CC6.6"
+  hipaa: "164.312(e)(1)"
+  ccm_v4: ["IVS-03", "IVS-06"]
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+observation_fields:
+  - network.kind
+  - network.subnet.id
+  - network.subnet.az
+  - network.subnet.map_public_ip
+  - network.subnet.cidr
+  - network.subnet.name
+remediation:
+  description: >
+    Subnet has `MapPublicIpOnLaunch` enabled. Resources launched in
+    this subnet are internet-facing by default without the launcher's
+    explicit choice.
+  action: >
+    Disable `MapPublicIpOnLaunch` on the subnet. Require resources
+    that need a public IP to request one explicitly at launch, which
+    makes the exposure decision visible in the launch API call and
+    in IaC diffs. For subnets that are genuinely public (ALB ingress,
+    bastions), consider a naming convention and tag that makes the
+    public-facing role explicit and pair it with tight security
+    groups.
+  example: |
+    {
+      "network": {
+        "kind": "subnet",
+        "subnet": {
+          "map_public_ip": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: subnet
+    - field: properties.network.subnet.map_public_ip
+      op: eq
+      value: true

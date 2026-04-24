@@ -1,0 +1,29 @@
+{
+  "assets": [
+    {
+      "id": "anfw-wired",
+      "properties": {
+        "network": {
+          "kind": "network_firewall",
+          "firewall": {
+            "firewall_id": "anfw-wired-000001",
+            "in_traffic_path": true,
+            "route_table_references": 4,
+            "endpoint_ids": ["vpce-0nfw000001", "vpce-0nfw000002"],
+            "routes_configured": true
+          }
+        }
+      },
+      "type": "aws_network_firewall",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

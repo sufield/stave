@@ -3,29 +3,29 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1346
-**Pack hash:** `85297e7577dbaef74a2323f2724c4c9f54ba84edf40ec7701977bb7163f696ab`
+**Total controls:** 1361
+**Pack hash:** `071d4d488b19378019e9a9e6efa82c629c9c64aa05446a332518d1f2a9800ef8`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 170 |
-| high | 605 |
+| critical | 171 |
+| high | 612 |
 | info | 16 |
-| low | 94 |
-| medium | 461 |
+| low | 96 |
+| medium | 466 |
 
 | Domain | Count |
 |--------|-------|
-| audit | 23 |
-| availability | 1 |
+| audit | 24 |
+| availability | 2 |
 | cryptography | 2 |
 | detection | 32 |
 | encryption | 75 |
-| exposure | 814 |
+| exposure | 824 |
 | governance | 27 |
-| hygiene | 3 |
+| hygiene | 6 |
 | identity | 326 |
 | network | 21 |
 | resilience | 14 |
@@ -15678,6 +15678,21 @@ Network Firewalls must have stateful engine logging configured with at least one
 
 ---
 
+### CTL.NETFIREWALL.MODE.001
+
+**Network Firewall Stateful Rules in Alert-Only Mode**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-7; hipaa: 164.312(c)(1); nist_800_53_r5: SC-7; pci_dss_v4.0: 1.2.1; soc2: CC6.6;
+
+Network Firewall stateful engine default action is configured as ALERT (or the default rule order has stateful rules producing alert-only matches). The firewall detects threats, logs them, and lets the traffic through. Alert-only mode is appropriate during initial rule validation — typically one to two weeks while tuning false positives — but persistence beyond that window represents a deployment that was never completed. In production configurations, stateful default action should be DROP or REJECT so that rule matches block traffic, not merely record it.
+
+**Remediation:** Switch the stateful engine's default action from ALERT to DROP (or REJECT where TCP RST is appropriate). If rule validation is still in progress, set an explicit deadline — record the date when the alert-mode deployment began and commit to transitioning to DROP within two weeks. Alert-mode dashboards and runbooks should clearly label the deployment as pre-enforcement.
+
+---
+
 ### CTL.NETFIREWALL.MULTIAZ.001
 
 **Network Firewall Must Be Deployed Across Multiple AZs**
@@ -15705,6 +15720,66 @@ Network Firewalls must be deployed with subnet mappings in multiple Availability
 Network Firewall policies must have at least one stateful or stateless rule group associated. An empty policy means the firewall sits in the network path without evaluating any rules — all traffic is handled by the default action alone.
 
 **Remediation:** Associate stateful and/or stateless rule groups with the policy.
+
+---
+
+### CTL.NETFIREWALL.ROUTING.001
+
+**Network Firewall Not in Traffic Path**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-7; hipaa: 164.312(e)(1); nist_800_53_r5: SC-7; pci_dss_v4.0: 1.2.1; soc2: CC6.6;
+
+AWS Network Firewall is deployed but no route tables direct traffic through the firewall endpoints. The firewall appears active, its policy and rule groups are configured, and logs may show zero events — but no traffic is actually being inspected. The firewall sits in the VPC as an unreferenced endpoint while packets flow around it via route tables that bypass it. This is the network security equivalent of a smoke detector that is installed but not connected to power. Dashboards show the detector; nothing it is supposed to watch actually reaches it.
+
+**Remediation:** Update the route tables for each subnet whose traffic should be inspected. For ingress inspection, the Internet Gateway route table (or the relevant subnet route tables) must route 0.0.0.0/0 to the firewall endpoint in the matching AZ. For egress inspection, protected subnets' route tables must route default traffic to the firewall endpoint. Validate by confirming non-zero flow logs on the firewall after the change. Absence of traffic should be the exception, not the default.
+
+---
+
+### CTL.NETFIREWALL.RULES.PERMISSIVE.001
+
+**Network Firewall Rule Group Contains Allow-All Rule**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-7; nist_800_53_r5: SC-7; pci_dss_v4.0: 1.2.1; soc2: CC6.6;
+
+A Network Firewall rule group contains a rule that allows all traffic (action `pass`, protocol `any`, source `any`, destination `any`). The rule group exists and is associated with the policy, but a catch-all pass rule short-circuits inspection for every packet that reaches it. This is the NF equivalent of a WAF that runs in count-only mode with a bypass rule — the control exists, evaluates packets, and does nothing with them. Distinct from `CTL.NETFIREWALL.DEFAULT.FULL.001` (which checks the stateless default action); this control checks for explicit allow-any rules inside rule groups.
+
+**Remediation:** Remove the allow-any rule from the rule group. If a broad allow is needed for legitimate high-volume traffic, scope it explicitly (specific CIDRs, specific ports, specific protocols) rather than using any/any/any. Audit the rule group's rule order: pass-any rules are particularly dangerous at the top of a group because they bypass every subsequent rule.
+
+---
+
+### CTL.NETFIREWALL.RULES.STATEFUL.001
+
+**Network Firewall Has No Stateful Rule Groups**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-7; nist_800_53_r5: SC-7; pci_dss_v4.0: 1.2.1; soc2: CC6.6;
+
+Network Firewall's associated policy has only stateless rules (or no rules at all). Stateless rules evaluate each packet in isolation — no connection tracking, no TCP session awareness, no stream reassembly, no application-layer visibility. Stateful rules add connection state, session lifecycle awareness, and Suricata-style content inspection (protocol anomaly detection, IDS/IPS signatures). A firewall with only stateless rules is a packet filter with richer syntax, not a connection-aware firewall. Complements `CTL.NETFIREWALL.POLICY.RULEGROUP.001` (which checks that at least one rule group of any type is associated); this control checks for stateful coverage specifically.
+
+**Remediation:** Associate at least one stateful rule group with the firewall policy. Start with AWS managed threat-signature rule groups (ThreatSignaturesEmergingThreats, ThreatSignaturesBotnet, ThreatSignaturesMalware) and add domain-allowlist or -denylist stateful rules for your workload's traffic pattern. Keep stateless rules for high-volume allow/deny of well-known traffic; use stateful rules for everything that requires session or content awareness.
+
+---
+
+### CTL.NETFIREWALL.TLS.001
+
+**Network Firewall TLS Inspection Not Configured**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SI-4; hipaa: 164.312(e)(1); nist_800_53_r5: SI-4; pci_dss_v4.0: 11.5.1; soc2: CC7.1;
+
+Network Firewall does not have TLS inspection enabled. Encrypted traffic (HTTPS, TLS) passes through the firewall with only connection-metadata visibility — source and destination IPs, ports, SNI hostnames. The firewall cannot inspect the encrypted payload: URL paths, request bodies, response content, uploaded files. Malware delivered via HTTPS, command-and-control communication over HTTPS, and data exfiltration inside TLS sessions bypass content inspection entirely. TLS inspection is a defense-in-depth measure with operational tradeoffs (certificate management, performance impact, privacy and compliance considerations for decrypting user traffic) — not every environment should enable it, but every environment should document a conscious decision about it.
+
+**Remediation:** Enable TLS inspection on the firewall policy. Provision an ACM certificate for the firewall's interception role and configure the TLS inspection configuration with the traffic scope (source/destination CIDRs, SNI patterns). Exclude flows where decryption is contractually or legally inappropriate (employee personal services, healthcare portals, banking, etc.) via an allowlist. If TLS inspection is intentionally not used, document the decision and the compensating controls (endpoint protection, egress allowlisting by domain, application-layer logging on the destination).
 
 ---
 
@@ -18971,6 +19046,21 @@ The default VPC must not have an internet gateway route in its route tables. AWS
 
 ---
 
+### CTL.VPC.DEFAULT.RESOURCES.001
+
+**Resources Deployed in Default VPC**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 5.1; fedramp_moderate: SC-7; nist_800_53_r5: SC-7; pci_dss_v4.0: 1.2.1; soc2: CC6.6;
+
+Active resources (EC2 instances, RDS instances, VPC-configured Lambda functions, ECS tasks) exist in the default VPC. The default VPC ships with unsafe defaults: public subnets in every AZ with `MapPublicIpOnLaunch` enabled, a default security group that permits all intra-VPC traffic, and an Internet Gateway. Production workloads inherit all of those defaults. Strengthens `CTL.VPC.DEFAULT.001` (which detects the default VPC's existence) by focusing on the actionable problem — resources deployed in it.
+
+**Remediation:** Migrate resources out of the default VPC into a purpose-built VPC with non-default subnets, route tables, and security groups. If migration is not feasible short-term, harden the default VPC in place: remove auto-assign public IP on its subnets, restrict the default security group to deny-all, and detach the default IGW if the resources do not need internet access. Do not deploy new workloads into the default VPC.
+
+---
+
 ### CTL.VPC.DX.ENCRYPTION.001
 
 **Direct Connect Without Encryption**
@@ -18983,6 +19073,36 @@ The default VPC must not have an internet gateway route in its route tables. AWS
 Direct Connect connection carries unencrypted traffic. Neither a site-to-site VPN overlay nor MACsec is configured. Direct Connect is a dedicated physical link — not shared with other customers — but the traffic on it is plaintext by default. Anyone with physical access to the fiber path (datacenter staff, transit providers, co-location personnel) can tap the connection and read traffic. Either a VPN over the Direct Connect or MACsec provides confidentiality; the control passes if either is configured.
 
 **Remediation:** Add encryption to the Direct Connect path. Either (a) configure a site-to-site VPN over the Direct Connect connection and route all traffic through the VPN, or (b) enable MACsec on the Direct Connect ports (supported on 10 Gbps and 100 Gbps dedicated connections). VPN overlay is more widely supported; MACsec offers lower latency but requires compatible hardware on both ends.
+
+---
+
+### CTL.VPC.EIP.EXCESSIVE.001
+
+**Instance Has Multiple Elastic IPs**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 5.1; fedramp_moderate: SC-7; nist_800_53_r5: SC-7; pci_dss_v4.0: 1.3.1; soc2: CC6.6;
+
+EC2 instance has more than one Elastic IP associated. Multiple public addresses on a single instance indicate over-exposure — the instance is reachable via multiple distinct network paths, broadening the attack surface and complicating firewall rules, monitoring, and incident response. Legitimate use cases (multi- tenant ingress, specific licensing requirements) exist but are unusual and should be explicitly justified.
+
+**Remediation:** Review the use case for each attached EIP. Retain only the minimum set required; release the extras and reassign dependents. If multiple EIPs are genuinely required, document the reason on the instance tag and ensure each address is covered by the same security group rules and monitoring as the primary address.
+
+---
+
+### CTL.VPC.EIP.ORPHANED.001
+
+**Elastic IP Not Associated with Any Resource**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** hygiene
+- **Compliance:** cis_aws_v3.0: 5.1; fedramp_moderate: CM-8; nist_800_53_r5: CM-8; soc2: CC7.1;
+
+Elastic IP is allocated but not associated with an instance, NAT gateway, or network interface. Orphaned EIPs are a lifecycle gap — the resource the EIP was attached to was deleted but the EIP was not released. The security relevance is the lifecycle signal: if EIPs are not cleaned up, related resources (security groups, route table entries, IAM policies referencing IPs) are likely also accumulating without review. Orphaned EIPs also carry an ongoing charge and count against the per-region limit.
+
+**Remediation:** Release the orphaned EIP with `aws ec2 release-address`. Add an allocation-age check to your housekeeping automation so EIPs that sit unassociated for longer than a defined threshold (for example seven days) are reported and released. Review neighboring resources (security groups, route tables) for matching staleness.
 
 ---
 
@@ -19106,6 +19226,21 @@ VPC flow logs contain network metadata (source/destination IPs, ports, protocols
 
 ---
 
+### CTL.VPC.IGW.UNNECESSARY.001
+
+**Internet Gateway Attached to VPC Without Internet Requirement**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** hygiene
+- **Compliance:** cis_aws_v3.0: 5.1; fedramp_moderate: SC-7; nist_800_53_r5: SC-7; pci_dss_v4.0: 1.2.1; soc2: CC6.6;
+
+VPC has an Internet Gateway attached but no resources have public IP addresses and no subnets have routes pointing to the IGW. The IGW provides internet connectivity that nothing uses — residual from initial setup, or attached for a purpose that no longer exists. An unattached-but-present IGW is a latent attack surface: one route table change (adding 0.0.0.0/0 → IGW to a subnet) or one public IP assignment converts any instance in the VPC from private to internet-facing. For VPCs intended to have no internet connectivity (data processing, database, internal services), the IGW should be detached.
+
+**Remediation:** Detach and delete the Internet Gateway if this VPC is not intended to have internet connectivity. If the IGW is kept for future use, document the reason and recheck before each audit cycle. If internet connectivity is required, add at least one public subnet with an IGW route and a public-facing resource so the attachment reflects actual use.
+
+---
+
 ### CTL.VPC.INCOMPLETE.001
 
 **Complete Data Required for VPC Assessment**
@@ -19132,6 +19267,36 @@ VPC safety cannot be assessed when flow logging status is missing from the snaps
 Network ACLs must not allow inbound traffic from 0.0.0.0/0 or ::/0 to SSH (22) or RDP (3389) ports. NACLs apply to entire subnets — open admin ports expose all instances.
 
 **Remediation:** Replace the allow rule with a specific CIDR for authorized admin IP ranges using aws ec2 replace-network-acl-entry.
+
+---
+
+### CTL.VPC.NAT.LOGGING.001
+
+**NAT Gateway Does Not Have Flow Logging**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** cis_aws_v3.0: 3.9; fedramp_moderate: AU-12; nist_800_53_r5: AU-12; pci_dss_v4.0: 10.2.1; soc2: CC7.2;
+
+NAT gateway's ENI does not have flow logs enabled. All outbound internet traffic from private subnets traverses the NAT gateway; without flow logs on the NAT ENI, outbound traffic patterns are invisible — data exfiltration, C2 communication, and unauthorized outbound connections are not recorded. VPC flow logs on subnets capture traffic at the ENI level, but NAT-specific flow logs consolidate the post-NAT egress view that maps back to private source addresses.
+
+**Remediation:** Enable VPC flow logs on the NAT gateway's ENI and direct records to a CloudWatch Logs group or S3 bucket in a logging-dedicated account. Retain per incident-response and compliance requirements (typically one year minimum). Alert on unusual outbound volume, unexpected destinations, and high-entropy payload patterns characteristic of exfiltration and C2.
+
+---
+
+### CTL.VPC.NAT.SINGLEAZ.001
+
+**NAT Gateway Deployed in Single Availability Zone**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** availability
+- **Compliance:** cis_aws_v3.0: 5.1; fedramp_moderate: CP-7; nist_800_53_r5: CP-7; soc2: A1.2;
+
+NAT gateways for this VPC exist in only one AZ while private subnets exist in multiple AZs. If the NAT's AZ fails, all private subnet instances in other AZs lose outbound internet connectivity — no software updates, no AWS API calls via public endpoints, no outbound communication. Security-critical updates and log shipping stop. Production workloads should have a NAT gateway in each AZ that contains private subnets.
+
+**Remediation:** Deploy one NAT gateway in each AZ that contains private subnets. Update route tables so each private subnet's default route points to the NAT gateway in its own AZ (not a cross-AZ NAT). Using a single shared NAT across AZs also incurs cross-AZ data transfer charges on every outbound connection.
 
 ---
 
@@ -19222,6 +19387,36 @@ VPC peering connection is in pending-acceptance state. The peering request was s
 Route table entries for VPC peering connections must reference specific subnet CIDRs within the peered VPC, not the entire VPC CIDR. A route to the full peer VPC CIDR means any resource in the local VPC can reach any resource in the peered VPC — collapsing the network boundary between VPCs that were segmented for a reason. This is the routing-layer equivalent of east-west security group over-permissiveness (CTL.VPC.SG.EASTWEST.001). Cross-environment peering routes — production routing to development or vice versa — are a finding regardless of route specificity, as they violate environment isolation at the routing layer. CIS 5.5 requires that VPC peering route tables follow least access.
 
 **Remediation:** Replace the broad VPC CIDR route with specific subnet CIDR routes that target only the subnets hosting the services that require cross-VPC connectivity. For example, replace a route to 10.1.0.0/16 (entire peer VPC) with a route to 10.1.2.0/24 (specific application subnet). Remove peering routes that cross environment boundaries (production to development) unless explicitly justified.
+
+---
+
+### CTL.VPC.ROUTETABLE.MAIN.PUBLIC.001
+
+**Main Route Table Has Public Route**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 5.1; fedramp_moderate: SC-7; nist_800_53_r5: SC-7; pci_dss_v4.0: 1.2.1; soc2: CC6.6;
+
+The VPC's main (default) route table has a 0.0.0.0/0 route to an Internet Gateway. Any new subnet created without an explicit custom route-table association inherits the main route table — so every new subnet is public by default. The operator creating the subnet must remember to associate a private route table; omission produces an internet-facing subnet silently. The safe default is a main route table with no IGW route, so subnets are private unless explicitly associated with a public route table.
+
+**Remediation:** Remove the 0.0.0.0/0 → IGW route from the main route table. Create a dedicated "public-subnets" route table with the IGW route and explicitly associate it only with subnets that should be public (ALB, NAT, bastion). New subnets inherit the main route table, so the main route table should represent the safe default (no internet route).
+
+---
+
+### CTL.VPC.ROUTETABLE.ORPHANED.001
+
+**Route Table Not Associated with Any Subnet**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** hygiene
+- **Compliance:** cis_aws_v3.0: 5.1; fedramp_moderate: CM-8; nist_800_53_r5: CM-8; soc2: CC7.1;
+
+Route table exists but is not associated with any subnet, implicit or explicit. The table's routes are inert. Orphaned route tables are a lifecycle signal — the subnet that used this table was deleted but the table itself was left behind. Hygiene accumulation in the VPC layer usually tracks with accumulation in other layers (stale security groups, stale IAM policies).
+
+**Remediation:** Delete the orphaned route table. Add an association-count check to periodic VPC housekeeping so route tables that sit unassociated for longer than a defined threshold are reported and removed. Review neighboring resources (security groups, EIPs) for matching staleness.
 
 ---
 
@@ -19462,6 +19657,36 @@ Security group has had unrestricted ingress (0.0.0.0/0 or ::/0) added, removed, 
 Security group rules must not allow ingress from 0.0.0.0/0 on sensitive ports (SSH, RDP, database). Unrestricted ingress exposes services to the entire internet.
 
 **Remediation:** Restrict ingress rules to specific CIDR blocks or security group references. Remove 0.0.0.0/0 and ::/0 from ingress rules on ports 22 (SSH), 3389 (RDP), 3306 (MySQL), 5432 (PostgreSQL).
+
+---
+
+### CTL.VPC.SUBNET.AUTOPUBLIC.001
+
+**Subnet Auto-Assigns Public IP Addresses**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 5.1; fedramp_moderate: SC-7; hipaa: 164.312(e)(1); nist_800_53_r5: SC-7; pci_dss_v4.0: 1.2.1; soc2: CC6.6;
+
+Subnet has `MapPublicIpOnLaunch` enabled. Every resource launched in this subnet automatically receives a public IP address — without the launcher explicitly requesting one. A developer launching an EC2 instance, an ECS task, or a Lambda ENI in this subnet may not know it becomes internet-facing. Combined with a subnet route to an Internet Gateway and a permissive security group (often the default), resources become reachable from the internet without any explicit decision to make them public.
+
+**Remediation:** Disable `MapPublicIpOnLaunch` on the subnet. Require resources that need a public IP to request one explicitly at launch, which makes the exposure decision visible in the launch API call and in IaC diffs. For subnets that are genuinely public (ALB ingress, bastions), consider a naming convention and tag that makes the public-facing role explicit and pair it with tight security groups.
+
+---
+
+### CTL.VPC.SUBNET.PRIVATEDB.001
+
+**Database Subnet Has Route to Internet Gateway**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 5.1; fedramp_moderate: SC-7; hipaa: 164.312(e)(1); nist_800_53_r5: SC-7; pci_dss_v4.0: 1.2.1; soc2: CC6.6;
+
+A subnet containing RDS instances, ElastiCache clusters, or Redshift clusters has a route table with 0.0.0.0/0 pointing to an Internet Gateway. The database subnet is effectively public at the network layer — the internet route path exists. A single security group rule change is the gap between current-state safety and direct internet exposure of the database. Complements `CTL.RDS.PUBLIC.001` (which checks the RDS instance's `PubliclyAccessible` setting). Database hosts should live in subnets where an internet route is structurally absent.
+
+**Remediation:** Move the database resources to a subnet whose route table has no IGW route. If the current subnet is shared between databases and public workloads, split it: create a dedicated private subnet group for databases (RDS subnet group, ElastiCache subnet group) and migrate the instances. Do not rely on security group rules alone to contain databases; the network path should not exist in the first place.
 
 ---
 

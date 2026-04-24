@@ -1,0 +1,33 @@
+{
+  "assets": [
+    {
+      "id": "anfw-silent-theater",
+      "properties": {
+        "network": {
+          "kind": "network_firewall",
+          "firewall": {
+            "firewall_id": "anfw-silent-00000001",
+            "in_traffic_path": false,
+            "route_table_references": 0,
+            "endpoint_ids": ["vpce-0silent0001", "vpce-0silent0002"],
+            "routes_configured": false,
+            "stateful_rule_count": 37,
+            "has_stateful_rules": true,
+            "logging_enabled": true,
+            "rule_group_names": ["ThreatSignaturesEmergingThreats", "custom-denylist"]
+          }
+        }
+      },
+      "type": "aws_network_firewall",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

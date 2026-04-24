@@ -1,0 +1,18 @@
+control: CTL.VPC.SUBNET.AUTOPUBLIC.001
+defect: >
+  Subnet has `MapPublicIpOnLaunch` enabled.
+infection: >
+  The `MapPublicIpOnLaunch` flag makes public IP assignment a
+  subnet-level default rather than a per-resource choice. A
+  developer launching an EC2 instance, an ECS task, or a Lambda ENI
+  into this subnet receives a public IP without having requested
+  one — the exposure decision is invisible in the launch API call
+  and in IaC diffs. Combined with a route to an Internet Gateway
+  and a permissive security group (often the default), new
+  resources become internet-facing the moment they appear. This
+  is the "everything just works" failure pattern applied to
+  network exposure.
+failure: >
+  Silent internet exposure at launch. Every new resource in this
+  subnet is internet-facing without any explicit decision to make
+  it so.

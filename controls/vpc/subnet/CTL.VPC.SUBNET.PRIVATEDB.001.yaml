@@ -1,0 +1,69 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.SUBNET.PRIVATEDB.001
+name: Database Subnet Has Route to Internet Gateway
+description: >
+  A subnet containing RDS instances, ElastiCache clusters, or
+  Redshift clusters has a route table with 0.0.0.0/0 pointing to an
+  Internet Gateway. The database subnet is effectively public at the
+  network layer — the internet route path exists. A single security
+  group rule change is the gap between current-state safety and
+  direct internet exposure of the database. Complements
+  `CTL.RDS.PUBLIC.001` (which checks the RDS instance's
+  `PubliclyAccessible` setting). Database hosts should live in
+  subnets where an internet route is structurally absent.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "5.1"
+  nist_800_53_r5: "SC-7"
+  fedramp_moderate: "SC-7"
+  pci_dss_v4.0: "1.2.1"
+  soc2: "CC6.6"
+  hipaa: "164.312(e)(1)"
+  ccm_v4: ["IVS-03", "IVS-06"]
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+observation_fields:
+  - network.kind
+  - network.subnet.id
+  - network.subnet.has_database_resources
+  - network.subnet.database_resource_types
+  - network.subnet.route_to_igw
+  - network.subnet.is_effectively_public
+remediation:
+  description: >
+    Subnet contains database resources and its route table has a
+    route to an Internet Gateway.
+  action: >
+    Move the database resources to a subnet whose route table has no
+    IGW route. If the current subnet is shared between databases and
+    public workloads, split it: create a dedicated private subnet
+    group for databases (RDS subnet group, ElastiCache subnet group)
+    and migrate the instances. Do not rely on security group rules
+    alone to contain databases; the network path should not exist
+    in the first place.
+  example: |
+    {
+      "network": {
+        "kind": "subnet",
+        "subnet": {
+          "is_effectively_public": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: subnet
+    - field: properties.network.subnet.has_database_resources
+      op: eq
+      value: true
+    - field: properties.network.subnet.route_to_igw
+      op: eq
+      value: true

@@ -1,0 +1,18 @@
+control: CTL.VPC.NAT.SINGLEAZ.001
+defect: >
+  NAT gateway coverage is concentrated in a single AZ while private
+  subnets span multiple AZs.
+infection: >
+  A single-AZ NAT is the egress bottleneck for every private subnet
+  across every AZ that routes through it. An AZ failure cuts
+  outbound internet connectivity for private subnets in the
+  unaffected AZs — software updates stop, log shippers silently
+  fail, AWS API clients timeout on public endpoints. Workloads that
+  appear "up" from the ALB side degrade invisibly because they
+  cannot reach the internet for background operations. The problem
+  surfaces only under the exact conditions (AZ-level failure) when
+  operators are already managing incidents.
+failure: >
+  Egress outage under AZ failure. Private workloads in surviving AZs
+  lose internet connectivity for patches, log shipping, and public
+  AWS API calls.

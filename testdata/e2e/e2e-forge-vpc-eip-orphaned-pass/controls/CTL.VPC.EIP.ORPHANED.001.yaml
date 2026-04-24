@@ -1,0 +1,59 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.EIP.ORPHANED.001
+name: Elastic IP Not Associated with Any Resource
+description: >
+  Elastic IP is allocated but not associated with an instance, NAT
+  gateway, or network interface. Orphaned EIPs are a lifecycle gap
+  — the resource the EIP was attached to was deleted but the EIP was
+  not released. The security relevance is the lifecycle signal: if
+  EIPs are not cleaned up, related resources (security groups, route
+  table entries, IAM policies referencing IPs) are likely also
+  accumulating without review. Orphaned EIPs also carry an ongoing
+  charge and count against the per-region limit.
+domain: hygiene
+severity: low
+compliance:
+  cis_aws_v3.0: "5.1"
+  nist_800_53_r5: "CM-8"
+  fedramp_moderate: "CM-8"
+  soc2: "CC7.1"
+  ccm_v4: ["CCC-03"]
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: none
+observation_fields:
+  - network.kind
+  - network.eip.allocation_id
+  - network.eip.public_ip
+  - network.eip.associated
+  - network.eip.association_id
+remediation:
+  description: >
+    Elastic IP allocation is not attached to any resource.
+  action: >
+    Release the orphaned EIP with `aws ec2 release-address`. Add an
+    allocation-age check to your housekeeping automation so EIPs that
+    sit unassociated for longer than a defined threshold (for example
+    seven days) are reported and released. Review neighboring
+    resources (security groups, route tables) for matching staleness.
+  example: |
+    {
+      "network": {
+        "kind": "elastic_ip",
+        "eip": {
+          "associated": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: elastic_ip
+    - field: properties.network.eip.associated
+      op: eq
+      value: false

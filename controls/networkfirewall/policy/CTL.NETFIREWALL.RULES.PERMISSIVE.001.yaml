@@ -1,0 +1,61 @@
+dsl_version: ctrl.v1
+id: CTL.NETFIREWALL.RULES.PERMISSIVE.001
+name: Network Firewall Rule Group Contains Allow-All Rule
+description: >
+  A Network Firewall rule group contains a rule that allows all
+  traffic (action `pass`, protocol `any`, source `any`, destination
+  `any`). The rule group exists and is associated with the policy,
+  but a catch-all pass rule short-circuits inspection for every
+  packet that reaches it. This is the NF equivalent of a WAF that
+  runs in count-only mode with a bypass rule — the control exists,
+  evaluates packets, and does nothing with them. Distinct from
+  `CTL.NETFIREWALL.DEFAULT.FULL.001` (which checks the stateless
+  default action); this control checks for explicit allow-any rules
+  inside rule groups.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  fedramp_moderate: "SC-7"
+  pci_dss_v4.0: "1.2.1"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "IVS-04"]
+scope_tags:
+  - aws
+  - networkfirewall
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - network.kind
+  - network.firewall.has_allow_all_rule
+  - network.firewall.permissive_rules
+remediation:
+  description: >
+    One or more rule groups contain an allow-all rule that nullifies
+    downstream inspection.
+  action: >
+    Remove the allow-any rule from the rule group. If a broad allow
+    is needed for legitimate high-volume traffic, scope it explicitly
+    (specific CIDRs, specific ports, specific protocols) rather than
+    using any/any/any. Audit the rule group's rule order: pass-any
+    rules are particularly dangerous at the top of a group because
+    they bypass every subsequent rule.
+  example: |
+    {
+      "network": {
+        "kind": "network_firewall",
+        "firewall": {
+          "has_allow_all_rule": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: network_firewall
+    - field: properties.network.firewall.has_allow_all_rule
+      op: eq
+      value: true

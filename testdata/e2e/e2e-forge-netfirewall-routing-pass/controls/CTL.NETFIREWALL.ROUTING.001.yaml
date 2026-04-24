@@ -1,0 +1,66 @@
+dsl_version: ctrl.v1
+id: CTL.NETFIREWALL.ROUTING.001
+name: Network Firewall Not in Traffic Path
+description: >
+  AWS Network Firewall is deployed but no route tables direct traffic
+  through the firewall endpoints. The firewall appears active, its
+  policy and rule groups are configured, and logs may show zero events
+  — but no traffic is actually being inspected. The firewall sits in
+  the VPC as an unreferenced endpoint while packets flow around it
+  via route tables that bypass it. This is the network security
+  equivalent of a smoke detector that is installed but not connected
+  to power. Dashboards show the detector; nothing it is supposed to
+  watch actually reaches it.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "SC-7"
+  fedramp_moderate: "SC-7"
+  pci_dss_v4.0: "1.2.1"
+  soc2: "CC6.6"
+  hipaa: "164.312(e)(1)"
+  ccm_v4: ["IVS-03", "IVS-04"]
+scope_tags:
+  - aws
+  - networkfirewall
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - network.kind
+  - network.firewall.firewall_id
+  - network.firewall.in_traffic_path
+  - network.firewall.route_table_references
+  - network.firewall.endpoint_ids
+  - network.firewall.routes_configured
+remediation:
+  description: >
+    Network Firewall is deployed but no route tables direct traffic
+    to its endpoints. Traffic bypasses the firewall entirely.
+  action: >
+    Update the route tables for each subnet whose traffic should be
+    inspected. For ingress inspection, the Internet Gateway route
+    table (or the relevant subnet route tables) must route
+    0.0.0.0/0 to the firewall endpoint in the matching AZ. For
+    egress inspection, protected subnets' route tables must route
+    default traffic to the firewall endpoint. Validate by confirming
+    non-zero flow logs on the firewall after the change. Absence of
+    traffic should be the exception, not the default.
+  example: |
+    {
+      "network": {
+        "kind": "network_firewall",
+        "firewall": {
+          "in_traffic_path": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: network_firewall
+    - field: properties.network.firewall.in_traffic_path
+      op: eq
+      value: false

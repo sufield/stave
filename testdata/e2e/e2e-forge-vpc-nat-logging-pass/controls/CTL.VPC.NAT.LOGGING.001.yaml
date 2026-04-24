@@ -1,0 +1,61 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.NAT.LOGGING.001
+name: NAT Gateway Does Not Have Flow Logging
+description: >
+  NAT gateway's ENI does not have flow logs enabled. All outbound
+  internet traffic from private subnets traverses the NAT gateway;
+  without flow logs on the NAT ENI, outbound traffic patterns are
+  invisible — data exfiltration, C2 communication, and unauthorized
+  outbound connections are not recorded. VPC flow logs on subnets
+  capture traffic at the ENI level, but NAT-specific flow logs
+  consolidate the post-NAT egress view that maps back to private
+  source addresses.
+domain: audit
+severity: medium
+compliance:
+  cis_aws_v3.0: "3.9"
+  nist_800_53_r5: "AU-12"
+  fedramp_moderate: "AU-12"
+  pci_dss_v4.0: "10.2.1"
+  soc2: "CC7.2"
+  ccm_v4: ["LOG-03", "LOG-08"]
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - network.kind
+  - network.nat.gateway_id
+  - network.nat.flow_logs_enabled
+  - network.nat.eni_id
+remediation:
+  description: >
+    NAT gateway ENI has no flow log configuration. Outbound traffic
+    through the NAT is not recorded.
+  action: >
+    Enable VPC flow logs on the NAT gateway's ENI and direct records
+    to a CloudWatch Logs group or S3 bucket in a logging-dedicated
+    account. Retain per incident-response and compliance requirements
+    (typically one year minimum). Alert on unusual outbound volume,
+    unexpected destinations, and high-entropy payload patterns
+    characteristic of exfiltration and C2.
+  example: |
+    {
+      "network": {
+        "kind": "nat_gateway",
+        "nat": {
+          "flow_logs_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: nat_gateway
+    - field: properties.network.nat.flow_logs_enabled
+      op: eq
+      value: false

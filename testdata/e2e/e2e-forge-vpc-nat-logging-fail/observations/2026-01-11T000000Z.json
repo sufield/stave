@@ -1,0 +1,27 @@
+{
+  "assets": [
+    {
+      "id": "nat-log-off",
+      "properties": {
+        "network": {
+          "kind": "nat_gateway",
+          "nat": {
+            "gateway_id": "nat-0logoff00000001",
+            "flow_logs_enabled": false,
+            "eni_id": "eni-0natoff0000001"
+          }
+        }
+      },
+      "type": "aws_nat_gateway",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

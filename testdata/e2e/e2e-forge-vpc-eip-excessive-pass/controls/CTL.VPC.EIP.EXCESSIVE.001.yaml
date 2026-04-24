@@ -1,0 +1,58 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.EIP.EXCESSIVE.001
+name: Instance Has Multiple Elastic IPs
+description: >
+  EC2 instance has more than one Elastic IP associated. Multiple
+  public addresses on a single instance indicate over-exposure — the
+  instance is reachable via multiple distinct network paths,
+  broadening the attack surface and complicating firewall rules,
+  monitoring, and incident response. Legitimate use cases (multi-
+  tenant ingress, specific licensing requirements) exist but are
+  unusual and should be explicitly justified.
+domain: exposure
+severity: medium
+compliance:
+  cis_aws_v3.0: "5.1"
+  nist_800_53_r5: "SC-7"
+  fedramp_moderate: "SC-7"
+  pci_dss_v4.0: "1.3.1"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03"]
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+observation_fields:
+  - network.kind
+  - network.eip.instance_id
+  - network.eip.instance_eip_count
+  - network.eip.instance_has_multiple
+remediation:
+  description: >
+    EC2 instance has more than one Elastic IP attached.
+  action: >
+    Review the use case for each attached EIP. Retain only the
+    minimum set required; release the extras and reassign dependents.
+    If multiple EIPs are genuinely required, document the reason on
+    the instance tag and ensure each address is covered by the same
+    security group rules and monitoring as the primary address.
+  example: |
+    {
+      "network": {
+        "kind": "elastic_ip",
+        "eip": {
+          "instance_has_multiple": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: elastic_ip
+    - field: properties.network.eip.instance_has_multiple
+      op: eq
+      value: true
