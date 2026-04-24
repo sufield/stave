@@ -48,7 +48,7 @@ func EvaluateRecurrenceForControl(
 		}
 	}
 
-	if count < p.Limit {
+	if count <= p.Limit {
 		return nil
 	}
 

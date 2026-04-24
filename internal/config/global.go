@@ -52,20 +52,3 @@ type GlobalSettings struct {
 	// not recognized.
 	AllowUnknownInput bool
 }
-
-// TextOutputEnabled reports whether human-readable text should be
-// printed — inverse of Quiet.
-func (g GlobalSettings) TextOutputEnabled() bool { return !g.Quiet }
-
-// AutoConfirm reports whether interactive prompts should be skipped.
-// True when --yes is set or (in future) when stderr is not a TTY.
-func (g GlobalSettings) AutoConfirm() bool { return g.Yes }
-
-// NewSanitizer constructs a sanitizer configured from these
-// settings. Returned value is owned by the caller.
-func (g GlobalSettings) NewSanitizer() *sanitize.Sanitizer {
-	return sanitize.Policy{
-		SanitizeIDs: g.Sanitize,
-		PathMode:    g.PathMode,
-	}.NewSanitizer()
-}

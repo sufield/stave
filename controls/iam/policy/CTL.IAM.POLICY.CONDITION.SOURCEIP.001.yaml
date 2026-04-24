@@ -1,0 +1,84 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.POLICY.CONDITION.SOURCEIP.001
+name: "Sensitive Actions Without SourceIp Condition"
+description: >
+  IAM-administrative actions (iam:Create*, iam:Delete*, iam:Attach*,
+  iam:Put*, iam:Update*) are allowed without an aws:SourceIp condition.
+  These actions can be called from any IP address. Note: SourceIp
+  conditions do not work for calls through VPC endpoints or some
+  assumed-role patterns — this is a defense-in-depth measure, not a
+  primary control.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.3"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: defense_evasion
+  base_impact: 7
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 1.5
+observation_fields:
+  - identity.kind
+  - identity.policy.iam_admin_missing_sourceip
+remediation:
+  description: >
+    IAM admin actions allowed without aws:SourceIp condition —
+    credentials usable from any location.
+  action: >
+    Add an aws:SourceIp condition to policies allowing
+    IAM-administrative actions. Note: SourceIp conditions do not work
+    for calls through VPC endpoints or some assumed-role patterns.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "policy": {
+          "iam_admin_missing_sourceip": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user
+    - field: properties.identity.policy.iam_admin_missing_sourceip
+      op: eq
+      value: true
+tests:
+  - name: "user with IAM admin actions missing SourceIp fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:user/mallory"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          policy:
+            iam_admin_missing_sourceip: true
+  - name: "user with IAM admin actions restricted by SourceIp passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:user/bob"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          policy:
+            iam_admin_missing_sourceip: false
+alternatives:
+  - tool: prowler
+    check_id: iam_policy_no_full_access_to_cloudwatch_logs
+    coverage: partial
+    note: Prowler checks specific service scoping; this control checks condition-level enforcement patterns.

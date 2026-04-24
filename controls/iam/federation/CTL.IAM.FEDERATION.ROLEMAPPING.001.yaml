@@ -1,0 +1,74 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.FEDERATION.ROLEMAPPING.001
+name: Federated Role Must Be Scoped to Specific IdP Groups
+description: >
+  Federated role trust policy allows any federated user to assume
+  the role — not scoped to specific IdP groups or attributes. Any
+  user who authenticates via the IdP can assume the role regardless
+  of their group membership or job function.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-2"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+observation_fields:
+  - identity.kind
+  - identity.federation.trust_scoped_to_groups
+remediation:
+  description: >
+    Federated role trust allows any IdP user to assume the role —
+    no group or attribute condition restricts assumption.
+  action: >
+    Add a condition to the role trust policy that restricts
+    assumption to specific IdP groups or attributes. For SAML, add
+    a StringEquals condition on the SAML:NameQualifier or group
+    attribute. For OIDC, scope the sub claim to specific groups.
+  example: |
+    {
+      "identity": {
+        "kind": "federated_role",
+        "federation": {
+          "trust_scoped_to_groups": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: federated_role
+    - field: properties.identity.federation.trust_scoped_to_groups
+      op: eq
+      value: false
+tests:
+  - name: Federated role trust not scoped to specific groups
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/FederatedAdmin"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: federated_role
+          federation:
+            trust_scoped_to_groups: false
+  - name: Federated role trust scoped to specific groups
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::444455556666:role/FederatedScopedRole"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: federated_role
+          federation:
+            trust_scoped_to_groups: true

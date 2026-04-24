@@ -1,0 +1,84 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.POLICY.CONDITION.VIASERVICE.001
+name: "KMS Actions Without kms:ViaService Condition"
+description: >
+  KMS actions (kms:Decrypt, kms:GenerateDataKey, kms:Encrypt) are
+  allowed without a kms:ViaService condition. Without this condition,
+  the KMS key can be used by any AWS service or directly via the KMS
+  API — not just the intended service. An attacker with kms:Decrypt can
+  decrypt data from any service that uses the key.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-12"
+  soc2: "CC6.1"
+  ccm_v4: ["CEK-01"]
+scope_tags:
+  - aws
+  - iam
+  - kms
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: collection
+  base_impact: 7
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 1.5
+observation_fields:
+  - identity.kind
+  - identity.policy.kms_missing_viaservice
+remediation:
+  description: >
+    KMS cryptographic actions allowed without kms:ViaService
+    condition — key usable by any service.
+  action: >
+    Add a kms:ViaService condition to restrict KMS Decrypt and
+    GenerateDataKey to the intended service (e.g.,
+    s3.us-east-1.amazonaws.com).
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "policy": {
+          "kms_missing_viaservice": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user
+    - field: properties.identity.policy.kms_missing_viaservice
+      op: eq
+      value: true
+tests:
+  - name: "user with KMS actions missing ViaService condition fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:user/mallory"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          policy:
+            kms_missing_viaservice: true
+  - name: "user with KMS actions restricted by ViaService passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:user/bob"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          policy:
+            kms_missing_viaservice: false
+alternatives:
+  - tool: prowler
+    check_id: iam_policy_no_full_access_to_cloudwatch_logs
+    coverage: partial
+    note: Prowler checks specific service scoping; this control checks condition-level enforcement patterns.

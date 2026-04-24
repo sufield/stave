@@ -1,0 +1,76 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SSO.MFA.001
+name: SSO Must Enforce MFA at Identity Center Level
+description: >
+  MFA is not enforced at the AWS Identity Center level. MFA
+  enforcement may be delegated to the external IdP but if the IdP
+  is configured without MFA for some users, those users access AWS
+  without MFA. Identity Center should enforce MFA independently as
+  defense-in-depth.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "IA-2(1)"
+  soc2: "CC6.1"
+  hipaa: "164.312(d)"
+  pci_dss_v4.0: "8.3.1"
+  ccm_v4: ["IAM-14"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+observation_fields:
+  - identity.kind
+  - identity.sso.mfa_enforced
+remediation:
+  description: >
+    SSO MFA not enforced at Identity Center level — users may access
+    AWS without MFA if IdP does not enforce it.
+  action: >
+    Enable MFA enforcement in AWS IAM Identity Center authentication
+    settings. Configure MFA to be required for all users, not just
+    recommended. Set the MFA type to require hardware or
+    authenticator app tokens — SMS is not sufficient.
+  example: |
+    {
+      "identity": {
+        "kind": "sso_config",
+        "sso": {
+          "mfa_enforced": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: sso_config
+    - field: properties.identity.sso.mfa_enforced
+      op: eq
+      value: false
+tests:
+  - name: SSO MFA not enforced at Identity Center level
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sso:::instance/ssoins-1234567890abcdef"
+      asset_type: aws_sso_instance
+      vendor: aws
+      properties:
+        identity:
+          kind: sso_config
+          sso:
+            mfa_enforced: false
+  - name: SSO MFA enforced at Identity Center level
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sso:::instance/ssoins-abcdef1234567890"
+      asset_type: aws_sso_instance
+      vendor: aws
+      properties:
+        identity:
+          kind: sso_config
+          sso:
+            mfa_enforced: true

@@ -1,0 +1,75 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SSO.LEGACY.001
+name: Legacy IAM Users Must Not Coexist with SSO
+description: >
+  AWS IAM Identity Center is configured but IAM users with console
+  access still exist. Two authentication paths: SSO (controlled by
+  IdP, MFA enforced, session bounded) and IAM users (password-based,
+  MFA optional, no IdP governance). An attacker who targets IAM user
+  credentials bypasses every SSO security control.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "IA-2"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-04"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+observation_fields:
+  - identity.kind
+  - identity.sso.has_legacy_iam_users
+remediation:
+  description: >
+    SSO configured but legacy IAM users with console access bypass
+    all SSO security controls.
+  action: >
+    Migrate all console IAM users to AWS IAM Identity Center. Create
+    corresponding user accounts in the identity provider. After
+    verifying SSO access works, delete the IAM console passwords.
+    Retain IAM users only for programmatic access where SSO is not
+    applicable.
+  example: |
+    {
+      "identity": {
+        "kind": "sso_config",
+        "sso": {
+          "has_legacy_iam_users": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: sso_config
+    - field: properties.identity.sso.has_legacy_iam_users
+      op: eq
+      value: true
+tests:
+  - name: SSO configured with legacy IAM console users
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sso:::instance/ssoins-1234567890abcdef"
+      asset_type: aws_sso_instance
+      vendor: aws
+      properties:
+        identity:
+          kind: sso_config
+          sso:
+            has_legacy_iam_users: true
+  - name: SSO configured without legacy IAM console users
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sso:::instance/ssoins-abcdef1234567890"
+      asset_type: aws_sso_instance
+      vendor: aws
+      properties:
+        identity:
+          kind: sso_config
+          sso:
+            has_legacy_iam_users: false

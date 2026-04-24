@@ -122,10 +122,8 @@ func listObservationFiles(dir string) ([]os.DirEntry, error) {
 	return entries, nil
 }
 
-// process is the single processing pipeline: hash → validate → unmarshal.
+// process is the single processing pipeline: validate → unmarshal → hash.
 func (l *ObservationLoader) process(data []byte, source string) (asset.Snapshot, string, error) {
-	hash := string(platformcrypto.HashBytes(data))
-
 	issues, err := l.validator.ValidateObservationJSON(data, contractvalidator.WithPrefix(source))
 	if err != nil {
 		return asset.Snapshot{}, "", fmt.Errorf("schema validation error: %w", err)
@@ -142,6 +140,7 @@ func (l *ObservationLoader) process(data []byte, source string) (asset.Snapshot,
 		return asset.Snapshot{}, "", fmt.Errorf("invalid observation semantics: %w", err)
 	}
 
+	hash := string(platformcrypto.HashBytes(data))
 	return snap, hash, nil
 }
 

@@ -1,0 +1,20 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:sso:::instance/ssoins-abcdef1234567890",
+      "properties": {
+        "identity": {
+          "kind": "sso_config",
+          "sso": {
+            "has_legacy_iam_users": false
+          }
+        }
+      },
+      "type": "aws_sso_instance",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

@@ -1,0 +1,74 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.FEDERATION.SAML.AUDIENCE.001
+name: SAML Trust Must Validate Audience Restriction
+description: >
+  SAML trust policy does not validate the audience restriction in
+  assertions. Without audience validation, a SAML assertion intended
+  for a different service provider can be replayed against AWS. The
+  assertion is valid — signed by the IdP — but was meant for a
+  different application.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "IA-8"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-14"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+observation_fields:
+  - identity.kind
+  - identity.federation.saml_audience_restricted
+remediation:
+  description: >
+    SAML provider trust does not validate audience restriction —
+    assertions for other applications can be replayed against AWS.
+  action: >
+    Configure the SAML trust to validate the audience restriction
+    field in assertions. Set the audience to the AWS SAML endpoint
+    URL for the account. Verify that assertions from other service
+    providers are rejected.
+  example: |
+    {
+      "identity": {
+        "kind": "saml_provider",
+        "federation": {
+          "saml_audience_restricted": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: saml_provider
+    - field: properties.identity.federation.saml_audience_restricted
+      op: eq
+      value: false
+tests:
+  - name: SAML trust does not validate audience restriction
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:saml-provider/CorpIdP"
+      asset_type: aws_iam_saml_provider
+      vendor: aws
+      properties:
+        identity:
+          kind: saml_provider
+          federation:
+            saml_audience_restricted: false
+  - name: SAML trust validates audience restriction
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::444455556666:saml-provider/SecureIdP"
+      asset_type: aws_iam_saml_provider
+      vendor: aws
+      properties:
+        identity:
+          kind: saml_provider
+          federation:
+            saml_audience_restricted: true

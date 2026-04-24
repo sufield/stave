@@ -1,0 +1,20 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:iam::111122223333:user/mallory",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "policy": {
+            "cross_account_missing_org_id": true
+          }
+        }
+      },
+      "type": "aws_iam_user",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

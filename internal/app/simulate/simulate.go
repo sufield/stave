@@ -6,7 +6,6 @@ import (
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/evaluation/risk"
-	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/util/sets"
 )
 
@@ -99,18 +98,4 @@ func Run(input Input) *Result {
 		FindingsRemoved:   removed,
 		ChainsDeactivated: deactivated,
 	}
-}
-
-// CollectTeamControls returns all control IDs with findings on a team's assets.
-func CollectTeamControls(findings []remediation.Finding, teamAssets map[kernel.ControlID]bool) []string {
-	var controls []string
-	seen := sets.New[string]()
-	for i := range findings {
-		cid := string(findings[i].ControlID)
-		if !seen.Contains(cid) {
-			controls = append(controls, cid)
-			seen.Add(cid)
-		}
-	}
-	return controls
 }

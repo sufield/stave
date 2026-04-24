@@ -189,17 +189,6 @@ type FindingRef struct {
 	OwnerResolution string
 }
 
-// FilterByTeams returns indices of findings whose OwnerTeamID is in the allowed set.
-func FilterByTeams(findings []FindingRef, allowedTeams map[string]bool) []int {
-	var indices []int
-	for i := range findings {
-		if allowedTeams[findings[i].OwnerTeamID] {
-			indices = append(indices, i)
-		}
-	}
-	return indices
-}
-
 // globMatch checks if a value matches a simple glob pattern (supports * suffix).
 func globMatch(pattern, value string) bool {
 	if pattern == value {

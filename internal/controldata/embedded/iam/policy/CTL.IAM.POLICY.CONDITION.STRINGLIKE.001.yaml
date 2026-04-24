@@ -1,0 +1,83 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.POLICY.CONDITION.STRINGLIKE.001
+name: "Policy Condition Uses StringLike Where StringEquals Intended"
+description: >
+  A policy condition uses the StringLike operator on identity-related
+  condition keys where StringEquals should be used. StringLike supports
+  wildcards (* and ?). On identity values like account IDs, an account
+  ID pattern '12345678*' matches 10,000 possible accounts. StringEquals
+  performs exact matching without wildcard interpretation.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  base_impact: 7
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 1.5
+observation_fields:
+  - identity.kind
+  - identity.policy.has_stringlike_on_identity
+remediation:
+  description: >
+    IAM policy uses StringLike operator on identity-related condition
+    keys where exact matching via StringEquals is required.
+  action: >
+    Replace StringLike with StringEquals on identity-related condition
+    keys (aws:PrincipalArn, aws:SourceAccount, aws:PrincipalOrgID).
+    Use exact matching for identity values.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "policy": {
+          "has_stringlike_on_identity": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user
+    - field: properties.identity.policy.has_stringlike_on_identity
+      op: eq
+      value: true
+tests:
+  - name: "user with StringLike on identity condition keys fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:user/mallory"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          policy:
+            has_stringlike_on_identity: true
+  - name: "user with StringEquals on identity condition keys passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:user/bob"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          policy:
+            has_stringlike_on_identity: false
+alternatives:
+  - tool: prowler
+    check_id: iam_policy_no_full_access_to_cloudwatch_logs
+    coverage: partial
+    note: Prowler checks specific service scoping; this control checks condition-level enforcement patterns.

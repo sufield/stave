@@ -1,0 +1,84 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.POLICY.CONDITION.ORGID.001
+name: "Resource-Based Policy Missing aws:PrincipalOrgID Condition"
+description: >
+  A resource-based policy grants cross-account access without the
+  aws:PrincipalOrgID condition. Without this condition, access can be
+  granted to principals from any AWS account — not just accounts in the
+  organization. aws:PrincipalOrgID restricts access to principals whose
+  accounts are members of the specified organization, preventing access
+  from accounts that have left the org or were never members.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+  base_impact: 7
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 1.5
+observation_fields:
+  - identity.kind
+  - identity.policy.cross_account_missing_org_id
+remediation:
+  description: >
+    Resource-based policy grants cross-account access without
+    aws:PrincipalOrgID organizational boundary condition.
+  action: >
+    Add an aws:PrincipalOrgID condition to all cross-account grants in
+    resource-based policies. This restricts access to principals whose
+    accounts are members of the organization.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "policy": {
+          "cross_account_missing_org_id": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user
+    - field: properties.identity.policy.cross_account_missing_org_id
+      op: eq
+      value: true
+tests:
+  - name: "user with cross-account policy missing org ID fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:user/mallory"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          policy:
+            cross_account_missing_org_id: true
+  - name: "user with cross-account policy scoped to org passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:user/bob"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          policy:
+            cross_account_missing_org_id: false
+alternatives:
+  - tool: prowler
+    check_id: iam_policy_no_full_access_to_cloudwatch_logs
+    coverage: partial
+    note: Prowler checks specific service scoping; this control checks condition-level enforcement patterns.

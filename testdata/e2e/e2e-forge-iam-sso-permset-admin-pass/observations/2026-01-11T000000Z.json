@@ -1,0 +1,20 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:sso:::permissionSet/ssoins-1234567890abcdef/ps-readonly",
+      "properties": {
+        "identity": {
+          "kind": "sso_permission_set",
+          "sso": {
+            "has_admin_policy": false
+          }
+        }
+      },
+      "type": "aws_sso_permission_set",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

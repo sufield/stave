@@ -129,7 +129,7 @@ func sanitizeActualValue(v any, s kernel.Sanitizer) any {
 	switch t := v.(type) {
 	case nil:
 		return nil
-	case bool, int, int64, float64:
+	case bool, int, int64, float64, uint, uint32, uint64:
 		return v
 	case string:
 		return s.Value(t)
@@ -155,7 +155,7 @@ func sanitizeActualValue(v any, s kernel.Sanitizer) any {
 // sanitizeSlice clones and replaces every element using the provided sanitizer.
 func sanitizeSlice[T ~string](items []T, s kernel.Sanitizer) []T {
 	if len(items) == 0 {
-		return nil
+		return []T{}
 	}
 	out := make([]T, len(items))
 	for i := range items {

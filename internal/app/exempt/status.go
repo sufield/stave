@@ -1,8 +1,6 @@
 package exempt
 
 import (
-	"fmt"
-	"strings"
 	"time"
 )
 
@@ -99,31 +97,4 @@ func ComputeStatus(file *AcceptanceFile, now time.Time, activeFindings map[strin
 	}
 
 	return report
-}
-
-// FormatStatus produces a human-readable status report.
-func FormatStatus(r *StatusReport) string {
-	var b strings.Builder
-	fmt.Fprintf(&b, "EXEMPTION STATUS REPORT\nGenerated: %s\n\n", r.GeneratedAt)
-	fmt.Fprintf(&b, "SUMMARY\n")
-	fmt.Fprintf(&b, "  Active exemptions:       %d\n", r.TotalActive)
-	fmt.Fprintf(&b, "  Expiring within 30 days: %d\n", r.ExpiringDays30)
-	fmt.Fprintf(&b, "  Expiring within 60 days: %d\n", r.ExpiringDays60)
-	fmt.Fprintf(&b, "  Expired (not revoked):   %d\n", r.AlreadyExpired)
-	fmt.Fprintf(&b, "  Resolved (redundant):    %d\n", r.Resolved)
-
-	if len(r.ExpiredItems) > 0 {
-		fmt.Fprintf(&b, "\nEXPIRED — NOT REVOKED\n")
-		for _, e := range r.ExpiredItems {
-			fmt.Fprintf(&b, "  %s on %s (expired %d days ago)\n", e.ControlID, e.AssetID, -e.DaysRemaining)
-		}
-	}
-	if len(r.ExpiringItems) > 0 {
-		fmt.Fprintf(&b, "\nEXPIRING WITHIN 30 DAYS\n")
-		for _, e := range r.ExpiringItems {
-			fmt.Fprintf(&b, "  %s on %s (expires in %d days)\n", e.ControlID, e.AssetID, e.DaysRemaining)
-		}
-	}
-
-	return b.String()
 }

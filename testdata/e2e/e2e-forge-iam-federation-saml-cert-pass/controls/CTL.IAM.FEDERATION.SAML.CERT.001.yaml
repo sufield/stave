@@ -1,0 +1,75 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.FEDERATION.SAML.CERT.001
+name: SAML Provider Certificate Must Be Rotated Within 365 Days
+description: >
+  SAML provider certificate is older than 365 days. The certificate
+  authenticates the IdP to AWS. If the certificate's private key is
+  compromised, an attacker can forge SAML assertions and assume any
+  role that trusts the SAML provider. The SolarWinds/Nobelium attack
+  (Golden SAML) used forged SAML tokens via compromised AD FS signing
+  certificates.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "IA-5"
+  soc2: "CC6.1"
+  hipaa: "164.312(d)"
+  ccm_v4: ["IAM-14"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+observation_fields:
+  - identity.kind
+  - identity.federation.saml_cert_rotated
+remediation:
+  description: >
+    SAML provider certificate not rotated within 365 days — vulnerable
+    to Golden SAML attack if signing key is compromised.
+  action: >
+    Generate a new signing certificate in the IdP, update the SAML
+    provider metadata in AWS IAM, and verify federation still works.
+    Remove the old certificate from both IdP and AWS after rollover.
+  example: |
+    {
+      "identity": {
+        "kind": "saml_provider",
+        "federation": {
+          "saml_cert_rotated": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: saml_provider
+    - field: properties.identity.federation.saml_cert_rotated
+      op: eq
+      value: false
+tests:
+  - name: SAML certificate not rotated within 365 days
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:saml-provider/OktaIdP"
+      asset_type: aws_iam_saml_provider
+      vendor: aws
+      properties:
+        identity:
+          kind: saml_provider
+          federation:
+            saml_cert_rotated: false
+  - name: SAML certificate rotated within 365 days
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::444455556666:saml-provider/AzureADIdP"
+      asset_type: aws_iam_saml_provider
+      vendor: aws
+      properties:
+        identity:
+          kind: saml_provider
+          federation:
+            saml_cert_rotated: true

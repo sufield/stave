@@ -349,3 +349,18 @@ func TestCoerceString_NumericStringPreserved(t *testing.T) {
 		})
 	}
 }
+
+func TestNormalizeValue_SliceNotMutatedInPlace(t *testing.T) {
+	original := []any{"true", "false", "hello"}
+	backup := make([]any, len(original))
+	copy(backup, original)
+
+	normalizeValue(original)
+
+	for i, v := range original {
+		if v != backup[i] {
+			t.Errorf("original[%d] mutated: was %v (%T), now %v (%T)",
+				i, backup[i], backup[i], v, v)
+		}
+	}
+}

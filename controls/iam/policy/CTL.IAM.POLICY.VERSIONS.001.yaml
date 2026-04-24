@@ -1,0 +1,85 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.POLICY.VERSIONS.001
+name: "Policy Has Non-Default Versions with Broader Permissions"
+description: >
+  A customer-managed IAM policy has non-default versions containing
+  broader permissions than the currently active default version. An
+  attacker with iam:SetDefaultPolicyVersion can switch to a more
+  permissive version without creating a new policy. The escalation path
+  is pre-authored in the policy's version history — the attacker
+  activates it with a single API call.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  base_impact: 7
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 1.5
+observation_fields:
+  - identity.kind
+  - identity.policy.has_broader_inactive_version
+remediation:
+  description: >
+    IAM policy has dormant versions with broader permissions than the
+    active default — switchable escalation path.
+  action: >
+    Delete non-default policy versions that contain broader permissions
+    than the current default. Use aws iam delete-policy-version to
+    remove dormant escalation paths.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "policy": {
+          "has_broader_inactive_version": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user
+    - field: properties.identity.policy.has_broader_inactive_version
+      op: eq
+      value: true
+tests:
+  - name: "user with broader inactive policy version fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:user/mallory"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          policy:
+            has_broader_inactive_version: true
+  - name: "user without broader inactive policy version passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:user/bob"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          policy:
+            has_broader_inactive_version: false
+alternatives:
+  - tool: prowler
+    check_id: iam_policy_no_full_access_to_cloudwatch_logs
+    coverage: partial
+    note: Prowler checks specific service scoping; this control checks condition-level enforcement patterns.

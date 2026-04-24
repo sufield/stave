@@ -1,0 +1,74 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.FEDERATION.SESSION.DURATION.001
+name: Federated Role Session Duration Must Not Exceed 4 Hours
+description: >
+  Federated role maximum session duration exceeds 4 hours. Federation
+  sessions persist after the IdP revokes access. If a user is
+  terminated in the IdP, their AWS session continues until expiry. A
+  12-hour session means a terminated employee retains AWS access for
+  up to 12 hours after termination.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-2"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-14"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+observation_fields:
+  - identity.kind
+  - identity.federation.session_exceeds_threshold
+remediation:
+  description: >
+    Federated role allows sessions exceeding 4 hours — terminated
+    users retain AWS access until session expiry.
+  action: >
+    Reduce the maximum session duration for federated roles to 4
+    hours or less. Use aws iam update-role --max-session-duration
+    14400 to set the limit. For sensitive roles, consider 1-hour
+    sessions with re-authentication.
+  example: |
+    {
+      "identity": {
+        "kind": "federated_role",
+        "federation": {
+          "session_exceeds_threshold": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: federated_role
+    - field: properties.identity.federation.session_exceeds_threshold
+      op: eq
+      value: true
+tests:
+  - name: Federated role session exceeds 4-hour threshold
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/FederatedAdmin"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: federated_role
+          federation:
+            session_exceeds_threshold: true
+  - name: Federated role session within 4-hour threshold
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::444455556666:role/FederatedReadOnly"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: federated_role
+          federation:
+            session_exceeds_threshold: false

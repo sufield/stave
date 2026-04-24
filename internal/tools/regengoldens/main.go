@@ -43,24 +43,6 @@ const (
 	catError
 )
 
-func (c diffCategory) String() string {
-	switch c {
-	case catClean:
-		return "CLEAN"
-	case catFingerprintOnly:
-		return "FINGERPRINT-ONLY"
-	case catMetadataOnly:
-		return "METADATA-ONLY"
-	case catBehavioral:
-		return "BEHAVIORAL"
-	case catMixed:
-		return "MIXED"
-	case catError:
-		return "ERROR"
-	}
-	return "?"
-}
-
 type fixtureReport struct {
 	Fixture  string
 	Category diffCategory

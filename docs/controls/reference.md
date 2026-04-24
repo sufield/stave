@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1280
-**Pack hash:** `0f6cb9422d9e69373abc98464fd807fd3d9dc3221fe33f71471cddc007bc58da`
+**Total controls:** 1296
+**Pack hash:** `cf82bc3619aed0c37f59144f351c36e932c2fec2894ec93f29ca375c844fee1b`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 169 |
-| high | 572 |
+| high | 581 |
 | info | 16 |
 | low | 92 |
-| medium | 431 |
+| medium | 438 |
 
 | Domain | Count |
 |--------|-------|
@@ -23,7 +23,7 @@
 | encryption | 75 |
 | exposure | 788 |
 | governance | 27 |
-| identity | 295 |
+| identity | 311 |
 | network | 21 |
 | resilience | 14 |
 | storage | 8 |
@@ -10789,6 +10789,81 @@ IAM users with console access should authenticate through identity federation ra
 
 ---
 
+### CTL.IAM.FEDERATION.ROLEMAPPING.001
+
+**Federated Role Must Be Scoped to Specific IdP Groups**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-2; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+Federated role trust policy allows any federated user to assume the role — not scoped to specific IdP groups or attributes. Any user who authenticates via the IdP can assume the role regardless of their group membership or job function.
+
+**Remediation:** Add a condition to the role trust policy that restricts assumption to specific IdP groups or attributes. For SAML, add a StringEquals condition on the SAML:NameQualifier or group attribute. For OIDC, scope the sub claim to specific groups.
+
+---
+
+### CTL.IAM.FEDERATION.SAML.AUDIENCE.001
+
+**SAML Trust Must Validate Audience Restriction**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: IA-8; soc2: CC6.1;
+
+SAML trust policy does not validate the audience restriction in assertions. Without audience validation, a SAML assertion intended for a different service provider can be replayed against AWS. The assertion is valid — signed by the IdP — but was meant for a different application.
+
+**Remediation:** Configure the SAML trust to validate the audience restriction field in assertions. Set the audience to the AWS SAML endpoint URL for the account. Verify that assertions from other service providers are rejected.
+
+---
+
+### CTL.IAM.FEDERATION.SAML.CERT.001
+
+**SAML Provider Certificate Must Be Rotated Within 365 Days**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** hipaa: 164.312(d); nist_800_53_r5: IA-5; soc2: CC6.1;
+
+SAML provider certificate is older than 365 days. The certificate authenticates the IdP to AWS. If the certificate's private key is compromised, an attacker can forge SAML assertions and assume any role that trusts the SAML provider. The SolarWinds/Nobelium attack (Golden SAML) used forged SAML tokens via compromised AD FS signing certificates.
+
+**Remediation:** Generate a new signing certificate in the IdP, update the SAML provider metadata in AWS IAM, and verify federation still works. Remove the old certificate from both IdP and AWS after rollover.
+
+---
+
+### CTL.IAM.FEDERATION.SESSION.DURATION.001
+
+**Federated Role Session Duration Must Not Exceed 4 Hours**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-2; soc2: CC6.1;
+
+Federated role maximum session duration exceeds 4 hours. Federation sessions persist after the IdP revokes access. If a user is terminated in the IdP, their AWS session continues until expiry. A 12-hour session means a terminated employee retains AWS access for up to 12 hours after termination.
+
+**Remediation:** Reduce the maximum session duration for federated roles to 4 hours or less. Use aws iam update-role --max-session-duration 14400 to set the limit. For sensitive roles, consider 1-hour sessions with re-authentication.
+
+---
+
+### CTL.IAM.FEDERATION.SESSIONTAG.001
+
+**Federated Role Must Require Session Tags**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-2; soc2: CC6.2;
+
+Federated role trust policy does not require session tags. Without session tags, federated sessions are not attributed to specific user identities in the IdP. CloudTrail shows the role ARN and session name but no IdP-side identity attributes. Session tags propagate IdP attributes into the AWS session for attribution and ABAC.
+
+**Remediation:** Add sts:TagSession permission and required tag conditions to the role trust policy. Configure the IdP to pass user identity attributes (email, department, team) as session tags in the SAML assertion or OIDC token.
+
+---
+
 ### CTL.IAM.IDENTITY.BLASTRADIUS.001
 
 **Role Blast Radius Must Not Exceed Resource Threshold**
@@ -11118,6 +11193,111 @@ IAM policies with more than 25 statements indicate excessive complexity that inc
 
 ---
 
+### CTL.IAM.POLICY.CONDITION.NOTRESOURCE.001
+
+**Policy Uses NotResource**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+Policy uses the NotResource element. NotResource inverts the resource scope — the policy applies to everything EXCEPT the listed resources. If the statement is an Allow with NotResource listing 3 S3 buckets, the policy allows access to every other resource in the account. Almost every use of NotResource is either a misconfiguration or could be expressed more safely with explicit Resource and Condition elements.
+
+**Remediation:** Replace NotResource with explicit Resource elements. Express the intended scope positively rather than inverting it.
+
+---
+
+### CTL.IAM.POLICY.CONDITION.ORGID.001
+
+**Resource-Based Policy Missing aws:PrincipalOrgID Condition**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+A resource-based policy grants cross-account access without the aws:PrincipalOrgID condition. Without this condition, access can be granted to principals from any AWS account — not just accounts in the organization. aws:PrincipalOrgID restricts access to principals whose accounts are members of the specified organization, preventing access from accounts that have left the org or were never members.
+
+**Remediation:** Add an aws:PrincipalOrgID condition to all cross-account grants in resource-based policies. This restricts access to principals whose accounts are members of the organization.
+
+---
+
+### CTL.IAM.POLICY.CONDITION.REGION.001
+
+**Policy Does Not Restrict AWS Regions**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+No aws:RequestedRegion condition on actions that create resources. Resources can be created in any AWS region including regions without organizational monitoring, CloudTrail, Config, or GuardDuty. An attacker deploys resources in an unmonitored region to evade detection.
+
+**Remediation:** Add an aws:RequestedRegion condition to policies that allow resource-creation actions. Restrict to approved regions where organizational monitoring is deployed.
+
+---
+
+### CTL.IAM.POLICY.CONDITION.SOURCEIP.001
+
+**Sensitive Actions Without SourceIp Condition**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.3;
+
+IAM-administrative actions (iam:Create*, iam:Delete*, iam:Attach*, iam:Put*, iam:Update*) are allowed without an aws:SourceIp condition. These actions can be called from any IP address. Note: SourceIp conditions do not work for calls through VPC endpoints or some assumed-role patterns — this is a defense-in-depth measure, not a primary control.
+
+**Remediation:** Add an aws:SourceIp condition to policies allowing IAM-administrative actions. Note: SourceIp conditions do not work for calls through VPC endpoints or some assumed-role patterns.
+
+---
+
+### CTL.IAM.POLICY.CONDITION.STRINGLIKE.001
+
+**Policy Condition Uses StringLike Where StringEquals Intended**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+A policy condition uses the StringLike operator on identity-related condition keys where StringEquals should be used. StringLike supports wildcards (* and ?). On identity values like account IDs, an account ID pattern '12345678*' matches 10,000 possible accounts. StringEquals performs exact matching without wildcard interpretation.
+
+**Remediation:** Replace StringLike with StringEquals on identity-related condition keys (aws:PrincipalArn, aws:SourceAccount, aws:PrincipalOrgID). Use exact matching for identity values.
+
+---
+
+### CTL.IAM.POLICY.CONDITION.TEMPORAL.001
+
+**Policy Has Date Condition Without Expiration**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-2; soc2: CC6.1;
+
+A policy has a date condition (aws:CurrentTime) with a DateGreaterThan start boundary but no DateLessThan end boundary. Temporary access intended to expire remains valid indefinitely after the start date passes. The condition is semantically equivalent to no condition once the start date is reached.
+
+**Remediation:** Add a DateLessThan condition to match the DateGreaterThan start boundary. Temporary access should have both a start and an end date.
+
+---
+
+### CTL.IAM.POLICY.CONDITION.VIASERVICE.001
+
+**KMS Actions Without kms:ViaService Condition**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: SC-12; soc2: CC6.1;
+
+KMS actions (kms:Decrypt, kms:GenerateDataKey, kms:Encrypt) are allowed without a kms:ViaService condition. Without this condition, the KMS key can be used by any AWS service or directly via the KMS API — not just the intended service. An attacker with kms:Decrypt can decrypt data from any service that uses the key.
+
+**Remediation:** Add a kms:ViaService condition to restrict KMS Decrypt and GenerateDataKey to the intended service (e.g., s3.us-east-1.amazonaws.com).
+
+---
+
 ### CTL.IAM.POLICY.DIRECT.001
 
 **No Direct Policy Attachment on IAM Users**
@@ -11355,6 +11535,21 @@ IAM policies using NotAction that allow IAM write actions (iam:PutRolePolicy, ia
 No single IAM role should have both data access permissions (s3:GetObject, dynamodb:GetItem, rds:*, secretsmanager:GetSecretValue) and IAM management permissions (iam:CreateRole, iam:AttachPolicy, iam:CreateUser, iam:PutRolePolicy). Combining these creates a privilege escalation path — a compromised role with data access can grant itself additional permissions. Separation of privileged access is required by IAM-09 in CCM v4.1.
 
 **Remediation:** Split into two roles: one for data access (application role) and one for IAM management (admin role). Use separate assume-role policies for each. Apply the principle of least privilege — data-path roles should never modify IAM.
+
+---
+
+### CTL.IAM.POLICY.VERSIONS.001
+
+**Policy Has Non-Default Versions with Broader Permissions**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+A customer-managed IAM policy has non-default versions containing broader permissions than the currently active default version. An attacker with iam:SetDefaultPolicyVersion can switch to a more permissive version without creating a new policy. The escalation path is pre-authored in the policy's version history — the attacker activates it with a single API call.
+
+**Remediation:** Delete non-default policy versions that contain broader permissions than the current default. Use aws iam delete-policy-version to remove dormant escalation paths.
 
 ---
 
@@ -11699,6 +11894,51 @@ SCP does not deny iam:CreateAccessKey for root users in member accounts. Root ac
 Service Control Policies must deny cloudtrail:StopLogging, cloudtrail:DeleteTrail, and cloudtrail:UpdateTrail to non- breakglass roles. Without these protective denies, any IAM principal with sufficient permissions can disrupt logging.
 
 **Remediation:** Create an SCP with Effect Deny on cloudtrail:StopLogging, cloudtrail:DeleteTrail, and cloudtrail:UpdateTrail. Add a Condition excluding the breakglass role ARN.
+
+---
+
+### CTL.IAM.SSO.LEGACY.001
+
+**Legacy IAM Users Must Not Coexist with SSO**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: IA-2; soc2: CC6.1;
+
+AWS IAM Identity Center is configured but IAM users with console access still exist. Two authentication paths: SSO (controlled by IdP, MFA enforced, session bounded) and IAM users (password-based, MFA optional, no IdP governance). An attacker who targets IAM user credentials bypasses every SSO security control.
+
+**Remediation:** Migrate all console IAM users to AWS IAM Identity Center. Create corresponding user accounts in the identity provider. After verifying SSO access works, delete the IAM console passwords. Retain IAM users only for programmatic access where SSO is not applicable.
+
+---
+
+### CTL.IAM.SSO.MFA.001
+
+**SSO Must Enforce MFA at Identity Center Level**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** hipaa: 164.312(d); nist_800_53_r5: IA-2(1); pci_dss_v4.0: 8.3.1; soc2: CC6.1;
+
+MFA is not enforced at the AWS Identity Center level. MFA enforcement may be delegated to the external IdP but if the IdP is configured without MFA for some users, those users access AWS without MFA. Identity Center should enforce MFA independently as defense-in-depth.
+
+**Remediation:** Enable MFA enforcement in AWS IAM Identity Center authentication settings. Configure MFA to be required for all users, not just recommended. Set the MFA type to require hardware or authenticator app tokens — SMS is not sufficient.
+
+---
+
+### CTL.IAM.SSO.PERMSET.ADMIN.001
+
+**SSO Permission Set Must Not Include AdministratorAccess**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+An AWS IAM Identity Center permission set includes AdministratorAccess. Any user or group assigned this permission set gets full admin access to the assigned accounts. SSO makes this easy to configure and hard to notice — one permission set, one group assignment, organization-wide admin.
+
+**Remediation:** Replace the AdministratorAccess policy with scoped permission sets that grant only the permissions needed for the role. Use separate permission sets for different job functions. Reserve admin access for break-glass scenarios with time-limited elevation.
 
 ---
 

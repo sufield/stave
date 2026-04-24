@@ -1,0 +1,82 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.POLICY.CONDITION.TEMPORAL.001
+name: "Policy Has Date Condition Without Expiration"
+description: >
+  A policy has a date condition (aws:CurrentTime) with a
+  DateGreaterThan start boundary but no DateLessThan end boundary.
+  Temporary access intended to expire remains valid indefinitely after
+  the start date passes. The condition is semantically equivalent to no
+  condition once the start date is reached.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-2"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+  base_impact: 7
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 1.5
+observation_fields:
+  - identity.kind
+  - identity.policy.has_temporal_without_expiry
+remediation:
+  description: >
+    IAM policy has date condition with start boundary but no
+    expiration — temporary access persists indefinitely.
+  action: >
+    Add a DateLessThan condition to match the DateGreaterThan start
+    boundary. Temporary access should have both a start and an end date.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "policy": {
+          "has_temporal_without_expiry": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user
+    - field: properties.identity.policy.has_temporal_without_expiry
+      op: eq
+      value: true
+tests:
+  - name: "user with temporal condition missing expiration fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:user/mallory"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          policy:
+            has_temporal_without_expiry: true
+  - name: "user with temporal condition including expiration passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:user/bob"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          policy:
+            has_temporal_without_expiry: false
+alternatives:
+  - tool: prowler
+    check_id: iam_policy_no_full_access_to_cloudwatch_logs
+    coverage: partial
+    note: Prowler checks specific service scoping; this control checks condition-level enforcement patterns.

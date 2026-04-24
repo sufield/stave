@@ -6,7 +6,6 @@ import (
 	"io"
 	"log/slog"
 	"os"
-	"time"
 
 	ctlbuiltin "github.com/sufield/stave/internal/adapters/controls/builtin"
 	"github.com/sufield/stave/internal/adapters/telemetry"
@@ -83,7 +82,7 @@ func executeEvaluation(ctx context.Context, ec evalContext) (EvaluateResult, err
 	// Detect lapsed exemptions.
 	evalResult.LapsedExemptions = exemptlapse.Detect(exemptlapse.Input{
 		AcknowledgedFindings: result.AcknowledgedFindings,
-		Now:                  time.Now().UTC(),
+		Now:                  deps.Config.Clock.Now(),
 	})
 
 	// Scan findings for SLA breaches.

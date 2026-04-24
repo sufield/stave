@@ -1,0 +1,83 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.POLICY.CONDITION.NOTRESOURCE.001
+name: "Policy Uses NotResource"
+description: >
+  Policy uses the NotResource element. NotResource inverts the resource
+  scope — the policy applies to everything EXCEPT the listed resources.
+  If the statement is an Allow with NotResource listing 3 S3 buckets,
+  the policy allows access to every other resource in the account.
+  Almost every use of NotResource is either a misconfiguration or could
+  be expressed more safely with explicit Resource and Condition elements.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  base_impact: 7
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 1.5
+observation_fields:
+  - identity.kind
+  - identity.policy.has_notresource
+remediation:
+  description: >
+    IAM policy uses NotResource, inverting the resource scope to grant
+    unintentionally broad access.
+  action: >
+    Replace NotResource with explicit Resource elements. Express the
+    intended scope positively rather than inverting it.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "policy": {
+          "has_notresource": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user
+    - field: properties.identity.policy.has_notresource
+      op: eq
+      value: true
+tests:
+  - name: "user with NotResource policy fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:user/mallory"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          policy:
+            has_notresource: true
+  - name: "user without NotResource policy passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:user/bob"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          policy:
+            has_notresource: false
+alternatives:
+  - tool: prowler
+    check_id: iam_policy_no_full_access_to_cloudwatch_logs
+    coverage: partial
+    note: Prowler checks specific service scoping; this control checks condition-level enforcement patterns.

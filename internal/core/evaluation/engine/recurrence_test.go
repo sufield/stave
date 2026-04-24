@@ -101,8 +101,8 @@ func TestRecurrence_ActiveWindowCountedTowardLimit(t *testing.T) {
 	// windows were counted, causing a false negative when the asset was
 	// currently exposed.
 	//
-	// Limit=3, window=7 days, 2 resolved windows + 1 active = 3 → violation
-	ctl := recurrenceControl("CTL.REC.001", 3, 7)
+	// Limit=2, window=7 days, 2 resolved windows + 1 active = 3 > 2 → violation
+	ctl := recurrenceControl("CTL.REC.001", 2, 7)
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 
 	a := asset.Asset{ID: "bucket-1", Type: kernel.AssetType("s3_bucket")}
@@ -184,5 +184,22 @@ func TestCreateRecurrenceFinding_Fields(t *testing.T) {
 	}
 	if finding.Evidence.WindowDays != 7 {
 		t.Fatalf("WindowDays = %d, want 7", finding.Evidence.WindowDays)
+	}
+}
+
+func TestRecurrence_ExactlyAtLimitShouldNotFire(t *testing.T) {
+	// A limit of 3 means "more than 3 times". Exactly 3 should NOT fire.
+	ctl := recurrenceControl("CTL.RECUR.BOUNDARY.001", 3, 90)
+	now := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
+
+	lc := recurrenceLifecycle(t, []struct{ start, end time.Time }{
+		{now.AddDate(0, 0, -80), now.AddDate(0, 0, -75)},
+		{now.AddDate(0, 0, -60), now.AddDate(0, 0, -55)},
+		{now.AddDate(0, 0, -30), now.AddDate(0, 0, -25)},
+	})
+
+	findings := EvaluateRecurrenceForControl(lc, ctl, now)
+	if len(findings) != 0 {
+		t.Errorf("limit=3 with count=3 should NOT fire (more than 3, not >= 3), got %d findings", len(findings))
 	}
 }

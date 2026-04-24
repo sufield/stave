@@ -29,10 +29,11 @@ func normalizeValue(v any) any {
 		normalizeProperties(val)
 		return val
 	case []any:
+		out := make([]any, len(val))
 		for i, elem := range val {
-			val[i] = normalizeValue(elem)
+			out[i] = normalizeValue(elem)
 		}
-		return val
+		return out
 	case string:
 		return coerceString(val)
 	default:

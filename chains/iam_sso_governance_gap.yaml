@@ -1,0 +1,15 @@
+id: iam_sso_governance_gap
+description: >
+  Admin permission set plus either legacy IAM users or no MFA. SSO
+  governance has multiple failures — broad admin access AND either a
+  bypass path (legacy users) or weak authentication (no MFA).
+controls:
+  - CTL.IAM.SSO.PERMSET.ADMIN.001
+  - CTL.IAM.SSO.LEGACY.001
+  - CTL.IAM.SSO.MFA.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - shadow_admin_access

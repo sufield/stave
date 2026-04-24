@@ -1,0 +1,20 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:iam::444455556666:role/FederatedReadOnly",
+      "properties": {
+        "identity": {
+          "kind": "federated_role",
+          "federation": {
+            "session_exceeds_threshold": false
+          }
+        }
+      },
+      "type": "aws_iam_role",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

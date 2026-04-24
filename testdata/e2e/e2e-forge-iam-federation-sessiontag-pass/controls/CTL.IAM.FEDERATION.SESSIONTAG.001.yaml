@@ -1,0 +1,74 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.FEDERATION.SESSIONTAG.001
+name: Federated Role Must Require Session Tags
+description: >
+  Federated role trust policy does not require session tags. Without
+  session tags, federated sessions are not attributed to specific user
+  identities in the IdP. CloudTrail shows the role ARN and session
+  name but no IdP-side identity attributes. Session tags propagate
+  IdP attributes into the AWS session for attribution and ABAC.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-2"
+  soc2: "CC6.2"
+  ccm_v4: ["IAM-14"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: defense_evasion
+observation_fields:
+  - identity.kind
+  - identity.federation.requires_session_tags
+remediation:
+  description: >
+    Federation trust does not enforce session tags — federated
+    sessions lack IdP identity attribution.
+  action: >
+    Add sts:TagSession permission and required tag conditions to
+    the role trust policy. Configure the IdP to pass user identity
+    attributes (email, department, team) as session tags in the
+    SAML assertion or OIDC token.
+  example: |
+    {
+      "identity": {
+        "kind": "federated_role",
+        "federation": {
+          "requires_session_tags": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: federated_role
+    - field: properties.identity.federation.requires_session_tags
+      op: eq
+      value: false
+tests:
+  - name: Federated role does not require session tags
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/FederatedRole"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: federated_role
+          federation:
+            requires_session_tags: false
+  - name: Federated role requires session tags
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::444455556666:role/FederatedTaggedRole"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: federated_role
+          federation:
+            requires_session_tags: true

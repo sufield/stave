@@ -1,0 +1,83 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.POLICY.CONDITION.REGION.001
+name: "Policy Does Not Restrict AWS Regions"
+description: >
+  No aws:RequestedRegion condition on actions that create resources.
+  Resources can be created in any AWS region including regions without
+  organizational monitoring, CloudTrail, Config, or GuardDuty. An
+  attacker deploys resources in an unmonitored region to evade
+  detection.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: defense_evasion
+  base_impact: 7
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 1.5
+observation_fields:
+  - identity.kind
+  - identity.policy.create_actions_missing_region
+remediation:
+  description: >
+    IAM policy allows resource-creation actions without
+    aws:RequestedRegion condition.
+  action: >
+    Add an aws:RequestedRegion condition to policies that allow
+    resource-creation actions. Restrict to approved regions where
+    organizational monitoring is deployed.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "policy": {
+          "create_actions_missing_region": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user
+    - field: properties.identity.policy.create_actions_missing_region
+      op: eq
+      value: true
+tests:
+  - name: "user with create actions missing region restriction fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:user/mallory"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          policy:
+            create_actions_missing_region: true
+  - name: "user with region-restricted create actions passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:user/bob"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          policy:
+            create_actions_missing_region: false
+alternatives:
+  - tool: prowler
+    check_id: iam_policy_no_full_access_to_cloudwatch_logs
+    coverage: partial
+    note: Prowler checks specific service scoping; this control checks condition-level enforcement patterns.

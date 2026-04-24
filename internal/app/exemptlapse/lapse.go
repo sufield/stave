@@ -9,7 +9,6 @@ import (
 
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
-	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
@@ -116,37 +115,5 @@ func bumpSeverity(sev string) string {
 		return "critical"
 	default:
 		return sev
-	}
-}
-
-// ToEvaluationFindings converts lapsed findings to evaluation findings
-// so they appear in the standard findings output.
-func ToEvaluationFindings(lapsed []LapsedFinding) []evaluation.Finding {
-	findings := make([]evaluation.Finding, len(lapsed))
-	for i := range lapsed {
-		lf := &lapsed[i]
-		findings[i] = evaluation.Finding{
-			FindingID:       "lapsed:" + lf.ExemptionID,
-			ControlID:       lf.ControlID,
-			AssetID:         lf.AssetID,
-			ControlSeverity: parseSeverity(lf.Severity),
-			ControlName:     "Exemption lapsed: " + string(lf.ControlID),
-		}
-	}
-	return findings
-}
-
-func parseSeverity(s string) policy.Severity {
-	switch s {
-	case "critical":
-		return policy.SeverityCritical
-	case "high":
-		return policy.SeverityHigh
-	case "medium":
-		return policy.SeverityMedium
-	case "low":
-		return policy.SeverityLow
-	default:
-		return policy.SeverityMedium
 	}
 }

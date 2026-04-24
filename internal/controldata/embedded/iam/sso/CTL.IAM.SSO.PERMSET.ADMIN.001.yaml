@@ -1,0 +1,76 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SSO.PERMSET.ADMIN.001
+name: SSO Permission Set Must Not Include AdministratorAccess
+description: >
+  An AWS IAM Identity Center permission set includes
+  AdministratorAccess. Any user or group assigned this permission
+  set gets full admin access to the assigned accounts. SSO makes
+  this easy to configure and hard to notice — one permission set,
+  one group assignment, organization-wide admin.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+observation_fields:
+  - identity.kind
+  - identity.sso.has_admin_policy
+remediation:
+  description: >
+    SSO permission set includes AdministratorAccess — broad admin
+    access via SSO group assignments.
+  action: >
+    Replace the AdministratorAccess policy with scoped permission
+    sets that grant only the permissions needed for the role. Use
+    separate permission sets for different job functions. Reserve
+    admin access for break-glass scenarios with time-limited
+    elevation.
+  example: |
+    {
+      "identity": {
+        "kind": "sso_permission_set",
+        "sso": {
+          "has_admin_policy": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: sso_permission_set
+    - field: properties.identity.sso.has_admin_policy
+      op: eq
+      value: true
+tests:
+  - name: SSO permission set includes AdministratorAccess
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sso:::permissionSet/ssoins-1234567890abcdef/ps-admin"
+      asset_type: aws_sso_permission_set
+      vendor: aws
+      properties:
+        identity:
+          kind: sso_permission_set
+          sso:
+            has_admin_policy: true
+  - name: SSO permission set does not include AdministratorAccess
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sso:::permissionSet/ssoins-1234567890abcdef/ps-readonly"
+      asset_type: aws_sso_permission_set
+      vendor: aws
+      properties:
+        identity:
+          kind: sso_permission_set
+          sso:
+            has_admin_policy: false
