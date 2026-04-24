@@ -1,0 +1,90 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.SNSADDPERM.001
+name: Principal Must Not Escalate via SNS AddPermission
+description: >
+  Principals with sns:AddPermission can modify an SNS topic's
+  resource-based policy to allow cross-account subscription or
+  publishing. If the topic carries sensitive notifications (CloudWatch
+  alarms, security findings, application events), the attacker grants
+  an external account subscribe access to receive all messages.
+domain: identity
+severity: medium
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-6(5)"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+  - sns
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: collection
+  base_impact: 6
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 1.5
+observation_fields:
+  - identity.kind
+  - identity.escalation.sns_addpermission.present
+remediation:
+  description: >
+    Principal can modify SNS topic policies to allow cross-account
+    subscription.
+  action: >
+    Remove sns:AddPermission or scope it to specific topic ARNs via
+    resource conditions. Use SNS topic policies with explicit deny
+    for cross-account access and monitor topic policy changes via
+    CloudTrail.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "escalation": {
+          "sns_addpermission": {
+            "present": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.escalation.sns_addpermission.present
+      op: eq
+      value: true
+tests:
+  - name: user with SNS AddPermission escalation path fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/mallory
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            sns_addpermission:
+              present: true
+  - name: user without escalation path passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/bob
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            sns_addpermission:
+              present: false
+alternatives:
+  - tool: prowler
+    check_id: iam_inline_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 38 per-technique controls covering the aggregated Prowler check.
+  - tool: prowler
+    check_id: iam_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 38 per-technique controls covering the aggregated Prowler check.

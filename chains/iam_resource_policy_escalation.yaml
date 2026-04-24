@@ -1,0 +1,17 @@
+id: iam_resource_policy_escalation
+description: >
+  Principal can modify resource-based policies on multiple services.
+  Can self-grant access to data (S3 via PutBucketPolicy), compute
+  (Lambda via AddPermission), and encryption (KMS via PutKeyPolicy)
+  by modifying the resource's own policy — bypassing identity-based
+  policy restrictions.
+controls:
+  - CTL.IAM.ESCALATE.PUTBUCKETPOLICY.001
+  - CTL.IAM.ESCALATE.LAMBDAADDPERM.001
+  - CTL.IAM.ESCALATE.KMSKEYPOLICY.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - resource_policy_escalation

@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1264
-**Pack hash:** `98a8c3040c07380ff4f6b00cdc67ad1ba6f09ca0ccc4719c8a415e3b4cc483ef`
+**Total controls:** 1280
+**Pack hash:** `0f6cb9422d9e69373abc98464fd807fd3d9dc3221fe33f71471cddc007bc58da`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 168 |
-| high | 561 |
+| critical | 169 |
+| high | 572 |
 | info | 16 |
 | low | 92 |
-| medium | 427 |
+| medium | 431 |
 
 | Domain | Count |
 |--------|-------|
@@ -23,7 +23,7 @@
 | encryption | 75 |
 | exposure | 788 |
 | governance | 27 |
-| identity | 279 |
+| identity | 295 |
 | network | 21 |
 | resilience | 14 |
 | storage | 8 |
@@ -10139,6 +10139,21 @@ All privileged accounts across all cloud providers must have MFA enforced. This 
 
 ---
 
+### CTL.IAM.ESCALATE.ADDLAYER.001
+
+**Principal Must Not Escalate via Lambda AddLayerVersionPermission**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(5); soc2: CC6.1;
+
+Principals with lambda:AddLayerVersionPermission can modify shared Lambda layers that other functions depend on. If the attacker modifies a widely-used layer, every function using that layer is compromised on next deployment. This is a supply chain attack via Lambda layers — the attacker doesn't modify the function code, they modify a dependency the function imports.
+
+**Remediation:** Remove lambda:AddLayerVersionPermission or scope it to specific layer ARNs. Modifying layer permissions can share layers cross-account, enabling supply chain attacks on functions that depend on the layer.
+
+---
+
 ### CTL.IAM.ESCALATE.ADDUSERTOGROUP.001
 
 **Principal Must Not Escalate via iam:AddUserToGroup To A Broader Group**
@@ -10247,6 +10262,36 @@ A principal with `iam:CreateAccessKey` whose Resource field reaches another IAM 
 
 ---
 
+### CTL.IAM.ESCALATE.CREATEACCOUNT.001
+
+**Principal Must Not Escalate via Organizations CreateAccount**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-2; soc2: CC6.1;
+
+Principals with organizations:CreateAccount can create new AWS accounts within the organization. The creator gets root access to the new account via the root email address. A new account starts with no SCPs applied beyond the default FullAWSAccess, providing unrestricted access until organizational policies are applied.
+
+**Remediation:** Remove organizations:CreateAccount or restrict it to designated automation roles. Use AWS Control Tower or Organizations SCPs to enforce baseline guardrails on new accounts automatically. Require MFA and approval workflows for account creation.
+
+---
+
+### CTL.IAM.ESCALATE.CREATEGRANT.001
+
+**Principal Must Not Escalate via KMS CreateGrant**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(5); soc2: CC6.1;
+
+Principals with kms:CreateGrant can delegate KMS key access to other principals without modifying the key policy. A grant allows the grantee to perform cryptographic operations (Decrypt, Encrypt, GenerateDataKey) on the key. An attacker with CreateGrant on a KMS key used for S3, RDS, or EBS encryption can grant themselves decrypt access, bypassing all IAM and bucket policies.
+
+**Remediation:** Scope kms:CreateGrant to specific KMS keys via resource ARN conditions, or remove unrestricted kms:CreateGrant from the principal. If grants are operationally required, restrict the grantee principal via the kms:GranteePrincipal condition key.
+
+---
+
 ### CTL.IAM.ESCALATE.CREATEINSTANCEPROFILE.001
 
 **Principal Must Not Escalate via Instance Profile Creation and Association**
@@ -10292,6 +10337,36 @@ A principal with both `iam:CreatePolicyVersion` and `iam:SetDefaultPolicyVersion
 
 ---
 
+### CTL.IAM.ESCALATE.DELETEBOUNDARY.001
+
+**Principal Must Not Escalate via DeleteRolePermissionsBoundary**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+Principals with iam:DeleteRolePermissionsBoundary can remove permission boundaries from IAM roles. Permission boundaries limit the maximum permissions a role can use regardless of its identity policies. Removing the boundary instantly expands the role's effective permissions to whatever its identity policies allow — potentially full admin access that was previously constrained by the boundary.
+
+**Remediation:** Deny iam:DeleteRolePermissionsBoundary via SCP or scope it to specific role ARNs via resource conditions. Use SCPs to enforce that permission boundaries cannot be removed from roles in production accounts. Monitor boundary deletion attempts via CloudTrail.
+
+---
+
+### CTL.IAM.ESCALATE.ECRTOKEN.001
+
+**Principal Must Not Escalate via ECR GetAuthorizationToken**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(5); soc2: CC6.1;
+
+Principals with ecr:GetAuthorizationToken can obtain a Docker credential that authenticates to ALL ECR repositories in the account — not just the repositories the principal's IAM policy specifies. The ECR authorization token is account-scoped, not repository-scoped. Repository-level IAM restrictions are bypassed by the Docker authentication layer. This is an AWS design behavior, not a bug.
+
+**Remediation:** Restrict ecr:GetAuthorizationToken to principals that need Docker access. The token is account-scoped — it grants pull/push access to ALL ECR repositories, not just those in the principal's IAM policy.
+
+---
+
 ### CTL.IAM.ESCALATE.EDITLAMBDA.001
 
 **Principal Must Not Escalate via Editing Existing Lambda Function**
@@ -10304,6 +10379,81 @@ A principal with both `iam:CreatePolicyVersion` and `iam:SetDefaultPolicyVersion
 Principals with lambda:UpdateFunctionCode on a function whose execution role exceeds the principal's permissions can escalate by modifying the function's code. The modified code runs under the existing execution role on the next invocation. Unlike PassRole-based Lambda escalation, this technique does not require iam:PassRole — the powerful role is already attached. The attacker only changes what code the role executes. Rhino Security Labs documents this as "EditExistingLambdaFunctionWithRole" and Prowler's iam_policy_allows_privilege_escalation enumerates it.
 
 **Remediation:** Restrict lambda:UpdateFunctionCode to functions whose execution roles do not exceed the principal's permissions, or scope the function's execution role to least privilege. If broader UpdateFunctionCode is required for deployment workflows, add a Lambda resource-based policy denying UpdateFunctionCode from non-deployment principals, or use code signing (CTL.LAMBDA.CODESIGN.ENFORCE.001) to prevent unauthorized code changes.
+
+---
+
+### CTL.IAM.ESCALATE.EXECUTECOMMAND.001
+
+**Principal Must Not Escalate via ECS ExecuteCommand**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(5); soc2: CC6.1;
+
+Principals with ecs:ExecuteCommand can open a shell session inside running ECS containers and access the task role credentials via the container metadata endpoint. This provides the same privilege escalation as PassRole+RunInstances but without needing PassRole — the container and its role already exist. The attacker executes commands as the container process and inherits whatever AWS permissions the task role provides.
+
+**Remediation:** Remove ecs:ExecuteCommand or scope it to specific clusters and tasks via resource ARN conditions. If interactive debugging is required, restrict ExecuteCommand to non-production clusters and use session logging to CloudWatch for audit trails.
+
+---
+
+### CTL.IAM.ESCALATE.GETPASSWORDDATA.001
+
+**Principal Must Not Escalate via EC2 GetPasswordData**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(5); soc2: CC6.1;
+
+Principals with ec2:GetPasswordData can retrieve the administrator password for any Windows EC2 instance. The password is encrypted with the key pair specified at launch. If the attacker also has access to the key pair or the key pair is widely shared, they gain RDP administrator access to the instance and inherit its network position and IAM role.
+
+**Remediation:** Remove ec2:GetPasswordData or scope it to specific instance ARNs. GetPasswordData retrieves the administrator password for Windows instances encrypted with the launch key pair.
+
+---
+
+### CTL.IAM.ESCALATE.KMSKEYPOLICY.001
+
+**Principal Must Not Escalate via KMS PutKeyPolicy**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(5); pci_dss_v4.0: 3.5.1; soc2: CC6.1;
+
+Principals with kms:PutKeyPolicy can replace the key policy on any KMS key within scope. The attacker adds themselves as a key user with kms:Decrypt permission. All data encrypted by the key — S3 objects, EBS volumes, RDS snapshots, Secrets Manager secrets — becomes decryptable. Unlike kms:CreateGrant which adds a temporary grant, PutKeyPolicy modifies the permanent authorization on the key.
+
+**Remediation:** Remove kms:PutKeyPolicy or scope it to specific key ARNs. PutKeyPolicy modifies the permanent authorization on the key — the attacker adds themselves as a key user with Decrypt access.
+
+---
+
+### CTL.IAM.ESCALATE.LAMBDAADDPERM.001
+
+**Principal Must Not Escalate via Lambda AddPermission**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(5); soc2: CC6.1;
+
+Principals with lambda:AddPermission can modify a Lambda function's resource-based policy to allow cross-account invocation. If the Lambda function has a privileged execution role, the attacker grants an external account permission to invoke the function, then invokes it from that account to execute code with the function's role permissions.
+
+**Remediation:** Remove lambda:AddPermission or scope it to specific function ARNs via resource conditions. If cross-account invocation is required, use a dedicated automation role with narrowly-scoped permissions and audit Lambda resource policy changes via CloudTrail.
+
+---
+
+### CTL.IAM.ESCALATE.MODIFYINSTANCE.001
+
+**Principal Must Not Escalate via EC2 ModifyInstanceAttribute**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(5); soc2: CC6.1;
+
+Principals with ec2:ModifyInstanceAttribute can modify an EC2 instance's user-data script. On the next instance reboot, the modified user-data executes with the instance profile role's permissions. The attacker injects a reverse shell or credential exfiltration script into user-data, reboots the instance, and gains the instance role's permissions.
+
+**Remediation:** Remove ec2:ModifyInstanceAttribute or scope it to specific instance ARNs via resource conditions. Use launch templates with immutable user-data instead of allowing runtime modifications. Enforce instance metadata service v2 (IMDSv2) to limit credential access from injected scripts.
 
 ---
 
@@ -10412,6 +10562,21 @@ Principals with ssm:SendCommand or ssm:StartSession on an EC2 instance whose att
 
 ---
 
+### CTL.IAM.ESCALATE.PUTBUCKETPOLICY.001
+
+**Principal Must Not Escalate via S3 PutBucketPolicy**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+Principals with s3:PutBucketPolicy can replace any S3 bucket's resource policy. The attacker can grant themselves or an external account full access to the bucket, bypassing all IAM-based access controls. This is a resource policy mutation — the bucket policy is an independent authorization mechanism that grants access regardless of the caller's IAM policies.
+
+**Remediation:** Remove s3:PutBucketPolicy or scope it to specific bucket ARNs via resource conditions. Use S3 Access Points with delegated access control instead of direct bucket policy modifications. Enforce bucket policy guardrails via SCP to prevent overly-permissive policies.
+
+---
+
 ### CTL.IAM.ESCALATE.PUTGROUPPOLICY.001
 
 **Principal Must Not Escalate via iam:PutGroupPolicy On A Belonging Group**
@@ -10474,6 +10639,51 @@ A principal with `iam:ResyncMFADevice` whose Resource field reaches another IAM 
 
 ---
 
+### CTL.IAM.ESCALATE.SERVICELINKEDROLE.001
+
+**Principal Must Not Escalate via CreateServiceLinkedRole**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(5); soc2: CC6.1;
+
+Principals with unrestricted iam:CreateServiceLinkedRole can create AWS service-linked roles for any AWS service. Service-linked roles have AWS-managed permission policies that cannot be modified. Some service-linked roles have broad permissions — creating them introduces new roles with predefined access that the principal does not directly control.
+
+**Remediation:** Scope iam:CreateServiceLinkedRole to specific services via the iam:AWSServiceName condition key. Restrict the condition to only the AWS services the principal legitimately needs to configure.
+
+---
+
+### CTL.IAM.ESCALATE.SNSADDPERM.001
+
+**Principal Must Not Escalate via SNS AddPermission**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(5); soc2: CC6.1;
+
+Principals with sns:AddPermission can modify an SNS topic's resource-based policy to allow cross-account subscription or publishing. If the topic carries sensitive notifications (CloudWatch alarms, security findings, application events), the attacker grants an external account subscribe access to receive all messages.
+
+**Remediation:** Remove sns:AddPermission or scope it to specific topic ARNs via resource conditions. Use SNS topic policies with explicit deny for cross-account access and monitor topic policy changes via CloudTrail.
+
+---
+
+### CTL.IAM.ESCALATE.SQSADDPERM.001
+
+**Principal Must Not Escalate via SQS AddPermission**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(5); soc2: CC6.1;
+
+Principals with sqs:AddPermission can modify an SQS queue's resource-based policy to allow cross-account message consumption. If the queue processes sensitive data or triggers downstream workflows (Lambda, Step Functions), the attacker grants an external account access to consume or inject messages.
+
+**Remediation:** Remove sqs:AddPermission or scope it to specific queue ARNs via resource conditions. Use SQS queue policies with explicit deny for cross-account access and enable SQS server-side encryption to protect message contents.
+
+---
+
 ### CTL.IAM.ESCALATE.STARTBUILD.001
 
 **Principal Must Not Escalate via CodeBuild Source Injection**
@@ -10489,6 +10699,21 @@ Principals with codebuild:StartBuild on project P, plus write access to P's sour
 
 ---
 
+### CTL.IAM.ESCALATE.STARTSESSION.001
+
+**Principal Must Not Escalate via SSM StartSession**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(5); soc2: CC6.1;
+
+Principals with ssm:StartSession can open an interactive shell on any EC2 instance managed by SSM without needing SSH keys or security group rules. The session runs as root (or ssm-user) and can access the instance profile credentials from the IMDS. Unlike PassRole+RunInstances, the instance and its role already exist — the attacker just connects.
+
+**Remediation:** Scope ssm:StartSession to specific instance ARNs via resource conditions. Use SSM Session Manager preferences to enforce session logging to CloudWatch and S3, and restrict session access via IAM policies with ssm:resourceTag conditions to limit which instances a principal can connect to.
+
+---
+
 ### CTL.IAM.ESCALATE.UPDATEDEVENDPOINT.001
 
 **Principal Must Not Escalate via Updating Existing Glue Dev Endpoint**
@@ -10501,6 +10726,21 @@ Principals with codebuild:StartBuild on project P, plus write access to P's sour
 Principals with glue:UpdateDevEndpoint on an existing Glue development endpoint can replace the SSH public key and connect to the endpoint. The endpoint runs under its attached IAM role. If the role's permissions exceed the principal's, this is a privilege escalation path. Unlike PassRole-based Glue escalation (which creates a new endpoint), this technique modifies an existing one — no iam:PassRole required. Rhino Security Labs documents this as "UpdateExistingGlueDevEndpoint". Note: AWS deprecated Glue dev endpoints in favor of interactive sessions, but existing endpoints remain operational.
 
 **Remediation:** Remove glue:UpdateDevEndpoint from the principal, or reduce the endpoint's IAM role to least privilege. If the endpoint is no longer needed, delete it — AWS deprecated Glue dev endpoints in favor of interactive sessions. For active endpoints, restrict glue:UpdateDevEndpoint via IAM policy conditions.
+
+---
+
+### CTL.IAM.ESCALATE.UPDATEFUNCTIONCONFIG.001
+
+**Principal Must Not Escalate via Lambda UpdateFunctionConfiguration**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(5); soc2: CC6.1;
+
+Principals with lambda:UpdateFunctionConfiguration can modify a Lambda function's environment variables, VPC configuration, and runtime settings without changing its code. Environment variables often contain secrets (API keys, database credentials, tokens). The attacker can exfiltrate these by adding an environment variable that sends secrets to an external endpoint, or modify VPC settings to route traffic through an attacker-controlled network.
+
+**Remediation:** Remove lambda:UpdateFunctionConfiguration or scope it to specific function ARNs via resource conditions. Store secrets in AWS Secrets Manager or SSM Parameter Store instead of Lambda environment variables. Use Lambda resource policies and VPC endpoint policies to restrict network access.
 
 ---
 

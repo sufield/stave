@@ -1,0 +1,92 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.STARTSESSION.001
+name: Principal Must Not Escalate via SSM StartSession
+description: >
+  Principals with ssm:StartSession can open an interactive shell on
+  any EC2 instance managed by SSM without needing SSH keys or security
+  group rules. The session runs as root (or ssm-user) and can access
+  the instance profile credentials from the IMDS. Unlike
+  PassRole+RunInstances, the instance and its role already exist —
+  the attacker just connects.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-6(5)"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+  - ssm
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  base_impact: 9
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+observation_fields:
+  - identity.kind
+  - identity.escalation.ssm_startsession.present
+remediation:
+  description: >
+    Principal can start SSM sessions on EC2 instances and access
+    instance profile credentials.
+  action: >
+    Scope ssm:StartSession to specific instance ARNs via resource
+    conditions. Use SSM Session Manager preferences to enforce session
+    logging to CloudWatch and S3, and restrict session access via
+    IAM policies with ssm:resourceTag conditions to limit which
+    instances a principal can connect to.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "escalation": {
+          "ssm_startsession": {
+            "present": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.escalation.ssm_startsession.present
+      op: eq
+      value: true
+tests:
+  - name: user with SSM StartSession escalation path fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/mallory
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            ssm_startsession:
+              present: true
+  - name: user without escalation path passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/bob
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            ssm_startsession:
+              present: false
+alternatives:
+  - tool: prowler
+    check_id: iam_inline_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 38 per-technique controls covering the aggregated Prowler check.
+  - tool: prowler
+    check_id: iam_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 38 per-technique controls covering the aggregated Prowler check.

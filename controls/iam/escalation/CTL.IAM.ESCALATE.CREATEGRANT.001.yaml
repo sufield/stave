@@ -1,0 +1,91 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.CREATEGRANT.001
+name: Principal Must Not Escalate via KMS CreateGrant
+description: >
+  Principals with kms:CreateGrant can delegate KMS key access to other
+  principals without modifying the key policy. A grant allows the
+  grantee to perform cryptographic operations (Decrypt, Encrypt,
+  GenerateDataKey) on the key. An attacker with CreateGrant on a KMS
+  key used for S3, RDS, or EBS encryption can grant themselves decrypt
+  access, bypassing all IAM and bucket policies.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-6(5)"
+  ccm_v4: ["IAM-05", "CEK-01"]
+scope_tags:
+  - aws
+  - iam
+  - kms
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  base_impact: 9
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+observation_fields:
+  - identity.kind
+  - identity.escalation.kms_creategrant.present
+remediation:
+  description: >
+    Principal can create KMS grants that delegate cryptographic
+    operations to arbitrary principals.
+  action: >
+    Scope kms:CreateGrant to specific KMS keys via resource ARN
+    conditions, or remove unrestricted kms:CreateGrant from the
+    principal. If grants are operationally required, restrict the
+    grantee principal via the kms:GranteePrincipal condition key.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "escalation": {
+          "kms_creategrant": {
+            "present": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.escalation.kms_creategrant.present
+      op: eq
+      value: true
+tests:
+  - name: user with KMS CreateGrant escalation path fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/mallory
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            kms_creategrant:
+              present: true
+  - name: user without escalation path passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/bob
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            kms_creategrant:
+              present: false
+alternatives:
+  - tool: prowler
+    check_id: iam_inline_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 38 per-technique controls covering the aggregated Prowler check.
+  - tool: prowler
+    check_id: iam_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 38 per-technique controls covering the aggregated Prowler check.

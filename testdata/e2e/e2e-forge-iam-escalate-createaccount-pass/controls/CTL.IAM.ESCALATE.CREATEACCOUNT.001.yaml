@@ -1,0 +1,89 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.CREATEACCOUNT.001
+name: Principal Must Not Escalate via Organizations CreateAccount
+description: >
+  Principals with organizations:CreateAccount can create new AWS
+  accounts within the organization. The creator gets root access to
+  the new account via the root email address. A new account starts
+  with no SCPs applied beyond the default FullAWSAccess, providing
+  unrestricted access until organizational policies are applied.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-2"
+  ccm_v4: ["IAM-04"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  base_impact: 9
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+observation_fields:
+  - identity.kind
+  - identity.escalation.org_createaccount.present
+remediation:
+  description: >
+    Principal can create new AWS accounts with root access within the
+    organization.
+  action: >
+    Remove organizations:CreateAccount or restrict it to designated
+    automation roles. Use AWS Control Tower or Organizations SCPs to
+    enforce baseline guardrails on new accounts automatically. Require
+    MFA and approval workflows for account creation.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "escalation": {
+          "org_createaccount": {
+            "present": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.escalation.org_createaccount.present
+      op: eq
+      value: true
+tests:
+  - name: user with Organizations CreateAccount escalation path fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/mallory
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            org_createaccount:
+              present: true
+  - name: user without escalation path passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/bob
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            org_createaccount:
+              present: false
+alternatives:
+  - tool: prowler
+    check_id: iam_inline_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 38 per-technique controls covering the aggregated Prowler check.
+  - tool: prowler
+    check_id: iam_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 38 per-technique controls covering the aggregated Prowler check.

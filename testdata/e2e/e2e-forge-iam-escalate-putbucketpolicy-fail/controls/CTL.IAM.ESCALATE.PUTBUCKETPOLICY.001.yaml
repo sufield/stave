@@ -1,0 +1,93 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.PUTBUCKETPOLICY.001
+name: Principal Must Not Escalate via S3 PutBucketPolicy
+description: >
+  Principals with s3:PutBucketPolicy can replace any S3 bucket's
+  resource policy. The attacker can grant themselves or an external
+  account full access to the bucket, bypassing all IAM-based access
+  controls. This is a resource policy mutation — the bucket policy is
+  an independent authorization mechanism that grants access regardless
+  of the caller's IAM policies.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-6(5)"
+  ccm_v4: ["IAM-05", "DSP-17"]
+scope_tags:
+  - aws
+  - iam
+  - s3
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  base_impact: 9
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+observation_fields:
+  - identity.kind
+  - identity.escalation.s3_putbucketpolicy.present
+remediation:
+  description: >
+    Principal can replace S3 bucket policies to grant arbitrary
+    access.
+  action: >
+    Remove s3:PutBucketPolicy or scope it to specific bucket ARNs via
+    resource conditions. Use S3 Access Points with delegated access
+    control instead of direct bucket policy modifications. Enforce
+    bucket policy guardrails via SCP to prevent overly-permissive
+    policies.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "escalation": {
+          "s3_putbucketpolicy": {
+            "present": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.escalation.s3_putbucketpolicy.present
+      op: eq
+      value: true
+tests:
+  - name: user with S3 PutBucketPolicy escalation path fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/mallory
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            s3_putbucketpolicy:
+              present: true
+  - name: user without escalation path passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/bob
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            s3_putbucketpolicy:
+              present: false
+alternatives:
+  - tool: prowler
+    check_id: iam_inline_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 38 per-technique controls covering the aggregated Prowler check.
+  - tool: prowler
+    check_id: iam_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 38 per-technique controls covering the aggregated Prowler check.

@@ -1,0 +1,93 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.DELETEBOUNDARY.001
+name: Principal Must Not Escalate via DeleteRolePermissionsBoundary
+description: >
+  Principals with iam:DeleteRolePermissionsBoundary can remove
+  permission boundaries from IAM roles. Permission boundaries limit
+  the maximum permissions a role can use regardless of its identity
+  policies. Removing the boundary instantly expands the role's
+  effective permissions to whatever its identity policies allow —
+  potentially full admin access that was previously constrained by
+  the boundary.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-6(5)"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  base_impact: 9
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+observation_fields:
+  - identity.kind
+  - identity.escalation.delete_boundary.present
+remediation:
+  description: >
+    Principal can remove permission boundaries from IAM roles,
+    expanding their effective permissions.
+  action: >
+    Deny iam:DeleteRolePermissionsBoundary via SCP or scope it to
+    specific role ARNs via resource conditions. Use SCPs to enforce
+    that permission boundaries cannot be removed from roles in
+    production accounts. Monitor boundary deletion attempts via
+    CloudTrail.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "escalation": {
+          "delete_boundary": {
+            "present": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.escalation.delete_boundary.present
+      op: eq
+      value: true
+tests:
+  - name: user with DeleteRolePermissionsBoundary escalation path fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/mallory
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            delete_boundary:
+              present: true
+  - name: user without escalation path passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/bob
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            delete_boundary:
+              present: false
+alternatives:
+  - tool: prowler
+    check_id: iam_inline_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 38 per-technique controls covering the aggregated Prowler check.
+  - tool: prowler
+    check_id: iam_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 38 per-technique controls covering the aggregated Prowler check.

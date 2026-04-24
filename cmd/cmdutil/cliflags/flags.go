@@ -175,6 +175,9 @@ func ParseRFC3339(raw, flag string) (time.Time, error) {
 // --- Internal Utilities ---
 
 func getStr(fs *pflag.FlagSet, name string) string {
+	if fs.Lookup(name) == nil {
+		return ""
+	}
 	val, err := fs.GetString(name)
 	if err != nil {
 		slog.Error("flag access failed", "flag", name, "error", err)
@@ -183,6 +186,9 @@ func getStr(fs *pflag.FlagSet, name string) string {
 }
 
 func getBool(fs *pflag.FlagSet, name string) bool {
+	if fs.Lookup(name) == nil {
+		return false
+	}
 	val, err := fs.GetBool(name)
 	if err != nil {
 		slog.Error("flag access failed", "flag", name, "error", err)

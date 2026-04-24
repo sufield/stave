@@ -1,0 +1,16 @@
+id: iam_shadow_admin
+description: >
+  Principal can create new AWS accounts OR already has admin access.
+  Creating a new account within the organization provides a fresh
+  admin scope outside existing monitoring and controls. The new
+  account may lack CloudTrail, GuardDuty, and Config until
+  organizational provisioning automation runs.
+controls:
+  - CTL.IAM.ESCALATE.CREATEACCOUNT.001
+  - CTL.IAM.POLICY.ADMIN.001
+escalation_threshold: 1
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - shadow_admin_access

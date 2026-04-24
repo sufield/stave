@@ -82,7 +82,11 @@ var ValidCapabilities = map[string]bool{
 	"cloudfront_origin_configured": true,
 	"data_in_transit_exposure":     true,
 	"scp_governance_configured":    true,
-	"ungoverned_operation":         true,
+	"ungoverned_operation":           true,
+	"kms_key_compromise":             true,
+	"control_plane_code_execution":   true,
+	"resource_policy_escalation":     true,
+	"shadow_admin_access":            true,
 }
 
 // IsValidCapability returns true if the capability string is in the closed vocabulary.

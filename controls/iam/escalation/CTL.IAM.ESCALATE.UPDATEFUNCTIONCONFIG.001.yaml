@@ -1,0 +1,93 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.UPDATEFUNCTIONCONFIG.001
+name: Principal Must Not Escalate via Lambda UpdateFunctionConfiguration
+description: >
+  Principals with lambda:UpdateFunctionConfiguration can modify a
+  Lambda function's environment variables, VPC configuration, and
+  runtime settings without changing its code. Environment variables
+  often contain secrets (API keys, database credentials, tokens). The
+  attacker can exfiltrate these by adding an environment variable that
+  sends secrets to an external endpoint, or modify VPC settings to
+  route traffic through an attacker-controlled network.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-6(5)"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+  - lambda
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  base_impact: 9
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+observation_fields:
+  - identity.kind
+  - identity.escalation.lambda_updateconfig.present
+remediation:
+  description: >
+    Principal can modify Lambda function configuration including
+    environment variables containing secrets.
+  action: >
+    Remove lambda:UpdateFunctionConfiguration or scope it to specific
+    function ARNs via resource conditions. Store secrets in AWS
+    Secrets Manager or SSM Parameter Store instead of Lambda
+    environment variables. Use Lambda resource policies and VPC
+    endpoint policies to restrict network access.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "escalation": {
+          "lambda_updateconfig": {
+            "present": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.escalation.lambda_updateconfig.present
+      op: eq
+      value: true
+tests:
+  - name: user with Lambda UpdateFunctionConfiguration escalation path fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/mallory
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            lambda_updateconfig:
+              present: true
+  - name: user without escalation path passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/bob
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            lambda_updateconfig:
+              present: false
+alternatives:
+  - tool: prowler
+    check_id: iam_inline_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 38 per-technique controls covering the aggregated Prowler check.
+  - tool: prowler
+    check_id: iam_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 38 per-technique controls covering the aggregated Prowler check.

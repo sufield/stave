@@ -1,0 +1,90 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.ECRTOKEN.001
+name: Principal Must Not Escalate via ECR GetAuthorizationToken
+description: >
+  Principals with ecr:GetAuthorizationToken can obtain a Docker
+  credential that authenticates to ALL ECR repositories in the account
+  — not just the repositories the principal's IAM policy specifies.
+  The ECR authorization token is account-scoped, not repository-scoped.
+  Repository-level IAM restrictions are bypassed by the Docker
+  authentication layer. This is an AWS design behavior, not a bug.
+domain: identity
+severity: medium
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-6(5)"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+  - ecr
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: collection
+  base_impact: 9
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+observation_fields:
+  - identity.kind
+  - identity.escalation.ecr_getauthtoken.present
+remediation:
+  description: >
+    Principal can get an account-wide ECR authorization token granting
+    access to all repositories regardless of IAM policy.
+  action: >
+    Restrict ecr:GetAuthorizationToken to principals that need Docker
+    access. The token is account-scoped — it grants pull/push access to
+    ALL ECR repositories, not just those in the principal's IAM policy.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "escalation": {
+          "ecr_getauthtoken": {
+            "present": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.escalation.ecr_getauthtoken.present
+      op: eq
+      value: true
+tests:
+  - name: user with ECR GetAuthorizationToken escalation path fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/mallory
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            ecr_getauthtoken:
+              present: true
+  - name: user without escalation path passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/bob
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            ecr_getauthtoken:
+              present: false
+alternatives:
+  - tool: prowler
+    check_id: iam_inline_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 42 per-technique controls covering the aggregated Prowler check.
+  - tool: prowler
+    check_id: iam_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 42 per-technique controls covering the aggregated Prowler check.

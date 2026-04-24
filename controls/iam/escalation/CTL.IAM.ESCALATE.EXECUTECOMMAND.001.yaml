@@ -1,0 +1,92 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.EXECUTECOMMAND.001
+name: Principal Must Not Escalate via ECS ExecuteCommand
+description: >
+  Principals with ecs:ExecuteCommand can open a shell session inside
+  running ECS containers and access the task role credentials via the
+  container metadata endpoint. This provides the same privilege
+  escalation as PassRole+RunInstances but without needing PassRole —
+  the container and its role already exist. The attacker executes
+  commands as the container process and inherits whatever AWS
+  permissions the task role provides.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-6(5)"
+  ccm_v4: ["IAM-05", "IVS-06"]
+scope_tags:
+  - aws
+  - iam
+  - ecs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  base_impact: 9
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+observation_fields:
+  - identity.kind
+  - identity.escalation.ecs_executecommand.present
+remediation:
+  description: >
+    Principal can exec into ECS containers and access task role
+    credentials.
+  action: >
+    Remove ecs:ExecuteCommand or scope it to specific clusters and
+    tasks via resource ARN conditions. If interactive debugging is
+    required, restrict ExecuteCommand to non-production clusters and
+    use session logging to CloudWatch for audit trails.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "escalation": {
+          "ecs_executecommand": {
+            "present": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.escalation.ecs_executecommand.present
+      op: eq
+      value: true
+tests:
+  - name: user with ECS ExecuteCommand escalation path fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/mallory
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            ecs_executecommand:
+              present: true
+  - name: user without escalation path passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/bob
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            ecs_executecommand:
+              present: false
+alternatives:
+  - tool: prowler
+    check_id: iam_inline_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 38 per-technique controls covering the aggregated Prowler check.
+  - tool: prowler
+    check_id: iam_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 38 per-technique controls covering the aggregated Prowler check.

@@ -1,0 +1,91 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.LAMBDAADDPERM.001
+name: Principal Must Not Escalate via Lambda AddPermission
+description: >
+  Principals with lambda:AddPermission can modify a Lambda function's
+  resource-based policy to allow cross-account invocation. If the
+  Lambda function has a privileged execution role, the attacker grants
+  an external account permission to invoke the function, then invokes
+  it from that account to execute code with the function's role
+  permissions.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-6(5)"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+  - lambda
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  base_impact: 9
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+observation_fields:
+  - identity.kind
+  - identity.escalation.lambda_addpermission.present
+remediation:
+  description: >
+    Principal can modify Lambda resource policies to allow
+    cross-account invocation.
+  action: >
+    Remove lambda:AddPermission or scope it to specific function ARNs
+    via resource conditions. If cross-account invocation is required,
+    use a dedicated automation role with narrowly-scoped permissions
+    and audit Lambda resource policy changes via CloudTrail.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "escalation": {
+          "lambda_addpermission": {
+            "present": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.escalation.lambda_addpermission.present
+      op: eq
+      value: true
+tests:
+  - name: user with Lambda AddPermission escalation path fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/mallory
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            lambda_addpermission:
+              present: true
+  - name: user without escalation path passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/bob
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            lambda_addpermission:
+              present: false
+alternatives:
+  - tool: prowler
+    check_id: iam_inline_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 38 per-technique controls covering the aggregated Prowler check.
+  - tool: prowler
+    check_id: iam_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 38 per-technique controls covering the aggregated Prowler check.

@@ -1,0 +1,89 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.SERVICELINKEDROLE.001
+name: Principal Must Not Escalate via CreateServiceLinkedRole
+description: >
+  Principals with unrestricted iam:CreateServiceLinkedRole can create
+  AWS service-linked roles for any AWS service. Service-linked roles
+  have AWS-managed permission policies that cannot be modified. Some
+  service-linked roles have broad permissions — creating them
+  introduces new roles with predefined access that the principal does
+  not directly control.
+domain: identity
+severity: medium
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-6(5)"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  base_impact: 6
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 1.5
+observation_fields:
+  - identity.kind
+  - identity.escalation.create_service_linked_role.present
+remediation:
+  description: >
+    Principal can create service-linked roles with predefined
+    AWS-managed permissions for any service.
+  action: >
+    Scope iam:CreateServiceLinkedRole to specific services via the
+    iam:AWSServiceName condition key. Restrict the condition to only
+    the AWS services the principal legitimately needs to configure.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "escalation": {
+          "create_service_linked_role": {
+            "present": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.escalation.create_service_linked_role.present
+      op: eq
+      value: true
+tests:
+  - name: user with CreateServiceLinkedRole escalation path fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/mallory
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            create_service_linked_role:
+              present: true
+  - name: user without escalation path passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/bob
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            create_service_linked_role:
+              present: false
+alternatives:
+  - tool: prowler
+    check_id: iam_inline_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 38 per-technique controls covering the aggregated Prowler check.
+  - tool: prowler
+    check_id: iam_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 38 per-technique controls covering the aggregated Prowler check.

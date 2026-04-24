@@ -1,0 +1,90 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.ADDLAYER.001
+name: Principal Must Not Escalate via Lambda AddLayerVersionPermission
+description: >
+  Principals with lambda:AddLayerVersionPermission can modify shared
+  Lambda layers that other functions depend on. If the attacker modifies
+  a widely-used layer, every function using that layer is compromised on
+  next deployment. This is a supply chain attack via Lambda layers — the
+  attacker doesn't modify the function code, they modify a dependency the
+  function imports.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-6(5)"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+  - lambda
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  base_impact: 9
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+observation_fields:
+  - identity.kind
+  - identity.escalation.lambda_addlayer.present
+remediation:
+  description: >
+    Principal can modify Lambda layer permissions enabling cross-account
+    layer sharing and supply chain attacks.
+  action: >
+    Remove lambda:AddLayerVersionPermission or scope it to specific layer
+    ARNs. Modifying layer permissions can share layers cross-account,
+    enabling supply chain attacks on functions that depend on the layer.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "escalation": {
+          "lambda_addlayer": {
+            "present": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.escalation.lambda_addlayer.present
+      op: eq
+      value: true
+tests:
+  - name: user with Lambda AddLayerVersionPermission escalation path fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/mallory
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            lambda_addlayer:
+              present: true
+  - name: user without escalation path passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/bob
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            lambda_addlayer:
+              present: false
+alternatives:
+  - tool: prowler
+    check_id: iam_inline_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 42 per-technique controls covering the aggregated Prowler check.
+  - tool: prowler
+    check_id: iam_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 42 per-technique controls covering the aggregated Prowler check.

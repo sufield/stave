@@ -1,0 +1,91 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.KMSKEYPOLICY.001
+name: Principal Must Not Escalate via KMS PutKeyPolicy
+description: >
+  Principals with kms:PutKeyPolicy can replace the key policy on any KMS
+  key within scope. The attacker adds themselves as a key user with
+  kms:Decrypt permission. All data encrypted by the key — S3 objects,
+  EBS volumes, RDS snapshots, Secrets Manager secrets — becomes
+  decryptable. Unlike kms:CreateGrant which adds a temporary grant,
+  PutKeyPolicy modifies the permanent authorization on the key.
+domain: identity
+severity: critical
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-6(5)"
+  pci_dss_v4.0: "3.5.1"
+  ccm_v4: ["IAM-05", "CEK-01"]
+scope_tags:
+  - aws
+  - iam
+  - kms
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  base_impact: 9
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+observation_fields:
+  - identity.kind
+  - identity.escalation.kms_putkeypolicy.present
+remediation:
+  description: >
+    Principal can modify KMS key policies to grant themselves decrypt
+    access to all encrypted data.
+  action: >
+    Remove kms:PutKeyPolicy or scope it to specific key ARNs. PutKeyPolicy
+    modifies the permanent authorization on the key — the attacker adds
+    themselves as a key user with Decrypt access.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "escalation": {
+          "kms_putkeypolicy": {
+            "present": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.escalation.kms_putkeypolicy.present
+      op: eq
+      value: true
+tests:
+  - name: user with KMS PutKeyPolicy escalation path fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/mallory
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            kms_putkeypolicy:
+              present: true
+  - name: user without escalation path passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/bob
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            kms_putkeypolicy:
+              present: false
+alternatives:
+  - tool: prowler
+    check_id: iam_inline_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 42 per-technique controls covering the aggregated Prowler check.
+  - tool: prowler
+    check_id: iam_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 42 per-technique controls covering the aggregated Prowler check.

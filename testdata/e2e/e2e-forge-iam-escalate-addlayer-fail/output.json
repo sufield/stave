@@ -1,0 +1,317 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "149f475e314d6f24949356436463b93d87f1a20cad6f061bf265534583526d02",
+        "2026-01-11T000000Z.json": "804ee6564d3730afa67fb899016c19f86a7075445f911d21f8310eb61b270b5b"
+      },
+      "overall": "14d3338fe281fc80f0d73cc7f29300f88aaa6c56187dc1e73b59df5947ca6dac"
+    },
+    "policy_fingerprint": "cd00df5a8226779cf0a69a2f3e7fea9014f6b56c56af07ca4e84f74104ccb765",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.IAM.ESCALATE.ADDLAYER.001",
+      "asset_id": "arn:aws:iam::111122223333:user/mallory",
+      "asset_type": "aws_iam_user",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:1a6420b9c85167f5",
+      "control_id": "CTL.IAM.ESCALATE.ADDLAYER.001",
+      "control_name": "Principal Must Not Escalate via Lambda AddLayerVersionPermission",
+      "control_description": "Principals with lambda:AddLayerVersionPermission can modify shared Lambda layers that other functions depend on. If the attacker modifies a widely-used layer, every function using that layer is compromised on next deployment. This is a supply chain attack via Lambda layers — the attacker doesn't modify the function code, they modify a dependency the function imports.\n",
+      "asset_id": "arn:aws:iam::111122223333:user/mallory",
+      "asset_type": "aws_iam_user",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "identity.escalation.lambda_addlayer.present",
+            "actual_value": true,
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "nist_800_53_r5": "AC-6(5)",
+        "soc2": "CC6.1"
+      },
+      "control_compliance_ccm_v4": [
+        "IAM-05"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Principal can modify Lambda layer permissions enabling cross-account layer sharing and supply chain attacks.",
+        "action": "Remove lambda:AddLayerVersionPermission or scope it to specific layer ARNs. Modifying layer permissions can share layers cross-account, enabling supply chain attacks on functions that depend on the layer.",
+        "example": "{\n  \"identity\": {\n    \"kind\": \"user\",\n    \"escalation\": {\n      \"lambda_addlayer\": {\n        \"present\": false\n      }\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-0e6504c8cf7ba713",
+        "target": {
+          "asset_id": "arn:aws:iam::111122223333:user/mallory",
+          "asset_type": "aws_iam_user"
+        },
+        "action": "Remove lambda:AddLayerVersionPermission or scope it to specific layer ARNs. Modifying layer permissions can share layers cross-account, enabling supply chain attacks on functions that depend on the layer."
+      },
+      "exposure_score": 150,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 2,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 10
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "identity.escalation.lambda_addlayer.present eq true",
+          "observation_key": "identity.escalation.lambda_addlayer.present",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": true
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "arn:aws:iam::111122223333:user/mallory",
+          "type": "aws_iam_user",
+          "vendor": "aws",
+          "arn": "arn:aws:iam::111122223333:user/mallory"
+        },
+        "violation": {
+          "control_id": "CTL.IAM.ESCALATE.ADDLAYER.001",
+          "control_name": "Principal Must Not Escalate via Lambda AddLayerVersionPermission",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "identity.escalation.lambda_addlayer.present = true",
+              "observation_key": "identity.escalation.lambda_addlayer.present",
+              "observed_value": true
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "identity.escalation.lambda_addlayer.present",
+            "current_value": "true",
+            "required_value": "false",
+            "has_safe_default": true,
+            "description": "Set identity.escalation.lambda_addlayer.present to false"
+          }
+        ],
+        "action": "Remove lambda:AddLayerVersionPermission or scope it to specific layer ARNs. Modifying layer permissions can share layers cross-account, enabling supply chain attacks on functions that depend on the layer."
+      },
+      "alternatives": [
+        {
+          "tool": "prowler",
+          "check_id": "iam_inline_policy_allows_privilege_escalation",
+          "coverage": "covered",
+          "note": "One of 42 per-technique controls covering the aggregated Prowler check."
+        },
+        {
+          "tool": "prowler",
+          "check_id": "iam_policy_allows_privilege_escalation",
+          "coverage": "covered",
+          "note": "One of 42 per-technique controls covering the aggregated Prowler check."
+        }
+      ],
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "iam",
+        "lambda"
+      ],
+      "delta": [
+        {
+          "property_label": "escalation lambda addlayer present",
+          "property_path": "identity.escalation.lambda_addlayer.present",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:8b2de52c7b0c5024",
+      "asset_id": "arn:aws:iam::111122223333:user/mallory",
+      "shared_keys": [
+        "identity.escalation.lambda_addlayer",
+        "identity.escalation.lambda_addlayer.present"
+      ],
+      "headline_finding_id": "sha256:1a6420b9c85167f5",
+      "member_finding_ids": [
+        "sha256:1a6420b9c85167f5"
+      ],
+      "consolidated_score": 150,
+      "consolidated_blast_radius": 2
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "arn:aws:iam::111122223333:user/mallory",
+      "asset_type": "aws_iam_user",
+      "fix_plan": {
+        "id": "fix-0e6504c8cf7ba713",
+        "target": {
+          "asset_id": "arn:aws:iam::111122223333:user/mallory",
+          "asset_type": "aws_iam_user"
+        },
+        "action": "Remove lambda:AddLayerVersionPermission or scope it to specific layer ARNs. Modifying layer permissions can share layers cross-account, enabling supply chain attacks on functions that depend on the layer."
+      },
+      "contributing_controls": [
+        "CTL.IAM.ESCALATE.ADDLAYER.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.IAM.ESCALATE.ADDLAYER.001",
+      "asset_id": "arn:aws:iam::111122223333:user/mallory",
+      "exposure_score": 150,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 2,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 2,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-forge-iam-escalate-addlayer-fail/controls",
+      "observations": "testdata/e2e/e2e-forge-iam-escalate-addlayer-fail/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "1d319fb1a55ef1206404a275b8c4510ce93a9f5e",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-forge-iam-escalate-addlayer-fail/controls/"
+      ]
+    }
+  }
+}

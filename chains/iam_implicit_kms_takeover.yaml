@@ -1,0 +1,16 @@
+id: iam_implicit_kms_takeover
+description: >
+  Principal has EITHER kms:CreateGrant or kms:PutKeyPolicy. Both
+  independently provide full KMS key access — CreateGrant stealthily
+  via temporary grants, PutKeyPolicy permanently via key policy
+  modification. Either alone is a complete encryption compromise path
+  giving the attacker decrypt access to all data encrypted by the key.
+controls:
+  - CTL.IAM.ESCALATE.CREATEGRANT.001
+  - CTL.IAM.ESCALATE.KMSKEYPOLICY.001
+escalation_threshold: 1
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - kms_key_compromise
