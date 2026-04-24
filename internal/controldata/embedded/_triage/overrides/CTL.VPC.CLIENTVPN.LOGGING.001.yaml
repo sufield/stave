@@ -1,0 +1,16 @@
+control: CTL.VPC.CLIENTVPN.LOGGING.001
+defect: >
+  Client VPN endpoint does not have connection logging enabled.
+infection: >
+  Connection logging is the only record of who used the VPN, when,
+  from where, and for how long. Without it, an attacker with a
+  stolen credential cannot be distinguished from the legitimate
+  user — every session looks equivalent. Incident response has no
+  way to scope the compromise window ("which sessions are the
+  attacker's?") and no source IPs to pivot on. The VPN endpoint
+  authenticates the user but leaves no forensic record of that
+  authentication.
+failure: >
+  Unattributable access. VPN sessions by an attacker using a
+  compromised credential are indistinguishable from legitimate
+  sessions; incident scoping is impossible.

@@ -381,6 +381,7 @@ func stripVolatile(v any) {
 	delete(m, "extensions")
 	if run, ok := m["run"].(map[string]any); ok {
 		delete(run, "tool_version")
+		delete(run, "policy_fingerprint")
 	}
 }
 

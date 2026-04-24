@@ -141,9 +141,8 @@
           {
             "path": "storage.tags.backup",
             "current_value": "true",
-            "required_value": "false",
-            "has_safe_default": true,
-            "description": "Set storage.tags.backup to false"
+            "has_safe_default": false,
+            "description": "Change storage.tags.backup from true"
           },
           {
             "path": "storage.versioning.mfa_delete_enabled",
@@ -322,7 +321,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "8ef91f6c62fe209cbb9f3919ce7310666be52141",
+      "head_commit": "0b07538859ec24dd4bd26a844bf54396a665866e",
       "dirty": false
     }
   }

@@ -1,0 +1,57 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.VPN.LOGGING.001
+name: VPN Connection Logging Not Enabled
+description: >
+  Site-to-site VPN tunnel logging is not enabled. Connection events
+  (tunnel UP/DOWN transitions, IKE negotiation failures, authentication
+  attempts, rekey events) are not recorded. VPN connectivity failures,
+  configuration drift, and attack attempts (IKE brute force, replay
+  attacks, identity spoofing) are invisible to security operations.
+domain: audit
+severity: medium
+compliance:
+  cis_aws_v3.0: "3.9"
+  nist_800_53_r5: "AU-12"
+  fedramp_moderate: "AU-12"
+  pci_dss_v4.0: "10.2.1"
+  soc2: "CC7.2"
+  hipaa: "164.312(b)"
+  ccm_v4: ["LOG-03", "LOG-08"]
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - network.kind
+  - network.vpn.logging_enabled
+  - network.vpn.log_destination
+remediation:
+  description: >
+    VPN tunnel logging is disabled. Tunnel state changes and IKE
+    events are not captured.
+  action: >
+    Enable tunnel logging on each tunnel of the VPN connection,
+    sending records to a CloudWatch Logs group in a logging-dedicated
+    account. Retain logs per incident-response and compliance
+    requirements (typically one year minimum). Alert on repeated IKE
+    failures and unexpected tunnel state changes.
+  example: |
+    {
+      "network": {
+        "kind": "vpn_connection",
+        "vpn": {
+          "logging_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: vpn_connection
+    - field: properties.network.vpn.logging_enabled
+      op: eq
+      value: false

@@ -1,0 +1,30 @@
+{
+  "assets": [
+    {
+      "id": "vpn-aes256-sha256",
+      "properties": {
+        "network": {
+          "kind": "vpn_connection",
+          "vpn": {
+            "connection_id": "vpn-0aesstrong00000001",
+            "encryption_algorithm": "AES256",
+            "integrity_algorithm": "SHA256",
+            "dh_group": 14,
+            "ike_version": 2,
+            "encryption_weak": false
+          }
+        }
+      },
+      "type": "aws_vpn_connection",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

@@ -1,0 +1,29 @@
+{
+  "assets": [
+    {
+      "id": "vpn-both-down",
+      "properties": {
+        "network": {
+          "kind": "vpn_connection",
+          "vpn": {
+            "connection_id": "vpn-0bothdown0000000001",
+            "tunnel_1_status": "DOWN",
+            "tunnel_2_status": "DOWN",
+            "tunnels_up_count": 0,
+            "has_tunnel_down": true
+          }
+        }
+      },
+      "type": "aws_vpn_connection",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

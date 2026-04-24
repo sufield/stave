@@ -1,0 +1,61 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.VPN.TUNNEL.DOWN.001
+name: VPN Tunnel Not in UP State
+description: >
+  One or both VPN tunnels are not in UP state. AWS provisions two
+  tunnels per site-to-site VPN connection for high availability. With
+  one tunnel down, the VPN operates on a single tunnel with no
+  failover — a single point of failure for hybrid connectivity. With
+  both tunnels down, the VPN is non-functional and traffic either
+  fails outright or silently falls back to internet paths (which may
+  be unencrypted).
+domain: availability
+severity: high
+compliance:
+  cis_aws_v3.0: "5.5"
+  nist_800_53_r5: "CP-7"
+  fedramp_moderate: "CP-7"
+  soc2: "A1.2"
+  ccm_v4: ["BCR-09", "IVS-03"]
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+observation_fields:
+  - network.kind
+  - network.vpn.connection_id
+  - network.vpn.tunnel_1_status
+  - network.vpn.tunnel_2_status
+  - network.vpn.tunnels_up_count
+  - network.vpn.has_tunnel_down
+remediation:
+  description: >
+    One or both tunnels on the VPN connection are in a non-UP state.
+    Hybrid connectivity has no redundancy or is not flowing.
+  action: >
+    Identify the root cause — check the on-premises peer's status,
+    verify pre-shared keys or certificates, confirm routing, and
+    review CloudWatch metrics for IKE or tunnel-state transitions.
+    Restore both tunnels to UP. For persistent single-tunnel
+    failures, open a support case with AWS and the on-premises
+    vendor simultaneously.
+  example: |
+    {
+      "network": {
+        "kind": "vpn_connection",
+        "vpn": {
+          "has_tunnel_down": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: vpn_connection
+    - field: properties.network.vpn.has_tunnel_down
+      op: eq
+      value: true

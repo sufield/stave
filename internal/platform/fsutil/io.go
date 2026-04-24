@@ -450,7 +450,7 @@ func crossFSCopy(src, dst string, perm os.FileMode) error {
 	// Close before rename; error is non-fatal since data was already synced.
 	_ = tmp.Close()
 
-	if err := os.Rename(tmpName, dst); err != nil {
+	if err = os.Rename(tmpName, dst); err != nil {
 		return err
 	}
 
@@ -458,8 +458,8 @@ func crossFSCopy(src, dst string, perm os.FileMode) error {
 	// this, a crash between rename and the OS's next flush can leave the
 	// destination's directory entry unpersisted — on some filesystems that
 	// manifests as a zero-byte or missing destination after reboot.
-	d, err := os.Open(dir)
-	if err != nil {
+	d, openErr := os.Open(dir) //nolint:gosec // directory path from caller's dst
+	if openErr != nil {
 		return nil
 	}
 	_ = d.Sync()

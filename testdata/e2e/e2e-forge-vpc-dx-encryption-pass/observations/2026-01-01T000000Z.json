@@ -1,0 +1,27 @@
+{
+  "assets": [
+    {
+      "id": "dx-vpn-overlay",
+      "properties": {
+        "network": {
+          "kind": "directconnect_connection",
+          "dx": {
+            "connection_id": "dxcon-0encryptedgood01",
+            "has_vpn_overlay": true,
+            "macsec_enabled": false
+          }
+        }
+      },
+      "type": "aws_dx_connection",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

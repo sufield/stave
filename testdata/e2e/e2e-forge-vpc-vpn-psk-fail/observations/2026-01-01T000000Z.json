@@ -1,0 +1,27 @@
+{
+  "assets": [
+    {
+      "id": "vpn-psk",
+      "properties": {
+        "network": {
+          "kind": "vpn_connection",
+          "vpn": {
+            "connection_id": "vpn-0psk0000000000001",
+            "auth_type": "PSK",
+            "uses_psk": true
+          }
+        }
+      },
+      "type": "aws_vpn_connection",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

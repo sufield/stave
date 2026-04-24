@@ -1,0 +1,18 @@
+control: CTL.VPC.VPN.TUNNEL.DOWN.001
+defect: >
+  One or both tunnels on the site-to-site VPN connection are not in
+  UP state.
+infection: >
+  AWS provisions two tunnels per VPN connection specifically so one
+  can fail over to the other. With one tunnel down, the VPN runs on
+  a single tunnel and has no surviving redundancy — the next failure
+  takes the connection down entirely. With both tunnels down,
+  connectivity between on-premises and AWS is gone; applications
+  either fail with timeouts or silently fall back to internet routes
+  that may bypass the encryption and logging the VPN was providing.
+  Hybrid-dependent systems rarely surface a clear error message for
+  the fallback path.
+failure: >
+  Hybrid connectivity fragility or outage. Traffic between on-premises
+  and AWS has no tunnel redundancy or is not flowing; fallback paths
+  may bypass encryption and audit controls.

@@ -1,0 +1,28 @@
+{
+  "assets": [
+    {
+      "id": "cvpn-granular",
+      "properties": {
+        "network": {
+          "kind": "clientvpn_endpoint",
+          "clientvpn": {
+            "endpoint_id": "cvpn-endpoint-granular",
+            "allows_all": false,
+            "auth_rule_count": 5,
+            "associated_subnets": ["subnet-0a1b", "subnet-0c2d"]
+          }
+        }
+      },
+      "type": "aws_clientvpn_endpoint",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

@@ -263,6 +263,7 @@ func checkFullOutput(t *testing.T, caseDir string, stdout []byte) {
 		delete(m, "extensions")
 		if run, ok := m["run"].(map[string]any); ok {
 			delete(run, "tool_version")
+			delete(run, "policy_fingerprint")
 		}
 		return marshalCanonical(t, m)
 	}

@@ -1,0 +1,18 @@
+id: vpc_clientvpn_exposure
+description: >
+  Client VPN permits all traffic across associated subnets AND either
+  connection logging is disabled or split tunneling is enabled. VPN
+  users reach the full VPC AND either their sessions leave no audit
+  trail or their client devices bridge the corporate network and the
+  public internet. A single compromised credential grants unrestricted
+  VPC access that cannot be attributed.
+controls:
+  - CTL.VPC.CLIENTVPN.AUTH.001
+  - CTL.VPC.CLIENTVPN.LOGGING.001
+  - CTL.VPC.CLIENTVPN.SPLITTUNNEL.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - network_access_vpc
+postconditions:
+  - network_access_ec2

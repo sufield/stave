@@ -1,0 +1,61 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.CLIENTVPN.AUTH.001
+name: Client VPN Allows All Traffic Without Authorization Rules
+description: >
+  Client VPN endpoint has no authorization rules or has a rule that
+  allows all traffic to 0.0.0.0/0 across every associated subnet. Any
+  VPN user who connects can reach every resource in every subnet the
+  endpoint is attached to. Authorization rules should restrict access
+  to specific destination CIDRs based on user-group membership so that
+  a single compromised credential does not grant full VPC access.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "5.5"
+  nist_800_53_r5: "AC-3"
+  fedramp_moderate: "AC-3"
+  pci_dss_v4.0: "1.3.2"
+  soc2: "CC6.6"
+  hipaa: "164.312(a)(1)"
+  ccm_v4: ["IAM-09", "IVS-06"]
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+observation_fields:
+  - network.kind
+  - network.clientvpn.endpoint_id
+  - network.clientvpn.allows_all
+  - network.clientvpn.auth_rule_count
+  - network.clientvpn.associated_subnets
+remediation:
+  description: >
+    Client VPN endpoint has no granular authorization rules. All
+    authenticated users reach every subnet the endpoint is associated
+    with.
+  action: >
+    Define authorization rules that restrict each user group to the
+    specific destination CIDRs that group requires. Remove any
+    0.0.0.0/0 allow-all rule. Map user groups from the authentication
+    provider (SAML, Active Directory, mutual certificate CN) to
+    destination CIDRs and enforce least privilege per group.
+  example: |
+    {
+      "network": {
+        "kind": "clientvpn_endpoint",
+        "clientvpn": {
+          "allows_all": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: clientvpn_endpoint
+    - field: properties.network.clientvpn.allows_all
+      op: eq
+      value: true

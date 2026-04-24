@@ -1,0 +1,18 @@
+control: CTL.VPC.CLIENTVPN.AUTH.001
+defect: >
+  Client VPN endpoint permits all traffic to all associated subnets
+  without granular authorization rules.
+infection: >
+  Authorization rules are the access control layer of Client VPN —
+  they decide which destination CIDRs each user group can reach.
+  Without them, the VPN credential IS the network access decision.
+  A single compromised credential (password spray, phishing, stolen
+  laptop) gives the attacker network-layer access to every database,
+  internal API, and management interface in every subnet the VPN is
+  associated with. The endpoint's design assumes authorization rules
+  are in place; operating without them treats every user as a
+  privileged network administrator.
+failure: >
+  Full-VPC access from a single credential. A compromised VPN user
+  reaches every resource reachable from the endpoint's associated
+  subnets.

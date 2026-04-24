@@ -1,0 +1,15 @@
+control: CTL.VPC.VPN.LOGGING.001
+defect: >
+  VPN tunnel logging is not enabled. Tunnel state transitions and
+  IKE events are not recorded.
+infection: >
+  Without tunnel logs, the organization cannot distinguish a clean
+  VPN from one under attack. IKE brute force looks the same as
+  normal negotiation. Tunnel flaps caused by misconfiguration look
+  the same as flaps caused by an adversary probing the peer. Replay
+  attempts and identity spoofing leave no trace. When an incident
+  occurs, there is no history to correlate — the investigation
+  starts cold.
+failure: >
+  Invisible tunnel-layer attacks. IKE brute force, replay, and
+  identity spoofing against the VPN leave no audit evidence.

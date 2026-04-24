@@ -1,0 +1,61 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.VPN.PSK.001
+name: VPN Uses Pre-Shared Key Instead of Certificate Authentication
+description: >
+  VPN tunnel uses pre-shared key (PSK) authentication instead of
+  certificate-based (PKI) authentication. PSKs are static shared
+  secrets configured on both endpoints — widely readable in config
+  files, shared across multiple administrators, and not rotated
+  automatically. If the PSK is compromised, all historical and
+  future traffic protected by that key is at risk. Certificate-based
+  authentication binds trust to a cryptographic identity that can be
+  rotated and revoked.
+domain: identity
+severity: medium
+compliance:
+  cis_aws_v3.0: "5.5"
+  nist_800_53_r5: "IA-5"
+  fedramp_moderate: "IA-5"
+  pci_dss_v4.0: "8.3.6"
+  soc2: "CC6.1"
+  hipaa: "164.312(d)"
+  ccm_v4: ["IAM-12", "CEK-13"]
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+observation_fields:
+  - network.kind
+  - network.vpn.auth_type
+  - network.vpn.uses_psk
+remediation:
+  description: >
+    VPN tunnel authenticates the peer using a pre-shared key rather
+    than a certificate. The secret is static and shared.
+  action: >
+    Migrate the VPN to certificate-based authentication. Issue a
+    certificate for the on-premises device from an internal or
+    managed CA, configure the customer gateway with certificate
+    authentication, and remove the PSK. If certificate authentication
+    is not feasible, rotate the PSK on a schedule, restrict its
+    storage to a secrets manager, and limit the admins who hold it.
+  example: |
+    {
+      "network": {
+        "kind": "vpn_connection",
+        "vpn": {
+          "uses_psk": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: vpn_connection
+    - field: properties.network.vpn.uses_psk
+      op: eq
+      value: true

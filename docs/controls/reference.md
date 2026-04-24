@@ -3,28 +3,30 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1337
-**Pack hash:** `39872662bfe9a62a3410dd50c9cb29d0560976a9f509d00bd67f3fa9c5785519`
+**Total controls:** 1346
+**Pack hash:** `85297e7577dbaef74a2323f2724c4c9f54ba84edf40ec7701977bb7163f696ab`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 170 |
-| high | 599 |
+| high | 605 |
 | info | 16 |
 | low | 94 |
-| medium | 458 |
+| medium | 461 |
 
 | Domain | Count |
 |--------|-------|
-| audit | 21 |
+| audit | 23 |
+| availability | 1 |
+| cryptography | 2 |
 | detection | 32 |
 | encryption | 75 |
-| exposure | 811 |
+| exposure | 814 |
 | governance | 27 |
 | hygiene | 3 |
-| identity | 325 |
+| identity | 326 |
 | network | 21 |
 | resilience | 14 |
 | storage | 8 |
@@ -15915,6 +15917,21 @@ AWS Organizations must have a Service Control Policy that restricts resource cre
 
 ---
 
+### CTL.RAM.EXTERNAL.001
+
+**RAM Resource Share Includes External Accounts**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-4; nist_800_53_r5: AC-4; pci_dss_v4.0: 1.3.1; soc2: CC6.6;
+
+AWS Resource Access Manager (RAM) shares resources (subnets, Transit Gateways, Route53 Resolver rules) with accounts outside the organization. Shared resources are accessible to the external account's principals — extending the network and resource boundary beyond organizational control. Unlike IAM trust policies, RAM shares operate at the resource level and can expose network infrastructure.
+
+**Remediation:** Remove external account principals from the RAM resource share. If external sharing is required, restrict to specific account IDs and resource types. Use AWS Organizations for internal sharing.
+
+---
+
 ### CTL.RDS.AUTOUPGRADE.001
 
 **RDS Auto Minor Version Upgrade Must Be Enabled**
@@ -18879,6 +18896,51 @@ Step Functions state machine definitions must not contain hardcoded secrets. Def
 
 ---
 
+### CTL.VPC.CLIENTVPN.AUTH.001
+
+**Client VPN Allows All Traffic Without Authorization Rules**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 5.5; fedramp_moderate: AC-3; hipaa: 164.312(a)(1); nist_800_53_r5: AC-3; pci_dss_v4.0: 1.3.2; soc2: CC6.6;
+
+Client VPN endpoint has no authorization rules or has a rule that allows all traffic to 0.0.0.0/0 across every associated subnet. Any VPN user who connects can reach every resource in every subnet the endpoint is attached to. Authorization rules should restrict access to specific destination CIDRs based on user-group membership so that a single compromised credential does not grant full VPC access.
+
+**Remediation:** Define authorization rules that restrict each user group to the specific destination CIDRs that group requires. Remove any 0.0.0.0/0 allow-all rule. Map user groups from the authentication provider (SAML, Active Directory, mutual certificate CN) to destination CIDRs and enforce least privilege per group.
+
+---
+
+### CTL.VPC.CLIENTVPN.LOGGING.001
+
+**Client VPN Connection Logging Not Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** cis_aws_v3.0: 3.9; fedramp_moderate: AU-2; hipaa: 164.312(b); nist_800_53_r5: AU-2; pci_dss_v4.0: 10.2.1; soc2: CC7.2;
+
+Client VPN connection logging is not enabled. The endpoint does not record who connected, when they connected, from what source IP, for how long, or which authorization rules their traffic matched. After a credential compromise, there is no way to identify which VPN sessions were the attacker's — every connection is indistinguishable from legitimate use.
+
+**Remediation:** Enable connection logging on the Client VPN endpoint. Route records to a CloudWatch Logs group in a logging-dedicated account. Retain records per incident-response and compliance requirements. Alert on unusual source-IP patterns, sessions outside business hours, and repeated authentication failures.
+
+---
+
+### CTL.VPC.CLIENTVPN.SPLITTUNNEL.001
+
+**Client VPN Split Tunneling Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 5.5; fedramp_moderate: AC-17; hipaa: 164.312(e)(1); nist_800_53_r5: AC-17; pci_dss_v4.0: 1.3.4; soc2: CC6.6;
+
+Client VPN endpoint has split tunneling enabled. Only VPC-destined traffic routes through the VPN; all other traffic leaves the client device directly to the internet. The client is simultaneously connected to the trusted VPC and the untrusted internet. An attacker who compromises the device via the internet path (malicious website, phishing, drive-by download) can pivot directly into the VPC through the VPN — the laptop becomes the corporate network perimeter. Split tunneling is a legitimate choice for bandwidth-sensitive use cases; triage should weigh that tradeoff rather than prescribe full-tunnel unconditionally.
+
+**Remediation:** Disable split tunneling so all client traffic routes through the VPN and passes through corporate security controls (firewall, proxy, DLP). If split tunneling is a documented business need (bandwidth-sensitive use cases, specific SaaS allowlist), keep it but compensate with strict endpoint hardening: EDR, host firewall, mandatory OS patching, and application allowlisting on the client device itself.
+
+---
+
 ### CTL.VPC.DEFAULT.001
 
 **Default VPC Must Not Be Used**
@@ -18906,6 +18968,21 @@ Workloads must not run in the default VPC. The default VPC is created automatica
 The default VPC must not have an internet gateway route in its route tables. AWS creates a default VPC in every region with a route table that sends all internet-bound traffic through an attached internet gateway. Resources launched into the default VPC without explicit network configuration receive a public IP and are directly reachable from the internet. The default VPC is frequently used for ad-hoc testing and forgotten resources — any instance, Lambda VPC attachment, or RDS instance placed in the default VPC inherits internet exposure by default. Removing the internet gateway route from the default VPC eliminates this accidental exposure path without affecting production workloads which should be in purpose-built VPCs.
 
 **Remediation:** Remove the internet gateway route from the default VPC route table. Detach and delete the internet gateway from the default VPC if no resources require it. Alternatively, delete the default VPC entirely if it is not in use. Verify no active resources depend on the default VPC internet connectivity before removing the route.
+
+---
+
+### CTL.VPC.DX.ENCRYPTION.001
+
+**Direct Connect Without Encryption**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** cryptography
+- **Compliance:** cis_aws_v3.0: 5.5; fedramp_moderate: SC-8; hipaa: 164.312(e)(1); nist_800_53_r5: SC-8; pci_dss_v4.0: 4.2.1; soc2: CC6.7;
+
+Direct Connect connection carries unencrypted traffic. Neither a site-to-site VPN overlay nor MACsec is configured. Direct Connect is a dedicated physical link — not shared with other customers — but the traffic on it is plaintext by default. Anyone with physical access to the fiber path (datacenter staff, transit providers, co-location personnel) can tap the connection and read traffic. Either a VPN over the Direct Connect or MACsec provides confidentiality; the control passes if either is configured.
+
+**Remediation:** Add encryption to the Direct Connect path. Either (a) configure a site-to-site VPN over the Direct Connect connection and route all traffic through the VPN, or (b) enable MACsec on the Direct Connect ports (supported on 10 Gbps and 100 Gbps dedicated connections). VPN overlay is more widely supported; MACsec offers lower latency but requires compatible hardware on both ends.
 
 ---
 
@@ -19460,6 +19537,66 @@ Transit Gateway has route propagation enabled from VPN or Direct Connect attachm
 Transit Gateway route table has routes that allow every attached VPC to communicate with every other attached VPC. The TGW becomes a flat network bridge — no segmentation between workloads. Production, development, staging, and shared services VPCs all reach each other at the network layer. A compromised instance in any attached VPC has a direct path to every other attached VPC, defeating the blast-radius isolation that separate VPCs were created to enforce. Segmented TGW route tables (one per security zone, associated only with the VPCs in that zone) are the correct pattern.
 
 **Remediation:** Replace the single shared route table with per-zone route tables. Associate each VPC attachment with the route table for its zone and configure propagation only between attachments that must communicate. Audit existing traffic to identify which flows are legitimate before enforcing new segmentation.
+
+---
+
+### CTL.VPC.VPN.ENCRYPTION.WEAK.001
+
+**VPN Connection Uses Weak Encryption**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** cryptography
+- **Compliance:** cis_aws_v3.0: 5.5; fedramp_moderate: SC-8; hipaa: 164.312(e)(1); nist_800_53_r5: SC-8; pci_dss_v4.0: 4.2.1; soc2: CC6.7;
+
+Site-to-site VPN tunnel uses encryption below AES-256 or integrity hashing below SHA-256. Phase 1 (IKE) or Phase 2 (IPsec) parameters include deprecated algorithms (DES, 3DES, AES-128, SHA-1, MD5). AWS permits customer-configured tunnel options that may include weak algorithms for backward compatibility with legacy on-premises equipment — compatibility should not override cryptographic strength for traffic that carries production data.
+
+**Remediation:** Reconfigure the VPN connection's tunnel options to require AES-256 for encryption and SHA-256 (or stronger) for integrity. Use IKEv2 rather than IKEv1. Replace DH Group 2/5 with Group 14 or higher. Coordinate with the on-premises peer to match parameters; if the peer does not support these algorithms, upgrade the peer device rather than weaken AWS-side configuration.
+
+---
+
+### CTL.VPC.VPN.LOGGING.001
+
+**VPN Connection Logging Not Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** cis_aws_v3.0: 3.9; fedramp_moderate: AU-12; hipaa: 164.312(b); nist_800_53_r5: AU-12; pci_dss_v4.0: 10.2.1; soc2: CC7.2;
+
+Site-to-site VPN tunnel logging is not enabled. Connection events (tunnel UP/DOWN transitions, IKE negotiation failures, authentication attempts, rekey events) are not recorded. VPN connectivity failures, configuration drift, and attack attempts (IKE brute force, replay attacks, identity spoofing) are invisible to security operations.
+
+**Remediation:** Enable tunnel logging on each tunnel of the VPN connection, sending records to a CloudWatch Logs group in a logging-dedicated account. Retain logs per incident-response and compliance requirements (typically one year minimum). Alert on repeated IKE failures and unexpected tunnel state changes.
+
+---
+
+### CTL.VPC.VPN.PSK.001
+
+**VPN Uses Pre-Shared Key Instead of Certificate Authentication**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 5.5; fedramp_moderate: IA-5; hipaa: 164.312(d); nist_800_53_r5: IA-5; pci_dss_v4.0: 8.3.6; soc2: CC6.1;
+
+VPN tunnel uses pre-shared key (PSK) authentication instead of certificate-based (PKI) authentication. PSKs are static shared secrets configured on both endpoints — widely readable in config files, shared across multiple administrators, and not rotated automatically. If the PSK is compromised, all historical and future traffic protected by that key is at risk. Certificate-based authentication binds trust to a cryptographic identity that can be rotated and revoked.
+
+**Remediation:** Migrate the VPN to certificate-based authentication. Issue a certificate for the on-premises device from an internal or managed CA, configure the customer gateway with certificate authentication, and remove the PSK. If certificate authentication is not feasible, rotate the PSK on a schedule, restrict its storage to a secrets manager, and limit the admins who hold it.
+
+---
+
+### CTL.VPC.VPN.TUNNEL.DOWN.001
+
+**VPN Tunnel Not in UP State**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** availability
+- **Compliance:** cis_aws_v3.0: 5.5; fedramp_moderate: CP-7; nist_800_53_r5: CP-7; soc2: A1.2;
+
+One or both VPN tunnels are not in UP state. AWS provisions two tunnels per site-to-site VPN connection for high availability. With one tunnel down, the VPN operates on a single tunnel with no failover — a single point of failure for hybrid connectivity. With both tunnels down, the VPN is non-functional and traffic either fails outright or silently falls back to internet paths (which may be unencrypted).
+
+**Remediation:** Identify the root cause — check the on-premises peer's status, verify pre-shared keys or certificates, confirm routing, and review CloudWatch metrics for IKE or tunnel-state transitions. Restore both tunnels to UP. For persistent single-tunnel failures, open a support case with AWS and the on-premises vendor simultaneously.
 
 ---
 

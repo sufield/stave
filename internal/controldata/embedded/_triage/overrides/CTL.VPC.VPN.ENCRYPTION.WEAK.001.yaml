@@ -1,0 +1,19 @@
+control: CTL.VPC.VPN.ENCRYPTION.WEAK.001
+defect: >
+  VPN connection tunnel options include a deprecated encryption or
+  integrity algorithm. AES-256 with SHA-256 is the minimum acceptable
+  standard.
+infection: >
+  VPN tunnels carry the full spectrum of traffic between the
+  organization's on-premises network and AWS — database queries,
+  API calls, file transfers, authentication exchanges. Weak cipher
+  suites (DES, 3DES, AES-128, SHA-1, MD5) have known cryptanalytic
+  attacks or insufficient key length. An attacker who intercepts
+  encrypted tunnel traffic via fiber tap, BGP hijack, or a compromised
+  transit provider can potentially decrypt it offline. The problem is
+  not whether the interception is detected — it often is not — but
+  whether the captured traffic is readable once obtained.
+failure: >
+  Transit confidentiality loss. Recorded VPN traffic between
+  on-premises and AWS is decryptable with current cryptanalytic
+  techniques.

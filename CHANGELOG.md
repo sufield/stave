@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **VPC-3 — VPN, Client VPN, and Direct Connect controls (8 controls, 3
+  chains).** Closes the hybrid-connectivity gap cluster in the VPC
+  taxonomy. Site-to-site VPN: `ENCRYPTION.WEAK` (sub-AES-256 cipher
+  suites, high), `TUNNEL.DOWN` (redundancy loss or connectivity outage,
+  high), `PSK` (shared-secret peer authentication, medium), `LOGGING`
+  (tunnel event log disabled, medium). Client VPN: `AUTH` (all-traffic
+  allow with no authorization rules, high), `LOGGING` (connection log
+  disabled, high), `SPLITTUNNEL` (client bridges VPC and internet,
+  medium). Direct Connect: `ENCRYPTION` (no VPN overlay and no MACsec,
+  high). Chains: `vpc_vpn_compromise` (weak cipher + no log or PSK),
+  `vpc_clientvpn_exposure` (all-traffic + no log or split tunnel),
+  `vpc_hybrid_unencrypted` (any unencrypted hybrid path). 18 e2e
+  fixtures, 8 triage overrides, docs and README regenerated
+  (1346 controls).
 - **VPC-2 — peering and Transit Gateway controls (9 controls, 3 chains).**
   Closes the largest remaining cluster in the VPC taxonomy: cross-VPC
   connectivity. Peering coverage adds `CROSSACCOUNT` (peer outside the

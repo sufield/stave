@@ -1,0 +1,19 @@
+control: CTL.VPC.CLIENTVPN.SPLITTUNNEL.001
+defect: >
+  Client VPN endpoint has split tunneling enabled. Client devices
+  simultaneously route VPC traffic through the VPN and internet
+  traffic directly.
+infection: >
+  Split tunneling leaves the client device with two live network
+  paths: one to the corporate VPC, one to the public internet.
+  Corporate traffic passes through VPN, firewall, and DLP; internet
+  traffic bypasses all of those. An attacker who compromises the
+  device via the internet path (malicious download, phishing, drive-
+  by exploit) has direct network access to the VPC via the VPN path
+  — the device becomes a bridge across the two networks. The
+  corporate security perimeter effectively shifts to each user's
+  laptop, whose posture is not centrally enforced.
+failure: >
+  Perimeter shifts to the endpoint. A compromise of the VPN-connected
+  device via the internet grants the attacker VPC access without
+  needing to defeat corporate network controls.

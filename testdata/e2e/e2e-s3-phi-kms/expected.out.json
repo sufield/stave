@@ -179,8 +179,9 @@
           {
             "path": "storage.encryption.algorithm",
             "current_value": "AES256",
+            "required_value": "aws:kms",
             "has_safe_default": false,
-            "description": "Change storage.encryption.algorithm from AES256"
+            "description": "Set storage.encryption.algorithm to aws:kms"
           },
           {
             "path": "storage.encryption.kms_key_id",
@@ -358,8 +359,9 @@
           {
             "path": "storage.encryption.algorithm",
             "current_value": "",
+            "required_value": "aws:kms",
             "has_safe_default": false,
-            "description": "Change storage.encryption.algorithm from "
+            "description": "Set storage.encryption.algorithm to aws:kms"
           },
           {
             "path": "storage.encryption.kms_key_id",
@@ -600,7 +602,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "8ef91f6c62fe209cbb9f3919ce7310666be52141",
+      "head_commit": "0b07538859ec24dd4bd26a844bf54396a665866e",
       "dirty": false
     }
   }

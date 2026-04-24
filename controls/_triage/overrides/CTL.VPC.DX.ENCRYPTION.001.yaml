@@ -1,0 +1,20 @@
+control: CTL.VPC.DX.ENCRYPTION.001
+defect: >
+  Direct Connect connection has neither a VPN overlay nor MACsec
+  configured. Traffic on the dedicated link is plaintext.
+infection: >
+  Direct Connect provides a private physical link between the
+  organization's datacenter and AWS — private in the sense that it
+  is not shared with other AWS customers, but not private in the
+  sense of being inaccessible. The fiber traverses conduits,
+  datacenter floors, transit provider equipment, and co-location
+  facility patch panels. Any operator or adversary with physical
+  access along that path can tap the fiber and read traffic in
+  plaintext: authentication tokens, database rows, API payloads,
+  file contents. AWS recommends layering either a site-to-site VPN
+  over the Direct Connect or MACsec (layer-2 encryption) on top
+  specifically to close this exposure.
+failure: >
+  Plaintext hybrid traffic. All data on the Direct Connect is
+  readable by anyone with physical access anywhere along the
+  fiber path.

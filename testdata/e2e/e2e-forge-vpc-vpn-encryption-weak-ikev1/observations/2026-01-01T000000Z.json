@@ -1,0 +1,30 @@
+{
+  "assets": [
+    {
+      "id": "vpn-ikev1-des",
+      "properties": {
+        "network": {
+          "kind": "vpn_connection",
+          "vpn": {
+            "connection_id": "vpn-0ikev1des000000001",
+            "encryption_algorithm": "DES",
+            "integrity_algorithm": "MD5",
+            "dh_group": 1,
+            "ike_version": 1,
+            "encryption_weak": true
+          }
+        }
+      },
+      "type": "aws_vpn_connection",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

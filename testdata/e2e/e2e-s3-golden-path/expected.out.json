@@ -1135,8 +1135,9 @@
           {
             "path": "storage.tags.public_list_intended",
             "current_value": "",
+            "required_value": "true",
             "has_safe_default": false,
-            "description": "Change storage.tags.public_list_intended from "
+            "description": "Set storage.tags.public_list_intended to true"
           }
         ],
         "action": "If listing is intentional, add the tag public_list_intended=true to the bucket. Otherwise, remove the policy or ACL granting s3:ListBucket to Principal \"*\" or AllUsers."
@@ -3188,7 +3189,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "8ef91f6c62fe209cbb9f3919ce7310666be52141",
+      "head_commit": "0b07538859ec24dd4bd26a844bf54396a665866e",
       "dirty": false
     }
   }

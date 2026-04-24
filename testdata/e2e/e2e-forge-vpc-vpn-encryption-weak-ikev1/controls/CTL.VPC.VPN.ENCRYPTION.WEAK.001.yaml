@@ -1,0 +1,63 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.VPN.ENCRYPTION.WEAK.001
+name: VPN Connection Uses Weak Encryption
+description: >
+  Site-to-site VPN tunnel uses encryption below AES-256 or integrity
+  hashing below SHA-256. Phase 1 (IKE) or Phase 2 (IPsec) parameters
+  include deprecated algorithms (DES, 3DES, AES-128, SHA-1, MD5). AWS
+  permits customer-configured tunnel options that may include weak
+  algorithms for backward compatibility with legacy on-premises
+  equipment — compatibility should not override cryptographic strength
+  for traffic that carries production data.
+domain: cryptography
+severity: high
+compliance:
+  cis_aws_v3.0: "5.5"
+  nist_800_53_r5: "SC-8"
+  fedramp_moderate: "SC-8"
+  pci_dss_v4.0: "4.2.1"
+  soc2: "CC6.7"
+  hipaa: "164.312(e)(1)"
+  ccm_v4: ["CEK-03", "IVS-03"]
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: data_access
+observation_fields:
+  - network.kind
+  - network.vpn.connection_id
+  - network.vpn.encryption_algorithm
+  - network.vpn.integrity_algorithm
+  - network.vpn.encryption_weak
+  - network.vpn.ike_version
+remediation:
+  description: >
+    VPN tunnel options include a deprecated encryption or integrity
+    algorithm. AES-256 with SHA-256 is the minimum acceptable standard.
+  action: >
+    Reconfigure the VPN connection's tunnel options to require AES-256
+    for encryption and SHA-256 (or stronger) for integrity. Use IKEv2
+    rather than IKEv1. Replace DH Group 2/5 with Group 14 or higher.
+    Coordinate with the on-premises peer to match parameters; if the
+    peer does not support these algorithms, upgrade the peer device
+    rather than weaken AWS-side configuration.
+  example: |
+    {
+      "network": {
+        "kind": "vpn_connection",
+        "vpn": {
+          "encryption_weak": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: vpn_connection
+    - field: properties.network.vpn.encryption_weak
+      op: eq
+      value: true

@@ -1,0 +1,27 @@
+{
+  "assets": [
+    {
+      "id": "dx-plaintext",
+      "properties": {
+        "network": {
+          "kind": "directconnect_connection",
+          "dx": {
+            "connection_id": "dxcon-0plaintextbad001",
+            "has_vpn_overlay": false,
+            "macsec_enabled": false
+          }
+        }
+      },
+      "type": "aws_dx_connection",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

@@ -1,0 +1,17 @@
+control: CTL.VPC.VPN.PSK.001
+defect: >
+  Site-to-site VPN authenticates the on-premises peer with a
+  pre-shared key instead of a certificate.
+infection: >
+  A pre-shared key is a static string written to configuration files
+  on both endpoints. It is usually shared among multiple operators,
+  stored in runbooks or vaults, copied into secondary systems, and
+  rarely rotated. A single leak — a screenshot in a ticket, a
+  misconfigured backup, a departing admin — exposes all past and
+  future traffic protected by that key. Certificates, by contrast,
+  can be issued per-device, rotated automatically, and revoked
+  centrally; compromise of one certificate does not require regen
+  across every peer.
+failure: >
+  Shared-secret exposure. A leaked PSK enables passive decryption
+  of captured traffic and active impersonation of the peer.
