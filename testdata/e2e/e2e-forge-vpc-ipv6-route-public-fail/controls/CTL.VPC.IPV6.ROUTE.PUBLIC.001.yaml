@@ -1,0 +1,72 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.IPV6.ROUTE.PUBLIC.001
+name: Subnet Private on IPv4 but Public on IPv6
+description: >
+  Subnet is private on IPv4 — no 0.0.0.0/0 route to the Internet
+  Gateway — but its route table contains a ::/0 → IGW entry for
+  IPv6. Instances with IPv6 addresses (any instance in a subnet
+  that has an IPv6 CIDR) are directly reachable from the
+  internet despite the subnet being labeled and treated as
+  "private." Operators inspecting route tables for IPv4 IGW
+  routes correctly conclude the subnet has no IPv4 internet
+  exposure, then routinely overlook the IPv6 route. The subnet
+  is private and public simultaneously — depending on which
+  protocol you ask about. The IPv6 route should target the
+  egress-only internet gateway, not the standard IGW.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "5.1"
+  nist_800_53_r5: "SC-7"
+  fedramp_moderate: "SC-7"
+  pci_dss_v4.0: "1.2.1"
+  soc2: "CC6.6"
+  hipaa: "164.312(e)(1)"
+  ccm_v4: ["IVS-03", "IVS-06"]
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+observation_fields:
+  - network.kind
+  - network.subnet.has_ipv4_igw_route
+  - network.subnet.has_ipv6_igw_route
+  - network.subnet.ipv6_route_destination
+  - network.subnet.is_ipv4_private
+  - network.subnet.is_ipv6_public
+remediation:
+  description: >
+    Subnet is private on IPv4 but has a ::/0 → IGW route on
+    IPv6. IPv6 traffic from this subnet is bidirectionally
+    routed through the standard Internet Gateway.
+  action: >
+    Replace the subnet's ::/0 → IGW route with a ::/0 route
+    targeting the VPC's egress-only internet gateway (creating
+    the EIGW first if it does not exist; see
+    `CTL.VPC.IPV6.EGRESSONLY.001`). IPv6 outbound traffic
+    continues to function; inbound IPv6 from the internet is
+    blocked, matching the IPv4-private behavior.
+  example: |
+    {
+      "network": {
+        "kind": "subnet",
+        "subnet": {
+          "is_ipv4_private": true,
+          "is_ipv6_public": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: subnet
+    - field: properties.network.subnet.is_ipv4_private
+      op: eq
+      value: true
+    - field: properties.network.subnet.is_ipv6_public
+      op: eq
+      value: true

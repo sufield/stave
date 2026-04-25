@@ -17,6 +17,7 @@ import (
 
 	builtinctl "github.com/sufield/stave/internal/adapters/controls/builtin"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
+	"github.com/sufield/stave/internal/builtin/capabilities"
 	"github.com/sufield/stave/internal/adapters/observations"
 	"github.com/sufield/stave/internal/adapters/sla"
 	appconsolidate "github.com/sufield/stave/internal/app/consolidate"
@@ -121,7 +122,7 @@ func run(stdout, stderr io.Writer, opts *options) error {
 		return fmt.Errorf("load controls: %w", err)
 	}
 	chainsDir := "chains"
-	chains, chainsErr := ctlyaml.LoadChains(chainsDir)
+	chains, chainsErr := ctlyaml.LoadChains(chainsDir, capabilities.Builtin())
 	if chainsErr != nil {
 		return fmt.Errorf("loading chains: %w", chainsErr)
 	}

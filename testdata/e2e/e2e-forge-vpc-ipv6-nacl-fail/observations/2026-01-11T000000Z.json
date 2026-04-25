@@ -1,0 +1,9 @@
+{
+  "assets": [
+    {"id": "nacl-ipv4-only", "properties": {"network": {"kind": "network_acl", "nacl": {"has_ipv4_restrictions": true, "has_ipv6_parity": false, "ipv6_rules_missing": [{"protocol": "tcp", "port": 22, "source_v4": "0.0.0.0/0", "missing_ipv6": "::/0"}]}}}, "type": "aws_network_acl", "vendor": "aws"}
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "generated_by": {"source_type": "aws.config_api", "tool": "stave-test", "tool_version": "1.0.0"},
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

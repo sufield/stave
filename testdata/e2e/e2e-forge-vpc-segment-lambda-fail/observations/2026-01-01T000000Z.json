@@ -1,0 +1,9 @@
+{
+  "assets": [
+    {"id": "lambda-wide-open", "properties": {"network": {"kind": "lambda_function", "lambda": {"vpc_configured": true, "sg_egress_unrestricted": true, "subnet_ids": ["subnet-private0001", "subnet-private0002"], "function_name": "fetch-secrets"}}}, "type": "aws_lambda_function", "vendor": "aws"}
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "generated_by": {"source_type": "aws.config_api", "tool": "stave-test", "tool_version": "1.0.0"},
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

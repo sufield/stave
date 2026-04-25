@@ -8,6 +8,7 @@ import (
 
 	ctlbuiltin "github.com/sufield/stave/internal/adapters/controls/builtin"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
+	"github.com/sufield/stave/internal/builtin/capabilities"
 	covadapter "github.com/sufield/stave/internal/adapters/coverage"
 	"github.com/sufield/stave/internal/adapters/observations"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
@@ -154,7 +155,7 @@ func loadChainDefs(dir string) ([]policy.ChainDefinition, error) {
 	if dir == "" {
 		return nil, nil
 	}
-	return ctlyaml.LoadChains(dir)
+	return ctlyaml.LoadChains(dir, capabilities.Builtin())
 }
 
 // resolveControls loads the control set used by the evaluation.

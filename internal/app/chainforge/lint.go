@@ -16,8 +16,9 @@ type LintResult struct {
 	Warnings []string `json:"warnings,omitempty"`
 }
 
-// LintChain validates a chain definition against the control catalog.
-func LintChain(chain *policy.ChainDefinition, controlIDs map[kernel.ControlID]bool) LintResult {
+// LintChain validates a chain definition against the control catalog
+// and the catalog-supplied capability registry.
+func LintChain(chain *policy.ChainDefinition, controlIDs map[kernel.ControlID]bool, registry policy.CapabilityRegistry) LintResult {
 	result := LintResult{ChainID: chain.ID}
 
 	if chain.ID == "" {
@@ -43,17 +44,19 @@ func LintChain(chain *policy.ChainDefinition, controlIDs map[kernel.ControlID]bo
 		}
 	}
 
-	// Validate capability strings.
-	for _, cap := range chain.Preconditions {
-		if !policy.IsValidCapability(cap) {
-			result.Errors = append(result.Errors, fmt.Sprintf(
-				"precondition %q is not a valid capability", cap))
+	// Validate capability strings against the catalog registry.
+	if registry != nil {
+		for _, cap := range chain.Preconditions {
+			if !registry.IsValid(cap) {
+				result.Errors = append(result.Errors, fmt.Sprintf(
+					"precondition %q is not a valid capability", cap))
+			}
 		}
-	}
-	for _, cap := range chain.Postconditions {
-		if !policy.IsValidCapability(cap) {
-			result.Errors = append(result.Errors, fmt.Sprintf(
-				"postcondition %q is not a valid capability", cap))
+		for _, cap := range chain.Postconditions {
+			if !registry.IsValid(cap) {
+				result.Errors = append(result.Errors, fmt.Sprintf(
+					"postcondition %q is not a valid capability", cap))
+			}
 		}
 	}
 

@@ -9,6 +9,7 @@ import (
 
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	"github.com/sufield/stave/internal/app/chainforge"
+	"github.com/sufield/stave/internal/builtin/capabilities"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -74,7 +75,7 @@ func runChainLint(w io.Writer, chainPath, controlsDir string) error {
 	// Load all chains to validate, build catalog of control IDs.
 	controlIDs := loadControlIDs(controlsDir)
 
-	result := chainforge.LintChain(&chain, controlIDs)
+	result := chainforge.LintChain(&chain, controlIDs, capabilities.Builtin())
 
 	_, _ = fmt.Fprint(w, chainforge.FormatLint(result))
 	fmt.Fprintf(w, "\n%d error(s), %d warning(s)\n", len(result.Errors), len(result.Warnings))
@@ -86,7 +87,7 @@ func runChainLint(w io.Writer, chainPath, controlsDir string) error {
 }
 
 func loadControlIDs(dir string) map[kernel.ControlID]bool {
-	chains, err := ctlyaml.LoadChains(dir)
+	chains, err := ctlyaml.LoadChains(dir, capabilities.Builtin())
 	_ = chains // we want control IDs, not chain IDs
 	if err != nil {
 		return nil

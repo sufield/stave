@@ -1,0 +1,24 @@
+control: CTL.VPC.IPV6.EGRESSONLY.001
+defect: >
+  VPC has an IPv6 CIDR but no egress-only internet gateway.
+  IPv6 instances are bidirectionally addressable from the
+  internet.
+infection: >
+  IPv6 has no NAT. Every IPv6 address is globally routable by
+  default — the address you get when an instance is launched
+  in an IPv6-enabled subnet IS its public address. Without an
+  egress-only internet gateway, the only IPv6 internet
+  attachment is the standard IGW, and traffic in both
+  directions flows through it. Every IPv6-enabled instance is
+  directly reachable from any IPv6 host on the internet, on
+  whatever ports its security group permits. Operators
+  accustomed to the IPv4-with-NAT model — where "private
+  subnet" structurally means "no internet" — often miss this
+  because nothing about the IPv6 surface looks like a NAT
+  problem. The egress-only IGW is the IPv6 mechanism that
+  produces NAT-equivalent behavior: outbound permitted,
+  inbound from the internet blocked.
+failure: >
+  Bidirectional IPv6 internet exposure. Every IPv6-enabled
+  instance is internet-reachable on its open SG ports without
+  any deliberate decision to make it public.

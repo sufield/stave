@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/cobra"
 
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
+	"github.com/sufield/stave/internal/builtin/capabilities"
 	"github.com/sufield/stave/internal/app/attackpath"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
@@ -109,7 +110,7 @@ func runPath(stdout io.Writer, opts *options) error {
 		return fmt.Errorf("parse assessment: %w", unmarshalErr)
 	}
 
-	chains, err := ctlyaml.LoadChains(opts.ChainsDir)
+	chains, err := ctlyaml.LoadChains(opts.ChainsDir, capabilities.Builtin())
 	if err != nil {
 		return fmt.Errorf("load chains: %w", err)
 	}

@@ -1,0 +1,65 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.SEGMENT.EASTWEST.001
+name: Inter-VPC Traffic via Transit Gateway Not Inspected
+description: >
+  Traffic transiting the Transit Gateway between attached VPCs is
+  not routed through a Network Firewall or inspection VPC. Cross-
+  VPC packets flow directly from source VPC to destination VPC
+  without any inspection — no IDS/IPS, no protocol anomaly
+  detection, no domain reputation checks, no logging beyond
+  flow-log metadata. East-west lateral movement between
+  workloads is uninspected. The recommended pattern routes all
+  inter-VPC traffic through a centralized inspection VPC whose
+  Network Firewall enforces stateful policy on every cross-VPC
+  flow.
+domain: exposure
+severity: medium
+compliance:
+  cis_aws_v3.0: "5.1"
+  nist_800_53_r5: "SC-7"
+  fedramp_moderate: "SC-7"
+  pci_dss_v4.0: "1.2.1"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "IVS-04"]
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+observation_fields:
+  - network.kind
+  - network.tgw.id
+  - network.tgw.inspection_vpc_configured
+  - network.tgw.traffic_routes_through_inspection
+  - network.tgw.has_inspection_attachment
+remediation:
+  description: >
+    Transit Gateway routes inter-VPC traffic directly between
+    attached VPCs without an inspection hop.
+  action: >
+    Add an inspection VPC attachment to the Transit Gateway.
+    Deploy AWS Network Firewall in the inspection VPC. Update
+    the TGW route tables so inter-VPC default routes target
+    the inspection VPC's attachment, not the destination VPC
+    directly. The inspection VPC firewall then enforces
+    stateful policy on every cross-VPC flow. Validate by
+    confirming non-zero firewall flow logs after the cutover.
+  example: |
+    {
+      "network": {
+        "kind": "transit_gateway",
+        "tgw": {
+          "traffic_routes_through_inspection": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: transit_gateway
+    - field: properties.network.tgw.traffic_routes_through_inspection
+      op: eq
+      value: false

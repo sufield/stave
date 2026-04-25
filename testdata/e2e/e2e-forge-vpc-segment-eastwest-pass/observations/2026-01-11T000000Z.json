@@ -1,0 +1,9 @@
+{
+  "assets": [
+    {"id": "tgw-with-inspection", "properties": {"network": {"kind": "transit_gateway", "tgw": {"id": "tgw-0inspect001", "inspection_vpc_configured": true, "traffic_routes_through_inspection": true, "has_inspection_attachment": true}}}, "type": "aws_ec2_transit_gateway", "vendor": "aws"}
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "generated_by": {"source_type": "aws.config_api", "tool": "stave-test", "tool_version": "1.0.0"},
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

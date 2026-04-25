@@ -8,6 +8,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **VPC-8 — lateral movement, network segmentation, and IPv6
+  controls (8 controls, 3 chains). Final VPC iteration.** Closes
+  the category-14 (lateral movement) and category-12 (IPv6)
+  clusters; completes the eight-iteration VPC gap-closure
+  programme.
+  Segmentation (5): `SEGMENT.ENVMIX` (production and non-
+  production share network path, high), `SEGMENT.TIERING`
+  (web/app/data tiers in same subnet, medium), `SEGMENT.BASTION`
+  (bastion has unrestricted internal egress, high),
+  `SEGMENT.EASTWEST` (TGW inter-VPC traffic uninspected, medium),
+  `SEGMENT.LAMBDA` (VPC-attached Lambda has unrestricted SG
+  egress, medium).
+  IPv6 (3): `IPV6.EGRESSONLY` (IPv6 VPC without egress-only IGW
+  — bidirectional internet exposure since IPv6 has no NAT,
+  high), `IPV6.ROUTE.PUBLIC` (subnet private on IPv4 but public
+  on IPv6 — the most deceptive IPv6 misconfiguration, high),
+  `IPV6.NACL` (NACL IPv6 rules don't match IPv4 restrictions —
+  the parity gap at the NACL layer, medium).
+  Chains: `vpc_lateral_movement` (envmix + bastion or eastwest),
+  `vpc_ipv6_shadow_exposure` (no EIGW + ROUTE.PUBLIC or SG IPv6
+  parity gap), `vpc_segmentation_failure` (no tiering + default
+  NACL or default SG in use).
+  18 e2e fixtures (16 base + two worst-case variants:
+  envmix-tgw with cross-VPC environment mixing via TGW, and
+  ipv6-route-public-natigw with NAT for IPv4 but IGW for IPv6).
+  8 triage overrides. Docs and README regenerated (1386 controls).
+- **refactor: extract capability vocabulary from core engine.**
+  Moved `ValidCapabilities` from `internal/core/controldef/` to
+  `internal/builtin/capabilities/`. Core now defines the
+  `CapabilityRegistry` contract; the catalog layer provides the
+  data. After this change, no domain expansion (AWS, M365,
+  Cloudflare, EKS, GCP, Azure, or any future domain) requires
+  modifying `internal/core/`. 108 domain-expansion commits, zero
+  core changes — that pattern now extends to any new
+  attack-path capability strings as well. `Validate()` is now
+  structural-only; vocabulary is checked via the new
+  `ValidateCapabilities(registry)` method. 12 production
+  callers updated to thread the registry through; tests use
+  locally-declared registries instead of the previously-global
+  vocabulary.
 - **VPC-7 — load balancer ghost references, DNS firewall, and
   Network ACL controls (9 controls, 3 chains).** Combines three
   smaller gap clusters from categories 2 (NACLs), 8 (DNS), and

@@ -1,0 +1,9 @@
+{
+  "assets": [
+    {"id": "vpc-mixed", "properties": {"network": {"kind": "vpc", "vpc": {"has_mixed_environments": true, "environment_tags": ["production", "development"], "production_resources": ["i-prod001"], "nonprod_resources": ["i-dev001", "i-dev002"]}}}, "type": "aws_vpc", "vendor": "aws"}
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "generated_by": {"source_type": "aws.config_api", "tool": "stave-test", "tool_version": "1.0.0"},
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

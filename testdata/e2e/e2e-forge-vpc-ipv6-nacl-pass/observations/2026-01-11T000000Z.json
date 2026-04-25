@@ -1,0 +1,9 @@
+{
+  "assets": [
+    {"id": "nacl-dual-stack", "properties": {"network": {"kind": "network_acl", "nacl": {"has_ipv4_restrictions": true, "has_ipv6_parity": true, "ipv6_rules_missing": []}}}, "type": "aws_network_acl", "vendor": "aws"}
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "generated_by": {"source_type": "aws.config_api", "tool": "stave-test", "tool_version": "1.0.0"},
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

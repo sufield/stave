@@ -18,6 +18,7 @@ import (
 
 	artifact "github.com/sufield/stave/internal/adapters/artifacts"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
+	"github.com/sufield/stave/internal/builtin/capabilities"
 	infraSLA "github.com/sufield/stave/internal/adapters/sla"
 	appcoverage "github.com/sufield/stave/internal/app/coverage"
 	appmon "github.com/sufield/stave/internal/app/monitor"
@@ -103,7 +104,7 @@ func runMonitor(ctx context.Context, stdout, _ io.Writer, opts *options) error {
 		if len(assessments) == 0 {
 			return nil, fmt.Errorf("no assessment files in %s", opts.HistoryDir)
 		}
-		chains, chainsErr := ctlyaml.LoadChains("chains")
+		chains, chainsErr := ctlyaml.LoadChains("chains", capabilities.Builtin())
 		if chainsErr != nil {
 			return nil, fmt.Errorf("loading chains: %w", chainsErr)
 		}

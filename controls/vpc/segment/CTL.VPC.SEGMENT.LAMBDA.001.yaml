@@ -1,0 +1,67 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.SEGMENT.LAMBDA.001
+name: Lambda Function in VPC Has Unrestricted Subnet Access
+description: >
+  Lambda function configured with VPC access has a security group
+  that permits outbound to all subnets in the VPC. The Lambda
+  ENI can reach every resource in every subnet — databases,
+  caches, internal APIs, management interfaces. Lambda functions
+  should have egress restricted to the specific subnets and
+  ports they require; the function code is small, the surface
+  it should reach is well-defined, and unrestricted egress
+  allows a compromised function to pivot anywhere in the VPC.
+domain: exposure
+severity: medium
+compliance:
+  cis_aws_v3.0: "5.1"
+  nist_800_53_r5: "SC-7"
+  fedramp_moderate: "SC-7"
+  pci_dss_v4.0: "1.2.1"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "IVS-06"]
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+observation_fields:
+  - network.kind
+  - network.lambda.vpc_configured
+  - network.lambda.sg_egress_unrestricted
+  - network.lambda.subnet_ids
+  - network.lambda.function_name
+remediation:
+  description: >
+    Lambda function's security group permits unrestricted
+    outbound to the VPC.
+  action: >
+    Replace the Lambda SG egress with explicit destination
+    rules: only the CIDRs and ports the function actually
+    calls. For an RDS-querying function, allow outbound to the
+    DB subnet CIDR on the database port only. For a function
+    calling internal APIs, allow outbound to the API subnet
+    CIDR on the application port only. If the function calls
+    AWS services privately, prefer interface VPC endpoints
+    over broad outbound rules.
+  example: |
+    {
+      "network": {
+        "kind": "lambda_function",
+        "lambda": {
+          "sg_egress_unrestricted": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: lambda_function
+    - field: properties.network.lambda.vpc_configured
+      op: eq
+      value: true
+    - field: properties.network.lambda.sg_egress_unrestricted
+      op: eq
+      value: true

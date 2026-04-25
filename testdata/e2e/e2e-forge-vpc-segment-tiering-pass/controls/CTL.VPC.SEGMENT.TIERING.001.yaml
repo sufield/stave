@@ -1,0 +1,66 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.SEGMENT.TIERING.001
+name: Subnet Mixes Web, Application, and Data-Tier Resources
+description: >
+  Web-facing resources (load balancers, web servers), application
+  logic (app servers, Lambda ENIs, ECS tasks), and data stores
+  (RDS, ElastiCache, Redshift) share the same subnet. With no
+  subnet tier separation, security groups become the only network
+  control — there is no NACL boundary between tiers. A compromise
+  at any tier reaches every other tier on the same broadcast
+  domain at the network layer; only SG rules stand in the way.
+  Tier separation puts web in public subnets, application in
+  private subnets, and data in private subnets associated with
+  database-only NACLs.
+domain: exposure
+severity: medium
+compliance:
+  cis_aws_v3.0: "5.1"
+  nist_800_53_r5: "SC-7"
+  fedramp_moderate: "SC-7"
+  pci_dss_v4.0: "1.2.1"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "IVS-06"]
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+observation_fields:
+  - network.kind
+  - network.subnet.id
+  - network.subnet.resource_types
+  - network.subnet.has_mixed_tiers
+  - network.subnet.tier_mix
+remediation:
+  description: >
+    Subnet contains resources spanning multiple architectural
+    tiers (web, application, data) without subnet-level
+    separation.
+  action: >
+    Reorganize subnets so each tier has dedicated subnets:
+    public subnets for ALBs/NLBs/bastions, private subnets for
+    application workloads, isolated private subnets for databases
+    (no IGW/NAT route). Migrate existing resources tier-by-tier;
+    use database snapshots and Lambda blue/green to minimize
+    downtime. After tier separation, apply NACLs that mirror
+    each tier's intended traffic boundaries.
+  example: |
+    {
+      "network": {
+        "kind": "subnet",
+        "subnet": {
+          "has_mixed_tiers": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: subnet
+    - field: properties.network.subnet.has_mixed_tiers
+      op: eq
+      value: true

@@ -1,0 +1,9 @@
+{
+  "assets": [
+    {"id": "subnet-tiered", "properties": {"network": {"kind": "subnet", "subnet": {"id": "subnet-app-only", "resource_types": ["ec2_instance"], "has_mixed_tiers": false, "tier_mix": ["app"]}}}, "type": "aws_subnet", "vendor": "aws"}
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "generated_by": {"source_type": "aws.config_api", "tool": "stave-test", "tool_version": "1.0.0"},
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

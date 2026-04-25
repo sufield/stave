@@ -9,6 +9,7 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
+	"github.com/sufield/stave/internal/builtin/capabilities"
 	"github.com/sufield/stave/internal/adapters/observations"
 	"github.com/sufield/stave/internal/adapters/sla"
 	appconfig "github.com/sufield/stave/internal/app/config"
@@ -115,7 +116,7 @@ func (b *Builder) Build(ctx context.Context, plan *appeval.EvaluationPlan) (*app
 
 	// Auto-discover chain definitions from chains/ directory at project root,
 	// independent of --controls path.
-	chains, chainsErr := ctlyaml.LoadChains("chains")
+	chains, chainsErr := ctlyaml.LoadChains("chains", capabilities.Builtin())
 	if chainsErr != nil {
 		return nil, fmt.Errorf("loading chains: %w", chainsErr)
 	}

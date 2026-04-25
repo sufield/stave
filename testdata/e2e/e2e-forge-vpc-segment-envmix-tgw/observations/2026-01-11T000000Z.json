@@ -1,0 +1,9 @@
+{
+  "assets": [
+    {"id": "vpc-prod-tgw-dev", "properties": {"network": {"kind": "vpc", "vpc": {"has_mixed_environments": true, "environment_tags": ["production", "development"], "production_resources": ["i-prod-vpc-001"], "nonprod_resources": ["i-dev-tgw-peer-001"]}}}, "type": "aws_vpc", "vendor": "aws"}
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "generated_by": {"source_type": "aws.config_api", "tool": "stave-test", "tool_version": "1.0.0"},
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

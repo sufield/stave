@@ -42,6 +42,16 @@ func TestChainDefinition_Validate(t *testing.T) {
 	}
 }
 
+// testRegistry is the test-local capability vocabulary. The core
+// engine no longer ships a vocabulary; tests declare exactly the
+// capabilities they exercise so the test never depends on the
+// catalog layer.
+var testRegistry = CapabilitySet{
+	"internet_access":      {},
+	"iam_credential_theft": {},
+	"network_access_ec2":   {},
+}
+
 func TestChainDefinition_Validate_ValidCapabilities(t *testing.T) {
 	c := ChainDefinition{
 		ID:                  "test_chain",
@@ -52,7 +62,10 @@ func TestChainDefinition_Validate_ValidCapabilities(t *testing.T) {
 		Postconditions:      []string{"iam_credential_theft", "network_access_ec2"},
 	}
 	if err := c.Validate(); err != nil {
-		t.Errorf("valid chain should pass: %v", err)
+		t.Errorf("valid chain should pass structural validation: %v", err)
+	}
+	if err := c.ValidateCapabilities(testRegistry); err != nil {
+		t.Errorf("valid chain should pass capability validation: %v", err)
 	}
 }
 
@@ -64,7 +77,7 @@ func TestChainDefinition_Validate_InvalidCapability(t *testing.T) {
 		CompoundSeverity:    SeverityHigh,
 		Preconditions:       []string{"totally_fake_capability"},
 	}
-	if err := c.Validate(); err == nil {
+	if err := c.ValidateCapabilities(testRegistry); err == nil {
 		t.Fatal("expected error for invalid precondition capability")
 	}
 
@@ -75,8 +88,21 @@ func TestChainDefinition_Validate_InvalidCapability(t *testing.T) {
 		CompoundSeverity:    SeverityHigh,
 		Postconditions:      []string{"nonexistent_cap"},
 	}
-	if err := c2.Validate(); err == nil {
+	if err := c2.ValidateCapabilities(testRegistry); err == nil {
 		t.Fatal("expected error for invalid postcondition capability")
+	}
+}
+
+func TestChainDefinition_ValidateCapabilities_NilRegistryAllowsAll(t *testing.T) {
+	c := ChainDefinition{
+		ID:                  "test_chain",
+		ControlIDs:          []kernel.ControlID{"CTL.A.001", "CTL.A.002"},
+		EscalationThreshold: 2,
+		CompoundSeverity:    SeverityHigh,
+		Preconditions:       []string{"anything", "really"},
+	}
+	if err := c.ValidateCapabilities(nil); err != nil {
+		t.Errorf("nil registry should skip capability validation: %v", err)
 	}
 }
 

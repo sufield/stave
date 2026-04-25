@@ -1,0 +1,22 @@
+control: CTL.VPC.SEGMENT.ENVMIX.001
+defect: >
+  Production and non-production workloads share a network path
+  — co-located in one VPC or connected across VPCs without
+  segmentation.
+infection: >
+  Network segmentation between environments is the primary
+  blast-radius control. Production gets the strictest IAM, the
+  most monitoring, the most patching discipline. Development
+  environments routinely have weaker controls — broader IAM
+  for developer convenience, less alerting, lower patch
+  cadence. When the two environments share a network path, a
+  compromise in development gives the attacker direct network
+  access to production. The compromise enters where defenses
+  are loose and reaches where the data lives. Cross-environment
+  network paths convert "we have stricter controls in prod"
+  into "stricter controls in prod don't matter because the
+  attacker is already inside the network."
+failure: >
+  Lateral movement from low-trust to high-trust environment.
+  A compromised dev workload reaches production databases and
+  services without crossing any network boundary.

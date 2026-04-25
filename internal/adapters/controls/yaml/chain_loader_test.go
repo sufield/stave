@@ -18,7 +18,7 @@ controls:
 escalation_threshold: 2
 compound_severity: high
 `)
-		chains, err := LoadChains(dir)
+		chains, err := LoadChains(dir, nil)
 		if err != nil {
 			t.Fatalf("LoadChains: %v", err)
 		}
@@ -34,7 +34,7 @@ compound_severity: high
 	})
 
 	t.Run("missing directory returns nil", func(t *testing.T) {
-		chains, err := LoadChains("/nonexistent/path")
+		chains, err := LoadChains("/nonexistent/path", nil)
 		if err != nil {
 			t.Fatalf("expected nil error for missing dir, got: %v", err)
 		}
@@ -51,7 +51,7 @@ controls:
   - CTL.A.001
 escalation_threshold: 1
 `)
-		_, err := LoadChains(dir)
+		_, err := LoadChains(dir, nil)
 		if err == nil {
 			t.Fatal("expected validation error for chain with 1 control")
 		}
@@ -69,7 +69,7 @@ id: a_chain
 controls: [CTL.C.001, CTL.D.001]
 escalation_threshold: 1
 `)
-		chains, err := LoadChains(dir)
+		chains, err := LoadChains(dir, nil)
 		if err != nil {
 			t.Fatalf("LoadChains: %v", err)
 		}
@@ -86,7 +86,7 @@ id: valid
 controls: [CTL.A.001, CTL.B.001]
 escalation_threshold: 1
 `)
-		chains, err := LoadChains(dir)
+		chains, err := LoadChains(dir, nil)
 		if err != nil {
 			t.Fatalf("LoadChains: %v", err)
 		}

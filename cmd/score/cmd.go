@@ -16,6 +16,7 @@ import (
 
 	artifact "github.com/sufield/stave/internal/adapters/artifacts"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
+	"github.com/sufield/stave/internal/builtin/capabilities"
 	appscore "github.com/sufield/stave/internal/app/score"
 	"github.com/sufield/stave/internal/core/report"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -102,7 +103,7 @@ func runScore(ctx context.Context, stdout io.Writer, opts *options) error {
 	}
 
 	// Load chain definitions for accurate chain weight.
-	chains, chainsErr := ctlyaml.LoadChains("chains")
+	chains, chainsErr := ctlyaml.LoadChains("chains", capabilities.Builtin())
 	if chainsErr != nil {
 		return fmt.Errorf("loading chains: %w", chainsErr)
 	}

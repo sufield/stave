@@ -13,6 +13,7 @@ import (
 
 	builtinctl "github.com/sufield/stave/internal/adapters/controls/builtin"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
+	"github.com/sufield/stave/internal/builtin/capabilities"
 	"github.com/sufield/stave/internal/app/narrative"
 	"github.com/sufield/stave/internal/controldata"
 	policy "github.com/sufield/stave/internal/core/controldef"
@@ -107,7 +108,7 @@ func runExplainNarrative(stdout io.Writer, opts *explainNarrativeOpts) error {
 	}
 
 	// Load chains.
-	chains, chainsErr := ctlyaml.LoadChains(opts.ChainsDir)
+	chains, chainsErr := ctlyaml.LoadChains(opts.ChainsDir, capabilities.Builtin())
 	if chainsErr != nil {
 		return fmt.Errorf("loading chains: %w", chainsErr)
 	}

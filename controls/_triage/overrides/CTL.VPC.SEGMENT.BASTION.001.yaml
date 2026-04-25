@@ -1,0 +1,25 @@
+control: CTL.VPC.SEGMENT.BASTION.001
+defect: >
+  Bastion or jump host has a security group that permits
+  outbound traffic to all internal subnets on management
+  ports.
+infection: >
+  The bastion is, by design, the bridge between the public
+  internet and the internal network — it has both a public IP
+  and management-plane access to internal hosts. That
+  combination makes it the highest-value lateral-movement
+  target in the VPC. Every external attacker who can SSH or
+  RDP to the bastion (via leaked key, brute-force success,
+  malicious insider, or unpatched bastion-side vulnerability)
+  inherits whatever the bastion can reach. If the bastion's
+  egress is "any internal CIDR on SSH/RDP," the attacker
+  reaches every Linux instance and every Windows instance in
+  every subnet. AWS Systems Manager Session Manager removes
+  the bastion entirely by tunneling SSH through IAM-
+  authenticated SSM sessions; where bastions remain, their
+  egress should be scoped to specific subnets and ports.
+failure: >
+  Full internal management access from a single compromised
+  jump host. Every Linux and Windows instance in the VPC is
+  reachable on its management port via the bastion's
+  unrestricted egress.

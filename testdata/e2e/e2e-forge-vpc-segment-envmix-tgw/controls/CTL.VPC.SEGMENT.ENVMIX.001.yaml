@@ -1,0 +1,68 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.SEGMENT.ENVMIX.001
+name: Production and Non-Production Workloads Share Network Path
+description: >
+  Production and non-production (development, staging, testing)
+  resources exist in the same VPC, or in VPCs connected via peering
+  or Transit Gateway with route-table entries that permit cross-
+  environment traffic. Network segmentation between environments is
+  the primary blast-radius control: a compromised low-trust
+  workload in development should not have a network path to
+  production databases. When environments share a VPC or have
+  unrestricted inter-VPC routing, that control is absent.
+  Strengthens `CTL.VPC.ENV.ISOLATION.001` with explicit
+  detection of mixed environments sharing a network path.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "5.1"
+  nist_800_53_r5: "SC-7"
+  fedramp_moderate: "SC-7"
+  pci_dss_v4.0: "1.2.1"
+  soc2: "CC6.6"
+  hipaa: "164.312(e)(1)"
+  ccm_v4: ["IVS-03", "IVS-06"]
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+observation_fields:
+  - network.kind
+  - network.vpc.has_mixed_environments
+  - network.vpc.environment_tags
+  - network.vpc.production_resources
+  - network.vpc.nonprod_resources
+remediation:
+  description: >
+    Production and non-production workloads share a network path,
+    either co-located in one VPC or connected via unrestricted
+    routing.
+  action: >
+    Move non-production workloads to dedicated VPCs and remove any
+    routing between production and non-production VPCs (peering or
+    TGW). If a controlled connection is required (e.g., shared
+    services), terminate it through an inspection VPC with a
+    Network Firewall and tightly scoped routes. Standardize an
+    `Environment` tag with values `production`, `staging`,
+    `development`, `testing` so this control fires reliably; the
+    tag-name and value heuristics are configurable.
+  example: |
+    {
+      "network": {
+        "kind": "vpc",
+        "vpc": {
+          "has_mixed_environments": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: vpc
+    - field: properties.network.vpc.has_mixed_environments
+      op: eq
+      value: true

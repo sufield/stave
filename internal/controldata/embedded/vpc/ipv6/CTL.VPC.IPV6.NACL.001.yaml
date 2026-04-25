@@ -1,0 +1,66 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.IPV6.NACL.001
+name: NACL IPv6 Rules Do Not Match IPv4 Restrictions
+description: >
+  Network ACL has IPv4 deny or restrict rules but no equivalent
+  IPv6 rules. The NACL filters IPv4 traffic but allows all
+  IPv6 traffic by default. This is the dual-stack parity gap at
+  the NACL layer — equivalent to `CTL.VPC.SG.IPV6.PARITY.001`
+  at the security-group layer. A NACL that denies SSH from
+  0.0.0.0/0 should also deny SSH from ::/0; otherwise the
+  protection only applies to IPv4 and IPv6 traffic flows
+  through unrestricted.
+domain: exposure
+severity: medium
+compliance:
+  cis_aws_v3.0: "5.1"
+  nist_800_53_r5: "SC-7"
+  fedramp_moderate: "SC-7"
+  pci_dss_v4.0: "1.3.2"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "IVS-06"]
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+observation_fields:
+  - network.kind
+  - network.nacl.has_ipv4_restrictions
+  - network.nacl.has_ipv6_parity
+  - network.nacl.ipv6_rules_missing
+remediation:
+  description: >
+    NACL applies IPv4-specific deny rules without matching IPv6
+    rules. The protection only covers IPv4 traffic.
+  action: >
+    For each IPv4 deny or restrict rule, add an equivalent IPv6
+    rule with the same protocol, port, and action. The IPv6
+    rule's CIDR is the IPv6 equivalent of the IPv4 CIDR — for
+    example, `0.0.0.0/0` pairs with `::/0`, an IPv4 internal
+    CIDR pairs with the matching IPv6 CIDR. Use NACL rule
+    numbering that keeps each protocol's rules grouped (e.g.,
+    100-199 IPv4, 200-299 IPv6) so dual-stack rules stay
+    obvious to reviewers.
+  example: |
+    {
+      "network": {
+        "kind": "network_acl",
+        "nacl": {
+          "has_ipv6_parity": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: network_acl
+    - field: properties.network.nacl.has_ipv4_restrictions
+      op: eq
+      value: true
+    - field: properties.network.nacl.has_ipv6_parity
+      op: eq
+      value: false

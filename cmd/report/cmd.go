@@ -17,6 +17,7 @@ import (
 
 	artifact "github.com/sufield/stave/internal/adapters/artifacts"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
+	"github.com/sufield/stave/internal/builtin/capabilities"
 	"github.com/sufield/stave/internal/adapters/observations"
 	infraSLA "github.com/sufield/stave/internal/adapters/sla"
 	appcoverage "github.com/sufield/stave/internal/app/coverage"
@@ -121,7 +122,7 @@ func runReport(ctx context.Context, stdout io.Writer, opts *options) error {
 	latest := assessments[len(assessments)-1]
 
 	// Load chains and controls for ATT&CK.
-	chains, chainsErr := ctlyaml.LoadChains(opts.ChainsDir)
+	chains, chainsErr := ctlyaml.LoadChains(opts.ChainsDir, capabilities.Builtin())
 	if chainsErr != nil {
 		return fmt.Errorf("loading chains: %w", chainsErr)
 	}

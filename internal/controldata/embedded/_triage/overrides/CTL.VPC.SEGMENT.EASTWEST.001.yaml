@@ -1,0 +1,20 @@
+control: CTL.VPC.SEGMENT.EASTWEST.001
+defect: >
+  Transit Gateway routes inter-VPC traffic directly between
+  attached VPCs without inspection.
+infection: >
+  Cross-VPC traffic is the lateral-movement substrate of
+  multi-VPC architectures. A compromise in one VPC needs to
+  cross to the VPC that holds the targets — the database VPC,
+  the secrets VPC, the production-workload VPC. A Transit
+  Gateway with direct VPC-to-VPC routing makes that crossing
+  invisible: no IDS, no protocol anomaly detection, no domain
+  reputation, no payload inspection. The recommended pattern
+  routes inter-VPC traffic through an inspection VPC whose
+  Network Firewall enforces stateful policy on every flow.
+  Without it, the TGW is a flat backplane with no inspection
+  surface — exactly what an attacker wants.
+failure: >
+  Uninspected lateral movement between VPCs. Cross-VPC
+  attacks succeed at the network layer with no firewall
+  evidence and no opportunity to block.

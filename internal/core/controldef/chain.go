@@ -21,7 +21,29 @@ type ChainDefinition struct {
 	Postconditions      []string           `yaml:"postconditions,omitempty" json:"postconditions,omitempty"`
 }
 
-// Validate checks that the chain definition has all required fields.
+// CapabilityRegistry is the contract for resolving whether a capability
+// string belongs to the closed vocabulary the catalog has registered.
+// Core owns the contract; the catalog layer (internal/builtin/) owns
+// the data.
+type CapabilityRegistry interface {
+	IsValid(capability string) bool
+}
+
+// CapabilitySet is the standard string-set implementation of
+// CapabilityRegistry. The catalog layer constructs one from its
+// capability list and passes it into chain validation.
+type CapabilitySet map[string]struct{}
+
+// IsValid reports whether the capability string is in the set.
+func (s CapabilitySet) IsValid(capability string) bool {
+	_, ok := s[capability]
+	return ok
+}
+
+// Validate performs structural validation on the chain definition: ID
+// presence, control count, threshold sanity. Capability vocabulary is
+// validated separately via ValidateCapabilities so the engine does not
+// need to know the catalog's vocabulary.
 func (c *ChainDefinition) Validate() error {
 	if c.ID == "" {
 		return errors.New("chain: missing id")
@@ -36,62 +58,27 @@ func (c *ChainDefinition) Validate() error {
 		return fmt.Errorf("chain %s: escalation_threshold (%d) > control count (%d)",
 			c.ID, c.EscalationThreshold, len(c.ControlIDs))
 	}
+	return nil
+}
+
+// ValidateCapabilities checks that every precondition and postcondition
+// string is present in the supplied registry. Loaders call this after
+// Validate to reject typos and undeclared capabilities.
+func (c *ChainDefinition) ValidateCapabilities(registry CapabilityRegistry) error {
+	if registry == nil {
+		return nil
+	}
 	for _, cap := range c.Preconditions {
-		if !IsValidCapability(cap) {
+		if !registry.IsValid(cap) {
 			return fmt.Errorf("chain %s: unknown precondition capability %q", c.ID, cap)
 		}
 	}
 	for _, cap := range c.Postconditions {
-		if !IsValidCapability(cap) {
+		if !registry.IsValid(cap) {
 			return fmt.Errorf("chain %s: unknown postcondition capability %q", c.ID, cap)
 		}
 	}
 	return nil
-}
-
-// ValidCapabilities is the closed vocabulary of attack path capabilities.
-var ValidCapabilities = map[string]bool{
-	"internet_access":              true,
-	"network_access_vpc":           true,
-	"network_access_ec2":           true,
-	"network_access_rds":           true,
-	"network_access_eks":           true,
-	"network_access_lambda":        true,
-	"iam_credential_theft":         true,
-	"aws_root_access":              true,
-	"k8s_service_account_token":    true,
-	"db_credential_theft":          true,
-	"secret_store_access":          true,
-	"ec2_code_execution":           true,
-	"container_code_execution":     true,
-	"k8s_cluster_admin":            true,
-	"s3_data_access":               true,
-	"rds_data_access":              true,
-	"cloudtrail_data_access":       true,
-	"data_destruction":             true,
-	"audit_trail_destroyed":        true,
-	"cdn_bypass_data_access":       true,
-	"data_access":                  true,
-	"database_compromise":          true,
-	"data_warehouse_compromise":    true,
-	"invisible_data_exfiltration":  true,
-	"vpc_instance_compromise":      true,
-	"encryption_bypass":            true,
-	"s3_replication_configured":    true,
-	"kms_encryption_configured":    true,
-	"cloudfront_origin_configured": true,
-	"data_in_transit_exposure":     true,
-	"scp_governance_configured":    true,
-	"ungoverned_operation":         true,
-	"kms_key_compromise":           true,
-	"control_plane_code_execution": true,
-	"resource_policy_escalation":   true,
-	"shadow_admin_access":          true,
-}
-
-// IsValidCapability returns true if the capability string is in the closed vocabulary.
-func IsValidCapability(capability string) bool {
-	return ValidCapabilities[capability]
 }
 
 // ChainRefIssue records one chain that references controls missing

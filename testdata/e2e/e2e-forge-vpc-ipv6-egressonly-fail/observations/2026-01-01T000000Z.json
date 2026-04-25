@@ -1,0 +1,9 @@
+{
+  "assets": [
+    {"id": "vpc-no-eigw", "properties": {"network": {"kind": "vpc", "vpc": {"has_ipv6_cidr": true, "ipv6_cidr": "2001:db8:5678::/56", "has_egress_only_igw": false, "eigw_id": ""}}}, "type": "aws_vpc", "vendor": "aws"}
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "generated_by": {"source_type": "aws.config_api", "tool": "stave-test", "tool_version": "1.0.0"},
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

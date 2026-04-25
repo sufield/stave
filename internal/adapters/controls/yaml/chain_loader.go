@@ -12,8 +12,12 @@ import (
 )
 
 // LoadChains reads all YAML chain definitions from a directory.
-// Returns validated, sorted chain definitions.
-func LoadChains(dir string) ([]policy.ChainDefinition, error) {
+// Returns validated, sorted chain definitions. The registry argument
+// supplies the closed vocabulary of capability strings; chains
+// referencing capabilities outside the registry are rejected. A nil
+// registry skips capability validation (structural validation still
+// runs).
+func LoadChains(dir string, registry policy.CapabilityRegistry) ([]policy.ChainDefinition, error) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -40,6 +44,10 @@ func LoadChains(dir string) ([]policy.ChainDefinition, error) {
 
 		if validateErr := chain.Validate(); validateErr != nil {
 			return nil, fmt.Errorf("validate chain %q: %w", path, validateErr)
+		}
+
+		if capErr := chain.ValidateCapabilities(registry); capErr != nil {
+			return nil, fmt.Errorf("validate chain %q: %w", path, capErr)
 		}
 
 		chains = append(chains, chain)

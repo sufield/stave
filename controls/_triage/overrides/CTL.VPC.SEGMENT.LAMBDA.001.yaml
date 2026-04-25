@@ -1,0 +1,23 @@
+control: CTL.VPC.SEGMENT.LAMBDA.001
+defect: >
+  VPC-attached Lambda function has a security group that
+  permits unrestricted outbound to the VPC.
+infection: >
+  A VPC-attached Lambda function has an ENI in the VPC and
+  reaches resources through that ENI subject to the
+  function's security group. With unrestricted egress, the
+  function can call any database, any cache, any internal
+  API, any management endpoint in the VPC. A compromised
+  function — by way of a vulnerable dependency, a poisoned
+  package, an injected secret, or an attacker-controlled
+  trigger — pivots to anything the SG permits. Lambda
+  functions are typically narrow in purpose: a function
+  triggered to update a single DynamoDB table needs only
+  DynamoDB egress, not VPC-wide reach. The egress should
+  match the function's actual surface; least privilege is
+  the default and unrestricted egress is a deployment that
+  was never finished.
+failure: >
+  Pivot from a single function to anything in the VPC. A
+  compromised function reaches resources its purpose never
+  required.

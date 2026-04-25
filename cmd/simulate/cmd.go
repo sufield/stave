@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/cobra"
 
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
+	"github.com/sufield/stave/internal/builtin/capabilities"
 	appsim "github.com/sufield/stave/internal/app/simulate"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
@@ -80,7 +81,7 @@ func runSimulate(stdout io.Writer, opts *options) error {
 		return &ui.UserError{Err: fmt.Errorf("parse assessment: %w", unmarshalErr)}
 	}
 
-	chains, chainsErr := ctlyaml.LoadChains("chains")
+	chains, chainsErr := ctlyaml.LoadChains("chains", capabilities.Builtin())
 	if chainsErr != nil {
 		return fmt.Errorf("loading chains: %w", chainsErr)
 	}

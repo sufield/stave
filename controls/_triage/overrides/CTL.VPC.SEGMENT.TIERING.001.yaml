@@ -1,0 +1,23 @@
+control: CTL.VPC.SEGMENT.TIERING.001
+defect: >
+  Subnet contains resources spanning multiple architectural
+  tiers — web/load balancer, application logic, and data
+  store — without subnet-level separation.
+infection: >
+  Tier separation is the architectural control that makes
+  subnet-level filtering meaningful. When the database lives
+  in its own subnet with a database-only NACL, an attacker
+  who reaches the application tier still cannot connect to
+  the database from outside its NACL boundary, regardless of
+  what the application's security group permits. When all
+  tiers share one subnet, the NACL has nothing useful to
+  filter (every flow is intra-subnet, NACL doesn't apply),
+  and security groups become the only line of defense. A
+  single permissive SG rule between application and database
+  exposes the database directly. Tier separation gives you
+  two independent failure conditions before exposure; mixed
+  tiers give you one.
+failure: >
+  Single-layer defense. A misconfigured SG between resources
+  in the shared subnet directly exposes one tier to another
+  with no NACL boundary to catch the mistake.

@@ -13,6 +13,7 @@ import (
 
 	artifact "github.com/sufield/stave/internal/adapters/artifacts"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
+	"github.com/sufield/stave/internal/builtin/capabilities"
 	appscore "github.com/sufield/stave/internal/app/score"
 	"github.com/sufield/stave/internal/app/teams"
 	"github.com/sufield/stave/internal/core/report"
@@ -69,7 +70,7 @@ func runTrend(ctx context.Context, w io.Writer, opts *trendOptions) error {
 	slaTrend := computeSLATrend(assessments)
 
 	// Load chain definitions for accurate chain weight.
-	chains, chainsErr := ctlyaml.LoadChains("chains")
+	chains, chainsErr := ctlyaml.LoadChains("chains", capabilities.Builtin())
 	if chainsErr != nil {
 		return fmt.Errorf("loading chains: %w", chainsErr)
 	}

@@ -1,0 +1,23 @@
+control: CTL.VPC.IPV6.ROUTE.PUBLIC.001
+defect: >
+  Subnet is private on IPv4 (no 0.0.0.0/0 → IGW) but has
+  ::/0 → IGW for IPv6. Instances are private on IPv4 and
+  public on IPv6 simultaneously.
+infection: >
+  This is the most deceptive IPv6 misconfiguration. The
+  subnet looks private when an operator inspects route
+  tables — the standard checklist is "is there a 0.0.0.0/0
+  route to the IGW?" and the answer here is no. Compliance
+  reports, architecture reviews, and tagging all label the
+  subnet "private." Then the operator never checks the IPv6
+  route. ::/0 → IGW means every IPv6-enabled instance in the
+  subnet is reachable from the internet on IPv6, even though
+  the same instance is unreachable on IPv4. Two routing
+  realities live side by side, with one of them invisible to
+  every IPv4-centric review process. The fix is the same
+  pattern as IPv6 EGRESSONLY: route ::/0 to an egress-only
+  internet gateway, not the standard IGW.
+failure: >
+  IPv6 public exposure on subnets labeled and treated as
+  private. IPv4-focused reviews and compliance scans miss
+  the exposure entirely.

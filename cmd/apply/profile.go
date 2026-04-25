@@ -11,6 +11,7 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
+	"github.com/sufield/stave/internal/builtin/capabilities"
 	"github.com/sufield/stave/internal/adapters/observations"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
@@ -166,7 +167,7 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 
 	// Load chain definitions for risk reasoning.
 	chainsDir := filepath.Join(getControlsBaseDir(), "..", "chains")
-	chains, chainsErr := ctlyaml.LoadChains(chainsDir)
+	chains, chainsErr := ctlyaml.LoadChains(chainsDir, capabilities.Builtin())
 	if chainsErr != nil {
 		return fmt.Errorf("loading chains: %w", chainsErr)
 	}

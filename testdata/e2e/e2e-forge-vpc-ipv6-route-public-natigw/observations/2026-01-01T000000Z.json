@@ -1,0 +1,9 @@
+{
+  "assets": [
+    {"id": "subnet-nat-v4-public-v6", "properties": {"network": {"kind": "subnet", "subnet": {"has_ipv4_igw_route": false, "has_ipv6_igw_route": true, "ipv6_route_destination": "::/0", "is_ipv4_private": true, "is_ipv6_public": true}}}, "type": "aws_subnet", "vendor": "aws"}
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "generated_by": {"source_type": "aws.config_api", "tool": "stave-test", "tool_version": "1.0.0"},
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

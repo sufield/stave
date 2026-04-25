@@ -1,0 +1,19 @@
+control: CTL.VPC.IPV6.NACL.001
+defect: >
+  NACL applies IPv4-specific deny rules without matching IPv6
+  rules. The protection only covers IPv4 traffic.
+infection: >
+  Network ACLs enforce protocol-specific rules: an IPv4 deny
+  rule applies only to IPv4 traffic, an IPv6 deny rule only
+  to IPv6. A NACL that denies SSH from 0.0.0.0/0 but has no
+  ::/0 SSH-deny rule blocks IPv4 SSH attempts and silently
+  passes IPv6 SSH attempts. In dual-stack deployments —
+  which is the majority of modern VPCs once IPv6 is enabled —
+  attackers can systematically prefer IPv6 to bypass IPv4-
+  only defenses. The same parity gap exists at the security-
+  group layer (`CTL.VPC.SG.IPV6.PARITY.001`); this control
+  catches it at the NACL layer.
+failure: >
+  IPv6 bypass of IPv4 NACL restrictions. Traffic the NACL
+  was written to block reaches the subnet via IPv6 because
+  the rule only covered IPv4.

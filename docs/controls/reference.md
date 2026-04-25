@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1378
-**Pack hash:** `014dbf08446d167fc707ec041ea901ccaa2dd594f0b6e63758455403b587bd71`
+**Total controls:** 1386
+**Pack hash:** `1a961df5608596a61f52943f7ef91796d6e6882edf1da628f240c4123760b6ee`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 171 |
-| high | 617 |
+| high | 621 |
 | info | 16 |
 | low | 97 |
-| medium | 477 |
+| medium | 481 |
 
 | Domain | Count |
 |--------|-------|
@@ -23,7 +23,7 @@
 | cryptography | 2 |
 | detection | 32 |
 | encryption | 75 |
-| exposure | 834 |
+| exposure | 842 |
 | governance | 27 |
 | hygiene | 8 |
 | identity | 326 |
@@ -19465,6 +19465,51 @@ VPC safety cannot be assessed when flow logging status is missing from the snaps
 
 ---
 
+### CTL.VPC.IPV6.EGRESSONLY.001
+
+**IPv6 VPC Without Egress-Only Internet Gateway**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 5.1; fedramp_moderate: SC-7; hipaa: 164.312(e)(1); nist_800_53_r5: SC-7; pci_dss_v4.0: 1.2.1; soc2: CC6.6;
+
+VPC has an IPv6 CIDR block but no egress-only internet gateway. IPv6 has no NAT — every IPv6 address is globally routable by default. With only a standard Internet Gateway attached, IPv6- enabled instances are reachable from the internet on IPv6, not just able to reach out. An egress-only internet gateway is the IPv6 equivalent of a NAT gateway: it permits outbound IPv6 traffic while blocking inbound IPv6 connections from the internet. Without it, the IPv6 surface area is symmetric to the public internet — every IPv6 instance is directly addressable from anywhere.
+
+**Remediation:** Create an egress-only internet gateway in the VPC and update private-subnet route tables so IPv6 default routes (::/0) point to the egress-only IGW rather than the standard IGW. Public IPv6 subnets (those that should accept inbound IPv6, such as the ALB tier) keep the standard IGW route. The distinction parallels the IPv4 NAT pattern: egress-only IGW for private, standard IGW for public.
+
+---
+
+### CTL.VPC.IPV6.NACL.001
+
+**NACL IPv6 Rules Do Not Match IPv4 Restrictions**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 5.1; fedramp_moderate: SC-7; nist_800_53_r5: SC-7; pci_dss_v4.0: 1.3.2; soc2: CC6.6;
+
+Network ACL has IPv4 deny or restrict rules but no equivalent IPv6 rules. The NACL filters IPv4 traffic but allows all IPv6 traffic by default. This is the dual-stack parity gap at the NACL layer — equivalent to `CTL.VPC.SG.IPV6.PARITY.001` at the security-group layer. A NACL that denies SSH from 0.0.0.0/0 should also deny SSH from ::/0; otherwise the protection only applies to IPv4 and IPv6 traffic flows through unrestricted.
+
+**Remediation:** For each IPv4 deny or restrict rule, add an equivalent IPv6 rule with the same protocol, port, and action. The IPv6 rule's CIDR is the IPv6 equivalent of the IPv4 CIDR — for example, `0.0.0.0/0` pairs with `::/0`, an IPv4 internal CIDR pairs with the matching IPv6 CIDR. Use NACL rule numbering that keeps each protocol's rules grouped (e.g., 100-199 IPv4, 200-299 IPv6) so dual-stack rules stay obvious to reviewers.
+
+---
+
+### CTL.VPC.IPV6.ROUTE.PUBLIC.001
+
+**Subnet Private on IPv4 but Public on IPv6**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 5.1; fedramp_moderate: SC-7; hipaa: 164.312(e)(1); nist_800_53_r5: SC-7; pci_dss_v4.0: 1.2.1; soc2: CC6.6;
+
+Subnet is private on IPv4 — no 0.0.0.0/0 route to the Internet Gateway — but its route table contains a ::/0 → IGW entry for IPv6. Instances with IPv6 addresses (any instance in a subnet that has an IPv6 CIDR) are directly reachable from the internet despite the subnet being labeled and treated as "private." Operators inspecting route tables for IPv4 IGW routes correctly conclude the subnet has no IPv4 internet exposure, then routinely overlook the IPv6 route. The subnet is private and public simultaneously — depending on which protocol you ask about. The IPv6 route should target the egress-only internet gateway, not the standard IGW.
+
+**Remediation:** Replace the subnet's ::/0 → IGW route with a ::/0 route targeting the VPC's egress-only internet gateway (creating the EIGW first if it does not exist; see `CTL.VPC.IPV6.EGRESSONLY.001`). IPv6 outbound traffic continues to function; inbound IPv6 from the internet is blocked, matching the IPv4-private behavior.
+
+---
+
 ### CTL.VPC.NACL.ADMIN.001
 
 **No NACL Ingress from 0.0.0.0/0 to Admin Ports**
@@ -19672,6 +19717,81 @@ The VPC's main (default) route table has a 0.0.0.0/0 route to an Internet Gatewa
 Route table exists but is not associated with any subnet, implicit or explicit. The table's routes are inert. Orphaned route tables are a lifecycle signal — the subnet that used this table was deleted but the table itself was left behind. Hygiene accumulation in the VPC layer usually tracks with accumulation in other layers (stale security groups, stale IAM policies).
 
 **Remediation:** Delete the orphaned route table. Add an association-count check to periodic VPC housekeeping so route tables that sit unassociated for longer than a defined threshold are reported and removed. Review neighboring resources (security groups, EIPs) for matching staleness.
+
+---
+
+### CTL.VPC.SEGMENT.BASTION.001
+
+**Bastion Host Has Unrestricted Internal Access**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 5.1; fedramp_moderate: AC-17; hipaa: 164.312(e)(1); nist_800_53_r5: AC-17; pci_dss_v4.0: 1.3.2; soc2: CC6.6;
+
+A bastion or jump host (identified by tag or name containing "bastion"/"jump"/"jumpbox", or an instance with a public IP and SSH ingress from 0.0.0.0/0) has a security group that permits outbound to all internal subnets on management ports (SSH/22, RDP/3389). The bastion is, by design, the bridge between the public internet and the internal network — making it the highest-value lateral-movement target. A compromise of the bastion with unrestricted internal egress yields management-plane access to every instance in the VPC. The bastion's egress should be scoped to specific destination subnets and ports.
+
+**Remediation:** Tighten the bastion SG egress to only the subnets and ports required for legitimate jump-host duties. Examples: SSH only to the application-subnet CIDR, RDP only to the Windows-tier CIDR. Replace the bastion with AWS Systems Manager Session Manager where feasible — it eliminates the bastion entirely and routes through IAM-authenticated SSM rather than SSH. If a bastion remains, keep its instance image patched, log every session to CloudWatch Logs or S3, and enforce MFA on the IAM role that connects.
+
+---
+
+### CTL.VPC.SEGMENT.EASTWEST.001
+
+**Inter-VPC Traffic via Transit Gateway Not Inspected**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 5.1; fedramp_moderate: SC-7; nist_800_53_r5: SC-7; pci_dss_v4.0: 1.2.1; soc2: CC6.6;
+
+Traffic transiting the Transit Gateway between attached VPCs is not routed through a Network Firewall or inspection VPC. Cross- VPC packets flow directly from source VPC to destination VPC without any inspection — no IDS/IPS, no protocol anomaly detection, no domain reputation checks, no logging beyond flow-log metadata. East-west lateral movement between workloads is uninspected. The recommended pattern routes all inter-VPC traffic through a centralized inspection VPC whose Network Firewall enforces stateful policy on every cross-VPC flow.
+
+**Remediation:** Add an inspection VPC attachment to the Transit Gateway. Deploy AWS Network Firewall in the inspection VPC. Update the TGW route tables so inter-VPC default routes target the inspection VPC's attachment, not the destination VPC directly. The inspection VPC firewall then enforces stateful policy on every cross-VPC flow. Validate by confirming non-zero firewall flow logs after the cutover.
+
+---
+
+### CTL.VPC.SEGMENT.ENVMIX.001
+
+**Production and Non-Production Workloads Share Network Path**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 5.1; fedramp_moderate: SC-7; hipaa: 164.312(e)(1); nist_800_53_r5: SC-7; pci_dss_v4.0: 1.2.1; soc2: CC6.6;
+
+Production and non-production (development, staging, testing) resources exist in the same VPC, or in VPCs connected via peering or Transit Gateway with route-table entries that permit cross- environment traffic. Network segmentation between environments is the primary blast-radius control: a compromised low-trust workload in development should not have a network path to production databases. When environments share a VPC or have unrestricted inter-VPC routing, that control is absent. Strengthens `CTL.VPC.ENV.ISOLATION.001` with explicit detection of mixed environments sharing a network path.
+
+**Remediation:** Move non-production workloads to dedicated VPCs and remove any routing between production and non-production VPCs (peering or TGW). If a controlled connection is required (e.g., shared services), terminate it through an inspection VPC with a Network Firewall and tightly scoped routes. Standardize an `Environment` tag with values `production`, `staging`, `development`, `testing` so this control fires reliably; the tag-name and value heuristics are configurable.
+
+---
+
+### CTL.VPC.SEGMENT.LAMBDA.001
+
+**Lambda Function in VPC Has Unrestricted Subnet Access**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 5.1; fedramp_moderate: SC-7; nist_800_53_r5: SC-7; pci_dss_v4.0: 1.2.1; soc2: CC6.6;
+
+Lambda function configured with VPC access has a security group that permits outbound to all subnets in the VPC. The Lambda ENI can reach every resource in every subnet — databases, caches, internal APIs, management interfaces. Lambda functions should have egress restricted to the specific subnets and ports they require; the function code is small, the surface it should reach is well-defined, and unrestricted egress allows a compromised function to pivot anywhere in the VPC.
+
+**Remediation:** Replace the Lambda SG egress with explicit destination rules: only the CIDRs and ports the function actually calls. For an RDS-querying function, allow outbound to the DB subnet CIDR on the database port only. For a function calling internal APIs, allow outbound to the API subnet CIDR on the application port only. If the function calls AWS services privately, prefer interface VPC endpoints over broad outbound rules.
+
+---
+
+### CTL.VPC.SEGMENT.TIERING.001
+
+**Subnet Mixes Web, Application, and Data-Tier Resources**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 5.1; fedramp_moderate: SC-7; nist_800_53_r5: SC-7; pci_dss_v4.0: 1.2.1; soc2: CC6.6;
+
+Web-facing resources (load balancers, web servers), application logic (app servers, Lambda ENIs, ECS tasks), and data stores (RDS, ElastiCache, Redshift) share the same subnet. With no subnet tier separation, security groups become the only network control — there is no NACL boundary between tiers. A compromise at any tier reaches every other tier on the same broadcast domain at the network layer; only SG rules stand in the way. Tier separation puts web in public subnets, application in private subnets, and data in private subnets associated with database-only NACLs.
+
+**Remediation:** Reorganize subnets so each tier has dedicated subnets: public subnets for ALBs/NLBs/bastions, private subnets for application workloads, isolated private subnets for databases (no IGW/NAT route). Migrate existing resources tier-by-tier; use database snapshots and Lambda blue/green to minimize downtime. After tier separation, apply NACLs that mirror each tier's intended traffic boundaries.
 
 ---
 

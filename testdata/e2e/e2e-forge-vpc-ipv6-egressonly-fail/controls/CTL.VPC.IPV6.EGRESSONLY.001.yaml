@@ -1,0 +1,71 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.IPV6.EGRESSONLY.001
+name: IPv6 VPC Without Egress-Only Internet Gateway
+description: >
+  VPC has an IPv6 CIDR block but no egress-only internet gateway.
+  IPv6 has no NAT — every IPv6 address is globally routable by
+  default. With only a standard Internet Gateway attached, IPv6-
+  enabled instances are reachable from the internet on IPv6,
+  not just able to reach out. An egress-only internet gateway is
+  the IPv6 equivalent of a NAT gateway: it permits outbound
+  IPv6 traffic while blocking inbound IPv6 connections from the
+  internet. Without it, the IPv6 surface area is symmetric to
+  the public internet — every IPv6 instance is directly
+  addressable from anywhere.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "5.1"
+  nist_800_53_r5: "SC-7"
+  fedramp_moderate: "SC-7"
+  pci_dss_v4.0: "1.2.1"
+  soc2: "CC6.6"
+  hipaa: "164.312(e)(1)"
+  ccm_v4: ["IVS-03", "IVS-06"]
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+observation_fields:
+  - network.kind
+  - network.vpc.has_ipv6_cidr
+  - network.vpc.ipv6_cidr
+  - network.vpc.has_egress_only_igw
+  - network.vpc.eigw_id
+remediation:
+  description: >
+    VPC has an IPv6 CIDR but no egress-only internet gateway.
+    IPv6 instances are bidirectionally addressable from the
+    internet.
+  action: >
+    Create an egress-only internet gateway in the VPC and update
+    private-subnet route tables so IPv6 default routes (::/0)
+    point to the egress-only IGW rather than the standard IGW.
+    Public IPv6 subnets (those that should accept inbound IPv6,
+    such as the ALB tier) keep the standard IGW route. The
+    distinction parallels the IPv4 NAT pattern: egress-only
+    IGW for private, standard IGW for public.
+  example: |
+    {
+      "network": {
+        "kind": "vpc",
+        "vpc": {
+          "has_ipv6_cidr": true,
+          "has_egress_only_igw": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: vpc
+    - field: properties.network.vpc.has_ipv6_cidr
+      op: eq
+      value: true
+    - field: properties.network.vpc.has_egress_only_igw
+      op: eq
+      value: false
