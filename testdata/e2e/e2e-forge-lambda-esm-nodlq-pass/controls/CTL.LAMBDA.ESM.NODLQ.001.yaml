@@ -1,0 +1,62 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.ESM.NODLQ.001
+name: Event Source Mapping Must Have a Failure Destination
+description: >
+  Lambda event source mappings (Kinesis, DynamoDB
+  Streams, SQS) must have an on-failure destination
+  configured. Without one, error handling depends on
+  the source type and is uniformly bad. For Kinesis
+  and DynamoDB Streams: the failed batch is retried
+  until it succeeds or the record's maximum age
+  expires — and meanwhile the shard is blocked. Every
+  record behind the poisonous one is stuck. The
+  function processes the same failed batch repeatedly
+  and the stream cannot drain. For SQS: the message
+  returns to the queue, the receive count increments,
+  and the message retries until the queue's retention
+  expires. Without a queue-level DLQ, the message is
+  discarded with no record. A failure destination
+  (SQS, SNS, S3, or EventBridge) captures the failed
+  record for investigation, unblocks the stream, and
+  preserves the data for reprocessing.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "CP-10"
+  fedramp_moderate: "CP-10"
+  soc2: "A1.2"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - lambda
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    Lambda event source mapping has no on-failure
+    destination — failed records block the shard
+    (Kinesis/DynamoDB) or are discarded after queue
+    retention (SQS).
+  action: >
+    Add a failure destination to the event source
+    mapping via aws lambda update-event-source-mapping
+    --destination-config OnFailure={Destination=<arn>}.
+  example: |
+    {
+      "compute": {
+        "kind": "function",
+        "event_source": {
+          "has_failure_destination": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
+    - field: properties.compute.event_source.has_failure_destination
+      op: eq
+      value: false

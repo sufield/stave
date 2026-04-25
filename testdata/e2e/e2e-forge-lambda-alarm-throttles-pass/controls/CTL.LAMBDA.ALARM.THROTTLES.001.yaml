@@ -1,0 +1,56 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.ALARM.THROTTLES.001
+name: Lambda Function Must Have a CloudWatch Alarm on Throttles
+description: >
+  Lambda functions must have a CloudWatch alarm on the
+  Throttles metric. Throttled invocations are rejected:
+  for synchronous callers (API Gateway, ALB) the caller
+  receives a 429 and the upstream request fails. For
+  async invocations the event is retried for six hours
+  and then sent to the DLQ if configured or discarded.
+  Throttling indicates one of: account-level concurrency
+  exhaustion (a noisy neighbor function consuming the
+  shared limit), reserved-concurrency cap reached (the
+  function's own ceiling is too low for current traffic),
+  or a deliberate denial-of-service against a public
+  function URL. Each cause requires a different
+  response, but all require notification before user
+  impact compounds.
+domain: detection
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-4"
+  fedramp_moderate: "SI-4"
+  soc2: "CC7.2"
+  ccm_v4: ["LOG-08", "BCR-08"]
+scope_tags:
+  - aws
+  - lambda
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Lambda function has no CloudWatch alarm on the
+    Throttles metric.
+  action: >
+    Create a CloudWatch alarm on AWS/Lambda Throttles
+    with an SNS notification action.
+  example: |
+    {
+      "compute": {
+        "kind": "function",
+        "alarms": {
+          "has_throttles_alarm": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
+    - field: properties.compute.alarms.has_throttles_alarm
+      op: eq
+      value: false

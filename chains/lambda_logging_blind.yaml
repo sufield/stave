@@ -1,0 +1,23 @@
+id: lambda_logging_blind
+description: >
+  No CloudWatch log group exists for the function plus
+  either the existing log group's retention is too short
+  or it is not encrypted with a CMK. Function output is
+  either not captured at all (no log group — every console
+  write discarded) or, where it is captured, is either
+  short-lived (deleted before audit windows close) or
+  unprotected (any account principal with log read can
+  exfiltrate sensitive payloads, with no audit). Multiple
+  logging failures stacked on the same function — the
+  visibility into function behavior is degraded along
+  every axis at once.
+controls:
+  - CTL.LAMBDA.LOG.MISSING.001
+  - CTL.LAMBDA.LOG.RETENTION.001
+  - CTL.LAMBDA.LOG.ENCRYPT.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - network_access_lambda
+postconditions:
+  - audit_trail_destroyed

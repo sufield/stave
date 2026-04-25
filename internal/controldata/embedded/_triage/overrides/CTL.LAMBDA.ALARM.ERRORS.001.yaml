@@ -1,0 +1,28 @@
+control: CTL.LAMBDA.ALARM.ERRORS.001
+defect: >
+  No CloudWatch alarm monitors the Lambda function's
+  Errors metric.
+infection: >
+  The Errors metric counts invocations that result in
+  a function error: runtime exceptions, timeouts,
+  out-of-memory kills, missing handlers, init failures,
+  permission errors. Without an alarm, errors
+  accumulate in CloudWatch with no notification
+  channel. A function that begins failing — from a
+  code bug pushed in the latest deploy, a downstream
+  service outage, an IAM policy change that revokes a
+  required permission, a ghost reference to a deleted
+  resource — fails repeatedly with zero notification.
+  The error rate could be 100% (every invocation
+  fails) and the only indication is the CloudWatch
+  Errors graph, which nobody watches in real time.
+  The first signal of trouble is a downstream user
+  complaint or a reconciliation gap discovered hours
+  later. The Errors alarm is the single most
+  important serverless alarm; without it, every
+  other monitoring effort is undermined.
+failure: >
+  Undetected function failures. The function fails
+  repeatedly without real-time notification, and the
+  team learns about the outage from downstream impact
+  rather than from the function itself.

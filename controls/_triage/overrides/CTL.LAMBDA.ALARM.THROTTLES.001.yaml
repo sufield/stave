@@ -1,0 +1,29 @@
+control: CTL.LAMBDA.ALARM.THROTTLES.001
+defect: >
+  No CloudWatch alarm monitors the Lambda function's
+  Throttles metric.
+infection: >
+  Throttled invocations are rejected before the
+  function runs. For synchronous callers (API Gateway,
+  ALB), the caller receives a 429 and the request
+  fails upstream — the user sees an error but Lambda
+  never executed. For asynchronous invocations, the
+  event is retried for up to six hours and then sent
+  to the DLQ if configured or discarded otherwise.
+  Throttling has three primary causes, each requiring
+  a different response: account-level concurrency
+  exhaustion (a noisy neighbor function consuming the
+  account's shared concurrency limit, often visible
+  as throttling across many functions simultaneously),
+  reserved-concurrency cap reached (the function's
+  own ceiling is too low for current traffic — usually
+  a sign of underprovisioning or unexpected load),
+  or a deliberate denial-of-service attack against a
+  publicly invocable function (function URL or
+  unauthenticated API Gateway). Without the alarm,
+  throttling is invisible until users complain.
+failure: >
+  Undetected request rejection. Synchronous callers
+  receive errors, async events queue up or vanish,
+  and the team has no real-time signal of capacity
+  or attack conditions.

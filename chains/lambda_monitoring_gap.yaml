@@ -1,0 +1,22 @@
+id: lambda_monitoring_gap
+description: >
+  No CloudWatch alarm on the Errors metric, plus either
+  no Throttles alarm or no Duration alarm. Multiple
+  critical function metrics are unmonitored at once:
+  errors are not detected when the function fails,
+  throttling is not detected when capacity is exhausted
+  or under attack, and approaching-timeout drift is not
+  detected before it becomes a cliff. The function can
+  fail catastrophically with no real-time signal — the
+  team learns about the outage from downstream impact
+  hours after it began.
+controls:
+  - CTL.LAMBDA.ALARM.ERRORS.001
+  - CTL.LAMBDA.ALARM.THROTTLES.001
+  - CTL.LAMBDA.ALARM.DURATION.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - network_access_lambda
+postconditions:
+  - audit_trail_destroyed

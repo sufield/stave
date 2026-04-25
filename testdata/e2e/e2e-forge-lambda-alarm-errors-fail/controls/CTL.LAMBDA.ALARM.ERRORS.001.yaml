@@ -1,0 +1,60 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.ALARM.ERRORS.001
+name: Lambda Function Must Have a CloudWatch Alarm on Errors
+description: >
+  Lambda functions must have a CloudWatch alarm on the
+  Errors metric. Errors counts invocations that result
+  in a function error — runtime exceptions, timeouts,
+  out-of-memory kills, missing handler. Without an
+  alarm, errors accumulate in CloudWatch metrics with
+  no notification path. A function that begins failing
+  100% of invocations — from a code bug, a downstream
+  outage, a permission drift, or a ghost reference —
+  fails repeatedly and silently. The Errors graph
+  exists, but nobody watches it in real time. The first
+  signal is a downstream user complaint or a
+  reconciliation gap discovered hours later. The Errors
+  alarm is the single most important serverless alarm —
+  every other Lambda alarm is secondary to knowing that
+  the function is failing.
+domain: detection
+severity: high
+compliance:
+  nist_800_53_r5: "SI-4"
+  fedramp_moderate: "SI-4"
+  pci_dss_v4.0: "10.4.1"
+  soc2: "CC7.2"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - lambda
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Lambda function has no CloudWatch alarm on the
+    Errors metric.
+  action: >
+    Create a CloudWatch alarm on AWS/Lambda Errors with
+    an SNS notification action — aws cloudwatch
+    put-metric-alarm --metric-name Errors --namespace
+    AWS/Lambda --dimensions Name=FunctionName,Value=<fn>.
+  example: |
+    {
+      "compute": {
+        "kind": "function",
+        "alarms": {
+          "has_errors_alarm": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
+    - field: properties.compute.alarms.has_errors_alarm
+      op: eq
+      value: false

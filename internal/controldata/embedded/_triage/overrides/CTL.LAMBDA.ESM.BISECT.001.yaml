@@ -1,0 +1,31 @@
+control: CTL.LAMBDA.ESM.BISECT.001
+defect: >
+  Lambda event source mapping for Kinesis or DynamoDB
+  Streams does not have BisectBatchOnFunctionError
+  enabled.
+infection: >
+  Without bisect, the entire batch is retried when a
+  single record causes the function to fail — one
+  poisonous record blocks every record alongside it
+  in the batch. With bisect, Lambda splits the
+  failing batch in half and retries each half
+  independently, recursively isolating the bad record
+  while letting the good ones drain. For high-
+  throughput streams with batch sizes of 100 or 1000,
+  the difference is between minutes of blocked
+  processing (entire batch repeatedly retried) and
+  minutes of normal processing with one isolated
+  failure routed to the on-failure destination.
+  Combined with a failure destination, bisect makes
+  stream processing self-healing for poisonous
+  records: bad records are isolated and captured,
+  good records flow through. Bisect is stream-only:
+  SQS event source mappings handle individual
+  messages, not stream shards, and have no bisect
+  setting; the control fires only on Kinesis and
+  DynamoDB Stream ESMs.
+failure: >
+  Stream-wide blocking on a single bad record. One
+  poisonous record halts processing for the entire
+  shard until the record expires from the stream or
+  the function is patched to handle it.

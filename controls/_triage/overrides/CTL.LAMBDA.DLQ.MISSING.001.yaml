@@ -1,0 +1,30 @@
+control: CTL.LAMBDA.DLQ.MISSING.001
+defect: >
+  Lambda function has at least one asynchronous trigger
+  (S3, SNS, EventBridge, or async invoke) but has
+  neither a dead-letter queue nor an EventInvokeConfig
+  on-failure destination configured.
+infection: >
+  Asynchronous Lambda invocations are retried twice
+  on failure. After the retries the event is sent to
+  the DLQ if configured, sent to the EventInvokeConfig
+  on-failure destination if configured, or discarded
+  if neither is configured. When discarded, the event
+  is permanently lost — no record of what failed, no
+  ability to reprocess, no audit trail. The function
+  is supposed to have processed the event; it failed;
+  nobody knows what was in the event because the
+  event no longer exists. For event-driven
+  architectures, lost events mean lost data, missed
+  transactions, or inconsistent state across consumers
+  that share the same upstream event source. Distinct
+  from CTL.LAMBDA.DLQ.001, which is ungated and fires
+  even on sync-only functions where DLQ does not
+  apply; this control is gated on the actual presence
+  of async triggers and on the absence of both
+  recovery channels (DLQ and destination).
+failure: >
+  Silent event loss. Failed asynchronous invocations
+  are discarded after two retries with no record and
+  no reprocessing capability. The function appears to
+  be working; the data is gone.

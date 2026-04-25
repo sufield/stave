@@ -1,0 +1,57 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.ALARM.DURATION.001
+name: Lambda Function Must Have a CloudWatch Alarm on Duration
+description: >
+  Lambda functions must have a CloudWatch alarm on the
+  Duration metric, threshold set near the configured
+  function timeout. A function with a 30-second timeout
+  that regularly executes for 25 seconds is approaching
+  its limit — any incremental downstream latency,
+  payload size growth, or cold-start variability tips
+  it into timeout-class errors. Duration alarms catch
+  the approaching-cliff condition before it becomes a
+  cliff: by the time the function starts timing out,
+  the real failure is already in production. The alarm
+  threshold should fire when sustained duration
+  exceeds 80% of the configured timeout, giving
+  response time before the function is failing
+  outright.
+domain: detection
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-4"
+  fedramp_moderate: "SI-4"
+  soc2: "CC7.2"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - lambda
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Lambda function has no CloudWatch alarm on the
+    Duration metric.
+  action: >
+    Create a CloudWatch alarm on AWS/Lambda Duration
+    with threshold at 80% of the function's configured
+    timeout, and an SNS notification action.
+  example: |
+    {
+      "compute": {
+        "kind": "function",
+        "alarms": {
+          "has_duration_alarm": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
+    - field: properties.compute.alarms.has_duration_alarm
+      op: eq
+      value: false

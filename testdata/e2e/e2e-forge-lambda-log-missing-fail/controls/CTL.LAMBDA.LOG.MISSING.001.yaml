@@ -1,0 +1,70 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.LOG.MISSING.001
+name: Lambda Function Has No CloudWatch Log Group
+description: >
+  Lambda functions must have an associated CloudWatch
+  log group. Lambda creates the log group automatically
+  on first invocation — provided the execution role
+  has logs:CreateLogGroup, logs:CreateLogStream, and
+  logs:PutLogEvents. If the role lacks log permissions,
+  the function still executes — its code runs, side
+  effects occur, downstream calls happen — but every
+  console output, error stack, and log statement is
+  silently discarded. Debugging is impossible. Error
+  tracking is impossible. The function becomes a black
+  box. The control fires only when the function has
+  been invoked at least once: an uninvoked function
+  with no log group is expected (the log group will
+  be created on first call) and the finding instead
+  signals a stale or never-deployed function. Two
+  distinct causes, distinguishable in triage:
+  function invoked but role missing log permissions
+  (real silent failure) versus function never invoked
+  (deployment never completed or zombie function).
+domain: detection
+severity: high
+compliance:
+  nist_800_53_r5: "AU-2"
+  fedramp_moderate: "AU-2"
+  pci_dss_v4.0: "10.2.1"
+  hipaa: "164.312(b)"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-12"]
+scope_tags:
+  - aws
+  - lambda
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Lambda function has been invoked but has no
+    CloudWatch log group — the execution role likely
+    lacks logs:CreateLogGroup or logs:PutLogEvents.
+  action: >
+    Attach AWSLambdaBasicExecutionRole or an equivalent
+    policy granting logs:CreateLogGroup,
+    logs:CreateLogStream, and logs:PutLogEvents to the
+    function's execution role. Re-invoke the function
+    to trigger log group creation.
+  example: |
+    {
+      "compute": {
+        "kind": "function",
+        "logging": {
+          "log_group_exists": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
+    - field: properties.compute.logging.has_been_invoked
+      op: eq
+      value: true
+    - field: properties.compute.logging.log_group_exists
+      op: eq
+      value: false

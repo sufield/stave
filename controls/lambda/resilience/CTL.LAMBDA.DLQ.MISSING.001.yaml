@@ -1,0 +1,71 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.DLQ.MISSING.001
+name: Lambda With Async Triggers Must Have a DLQ or Failure Destination
+description: >
+  Lambda functions with asynchronous triggers (S3, SNS,
+  EventBridge, async invoke) must have either a
+  dead-letter queue or an on-failure destination
+  configured. Asynchronous invocations are retried
+  twice on failure; after the retries the event is
+  sent to the DLQ if configured, sent to the failure
+  destination if configured, or discarded if neither
+  is configured. Discarded events are gone — no
+  reprocessing path, no audit, no record. For
+  event-driven architectures, lost events mean lost
+  data, missed transactions, or inconsistent state
+  across consumers that share the upstream event
+  source. Distinct from CTL.LAMBDA.DLQ.001 which is
+  ungated; this control fires only when the function
+  has at least one async trigger and neither a DLQ
+  nor a failure destination, which is the actual data
+  loss case.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "CP-10"
+  fedramp_moderate: "CP-10"
+  soc2: "A1.2"
+  hipaa: "164.308(a)(7)"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - lambda
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    Lambda function has async triggers but neither DLQ
+    nor on-failure destination — failed events will be
+    silently discarded after retries.
+  action: >
+    Configure a dead-letter queue via aws lambda
+    update-function-configuration --dead-letter-config
+    TargetArn=<sqs-or-sns-arn>, or attach an
+    EventInvokeConfig OnFailure destination via aws
+    lambda put-function-event-invoke-config.
+  example: |
+    {
+      "compute": {
+        "kind": "function",
+        "async": {
+          "has_async_triggers": true,
+          "dlq_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
+    - field: properties.compute.async.has_async_triggers
+      op: eq
+      value: true
+    - field: properties.compute.async.dlq_configured
+      op: eq
+      value: false
+    - field: properties.compute.async.destination_on_failure
+      op: eq
+      value: false

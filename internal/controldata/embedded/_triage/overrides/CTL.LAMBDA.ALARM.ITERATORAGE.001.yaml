@@ -1,0 +1,26 @@
+control: CTL.LAMBDA.ALARM.ITERATORAGE.001
+defect: >
+  Lambda function consumes from a Kinesis or DynamoDB
+  Stream but has no CloudWatch alarm on the
+  IteratorAge metric.
+infection: >
+  IteratorAge measures how far behind the function is
+  in processing the stream — the age of the oldest
+  record in the most recent batch the function
+  received. A growing IteratorAge means the function
+  cannot keep up with the rate of incoming events:
+  the stream is producing records faster than the
+  function is processing them, the lag is compounding,
+  and eventually records will expire from the stream
+  (24-hour default for Kinesis, 24-hour for DynamoDB
+  Streams) before the function reaches them. Without
+  the alarm, the only signal is a downstream consumer
+  noticing stale data — which often surfaces as a
+  reconciliation gap days later. The control fires
+  only on functions with stream triggers; SQS, S3,
+  SNS, and API Gateway-triggered functions do not
+  publish IteratorAge.
+failure: >
+  Undetected processing lag. The function falls
+  behind, records expire, and downstream data goes
+  stale or incomplete with no real-time notification.

@@ -1,0 +1,63 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.ALARM.ITERATORAGE.001
+name: Stream-Triggered Lambda Must Have an IteratorAge Alarm
+description: >
+  Lambda functions triggered by Kinesis or DynamoDB
+  Streams must have a CloudWatch alarm on the
+  IteratorAge metric. IteratorAge measures how far
+  behind the function is in processing the stream — a
+  growing iterator age means the function cannot keep
+  up with event volume. Events are processed with
+  increasing delay; eventually records expire from the
+  stream before the function reaches them and are lost.
+  Without the alarm, the only signal is a downstream
+  consumer noticing stale data. The control fires only
+  on functions with stream-type triggers (Kinesis,
+  DynamoDB Streams) — IteratorAge does not exist for
+  SQS, API Gateway, S3, or SNS-triggered functions.
+domain: detection
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-4"
+  fedramp_moderate: "SI-4"
+  soc2: "CC7.2"
+  ccm_v4: ["LOG-08", "BCR-08"]
+scope_tags:
+  - aws
+  - lambda
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Stream-triggered Lambda function has no CloudWatch
+    alarm on the IteratorAge metric.
+  action: >
+    Create a CloudWatch alarm on AWS/Lambda IteratorAge
+    with an SNS notification action; threshold should
+    reflect acceptable processing lag for the stream
+    (typically 60000 ms for low-latency streams).
+  example: |
+    {
+      "compute": {
+        "kind": "function",
+        "function": {
+          "has_stream_trigger": true
+        },
+        "alarms": {
+          "has_iterator_age_alarm": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
+    - field: properties.compute.function.has_stream_trigger
+      op: eq
+      value: true
+    - field: properties.compute.alarms.has_iterator_age_alarm
+      op: eq
+      value: false

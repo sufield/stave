@@ -1,0 +1,29 @@
+control: CTL.LAMBDA.LOG.MISSING.001
+defect: >
+  Lambda function has been invoked but no CloudWatch
+  log group exists for it — the function's execution
+  role lacks logs:CreateLogGroup, logs:CreateLogStream,
+  or logs:PutLogEvents.
+infection: >
+  Lambda automatically creates a log group on first
+  invocation, but only if the execution role has
+  logs:CreateLogGroup, logs:CreateLogStream, and
+  logs:PutLogEvents. When those permissions are
+  missing, the function still runs — the code
+  executes, side effects occur, downstream calls
+  succeed or fail — but every console output, error
+  message, and structured log statement is silently
+  discarded. Debugging is impossible; error tracking
+  is impossible; the function operates as a black box.
+  An attacker who can invoke the function (for example
+  via a public function URL) can trigger arbitrary
+  side effects with no audit trail. If the function
+  has never been invoked, the missing log group is
+  expected — but the function existing without ever
+  being invoked is its own signal: a deployment that
+  was never completed or a zombie function that
+  should be cleaned up.
+failure: >
+  Silent function execution. The function runs without
+  any log output — error tracking, debugging, audit,
+  and security investigation are all impossible.

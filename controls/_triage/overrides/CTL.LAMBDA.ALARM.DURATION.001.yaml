@@ -1,0 +1,28 @@
+control: CTL.LAMBDA.ALARM.DURATION.001
+defect: >
+  No CloudWatch alarm monitors the Lambda function's
+  Duration metric relative to its configured timeout.
+infection: >
+  A function with a 30-second timeout that regularly
+  takes 25 seconds is approaching its limit. Any
+  incremental downstream latency (a slow database
+  query, a network hiccup, a GC pause in the
+  downstream service), payload size growth (a larger
+  message in the queue, a bigger object in S3), or
+  cold-start variability tips the function into
+  timeout-class errors. By the time the function
+  starts timing out outright, the underlying drift
+  has been progressing for hours or days and the
+  failure is already in production. The Duration
+  alarm catches the approaching-cliff condition
+  before it becomes a cliff: a sustained duration
+  over 80% of the configured timeout signals that
+  the function needs either a higher timeout, a
+  performance fix, or smaller payloads — long before
+  the user-facing failure shows up as Errors.
+failure: >
+  Latent timeout failures. The function quietly slows
+  toward its limit and the first signal is the
+  Errors alarm firing instead of the Duration alarm,
+  by which time investigation has to reconstruct
+  what changed days ago.

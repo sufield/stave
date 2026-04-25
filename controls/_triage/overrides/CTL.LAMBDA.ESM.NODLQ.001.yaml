@@ -1,0 +1,31 @@
+control: CTL.LAMBDA.ESM.NODLQ.001
+defect: >
+  Lambda event source mapping has no on-failure
+  destination configured.
+infection: >
+  Without a failure destination, event source mapping
+  error handling depends on the source type and is
+  uniformly bad. For Kinesis and DynamoDB Streams: the
+  failed batch is retried indefinitely up to the
+  record's maximum age in the stream (24 hours
+  default). The shard is blocked — every record
+  behind the failed batch is stuck waiting. The
+  function processes the same failed batch over and
+  over, consuming concurrency, until it succeeds or
+  the records expire and are dropped silently. For
+  SQS: the message returns to the queue, the receive
+  count increments, and the message retries until
+  the queue's maxReceiveCount is reached or the
+  retention period expires. Without a queue-level
+  DLQ on the SQS queue, the message is discarded.
+  A failure destination (SQS, SNS, S3, EventBridge)
+  captures the failed record for investigation,
+  unblocks the stream (for Kinesis/DynamoDB), and
+  preserves the data so it can be replayed once the
+  underlying bug is fixed.
+failure: >
+  Stream processing blocked or events lost. Failed
+  records either block the shard (Kinesis and
+  DynamoDB Streams) or are discarded after queue
+  retention (SQS) without any capture mechanism for
+  investigation or replay.

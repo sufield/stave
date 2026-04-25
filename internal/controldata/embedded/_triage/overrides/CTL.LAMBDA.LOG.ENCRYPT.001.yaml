@@ -1,0 +1,29 @@
+control: CTL.LAMBDA.LOG.ENCRYPT.001
+defect: >
+  Lambda CloudWatch log group is encrypted with the
+  default service key, not a customer-managed KMS key.
+infection: >
+  Log groups are encrypted by default with the
+  CloudWatch Logs service key, but the service key
+  cannot be revoked, has no caller-specific audit, and
+  is shared across the account — any principal with
+  logs:GetLogEvents on the log group can read every
+  byte. A customer-managed KMS key adds three controls
+  the service key cannot offer: a key policy that
+  restricts which principals can decrypt the logs;
+  CloudTrail kms:Decrypt events that record every
+  read, by which principal, when, and from where; and
+  the option to revoke access by editing the key
+  policy or scheduling key deletion. Lambda logs
+  routinely contain sensitive payloads — request and
+  response bodies, error stacks with PII, debug output
+  capturing credentials. The CMK is the boundary
+  between "anyone with log read can see those
+  payloads" and "only specific principals can, and
+  every read is audited."
+failure: >
+  Logs containing sensitive data are readable by any
+  account principal with log access, with no way to
+  revoke that access and no audit of who has read
+  what. Detection of credential exfiltration through
+  logs becomes impossible.

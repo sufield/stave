@@ -1,0 +1,62 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.ESM.BISECT.001
+name: Stream Event Source Mapping Must Bisect on Error
+description: >
+  Lambda event source mappings for Kinesis or DynamoDB
+  Streams must have BisectBatchOnFunctionError enabled.
+  Without bisect, the entire batch is retried when a
+  single record fails — one poisonous record blocks
+  every record alongside it. With bisect, Lambda splits
+  the failing batch in half and retries each half
+  independently, recursively isolating the bad record
+  while letting the good ones drain. For high-throughput
+  streams, the difference is between minutes of
+  blocked processing and minutes of normal processing
+  with one isolated failure. Bisect is stream-only:
+  SQS event source mappings handle individual messages,
+  not stream shards, and have no bisect setting. The
+  control fires only on Kinesis and DynamoDB Stream
+  ESMs.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-11"
+  fedramp_moderate: "SI-11"
+  soc2: "A1.2"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - lambda
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    Stream event source mapping has BisectBatchOnFunctionError
+    disabled — a single bad record blocks the entire batch.
+  action: >
+    Enable bisect on the event source mapping via aws
+    lambda update-event-source-mapping
+    --bisect-batch-on-function-error.
+  example: |
+    {
+      "compute": {
+        "kind": "function",
+        "event_source": {
+          "is_stream_source": true,
+          "bisect_on_error": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
+    - field: properties.compute.event_source.is_stream_source
+      op: eq
+      value: true
+    - field: properties.compute.event_source.bisect_on_error
+      op: eq
+      value: false

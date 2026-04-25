@@ -1,0 +1,27 @@
+control: CTL.LAMBDA.LOG.RETENTION.001
+defect: >
+  Lambda function CloudWatch log group has either no
+  retention policy (Never expire) or a retention period
+  shorter than the 365-day audit window.
+infection: >
+  Lambda functions write all stdout and stderr to
+  CloudWatch Logs. Without a retention policy, logs
+  accumulate indefinitely — consuming storage costs
+  and potentially violating data deletion policies
+  (GDPR right to erasure, internal retention rules
+  that require deletion after a fixed period). With
+  retention shorter than 365 days, logs needed for
+  compliance audit, incident investigation, or
+  forensic reconstruction are deleted before the
+  investigation window closes. The log group is
+  created automatically by Lambda on first invocation,
+  but the retention setting must be configured
+  explicitly via put-retention-policy — Lambda
+  itself does not set one.
+failure: >
+  Either unbounded log accumulation (no retention —
+  cost and data deletion compliance) or premature log
+  deletion (retention too short — audit and
+  investigation gap). The team chooses one or the
+  other on purpose; the absence of a deliberate
+  choice is the defect.

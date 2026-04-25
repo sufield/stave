@@ -1,0 +1,22 @@
+id: lambda_stream_stuck
+description: >
+  Stream event source mapping does not bisect on error,
+  plus either has no failure destination or has no
+  IteratorAge alarm. A single poisonous record blocks
+  the entire batch (no bisect), and either failed
+  records aren't captured for investigation (no failure
+  destination) or the resulting processing lag isn't
+  alerted (no IteratorAge alarm). The stream processing
+  pipeline is both fragile (one bad record halts the
+  shard) and unmonitored (the lag compounds invisibly).
+  Records expire from the stream before anyone notices.
+controls:
+  - CTL.LAMBDA.ESM.BISECT.001
+  - CTL.LAMBDA.ESM.NODLQ.001
+  - CTL.LAMBDA.ALARM.ITERATORAGE.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - network_access_lambda
+postconditions:
+  - audit_trail_destroyed

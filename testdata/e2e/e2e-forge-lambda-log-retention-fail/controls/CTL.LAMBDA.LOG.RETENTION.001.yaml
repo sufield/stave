@@ -1,0 +1,66 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.LOG.RETENTION.001
+name: Lambda CloudWatch Log Group Has No Retention or Retention Too Short
+description: >
+  Lambda function CloudWatch log groups must have an
+  explicit retention policy of at least 365 days. Lambda
+  creates the log group on first invocation but does not
+  set a retention policy — the default is "Never expire,"
+  which accumulates storage cost indefinitely and may
+  violate data deletion policies (GDPR right to erasure,
+  internal retention rules requiring deletion after a
+  period). Retention shorter than 365 days fails compliance
+  audit windows that require log preservation across
+  investigation cycles. Two failure modes, one control:
+  unbounded accumulation (no retention set — cost and
+  compliance) and premature deletion (retention below
+  the audit window — investigation gap).
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-11"
+  fedramp_moderate: "AU-11"
+  pci_dss_v4.0: "10.5.1"
+  hipaa: "164.312(b)"
+  soc2: "CC7.2"
+  ccm_v4: ["LOG-12", "BCR-11"]
+scope_tags:
+  - aws
+  - lambda
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Lambda log group has no retention policy or retention
+    is shorter than 365 days.
+  action: >
+    Set CloudWatch log group retention to 365 days or more
+    via aws logs put-retention-policy --log-group-name
+    /aws/lambda/<function> --retention-in-days 365.
+  example: |
+    {
+      "compute": {
+        "kind": "function",
+        "logging": {
+          "retention_set": true,
+          "retention_days": 365
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
+    - field: properties.compute.logging.log_group_exists
+      op: eq
+      value: true
+    - any:
+        - field: properties.compute.logging.retention_set
+          op: eq
+          value: false
+        - field: properties.compute.logging.retention_days
+          op: lt
+          value: 365
