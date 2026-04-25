@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.SNAPSHOT.AMI.DEREGISTERED.001
+name: EBS Snapshots from Deregistered AMIs Must Be Cleaned Up
+description: >
+  EBS snapshots that were created as the backing store for an AMI
+  must be deleted when the AMI is deregistered. AMI deregistration
+  removes the AMI from the launchable inventory but does not delete
+  the underlying snapshots — they remain in the account, continue
+  to incur cost, and remain readable by anyone with
+  ec2:DescribeSnapshots and ec2:CreateVolume on the snapshot. The
+  snapshots typically contain the OS, application binaries, and
+  whatever data was on the EBS volumes at AMI creation time —
+  including secrets baked into the image, customer data on database
+  volumes that were imaged for backup, and credentials on
+  configuration volumes. After deregistration the snapshots are
+  effectively forgotten by the AMI lifecycle yet remain a complete
+  copy of the historical instance state, recoverable to a fresh
+  volume that the attacker mounts and reads.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "MP-6"
+  soc2: "CC6.5"
+  ccm_v4: ["DSP-15", "DSP-17"]
+scope_tags: [aws, ec2]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: collection
+remediation:
+  description: EBS snapshot is associated with a deregistered AMI.
+  action: Delete the snapshot or re-register the AMI if it is still needed.
+  example: |
+    {"compute": {"kind": "ebs_snapshot", "snapshot": {"source_ami_deregistered": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: ebs_snapshot
+    - field: properties.compute.snapshot.source_ami_deregistered
+      op: eq
+      value: true

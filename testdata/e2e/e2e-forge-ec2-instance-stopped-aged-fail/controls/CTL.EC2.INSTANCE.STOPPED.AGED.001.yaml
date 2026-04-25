@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.INSTANCE.STOPPED.AGED.001
+name: EC2 Instances Must Not Remain Stopped Beyond the Decommission Threshold
+description: >
+  EC2 instances stopped for longer than the decommission threshold
+  (default 90 days) accumulate attached resources (EBS volumes,
+  Elastic Network Interfaces, Elastic IPs) that continue to incur
+  cost and remain in the attack surface. A stopped instance is not
+  the same as a terminated instance — its volumes are still
+  readable from any role with EC2 permissions, its IAM profile is
+  still attached, and a single Start call brings it back online
+  with whatever stale credentials, packages, and trust relationships
+  it had at stop time. Long-stopped instances are typically forgotten
+  by their owners; they fail every patch cycle, fall outside SSM
+  inventory refresh, and become unmanaged the moment they restart.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-8"
+  soc2: "CC6.1"
+  ccm_v4: ["DCS-06"]
+scope_tags: [aws, ec2]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: EC2 instance has been stopped longer than the decommission threshold.
+  action: Terminate the instance and release its attached resources, or document why it must remain stopped.
+  example: |
+    {"compute": {"kind": "instance", "instance": {"state": "stopped", "stopped_age_exceeds_threshold": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: instance
+    - field: properties.compute.instance.state
+      op: eq
+      value: stopped
+    - field: properties.compute.instance.stopped_age_exceeds_threshold
+      op: eq
+      value: true

@@ -1,0 +1,30 @@
+control: CTL.EC2.KEYPAIR.ORPHAN.001
+defect: >
+  EC2 key pair exists in the account but is not referenced
+  by any current instance or launch template.
+infection: >
+  An EC2 key pair is the public half of an SSH key. The
+  private half lives somewhere else — on a developer's
+  laptop, in CI secrets, in an S3 bucket from a
+  long-finished migration, in a Slack message, in a
+  password manager belonging to someone who no longer
+  works here. The key pair leaving the active fleet is
+  not the same as the private key being decommissioned;
+  it almost never is. As long as the public key remains
+  in EC2, anyone holding the private half can use it on
+  a new instance launched with that key (any role with
+  ec2:RunInstances and the ability to specify
+  KeyName has the access). Worse, the orphan key was
+  often baked into AMIs while it was active; re-launching
+  any of those AMIs (which deregistration may not have
+  cleaned up — see CTL.EC2.SNAPSHOT.AMI.DEREGISTERED.001
+  and CTL.EC2.LT.GHOST.KEYPAIR.001) re-grants the
+  original holder's SSH access to the new instance. The
+  EC2 console shows orphan key pairs in the inventory
+  with no usage indicator, so accumulation is the
+  default state of the catalog over time.
+failure: >
+  Persistent SSH backdoor potential. Any retained private
+  half of the orphan key remains usable against any
+  newly-launched instance that references the key, with
+  no audit signal that the access path exists.

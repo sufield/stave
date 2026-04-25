@@ -8,6 +8,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **EC2-4 — instance lifecycle and orphaned resources
+  (6 new controls, 3 chains).** Fourth EC2 gap-closure
+  iteration. Closes the post-termination decommission-leak
+  surface and the long-lived-instance retirement surface.
+  Prompt spec asked for ~8 controls; two turned out to
+  duplicate existing ones (`CTL.EC2.INSTANCE.AGE.001`
+  covered RUNNING.AGED; `CTL.CLOUDWATCH.ALARM.GHOST.001`
+  covered GHOST.ALARM), so shipped 6 distinct additions.
+  Instance lifecycle (2): `INSTANCE.STOPPED.AGED` (stopped
+  > decommission threshold accumulates EBS, ENIs, IAM
+  attachments, all readable on a single Start, medium),
+  `INSTANCE.EOL` (running on retired instance family →
+  capped security primitives now and unrecoverable on next
+  AZ failover, medium). Orphaned resources (3):
+  `ENI.ORPHAN` (detached > threshold → IP/SG-quota leak,
+  attach-back lateral movement, low), `SNAPSHOT.AMI.DEREGISTERED`
+  (AMI deregistration leaves snapshots → indefinite
+  historical-state retention readable to anyone with
+  CreateVolume, medium), `KEYPAIR.ORPHAN` (key pair with
+  no current users → persistent SSH backdoor potential
+  via re-launched AMIs, medium). Resource-side ghost (1):
+  `ROUTE53.HEALTHCHECK.GHOST` (health check whose target
+  was deleted → alert fatigue + cross-tenant probe risk
+  on reissued IPs, low) — resource-side twin of
+  CTL.ROUTE53.DANGLING (DNS-record side). Chains:
+  `ec2_dormant_attack_surface` (long-stopped instance +
+  orphan ENI/keypair = forgotten access path),
+  `ec2_decommission_incomplete` (snapshot + ENI + keypair
+  artifacts together prove cleanup workflow stopped after
+  AMI deregistration), `ec2_permanent_vulnerability`
+  (EOL family + aged + unmanaged = no remediation pipeline
+  before the EOL deadline). 12 e2e fixtures. 6 triage
+  overrides.
 - **EC2-1 — launch template ghost references and AMI security
   (6 new controls, 3 chains).** First EC2 gap-closure
   iteration. Extends the ghost-reference pattern to launch

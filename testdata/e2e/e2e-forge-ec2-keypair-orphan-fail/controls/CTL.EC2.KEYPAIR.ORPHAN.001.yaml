@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.KEYPAIR.ORPHAN.001
+name: EC2 Key Pairs Must Be Used by at Least One Resource
+description: >
+  EC2 key pairs that no current instance and no current launch
+  template references must be deleted from the account. An orphan
+  key pair is the public half of an SSH key whose private half
+  almost always still lives on a developer's laptop, in a CI
+  secret store, or in an S3 bucket from a long-finished migration.
+  As long as the key pair exists in EC2, anyone with the private
+  half can ec2:ImportKeyPair-collide or simply launch a new
+  instance with that key (with EC2 launch permissions) and gain
+  SSH access to a freshly minted box bearing the orphan key. Worse,
+  the orphan key may have been authorized on instances that were
+  recently terminated whose AMIs still embed it — re-launching
+  any such AMI re-grants the original key holder access. Key
+  pairs leak quietly: the EC2 console shows them in the inventory
+  with no usage indicator, so accumulation is the default state.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-2"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-08"]
+scope_tags: [aws, ec2]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: EC2 key pair is not referenced by any instance or launch template.
+  action: Delete the orphan key pair or document its intended use.
+  example: |
+    {"compute": {"kind": "key_pair", "keypair": {"is_referenced": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: key_pair
+    - field: properties.compute.keypair.is_referenced
+      op: eq
+      value: false

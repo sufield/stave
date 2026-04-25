@@ -1,0 +1,40 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.INSTANCE.EOL.001
+name: EC2 Instances Must Not Use End-of-Life Instance Types
+description: >
+  EC2 instances must not run on instance types that AWS has marked
+  end-of-life or scheduled for retirement. EOL instance families
+  (e.g., m1, m2, c1, t1, cc2, cr1) lose hardware availability,
+  stop receiving Nitro security feature backports (improved IMDS,
+  EBS encryption defaults, SR-IOV), and eventually become impossible
+  to launch — at which point any Stop/Start cycle, Auto Scaling
+  refresh, or AZ failover will fail. The instance is also locked
+  out of newer security primitives (NitroTPM, CPU options for
+  side-channel mitigation), so even if it stays running its
+  hardening posture is permanently capped at the EOL family's
+  era. EOL is a deadline, not a warning — once the family is
+  withdrawn from a region, the instance becomes unrecoverable.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-2"
+  soc2: "A1.2"
+  ccm_v4: ["BCR-08", "CCC-04"]
+scope_tags: [aws, ec2]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: EC2 instance runs on an end-of-life instance type.
+  action: Migrate the instance to a current-generation instance family.
+  example: |
+    {"compute": {"kind": "instance", "instance": {"instance_type_eol": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: instance
+    - field: properties.compute.instance.instance_type_eol
+      op: eq
+      value: true

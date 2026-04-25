@@ -1,0 +1,31 @@
+control: CTL.ROUTE53.HEALTHCHECK.GHOST.001
+defect: >
+  Route 53 health check monitors an endpoint that has
+  been deleted (released EIP, disabled CloudFront
+  distribution, deleted load balancer, removed A record).
+infection: >
+  A health check pointed at a deleted endpoint reports
+  persistent unhealthy status. Operators learn to ignore
+  the alert ("oh, that one is always red"), which makes
+  the dashboard noisy and the on-call response slower
+  for the next real outage. The health check does not
+  trigger any failover, because Route 53 has no record
+  group still wired to it. Meanwhile, the orphan
+  consumes one slot of the per-account health check
+  quota (default 200) and continues to bill at the
+  endpoint-monitoring rate. The dangerous edge case is
+  IP reassignment: if the released EIP is reassigned to
+  a different AWS tenant, the health check will silently
+  begin probing — and reporting on — that tenant's
+  infrastructure, which is both an information leak from
+  the new tenant's side and a cross-tenant trust signal
+  the original team did not authorize. Route 53 health
+  checks are the resource-side twin of dangling DNS
+  records: both are decommission-leak artifacts, both
+  are catalog-level rather than blast-radius level, and
+  both are typically discovered by quota exhaustion or
+  by the bill rather than by the security review.
+failure: >
+  Alert fatigue, quota leak, and a small but real
+  cross-tenant probe risk against IPs that have been
+  reissued to other AWS customers.

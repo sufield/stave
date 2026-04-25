@@ -68,7 +68,6 @@
         "first_unsafe_at": "2026-01-01T00:00:00Z",
         "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
         "unsafe_duration_hours": 240,
-        "threshold_hours": 168,
         "misconfigurations": [
           {
             "property": "storage.kind",
@@ -92,7 +91,7 @@
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
       },
       "control_severity": "medium",
       "control_compliance": {
@@ -237,7 +236,6 @@
         "first_unsafe_at": "2026-01-01T00:00:00Z",
         "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
         "unsafe_duration_hours": 240,
-        "threshold_hours": 168,
         "misconfigurations": [
           {
             "property": "storage.object_lock.enabled",
@@ -261,7 +259,7 @@
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
       },
       "control_severity": "medium",
       "control_compliance_ccm_v4": [
@@ -407,7 +405,6 @@
         "first_unsafe_at": "2026-01-01T00:00:00Z",
         "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
         "unsafe_duration_hours": 240,
-        "threshold_hours": 168,
         "misconfigurations": [
           {
             "property": "storage.object_lock.enabled",
@@ -431,7 +428,7 @@
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
       },
       "control_severity": "medium",
       "control_compliance_ccm_v4": [
@@ -807,7 +804,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "0b07538859ec24dd4bd26a844bf54396a665866e",
+      "head_commit": "e42b31ff03f614f66a9a82828959d1d537619153",
       "dirty": false
     }
   }

@@ -2,6 +2,7 @@ package observations
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/sufield/stave/internal/core/asset"
@@ -32,7 +33,7 @@ func ParseBundle(data []byte) ([]asset.Snapshot, error) {
 		return nil, fmt.Errorf("parse observations JSON: %w", err)
 	}
 	if len(bundle.Snapshots) == 0 {
-		return nil, fmt.Errorf("observation bundle contains no snapshots (expected a top-level `snapshots` array)")
+		return nil, errors.New("observation bundle contains no snapshots (expected a top-level `snapshots` array)")
 	}
 	for i := range bundle.Snapshots {
 		if bundle.Snapshots[i].CapturedAt.IsZero() {

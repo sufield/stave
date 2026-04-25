@@ -1,0 +1,32 @@
+control: CTL.EC2.INSTANCE.EOL.001
+defect: >
+  EC2 instance is running on an end-of-life instance type
+  (e.g., m1, m2, c1, t1, cc2, cr1) that AWS has marked for
+  retirement.
+infection: >
+  EOL is qualitatively different from "old". EOL means the
+  family will be withdrawn from the region on a published
+  date, after which no Stop/Start, Auto Scaling refresh, or
+  AZ failover for an EOL instance can succeed — the launch
+  call returns InsufficientInstanceCapacity for a type that
+  no longer exists. Until that date, the instance is still
+  running but is permanently capped at the security
+  primitives of its original generation: pre-Nitro families
+  do not get NitroTPM, do not get the improved IMDS rate
+  limiting, do not get encrypted EBS by default at the
+  hypervisor level, and miss SR-IOV-tier network
+  isolation. Side-channel mitigations (CPU options for
+  Spectre/Meltdown families, hyperthreading control) are
+  unavailable on the older virtualization stack. The
+  instance also typically runs on a kernel/AMI that the
+  organization no longer rebuilds — the migration path
+  away from the EOL family forces a parallel rebuild, which
+  the team postpones until the deadline forces it. The
+  result is an instance with frozen hardening, frozen
+  patching cadence, and a known expiry date.
+failure: >
+  Permanent vulnerability and an availability cliff. Until
+  EOL date the instance carries hardware-era security
+  ceilings that newer CVEs assume have been mitigated;
+  after EOL date any failover scenario fails outright,
+  taking the workload offline.

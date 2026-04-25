@@ -58,7 +58,6 @@
         "first_unsafe_at": "2026-01-01T00:00:00Z",
         "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
         "unsafe_duration_hours": 240,
-        "threshold_hours": 168,
         "misconfigurations": [
           {
             "property": "storage.access.public_read",
@@ -70,7 +69,7 @@
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
       },
       "control_severity": "critical",
       "control_compliance": {
@@ -213,7 +212,6 @@
         "first_unsafe_at": "2026-01-01T00:00:00Z",
         "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
         "unsafe_duration_hours": 240,
-        "threshold_hours": 168,
         "misconfigurations": [
           {
             "property": "storage.access.public_list",
@@ -249,7 +247,7 @@
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
       },
       "control_severity": "critical",
       "control_compliance_ccm_v4": [
@@ -658,7 +656,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "8ef91f6c62fe209cbb9f3919ce7310666be52141",
+      "head_commit": "e42b31ff03f614f66a9a82828959d1d537619153",
       "dirty": false
     }
   }

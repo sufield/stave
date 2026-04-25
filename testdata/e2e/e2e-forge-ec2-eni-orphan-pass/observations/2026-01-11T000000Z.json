@@ -1,0 +1,13 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "eni-0abc123def456live",
+      "type": "aws_ec2_network_interface",
+      "vendor": "aws",
+      "properties": {"network":{"kind":"network_interface","eni":{"is_attached":true,"detached_age_exceeds_threshold":false}}}
+    }
+  ]
+}

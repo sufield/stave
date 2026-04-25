@@ -1,0 +1,31 @@
+control: CTL.EC2.ENI.ORPHAN.001
+defect: >
+  Elastic Network Interface has been detached for longer
+  than the decommission threshold (default 30 days).
+infection: >
+  An orphaned ENI is invisible from the EC2 instance view
+  yet remains a fully-formed network attachment in the
+  account: it occupies a private IP in its subnet's CIDR
+  (eventually causing subnet exhaustion), it may carry an
+  Elastic IP that continues to bill, it pins security
+  group attachments that consume the per-region SG-rule
+  quota, and it is one ec2:AttachNetworkInterface call
+  away from being the secondary interface on a freshly-
+  launched instance. The most common origins — instance
+  termination with delete_on_termination=false, deleted
+  Lambda functions whose hyperplane ENIs the platform
+  failed to reap, decommissioned VPC interface endpoints,
+  CloudFormation rollbacks that lost track of a
+  Resource — all share a property: nobody is tracking
+  the leak because the orphan does not fail any console
+  view. The Network Interfaces list shows status
+  "available", which the UI presents as a neutral state.
+  An attacker (or an intern with EC2 launch permissions)
+  who attaches an orphan ENI inherits the security group
+  rules that the original workload had — frequently
+  including private routes, peered-VPC trust, or VPC-
+  endpoint policies that the SG was sized for.
+failure: >
+  Subnet IP exhaustion in the slow case; lateral movement
+  via SG-rule reuse in the fast case. EIP costs continue
+  silently.

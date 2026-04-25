@@ -1,0 +1,31 @@
+control: CTL.EC2.SNAPSHOT.AMI.DEREGISTERED.001
+defect: >
+  EBS snapshot is the backing store for an AMI that has
+  been deregistered.
+infection: >
+  AMI deregistration is the removal of a row from the
+  launchable-images table; it does not delete the EBS
+  snapshots the AMI was built from. The snapshots remain
+  in the account in `completed` state, continue to
+  accrue storage cost (snapshot pricing is by
+  delta-block), and remain readable to any principal with
+  ec2:DescribeSnapshots and ec2:CreateVolume on them. The
+  AMI deregistration step is what most cleanup runbooks
+  document; the snapshot deletion step is what they
+  forget. The result is that the historical fleet
+  state — every package, every config file, every secret
+  baked into the AMI build, every bit of data on the
+  database volume that was imaged for backup — persists
+  in the account indefinitely under a resource type
+  (snapshot) that is rarely audited at the same cadence
+  as the AMI catalog. An attacker who acquires
+  ec2:CreateVolume and ec2:RunInstances rights can mount
+  the snapshot to a fresh volume on an instance they
+  control and read the entire historical filesystem;
+  unlike running a stopped instance, this leaves no audit
+  trail in the original instance role.
+failure: >
+  Indefinite retention of historical fleet state.
+  Forgotten secrets and customer data remain readable to
+  anyone with EBS volume rights long after the AMI's
+  deletion records suggest cleanup is complete.

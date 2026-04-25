@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.ENI.ORPHAN.001
+name: Elastic Network Interfaces Must Not Remain Detached
+description: >
+  Elastic Network Interfaces (ENIs) detached for longer than the
+  decommission threshold (default 30 days) are orphaned resources.
+  An orphaned ENI still occupies a private IP in its subnet, may
+  hold a public IP / Elastic IP allocation, may carry security
+  group attachments that consume SG-rule quota, and is reachable
+  via re-attachment to any new instance the orphan's owner can
+  launch. Orphaned ENIs typically result from instance termination
+  with delete_on_termination=false, deleted Lambda functions whose
+  hyperplane ENIs were never reaped, decommissioned VPC endpoints,
+  and failed CloudFormation rollbacks. The ENI is invisible to the
+  instance dashboard yet shows up under EC2 → Network Interfaces
+  with status "available" — a state the console marks neutral but
+  that is operationally a leak.
+domain: governance
+severity: low
+compliance:
+  ccm_v4: ["DCS-06", "IVS-04"]
+scope_tags: [aws, ec2]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: Network interface has been detached longer than the decommission threshold.
+  action: Delete the orphaned ENI or attach it to a current resource.
+  example: |
+    {"network": {"kind": "network_interface", "eni": {"is_attached": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: network_interface
+    - field: properties.network.eni.is_attached
+      op: eq
+      value: false
+    - field: properties.network.eni.detached_age_exceeds_threshold
+      op: eq
+      value: true

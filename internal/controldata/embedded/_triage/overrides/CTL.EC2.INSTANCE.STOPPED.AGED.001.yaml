@@ -1,0 +1,30 @@
+control: CTL.EC2.INSTANCE.STOPPED.AGED.001
+defect: >
+  EC2 instance has been stopped for longer than the
+  decommission threshold (default 90 days).
+infection: >
+  A stopped instance is not the same as a terminated
+  instance — its EBS volumes remain attached and readable,
+  its IAM instance profile is still bound, its security
+  group attachments still consume rule quota, and a single
+  ec2:StartInstances call is sufficient to bring it back
+  online. Long-stopped instances are operationally invisible:
+  they fall outside SSM patch cycles (the agent is offline),
+  they do not appear in current Inspector scans (no live
+  process to assess), and ownership decays as the original
+  team rotates. When the instance is eventually restarted —
+  often by an unrelated cleanup script or a misclick — it
+  comes back with a frozen view of the world: stale
+  packages with months of unpatched CVEs, an IAM profile
+  whose policies have likely been revised since stop time
+  but whose attached version on the instance is the one
+  cached at boot, and SSH/SSM credentials that may have
+  been rotated everywhere except on this one box. The
+  console marks the state "stopped" without flagging the
+  age, so the inventory looks clean.
+failure: >
+  Forgotten attack surface that re-enters scope on Start.
+  Costs accumulate; the instance carries unpatched
+  vulnerabilities and stale credentials that nobody is
+  monitoring; restart re-introduces a non-current host
+  into an otherwise current fleet.

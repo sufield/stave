@@ -2,6 +2,7 @@ package e2e_test
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"encoding/json"
 	"errors"
@@ -12,7 +13,10 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 )
+
+const e2eCaseTimeout = 90 * time.Second
 
 // TestE2E discovers and runs all e2e test cases under testdata/e2e/.
 // Each subdirectory is a test case with controls, observations, and expected output files.
@@ -102,12 +106,15 @@ func runE2ECase(t *testing.T, bin, caseDir string) {
 	relCtlDir, _ := filepath.Rel(repoRoot, ctlDir)
 	relObsDir, _ := filepath.Rel(repoRoot, obsDir)
 
+	ctx, cancel := context.WithTimeout(context.Background(), e2eCaseTimeout)
+	defer cancel()
+
 	var cmd *exec.Cmd
 	if cmdFile := filepath.Join(caseDir, "command.txt"); fileExists(cmdFile) {
 		content := readFileTrimmed(t, cmdFile)
 		content = strings.ReplaceAll(content, "$CASE_DIR", relCaseDir)
 		parts := strings.Fields(content)
-		cmd = exec.Command(bin, parts...)
+		cmd = exec.CommandContext(ctx, bin, parts...)
 	} else {
 		args := []string{
 			"apply",
@@ -121,7 +128,7 @@ func runE2ECase(t *testing.T, bin, caseDir string) {
 			extra = strings.ReplaceAll(extra, "$CASE_DIR", relCaseDir)
 			args = append(args, strings.Fields(extra)...)
 		}
-		cmd = exec.Command(bin, args...)
+		cmd = exec.CommandContext(ctx, bin, args...)
 	}
 
 	var stdout, stderr bytes.Buffer
@@ -130,12 +137,19 @@ func runE2ECase(t *testing.T, bin, caseDir string) {
 	cmd.Dir = repoRoot
 
 	exitCode := 0
-	if err := cmd.Run(); err != nil {
+	runErr := cmd.Run()
+	if ctx.Err() == context.DeadlineExceeded {
+		t.Fatalf(
+			"e2e case timed out after %s\ncase: %s\nstdout:\n%s\nstderr:\n%s",
+			e2eCaseTimeout, caseDir, stdout.String(), stderr.String(),
+		)
+	}
+	if runErr != nil {
 		var exitErr *exec.ExitError
-		if errors.As(err, &exitErr) {
+		if errors.As(runErr, &exitErr) {
 			exitCode = exitErr.ExitCode()
 		} else {
-			t.Fatalf("exec error: %v", err)
+			t.Fatalf("exec error: %v\nstdout:\n%s\nstderr:\n%s", runErr, stdout.String(), stderr.String())
 		}
 	}
 
@@ -261,9 +275,19 @@ func checkFullOutput(t *testing.T, caseDir string, stdout []byte) {
 			t.Fatalf("parse JSON: %v", err)
 		}
 		delete(m, "extensions")
+		delete(m, "generated_at")
+		delete(m, "timestamp")
 		if run, ok := m["run"].(map[string]any); ok {
 			delete(run, "tool_version")
 			delete(run, "policy_fingerprint")
+			delete(run, "started_at")
+			delete(run, "finished_at")
+			delete(run, "duration_ms")
+			delete(run, "duration")
+			delete(run, "repo_sha")
+			delete(run, "git_sha")
+			delete(run, "environment")
+			delete(run, "hostname")
 		}
 		return marshalCanonical(t, m)
 	}

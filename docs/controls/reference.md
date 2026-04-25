@@ -3,29 +3,29 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1392
-**Pack hash:** `f7c9ebc3b2568b7bf475f281452e80247dc3771f590dfbb914bbd9d5357866bd`
+**Total controls:** 1410
+**Pack hash:** `eade496ed2e1050458dcffce3787fcea57e67219cdfb1f4b7cebaa693c181e20`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 171 |
-| high | 625 |
+| high | 628 |
 | info | 16 |
-| low | 97 |
-| medium | 483 |
+| low | 101 |
+| medium | 494 |
 
 | Domain | Count |
 |--------|-------|
-| audit | 29 |
+| audit | 32 |
 | availability | 2 |
 | cryptography | 3 |
 | detection | 32 |
 | encryption | 75 |
-| exposure | 845 |
-| governance | 27 |
-| hygiene | 10 |
+| exposure | 848 |
+| governance | 33 |
+| hygiene | 16 |
 | identity | 326 |
 | network | 21 |
 | resilience | 14 |
@@ -6345,6 +6345,21 @@ Basic EC2 monitoring provides metrics at 5-minute intervals. Detailed monitoring
 
 ---
 
+### CTL.EC2.EBS.CROSSENV.SNAPSHOT.001
+
+**Production EBS Snapshot Shared With Non-Production Account**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 2.2.1; fedramp_moderate: AC-3; hipaa: 164.312(a)(1); nist_800_53_r5: AC-3; pci_dss_v4.0: 1.3.1; soc2: CC6.1;
+
+EBS snapshot whose source instance is tagged or accounted as production is shared with an account whose environment is development, staging, or testing. Production snapshots contain production data — customer records, application state, embedded credentials, configuration. Non-production accounts typically have broader access (more developers, more roles, less strict SCPs) and weaker controls (relaxed CloudTrail retention, limited GuardDuty coverage, permissive SGs). Production data restored from a snapshot in a non-production account escapes every production- scoped control. Environment classification uses account tags or OU membership; the same heuristic as `CTL.VPC.SEGMENT.ENVMIX.001`.
+
+**Remediation:** Revoke the cross-environment share immediately. If non-production accounts need a production data sample for testing, scrub the snapshot (anonymize PII, remove secrets, redact identifiers) into a sanitized snapshot and share that instead. Apply an SCP at the organization level that prevents `ec2:ModifySnapshotAttribute --add` between accounts in different environment OUs.
+
+---
+
 ### CTL.EC2.EBS.DEFAULT.001
 
 **EBS Default Encryption Must Be Enabled**
@@ -6357,6 +6372,21 @@ Basic EC2 monitoring provides metrics at 5-minute intervals. Detailed monitoring
 EBS default encryption must be enabled at the account level to ensure all new EBS volumes are automatically encrypted. Without it, volumes created by auto-scaling or manual launches may be unencrypted.
 
 **Remediation:** aws ec2 enable-ebs-encryption-by-default --region <region> Enable in all regions where EC2 workloads run.
+
+---
+
+### CTL.EC2.EBS.DELETEONTERMINATION.001
+
+**EBS Volume Has DeleteOnTermination Disabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** hygiene
+- **Compliance:** cis_aws_v3.0: 2.2.1; fedramp_moderate: MP-6; hipaa: 164.310(d)(2)(i); nist_800_53_r5: MP-6; soc2: CC6.1;
+
+EBS volume attached to a running instance has `DeleteOnTermination` set to false. When the instance is terminated, the volume persists and transitions to `available` state — becoming an unattached volume with all the data the application wrote during the instance's lifetime. This is the precondition for the orphan-volume accumulation problem. Disabling DeleteOnTermination is a legitimate choice for stateful workloads that handle volume lifecycle out-of-band (databases with explicit backup/restore procedures); for ephemeral or replaceable workloads, the default of `true` is the correct behavior and the finding signals an unintentional drift.
+
+**Remediation:** For ephemeral / replaceable workloads, set `DeleteOnTermination` to true so volumes are cleaned up on termination. For stateful workloads where the volume must outlive the instance (databases, persistent caches), keep `DeleteOnTermination` false but document the lifecycle expectation: who owns the volume after instance termination, what backups exist, what the deletion criteria are. Pair the disabled flag with an explicit snapshot/backup policy.
 
 ---
 
@@ -6390,6 +6420,51 @@ Unencrypted EBS snapshots expose full disk contents if shared or made public. Ev
 
 ---
 
+### CTL.EC2.EBS.SNAPSHOT.STALE.001
+
+**EBS Snapshot Older Than 365 Days**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** hygiene
+- **Compliance:** cis_aws_v3.0: 2.2.1; fedramp_moderate: SI-12; hipaa: 164.310(d)(2)(i); nist_800_53_r5: SI-12; soc2: CC7.1;
+
+EBS snapshot is older than 365 days. Stale snapshots accumulate cost (S3 storage charges for every snapshot block) and exposure surface. They may contain historical credentials that have since been rotated, old application versions with patched-but-not-removed vulnerabilities, and data that should have been deleted under retention policies. The finding is a lifecycle/governance signal: stale snapshots warrant a review pass — archive to cheaper storage, fold into a compliance retention pipeline, or delete.
+
+**Remediation:** Review the snapshot against retention policy. For snapshots covered by a documented retention rule, move them under an automated lifecycle policy (Data Lifecycle Manager) so future expirations happen automatically. For snapshots that no longer have a retention purpose, delete them. For snapshots whose contents are uncertain, document the asset they came from and the data classification before making a delete decision.
+
+---
+
+### CTL.EC2.EBS.SNAPSHOT.UNENCRYPTED.SHARED.001
+
+**EBS Snapshot Shared Without Encryption**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 2.2.1; fedramp_moderate: SC-28; hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-28; pci_dss_v4.0: 3.5.1; soc2: CC6.7;
+
+EBS snapshot is shared with one or more accounts and is unencrypted. The receiving account can restore the snapshot and read every block in plaintext. Shared snapshots that contain meaningful data should be encrypted with a KMS key whose grant is explicitly extended to the receiving account — encryption at rest on the source side, encryption in transit during the copy, and key-based access revocation if the share is later withdrawn. An unencrypted shared snapshot offers none of those protections; once shared, the data is effectively published to the receiving account permanently.
+
+**Remediation:** Withdraw the existing share immediately. Re-create the snapshot as encrypted: `aws ec2 copy-snapshot --source- snapshot-id <id> --encrypted --kms-key-id <key>`. Grant the receiving account explicit `kms:Decrypt` permission on the KMS key. Re-share the new encrypted snapshot. Add an SCP that denies `ec2:ModifySnapshotAttribute --add` for unencrypted snapshots to prevent recurrence.
+
+---
+
+### CTL.EC2.EBS.UNATTACHED.001
+
+**Unattached EBS Volume Persists With Data**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** hygiene
+- **Compliance:** cis_aws_v3.0: 2.2.1; fedramp_moderate: MP-6; hipaa: 164.310(d)(2)(i); nist_800_53_r5: MP-6; pci_dss_v4.0: 9.4.5; soc2: CC6.1;
+
+EBS volume is in `available` state — not attached to any instance — and continues to persist with whatever data it contained when last detached. Unattached volumes are data remnants from terminated workloads: application databases, log files, configuration files with credentials, temporary data, user uploads. The volume is invisible to instance- level security tools (no instance to scan), invisible to most monitoring (no associated workload), and accessible to anyone in the account with `ec2:AttachVolume` permission. Accumulation is the real risk — dozens of orphan volumes from years of terminated instances, each with unknown data.
+
+**Remediation:** Verify the volume's contents are not needed: snapshot it if there is uncertainty, then delete the volume. If the volume is intentionally retained for restore purposes, snapshot it and delete the volume — the snapshot is cheaper and clearer about the lifecycle. Add an automated sweep that flags volumes in `available` state older than a defined threshold (typically 30 days) and either snapshots-then-deletes or escalates to the asset owner.
+
+---
+
 ### CTL.EC2.EIP.UNASSIGNED.001
 
 **Elastic IPs Must Be Associated with Resources**
@@ -6401,6 +6476,20 @@ Unencrypted EBS snapshots expose full disk contents if shared or made public. Ev
 Unassigned Elastic IP addresses incur cost and represent unused public IP allocations that should be released.
 
 **Remediation:** Associate the EIP with an instance or release it.
+
+---
+
+### CTL.EC2.ENI.ORPHAN.001
+
+**Elastic Network Interfaces Must Not Remain Detached**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+
+Elastic Network Interfaces (ENIs) detached for longer than the decommission threshold (default 30 days) are orphaned resources. An orphaned ENI still occupies a private IP in its subnet, may hold a public IP / Elastic IP allocation, may carry security group attachments that consume SG-rule quota, and is reachable via re-attachment to any new instance the orphan's owner can launch. Orphaned ENIs typically result from instance termination with delete_on_termination=false, deleted Lambda functions whose hyperplane ENIs were never reaped, decommissioned VPC endpoints, and failed CloudFormation rollbacks. The ENI is invisible to the instance dashboard yet shows up under EC2 → Network Interfaces with status "available" — a state the console marks neutral but that is operationally a leak.
+
+**Remediation:** Delete the orphaned ENI or attach it to a current resource.
 
 ---
 
@@ -6416,6 +6505,36 @@ Unassigned Elastic IP addresses incur cost and represent unused public IP alloca
 EC2 instances that access AWS services must use IAM instance profiles (roles) instead of embedded access keys. Instance roles provide temporary credentials that are automatically rotated.
 
 **Remediation:** Create an IAM role and attach it to the instance: aws ec2 associate-iam-instance-profile --iam-instance-profile Name=<role> --instance-id <id>
+
+---
+
+### CTL.EC2.IMDS.HOPLIMIT.001
+
+**IMDS Hop Limit Greater Than 1**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 5.6; fedramp_moderate: AC-3; nist_800_53_r5: AC-3; pci_dss_v4.0: 2.2.1; soc2: CC6.1;
+
+Instance metadata service hop limit (`HttpPutResponseHopLimit`) is greater than 1. The hop limit is the TTL applied to HTTP responses from the metadata endpoint at 169.254.169.254. With a hop limit of 1, only the instance itself can reach the metadata service — single-hop, direct access. With a hop limit of 2 or more, the metadata response can traverse additional network hops: containers attached via Docker bridge networking, in-process proxies, sidecar containers, NAT-style routing inside the host. Each added hop is a new SSRF surface — a vulnerable application that proxies a metadata request from a containerized client reaches the host's IAM role credentials. AWS sets the default to 1 for new instances; the broader value is a deliberate operator choice that warrants a corresponding awareness of the attack surface it opens. The higher-confidence container-aware check (`CTL.EC2.IMDSV2.002`) fires when containers are detected; this control is the fallback signal when container detection is not available from the observation source.
+
+**Remediation:** Set `HttpPutResponseHopLimit` to 1: `aws ec2 modify-instance-metadata-options --instance-id <id> --http-put-response-hop-limit 1 --http-tokens required --http-endpoint enabled`. If the workload requires hop limit 2 (specific bridge- networked containers that need IMDS), document the requirement and pair it with strict per-container network segmentation (e.g., use the EKS pod identity agent so containers do not reach IMDS at all).
+
+---
+
+### CTL.EC2.IMDS.UNNECESSARY.001
+
+**IMDS Enabled on Instance Without IAM Role**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** hygiene
+- **Compliance:** cis_aws_v3.0: 5.6; fedramp_moderate: CM-7; nist_800_53_r5: CM-7; soc2: CC6.1;
+
+Instance has the metadata service enabled (`HttpEndpoint: enabled`) but no IAM instance profile attached. The metadata service responds to requests but serves no IAM credentials — there is no role to deliver. IMDS still exposes instance identity information that aids reconnaissance: account ID, instance ID, region, availability zone, instance type, public/private IPs, security group IDs, network interfaces. An attacker who has reached the metadata endpoint can build a profile of the instance's environment without obtaining credentials. If IMDS is not actually needed (no role attached, no application code that calls `GetInstanceIdentityDocument`), it should be disabled entirely with `HttpEndpoint: disabled`. The finding is a hardening recommendation, not a vulnerability — IMDS without a role does not directly leak credentials.
+
+**Remediation:** Disable the metadata endpoint: `aws ec2 modify-instance-metadata-options --instance-id <id> --http-endpoint disabled`. If a role is genuinely required for the workload but has been omitted by mistake, attach the appropriate profile instead of disabling IMDS. Either action resolves the finding — the goal is to align the IMDS configuration with whether the instance actually uses IAM credentials.
 
 ---
 
@@ -6463,6 +6582,36 @@ EC2 instance safety cannot be assessed when encryption status is missing from th
 
 ---
 
+### CTL.EC2.INSPECTOR.COVERAGE.001
+
+**EC2 Instance Not in Inspector Scanning Scope**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** cis_aws_v3.0: 5.7; fedramp_moderate: RA-5; nist_800_53_r5: RA-5; pci_dss_v4.0: 11.3.1; soc2: CC7.1;
+
+EC2 instance is not covered by Amazon Inspector. The account has Inspector enabled (verified by CTL.INSPECTOR.ENABLED.001) but this individual instance is excluded from scanning — typically because it is not SSM-managed (Inspector requires the SSM agent for OS scanning) or because it is explicitly excluded by tag. Account-level Inspector enablement is necessary but not sufficient: per-instance coverage is what produces vulnerability findings for that instance. An uncovered instance ships without vulnerability evidence into the organization's security posture.
+
+**Remediation:** Add the instance to Inspector's scanning scope. The fastest path is usually to make the instance SSM- managed (if not already) — Inspector picks up SSM- managed instances automatically. Remove any explicit exclusion tags or filter rules that drop this instance from scope. Confirm coverage with `aws inspector2 list-coverage` after the change.
+
+---
+
+### CTL.EC2.INSPECTOR.FINDINGS.STALE.001
+
+**Inspector Findings Older Than 30 Days Without Remediation**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** hygiene
+- **Compliance:** cis_aws_v3.0: 5.7; fedramp_moderate: RA-5; hipaa: 164.308(a)(8); nist_800_53_r5: RA-5; pci_dss_v4.0: 6.3.2; soc2: CC7.1;
+
+Amazon Inspector has active findings for this instance that are older than 30 days and have not been remediated. The vulnerabilities were detected — the scan ran, the issue was identified, the finding was filed — but no follow-up has happened in a month. Stale findings indicate either a broken remediation pipeline (the SLA process never picked them up) or undocumented acceptance (someone decided not to fix but did not record the decision in Inspector). Either case is a signal that the vulnerability-management lifecycle is not closing the loop on detected issues.
+
+**Remediation:** Review the stale findings: remediate them via patches or configuration changes, suppress them with a documented business justification (Inspector suppression rule with comment), or accept them via the organization's vulnerability acceptance process. Add the per-instance vulnerability burndown to the standard incident review cadence so findings do not sit beyond their SLA undetected.
+
+---
+
 ### CTL.EC2.INSTANCE.AGE.001
 
 **EC2 Instances Must Not Exceed Maximum Age**
@@ -6478,6 +6627,21 @@ EC2 instances running longer than the maximum age threshold (default 180 days) a
 
 ---
 
+### CTL.EC2.INSTANCE.EOL.001
+
+**EC2 Instances Must Not Use End-of-Life Instance Types**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: SI-2; soc2: A1.2;
+
+EC2 instances must not run on instance types that AWS has marked end-of-life or scheduled for retirement. EOL instance families (e.g., m1, m2, c1, t1, cc2, cr1) lose hardware availability, stop receiving Nitro security feature backports (improved IMDS, EBS encryption defaults, SR-IOV), and eventually become impossible to launch — at which point any Stop/Start cycle, Auto Scaling refresh, or AZ failover will fail. The instance is also locked out of newer security primitives (NitroTPM, CPU options for side-channel mitigation), so even if it stays running its hardening posture is permanently capped at the EOL family's era. EOL is a deadline, not a warning — once the family is withdrawn from a region, the instance becomes unrecoverable.
+
+**Remediation:** Migrate the instance to a current-generation instance family.
+
+---
+
 ### CTL.EC2.INSTANCE.PROFILE.001
 
 **EC2 Instances Must Use Instance Profiles Instead of Access Keys**
@@ -6490,6 +6654,36 @@ EC2 instances running longer than the maximum age threshold (default 180 days) a
 EC2 instances that need AWS API access should use IAM instance profiles (role-based, temporary, automatically rotated credentials) rather than embedding long-term access keys. Long-term access keys stored on EC2 instances are frequently discovered via metadata SSRF, file system access after compromise, or accidental git commits. Instance profile credentials auto-rotate every hour via the metadata service.
 
 **Remediation:** Attach an IAM instance profile with minimum required permissions: aws ec2 associate-iam-instance-profile --instance-id <id> --iam-instance-profile Name=<profile-name>. Remove any hard-coded access keys from the instance.
+
+---
+
+### CTL.EC2.INSTANCE.STOPPED.AGED.001
+
+**EC2 Instances Must Not Remain Stopped Beyond the Decommission Threshold**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-8; soc2: CC6.1;
+
+EC2 instances stopped for longer than the decommission threshold (default 90 days) accumulate attached resources (EBS volumes, Elastic Network Interfaces, Elastic IPs) that continue to incur cost and remain in the attack surface. A stopped instance is not the same as a terminated instance — its volumes are still readable from any role with EC2 permissions, its IAM profile is still attached, and a single Start call brings it back online with whatever stale credentials, packages, and trust relationships it had at stop time. Long-stopped instances are typically forgotten by their owners; they fail every patch cycle, fall outside SSM inventory refresh, and become unmanaged the moment they restart.
+
+**Remediation:** Terminate the instance and release its attached resources, or document why it must remain stopped.
+
+---
+
+### CTL.EC2.KEYPAIR.ORPHAN.001
+
+**EC2 Key Pairs Must Be Used by at Least One Resource**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-2; soc2: CC6.1;
+
+EC2 key pairs that no current instance and no current launch template references must be deleted from the account. An orphan key pair is the public half of an SSH key whose private half almost always still lives on a developer's laptop, in a CI secret store, or in an S3 bucket from a long-finished migration. As long as the key pair exists in EC2, anyone with the private half can ec2:ImportKeyPair-collide or simply launch a new instance with that key (with EC2 launch permissions) and gain SSH access to a freshly minted box bearing the orphan key. Worse, the orphan key may have been authorized on instances that were recently terminated whose AMIs still embed it — re-launching any such AMI re-grants the original key holder access. Key pairs leak quietly: the EC2 console shows them in the inventory with no usage indicator, so accumulation is the default state.
+
+**Remediation:** Delete the orphan key pair or document its intended use.
 
 ---
 
@@ -6595,6 +6789,36 @@ EC2 instances with public IPs receiving internet traffic must be behind an ALB o
 Nitro Enclaves provide an isolated execution environment with no persistent storage, no interactive access, and no external networking. Cryptographic operations performed inside an enclave are protected even if the parent instance is compromised. Applies only to instances tagged requires-enclave=true.
 
 **Remediation:** aws ec2 modify-instance-attribute --instance-id <id> --enclave-options Enabled=true. Requires an enclave-capable instance type (m5, c5, r5 or newer).
+
+---
+
+### CTL.EC2.PATCH.SCAN.STALE.001
+
+**Patch Compliance Scan Not Run Recently**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** cis_aws_v3.0: 2.5; fedramp_moderate: RA-5; hipaa: 164.308(a)(8); nist_800_53_r5: RA-5; pci_dss_v4.0: 11.3.1; soc2: CC7.1;
+
+SSM Patch Manager has not scanned this instance for patch compliance in more than 7 days. The patch compliance status is stale: vendors release new patches continuously, and a scan that ran a week ago cannot tell us whether yesterday's CVE patch is installed. The instance may have been compliant when the last scan ran and non-compliant since, with no evidence of either state. Patch scans are cheap and should run on a daily cadence; a 7-day gap suggests the maintenance schedule is broken or the SSM agent is silently failing scan operations.
+
+**Remediation:** Trigger an immediate `AWS-RunPatchBaseline` scan via SSM Run Command: `aws ssm send-command --document-name AWS-RunPatchBaseline --instance-ids <id> --parameters '{"Operation": ["Scan"]}'`. Investigate why the scheduled scan did not run — check the SSM maintenance window's `Schedule` and execution history, the IAM role's permissions for `ssm:UpdateInstanceAssociationStatus`, and the SSM agent's last ping (which may overlap with `CTL.EC2.SSM.AGENT.STALE.001`).
+
+---
+
+### CTL.EC2.PATCH.WINDOW.INACTIVE.001
+
+**Patch Maintenance Window Not Executed Recently**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** cis_aws_v3.0: 2.5; fedramp_moderate: SI-2; hipaa: 164.308(a)(5)(ii)(B); nist_800_53_r5: SI-2; pci_dss_v4.0: 6.3.3; soc2: CC7.1;
+
+SSM Patch Manager maintenance window has not executed in more than 30 days. The maintenance window is the mechanism that actually applies patches — a compliance scan identifies missing patches, but the window installs them. When the window has not run, no patches have been installed regardless of what the compliance scan reports. Compliance scans may show "patches pending" but the apply step that resolves pending into installed has not happened. The remediation pipeline is broken even when the detection pipeline reports correctly.
+
+**Remediation:** Investigate the maintenance window's execution history: `aws ssm describe-maintenance-window- executions --window-id <id>`. Common causes are a misconfigured cron schedule, a removed target registration, missing IAM permissions on the maintenance window's service role, or task definitions that have failed and disabled the window. Fix the underlying issue and trigger an immediate run with `aws ssm start-automation-execution` or wait for the next scheduled execution and confirm via the SSM console.
 
 ---
 
@@ -6718,6 +6942,21 @@ Security groups with no attached resources should be removed. Unused SGs with br
 
 ---
 
+### CTL.EC2.SNAPSHOT.AMI.DEREGISTERED.001
+
+**EBS Snapshots from Deregistered AMIs Must Be Cleaned Up**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: MP-6; soc2: CC6.5;
+
+EBS snapshots that were created as the backing store for an AMI must be deleted when the AMI is deregistered. AMI deregistration removes the AMI from the launchable inventory but does not delete the underlying snapshots — they remain in the account, continue to incur cost, and remain readable by anyone with ec2:DescribeSnapshots and ec2:CreateVolume on the snapshot. The snapshots typically contain the OS, application binaries, and whatever data was on the EBS volumes at AMI creation time — including secrets baked into the image, customer data on database volumes that were imaged for backup, and credentials on configuration volumes. After deregistration the snapshots are effectively forgotten by the AMI lifecycle yet remain a complete copy of the historical instance state, recoverable to a fresh volume that the attacker mounts and reads.
+
+**Remediation:** Delete the snapshot or re-register the AMI if it is still needed.
+
+---
+
 ### CTL.EC2.SNAPSHOT.CROSSACCOUNT.001
 
 **EBS Snapshots Must Not Be Shared with External Accounts**
@@ -6760,6 +6999,21 @@ EBS snapshots must be encrypted. Unencrypted snapshots can be shared across acco
 A public EBS snapshot can be copied to any AWS account and mounted as a volume — exposing all data on the volume including OS files, application data, database files, and credentials stored on disk. Unlike S3, public snapshots do not require knowing a URL or bucket name — they appear in public snapshot searches.
 
 **Remediation:** Remove public access from the snapshot: aws ec2 modify-snapshot-attribute --snapshot-id <id> --attribute createVolumePermission --operation-type remove --group-names all. Use an SCP to prevent future public snapshots.
+
+---
+
+### CTL.EC2.SSM.AGENT.STALE.001
+
+**SSM Agent Connection Lost**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** hygiene
+- **Compliance:** cis_aws_v3.0: 2.5; fedramp_moderate: CM-6; nist_800_53_r5: CM-6; pci_dss_v4.0: 11.5.1; soc2: CC7.1;
+
+EC2 instance is registered with Systems Manager but its agent ping status is `ConnectionLost` — the agent has stopped communicating since the last successful heartbeat. The instance still appears in the SSM inventory and shows up in the SSM console as managed. But Patch Manager cannot deliver patches, Session Manager cannot establish sessions, and Run Command cannot execute commands. The dashboard says "managed"; the operations layer says "unreachable." This is worse than an instance that was never registered with SSM because the unregistered case is visibly unmanaged — this one is invisibly unmanaged.
+
+**Remediation:** Inspect the instance directly: confirm the SSM agent process is running, check VPC endpoints / NAT connectivity to ssm/ssmmessages/ec2messages endpoints, and verify the instance role still has `AmazonSSMManagedInstanceCore`. Restart the agent if the process died, fix network reachability if the endpoints are blocked, or re-attach the IAM role if the permissions were revoked. After the fix, confirm the next ping returns `Online`.
 
 ---
 
@@ -16692,6 +16946,20 @@ Route53 records (A, AAAA, CNAME, Alias) must not point to AWS resources that hav
 Route 53 health checks must be configured for DNS records pointing to critical endpoints. Without health checks, DNS routes to failed endpoints.
 
 **Remediation:** Create health checks: aws route53 create-health-check and associate with failover routing.
+
+---
+
+### CTL.ROUTE53.HEALTHCHECK.GHOST.001
+
+**Route 53 Health Checks Must Not Target Deleted Endpoints**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+
+Route 53 health checks must monitor endpoints that still exist — an EIP that has been released, a CloudFront distribution that has been disabled, a load balancer that has been deleted, or an FQDN whose A record was removed. A health check pointed at a deleted endpoint reports persistent unhealthy status, which is treated as routine noise by the team and fails to trigger any failover (because Route 53 has no record group to fail over from). More dangerously, the health check continues to incur cost and occupy the per-account quota (200 by default), and if the endpoint's IP is later reassigned to a different tenant, the health check will silently begin probing — and reporting on — a stranger's infrastructure. Health checks are the resource-side twin of CTL.ROUTE53.DANGLING (which handles the DNS-record side); both leak from incomplete decommission flows.
+
+**Remediation:** Delete the orphan health check or update it to target a current endpoint.
 
 ---
 

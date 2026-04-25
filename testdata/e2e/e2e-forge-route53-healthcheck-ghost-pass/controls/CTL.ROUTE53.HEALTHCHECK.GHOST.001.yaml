@@ -1,0 +1,40 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.HEALTHCHECK.GHOST.001
+name: Route 53 Health Checks Must Not Target Deleted Endpoints
+description: >
+  Route 53 health checks must monitor endpoints that still exist —
+  an EIP that has been released, a CloudFront distribution that
+  has been disabled, a load balancer that has been deleted, or an
+  FQDN whose A record was removed. A health check pointed at a
+  deleted endpoint reports persistent unhealthy status, which is
+  treated as routine noise by the team and fails to trigger any
+  failover (because Route 53 has no record group to fail over from).
+  More dangerously, the health check continues to incur cost and
+  occupy the per-account quota (200 by default), and if the
+  endpoint's IP is later reassigned to a different tenant, the
+  health check will silently begin probing — and reporting on —
+  a stranger's infrastructure. Health checks are the resource-side
+  twin of CTL.ROUTE53.DANGLING (which handles the DNS-record
+  side); both leak from incomplete decommission flows.
+domain: governance
+severity: low
+compliance:
+  ccm_v4: ["BCR-03", "DCS-06"]
+scope_tags: [aws, route53]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: Route 53 health check targets an endpoint that no longer exists.
+  action: Delete the orphan health check or update it to target a current endpoint.
+  example: |
+    {"dns_service": {"kind": "route53_healthcheck", "healthcheck": {"target_exists": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.dns_service.kind
+      op: eq
+      value: route53_healthcheck
+    - field: properties.dns_service.healthcheck.target_exists
+      op: eq
+      value: false

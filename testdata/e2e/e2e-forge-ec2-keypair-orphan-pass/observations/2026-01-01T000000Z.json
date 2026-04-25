@@ -1,0 +1,13 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "key-0activecurrent",
+      "type": "aws_ec2_key_pair",
+      "vendor": "aws",
+      "properties": {"compute":{"kind":"key_pair","keypair":{"is_referenced":true,"name":"prod-deploy-current"}}}
+    }
+  ]
+}
