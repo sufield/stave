@@ -1,0 +1,63 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.INTEGRATION.TIMEOUT.001
+name: API Gateway Integration Timeout At Maximum
+description: >
+  API Gateway integration timeout is set to the maximum allowed by
+  the API type — 29 seconds for REST APIs, 30 seconds for HTTP
+  APIs. The maximum-timeout configuration is sometimes intentional
+  for genuinely long-running backends (file processing, report
+  generation, ML inference), but it has measurable side effects on
+  the API's resilience: each slow or hanging request holds an API
+  Gateway connection for the full timeout window before failing,
+  back-pressure is delayed, and the per-account concurrency budget
+  is consumed by stuck requests. Under abuse — request flooding,
+  attacker-controlled slow backends — the maximum timeout
+  amplifies the impact of every request that doesn't complete.
+  Operators who run backends that never need 29 seconds should set
+  the timeout to a value that matches actual SLOs. Operators with
+  genuinely long backends should acknowledge this control in the
+  triage override with the rationale.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-5"
+  fedramp_moderate: "SC-5"
+  soc2: "A1.1"
+  ccm_v4: ["AIS-01", "IVS-09"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    API Gateway integration timeout is at the maximum allowed by
+    the API type (29s REST / 30s HTTP). Slow or hanging backends
+    hold connections for the full window.
+  action: >
+    Reduce the integration timeout to match the backend's actual
+    p99 latency plus headroom. For a backend whose p99 is 2 seconds,
+    a timeout of 5 seconds is more than enough; the maximum is
+    appropriate only for backends that genuinely need it. If the
+    long timeout is intentional, document the reason in a triage
+    override on this control rather than leaving it at default.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_integration",
+        "integration": {
+          "timeout_ms": 5000,
+          "timeout_at_maximum": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_integration
+    - field: properties.api.integration.timeout_at_maximum
+      op: eq
+      value: true

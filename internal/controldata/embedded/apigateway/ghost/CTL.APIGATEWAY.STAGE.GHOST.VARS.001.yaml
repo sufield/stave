@@ -1,0 +1,65 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.STAGE.GHOST.VARS.001
+name: API Gateway Stage Variables Reference Deleted Resources
+description: >
+  API Gateway stage has stage variables that reference resources
+  (Lambda function ARNs, DynamoDB table names, S3 bucket names,
+  backend URLs, parameter store paths) that no longer exist. Stage
+  variables are typically interpolated into integration URIs via
+  ${stageVariables.varName} so a single API definition can target
+  different backends per stage. When the resource a variable points
+  at is deleted, requests that resolve through the variable hit a
+  non-existent target — 5xx responses with no clue at the API
+  Gateway layer that the cause is configuration drift rather than
+  a backend outage. This is the ghost-reference pattern applied to
+  stage variables, alongside CTL.APIGATEWAY.GHOST.LAMBDA.001
+  (integration ARN), CTL.APIGATEWAY.GHOST.AUTHORIZER.001 (authorizer
+  provider), and others in the apigateway/ghost/ family. Detection
+  requires the extractor to resolve each variable's value against
+  the relevant resource catalog — same mechanism the other ghost
+  controls already use.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-3"
+  fedramp_moderate: "CM-3"
+  soc2: "CC8.1"
+  ccm_v4: ["CCC-03", "GRC-04"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Stage variables on this stage point at resources that no longer
+    exist. Requests interpolating those variables hit dead targets.
+  action: >
+    Identify each variable whose value resolves to a deleted
+    resource and either re-create the resource (if the deletion was
+    accidental), update the variable to a current resource, or
+    remove the variable if no integration references it. Add a
+    deletion guard on the affected resource types that
+    cross-references stage variables before allowing the resource
+    to be deleted.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_stage",
+        "stage": {
+          "has_ghost_vars": false,
+          "ghost_var_keys": [],
+          "ghost_var_arns": []
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_stage
+    - field: properties.api.stage.has_ghost_vars
+      op: eq
+      value: true

@@ -1,0 +1,23 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:apigateway:us-east-1::/restapis/abc/integrations/int2",
+      "type": "aws_apigateway_integration",
+      "vendor": "aws",
+      "properties": {
+        "api": {
+          "kind": "apigateway_integration",
+          "integration": {
+            "type": "HTTP",
+            "uri": "http://backend.example.com/orders",
+            "uses_http": true,
+            "uses_https": false
+          }
+        }
+      }
+    }
+  ]
+}

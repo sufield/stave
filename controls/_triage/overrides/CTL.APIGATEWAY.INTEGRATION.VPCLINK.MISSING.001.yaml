@@ -1,0 +1,34 @@
+control: CTL.APIGATEWAY.INTEGRATION.VPCLINK.MISSING.001
+defect: >
+  API Gateway integration targets a backend whose
+  URI looks private (internal hostname, RFC 1918
+  address, NLB/ALB ARN) but the integration is
+  not associated with a VPC Link.
+infection: >
+  Integrations without a VPC Link reach the
+  backend over the public internet. For an
+  integration with a private-looking URI to
+  function at all, the backend has to expose a
+  matching public endpoint — which contradicts
+  the operator's mental model that placing the
+  backend in a VPC keeps it off the internet.
+  Two outcomes from this state: either the
+  backend really is private and unreachable
+  (clients see 5xx; the asymmetry between "API
+  reports success" and "backend can't be reached"
+  produces hard-to-diagnose failures), or the
+  backend has been exposed publicly to make the
+  integration work, in which case the VPC
+  boundary is mostly cosmetic. The control uses a
+  heuristic — internal-suffix DNS, private CIDR,
+  same-account load balancer ARN — to flag the
+  pattern. The heuristic can produce false
+  positives if the environment's naming
+  conventions don't match; an explicit triage
+  override per affected integration is the
+  expected remediation path for those cases.
+failure: >
+  Private backend behind a public-internet path,
+  or public backend dressed as private. Either
+  way, the network boundary the operator believes
+  is in place is not in place.

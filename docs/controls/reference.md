@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1513
-**Pack hash:** `f1716a0ec199b130c1be44dcf3a887684840ba3d21ee14691bcd25b23808e88c`
+**Total controls:** 1521
+**Pack hash:** `a86e3f2996b7f10d1ddf7a41788472f793134e81f1ca915e934ba0b068d40037`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 176 |
-| high | 671 |
+| high | 675 |
 | info | 16 |
 | low | 111 |
-| medium | 539 |
+| medium | 543 |
 
 | Domain | Count |
 |--------|-------|
@@ -24,10 +24,10 @@
 | cryptography | 3 |
 | detection | 49 |
 | encryption | 87 |
-| exposure | 870 |
-| governance | 59 |
+| exposure | 872 |
+| governance | 63 |
 | hygiene | 16 |
-| identity | 328 |
+| identity | 330 |
 | network | 28 |
 | resilience | 18 |
 | secrets | 4 |
@@ -919,6 +919,66 @@ The observation snapshot is missing required API Gateway properties.
 
 ---
 
+### CTL.APIGATEWAY.INTEGRATION.HTTP.PLAINTEXT.001
+
+**API Gateway Integration Forwards to HTTP Backend**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-8; hipaa: 164.312(e)(1); nist_800_53_r5: SC-8; pci_dss_v4.0: 4.2.1; soc2: CC6.7;
+
+API Gateway integration forwards requests to a backend over plain HTTP, not HTTPS. The client connects to API Gateway over TLS and sees a padlock; API Gateway terminates TLS and re-emits the request to the backend in plaintext. Headers (including any forwarded Authorization or session cookies), query parameters, request bodies, and response bodies traverse the network between API Gateway and the backend without encryption. This is the same false-HTTPS pattern documented across CDN→origin (CTL.S3.CDN.TRANSPORT.001), Cloudflare Flexible SSL (CTL.CLOUDFLARE.ZONE.SSL.001), and RDS Proxy without backend TLS (CTL.RDS.PROXY.TLS.001) — encryption at the edge, plaintext inside. The control fires on HTTP and HTTP_PROXY integration types whose URI begins with http://.
+
+**Remediation:** Update the integration URI from http:// to https://. If the backend doesn't yet support TLS, terminate TLS at a load balancer or service mesh in front of it before exposing it through API Gateway. For backends in a VPC, use a VPC Link with an HTTPS listener on the NLB or ALB. Verify by re-issuing a request and confirming the backend log shows TLS-terminated traffic.
+
+---
+
+### CTL.APIGATEWAY.INTEGRATION.LAMBDA.SCOPE.001
+
+**Lambda Permission Not Scoped to Specific API**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-3; nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+API Gateway integrates with a Lambda function whose resource-based policy allows invocation from execute-api with an unscoped or wildcarded source ARN. Lambda's resource-based policy is what authorizes API Gateway to invoke it; the policy's source ARN condition is what restricts which API Gateway can do so. When the source ARN condition is missing, set to arn:aws:execute-api:REGION:ACCOUNT:* (or omits the API ID), the Lambda is invocable from any API Gateway in the account — not just the one the operator built. An attacker (or a different team) who can create an API in the same account can point a route at this Lambda and bypass the original API's authorizer entirely. This control is a cross-resource check: API Gateway provides the Lambda ARN; Lambda's policy determines whether invocation is scoped.
+
+**Remediation:** Update the Lambda's resource-based policy to add an explicit SourceArn condition pinning the API ID, stage, method, and path — for example, arn:aws:execute-api:REGION:ACCOUNT:API_ID/STAGE/METHOD/PATH. Use the smallest pattern that covers the intended call sites; avoid trailing wildcards beyond what's necessary. Re-add the permission via aws lambda add-permission with the scoped source-arn rather than editing the policy in place.
+
+---
+
+### CTL.APIGATEWAY.INTEGRATION.TIMEOUT.001
+
+**API Gateway Integration Timeout At Maximum**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: SC-5; nist_800_53_r5: SC-5; soc2: A1.1;
+
+API Gateway integration timeout is set to the maximum allowed by the API type — 29 seconds for REST APIs, 30 seconds for HTTP APIs. The maximum-timeout configuration is sometimes intentional for genuinely long-running backends (file processing, report generation, ML inference), but it has measurable side effects on the API's resilience: each slow or hanging request holds an API Gateway connection for the full timeout window before failing, back-pressure is delayed, and the per-account concurrency budget is consumed by stuck requests. Under abuse — request flooding, attacker-controlled slow backends — the maximum timeout amplifies the impact of every request that doesn't complete. Operators who run backends that never need 29 seconds should set the timeout to a value that matches actual SLOs. Operators with genuinely long backends should acknowledge this control in the triage override with the rationale.
+
+**Remediation:** Reduce the integration timeout to match the backend's actual p99 latency plus headroom. For a backend whose p99 is 2 seconds, a timeout of 5 seconds is more than enough; the maximum is appropriate only for backends that genuinely need it. If the long timeout is intentional, document the reason in a triage override on this control rather than leaving it at default.
+
+---
+
+### CTL.APIGATEWAY.INTEGRATION.VPCLINK.MISSING.001
+
+**API Gateway Routes to Private Backend Without VPC Link**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-7; nist_800_53_r5: SC-7; pci_dss_v4.0: 1.3.4; soc2: CC6.6;
+
+API Gateway integration routes to a backend whose URI matches private-resource patterns — internal hostname suffixes (.internal, .local, .vpc), RFC 1918 IP ranges, or NLB/ALB ARNs inside the same account — but the integration does not use a VPC Link. Without a VPC Link, the integration must reach the backend over the public internet. For the URI to resolve, the backend has to expose a public endpoint, which defeats the reason it was placed in a private network. Either the backend is unreachable (asymmetric: the API tells clients it works, the backend can't be reached), or the backend has a public exposure the operator did not intend. The control's heuristic for "private backend" is documented in the URI pattern field; if the heuristic produces false positives in a particular environment, the triage override should pin the rationale.
+
+**Remediation:** Create a VPC Link pointing at the appropriate NLB (REST API) or ALB/NLB/CloudMap service (HTTP API), then update the integration to reference that VPC Link. Once the link is in place, remove any public exposure from the backend's load balancer or service. If the backend is genuinely meant to be public, change the URI to its public DNS name so the heuristic stops matching the private pattern.
+
+---
+
 ### CTL.APIGATEWAY.LOG.001
 
 **REST API Stages Must Have Logging Enabled**
@@ -994,6 +1054,51 @@ REST APIs using EDGE or REGIONAL endpoint types are internet-accessible. APIs th
 
 ---
 
+### CTL.APIGATEWAY.STAGE.AUTODEPLOY.001
+
+**HTTP API Default Stage Has Auto-Deploy Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-3; nist_800_53_r5: CM-3; pci_dss_v4.0: 6.5.6; soc2: CC8.1;
+
+HTTP API $default stage has auto-deploy enabled. With auto-deploy on, any change to the API definition — adding or removing routes, modifying integrations, attaching or detaching authorizers, changing CORS — is immediately deployed to the stage. There is no deployment review, no canary, no rollback gate, no separation between "I edited the API" and "the change is live." The $default stage is most often the production stage, so a route added with a misconfigured integration is immediately serving 500 errors to real users; a route whose authorizer was accidentally removed is immediately unauthenticated; a removed route is immediately a 404 for active clients. Auto-deploy is a reasonable convenience on explicitly-named non-production stages (dev, sandbox). On the default stage that backs production traffic, it eliminates every deployment safety control. REST APIs do not have auto-deploy; this control is HTTP-API-specific.
+
+**Remediation:** Disable auto-deploy on the $default stage and move deployments to an explicit pipeline that runs validation, manual approval on production-impacting routes, and a canary or blue/green cutover. If auto-deploy is intentional for the team's workflow, move production traffic to an explicitly-named stage and leave auto-deploy on a non-prod stage instead.
+
+---
+
+### CTL.APIGATEWAY.STAGE.CROSSENV.001
+
+**API Gateway Non-Production Stage Routes to Production Backend**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-3; nist_800_53_r5: CM-3; pci_dss_v4.0: 6.5.6; soc2: CC8.1;
+
+API Gateway stage whose name suggests non-production (dev, staging, test, qa, sandbox) routes to a backend that appears to be production (production-account ARN, production-stage Lambda alias, prod-tagged URL). The stage name promises isolation; the backend provides none. Two failure modes follow. First, traffic through the non-production stage — typically subject to looser authorizer settings, less restrictive throttling, weaker WAF coverage, and broader developer access — reaches production data. A request that an attacker (or developer) authenticates against the dev stage's relaxed controls hits the same production Lambda, the same production database. Second, developers who believe the dev stage is harmless run destructive operations against it (data resets, schema changes, load tests) and corrupt production state. The control's stage-name and backend-identity heuristics are documented and configurable; false positives are expected when naming conventions don't follow the assumed patterns and should be acknowledged via triage override.
+
+**Remediation:** Point the non-production stage at a non-production backend (separate Lambda alias, separate database endpoint, separate account). If the backend genuinely must be shared, rename the stage so the cross-environment relationship is explicit, or document the exception in a triage override on this control with the reason the stage name and backend cannot be aligned.
+
+---
+
+### CTL.APIGATEWAY.STAGE.GHOST.VARS.001
+
+**API Gateway Stage Variables Reference Deleted Resources**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-3; nist_800_53_r5: CM-3; soc2: CC8.1;
+
+API Gateway stage has stage variables that reference resources (Lambda function ARNs, DynamoDB table names, S3 bucket names, backend URLs, parameter store paths) that no longer exist. Stage variables are typically interpolated into integration URIs via ${stageVariables.varName} so a single API definition can target different backends per stage. When the resource a variable points at is deleted, requests that resolve through the variable hit a non-existent target — 5xx responses with no clue at the API Gateway layer that the cause is configuration drift rather than a backend outage. This is the ghost-reference pattern applied to stage variables, alongside CTL.APIGATEWAY.GHOST.LAMBDA.001 (integration ARN), CTL.APIGATEWAY.GHOST.AUTHORIZER.001 (authorizer provider), and others in the apigateway/ghost/ family. Detection requires the extractor to resolve each variable's value against the relevant resource catalog — same mechanism the other ghost controls already use.
+
+**Remediation:** Identify each variable whose value resolves to a deleted resource and either re-create the resource (if the deletion was accidental), update the variable to a current resource, or remove the variable if no integration references it. Add a deletion guard on the affected resource types that cross-references stage variables before allowing the resource to be deleted.
+
+---
+
 ### CTL.APIGATEWAY.STAGE.LIFECYCLE.001
 
 **API Gateway Stages Must Not Have Orphaned or Deprecated Versions Accessible**
@@ -1006,6 +1111,21 @@ REST APIs using EDGE or REGIONAL endpoint types are internet-accessible. APIs th
 API Gateway REST APIs must not have orphaned stages accessible with weaker security controls than the production stage. Orphaned stages from previous deployments, testing, and migrations accumulate without security controls applied to the current stage — no WAF association, no throttling, potentially no authorization. OWASP API9:2023 (Improper Inventory Management) identifies this as a primary API security gap. Older stages may retain endpoints that were fixed or removed in current versions. The security delta between orphaned and production stages defines the attack surface an attacker gains by discovering the old endpoint. A stage with no invocations in 30 days and missing controls present on the production stage is considered orphaned.
 
 **Remediation:** Decommission orphaned stages by deleting the deployment from the API Gateway console or DeleteStage API. If the stage must remain for legacy integration, apply equivalent security controls — WAF association, throttling, and authorization — matching the production stage. Document intentional multi-stage deployments with a stave/api-stage-lookback-days tag.
+
+---
+
+### CTL.APIGATEWAY.STAGE.VARS.CREDENTIALS.001
+
+**API Gateway Stage Variables Contain Credentials**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: SC-28; hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-28; pci_dss_v4.0: 3.5.1; soc2: CC6.1;
+
+API Gateway stage variables hold values that match credential patterns — AWS access-key prefixes (AKIA, ASIA), database connection strings with embedded passwords, generic password= or token= assignments, or JWT-shaped strings. Stage variables are plaintext configuration: they are visible to anyone with apigateway:GetStage permission, returned in API exports (OpenAPI/Swagger), included in CloudTrail audit events for UpdateStage calls, and may be reflected into responses if used in mapping templates without escaping. They have no encryption at rest beyond the API Gateway service itself and no rotation. This is the same detection mechanism used by CTL.LAMBDA.ENV.SECRETS.001 against Lambda environment variables — same pattern, different configuration surface. Secrets belong in Secrets Manager or SSM Parameter Store SecureString.
+
+**Remediation:** Move the credential to AWS Secrets Manager or SSM Parameter Store SecureString. Update the integration mapping templates or Lambda integrations to fetch the secret at request time via a Lambda authorizer or backend code. Remove the credential from the stage variables and rotate it (assume the previous plaintext is compromised).
 
 ---
 

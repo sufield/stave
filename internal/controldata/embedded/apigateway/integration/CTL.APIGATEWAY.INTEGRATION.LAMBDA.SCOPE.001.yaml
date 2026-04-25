@@ -1,0 +1,70 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.INTEGRATION.LAMBDA.SCOPE.001
+name: Lambda Permission Not Scoped to Specific API
+description: >
+  API Gateway integrates with a Lambda function whose resource-based
+  policy allows invocation from execute-api with an unscoped or
+  wildcarded source ARN. Lambda's resource-based policy is what
+  authorizes API Gateway to invoke it; the policy's source ARN
+  condition is what restricts which API Gateway can do so. When
+  the source ARN condition is missing, set to
+  arn:aws:execute-api:REGION:ACCOUNT:* (or omits the API ID), the
+  Lambda is invocable from any API Gateway in the account — not
+  just the one the operator built. An attacker (or a different team)
+  who can create an API in the same account can point a route at
+  this Lambda and bypass the original API's authorizer entirely.
+  This control is a cross-resource check: API Gateway provides the
+  Lambda ARN; Lambda's policy determines whether invocation is
+  scoped.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-3"
+  fedramp_moderate: "AC-3"
+  pci_dss_v4.0: "7.2.1"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-04", "IAM-16"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    Lambda function invoked by this integration has a resource-based
+    policy that does not restrict invocation to a specific API ID.
+    Any API Gateway in the account can invoke the function and
+    bypass the intended API's authorization controls.
+  action: >
+    Update the Lambda's resource-based policy to add an explicit
+    SourceArn condition pinning the API ID, stage, method, and
+    path — for example,
+    arn:aws:execute-api:REGION:ACCOUNT:API_ID/STAGE/METHOD/PATH.
+    Use the smallest pattern that covers the intended call sites;
+    avoid trailing wildcards beyond what's necessary. Re-add the
+    permission via aws lambda add-permission with the scoped
+    source-arn rather than editing the policy in place.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_integration",
+        "integration": {
+          "lambda_arn": "arn:aws:lambda:us-east-1:123456789012:function:fn",
+          "lambda_permission_scoped": true,
+          "lambda_source_arn_pattern": "arn:aws:execute-api:us-east-1:123456789012:abcd1234/prod/POST/orders"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_integration
+    - field: properties.api.integration.lambda_arn
+      op: ne
+      value: ""
+    - field: properties.api.integration.lambda_permission_scoped
+      op: eq
+      value: false

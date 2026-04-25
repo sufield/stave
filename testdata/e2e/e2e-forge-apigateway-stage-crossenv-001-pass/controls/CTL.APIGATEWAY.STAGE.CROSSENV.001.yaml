@@ -1,0 +1,68 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.STAGE.CROSSENV.001
+name: API Gateway Non-Production Stage Routes to Production Backend
+description: >
+  API Gateway stage whose name suggests non-production (dev,
+  staging, test, qa, sandbox) routes to a backend that appears to
+  be production (production-account ARN, production-stage Lambda
+  alias, prod-tagged URL). The stage name promises isolation; the
+  backend provides none. Two failure modes follow. First, traffic
+  through the non-production stage — typically subject to looser
+  authorizer settings, less restrictive throttling, weaker WAF
+  coverage, and broader developer access — reaches production
+  data. A request that an attacker (or developer) authenticates
+  against the dev stage's relaxed controls hits the same production
+  Lambda, the same production database. Second, developers who
+  believe the dev stage is harmless run destructive operations
+  against it (data resets, schema changes, load tests) and corrupt
+  production state. The control's stage-name and backend-identity
+  heuristics are documented and configurable; false positives are
+  expected when naming conventions don't follow the assumed
+  patterns and should be acknowledged via triage override.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "CM-3"
+  fedramp_moderate: "CM-3"
+  pci_dss_v4.0: "6.5.6"
+  soc2: "CC8.1"
+  ccm_v4: ["CCC-03", "AIS-04"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: >
+    API Gateway non-production stage routes to a backend that
+    appears to be production. Non-prod controls front production
+    data.
+  action: >
+    Point the non-production stage at a non-production backend
+    (separate Lambda alias, separate database endpoint, separate
+    account). If the backend genuinely must be shared, rename the
+    stage so the cross-environment relationship is explicit, or
+    document the exception in a triage override on this control
+    with the reason the stage name and backend cannot be aligned.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_stage",
+        "stage": {
+          "name": "dev",
+          "appears_nonprod": true,
+          "backend_appears_prod": false,
+          "cross_env_backend": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_stage
+    - field: properties.api.stage.cross_env_backend
+      op: eq
+      value: true

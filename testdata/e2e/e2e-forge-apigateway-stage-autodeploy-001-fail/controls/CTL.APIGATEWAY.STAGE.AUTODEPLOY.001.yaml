@@ -1,0 +1,67 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.STAGE.AUTODEPLOY.001
+name: HTTP API Default Stage Has Auto-Deploy Enabled
+description: >
+  HTTP API $default stage has auto-deploy enabled. With auto-deploy
+  on, any change to the API definition — adding or removing routes,
+  modifying integrations, attaching or detaching authorizers,
+  changing CORS — is immediately deployed to the stage. There is
+  no deployment review, no canary, no rollback gate, no separation
+  between "I edited the API" and "the change is live." The
+  $default stage is most often the production stage, so a route
+  added with a misconfigured integration is immediately serving
+  500 errors to real users; a route whose authorizer was
+  accidentally removed is immediately unauthenticated; a removed
+  route is immediately a 404 for active clients. Auto-deploy is a
+  reasonable convenience on explicitly-named non-production stages
+  (dev, sandbox). On the default stage that backs production
+  traffic, it eliminates every deployment safety control. REST
+  APIs do not have auto-deploy; this control is HTTP-API-specific.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-3"
+  fedramp_moderate: "CM-3"
+  pci_dss_v4.0: "6.5.6"
+  soc2: "CC8.1"
+  ccm_v4: ["CCC-03", "GRC-04"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    HTTP API $default stage has auto-deploy enabled. Configuration
+    changes deploy immediately with no review or rollback gate.
+  action: >
+    Disable auto-deploy on the $default stage and move deployments
+    to an explicit pipeline that runs validation, manual approval
+    on production-impacting routes, and a canary or blue/green
+    cutover. If auto-deploy is intentional for the team's workflow,
+    move production traffic to an explicitly-named stage and leave
+    auto-deploy on a non-prod stage instead.
+  example: |
+    {
+      "api": {
+        "kind": "http_api",
+        "stage": {
+          "name": "$default",
+          "is_default": true,
+          "auto_deploy": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: http_api
+    - field: properties.api.stage.is_default
+      op: eq
+      value: true
+    - field: properties.api.stage.auto_deploy
+      op: eq
+      value: true

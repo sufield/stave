@@ -1,0 +1,24 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:apigateway:us-east-1::/restapis/abc/integrations/intlam-pass",
+      "type": "aws_apigateway_integration",
+      "vendor": "aws",
+      "properties": {
+        "api": {
+          "kind": "apigateway_integration",
+          "integration": {
+            "type": "AWS_PROXY",
+            "lambda_arn": "arn:aws:lambda:us-east-1:123456789012:function:orders-handler",
+            "lambda_permission_scoped": true,
+            "lambda_source_arn_pattern": "arn:aws:execute-api:us-east-1:123456789012:abcd1234/*/POST/orders",
+            "api_id": "abcd1234"
+          }
+        }
+      }
+    }
+  ]
+}

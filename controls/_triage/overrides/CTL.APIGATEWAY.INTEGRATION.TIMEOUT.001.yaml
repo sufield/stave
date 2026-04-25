@@ -1,0 +1,30 @@
+control: CTL.APIGATEWAY.INTEGRATION.TIMEOUT.001
+defect: >
+  API Gateway integration timeout is at the
+  maximum allowed by the API type (29s REST,
+  30s HTTP).
+infection: >
+  Integration timeout determines how long API
+  Gateway will wait for the backend before giving
+  up on a request. At the maximum, every slow or
+  hanging request holds an API Gateway connection
+  for nearly half a minute before the connection
+  is released. Two costs follow: under organic
+  load, the per-account concurrency budget fills
+  with stuck requests and back-pressure to
+  callers is delayed; under abuse, an attacker
+  who can induce slow responses (slowloris-style
+  attacks against the backend, or simply
+  high-volume requests that all wait the full
+  window) consumes far more capacity than the
+  request rate alone implies. The maximum is a
+  legitimate setting for backends that genuinely
+  need it — long-running file processing, report
+  generation, ML inference — but operators
+  whose backends never need 29 seconds should
+  set the timeout to match actual SLOs.
+failure: >
+  Slow backends or attack traffic consume the
+  full timeout window per request, amplifying
+  resource exhaustion and connection-hold
+  pressure.

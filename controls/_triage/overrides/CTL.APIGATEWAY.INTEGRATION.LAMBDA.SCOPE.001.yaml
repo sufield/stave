@@ -1,0 +1,35 @@
+control: CTL.APIGATEWAY.INTEGRATION.LAMBDA.SCOPE.001
+defect: >
+  Lambda function invoked by this integration has
+  a resource-based policy that allows
+  execute-api invocation without a SourceArn
+  condition pinning a specific API ID.
+infection: >
+  When API Gateway invokes a Lambda, AWS
+  authorizes the call against the Lambda's
+  resource-based policy. The SourceArn condition
+  in that policy is what scopes "which API
+  Gateway is allowed to invoke me" — its full
+  form is
+  arn:aws:execute-api:REGION:ACCOUNT:API_ID/STAGE/METHOD/PATH.
+  When the condition is missing, set to
+  arn:aws:execute-api:REGION:ACCOUNT:* , or
+  trimmed to anything that doesn't pin the API
+  ID, every API in the account is authorized to
+  invoke the function. The original API's
+  authorizer (Cognito, JWT, Lambda authorizer,
+  IAM) only protects routes that flow through
+  that API. An attacker with permission to
+  create or modify an API in the same account
+  can stand up a new API, point any route at
+  this Lambda, and reach the function without
+  ever traversing the original API's
+  authorization layer. The mistake is usually
+  introduced at deploy time — `aws lambda
+  add-permission` without --source-arn, or with
+  --source-arn set to a wildcard.
+failure: >
+  Lambda invocable from any API in the account.
+  An attacker creates a new API and reaches the
+  function bypassing the intended API's
+  authorizer.

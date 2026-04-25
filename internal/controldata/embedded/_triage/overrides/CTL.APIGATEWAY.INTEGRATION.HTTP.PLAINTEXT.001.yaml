@@ -1,0 +1,32 @@
+control: CTL.APIGATEWAY.INTEGRATION.HTTP.PLAINTEXT.001
+defect: >
+  API Gateway integration forwards requests to a
+  backend over HTTP rather than HTTPS.
+infection: >
+  The client connects to API Gateway over TLS —
+  browser shows a padlock, traffic is encrypted
+  end-to-edge. API Gateway terminates that TLS
+  connection and re-emits the request to the
+  backend over HTTP. Everything inside the
+  request — including any forwarded Authorization
+  header, session cookies, request body with
+  login credentials or PII, and the backend's
+  response body — traverses the network in
+  plaintext between API Gateway and the backend.
+  This is the same false-HTTPS pattern that
+  recurs across the platform: CDN→origin
+  (CTL.S3.CDN.TRANSPORT.001), Cloudflare
+  Flexible SSL (CTL.CLOUDFLARE.ZONE.SSL.001),
+  RDS Proxy without backend TLS
+  (CTL.RDS.PROXY.TLS.001). The architectural
+  mistake is identical: encryption at the edge
+  is treated as encryption end-to-end. Anyone
+  with network visibility on the backend path
+  (a peered VPC, a Transit Gateway, a hop on the
+  internet for HTTP_PROXY-to-public-URL) can
+  read the cleartext traffic.
+failure: >
+  False HTTPS. Clients see encrypted connections
+  and assume their data is encrypted; the back
+  half of the request path between API Gateway
+  and the backend is plaintext.

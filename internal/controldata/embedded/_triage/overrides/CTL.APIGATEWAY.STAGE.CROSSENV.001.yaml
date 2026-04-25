@@ -1,0 +1,35 @@
+control: CTL.APIGATEWAY.STAGE.CROSSENV.001
+defect: >
+  API Gateway stage whose name signals non-
+  production routes to a backend whose
+  identifiers signal production.
+infection: >
+  Stage names create an expectation about who
+  uses the path and how strictly it is
+  controlled. A stage called "dev" or "staging"
+  is typically subject to looser authorizer
+  configuration, more permissive WAF rules
+  (often none at all), broader developer access,
+  and more relaxed throttling. When such a stage
+  routes to a production backend — same Lambda
+  alias as the prod stage, same database
+  endpoint, same downstream service — the
+  looser controls front the same data the
+  hardened production stage protects. Two
+  consequences: a request authenticated against
+  the dev stage's weaker controls reaches
+  production data the operator believed was
+  reachable only via the prod stage; and
+  developers who treat the dev stage as
+  expendable (running destructive operations,
+  load tests, schema migrations) corrupt
+  production state. The control uses heuristics
+  on stage name and backend identifiers — when
+  the naming conventions don't match the
+  heuristic, false positives are expected; the
+  remediation in those cases is a per-finding
+  triage override that pins the rationale.
+failure: >
+  Non-production controls protect production
+  data. The isolation suggested by the stage
+  name does not exist at the backend.

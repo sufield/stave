@@ -1,0 +1,63 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.INTEGRATION.HTTP.PLAINTEXT.001
+name: API Gateway Integration Forwards to HTTP Backend
+description: >
+  API Gateway integration forwards requests to a backend over plain
+  HTTP, not HTTPS. The client connects to API Gateway over TLS and
+  sees a padlock; API Gateway terminates TLS and re-emits the request
+  to the backend in plaintext. Headers (including any forwarded
+  Authorization or session cookies), query parameters, request bodies,
+  and response bodies traverse the network between API Gateway and
+  the backend without encryption. This is the same false-HTTPS
+  pattern documented across CDN→origin (CTL.S3.CDN.TRANSPORT.001),
+  Cloudflare Flexible SSL (CTL.CLOUDFLARE.ZONE.SSL.001), and RDS
+  Proxy without backend TLS (CTL.RDS.PROXY.TLS.001) — encryption at
+  the edge, plaintext inside. The control fires on HTTP and
+  HTTP_PROXY integration types whose URI begins with http://.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-8"
+  fedramp_moderate: "SC-8"
+  pci_dss_v4.0: "4.2.1"
+  soc2: "CC6.7"
+  hipaa: "164.312(e)(1)"
+  ccm_v4: ["AIS-01", "CEK-03", "DSP-10"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    API Gateway integration uses HTTP rather than HTTPS to reach the
+    backend. Edge encryption is in place but the back-half of the
+    request path is plaintext.
+  action: >
+    Update the integration URI from http:// to https://. If the
+    backend doesn't yet support TLS, terminate TLS at a load balancer
+    or service mesh in front of it before exposing it through API
+    Gateway. For backends in a VPC, use a VPC Link with an HTTPS
+    listener on the NLB or ALB. Verify by re-issuing a request and
+    confirming the backend log shows TLS-terminated traffic.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_integration",
+        "integration": {
+          "type": "HTTP_PROXY",
+          "uses_http": false,
+          "uses_https": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_integration
+    - field: properties.api.integration.uses_http
+      op: eq
+      value: true

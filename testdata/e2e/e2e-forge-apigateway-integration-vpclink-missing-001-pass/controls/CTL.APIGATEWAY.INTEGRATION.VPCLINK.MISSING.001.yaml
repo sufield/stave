@@ -1,0 +1,68 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.INTEGRATION.VPCLINK.MISSING.001
+name: API Gateway Routes to Private Backend Without VPC Link
+description: >
+  API Gateway integration routes to a backend whose URI matches
+  private-resource patterns — internal hostname suffixes
+  (.internal, .local, .vpc), RFC 1918 IP ranges, or NLB/ALB ARNs
+  inside the same account — but the integration does not use a
+  VPC Link. Without a VPC Link, the integration must reach the
+  backend over the public internet. For the URI to resolve, the
+  backend has to expose a public endpoint, which defeats the
+  reason it was placed in a private network. Either the backend is
+  unreachable (asymmetric: the API tells clients it works, the
+  backend can't be reached), or the backend has a public exposure
+  the operator did not intend. The control's heuristic for "private
+  backend" is documented in the URI pattern field; if the heuristic
+  produces false positives in a particular environment, the
+  triage override should pin the rationale.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  fedramp_moderate: "SC-7"
+  pci_dss_v4.0: "1.3.4"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "IVS-09"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    API Gateway integration targets a backend that appears to be
+    private but is not associated with a VPC Link. The backend is
+    either unreachable from API Gateway or has a public exposure
+    that the operator likely did not intend.
+  action: >
+    Create a VPC Link pointing at the appropriate NLB (REST API) or
+    ALB/NLB/CloudMap service (HTTP API), then update the integration
+    to reference that VPC Link. Once the link is in place, remove
+    any public exposure from the backend's load balancer or service.
+    If the backend is genuinely meant to be public, change the URI
+    to its public DNS name so the heuristic stops matching the
+    private pattern.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_integration",
+        "integration": {
+          "backend_appears_private": true,
+          "has_vpc_link": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_integration
+    - field: properties.api.integration.backend_appears_private
+      op: eq
+      value: true
+    - field: properties.api.integration.has_vpc_link
+      op: eq
+      value: false

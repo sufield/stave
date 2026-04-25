@@ -1,0 +1,33 @@
+control: CTL.APIGATEWAY.STAGE.AUTODEPLOY.001
+defect: >
+  HTTP API $default stage has auto-deploy
+  enabled. Any API configuration change is
+  immediately live on the stage.
+infection: >
+  Auto-deploy collapses two operations — "I
+  changed the API" and "the change is in front
+  of users" — into one. On the $default stage,
+  which most teams use for production traffic,
+  the practical effects are immediate: a route
+  added with a typo'd integration starts
+  returning 500 errors to real users the moment
+  the API definition is saved; an authorizer
+  accidentally removed from a route makes that
+  route public on the next request; a route
+  deleted in the console becomes a 404 for
+  active clients with no notice. There is no
+  gate where a reviewer can stop a bad change,
+  no canary stage where it can be observed
+  against synthetic traffic, no rollback artifact
+  to revert to. REST APIs do not have this
+  setting — they require explicit
+  CreateDeployment calls — so the failure mode
+  is HTTP-API-specific. Auto-deploy is fine on
+  explicitly-named non-production stages where
+  the team accepts immediate live changes; it is
+  not fine on the default stage that backs
+  production.
+failure: >
+  Ungated production deployment. Misconfigurations
+  including security-impacting ones are live
+  immediately without review, canary, or rollback.

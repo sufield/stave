@@ -1,0 +1,36 @@
+control: CTL.APIGATEWAY.STAGE.GHOST.VARS.001
+defect: >
+  Stage variables on this stage hold values that
+  resolve to resources (Lambda ARNs, DynamoDB
+  tables, S3 buckets, parameter store paths) that
+  no longer exist.
+infection: >
+  Stage variables are designed for cross-stage
+  parameterization: one API definition references
+  ${stageVariables.backendArn} in the integration
+  URI, and the dev/staging/prod stages each
+  supply a different concrete value. When the
+  concrete value points at a deleted resource,
+  the integration URI resolves at request time
+  to a target that doesn't exist. The failure
+  mode is identical to the other ghost-reference
+  cases in apigateway/ghost/: the configuration
+  appears intact in the console (the variable
+  is set, the integration references it), but
+  the underlying resource is gone. Requests
+  through the affected route fail with backend
+  errors that surface no signal at the API
+  Gateway layer about the actual cause —
+  operators see 5xx and assume backend outage,
+  not configuration drift. Detection requires the
+  extractor to resolve each variable's value
+  against the catalog of live resources of the
+  appropriate type, the same mechanism used by
+  GHOST.LAMBDA, GHOST.AUTHORIZER, GHOST.CERT,
+  GHOST.LOGDEST, GHOST.USAGEPLAN, and
+  GHOST.VPCLINK.
+failure: >
+  Configuration drift hidden behind the API
+  Gateway layer. Routes that interpolate ghost
+  variables fail with backend errors that don't
+  reveal the misconfiguration.
