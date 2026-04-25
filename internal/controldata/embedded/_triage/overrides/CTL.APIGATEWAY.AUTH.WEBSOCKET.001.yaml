@@ -1,0 +1,20 @@
+control: CTL.APIGATEWAY.AUTH.WEBSOCKET.001
+defect: >
+  WebSocket API $connect route has no authorizer.
+infection: >
+  WebSocket APIs authenticate only at connection
+  time — the $connect route. Once connected, the
+  client can send messages to any route ($default,
+  custom routes) without further authentication.
+  If $connect has no authorizer, any client can
+  establish a WebSocket connection, send messages
+  to all routes, receive responses, and maintain
+  the connection indefinitely. For WebSocket APIs
+  that provide real-time data, execute commands,
+  or access internal services, unauthenticated
+  $connect means unauthenticated access to all
+  WebSocket functionality.
+failure: >
+  Unauthenticated WebSocket access. Anyone can
+  connect and send messages to all WebSocket
+  routes.

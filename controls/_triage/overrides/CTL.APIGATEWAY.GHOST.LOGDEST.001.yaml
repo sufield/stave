@@ -1,0 +1,19 @@
+control: CTL.APIGATEWAY.GHOST.LOGDEST.001
+defect: >
+  API Gateway stage's access log destination
+  (CloudWatch log group or Firehose delivery
+  stream) has been deleted.
+infection: >
+  Access logging is configured — the stage shows
+  a log destination ARN. Logs are not being
+  delivered because the destination doesn't
+  exist. The API appears to have access logging.
+  The audit trail produces nothing. The operator
+  who reads stage configuration reports
+  compliance; the operator who searches for logs
+  finds none. Every external API request leaves
+  no record.
+failure: >
+  Silent logging failure. The stage advertises
+  access logging but no logs are produced
+  because the destination has been deleted.

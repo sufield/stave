@@ -1,0 +1,58 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.GHOST.CERT.001
+name: API Gateway Custom Domain Certificate Deleted or Expired
+description: >
+  API Gateway custom domain references an ACM certificate that has
+  been deleted or has expired. Clients connecting to the custom
+  domain receive TLS errors — the handshake fails, browsers display
+  certificate warnings, and automated integrations reject the
+  connection. The custom domain configuration appears intact in the
+  console; the failure is external and immediate. The control
+  surfaces both the deleted-certificate case (immediate failure) and
+  the imminent-expiry case (failure within a known window) so
+  remediation happens during a change window rather than during an
+  outage.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-17"
+  fedramp_moderate: "SC-17"
+  pci_dss_v4.0: "4.2.1"
+  soc2: "CC6.7"
+  hipaa: "164.312(e)(1)"
+  ccm_v4: ["CEK-08", "IVS-04"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    API Gateway custom domain references a certificate that has been
+    deleted or has expired. Custom domain TLS is broken.
+  action: >
+    Replace the certificate on the custom domain. If the original ACM
+    certificate was deleted, request a new one with the same subject
+    alternative names and associate it. If the certificate expired,
+    investigate the ACM renewal path (DNS validation records, IAM
+    permissions for renewal) and enable automated renewal. Add a
+    30-day-before-expiry alarm.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_custom_domain",
+        "custom_domain": {
+          "has_ghost_cert": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_custom_domain
+    - field: properties.api.custom_domain.has_ghost_cert
+      op: eq
+      value: true

@@ -1,0 +1,24 @@
+id: apigw_silent_logging_failure
+description: >
+  Either access logging is not enabled on the API stage
+  (CTL.APIGATEWAY.LOG.001) or it is configured but the log
+  destination has been deleted (CTL.APIGATEWAY.GHOST.LOGDEST.001).
+  Both result in no access logs reaching their intended store —
+  either because logging was never turned on, or because it was
+  turned on but the CloudWatch log group / Firehose stream behind
+  it was deleted afterwards. The two conditions are
+  observationally similar (no logs in the log destination) but
+  diagnostically different (one is "missing config", one is
+  "broken config that looks healthy"). Threshold of 1 reflects
+  that one of these is enough to lose the audit trail — the chain
+  groups them so the reviewer reaches "no logs from this API"
+  whether the cause is the simple omission or the silent failure.
+controls:
+  - CTL.APIGATEWAY.LOG.001
+  - CTL.APIGATEWAY.GHOST.LOGDEST.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - audit_trail_destroyed

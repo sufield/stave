@@ -1,0 +1,9 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "generated_by": {"source_type": "aws.config_api", "tool": "stave-test", "tool_version": "1.0.0"},
+  "assets": [
+  {"id": "usageplan-healthy", "type": "aws_apigateway_usage_plan", "vendor": "aws", "properties": {"api": {"kind": "apigateway_usage_plan", "usage_plan": {"api_key_ids": ["key-active-1", "key-active-2"], "has_ghost_keys": false, "ghost_key_ids": []}}}}
+]
+}

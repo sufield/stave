@@ -1,0 +1,23 @@
+control: CTL.APIGATEWAY.GHOST.CERT.001
+defect: >
+  API Gateway custom domain references an ACM
+  certificate that has been deleted or has
+  expired (or is expiring within the imminent
+  window).
+infection: >
+  Clients connecting to the custom domain receive
+  TLS errors. Browsers display certificate
+  warnings; API clients reject the handshake;
+  automated integrations (webhooks, partner APIs,
+  service meshes) fail at connection time. The
+  custom domain configuration appears intact in
+  the console — the failure is external and
+  immediate. For the imminent-expiry case, the
+  failure is scheduled rather than current: the
+  certificate still serves traffic now and will
+  stop on its expiry date. Either flavor causes
+  custom-domain traffic to fail.
+failure: >
+  Custom domain TLS broken. Clients cannot reach
+  the API through the custom domain because the
+  certificate is missing or expired.

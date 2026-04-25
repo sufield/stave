@@ -1,0 +1,62 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.GHOST.LOGDEST.001
+name: API Gateway Access Log Destination Deleted
+description: >
+  API Gateway stage's access log destination — a CloudWatch log group
+  or Firehose delivery stream — has been deleted. The stage shows a
+  destination ARN configured, so the API appears to have access
+  logging enabled. The destination does not exist, so logs are
+  silently discarded. The "logging is on" signal is preserved while
+  the audit trail produces nothing. This is the silent-failure flavor
+  of a logging gap: the operator who looks at the stage configuration
+  reports compliance; the operator who looks for logs finds none.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "AU-12"
+  fedramp_moderate: "AU-12"
+  pci_dss_v4.0: "10.2"
+  soc2: "CC7.2"
+  hipaa: "164.312(b)"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: defense_evasion
+remediation:
+  description: >
+    API Gateway access log destination has been deleted. Access logs
+    are not being recorded despite the stage appearing configured.
+  action: >
+    Recreate the log destination (CloudWatch log group or Firehose
+    delivery stream) at the same ARN, or update the stage's access
+    log settings to point at a current destination. Add a deletion
+    guard on log destinations referenced by API Gateway stages.
+  example: |
+    {
+      "api": {
+        "kind": "rest_api",
+        "logging": {
+          "has_ghost_log_dest": false
+        }
+      }
+    }
+unsafe_predicate:
+  any:
+    - all:
+        - field: properties.api.kind
+          op: eq
+          value: rest_api
+        - field: properties.api.logging.has_ghost_log_dest
+          op: eq
+          value: true
+    - all:
+        - field: properties.api.kind
+          op: eq
+          value: http_api
+        - field: properties.api.logging.has_ghost_log_dest
+          op: eq
+          value: true

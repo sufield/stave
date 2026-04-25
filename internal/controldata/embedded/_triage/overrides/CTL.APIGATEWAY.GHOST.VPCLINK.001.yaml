@@ -1,0 +1,22 @@
+control: CTL.APIGATEWAY.GHOST.VPCLINK.001
+defect: >
+  API Gateway VPC Link references a load balancer
+  (NLB or ALB) that has been deleted from the
+  load-balancer inventory.
+infection: >
+  The VPC Link is the network bridge between API
+  Gateway and a private backend (NLB or ALB in a
+  VPC). When the target load balancer is deleted,
+  the VPC Link has no destination. API Gateway
+  routes requests through the VPC Link, the VPC
+  Link attempts to forward to the deleted load
+  balancer, and the request fails with a 500
+  Internal Server Error. The VPC Link shows as
+  AVAILABLE in the console — its status doesn't
+  change when the target is deleted. The API
+  configuration looks correct. The integration
+  looks correct. Every request fails.
+failure: >
+  Complete API backend failure. Every request
+  routed through the VPC Link returns 500
+  because the backend load balancer was deleted.

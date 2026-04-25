@@ -1,0 +1,9 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "generated_by": {"source_type": "aws.config_api", "tool": "stave-test", "tool_version": "1.0.0"},
+  "assets": [
+  {"id": "integration-orphaned", "type": "aws_apigateway_integration", "vendor": "aws", "properties": {"api": {"kind": "apigateway_integration", "integration": {"api_id": "abc123", "route_key": "POST /payments", "lambda_arn": "arn:aws:lambda:us-east-1:111122223333:function:process-payment-deleted", "lambda_exists": false, "has_ghost_lambda": true}}}}
+]
+}

@@ -1,0 +1,57 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.AUTH.WEBSOCKET.001
+name: WebSocket API $connect Route Has No Authorizer
+description: >
+  WebSocket API's $connect route has no authorizer. WebSocket APIs
+  authenticate only at connection time — once a connection is
+  established, the client can send messages to any route ($default,
+  custom routes) without further authentication. If $connect has no
+  authorizer, any client can establish a WebSocket connection, send
+  messages to all routes, receive responses, and maintain the
+  connection indefinitely. For WebSocket APIs that provide real-time
+  data, execute commands, or access internal services,
+  unauthenticated $connect means unauthenticated access to all
+  WebSocket functionality.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  fedramp_moderate: "AC-3"
+  pci_dss_v4.0: "8.2"
+  soc2: "CC6.1"
+  ccm_v4: ["AIS-01", "IAM-16"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    WebSocket API $connect route has no authorizer. Anyone can open
+    a WebSocket connection and message any route.
+  action: >
+    Attach an authorizer (Lambda authorizer or IAM auth) to the
+    $connect route. The $connect route is the only place where
+    WebSocket APIs can enforce authorization — message-level checks
+    are not a substitute. If the API is intentionally public (e.g.,
+    a public chat broadcast), document the intent in an exemption
+    rather than relying on the absence of auth.
+  example: |
+    {
+      "api": {
+        "kind": "websocket_api",
+        "access": {
+          "connect_route_authorized": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: websocket_api
+    - field: properties.api.access.connect_route_authorized
+      op: eq
+      value: false

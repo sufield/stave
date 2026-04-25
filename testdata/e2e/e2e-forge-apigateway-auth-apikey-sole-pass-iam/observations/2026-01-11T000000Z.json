@@ -1,0 +1,9 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "generated_by": {"source_type": "aws.config_api", "tool": "stave-test", "tool_version": "1.0.0"},
+  "assets": [
+  {"id": "method-iam-plus-key", "type": "aws_apigateway_method", "vendor": "aws", "properties": {"api": {"kind": "apigateway_method", "method": {"route_key": "POST /admin", "api_key_required": true, "has_authorizer": true, "api_key_sole_auth": false}}}}
+]
+}

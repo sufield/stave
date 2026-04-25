@@ -1,0 +1,24 @@
+control: CTL.APIGATEWAY.ENDPOINT.DEFAULT.001
+defect: >
+  API Gateway has the default execute-api
+  endpoint enabled alongside a custom domain.
+infection: >
+  The default execute-api endpoint is a direct
+  path to the API that bypasses every control
+  applied at the custom domain level: WAF rules
+  (applied at CloudFront or ALB in front of the
+  custom domain — not at the default endpoint),
+  mTLS (configured on the custom domain — not on
+  the default endpoint), custom TLS policy (TLS
+  1.2 minimum on custom domain — default endpoint
+  uses AWS's default), and geographic
+  restrictions (CloudFront geo-blocking on
+  custom domain — not on default endpoint).
+  Disabling the default endpoint forces all
+  traffic through the custom domain where
+  security controls are applied.
+failure: >
+  Security control bypass. Clients access the
+  API via the default endpoint, bypassing WAF,
+  mTLS, custom TLS policy, and geographic
+  restrictions.

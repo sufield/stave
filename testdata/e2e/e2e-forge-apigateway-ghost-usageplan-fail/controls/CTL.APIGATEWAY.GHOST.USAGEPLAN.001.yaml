@@ -1,0 +1,53 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.GHOST.USAGEPLAN.001
+name: API Gateway Usage Plan References Deleted API Key
+description: >
+  API Gateway usage plan references one or more API keys that have
+  been deleted. The usage plan retains its throttling and quota
+  settings, but the keys it governs no longer exist. Clients using a
+  deleted key receive 403 Forbidden; the throttle and quota policy
+  attached to the deleted key never applies; if the deleted key was
+  the only key in the plan, the plan is effectively empty. The
+  failure is medium severity rather than critical because the impact
+  is per-client (the holder of the deleted key) rather than per-API.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-3"
+  fedramp_moderate: "CM-3"
+  soc2: "CC8.1"
+  ccm_v4: ["CCC-03", "GRC-04"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    API Gateway usage plan references API keys that have been
+    deleted. Throttling and quota policy on those keys is moot.
+  action: >
+    Remove deleted key IDs from the usage plan's key list. If clients
+    still need the throttle policy that was attached to a deleted
+    key, issue a new key and re-attach. Add a deletion guard on API
+    keys that cross-references usage plans before allowing the key
+    to be deleted.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_usage_plan",
+        "usage_plan": {
+          "has_ghost_keys": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_usage_plan
+    - field: properties.api.usage_plan.has_ghost_keys
+      op: eq
+      value: true

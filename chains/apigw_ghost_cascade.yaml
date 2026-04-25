@@ -1,0 +1,25 @@
+id: apigw_ghost_cascade
+description: >
+  Any single API Gateway infrastructure ghost — a deleted VPC Link
+  target, a deleted Lambda integration, or a deleted authorizer
+  backend — breaks the API request path. Each fails differently:
+  VPC Link ghost causes complete backend failure (every request
+  through the link returns 500 because the load balancer is gone),
+  Lambda integration ghost causes per-route failure (the route
+  accepts requests and tries to invoke a function that no longer
+  exists), and authorizer ghost causes complete auth failure
+  (every authenticated request fails because the function or user
+  pool is gone). The console shows everything as healthy in all
+  three cases. Threshold of 1 reflects that a single ghost at the
+  API entry point is already critical — escalation to a chain
+  rather than a single finding when the cascade exists primes the
+  reviewer to look for a systemic decommission process gap rather
+  than a one-off cleanup miss.
+controls:
+  - CTL.APIGATEWAY.GHOST.VPCLINK.001
+  - CTL.APIGATEWAY.GHOST.LAMBDA.001
+  - CTL.APIGATEWAY.GHOST.AUTHORIZER.001
+escalation_threshold: 1
+compound_severity: critical
+preconditions:
+  - internet_access

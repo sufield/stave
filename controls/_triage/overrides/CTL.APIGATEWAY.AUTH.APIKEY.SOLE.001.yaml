@@ -1,0 +1,23 @@
+control: CTL.APIGATEWAY.AUTH.APIKEY.SOLE.001
+defect: >
+  API Gateway route uses an API key as the only
+  authentication mechanism. No authorizer is
+  configured.
+infection: >
+  API keys are not authentication credentials.
+  AWS documentation explicitly states: 'API keys
+  are not meant to be used for authentication or
+  authorization.' API keys are plain strings sent
+  in the x-api-key header. They are: shared
+  across users (no per-user identity), hardcoded
+  in mobile apps (extractable via decompilation),
+  logged in proxy and CDN access logs, and not
+  rotatable without breaking all clients
+  simultaneously. An API key as sole auth means
+  anyone who obtains the key string has full API
+  access with no identity attribution.
+failure: >
+  API access via shared secret. Anyone with the
+  API key string has full access to the API with
+  no identity attribution or per-user
+  authorization.

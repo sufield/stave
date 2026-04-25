@@ -1,0 +1,56 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.GHOST.AUTHORIZER.001
+name: API Gateway Authorizer References Deleted Provider
+description: >
+  API Gateway authorizer references a Lambda function (Lambda
+  authorizer) or Cognito User Pool (Cognito authorizer) that has been
+  deleted. The authorizer object remains in place and is attached to
+  routes. When a request hits the route, the authorizer attempts to
+  invoke the deleted function or validate against the deleted user
+  pool and authorization fails — routes return 403 (denied) or 500
+  (internal error), depending on the gateway's error handling. The
+  authorizer appears configured in the console; the failure only
+  surfaces when authenticated traffic arrives.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-3"
+  fedramp_moderate: "AC-3"
+  pci_dss_v4.0: "8.2"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-16", "IVS-04"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    API Gateway authorizer references a backend (Lambda function or
+    Cognito User Pool) that has been deleted. Every authenticated
+    request fails.
+  action: >
+    Either recreate the authorizer's backend (function or user pool)
+    with the same ARN, or update the authorizer to reference a
+    current provider. Add a deletion guard at the provider tier so
+    that deleting a Lambda function or Cognito User Pool referenced
+    by an authorizer fails until the authorizer is migrated.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_authorizer",
+        "authorizer": {
+          "has_ghost_provider": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_authorizer
+    - field: properties.api.authorizer.has_ghost_provider
+      op: eq
+      value: true

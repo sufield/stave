@@ -1,0 +1,26 @@
+id: apigw_auth_failure
+description: >
+  Any single authentication gap at the API layer — unauthenticated
+  $connect on a WebSocket API, JWT authorizer without audience
+  validation, API key as sole authentication, or a route with no
+  authorizer at all (CTL.APIGATEWAY.AUTH.001) — independently allows
+  unauthenticated or weakly authenticated access to API
+  functionality. WebSocket $connect without auth means anyone can
+  open a connection and message any route. JWT without audience
+  means tokens issued for a different application are accepted. API
+  key as sole auth means anyone with the key string has full access.
+  A route with NONE authorization is publicly callable. Threshold
+  of 1 reflects that one auth gap at the API boundary is already a
+  data-access path; the chain exists to surface auth weakness as a
+  family rather than four unrelated findings.
+controls:
+  - CTL.APIGATEWAY.AUTH.001
+  - CTL.APIGATEWAY.AUTH.WEBSOCKET.001
+  - CTL.APIGATEWAY.AUTH.JWT.AUDIENCE.001
+  - CTL.APIGATEWAY.AUTH.APIKEY.SOLE.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - data_access

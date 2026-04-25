@@ -1,0 +1,75 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.ENDPOINT.DEFAULT.001
+name: Default execute-api Endpoint Not Disabled Alongside Custom Domain
+description: >
+  The default execute-api endpoint
+  (https://{api-id}.execute-api.{region}.amazonaws.com) is enabled
+  on an API that also has a custom domain configured. The default
+  endpoint is a direct path to the API that bypasses every control
+  applied at the custom domain layer: WAF rules attached to
+  CloudFront or an ALB in front of the custom domain do not apply
+  to the default endpoint, mTLS configured on the custom domain
+  does not apply, custom TLS policy (TLS 1.2 minimum) does not
+  apply, and CloudFront geographic restrictions do not apply.
+  Disabling the default endpoint forces all traffic through the
+  custom domain where security controls are applied. The control
+  does not fire when no custom domain exists — in that case the
+  default endpoint is the intended access path.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-4"
+  fedramp_moderate: "AC-4"
+  pci_dss_v4.0: "1.3"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    Default execute-api endpoint is enabled on an API with a custom
+    domain, allowing clients to bypass WAF, mTLS, and TLS-policy
+    controls applied at the custom domain.
+  action: >
+    Set DisableExecuteApiEndpoint=true on the API. For REST APIs
+    this is the disableExecuteApiEndpoint property; for HTTP APIs
+    it is the disableExecuteApiEndpoint setting on the API. After
+    disabling, verify the custom domain still serves traffic and
+    that no internal callers were using the default endpoint URL.
+  example: |
+    {
+      "api": {
+        "kind": "rest_api",
+        "endpoint": {
+          "default_endpoint_enabled": false,
+          "has_custom_domain": true
+        }
+      }
+    }
+unsafe_predicate:
+  any:
+    - all:
+        - field: properties.api.kind
+          op: eq
+          value: rest_api
+        - field: properties.api.endpoint.has_custom_domain
+          op: eq
+          value: true
+        - field: properties.api.endpoint.default_endpoint_enabled
+          op: eq
+          value: true
+    - all:
+        - field: properties.api.kind
+          op: eq
+          value: http_api
+        - field: properties.api.endpoint.has_custom_domain
+          op: eq
+          value: true
+        - field: properties.api.endpoint.default_endpoint_enabled
+          op: eq
+          value: true

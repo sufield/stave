@@ -1,0 +1,21 @@
+control: CTL.APIGATEWAY.AUTH.JWT.AUDIENCE.001
+defect: >
+  HTTP API JWT authorizer does not validate the
+  audience (aud) claim.
+infection: >
+  The JWT audience claim identifies which
+  application the token was issued for. Without
+  audience validation, the API accepts any valid
+  JWT from the configured issuer — regardless of
+  which application it was issued for. If the
+  issuer (e.g., Auth0, Cognito, Okta) issues
+  tokens for multiple applications, a token from
+  Application A can access Application B's API.
+  The token is valid (signed by the issuer, not
+  expired) but was never intended for this API.
+  Audience validation ensures the token was
+  specifically issued for this API's client ID.
+failure: >
+  Cross-application token reuse. A JWT issued
+  for a different application is accepted by
+  this API because audience is not validated.

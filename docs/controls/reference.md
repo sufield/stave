@@ -3,31 +3,31 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1480
-**Pack hash:** `7d7cda074dbeb150e4aeb1cff484dca0af83dbe1ea06e3b84cc6bd4e8583dfda`
+**Total controls:** 1508
+**Pack hash:** `b773c4a0e16296298ca0a2b079cf87ad4af339dce4e7b71ade35f9b32b3cce5a`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 173 |
-| high | 656 |
+| critical | 176 |
+| high | 669 |
 | info | 16 |
-| low | 108 |
-| medium | 527 |
+| low | 111 |
+| medium | 536 |
 
 | Domain | Count |
 |--------|-------|
-| access | 7 |
+| access | 9 |
 | audit | 32 |
 | availability | 2 |
 | cryptography | 3 |
-| detection | 44 |
+| detection | 49 |
 | encryption | 87 |
-| exposure | 848 |
-| governance | 56 |
+| exposure | 866 |
+| governance | 58 |
 | hygiene | 16 |
-| identity | 327 |
+| identity | 328 |
 | network | 28 |
 | resilience | 18 |
 | secrets | 4 |
@@ -695,6 +695,51 @@ API Gateway routes and methods must have an authorizer configured (Cognito, Lamb
 
 ---
 
+### CTL.APIGATEWAY.AUTH.APIKEY.SOLE.001
+
+**API Gateway Uses API Key as Sole Authentication**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: IA-2; nist_800_53_r5: IA-2; pci_dss_v4.0: 8.2; soc2: CC6.1;
+
+API Gateway method or route requires an API key but has no other authorizer (no IAM, no Cognito, no Lambda authorizer, no JWT). API keys are identifiers, not credentials — AWS documentation explicitly states they are not meant for authentication or authorization. They are plain strings sent in the x-api-key header, shared across users (no per-user identity), often hardcoded in mobile and SPA clients (extractable via decompilation or DevTools), logged in proxy and CDN access logs, and not rotatable without breaking all clients simultaneously. API key as sole auth means anyone with the key string has full API access with no identity attribution.
+
+**Remediation:** Attach an authorizer (IAM, Cognito, Lambda authorizer, or JWT) to the route. The API key, if still needed, then serves its intended purpose — usage tracking, throttling, and quota enforcement — alongside the authorizer's identity check. If the route is intentionally public, remove the api_key_required flag so the lack of auth is explicit rather than disguised by a key that grants no real protection.
+
+---
+
+### CTL.APIGATEWAY.AUTH.JWT.AUDIENCE.001
+
+**HTTP API JWT Authorizer Without Audience Validation**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: IA-2; nist_800_53_r5: IA-2; pci_dss_v4.0: 8.2; soc2: CC6.2;
+
+HTTP API JWT authorizer does not validate the audience (aud) claim. Without audience validation, any valid JWT signed by the configured issuer is accepted — regardless of which application it was issued for. If the issuer (Auth0, Cognito, Okta, or any IdP serving multiple applications) issues tokens for Application A, those tokens can be used to access this API even if it is Application B. The token is legitimately signed and not expired but was never intended for this audience. Audience validation ties the token to this API's specific client ID.
+
+**Remediation:** Configure the audience claim on the JWT authorizer with the specific client ID(s) that should be accepted. In the API Gateway console: Authorizer → Edit → Audience. Multiple audiences are allowed; an empty audience list is the unsafe state. Verify that the issuer URL is also pinned and uses HTTPS.
+
+---
+
+### CTL.APIGATEWAY.AUTH.WEBSOCKET.001
+
+**WebSocket API $connect Route Has No Authorizer**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3; nist_800_53_r5: AC-3; pci_dss_v4.0: 8.2; soc2: CC6.1;
+
+WebSocket API's $connect route has no authorizer. WebSocket APIs authenticate only at connection time — once a connection is established, the client can send messages to any route ($default, custom routes) without further authentication. If $connect has no authorizer, any client can establish a WebSocket connection, send messages to all routes, receive responses, and maintain the connection indefinitely. For WebSocket APIs that provide real-time data, execute commands, or access internal services, unauthenticated $connect means unauthenticated access to all WebSocket functionality.
+
+**Remediation:** Attach an authorizer (Lambda authorizer or IAM auth) to the $connect route. The $connect route is the only place where WebSocket APIs can enforce authorization — message-level checks are not a substitute. If the API is intentionally public (e.g., a public chat broadcast), document the intent in an exemption rather than relying on the absence of auth.
+
+---
+
 ### CTL.APIGATEWAY.CACHE.ENCRYPT.001
 
 **REST API Cache Must Be Encrypted**
@@ -737,6 +782,111 @@ API Gateway v2 HTTP APIs expose CORS configuration at the API level. Setting All
 API Gateway custom domain names must enforce a minimum TLS version of 1.2. TLS 1.0 and 1.1 have known protocol-level vulnerabilities including BEAST, POODLE, and weak cipher suites that enable man-in-the-middle attacks. When a custom domain allows TLS below 1.2, an attacker on the network path can downgrade the connection and intercept API credentials, session tokens, or request payloads in transit. AWS API Gateway supports TLS 1.2 as the minimum security policy. Custom domains configured with older TLS versions expose every API behind that domain to protocol downgrade attacks regardless of the application-layer security controls in place.
 
 **Remediation:** Update the custom domain security policy to TLS_1_2. In the API Gateway console or via the AWS CLI, set the security policy on the domain name to TLS_1_2. Verify that all API clients support TLS 1.2 before applying the change. Monitor CloudWatch access logs for connection failures after the update to identify clients that need upgrading.
+
+---
+
+### CTL.APIGATEWAY.ENDPOINT.DEFAULT.001
+
+**Default execute-api Endpoint Not Disabled Alongside Custom Domain**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-4; nist_800_53_r5: AC-4; pci_dss_v4.0: 1.3; soc2: CC6.6;
+
+The default execute-api endpoint (https://{api-id}.execute-api.{region}.amazonaws.com) is enabled on an API that also has a custom domain configured. The default endpoint is a direct path to the API that bypasses every control applied at the custom domain layer: WAF rules attached to CloudFront or an ALB in front of the custom domain do not apply to the default endpoint, mTLS configured on the custom domain does not apply, custom TLS policy (TLS 1.2 minimum) does not apply, and CloudFront geographic restrictions do not apply. Disabling the default endpoint forces all traffic through the custom domain where security controls are applied. The control does not fire when no custom domain exists — in that case the default endpoint is the intended access path.
+
+**Remediation:** Set DisableExecuteApiEndpoint=true on the API. For REST APIs this is the disableExecuteApiEndpoint property; for HTTP APIs it is the disableExecuteApiEndpoint setting on the API. After disabling, verify the custom domain still serves traffic and that no internal callers were using the default endpoint URL.
+
+---
+
+### CTL.APIGATEWAY.GHOST.AUTHORIZER.001
+
+**API Gateway Authorizer References Deleted Provider**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3; nist_800_53_r5: AC-3; pci_dss_v4.0: 8.2; soc2: CC6.1;
+
+API Gateway authorizer references a Lambda function (Lambda authorizer) or Cognito User Pool (Cognito authorizer) that has been deleted. The authorizer object remains in place and is attached to routes. When a request hits the route, the authorizer attempts to invoke the deleted function or validate against the deleted user pool and authorization fails — routes return 403 (denied) or 500 (internal error), depending on the gateway's error handling. The authorizer appears configured in the console; the failure only surfaces when authenticated traffic arrives.
+
+**Remediation:** Either recreate the authorizer's backend (function or user pool) with the same ARN, or update the authorizer to reference a current provider. Add a deletion guard at the provider tier so that deleting a Lambda function or Cognito User Pool referenced by an authorizer fails until the authorizer is migrated.
+
+---
+
+### CTL.APIGATEWAY.GHOST.CERT.001
+
+**API Gateway Custom Domain Certificate Deleted or Expired**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-17; hipaa: 164.312(e)(1); nist_800_53_r5: SC-17; pci_dss_v4.0: 4.2.1; soc2: CC6.7;
+
+API Gateway custom domain references an ACM certificate that has been deleted or has expired. Clients connecting to the custom domain receive TLS errors — the handshake fails, browsers display certificate warnings, and automated integrations reject the connection. The custom domain configuration appears intact in the console; the failure is external and immediate. The control surfaces both the deleted-certificate case (immediate failure) and the imminent-expiry case (failure within a known window) so remediation happens during a change window rather than during an outage.
+
+**Remediation:** Replace the certificate on the custom domain. If the original ACM certificate was deleted, request a new one with the same subject alternative names and associate it. If the certificate expired, investigate the ACM renewal path (DNS validation records, IAM permissions for renewal) and enable automated renewal. Add a 30-day-before-expiry alarm.
+
+---
+
+### CTL.APIGATEWAY.GHOST.LAMBDA.001
+
+**API Gateway Integration References Deleted Lambda Function**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: CM-2; nist_800_53_r5: CM-2; soc2: CC8.1;
+
+API Gateway method or route integration references a Lambda function that has been deleted from the function inventory. The route is configured, accepts requests, and attempts to invoke the function — every invocation fails because the function no longer exists. The console shows the integration ARN as if it were valid; the failure surfaces only when a request reaches the route, at which point API Gateway returns 500. If the route handles authentication, payment, or other critical paths, the functionality is fully broken with no configuration-time signal.
+
+**Remediation:** Recreate the Lambda function with the same ARN, or update the integration to point at a current function. Add a deletion guard on Lambda functions that cross-references API Gateway integrations so the function deletion either fails or cascades the integration cleanup.
+
+---
+
+### CTL.APIGATEWAY.GHOST.LOGDEST.001
+
+**API Gateway Access Log Destination Deleted**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AU-12; hipaa: 164.312(b); nist_800_53_r5: AU-12; pci_dss_v4.0: 10.2; soc2: CC7.2;
+
+API Gateway stage's access log destination — a CloudWatch log group or Firehose delivery stream — has been deleted. The stage shows a destination ARN configured, so the API appears to have access logging enabled. The destination does not exist, so logs are silently discarded. The "logging is on" signal is preserved while the audit trail produces nothing. This is the silent-failure flavor of a logging gap: the operator who looks at the stage configuration reports compliance; the operator who looks for logs finds none.
+
+**Remediation:** Recreate the log destination (CloudWatch log group or Firehose delivery stream) at the same ARN, or update the stage's access log settings to point at a current destination. Add a deletion guard on log destinations referenced by API Gateway stages.
+
+---
+
+### CTL.APIGATEWAY.GHOST.USAGEPLAN.001
+
+**API Gateway Usage Plan References Deleted API Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-3; nist_800_53_r5: CM-3; soc2: CC8.1;
+
+API Gateway usage plan references one or more API keys that have been deleted. The usage plan retains its throttling and quota settings, but the keys it governs no longer exist. Clients using a deleted key receive 403 Forbidden; the throttle and quota policy attached to the deleted key never applies; if the deleted key was the only key in the plan, the plan is effectively empty. The failure is medium severity rather than critical because the impact is per-client (the holder of the deleted key) rather than per-API.
+
+**Remediation:** Remove deleted key IDs from the usage plan's key list. If clients still need the throttle policy that was attached to a deleted key, issue a new key and re-attach. Add a deletion guard on API keys that cross-references usage plans before allowing the key to be deleted.
+
+---
+
+### CTL.APIGATEWAY.GHOST.VPCLINK.001
+
+**API Gateway VPC Link References Deleted Load Balancer**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: CM-2; nist_800_53_r5: CM-2; soc2: CC8.1;
+
+API Gateway VPC Link references an NLB or ALB that has been deleted from the load balancer inventory. The VPC Link is the network bridge between API Gateway and a private backend in a VPC. When the target load balancer is deleted, the VPC Link has no destination — but its status remains AVAILABLE in the console because the link object itself still exists. API Gateway routes requests through the VPC Link, the VPC Link tries to forward to the deleted load balancer, and every request fails with 500 Internal Server Error. The API configuration looks correct, the integration looks correct, every request fails.
+
+**Remediation:** Either delete the VPC Link and remove integrations that reference it, or recreate the target load balancer with the same ARN and re-attach. Add a check at load-balancer deletion time to enumerate VPC Links referencing the LB ARN and fail-fast or delete-cascade rather than orphan the link.
 
 ---
 
@@ -14389,6 +14539,66 @@ Same IAM principal has both key administration permissions (kms:Create*, kms:Del
 
 ---
 
+### CTL.LAMBDA.ALARM.DURATION.001
+
+**Lambda Function Must Have a CloudWatch Alarm on Duration**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** fedramp_moderate: SI-4; nist_800_53_r5: SI-4; soc2: CC7.2;
+
+Lambda functions must have a CloudWatch alarm on the Duration metric, threshold set near the configured function timeout. A function with a 30-second timeout that regularly executes for 25 seconds is approaching its limit — any incremental downstream latency, payload size growth, or cold-start variability tips it into timeout-class errors. Duration alarms catch the approaching-cliff condition before it becomes a cliff: by the time the function starts timing out, the real failure is already in production. The alarm threshold should fire when sustained duration exceeds 80% of the configured timeout, giving response time before the function is failing outright.
+
+**Remediation:** Create a CloudWatch alarm on AWS/Lambda Duration with threshold at 80% of the function's configured timeout, and an SNS notification action.
+
+---
+
+### CTL.LAMBDA.ALARM.ERRORS.001
+
+**Lambda Function Must Have a CloudWatch Alarm on Errors**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** fedramp_moderate: SI-4; nist_800_53_r5: SI-4; pci_dss_v4.0: 10.4.1; soc2: CC7.2;
+
+Lambda functions must have a CloudWatch alarm on the Errors metric. Errors counts invocations that result in a function error — runtime exceptions, timeouts, out-of-memory kills, missing handler. Without an alarm, errors accumulate in CloudWatch metrics with no notification path. A function that begins failing 100% of invocations — from a code bug, a downstream outage, a permission drift, or a ghost reference — fails repeatedly and silently. The Errors graph exists, but nobody watches it in real time. The first signal is a downstream user complaint or a reconciliation gap discovered hours later. The Errors alarm is the single most important serverless alarm — every other Lambda alarm is secondary to knowing that the function is failing.
+
+**Remediation:** Create a CloudWatch alarm on AWS/Lambda Errors with an SNS notification action — aws cloudwatch put-metric-alarm --metric-name Errors --namespace AWS/Lambda --dimensions Name=FunctionName,Value=<fn>.
+
+---
+
+### CTL.LAMBDA.ALARM.ITERATORAGE.001
+
+**Stream-Triggered Lambda Must Have an IteratorAge Alarm**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** fedramp_moderate: SI-4; nist_800_53_r5: SI-4; soc2: CC7.2;
+
+Lambda functions triggered by Kinesis or DynamoDB Streams must have a CloudWatch alarm on the IteratorAge metric. IteratorAge measures how far behind the function is in processing the stream — a growing iterator age means the function cannot keep up with event volume. Events are processed with increasing delay; eventually records expire from the stream before the function reaches them and are lost. Without the alarm, the only signal is a downstream consumer noticing stale data. The control fires only on functions with stream-type triggers (Kinesis, DynamoDB Streams) — IteratorAge does not exist for SQS, API Gateway, S3, or SNS-triggered functions.
+
+**Remediation:** Create a CloudWatch alarm on AWS/Lambda IteratorAge with an SNS notification action; threshold should reflect acceptable processing lag for the stream (typically 60000 ms for low-latency streams).
+
+---
+
+### CTL.LAMBDA.ALARM.THROTTLES.001
+
+**Lambda Function Must Have a CloudWatch Alarm on Throttles**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** fedramp_moderate: SI-4; nist_800_53_r5: SI-4; soc2: CC7.2;
+
+Lambda functions must have a CloudWatch alarm on the Throttles metric. Throttled invocations are rejected: for synchronous callers (API Gateway, ALB) the caller receives a 429 and the upstream request fails. For async invocations the event is retried for six hours and then sent to the DLQ if configured or discarded. Throttling indicates one of: account-level concurrency exhaustion (a noisy neighbor function consuming the shared limit), reserved-concurrency cap reached (the function's own ceiling is too low for current traffic), or a deliberate denial-of-service against a public function URL. Each cause requires a different response, but all require notification before user impact compounds.
+
+**Remediation:** Create a CloudWatch alarm on AWS/Lambda Throttles with an SNS notification action.
+
+---
+
 ### CTL.LAMBDA.CODESIGN.001
 
 **Lambda Functions Must Enforce Code Signing**
@@ -14434,6 +14644,51 @@ Lambda functions must have reserved concurrency set to a non-zero value. Without
 
 ---
 
+### CTL.LAMBDA.CONFIG.CONCURRENCY.NOLIMIT.001
+
+**Publicly Invocable Lambda Has No Concurrency Limit**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-5; hipaa: 164.308(a)(7); nist_800_53_r5: SC-5; pci_dss_v4.0: 1.3.2; soc2: A1.1;
+
+Lambda functions that are publicly invocable (Function URL with AuthType NONE, or API Gateway route with no authorizer) must have reserved concurrency configured. Without reserved concurrency the function competes with every other function in the account for the account-wide concurrency limit (default: 1000). For a publicly invocable function, an attacker can drive thousands of concurrent invocations from the open endpoint and exhaust the entire account's concurrency budget — every other function in the account is throttled and effectively denied service. Reserved concurrency caps the function's maximum simultaneous executions (a ceiling that contains the blast radius) and reserves capacity for the function (a floor that guarantees minimum throughput). Distinct from CTL.LAMBDA.CONCURRENCY.001 which fires for any function without reserved concurrency at low severity; this control gates on public invocability and treats the combination as the high-severity DDoS surface.
+
+**Remediation:** Set reserved concurrency to a value that bounds the function's maximum simultaneous executions and preserves headroom for other functions in the account via aws lambda put-function-concurrency --reserved-concurrent-executions <value>. If public invocability is not intended, remove the public surface first (Function URL AuthType to AWS_IAM, or attach an authorizer to the API Gateway route).
+
+---
+
+### CTL.LAMBDA.CONFIG.MEMORY.EXCESSIVE.001
+
+**Lambda Function Memory Set to Maximum**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: CM-6; hipaa: 164.308(a)(7); nist_800_53_r5: CM-6; soc2: CC6.1;
+
+Lambda functions must not have memory_size set to the 10240MB maximum without justification. Memory in Lambda is also CPU and network allocation — increasing memory proportionally increases CPU share and network bandwidth — and the per-millisecond billing rate scales with the memory allocation. A function provisioned at 10240MB pays 64x the rate of a function provisioned at 160MB. Provisioning at the maximum is a governance signal in most environments: memory was raised once during incident response or capacity tuning and never reduced when the workload changed, or the workload genuinely needs the ceiling (large in-memory data processing, ML inference) in which case the value should be tagged and tracked. The finding is "review whether the maximum is intended" rather than "this is unsafe."
+
+**Remediation:** Reduce memory_size to the lowest value at which the function meets its latency SLO via aws lambda update-function-configuration --memory-size <MB>. Use Lambda Power Tuning or measured invocation duration to find the cost-optimal allocation. If 10240MB is required, tag the function stave/lambda-memory-justified with the workload reason.
+
+---
+
+### CTL.LAMBDA.CONFIG.TIMEOUT.EXCESSIVE.001
+
+**Lambda Function Timeout Set to Maximum**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: CM-6; hipaa: 164.308(a)(7); nist_800_53_r5: CM-6; soc2: CC6.1;
+
+Lambda functions must not have their timeout set to the 900-second maximum without justification. For most functions, normal execution completes in seconds; the 900-second ceiling is the configured guardrail value AWS allows, not a default. A 15-minute timeout means: a stuck function consumes compute for 15 minutes before being killed (cost), a runaway function or injection attack runs for 15 minutes before termination (blast radius duration), and the function's concurrent execution slot is held for up to 15 minutes per invocation (capacity waste reducing available concurrency for other invocations). Distinct from CTL.LAMBDA.TIMEOUT.001 which fires when timeout exceeds the configurable safe threshold (default 60s); this control specifically catches the at-maximum value as a governance signal — review whether 900s is actually needed or whether the timeout was raised once and never tightened.
+
+**Remediation:** Reduce the timeout to the lowest value that accommodates the function's actual runtime — most workloads complete in well under 60 seconds — via aws lambda update-function-configuration --timeout <seconds>. If 900s is required (long-running ETL, batch processing), tag the function stave/lambda-timeout-justified with the reason.
+
+---
+
 ### CTL.LAMBDA.DLQ.001
 
 **Lambda Async Invocations Must Have a Dead Letter Queue**
@@ -14446,6 +14701,21 @@ Lambda functions must have reserved concurrency set to a non-zero value. Without
 Lambda functions with asynchronous invocation sources must have a dead-letter queue (SQS or SNS) configured. Without a DLQ, failed async invocations are silently discarded after retries. For functions processing PHI events or compliance-relevant data, silent discard is an undetectable data integrity violation.
 
 **Remediation:** Configure a dead-letter queue (SQS queue or SNS topic) for the function via aws lambda update-function-configuration --dead-letter-config.
+
+---
+
+### CTL.LAMBDA.DLQ.MISSING.001
+
+**Lambda With Async Triggers Must Have a DLQ or Failure Destination**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: CP-10; hipaa: 164.308(a)(7); nist_800_53_r5: CP-10; soc2: A1.2;
+
+Lambda functions with asynchronous triggers (S3, SNS, EventBridge, async invoke) must have either a dead-letter queue or an on-failure destination configured. Asynchronous invocations are retried twice on failure; after the retries the event is sent to the DLQ if configured, sent to the failure destination if configured, or discarded if neither is configured. Discarded events are gone — no reprocessing path, no audit, no record. For event-driven architectures, lost events mean lost data, missed transactions, or inconsistent state across consumers that share the upstream event source. Distinct from CTL.LAMBDA.DLQ.001 which is ungated; this control fires only when the function has at least one async trigger and neither a DLQ nor a failure destination, which is the actual data loss case.
+
+**Remediation:** Configure a dead-letter queue via aws lambda update-function-configuration --dead-letter-config TargetArn=<sqs-or-sns-arn>, or attach an EventInvokeConfig OnFailure destination via aws lambda put-function-event-invoke-config.
 
 ---
 
@@ -14520,6 +14790,36 @@ Lambda function environment variables must not contain plaintext secrets such as
 Lambda functions with multiple published versions whose older versions hold environment variables that differ from the current ($LATEST) version are surfaced for cleanup. Published Lambda versions are immutable snapshots of the function configuration — including the full environment-variable map at the moment the version was published — and the snapshot persists even after the live function rotates the credential, removes the variable, or migrates to a Secrets Manager reference. Anyone with `lambda:GetFunction` against the version- qualified ARN can read the historical environment block. A database password that was a raw value in version 3 is still readable from version 3 a year later, even if version 14 is the live one and the password has been rotated three times in the meantime. The pattern is benign for non-credential env vars (feature flags, service URLs); it is a leak when the env var ever held a credential. Published-version cleanup (DeleteFunction with version qualifier) is the remediation; the control is medium because the leak requires both `GetFunction` rights AND awareness that versions retain history.
 
 **Remediation:** Delete unused published versions; for versions still in use, audit the environment for stale credentials and delete after migration.
+
+---
+
+### CTL.LAMBDA.ESM.BISECT.001
+
+**Stream Event Source Mapping Must Bisect on Error**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SI-11; nist_800_53_r5: SI-11; soc2: A1.2;
+
+Lambda event source mappings for Kinesis or DynamoDB Streams must have BisectBatchOnFunctionError enabled. Without bisect, the entire batch is retried when a single record fails — one poisonous record blocks every record alongside it. With bisect, Lambda splits the failing batch in half and retries each half independently, recursively isolating the bad record while letting the good ones drain. For high-throughput streams, the difference is between minutes of blocked processing and minutes of normal processing with one isolated failure. Bisect is stream-only: SQS event source mappings handle individual messages, not stream shards, and have no bisect setting. The control fires only on Kinesis and DynamoDB Stream ESMs.
+
+**Remediation:** Enable bisect on the event source mapping via aws lambda update-event-source-mapping --bisect-batch-on-function-error.
+
+---
+
+### CTL.LAMBDA.ESM.NODLQ.001
+
+**Event Source Mapping Must Have a Failure Destination**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: CP-10; nist_800_53_r5: CP-10; soc2: A1.2;
+
+Lambda event source mappings (Kinesis, DynamoDB Streams, SQS) must have an on-failure destination configured. Without one, error handling depends on the source type and is uniformly bad. For Kinesis and DynamoDB Streams: the failed batch is retried until it succeeds or the record's maximum age expires — and meanwhile the shard is blocked. Every record behind the poisonous one is stuck. The function processes the same failed batch repeatedly and the stream cannot drain. For SQS: the message returns to the queue, the receive count increments, and the message retries until the queue's retention expires. Without a queue-level DLQ, the message is discarded with no record. A failure destination (SQS, SNS, S3, or EventBridge) captures the failed record for investigation, unblocks the stream, and preserves the data for reprocessing.
+
+**Remediation:** Add a failure destination to the event source mapping via aws lambda update-event-source-mapping --destination-config OnFailure={Destination=<arn>}.
 
 ---
 
@@ -14643,6 +14943,51 @@ Lambda layers must not contain embedded secrets (API keys, database credentials,
 
 ---
 
+### CTL.LAMBDA.LIFECYCLE.DORMANT.001
+
+**Lambda Function Not Invoked in 90+ Days**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: CM-2; hipaa: 164.308(a)(1)(ii)(B); nist_800_53_r5: CM-2; soc2: CC6.1;
+
+Lambda functions that have not been invoked in 90 or more days are dormant. The function still exists with its execution role, environment variables, VPC configuration, and triggers — but serves no active purpose. Dormant functions are a latent attack surface: the execution role carries IAM permissions, the environment variables may contain credentials, the VPC config grants a network position, and the triggers (event sources) may still be active and routable. Nobody monitors a dormant function for anomalous invocations because it is assumed to be unused, so any invocation that does occur — by the attacker who finds it — goes unnoticed. The 90-day threshold matches the dormancy threshold used for unused IAM roles and aged stopped EC2 instances, so dormancy is consistent across services.
+
+**Remediation:** Decommission the function if it is no longer needed — aws lambda delete-function — and remove its triggers, DLQ, log group, and execution role to eliminate the latent surface. If the function must be retained, tag it stave/lambda-dormancy-justified with the reason and add monitoring for any invocation.
+
+---
+
+### CTL.LAMBDA.LIFECYCLE.NOTRIGGER.001
+
+**Lambda Function Has No Event Source**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: CM-3; hipaa: 164.308(a)(1)(ii)(B); nist_800_53_r5: CM-3; soc2: CC8.1;
+
+Lambda functions must have at least one configured trigger — an event source mapping (SQS, Kinesis, DynamoDB Streams), a resource-policy invoke statement (S3, SNS, EventBridge, API Gateway), a Function URL, or a CloudWatch schedule. A function with zero triggers can only be invoked via direct lambda:InvokeFunction API calls, meaning either the function was partially deployed (triggers not yet configured), the triggers were removed (cleanup left the function behind), or the function is invoked manually with no automated path. In each case the fully configured function — with execution role, environment variables, and VPC access — is sitting idle with no observable invocation channel and so no detection for misuse.
+
+**Remediation:** Remove the function if no invocation path is intended, or attach the missing trigger (event source mapping, resource policy statement, Function URL, or scheduled rule) and document the invocation channel.
+
+---
+
+### CTL.LAMBDA.LIFECYCLE.ORPHANLOG.001
+
+**CloudWatch Log Group Exists for Deleted Lambda Function**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SA-22; hipaa: 164.308(a)(1)(ii)(B); nist_800_53_r5: SA-22; soc2: CC8.1;
+
+A CloudWatch log group with the Lambda naming pattern (/aws/lambda/<function-name>) must not persist after the corresponding Lambda function is deleted. When the function is removed but its log group is not, the log group accumulates no new logs but retains historical logs with potentially sensitive output (request/response payloads, IDs, error stack traces, environment-variable echoes). The orphaned log group is a low-severity finding — there is no active invocation surface — but it represents three governance signals: cost (logs retained past their useful life), data exposure (historical logs may contain sensitive content past the retention intention of the deleted function), and serverless cleanup failure (the decommission script removed the function but not its dependent resources).
+
+**Remediation:** Delete the orphaned log group via aws logs delete-log-group --log-group-name /aws/lambda/<name>, or transfer historical logs to long-term storage (S3 + Glacier) before deletion if the data is retention-required.
+
+---
+
 ### CTL.LAMBDA.LIST.RESTRICT.001
 
 **Lambda Function List Permissions Must Be Restricted**
@@ -14670,6 +15015,51 @@ Lambda function list permissions must be restricted to administrative roles. Unr
 Lambda functions must have CloudWatch Logs enabled. Without logging, function invocations — including unauthorized or malicious invocations — produce no observable output. Error conditions, security events, and application behavior are invisible. For functions with public function URLs, missing logging means a Denial of Wallet attack generates AWS costs with no audit trail. Lambda logging requires the execution role to have logs:CreateLogGroup, logs:CreateLogStream, and logs:PutLogEvents permissions — a missing log group or insufficient permissions silently disables logging without failing the function invocation.
 
 **Remediation:** Grant the execution role CloudWatch Logs permissions: logs:CreateLogGroup, logs:CreateLogStream, logs:PutLogEvents. Verify the log group exists in CloudWatch Logs. If using a custom log group name via the function's logging configuration, ensure the log group is created and the retention policy is set.
+
+---
+
+### CTL.LAMBDA.LOG.ENCRYPT.001
+
+**Lambda CloudWatch Log Group Not Encrypted with CMK**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AU-9; hipaa: 164.312(a)(2)(iv); nist_800_53_r5: AU-9; pci_dss_v4.0: 10.3.2; soc2: CC6.1;
+
+Lambda function CloudWatch log groups must be encrypted with a customer-managed KMS key. Log groups are encrypted by default with the CloudWatch service key, but a CMK provides explicit key policy control, CloudTrail-level audit on key use, and revocation capability. Lambda logs frequently contain sensitive data — request and response payloads, error stacks with PII, debug output that captures credentials. The service key cannot be revoked, has no caller-specific audit, and is shared across the account; a CMK is the only way to limit log access to specific principals and to detect anomalous access via CloudTrail key events.
+
+**Remediation:** Associate a CMK with the log group via aws logs associate-kms-key --log-group-name /aws/lambda/<function> --kms-key-id <cmk-arn>. Ensure the CMK key policy permits logs.<region>.amazonaws.com to use the key.
+
+---
+
+### CTL.LAMBDA.LOG.MISSING.001
+
+**Lambda Function Has No CloudWatch Log Group**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** fedramp_moderate: AU-2; hipaa: 164.312(b); nist_800_53_r5: AU-2; pci_dss_v4.0: 10.2.1; soc2: CC7.1;
+
+Lambda functions must have an associated CloudWatch log group. Lambda creates the log group automatically on first invocation — provided the execution role has logs:CreateLogGroup, logs:CreateLogStream, and logs:PutLogEvents. If the role lacks log permissions, the function still executes — its code runs, side effects occur, downstream calls happen — but every console output, error stack, and log statement is silently discarded. Debugging is impossible. Error tracking is impossible. The function becomes a black box. The control fires only when the function has been invoked at least once: an uninvoked function with no log group is expected (the log group will be created on first call) and the finding instead signals a stale or never-deployed function. Two distinct causes, distinguishable in triage: function invoked but role missing log permissions (real silent failure) versus function never invoked (deployment never completed or zombie function).
+
+**Remediation:** Attach AWSLambdaBasicExecutionRole or an equivalent policy granting logs:CreateLogGroup, logs:CreateLogStream, and logs:PutLogEvents to the function's execution role. Re-invoke the function to trigger log group creation.
+
+---
+
+### CTL.LAMBDA.LOG.RETENTION.001
+
+**Lambda CloudWatch Log Group Has No Retention or Retention Too Short**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AU-11; hipaa: 164.312(b); nist_800_53_r5: AU-11; pci_dss_v4.0: 10.5.1; soc2: CC7.2;
+
+Lambda function CloudWatch log groups must have an explicit retention policy of at least 365 days. Lambda creates the log group on first invocation but does not set a retention policy — the default is "Never expire," which accumulates storage cost indefinitely and may violate data deletion policies (GDPR right to erasure, internal retention rules requiring deletion after a period). Retention shorter than 365 days fails compliance audit windows that require log preservation across investigation cycles. Two failure modes, one control: unbounded accumulation (no retention set — cost and compliance) and premature deletion (retention below the audit window — investigation gap).
+
+**Remediation:** Set CloudWatch log group retention to 365 days or more via aws logs put-retention-policy --log-group-name /aws/lambda/<function> --retention-in-days 365.
 
 ---
 
@@ -14850,6 +15240,36 @@ Lambda functions must not have a timeout exceeding the safe threshold (default 6
 Lambda functions must have X-Ray tracing set to Active, not PassThrough. Active tracing captures downstream service calls independently of function log output — providing an audit trail of what the function actually did at the infrastructure layer. PassThrough tracing only traces requests with upstream sampling decisions, creating a detection gap exploitable by compromised functions that suppress their own log output.
 
 **Remediation:** Set the function tracing mode to Active via aws lambda update-function-configuration --tracing-config Mode=Active.
+
+---
+
+### CTL.LAMBDA.TRIGGER.APIGATEWAY.NOAUTH.001
+
+**Lambda Behind API Gateway Without Authentication**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** access
+- **Compliance:** fedramp_moderate: AC-3; hipaa: 164.312(a)(1); nist_800_53_r5: AC-3; pci_dss_v4.0: 6.4.2; soc2: CC6.1;
+
+Lambda functions invoked via API Gateway must not be exposed through routes that have no authentication configured. A route with no IAM auth, no Cognito authorizer, no Lambda authorizer, and no API key requirement is a public endpoint — anyone who discovers the URL can invoke the function with any payload. The API Gateway provides throttling (unlike Function URLs) but no identity verification, so every unauthenticated invocation exercises the function's full execution-role permissions and accumulates Lambda invocation cost. Distinct from CTL.LAMBDA.URL.AUTH.001 which guards Function URL AuthType NONE; this control guards the API Gateway integration layer, where the public-invocability gate is the route's authorizer rather than the function URL config.
+
+**Remediation:** Attach an authorizer to the route — IAM auth (AuthType AWS_IAM), Cognito user pool authorizer, Lambda authorizer, or API key requirement. For public APIs that must remain unauthenticated, document the exposure and reduce blast radius by tightening the function's execution-role permissions.
+
+---
+
+### CTL.LAMBDA.TRIGGER.CONFUSEDDEPUTY.001
+
+**Lambda Trigger Allows Invocation Without Source Restriction**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** access
+- **Compliance:** fedramp_moderate: AC-3; hipaa: 164.312(a)(1); nist_800_53_r5: AC-3; pci_dss_v4.0: 1.2.1; soc2: CC6.1;
+
+Lambda resource policy must not allow a service principal (s3.amazonaws.com, sns.amazonaws.com, events.amazonaws.com, apigateway.amazonaws.com, etc.) to invoke the function without an aws:SourceArn or aws:SourceAccount condition. Without one of these conditions, ANY resource of that service type in ANY account can trigger the function — the Lambda confused-deputy problem. An attacker creates an S3 bucket in their own account, configures a notification to the function ARN, uploads a crafted object, and the function is invoked with the attacker payload — executing with the function's full execution-role permissions. This is distinct from CTL.LAMBDA.POLICY.CROSSACCOUNT.001 which guards account-principal grants; this control guards the service-principal invocation surface, where the attacker doesn't need an account principal at all — the service itself is the principal and the missing source condition removes the account boundary.
+
+**Remediation:** Add an aws:SourceArn (preferred — restricts to a specific source resource) or aws:SourceAccount (restricts to a specific account) condition to each service-principal invoke statement via aws lambda add-permission --source-arn or --source-account.
 
 ---
 

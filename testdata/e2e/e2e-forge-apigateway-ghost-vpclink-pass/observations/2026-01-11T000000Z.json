@@ -1,0 +1,9 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "generated_by": {"source_type": "aws.config_api", "tool": "stave-test", "tool_version": "1.0.0"},
+  "assets": [
+  {"id": "vpclink-healthy", "type": "aws_apigateway_vpc_link", "vendor": "aws", "properties": {"api": {"kind": "apigateway_vpc_link", "vpc_link": {"id": "vlink-1a2b3c", "target_arn": "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/net/internal-api/abc123", "target_exists": true, "has_ghost_target": false, "status": "AVAILABLE"}}}}
+]
+}

@@ -1,0 +1,21 @@
+control: CTL.APIGATEWAY.GHOST.USAGEPLAN.001
+defect: >
+  API Gateway usage plan references one or more
+  API keys that have been deleted from the API
+  key inventory.
+infection: >
+  The usage plan exists with throttling and quota
+  settings, but the API keys it governs no longer
+  exist. Clients using a deleted key receive 403
+  Forbidden. The throttling and quota policy
+  attached to the deleted key never applies — it
+  has nothing to govern. If the deleted key was
+  the only key in the plan, the plan is empty
+  and silently inert. The impact is per-client
+  rather than per-API: only the holders of the
+  deleted keys experience the failure.
+failure: >
+  Per-client API access broken and per-key
+  throttle/quota policy moot. The usage plan
+  retains its policy on a key that no longer
+  exists.

@@ -1,0 +1,21 @@
+control: CTL.APIGATEWAY.GHOST.LAMBDA.001
+defect: >
+  API Gateway route integration references a
+  Lambda function that has been deleted from the
+  function inventory.
+infection: >
+  The API route accepts requests and attempts to
+  invoke the specified Lambda function. The
+  function has been deleted. Every request to
+  this route fails — API Gateway returns a 500
+  error because the invoke target doesn't exist.
+  If this route handles critical functionality
+  (authentication, payment processing, data
+  retrieval), the functionality is completely
+  broken. The route appears correctly configured
+  in the API Gateway console. The integration
+  ARN is present. The failure is only visible
+  when a request hits the route.
+failure: >
+  API route returns 500 on every request. The
+  Lambda integration target was deleted.

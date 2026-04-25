@@ -1,0 +1,54 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.GHOST.LAMBDA.001
+name: API Gateway Integration References Deleted Lambda Function
+description: >
+  API Gateway method or route integration references a Lambda function
+  that has been deleted from the function inventory. The route is
+  configured, accepts requests, and attempts to invoke the function —
+  every invocation fails because the function no longer exists. The
+  console shows the integration ARN as if it were valid; the failure
+  surfaces only when a request reaches the route, at which point API
+  Gateway returns 500. If the route handles authentication, payment,
+  or other critical paths, the functionality is fully broken with no
+  configuration-time signal.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "CM-2"
+  fedramp_moderate: "CM-2"
+  soc2: "CC8.1"
+  ccm_v4: ["BCR-08", "IVS-04"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    API Gateway integration references a Lambda function that has
+    been deleted. The route returns 500 on every request.
+  action: >
+    Recreate the Lambda function with the same ARN, or update the
+    integration to point at a current function. Add a deletion guard
+    on Lambda functions that cross-references API Gateway integrations
+    so the function deletion either fails or cascades the integration
+    cleanup.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_integration",
+        "integration": {
+          "has_ghost_lambda": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_integration
+    - field: properties.api.integration.has_ghost_lambda
+      op: eq
+      value: true

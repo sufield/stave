@@ -83,7 +83,14 @@ GDPR, FFIEC, and ISO 27001 compliance coverage. Each follows the same
 | `aws_cloudwatch_log_group` | `log_group.*` | `log_group` | `has_retention_policy`, `retention_days` |
 | `aws_cloudwatch_monitoring_config` | `monitoring.*` | `account` | `metric_filters.*.exists`, `alarms.*.exists` |
 | `aws_config_recorder` | `compliance.*` | `recorder` | `recording_enabled`, `all_resource_types`, `has_active_rules` |
-| `aws_apigateway_stage` | `api.*` | `rest_api` | `encryption.tls_enforced`, `encryption.minimum_tls_version` |
+| `aws_apigateway_stage` | `api.*` | `rest_api`, `http_api` | `encryption.tls_enforced`, `encryption.minimum_tls_version`, `logging.access_log_destination`, `logging.access_log_dest_exists`, `logging.has_ghost_log_dest`, `endpoint.api_id`, `endpoint.default_endpoint_enabled`, `endpoint.has_custom_domain` |
+| `aws_apigateway_vpc_link` | `api.vpc_link.*` | `apigateway_vpc_link` | `id`, `target_arn`, `target_exists`, `has_ghost_target`, `status` |
+| `aws_apigateway_integration` | `api.integration.*` | `apigateway_integration` | `api_id`, `route_key`, `lambda_arn`, `lambda_exists`, `has_ghost_lambda` |
+| `aws_apigateway_authorizer` | `api.authorizer.*` | `apigateway_authorizer` | `id`, `type` (TOKEN/REQUEST/COGNITO/JWT), `provider_arn`, `provider_exists`, `has_ghost_provider`, `jwt.issuer`, `jwt.audience`, `jwt.audience_configured` |
+| `aws_apigateway_custom_domain` | `api.custom_domain.*` | `apigateway_custom_domain` | `certificate_arn`, `certificate_exists`, `certificate_expired`, `certificate_expiry_days`, `has_ghost_cert` |
+| `aws_apigateway_usage_plan` | `api.usage_plan.*` | `apigateway_usage_plan` | `api_key_ids`, `has_ghost_keys`, `ghost_key_ids` |
+| `aws_apigateway_method` | `api.method.*` | `apigateway_method` | `route_key`, `api_key_required`, `has_authorizer`, `api_key_sole_auth` |
+| `aws_apigateway_websocket_api` | `api.access.*` | `websocket_api` | `connect_route_authorized`, `connect_route_authorizer_id` |
 | `aws_elasticache_cluster` | `cache.*` | `cluster` | `encryption.in_transit_enabled`, `encryption.at_rest_enabled` |
 | `aws_cognito_user_pool` | `identity.*` | `user_pool` | `auth.mfa_enforced`, `auth.mfa_configuration` |
 | `aws_backup_resource` | `backup.*`, `availability.*`, `replication.*` | `resource` | `has_backup`, `is_recent`, `encrypted`, `multi_az`, `cross_region_enabled` |

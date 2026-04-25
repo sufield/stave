@@ -1,0 +1,55 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.GHOST.VPCLINK.001
+name: API Gateway VPC Link References Deleted Load Balancer
+description: >
+  API Gateway VPC Link references an NLB or ALB that has been deleted
+  from the load balancer inventory. The VPC Link is the network bridge
+  between API Gateway and a private backend in a VPC. When the target
+  load balancer is deleted, the VPC Link has no destination — but its
+  status remains AVAILABLE in the console because the link object
+  itself still exists. API Gateway routes requests through the VPC
+  Link, the VPC Link tries to forward to the deleted load balancer,
+  and every request fails with 500 Internal Server Error. The API
+  configuration looks correct, the integration looks correct, every
+  request fails.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "CM-2"
+  fedramp_moderate: "CM-2"
+  soc2: "CC8.1"
+  ccm_v4: ["BCR-08", "IVS-04"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    API Gateway VPC Link references a load balancer that has been
+    deleted. Every request through this VPC Link returns 500.
+  action: >
+    Either delete the VPC Link and remove integrations that reference
+    it, or recreate the target load balancer with the same ARN and
+    re-attach. Add a check at load-balancer deletion time to
+    enumerate VPC Links referencing the LB ARN and fail-fast or
+    delete-cascade rather than orphan the link.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_vpc_link",
+        "vpc_link": {
+          "has_ghost_target": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_vpc_link
+    - field: properties.api.vpc_link.has_ghost_target
+      op: eq
+      value: true

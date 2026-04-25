@@ -1,0 +1,24 @@
+control: CTL.APIGATEWAY.GHOST.AUTHORIZER.001
+defect: >
+  API Gateway authorizer references a Lambda
+  function (Lambda authorizer) or Cognito User
+  Pool (Cognito authorizer) that has been
+  deleted.
+infection: >
+  The authorizer is the authentication gate for
+  API routes. When its backend is deleted: a
+  Lambda authorizer fails every authorization
+  request because the function can't be invoked;
+  a Cognito authorizer fails every token
+  validation because the user pool doesn't
+  exist. Routes using this authorizer either
+  return 403 (authorization denied) or 500
+  (internal error), depending on the gateway's
+  error handling. The authorizer appears
+  configured in the console. Routes show an
+  authorizer is attached. The failure surfaces
+  only when requests arrive.
+failure: >
+  Authentication gate broken. Every authenticated
+  request fails because the authorizer's backend
+  was deleted.

@@ -1,0 +1,9 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "generated_by": {"source_type": "aws.config_api", "tool": "stave-test", "tool_version": "1.0.0"},
+  "assets": [
+  {"id": "authorizer-lambda-orphaned", "type": "aws_apigateway_authorizer", "vendor": "aws", "properties": {"api": {"kind": "apigateway_authorizer", "authorizer": {"id": "auth-deadlamb", "type": "TOKEN", "provider_arn": "arn:aws:lambda:us-east-1:111122223333:function:custom-jwt-validator-deleted", "provider_exists": false, "has_ghost_provider": true}}}}
+]
+}

@@ -1,0 +1,59 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.AUTH.APIKEY.SOLE.001
+name: API Gateway Uses API Key as Sole Authentication
+description: >
+  API Gateway method or route requires an API key but has no other
+  authorizer (no IAM, no Cognito, no Lambda authorizer, no JWT). API
+  keys are identifiers, not credentials — AWS documentation
+  explicitly states they are not meant for authentication or
+  authorization. They are plain strings sent in the x-api-key header,
+  shared across users (no per-user identity), often hardcoded in
+  mobile and SPA clients (extractable via decompilation or DevTools),
+  logged in proxy and CDN access logs, and not rotatable without
+  breaking all clients simultaneously. API key as sole auth means
+  anyone with the key string has full API access with no identity
+  attribution.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "IA-2"
+  fedramp_moderate: "IA-2"
+  pci_dss_v4.0: "8.2"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-04", "IAM-16"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    API Gateway method or route uses an API key as its only
+    authentication mechanism. No authorizer is configured.
+  action: >
+    Attach an authorizer (IAM, Cognito, Lambda authorizer, or JWT)
+    to the route. The API key, if still needed, then serves its
+    intended purpose — usage tracking, throttling, and quota
+    enforcement — alongside the authorizer's identity check. If the
+    route is intentionally public, remove the api_key_required flag
+    so the lack of auth is explicit rather than disguised by a key
+    that grants no real protection.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_method",
+        "method": {
+          "api_key_sole_auth": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_method
+    - field: properties.api.method.api_key_sole_auth
+      op: eq
+      value: true
